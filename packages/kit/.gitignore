@@ -8,3 +8,4 @@
 !/src/core/adapt/fixtures/*/.svelte-kit
 !/test/node_modules
 /test/apps/basics/test/errors.json
+.custom-out-dir

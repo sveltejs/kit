@@ -26,7 +26,6 @@ test('copy files', () => {
 	};
 
 	const builder = create_builder({
-		cwd,
 		config: /** @type {import('types').ValidatedConfig} */ (mocked),
 		// @ts-expect-error
 		build_data: {},

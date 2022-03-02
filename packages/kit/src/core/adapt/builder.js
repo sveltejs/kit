@@ -4,14 +4,13 @@ import { generate_manifest } from '../generate_manifest/index.js';
 
 /**
  * @param {{
- *   cwd: string;
  *   config: import('types').ValidatedConfig;
  *   build_data: import('types').BuildData;
  *   log: import('types').Logger;
  * }} opts
  * @returns {import('types').Builder}
  */
-export function create_builder({ cwd, config, build_data, log }) {
+export function create_builder({ config, build_data, log }) {
 	/** @type {Set<string>} */
 	let prerendered_paths;
 
