@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.290
+
+### Patch Changes
+
+- Add config.kit.outDir ([#4176](https://github.com/sveltejs/kit/pull/4176))
+
+* [breaking] allow `InputProps` and `OutputProps` to be typed separately in `Load` ([#4160](https://github.com/sveltejs/kit/pull/4160))
+
 ## 1.0.0-next.289
 
 ### Patch Changes
