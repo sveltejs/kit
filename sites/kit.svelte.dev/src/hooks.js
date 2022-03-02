@@ -1,6 +1,6 @@
 const redirects = {
 	'/docs/typescript': '/docs/types',
-	'/docs/amp': '/docs/seo#amp'
+	'/docs/amp': '/docs/seo#manual-setup-amp'
 };
 
 /** @type {import('@sveltejs/kit').Handle} */
