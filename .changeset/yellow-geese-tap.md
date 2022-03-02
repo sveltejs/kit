@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-allow providing `InputProps` type argument for `Load`
+allow `InputProps` and `OutputProps` to be typed separately in `Load`
