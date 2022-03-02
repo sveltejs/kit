@@ -63,7 +63,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	};
 
 	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
-	const loading = {
+	const load_cache = {
 		id: null,
 		promise: null
 	};
@@ -177,10 +177,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		const intent = get_navigation_intent(url);
 
-		loading.promise = get_navigation_result(intent, false);
-		loading.id = intent.id;
+		load_cache.promise = get_navigation_result(intent, false);
+		load_cache.id = intent.id;
 
-		return loading.promise;
+		return load_cache.promise;
 	}
 
 	/**
@@ -293,8 +293,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 			await tick();
 		}
 
-		loading.promise = null;
-		loading.id = null;
+		load_cache.promise = null;
+		load_cache.id = null;
 		autoscroll = true;
 		updating = false;
 
@@ -334,8 +334,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {boolean} no_cache
 	 */
 	async function get_navigation_result(intent, no_cache) {
-		if (loading.id === intent.id && loading.promise) {
-			return loading.promise;
+		if (load_cache.id === intent.id && load_cache.promise) {
+			return load_cache.promise;
 		}
 
 		for (let i = 0; i < intent.routes.length; i += 1) {
