@@ -284,7 +284,7 @@ test.describe.parallel('Imports', () => {
 		await page.goto('/asset-import');
 
 		const sources = await page.evaluate(() =>
-			[...document.querySelectorAll('img')].map((img) => img.src)
+			Array.from(document.querySelectorAll('img'), (img) => img.src)
 		);
 
 		if (process.env.DEV) {

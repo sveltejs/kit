@@ -303,24 +303,90 @@ importers:
       tiny-glob: 0.2.9
       uvu: 0.5.2
 
+  packages/kit/test/apps/amp:
+    specifiers:
+      '@sveltejs/kit': workspace:*
+      cross-env: ^7.0.3
+      svelte: ^3.43.0
+      svelte-check: ^2.2.10
+      typescript: ~4.5.5
+    devDependencies:
+      '@sveltejs/kit': link:../../..
+      cross-env: 7.0.3
+      svelte: 3.44.2
+      svelte-check: 2.2.10_svelte@3.44.2
+      typescript: 4.5.5
+
+  packages/kit/test/apps/basics:
+    specifiers:
+      '@sveltejs/kit': workspace:*
+      cross-env: ^7.0.3
+      svelte: ^3.43.0
+      svelte-check: ^2.2.10
+      typescript: ~4.5.5
+    devDependencies:
+      '@sveltejs/kit': link:../../..
+      cross-env: 7.0.3
+      svelte: 3.44.2
+      svelte-check: 2.2.10_svelte@3.44.2
+      typescript: 4.5.5
+
+  packages/kit/test/apps/options:
+    specifiers:
+      '@sveltejs/kit': workspace:*
+      cross-env: ^7.0.3
+      svelte: ^3.43.0
+      svelte-check: ^2.2.10
+      typescript: ~4.5.5
+    devDependencies:
+      '@sveltejs/kit': link:../../..
+      cross-env: 7.0.3
+      svelte: 3.44.2
+      svelte-check: 2.2.10_svelte@3.44.2
+      typescript: 4.5.5
+
+  packages/kit/test/apps/options-2:
+    specifiers:
+      '@sveltejs/adapter-node': workspace:*
+      '@sveltejs/kit': workspace:*
+      cross-env: ^7.0.3
+      svelte: ^3.43.0
+      svelte-check: ^2.2.10
+      typescript: ~4.5.5
+    devDependencies:
+      '@sveltejs/adapter-node': link:../../../../adapter-node
+      '@sveltejs/kit': link:../../..
+      cross-env: 7.0.3
+      svelte: 3.44.2
+      svelte-check: 2.2.10_svelte@3.44.2
+      typescript: 4.5.5
+
   packages/kit/test/prerendering/basics:
     specifiers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.43.0
+      svelte-check: ^2.2.10
+      typescript: ~4.5.5
       uvu: ^0.5.2
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.44.2
+      svelte-check: 2.2.10_svelte@3.44.2
+      typescript: 4.5.5
       uvu: 0.5.2
 
   packages/kit/test/prerendering/options:
     specifiers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.43.0
+      svelte-check: ^2.2.10
+      typescript: ~4.5.5
       uvu: ^0.5.2
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.44.2
+      svelte-check: 2.2.10_svelte@3.44.2
+      typescript: 4.5.5
       uvu: 0.5.2
 
   sites/kit.svelte.dev:
@@ -1666,7 +1732,6 @@ packages:
   /@types/node/17.0.21:
     resolution: {integrity: sha512-DBZCJbhII3r90XbQxI8Y9IjjiiOGlZ0Hr32omXIZvwwZ7p4DMMXGrKXVyPfuoBOri9XNtL0UK69jYIBIsRX3QQ==}
     dev: true
-    optional: true
 
   /@types/normalize-package-data/2.4.1:
     resolution: {integrity: sha512-Gj7cI7z+98M282Tqmp2K5EIsoouUEzbBJhQQzDE3jSIRk6r9gsz0oUokqIUR4u1R3dMHo0pDHM7sNOHyhulypw==}
@@ -1709,7 +1774,7 @@ packages:
   /@types/sass/1.43.1:
     resolution: {integrity: sha512-BPdoIt1lfJ6B7rw35ncdwBZrAssjcwzI5LByIrYs+tpXlj/CAkuVdRsgZDdP4lq5EjyWzwxZCqAoFyHKFwp32g==}
     dependencies:
-      '@types/node': 16.11.11
+      '@types/node': 17.0.21
     dev: true
 
   /@types/semver/6.2.3:
@@ -3937,7 +4002,7 @@ packages:
   /jsonfile/4.0.0:
     resolution: {integrity: sha1-h3Gq4HmbZAdrdmQPygWPnBDjPss=}
     optionalDependencies:
-      graceful-fs: 4.2.8
+      graceful-fs: 4.2.9
     dev: true
 
   /kind-of/6.0.3:
@@ -3970,7 +4035,7 @@ packages:
     resolution: {integrity: sha512-OfCBkGEw4nN6JLtgRidPX6QxjBQGQf72q3si2uvqyFEMbycSFFHwAZeXx6cJgFM9wmLrf9zBwCP3Ivqa+LLZPw==}
     engines: {node: '>=6'}
     dependencies:
-      graceful-fs: 4.2.8
+      graceful-fs: 4.2.9
       js-yaml: 3.14.1
       pify: 4.0.1
       strip-bom: 3.0.0
@@ -5134,7 +5199,7 @@ packages:
     resolution: {integrity: sha1-dB4kXiMfB8r7b98PEzrfohalAq0=}
     dependencies:
       es6-promise: 3.3.1
-      graceful-fs: 4.2.8
+      graceful-fs: 4.2.9
       mkdirp: 0.5.5
       rimraf: 2.7.1
     dev: true
@@ -5558,8 +5623,8 @@ packages:
       sade: 1.7.4
       source-map: 0.7.3
       svelte: 3.44.2
-      svelte-preprocess: 4.9.8_svelte@3.44.2+typescript@4.5.2
-      typescript: 4.5.2
+      svelte-preprocess: 4.9.8_svelte@3.44.2+typescript@4.5.5
+      typescript: 4.5.5
     transitivePeerDependencies:
       - '@babel/core'
       - coffeescript
@@ -5579,57 +5644,6 @@ packages:
       svelte: '>=3.19.0'
     dependencies:
       svelte: 3.44.2
-
-  /svelte-preprocess/4.9.8_svelte@3.44.2+typescript@4.5.2:
-    resolution: {integrity: sha512-EQS/oRZzMtYdAprppZxY3HcysKh11w54MgA63ybtL+TAZ4hVqYOnhw41JVJjWN9dhPnNjjLzvbZ2tMhTsla1Og==}
-    engines: {node: '>= 9.11.2'}
-    requiresBuild: true
-    peerDependencies:
-      '@babel/core': ^7.10.2
-      coffeescript: ^2.5.1
-      less: ^3.11.3
-      node-sass: '*'
-      postcss: ^7 || ^8
-      postcss-load-config: ^2.1.0 || ^3.0.0
-      pug: ^3.0.0
-      sass: ^1.26.8
-      stylus: ^0.54.7
-      sugarss: ^2.0.0
-      svelte: ^3.23.0
-      typescript: ^3.9.5 || ^4.0.0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-      coffeescript:
-        optional: true
-      less:
-        optional: true
-      node-sass:
-        optional: true
-      postcss:
-        optional: true
-      postcss-load-config:
-        optional: true
-      pug:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      typescript:
-        optional: true
-    dependencies:
-      '@types/pug': 2.0.5
-      '@types/sass': 1.43.1
-      detect-indent: 6.1.0
-      magic-string: 0.25.7
-      sorcery: 0.10.0
-      strip-indent: 3.0.0
-      svelte: 3.44.2
-      typescript: 4.5.2
-    dev: true
 
   /svelte-preprocess/4.9.8_svelte@3.44.2+typescript@4.5.5:
     resolution: {integrity: sha512-EQS/oRZzMtYdAprppZxY3HcysKh11w54MgA63ybtL+TAZ4hVqYOnhw41JVJjWN9dhPnNjjLzvbZ2tMhTsla1Og==}
@@ -5888,12 +5902,6 @@ packages:
   /type-fest/0.8.1:
     resolution: {integrity: sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==}
     engines: {node: '>=8'}
-    dev: true
-
-  /typescript/4.5.2:
-    resolution: {integrity: sha512-5BlMof9H1yGt0P8/WF+wPNw6GfctgGjXp5hkblpyT+8rkASSmkUKMXrxR0Xg8ThVCi/JnHQiKXeBaEwCeQwMFw==}
-    engines: {node: '>=4.2.0'}
-    hasBin: true
     dev: true
 
   /typescript/4.5.5:

@@ -56,7 +56,6 @@ export async function respond(request, options, state = {}) {
 		request,
 		url,
 		params: {},
-		// @ts-expect-error this picks up types that belong to the tests
 		locals: {},
 		platform: state.platform
 	};
