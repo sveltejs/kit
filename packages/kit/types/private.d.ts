@@ -249,11 +249,9 @@ export type MaybePromise<T> = T | Promise<T>;
 
 export type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
 
-export type PayloadScriptAttributes = PayloadScriptAttributesData | PayloadScriptAttributesProps;
-
-type PayloadScriptAttributesData = { type: 'data'; url: string; body?: string };
-
-type PayloadScriptAttributesProps = { type: 'props' };
+export type PayloadScriptAttributes =
+	| { type: 'data'; url: string; body?: string }
+	| { type: 'props' };
 
 export interface Prerendered {
 	pages: Map<
