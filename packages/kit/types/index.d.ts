@@ -110,8 +110,18 @@ export interface HandleError {
 	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
 }
 
+/**
+ * The type of a `load` function exported from `<script context="module">` in a page or layout.
+ *
+ * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the Params generic argument.
+ */
 export interface Load<Params = Record<string, string>, Props = Record<string, any>> {
 	(input: LoadInput<Params>): MaybePromise<Either<Fallthrough, LoadOutput<Props>>>;
+}
+
+export interface Navigation {
+	from: URL;
+	to: URL;
 }
 
 export interface Page<Params extends Record<string, string> = Record<string, string>> {
@@ -122,16 +132,14 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	error: Error | null;
 }
 
-export interface Navigation {
-	from: URL;
-	to: URL;
-}
-
 /**
  * A function exported from an endpoint that corresponds to an
  * HTTP verb (`get`, `put`, `patch`, etc) and handles requests with
  * that method. Note that since 'delete' is a reserved word in
  * JavaScript, delete handles are called `del` instead.
+ *
+ * Note that you can use [generated types](/docs/types#generated)
+ * instead of manually specifying the `Params` generic argument.
  */
 export interface RequestHandler<Params = Record<string, string>, Output extends Body = Body> {
 	(event: RequestEvent<Params>): RequestHandlerOutput<Output>;

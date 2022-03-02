@@ -72,7 +72,7 @@
 		position: relative;
 		margin: 0 auto;
 		padding-top: var(--nav-h);
-		overflow: scroll;
+		overflow: auto;
 		overflow-x: hidden;
 	}
 

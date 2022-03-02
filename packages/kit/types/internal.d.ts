@@ -1,12 +1,12 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import {
-	RequestHandler,
-	Load,
+	Config,
 	ExternalFetch,
 	GetSession,
 	Handle,
 	HandleError,
-	Config
+	Load,
+	RequestHandler
 } from './index';
 import {
 	Either,
@@ -138,6 +138,10 @@ export interface PageData {
 	a: string[];
 	b: string[];
 }
+
+export type PayloadScriptAttributes =
+	| { type: 'data'; url: string; body?: string }
+	| { type: 'props' };
 
 export interface PrerenderDependency {
 	response: Response;

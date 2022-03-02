@@ -6,6 +6,7 @@
 		"dev": "node ../../cli.js dev",
 		"build": "node ../../cli.js build",
 		"preview": "node ../../cli.js preview",
+		"check": "tsc && svelte-check",
 		"test": "npm run test:dev && npm run test:build",
 		"test:dev": "cross-env DEV=true playwright test",
 		"test:build": "playwright test"
@@ -13,7 +14,9 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"cross-env": "^7.0.3",
-		"svelte": "^3.43.0"
+		"svelte": "^3.43.0",
+		"svelte-check": "^2.2.10",
+		"typescript": "~4.5.5"
 	},
 	"type": "module"
 }

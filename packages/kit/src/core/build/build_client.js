@@ -34,8 +34,8 @@ export async function build_client({
 	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${config.kit.version.pollInterval}`;
 
 	create_app({
+		config,
 		manifest_data,
-		output: `${SVELTE_KIT}/generated`,
 		cwd
 	});
 

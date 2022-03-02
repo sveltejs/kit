@@ -1,6 +1,7 @@
 packages:
   - 'packages/*'
   - 'sites/*'
+  - 'packages/kit/test/apps/*'
   - 'packages/kit/test/prerendering/*'
   - 'packages/create-svelte/templates/*'
   - '.github/actions/*'
