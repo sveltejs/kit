@@ -116,8 +116,14 @@ export interface HandleError {
  *
  * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the Params generic argument.
  */
-export interface Load<Params = Record<string, string>, Props = Record<string, any>> {
-	(input: LoadInput<Params>): MaybePromise<Either<Fallthrough, LoadOutput<Props>>>;
+export interface Load<
+	Params extends Record<string, string> = Record<string, string>,
+	InputProps extends Record<string, any> = Record<string, any>,
+	OutputProps extends Record<string, any> = InputProps
+> {
+	(input: LoadInput<Params, InputProps>): MaybePromise<
+		Either<Fallthrough, LoadOutput<OutputProps>>
+	>;
 }
 
 export interface Navigation {

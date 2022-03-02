@@ -220,10 +220,10 @@ export type JSONValue =
 	| JSONValue[]
 	| JSONObject;
 
-export interface LoadInput<Params = Record<string, string>> {
+export interface LoadInput<Params = Record<string, string>, Props = Record<string, any>> {
 	url: URL;
 	params: Params;
-	props: Record<string, any>;
+	props: Props;
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: App.Session;
 	stuff: Partial<App.Stuff>;
