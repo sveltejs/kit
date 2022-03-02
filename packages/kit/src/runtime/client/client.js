@@ -166,10 +166,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		}
 
-		location.href = url.href;
-		return new Promise(() => {
-			/* never resolves */
-		});
+		await traditional_navigation(url);
 	}
 
 	/** @param {URL} url */
@@ -205,8 +202,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		if (!navigation_result) {
-			location.href = intent.url.href;
-			return;
+			await traditional_navigation(intent.url);
+			return; // unnecessary, but TypeScript prefers it this way
 		}
 
 		// abort if user navigated during update
@@ -228,7 +225,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 						intent.url.pathname
 					]);
 				} else {
-					location.href = new URL(navigation_result.redirect, location.href).href;
+					await traditional_navigation(new URL(navigation_result.redirect, location.href));
 				}
 
 				return;
@@ -236,8 +233,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		} else if (navigation_result.props?.page?.status >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
-				location.href = intent.url.href;
-				return;
+				await traditional_navigation(intent.url);
 			}
 		}
 
@@ -846,10 +842,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		if (!owns(url)) {
-			location.href = url.href;
-			return new Promise(() => {
-				// never resolves
-			});
+			await traditional_navigation(url);
 		}
 
 		const pathname = normalize_path(url.pathname, trailing_slash);
@@ -894,6 +887,17 @@ export function create_client({ target, session, base, trailing_slash }) {
 			details.state[INDEX_KEY] = current_history_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', intent.url);
 		}
+	}
+
+	/**
+	 * Loads `href` the old-fashioned way, with a full page reload.
+	 * Returns a `Promise` that never resolves (to prevent any
+	 * subsequent work, e.g. history manipulation, from happening)
+	 * @param {URL} url
+	 */
+	function traditional_navigation(url) {
+		location.href = url.href;
+		return new Promise(() => {});
 	}
 
 	return {
@@ -1046,11 +1050,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 				const is_svg_a_element = a instanceof SVGAElement;
 				const url = get_href(a);
-				const url_string = url.toString();
-				if (url_string === location.href) {
-					if (!location.hash) event.preventDefault();
-					return;
-				}
 
 				// Ignore if url does not have origin (e.g. `mailto:`, `tel:`.)
 				// MEMO: Without this condition, firefox will open mailer twice.
@@ -1068,6 +1067,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 				// Ignore if <a> has a target
 				if (is_svg_a_element ? a.target.baseVal : a.target) return;
+
+				if (url.href === location.href) {
+					if (!location.hash) event.preventDefault();
+					return;
+				}
 
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired
@@ -1221,8 +1225,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (result.redirect) {
 				// this is a real edge case — `load` would need to return
 				// a redirect but only in the browser
-				location.href = new URL(result.redirect, location.href).href;
-				return;
+				await traditional_navigation(new URL(result.redirect, location.href));
 			}
 
 			initialize(result);
