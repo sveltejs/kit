@@ -194,6 +194,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 		let navigation_result = await get_navigation_result(intent, no_cache);
 
 		if (!navigation_result && intent.url.pathname === location.pathname) {
+			// this could happen in SPA fallback mode if the user navigated to
+			// `/non-existent-page`. if we fall back to reloading the page, it
+			// will create an infinite loop. so whereas we normally handle
+			// unknown routes by going to the server, in this special case
+			// we render a client-side error page instead
 			navigation_result = await load_root_error_page({
 				status: 404,
 				error: new Error(`Not found: ${intent.url.pathname}`),
