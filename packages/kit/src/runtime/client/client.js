@@ -166,7 +166,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		}
 
-		await traditional_navigation(url);
+		await native_navigation(url);
 	}
 
 	/** @param {URL} url */
@@ -207,7 +207,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		if (!navigation_result) {
-			await traditional_navigation(intent.url);
+			await native_navigation(intent.url);
 			return; // unnecessary, but TypeScript prefers it this way
 		}
 
@@ -230,7 +230,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 						intent.url.pathname
 					]);
 				} else {
-					await traditional_navigation(new URL(navigation_result.redirect, location.href));
+					await native_navigation(new URL(navigation_result.redirect, location.href));
 				}
 
 				return;
@@ -238,7 +238,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		} else if (navigation_result.props?.page?.status >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
-				await traditional_navigation(intent.url);
+				await native_navigation(intent.url);
 			}
 		}
 
@@ -846,7 +846,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		if (!owns(url)) {
-			await traditional_navigation(url);
+			await native_navigation(url);
 		}
 
 		const pathname = normalize_path(url.pathname, trailing_slash);
@@ -899,7 +899,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * subsequent work, e.g. history manipulation, from happening)
 	 * @param {URL} url
 	 */
-	function traditional_navigation(url) {
+	function native_navigation(url) {
 		location.href = url.href;
 		return new Promise(() => {});
 	}
@@ -1229,7 +1229,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (result.redirect) {
 				// this is a real edge case — `load` would need to return
 				// a redirect but only in the browser
-				await traditional_navigation(new URL(result.redirect, location.href));
+				await native_navigation(new URL(result.redirect, location.href));
 			}
 
 			initialize(result);
