@@ -49,7 +49,7 @@ export function write_root(manifest_data, output) {
 				export let page;
 
 				export let components;
-				${levels.map((l) => `export let props_${l} = null;`).join('\n\t\t\t')}
+				${levels.map((l) => `export let props_${l} = null;`).join('\n\t\t\t\t')}
 
 				setContext('__svelte__', stores);
 
@@ -73,7 +73,7 @@ export function write_root(manifest_data, output) {
 				});
 			</script>
 
-			${pyramid.replace(/\n/g, '\n\t\t')}
+			${pyramid.replace(/\n/g, '\n\t\t\t')}
 
 			{#if mounted}
 				<div id="svelte-announcer" aria-live="assertive" aria-atomic="true" style="position: absolute; left: 0; top: 0; clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap; width: 1px; height: 1px">

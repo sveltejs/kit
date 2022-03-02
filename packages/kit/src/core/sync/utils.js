@@ -19,5 +19,7 @@ export function write_if_changed(file, code) {
 
 /** @param {string} str */
 export function trim(str) {
-	return str.replace(/^\t\t/gm, '').trim();
+	const indentation = /** @type {RegExpExecArray} */ (/\n?(\s*)/.exec(str))[1];
+	const pattern = new RegExp(`^${indentation}`, 'gm');
+	return str.replace(pattern, '').trim();
 }

@@ -46,7 +46,8 @@ export function write_types(config, manifest_data) {
 	});
 
 	shadow_types.forEach(({ params, type }, key) => {
-		const arg = `{ ${params.map((param) => `${param}: string`).join('; ')} }`;
+		const arg =
+			params.length > 0 ? `{ ${params.map((param) => `${param}: string`).join('; ')} }` : '{}';
 
 		const imports = [
 			type !== 'page' && 'RequestHandler as GenericRequestHandler',

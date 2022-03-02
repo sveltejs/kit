@@ -21,7 +21,7 @@ export function write_manifest(manifest_data, base, output) {
 
 				return `() => import(${s(get_path(component))})`;
 			})
-			.join(',\n\t\t\t\t')}
+			.join(',\n\t\t\t\t\t')}
 	]`.replace(/^\t/gm, '');
 
 	/** @param {string[]} parts */
