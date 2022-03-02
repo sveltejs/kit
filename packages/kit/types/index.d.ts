@@ -114,17 +114,17 @@ export interface Load<Params = Record<string, string>, Props = Record<string, an
 	(input: LoadInput<Params>): MaybePromise<Either<Fallthrough, LoadOutput<Props>>>;
 }
 
+export interface Navigation {
+	from: URL;
+	to: URL;
+}
+
 export interface Page<Params extends Record<string, string> = Record<string, string>> {
 	url: URL;
 	params: Params;
 	stuff: App.Stuff;
 	status: number;
 	error: Error | null;
-}
-
-export interface Navigation {
-	from: URL;
-	to: URL;
 }
 
 /**

@@ -1,12 +1,12 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import {
-	RequestHandler,
-	Load,
+	Config,
 	ExternalFetch,
 	GetSession,
 	Handle,
 	HandleError,
-	Config
+	Load,
+	RequestHandler
 } from './index';
 import {
 	Either,
