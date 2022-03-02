@@ -68,20 +68,19 @@ export const differential_headers_assignment: RequestHandler = () => {
 	}
 };
 
-// TODO https://github.com/sveltejs/kit/issues/1997
-// interface ExamplePost {
-// 	title: string;
-// 	description: string;
-// 	published_date?: string;
-// 	author_name?: string;
-// 	author_link?: string;
-// }
-// // valid - should not be any different
-// export const generic_case: RequestHandler<Record<string, string>, ExamplePost> = () => {
-// 	return {
-// 		body: {} as ExamplePost
-// 	};
-// };
+interface ExamplePost {
+	title: string;
+	description: string;
+	published_date?: string;
+	author_name?: string;
+	author_link?: string;
+}
+// valid - should not be any different
+export const generic_case: RequestHandler<Record<string, string>, ExamplePost> = () => {
+	return {
+		body: {} as ExamplePost
+	};
+};
 
 // --- invalid cases ---
 
