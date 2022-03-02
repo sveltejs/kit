@@ -30,6 +30,10 @@ export interface AdapterEntry {
 
 export type Body = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
 
+export type BodyValidator<T> = {
+	[P in keyof T]: T[P] extends JSONValue ? BodyValidator<T[P]> : never;
+};
+
 export interface Builder {
 	log: Logger;
 	rimraf(dir: string): void;
