@@ -3,7 +3,6 @@ import vite from 'vite';
 import { s } from '../../utils/misc.js';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
-import { SVELTE_KIT } from '../constants.js';
 
 /**
  * @param {{
@@ -32,7 +31,7 @@ export async function build_service_worker(
 		}
 	}
 
-	const service_worker = `${cwd}/${SVELTE_KIT}/generated/service-worker.js`;
+	const service_worker = `${config.kit.outDir}/generated/service-worker.js`;
 
 	fs.writeFileSync(
 		service_worker,

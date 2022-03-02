@@ -43,6 +43,7 @@ const config = {
 			parameter: '_method',
 			allowed: []
 		},
+		outDir: '.svelte-kit',
 		package: {
 			dir: 'package',
 			emitTypes: true,
@@ -169,6 +170,10 @@ See [HTTP Method Overrides](/docs/routing#endpoints-http-method-overrides). An o
 
 - `parameter` — query parameter name to use for passing the intended method value
 - `allowed` - array of HTTP methods that can be used when overriding the original request method
+
+### outDir
+
+The directory that SvelteKit writes files to during `dev` and `build`. You should exclude this directory from version control.
 
 ### package
 

@@ -5,13 +5,13 @@ import * as assert from 'uvu/assert';
 import glob from 'tiny-glob/sync.js';
 import { create_builder } from './builder.js';
 import { fileURLToPath } from 'url';
-import { SVELTE_KIT } from '../constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
 test('copy files', () => {
 	const cwd = join(__dirname, 'fixtures/basic');
+	const outDir = join(cwd, '.svelte-kit');
 
 	/** @type {import('types').Config} */
 	const mocked = {
@@ -20,12 +20,12 @@ test('copy files', () => {
 			appDir: '_app',
 			files: {
 				assets: join(__dirname, 'fixtures/basic/static')
-			}
+			},
+			outDir
 		}
 	};
 
 	const builder = create_builder({
-		cwd,
 		config: /** @type {import('types').ValidatedConfig} */ (mocked),
 		// @ts-expect-error
 		build_data: {},
@@ -48,18 +48,12 @@ test('copy files', () => {
 	rmSync(dest, { recursive: true, force: true });
 	builder.writeClient(dest);
 
-	assert.equal(
-		glob('**', { cwd: `${cwd}/${SVELTE_KIT}/output/client` }),
-		glob('**', { cwd: dest })
-	);
+	assert.equal(glob('**', { cwd: `${outDir}/output/client` }), glob('**', { cwd: dest }));
 
 	rmSync(dest, { recursive: true, force: true });
 	builder.writeServer(dest);
 
-	assert.equal(
-		glob('**', { cwd: `${cwd}/${SVELTE_KIT}/output/server` }),
-		glob('**', { cwd: dest })
-	);
+	assert.equal(glob('**', { cwd: `${outDir}/output/server` }), glob('**', { cwd: dest }));
 
 	rmSync(dest, { force: true, recursive: true });
 });

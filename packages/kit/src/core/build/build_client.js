@@ -6,7 +6,6 @@ import { print_config_conflicts } from '../config/index.js';
 import { create_app } from '../create_app/index.js';
 import { copy_assets, get_aliases } from '../utils.js';
 import { create_build, find_deps } from './utils.js';
-import { SVELTE_KIT } from '../constants.js';
 import { posixify } from '../../utils/filesystem.js';
 
 /**
@@ -39,7 +38,7 @@ export async function build_client({
 		cwd
 	});
 
-	copy_assets(`${SVELTE_KIT}/runtime`);
+	copy_assets(path.join(config.kit.outDir, 'runtime'));
 
 	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
 

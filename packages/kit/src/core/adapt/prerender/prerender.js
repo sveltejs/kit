@@ -1,9 +1,8 @@
 import { readFileSync, writeFileSync } from 'fs';
-import { dirname, join, resolve as resolve_path } from 'path';
+import { dirname, join } from 'path';
 import { pathToFileURL, URL } from 'url';
 import { mkdirp } from '../../../utils/filesystem.js';
 import { installFetch } from '../../../install-fetch.js';
-import { SVELTE_KIT } from '../../constants.js';
 import { is_root_relative, normalize_path, resolve } from '../../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
@@ -41,7 +40,6 @@ const REDIRECT = 3;
 
 /**
  * @param {{
- *   cwd: string;
  *   out: string;
  *   log: Logger;
  *   config: import('types').ValidatedConfig;
@@ -50,7 +48,7 @@ const REDIRECT = 3;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts
  */
-export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
+export async function prerender({ out, log, config, build_data, fallback, all }) {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -65,7 +63,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	installFetch();
 
-	const server_root = resolve_path(cwd, `${SVELTE_KIT}/output`);
+	const server_root = join(config.kit.outDir, 'output');
 
 	/** @type {import('types').ServerModule} */
 	const { Server, override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);

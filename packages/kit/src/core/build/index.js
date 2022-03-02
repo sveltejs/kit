@@ -2,8 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { mkdirp, rimraf, posixify } from '../../utils/filesystem.js';
 import create_manifest_data from '../create_manifest_data/index.js';
-import { SVELTE_KIT } from '../constants.js';
-import { runtime, resolve_entry } from '../utils.js';
+import { get_runtime_path, resolve_entry } from '../utils.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { build_service_worker } from './build_service_worker.js';
 import { build_client } from './build_client.js';
@@ -17,11 +16,11 @@ import { generate_tsconfig } from '../tsconfig.js';
 export async function build(config) {
 	const cwd = process.cwd(); // TODO is this necessary?
 
-	const build_dir = path.resolve(`${SVELTE_KIT}/build`);
+	const build_dir = path.join(config.kit.outDir, 'build');
 	rimraf(build_dir);
 	mkdirp(build_dir);
 
-	const output_dir = path.resolve(`${SVELTE_KIT}/output`);
+	const output_dir = path.join(config.kit.outDir, 'output');
 	rimraf(output_dir);
 	mkdirp(output_dir);
 
@@ -41,7 +40,7 @@ export async function build(config) {
 			cwd
 		}),
 		output_dir,
-		client_entry_file: path.relative(cwd, `${runtime}/client/start.js`),
+		client_entry_file: path.relative(cwd, `${get_runtime_path(config)}/client/start.js`),
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
 		service_worker_register: config.kit.serviceWorker.register
 	};

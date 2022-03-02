@@ -71,6 +71,7 @@ const get_defaults = (prefix = '') => ({
 			parameter: '_method',
 			allowed: []
 		},
+		outDir: join(prefix, '.svelte-kit'),
 		package: {
 			dir: 'package',
 			emitTypes: true

@@ -2,25 +2,24 @@ import fs from 'fs';
 import path from 'path';
 import colors from 'kleur';
 import { mkdirp, posixify } from '../utils/filesystem.js';
-import { SVELTE_KIT } from './constants.js';
 
 /** @param {string} file */
 const exists = (file) => fs.existsSync(file) && file;
 
 /** @param {import('types').ValidatedConfig} config */
 export function generate_tsconfig(config) {
-	const out = path.resolve(SVELTE_KIT, 'tsconfig.json');
+	const out = path.join(config.kit.outDir, 'tsconfig.json');
 	const user_file = exists('tsconfig.json') || exists('jsconfig.json');
 
 	if (user_file) validate(config, out, user_file);
 
-	mkdirp(SVELTE_KIT);
+	mkdirp(config.kit.outDir);
 
 	/** @param {string} file */
 	const project_relative = (file) => posixify(path.relative('.', file));
 
 	/** @param {string} file */
-	const config_relative = (file) => posixify(path.relative(SVELTE_KIT, file));
+	const config_relative = (file) => posixify(path.relative(config.kit.outDir, file));
 
 	const dirs = new Set([
 		project_relative(path.dirname(config.kit.files.routes)),
@@ -36,7 +35,7 @@ export function generate_tsconfig(config) {
 	});
 
 	fs.writeFileSync(
-		`${SVELTE_KIT}/tsconfig.json`,
+		out,
 		JSON.stringify(
 			{
 				compilerOptions: {
@@ -117,7 +116,7 @@ function validate(config, out, user_file) {
 		}
 	} else {
 		let relative = posixify(path.relative('.', out));
-		if (relative.startsWith(SVELTE_KIT)) relative = './' + relative;
+		if (!relative.startsWith('./')) relative = './' + relative;
 
 		console.warn(
 			colors

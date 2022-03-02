@@ -3,14 +3,14 @@ import path from 'path';
 import colors from 'kleur';
 import { copy } from '../utils/filesystem.js';
 import { fileURLToPath } from 'url';
-import { SVELTE_KIT } from './constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const runtime = process.env.BUNDLED
-	? posixify_path(path.resolve(`${SVELTE_KIT}/runtime`))
-	: posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
+export const get_runtime_path = process.env.BUNDLED
+	? /** @param {import('types').ValidatedConfig} config */ (config) =>
+			posixify_path(path.join(config.kit.outDir, 'runtime'))
+	: () => posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
 
 /** @param {string} str */
 function posixify_path(str) {
@@ -104,8 +104,8 @@ export function get_mime_lookup(manifest_data) {
 /** @param {import('types').ValidatedConfig} config */
 export function get_aliases(config) {
 	const alias = {
-		__GENERATED__: path.posix.resolve(`${SVELTE_KIT}/generated`),
-		$app: `${runtime}/app`,
+		__GENERATED__: path.posix.join(config.kit.outDir, 'generated'),
+		$app: `${get_runtime_path(config)}/app`,
 		$lib: config.kit.files.lib
 	};
 

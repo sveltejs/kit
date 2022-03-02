@@ -55,6 +55,7 @@ export interface Config {
 			parameter?: string;
 			allowed?: string[];
 		};
+		outDir?: string;
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;
