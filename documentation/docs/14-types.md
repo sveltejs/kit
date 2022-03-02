@@ -73,4 +73,4 @@ export async function get({ params }) {
 
 > For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `.svelte-kit/tsconfig.json`:
 >
->     { "extends": ".svelte-kit/tsconfig.json" }
+>     { "extends": "./.svelte-kit/tsconfig.json" }
