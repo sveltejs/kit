@@ -6,7 +6,6 @@ const redirects = {
 /** @type {import('@sveltejs/kit').Handle} */
 export function handle({ event, resolve }) {
 	if (event.url.pathname in redirects) {
-		// return Response.redirect(redirects[event.url.pathname], 308);
 		return new Response(undefined, {
 			status: 308,
 			headers: {
