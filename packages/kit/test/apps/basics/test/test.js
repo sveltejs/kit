@@ -504,6 +504,18 @@ test.describe.parallel('Shadowed pages', () => {
 		await clicknav('[href="/shadowed/dynamic/bar"]');
 		expect(await page.textContent('h1')).toBe('slug: bar');
 	});
+
+	test('Shadow fallthrough shadow', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/fallthrough');
+		await clicknav('[href="/shadowed/fallthrough/b"]');
+		expect(await page.textContent('h2')).toBe('b-b');
+	});
+
+	test('Shadow fallthrough to  no_shadow', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/fallthrough');
+		await clicknav('[href="/shadowed/fallthrough/c"]');
+		expect(await page.textContent('h2')).toBe('c');
+	});
 });
 
 test.describe.parallel('Endpoints', () => {

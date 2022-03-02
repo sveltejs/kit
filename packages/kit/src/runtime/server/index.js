@@ -153,6 +153,7 @@ export async function respond(request, options, state = {}) {
 
 				const shadow_key = request.headers.get('x-sveltekit-load');
 				let from_fallthrough = false;
+				let route_index = -1;
 
 				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
@@ -162,6 +163,7 @@ export async function respond(request, options, state = {}) {
 					/** @type {Response | undefined} */
 					let response;
 					const is_page = route.type === 'page';
+					if (is_page) route_index++;
 					if (is_data_request && is_page && route.shadow) {
 						if (!from_fallthrough && shadow_key && shadow_key !== route.key) continue;
 						if (route.shadow) {
@@ -184,7 +186,7 @@ export async function respond(request, options, state = {}) {
 								if (from_fallthrough && response.ok) {
 									const headers = new Headers(response.headers);
 									// client-site will fallthrough to the route
-									headers.set('x-sveltekit-load', route.key);
+									headers.set('x-sveltekit-load', `${route_index}`);
 									response = new Response(response.body, {
 										status: response.status,
 										headers
@@ -201,7 +203,7 @@ export async function respond(request, options, state = {}) {
 						if (is_page) {
 							if (from_fallthrough) {
 								const headers = new Headers({
-									'x-sveltekit-load': route.key
+									'x-sveltekit-load': `${route_index}`
 								});
 								// next match not a shadow  so fallthrough at client-side
 								return new Response(undefined, {
@@ -256,7 +258,7 @@ export async function respond(request, options, state = {}) {
 				// no match route
 				if (from_fallthrough) {
 					const headers = new Headers({
-						'x-sveltekit-load': '.'
+						'x-sveltekit-load': '-1'
 					});
 					// next match not a shadow  so fallthrough at client-side
 					return new Response(undefined, {

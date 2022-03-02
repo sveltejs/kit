@@ -724,11 +724,11 @@ export class Renderer {
 	/**
 	 * @param {import('./types').NavigationCandidate} selected
 	 * @param {boolean} no_cache
-	 * @param {string} [next_route_key]
-	 * @param {Record<string, any>} [next_route_props]
+	 * @param {string} [fallthrough_target]
+	 * @param {Record<string, any>} [fallthrough_props]
 	 * @returns {Promise<import('./types').NavigationResult | undefined>} undefined if fallthrough
 	 */
-	async _load({ route, info }, no_cache, next_route_key, next_route_props) {
+	async _load({ route, info }, no_cache, fallthrough_target, fallthrough_props) {
 		const { url, path, routes } = info;
 		const key = url.pathname + url.search;
 		if (!no_cache) {
@@ -790,8 +790,8 @@ export class Renderer {
 					const is_shadow_page = shadow_key !== undefined && i === a.length - 1;
 
 					if (is_shadow_page) {
-						if (next_route_key !== undefined && shadow_key === next_route_key) {
-							if (next_route_props) props = next_route_props;
+						if (fallthrough_target !== undefined && shadow_key === fallthrough_target) {
+							if (fallthrough_props) props = fallthrough_props;
 						} else {
 							const res = await fetch(
 								`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
@@ -804,7 +804,7 @@ export class Renderer {
 							);
 							if (res.ok) {
 								const redirect = res.headers.get('x-sveltekit-location');
-								const route_key = res.headers.get('x-sveltekit-load');
+								const route_index = res.headers.get('x-sveltekit-load');
 								if (redirect) {
 									return {
 										redirect,
@@ -813,15 +813,15 @@ export class Renderer {
 									};
 								}
 								// '.' means fallthrough from server-side  not match any router
-								if (route_key === '.') return;
-								props = await res.json();
-								if (route_key) {
-									const next_route = routes.find((r) => r[4] === route_key);
+								if (route_index === '-1') return;
+								props = res.status === 204 ? {} : await res.json();
+								if (route_index) {
+									const next_route = routes[+route_index];
 									if (next_route) {
 										return await this._load(
 											{ route: next_route, info },
 											no_cache,
-											route_key,
+											next_route[4],
 											props
 										);
 									}
