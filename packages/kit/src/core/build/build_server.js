@@ -4,9 +4,8 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { mkdirp, posixify } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
 import { load_template, print_config_conflicts } from '../config/index.js';
-import { get_aliases, resolve_entry, runtime } from '../utils.js';
+import { get_aliases, get_runtime_path, resolve_entry } from '../utils.js';
 import { create_build, find_deps } from './utils.js';
-import { SVELTE_KIT } from '../constants.js';
 import { s } from '../../utils/misc.js';
 
 /**
@@ -14,11 +13,12 @@ import { s } from '../../utils/misc.js';
  *   hooks: string;
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
+ *   runtime: string;
  *   template: string;
  * }} opts
  * @returns
  */
-const server_template = ({ config, hooks, has_service_worker, template }) => `
+const server_template = ({ config, hooks, has_service_worker, runtime, template }) => `
 import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
@@ -133,7 +133,7 @@ export async function build_server(
 ) {
 	let hooks_file = resolve_entry(config.kit.files.hooks);
 	if (!hooks_file || !fs.existsSync(hooks_file)) {
-		hooks_file = path.resolve(cwd, `${SVELTE_KIT}/build/hooks.js`);
+		hooks_file = path.join(config.kit.outDir, 'build/hooks.js');
 		fs.writeFileSync(hooks_file, '');
 	}
 
@@ -177,6 +177,7 @@ export async function build_server(
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: service_worker_register && !!service_worker_entry_file,
+			runtime: get_runtime_path(config),
 			template: load_template(cwd, config)
 		})
 	);

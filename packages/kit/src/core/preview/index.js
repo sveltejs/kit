@@ -1,12 +1,12 @@
 import fs from 'fs';
 import http from 'http';
 import https from 'https';
-import { join, resolve } from 'path';
+import { join } from 'path';
 import sirv from 'sirv';
 import { pathToFileURL } from 'url';
 import { getRequest, setResponse } from '../../node.js';
 import { installFetch } from '../../install-fetch.js';
-import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
+import { SVELTE_KIT_ASSETS } from '../constants.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -33,8 +33,8 @@ export async function preview({
 }) {
 	installFetch();
 
-	const index_file = resolve(cwd, `${SVELTE_KIT}/output/server/index.js`);
-	const manifest_file = resolve(cwd, `${SVELTE_KIT}/output/server/manifest.js`);
+	const index_file = join(config.kit.outDir, 'output/server/index.js');
+	const manifest_file = join(config.kit.outDir, 'output/server/manifest.js');
 
 	/** @type {import('types').ServerModule} */
 	const { Server, override } = await import(pathToFileURL(index_file).href);
@@ -49,7 +49,7 @@ export async function preview({
 				return next();
 		  };
 
-	const assets_handler = sirv(resolve(cwd, `${SVELTE_KIT}/output/client`), {
+	const assets_handler = sirv(join(config.kit.outDir, 'output/client'), {
 		maxAge: 31536000,
 		immutable: true
 	});

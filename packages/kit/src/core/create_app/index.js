@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { s } from '../../utils/misc.js';
 import { mkdirp } from '../../utils/filesystem.js';
-import { SVELTE_KIT } from '../constants.js';
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -29,7 +28,7 @@ export function write_if_changed(file, code) {
  * }} options
  */
 export function create_app({ config, manifest_data, cwd = process.cwd() }) {
-	const output = `${SVELTE_KIT}/generated`;
+	const output = path.join(config.kit.outDir, 'generated');
 	const base = path.relative(cwd, output);
 
 	write_if_changed(`${output}/manifest.js`, generate_client_manifest(manifest_data, base));
@@ -248,7 +247,7 @@ function create_types(config, manifest_data) {
 			.filter(Boolean)
 			.join(', ');
 
-		const file = `${SVELTE_KIT}/types/${key || 'index'}.d.ts`;
+		const file = `${config.kit.outDir}/types/${key || 'index'}.d.ts`;
 		const content = [
 			'// this file is auto-generated',
 			`import type { ${imports} } from '@sveltejs/kit';`,

@@ -1,4 +1,3 @@
-import { SVELTE_KIT } from '../constants.js';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { prerender } from './prerender/prerender.js';
 import { generate_manifest } from '../generate_manifest/index.js';
@@ -118,15 +117,15 @@ export function create_builder({ cwd, config, build_data, log }) {
 		},
 
 		getBuildDirectory(name) {
-			return `${cwd}/${SVELTE_KIT}/${name}`;
+			return `${config.kit.outDir}/${name}`;
 		},
 
 		getClientDirectory() {
-			return `${cwd}/${SVELTE_KIT}/output/client`;
+			return `${config.kit.outDir}/output/client`;
 		},
 
 		getServerDirectory() {
-			return `${cwd}/${SVELTE_KIT}/output/server`;
+			return `${config.kit.outDir}/output/server`;
 		},
 
 		getStaticDirectory() {
@@ -134,13 +133,13 @@ export function create_builder({ cwd, config, build_data, log }) {
 		},
 
 		writeClient(dest) {
-			return copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, {
+			return copy(`${config.kit.outDir}/output/client`, dest, {
 				filter: (file) => file[0] !== '.'
 			});
 		},
 
 		writeServer(dest) {
-			return copy(`${cwd}/${SVELTE_KIT}/output/server`, dest, {
+			return copy(`${config.kit.outDir}/output/server`, dest, {
 				filter: (file) => file[0] !== '.'
 			});
 		},
