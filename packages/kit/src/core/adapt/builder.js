@@ -158,7 +158,6 @@ export function create_builder({ cwd, config, build_data, log }) {
 			const prerendered = await prerender({
 				out: dest,
 				all,
-				cwd,
 				config,
 				build_data,
 				fallback,

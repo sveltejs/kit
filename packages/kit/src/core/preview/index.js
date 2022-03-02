@@ -24,13 +24,7 @@ const mutable = (dir) =>
  *   cwd?: string;
  * }} opts
  */
-export async function preview({
-	port,
-	host,
-	config,
-	https: use_https = false,
-	cwd = process.cwd()
-}) {
+export async function preview({ port, host, config, https: use_https = false }) {
 	installFetch();
 
 	const index_file = join(config.kit.outDir, 'output/server/index.js');
