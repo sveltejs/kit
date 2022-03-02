@@ -63,7 +63,7 @@ export function resolve_entry(entry) {
 	return null;
 }
 
-/** @param {import('./sync/sync.js').ManifestData} manifest_data */
+/** @param {import('types').ManifestData} manifest_data */
 export function get_mime_lookup(manifest_data) {
 	/** @type {Record<string, string>} */
 	const mime = {};

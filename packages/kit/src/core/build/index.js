@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { mkdirp, rimraf, posixify } from '../../utils/filesystem.js';
-import { sync } from '../sync/sync.js';
+import * as sync from '../sync/sync.js';
 import { get_runtime_path, resolve_entry } from '../utils.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { build_service_worker } from './build_service_worker.js';
@@ -23,7 +23,7 @@ export async function build(config) {
 	rimraf(output_dir);
 	mkdirp(output_dir);
 
-	const { manifest_data } = sync(config);
+	const { manifest_data } = sync.all(config);
 
 	const options = {
 		cwd,
