@@ -12,6 +12,7 @@ import { get_mime_lookup, get_runtime_path, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { load_template } from '../config/index.js';
 import { sequence } from '../../hooks.js';
+import { posixify } from '../../utils/filesystem.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -235,12 +236,12 @@ export async function create_plugin(config, cwd) {
 						// can get loaded twice via different URLs, which causes failures. Might
 						// require changes to Vite to fix
 						const { default: root } = await vite.ssrLoadModule(
-							'/' + path.relative(cwd, `${config.kit.outDir}/generated/root.svelte`)
+							`/${posixify(path.relative(cwd, `${config.kit.outDir}/generated/root.svelte`))}`
 						);
 
 						const paths = await vite.ssrLoadModule(
 							process.env.BUNDLED
-								? '/' + path.relative(cwd, `${config.kit.outDir}/runtime/paths.js`)
+								? `/${posixify(path.relative(cwd, `${config.kit.outDir}/runtime/paths.js`))}`
 								: `/@fs${runtime}/paths.js`
 						);
 
