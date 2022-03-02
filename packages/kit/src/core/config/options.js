@@ -142,6 +142,8 @@ const options = object(
 				})
 			}),
 
+			outDir: string('.svelte-kit'),
+
 			package: object({
 				dir: string('package'),
 				// excludes all .d.ts and filename starting with _
