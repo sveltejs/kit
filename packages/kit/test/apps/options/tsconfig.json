@@ -7,5 +7,5 @@
 			"types": ["../../../types/internal"]
 		}
 	},
-	"extends": "./.svelte-kit/tsconfig.json"
+	"extends": "./.custom-out-dir/tsconfig.json"
 }

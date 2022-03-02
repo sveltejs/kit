@@ -19,7 +19,7 @@ export function generate_tsconfig(config) {
 	const project_relative = (file) => posixify(path.relative('.', file));
 
 	/** @param {string} file */
-	const config_relative = (file) => posixify(path.join(config.kit.outDir, file));
+	const config_relative = (file) => posixify(path.relative(config.kit.outDir, file));
 
 	const dirs = new Set([
 		project_relative(path.dirname(config.kit.files.routes)),
