@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import colors from 'kleur';
-import { mkdirp } from '../utils/filesystem.js';
+import { mkdirp, posixify } from '../utils/filesystem.js';
 import { SVELTE_KIT } from './constants.js';
 
 /** @param {string} file */
@@ -17,10 +17,10 @@ export function generate_tsconfig(config) {
 	mkdirp(SVELTE_KIT);
 
 	/** @param {string} file */
-	const project_relative = (file) => path.relative('.', file);
+	const project_relative = (file) => posixify(path.relative('.', file));
 
 	/** @param {string} file */
-	const config_relative = (file) => path.relative(SVELTE_KIT, file);
+	const config_relative = (file) => posixify(path.relative(SVELTE_KIT, file));
 
 	const dirs = new Set([
 		project_relative(path.dirname(config.kit.files.routes)),
