@@ -1,15 +1,21 @@
 import vite from 'vite';
 
+/**
+ * @typedef {import('rollup').RollupOutput} RollupOutput
+ * @typedef {import('rollup').OutputChunk} OutputChunk
+ * @typedef {import('rollup').OutputAsset} OutputAsset
+ */
+
 /** @param {import('vite').UserConfig} config */
 export async function create_build(config) {
-	const { output } = /** @type {import('rollup').RollupOutput} */ (await vite.build(config));
+	const { output } = /** @type {RollupOutput} */ (await vite.build(config));
 
-	const chunks = /** @type {import('rollup').OutputChunk[]} */ (
-		output.filter((output) => output.type === 'chunk')
+	const chunks = output.filter(
+		/** @returns {output is OutputChunk} */ (output) => output.type === 'chunk'
 	);
 
-	const assets = /** @type {import('rollup').OutputAsset[]} */ (
-		output.filter((output) => output.type === 'asset')
+	const assets = output.filter(
+		/** @returns {output is OutputAsset} */ (output) => output.type === 'asset'
 	);
 
 	return { chunks, assets };
