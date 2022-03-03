@@ -3,8 +3,7 @@ import path from 'path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
-import { create_app } from '../create_app/index.js';
-import { copy_assets, get_aliases } from '../utils.js';
+import { get_aliases } from '../utils.js';
 import { create_build, find_deps } from './utils.js';
 import { posixify } from '../../utils/filesystem.js';
 
@@ -31,14 +30,6 @@ export async function build_client({
 	process.env.VITE_SVELTEKIT_APP_VERSION = config.kit.version.name;
 	process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${config.kit.appDir}/version.json`;
 	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${config.kit.version.pollInterval}`;
-
-	create_app({
-		config,
-		manifest_data,
-		cwd
-	});
-
-	copy_assets(path.join(config.kit.outDir, 'runtime'));
 
 	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
 

@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.291
+
+### Patch Changes
+
+- Focus on `body` instead of `html` on navigation due to issues on Firefox ([#4184](https://github.com/sveltejs/kit/pull/4184))
+
 ## 1.0.0-next.290
 
 ### Patch Changes

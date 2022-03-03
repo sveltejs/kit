@@ -1,13 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 import { mkdirp, rimraf, posixify } from '../../utils/filesystem.js';
-import create_manifest_data from '../create_manifest_data/index.js';
+import * as sync from '../sync/sync.js';
 import { get_runtime_path, resolve_entry } from '../utils.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { build_service_worker } from './build_service_worker.js';
 import { build_client } from './build_client.js';
 import { build_server } from './build_server.js';
-import { generate_tsconfig } from '../tsconfig.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -24,7 +23,7 @@ export async function build(config) {
 	rimraf(output_dir);
 	mkdirp(output_dir);
 
-	generate_tsconfig(config);
+	const { manifest_data } = sync.all(config);
 
 	const options = {
 		cwd,
@@ -35,10 +34,7 @@ export async function build(config) {
 		// used relative paths, I _think_ this could get fixed. Issue here:
 		// https://github.com/vitejs/vite/issues/2009
 		assets_base: `${config.kit.paths.assets || config.kit.paths.base}/${config.kit.appDir}/`,
-		manifest_data: create_manifest_data({
-			config,
-			cwd
-		}),
+		manifest_data,
 		output_dir,
 		client_entry_file: path.relative(cwd, `${get_runtime_path(config)}/client/start.js`),
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),

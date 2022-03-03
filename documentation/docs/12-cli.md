@@ -16,8 +16,8 @@ Starts a development server. It accepts the following options:
 
 - `-p`/`--port` — which port to start the server on
 - `-o`/`--open` — open a browser tab once the server starts
-- `-h`/`--host` — expose the server to the network.
-- `-H`/`--https` — launch an HTTPS server using a self-signed certificate. Useful for testing HTTPS-only features on an external device
+- `--host` — expose the server to the network.
+- `--https` — launch an HTTPS server using a self-signed certificate. Useful for testing HTTPS-only features on an external device
 
 > This command will fail if the specified (or default) port is unavailable. To use an alternative port instead of failing, set the [`config.kit.vite.server.strictPort`](/docs/configuration#vite) option to `false`.
 
@@ -37,8 +37,8 @@ Like `svelte-kit dev`, it accepts the following options:
 
 - `-p`/`--port`
 - `-o`/`--open`
-- `-h`/`--host`
-- `-H`/`--https`
+- `--host`
+- `--https`
 
 ### svelte-kit package
 
