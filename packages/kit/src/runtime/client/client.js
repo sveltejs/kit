@@ -258,18 +258,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			if (!keepfocus) {
 				// Reset page selection and focus
-				// We try to mimick browsers' behaviour as closely as possible by targeting the
-				// viewport, but unfortunately it's not a perfect match — e.g. shift-tabbing won't
-				// immediately cycle from the end of the page
+				// We try to mimic browsers' behaviour as closely as possible by targeting the
+				// first scrollable region, but unfortunately it's not a perfect match — e.g.
+				// shift-tabbing won't immediately cycle up from the end of the page on Chromium
 				// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-				const root = document.documentElement;
+				const root = document.body;
 				const tabindex = root.getAttribute('tabindex');
 
 				getSelection()?.removeAllRanges();
 				root.tabIndex = -1;
 				root.focus();
 
-				// restore `tabindex` as to prevent the document from stealing input from elements
+				// restore `tabindex` as to prevent `root` from stealing input from elements
 				if (tabindex !== null) {
 					root.setAttribute('tabindex', tabindex);
 				} else {
