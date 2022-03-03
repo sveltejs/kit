@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import create_manifest_data from './index.js';
-import options from '../config/options.js';
+import options from '../../config/options.js';
 
 const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
