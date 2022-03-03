@@ -150,7 +150,7 @@ export interface PrerenderDependency {
 
 export interface PrerenderOptions {
 	fallback?: string;
-	all: boolean;
+	default: boolean;
 	dependencies: Map<string, PrerenderDependency>;
 }
 

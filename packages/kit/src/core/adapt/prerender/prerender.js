@@ -45,10 +45,9 @@ const REDIRECT = 3;
  *   config: import('types').ValidatedConfig;
  *   build_data: import('types').BuildData;
  *   fallback?: string;
- *   all: boolean; // disregard `export const prerender = true`
  * }} opts
  */
-export async function prerender({ out, log, config, build_data, fallback, all }) {
+export async function prerender({ out, log, config, build_data, fallback }) {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -145,7 +144,7 @@ export async function prerender({ out, log, config, build_data, fallback, all })
 
 		const response = await server.respond(new Request(`http://sveltekit-prerender${encoded}`), {
 			prerender: {
-				all,
+				default: config.kit.prerender.default,
 				dependencies
 			}
 		});
@@ -283,7 +282,7 @@ export async function prerender({ out, log, config, build_data, fallback, all })
 		const rendered = await server.respond(new Request('http://sveltekit-prerender/[fallback]'), {
 			prerender: {
 				fallback,
-				all: false,
+				default: false,
 				dependencies: new Map()
 			}
 		});
