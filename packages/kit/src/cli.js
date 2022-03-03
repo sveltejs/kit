@@ -160,6 +160,19 @@ prog
 		}
 	});
 
+prog
+	.command('sync')
+	.describe('Synchronise generated files')
+	.action(async () => {
+		try {
+			const config = await load_config();
+			const sync = await import('./core/sync/sync.js');
+			sync.all(config);
+		} catch (error) {
+			handle_error(error);
+		}
+	});
+
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
 
 /** @param {number} port */

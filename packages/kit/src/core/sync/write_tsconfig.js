@@ -1,19 +1,18 @@
 import fs from 'fs';
 import path from 'path';
 import colors from 'kleur';
-import { mkdirp, posixify } from '../utils/filesystem.js';
+import { posixify } from '../../utils/filesystem.js';
+import { write_if_changed } from './utils.js';
 
 /** @param {string} file */
 const exists = (file) => fs.existsSync(file) && file;
 
 /** @param {import('types').ValidatedConfig} config */
-export function generate_tsconfig(config) {
+export function write_tsconfig(config) {
 	const out = path.join(config.kit.outDir, 'tsconfig.json');
 	const user_file = exists('tsconfig.json') || exists('jsconfig.json');
 
 	if (user_file) validate(config, out, user_file);
-
-	mkdirp(config.kit.outDir);
 
 	/** @param {string} file */
 	const project_relative = (file) => posixify(path.relative('.', file));
@@ -34,7 +33,7 @@ export function generate_tsconfig(config) {
 		include.push(config_relative(`${dir}/**/*.svelte`));
 	});
 
-	fs.writeFileSync(
+	write_if_changed(
 		out,
 		JSON.stringify(
 			{
