@@ -29,9 +29,9 @@ export function generate_tsconfig(config) {
 	/** @type {string[]} */
 	const include = [];
 	dirs.forEach((dir) => {
-		include.push(config_relative(`./${dir}/**/*.js`));
-		include.push(config_relative(`./${dir}/**/*.ts`));
-		include.push(config_relative(`./${dir}/**/*.svelte`));
+		include.push(config_relative(`${dir}/**/*.js`));
+		include.push(config_relative(`${dir}/**/*.ts`));
+		include.push(config_relative(`${dir}/**/*.svelte`));
 	});
 
 	fs.writeFileSync(
