@@ -187,7 +187,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {import('./types').NavigationIntent} intent
 	 * @param {string[]} redirect_chain
 	 * @param {boolean} no_cache
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
+	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
 	 */
 	async function update(intent, redirect_chain, no_cache, opts) {
 		const current_token = (token = {});
@@ -243,6 +243,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		updating = true;
+
+		if (opts && opts.details) {
+			const { details } = opts;
+			const change = details.replaceState ? 0 : 1;
+			details.state[INDEX_KEY] = current_history_index += change;
+			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', intent.url);
+		}
 
 		if (started) {
 			current = navigation_result.state;
@@ -871,7 +878,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		await update(intent, redirect_chain, false, {
 			scroll,
-			keepfocus
+			keepfocus,
+			details
 		});
 
 		navigating--;
@@ -884,12 +892,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
 
 			stores.navigating.set(null);
-		}
-
-		if (details) {
-			const change = details.replaceState ? 0 : 1;
-			details.state[INDEX_KEY] = current_history_index += change;
-			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', intent.url);
 		}
 	}
 
