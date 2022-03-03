@@ -81,13 +81,12 @@ export async function build(config, { log }) {
 	});
 
 	const prerendered = await prerender({
-		out: path.join(output_dir, 'prerendered'),
-		log,
 		config,
-		files,
 		entries: options.manifest_data.routes
 			.map((route) => (route.type === 'page' ? route.path : ''))
-			.filter(Boolean)
+			.filter(Boolean),
+		files,
+		log
 	});
 
 	if (options.service_worker_entry_file) {

@@ -40,15 +40,13 @@ const REDIRECT = 3;
 
 /**
  * @param {{
- *   out: string;
- *   log: Logger;
  *   config: import('types').ValidatedConfig;
- *   files: Set<string>;
  *   entries: string[];
- *   fallback?: string;
+ *   files: Set<string>;
+ *   log: Logger;
  * }} opts
  */
-export async function prerender({ out, log, config, files, entries, fallback }) {
+export async function prerender({ config, entries, files, log }) {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -57,7 +55,7 @@ export async function prerender({ out, log, config, files, entries, fallback }) 
 		paths: []
 	};
 
-	if (!config.kit.prerender.enabled && !fallback) {
+	if (!config.kit.prerender.enabled) {
 		return prerendered;
 	}
 
