@@ -12,12 +12,17 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 		name: '@sveltejs/adapter-static',
 
 		async adapt(builder) {
+			if (!fallback && !builder.config.kit.prerender.default) {
+				builder.log.warn(
+					'You should set `config.kit.prerender.default` to `true` if no fallback is specified'
+				);
+			}
+
 			builder.rimraf(assets);
 			builder.rimraf(pages);
 
 			builder.writeStatic(assets);
 			builder.writeClient(assets);
-
 			builder.writePrerendered(pages, { fallback });
 
 			if (precompress) {
