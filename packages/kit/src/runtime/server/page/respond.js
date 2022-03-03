@@ -69,7 +69,7 @@ export async function respond(opts) {
 
 	if (state.prerender) {
 		// if the page isn't marked as prerenderable (or is explicitly
-		// marked NOT prerenderable, if `prerender.default` is `true`,
+		// marked NOT prerenderable, if `prerender.default` is `true`),
 		// then bail out at this point
 		const should_prerender = leaf.prerender ?? state.prerender.default;
 		if (!should_prerender) {
