@@ -31,10 +31,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [14]
+        node-version: [16]
         os: [ubuntu-latest, macOS-latest, windows-latest]
         include:
-          - node-version: 16
+          - node-version: 14
             os: ubuntu-latest
     steps:
       - run: git config --global core.autocrlf false
