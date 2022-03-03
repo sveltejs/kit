@@ -99,6 +99,8 @@ const options = object(
 				})
 			}),
 
+			endpointExtensions: string_array(['.js', '.ts']),
+
 			files: object({
 				assets: string('static'),
 				hooks: string(join('src', 'hooks')),

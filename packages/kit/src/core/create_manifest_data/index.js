@@ -74,7 +74,12 @@ export default function create_manifest_data({
 			const file = posixify(path.relative(cwd, resolved));
 			const is_dir = fs.statSync(resolved).isDirectory();
 
-			const ext = config.extensions.find((ext) => basename.endsWith(ext)) || path.extname(basename);
+			const ext = is_dir
+				? ''
+				: config.extensions.find((ext) => basename.endsWith(ext)) ||
+				  config.kit.endpointExtensions.find((ext) => basename.endsWith(ext));
+
+			if (ext === undefined) return;
 
 			const name = ext ? basename.slice(0, -ext.length) : basename;
 
