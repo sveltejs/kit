@@ -138,7 +138,7 @@ When pages are prerendered, the CSP header is added via a `<meta http-equiv>` ta
 
 ### endpointExtensions
 
-An array of valid file extensions for endpoint modules.
+An array of file extensions that SvelteKit will treat as endpoints. Files with extensions that match neither `config.extensions` nor `config.kit.endpointExtensions` will be ignored by the router.
 
 ### files
 
