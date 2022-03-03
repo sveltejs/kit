@@ -94,7 +94,7 @@ export async function build(config, { log }) {
 			throw new Error('Cannot use service worker alongside config.kit.paths.assets');
 		}
 
-		await build_service_worker(options, client.vite_manifest);
+		await build_service_worker(options, prerendered, client.vite_manifest);
 	}
 
 	return { build_data, prerendered };
