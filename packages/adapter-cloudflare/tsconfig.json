@@ -9,5 +9,5 @@
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true
 	},
-	"include": ["index.js", "files"]
+	"include": ["./index.js", "./files"]
 }
