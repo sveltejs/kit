@@ -2156,6 +2156,15 @@ test.describe.parallel('Routing', () => {
 		await page.evaluate('window.fulfil_navigation && window.fulfil_navigation()');
 		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
 	});
+
+	test('Relative paths are relative to the current URL', async ({ page, clicknav }) => {
+		await page.goto('/iframes');
+		await clicknav('[href="/iframes/nested/parent"]');
+
+		expect(await page.frameLocator('iframe').locator('h1').textContent()).toBe(
+			'Hello from the child'
+		);
+	});
 });
 
 test.describe.parallel('Session', () => {
