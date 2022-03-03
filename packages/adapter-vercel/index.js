@@ -100,12 +100,6 @@ export default function ({ external = [] } = {}) {
 				lambda: `${dir}/functions/node/render`
 			};
 
-			builder.log.minor('Prerendering static pages...');
-
-			const prerendered = await builder.prerender({
-				dest: `${dir}/static`
-			});
-
 			builder.log.minor('Generating serverless function...');
 
 			const relativePath = posix.relative(tmp, builder.getServerDirectory());
@@ -139,32 +133,36 @@ export default function ({ external = [] } = {}) {
 
 			builder.writeStatic(dirs.static);
 			builder.writeClient(dirs.static);
+			builder.writePrerendered(dirs.static);
 
 			builder.log.minor('Writing routes...');
 
 			builder.mkdirp(`${dir}/config`);
 
-			const prerendered_pages = Array.from(prerendered.pages, ([src, page]) => ({
+			const prerendered_pages = Array.from(builder.prerendered.pages, ([src, page]) => ({
 				src,
 				dest: page.file
 			}));
 
-			const prerendered_redirects = Array.from(prerendered.redirects, ([src, redirect]) => ({
-				src,
-				headers: {
-					Location: redirect.location
-				},
-				status: redirect.status
-			}));
+			const prerendered_redirects = Array.from(
+				builder.prerendered.redirects,
+				([src, redirect]) => ({
+					src,
+					headers: {
+						Location: redirect.location
+					},
+					status: redirect.status
+				})
+			);
 
 			writeFileSync(
 				`${dir}/config/routes.json`,
 				JSON.stringify([
-					...redirects[builder.trailingSlash],
+					...redirects[builder.config.kit.trailingSlash],
 					...prerendered_pages,
 					...prerendered_redirects,
 					{
-						src: `/${builder.appDir}/.+`,
+						src: `/${builder.config.kit.appDir}/.+`,
 						headers: {
 							'cache-control': 'public, immutable, max-age=31536000'
 						}

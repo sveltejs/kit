@@ -34,11 +34,7 @@ export default function ({
 			builder.writeClient(`${out}/client`);
 			builder.writeServer(`${out}/server`);
 			builder.writeStatic(`${out}/static`);
-
-			builder.log.minor('Prerendering static pages');
-			await builder.prerender({
-				dest: `${out}/prerendered`
-			});
+			builder.writePrerendered(`${out}/prerendered`);
 
 			writeFileSync(
 				`${out}/manifest.js`,
