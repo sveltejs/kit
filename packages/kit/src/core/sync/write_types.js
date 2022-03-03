@@ -1,4 +1,3 @@
-import path from 'path';
 import { write_if_changed } from './utils.js';
 
 /**
