@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
-import { get_runtime_path } from '../utils.js';
-import { posixify } from '../../utils/filesystem.js';
+import { get_runtime_path } from '../../utils.js';
+import { posixify } from '../../../utils/filesystem.js';
 
 /**
  * A portion of a file or directory name where the name has been split into
