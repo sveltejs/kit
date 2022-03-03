@@ -154,14 +154,21 @@ export async function build_server(
 		}
 	});
 
+	const fallback = `${get_runtime_path(config)}/components`;
+	const default_error = posixify(path.relative(cwd, `${fallback}/error.svelte`));
+	const fix_error_name = 'entries/pages/__error.svelte';
+
 	// ...and every component used by pages
 	manifest_data.components.forEach((file) => {
 		const resolved = path.resolve(cwd, file);
 		const relative = path.relative(config.kit.files.routes, resolved);
 
-		const name = relative.startsWith('..')
-			? posixify(path.join('entries/pages', path.basename(file)))
-			: posixify(path.join('entries/pages', relative));
+		const name =
+			file === default_error
+				? fix_error_name
+				: relative.startsWith('..')
+				? posixify(path.join('entries/pages', path.basename(file)))
+				: posixify(path.join('entries/pages', relative));
 		input[name] = resolved;
 	});
 
