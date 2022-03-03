@@ -1,6 +1,5 @@
 ---
 'create-svelte': patch
-'default-template': patch
 '@sveltejs/kit': patch
 ---
 
