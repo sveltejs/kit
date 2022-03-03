@@ -14,6 +14,7 @@ import {
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
+	Prerendered,
 	RequestEvent,
 	RequestOptions,
 	ResolveOptions,
@@ -63,8 +64,6 @@ export interface BuildData {
 		methods: Record<string, HttpMethod[]>;
 		vite_manifest: import('vite').Manifest;
 	};
-	static: string[];
-	entries: string[];
 }
 
 export type CSRComponent = any; // TODO
@@ -149,7 +148,7 @@ export interface PrerenderDependency {
 }
 
 export interface PrerenderOptions {
-	fallback?: string;
+	fallback?: boolean;
 	default: boolean;
 	dependencies: Map<string, PrerenderDependency>;
 }

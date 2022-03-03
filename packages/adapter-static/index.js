@@ -18,11 +18,7 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 			builder.writeStatic(assets);
 			builder.writeClient(assets);
 
-			await builder.prerender({
-				fallback,
-				all: !fallback,
-				dest: pages
-			});
+			builder.writePrerendered(pages, { fallback });
 
 			if (precompress) {
 				if (pages === assets) {

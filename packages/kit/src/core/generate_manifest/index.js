@@ -2,17 +2,14 @@ import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
 
 /**
- * @param {import('types').BuildData} build_data;
- * @param {string} relative_path;
- * @param {import('types').RouteData[]} routes;
- * @param {'esm' | 'cjs'} format
+ * @param {{
+ *   build_data: import('types').BuildData;
+ *   relative_path: string;
+ *   routes: import('types').RouteData[];
+ *   format?: 'esm' | 'cjs'
+ * }} opts
  */
-export function generate_manifest(
-	build_data,
-	relative_path,
-	routes = build_data.manifest_data.routes,
-	format = 'esm'
-) {
+export function generate_manifest({ build_data, relative_path, routes, format = 'esm' }) {
 	/** @typedef {{ index: number, path: string }} LookupEntry */
 	/** @type {Map<string, LookupEntry>} */
 	const bundled_nodes = new Map();
