@@ -5,7 +5,7 @@
 	"private": true,
 	"scripts": {
 		"build": "pnpm build --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
-		"test": "pnpm -r test --workspace-concurrency=1",
+		"test": "pnpm -r test",
 		"check": "pnpm -r check",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",

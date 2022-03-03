@@ -142,35 +142,39 @@ export const test = base.extend({
 	}
 });
 
-/** @type {import('@playwright/test').PlaywrightTestConfig} */
-export const config = {
-	forbidOnly: !!process.env.CI,
-	// generous timeouts on CI
-	timeout: process.env.CI ? 45000 : 15000,
-	webServer: {
-		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
-		port: 3000
-	},
-	retries: process.env.CI ? 5 : 0,
-	projects: [
-		{
-			name: `${process.env.DEV ? 'dev' : 'build'}+js`,
-			use: {
-				javaScriptEnabled: true
-			}
+/** @type {(port: number) => import('@playwright/test').PlaywrightTestConfig} */
+export function get_config(port) {
+	return {
+		forbidOnly: !!process.env.CI,
+		// generous timeouts on CI
+		timeout: process.env.CI ? 45000 : 15000,
+		webServer: {
+			port,
+			command: process.env.DEV
+				? `npm run dev -- --port=${port}`
+				: `npm run build && npm run preview -- --port=${port}`
 		},
-		{
-			name: `${process.env.DEV ? 'dev' : 'build'}-js`,
-			use: {
-				javaScriptEnabled: false
+		retries: process.env.CI ? 5 : 0,
+		projects: [
+			{
+				name: `${process.env.DEV ? 'dev' : 'build'}+js`,
+				use: {
+					javaScriptEnabled: true
+				}
+			},
+			{
+				name: `${process.env.DEV ? 'dev' : 'build'}-js`,
+				use: {
+					javaScriptEnabled: false
+				}
 			}
+		],
+		use: {
+			screenshot: 'only-on-failure',
+			trace: 'retain-on-failure'
 		}
-	],
-	use: {
-		screenshot: 'only-on-failure',
-		trace: 'retain-on-failure'
-	}
-};
+	};
+}
 
 /**
  *
