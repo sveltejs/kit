@@ -54,6 +54,7 @@ const get_defaults = (prefix = '') => ({
 				referrer: undefined
 			}
 		},
+		endpointExtensions: ['.js', '.ts'],
 		files: {
 			assets: join(prefix, 'static'),
 			hooks: join(prefix, 'src/hooks'),

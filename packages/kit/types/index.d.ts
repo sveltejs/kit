@@ -41,6 +41,7 @@ export interface Config {
 			mode?: 'hash' | 'nonce' | 'auto';
 			directives?: CspDirectives;
 		};
+		endpointExtensions?: string[];
 		files?: {
 			assets?: string;
 			hooks?: string;

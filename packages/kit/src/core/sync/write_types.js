@@ -1,4 +1,3 @@
-import path from 'path';
 import { write_if_changed } from './utils.js';
 
 /**
@@ -25,12 +24,17 @@ export function write_types(config, manifest_data) {
 	}
 
 	manifest_data.routes.forEach((route) => {
-		if (route.type === 'endpoint') {
-			const key = route.file.slice(0, -path.extname(route.file).length);
-			shadow_types.set(key, { params: extract_params(key), type: 'endpoint' });
-		} else if (route.shadow) {
-			const key = route.shadow.slice(0, -path.extname(route.shadow).length);
-			shadow_types.set(key, { params: extract_params(key), type: 'both' });
+		const file = route.type === 'endpoint' ? route.file : route.shadow;
+
+		if (file) {
+			const ext = /** @type {string} */ (
+				config.kit.endpointExtensions.find((ext) => file.endsWith(ext))
+			);
+			const key = file.slice(0, -ext.length);
+			shadow_types.set(key, {
+				params: extract_params(key),
+				type: route.type === 'endpoint' ? 'endpoint' : 'both'
+			});
 		}
 	});
 
