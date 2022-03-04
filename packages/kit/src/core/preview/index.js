@@ -50,14 +50,14 @@ export async function preview({ port, host, config, https: use_https = false }) 
 	const { Server, override } = await import(pathToFileURL(index_file).href);
 	const { manifest } = await import(pathToFileURL(manifest_file).href);
 
-	const server = new Server(manifest);
-
 	override({
 		paths: { base, assets },
 		prerendering: false,
 		protocol: use_https ? 'https' : 'http',
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
+
+	const server = new Server(manifest);
 
 	const handle = compose([
 		// files in `static`
