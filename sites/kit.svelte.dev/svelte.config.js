@@ -10,6 +10,9 @@ const config = {
 		prerender: {
 			entries: ['*', '/content.json']
 		},
+		browser: {
+			hydrate: false
+		},
 
 		vite: {
 			plugins: [imagetools()],
