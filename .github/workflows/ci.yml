@@ -32,7 +32,7 @@ jobs:
       fail-fast: false
       matrix:
         node-version: [14]
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest, macOS-latest, windows-2019]
         include:
           - node-version: 16
             os: ubuntu-latest
