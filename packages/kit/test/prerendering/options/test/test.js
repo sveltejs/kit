@@ -27,4 +27,8 @@ test('adds CSP headers via meta tag', () => {
 	);
 });
 
+test('does not copy `public` into `_app`', () => {
+	assert.ok(!fs.existsSync(`${build}/_app/robots.txt`));
+});
+
 test.run();

@@ -89,7 +89,10 @@ export async function build_client({
 					hydratable: !!config.kit.browser.hydrate
 				}
 			})
-		]
+		],
+		// prevent Vite copying the contents of `config.kit.files.assets`,
+		// if it happens to be 'public' instead of 'static'
+		publicDir: false
 	});
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_client');

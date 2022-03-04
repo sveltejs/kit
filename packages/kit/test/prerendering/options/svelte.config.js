@@ -12,6 +12,10 @@ const config = {
 			}
 		},
 
+		files: {
+			assets: 'public'
+		},
+
 		paths: {
 			base: '/path-base',
 			assets: 'https://cdn.example.com/stuff'
