@@ -64,7 +64,7 @@ export async function build_service_worker(
 					.join(',\n\t\t\t\t')}
 			];
 
-			export const version = ${s(config.kit.version)};
+			export const version = ${s(config.kit.version.name)};
 		`
 			.replace(/^\t{3}/gm, '')
 			.trim()
