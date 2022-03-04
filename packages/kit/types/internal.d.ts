@@ -71,7 +71,7 @@ export type CSRComponent = any; // TODO
 
 export type CSRComponentLoader = () => Promise<CSRComponent>;
 
-export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?, HasShadow?];
+export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?, ShadowKey?];
 
 export interface EndpointData {
 	type: 'endpoint';
@@ -83,8 +83,6 @@ export interface EndpointData {
 }
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
-
-type HasShadow = 1;
 
 export interface Hooks {
 	externalFetch: ExternalFetch;
@@ -179,6 +177,8 @@ export interface ShadowEndpointOutput<Output extends JSONObject = JSONObject> {
 	body?: Output;
 }
 
+type ShadowKey = string;
+
 export interface ShadowRequestHandler<Output extends JSONObject = JSONObject> {
 	(event: RequestEvent): MaybePromise<Either<ShadowEndpointOutput<Output>, Fallthrough>>;
 }
@@ -272,6 +272,7 @@ export interface SSROptions {
 
 export interface SSRPage {
 	type: 'page';
+	key: string;
 	pattern: RegExp;
 	params: GetParams;
 	shadow:

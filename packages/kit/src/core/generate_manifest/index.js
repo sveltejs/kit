@@ -72,6 +72,7 @@ export function generate_manifest(
 					if (route.type === 'page') {
 						return `{
 							type: 'page',
+							key: ${s(route.key)},
 							pattern: ${route.pattern},
 							params: ${get_params(route.params)},
 							path: ${route.path ? s(route.path) : null},
