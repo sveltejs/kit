@@ -2,10 +2,10 @@
 	"name": "kit.svelte.dev",
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "svelte-kit dev",
-		"build": "svelte-kit build --verbose",
+		"dev": "node ./svelte-kit.js dev",
+		"build": "node ./svelte-kit.js build --verbose",
 		"prebuild": "test \"$CI\" = true && npx pnpm install --store=node_modules/.pnpm-store || echo skipping pnpm install",
-		"preview": "svelte-kit preview"
+		"preview": "node ./svelte-kit.js preview"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",

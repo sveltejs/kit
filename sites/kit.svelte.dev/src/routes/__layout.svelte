@@ -5,10 +5,6 @@
 	import { Icon, Icons, Nav, NavItem, PreloadingIndicator, SkipLink } from '@sveltejs/site-kit';
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
-
-	let h = 0;
-	let w = 0;
-	$: browser && document.documentElement.style.setProperty('--ukr-footer-height', `${h}px`);
 </script>
 
 <Icons />
@@ -47,25 +43,25 @@
 		</NavItem>
 	</svelte:fragment>
 </Nav>
-	<a target="_blank" rel="noopener noreferrer" href="https://www.stopputin.net/"
-		><div class="ukr" bind:clientHeight={h} bind:clientWidth={w}>
-			{#if w < 830}
-				<strong>We stand with Ukraine.</strong>
-				Donate →
-			{:else}
-				<strong>We stand with Ukraine.</strong>
-				Petition your leaders. Show your support.
-			{/if}
-		</div></a
-	>
 
-<main id="main" style="padding-bottom: {h}px;">
+<main id="main">
 	<slot />
 
 	{#if browser}
 		<SearchBox />
 	{/if}
 </main>
+
+<a target="_blank" rel="noopener noreferrer" href="https://www.stopputin.net/">
+	<div class="ukr">
+		<span class="small">
+			<strong>We stand with Ukraine.</strong> Donate →
+		</span>
+		<span class="large">
+			<strong>We stand with Ukraine.</strong> Petition your leaders. Show your support.
+		</span>
+	</div>
+</a>
 
 <style>
 	main {
@@ -136,22 +132,36 @@
 		font-size: 1.6rem !important;
 	}
 
+	/** Ukraine banner */
+	:root {
+		--ukr-footer-height: 48px;
+	}
+
+	main {
+		padding-bottom: var(--ukr-footer-height);
+	}
+
 	.ukr {
 		background-color: #0066cc;
 		color: white;
 		position: fixed;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		bottom: 0;
 		width: 100vw;
-		text-align: center;
-		padding: 0.75em;
+		height: var(--ukr-footer-height);
 		z-index: 999;
 	}
+
 	:global(.examples-container, .repl-outer, .tutorial-outer) {
 		height: calc(100vh - var(--nav-h) - var(--ukr-footer-height)) !important;
 	}
+
 	:global(.toggle) {
 		bottom: var(--ukr-footer-height) !important;
 	}
+
 	@media (max-width: 830px) {
 		:global(aside) {
 			z-index: 9999 !important;
