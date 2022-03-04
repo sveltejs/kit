@@ -38,15 +38,23 @@ Ordinarily, SvelteKit [hydrates](/docs/appendix#hydration) your server-rendered 
 
 It's likely that at least some pages of your app can be represented as a simple HTML file generated at build time. These pages can be [_prerendered_](/docs/appendix#prerendering) by your [adapter](/docs/adapters).
 
-If your entire app is suitable for prerendering, you could use [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), which will generate HTML files for every page, plus additional files that are requested by `load` functions in those pages.
-
-In many cases, you'll only want to prerender specific pages in your app. You'll need to annotate these pages:
+Prerendering happens automatically for any page with the `prerender` annotation:
 
 ```html
 <script context="module">
 	export const prerender = true;
 </script>
 ```
+
+Alternatively, you can set [`confit.kit.prerender.default`](/docs/configuration#prerender) to `true` and prerender everything except pages that are explicitly marked as _not_ prerenderable:
+
+```html
+<script context="module">
+	export const prerender = false;
+</script>
+```
+
+> If your entire app is suitable for prerendering, you can use [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), which will output files suitable for use with any static webserver.
 
 The prerenderer will start at the root of your app and generate HTML for any prerenderable pages it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with the `entries` option in the [prerender configuration](/docs/configuration#prerender).
 

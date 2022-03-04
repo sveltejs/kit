@@ -1,25 +1,22 @@
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
-import { prerender } from './prerender/prerender.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 
 /**
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   build_data: import('types').BuildData;
+ *   prerendered: import('types').Prerendered;
  *   log: import('types').Logger;
  * }} opts
  * @returns {import('types').Builder}
  */
-export function create_builder({ config, build_data, log }) {
+export function create_builder({ config, build_data, prerendered, log }) {
 	/** @type {Set<string>} */
-	let prerendered_paths;
-
-	let generated_manifest = false;
+	const prerendered_paths = new Set(prerendered.paths);
 
 	/** @param {import('types').RouteData} route */
+	// TODO routes should come pre-filtered
 	function not_prerendered(route) {
-		if (!prerendered_paths) return true;
-
 		if (route.type === 'page' && route.path) {
 			return !prerendered_paths.has(route.path);
 		}
@@ -33,12 +30,10 @@ export function create_builder({ config, build_data, log }) {
 		mkdirp,
 		copy,
 
-		appDir: config.kit.appDir,
-		trailingSlash: config.kit.trailingSlash,
+		config,
+		prerendered,
 
 		createEntries(fn) {
-			generated_manifest = true;
-
 			const { routes } = build_data.manifest_data;
 
 			/** @type {import('types').RouteDefinition[]} */
@@ -99,20 +94,24 @@ export function create_builder({ config, build_data, log }) {
 				if (filtered.size > 0) {
 					complete({
 						generateManifest: ({ relativePath, format }) =>
-							generate_manifest(build_data, relativePath, Array.from(filtered), format)
+							generate_manifest({
+								build_data,
+								relative_path: relativePath,
+								routes: Array.from(filtered),
+								format
+							})
 					});
 				}
 			}
 		},
 
 		generateManifest: ({ relativePath, format }) => {
-			generated_manifest = true;
-			return generate_manifest(
+			return generate_manifest({
 				build_data,
-				relativePath,
-				build_data.manifest_data.routes.filter(not_prerendered),
+				relative_path: relativePath,
+				routes: build_data.manifest_data.routes.filter(not_prerendered),
 				format
-			);
+			});
 		},
 
 		getBuildDirectory(name) {
@@ -137,6 +136,18 @@ export function create_builder({ config, build_data, log }) {
 			});
 		},
 
+		writePrerendered(dest, { fallback } = {}) {
+			const source = `${config.kit.outDir}/output/prerendered`;
+			const files = [...copy(`${source}/pages`, dest), ...copy(`${source}/dependencies`, dest)];
+
+			if (fallback) {
+				files.push(fallback);
+				copy(`${source}/fallback.html`, `${dest}/${fallback}`);
+			}
+
+			return files;
+		},
+
 		writeServer(dest) {
 			return copy(`${config.kit.outDir}/output/server`, dest, {
 				filter: (file) => file[0] !== '.'
@@ -147,25 +158,11 @@ export function create_builder({ config, build_data, log }) {
 			return copy(config.kit.files.assets, dest);
 		},
 
-		async prerender({ all = false, dest, fallback }) {
-			if (generated_manifest) {
-				throw new Error(
-					'Adapters must call prerender(...) before createEntries(...) or generateManifest(...)'
-				);
-			}
-
-			const prerendered = await prerender({
-				out: dest,
-				all,
-				config,
-				build_data,
-				fallback,
-				log
-			});
-
-			prerendered_paths = new Set(prerendered.paths);
-
-			return prerendered;
+		// @ts-expect-error
+		async prerender() {
+			throw new Error(
+				'builder.prerender() has been removed. Prerendering now takes place in the build phase — see builder.prerender and builder.writePrerendered'
+			);
 		}
 	};
 }

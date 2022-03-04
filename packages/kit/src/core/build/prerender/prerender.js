@@ -40,15 +40,13 @@ const REDIRECT = 3;
 
 /**
  * @param {{
- *   out: string;
- *   log: Logger;
  *   config: import('types').ValidatedConfig;
- *   build_data: import('types').BuildData;
- *   fallback?: string;
- *   all: boolean; // disregard `export const prerender = true`
+ *   entries: string[];
+ *   files: Set<string>;
+ *   log: Logger;
  * }} opts
  */
-export async function prerender({ out, log, config, build_data, fallback, all }) {
+export async function prerender({ config, entries, files, log }) {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -57,7 +55,7 @@ export async function prerender({ out, log, config, build_data, fallback, all })
 		paths: []
 	};
 
-	if (!config.kit.prerender.enabled && !fallback) {
+	if (!config.kit.prerender.enabled) {
 		return prerendered;
 	}
 
@@ -78,18 +76,6 @@ export async function prerender({ out, log, config, build_data, fallback, all })
 	const server = new Server(manifest);
 
 	const error = normalise_error_handler(log, config.kit.prerender.onError);
-
-	const files = new Set([
-		...build_data.static,
-		...build_data.client.chunks.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`),
-		...build_data.client.assets.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`)
-	]);
-
-	build_data.static.forEach((file) => {
-		if (file.endsWith('/index.html')) {
-			files.add(file.slice(0, -11));
-		}
-	});
 
 	const q = queue(config.kit.prerender.concurrency);
 
@@ -145,14 +131,14 @@ export async function prerender({ out, log, config, build_data, fallback, all })
 
 		const response = await server.respond(new Request(`http://sveltekit-prerender${encoded}`), {
 			prerender: {
-				all,
+				default: config.kit.prerender.default,
 				dependencies
 			}
 		});
 
 		const text = await response.text();
 
-		save(response, text, decoded, encoded, referrer, 'linked');
+		save('pages', response, text, decoded, encoded, referrer, 'linked');
 
 		for (const [dependency_path, result] of dependencies) {
 			// this seems circuitous, but using new URL allows us to not care
@@ -162,6 +148,7 @@ export async function prerender({ out, log, config, build_data, fallback, all })
 
 			const body = result.body ?? new Uint8Array(await result.response.arrayBuffer());
 			save(
+				'dependencies',
 				result.response,
 				body,
 				decoded_dependency_path,
@@ -191,6 +178,7 @@ export async function prerender({ out, log, config, build_data, fallback, all })
 	}
 
 	/**
+	 * @param {'pages' | 'dependencies'} category
 	 * @param {Response} response
 	 * @param {string | Uint8Array} body
 	 * @param {string} decoded
@@ -198,13 +186,13 @@ export async function prerender({ out, log, config, build_data, fallback, all })
 	 * @param {string | null} referrer
 	 * @param {'linked' | 'fetched'} referenceType
 	 */
-	function save(response, body, decoded, encoded, referrer, referenceType) {
+	function save(category, response, body, decoded, encoded, referrer, referenceType) {
 		const response_type = Math.floor(response.status / 100);
 		const type = /** @type {string} */ (response.headers.get('content-type'));
 		const is_html = response_type === REDIRECT || type === 'text/html';
 
 		const file = output_filename(decoded, is_html);
-		const dest = `${out}/${file}`;
+		const dest = `${config.kit.outDir}/output/prerendered/${category}/${file}`;
 
 		if (written.has(file)) return;
 		written.add(file);
@@ -268,7 +256,7 @@ export async function prerender({ out, log, config, build_data, fallback, all })
 	if (config.kit.prerender.enabled) {
 		for (const entry of config.kit.prerender.entries) {
 			if (entry === '*') {
-				for (const entry of build_data.entries) {
+				for (const entry of entries) {
 					enqueue(null, normalize_path(config.kit.paths.base + entry, config.kit.trailingSlash)); // TODO can we pre-normalize these?
 				}
 			} else {
@@ -279,19 +267,17 @@ export async function prerender({ out, log, config, build_data, fallback, all })
 		await q.done();
 	}
 
-	if (fallback) {
-		const rendered = await server.respond(new Request('http://sveltekit-prerender/[fallback]'), {
-			prerender: {
-				fallback,
-				all: false,
-				dependencies: new Map()
-			}
-		});
+	const rendered = await server.respond(new Request('http://sveltekit-prerender/[fallback]'), {
+		prerender: {
+			fallback: true,
+			default: false,
+			dependencies: new Map()
+		}
+	});
 
-		const file = join(out, fallback);
-		mkdirp(dirname(file));
-		writeFileSync(file, await rendered.text());
-	}
+	const file = `${config.kit.outDir}/output/prerendered/fallback.html`;
+	mkdirp(dirname(file));
+	writeFileSync(file, await rendered.text());
 
 	return prerendered;
 }

@@ -7,6 +7,7 @@ const config = {
 		adapter: adapter(),
 
 		prerender: {
+			default: true,
 			onError: 'continue'
 		},
 

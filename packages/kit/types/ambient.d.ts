@@ -229,6 +229,10 @@ declare module '$service-worker' {
 	 */
 	export const files: string[];
 	/**
+	 * An array of pathnames corresponding to prerendered pages and endpoints.
+	 */
+	export const prerendered: string[];
+	/**
 	 * The result of calling `Date.now()` at build time. It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
 	 */
 	export const timestamp: number;

@@ -7,12 +7,13 @@ import { generate_manifest } from '../generate_manifest/index.js';
 import { build_service_worker } from './build_service_worker.js';
 import { build_client } from './build_client.js';
 import { build_server } from './build_server.js';
+import { prerender } from './prerender/prerender.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
- * @returns {Promise<import('types').BuildData>}
+ * @param {{ log: import('types').Logger }} opts
  */
-export async function build(config) {
+export async function build(config, { log }) {
 	const cwd = process.cwd(); // TODO is this necessary?
 
 	const build_dir = path.join(config.kit.outDir, 'build');
@@ -44,28 +45,53 @@ export async function build(config) {
 	const client = await build_client(options);
 	const server = await build_server(options, client);
 
-	if (options.service_worker_entry_file) {
-		if (config.kit.paths.assets) {
-			throw new Error('Cannot use service worker alongside config.kit.paths.assets');
-		}
-
-		await build_service_worker(options, client.vite_manifest);
-	}
-
+	/** @type {import('types').BuildData} */
 	const build_data = {
 		app_dir: config.kit.appDir,
 		manifest_data: options.manifest_data,
 		service_worker: options.service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 		client,
-		server,
-		static: options.manifest_data.assets.map((asset) => posixify(asset.file)),
-		entries: options.manifest_data.routes
-			.map((route) => (route.type === 'page' ? route.path : ''))
-			.filter(Boolean)
+		server
 	};
 
-	const manifest = `export const manifest = ${generate_manifest(build_data, '.')};\n`;
+	const manifest = `export const manifest = ${generate_manifest({
+		build_data,
+		relative_path: '.',
+		routes: options.manifest_data.routes
+	})};\n`;
 	fs.writeFileSync(`${output_dir}/server/manifest.js`, manifest);
 
-	return build_data;
+	const static_files = options.manifest_data.assets.map((asset) => posixify(asset.file));
+
+	const files = new Set([
+		...static_files,
+		...client.chunks.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`),
+		...client.assets.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`)
+	]);
+
+	// TODO is this right?
+	static_files.forEach((file) => {
+		if (file.endsWith('/index.html')) {
+			files.add(file.slice(0, -11));
+		}
+	});
+
+	const prerendered = await prerender({
+		config,
+		entries: options.manifest_data.routes
+			.map((route) => (route.type === 'page' ? route.path : ''))
+			.filter(Boolean),
+		files,
+		log
+	});
+
+	if (options.service_worker_entry_file) {
+		if (config.kit.paths.assets) {
+			throw new Error('Cannot use service worker alongside config.kit.paths.assets');
+		}
+
+		await build_service_worker(options, prerendered, client.vite_manifest);
+	}
+
+	return { build_data, prerendered };
 }

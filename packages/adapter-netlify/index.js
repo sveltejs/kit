@@ -36,11 +36,6 @@ export default function ({ split = false } = {}) {
 
 			builder.log.minor(`Publishing to "${publish}"`);
 
-			builder.log.minor('Prerendering static pages...');
-			await builder.prerender({
-				dest: publish
-			});
-
 			builder.writeServer('.netlify/server');
 
 			// for esbuild, use ESM
@@ -127,6 +122,7 @@ export default function ({ split = false } = {}) {
 			builder.log.minor('Copying assets...');
 			builder.writeStatic(publish);
 			builder.writeClient(publish);
+			builder.writePrerendered(publish);
 
 			builder.log.minor('Writing redirects...');
 			const redirect_file = join(publish, '_redirects');
@@ -138,7 +134,7 @@ export default function ({ split = false } = {}) {
 			builder.copy('_headers', headers_file);
 			appendFileSync(
 				headers_file,
-				`\n\n/${builder.appDir}/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
+				`\n\n/${builder.config.kit.appDir}/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
 			);
 		}
 	};

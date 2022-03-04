@@ -2,7 +2,7 @@
 // but which cannot be imported from `@sveltejs/kit`. Care should
 // be taken to avoid breaking changes when editing this file
 
-import { SSRNodeLoader, SSRRoute } from './internal';
+import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal';
 
 export interface AdapterEntry {
 	/**
@@ -35,8 +35,8 @@ export interface Builder {
 	rimraf(dir: string): void;
 	mkdirp(dir: string): void;
 
-	appDir: string;
-	trailingSlash: TrailingSlash;
+	config: ValidatedConfig;
+	prerendered: Prerendered;
 
 	/**
 	 * Create entry points that map to individual functions
@@ -56,6 +56,16 @@ export interface Builder {
 	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */
 	writeClient(dest: string): string[];
+	/**
+	 *
+	 * @param dest
+	 */
+	writePrerendered(
+		dest: string,
+		opts?: {
+			fallback?: string;
+		}
+	): string[];
 	/**
 	 * @param dest the destination folder to which files should be copied
 	 * @returns an array of paths corresponding to the files that have been created by the copy
@@ -81,8 +91,6 @@ export interface Builder {
 			replace?: Record<string, string>;
 		}
 	): string[];
-
-	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<Prerendered>;
 }
 
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts

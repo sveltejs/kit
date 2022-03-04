@@ -30,6 +30,10 @@ test('copy files', () => {
 		// @ts-expect-error
 		build_data: {},
 		// @ts-expect-error
+		prerendered: {
+			paths: []
+		},
+		// @ts-expect-error
 		log: {}
 	});
 

@@ -99,7 +99,7 @@ The types for `Adapter` and its parameters are available in [types/config.d.ts](
 Within the `adapt` method, there are a number of things that an adapter should do:
 
 - Clear out the build directory
-- Call `builder.prerender({ dest })` to prerender pages
+- Write SvelteKit output with `builder.writeClient`, `builder.writePrerendered`, `builder.writeServer`, and `builder.writeStatic`
 - Output code that:
   - Imports `App` from `${builder.getServerDirectory()}/app.js`
   - Instantiates the app with a manifest generated with `builder.generateManifest({ relativePath })`
