@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Change URL just before running root.\$set
+Update history immediately before updating DOM
