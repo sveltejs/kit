@@ -150,7 +150,17 @@ export async function respond(request, options, state = {}) {
 					event.url = new URL(event.url.origin + normalized + event.url.search);
 				}
 
+				// `key` will be set if this request came from a client-side navigation
+				// to a page with a matching endpoint
+				const key = request.headers.get('x-sveltekit-load');
+
 				for (const route of options.manifest._.routes) {
+					if (key) {
+						// client is requesting data for a specific endpoint
+						if (route.type !== 'page') continue;
+						if (route.key !== key) continue;
+					}
+
 					const match = route.pattern.exec(decoded);
 					if (!match) continue;
 
@@ -163,7 +173,7 @@ export async function respond(request, options, state = {}) {
 						response = await render_endpoint(event, await route.shadow());
 
 						// loading data for a client-side transition is a special case
-						if (request.headers.get('x-sveltekit-load') === 'true') {
+						if (key) {
 							if (response) {
 								// since redirects are opaque to the browser, we need to repackage
 								// 3xx responses as 200s with a custom header
@@ -180,9 +190,9 @@ export async function respond(request, options, state = {}) {
 									}
 								}
 							} else {
-								// TODO ideally, the client wouldn't request this data
-								// in the first place (at least in production)
-								response = new Response('{}', {
+								// fallthrough
+								response = new Response(undefined, {
+									status: 204,
 									headers: {
 										'content-type': 'application/json'
 									}

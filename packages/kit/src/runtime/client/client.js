@@ -567,7 +567,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (cached) return cached;
 		}
 
-		const [pattern, a, b, get_params, has_shadow] = route;
+		const [pattern, a, b, get_params, shadow_key] = route;
 		const params = get_params
 			? // the pattern is for the route which we've already matched to this path
 			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(path)))
@@ -618,17 +618,22 @@ export function create_client({ target, session, base, trailing_slash }) {
 					/** @type {Record<string, any>} */
 					let props = {};
 
-					const is_shadow_page = has_shadow && i === a.length - 1;
+					const is_shadow_page = shadow_key !== undefined && i === a.length - 1;
 
 					if (is_shadow_page) {
 						const res = await fetch(
 							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
 								headers: {
-									'x-sveltekit-load': 'true'
+									'x-sveltekit-load': /** @type {string} */ (shadow_key)
 								}
 							}
 						);
+
+						if (res.status === 204) {
+							// fallthrough
+							return;
+						}
 
 						if (res.ok) {
 							const redirect = res.headers.get('x-sveltekit-location');
