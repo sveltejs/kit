@@ -1,9 +1,0 @@
-{
-	"name": "test-amp",
-	"private": true,
-	"version": "0.0.1",
-	"scripts": {
-		"test": "cd ../project && npm run test:dev"
-	},
-	"type": "module"
-}

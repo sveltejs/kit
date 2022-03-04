@@ -1,2 +1,1 @@
-import { get_config } from '../../utils.js';
-export default get_config(3002);
+export { config as default } from '../../utils.js';
