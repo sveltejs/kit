@@ -99,6 +99,7 @@ export async function preview({ port, host, config, https: use_https = false }) 
 					location: normalized + search
 				});
 				res.end();
+				return;
 			}
 
 			// only treat this as a page if it doesn't include an extension
@@ -117,9 +118,9 @@ export async function preview({ port, host, config, https: use_https = false }) 
 					fs.createReadStream(file).pipe(res);
 					return;
 				}
-			} else {
-				next();
 			}
+
+			next();
 		}),
 
 		// SSR
