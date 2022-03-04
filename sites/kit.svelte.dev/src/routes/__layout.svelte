@@ -47,17 +47,6 @@
 		</NavItem>
 	</svelte:fragment>
 </Nav>
-	<a target="_blank" rel="noopener noreferrer" href="https://www.stopputin.net/"
-		><div class="ukr" bind:clientHeight={h} bind:clientWidth={w}>
-			{#if w < 830}
-				<strong>We stand with Ukraine.</strong>
-				Donate →
-			{:else}
-				<strong>We stand with Ukraine.</strong>
-				Petition your leaders. Show your support.
-			{/if}
-		</div></a
-	>
 
 <main id="main" style="padding-bottom: {h}px;">
 	<slot />
@@ -66,6 +55,18 @@
 		<SearchBox />
 	{/if}
 </main>
+
+<a target="_blank" rel="noopener noreferrer" href="https://www.stopputin.net/">
+	<div class="ukr" bind:clientHeight={h} bind:clientWidth={w}>
+		{#if w < 830}
+			<strong>We stand with Ukraine.</strong>
+			Donate →
+		{:else}
+			<strong>We stand with Ukraine.</strong>
+			Petition your leaders. Show your support.
+		{/if}
+	</div>
+</a>
 
 <style>
 	main {
