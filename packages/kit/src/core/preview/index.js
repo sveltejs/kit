@@ -124,7 +124,7 @@ export async function preview({ port, host, config, https: use_https = false }) 
 		}),
 
 		// SSR
-		scoped(base, async (req, res) => {
+		async (req, res) => {
 			const protocol = use_https ? 'https' : 'http';
 			const host = req.headers['host'];
 
@@ -138,7 +138,7 @@ export async function preview({ port, host, config, https: use_https = false }) 
 			}
 
 			setResponse(res, await server.respond(request));
-		})
+		}
 	]);
 
 	const vite_config = (config.kit.vite && (await config.kit.vite())) || {};
