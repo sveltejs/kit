@@ -12,11 +12,9 @@
 	let h = 0;
 	let w = 0;
 	onMount(() => {
-		setTimeout(() => {
-			h = el.clientHeight;
-			w = el.clientWidth;
-			document.documentElement.style.setProperty('--ukr-footer-height', `${h}px`);
-		}, 0);
+		h = el.clientHeight;
+		w = el.clientWidth;
+		document.documentElement.style.setProperty('--ukr-footer-height', `${h}px`);
 	});
 </script>
 
