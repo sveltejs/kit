@@ -93,7 +93,7 @@ export default function ({ external = [] } = {}) {
 			builder.rimraf(dir);
 			builder.rimraf(tmp);
 
-			const files = fileURLToPath(new URL('./files', import.meta.url));
+			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 			const dirs = {
 				static: `${dir}/static`,

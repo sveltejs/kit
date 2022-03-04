@@ -16,10 +16,12 @@ import {
 	MaybePromise,
 	PrerenderOnErrorValue,
 	RequestEvent,
+	RequestOptions,
 	ResolveOptions,
 	ResponseHeaders,
 	TrailingSlash
 } from './private';
+import { SSRNodeLoader, SSRRoute } from './internal';
 
 export interface Adapter {
 	name: string;
@@ -164,3 +166,24 @@ export type RequestHandlerOutput<Output extends Body = Body> = MaybePromise<
 		Fallthrough
 	>
 >;
+
+export class Server {
+	constructor(manifest: SSRManifest);
+	respond(request: Request, options?: RequestOptions): Promise<Response>;
+}
+
+export interface SSRManifest {
+	appDir: string;
+	assets: Set<string>;
+	/** private fields */
+	_: {
+		mime: Record<string, string>;
+		entry: {
+			file: string;
+			js: string[];
+			css: string[];
+		};
+		nodes: SSRNodeLoader[];
+		routes: SSRRoute[];
+	};
+}

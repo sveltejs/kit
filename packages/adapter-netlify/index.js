@@ -12,7 +12,7 @@ import toml from '@iarna/toml';
  * } & toml.JsonMap} NetlifyConfig
  */
 
-const files = fileURLToPath(new URL('./files', import.meta.url));
+const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('.')} */
 export default function ({ split = false } = {}) {
@@ -153,7 +153,7 @@ function get_netlify_config() {
 
 /**
  * @param {NetlifyConfig} netlify_config
- * @param {import('@sveltejs/kit').Builder} builder
+ * @param {any} builder
  **/
 function get_publish_directory(netlify_config, builder) {
 	if (netlify_config) {

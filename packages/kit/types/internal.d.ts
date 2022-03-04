@@ -6,7 +6,9 @@ import {
 	Handle,
 	HandleError,
 	Load,
-	RequestHandler
+	RequestHandler,
+	Server,
+	SSRManifest
 } from './index';
 import {
 	Either,
@@ -14,14 +16,11 @@ import {
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
-	Prerendered,
 	RequestEvent,
 	RequestOptions,
 	ResolveOptions,
 	ResponseHeaders,
 	RouteSegment,
-	Server,
-	SSRManifest,
 	TrailingSlash
 } from './private';
 

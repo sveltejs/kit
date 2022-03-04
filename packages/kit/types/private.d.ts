@@ -329,27 +329,6 @@ export interface RouteSegment {
 	rest: boolean;
 }
 
-export class Server {
-	constructor(manifest: SSRManifest);
-	respond(request: Request, options?: RequestOptions): Promise<Response>;
-}
-
-export interface SSRManifest {
-	appDir: string;
-	assets: Set<string>;
-	/** private fields */
-	_: {
-		mime: Record<string, string>;
-		entry: {
-			file: string;
-			js: string[];
-			css: string[];
-		};
-		nodes: SSRNodeLoader[];
-		routes: SSRRoute[];
-	};
-}
-
 export interface ToJSON {
 	toJSON(...args: any[]): Exclude<JSONValue, ToJSON>;
 }

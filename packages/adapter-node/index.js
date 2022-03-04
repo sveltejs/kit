@@ -7,7 +7,7 @@ import zlib from 'zlib';
 
 const pipe = promisify(pipeline);
 
-const files = fileURLToPath(new URL('./files', import.meta.url));
+const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('.')} */
 export default function ({

@@ -4,12 +4,10 @@
 		"checkJs": true,
 		"noEmit": true,
 		"noImplicitAny": true,
-		"module": "es2020",
-		"moduleResolution": "node",
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"include": ["**/*.js", "ambient.d.ts"]
+	"include": ["**/*.js"]
 }

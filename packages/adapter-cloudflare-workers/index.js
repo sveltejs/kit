@@ -19,7 +19,7 @@ export default function () {
 			// @ts-ignore
 			const entrypoint = site['entry-point'] || 'workers-site';
 
-			const files = fileURLToPath(new URL('./files', import.meta.url));
+			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
 
 			builder.rimraf(bucket);
@@ -67,7 +67,7 @@ export default function () {
 	};
 }
 
-/** @param {import('@sveltejs/kit').Builder} builder */
+/** @param {any} builder */
 function validate_config(builder) {
 	if (existsSync('wrangler.toml')) {
 		let wrangler_config;

@@ -49,10 +49,15 @@ importers:
       '@sveltejs/adapter-cloudflare': workspace:*
       '@sveltejs/adapter-netlify': workspace:*
       '@sveltejs/adapter-vercel': workspace:*
+      '@sveltejs/kit': workspace:*
+      typescript: ^4.6.2
     dependencies:
       '@sveltejs/adapter-cloudflare': link:../adapter-cloudflare
       '@sveltejs/adapter-netlify': link:../adapter-netlify
       '@sveltejs/adapter-vercel': link:../adapter-vercel
+    devDependencies:
+      '@sveltejs/kit': link:../kit
+      typescript: 4.6.2
 
   packages/adapter-begin:
     specifiers:

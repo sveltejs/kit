@@ -4,10 +4,13 @@
 		"checkJs": true,
 		"noEmit": true,
 		"noImplicitAny": true,
-		"target": "es2020",
-		"module": "es2020",
+		"allowSyntheticDefaultImports": true,
 		"moduleResolution": "node",
-		"allowSyntheticDefaultImports": true
+		"module": "es2020",
+		"baseUrl": ".",
+		"paths": {
+			"@sveltejs/kit": ["../kit/types/index"]
+		}
 	},
-	"include": ["index.js", "src"]
+	"include": ["index.js", "src/**/*.js", "ambient.d.ts"]
 }
