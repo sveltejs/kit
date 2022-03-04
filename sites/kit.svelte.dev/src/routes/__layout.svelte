@@ -7,15 +7,14 @@
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
 
-	/** @type {Element} */
-	let el;
+	//let el;
 	let h = 0;
 	let w = 0;
-	onMount(() => {
+	/*onMount(() => {
 		h = el.clientHeight;
 		w = el.clientWidth;
-		// document.documentElement.style.setProperty('--ukr-footer-height', `${h}px`);
-	});
+		document.documentElement.style.setProperty('--ukr-footer-height', `${h}px`);
+	});*/
 </script>
 
 <Icons />
