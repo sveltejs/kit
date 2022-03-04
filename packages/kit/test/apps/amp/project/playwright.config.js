@@ -1,6 +1,6 @@
 import { get_config } from '../../utils.js';
 
-const config = get_config(3000);
+const config = get_config(process.env.DEV ? 3000 : 3001);
 config.webServer.timeout = 15000; // AMP validator needs a long time to get moving
 
 // remove any projects with javaScriptEnabled

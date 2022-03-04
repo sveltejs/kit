@@ -1,2 +1,2 @@
 import { get_config } from '../../utils.js';
-export default get_config(3001);
+export default get_config(3002);
