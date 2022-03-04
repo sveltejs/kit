@@ -2,13 +2,20 @@
 	import '@sveltejs/site-kit/base.css';
 	import { browser } from '$app/env';
 	import { page, navigating } from '$app/stores';
+	import { onMount } from 'svelte';
 	import { Icon, Icons, Nav, NavItem, PreloadingIndicator, SkipLink } from '@sveltejs/site-kit';
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
 
+	/** @type {Element} */
+	let el;
 	let h = 0;
 	let w = 0;
-	$: browser && document.documentElement.style.setProperty('--ukr-footer-height', `${h}px`);
+	onMount(() => {
+		h = el.clientHeight;
+		w = el.clientWidth;
+		document.documentElement.style.setProperty('--ukr-footer-height', `${h}px`);
+	});
 </script>
 
 <Icons />
@@ -48,7 +55,7 @@
 	</svelte:fragment>
 </Nav>
 	<a target="_blank" rel="noopener noreferrer" href="https://www.stopputin.net/"
-		><div class="ukr" bind:clientHeight={h} bind:clientWidth={w}>
+		><div class="ukr" bind:this={el}>
 			{#if w < 830}
 				<strong>We stand with Ukraine.</strong>
 				Donate →
