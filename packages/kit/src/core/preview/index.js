@@ -50,14 +50,14 @@ export async function preview({ port, host, config, https: use_https = false }) 
 	const { Server, override } = await import(pathToFileURL(index_file).href);
 	const { manifest } = await import(pathToFileURL(manifest_file).href);
 
-	const server = new Server(manifest);
-
 	override({
 		paths: { base, assets },
 		prerendering: false,
 		protocol: use_https ? 'https' : 'http',
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
+
+	const server = new Server(manifest);
 
 	const handle = compose([
 		// files in `static`
@@ -96,7 +96,7 @@ export async function preview({ port, host, config, https: use_https = false }) 
 
 			if (normalized !== pathname) {
 				res.writeHead(307, {
-					location: normalized + search
+					location: base + normalized + search
 				});
 				res.end();
 				return;
@@ -124,7 +124,7 @@ export async function preview({ port, host, config, https: use_https = false }) 
 		}),
 
 		// SSR
-		scoped(base, async (req, res) => {
+		async (req, res) => {
 			const protocol = use_https ? 'https' : 'http';
 			const host = req.headers['host'];
 
@@ -138,7 +138,7 @@ export async function preview({ port, host, config, https: use_https = false }) 
 			}
 
 			setResponse(res, await server.respond(request));
-		})
+		}
 	]);
 
 	const vite_config = (config.kit.vite && (await config.kit.vite())) || {};
@@ -219,9 +219,10 @@ function scoped(scope, handler) {
 
 	return (req, res, next) => {
 		if (req.url?.startsWith(scope)) {
+			const original_url = req.url;
 			req.url = req.url.slice(scope.length);
 			handler(req, res, () => {
-				req.url = scope + req.url;
+				req.url = original_url;
 				next();
 			});
 		} else {
