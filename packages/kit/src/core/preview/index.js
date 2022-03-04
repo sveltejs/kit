@@ -96,7 +96,7 @@ export async function preview({ port, host, config, https: use_https = false }) 
 
 			if (normalized !== pathname) {
 				res.writeHead(307, {
-					location: normalized + search
+					location: base + normalized + search
 				});
 				res.end();
 				return;
@@ -219,9 +219,10 @@ function scoped(scope, handler) {
 
 	return (req, res, next) => {
 		if (req.url?.startsWith(scope)) {
+			const original_url = req.url;
 			req.url = req.url.slice(scope.length);
 			handler(req, res, () => {
-				req.url = scope + req.url;
+				req.url = original_url;
 				next();
 			});
 		} else {
