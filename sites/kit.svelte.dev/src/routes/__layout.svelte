@@ -14,7 +14,7 @@
 	onMount(() => {
 		h = el.clientHeight;
 		w = el.clientWidth;
-		document.documentElement.style.setProperty('--ukr-footer-height', `${h}px`);
+		// document.documentElement.style.setProperty('--ukr-footer-height', `${h}px`);
 	});
 </script>
 
