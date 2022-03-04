@@ -153,7 +153,7 @@ function get_netlify_config() {
 
 /**
  * @param {NetlifyConfig} netlify_config
- * @param {any} builder
+ * @param {import('@sveltejs/kit').Builder} builder
  **/
 function get_publish_directory(netlify_config, builder) {
 	if (netlify_config) {
