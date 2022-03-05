@@ -294,7 +294,7 @@
 	.search-box {
 		position: relative;
 		width: calc(100vw - 2rem);
-		height: calc(100% - 2rem);
+		height: max-content;
 		max-width: 50rem;
 		max-height: 50rem;
 		background: white;
