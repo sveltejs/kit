@@ -49,10 +49,13 @@ importers:
       '@sveltejs/adapter-cloudflare': workspace:*
       '@sveltejs/adapter-netlify': workspace:*
       '@sveltejs/adapter-vercel': workspace:*
+      typescript: ^4.6.2
     dependencies:
       '@sveltejs/adapter-cloudflare': link:../adapter-cloudflare
       '@sveltejs/adapter-netlify': link:../adapter-netlify
       '@sveltejs/adapter-vercel': link:../adapter-vercel
+    devDependencies:
+      typescript: 4.6.2
 
   packages/adapter-begin:
     specifiers:
@@ -66,25 +69,25 @@ importers:
 
   packages/adapter-cloudflare:
     specifiers:
-      '@sveltejs/kit': workspace:*
       esbuild: ^0.14.21
+      typescript: ^4.6.2
     dependencies:
       esbuild: 0.14.21
     devDependencies:
-      '@sveltejs/kit': link:../kit
+      typescript: 4.6.2
 
   packages/adapter-cloudflare-workers:
     specifiers:
       '@cloudflare/kv-asset-handler': ^0.2.0
       '@iarna/toml': ^2.2.5
-      '@sveltejs/kit': workspace:*
       esbuild: ^0.14.21
+      typescript: ^4.6.2
     dependencies:
       '@iarna/toml': 2.2.5
       esbuild: 0.14.21
     devDependencies:
       '@cloudflare/kv-asset-handler': 0.2.0
-      '@sveltejs/kit': link:../kit
+      typescript: 4.6.2
 
   packages/adapter-netlify:
     specifiers:
@@ -98,6 +101,7 @@ importers:
       rimraf: ^3.0.2
       rollup: ^2.58.0
       tiny-glob: ^0.2.9
+      typescript: ^4.6.2
       uvu: ^0.5.2
     dependencies:
       '@iarna/toml': 2.2.5
@@ -111,6 +115,7 @@ importers:
       '@sveltejs/kit': link:../kit
       rimraf: 3.0.2
       rollup: 2.60.2
+      typescript: 4.6.2
       uvu: 0.5.2
 
   packages/adapter-node:
@@ -126,6 +131,7 @@ importers:
       rollup: ^2.60.2
       sirv: ^2.0.0
       tiny-glob: ^0.2.9
+      typescript: ^4.6.2
       uvu: ^0.5.2
     dependencies:
       tiny-glob: 0.2.9
@@ -140,6 +146,7 @@ importers:
       rimraf: 3.0.2
       rollup: 2.60.2
       sirv: 2.0.0
+      typescript: 4.6.2
       uvu: 0.5.2
 
   packages/adapter-static:
@@ -151,6 +158,7 @@ importers:
       sirv: ^2.0.0
       svelte: ^3.44.2
       tiny-glob: ^0.2.9
+      typescript: ^4.6.2
       uvu: ^0.5.2
     dependencies:
       tiny-glob: 0.2.9
@@ -161,16 +169,19 @@ importers:
       port-authority: 1.1.2
       sirv: 2.0.0
       svelte: 3.44.2
+      typescript: 4.6.2
       uvu: 0.5.2
 
   packages/adapter-vercel:
     specifiers:
       '@sveltejs/kit': workspace:*
       esbuild: ^0.14.21
+      typescript: ^4.6.2
     dependencies:
       esbuild: 0.14.21
     devDependencies:
       '@sveltejs/kit': link:../kit
+      typescript: 4.6.2
 
   packages/create-svelte:
     specifiers:

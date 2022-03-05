@@ -4,11 +4,13 @@
 		"checkJs": true,
 		"noEmit": true,
 		"noImplicitAny": true,
-		"target": "es2020",
 		"module": "es2020",
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true,
-		"skipLibCheck": true
+		"baseUrl": ".",
+		"paths": {
+			"@sveltejs/kit": ["../kit/types/index"]
+		}
 	},
-	"include": ["index.js", "test/*.js"]
+	"include": ["index.js"]
 }

@@ -12,7 +12,7 @@ import toml from '@iarna/toml';
  * } & toml.JsonMap} NetlifyConfig
  */
 
-const files = fileURLToPath(new URL('./files', import.meta.url));
+const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('.')} */
 export default function ({ split = false } = {}) {

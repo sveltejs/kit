@@ -5,25 +5,93 @@ import './ambient';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
+	AdapterEntry,
 	Body,
-	Builder,
 	CspDirectives,
 	Either,
 	ErrorLoadInput,
 	Fallthrough,
 	LoadInput,
 	LoadOutput,
+	Logger,
 	MaybePromise,
+	Prerendered,
 	PrerenderOnErrorValue,
 	RequestEvent,
+	RequestOptions,
 	ResolveOptions,
 	ResponseHeaders,
+	RouteDefinition,
 	TrailingSlash
 } from './private';
+import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal';
 
 export interface Adapter {
 	name: string;
 	adapt(builder: Builder): Promise<void>;
+}
+
+export interface Builder {
+	log: Logger;
+	rimraf(dir: string): void;
+	mkdirp(dir: string): void;
+
+	config: ValidatedConfig;
+	prerendered: Prerendered;
+
+	/**
+	 * Create entry points that map to individual functions
+	 * @param fn A function that groups a set of routes into an entry point
+	 */
+	createEntries(fn: (route: RouteDefinition) => AdapterEntry): void;
+
+	generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
+
+	getBuildDirectory(name: string): string;
+	getClientDirectory(): string;
+	getServerDirectory(): string;
+	getStaticDirectory(): string;
+
+	/**
+	 * @param dest the destination folder to which files should be copied
+	 * @returns an array of paths corresponding to the files that have been created by the copy
+	 */
+	writeClient(dest: string): string[];
+	/**
+	 *
+	 * @param dest
+	 */
+	writePrerendered(
+		dest: string,
+		opts?: {
+			fallback?: string;
+		}
+	): string[];
+	/**
+	 * @param dest the destination folder to which files should be copied
+	 * @returns an array of paths corresponding to the files that have been created by the copy
+	 */
+	writeServer(dest: string): string[];
+	/**
+	 * @param dest the destination folder to which files should be copied
+	 * @returns an array of paths corresponding to the files that have been created by the copy
+	 */
+	writeStatic(dest: string): string[];
+	/**
+	 * @param from the source file or folder
+	 * @param to the destination file or folder
+	 * @param opts.filter a function to determine whether a file or folder should be copied
+	 * @param opts.replace a map of strings to replace
+	 * @returns an array of paths corresponding to the files that have been created by the copy
+	 */
+	copy(
+		from: string,
+		to: string,
+		opts?: {
+			filter?: (basename: string) => boolean;
+			replace?: Record<string, string>;
+		}
+	): string[];
 }
 
 export interface Config {
@@ -164,3 +232,24 @@ export type RequestHandlerOutput<Output extends Body = Body> = MaybePromise<
 		Fallthrough
 	>
 >;
+
+export class Server {
+	constructor(manifest: SSRManifest);
+	respond(request: Request, options?: RequestOptions): Promise<Response>;
+}
+
+export interface SSRManifest {
+	appDir: string;
+	assets: Set<string>;
+	/** private fields */
+	_: {
+		mime: Record<string, string>;
+		entry: {
+			file: string;
+			js: string[];
+			css: string[];
+		};
+		nodes: SSRNodeLoader[];
+		routes: SSRRoute[];
+	};
+}
