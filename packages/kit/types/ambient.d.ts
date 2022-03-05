@@ -214,7 +214,7 @@ declare module '$lib' {}
 
 /**
  * ```ts
- * import { build, files, timestamp } from '$service-worker';
+ * import { build, files, prerendered, version } from '$service-worker';
  * ```
  *
  * This module is only available to [service workers](/docs/service-workers).
@@ -233,9 +233,9 @@ declare module '$service-worker' {
 	 */
 	export const prerendered: string[];
 	/**
-	 * The result of calling `Date.now()` at build time. It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
+	 * See [`config.kit.version`](/docs/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
 	 */
-	export const timestamp: number;
+	export const version: string;
 }
 
 declare module '@sveltejs/kit/hooks' {
