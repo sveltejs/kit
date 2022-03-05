@@ -384,6 +384,7 @@ importers:
       '@sveltejs/kit': workspace:*
       '@sveltejs/site-kit': ^2.0.3
       '@types/node': ^16.11.11
+      devalue: ^2.0.1
       flexsearch: ^0.7.21
       marked: ^4.0.5
       prism-svelte: ^0.5.0
@@ -399,6 +400,7 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': 2.0.3
       '@types/node': 16.11.11
+      devalue: 2.0.1
       flexsearch: 0.7.21
       marked: 4.0.5
       prism-svelte: 0.5.0
