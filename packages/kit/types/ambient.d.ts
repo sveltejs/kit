@@ -207,12 +207,6 @@ declare module '$app/stores' {
 	export const updated: Readable<boolean> & { check: () => boolean };
 }
 
-// note: this is a hack to allow `$lib` to show up at https://kit.svelte.dev/docs/modules#$lib
-/**
- * This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](/docs/configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.
- */
-declare namespace $lib {}
-
 /**
  * ```ts
  * import { build, files, timestamp } from '$service-worker';

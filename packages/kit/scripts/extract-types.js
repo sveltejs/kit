@@ -94,6 +94,14 @@ function get_types(code, statements) {
 	});
 }
 
+modules.push({
+	name: '$lib',
+	comment:
+		'This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](/docs/configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.',
+	exports: [],
+	types: []
+});
+
 {
 	const code = fs.readFileSync('types/ambient.d.ts', 'utf-8');
 	const node = ts.createSourceFile('ambient.d.ts', code, ts.ScriptTarget.Latest);
@@ -115,6 +123,8 @@ function get_types(code, statements) {
 		}
 	}
 }
+
+modules.sort((a, b) => (a.name < b.name ? -1 : 1));
 
 fs.writeFileSync(
 	'../../documentation/types.js',
