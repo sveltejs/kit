@@ -59,6 +59,7 @@ const config = {
 		prerender: {
 			concurrency: 1,
 			crawl: true,
+			default: false,
 			enabled: true,
 			entries: ['*'],
 			onError: 'fail'
