@@ -380,7 +380,6 @@ importers:
   sites/kit.svelte.dev:
     specifiers:
       '@sveltejs/adapter-auto': workspace:*
-      '@sveltejs/adapter-static': workspace:^1.0.0-next.29
       '@sveltejs/kit': workspace:*
       '@sveltejs/site-kit': ^2.0.3
       '@types/node': ^16.11.11
@@ -396,7 +395,6 @@ importers:
       vite-imagetools: ^4.0.3
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
-      '@sveltejs/adapter-static': link:../../packages/adapter-static
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': 2.0.3
       '@types/node': 16.11.11
