@@ -28,7 +28,7 @@ export async function build_client({
 	client_entry_file
 }) {
 	process.env.VITE_SVELTEKIT_APP_VERSION = config.kit.version.name;
-	process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${config.kit.appDir}/version.json`;
+	process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${assets_base}version.json`;
 	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${config.kit.version.pollInterval}`;
 
 	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
