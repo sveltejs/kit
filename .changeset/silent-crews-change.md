@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-consider `paths.assets` for `version.json`
+fetch `version.json` relative to `paths.assets`, if set
