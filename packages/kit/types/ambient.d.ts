@@ -210,7 +210,7 @@ declare module '$app/stores' {
 /**
  * This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](/docs/configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.
  */
-declare module '$lib' {}
+declare namespace $lib {}
 
 /**
  * ```ts
