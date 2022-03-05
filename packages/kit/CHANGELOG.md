@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.293
+
+### Patch Changes
+
+- Expose Server and SSRManifest as public types ([#4220](https://github.com/sveltejs/kit/pull/4220))
+
+* fetch `version.json` relative to `paths.assets`, if set ([#4234](https://github.com/sveltejs/kit/pull/4234))
+
 ## 1.0.0-next.292
 
 ### Patch Changes
