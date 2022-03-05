@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 import { hash } from '../hash.js';
-import { base } from '../paths.js';
+import { assets } from '../paths.js';
 
 /** @param {HTMLDocument} doc */
 export function get_base_uri(doc) {
@@ -86,7 +86,7 @@ export function create_updated_store() {
 
 		const file = import.meta.env.VITE_SVELTEKIT_APP_VERSION_FILE;
 
-		const res = await fetch(`${base}/${file}`, {
+		const res = await fetch(`${assets}/${file}`, {
 			headers: {
 				pragma: 'no-cache',
 				'cache-control': 'no-cache'
