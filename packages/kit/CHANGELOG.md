@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.294
+
+### Patch Changes
+
+- [breaking] Replace timestamp in \$service-worker with version ([#4213](https://github.com/sveltejs/kit/pull/4213))
+
+* Remove declared `$lib` module ([#4227](https://github.com/sveltejs/kit/pull/4227))
+
 ## 1.0.0-next.293
 
 ### Patch Changes
