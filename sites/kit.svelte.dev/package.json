@@ -9,6 +9,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",
+		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/site-kit": "^2.0.3",
 		"@types/node": "^16.11.11",
