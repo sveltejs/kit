@@ -172,7 +172,7 @@
 			<div class="results">
 				{#if $query}
 					{#if results.length > 0}
-						<ul class="results">
+						<ul>
 							{#each results as result, i}
 								<!-- svelte-ignore a11y-mouse-events-have-key-events -->
 								<li>
@@ -302,6 +302,10 @@
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+		pointer-events: none;
+	}
+
+	.search-box > * {
 		pointer-events: all;
 	}
 
@@ -309,12 +313,14 @@
 		flex: 1;
 		overflow: auto;
 		overscroll-behavior-y: none;
+		pointer-events: none;
 	}
 
 	ul {
 		margin: calc(-1 * var(--border-r)) 0 0 0;
 		background: white;
 		border-radius: 0 0 var(--border-r) var(--border-r);
+		pointer-events: all;
 	}
 
 	li {
@@ -330,6 +336,7 @@
 		text-transform: uppercase;
 		background-color: white;
 		border-radius: 0 0 var(--border-r) var(--border-r);
+		pointer-events: all;
 	}
 
 	a {
