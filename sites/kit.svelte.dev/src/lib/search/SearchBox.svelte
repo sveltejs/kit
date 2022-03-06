@@ -297,7 +297,6 @@
 		height: calc(100% - 2rem);
 		max-width: 50rem;
 		max-height: 50rem;
-		background: white;
 		filter: drop-shadow(2px 4px 16px rgba(0, 0, 0, 0.2));
 		border-radius: var(--border-r);
 		display: flex;
@@ -309,10 +308,13 @@
 	.results {
 		flex: 1;
 		overflow: auto;
+		overscroll-behavior-y: none;
 	}
 
 	ul {
-		margin: 0;
+		margin: calc(-1 * var(--border-r)) 0 0 0;
+		background: white;
+		border-radius: 0 0 var(--border-r) var(--border-r);
 	}
 
 	li {
@@ -322,10 +324,12 @@
 	}
 
 	.info {
-		padding: 1rem 1rem 0 1rem;
+		padding: 1rem 1rem 1rem 1rem;
 		font-size: 1.2rem;
 		font-weight: normal;
 		text-transform: uppercase;
+		background-color: white;
+		border-radius: 0 0 var(--border-r) var(--border-r);
 	}
 
 	a {
