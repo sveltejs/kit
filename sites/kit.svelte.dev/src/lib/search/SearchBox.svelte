@@ -324,7 +324,7 @@
 	}
 
 	.info {
-		padding: 1rem 1rem 1rem 1rem;
+		padding: 1rem;
 		font-size: 1.2rem;
 		font-weight: normal;
 		text-transform: uppercase;
