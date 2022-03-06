@@ -292,9 +292,9 @@
 	}
 
 	.search-box {
-		position: relative;
+		position: absolute;
 		width: calc(100vw - 2rem);
-		height: calc(100% - 2rem);
+		top: calc(50% - 25rem);
 		max-width: 50rem;
 		max-height: 50rem;
 		background: white;
