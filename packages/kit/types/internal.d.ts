@@ -239,6 +239,7 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	amp: boolean;
+	app_dir: string;
 	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
 	floc: boolean;
@@ -252,7 +253,6 @@ export interface SSROptions {
 		base: string;
 		assets: string;
 	};
-	prefix: string;
 	prerender: boolean;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];

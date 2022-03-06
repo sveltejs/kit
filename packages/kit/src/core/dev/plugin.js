@@ -261,6 +261,7 @@ export async function create_plugin(config, cwd) {
 
 						const rendered = await respond(request, {
 							amp: config.kit.amp,
+							app_dir: config.kit.appDir,
 							csp: config.kit.csp,
 							dev: true,
 							floc: config.kit.floc,
@@ -297,7 +298,6 @@ export async function create_plugin(config, cwd) {
 								base: config.kit.paths.base,
 								assets
 							},
-							prefix: '',
 							prerender: config.kit.prerender.enabled,
 							read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 							root,

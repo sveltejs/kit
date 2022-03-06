@@ -61,6 +61,7 @@ export class Server {
 
 		this.options = {
 			amp: ${config.kit.amp},
+			app_dir: ${s(config.kit.appDir)},
 			csp: ${s(config.kit.csp)},
 			dev: false,
 			floc: ${config.kit.floc},
@@ -83,7 +84,6 @@ export class Server {
 			manifest,
 			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
-			prefix: assets + '/${config.kit.appDir}/',
 			prerender: ${config.kit.prerender.enabled},
 			read,
 			root,

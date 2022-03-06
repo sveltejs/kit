@@ -157,9 +157,16 @@ export async function render_response({
 
 	const target = hash(body);
 
+	const segments = url.pathname.slice(options.paths.base.length).split('/').slice(2);
+	const assets =
+		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
+
+	/** @param {string} path */
+	const prefix = (path) => (path.startsWith('/') ? path : `${assets}/${options.app_dir}/${path}`);
+
 	// prettier-ignore
 	const init_app = `
-		import { start } from ${s(options.prefix + options.manifest._.entry.file)};
+		import { start } from ${s(prefix(options.manifest._.entry.file))};
 		start({
 			target: document.querySelector('[data-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
@@ -174,7 +181,7 @@ export async function render_response({
 				error: ${serialize_error(error)},
 				nodes: [
 					${(branch || [])
-					.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
+					.map(({ node }) => `import(${s(prefix(node.entry))})`)
 					.join(',\n\t\t\t\t\t\t')}
 				],
 				params: ${devalue(params)}
@@ -221,7 +228,7 @@ export async function render_response({
 			.map((dep) => {
 				const attributes = [
 					'rel="stylesheet"',
-					`href="${options.prefix + dep}"`
+					`href="${prefix(dep)}"`
 				];
 
 				if (csp.style_needs_nonce) {
@@ -240,7 +247,7 @@ export async function render_response({
 
 		if (page_config.router || page_config.hydrate) {
 			head += Array.from(modulepreloads)
-				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
+				.map((dep) => `\n\t<link rel="modulepreload" href="${prefix(dep)}">`)
 				.join('');
 
 			const attributes = ['type="module"', `data-hydrate="${target}"`];
@@ -292,10 +299,6 @@ export async function render_response({
 			head = http_equiv.join('\n') + head;
 		}
 	}
-
-	const segments = url.pathname.slice(options.paths.base.length).split('/').slice(2);
-	const assets =
-		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
 	const html = await resolve_opts.transformPage({
 		html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) })
