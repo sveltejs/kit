@@ -630,11 +630,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 							}
 						);
 
-						if (res.status === 204) {
-							// fallthrough
-							return;
-						}
-
 						if (res.ok) {
 							const redirect = res.headers.get('x-sveltekit-location');
 
@@ -646,6 +641,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 								};
 							}
 
+							if (res.status === 204) {
+								// fallthrough
+								return;
+							}
 							props = await res.json();
 						} else {
 							status = res.status;
