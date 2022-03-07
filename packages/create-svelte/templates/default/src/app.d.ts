@@ -20,4 +20,4 @@ type Todo = {
 	text: string;
 	done: boolean;
 	pending_delete: boolean;
-}
+};

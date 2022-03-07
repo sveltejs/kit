@@ -51,13 +51,13 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 	const index = todo[locals.userid].findIndex((t) => t.uid === uid);
 	const existsTodo = todo[locals.userid][index];
 	if (!existsTodo) return { status: 404 };
-		todo[locals.userid][index] = {
-			uid,
-			created_at: existsTodo.created_at,
-			text: text || existsTodo.text,
-			done: typeof done !== undefined ? done : existsTodo.done,
-			pending_delete: typeof pending_delete !== undefined ? done : existsTodo.pending_delete
-		};
+	todo[locals.userid][index] = {
+		uid,
+		created_at: existsTodo.created_at,
+		text: text || existsTodo.text,
+		done: typeof done !== undefined ? done : existsTodo.done,
+		pending_delete: typeof pending_delete !== undefined ? done : existsTodo.pending_delete
+	};
 	return redirect;
 };
 
