@@ -22,15 +22,14 @@ export const get: RequestHandler = async ({ locals }) => {
 
 export const post: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
-	const { text, done, pending_delete } = getFormValues(form);
+	const { text, done } = getFormValues(form);
 	const { todo } = database;
 	if (!todo[locals.userid]) todo[locals.userid] = [];
 	todo[locals.userid].push({
 		uid: uuid(),
 		created_at: new Date(),
 		text,
-		done: done || false,
-		pending_delete: pending_delete || false
+		done: done || false
 	});
 	return {};
 };
@@ -46,7 +45,7 @@ const redirect = {
 
 export const patch: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
-	const { uid, text, done, pending_delete } = getFormValues(form);
+	const { uid, text, done } = getFormValues(form);
 	const { todo } = database;
 	const index = todo[locals.userid].findIndex((t) => t.uid === uid);
 	const existsTodo = todo[locals.userid][index];
@@ -55,8 +54,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 		uid,
 		created_at: existsTodo.created_at,
 		text: text || existsTodo.text,
-		done: typeof done !== undefined ? done : existsTodo.done,
-		pending_delete: typeof pending_delete !== undefined ? done : existsTodo.pending_delete
+		done: typeof done !== undefined ? done : existsTodo.done
 	};
 	return redirect;
 };
@@ -73,7 +71,6 @@ function getFormValues(form: FormData): Partial<Todo> {
 	return {
 		uid: form.get('uid')?.toString(),
 		text: form.get('text')?.toString(),
-		done: form.get('done')?.toString() === 'true',
-		pending_delete: form.get('pending_delete')?.toString() === 'true'
+		done: form.get('done')?.toString() === 'true'
 	};
 }
