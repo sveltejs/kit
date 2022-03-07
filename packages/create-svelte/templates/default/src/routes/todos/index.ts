@@ -1,40 +1,37 @@
-import { api } from './_api';
+import { v4 as uuid } from '@lukeed/uuid';
 import type { RequestHandler } from '@sveltejs/kit';
+
+type Database = {
+	todo: {
+		[uid: string]: Todo[];
+	};
+};
+
+// --------------------------------------------------
+// In actual use cases,
+// this is where an actual API calls or database accesses or something else.
+// Since this is a sample app, we will access in-memory objects instead.
+// --------------------------------------------------
+const database: Database = { todo: {} };
 
 export const get: RequestHandler = async ({ locals }) => {
 	// locals.userid comes from src/hooks.js
-	const response = await api('get', `todos/${locals.userid}`);
-
-	if (response.status === 404) {
-		// user hasn't created a todo list.
-		// start with an empty array
-		return {
-			body: {
-				todos: []
-			}
-		};
-	}
-
-	if (response.status === 200) {
-		return {
-			body: {
-				todos: await response.json()
-			}
-		};
-	}
-
-	return {
-		status: response.status
-	};
+	const todos = database.todo[locals.userid] || [];
+	return { body: { todos } };
 };
 
 export const post: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
-
-	await api('post', `todos/${locals.userid}`, {
-		text: form.get('text')
+	const { text, done, pending_delete } = getFormValues(form);
+	const { todo } = database;
+	if (!todo[locals.userid]) todo[locals.userid] = [];
+	todo[locals.userid].push({
+		uid: uuid(),
+		created_at: new Date(),
+		text,
+		done: done || false,
+		pending_delete: pending_delete || false
 	});
-
 	return {};
 };
 
@@ -49,19 +46,34 @@ const redirect = {
 
 export const patch: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
-
-	await api('patch', `todos/${locals.userid}/${form.get('uid')}`, {
-		text: form.has('text') ? form.get('text') : undefined,
-		done: form.has('done') ? !!form.get('done') : undefined
-	});
-
+	const { uid, text, done, pending_delete } = getFormValues(form);
+	const { todo } = database;
+	const index = todo[locals.userid].findIndex((t) => t.uid === uid);
+	const existsTodo = todo[locals.userid][index];
+	if (!existsTodo) return { status: 404 };
+		todo[locals.userid][index] = {
+			uid,
+			created_at: existsTodo.created_at,
+			text: text || existsTodo.text,
+			done: typeof done !== undefined ? done : existsTodo.done,
+			pending_delete: typeof pending_delete !== undefined ? done : existsTodo.pending_delete
+		};
 	return redirect;
 };
 
 export const del: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
-
-	await api('delete', `todos/${locals.userid}/${form.get('uid')}`);
-
+	const { uid } = getFormValues(form);
+	const { todo } = database;
+	todo[locals.userid] = todo[locals.userid].filter((t) => t.uid !== uid);
 	return redirect;
 };
+
+function getFormValues(form: FormData): Partial<Todo> {
+	return {
+		uid: form.get('uid')?.toString(),
+		text: form.get('text')?.toString(),
+		done: form.get('done')?.toString() === 'true',
+		pending_delete: form.get('pending_delete')?.toString() === 'true'
+	};
+}

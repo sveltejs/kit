@@ -3,14 +3,6 @@
 	import { scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 
-	type Todo = {
-		uid: string;
-		created_at: Date;
-		text: string;
-		done: boolean;
-		pending_delete: boolean;
-	};
-
 	export let todos: Todo[];
 </script>
 
