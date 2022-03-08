@@ -1,36 +1,26 @@
 import { v4 as uuid } from '@lukeed/uuid';
 import type { RequestHandler } from '@sveltejs/kit';
-
-type Database = {
-	todos: {
-		[uid: string]: Todo[];
-	};
-};
-
-// --------------------------------------------------
-// In actual use cases,
-// this is where an actual API calls or database accesses or something else.
-// Since this is a sample app, we will access in-memory objects instead.
-// --------------------------------------------------
-const database: Database = { todos: {} };
+import { database } from '$lib/db';
 
 export const get: RequestHandler = async ({ locals }) => {
 	// locals.userid comes from src/hooks.js
-	const todos = database.todos[locals.userid] || [];
+	const todos = database.getTodos(locals.userid);
 	return { body: { todos } };
 };
 
 export const post: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 	const { text, done } = getFormValues(form);
-	const { todos: todo } = database;
-	if (!todo[locals.userid]) todo[locals.userid] = [];
-	todo[locals.userid].push({
+
+	if (!text) return { status: 400, body: { error: 'Missing text' } };
+
+	const todo: Todo = {
 		uid: uuid(),
 		created_at: new Date(),
 		text,
-		done: done || false
-	});
+		done: done ?? false
+	};
+	database.addTodo(locals.userid, todo);
 	return {};
 };
 
@@ -46,25 +36,25 @@ const redirect = {
 export const patch: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 	const { uid, text, done } = getFormValues(form);
-	const { todos: todo } = database;
-	const index = todo[locals.userid].findIndex((t) => t.uid === uid);
-	const existsTodo = todo[locals.userid][index];
-	if (!existsTodo) return { status: 404 };
-	todo[locals.userid][index] = {
-		uid,
-		created_at: existsTodo.created_at,
-		text: text || existsTodo.text,
-		done: done ?? existsTodo.done
-	};
-	return redirect;
+
+	try {
+		database.updateTodo(locals.userid, uid, { text, done });
+		return redirect;
+	} catch (e) {
+		return { status: 404, body: { error: 'Todo not found.' } };
+	}
 };
 
 export const del: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 	const { uid } = getFormValues(form);
-	const { todos: todo } = database;
-	todo[locals.userid] = todo[locals.userid].filter((t) => t.uid !== uid);
-	return redirect;
+
+	try {
+		database.deleteTodo(locals.userid, uid);
+		return redirect;
+	} catch {
+		return { status: 404, body: { error: 'Todo not found.' } };
+	}
 };
 
 function getFormValues(form: FormData): Partial<Todo> {
