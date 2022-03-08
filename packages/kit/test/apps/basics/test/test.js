@@ -887,7 +887,7 @@ test.describe.parallel('Errors', () => {
 		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint.svelte:12:15';
+		const location = /endpoint\.svelte:12:9|endpoint\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
@@ -905,7 +905,7 @@ test.describe.parallel('Errors', () => {
 		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint-not-ok.svelte:12:15';
+		const location = /endpoint-not-ok\.svelte:12:9|endpoint-not-ok\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
