@@ -2,7 +2,7 @@ import { v4 as uuid } from '@lukeed/uuid';
 import type { RequestHandler } from '@sveltejs/kit';
 
 type Database = {
-	todo: {
+	todos: {
 		[uid: string]: Todo[];
 	};
 };
@@ -12,18 +12,18 @@ type Database = {
 // this is where an actual API calls or database accesses or something else.
 // Since this is a sample app, we will access in-memory objects instead.
 // --------------------------------------------------
-const database: Database = { todo: {} };
+const database: Database = { todos: {} };
 
 export const get: RequestHandler = async ({ locals }) => {
 	// locals.userid comes from src/hooks.js
-	const todos = database.todo[locals.userid] || [];
+	const todos = database.todos[locals.userid] || [];
 	return { body: { todos } };
 };
 
 export const post: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 	const { text, done } = getFormValues(form);
-	const { todo } = database;
+	const { todos: todo } = database;
 	if (!todo[locals.userid]) todo[locals.userid] = [];
 	todo[locals.userid].push({
 		uid: uuid(),
@@ -46,7 +46,7 @@ const redirect = {
 export const patch: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 	const { uid, text, done } = getFormValues(form);
-	const { todo } = database;
+	const { todos: todo } = database;
 	const index = todo[locals.userid].findIndex((t) => t.uid === uid);
 	const existsTodo = todo[locals.userid][index];
 	if (!existsTodo) return { status: 404 };
@@ -62,7 +62,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 export const del: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 	const { uid } = getFormValues(form);
-	const { todo } = database;
+	const { todos: todo } = database;
 	todo[locals.userid] = todo[locals.userid].filter((t) => t.uid !== uid);
 	return redirect;
 };
