@@ -3,7 +3,11 @@
 	import { scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 
-	export let todos: Todo[];
+	export let todos: Array<
+		Todo & {
+			pending_delete?: boolean;
+		}
+	>;
 </script>
 
 <svelte:head>
