@@ -54,7 +54,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 		uid,
 		created_at: existsTodo.created_at,
 		text: text || existsTodo.text,
-		done: typeof done !== undefined ? done : existsTodo.done
+		done: done ?? existsTodo.done
 	};
 	return redirect;
 };
