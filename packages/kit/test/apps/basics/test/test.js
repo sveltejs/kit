@@ -516,6 +516,12 @@ test.describe.parallel('Shadowed pages', () => {
 		await clicknav('[href="/shadowed/fallthrough/c"]');
 		expect(await page.textContent('h2')).toBe('c');
 	});
+
+	test('Shadow redirect', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/redirect');
+		await clicknav('[href="/shadowed/redirect/a"]');
+		expect(await page.textContent('h1')).toBe('done');
+	});
 });
 
 test.describe.parallel('Endpoints', () => {
