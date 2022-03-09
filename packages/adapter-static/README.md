@@ -25,6 +25,8 @@ export default {
 
 Unless you're in [SPA mode](#spa-mode), the adapter will attempt to prerender every page of your app, regardless of whether the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option is set.
 
+> ⚠️ You must ensure SvelteKit's [`trailingSlash`](https://kit.svelte.dev/docs/configuration#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+
 ## Options
 
 ### pages

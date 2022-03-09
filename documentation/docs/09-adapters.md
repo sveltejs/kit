@@ -54,6 +54,8 @@ Most adapters will generate static HTML for any [prerenderable](/docs/page-optio
 
 You can also use `adapter-static` to generate single-page apps (SPAs) by specifying a [fallback page](https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode).
 
+> You must ensure [`trailingSlash`](configuration#trailingslash) is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+
 #### Platform-specific context
 
 Some adapters may have access to additional information about the request. For example, Cloudflare Workers can access an `env` object containing KV namespaces etc. This can be passed to the `RequestEvent` used in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints) as the `platform` property — consult each adapter's documentation to learn more.
