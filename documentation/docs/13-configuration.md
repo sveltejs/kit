@@ -275,9 +275,9 @@ An object containing zero or more of the following values:
 
 Whether to remove, append, or ignore trailing slashes when resolving URLs to routes.
 
-- `"never"` — redirect `/x/` to `/x`
-- `"always"` — redirect `/x` to `/x/`
-- `"ignore"` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
+- `'never'` — redirect `/x/` to `/x`
+- `'always'` — redirect `/x` to `/x/`
+- `'ignore'` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
 
 This option also affects [prerendering](/docs/page-options#prerender). If `trailingSlash` is `always`, a route like `/about` will result in an `about/index.html` file, otherwise it will create `about.html`, mirroring static webserver conventions.
 
