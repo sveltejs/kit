@@ -141,8 +141,9 @@ export async function preview({ port, host, config, https: use_https = false }) 
 				res,
 				await server.respond(request, {
 					getClientAddress: () => {
-						// TODO
-						return 'TODO';
+						const { remoteAddress } = req.socket;
+						if (remoteAddress) return remoteAddress;
+						throw new Error('Could not determine clientAddress');
 					}
 				})
 			);

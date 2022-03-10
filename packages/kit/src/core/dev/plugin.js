@@ -319,7 +319,9 @@ export async function create_plugin(config, cwd) {
 							},
 							{
 								getClientAddress: () => {
-									return 'TODO';
+									const { remoteAddress } = req.socket;
+									if (remoteAddress) return remoteAddress;
+									throw new Error('Could not determine clientAddress');
 								}
 							}
 						);
