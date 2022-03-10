@@ -284,7 +284,7 @@ export async function prerender({ config, entries, files, log }) {
 	return prerendered;
 }
 
+/** @return {string} */
 function getClientAddress() {
 	throw new Error('Cannot read clientAddress during prerendering');
-	return ''; // for typescript
 }
