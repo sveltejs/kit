@@ -12,7 +12,7 @@ const DATA_SUFFIX = '/__data.json';
 const default_transform = ({ html }) => html;
 
 /** @type {import('types').Respond} */
-export async function respond(request, options, state = {}) {
+export async function respond(request, options, state) {
 	const url = new URL(request.url);
 
 	const normalized = normalize_path(url.pathname, options.trailing_slash);
@@ -53,11 +53,14 @@ export async function respond(request, options, state = {}) {
 
 	/** @type {import('types').RequestEvent} */
 	const event = {
-		request,
-		url,
-		params: {},
+		get clientAddress() {
+			return (event.clientAddress = state.getClientAddress());
+		},
 		locals: {},
-		platform: state.platform
+		params: {},
+		platform: state.platform,
+		request,
+		url
 	};
 
 	// TODO remove this for 1.0

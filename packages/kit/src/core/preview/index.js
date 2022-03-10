@@ -137,7 +137,15 @@ export async function preview({ port, host, config, https: use_https = false }) 
 				return res.end(err.reason || 'Invalid request body');
 			}
 
-			setResponse(res, await server.respond(request));
+			setResponse(
+				res,
+				await server.respond(request, {
+					getClientAddress: () => {
+						// TODO
+						return 'TODO';
+					}
+				})
+			);
 		}
 	]);
 
