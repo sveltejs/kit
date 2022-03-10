@@ -160,7 +160,7 @@ export async function build_server(
 		const relative = path.relative(config.kit.files.routes, resolved);
 
 		const name = relative.startsWith('..')
-			? posixify(path.join('entries/pages', path.basename(file)))
+			? posixify(path.join('entries/fallbacks', path.basename(file)))
 			: posixify(path.join('entries/pages', relative));
 		input[name] = resolved;
 	});
