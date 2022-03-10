@@ -6,6 +6,7 @@
 
 #### add the following to your wrangler.toml
 ```toml
-[build.upload]
-format = "modules"
+		[build.upload]
+		format = "modules"
+		main = "./worker.mjs"
 ```

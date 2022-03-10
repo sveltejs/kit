@@ -11,13 +11,16 @@ export default function () {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
 		async adapt(builder) {
-			const { site } = validate_config(builder);
+			const { site, build } = validate_config(builder);
 
 			// @ts-ignore
 			const { bucket } = site;
 
 			// @ts-ignore
 			const entrypoint = site['entry-point'] || 'workers-site';
+
+			// @ts-ignore
+			const main_path = build.upload.main;
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
@@ -51,13 +54,18 @@ export default function () {
 
 			await esbuild.build({
 				entryPoints: [`${tmp}/entry.js`],
-				outfile: `${entrypoint}/index.js`,
-				bundle: true,
+				outfile: `${entrypoint}/${main_path}`,
 				target: 'es2020',
-				platform: 'browser'
+				platform: 'browser',
+				bundle: true,
+				external: ['__STATIC_CONTENT_MANIFEST'],
+				format: 'esm'
 			});
 
-			writeFileSync(`${entrypoint}/package.json`, JSON.stringify({ main: 'index.js' }));
+			writeFileSync(
+				`${entrypoint}/package.json`,
+				JSON.stringify({ main: main_path, type: 'module' })
+			);
 
 			builder.log.minor('Copying assets...');
 			builder.writeClient(bucket);
@@ -86,6 +94,24 @@ function validate_config(builder) {
 			);
 		}
 
+		// @ts-ignore
+		const main_file = wrangler_config.build?.upload?.main;
+		const main_file_ext = main_file?.split('.').slice(-1)[0];
+		if (main_file_ext && main_file_ext !== 'mjs') {
+			// @ts-ignore
+			const upload_rules = wrangler_config.build?.upload?.rules;
+			// @ts-ignore
+			const matching_rule = upload_rules?.find(({ globs }) =>
+				// @ts-ignore
+				globs.find((glob) => glob.endsWith(`*.${main_file_ext}`))
+			);
+			if (!matching_rule) {
+				throw new Error(
+					'To support a build.upload.main value not ending in .mjs, an upload rule must be added to build.upload.rules. Consult https://developers.cloudflare.com/workers/cli-wrangler/configuration/#build'
+				);
+			}
+		}
+
 		return wrangler_config;
 	}
 
@@ -103,6 +129,13 @@ function validate_config(builder) {
 		workers_dev = true
 		route = ""
 		zone_id = ""
+
+		[build]
+    command = ""
+
+		[build.upload]
+		format = "modules"
+		main = "./worker.mjs"
 
 		[site]
 		bucket = "./.cloudflare/assets"
