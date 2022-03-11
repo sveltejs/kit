@@ -6,8 +6,9 @@ import { fileURLToPath } from 'url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
+import { get_client_address } from './get-client-address';
 
-/* global ORIGIN, PROTOCOL_HEADER, HOST_HEADER */
+/* global ORIGIN, PROTOCOL_HEADER, HOST_HEADER, TRUST_PROXY */
 
 const server = new Server(manifest);
 const origin = ORIGIN;
@@ -45,7 +46,18 @@ const ssr = async (req, res) => {
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	setResponse(res, await server.respond(request));
+	setResponse(
+		res,
+		await server.respond(request, {
+			getClientAddress: () => {
+				if (TRUST_PROXY) {
+					return get_client_address(req);
+				}
+
+				throw new Error('You must enable the adapter-node trustProxy option to read clientAddress');
+			}
+		})
+	);
 };
 
 /** @param {import('polka').Middleware[]} handlers */

@@ -4,6 +4,7 @@ declare global {
 	const ORIGIN: string;
 	const HOST_HEADER: string;
 	const PROTOCOL_HEADER: string;
+	const TRUST_PROXY: boolean;
 }
 
 export const handler: Handle;

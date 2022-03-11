@@ -19,6 +19,7 @@ interface AdapterOptions {
 			host?: string;
 		};
 	};
+	trustProxy?: boolean;
 }
 
 declare function plugin(options?: AdapterOptions): Adapter;
