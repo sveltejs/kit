@@ -54,7 +54,19 @@ export async function respond(request, options, state) {
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		get clientAddress() {
-			return (event.clientAddress = state.getClientAddress());
+			if (!state.getClientAddress) {
+				throw new Error(
+					`${
+						import.meta.env.VITE_SVELTEKIT_ADAPTER_NAME
+					} does not specify getClientAddress. Please raise an issue`
+				);
+			}
+
+			Object.defineProperty(event, 'clientAddress', {
+				value: state.getClientAddress()
+			});
+
+			return event.clientAddress;
 		},
 		locals: {},
 		params: {},
