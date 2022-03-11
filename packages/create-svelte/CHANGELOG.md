@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.125
+
+### Patch Changes
+
+- [fix] check for app.d.ts rather than global.d.ts ([#4295](https://github.com/sveltejs/kit/pull/4295))
+
 ## 2.0.0-next.124
 
 ### Patch Changes
