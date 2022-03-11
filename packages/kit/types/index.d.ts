@@ -235,7 +235,7 @@ export type RequestHandlerOutput<Output extends Body = Body> = MaybePromise<
 
 export class Server {
 	constructor(manifest: SSRManifest);
-	respond(request: Request, options?: RequestOptions): Promise<Response>;
+	respond(request: Request, options: RequestOptions): Promise<Response>;
 }
 
 export interface SSRManifest {
