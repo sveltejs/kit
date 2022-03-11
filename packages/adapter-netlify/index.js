@@ -69,6 +69,8 @@ export default function ({ split = false } = {}) {
 				builder.createEntries((route) => {
 					const parts = [];
 
+					// Netlify's syntax uses '*' and ':param' as "splats" and "placeholders"
+					// https://docs.netlify.com/routing/redirects/redirect-options/#splats
 					for (const segment of route.segments) {
 						if (segment.rest) {
 							parts.push('*');
