@@ -25,7 +25,8 @@ export default {
 					protocol: 'PROTOCOL_HEADER',
 					host: 'HOST_HEADER'
 				}
-			}
+			},
+			trustProxy: false
 		})
 	}
 };
@@ -83,6 +84,10 @@ MY_PORT_VARIABLE=4000 \
 MY_ORIGINURL=https://my.site \
 node build
 ```
+
+### trustProxy
+
+In order for `event.clientAddress` to show the client's IP address, `adapter-node` must read it from one of several possible request headers. Since these headers can be spoofed, it will only do this if `trustProxy` is `true`.
 
 ## Custom server
 
