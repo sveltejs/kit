@@ -3,12 +3,8 @@ import { adapters } from './adapters.js';
 /** @type {import('./index')} */
 let fn;
 
-let info = '';
-
 for (const candidate of adapters) {
 	if (candidate.test()) {
-		info = `Detected environment: ${candidate.name}. Using ${candidate.module}`;
-
 		/** @type {{ default: () => import('@sveltejs/kit').Adapter }} */
 		let module;
 
@@ -20,7 +16,7 @@ for (const candidate of adapters) {
 				return {
 					...adapter,
 					adapt: (builder) => {
-						builder.log.info(info);
+						builder.log.info(`Detected environment: ${candidate.name}. Using ${candidate.module}`);
 						return adapter.adapt(builder);
 					}
 				};
