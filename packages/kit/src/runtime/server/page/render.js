@@ -7,6 +7,8 @@ import { s } from '../../../utils/misc.js';
 import { create_prerendering_url_proxy } from './utils.js';
 import { Csp, csp_ready } from './csp.js';
 
+const envScript = renderEnvScript();
+
 // TODO rename this function/module
 
 const updated = {
@@ -137,6 +139,7 @@ export async function render_response({
 
 		try {
 			rendered = options.root.render(props);
+			rendered.head += envScript;
 		} finally {
 			unsubscribe();
 		}
@@ -354,4 +357,20 @@ function serialize_error(error) {
 		serialized = '{}';
 	}
 	return serialized;
+}
+
+function renderEnvScript() {
+	/** @type {Record<string, string | undefined>} */
+	const env = {};
+	if (typeof process === 'object' && typeof process.env === 'object') {
+		Object.entries(process.env).forEach(([name, value]) => {
+			if (name.startsWith('SVELTE_PUBLIC_')) {
+				env[name] = value;
+			}
+		});
+	}
+	if (Object.keys(env).length === 0) {
+		return '';
+	}
+	return `\n    <script type="svelte/env">${devalue(env)}</script>`;
 }

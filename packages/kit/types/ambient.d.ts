@@ -67,6 +67,11 @@ declare module '$app/env' {
 	 * By default, `svelte-kit dev` runs with `mode=development` and `svelte-kit build` runs with `mode=production`.
 	 */
 	export const mode: string;
+	/**
+	 * Runtime environment variables.
+	 * Only variables starting with "SVELTE_PUBLIC_" are available on the client, the server has access to all variables.
+	 */
+	export const env: Record<string, string | undefined>;
 }
 
 /**
