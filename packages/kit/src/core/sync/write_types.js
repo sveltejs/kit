@@ -66,7 +66,10 @@ export function write_types(config, manifest_data) {
 			`import type { ${imports} } from '@sveltejs/kit';`,
 			type !== 'page' && `export type RequestHandler = GenericRequestHandler<${arg}>;`,
 			type !== 'endpoint' &&
-				`export type Load<Props = Record<string, any>> = GenericLoad<${arg}, Props>;`
+				`export type Load<
+		InputProps extends Record<string, any> = Record<string, any>,
+		OutputProps extends Record<string, any> = InputProps
+	> = GenericLoad<${arg}, InputProps, OutputProps>;`
 		]
 			.filter(Boolean)
 			.join('\n');
