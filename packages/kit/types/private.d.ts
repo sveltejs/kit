@@ -140,7 +140,8 @@ export interface CspDirectives {
 
 export type Either<T, U> = Only<T, U> | Only<U, T>;
 
-export interface ErrorLoadInput<Params extends Record<string, string> = Record<string, string>> extends LoadInput<Params> {
+export interface ErrorLoadInput<Params extends Record<string, string> = Record<string, string>>
+	extends LoadInput<Params> {
 	status?: number;
 	error?: Error;
 }
@@ -166,7 +167,7 @@ export type JSONValue =
 	| JSONObject;
 
 export interface LoadInput<
-	Params extends Record<string, string> = Record<string, string>, 
+	Params extends Record<string, string> = Record<string, string>,
 	Props extends Record<string, any> = Record<string, any>
 > {
 	url: URL;

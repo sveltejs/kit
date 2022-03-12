@@ -160,7 +160,8 @@ export interface Config {
 
 export interface ErrorLoad<
 	Params extends Record<string, string> = Record<string, string>,
-	Props extends Record<string, any> = Record<string, any>> {
+	Props extends Record<string, any> = Record<string, any>
+> {
 	(input: ErrorLoadInput<Params>): MaybePromise<LoadOutput<Props>>;
 }
 
