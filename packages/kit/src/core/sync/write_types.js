@@ -67,9 +67,9 @@ export function write_types(config, manifest_data) {
 			type !== 'page' && `export type RequestHandler = GenericRequestHandler<${arg}>;`,
 			type !== 'endpoint' &&
 				`export type Load<
-		InputProps extends Record<string, any> = Record<string, any>,
-		OutputProps extends Record<string, any> = InputProps
-	> = GenericLoad<${arg}, InputProps, OutputProps>;`
+	InputProps extends Record<string, any> = Record<string, any>,
+	OutputProps extends Record<string, any> = InputProps
+> = GenericLoad<${arg}, InputProps, OutputProps>;`
 		]
 			.filter(Boolean)
 			.join('\n');
