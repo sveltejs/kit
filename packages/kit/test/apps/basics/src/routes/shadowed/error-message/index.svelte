@@ -1,1 +1,1 @@
-<a href="./error-message/err">shadow</a>
+<a href="/shadowed/error-message/err">shadow</a>

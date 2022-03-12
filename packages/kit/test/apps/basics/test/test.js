@@ -525,7 +525,7 @@ test.describe.parallel('Shadowed pages', () => {
 
 	test('Display custom error message on client side shadow page', async ({ page, clicknav }) => {
 		await page.goto('/shadowed/error-message');
-		await clicknav('[href="./error-message/err"]');
+		await clicknav('[href="/shadowed/error-message/err"]');
 		expect(await page.textContent('h1')).toBe('451');
 		expect(await page.textContent('p')).toBe('A custom error message');
 		await page.goto('/shadowed/error-message/shadow');
