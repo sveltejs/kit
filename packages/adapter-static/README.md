@@ -12,18 +12,18 @@ import adapter from '@sveltejs/adapter-static';
 
 export default {
 	kit: {
+		// Enable prerendering by default unless when in SPA mode
+		prerender.default: true,
 		adapter: adapter({
 			// default options are shown
 			pages: 'build',
 			assets: 'build',
 			fallback: null,
 			precompress: false
-		})
+		}),
 	}
 };
 ```
-
-Unless you're in [SPA mode](#spa-mode), the adapter will attempt to prerender every page of your app, regardless of whether the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option is set.
 
 > ⚠️ You must ensure SvelteKit's [`trailingSlash`](https://kit.svelte.dev/docs/configuration#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
 
@@ -47,7 +47,7 @@ If `true`, precompresses files with brotli and gzip. This will generate `.br` an
 
 ## SPA mode
 
-You can use `adapter-static` to create a single-page app or SPA by specifying a **fallback page**.
+You can use `adapter-static` to create a single-page app or SPA by specifying a **fallback page** and leaving the default of ``false`` for ``config.kitprerender.default``.
 
 > In most situations this is not recommended: it harms SEO, tends to slow down perceived performance, and makes your app inaccessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
 
@@ -65,8 +65,7 @@ export default {
 	}
 };
 ```
-
-When operating in SPA mode, only pages that have the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option set will be prerendered.
+When operating in SPA mode, only pages that have the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option set will be prerendered at build time.
 
 ## GitHub Pages
 
