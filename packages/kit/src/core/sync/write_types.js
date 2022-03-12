@@ -66,7 +66,7 @@ export function write_types(config, manifest_data) {
 			`import type { ${imports} } from '@sveltejs/kit';`,
 			type !== 'endpoint' && "import type { Body } from '@sveltejs/kit/types/private';",
 			type !== 'page' &&
-				`export type RequestHandler<Output extends Body = Body> = GenericRequestHandler<${arg}; Output>;`,
+				`export type RequestHandler<Output extends Body = Body> = GenericRequestHandler<${arg}, Output>;`,
 			type !== 'endpoint' &&
 				`export type Load<
 	InputProps extends Record<string, any> = Record<string, any>,
