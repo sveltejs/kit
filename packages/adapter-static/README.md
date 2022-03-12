@@ -66,6 +66,7 @@ export default {
 };
 ```
 When operating in SPA mode, only pages that have the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option set will be prerendered at build time.
+> ⚠️  During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the ``window`` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [call ``resolve()`` with a parameter of ``ssr`` set to ``false`` inside the ``handle()`` hook](https://kit.svelte.dev/docs/hooks#handle).
 
 ## GitHub Pages
 
