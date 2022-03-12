@@ -158,7 +158,9 @@ export interface Config {
 	preprocess?: any;
 }
 
-export interface ErrorLoad<Params = Record<string, string>, Props = Record<string, any>> {
+export interface ErrorLoad<
+	Params extends Record<string, string> = Record<string, string>,
+	Props extends Record<string, any> = Record<string, any>> {
 	(input: ErrorLoadInput<Params>): MaybePromise<LoadOutput<Props>>;
 }
 
@@ -218,7 +220,10 @@ export interface Page<Params extends Record<string, string> = Record<string, str
  * Note that you can use [generated types](/docs/types#generated-types)
  * instead of manually specifying the `Params` generic argument.
  */
-export interface RequestHandler<Params = Record<string, string>, Output extends Body = Body> {
+export interface RequestHandler<
+	Params extends Record<string, string> = Record<string, string>,
+	Output extends Body = Body
+> {
 	(event: RequestEvent<Params>): RequestHandlerOutput<Output>;
 }
 
