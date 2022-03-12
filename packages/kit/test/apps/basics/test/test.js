@@ -522,6 +522,20 @@ test.describe.parallel('Shadowed pages', () => {
 		await clicknav('[href="/shadowed/redirect/a"]');
 		expect(await page.textContent('h1')).toBe('done');
 	});
+
+	test('Display custom error message on client side shadow page', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/error-message');
+		await clicknav('[href="./error-message/err"]');
+		expect(await page.textContent('h1')).toBe('451');
+		expect(await page.textContent('p')).toBe('A custom error message');
+		await page.goto('/shadowed/error-message/shadow');
+	});
+
+	test('Display custom error message on server side shadow page', async ({ page }) => {
+		await page.goto('/shadowed/error-message/err');
+		expect(await page.textContent('h1')).toBe('451');
+		expect(await page.textContent('p')).toBe('A custom error message');
+	});
 });
 
 test.describe.parallel('Endpoints', () => {
