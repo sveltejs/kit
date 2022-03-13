@@ -12,7 +12,7 @@ import adapter from '@sveltejs/adapter-static';
 
 export default {
 	kit: {
-		// Enable prerendering by default unless when in SPA mode
+		// Enable prerendering by default. Remove if using SPA mode
 		prerender.default: true,
 		adapter: adapter({
 			// default options are shown
