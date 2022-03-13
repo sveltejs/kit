@@ -7,7 +7,7 @@
 		Todo & {
 			pending_delete?: boolean;
 		}
-	>;
+	> = [];
 </script>
 
 <svelte:head>
