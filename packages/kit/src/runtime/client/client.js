@@ -650,8 +650,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 							status = res.status;
 							let error_message = 'Failed to load data';
 							try {
-								const { message } = await res.json();
-								if ('string' === typeof message) error_message = message;
+								const { error } = await res.json();
+								if ('string' === typeof error) error_message = error;
 							} catch (e) {
 								// ignore
 							}

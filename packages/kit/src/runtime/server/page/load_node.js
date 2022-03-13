@@ -432,7 +432,7 @@ async function load_shadow_data(route, event, options, prerender) {
 
 			if (status >= 400) {
 				let error_message = 'Failed to load data';
-				if ('string' === typeof body.message) error_message = body.message;
+				if ('string' === typeof body.error) error_message = body.error;
 				data.error = new Error(error_message);
 				return data;
 			}
