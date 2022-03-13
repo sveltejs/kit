@@ -642,8 +642,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 								};
 							}
 
-							const fallthrough = res.status === 204;
-							if (fallthrough) {
+							if (res.status === 204) {
 								if (has_next) {
 									// fallthrough
 									return;
