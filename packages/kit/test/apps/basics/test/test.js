@@ -522,6 +522,12 @@ test.describe.parallel('Shadowed pages', () => {
 		await clicknav('[href="/shadowed/redirect/a"]');
 		expect(await page.textContent('h1')).toBe('done');
 	});
+
+	test('The last matching route fallthrough', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/no-next-fallthrough');
+		await clicknav('[href="/shadowed/no-next-fallthrough?a=test"]');
+		expect(await page.textContent('h1')).toBe('test');
+	});
 });
 
 test.describe.parallel('Endpoints', () => {
