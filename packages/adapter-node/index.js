@@ -19,10 +19,12 @@ export default function ({
 		port: port_env = 'PORT',
 		origin: origin_env = 'ORIGIN',
 		headers: {
+			address: address_header_env = 'ADDRESS_HEADER',
 			protocol: protocol_header_env = 'PROTOCOL_HEADER',
 			host: host_header_env = 'HOST_HEADER'
 		} = {}
-	} = {}
+	} = {},
+	xForwardedForIndex = -1
 } = {}) {
 	return {
 		name: '@sveltejs/adapter-node',
@@ -52,7 +54,9 @@ export default function ({
 					PORT_ENV: JSON.stringify(port_env),
 					ORIGIN: origin_env ? `process.env[${JSON.stringify(origin_env)}]` : 'undefined',
 					PROTOCOL_HEADER: JSON.stringify(protocol_header_env),
-					HOST_HEADER: JSON.stringify(host_header_env)
+					HOST_HEADER: JSON.stringify(host_header_env),
+					ADDRESS_HEADER: JSON.stringify(address_header_env),
+					X_FORWARDED_FOR_INDEX: JSON.stringify(xForwardedForIndex)
 				}
 			});
 

@@ -7,10 +7,12 @@ import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 
-/* global ORIGIN, PROTOCOL_HEADER, HOST_HEADER */
+/* global ORIGIN, ADDRESS_HEADER, PROTOCOL_HEADER, HOST_HEADER, X_FORWARDED_FOR_INDEX */
 
 const server = new Server(manifest);
 const origin = ORIGIN;
+
+const address_header = ADDRESS_HEADER && (process.env[ADDRESS_HEADER] || '').toLowerCase();
 const protocol_header = PROTOCOL_HEADER && process.env[PROTOCOL_HEADER];
 const host_header = (HOST_HEADER && process.env[HOST_HEADER]) || 'host';
 
@@ -45,7 +47,38 @@ const ssr = async (req, res) => {
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	setResponse(res, await server.respond(request));
+	if (address_header && !(address_header in req.headers)) {
+		throw new Error(
+			`Address header was specified with ${ADDRESS_HEADER}=${process.env[ADDRESS_HEADER]} but is absent from request`
+		);
+	}
+
+	setResponse(
+		res,
+		await server.respond(request, {
+			getClientAddress: () => {
+				if (address_header) {
+					const value = /** @type {string} */ (req.headers[address_header]) || '';
+
+					if (address_header === 'x-forwarded-for') {
+						const addresses = value.split(',');
+						return addresses[(addresses.length + X_FORWARDED_FOR_INDEX) % addresses.length].trim();
+					}
+
+					return value;
+				}
+
+				return (
+					req.connection?.remoteAddress ||
+					// @ts-expect-error
+					req.connection?.socket?.remoteAddress ||
+					req.socket?.remoteAddress ||
+					// @ts-expect-error
+					req.info?.remoteAddress
+				);
+			}
+		})
+	);
 };
 
 /** @param {import('polka').Middleware[]} handlers */

@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.296
+
+### Patch Changes
+
+- Allow adapter.adapt to be synchronous ([#4299](https://github.com/sveltejs/kit/pull/4299))
+
+* Make `manifest.mimeTypes` part of the public API ([#4302](https://github.com/sveltejs/kit/pull/4302))
+
+- load hooks after server initialisation, to ensure `prerendering` is correct ([#4322](https://github.com/sveltejs/kit/pull/4322))
+
 ## 1.0.0-next.295
 
 ### Patch Changes

@@ -50,7 +50,11 @@ async function handle(event) {
 
 	// dynamically-generated pages
 	try {
-		return await server.respond(request);
+		return await server.respond(request, {
+			getClientAddress() {
+				return request.headers.get('cf-connecting-ip');
+			}
+		});
 	} catch (e) {
 		return new Response('Error rendering route:' + (e.message || e.toString()), { status: 500 });
 	}

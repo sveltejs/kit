@@ -10,7 +10,12 @@ export function init(manifest) {
 	const server = new Server(manifest);
 
 	return async (event, context) => {
-		const rendered = await server.respond(to_request(event), { platform: { context } });
+		const rendered = await server.respond(to_request(event), {
+			platform: { context },
+			getClientAddress() {
+				return event.headers['x-nf-client-connection-ip'];
+			}
+		});
 
 		const partial_response = {
 			statusCode: rendered.status,

@@ -243,15 +243,16 @@ export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('str
 
 export class Server {
 	constructor(manifest: SSRManifest);
-	respond(request: Request, options?: RequestOptions): Promise<Response>;
+	respond(request: Request, options: RequestOptions): Promise<Response>;
 }
 
 export interface SSRManifest {
 	appDir: string;
 	assets: Set<string>;
+	mimeTypes: Record<string, string>;
+
 	/** private fields */
 	_: {
-		mime: Record<string, string>;
 		entry: {
 			file: string;
 			js: string[];
