@@ -49,8 +49,8 @@ export async function create_plugin(config, cwd) {
 				manifest = {
 					appDir: config.kit.appDir,
 					assets: new Set(manifest_data.assets.map((asset) => asset.file)),
+					mimeTypes: get_mime_lookup(manifest_data),
 					_: {
-						mime: get_mime_lookup(manifest_data),
 						entry: {
 							file: `/@fs${runtime}/client/start.js`,
 							css: [],

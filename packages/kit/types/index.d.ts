@@ -28,7 +28,7 @@ import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal';
 
 export interface Adapter {
 	name: string;
-	adapt(builder: Builder): Promise<void>;
+	adapt(builder: Builder): MaybePromise<void>;
 }
 
 export interface Builder {
@@ -241,9 +241,10 @@ export class Server {
 export interface SSRManifest {
 	appDir: string;
 	assets: Set<string>;
+	mimeTypes: Record<string, string>;
+
 	/** private fields */
 	_: {
-		mime: Record<string, string>;
 		entry: {
 			file: string;
 			js: string[];

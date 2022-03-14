@@ -155,7 +155,7 @@ export async function load_node({
 
 					if (options.read) {
 						const type = is_asset
-							? options.manifest._.mime[filename.slice(filename.lastIndexOf('.'))]
+							? options.manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
 							: 'text/html';
 
 						response = new Response(options.read(file), {
@@ -191,7 +191,8 @@ export async function load_node({
 					response = await respond(new Request(new URL(requested, event.url).href, opts), options, {
 						fetched: requested,
 						getClientAddress: state.getClientAddress,
-						initiator: route
+						initiator: route,
+						prerender: state.prerender
 					});
 
 					if (state.prerender) {
