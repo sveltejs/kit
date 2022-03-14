@@ -241,9 +241,10 @@ export class Server {
 export interface SSRManifest {
 	appDir: string;
 	assets: Set<string>;
+	mimeTypes: Record<string, string>;
+
 	/** private fields */
 	_: {
-		mime: Record<string, string>;
 		entry: {
 			file: string;
 			js: string[];

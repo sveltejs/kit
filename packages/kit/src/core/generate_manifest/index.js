@@ -58,8 +58,8 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 	return `{
 		appDir: ${s(build_data.app_dir)},
 		assets: new Set(${s(assets)}),
+		mimeTypes: ${s(get_mime_lookup(build_data.manifest_data))},
 		_: {
-			mime: ${s(get_mime_lookup(build_data.manifest_data))},
 			entry: ${s(build_data.client.entry)},
 			nodes: [
 				${Array.from(bundled_nodes.values()).map(node => importer(node.path)).join(',\n\t\t\t\t')}
