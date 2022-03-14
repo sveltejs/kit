@@ -259,62 +259,72 @@ export async function create_plugin(config, cwd) {
 
 						const template = load_template(cwd, config);
 
-						const rendered = await respond(request, {
-							amp: config.kit.amp,
-							csp: config.kit.csp,
-							dev: true,
-							floc: config.kit.floc,
-							get_stack: (error) => {
-								return fix_stack_trace(error);
-							},
-							handle_error: (error, event) => {
-								hooks.handleError({
-									error: new Proxy(error, {
-										get: (target, property) => {
-											if (property === 'stack') {
-												return fix_stack_trace(error);
+						const rendered = await respond(
+							request,
+							{
+								amp: config.kit.amp,
+								csp: config.kit.csp,
+								dev: true,
+								floc: config.kit.floc,
+								get_stack: (error) => {
+									return fix_stack_trace(error);
+								},
+								handle_error: (error, event) => {
+									hooks.handleError({
+										error: new Proxy(error, {
+											get: (target, property) => {
+												if (property === 'stack') {
+													return fix_stack_trace(error);
+												}
+
+												return Reflect.get(target, property, target);
 											}
+										}),
+										event,
 
-											return Reflect.get(target, property, target);
+										// TODO remove for 1.0
+										// @ts-expect-error
+										get request() {
+											throw new Error(
+												'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
+											);
 										}
-									}),
-									event,
-
-									// TODO remove for 1.0
-									// @ts-expect-error
-									get request() {
-										throw new Error(
-											'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
-										);
-									}
-								});
+									});
+								},
+								hooks,
+								hydrate: config.kit.browser.hydrate,
+								manifest,
+								method_override: config.kit.methodOverride,
+								paths: {
+									base: config.kit.paths.base,
+									assets
+								},
+								prefix: '',
+								prerender: config.kit.prerender.enabled,
+								read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
+								root,
+								router: config.kit.browser.router,
+								template: ({ head, body, assets, nonce }) => {
+									return (
+										template
+											.replace(/%svelte\.assets%/g, assets)
+											.replace(/%svelte\.nonce%/g, nonce)
+											// head and body must be replaced last, in case someone tries to sneak in %svelte.assets% etc
+											.replace('%svelte.head%', () => head)
+											.replace('%svelte.body%', () => body)
+									);
+								},
+								template_contains_nonce: template.includes('%svelte.nonce%'),
+								trailing_slash: config.kit.trailingSlash
 							},
-							hooks,
-							hydrate: config.kit.browser.hydrate,
-							manifest,
-							method_override: config.kit.methodOverride,
-							paths: {
-								base: config.kit.paths.base,
-								assets
-							},
-							prefix: '',
-							prerender: config.kit.prerender.enabled,
-							read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
-							root,
-							router: config.kit.browser.router,
-							template: ({ head, body, assets, nonce }) => {
-								return (
-									template
-										.replace(/%svelte\.assets%/g, assets)
-										.replace(/%svelte\.nonce%/g, nonce)
-										// head and body must be replaced last, in case someone tries to sneak in %svelte.assets% etc
-										.replace('%svelte.head%', () => head)
-										.replace('%svelte.body%', () => body)
-								);
-							},
-							template_contains_nonce: template.includes('%svelte.nonce%'),
-							trailing_slash: config.kit.trailingSlash
-						});
+							{
+								getClientAddress: () => {
+									const { remoteAddress } = req.socket;
+									if (remoteAddress) return remoteAddress;
+									throw new Error('Could not determine clientAddress');
+								}
+							}
+						);
 
 						if (rendered) {
 							setResponse(res, rendered);

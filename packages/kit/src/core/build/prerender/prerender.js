@@ -130,6 +130,7 @@ export async function prerender({ config, entries, files, log }) {
 		const dependencies = new Map();
 
 		const response = await server.respond(new Request(`http://sveltekit-prerender${encoded}`), {
+			getClientAddress,
 			prerender: {
 				default: config.kit.prerender.default,
 				dependencies
@@ -268,6 +269,7 @@ export async function prerender({ config, entries, files, log }) {
 	}
 
 	const rendered = await server.respond(new Request('http://sveltekit-prerender/[fallback]'), {
+		getClientAddress,
 		prerender: {
 			fallback: true,
 			default: false,
@@ -280,4 +282,9 @@ export async function prerender({ config, entries, files, log }) {
 	writeFileSync(file, await rendered.text());
 
 	return prerendered;
+}
+
+/** @return {string} */
+function getClientAddress() {
+	throw new Error('Cannot read clientAddress during prerendering');
 }

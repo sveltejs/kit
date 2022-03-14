@@ -229,6 +229,8 @@ export async function build_server(
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
 
+	process.env.VITE_SVELTEKIT_ADAPTER_NAME = config.kit.adapter?.name;
+
 	const { chunks } = await create_build(merged_config);
 
 	/** @type {import('vite').Manifest} */

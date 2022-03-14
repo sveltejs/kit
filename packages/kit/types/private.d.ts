@@ -234,14 +234,16 @@ export interface PrerenderErrorHandler {
 export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
 export interface RequestEvent<Params = Record<string, string>> {
+	clientAddress: string;
+	locals: App.Locals;
+	params: Params;
+	platform: Readonly<App.Platform>;
 	request: Request;
 	url: URL;
-	params: Params;
-	locals: App.Locals;
-	platform: Readonly<App.Platform>;
 }
 
 export interface RequestOptions {
+	getClientAddress: () => string;
 	platform?: App.Platform;
 }
 

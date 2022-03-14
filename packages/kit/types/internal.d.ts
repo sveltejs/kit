@@ -92,7 +92,7 @@ export interface Hooks {
 export class InternalServer extends Server {
 	respond(
 		request: Request,
-		options?: RequestOptions & {
+		options: RequestOptions & {
 			prerender?: PrerenderOptions;
 		}
 	): Promise<Response>;
@@ -164,7 +164,7 @@ export type RecursiveRequired<T> = {
 export type RequiredResolveOptions = Required<ResolveOptions>;
 
 export interface Respond {
-	(request: Request, options: SSROptions, state?: SSRState): Promise<Response>;
+	(request: Request, options: SSROptions, state: SSRState): Promise<Response>;
 }
 
 export type RouteData = PageData | EndpointData;
@@ -302,11 +302,12 @@ export interface SSRPagePart {
 export type SSRRoute = SSREndpoint | SSRPage;
 
 export interface SSRState {
+	fallback?: string;
 	fetched?: string;
+	getClientAddress: () => string;
 	initiator?: SSRPage | null;
 	platform?: any;
 	prerender?: PrerenderOptions;
-	fallback?: string;
 }
 
 export type StrictBody = string | Uint8Array;
