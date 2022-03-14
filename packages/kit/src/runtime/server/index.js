@@ -259,6 +259,10 @@ export async function respond(request, options, state = {}) {
 					});
 				}
 
+				if (state.prerender) {
+					return new Response('not found', { status: 404 });
+				}
+
 				// we can't load the endpoint from our own manifest,
 				// so we need to make an actual HTTP request
 				return await fetch(request);
