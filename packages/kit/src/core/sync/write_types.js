@@ -1,5 +1,21 @@
 import { write_if_changed } from './utils.js';
 
+/** @param {string} imports */
+const header = (imports) => `
+// this file is auto-generated
+import type { ${imports} } from '@sveltejs/kit';`;
+
+/** @param {string} arg */
+const endpoint = (arg) => `
+export type RequestHandler<Output extends ResponseBody = ResponseBody> = GenericRequestHandler<${arg}, Output>;`;
+
+/** @param {string} arg */
+const page = (arg) => `
+export type Load<
+	InputProps extends Record<string, any> = Record<string, any>,
+	OutputProps extends Record<string, any> = InputProps
+> = GenericLoad<${arg}, InputProps, OutputProps>;`;
+
 /**
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
@@ -53,24 +69,24 @@ export function write_types(config, manifest_data) {
 		const arg =
 			params.length > 0 ? `{ ${params.map((param) => `${param}: string`).join('; ')} }` : '{}';
 
-		const imports = [
-			type !== 'page' && 'RequestHandler as GenericRequestHandler',
-			type !== 'endpoint' && 'Load as GenericLoad'
-		]
-			.filter(Boolean)
-			.join(', ');
+		const imports = [];
+		const content = [];
 
-		const file = `${config.kit.outDir}/types/${key || 'index'}.d.ts`;
-		const content = [
-			'// this file is auto-generated',
-			`import type { ${imports} } from '@sveltejs/kit';`,
-			type !== 'page' && `export type RequestHandler = GenericRequestHandler<${arg}>;`,
-			type !== 'endpoint' &&
-				`export type Load<Props = Record<string, any>> = GenericLoad<${arg}, Props>;`
-		]
-			.filter(Boolean)
-			.join('\n');
+		if (type !== 'page') {
+			imports.push('RequestHandler as GenericRequestHandler, ResponseBody');
+			content.push(endpoint(arg));
+		}
 
-		write_if_changed(file, content);
+		if (type !== 'endpoint') {
+			imports.push('Load as GenericLoad');
+			content.push(page(arg));
+		}
+
+		content.unshift(header(imports.join(', ')));
+
+		write_if_changed(
+			`${config.kit.outDir}/types/${key || 'index'}.d.ts`,
+			content.join('\n').trim()
+		);
 	});
 }
