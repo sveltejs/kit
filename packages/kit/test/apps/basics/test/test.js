@@ -522,6 +522,23 @@ test.describe.parallel('Shadowed pages', () => {
 		await clicknav('[href="/shadowed/redirect/a"]');
 		expect(await page.textContent('h1')).toBe('done');
 	});
+
+	test('Endpoint without GET', async ({ page, clicknav, baseURL, javaScriptEnabled }) => {
+		await page.goto('/shadowed');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await clicknav('[href="/shadowed/missing-get"]');
+
+		expect(await page.textContent('h1')).toBe('post without get');
+
+		// check that the router didn't fall back to the server
+		if (javaScriptEnabled) {
+			expect(requests).not.toContain(`${baseURL}/shadowed/missing-get`);
+		}
+	});
 });
 
 test.describe.parallel('Endpoints', () => {

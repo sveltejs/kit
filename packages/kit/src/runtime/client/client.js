@@ -561,7 +561,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {import('./types').NavigationIntent} intent
 	 * @param {boolean} no_cache
 	 */
-	async function load_route(route, { id, url, path }, no_cache) {
+	async function load_route(route, { id, url, path, routes }, no_cache) {
 		if (!no_cache) {
 			const cached = cache.get(id);
 			if (cached) return cached;
@@ -570,7 +570,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const [pattern, a, b, get_params, shadow_key] = route;
 		const params = get_params
 			? // the pattern is for the route which we've already matched to this path
-			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(path)))
+			  get_params(/** @type {RegExpExecArray} */ (pattern.exec(path)))
 			: {};
 
 		const changed = current.url && {
@@ -642,10 +642,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 							}
 
 							if (res.status === 204) {
-								// fallthrough
-								return;
+								if (route !== routes[routes.length - 1]) {
+									// fallthrough
+									return;
+								}
+								props = {};
+							} else {
+								props = await res.json();
 							}
-							props = await res.json();
 						} else {
 							status = res.status;
 							error = new Error('Failed to load data');
