@@ -50,7 +50,7 @@ If `true`, precompresses files with brotli and gzip. This will generate `.br` an
 
 ## SPA mode
 
-You can use `adapter-static` to create a single-page app or SPA by specifying a **fallback page** and leaving the default of `false` for `config.kitprerender.default`.
+You can use `adapter-static` to create a single-page app or SPA by specifying a **fallback page**.
 
 > In most situations this is not recommended: it harms SEO, tends to slow down perceived performance, and makes your app inaccessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
 
@@ -69,7 +69,7 @@ export default {
 };
 ```
 
-When operating in SPA mode, only pages that have the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option set will be prerendered at build time.
+When operating in SPA mode, you can omit `config.kit.prerender.default` (or set it to `false`, its default value), and only pages that have the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option set will be prerendered at build time.
 
 > ⚠️ During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [call `resolve()` with a parameter of `{ssr: false}` inside the `handle()` hook](https://kit.svelte.dev/docs/hooks#handle).
 
