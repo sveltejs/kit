@@ -22,6 +22,7 @@ const server_template = ({ config, hooks, has_service_worker, runtime, template 
 import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
+import { set_prerendering } from '${runtime}/env.js';
 import * as user_hooks from ${s(hooks)};
 
 const template = ({ head, body, assets, nonce }) => ${s(template)
@@ -34,15 +35,6 @@ let read = null;
 
 set_paths(${s(config.kit.paths)});
 
-// this looks redundant, but the indirection allows us to access
-// named imports without triggering Rollup's missing import detection
-const get_hooks = hooks => ({
-	getSession: hooks.getSession || (() => ({})),
-	handle: hooks.handle || (({ event, resolve }) => resolve(event)),
-	handleError: hooks.handleError || (({ error }) => console.error(error.stack)),
-	externalFetch: hooks.externalFetch || fetch
-});
-
 let default_protocol = 'https';
 
 // allow paths to be globally overridden
@@ -50,13 +42,12 @@ let default_protocol = 'https';
 export function override(settings) {
 	default_protocol = settings.protocol || default_protocol;
 	set_paths(settings.paths);
+	set_prerendering(settings.prerendering);
 	read = settings.read;
 }
 
 export class Server {
 	constructor(manifest) {
-		const hooks = get_hooks(user_hooks);
-
 		this.options = {
 			amp: ${config.kit.amp},
 			csp: ${s(config.kit.csp)},
@@ -64,7 +55,7 @@ export class Server {
 			floc: ${config.kit.floc},
 			get_stack: error => String(error), // for security
 			handle_error: (error, event) => {
-				hooks.handleError({
+				this.options.hooks.handleError({
 					error,
 					event,
 
@@ -76,7 +67,7 @@ export class Server {
 				});
 				error.stack = this.options.get_stack(error);
 			},
-			hooks,
+			hooks: null,
 			hydrate: ${s(config.kit.browser.hydrate)},
 			manifest,
 			method_override: ${s(config.kit.methodOverride)},
@@ -93,9 +84,19 @@ export class Server {
 		};
 	}
 
-	respond(request, options = {}) {
+	async respond(request, options = {}) {
 		if (!(request instanceof Request)) {
 			throw new Error('The first argument to server.respond must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
+		}
+
+		if (!this.options.hooks) {
+			const module = await import(${s(hooks)});
+			this.options.hooks = {
+				getSession: module.getSession || (() => ({})),
+				handle: module.handle || (({ event, resolve }) => resolve(event)),
+				handleError: module.handleError || (({ error }) => console.error(error.stack)),
+				externalFetch: module.externalFetch || fetch
+			};
 		}
 
 		return respond(request, this.options, options);
@@ -147,8 +148,7 @@ export async function build_server(
 
 	/** @type {Record<string, string>} */
 	const input = {
-		index: `${build_dir}/index.js`,
-		notify_prerendering: `${build_dir}/notify_prerendering.js`
+		index: `${build_dir}/index.js`
 	};
 
 	// add entry points for every endpoint...
@@ -180,20 +180,16 @@ export async function build_server(
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
-	const runtime = get_runtime_path(config);
-
 	fs.writeFileSync(
 		input.index,
 		server_template({
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: service_worker_register && !!service_worker_entry_file,
-			runtime,
+			runtime: get_runtime_path(config),
 			template: load_template(cwd, config)
 		})
 	);
-
-	fs.writeFileSync(input.notify_prerendering, notify_prerendering_template(runtime));
 
 	/** @type {import('vite').UserConfig} */
 	const vite_config = await config.kit.vite();

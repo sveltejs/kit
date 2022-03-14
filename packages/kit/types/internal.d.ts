@@ -32,13 +32,10 @@ export interface ServerModule {
 			base: string;
 			assets: string;
 		};
+		prerendering: boolean;
 		protocol?: 'http' | 'https';
 		read(file: string): Buffer;
 	}): void;
-}
-
-export interface NotifyPrerendering {
-	notify_prerendering(): void;
 }
 
 export interface Asset {

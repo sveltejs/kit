@@ -63,15 +63,13 @@ export async function prerender({ config, entries, files, log }) {
 
 	const server_root = join(config.kit.outDir, 'output');
 
-	/** @type {import('types').NotifyPrerendering} */
-	const { notify_prerendering } = await import(`${server_root}/server/notify_prerendering.js`);
-	notify_prerendering();
 	/** @type {import('types').ServerModule} */
 	const { Server, override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
 
 	override({
 		paths: config.kit.paths,
+		prerendering: true,
 		read: (file) => readFileSync(join(config.kit.files.assets, file))
 	});
 

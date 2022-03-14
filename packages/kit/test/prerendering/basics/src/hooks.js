@@ -1,11 +1,14 @@
 import { prerendering } from '$app/env';
 
-const global_prerendering = prerendering;
+const initial_prerendering = prerendering;
 
 export const handle = async ({ event, resolve }) => {
-	if (event.url.pathname === '/prerendering-true' && global_prerendering) {
+	if (event.url.pathname === '/prerendering-true' && prerendering) {
 		return await resolve(event, {
-			transformPage: ({ html }) => html.replace('answer', '42')
+			transformPage: ({ html }) =>
+				html
+					.replace('__INITIAL_PRERENDERING__', initial_prerendering)
+					.replace('__PRERENDERING__', prerendering)
 		});
 	}
 	return await resolve(event);

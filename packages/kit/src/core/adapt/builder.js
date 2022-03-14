@@ -150,7 +150,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 
 		writeServer(dest) {
 			return copy(`${config.kit.outDir}/output/server`, dest, {
-				filter: (file) => file[0] !== '.' && file !== 'notify_prerendering.js'
+				filter: (file) => file[0] !== '.'
 			});
 		},
 
