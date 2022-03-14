@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.16
+
+### Patch Changes
+
+- Provide getClientAddress function ([#4289](https://github.com/sveltejs/kit/pull/4289))
+
 ## 1.0.0-next.15
 
 ### Patch Changes

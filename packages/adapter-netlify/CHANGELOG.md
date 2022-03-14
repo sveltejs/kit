@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.51
+
+### Patch Changes
+
+- Provide getClientAddress function ([#4289](https://github.com/sveltejs/kit/pull/4289))
+
 ## 1.0.0-next.50
 
 ### Patch Changes
