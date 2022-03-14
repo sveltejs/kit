@@ -52,7 +52,6 @@ export async function preview({ port, host, config, https: use_https = false }) 
 
 	override({
 		paths: { base, assets },
-		prerendering: false,
 		protocol: use_https ? 'https' : 'http',
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
