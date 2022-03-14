@@ -64,9 +64,9 @@ export function write_types(config, manifest_data) {
 		const content = [
 			'// this file is auto-generated',
 			`import type { ${imports} } from '@sveltejs/kit';`,
-			type !== 'endpoint' && "import type { Body } from '@sveltejs/kit/types/private';",
+			type !== 'endpoint' && "import type { ResponseBody } from '@sveltejs/kit';",
 			type !== 'page' &&
-				`export type RequestHandler<Output extends Body = Body> = GenericRequestHandler<${arg}, Output>;`,
+				`export type RequestHandler<Output extends ResponseBody = ResponseBody> = GenericRequestHandler<${arg}, Output>;`,
 			type !== 'endpoint' &&
 				`export type Load<
 	InputProps extends Record<string, any> = Record<string, any>,

@@ -6,11 +6,11 @@ import './ambient';
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
-	Body,
 	CspDirectives,
 	Either,
 	ErrorLoadInput,
 	Fallthrough,
+	JSONValue,
 	LoadInput,
 	LoadOutput,
 	Logger,
@@ -223,12 +223,12 @@ export interface Page<Params extends Record<string, string> = Record<string, str
  */
 export interface RequestHandler<
 	Params extends Record<string, string> = Record<string, string>,
-	Output extends Body = Body
+	Output extends ResponseBody = ResponseBody
 > {
 	(event: RequestEvent<Params>): RequestHandlerOutput<Output>;
 }
 
-export type RequestHandlerOutput<Output extends Body = Body> = MaybePromise<
+export type RequestHandlerOutput<Output extends ResponseBody = ResponseBody> = MaybePromise<
 	Either<
 		{
 			status?: number;
@@ -238,6 +238,8 @@ export type RequestHandlerOutput<Output extends Body = Body> = MaybePromise<
 		Fallthrough
 	>
 >;
+
+export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
 
 export class Server {
 	constructor(manifest: SSRManifest);

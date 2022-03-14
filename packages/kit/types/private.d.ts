@@ -28,8 +28,6 @@ export interface AdapterEntry {
 	}) => void;
 }
 
-export type Body = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
-
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
 //
 // MIT License
