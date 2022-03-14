@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 1.0.0-next.297
+
+### Patch Changes
+
+- [breaking] allow `InputProps` and `OutputProps` to be typed separately in generated `Load` ([#4305](https://github.com/sveltejs/kit/pull/4305))
+
+* allow `Output` to be typed in generated `RequestHandler` ([#4305](https://github.com/sveltejs/kit/pull/4305))
+
+- [breaking] require adapters to supply a getClientAddress function ([#4289](https://github.com/sveltejs/kit/pull/4289))
+
+* Allow page endpoint without GET handler ([#4318](https://github.com/sveltejs/kit/pull/4318))
+
+- Return 404 when fetching missing data during prerender ([#4324](https://github.com/sveltejs/kit/pull/4324))
+
+* expose client IP address as event.clientAddress ([#4289](https://github.com/sveltejs/kit/pull/4289))
+
 ## 1.0.0-next.296
 
 ### Patch Changes
