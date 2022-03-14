@@ -190,7 +190,8 @@ export async function load_node({
 
 					response = await respond(new Request(new URL(requested, event.url).href, opts), options, {
 						fetched: requested,
-						initiator: route
+						initiator: route,
+						prerender: state.prerender
 					});
 
 					if (state.prerender) {
