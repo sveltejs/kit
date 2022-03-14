@@ -9,6 +9,16 @@ import { create_build, find_deps } from './utils.js';
 import { s } from '../../utils/misc.js';
 
 /**
+ * @param {string} runtime
+ * @returns {string}
+ */
+const notify_prerendering_template = (runtime) => `
+import { set_prerendering } from '${runtime}/env.js';
+export function notify_prerendering() {
+	set_prerendering(true);
+}`;
+
+/**
  * @param {{
  *   hooks: string;
  *   config: import('types').ValidatedConfig;
@@ -22,7 +32,6 @@ const server_template = ({ config, hooks, has_service_worker, runtime, template 
 import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
-import { set_prerendering } from '${runtime}/env.js';
 import * as user_hooks from ${s(hooks)};
 
 const template = ({ head, body, assets, nonce }) => ${s(template)
@@ -51,7 +60,6 @@ let default_protocol = 'https';
 export function override(settings) {
 	default_protocol = settings.protocol || default_protocol;
 	set_paths(settings.paths);
-	set_prerendering(settings.prerendering);
 	read = settings.read;
 }
 
@@ -139,7 +147,8 @@ export async function build_server(
 
 	/** @type {Record<string, string>} */
 	const input = {
-		index: `${build_dir}/index.js`
+		index: `${build_dir}/index.js`,
+		notify_prerendering: `${build_dir}/notify_prerendering.js`
 	};
 
 	// add entry points for every endpoint...
@@ -171,16 +180,20 @@ export async function build_server(
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
+	const runtime = get_runtime_path(config);
+
 	fs.writeFileSync(
 		input.index,
 		server_template({
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: service_worker_register && !!service_worker_entry_file,
-			runtime: get_runtime_path(config),
+			runtime,
 			template: load_template(cwd, config)
 		})
 	);
+
+	fs.writeFileSync(input.notify_prerendering, notify_prerendering_template(runtime));
 
 	/** @type {import('vite').UserConfig} */
 	const vite_config = await config.kit.vite();
