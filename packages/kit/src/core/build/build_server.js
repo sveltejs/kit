@@ -9,16 +9,6 @@ import { create_build, find_deps } from './utils.js';
 import { s } from '../../utils/misc.js';
 
 /**
- * @param {string} runtime
- * @returns {string}
- */
-const notify_prerendering_template = (runtime) => `
-import { set_prerendering } from '${runtime}/env.js';
-export function notify_prerendering() {
-	set_prerendering(true);
-}`;
-
-/**
  * @param {{
  *   hooks: string;
  *   config: import('types').ValidatedConfig;
@@ -112,6 +102,16 @@ export class Server {
 	}
 }
 `;
+
+/**
+ * @param {string} runtime
+ * @returns {string}
+ */
+const notify_prerendering_template = (runtime) => `
+import { set_prerendering } from '${runtime}/env.js';
+export function notify_prerendering() {
+	set_prerendering(true);
+}`;
 
 /**
  * @param {{
