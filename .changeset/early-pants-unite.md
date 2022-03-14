@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Make manifest.mime part of the public API
+Make `manifest.mimeTypes` part of the public API
