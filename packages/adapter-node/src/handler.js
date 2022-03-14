@@ -6,12 +6,13 @@ import { fileURLToPath } from 'url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
-import { get_client_address } from './get-client-address';
 
-/* global ORIGIN, PROTOCOL_HEADER, HOST_HEADER, TRUST_PROXY */
+/* global ORIGIN, ADDRESS_HEADER, PROTOCOL_HEADER, HOST_HEADER */
 
 const server = new Server(manifest);
 const origin = ORIGIN;
+
+const address_header = ADDRESS_HEADER && (process.env[ADDRESS_HEADER] || '').toLowerCase();
 const protocol_header = PROTOCOL_HEADER && process.env[PROTOCOL_HEADER];
 const host_header = (HOST_HEADER && process.env[HOST_HEADER]) || 'host';
 
@@ -50,11 +51,25 @@ const ssr = async (req, res) => {
 		res,
 		await server.respond(request, {
 			getClientAddress: () => {
-				if (TRUST_PROXY) {
-					return get_client_address(req);
+				if (address_header) {
+					const value = /** @type {string} */ (req.headers[address_header]) || '';
+
+					if (address_header === 'x-forwarded-for') {
+						const addresses = value.split(',');
+						return addresses[(addresses.length + X_FORWARDED_FOR_INDEX) % addresses.length].trim();
+					}
+
+					return value;
 				}
 
-				throw new Error('You must enable the adapter-node trustProxy option to read clientAddress');
+				return (
+					req.connection?.remoteAddress ||
+					// @ts-expect-error
+					req.connection?.socket?.remoteAddress ||
+					req.socket?.remoteAddress ||
+					// @ts-expect-error
+					req.info?.remoteAddress
+				);
 			}
 		})
 	);

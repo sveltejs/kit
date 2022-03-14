@@ -15,11 +15,12 @@ interface AdapterOptions {
 		port?: string;
 		origin?: string;
 		headers?: {
+			address?: string;
 			protocol?: string;
 			host?: string;
 		};
 	};
-	trustProxy?: boolean;
+	xForwardedForIndex?: number;
 }
 
 declare function plugin(options?: AdapterOptions): Adapter;
