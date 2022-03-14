@@ -47,6 +47,12 @@ const ssr = async (req, res) => {
 		return res.end(err.reason || 'Invalid request body');
 	}
 
+	if (address_header && !(address_header in req.headers)) {
+		throw new Error(
+			`Address header was specified with ${ADDRESS_HEADER}=${process.env[ADDRESS_HEADER]} but is absent from request`
+		);
+	}
+
 	setResponse(
 		res,
 		await server.respond(request, {
