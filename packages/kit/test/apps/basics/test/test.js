@@ -532,7 +532,7 @@ test.describe.parallel('Shadowed pages', () => {
 
 		await clicknav('[href="/shadowed/missing-get"]');
 
-		expect(await page.textContent('h1')).toBe(`post without get`);
+		expect(await page.textContent('h1')).toBe('post without get');
 
 		// check that the router didn't fall back to the server
 		if (javaScriptEnabled) {
