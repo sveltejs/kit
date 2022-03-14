@@ -2,44 +2,75 @@
 title: Types
 ---
 
-### @sveltejs/kit
-
-All APIs in SvelteKit are fully typed. The following types can be imported from `@sveltejs/kit`:
-
 **TYPES**
 
-### The `App` namespace
+### Generated types
 
-It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
+The [`RequestHandler`](#sveltejs-kit-requesthandler) and [`Load`](#sveltejs-kit-load) types both accept a `Params` argument allowing you to type the `params` object. For example this endpoint expects `foo`, `bar` and `baz` params:
 
-```ts
-/// <reference types="@sveltejs/kit" />
-
-declare namespace App {
-	interface Locals {}
-
-	interface Platform {}
-
-	interface Session {}
-
-	interface Stuff {}
+```js
+/// file: src/routes/[foo]/[bar]/[baz].js
+// @errors: 2355
+/** @type {import('@sveltejs/kit').RequestHandler<{
+ *   foo: string;
+ *   bar: string;
+ *   baz: string
+ * }>} */
+export async function get({ params }) {
+	// ...
 }
 ```
 
-By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`:
+Needless to say, this is cumbersome to write out, and less portable (if you were to rename the `[foo]` directory to `[qux]`, the type would no longer reflect reality).
 
-#### App.Locals
+To solve this problem, SvelteKit generates `.d.ts` files for each of your endpoints and pages:
 
-The interface that defines `event.locals`, which can be accessed in [hooks](/docs/hooks) (`handle`, `handleError` and `getSession`) and [endpoints](/docs/routing#endpoints).
+```ts
+/// file: .svelte-kit/types/src/routes/[foo]/[bar]/[baz].d.ts
+/// link: false
+import type { RequestHandler as GenericRequestHandler, Load as GenericLoad } from '@sveltejs/kit';
 
-#### App.Platform
+export type RequestHandler<Body = any> = GenericRequestHandler<
+	{ foo: string; bar: string; baz: string },
+	Body
+>;
 
-If your adapter provides [platform-specific context](/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
+export type Load<
+	InputProps extends Record<string, any> = Record<string, any>,
+	OutputProps extends Record<string, any> = InputProps
+> = GenericLoad<{ foo: string; bar: string; baz: string }, InputProps, OutputProps>
+```
 
-#### App.Session
+These files can be imported into your endpoints and pages as siblings, thanks to the [`rootDirs`](https://www.typescriptlang.org/tsconfig#rootDirs) option in your TypeScript configuration:
 
-The interface that defines `session`, both as an argument to [`load`](/docs/loading) functions and the value of the [session store](/docs/modules#$app-stores).
+```js
+/// file: src/routes/[foo]/[bar]/[baz].js
+// @filename: [baz].d.ts
+import type { RequestHandler as GenericRequestHandler, Load as GenericLoad } from '@sveltejs/kit';
 
-#### App.Stuff
+export type RequestHandler<Body = any> = GenericRequestHandler<
+	{ foo: string, bar: string, baz: string },
+	Body
+>;
 
-The interface that defines `stuff`, as input or output to [`load`](/docs/loading) or as the value of the `stuff` property of the [page store](/docs/modules#$app-stores).
+// @filename: index.js
+// @errors: 2355
+// ---cut---
+/** @type {import('./[baz]').RequestHandler} */
+export async function get({ params }) {
+	// ...
+}
+```
+
+```svelte
+<script context="module">
+	/** @type {import('./[baz]').Load} */
+	export async function load({ params, fetch, session, stuff }) {
+		// ...
+	}
+</script>
+```
+
+> For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `.svelte-kit/tsconfig.json` (where `.svelte-kit` is your [`outDir`](/docs/configuration#outdir)):
+>
+>     { "extends": "./.svelte-kit/tsconfig.json" }

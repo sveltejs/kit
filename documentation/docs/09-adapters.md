@@ -54,6 +54,8 @@ Most adapters will generate static HTML for any [prerenderable](/docs/page-optio
 
 You can also use `adapter-static` to generate single-page apps (SPAs) by specifying a [fallback page](https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode).
 
+> You must ensure [`trailingSlash`](configuration#trailingslash) is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+
 #### Platform-specific context
 
 Some adapters may have access to additional information about the request. For example, Cloudflare Workers can access an `env` object containing KV namespaces etc. This can be passed to the `RequestEvent` used in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints) as the `platform` property — consult each adapter's documentation to learn more.
@@ -99,12 +101,12 @@ The types for `Adapter` and its parameters are available in [types/config.d.ts](
 Within the `adapt` method, there are a number of things that an adapter should do:
 
 - Clear out the build directory
-- Call `builder.prerender({ dest })` to prerender pages
+- Write SvelteKit output with `builder.writeClient`, `builder.writePrerendered`, `builder.writeServer`, and `builder.writeStatic`
 - Output code that:
-  - Imports `App` from `${builder.getServerDirectory()}/app.js`
+  - Imports `Server` from `${builder.getServerDirectory()}/index.js`
   - Instantiates the app with a manifest generated with `builder.generateManifest({ relativePath })`
-  - Listens for requests from the platform, converts them to a standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) if necessary, calls the `render` function to generate a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) and responds with it
-  - expose any platform-specific information to SvelteKit via the `platform` option passed to `app.render`
+  - Listens for requests from the platform, converts them to a standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) if necessary, calls the `server.respond(request, { getClientAddress })` function to generate a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) and responds with it
+  - expose any platform-specific information to SvelteKit via the `platform` option passed to `server.respond`
   - Globally shims `fetch` to work on the target platform, if necessary. SvelteKit provides a `@sveltejs/kit/install-fetch` helper for platforms that can use `node-fetch`
 - Bundle the output to avoid needing to install dependencies on the target platform, if necessary
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform

@@ -1,7 +1,5 @@
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
-import { s } from '../../../utils/misc.js';
-import { escape_json_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { create_prerendering_url_proxy } from './utils.js';
 import { is_pojo, lowercase_keys, normalize_request_method } from '../utils.js';
@@ -44,13 +42,7 @@ export async function load_node({
 
 	let uses_credentials = false;
 
-	/**
-	 * @type {Array<{
-	 *   url: string;
-	 *   body: string;
-	 *   json: string;
-	 * }>}
-	 */
+	/** @type {Array<import('./types').Fetched>} */
 	const fetched = [];
 
 	/**
@@ -139,8 +131,6 @@ export async function load_node({
 					}
 				}
 
-				opts.headers.set('referer', event.url.href);
-
 				const resolved = resolve(event.url.pathname, requested.split('?')[0]);
 
 				/** @type {Response} */
@@ -165,7 +155,7 @@ export async function load_node({
 
 					if (options.read) {
 						const type = is_asset
-							? options.manifest._.mime[filename.slice(filename.lastIndexOf('.'))]
+							? options.manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
 							: 'text/html';
 
 						response = new Response(options.read(file), {
@@ -200,7 +190,9 @@ export async function load_node({
 
 					response = await respond(new Request(new URL(requested, event.url).href, opts), options, {
 						fetched: requested,
-						initiator: route
+						getClientAddress: state.getClientAddress,
+						initiator: route,
+						prerender: state.prerender
 					});
 
 					if (state.prerender) {
@@ -252,8 +244,6 @@ export async function load_node({
 							}
 
 							if (!opts.body || typeof opts.body === 'string') {
-								// the json constructed below is later added to the dom in a script tag
-								// make sure the used values are safe
 								const status_number = Number(response.status);
 								if (isNaN(status_number)) {
 									throw new Error(
@@ -262,11 +252,16 @@ export async function load_node({
 										}" type: ${typeof response.status}`
 									);
 								}
-								// prettier-ignore
+
 								fetched.push({
 									url: requested,
-									body: /** @type {string} */ (opts.body),
-									json: `{"status":${status_number},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape_json_in_html(body)}}`
+									body: opts.body,
+									response: {
+										status: status_number,
+										statusText: response.statusText,
+										headers,
+										body
+									}
 								});
 							}
 
@@ -346,7 +341,7 @@ export async function load_node({
 
 	// generate __data.json files when prerendering
 	if (shadow.body && state.prerender) {
-		const pathname = `${event.url.pathname}/__data.json`;
+		const pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
 
 		const dependency = {
 			response: new Response(undefined),

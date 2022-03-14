@@ -1,28 +1,34 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
+import './ambient';
+
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
-	Logger,
-	PrerenderOnErrorValue,
-	SSRNodeLoader,
-	SSRRoute,
-	TrailingSlash,
-	Either,
-	MaybePromise,
-	RecursiveRequired,
-	RouteDefinition,
 	AdapterEntry,
-	ResponseHeaders,
+	CspDirectives,
+	Either,
+	ErrorLoadInput,
 	Fallthrough,
-	RequiredResolveOptions,
-	Body
-} from './internal';
-import './ambient';
+	JSONValue,
+	LoadInput,
+	LoadOutput,
+	Logger,
+	MaybePromise,
+	Prerendered,
+	PrerenderOnErrorValue,
+	RequestEvent,
+	RequestOptions,
+	ResolveOptions,
+	ResponseHeaders,
+	RouteDefinition,
+	TrailingSlash
+} from './private';
+import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal';
 
 export interface Adapter {
 	name: string;
-	adapt(builder: Builder): Promise<void>;
+	adapt(builder: Builder): MaybePromise<void>;
 }
 
 export interface Builder {
@@ -30,8 +36,8 @@ export interface Builder {
 	rimraf(dir: string): void;
 	mkdirp(dir: string): void;
 
-	appDir: string;
-	trailingSlash: 'always' | 'never' | 'ignore';
+	config: ValidatedConfig;
+	prerendered: Prerendered;
 
 	/**
 	 * Create entry points that map to individual functions
@@ -51,6 +57,16 @@ export interface Builder {
 	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */
 	writeClient(dest: string): string[];
+	/**
+	 *
+	 * @param dest
+	 */
+	writePrerendered(
+		dest: string,
+		opts?: {
+			fallback?: string;
+		}
+	): string[];
 	/**
 	 * @param dest the destination folder to which files should be copied
 	 * @returns an array of paths corresponding to the files that have been created by the copy
@@ -76,8 +92,6 @@ export interface Builder {
 			replace?: Record<string, string>;
 		}
 	): string[];
-
-	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<Prerendered>;
 }
 
 export interface Config {
@@ -95,6 +109,7 @@ export interface Config {
 			mode?: 'hash' | 'nonce' | 'auto';
 			directives?: CspDirectives;
 		};
+		endpointExtensions?: string[];
 		files?: {
 			assets?: string;
 			hooks?: string;
@@ -109,6 +124,7 @@ export interface Config {
 			parameter?: string;
 			allowed?: string[];
 		};
+		outDir?: string;
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;
@@ -122,6 +138,7 @@ export interface Config {
 		prerender?: {
 			concurrency?: number;
 			crawl?: boolean;
+			default?: boolean;
 			enabled?: boolean;
 			entries?: string[];
 			onError?: PrerenderOnErrorValue;
@@ -141,127 +158,11 @@ export interface Config {
 	preprocess?: any;
 }
 
-// Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
-//
-// MIT License
-//
-// Copyright (c) 2021-present, Joshua Hemphill
-// Copyright (c) 2021, Tecnico Corporation
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
-export namespace Csp {
-	type ActionSource = 'strict-dynamic' | 'report-sample';
-	type BaseSource = 'self' | 'unsafe-eval' | 'unsafe-hashes' | 'unsafe-inline' | 'none';
-	type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
-	type FrameSource = HostSource | SchemeSource | 'self' | 'none';
-	type HostNameScheme = `${string}.${string}` | `localhost`;
-	type HostSource = `${HostProtocolSchemes}${HostNameScheme}${PortScheme}`;
-	type HostProtocolSchemes = `${string}://` | '';
-	type HttpDelineator = '/' | '?' | '#' | '\\';
-	type PortScheme = `:${number}` | '' | ':*';
-	type SchemeSource = 'http:' | 'https:' | 'data:' | 'mediastream:' | 'blob:' | 'filesystem:';
-	type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
-	type Sources = Source[];
-	type UriPath = `${HttpDelineator}${string}`;
-}
-
-export type CspDirectives = {
-	'child-src'?: Csp.Sources;
-	'default-src'?: Array<Csp.Source | Csp.ActionSource>;
-	'frame-src'?: Csp.Sources;
-	'worker-src'?: Csp.Sources;
-	'connect-src'?: Csp.Sources;
-	'font-src'?: Csp.Sources;
-	'img-src'?: Csp.Sources;
-	'manifest-src'?: Csp.Sources;
-	'media-src'?: Csp.Sources;
-	'object-src'?: Csp.Sources;
-	'prefetch-src'?: Csp.Sources;
-	'script-src'?: Array<Csp.Source | Csp.ActionSource>;
-	'script-src-elem'?: Csp.Sources;
-	'script-src-attr'?: Csp.Sources;
-	'style-src'?: Array<Csp.Source | Csp.ActionSource>;
-	'style-src-elem'?: Csp.Sources;
-	'style-src-attr'?: Csp.Sources;
-	'base-uri'?: Array<Csp.Source | Csp.ActionSource>;
-	sandbox?: Array<
-		| 'allow-downloads-without-user-activation'
-		| 'allow-forms'
-		| 'allow-modals'
-		| 'allow-orientation-lock'
-		| 'allow-pointer-lock'
-		| 'allow-popups'
-		| 'allow-popups-to-escape-sandbox'
-		| 'allow-presentation'
-		| 'allow-same-origin'
-		| 'allow-scripts'
-		| 'allow-storage-access-by-user-activation'
-		| 'allow-top-navigation'
-		| 'allow-top-navigation-by-user-activation'
-	>;
-	'form-action'?: Array<Csp.Source | Csp.ActionSource>;
-	'frame-ancestors'?: Array<Csp.HostSource | Csp.SchemeSource | Csp.FrameSource>;
-	'navigate-to'?: Array<Csp.Source | Csp.ActionSource>;
-	'report-uri'?: Csp.UriPath[];
-	'report-to'?: string[];
-
-	'require-trusted-types-for'?: Array<'script'>;
-	'trusted-types'?: Array<'none' | 'allow-duplicates' | '*' | string>;
-	'upgrade-insecure-requests'?: boolean;
-
-	/** @deprecated */
-	'require-sri-for'?: Array<'script' | 'style' | 'script style'>;
-
-	/** @deprecated */
-	'block-all-mixed-content'?: boolean;
-
-	/** @deprecated */
-	'plugin-types'?: Array<`${string}/${string}` | 'none'>;
-
-	/** @deprecated */
-	referrer?: Array<
-		| 'no-referrer'
-		| 'no-referrer-when-downgrade'
-		| 'origin'
-		| 'origin-when-cross-origin'
-		| 'same-origin'
-		| 'strict-origin'
-		| 'strict-origin-when-cross-origin'
-		| 'unsafe-url'
-		| 'none'
-	>;
-};
-
-export interface EndpointOutput<Output extends Body = Body> {
-	status?: number;
-	headers?: Headers | Partial<ResponseHeaders>;
-	body?: Output;
-}
-
-export interface ErrorLoad<Params = Record<string, string>, Props = Record<string, any>> {
+export interface ErrorLoad<
+	Params extends Record<string, string> = Record<string, string>,
+	Props extends Record<string, any> = Record<string, any>
+> {
 	(input: ErrorLoadInput<Params>): MaybePromise<LoadOutput<Props>>;
-}
-
-export interface ErrorLoadInput<Params = Record<string, string>> extends LoadInput<Params> {
-	status?: number;
-	error?: Error;
 }
 
 export interface ExternalFetch {
@@ -283,100 +184,75 @@ export interface HandleError {
 	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
 }
 
-export interface Load<Params = Record<string, string>, Props = Record<string, any>> {
-	(input: LoadInput<Params>): MaybePromise<Either<Fallthrough, LoadOutput<Props>>>;
+/**
+ * The type of a `load` function exported from `<script context="module">` in a page or layout.
+ *
+ * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the Params generic argument.
+ */
+export interface Load<
+	Params extends Record<string, string> = Record<string, string>,
+	InputProps extends Record<string, any> = Record<string, any>,
+	OutputProps extends Record<string, any> = InputProps
+> {
+	(input: LoadInput<Params, InputProps>): MaybePromise<
+		Either<Fallthrough, LoadOutput<OutputProps>>
+	>;
 }
 
-export interface LoadInput<Params = Record<string, string>> {
+export interface Navigation {
+	from: URL;
+	to: URL;
+}
+
+export interface Page<Params extends Record<string, string> = Record<string, string>> {
 	url: URL;
 	params: Params;
-	props: Record<string, any>;
-	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
-	session: App.Session;
-	stuff: Partial<App.Stuff>;
-}
-
-export interface LoadOutput<Props = Record<string, any>> {
-	status?: number;
-	error?: string | Error;
-	redirect?: string;
-	props?: Props;
-	stuff?: Partial<App.Stuff>;
-	maxage?: number;
-}
-
-export interface Prerendered {
-	pages: Map<
-		string,
-		{
-			/** The location of the .html file relative to the output directory */
-			file: string;
-		}
-	>;
-	assets: Map<
-		string,
-		{
-			/** The MIME type of the asset */
-			type: string;
-		}
-	>;
-	redirects: Map<
-		string,
-		{
-			status: number;
-			location: string;
-		}
-	>;
-	/** An array of prerendered paths (without trailing slashes, regardless of the trailingSlash config) */
-	paths: string[];
-}
-
-export interface PrerenderErrorHandler {
-	(details: {
-		status: number;
-		path: string;
-		referrer: string | null;
-		referenceType: 'linked' | 'fetched';
-	}): void;
-}
-
-export interface RequestEvent<Params = Record<string, string>> {
-	request: Request;
-	url: URL;
-	params: Params;
-	locals: App.Locals;
-	platform: Readonly<App.Platform>;
+	stuff: App.Stuff;
+	status: number;
+	error: Error | null;
 }
 
 /**
  * A function exported from an endpoint that corresponds to an
- * HTTP verb (get, put, patch, etc) and handles requests with
+ * HTTP verb (`get`, `put`, `patch`, etc) and handles requests with
  * that method. Note that since 'delete' is a reserved word in
- * JavaScript, delete handles are called 'del' instead.
+ * JavaScript, delete handles are called `del` instead.
+ *
+ * Note that you can use [generated types](/docs/types#generated-types)
+ * instead of manually specifying the `Params` generic argument.
  */
-export interface RequestHandler<Params = Record<string, string>, Output extends Body = Body> {
-	(event: RequestEvent<Params>): MaybePromise<
-		Either<Output extends Response ? Response : EndpointOutput<Output>, Fallthrough>
-	>;
+export interface RequestHandler<
+	Params extends Record<string, string> = Record<string, string>,
+	Output extends ResponseBody = ResponseBody
+> {
+	(event: RequestEvent<Params>): RequestHandlerOutput<Output>;
 }
 
-export interface RequestOptions {
-	platform?: App.Platform;
-}
+export type RequestHandlerOutput<Output extends ResponseBody = ResponseBody> = MaybePromise<
+	Either<
+		{
+			status?: number;
+			headers?: Headers | Partial<ResponseHeaders>;
+			body?: Output;
+		},
+		Fallthrough
+	>
+>;
 
-export type ResolveOptions = Partial<RequiredResolveOptions>;
+export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
 
 export class Server {
 	constructor(manifest: SSRManifest);
-	respond(request: Request, options?: RequestOptions): Promise<Response>;
+	respond(request: Request, options: RequestOptions): Promise<Response>;
 }
 
 export interface SSRManifest {
 	appDir: string;
 	assets: Set<string>;
+	mimeTypes: Record<string, string>;
+
 	/** private fields */
 	_: {
-		mime: Record<string, string>;
 		entry: {
 			file: string;
 			js: string[];
@@ -386,6 +262,3 @@ export interface SSRManifest {
 		routes: SSRRoute[];
 	};
 }
-
-// TODO should this be public?
-export type ValidatedConfig = RecursiveRequired<Config>;

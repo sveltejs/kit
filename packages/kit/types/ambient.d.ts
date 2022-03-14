@@ -1,15 +1,52 @@
-/* eslint-disable import/no-duplicates */
-
+/**
+ * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
+ *
+ * ```ts
+ * /// <reference types="@sveltejs/kit" />
+ *
+ * declare namespace App {
+ * 	interface Locals {}
+ *
+ * 	interface Platform {}
+ *
+ * 	interface Session {}
+ *
+ * 	interface Stuff {}
+ * }
+ * ```
+ *
+ * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`:
+ */
 declare namespace App {
-	interface Locals {}
-	interface Platform {}
-	interface Session {}
-	interface Stuff {}
+	/**
+	 * The interface that defines `event.locals`, which can be accessed in [hooks](/docs/hooks) (`handle`, `handleError` and `getSession`) and [endpoints](/docs/routing#endpoints).
+	 */
+	export interface Locals {}
+
+	/**
+	 * If your adapter provides [platform-specific context](/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
+	 */
+	export interface Platform {}
+
+	/**
+	 * The interface that defines `session`, both as an argument to [`load`](/docs/loading) functions and the value of the [session store](/docs/modules#$app-stores).
+	 */
+	export interface Session {}
+
+	/**
+	 * The interface that defines `stuff`, as input or output to [`load`](/docs/loading) or as the value of the `stuff` property of the [page store](/docs/modules#$app-stores).
+	 */
+	export interface Stuff {}
 }
 
+/**
+ * ```ts
+ * import { amp, browser, dev, mode, prerendering } from '$app/env';
+ * ```
+ */
 declare module '$app/env' {
 	/**
-	 * Whether or not app is in AMP mode.
+	 * Whether or not the app is running in [AMP mode](/docs/seo#manual-setup-amp).
 	 */
 	export const amp: boolean;
 	/**
@@ -32,14 +69,27 @@ declare module '$app/env' {
 	export const mode: string;
 }
 
+/**
+ * ```ts
+ * import {
+ * 	afterNavigate,
+ * 	beforeNavigate,
+ * 	disableScrollHandling,
+ * 	goto,
+ * 	invalidate,
+ * 	prefetch,
+ * 	prefetchRoutes
+ * } from '$app/navigation';
+ * ```
+ */
 declare module '$app/navigation' {
 	/**
-	 * Disable SvelteKit's built-in scroll handling for the current navigation, in case you need to manually control the scroll position.
+	 * If called when the page is being updated following a navigation (in `onMount` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
 	 */
 	export function disableScrollHandling(): void;
 	/**
-	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified href.
+	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`.
 	 *
 	 * @param href Where to navigate to
 	 * @param opts.replaceState If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
@@ -50,12 +100,12 @@ declare module '$app/navigation' {
 	export function goto(
 		href: string,
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
-	): Promise<any>;
+	): Promise<void>;
 	/**
-	 * Returns a Promise that resolves when SvelteKit re-runs any current `load` functions that depend on `href`
+	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * @param href The invalidated resource
 	 */
-	export function invalidate(href: string): Promise<any>;
+	export function invalidate(href: string): Promise<void>;
 	/**
 	 * Programmatically prefetches the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
@@ -67,7 +117,7 @@ declare module '$app/navigation' {
 	 *
 	 * @param href Page to prefetch
 	 */
-	export function prefetch(href: string): Promise<any>;
+	export function prefetch(href: string): Promise<void>;
 	/**
 	 * Programmatically prefetches the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
@@ -75,134 +125,174 @@ declare module '$app/navigation' {
 	 * If no argument is given, all routes will be fetched, otherwise you can specify routes by any matching pathname
 	 * such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`).
 	 *
-	 * Unlike prefetch, this won't call preload for individual pages.
+	 * Unlike prefetch, this won't call load for individual pages.
 	 * Returns a Promise that resolves when the routes have been prefetched.
 	 */
-	export function prefetchRoutes(routes?: string[]): Promise<any>;
+	export function prefetchRoutes(routes?: string[]): Promise<void>;
 
 	/**
-	 * A navigation interceptor that triggers before we navigate to a new route.
+	 * A navigation interceptor that triggers before we navigate to a new URL (internal or external) whether by clicking a link, calling `goto`, or using the browser back/forward controls.
 	 * This is helpful if we want to conditionally prevent a navigation from completing or lookup the upcoming url.
 	 */
 	export function beforeNavigate(
-		fn: ({ from, to, cancel }: { from: URL; to: URL | null; cancel: () => void }) => void
-	): any;
+		fn: (navigation: { from: URL; to: URL | null; cancel: () => void }) => void
+	): void;
 
 	/**
 	 * A lifecycle function that runs when the page mounts, and also whenever SvelteKit navigates to a new URL but stays on this component.
 	 */
-	export function afterNavigate(fn: ({ from, to }: { from: URL | null; to: URL }) => void): any;
+	export function afterNavigate(fn: (navigation: { from: URL | null; to: URL }) => void): void;
 }
 
+/**
+ * ```ts
+ * import { base, assets } from '$app/paths';
+ * ```
+ */
 declare module '$app/paths' {
 	/**
-	 * A root-relative (i.e. begins with a `/`) string that matches `config.kit.paths.base` in your project configuration.
+	 * A string that matches [`config.kit.paths.base`](/docs/configuration#paths). It must begin, but not end, with a `/`.
 	 */
-	export const base: string;
+	export const base: `/${string}`;
 	/**
-	 * A root-relative or absolute path that matches `config.kit.paths.assets` (after it has been resolved against base).
+	 * An absolute path that matches [`config.kit.paths.assets`](/docs/configuration#paths).
+	 *
+	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during [`svelte-kit dev`](/docs/cli#svelte-kit-dev) or [`svelte-kit preview`](/docs/cli#svelte-kit-preview), since the assets don't yet live at their eventual URL.
 	 */
-	export const assets: string;
+	export const assets: `https://${string}` | `http://${string}`;
 }
 
+/**
+ * ```ts
+ * import { getStores, navigating, page, session, updated } from '$app/stores';
+ * ```
+ *
+ * Stores are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `session` and `page` are unique to each request on the server, rather than shared between multiple requests handled by the same server simultaneously, which is what makes it safe to include user-specific data in `session`.
+ *
+ * Because of that, you must subscribe to the stores during component initialization (which happens automatically if you reference the store value, e.g. as `$page`, in a component) before you can use them.
+ */
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
-	type Navigating = { from: URL; to: URL };
+	import { Navigation, Page } from '@sveltejs/kit';
 
 	/**
-	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
-	 * Most of the time, you won't need to use it.
+	 * A convenience function around `getContext`. Must be called during component initialization.
+	 * Only use this if you need to defer store subscription until after the component has mounted, for some reason.
 	 */
 	export function getStores(): {
 		navigating: typeof navigating;
 		page: typeof page;
-		session: Writable<App.Session>;
+		session: typeof session;
 		updated: typeof updated;
 	};
+
 	/**
 	 * A readable store whose value contains page data.
 	 */
-	export const page: Readable<{
-		url: URL;
-		params: Record<string, string>;
-		stuff: App.Stuff;
-		status: number;
-		error: Error | null;
-	}>;
+	export const page: Readable<Page>;
 	/**
 	 * A readable store.
-	 * When navigating starts, its value is `{ from: URL, to: URL }`
+	 * When navigating starts, its value is `{ from: URL, to: URL }`,
 	 * When navigating finishes, its value reverts to `null`.
 	 */
-	export const navigating: Readable<Navigating | null>;
+	export const navigating: Readable<Navigation | null>;
 	/**
-	 * A writable store whose initial value is whatever was returned from `getSession`.
+	 * A writable store whose initial value is whatever was returned from [`getSession`](/docs/hooks#getsession).
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
 	 */
 	export const session: Writable<App.Session>;
 	/**
-	 * A writable store indicating if the site was updated since the store was created.
-	 * It can be written to when custom logic is required to detect updates.
+	 *  A readable store whose initial value is `false`. If [`version.pollInterval`](/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 */
 	export const updated: Readable<boolean> & { check: () => boolean };
 }
 
+/**
+ * ```ts
+ * import { build, files, prerendered, version } from '$service-worker';
+ * ```
+ *
+ * This module is only available to [service workers](/docs/service-workers).
+ */
 declare module '$service-worker' {
 	/**
 	 * An array of URL strings representing the files generated by Vite, suitable for caching with `cache.addAll(build)`.
-	 * This is only available to service workers.
 	 */
 	export const build: string[];
 	/**
-	 * An array of URL strings representing the files in your static directory,
-	 * or whatever directory is specified by `config.kit.files.assets`.
-	 * This is only available to service workers.
+	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.kit.files.assets`. You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](/docs/configuration)
 	 */
 	export const files: string[];
 	/**
-	 * The result of calling `Date.now()` at build time.
-	 * It's useful for generating unique cache names inside your service worker,
-	 * so that a later deployment of your app can invalidate old caches.
-	 * This is only available to service workers.
+	 * An array of pathnames corresponding to prerendered pages and endpoints.
 	 */
-	export const timestamp: number;
+	export const prerendered: string[];
+	/**
+	 * See [`config.kit.version`](/docs/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
+	 */
+	export const version: string;
 }
 
 declare module '@sveltejs/kit/hooks' {
 	import { Handle } from '@sveltejs/kit';
 
 	/**
-	 * Utility function that allows chaining `handle` functions in a
-	 * middleware-like manner.
+	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
+	 *
+	 * ```js
+	 * /// file: src/hooks.js
+	 * import { sequence } from '@sveltejs/kit/hooks';
+	 *
+	 * /** @type {import('@sveltejs/kit').Handle} *\/
+	 * async function first({ event, resolve }) {
+	 * 	console.log('first pre-processing');
+	 * 	const result = await resolve(event);
+	 * 	console.log('first post-processing');
+	 * 	return result;
+	 * }
+	 *
+	 * /** @type {import('@sveltejs/kit').Handle} *\/
+	 * async function second({ event, resolve }) {
+	 * 	console.log('second pre-processing');
+	 * 	const result = await resolve(event);
+	 * 	console.log('second post-processing');
+	 * 	return result;
+	 * }
+	 *
+	 * export const handle = sequence(first, second);
+	 * ```
+	 *
+	 * The example above would print:
+	 *
+	 * ```
+	 * first pre-processing
+	 * second pre-processing
+	 * second post-processing
+	 * first post-processing
+	 * ```
 	 *
 	 * @param handlers The chain of `handle` functions
 	 */
 	export function sequence(...handlers: Handle[]): Handle;
 }
 
-declare module '@sveltejs/kit/node' {
-	import { IncomingMessage, ServerResponse } from 'http';
-
-	export interface GetRawBody {
-		(request: IncomingMessage): Promise<Uint8Array | null>;
-	}
-	export const getRawBody: GetRawBody;
-
-	export interface GetRequest {
-		(base: string, request: IncomingMessage): Promise<Request>;
-	}
-	export const getRequest: GetRequest;
-
-	export interface SetResponse {
-		(res: ServerResponse, response: Response): void;
-	}
-	export const setResponse: SetResponse;
+/**
+ * A polyfill for `fetch` and its related interfaces, used by adapters for environments that don't provide a native implementation.
+ */
+declare module '@sveltejs/kit/install-fetch' {
+	/**
+	 * Make `fetch`, `Headers`, `Request` and `Response` available as globals, via `node-fetch`
+	 */
+	export function installFetch(): void;
 }
 
-declare module '@sveltejs/kit/install-fetch' {
-	import fetch, { Headers, Request, Response } from 'node-fetch';
-
-	export function __fetch_polyfill(): void;
-
-	export { fetch, Headers, Request, Response };
+/**
+ * Utilities used by adapters for Node-like environments.
+ */
+declare module '@sveltejs/kit/node' {
+	export function getRequest(
+		base: string,
+		request: import('http').IncomingMessage
+	): Promise<Request>;
+	export function setResponse(res: import('http').ServerResponse, response: Response): void;
 }

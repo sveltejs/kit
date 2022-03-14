@@ -1,5 +1,43 @@
 # create-svelte
 
+## 2.0.0-next.125
+
+### Patch Changes
+
+- [fix] check for app.d.ts rather than global.d.ts ([#4295](https://github.com/sveltejs/kit/pull/4295))
+
+## 2.0.0-next.124
+
+### Patch Changes
+
+- Add sync CLI command ([#4182](https://github.com/sveltejs/kit/pull/4182))
+
+* Upgrade to TypeScript 4.6 ([#4190](https://github.com/sveltejs/kit/pull/4190))
+
+## 2.0.0-next.123
+
+### Patch Changes
+
+- Extend user tsconfig from generated .svelte-kit/tsconfig.json ([#4118](https://github.com/sveltejs/kit/pull/4118))
+
+## 2.0.0-next.122
+
+### Patch Changes
+
+- remove unnecessary CSS units ([#4115](https://github.com/sveltejs/kit/pull/4115))
+
+## 2.0.0-next.121
+
+### Patch Changes
+
+- Add option to create integration tests with Playwright ([#4056](https://github.com/sveltejs/kit/pull/4056))
+
+## 2.0.0-next.120
+
+### Patch Changes
+
+- fix `@typescript-eslint/no-empty-interface` lint error when starting a new app with eslint ([#4077](https://github.com/sveltejs/kit/pull/4077))
+
 ## 2.0.0-next.119
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 
-/** @type {import('@sveltejs/kit/node').GetRawBody} */
+/** @param {import('http').IncomingMessage} req */
 function get_raw_body(req) {
 	return new Promise((fulfil, reject) => {
 		const h = req.headers;
@@ -50,7 +50,7 @@ function get_raw_body(req) {
 	});
 }
 
-/** @type {import('@sveltejs/kit/node').GetRequest} */
+/** @type {import('@sveltejs/kit/node').getRequest} */
 export async function getRequest(base, req) {
 	let headers = /** @type {Record<string, string>} */ (req.headers);
 	if (req.httpVersionMajor === 2) {
@@ -69,9 +69,8 @@ export async function getRequest(base, req) {
 	});
 }
 
-/** @type {import('@sveltejs/kit/node').SetResponse} */
+/** @type {import('@sveltejs/kit/node').setResponse} */
 export async function setResponse(res, response) {
-	/** @type {import('types').ResponseHeaders} */
 	const headers = Object.fromEntries(response.headers);
 
 	if (response.headers.has('set-cookie')) {

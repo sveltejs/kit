@@ -92,6 +92,14 @@ async function main() {
 					initial: false,
 					active: 'Yes',
 					inactive: 'No'
+				},
+				{
+					type: 'toggle',
+					name: 'playwright',
+					message: 'Add Playwright for browser testing?',
+					initial: false,
+					active: 'Yes',
+					inactive: 'No'
 				}
 			],
 			{
@@ -122,6 +130,11 @@ async function main() {
 		console.log(bold('✔ Prettier'));
 		console.log(cyan('  https://prettier.io/docs/en/options.html'));
 		console.log(cyan('  https://github.com/sveltejs/prettier-plugin-svelte#options'));
+	}
+
+	if (options.playwright) {
+		console.log(bold('✔ Playwright'));
+		console.log(cyan('  https://playwright.dev'));
 	}
 
 	console.log('\nInstall community-maintained integrations:');

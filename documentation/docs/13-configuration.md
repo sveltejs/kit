@@ -29,6 +29,7 @@ const config = {
 				// ...
 			}
 		},
+		endpointExtensions: ['.js', '.ts'],
 		files: {
 			assets: 'static',
 			hooks: 'src/hooks',
@@ -43,6 +44,7 @@ const config = {
 			parameter: '_method',
 			allowed: []
 		},
+		outDir: '.svelte-kit',
 		package: {
 			dir: 'package',
 			emitTypes: true,
@@ -57,6 +59,7 @@ const config = {
 		prerender: {
 			concurrency: 1,
 			crawl: true,
+			default: false,
 			enabled: true,
 			entries: ['*'],
 			onError: 'fail'
@@ -132,7 +135,11 @@ export default config;
 
 When pages are prerendered, the CSP header is added via a `<meta http-equiv>` tag (note that in this case, `frame-ancestors`, `report-uri` and `sandbox` directives will be ignored).
 
-> When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbiddem.
+> When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
+
+### endpointExtensions
+
+An array of file extensions that SvelteKit will treat as endpoints. Files with extensions that match neither `config.extensions` nor `config.kit.endpointExtensions` will be ignored by the router.
 
 ### files
 
@@ -169,6 +176,10 @@ See [HTTP Method Overrides](/docs/routing#endpoints-http-method-overrides). An o
 
 - `parameter` — query parameter name to use for passing the intended method value
 - `allowed` - array of HTTP methods that can be used when overriding the original request method
+
+### outDir
+
+The directory that SvelteKit writes files to during `dev` and `build`. You should exclude this directory from version control.
 
 ### package
 
@@ -219,6 +230,7 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
 
 - `concurrency` — how many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
+- `default` — set to `true` to prerender every page without `export const prerender = false`
 - `enabled` — set to `false` to disable prerendering altogether
 - `entries` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 - `onError`
@@ -230,18 +242,17 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
     ```js
     import adapter from '@sveltejs/adapter-static';
 
-    /** @type {import('@sveltejs/kit').PrerenderErrorHandler} */
-    const handleError = ({ status, path, referrer, referenceType }) => {
-    	if (path.startsWith('/blog')) throw new Error('Missing a blog page!');
-    	console.warn(`${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`);
-    };
-
     /** @type {import('@sveltejs/kit').Config} */
     const config = {
     	kit: {
     		adapter: adapter(),
     		prerender: {
-    			onError: handleError
+    			onError: ({ status, path, referrer, referenceType }) => {
+    				if (path.startsWith('/blog')) throw new Error('Missing a blog page!');
+    				console.warn(
+    					`${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`
+    				);
+    			}
     		}
     	}
     };
@@ -264,9 +275,9 @@ An object containing zero or more of the following values:
 
 Whether to remove, append, or ignore trailing slashes when resolving URLs to routes.
 
-- `"never"` — redirect `/x/` to `/x`
-- `"always"` — redirect `/x` to `/x/`
-- `"ignore"` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
+- `'never'` — redirect `/x/` to `/x`
+- `'always'` — redirect `/x` to `/x/`
+- `'ignore'` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
 
 This option also affects [prerendering](/docs/page-options#prerender). If `trailingSlash` is `always`, a route like `/about` will result in an `about/index.html` file, otherwise it will create `about.html`, mirroring static webserver conventions.
 

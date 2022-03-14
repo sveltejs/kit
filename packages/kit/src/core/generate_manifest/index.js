@@ -2,17 +2,14 @@ import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
 
 /**
- * @param {import('types').BuildData} build_data;
- * @param {string} relative_path;
- * @param {import('types').RouteData[]} routes;
- * @param {'esm' | 'cjs'} format
+ * @param {{
+ *   build_data: import('types').BuildData;
+ *   relative_path: string;
+ *   routes: import('types').RouteData[];
+ *   format?: 'esm' | 'cjs'
+ * }} opts
  */
-export function generate_manifest(
-	build_data,
-	relative_path,
-	routes = build_data.manifest_data.routes,
-	format = 'esm'
-) {
+export function generate_manifest({ build_data, relative_path, routes, format = 'esm' }) {
 	/** @typedef {{ index: number, path: string }} LookupEntry */
 	/** @type {Map<string, LookupEntry>} */
 	const bundled_nodes = new Map();
@@ -61,8 +58,8 @@ export function generate_manifest(
 	return `{
 		appDir: ${s(build_data.app_dir)},
 		assets: new Set(${s(assets)}),
+		mimeTypes: ${s(get_mime_lookup(build_data.manifest_data))},
 		_: {
-			mime: ${s(get_mime_lookup(build_data.manifest_data))},
 			entry: ${s(build_data.client.entry)},
 			nodes: [
 				${Array.from(bundled_nodes.values()).map(node => importer(node.path)).join(',\n\t\t\t\t')}
@@ -72,6 +69,7 @@ export function generate_manifest(
 					if (route.type === 'page') {
 						return `{
 							type: 'page',
+							key: ${s(route.key)},
 							pattern: ${route.pattern},
 							params: ${get_params(route.params)},
 							path: ${route.path ? s(route.path) : null},

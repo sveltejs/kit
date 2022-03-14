@@ -67,12 +67,16 @@ export async function respond(opts) {
 
 	let page_config = get_page_config(leaf, options);
 
-	if (!leaf.prerender && state.prerender && !state.prerender.all) {
-		// if the page has `export const prerender = true`, continue,
-		// otherwise bail out at this point
-		return new Response(undefined, {
-			status: 204
-		});
+	if (state.prerender) {
+		// if the page isn't marked as prerenderable (or is explicitly
+		// marked NOT prerenderable, if `prerender.default` is `true`),
+		// then bail out at this point
+		const should_prerender = leaf.prerender ?? state.prerender.default;
+		if (!should_prerender) {
+			return new Response(undefined, {
+				status: 204
+			});
+		}
 	}
 
 	/** @type {Array<Loaded>} */

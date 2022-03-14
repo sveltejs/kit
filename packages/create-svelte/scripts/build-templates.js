@@ -66,10 +66,10 @@ async function generate_templates(shared) {
 		const js = [];
 
 		for (const file of ts) {
-			// The global.d.ts file makes TS/JS aware of some ambient modules, which are
+			// The app.d.ts file makes TS/JS aware of some ambient modules, which are
 			// also needed for JS projects if people turn on "checkJs" in their jsonfig
 			if (file.name.endsWith('.d.ts')) {
-				if (file.name.endsWith('global.d.ts')) js.push(file);
+				if (file.name.endsWith('app.d.ts')) js.push(file);
 			} else if (file.name.endsWith('.ts')) {
 				const transformed = transform(file.contents, {
 					transforms: ['typescript']

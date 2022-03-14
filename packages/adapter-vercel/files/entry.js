@@ -10,6 +10,7 @@ const server = new Server(manifest);
  * @param {import('http').ServerResponse} res
  */
 export default async (req, res) => {
+	/** @type {Request} */
 	let request;
 
 	try {
@@ -19,5 +20,12 @@ export default async (req, res) => {
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	setResponse(res, await server.respond(request));
+	setResponse(
+		res,
+		await server.respond(request, {
+			getClientAddress() {
+				return request.headers.get('x-forwarded-for');
+			}
+		})
+	);
 };

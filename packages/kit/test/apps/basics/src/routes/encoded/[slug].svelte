@@ -1,5 +1,5 @@
 <script context="module">
-	/** @type {import('@sveltejs/kit').Load} */
+	/** @type {import('./[slug]').Load} */
 	export function load({ url, params }) {
 		return {
 			props: {

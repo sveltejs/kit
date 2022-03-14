@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.71
+
+### Patch Changes
+
+- [breaking] replace builder.prerender() with builder.writePrerendered() and builder.prerendered ([#4192](https://github.com/sveltejs/kit/pull/4192)) ([#4229](https://github.com/sveltejs/kit/pull/4229))
+
+## 1.0.0-next.70
+
+### Patch Changes
+
+- Rename `__fetch_polyfill` to `installFetch` ([#4111](https://github.com/sveltejs/kit/pull/4111))
+
 ## 1.0.0-next.69
 
 ### Patch Changes

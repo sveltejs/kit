@@ -6,11 +6,14 @@
 		"dev": "node ../../cli.js dev",
 		"build": "node ../../cli.js build",
 		"preview": "node ../../cli.js preview",
+		"check": "tsc && svelte-check",
 		"test": "npm run build && uvu test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.43.0",
+		"svelte-check": "^2.2.10",
+		"typescript": "~4.6.2",
 		"uvu": "^0.5.2"
 	},
 	"type": "module"

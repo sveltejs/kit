@@ -5,6 +5,7 @@ import * as ports from 'port-authority';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
 import { coalesce_to_error } from './utils/error.js';
+import { logger } from './core/utils.js';
 
 /** @param {unknown} e */
 function handle_error(e) {
@@ -91,8 +92,10 @@ prog
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 			const config = await load_config();
 
+			const log = logger({ verbose });
+
 			const { build } = await import('./core/build/index.js');
-			const build_data = await build(config);
+			const { build_data, prerendered } = await build(config, { log });
 
 			console.log(
 				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
@@ -100,7 +103,7 @@ prog
 
 			if (config.kit.adapter) {
 				const { adapt } = await import('./core/adapt/index.js');
-				await adapt(config, build_data, { verbose });
+				await adapt(config, build_data, prerendered, { log });
 
 				// this is necessary to close any open db connections, etc
 				process.exit(0);
@@ -155,6 +158,19 @@ prog
 			const { make_package } = await import('./packaging/index.js');
 
 			await make_package(config);
+		} catch (error) {
+			handle_error(error);
+		}
+	});
+
+prog
+	.command('sync')
+	.describe('Synchronise generated files')
+	.action(async () => {
+		try {
+			const config = await load_config();
+			const sync = await import('./core/sync/sync.js');
+			sync.all(config);
 		} catch (error) {
 			handle_error(error);
 		}

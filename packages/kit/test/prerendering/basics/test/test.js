@@ -63,9 +63,9 @@ test('loads a file with spaces in the filename', () => {
 	assert.ok(content.includes('<h1>answer: 42</h1>'), content);
 });
 
-test('generates __data.json file for shadow endpoint', () => {
-	const json = read('shadowed-get/__data.json');
-	assert.equal(json, JSON.stringify({ answer: 42 }));
+test('generates __data.json file for shadow endpoints', () => {
+	assert.equal(read('__data.json'), JSON.stringify({ message: 'hello' }));
+	assert.equal(read('shadowed-get/__data.json'), JSON.stringify({ answer: 42 }));
 });
 
 test('does not prerender page with shadow endpoint with non-GET handler', () => {
@@ -102,6 +102,16 @@ test('decodes paths when writing files', () => {
 
 	content = read('encoding/path with encoded spaces.json');
 	assert.equal(content, JSON.stringify({ path: 'path with encoded spaces' }));
+});
+
+test('prerendering is set to true in global code of hooks.js', () => {
+	const content = read('prerendering-true.html');
+	assert.ok(content.includes('<h1>prerendering: true/true</h1>'), content);
+});
+
+test('fetching missing content results in a 404', () => {
+	const content = read('fetch-404.html');
+	assert.ok(content.includes('<h1>status: 404</h1>'), content);
 });
 
 test.run();

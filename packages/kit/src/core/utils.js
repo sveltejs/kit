@@ -1,40 +1,17 @@
 import fs from 'fs';
 import path from 'path';
 import colors from 'kleur';
-import { copy } from '../utils/filesystem.js';
 import { fileURLToPath } from 'url';
-import { SVELTE_KIT } from './constants.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export const runtime = process.env.BUNDLED
-	? posixify_path(path.resolve(`${SVELTE_KIT}/runtime`))
-	: posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
+export const get_runtime_path = process.env.BUNDLED
+	? /** @param {import('types').ValidatedConfig} config */ (config) =>
+			posixify_path(path.join(config.kit.outDir, 'runtime'))
+	: () => posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
 
 /** @param {string} str */
 function posixify_path(str) {
 	const parsed = path.parse(str);
 	return `/${parsed.dir.slice(parsed.root.length).split(path.sep).join('/')}/${parsed.base}`;
-}
-
-/** @param {string} dest */
-export function copy_assets(dest) {
-	if (process.env.BUNDLED) {
-		let prefix = '..';
-		do {
-			// we jump through these hoops so that this function
-			// works whether or not it's been bundled
-			const resolved = path.resolve(__dirname, `${prefix}/assets`);
-
-			if (fs.existsSync(resolved)) {
-				copy(resolved, dest);
-				return;
-			}
-
-			prefix = `../${prefix}`;
-		} while (true); // eslint-disable-line
-	}
 }
 
 function noop() {}
@@ -86,7 +63,7 @@ export function resolve_entry(entry) {
 	return null;
 }
 
-/** @param {import('./create_app/index.js').ManifestData} manifest_data */
+/** @param {import('types').ManifestData} manifest_data */
 export function get_mime_lookup(manifest_data) {
 	/** @type {Record<string, string>} */
 	const mime = {};
@@ -101,11 +78,11 @@ export function get_mime_lookup(manifest_data) {
 	return mime;
 }
 
-/** @param {import('@sveltejs/kit').ValidatedConfig} config */
+/** @param {import('types').ValidatedConfig} config */
 export function get_aliases(config) {
 	const alias = {
-		__GENERATED__: path.posix.resolve(`${SVELTE_KIT}/generated`),
-		$app: `${runtime}/app`,
+		__GENERATED__: path.posix.join(config.kit.outDir, 'generated'),
+		$app: `${get_runtime_path(config)}/app`,
 		$lib: config.kit.files.lib
 	};
 

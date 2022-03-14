@@ -3,10 +3,8 @@ import path from 'path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
-import { create_app } from '../create_app/index.js';
-import { copy_assets, get_aliases } from '../utils.js';
+import { get_aliases } from '../utils.js';
 import { create_build, find_deps } from './utils.js';
-import { SVELTE_KIT } from '../constants.js';
 import { posixify } from '../../utils/filesystem.js';
 
 /**
@@ -32,14 +30,6 @@ export async function build_client({
 	process.env.VITE_SVELTEKIT_APP_VERSION = config.kit.version.name;
 	process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${config.kit.appDir}/version.json`;
 	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${config.kit.version.pollInterval}`;
-
-	create_app({
-		manifest_data,
-		output: `${SVELTE_KIT}/generated`,
-		cwd
-	});
-
-	copy_assets(`${SVELTE_KIT}/runtime`);
 
 	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
 
@@ -99,7 +89,10 @@ export async function build_client({
 					hydratable: !!config.kit.browser.hydrate
 				}
 			})
-		]
+		],
+		// prevent Vite copying the contents of `config.kit.files.assets`,
+		// if it happens to be 'public' instead of 'static'
+		publicDir: false
 	});
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_client');

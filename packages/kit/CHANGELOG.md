@@ -1,5 +1,147 @@
 # @sveltejs/kit
 
+## 1.0.0-next.296
+
+### Patch Changes
+
+- Allow adapter.adapt to be synchronous ([#4299](https://github.com/sveltejs/kit/pull/4299))
+
+* Make `manifest.mimeTypes` part of the public API ([#4302](https://github.com/sveltejs/kit/pull/4302))
+
+- load hooks after server initialisation, to ensure `prerendering` is correct ([#4322](https://github.com/sveltejs/kit/pull/4322))
+
+## 1.0.0-next.295
+
+### Patch Changes
+
+- fix error message for invalid request object ([#4277](https://github.com/sveltejs/kit/pull/4277))
+
+* Handle explicit redirects from endpoints ([#4260](https://github.com/sveltejs/kit/pull/4260))
+
+- Allow routes with the same name as fallback components ([#4284](https://github.com/sveltejs/kit/pull/4284))
+
+## 1.0.0-next.294
+
+### Patch Changes
+
+- [breaking] Replace timestamp in \$service-worker with version ([#4213](https://github.com/sveltejs/kit/pull/4213))
+
+* Remove declared `$lib` module ([#4227](https://github.com/sveltejs/kit/pull/4227))
+
+## 1.0.0-next.293
+
+### Patch Changes
+
+- Expose Server and SSRManifest as public types ([#4220](https://github.com/sveltejs/kit/pull/4220))
+
+* fetch `version.json` relative to `paths.assets`, if set ([#4234](https://github.com/sveltejs/kit/pull/4234))
+
+## 1.0.0-next.292
+
+### Patch Changes
+
+- Prevent Vite from copying static assets if directory is called "public" ([#4214](https://github.com/sveltejs/kit/pull/4214))
+
+* Add sync CLI command ([#4182](https://github.com/sveltejs/kit/pull/4182))
+
+- [breaking] expose entire config to adapters, rather than just appDir and trailingSlash ([#4192](https://github.com/sveltejs/kit/pull/4192))
+
+* [breaking] replace builder.prerender() with builder.writePrerendered() and builder.prerendered ([#4192](https://github.com/sveltejs/kit/pull/4192))
+
+- [breaking] prerender pages during build, regardless of adapter ([#4192](https://github.com/sveltejs/kit/pull/4192))
+
+* Add config.kit.prerender.default option ([#4192](https://github.com/sveltejs/kit/pull/4192))
+
+- Ensure props are loaded from matching endpoint during client-side navigation ([#4203](https://github.com/sveltejs/kit/pull/4203))
+
+* Use prerendered pages in svelte-kit preview ([#4192](https://github.com/sveltejs/kit/pull/4192))
+
+- Upgrade to TypeScript 4.6 ([#4190](https://github.com/sveltejs/kit/pull/4190))
+
+* Fix `svelte-kit preview` ([#4207](https://github.com/sveltejs/kit/pull/4207))
+
+- Make prerendered paths available to service workers ([#4192](https://github.com/sveltejs/kit/pull/4192))
+
+* Update history immediately before updating DOM ([#4191](https://github.com/sveltejs/kit/pull/4191))
+
+- Add config.kit.endpointExtensions option ([#4197](https://github.com/sveltejs/kit/pull/4197))
+
+## 1.0.0-next.291
+
+### Patch Changes
+
+- Focus on `body` instead of `html` on navigation due to issues on Firefox ([#4184](https://github.com/sveltejs/kit/pull/4184))
+
+## 1.0.0-next.290
+
+### Patch Changes
+
+- Add config.kit.outDir ([#4176](https://github.com/sveltejs/kit/pull/4176))
+
+* [breaking] allow `InputProps` and `OutputProps` to be typed separately in `Load` ([#4160](https://github.com/sveltejs/kit/pull/4160))
+
+## 1.0.0-next.289
+
+### Patch Changes
+
+- Only fall back to full page reload if pathname has changed ([#4116](https://github.com/sveltejs/kit/pull/4116))
+
+* Generate types for each page/endpoint ([#4120](https://github.com/sveltejs/kit/pull/4120))
+
+- Extend user tsconfig from generated .svelte-kit/tsconfig.json ([#4118](https://github.com/sveltejs/kit/pull/4118))
+
+## 1.0.0-next.288
+
+### Patch Changes
+
+- Fix XSS vulnerability on SSR pages with fetched data on `load()` ([#4128](https://github.com/sveltejs/kit/pull/4128))
+
+* [breaking] `tabindex="-1"` is no longer added to `<body>`; `<html>` only briefly receives it during navigation ([#4140](https://github.com/sveltejs/kit/pull/4140))
+
+- `RequestHandlerOutput` accepts body when it has or maybe is `undefined` ([#4152](https://github.com/sveltejs/kit/pull/4152))
+
+## 1.0.0-next.287
+
+### Patch Changes
+
+- [breaking] Rename `__fetch_polyfill` to `installFetch`, remove fetch exports ([#4111](https://github.com/sveltejs/kit/pull/4111))
+
+## 1.0.0-next.286
+
+### Patch Changes
+
+- Prevent double-fixing of error stack traces in dev mode ([#4041](https://github.com/sveltejs/kit/pull/4041))
+
+* Expose Navigation type ([#4076](https://github.com/sveltejs/kit/pull/4076))
+
+- add new `Page` type ([#4076](https://github.com/sveltejs/kit/pull/4076))
+
+* [breaking] separate public from private-but-documented types ([#4104](https://github.com/sveltejs/kit/pull/4104))
+
+## 1.0.0-next.285
+
+### Patch Changes
+
+- [breaking] referer header sent by fetch in load matches page's referer header, not the page itself ([#4070](https://github.com/sveltejs/kit/pull/4070))
+
+* [breaking] remove sveltekit:navigation-{start,end} events ([#4070](https://github.com/sveltejs/kit/pull/4070))
+
+- [breaking] defer pushState until navigation occurs ([#4070](https://github.com/sveltejs/kit/pull/4070))
+
+## 1.0.0-next.284
+
+### Patch Changes
+
+- Disable meta http-equiv tags for static amp configuration ([#4073](https://github.com/sveltejs/kit/pull/4073))
+
+* Ignore click event if url does not have origin (e.g. `mailto:`, `tel:`) ([#4072](https://github.com/sveltejs/kit/pull/4072))
+
+## 1.0.0-next.283
+
+### Patch Changes
+
+- create `__data.json` for pathnames with trailing slashes, including `/` ([#4066](https://github.com/sveltejs/kit/pull/4066))
+
 ## 1.0.0-next.282
 
 ### Patch Changes

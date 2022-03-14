@@ -1,5 +1,75 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.32
+
+### Patch Changes
+
+- Select adapter immediately ([#4299](https://github.com/sveltejs/kit/pull/4299))
+
+- Updated dependencies []:
+  - @sveltejs/adapter-netlify@1.0.0-next.50
+  - @sveltejs/adapter-vercel@1.0.0-next.46
+
+## 1.0.0-next.31
+
+### Patch Changes
+
+- Updated dependencies [[`8aa2920b`](https://github.com/sveltejs/kit/commit/8aa2920b9a05ab2907ee2ffbe9f273ab8e2dbc69)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.15
+  - @sveltejs/adapter-netlify@1.0.0-next.50
+  - @sveltejs/adapter-vercel@1.0.0-next.46
+
+## 1.0.0-next.30
+
+### Patch Changes
+
+- Updated dependencies [[`8c08aa50`](https://github.com/sveltejs/kit/commit/8c08aa505a0b5238cdc2fbe8408b89ff495da1f7)]:
+  - @sveltejs/adapter-netlify@1.0.0-next.49
+  - @sveltejs/adapter-cloudflare@1.0.0-next.14
+  - @sveltejs/adapter-vercel@1.0.0-next.45
+
+## 1.0.0-next.29
+
+### Patch Changes
+
+- Updated dependencies [[`dcb856f8`](https://github.com/sveltejs/kit/commit/dcb856f89ccc5c823fa604fb20e75d88323f83ca)]:
+  - @sveltejs/adapter-netlify@1.0.0-next.48
+  - @sveltejs/adapter-vercel@1.0.0-next.45
+  - @sveltejs/adapter-cloudflare@1.0.0-next.14
+
+## 1.0.0-next.28
+
+### Patch Changes
+
+- Updated dependencies [[`c1bf43e4`](https://github.com/sveltejs/kit/commit/c1bf43e4cc34f565089d82f8579e46ea12ae618e)]:
+  - @sveltejs/adapter-netlify@1.0.0-next.47
+  - @sveltejs/adapter-cloudflare@1.0.0-next.14
+  - @sveltejs/adapter-vercel@1.0.0-next.44
+
+## 1.0.0-next.27
+
+### Patch Changes
+
+- Bumping versions again ([#4090](https://github.com/sveltejs/kit/pull/4090))
+
+- Updated dependencies [[`69401762`](https://github.com/sveltejs/kit/commit/694017624ec8f1abaad7ebefb867bb065f7adf05)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.14
+
+## 1.0.0-next.26
+
+### Patch Changes
+
+- Attempt to force @next version bump ([#4088](https://github.com/sveltejs/kit/pull/4088))
+
+- Updated dependencies [[`46f44a61`](https://github.com/sveltejs/kit/commit/46f44a61624bed525e393e669da9b7db566a1e18)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.13
+
+## 1.0.0-next.25
+
+### Patch Changes
+
+- Attempt to bump @next version of adapter-auto ([#4082](https://github.com/sveltejs/kit/pull/4082))
+
 ## 1.0.0-next.24
 
 ### Patch Changes

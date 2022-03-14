@@ -2,22 +2,24 @@ import fs from 'fs';
 import vite from 'vite';
 import { s } from '../../utils/misc.js';
 import { deep_merge } from '../../utils/object.js';
+import { normalize_path } from '../../utils/url.js';
 import { print_config_conflicts } from '../config/index.js';
-import { SVELTE_KIT } from '../constants.js';
 
 /**
  * @param {{
  *   cwd: string;
  *   assets_base: string;
- *   config: import('types').ValidatedConfig
- *   manifest_data: import('types').ManifestData
+ *   config: import('types').ValidatedConfig;
+ *   manifest_data: import('types').ManifestData;
  *   output_dir: string;
  *   service_worker_entry_file: string | null;
  * }} options
+ * @param {import('types').Prerendered} prerendered
  * @param {import('vite').Manifest} client_manifest
  */
 export async function build_service_worker(
 	{ cwd, assets_base, config, manifest_data, output_dir, service_worker_entry_file },
+	prerendered,
 	client_manifest
 ) {
 	// TODO add any assets referenced in template .html file, e.g. favicon?
@@ -32,12 +34,17 @@ export async function build_service_worker(
 		}
 	}
 
-	const service_worker = `${cwd}/${SVELTE_KIT}/generated/service-worker.js`;
+	const service_worker = `${config.kit.outDir}/generated/service-worker.js`;
 
 	fs.writeFileSync(
 		service_worker,
 		`
-			export const timestamp = ${Date.now()};
+			// TODO remove for 1.0
+			export const timestamp = {
+				toString: () => {
+					throw new Error('\`timestamp\` has been removed from $service-worker. Use \`version\` instead');
+				}
+			};
 
 			export const build = [
 				${Array.from(app_files)
@@ -50,6 +57,14 @@ export async function build_service_worker(
 					.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
+
+			export const prerendered = [
+				${prerendered.paths
+					.map((path) => s(normalize_path(path, config.kit.trailingSlash)))
+					.join(',\n\t\t\t\t')}
+			];
+
+			export const version = ${s(config.kit.version.name)};
 		`
 			.replace(/^\t{3}/gm, '')
 			.trim()

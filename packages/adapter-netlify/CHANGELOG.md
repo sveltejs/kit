@@ -1,5 +1,29 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.50
+
+### Patch Changes
+
+- [breaking] replace builder.prerender() with builder.writePrerendered() and builder.prerendered ([#4192](https://github.com/sveltejs/kit/pull/4192)) ([#4229](https://github.com/sveltejs/kit/pull/4229))
+
+## 1.0.0-next.49
+
+### Patch Changes
+
+- Add Netlify Functions context as `event.platform.context` ([#4145](https://github.com/sveltejs/kit/pull/4145))
+
+## 1.0.0-next.48
+
+### Patch Changes
+
+- Rename `__fetch_polyfill` to `installFetch` ([#4111](https://github.com/sveltejs/kit/pull/4111))
+
+## 1.0.0-next.47
+
+### Patch Changes
+
+- Fix incorrect set-cookie header handling on adapter-netlify ([#4096](https://github.com/sveltejs/kit/pull/4096))
+
 ## 1.0.0-next.46
 
 ### Patch Changes

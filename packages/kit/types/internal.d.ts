@@ -1,42 +1,28 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import {
-	SSRManifest,
-	ValidatedConfig,
-	RequestHandler,
-	Load,
+	Config,
 	ExternalFetch,
 	GetSession,
 	Handle,
 	HandleError,
+	Load,
+	RequestHandler,
+	Server,
+	SSRManifest
+} from './index';
+import {
+	Either,
+	Fallthrough,
+	HttpMethod,
+	JSONObject,
+	MaybePromise,
 	RequestEvent,
 	RequestOptions,
-	PrerenderErrorHandler,
-	Server
-} from './index';
-
-export interface AdapterEntry {
-	/**
-	 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
-	 * For example, `/foo/a-[b]` and `/foo/[c]` are different routes, but would both
-	 * be represented in a Netlify _redirects file as `/foo/:param`, so they share an ID
-	 */
-	id: string;
-
-	/**
-	 * A function that compares the candidate route with the current route to determine
-	 * if it should be treated as a fallback for the current route. For example, `/foo/[c]`
-	 * is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
-	 */
-	filter: (route: RouteDefinition) => boolean;
-
-	/**
-	 * A function that is invoked once the entry has been created. This is where you
-	 * should write the function to the filesystem and generate redirect manifests.
-	 */
-	complete: (entry: {
-		generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
-	}) => void;
-}
+	ResolveOptions,
+	ResponseHeaders,
+	RouteSegment,
+	TrailingSlash
+} from './private';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -58,8 +44,6 @@ export interface Asset {
 	type: string | null;
 }
 
-export type Body = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
-
 export interface BuildData {
 	app_dir: string;
 	manifest_data: ManifestData;
@@ -79,17 +63,13 @@ export interface BuildData {
 		methods: Record<string, HttpMethod[]>;
 		vite_manifest: import('vite').Manifest;
 	};
-	static: string[];
-	entries: string[];
 }
 
 export type CSRComponent = any; // TODO
 
 export type CSRComponentLoader = () => Promise<CSRComponent>;
 
-export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?, HasShadow?];
-
-export type Either<T, U> = Only<T, U> | Only<U, T>;
+export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?, ShadowKey?];
 
 export interface EndpointData {
 	type: 'endpoint';
@@ -100,13 +80,7 @@ export interface EndpointData {
 	file: string;
 }
 
-export interface Fallthrough {
-	fallthrough: true;
-}
-
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
-
-type HasShadow = 1;
 
 export interface Hooks {
 	externalFetch: ExternalFetch;
@@ -115,28 +89,13 @@ export interface Hooks {
 	handleError: HandleError;
 }
 
-export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
-
 export class InternalServer extends Server {
 	respond(
 		request: Request,
-		options?: RequestOptions & {
+		options: RequestOptions & {
 			prerender?: PrerenderOptions;
 		}
 	): Promise<Response>;
-}
-
-export type JSONObject = { [key: string]: JSONValue };
-
-export type JSONValue = string | number | boolean | null | ToJSON | JSONValue[] | JSONObject;
-
-export interface Logger {
-	(msg: string): void;
-	success(msg: string): void;
-	error(msg: string): void;
-	warn(msg: string): void;
-	minor(msg: string): void;
-	info(msg: string): void;
 }
 
 export interface ManifestData {
@@ -146,8 +105,6 @@ export interface ManifestData {
 	components: string[];
 	routes: RouteData[];
 }
-
-export type MaybePromise<T> = T | Promise<T>;
 
 export interface MethodOverride {
 	parameter: string;
@@ -166,8 +123,6 @@ export type NormalizedLoadOutput = Either<
 	Fallthrough
 >;
 
-type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
-
 export interface PageData {
 	type: 'page';
 	key: string;
@@ -180,16 +135,18 @@ export interface PageData {
 	b: string[];
 }
 
+export type PayloadScriptAttributes =
+	| { type: 'data'; url: string; body?: string }
+	| { type: 'props' };
+
 export interface PrerenderDependency {
 	response: Response;
 	body: null | string | Uint8Array;
 }
 
-export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
-
 export interface PrerenderOptions {
-	fallback?: string;
-	all: boolean;
+	fallback?: boolean;
+	default: boolean;
 	dependencies: Map<string, PrerenderDependency>;
 }
 
@@ -204,38 +161,26 @@ export type RecursiveRequired<T> = {
 		: T[K]; // Use the exact type for everything else
 };
 
-export interface RequiredResolveOptions {
-	ssr: boolean;
-	transformPage: ({ html }: { html: string }) => MaybePromise<string>;
-}
+export type RequiredResolveOptions = Required<ResolveOptions>;
 
 export interface Respond {
-	(request: Request, options: SSROptions, state?: SSRState): Promise<Response>;
+	(request: Request, options: SSROptions, state: SSRState): Promise<Response>;
 }
-
-/** `string[]` is only for set-cookie, everything else must be type of `string` */
-export type ResponseHeaders = Record<string, string | number | string[]>;
 
 export type RouteData = PageData | EndpointData;
-
-export interface RouteDefinition {
-	type: 'page' | 'endpoint';
-	pattern: RegExp;
-	segments: RouteSegment[];
-	methods: HttpMethod[];
-}
-
-export interface RouteSegment {
-	content: string;
-	dynamic: boolean;
-	rest: boolean;
-}
 
 export interface ShadowEndpointOutput<Output extends JSONObject = JSONObject> {
 	status?: number;
 	headers?: Partial<ResponseHeaders>;
 	body?: Output;
 }
+
+/**
+ * The route key of a page with a matching endpoint — used to ensure the
+ * client loads data from the right endpoint during client-side navigation
+ * rather than a different route that happens to match the path
+ */
+type ShadowKey = string;
 
 export interface ShadowRequestHandler<Output extends JSONObject = JSONObject> {
 	(event: RequestEvent): MaybePromise<Either<ShadowEndpointOutput<Output>, Fallthrough>>;
@@ -330,6 +275,7 @@ export interface SSROptions {
 
 export interface SSRPage {
 	type: 'page';
+	key: string;
 	pattern: RegExp;
 	params: GetParams;
 	shadow:
@@ -356,17 +302,17 @@ export interface SSRPagePart {
 export type SSRRoute = SSREndpoint | SSRPage;
 
 export interface SSRState {
+	fallback?: string;
 	fetched?: string;
+	getClientAddress: () => string;
 	initiator?: SSRPage | null;
 	platform?: any;
 	prerender?: PrerenderOptions;
-	fallback?: string;
 }
 
 export type StrictBody = string | Uint8Array;
 
-type ToJSON = { toJSON(...args: any[]): Exclude<JSONValue, ToJSON> };
-
-export type TrailingSlash = 'never' | 'always' | 'ignore';
+export type ValidatedConfig = RecursiveRequired<Config>;
 
 export * from './index';
+export * from './private';

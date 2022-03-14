@@ -12,7 +12,7 @@ test('amp is true', async ({ page, baseURL }) => {
 	await expect(page.locator('p')).toHaveText('amp is true');
 
 	// should not include serialized data
-	expect(await page.$('script[data-type="svelte-data"]')).toBeNull();
+	expect(await page.$('script[sveltekit\\:data-type="data"]')).toBeNull();
 });
 
 test('styles are applied', async ({ page, baseURL }) => {

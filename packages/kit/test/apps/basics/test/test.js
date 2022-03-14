@@ -25,6 +25,8 @@ test.describe.parallel('a11y', () => {
 		await page.keyboard.press('Tab');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
+
+		expect(await page.evaluate(() => document.documentElement.getAttribute('tabindex'))).toBe(null);
 	});
 
 	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {
@@ -53,7 +55,7 @@ test.describe.parallel('a11y', () => {
 				page.type('#input', 'bar'),
 				page.waitForFunction(() => window.location.search === '?foo=bar')
 			]);
-			expect(await page.locator('#input')).toBeFocused();
+			await expect(page.locator('#input')).toBeFocused();
 		}
 	});
 
@@ -106,10 +108,10 @@ test.describe.parallel('beforeNavigate', () => {
 		await page.goto('/before-navigate/prevent-navigation');
 
 		try {
-			await clicknav('[href="/before-navigate/a"]');
+			await clicknav('[href="/before-navigate/a"]', { timeout: 1000 });
 			expect(false).toBe(true);
 		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('Timed out');
+			expect(e.message).toMatch('page.waitForNavigation: Timeout 1000ms exceeded');
 		}
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
@@ -230,17 +232,19 @@ test.describe('Scrolling', () => {
 	test('url-supplied anchor is ignored with onMount() scrolling on navigation to page', async ({
 		page,
 		clicknav,
+		javaScriptEnabled,
 		in_view
 	}) => {
 		await page.goto('/anchor-with-manual-scroll');
 		await clicknav('[href="/anchor-with-manual-scroll/anchor#go-to-element"]');
-		expect(await in_view('#abcde')).toBe(true);
+		if (javaScriptEnabled) expect(await in_view('#abcde')).toBe(true);
+		else expect(await in_view('#go-to-element')).toBe(true);
 	});
 
 	test('app-supplied scroll and focus work on direct page load', async ({ page, in_view }) => {
 		await page.goto('/use-action/focus-and-scroll');
 		expect(await in_view('#input')).toBe(true);
-		expect(await page.locator('#input')).toBeFocused();
+		await expect(page.locator('#input')).toBeFocused();
 	});
 
 	test('app-supplied scroll and focus work on navigation to page', async ({
@@ -251,7 +255,7 @@ test.describe('Scrolling', () => {
 		await page.goto('/use-action');
 		await clicknav('[href="/use-action/focus-and-scroll"]');
 		expect(await in_view('#input')).toBe(true);
-		expect(await page.locator('#input')).toBeFocused();
+		await expect(page.locator('input')).toBeFocused();
 	});
 
 	test('scroll positions are recovered on reloading the page', async ({ page, back, app }) => {
@@ -280,7 +284,7 @@ test.describe.parallel('Imports', () => {
 		await page.goto('/asset-import');
 
 		const sources = await page.evaluate(() =>
-			[...document.querySelectorAll('img')].map((img) => img.src)
+			Array.from(document.querySelectorAll('img'), (img) => img.src)
 		);
 
 		if (process.env.DEV) {
@@ -499,6 +503,41 @@ test.describe.parallel('Shadowed pages', () => {
 		expect(await page.textContent('h1')).toBe('slug: foo');
 		await clicknav('[href="/shadowed/dynamic/bar"]');
 		expect(await page.textContent('h1')).toBe('slug: bar');
+	});
+
+	test('Shadow fallthrough to shadowed page', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/fallthrough');
+		await clicknav('[href="/shadowed/fallthrough/b"]');
+		expect(await page.textContent('h2')).toBe('b-b');
+	});
+
+	test('Shadow fallthrough to unshadowed page', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/fallthrough');
+		await clicknav('[href="/shadowed/fallthrough/c"]');
+		expect(await page.textContent('h2')).toBe('c');
+	});
+
+	test('Shadow redirect', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/redirect');
+		await clicknav('[href="/shadowed/redirect/a"]');
+		expect(await page.textContent('h1')).toBe('done');
+	});
+
+	test('Endpoint without GET', async ({ page, clicknav, baseURL, javaScriptEnabled }) => {
+		await page.goto('/shadowed');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await clicknav('[href="/shadowed/missing-get"]');
+
+		expect(await page.textContent('h1')).toBe('post without get');
+
+		// check that the router didn't fall back to the server
+		if (javaScriptEnabled) {
+			expect(requests).not.toContain(`${baseURL}/shadowed/missing-get`);
+		}
 	});
 });
 
@@ -871,7 +910,7 @@ test.describe.parallel('Errors', () => {
 		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint.svelte:12:15';
+		const location = /endpoint\.svelte:12:9|endpoint\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
@@ -889,7 +928,7 @@ test.describe.parallel('Errors', () => {
 		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint-not-ok.svelte:12:15';
+		const location = /endpoint-not-ok\.svelte:12:9|endpoint-not-ok\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
@@ -906,7 +945,7 @@ test.describe.parallel('Errors', () => {
 		expect(lines[0]).toMatch('nope');
 
 		if (process.env.DEV) {
-			expect(lines[1]).toMatch('endpoint-shadow');
+			expect(lines[1]).toMatch('endpoint-shadow.js:3:8');
 		}
 
 		expect(res && res.status()).toBe(500);
@@ -915,7 +954,7 @@ test.describe.parallel('Errors', () => {
 		);
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint-shadow.js:1:8'; // TODO this is the wrong location, but i'm not going to open the sourcemap can of worms just now
+		const location = 'endpoint-shadow.js:3:8';
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
@@ -961,6 +1000,14 @@ test.describe.parallel('Errors', () => {
 			'This is your custom error page saying: "Error in handle"'
 		);
 		expect(await page.innerHTML('h1')).toBe('500');
+	});
+
+	// TODO re-enable this if https://github.com/vitejs/vite/issues/7046 is implemented
+	test.skip('error evaluating module', async ({ request }) => {
+		const response = await request.get('/errors/init-error-endpoint');
+
+		expect(response.status()).toBe(500);
+		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
 	});
 });
 
@@ -1058,7 +1105,7 @@ test.describe.parallel('Load', () => {
 
 		if (!javaScriptEnabled) {
 			// by the time JS has run, hydration will have nuked these scripts
-			const script_contents = await page.innerHTML('script[data-type="svelte-data"]');
+			const script_contents = await page.innerHTML('script[sveltekit\\:data-type="data"]');
 
 			const payload =
 				'{"status":200,"statusText":"","headers":{"content-type":"application/json; charset=utf-8"},"body":"{\\"answer\\":42}"}';
@@ -1088,11 +1135,11 @@ test.describe.parallel('Load', () => {
 		if (!javaScriptEnabled) {
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents_a = await page.innerHTML(
-				'script[data-type="svelte-data"][data-url="/load/serialization-post.json"][data-body="3t25"]'
+				'script[sveltekit\\:data-type="data"][sveltekit\\:data-url="/load/serialization-post.json"][sveltekit\\:data-body="3t25"]'
 			);
 
 			const script_contents_b = await page.innerHTML(
-				'script[data-type="svelte-data"][data-url="/load/serialization-post.json"][data-body="3t24"]'
+				'script[sveltekit\\:data-type="data"][sveltekit\\:data-url="/load/serialization-post.json"][sveltekit\\:data-body="3t24"]'
 			);
 
 			expect(script_contents_a).toBe(payload_a);
@@ -1267,8 +1314,12 @@ test.describe.parallel('Load', () => {
 		await clicknav('[href="/load/fetch-headers"]');
 
 		const json = /** @type {string} */ (await page.textContent('pre'));
-		expect(JSON.parse(json)).toEqual({
-			referer: `${baseURL}/load/fetch-headers`,
+		const headers = JSON.parse(json);
+
+		expect(headers).toEqual({
+			// the referer will be the previous page in the client-side
+			// navigation case
+			referer: `${baseURL}/load`,
 			// these headers aren't particularly useful, but they allow us to verify
 			// that page headers are being forwarded
 			'sec-fetch-dest': javaScriptEnabled ? 'empty' : 'document',
@@ -1408,8 +1459,8 @@ test.describe.parallel('Page options', () => {
 		expect(await page.textContent('button')).toBe('clicks: 0');
 
 		if (javaScriptEnabled) {
-			await Promise.all([page.click('[href="/no-hydrate/other"]'), page.waitForNavigation()]);
-			await Promise.all([page.click('[href="/no-hydrate"]'), page.waitForNavigation()]);
+			await Promise.all([page.waitForNavigation(), page.click('[href="/no-hydrate/other"]')]);
+			await Promise.all([page.waitForNavigation(), page.click('[href="/no-hydrate"]')]);
 
 			await page.click('button');
 			expect(await page.textContent('button')).toBe('clicks: 1');
@@ -1417,7 +1468,7 @@ test.describe.parallel('Page options', () => {
 			// ensure data wasn't inlined
 			expect(
 				await page.evaluate(
-					() => document.querySelectorAll('script[data-type="svelte-data"]').length
+					() => document.querySelectorAll('script[sveltekit\\:data-type="data"]').length
 				)
 			).toBe(0);
 		}
@@ -1443,7 +1494,7 @@ test.describe.parallel('Page options', () => {
 			await page.click('button');
 			expect(await page.textContent('button')).toBe('clicks: 1');
 
-			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
+			await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
 			expect(await page.textContent('button')).toBe('clicks: 0');
 
 			await page.click('button');
@@ -1452,7 +1503,7 @@ test.describe.parallel('Page options', () => {
 			await clicknav('[href="/no-router/a"]');
 			expect(await page.textContent('button')).toBe('clicks: 1');
 
-			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
+			await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
 			expect(await page.textContent('button')).toBe('clicks: 0');
 		}
 	});
@@ -1629,13 +1680,17 @@ test.describe.parallel('searchParams', () => {
 });
 
 test.describe.parallel('Redirects', () => {
-	test('redirect', async ({ page, clicknav }) => {
+	test('redirect', async ({ baseURL, page, clicknav, back }) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/a"]');
 
 		await page.waitForURL('/redirect/c');
 		expect(await page.textContent('h1')).toBe('c');
+		expect(page.url()).toBe(`${baseURL}/redirect/c`);
+
+		await back();
+		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
 	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled }) => {
@@ -2120,6 +2175,30 @@ test.describe.parallel('Routing', () => {
 		await page.goto('/routing');
 		await clicknav('[href="/static.json"]');
 		expect(await page.textContent('body')).toBe('"static file"\n');
+	});
+
+	test('navigation is cancelled upon subsequent navigation', async ({
+		baseURL,
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/cancellation');
+		await page.click('[href="/routing/cancellation/a"]');
+		await clicknav('[href="/routing/cancellation/b"]');
+
+		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
+
+		await page.evaluate('window.fulfil_navigation && window.fulfil_navigation()');
+		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
+	});
+
+	test('Relative paths are relative to the current URL', async ({ page, clicknav }) => {
+		await page.goto('/iframes');
+		await clicknav('[href="/iframes/nested/parent"]');
+
+		expect(await page.frameLocator('iframe').locator('h1').textContent()).toBe(
+			'Hello from the child'
+		);
 	});
 });
 

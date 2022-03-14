@@ -18,5 +18,6 @@ await create(repo, {
 	template: 'default',
 	eslint: false,
 	typescript: false,
-	prettier: true
+	prettier: true,
+	playwright: false
 });

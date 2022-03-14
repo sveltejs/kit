@@ -3,15 +3,15 @@ import path from 'path';
 import { URL } from 'url';
 import colors from 'kleur';
 import sirv from 'sirv';
-import { __fetch_polyfill } from '../../install-fetch.js';
-import { create_app } from '../create_app/index.js';
-import create_manifest_data from '../create_manifest_data/index.js';
+import { installFetch } from '../../install-fetch.js';
+import * as sync from '../sync/sync.js';
 import { getRequest, setResponse } from '../../node.js';
-import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
-import { get_mime_lookup, resolve_entry, runtime } from '../utils.js';
+import { SVELTE_KIT_ASSETS } from '../constants.js';
+import { get_mime_lookup, get_runtime_path, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { load_template } from '../config/index.js';
 import { sequence } from '../../hooks.js';
+import { posixify } from '../../utils/filesystem.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -19,6 +19,8 @@ import { sequence } from '../../hooks.js';
  * @returns {Promise<import('vite').Plugin>}
  */
 export async function create_plugin(config, cwd) {
+	const runtime = get_runtime_path(config);
+
 	/** @type {import('types').Handle} */
 	let amp;
 
@@ -36,21 +38,19 @@ export async function create_plugin(config, cwd) {
 		name: 'vite-plugin-svelte-kit',
 
 		configureServer(vite) {
-			__fetch_polyfill();
+			installFetch();
 
 			/** @type {import('types').SSRManifest} */
 			let manifest;
 
 			function update_manifest() {
-				const manifest_data = create_manifest_data({ config, cwd });
-
-				create_app({ manifest_data, output: `${SVELTE_KIT}/generated`, cwd });
+				const { manifest_data } = sync.update(config);
 
 				manifest = {
 					appDir: config.kit.appDir,
 					assets: new Set(manifest_data.assets.map((asset) => asset.file)),
+					mimeTypes: get_mime_lookup(manifest_data),
 					_: {
-						mime: get_mime_lookup(manifest_data),
 						entry: {
 							file: `/@fs${runtime}/client/start.js`,
 							css: [],
@@ -107,6 +107,7 @@ export async function create_plugin(config, cwd) {
 							if (route.type === 'page') {
 								return {
 									type: 'page',
+									key: route.key,
 									pattern: route.pattern,
 									params: get_params(route.params),
 									shadow: route.shadow
@@ -132,6 +133,24 @@ export async function create_plugin(config, cwd) {
 						})
 					}
 				};
+			}
+
+			/** @param {Error} error */
+			function fix_stack_trace(error) {
+				// TODO https://github.com/vitejs/vite/issues/7045
+
+				// ideally vite would expose ssrRewriteStacktrace, but
+				// in lieu of that, we can implement it ourselves. we
+				// don't want to mutate the error object, because
+				// the stack trace could be 'fixed' multiple times,
+				// and Vite will fix stack traces before we even
+				// see them if they occur during ssrLoadModule
+				const original = error.stack;
+				vite.ssrFixStacktrace(error);
+				const fixed = error.stack;
+				error.stack = original;
+
+				return fixed;
 			}
 
 			update_manifest();
@@ -182,7 +201,6 @@ export async function create_plugin(config, cwd) {
 
 						/** @type {import('types').Hooks} */
 						const hooks = {
-							// @ts-expect-error this picks up types that belong to the tests
 							getSession: user_hooks.getSession || (() => ({})),
 							handle: amp ? sequence(amp, handle) : handle,
 							handleError:
@@ -211,9 +229,18 @@ export async function create_plugin(config, cwd) {
 							throw new Error('The serverFetch hook has been renamed to externalFetch.');
 						}
 
-						const root = (await vite.ssrLoadModule(`/${SVELTE_KIT}/generated/root.svelte`)).default;
+						// TODO the / prefix will probably fail if outDir is outside the cwd (which
+						// could be the case in a monorepo setup), but without it these modules
+						// can get loaded twice via different URLs, which causes failures. Might
+						// require changes to Vite to fix
+						const { default: root } = await vite.ssrLoadModule(
+							`/${posixify(path.relative(cwd, `${config.kit.outDir}/generated/root.svelte`))}`
+						);
+
 						const paths = await vite.ssrLoadModule(
-							process.env.BUNDLED ? `/${SVELTE_KIT}/runtime/paths.js` : `/@fs${runtime}/paths.js`
+							process.env.BUNDLED
+								? `/${posixify(path.relative(cwd, `${config.kit.outDir}/runtime/paths.js`))}`
+								: `/@fs${runtime}/paths.js`
 						);
 
 						paths.set_paths({
@@ -232,56 +259,72 @@ export async function create_plugin(config, cwd) {
 
 						const template = load_template(cwd, config);
 
-						const rendered = await respond(request, {
-							amp: config.kit.amp,
-							csp: config.kit.csp,
-							dev: true,
-							floc: config.kit.floc,
-							get_stack: (error) => {
-								vite.ssrFixStacktrace(error);
-								return error.stack;
-							},
-							handle_error: (error, event) => {
-								vite.ssrFixStacktrace(error);
-								hooks.handleError({
-									error,
-									event,
+						const rendered = await respond(
+							request,
+							{
+								amp: config.kit.amp,
+								csp: config.kit.csp,
+								dev: true,
+								floc: config.kit.floc,
+								get_stack: (error) => {
+									return fix_stack_trace(error);
+								},
+								handle_error: (error, event) => {
+									hooks.handleError({
+										error: new Proxy(error, {
+											get: (target, property) => {
+												if (property === 'stack') {
+													return fix_stack_trace(error);
+												}
 
-									// TODO remove for 1.0
-									// @ts-expect-error
-									get request() {
-										throw new Error(
-											'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
-										);
-									}
-								});
+												return Reflect.get(target, property, target);
+											}
+										}),
+										event,
+
+										// TODO remove for 1.0
+										// @ts-expect-error
+										get request() {
+											throw new Error(
+												'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
+											);
+										}
+									});
+								},
+								hooks,
+								hydrate: config.kit.browser.hydrate,
+								manifest,
+								method_override: config.kit.methodOverride,
+								paths: {
+									base: config.kit.paths.base,
+									assets
+								},
+								prefix: '',
+								prerender: config.kit.prerender.enabled,
+								read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
+								root,
+								router: config.kit.browser.router,
+								template: ({ head, body, assets, nonce }) => {
+									return (
+										template
+											.replace(/%svelte\.assets%/g, assets)
+											.replace(/%svelte\.nonce%/g, nonce)
+											// head and body must be replaced last, in case someone tries to sneak in %svelte.assets% etc
+											.replace('%svelte.head%', () => head)
+											.replace('%svelte.body%', () => body)
+									);
+								},
+								template_contains_nonce: template.includes('%svelte.nonce%'),
+								trailing_slash: config.kit.trailingSlash
 							},
-							hooks,
-							hydrate: config.kit.browser.hydrate,
-							manifest,
-							method_override: config.kit.methodOverride,
-							paths: {
-								base: config.kit.paths.base,
-								assets
-							},
-							prefix: '',
-							prerender: config.kit.prerender.enabled,
-							read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
-							root,
-							router: config.kit.browser.router,
-							template: ({ head, body, assets, nonce }) => {
-								return (
-									template
-										.replace(/%svelte\.assets%/g, assets)
-										.replace(/%svelte\.nonce%/g, nonce)
-										// head and body must be replaced last, in case someone tries to sneak in %svelte.assets% etc
-										.replace('%svelte.head%', () => head)
-										.replace('%svelte.body%', () => body)
-								);
-							},
-							template_contains_nonce: template.includes('%svelte.nonce%'),
-							trailing_slash: config.kit.trailingSlash
-						});
+							{
+								getClientAddress: () => {
+									const { remoteAddress } = req.socket;
+									if (remoteAddress) return remoteAddress;
+									throw new Error('Could not determine clientAddress');
+								}
+							}
+						);
 
 						if (rendered) {
 							setResponse(res, rendered);

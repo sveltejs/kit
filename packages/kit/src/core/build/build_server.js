@@ -4,9 +4,8 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { mkdirp, posixify } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
 import { load_template, print_config_conflicts } from '../config/index.js';
-import { get_aliases, resolve_entry, runtime } from '../utils.js';
+import { get_aliases, get_runtime_path, resolve_entry } from '../utils.js';
 import { create_build, find_deps } from './utils.js';
-import { SVELTE_KIT } from '../constants.js';
 import { s } from '../../utils/misc.js';
 
 /**
@@ -14,11 +13,12 @@ import { s } from '../../utils/misc.js';
  *   hooks: string;
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
+ *   runtime: string;
  *   template: string;
  * }} opts
  * @returns
  */
-const server_template = ({ config, hooks, has_service_worker, template }) => `
+const server_template = ({ config, hooks, has_service_worker, runtime, template }) => `
 import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
@@ -35,15 +35,6 @@ let read = null;
 
 set_paths(${s(config.kit.paths)});
 
-// this looks redundant, but the indirection allows us to access
-// named imports without triggering Rollup's missing import detection
-const get_hooks = hooks => ({
-	getSession: hooks.getSession || (() => ({})),
-	handle: hooks.handle || (({ event, resolve }) => resolve(event)),
-	handleError: hooks.handleError || (({ error }) => console.error(error.stack)),
-	externalFetch: hooks.externalFetch || fetch
-});
-
 let default_protocol = 'https';
 
 // allow paths to be globally overridden
@@ -57,8 +48,6 @@ export function override(settings) {
 
 export class Server {
 	constructor(manifest) {
-		const hooks = get_hooks(user_hooks);
-
 		this.options = {
 			amp: ${config.kit.amp},
 			csp: ${s(config.kit.csp)},
@@ -66,7 +55,7 @@ export class Server {
 			floc: ${config.kit.floc},
 			get_stack: error => String(error), // for security
 			handle_error: (error, event) => {
-				hooks.handleError({
+				this.options.hooks.handleError({
 					error,
 					event,
 
@@ -78,7 +67,7 @@ export class Server {
 				});
 				error.stack = this.options.get_stack(error);
 			},
-			hooks,
+			hooks: null,
 			hydrate: ${s(config.kit.browser.hydrate)},
 			manifest,
 			method_override: ${s(config.kit.methodOverride)},
@@ -95,9 +84,19 @@ export class Server {
 		};
 	}
 
-	respond(request, options = {}) {
+	async respond(request, options = {}) {
 		if (!(request instanceof Request)) {
-			throw new Error('The first argument to app.render must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
+			throw new Error('The first argument to server.respond must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
+		}
+
+		if (!this.options.hooks) {
+			const module = await import(${s(hooks)});
+			this.options.hooks = {
+				getSession: module.getSession || (() => ({})),
+				handle: module.handle || (({ event, resolve }) => resolve(event)),
+				handleError: module.handleError || (({ error }) => console.error(error.stack)),
+				externalFetch: module.externalFetch || fetch
+			};
 		}
 
 		return respond(request, this.options, options);
@@ -133,7 +132,7 @@ export async function build_server(
 ) {
 	let hooks_file = resolve_entry(config.kit.files.hooks);
 	if (!hooks_file || !fs.existsSync(hooks_file)) {
-		hooks_file = path.resolve(cwd, `${SVELTE_KIT}/build/hooks.js`);
+		hooks_file = path.join(config.kit.outDir, 'build/hooks.js');
 		fs.writeFileSync(hooks_file, '');
 	}
 
@@ -160,7 +159,7 @@ export async function build_server(
 		const relative = path.relative(config.kit.files.routes, resolved);
 
 		const name = relative.startsWith('..')
-			? posixify(path.join('entries/pages', path.basename(file)))
+			? posixify(path.join('entries/fallbacks', path.basename(file)))
 			: posixify(path.join('entries/pages', relative));
 		input[name] = resolved;
 	});
@@ -177,6 +176,7 @@ export async function build_server(
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: service_worker_register && !!service_worker_entry_file,
+			runtime: get_runtime_path(config),
 			template: load_template(cwd, config)
 		})
 	);
@@ -228,6 +228,8 @@ export async function build_server(
 	});
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
+
+	process.env.VITE_SVELTEKIT_ADAPTER_NAME = config.kit.adapter?.name;
 
 	const { chunks } = await create_build(merged_config);
 

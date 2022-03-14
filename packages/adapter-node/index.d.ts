@@ -1,5 +1,11 @@
 import { Adapter } from '@sveltejs/kit';
 
+declare global {
+	const HOST_ENV: string;
+	const PATH_ENV: string;
+	const PORT_ENV: string;
+}
+
 interface AdapterOptions {
 	out?: string;
 	precompress?: boolean;
@@ -9,10 +15,12 @@ interface AdapterOptions {
 		port?: string;
 		origin?: string;
 		headers?: {
+			address?: string;
 			protocol?: string;
 			host?: string;
 		};
 	};
+	xForwardedForIndex?: number;
 }
 
 declare function plugin(options?: AdapterOptions): Adapter;

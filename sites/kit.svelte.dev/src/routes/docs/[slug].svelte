@@ -85,11 +85,12 @@
 	}
 
 	.controls {
-		max-width: var(--linemax);
+		max-width: calc(var(--linemax) + 1rem);
 		border-top: 1px solid #eee;
 		padding: 1rem 0 0 0;
 		display: grid;
 		grid-template-columns: 1fr 1fr;
+		margin: 6rem 0 0 0;
 	}
 
 	.controls > :first-child {

@@ -5,11 +5,12 @@
 	"scripts": {
 		"dev": "../../../../kit/svelte-kit.js dev",
 		"build": "../../../../kit/svelte-kit.js build",
-		"start": "../../../../kit/svelte-kit.js start"
+		"start": "sirv -s 200.html build"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "next",
 		"@sveltejs/kit": "next",
+		"sirv-cli": "^2.0.2",
 		"svelte": "^3.43.0"
 	},
 	"type": "module"

@@ -3,9 +3,9 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import vite from 'vite';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
-import { SVELTE_KIT } from '../constants.js';
-import { copy_assets, get_aliases, runtime } from '../utils.js';
+import { get_aliases, get_runtime_path } from '../utils.js';
 import { create_plugin } from './plugin.js';
+import * as sync from '../sync/sync.js';
 
 /**
  * @typedef {{
@@ -20,7 +20,7 @@ import { create_plugin } from './plugin.js';
 
 /** @param {Options} opts */
 export async function dev({ cwd, port, host, https, config }) {
-	copy_assets(`${SVELTE_KIT}/runtime`);
+	sync.init(config);
 
 	const [vite_config] = deep_merge(
 		{
@@ -31,8 +31,8 @@ export async function dev({ cwd, port, host, https, config }) {
 							config.kit.files.assets,
 							config.kit.files.lib,
 							config.kit.files.routes,
+							config.kit.outDir,
 							path.resolve(cwd, 'src'),
-							path.resolve(cwd, SVELTE_KIT),
 							path.resolve(cwd, 'node_modules'),
 							path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
 						])
@@ -55,7 +55,7 @@ export async function dev({ cwd, port, host, https, config }) {
 			rollupOptions: {
 				// Vite dependency crawler needs an explicit JS entry point
 				// eventhough server otherwise works without it
-				input: `${runtime}/client/start.js`
+				input: `${get_runtime_path(config)}/client/start.js`
 			}
 		},
 		plugins: [
