@@ -104,4 +104,9 @@ test('decodes paths when writing files', () => {
 	assert.equal(content, JSON.stringify({ path: 'path with encoded spaces' }));
 });
 
+test('prerendering is set to true in global code of hooks.js', () => {
+	const content = read('prerendering-true.html');
+	assert.ok(content.includes('<h1>prerendering: true/true</h1>'), content);
+});
+
 test.run();
