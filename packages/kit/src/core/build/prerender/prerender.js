@@ -63,6 +63,7 @@ export async function prerender({ config, entries, files, log }) {
 
 	const server_root = join(config.kit.outDir, 'output');
 
+	/** @type {import('types').NotifyPrerendering} */
 	const { notify_prerendering } = await import(`${server_root}/server/notify_prerendering.js`);
 	notify_prerendering();
 	/** @type {import('types').ServerModule} */
