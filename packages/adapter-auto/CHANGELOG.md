@@ -1,5 +1,15 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.32
+
+### Patch Changes
+
+- Select adapter immediately ([#4299](https://github.com/sveltejs/kit/pull/4299))
+
+- Updated dependencies []:
+  - @sveltejs/adapter-netlify@1.0.0-next.50
+  - @sveltejs/adapter-vercel@1.0.0-next.46
+
 ## 1.0.0-next.31
 
 ### Patch Changes
