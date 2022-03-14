@@ -49,7 +49,7 @@ export async function create_plugin(config, cwd) {
 				manifest = {
 					appDir: config.kit.appDir,
 					assets: new Set(manifest_data.assets.map((asset) => asset.file)),
-					mime: get_mime_lookup(manifest_data),
+					mimeTypes: get_mime_lookup(manifest_data),
 					_: {
 						entry: {
 							file: `/@fs${runtime}/client/start.js`,
