@@ -567,11 +567,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (cached) return cached;
 		}
 
-		const has_next = route !== routes[routes.length - 1];
 		const [pattern, a, b, get_params, shadow_key] = route;
 		const params = get_params
 			? // the pattern is for the route which we've already matched to this path
-			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(path)))
+			  get_params(/** @type {RegExpExecArray} */ (pattern.exec(path)))
 			: {};
 
 		const changed = current.url && {
@@ -643,7 +642,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 							}
 
 							if (res.status === 204) {
-								if (has_next) {
+								if (route !== routes[routes.length - 1]) {
 									// fallthrough
 									return;
 								}
