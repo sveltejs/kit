@@ -2059,7 +2059,7 @@ test.describe.parallel('Routing', () => {
 		}
 	});
 
-	test('navigates to ...rest', async ({ page, clicknav }) => {
+	test.only('navigates to ...rest', async ({ page, clicknav }) => {
 		await page.goto('/routing/rest/abc/xyz');
 
 		expect(await page.textContent('h1')).toBe('abc/xyz');
@@ -2210,6 +2210,24 @@ test.describe.parallel('Static files', () => {
 
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
+	});
+});
+
+test.describe.parallel('Validators', () => {
+	test('Validates parameters', async ({ page, clicknav }) => {
+		await page.goto('/routing/validated');
+
+		await clicknav('[href="/routing/validated/a"]');
+		expect(await page.textContent('h1')).toBe('lowercase: a');
+
+		await clicknav('[href="/routing/validated/B"]');
+		expect(await page.textContent('h1')).toBe('uppercase: B');
+
+		await clicknav('[href="/routing/validated/1"]');
+		expect(await page.textContent('h1')).toBe('number: 1');
+
+		await clicknav('[href="/routing/validated/everything-else"]');
+		expect(await page.textContent('h1')).toBe('fallback: everything-else');
 	});
 });
 
