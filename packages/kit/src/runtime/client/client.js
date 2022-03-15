@@ -639,7 +639,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 						}
 
 						if (node.loaded) {
-							// TODO remove for 1.9
+							// TODO remove for 1.0
 							// @ts-expect-error
 							if (node.loaded.fallthrough) {
 								throw new Error('fallthrough is no longer supported');
