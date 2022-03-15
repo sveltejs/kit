@@ -15,12 +15,17 @@ import {
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { components, dictionary, fallback } from '__GENERATED__/manifest.js';
+import { components, dictionary } from '__GENERATED__/client-manifest.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
 
 const routes = parse(components, dictionary);
+
+// we import the root layout/error components eagerly, so that
+// connectivity errors after initialisation don't nuke the app
+const default_layout = components[0]();
+const default_error = components[1]();
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -755,7 +760,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const params = {}; // error page does not have params
 
 		const root_layout = await load_node({
-			module: await fallback[0],
+			module: await default_layout,
 			url,
 			params,
 			stuff: {}
@@ -764,7 +769,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const root_error = await load_node({
 			status,
 			error,
-			module: await fallback[1],
+			module: await default_error,
 			url,
 			params,
 			stuff: (root_layout && root_layout.loaded && root_layout.loaded.stuff) || {}

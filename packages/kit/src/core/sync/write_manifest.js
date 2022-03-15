@@ -43,15 +43,11 @@ export function write_manifest(manifest_data, base, output) {
 	}`.replace(/^\t/gm, '');
 
 	write_if_changed(
-		`${output}/manifest.js`,
+		`${output}/client-manifest.js`,
 		trim(`
 			export const components = ${components};
 
 			export const dictionary = ${routes};
-
-			// we import the root layout/error components eagerly, so that
-			// connectivity errors after initialisation don't nuke the app
-			export const fallback = [components[0](), components[1]()];
 		`)
 	);
 }
