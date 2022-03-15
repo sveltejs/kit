@@ -537,8 +537,8 @@ test('creates param validators', () => {
 	const { validators } = create('samples/basic'); // directory doesn't matter for the test
 
 	assert.equal(validators, {
-		foo: 'foo.js',
-		bar: 'bar.js'
+		foo: 'params/foo.js',
+		bar: 'params/bar.js'
 	});
 });
 

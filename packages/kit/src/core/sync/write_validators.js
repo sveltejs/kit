@@ -19,7 +19,7 @@ export function write_validators(manifest_data, output) {
 
 	const module = imports.length
 		? `${imports.join('\n')}\n\nexport const validators = { ${validators.join(', ')} };`
-		: '';
+		: 'export const validators = {};';
 
 	write_if_changed(`${output}/client-validators.js`, module);
 }
