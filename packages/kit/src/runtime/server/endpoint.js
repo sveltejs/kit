@@ -63,7 +63,6 @@ export async function render_endpoint(event, mod) {
 	// @ts-expect-error
 	if (response.fallthrough) {
 		throw new Error('fallthrough is no longer supported');
-		return;
 	}
 
 	const { status = 200, body = {} } = response;

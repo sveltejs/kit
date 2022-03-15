@@ -647,7 +647,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 							// @ts-expect-error
 							if (node.loaded.fallthrough) {
 								throw new Error('fallthrough is no longer supported');
-								return;
 							}
 
 							if (node.loaded.error) {
