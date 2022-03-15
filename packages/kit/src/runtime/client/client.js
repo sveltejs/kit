@@ -177,7 +177,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		const intent = get_navigation_intent(url);
 
-		load_cache.promise = get_navigation_result(intent, false);
+		load_cache.promise = load_route(intent, false);
 		load_cache.id = intent.id;
 
 		return load_cache.promise;
@@ -191,7 +191,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 */
 	async function update(intent, redirect_chain, no_cache, opts) {
 		const current_token = (token = {});
-		let navigation_result = await get_navigation_result(intent, no_cache);
+		let navigation_result = await load_route(intent, no_cache);
 
 		if (!navigation_result && intent.url.pathname === location.pathname) {
 			// this could happen in SPA fallback mode if the user navigated to
@@ -338,36 +338,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (router_enabled) {
 			const navigation = { from: null, to: new URL(location.href) };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
-		}
-	}
-
-	/**
-	 * @param {import('./types').NavigationIntent} intent
-	 * @param {boolean} no_cache
-	 */
-	async function get_navigation_result(intent, no_cache) {
-		if (load_cache.id === intent.id && load_cache.promise) {
-			return load_cache.promise;
-		}
-
-		for (let i = 0; i < intent.routes.length; i += 1) {
-			const route = intent.routes[i];
-
-			// load code for subsequent routes immediately, if they are as
-			// likely to match the current path/query as the current one
-			let j = i + 1;
-			while (j < intent.routes.length) {
-				const next = intent.routes[j];
-				if (next[0].toString() === route[0].toString()) {
-					next[1].forEach((loader) => loader());
-					j += 1;
-				} else {
-					break;
-				}
-			}
-
-			const result = await load_route(route, intent, no_cache);
-			if (result) return result;
 		}
 	}
 
@@ -557,11 +527,16 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('types').CSRRoute} route
 	 * @param {import('./types').NavigationIntent} intent
 	 * @param {boolean} no_cache
 	 */
-	async function load_route(route, { id, url, path }, no_cache) {
+	async function load_route({ id, url, path, route }, no_cache) {
+		if (!route) return;
+
+		if (load_cache.id === id && load_cache.promise) {
+			return load_cache.promise;
+		}
+
 		if (!no_cache) {
 			const cached = cache.get(id);
 			if (cached) return cached;
@@ -817,7 +792,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		/** @type {import('./types').NavigationIntent} */
 		const intent = {
 			id: url.pathname + url.search,
-			routes: routes.filter(([pattern]) => pattern.test(path)),
+			route: routes.find(([pattern]) => pattern.test(path)),
 			url,
 			path
 		};
