@@ -179,11 +179,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	/** @param {URL} url */
 	async function prefetch(url) {
-		if (!owns(url)) {
+		const intent = get_navigation_intent(url);
+
+		if (!intent) {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
-
-		const intent = get_navigation_intent(url);
 
 		load_cache.promise = load_route(intent, false);
 		load_cache.id = intent.id;
@@ -785,13 +785,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/** @param {URL} url */
-	function owns(url) {
-		// TODO now that we've got rid of fallthrough, check against routes immediately
-		return url.origin === location.origin && url.pathname.startsWith(base);
-	}
-
-	/** @param {URL} url */
 	function get_navigation_intent(url) {
+		if (url.origin !== location.origin || !url.pathname.startsWith(base)) return;
+
 		const path = decodeURI(url.pathname.slice(base.length) || '/');
 
 		for (const route of routes) {
