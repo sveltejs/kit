@@ -45,7 +45,7 @@ export function write_manifest(manifest_data, base, output) {
 	write_if_changed(
 		`${output}/client-manifest.js`,
 		trim(`
-			export { validators } from './validators.js';
+			export { validators } from './client-validators.js';
 
 			export const components = ${components};
 
