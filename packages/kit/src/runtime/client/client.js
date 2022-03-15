@@ -561,7 +561,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {import('./types').NavigationIntent} intent
 	 * @param {boolean} no_cache
 	 */
-	async function load_route(route, { id, url, path, routes }, no_cache) {
+	async function load_route(route, { id, url, path }, no_cache) {
 		if (!no_cache) {
 			const cached = cache.get(id);
 			if (cached) return cached;
@@ -641,15 +641,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 								};
 							}
 
-							if (res.status === 204) {
-								if (route !== routes[routes.length - 1]) {
-									// fallthrough
-									return;
-								}
-								props = {};
-							} else {
-								props = await res.json();
-							}
+							props = res.status === 204 ? {} : await res.json();
 						} else {
 							status = res.status;
 							error = new Error('Failed to load data');
@@ -672,9 +664,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 						}
 
 						if (node.loaded) {
+							// TODO remove for 1.9
+							// @ts-expect-error
 							if (node.loaded.fallthrough) {
+								throw new Error('fallthrough is no longer supported');
 								return;
 							}
+
 							if (node.loaded.error) {
 								status = node.loaded.status;
 								error = node.loaded.error;

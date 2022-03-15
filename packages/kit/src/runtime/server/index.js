@@ -205,12 +205,8 @@ export async function respond(request, options, state) {
 									}
 								}
 							} else {
-								// fallthrough
 								response = new Response(undefined, {
-									status: 204,
-									headers: {
-										'content-type': 'application/json'
-									}
+									status: 204
 								});
 							}
 						}

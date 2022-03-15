@@ -59,7 +59,10 @@ export async function render_endpoint(event, mod) {
 		return error(`${preface}: expected an object, got ${typeof response}`);
 	}
 
+	// TODO remove for 1.9
+	// @ts-expect-error
 	if (response.fallthrough) {
+		throw new Error('fallthrough is no longer supported');
 		return;
 	}
 
