@@ -113,8 +113,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (!ready) return;
 		session_id += 1;
 
-		const intent = get_navigation_intent(new URL(location.href));
-		if (intent) update(intent, [], true);
+		update(new URL(location.href), [], true);
 	});
 	ready = true;
 
@@ -192,16 +191,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('./types').NavigationIntent} intent
+	 * @param {URL} url
 	 * @param {string[]} redirect_chain
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
 	 */
-	async function update(intent, redirect_chain, no_cache, opts) {
-		const current_token = (token = {});
-		let navigation_result = await load_route(intent, no_cache);
+	async function update(url, redirect_chain, no_cache, opts) {
+		const intent = get_navigation_intent(url);
 
-		if (!navigation_result && intent.url.pathname === location.pathname) {
+		const current_token = (token = {});
+		let navigation_result = intent && (await load_route(intent, no_cache));
+
+		if (!navigation_result && url.pathname === location.pathname) {
 			// this could happen in SPA fallback mode if the user navigated to
 			// `/non-existent-page`. if we fall back to reloading the page, it
 			// will create an infinite loop. so whereas we normally handle
@@ -209,13 +210,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 			// we render a client-side error page instead
 			navigation_result = await load_root_error_page({
 				status: 404,
-				error: new Error(`Not found: ${intent.url.pathname}`),
-				url: intent.url
+				error: new Error(`Not found: ${url.pathname}`),
+				url
 			});
 		}
 
 		if (!navigation_result) {
-			await native_navigation(intent.url);
+			await native_navigation(url);
 			return; // unnecessary, but TypeScript prefers it this way
 		}
 
@@ -225,17 +226,17 @@ export function create_client({ target, session, base, trailing_slash }) {
 		invalidated.clear();
 
 		if (navigation_result.redirect) {
-			if (redirect_chain.length > 10 || redirect_chain.includes(intent.url.pathname)) {
+			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
 				navigation_result = await load_root_error_page({
 					status: 500,
 					error: new Error('Redirect loop'),
-					url: intent.url
+					url
 				});
 			} else {
 				if (router_enabled) {
-					goto(new URL(navigation_result.redirect, intent.url).href, {}, [
+					goto(new URL(navigation_result.redirect, url).href, {}, [
 						...redirect_chain,
-						intent.url.pathname
+						url.pathname
 					]);
 				} else {
 					await native_navigation(new URL(navigation_result.redirect, location.href));
@@ -246,7 +247,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		} else if (navigation_result.props?.page?.status >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
-				await native_navigation(intent.url);
+				await native_navigation(url);
 			}
 		}
 
@@ -256,7 +257,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			const { details } = opts;
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
-			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', intent.url);
+			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 
 		if (started) {
@@ -296,7 +297,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			await tick();
 
 			if (autoscroll) {
-				const deep_linked = intent.url.hash && document.getElementById(intent.url.hash.slice(1));
+				const deep_linked = url.hash && document.getElementById(url.hash.slice(1));
 				if (scroll) {
 					scrollTo(scroll.x, scroll.y);
 				} else if (deep_linked) {
@@ -840,9 +841,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const pathname = normalize_path(url.pathname, trailing_slash);
 		const normalized = new URL(url.origin + pathname + url.search + url.hash);
 
-		const intent = get_navigation_intent(normalized);
-		if (!intent) return await native_navigation(url);
-
 		update_scroll_positions(current_history_index);
 
 		accepted();
@@ -854,11 +852,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (started) {
 			stores.navigating.set({
 				from: current.url,
-				to: intent.url
+				to: normalized
 			});
 		}
 
-		await update(intent, redirect_chain, false, {
+		await update(normalized, redirect_chain, false, {
 			scroll,
 			keepfocus,
 			details
@@ -930,8 +928,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			if (!invalidating) {
 				invalidating = Promise.resolve().then(async () => {
-					const intent = get_navigation_intent(new URL(location.href));
-					if (intent) await update(intent, [], true);
+					await update(new URL(location.href), [], true);
 
 					invalidating = null;
 				});
