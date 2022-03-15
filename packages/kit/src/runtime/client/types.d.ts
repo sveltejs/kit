@@ -38,6 +38,10 @@ export type NavigationIntent = {
 	 */
 	path: string;
 	/**
+	 * The route parameters
+	 */
+	params: Record<string, string>;
+	/**
 	 * The route that matches `path`
 	 */
 	route: CSRRoute | undefined; // TODO i'm pretty sure we can make this required, and simplify some stuff

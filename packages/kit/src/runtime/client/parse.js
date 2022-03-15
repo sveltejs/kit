@@ -1,11 +1,14 @@
 /**
  * @param {import("types").CSRComponentLoader[]} components
  * @param {Record<string, [number[], number[], 1?]>} dictionary
+ * @param {Record<string, (param: string) => boolean>} validators
  */
-export function parse(components, dictionary) {
+export function parse(components, dictionary, validators) {
 	const routes = Object.entries(dictionary).map(([key, [a, b, has_shadow]]) => {
 		/** @type {string[]} */
 		const names = [];
+
+		/** @type {string[]} */
 		const types = [];
 
 		const pattern =
@@ -37,18 +40,33 @@ export function parse(components, dictionary) {
 
 		return {
 			key,
-			pattern,
-			a: a.map((n) => components[n]),
-			b: b.map((n) => components[n]),
-			/** @param {RegExpMatchArray} match */
-			get_params: (match) => {
+			/** @param {string} path */
+			exec: (path) => {
+				const match = pattern.exec(path);
+				if (!match) return;
+
 				/** @type {Record<string, string>} */
 				const params = {};
-				names.forEach((name, i) => {
-					params[name] = decodeURIComponent(match[i + 1] || '');
-				});
+
+				for (let i = 0; i < names.length; i += 1) {
+					const name = names[i];
+					const type = types[i];
+					const value = match[i + 1] || '';
+
+					if (type) {
+						const validator = validators[type];
+						if (!validator) throw new Error(`Missing "${type}" param validator`); // TODO do this ahead of time?
+
+						if (!validator(value)) return;
+					}
+
+					params[name] = decodeURIComponent(value);
+				}
+
 				return params;
 			},
+			a: a.map((n) => components[n]),
+			b: b.map((n) => components[n]),
 			has_shadow: !!has_shadow
 		};
 	});

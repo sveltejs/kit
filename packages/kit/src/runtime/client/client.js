@@ -15,12 +15,12 @@ import {
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { components, dictionary } from '__GENERATED__/client-manifest.js';
+import { components, dictionary, validators } from '__GENERATED__/client-manifest.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
 
-const routes = parse(components, dictionary);
+const routes = parse(components, dictionary, validators);
 
 // we import the root layout/error components eagerly, so that
 // connectivity errors after initialisation don't nuke the app
@@ -538,7 +538,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {import('./types').NavigationIntent} intent
 	 * @param {boolean} no_cache
 	 */
-	async function load_route({ id, url, path, route }, no_cache) {
+	async function load_route({ id, url, params, route }, no_cache) {
 		if (!route) return;
 
 		if (load_cache.id === id && load_cache.promise) {
@@ -550,11 +550,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (cached) return cached;
 		}
 
-		const { pattern, a, b, get_params, has_shadow } = route;
-		const params = get_params
-			? // the pattern is for the route which we've already matched to this path
-			  get_params(/** @type {RegExpExecArray} */ (pattern.exec(path)))
-			: {};
+		const { a, b, has_shadow } = route;
 
 		const changed = current.url && {
 			url: id !== current.url.pathname + current.url.search,
@@ -798,15 +794,22 @@ export function create_client({ target, session, base, trailing_slash }) {
 	function get_navigation_intent(url) {
 		const path = decodeURI(url.pathname.slice(base.length) || '/');
 
-		/** @type {import('./types').NavigationIntent} */
-		const intent = {
-			id: url.pathname + url.search,
-			route: routes.find((route) => route.pattern.test(path)),
-			url,
-			path
-		};
+		for (const route of routes) {
+			const params = route.exec(path);
 
-		return intent;
+			if (params) {
+				/** @type {import('./types').NavigationIntent} */
+				const intent = {
+					id: url.pathname + url.search,
+					route,
+					params,
+					path,
+					url
+				};
+
+				return intent;
+			}
+		}
 	}
 
 	/**
@@ -843,11 +846,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const pathname = normalize_path(url.pathname, trailing_slash);
 		const normalized = new URL(url.origin + pathname + url.search + url.hash);
 
-		if (!owns(normalized)) {
-			await native_navigation(url);
-		}
-
 		const intent = get_navigation_intent(normalized);
+		if (!intent) return await native_navigation(url);
 
 		update_scroll_positions(current_history_index);
 
@@ -954,7 +954,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		// TODO rethink this API
 		prefetch_routes: async (pathnames) => {
 			const matching = pathnames
-				? routes.filter((route) => pathnames.some((pathname) => route.pattern.test(pathname)))
+				? routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)))
 				: routes;
 
 			const promises = matching.map((r) => Promise.all(r.a.map((load) => load())));

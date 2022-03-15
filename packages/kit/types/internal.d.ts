@@ -69,10 +69,9 @@ export type CSRComponent = any; // TODO
 export type CSRComponentLoader = () => Promise<CSRComponent>;
 
 export type CSRRoute = {
-	pattern: RegExp;
+	exec: (path: string) => undefined | Record<string, string>;
 	a: CSRComponentLoader[];
 	b: CSRComponentLoader[];
-	get_params: GetParams;
 	has_shadow: boolean;
 };
 
