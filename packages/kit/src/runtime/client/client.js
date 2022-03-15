@@ -114,7 +114,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		session_id += 1;
 
 		const intent = get_navigation_intent(new URL(location.href));
-		update(intent, [], true);
+		if (intent) update(intent, [], true);
 	});
 	ready = true;
 
@@ -798,7 +798,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 					id: url.pathname + url.search,
 					route,
 					params,
-					path,
 					url
 				};
 
@@ -932,7 +931,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (!invalidating) {
 				invalidating = Promise.resolve().then(async () => {
 					const intent = get_navigation_intent(new URL(location.href));
-					await update(intent, [], true);
+					if (intent) await update(intent, [], true);
 
 					invalidating = null;
 				});

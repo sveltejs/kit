@@ -276,7 +276,6 @@ export interface SSROptions {
 
 export interface SSRPage {
 	type: 'page';
-	key: string;
 	pattern: RegExp;
 	names: string[];
 	types: string[];

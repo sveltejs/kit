@@ -34,10 +34,6 @@ export type NavigationIntent = {
 	 */
 	id: string;
 	/**
-	 * `url.pathname`, minus any `paths.base` prefix
-	 */
-	path: string;
-	/**
 	 * The route parameters
 	 */
 	params: Record<string, string>;
