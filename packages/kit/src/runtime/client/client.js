@@ -625,7 +625,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
 								headers: {
-									'x-sveltekit-load': /** @type {string} */ (shadow_key)
+									'x-sveltekit-load': 'true'
 								}
 							}
 						);
