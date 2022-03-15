@@ -360,29 +360,6 @@ export async function create_plugin(config, cwd) {
 	};
 }
 
-/** @param {string[]} array */
-function get_params(array) {
-	// given an array of params like `['x', 'y', 'z']` for
-	// src/routes/[x]/[y]/[z]/svelte, create a function
-	// that turns a RegExpExecArray into ({ x, y, z })
-
-	/** @param {RegExpExecArray} match */
-	const fn = (match) => {
-		/** @type {Record<string, string>} */
-		const params = {};
-		array.forEach((key, i) => {
-			if (key.startsWith('...')) {
-				params[key.slice(3)] = match[i + 1] || '';
-			} else {
-				params[key] = match[i + 1];
-			}
-		});
-		return params;
-	};
-
-	return fn;
-}
-
 /** @param {import('http').ServerResponse} res */
 function not_found(res) {
 	res.statusCode = 404;

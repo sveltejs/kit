@@ -114,21 +114,3 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 		}
 	}`.replace(/^\t/gm, '');
 }
-
-/** @param {string[]} array */
-function get_params(array) {
-	// given an array of params like `['x', 'y', 'z']` for
-	// src/routes/[x]/[y]/[z]/svelte, create a function
-	// that turns a RexExpMatchArray into ({ x, y, z })
-	return array.length
-		? '(m) => ({ ' +
-				array
-					.map((param, i) => {
-						return param.startsWith('...')
-							? `${param.slice(3)}: m[${i + 1}] || ''`
-							: `${param}: m[${i + 1}]`;
-					})
-					.join(', ') +
-				'})'
-		: 'null';
-}
