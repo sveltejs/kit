@@ -327,7 +327,7 @@ export async function load_node({
 			throw new Error(`load function must return a value${options.dev ? ` (${node.entry})` : ''}`);
 		}
 
-		// TODO remove for 1.9
+		// TODO remove for 1.0
 		// @ts-expect-error
 		if (loaded.fallthrough) {
 			throw new Error('fallthrough is no longer supported');
@@ -402,7 +402,7 @@ async function load_shadow_data(route, event, options, prerender) {
 		if (!is_get) {
 			const result = await handler(event);
 
-			// TODO remove for 1.9
+			// TODO remove for 1.0
 			// @ts-expect-error
 			if (result.fallthrough) {
 				throw new Error('fallthrough is no longer supported');
@@ -431,7 +431,7 @@ async function load_shadow_data(route, event, options, prerender) {
 		if (get) {
 			const result = await get(event);
 
-			// TODO remove for 1.9
+			// TODO remove for 1.0
 			// @ts-expect-error
 			if (result.fallthrough) {
 				throw new Error('fallthrough is no longer supported');
