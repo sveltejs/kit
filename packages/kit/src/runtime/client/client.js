@@ -782,6 +782,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	/** @param {URL} url */
 	function owns(url) {
+		// TODO now that we've got rid of fallthrough, check against routes immediately
 		return url.origin === location.origin && url.pathname.startsWith(base);
 	}
 
@@ -831,14 +832,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 			return;
 		}
 
-		if (!owns(url)) {
+		const pathname = normalize_path(url.pathname, trailing_slash);
+		const normalized = new URL(url.origin + pathname + url.search + url.hash);
+
+		if (!owns(normalized)) {
 			await native_navigation(url);
 		}
 
-		const pathname = normalize_path(url.pathname, trailing_slash);
-		url = new URL(url.origin + pathname + url.search + url.hash);
-
-		const intent = get_navigation_intent(url);
+		const intent = get_navigation_intent(normalized);
 
 		update_scroll_positions(current_history_index);
 
@@ -867,7 +868,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (navigating_token !== current_navigating_token) return;
 
 		if (!navigating) {
-			const navigation = { from, to: url };
+			const navigation = { from, to: normalized };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
 
 			stores.navigating.set(null);
