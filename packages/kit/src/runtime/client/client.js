@@ -540,8 +540,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {boolean} no_cache
 	 */
 	async function load_route({ id, url, params, route }, no_cache) {
-		if (!route) return;
-
 		if (load_cache.id === id && load_cache.promise) {
 			return load_cache.promise;
 		}
