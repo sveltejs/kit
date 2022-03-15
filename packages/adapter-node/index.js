@@ -24,12 +24,16 @@ export default function ({
 			host: host_header_env = 'HOST_HEADER'
 		} = {}
 	} = {},
-	xForwardedForIndex = -1
+	xForwardedForNumProxies = 1
 } = {}) {
 	return {
 		name: '@sveltejs/adapter-node',
 
 		async adapt(builder) {
+			if (xForwardedForNumProxies < 1) {
+				throw new Error('xForwardedForNumProxies cannot be less than 1');
+			}
+
 			builder.rimraf(out);
 
 			builder.log.minor('Copying assets');
@@ -56,7 +60,7 @@ export default function ({
 					PROTOCOL_HEADER: JSON.stringify(protocol_header_env),
 					HOST_HEADER: JSON.stringify(host_header_env),
 					ADDRESS_HEADER: JSON.stringify(address_header_env),
-					X_FORWARDED_FOR_INDEX: JSON.stringify(xForwardedForIndex)
+					X_FORWARDED_FOR_PROXIES: JSON.stringify(xForwardedForNumProxies)
 				}
 			});
 

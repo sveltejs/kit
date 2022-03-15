@@ -5,7 +5,7 @@ declare global {
 	const ADDRESS_HEADER: string;
 	const HOST_HEADER: string;
 	const PROTOCOL_HEADER: string;
-	const X_FORWARDED_FOR_INDEX: number;
+	const X_FORWARDED_FOR_PROXIES: number;
 }
 
 export const handler: Handle;

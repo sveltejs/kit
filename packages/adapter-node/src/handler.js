@@ -7,7 +7,7 @@ import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 
-/* global ORIGIN, ADDRESS_HEADER, PROTOCOL_HEADER, HOST_HEADER, X_FORWARDED_FOR_INDEX */
+/* global ORIGIN, ADDRESS_HEADER, PROTOCOL_HEADER, HOST_HEADER, X_FORWARDED_FOR_PROXIES */
 
 const server = new Server(manifest);
 const origin = ORIGIN;
@@ -62,7 +62,12 @@ const ssr = async (req, res) => {
 
 					if (address_header === 'x-forwarded-for') {
 						const addresses = value.split(',');
-						return addresses[(addresses.length + X_FORWARDED_FOR_INDEX) % addresses.length].trim();
+						if (X_FORWARDED_FOR_PROXIES > addresses.length) {
+							throw new Error(
+								`Received xForwardedForNumProxies of ${X_FORWARDED_FOR_PROXIES}, but only found ${addresses.length} addresses`
+							);
+						}
+						return addresses[addresses.length - X_FORWARDED_FOR_PROXIES].trim();
 					}
 
 					return value;

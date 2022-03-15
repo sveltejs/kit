@@ -94,23 +94,17 @@ MY_ORIGINURL=https://my.site \
 node build
 ```
 
-### xForwardedForIndex
+### xForwardedForNumProxies
 
-If the `ADDRESS_HEADER` is `X-Forwarded-For`, the header value will contain a comma-separated list of IP addresses. For example, if there are three proxies between your server and the client, proxy 3 will forward the addresses of the client and the first two proxies:
+If the `ADDRESS_HEADER` is `X-Forwarded-For`, the header value will contain a comma-separated list of IP addresses. `xForwardedForNumProxies` should specify how many trusted proxies sit between your server and the client. E.g. if there are three trusted proxies, proxy 3 will forward the addresses of the client and the first two proxies:
 
 ```
 <client address>, <proxy 1 address>, <proxy 2 address>
 ```
 
-To get the client address we could use `xForwardedFor: 0` or `xForwardedFor: -3`, which counts back from the number of addresses.
+To get the client address we could use `xForwardedFor: 3`.
 
-**X-Forwarded-For is [trivial to spoof](https://adam-p.ca/blog/2022/03/x-forwarded-for/), howevever**:
-
-```
-<spoofed address>, <client address>, <proxy 1 address>, <proxy 2 address>
-```
-
-For that reason you should always use a negative number (depending on the number of proxies) if you need to trust `event.clientAddress`. In the above example, `0` would yield the spoofed address while `-3` would continue to work.
+If there may be a variable number of proxies, you would have to read the `X-Forwarded-For` header yourself and read the IP address from the left, but be very careful that you do not use the result for any applications with possible security implications.
 
 ## Custom server
 
