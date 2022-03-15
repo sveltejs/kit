@@ -156,7 +156,7 @@ export async function create_plugin(config, cwd) {
 			update_manifest();
 
 			vite.watcher.on('add', update_manifest);
-			vite.watcher.on('remove', update_manifest);
+			vite.watcher.on('unlink', update_manifest);
 
 			const assets = config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base;
 			const asset_server = sirv(config.kit.files.assets, {
