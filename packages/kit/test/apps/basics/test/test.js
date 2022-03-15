@@ -2059,7 +2059,7 @@ test.describe.parallel('Routing', () => {
 		}
 	});
 
-	test.only('navigates to ...rest', async ({ page, clicknav }) => {
+	test('navigates to ...rest', async ({ page, clicknav }) => {
 		await page.goto('/routing/rest/abc/xyz');
 
 		expect(await page.textContent('h1')).toBe('abc/xyz');

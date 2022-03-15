@@ -2,7 +2,7 @@ import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { normalize } from '../load.js';
-import { normalize_path } from '../../utils/url';
+import { normalize_path } from '../../utils/url.js';
 import {
 	create_updated_store,
 	find_anchor,
@@ -11,13 +11,16 @@ import {
 	initial_fetch,
 	notifiable_store,
 	scroll_state
-} from './utils';
+} from './utils.js';
+import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { routes, fallback } from '__GENERATED__/manifest.js';
+import { components, dictionary, fallback } from '__GENERATED__/manifest.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
+
+const routes = parse(components, dictionary);
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -542,7 +545,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (cached) return cached;
 		}
 
-		const [pattern, a, b, get_params, shadow_key] = route;
+		const { pattern, a, b, get_params, has_shadow } = route;
 		const params = get_params
 			? // the pattern is for the route which we've already matched to this path
 			  get_params(/** @type {RegExpExecArray} */ (pattern.exec(path)))
@@ -593,7 +596,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					/** @type {Record<string, any>} */
 					let props = {};
 
-					const is_shadow_page = shadow_key !== undefined && i === a.length - 1;
+					const is_shadow_page = has_shadow && i === a.length - 1;
 
 					if (is_shadow_page) {
 						const res = await fetch(
@@ -793,7 +796,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		/** @type {import('./types').NavigationIntent} */
 		const intent = {
 			id: url.pathname + url.search,
-			route: routes.find(([pattern]) => pattern.test(path)),
+			route: routes.find((route) => route.pattern.test(path)),
 			url,
 			path
 		};
@@ -946,10 +949,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 		// TODO rethink this API
 		prefetch_routes: async (pathnames) => {
 			const matching = pathnames
-				? routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
+				? routes.filter((route) => pathnames.some((pathname) => route.pattern.test(pathname)))
 				: routes;
 
-			const promises = matching.map((r) => Promise.all(r[1].map((load) => load())));
+			const promises = matching.map((r) => Promise.all(r.a.map((load) => load())));
 
 			await Promise.all(promises);
 		},
