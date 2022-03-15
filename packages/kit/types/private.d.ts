@@ -136,8 +136,6 @@ export interface CspDirectives {
 	>;
 }
 
-export type Either<T, U> = Only<T, U> | Only<U, T>;
-
 export interface ErrorLoadInput<Params extends Record<string, string> = Record<string, string>>
 	extends LoadInput<Params> {
 	status?: number;

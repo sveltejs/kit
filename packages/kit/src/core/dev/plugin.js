@@ -12,6 +12,7 @@ import { coalesce_to_error } from '../../utils/error.js';
 import { load_template } from '../config/index.js';
 import { sequence } from '../../hooks.js';
 import { posixify } from '../../utils/filesystem.js';
+import { parse_route_key } from '../../utils/routing.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -104,12 +105,15 @@ export async function create_plugin(config, cwd) {
 							};
 						}),
 						routes: manifest_data.routes.map((route) => {
+							const { pattern, names, types } = parse_route_key(route.key);
+
 							if (route.type === 'page') {
 								return {
 									type: 'page',
 									key: route.key,
-									pattern: route.pattern,
-									params: get_params(route.params),
+									pattern,
+									names,
+									types,
 									shadow: route.shadow
 										? async () => {
 												const url = path.resolve(cwd, /** @type {string} */ (route.shadow));
@@ -123,14 +127,27 @@ export async function create_plugin(config, cwd) {
 
 							return {
 								type: 'endpoint',
-								pattern: route.pattern,
-								params: get_params(route.params),
+								pattern,
+								names,
+								types,
 								load: async () => {
 									const url = path.resolve(cwd, route.file);
 									return await vite.ssrLoadModule(url);
 								}
 							};
-						})
+						}),
+						validators: async () => {
+							/** @type {Record<string, import('types').ParamValidator>} */
+							const validators = {};
+
+							for (const key in manifest_data.validators) {
+								const url = path.resolve(cwd, manifest_data.validators[key]);
+								const module = await vite.ssrLoadModule(url);
+								validators[key] = module.validate;
+							}
+
+							return validators;
+						}
 					}
 				};
 			}

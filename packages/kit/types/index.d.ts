@@ -209,6 +209,10 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	error: Error | null;
 }
 
+export interface ParamValidator {
+	(param: string): boolean;
+}
+
 /**
  * A function exported from an endpoint that corresponds to an
  * HTTP verb (`get`, `put`, `patch`, etc) and handles requests with
@@ -252,5 +256,6 @@ export interface SSRManifest {
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
+		validators: () => Promise<Record<string, ParamValidator>>;
 	};
 }

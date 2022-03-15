@@ -11,7 +11,6 @@ import {
 	SSRManifest
 } from './index';
 import {
-	Either,
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
@@ -218,7 +217,8 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 export interface SSREndpoint {
 	type: 'endpoint';
 	pattern: RegExp;
-	params: GetParams;
+	names: string[];
+	types: string[];
 	load(): Promise<{
 		[method: string]: RequestHandler;
 	}>;
@@ -278,7 +278,8 @@ export interface SSRPage {
 	type: 'page';
 	key: string;
 	pattern: RegExp;
-	params: GetParams;
+	names: string[];
+	types: string[];
 	shadow:
 		| null
 		| (() => Promise<{
