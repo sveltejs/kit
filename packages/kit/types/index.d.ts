@@ -7,7 +7,6 @@ import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
 	CspDirectives,
-	Either,
 	ErrorLoadInput,
 	JSONValue,
 	LoadInput,
@@ -113,6 +112,7 @@ export interface Config {
 			assets?: string;
 			hooks?: string;
 			lib?: string;
+			params?: string;
 			routes?: string;
 			serviceWorker?: string;
 			template?: string;

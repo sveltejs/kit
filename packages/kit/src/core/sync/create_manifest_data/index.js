@@ -286,12 +286,26 @@ export default function create_manifest_data({
 		? list_files({ config, dir: config.kit.files.assets, path: '' })
 		: [];
 
+	/** @type {Record<string, string>} */
+	const validators = {};
+	if (fs.existsSync(config.kit.files.params)) {
+		for (const file of fs.readdirSync(config.kit.files.params)) {
+			const ext = path.extname(file);
+			const type = file.slice(0, -ext.length);
+
+			if (/^[a-zA-Z0-9_$]+$/.test(type)) {
+				validators[type] = file;
+			}
+		}
+	}
+
 	return {
 		assets,
 		layout,
 		error,
 		components,
-		routes
+		routes,
+		validators
 	};
 }
 

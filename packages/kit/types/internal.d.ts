@@ -109,6 +109,7 @@ export interface ManifestData {
 	error: string;
 	components: string[];
 	routes: RouteData[];
+	validators: Record<string, string>;
 }
 
 export interface MethodOverride {

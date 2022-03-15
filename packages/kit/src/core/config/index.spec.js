@@ -59,6 +59,7 @@ const get_defaults = (prefix = '') => ({
 			assets: join(prefix, 'static'),
 			hooks: join(prefix, 'src/hooks'),
 			lib: join(prefix, 'src/lib'),
+			params: join(prefix, 'src/params'),
 			routes: join(prefix, 'src/routes'),
 			serviceWorker: join(prefix, 'src/service-worker'),
 			template: join(prefix, 'src/app.html')
