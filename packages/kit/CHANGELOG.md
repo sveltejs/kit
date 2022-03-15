@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.298
+
+### Patch Changes
+
+- fix: correctly detect removal of route ([#4333](https://github.com/sveltejs/kit/pull/4333))
+
 ## 1.0.0-next.297
 
 ### Patch Changes
