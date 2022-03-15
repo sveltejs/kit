@@ -104,7 +104,7 @@ If the `ADDRESS_HEADER` is `X-Forwarded-For`, the header value will contain a co
 
 To get the client address we could use `xForwardedFor: 3`.
 
-If there may be a variable number of proxies, you would have to read the `X-Forwarded-For` header yourself and read the IP address from the left, but be very careful that you do not use the result for any applications with possible security implications.
+If there may be a variable number of proxies, you would have to read the `X-Forwarded-For` header yourself and read the IP address from the left, but be very careful that you do not use the result for any applications with possible security implications since `X-Forwarded-For` is [trivial to spoof](https://adam-p.ca/blog/2022/03/x-forwarded-for/).
 
 ## Custom server
 
