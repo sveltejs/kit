@@ -96,7 +96,7 @@ node build
 
 ### `XFF_DEPTH`
 
-If the `ADDRESS_HEADER` is `X-Forwarded-For`, the header value will contain a comma-separated list of IP addresses. The `XFF_DEPTH` environment variable should specify how many trusted proxies sit between your server and the client. E.g. if there are three trusted proxies, proxy 3 will forward the addresses of the client and the first two proxies:
+If the `ADDRESS_HEADER` is `X-Forwarded-For`, the header value will contain a comma-separated list of IP addresses. The `XFF_DEPTH` environment variable should specify how many trusted proxies sit in front of your server. E.g. if there are three trusted proxies, proxy 3 will forward the addresses of the original connection and the first two proxies:
 
 ```
 <client address>, <proxy 1 address>, <proxy 2 address>
