@@ -2213,6 +2213,24 @@ test.describe.parallel('Static files', () => {
 	});
 });
 
+test.describe.parallel('Validators', () => {
+	test('Validates parameters', async ({ page, clicknav }) => {
+		await page.goto('/routing/validated');
+
+		await clicknav('[href="/routing/validated/a"]');
+		expect(await page.textContent('h1')).toBe('lowercase: a');
+
+		await clicknav('[href="/routing/validated/B"]');
+		expect(await page.textContent('h1')).toBe('uppercase: B');
+
+		await clicknav('[href="/routing/validated/1"]');
+		expect(await page.textContent('h1')).toBe('number: 1');
+
+		await clicknav('[href="/routing/validated/everything-else"]');
+		expect(await page.textContent('h1')).toBe('fallback: everything-else');
+	});
+});
+
 test.describe.parallel('XSS', () => {
 	test('replaces %svelte.xxx% tags safely', async ({ page }) => {
 		await page.goto('/unsafe-replacement');

@@ -2,7 +2,7 @@ import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { normalize } from '../load.js';
-import { normalize_path } from '../../utils/url';
+import { normalize_path } from '../../utils/url.js';
 import {
 	create_updated_store,
 	find_anchor,
@@ -11,13 +11,21 @@ import {
 	initial_fetch,
 	notifiable_store,
 	scroll_state
-} from './utils';
+} from './utils.js';
+import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { routes, fallback } from '__GENERATED__/manifest.js';
+import { components, dictionary, validators } from '__GENERATED__/client-manifest.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
+
+const routes = parse(components, dictionary, validators);
+
+// we import the root layout/error components eagerly, so that
+// connectivity errors after initialisation don't nuke the app
+const default_layout = components[0]();
+const default_error = components[1]();
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -105,8 +113,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (!ready) return;
 		session_id += 1;
 
-		const intent = get_navigation_intent(new URL(location.href));
-		update(intent, [], true);
+		update(new URL(location.href), [], true);
 	});
 	ready = true;
 
@@ -171,11 +178,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	/** @param {URL} url */
 	async function prefetch(url) {
-		if (!owns(url)) {
+		const intent = get_navigation_intent(url);
+
+		if (!intent) {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
-
-		const intent = get_navigation_intent(url);
 
 		load_cache.promise = load_route(intent, false);
 		load_cache.id = intent.id;
@@ -184,16 +191,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('./types').NavigationIntent} intent
+	 * @param {URL} url
 	 * @param {string[]} redirect_chain
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
 	 */
-	async function update(intent, redirect_chain, no_cache, opts) {
-		const current_token = (token = {});
-		let navigation_result = await load_route(intent, no_cache);
+	async function update(url, redirect_chain, no_cache, opts) {
+		const intent = get_navigation_intent(url);
 
-		if (!navigation_result && intent.url.pathname === location.pathname) {
+		const current_token = (token = {});
+		let navigation_result = intent && (await load_route(intent, no_cache));
+
+		if (!navigation_result && url.pathname === location.pathname) {
 			// this could happen in SPA fallback mode if the user navigated to
 			// `/non-existent-page`. if we fall back to reloading the page, it
 			// will create an infinite loop. so whereas we normally handle
@@ -201,13 +210,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 			// we render a client-side error page instead
 			navigation_result = await load_root_error_page({
 				status: 404,
-				error: new Error(`Not found: ${intent.url.pathname}`),
-				url: intent.url
+				error: new Error(`Not found: ${url.pathname}`),
+				url
 			});
 		}
 
 		if (!navigation_result) {
-			await native_navigation(intent.url);
+			await native_navigation(url);
 			return; // unnecessary, but TypeScript prefers it this way
 		}
 
@@ -217,17 +226,17 @@ export function create_client({ target, session, base, trailing_slash }) {
 		invalidated.clear();
 
 		if (navigation_result.redirect) {
-			if (redirect_chain.length > 10 || redirect_chain.includes(intent.url.pathname)) {
+			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
 				navigation_result = await load_root_error_page({
 					status: 500,
 					error: new Error('Redirect loop'),
-					url: intent.url
+					url
 				});
 			} else {
 				if (router_enabled) {
-					goto(new URL(navigation_result.redirect, intent.url).href, {}, [
+					goto(new URL(navigation_result.redirect, url).href, {}, [
 						...redirect_chain,
-						intent.url.pathname
+						url.pathname
 					]);
 				} else {
 					await native_navigation(new URL(navigation_result.redirect, location.href));
@@ -238,7 +247,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		} else if (navigation_result.props?.page?.status >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
-				await native_navigation(intent.url);
+				await native_navigation(url);
 			}
 		}
 
@@ -248,7 +257,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			const { details } = opts;
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
-			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', intent.url);
+			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 
 		if (started) {
@@ -288,7 +297,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			await tick();
 
 			if (autoscroll) {
-				const deep_linked = intent.url.hash && document.getElementById(intent.url.hash.slice(1));
+				const deep_linked = url.hash && document.getElementById(url.hash.slice(1));
 				if (scroll) {
 					scrollTo(scroll.x, scroll.y);
 				} else if (deep_linked) {
@@ -530,9 +539,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {import('./types').NavigationIntent} intent
 	 * @param {boolean} no_cache
 	 */
-	async function load_route({ id, url, path, route }, no_cache) {
-		if (!route) return;
-
+	async function load_route({ id, url, params, route }, no_cache) {
 		if (load_cache.id === id && load_cache.promise) {
 			return load_cache.promise;
 		}
@@ -542,11 +549,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (cached) return cached;
 		}
 
-		const [pattern, a, b, get_params, shadow_key] = route;
-		const params = get_params
-			? // the pattern is for the route which we've already matched to this path
-			  get_params(/** @type {RegExpExecArray} */ (pattern.exec(path)))
-			: {};
+		const { a, b, has_shadow } = route;
 
 		const changed = current.url && {
 			url: id !== current.url.pathname + current.url.search,
@@ -593,7 +596,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					/** @type {Record<string, any>} */
 					let props = {};
 
-					const is_shadow_page = shadow_key !== undefined && i === a.length - 1;
+					const is_shadow_page = has_shadow && i === a.length - 1;
 
 					if (is_shadow_page) {
 						const res = await fetch(
@@ -642,7 +645,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 							// TODO remove for 1.0
 							// @ts-expect-error
 							if (node.loaded.fallthrough) {
-								throw new Error('fallthrough is no longer supported');
+								throw new Error(
+									'fallthrough is no longer supported. Use validators instead: https://kit.svelte.dev/docs/routing#advanced-routing-validation'
+								);
 							}
 
 							if (node.loaded.error) {
@@ -751,7 +756,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const params = {}; // error page does not have params
 
 		const root_layout = await load_node({
-			module: await fallback[0],
+			module: await default_layout,
 			url,
 			params,
 			stuff: {}
@@ -760,7 +765,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const root_error = await load_node({
 			status,
 			error,
-			module: await fallback[1],
+			module: await default_error,
 			url,
 			params,
 			stuff: (root_layout && root_layout.loaded && root_layout.loaded.stuff) || {}
@@ -780,24 +785,26 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/** @param {URL} url */
-	function owns(url) {
-		// TODO now that we've got rid of fallthrough, check against routes immediately
-		return url.origin === location.origin && url.pathname.startsWith(base);
-	}
-
-	/** @param {URL} url */
 	function get_navigation_intent(url) {
+		if (url.origin !== location.origin || !url.pathname.startsWith(base)) return;
+
 		const path = decodeURI(url.pathname.slice(base.length) || '/');
 
-		/** @type {import('./types').NavigationIntent} */
-		const intent = {
-			id: url.pathname + url.search,
-			route: routes.find(([pattern]) => pattern.test(path)),
-			url,
-			path
-		};
+		for (const route of routes) {
+			const params = route.exec(path);
 
-		return intent;
+			if (params) {
+				/** @type {import('./types').NavigationIntent} */
+				const intent = {
+					id: url.pathname + url.search,
+					route,
+					params,
+					url
+				};
+
+				return intent;
+			}
+		}
 	}
 
 	/**
@@ -834,12 +841,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const pathname = normalize_path(url.pathname, trailing_slash);
 		const normalized = new URL(url.origin + pathname + url.search + url.hash);
 
-		if (!owns(normalized)) {
-			await native_navigation(url);
-		}
-
-		const intent = get_navigation_intent(normalized);
-
 		update_scroll_positions(current_history_index);
 
 		accepted();
@@ -851,11 +852,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (started) {
 			stores.navigating.set({
 				from: current.url,
-				to: intent.url
+				to: normalized
 			});
 		}
 
-		await update(intent, redirect_chain, false, {
+		await update(normalized, redirect_chain, false, {
 			scroll,
 			keepfocus,
 			details
@@ -927,8 +928,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			if (!invalidating) {
 				invalidating = Promise.resolve().then(async () => {
-					const intent = get_navigation_intent(new URL(location.href));
-					await update(intent, [], true);
+					await update(new URL(location.href), [], true);
 
 					invalidating = null;
 				});
@@ -945,10 +945,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 		// TODO rethink this API
 		prefetch_routes: async (pathnames) => {
 			const matching = pathnames
-				? routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
+				? routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)))
 				: routes;
 
-			const promises = matching.map((r) => Promise.all(r[1].map((load) => load())));
+			const promises = matching.map((r) => Promise.all(r.a.map((load) => load())));
 
 			await Promise.all(promises);
 		},

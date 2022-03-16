@@ -7,6 +7,12 @@ const config = {
 
 		prerender: {
 			default: true
+		},
+
+		vite: {
+			build: {
+				minify: false
+			}
 		}
 	}
 };

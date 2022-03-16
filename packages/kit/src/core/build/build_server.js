@@ -152,7 +152,7 @@ export async function build_server(
 		}
 	});
 
-	// ...and every component used by pages
+	// ...and every component used by pages...
 	manifest_data.components.forEach((file) => {
 		const resolved = path.resolve(cwd, file);
 		const relative = path.relative(config.kit.files.routes, resolved);
@@ -161,6 +161,12 @@ export async function build_server(
 			? posixify(path.join('entries/fallbacks', path.basename(file)))
 			: posixify(path.join('entries/pages', relative));
 		input[name] = resolved;
+	});
+
+	// ...and every validator
+	Object.entries(manifest_data.validators).forEach(([key, file]) => {
+		const name = posixify(path.join('entries/validators', key));
+		input[name] = path.resolve(cwd, file);
 	});
 
 	/** @type {(file: string) => string} */

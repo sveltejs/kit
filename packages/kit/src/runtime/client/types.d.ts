@@ -34,13 +34,13 @@ export type NavigationIntent = {
 	 */
 	id: string;
 	/**
-	 * `url.pathname`, minus any `paths.base` prefix
+	 * The route parameters
 	 */
-	path: string;
+	params: Record<string, string>;
 	/**
 	 * The route that matches `path`
 	 */
-	route: CSRRoute | undefined; // TODO i'm pretty sure we can make this required, and simplify some stuff
+	route: CSRRoute;
 	/**
 	 * The destination URL
 	 */

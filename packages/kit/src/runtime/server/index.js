@@ -5,6 +5,7 @@ import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { decode_params } from './utils.js';
 import { normalize_path } from '../../utils/url.js';
+import { exec } from '../../utils/routing.js';
 
 const DATA_SUFFIX = '/__data.json';
 
@@ -114,6 +115,8 @@ export async function respond(request, options, state) {
 		transformPage: default_transform
 	};
 
+	// TODO match route before calling handle?
+
 	try {
 		const response = await options.hooks.handle({
 			event,
@@ -165,11 +168,16 @@ export async function respond(request, options, state) {
 					event.url = new URL(event.url.origin + normalized + event.url.search);
 				}
 
+				const validators = await options.manifest._.validators();
+
 				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
 					if (!match) continue;
 
-					event.params = route.params ? decode_params(route.params(match)) : {};
+					const params = exec(match, route.names, route.types, validators);
+					if (!params) continue;
+
+					event.params = decode_params(params);
 
 					/** @type {Response | undefined} */
 					let response;

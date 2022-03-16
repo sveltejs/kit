@@ -11,7 +11,6 @@ import {
 	SSRManifest
 } from './index';
 import {
-	Either,
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
@@ -68,7 +67,12 @@ export type CSRComponent = any; // TODO
 
 export type CSRComponentLoader = () => Promise<CSRComponent>;
 
-export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?, ShadowKey?];
+export type CSRRoute = {
+	exec: (path: string) => undefined | Record<string, string>;
+	a: CSRComponentLoader[];
+	b: CSRComponentLoader[];
+	has_shadow: boolean;
+};
 
 export interface EndpointData {
 	type: 'endpoint';
@@ -103,6 +107,7 @@ export interface ManifestData {
 	error: string;
 	components: string[];
 	routes: RouteData[];
+	validators: Record<string, string>;
 }
 
 export interface MethodOverride {
@@ -212,7 +217,8 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 export interface SSREndpoint {
 	type: 'endpoint';
 	pattern: RegExp;
-	params: GetParams;
+	names: string[];
+	types: string[];
 	load(): Promise<{
 		[method: string]: RequestHandler;
 	}>;
@@ -270,9 +276,9 @@ export interface SSROptions {
 
 export interface SSRPage {
 	type: 'page';
-	key: string;
 	pattern: RegExp;
-	params: GetParams;
+	names: string[];
+	types: string[];
 	shadow:
 		| null
 		| (() => Promise<{

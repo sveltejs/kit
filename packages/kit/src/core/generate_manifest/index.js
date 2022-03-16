@@ -1,4 +1,5 @@
 import { s } from '../../utils/misc.js';
+import { parse_route_key } from '../../utils/routing.js';
 import { get_mime_lookup } from '../utils.js';
 
 /**
@@ -41,10 +42,13 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 	});
 
 	/** @type {(path: string) => string} */
-	const importer =
+	const load =
 		format === 'esm'
-			? (path) => `() => import('${path}')`
-			: (path) => `() => Promise.resolve().then(() => require('${path}'))`;
+			? (path) => `import('${path}')`
+			: (path) => `Promise.resolve().then(() => require('${path}'))`;
+
+	/** @type {(path: string) => string} */
+	const loader = (path) => `() => ${load(path)}`;
 
 	const assets = build_data.manifest_data.assets.map((asset) => asset.file);
 	if (build_data.service_worker) {
@@ -54,6 +58,8 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 	/** @param {string} id */
 	const get_index = (id) => id && /** @type {LookupEntry} */ (bundled_nodes.get(id)).index;
 
+	const validators = new Set();
+
 	// prettier-ignore
 	return `{
 		appDir: ${s(build_data.app_dir)},
@@ -62,18 +68,25 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 		_: {
 			entry: ${s(build_data.client.entry)},
 			nodes: [
-				${Array.from(bundled_nodes.values()).map(node => importer(node.path)).join(',\n\t\t\t\t')}
+				${Array.from(bundled_nodes.values()).map(node => loader(node.path)).join(',\n\t\t\t\t')}
 			],
 			routes: [
 				${routes.map(route => {
+					const { pattern, names, types } = parse_route_key(route.key);
+
+					types.forEach(type => {
+						if (type) validators.add(type);
+					});
+
 					if (route.type === 'page') {
 						return `{
 							type: 'page',
 							key: ${s(route.key)},
-							pattern: ${route.pattern},
-							params: ${get_params(route.params)},
+							pattern: ${pattern},
+							names: ${s(names)},
+							types: ${s(types)},
 							path: ${route.path ? s(route.path) : null},
-							shadow: ${route.shadow ? importer(`${relative_path}/${build_data.server.vite_manifest[route.shadow].file}`) : null},
+							shadow: ${route.shadow ? loader(`${relative_path}/${build_data.server.vite_manifest[route.shadow].file}`) : null},
 							a: ${s(route.a.map(get_index))},
 							b: ${s(route.b.map(get_index))}
 						}`.replace(/^\t\t/gm, '');
@@ -86,31 +99,18 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 
 						return `{
 							type: 'endpoint',
-							pattern: ${route.pattern},
-							params: ${get_params(route.params)},
-							load: ${importer(`${relative_path}/${build_data.server.vite_manifest[route.file].file}`)}
+							pattern: ${pattern},
+							names: ${s(names)},
+							types: ${s(types)},
+							load: ${loader(`${relative_path}/${build_data.server.vite_manifest[route.file].file}`)}
 						}`.replace(/^\t\t/gm, '');
 					}
 				}).filter(Boolean).join(',\n\t\t\t\t')}
-			]
+			],
+			validators: async () => {
+				${Array.from(validators).map(type => `const { validate: ${type} } = await ${load(`${relative_path}/entries/validators/${type}.js`)}`).join('\n\t\t\t\t')}
+				return { ${Array.from(validators).join(', ')} };
+			}
 		}
 	}`.replace(/^\t/gm, '');
-}
-
-/** @param {string[]} array */
-function get_params(array) {
-	// given an array of params like `['x', 'y', 'z']` for
-	// src/routes/[x]/[y]/[z]/svelte, create a function
-	// that turns a RexExpMatchArray into ({ x, y, z })
-	return array.length
-		? '(m) => ({ ' +
-				array
-					.map((param, i) => {
-						return param.startsWith('...')
-							? `${param.slice(3)}: m[${i + 1}] || ''`
-							: `${param}: m[${i + 1}]`;
-					})
-					.join(', ') +
-				'})'
-		: 'null';
 }

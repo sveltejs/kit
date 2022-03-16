@@ -15,6 +15,7 @@ const create = (dir, config = {}) => {
 	const initial = options(config, 'config');
 
 	initial.kit.files.assets = path.resolve(cwd, 'static');
+	initial.kit.files.params = path.resolve(cwd, 'params');
 	initial.kit.files.routes = path.resolve(cwd, dir);
 
 	return create_manifest_data({
@@ -529,6 +530,15 @@ test('errors on encountering an illegal __file', () => {
 		() => create('samples/illegal-dunder'),
 		/Files and directories prefixed with __ are reserved \(saw samples\/illegal-dunder\/__foo.svelte\)/
 	);
+});
+
+test('creates param validators', () => {
+	const { validators } = create('samples/basic'); // directory doesn't matter for the test
+
+	assert.equal(validators, {
+		foo: path.join('params', 'foo.js'),
+		bar: path.join('params', 'bar.js')
+	});
 });
 
 test.run();
