@@ -40,9 +40,9 @@ export function parse_route_id(key) {
  * @param {RegExpMatchArray} match
  * @param {string[]} names
  * @param {string[]} types
- * @param {Record<string, import('types').ParamValidator>} validators
+ * @param {Record<string, import('types').ParamMatcher>} matchers
  */
-export function exec(match, names, types, validators) {
+export function exec(match, names, types, matchers) {
 	/** @type {Record<string, string>} */
 	const params = {};
 
@@ -52,10 +52,10 @@ export function exec(match, names, types, validators) {
 		const value = match[i + 1] || '';
 
 		if (type) {
-			const validator = validators[type];
-			if (!validator) throw new Error(`Missing "${type}" param validator`); // TODO do this ahead of time?
+			const matcher = matchers[type];
+			if (!matcher) throw new Error(`Missing "${type}" param matcher`); // TODO do this ahead of time?
 
-			if (!validator(value)) return;
+			if (!matcher(value)) return;
 		}
 
 		params[name] = value;

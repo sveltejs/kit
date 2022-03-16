@@ -532,10 +532,10 @@ test('errors on encountering an illegal __file', () => {
 	);
 });
 
-test('creates param validators', () => {
-	const { validators } = create('samples/basic'); // directory doesn't matter for the test
+test('creates param matchers', () => {
+	const { matchers } = create('samples/basic'); // directory doesn't matter for the test
 
-	assert.equal(validators, {
+	assert.equal(matchers, {
 		foo: path.join('params', 'foo.js'),
 		bar: path.join('params', 'bar.js')
 	});

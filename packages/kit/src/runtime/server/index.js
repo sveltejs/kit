@@ -81,13 +81,13 @@ export async function respond(request, options, state) {
 	}
 
 	if (!state.prerender || !state.prerender.fallback) {
-		const validators = await options.manifest._.validators();
+		const matchers = await options.manifest._.matchers();
 
 		for (const candidate of options.manifest._.routes) {
 			const match = candidate.pattern.exec(decoded);
 			if (!match) continue;
 
-			const matched = exec(match, candidate.names, candidate.types, validators);
+			const matched = exec(match, candidate.names, candidate.types, matchers);
 			if (matched) {
 				route = candidate;
 				params = decode_params(matched);

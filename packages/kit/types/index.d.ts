@@ -210,7 +210,7 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	error: Error | null;
 }
 
-export interface ParamValidator {
+export interface ParamMatcher {
 	(param: string): boolean;
 }
 
@@ -257,6 +257,6 @@ export interface SSRManifest {
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
-		validators: () => Promise<Record<string, ParamValidator>>;
+		matchers: () => Promise<Record<string, ParamMatcher>>;
 	};
 }

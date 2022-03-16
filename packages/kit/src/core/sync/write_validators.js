@@ -8,18 +8,18 @@ import { write_if_changed } from './utils.js';
  */
 export function write_validators(manifest_data, output) {
 	const imports = [];
-	const validators = [];
+	const matchers = [];
 
-	for (const key in manifest_data.validators) {
-		const src = manifest_data.validators[key];
+	for (const key in manifest_data.matchers) {
+		const src = manifest_data.matchers[key];
 
-		imports.push(`import { validate as ${key} } from ${s(path.relative(output, src))};`);
-		validators.push(key);
+		imports.push(`import { match as ${key} } from ${s(path.relative(output, src))};`);
+		matchers.push(key);
 	}
 
 	const module = imports.length
-		? `${imports.join('\n')}\n\nexport const validators = { ${validators.join(', ')} };`
-		: 'export const validators = {};';
+		? `${imports.join('\n')}\n\nexport const matchers = { ${matchers.join(', ')} };`
+		: 'export const matchers = {};';
 
-	write_if_changed(`${output}/client-validators.js`, module);
+	write_if_changed(`${output}/client-matchers.js`, module);
 }
