@@ -9,17 +9,15 @@ declare global {
 interface AdapterOptions {
 	out?: string;
 	precompress?: boolean;
-	env?: {
-		path?: string;
-		host?: string;
-		port?: string;
-		origin?: string;
-		xffDepth?: string;
-		headers?: {
-			address?: string;
-			protocol?: string;
-			host?: string;
-		};
+	environment?: {
+		SOCKET_PATH?: string;
+		HOST?: string;
+		PORT?: string;
+		ORIGIN?: string;
+		XFF_DEPTH?: string;
+		ADDRESS_HEADER?: string;
+		PROTOCOL_HEADER?: string;
+		HOST_HEADER?: string;
 	};
 }
 

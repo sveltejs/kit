@@ -13,17 +13,15 @@ const files = fileURLToPath(new URL('./files', import.meta.url).href);
 export default function ({
 	out = 'build',
 	precompress,
-	env: {
-		path: path_env = 'SOCKET_PATH',
-		host: host_env = 'HOST',
-		port: port_env = 'PORT',
-		origin: origin_env = 'ORIGIN',
-		xffDepth: xff_depth_env = 'XFF_DEPTH',
-		headers: {
-			address: address_header_env = 'ADDRESS_HEADER',
-			protocol: protocol_header_env = 'PROTOCOL_HEADER',
-			host: host_header_env = 'HOST_HEADER'
-		} = {}
+	environment: {
+		SOCKET_PATH = 'SOCKET_PATH',
+		HOST = 'HOST',
+		PORT = 'PORT',
+		ORIGIN = 'ORIGIN',
+		XFF_DEPTH = 'XFF_DEPTH',
+		ADDRESS_HEADER = 'ADDRESS_HEADER',
+		PROTOCOL_HEADER = 'PROTOCOL_HEADER',
+		HOST_HEADER = 'HOST_HEADER'
 	} = {}
 } = {}) {
 	return {
@@ -49,14 +47,14 @@ export default function ({
 				replace: {
 					SERVER: './server/index.js',
 					MANIFEST: './manifest.js',
-					PATH_ENV: JSON.stringify(path_env),
-					HOST_ENV: JSON.stringify(host_env),
-					PORT_ENV: JSON.stringify(port_env),
-					ORIGIN: origin_env ? `process.env[${JSON.stringify(origin_env)}]` : 'undefined',
-					XFF_DEPTH_ENV: xff_depth_env,
-					PROTOCOL_HEADER: JSON.stringify(protocol_header_env),
-					HOST_HEADER: JSON.stringify(host_header_env),
-					ADDRESS_HEADER: JSON.stringify(address_header_env)
+					SOCKET_PATH: JSON.stringify(SOCKET_PATH),
+					HOST: JSON.stringify(HOST),
+					PORT: JSON.stringify(PORT),
+					ORIGIN: JSON.stringify(ORIGIN),
+					XFF_DEPTH: JSON.stringify(XFF_DEPTH),
+					PROTOCOL_HEADER: JSON.stringify(PROTOCOL_HEADER),
+					HOST_HEADER: JSON.stringify(HOST_HEADER),
+					ADDRESS_HEADER: JSON.stringify(ADDRESS_HEADER)
 				}
 			});
 
