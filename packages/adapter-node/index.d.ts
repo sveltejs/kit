@@ -14,6 +14,7 @@ interface AdapterOptions {
 		host?: string;
 		port?: string;
 		origin?: string;
+		xffDepth?: string;
 		headers?: {
 			address?: string;
 			protocol?: string;
