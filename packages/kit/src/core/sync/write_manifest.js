@@ -28,7 +28,7 @@ export function write_manifest(manifest_data, base, output) {
 	const get_indices = (parts) =>
 		`[${parts.map((part) => (part ? component_indexes[part] : '')).join(', ')}]`;
 
-	const routes = `{
+	const dictionary = `{
 		${manifest_data.routes
 			.map((route) => {
 				if (route.type === 'page') {
@@ -49,7 +49,7 @@ export function write_manifest(manifest_data, base, output) {
 
 			export const components = ${components};
 
-			export const dictionary = ${routes};
+			export const dictionary = ${dictionary};
 		`)
 	);
 }
