@@ -1,3 +1,3 @@
-export function validate(param) {
+export function match(param) {
 	return !isNaN(param);
 }
