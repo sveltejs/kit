@@ -16,7 +16,6 @@ import { s } from '../../utils/misc.js';
  *   runtime: string;
  *   template: string;
  * }} opts
- * @returns
  */
 const server_template = ({ config, hooks, has_service_worker, runtime, template }) => `
 import root from '__GENERATED__/root.svelte';
@@ -306,7 +305,6 @@ const method_names = {
 };
 
 /**
- *
  * @param {string} cwd
  * @param {import('rollup').OutputChunk[]} output
  * @param {import('types').ManifestData} manifest_data
