@@ -7,9 +7,7 @@ import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
 	CspDirectives,
-	Either,
 	ErrorLoadInput,
-	Fallthrough,
 	JSONValue,
 	LoadInput,
 	LoadOutput,
@@ -114,6 +112,7 @@ export interface Config {
 			assets?: string;
 			hooks?: string;
 			lib?: string;
+			params?: string;
 			routes?: string;
 			serviceWorker?: string;
 			template?: string;
@@ -194,9 +193,7 @@ export interface Load<
 	InputProps extends Record<string, any> = Record<string, any>,
 	OutputProps extends Record<string, any> = InputProps
 > {
-	(input: LoadInput<Params, InputProps>): MaybePromise<
-		Either<Fallthrough, LoadOutput<OutputProps>>
-	>;
+	(input: LoadInput<Params, InputProps>): MaybePromise<LoadOutput<OutputProps>>;
 }
 
 export interface Navigation {
@@ -207,9 +204,14 @@ export interface Navigation {
 export interface Page<Params extends Record<string, string> = Record<string, string>> {
 	url: URL;
 	params: Params;
+	routeId: string | null;
 	stuff: App.Stuff;
 	status: number;
 	error: Error | null;
+}
+
+export interface ParamValidator {
+	(param: string): boolean;
 }
 
 /**
@@ -228,16 +230,11 @@ export interface RequestHandler<
 	(event: RequestEvent<Params>): RequestHandlerOutput<Output>;
 }
 
-export type RequestHandlerOutput<Output extends ResponseBody = ResponseBody> = MaybePromise<
-	Either<
-		{
-			status?: number;
-			headers?: Headers | Partial<ResponseHeaders>;
-			body?: Output;
-		},
-		Fallthrough
-	>
->;
+export type RequestHandlerOutput<Output extends ResponseBody = ResponseBody> = MaybePromise<{
+	status?: number;
+	headers?: Headers | Partial<ResponseHeaders>;
+	body?: Output;
+}>;
 
 export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
 
@@ -260,5 +257,6 @@ export interface SSRManifest {
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
+		validators: () => Promise<Record<string, ParamValidator>>;
 	};
 }

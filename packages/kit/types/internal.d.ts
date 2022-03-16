@@ -11,8 +11,6 @@ import {
 	SSRManifest
 } from './index';
 import {
-	Either,
-	Fallthrough,
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
@@ -69,11 +67,17 @@ export type CSRComponent = any; // TODO
 
 export type CSRComponentLoader = () => Promise<CSRComponent>;
 
-export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?, ShadowKey?];
+export type CSRRoute = {
+	id: string;
+	exec: (path: string) => undefined | Record<string, string>;
+	a: CSRComponentLoader[];
+	b: CSRComponentLoader[];
+	has_shadow: boolean;
+};
 
 export interface EndpointData {
 	type: 'endpoint';
-	key: string;
+	id: string;
 	segments: RouteSegment[];
 	pattern: RegExp;
 	params: string[];
@@ -104,6 +108,7 @@ export interface ManifestData {
 	error: string;
 	components: string[];
 	routes: RouteData[];
+	validators: Record<string, string>;
 }
 
 export interface MethodOverride {
@@ -111,21 +116,18 @@ export interface MethodOverride {
 	allowed: string[];
 }
 
-export type NormalizedLoadOutput = Either<
-	{
-		status: number;
-		error?: Error;
-		redirect?: string;
-		props?: Record<string, any> | Promise<Record<string, any>>;
-		stuff?: Record<string, any>;
-		maxage?: number;
-	},
-	Fallthrough
->;
+export type NormalizedLoadOutput = {
+	status: number;
+	error?: Error;
+	redirect?: string;
+	props?: Record<string, any> | Promise<Record<string, any>>;
+	stuff?: Record<string, any>;
+	maxage?: number;
+};
 
 export interface PageData {
 	type: 'page';
-	key: string;
+	id: string;
 	shadow: string | null;
 	segments: RouteSegment[];
 	pattern: RegExp;
@@ -183,11 +185,10 @@ export interface ShadowEndpointOutput<Output extends JSONObject = JSONObject> {
 type ShadowKey = string;
 
 export interface ShadowRequestHandler<Output extends JSONObject = JSONObject> {
-	(event: RequestEvent): MaybePromise<Either<ShadowEndpointOutput<Output>, Fallthrough>>;
+	(event: RequestEvent): MaybePromise<ShadowEndpointOutput<Output>>;
 }
 
 export interface ShadowData {
-	fallthrough?: boolean;
 	status?: number;
 	error?: Error;
 	redirect?: string;
@@ -216,8 +217,10 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface SSREndpoint {
 	type: 'endpoint';
+	id: string;
 	pattern: RegExp;
-	params: GetParams;
+	names: string[];
+	types: string[];
 	load(): Promise<{
 		[method: string]: RequestHandler;
 	}>;
@@ -275,9 +278,10 @@ export interface SSROptions {
 
 export interface SSRPage {
 	type: 'page';
-	key: string;
+	id: string;
 	pattern: RegExp;
-	params: GetParams;
+	names: string[];
+	types: string[];
 	shadow:
 		| null
 		| (() => Promise<{
@@ -303,7 +307,6 @@ export type SSRRoute = SSREndpoint | SSRPage;
 
 export interface SSRState {
 	fallback?: string;
-	fetched?: string;
 	getClientAddress: () => string;
 	initiator?: SSRPage | null;
 	platform?: any;

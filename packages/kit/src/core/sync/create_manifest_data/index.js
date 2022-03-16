@@ -11,6 +11,7 @@ import { posixify } from '../../../utils/filesystem.js';
  *   content: string;
  *   dynamic: boolean;
  *   rest: boolean;
+ *   type: string | null;
  * }} Part
  * @typedef {{
  *   basename: string;
@@ -60,13 +61,13 @@ export default function create_manifest_data({
 
 	/**
 	 * @param {string} dir
-	 * @param {string[]} parent_key
+	 * @param {string[]} parent_id
 	 * @param {Part[][]} parent_segments
 	 * @param {string[]} parent_params
 	 * @param {Array<string|undefined>} layout_stack // accumulated __layout.svelte components
 	 * @param {Array<string|undefined>} error_stack // accumulated __error.svelte components
 	 */
-	function walk(dir, parent_key, parent_segments, parent_params, layout_stack, error_stack) {
+	function walk(dir, parent_id, parent_segments, parent_params, layout_stack, error_stack) {
 		/** @type {Item[]} */
 		let items = [];
 		fs.readdirSync(dir).forEach((basename) => {
@@ -134,7 +135,7 @@ export default function create_manifest_data({
 		items = items.sort(comparator);
 
 		items.forEach((item) => {
-			const key = parent_key.slice();
+			const id = parent_id.slice();
 			const segments = parent_segments.slice();
 
 			if (item.is_index) {
@@ -147,24 +148,26 @@ export default function create_manifest_data({
 							last_segment.push({
 								dynamic: false,
 								rest: false,
-								content: item.route_suffix
+								content: item.route_suffix,
+								type: null
 							});
 						} else {
 							last_segment[last_segment.length - 1] = {
 								dynamic: false,
 								rest: false,
-								content: `${last_part.content}${item.route_suffix}`
+								content: `${last_part.content}${item.route_suffix}`,
+								type: null
 							};
 						}
 
 						segments[segments.length - 1] = last_segment;
-						key[key.length - 1] += item.route_suffix;
+						id[id.length - 1] += item.route_suffix;
 					} else {
 						segments.push(item.parts);
 					}
 				}
 			} else {
-				key.push(item.name);
+				id.push(item.name);
 				segments.push(item.parts);
 			}
 
@@ -198,7 +201,7 @@ export default function create_manifest_data({
 
 				walk(
 					path.join(dir, item.basename),
-					key,
+					id,
 					segments,
 					params,
 					layout_reset ? [layout_reset] : layout_stack.concat(layout),
@@ -233,7 +236,7 @@ export default function create_manifest_data({
 
 				routes.push({
 					type: 'page',
-					key: key.join('/'),
+					id: id.join('/'),
 					segments: simple_segments,
 					pattern,
 					params,
@@ -247,7 +250,7 @@ export default function create_manifest_data({
 
 				routes.push({
 					type: 'endpoint',
-					key: key.join('/'),
+					id: id.join('/'),
 					segments: simple_segments,
 					pattern,
 					file: item.file,
@@ -257,10 +260,10 @@ export default function create_manifest_data({
 		});
 	}
 
-	const base = path.relative(cwd, config.kit.files.routes);
+	const routes_base = path.relative(cwd, config.kit.files.routes);
 
-	const layout = find_layout('__layout', base) || default_layout;
-	const error = find_layout('__error', base) || default_error;
+	const layout = find_layout('__layout', routes_base) || default_layout;
+	const error = find_layout('__error', routes_base) || default_error;
 
 	components.push(layout, error);
 
@@ -269,15 +272,15 @@ export default function create_manifest_data({
 	const lookup = new Map();
 	for (const route of routes) {
 		if (route.type === 'page') {
-			lookup.set(route.key, route);
+			lookup.set(route.id, route);
 		}
 	}
 
 	let i = routes.length;
 	while (i--) {
 		const route = routes[i];
-		if (route.type === 'endpoint' && lookup.has(route.key)) {
-			lookup.get(route.key).shadow = route.file;
+		if (route.type === 'endpoint' && lookup.has(route.id)) {
+			lookup.get(route.id).shadow = route.file;
 			routes.splice(i, 1);
 		}
 	}
@@ -286,12 +289,32 @@ export default function create_manifest_data({
 		? list_files({ config, dir: config.kit.files.assets, path: '' })
 		: [];
 
+	const params_base = path.relative(cwd, config.kit.files.params);
+
+	/** @type {Record<string, string>} */
+	const validators = {};
+	if (fs.existsSync(config.kit.files.params)) {
+		for (const file of fs.readdirSync(config.kit.files.params)) {
+			const ext = path.extname(file);
+			const type = file.slice(0, -ext.length);
+
+			if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(type)) {
+				validators[type] = path.join(params_base, file);
+			} else {
+				throw new Error(
+					`Validator names must match /^[a-zA-Z_][a-zA-Z0-9_]*$/ — "${file}" is invalid`
+				);
+			}
+		}
+	}
+
 	return {
 		assets,
 		layout,
 		error,
 		components,
-		routes
+		routes,
+		validators
 	};
 }
 
@@ -348,6 +371,10 @@ function comparator(a, b) {
 			return a_sub_part.dynamic ? 1 : -1;
 		}
 
+		if (a_sub_part.dynamic && !!a_sub_part.type !== !!b_sub_part.type) {
+			return a_sub_part.type ? -1 : 1;
+		}
+
 		if (!a_sub_part.dynamic && a_sub_part.content !== b_sub_part.content) {
 			return (
 				b_sub_part.content.length - a_sub_part.content.length ||
@@ -375,16 +402,25 @@ function get_parts(part, file) {
 		if (!str) return;
 		const dynamic = i % 2 === 1;
 
-		const [, content] = dynamic ? /([^(]+)$/.exec(str) || [null, null] : [null, str];
+		const [, content, type] = dynamic
+			? /^((?:\.\.\.)?[a-zA-Z_][a-zA-Z0-9_]*)(?:=([a-zA-Z_][a-zA-Z0-9_]*))?$/.exec(str) || [
+					null,
+					null,
+					null
+			  ]
+			: [null, str, null];
 
-		if (!content || (dynamic && !/^(\.\.\.)?[a-zA-Z0-9_$]+$/.test(content))) {
-			throw new Error(`Invalid route ${file} — parameter name must match /^[a-zA-Z0-9_$]+$/`);
+		if (!content) {
+			throw new Error(
+				`Invalid route ${file} — parameter name and type must match /^[a-zA-Z_][a-zA-Z0-9_]*$/`
+			);
 		}
 
 		result.push({
 			content,
 			dynamic,
-			rest: dynamic && /^\.{3}.+$/.test(content)
+			rest: dynamic && /^\.{3}.+$/.test(content),
+			type
 		});
 	});
 

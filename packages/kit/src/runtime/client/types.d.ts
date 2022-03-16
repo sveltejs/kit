@@ -24,6 +24,7 @@ export interface Client {
 		error: Error;
 		nodes: Array<Promise<CSRComponent>>;
 		params: Record<string, string>;
+		routeId: string | null;
 	}) => Promise<void>;
 	_start_router: () => void;
 }
@@ -34,13 +35,13 @@ export type NavigationIntent = {
 	 */
 	id: string;
 	/**
-	 * `url.pathname`, minus any `paths.base` prefix
+	 * The route parameters
 	 */
-	path: string;
+	params: Record<string, string>;
 	/**
-	 * The routes that could satisfy this navigation intent
+	 * The route that matches `path`
 	 */
-	routes: CSRRoute[];
+	route: CSRRoute;
 	/**
 	 * The destination URL
 	 */

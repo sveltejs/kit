@@ -7,7 +7,7 @@ import { respond } from './respond.js';
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRState} state
  * @param {import('types').RequiredResolveOptions} resolve_opts
- * @returns {Promise<Response | undefined>}
+ * @returns {Promise<Response>}
  */
 export async function render_page(event, route, options, state, resolve_opts) {
 	if (state.initiator === route) {
@@ -30,29 +30,14 @@ export async function render_page(event, route, options, state, resolve_opts) {
 
 	const $session = await options.hooks.getSession(event);
 
-	const response = await respond({
+	return respond({
 		event,
 		options,
 		state,
 		$session,
 		resolve_opts,
-		route,
-		params: event.params // TODO this is redundant
+		route
 	});
-
-	if (response) {
-		return response;
-	}
-
-	if (state.fetched) {
-		// we came here because of a bad request in a `load` function.
-		// rather than render the error page — which could lead to an
-		// infinite loop, if the `load` belonged to the root layout,
-		// we respond with a bare-bones 500
-		return new Response(`Bad request in load function: failed to fetch ${state.fetched}`, {
-			status: 500
-		});
-	}
 }
 
 /**

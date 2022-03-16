@@ -508,18 +508,6 @@ test.describe.parallel('Shadowed pages', () => {
 		expect(await page.textContent('h1')).toBe('slug: bar');
 	});
 
-	test('Shadow fallthrough to shadowed page', async ({ page, clicknav }) => {
-		await page.goto('/shadowed/fallthrough');
-		await clicknav('[href="/shadowed/fallthrough/b"]');
-		expect(await page.textContent('h2')).toBe('b-b');
-	});
-
-	test('Shadow fallthrough to unshadowed page', async ({ page, clicknav }) => {
-		await page.goto('/shadowed/fallthrough');
-		await clicknav('[href="/shadowed/fallthrough/c"]');
-		expect(await page.textContent('h2')).toBe('c');
-	});
-
 	test('Shadow redirect', async ({ page, clicknav }) => {
 		await page.goto('/shadowed/redirect');
 		await clicknav('[href="/shadowed/redirect/a"]');
@@ -551,11 +539,6 @@ test.describe.parallel('Endpoints', () => {
 			await page.click('.del');
 			expect(await page.innerHTML('h1')).toBe('deleted 42');
 		}
-	});
-
-	test('not ok on void endpoint', async ({ request }) => {
-		const response = await request.delete('/endpoint-output/empty');
-		expect(response.ok()).toBe(false);
 	});
 
 	test('200 status on empty endpoint', async ({ request }) => {
@@ -2035,33 +2018,6 @@ test.describe.parallel('Routing', () => {
 		}
 	});
 
-	test('fallthrough', async ({ page }) => {
-		await page.goto('/routing/fallthrough-simple/invalid');
-		expect(await page.textContent('h1')).toBe('Page');
-	});
-
-	test('dynamic fallthrough of pages and endpoints', async ({ page, clicknav }) => {
-		await page.goto('/routing/fallthrough-advanced/borax');
-		expect(await page.textContent('h1')).toBe('borax is a mineral');
-
-		await clicknav('[href="/routing/fallthrough-advanced/camel"]');
-		expect(await page.textContent('h1')).toBe('camel is an animal');
-
-		await clicknav('[href="/routing/fallthrough-advanced/potato"]');
-		expect(await page.textContent('h1')).toBe('404');
-	});
-
-	test('dynamic fallthrough of layout', async ({ page, clicknav }) => {
-		await page.goto('/routing/fallthrough-layout/okay');
-		expect(await page.textContent('h1')).toBe('foo is okay');
-
-		await clicknav('[href="/routing/fallthrough-layout/ok"]');
-		expect(await page.textContent('h1')).toBe('xyz is ok');
-
-		await clicknav('[href="/routing/fallthrough-layout/notok"]');
-		expect(await page.textContent('h1')).toBe('404');
-	});
-
 	test('last parameter in a segment wins in cases of ambiguity', async ({ page, clicknav }) => {
 		await page.goto('/routing/split-params');
 		await clicknav('[href="/routing/split-params/x-y-z"]');
@@ -2203,6 +2159,22 @@ test.describe.parallel('Routing', () => {
 			'Hello from the child'
 		);
 	});
+
+	test('event.params are available in handle', async ({ request }) => {
+		const response = await request.get('/routing/params-in-handle/banana');
+		expect(await response.json()).toStrictEqual({
+			key: 'routing/params-in-handle/[x]',
+			params: { x: 'banana' }
+		});
+	});
+
+	test('exposes page.routeId', async ({ page, clicknav }) => {
+		await page.goto('/routing/route-id');
+		await clicknav('[href="/routing/route-id/foo"]');
+
+		expect(await page.textContent('h1')).toBe('routeId in load: routing/route-id/[x]');
+		expect(await page.textContent('h2')).toBe('routeId in store: routing/route-id/[x]');
+	});
 });
 
 test.describe.parallel('Session', () => {
@@ -2257,6 +2229,24 @@ test.describe.parallel('Static files', () => {
 
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
+	});
+});
+
+test.describe.parallel('Validators', () => {
+	test('Validates parameters', async ({ page, clicknav }) => {
+		await page.goto('/routing/validated');
+
+		await clicknav('[href="/routing/validated/a"]');
+		expect(await page.textContent('h1')).toBe('lowercase: a');
+
+		await clicknav('[href="/routing/validated/B"]');
+		expect(await page.textContent('h1')).toBe('uppercase: B');
+
+		await clicknav('[href="/routing/validated/1"]');
+		expect(await page.textContent('h1')).toBe('number: 1');
+
+		await clicknav('[href="/routing/validated/everything-else"]');
+		expect(await page.textContent('h1')).toBe('fallback: everything-else');
 	});
 });
 

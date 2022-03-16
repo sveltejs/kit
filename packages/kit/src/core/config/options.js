@@ -105,6 +105,7 @@ const options = object(
 				assets: string('static'),
 				hooks: string(join('src', 'hooks')),
 				lib: string(join('src', 'lib')),
+				params: string(join('src', 'params')),
 				routes: string(join('src', 'routes')),
 				serviceWorker: string(join('src', 'service-worker')),
 				template: string(join('src', 'app.html'))

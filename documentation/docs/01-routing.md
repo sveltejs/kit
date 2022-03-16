@@ -318,70 +318,51 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 
 > `src/routes/a/[...rest]/z.svelte` will match `/a/z` as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid.
 
+#### Validation
+
+A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _validator_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](/docs/configuration#files) directory...
+
+```js
+/// file: src/params/integer.js
+/** @type {import('@sveltejs/kit').ParamValidator} */
+export function validate(param) {
+	return /^\d+$/.test(param);
+}
+```
+
+...and augmenting your routes:
+
+```diff
+-src/routes/archive/[page]
++src/routes/archive/[page=integer]
+```
+
+If the pathname doesn't validate, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404.
+
 #### Sorting
 
 It's possible for multiple routes to match a given path. For example each of these routes would match `/foo-abc`:
 
 ```bash
+src/routes/[...catchall].svelte
 src/routes/[a].js
 src/routes/[b].svelte
-src/routes/[c].svelte
-src/routes/[...catchall].svelte
-src/routes/foo-[bar].svelte
+src/routes/foo-[c].svelte
 ```
 
 SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
 
 - More specific routes are higher priority
 - Standalone endpoints have higher priority than pages with the same specificity
+- Parameters with [validators](#validation) (`[name=type]`) are higher priority than those without (`[name]`)
 - Rest parameters have lowest priority
 - Ties are resolved alphabetically
 
 ...resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-[bar].svelte` rather than a less specific route:
 
 ```bash
-src/routes/foo-[bar].svelte
+src/routes/foo-[c].svelte
 src/routes/[a].js
 src/routes/[b].svelte
-src/routes/[c].svelte
 src/routes/[...catchall].svelte
-```
-
-#### Fallthrough routes
-
-In rare cases, the ordering above might not be what you want for a given path. For example, perhaps `/foo-abc` should resolve to `src/routes/foo-[bar].svelte`, but `/foo-def` should resolve to `src/routes/[b].svelte`.
-
-Higher priority routes can _fall through_ to lower priority routes by returning `{ fallthrough: true }`, either from `load` (for pages) or a request handler (for endpoints):
-
-```svelte
-/// file: src/routes/foo-[bar].svelte
-<script context="module">
-	export function load({ params }) {
-		if (params.bar === 'def') {
-			return { fallthrough: true };
-		}
-
-		// ...
-	}
-</script>
-```
-
-```js
-/// file: src/routes/[a].js
-
-// @filename: [a].d.ts
-import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
-export type RequestHandler<Body = any> = GenericRequestHandler<{ a: string }, Body>;
-
-// @filename: index.js
-// @errors: 2366
-// ---cut---
-/** @type {import('./[a]').RequestHandler} */
-export function get({ params }) {
-	if (params.a === 'foo-def') {
-		return { fallthrough: true };
-	}
-
-	// ...
-}
 ```

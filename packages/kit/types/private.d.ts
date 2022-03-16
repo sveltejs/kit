@@ -136,16 +136,10 @@ export interface CspDirectives {
 	>;
 }
 
-export type Either<T, U> = Only<T, U> | Only<U, T>;
-
 export interface ErrorLoadInput<Params extends Record<string, string> = Record<string, string>>
 	extends LoadInput<Params> {
 	status?: number;
 	error?: Error;
-}
-
-export interface Fallthrough {
-	fallthrough: true;
 }
 
 export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
@@ -168,12 +162,13 @@ export interface LoadInput<
 	Params extends Record<string, string> = Record<string, string>,
 	Props extends Record<string, any> = Record<string, any>
 > {
-	url: URL;
+	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
 	props: Props;
-	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
+	routeId: string | null;
 	session: App.Session;
 	stuff: Partial<App.Stuff>;
+	url: URL;
 }
 
 export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {
@@ -241,6 +236,7 @@ export interface RequestEvent<Params extends Record<string, string> = Record<str
 	params: Params;
 	platform: Readonly<App.Platform>;
 	request: Request;
+	routeId: string | null;
 	url: URL;
 }
 
