@@ -19,20 +19,6 @@ const host_header = (HOST_HEADER && process.env[HOST_HEADER]) || 'host';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-function get_xff_depth() {
-	const value = process.env['XFF_DEPTH'];
-	let xff_depth;
-	try {
-		xff_depth = value ? parseInt(value) : 1;
-	} catch (err) {
-		throw new Error('Expected XFF_DEPTH to be an integer. Received ${value}');
-	}
-	if (xff_depth < 1) {
-		throw new Error('XFF_DEPTH cannot be less than 1');
-	}
-	return xff_depth;
-}
-
 /**
  * @param {string} path
  * @param {number} max_age
