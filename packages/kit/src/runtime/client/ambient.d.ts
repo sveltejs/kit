@@ -1,5 +1,5 @@
 declare module '__GENERATED__/client-manifest.js' {
-	import { CSRComponentLoader, ParamValidator } from 'types';
+	import { CSRComponentLoader, ParamMatcher } from 'types';
 
 	/**
 	 * A list of all the layout/pages components used in the app
@@ -12,5 +12,5 @@ declare module '__GENERATED__/client-manifest.js' {
 	 */
 	export const dictionary: Record<string, [number[], number[], 1]>;
 
-	export const validators: Record<string, ParamValidator>;
+	export const matchers: Record<string, ParamMatcher>;
 }

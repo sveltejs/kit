@@ -2229,20 +2229,20 @@ test.describe.parallel('Static files', () => {
 	});
 });
 
-test.describe.parallel('Validators', () => {
-	test('Validates parameters', async ({ page, clicknav }) => {
-		await page.goto('/routing/validated');
+test.describe.parallel('Matchers', () => {
+	test('Matches parameters', async ({ page, clicknav }) => {
+		await page.goto('/routing/matched');
 
-		await clicknav('[href="/routing/validated/a"]');
+		await clicknav('[href="/routing/matched/a"]');
 		expect(await page.textContent('h1')).toBe('lowercase: a');
 
-		await clicknav('[href="/routing/validated/B"]');
+		await clicknav('[href="/routing/matched/B"]');
 		expect(await page.textContent('h1')).toBe('uppercase: B');
 
-		await clicknav('[href="/routing/validated/1"]');
+		await clicknav('[href="/routing/matched/1"]');
 		expect(await page.textContent('h1')).toBe('number: 1');
 
-		await clicknav('[href="/routing/validated/everything-else"]');
+		await clicknav('[href="/routing/matched/everything-else"]');
 		expect(await page.textContent('h1')).toBe('fallback: everything-else');
 	});
 });

@@ -318,14 +318,14 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 
 > `src/routes/a/[...rest]/z.svelte` will match `/a/z` as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid.
 
-#### Validation
+#### Matching
 
-A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _validator_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](/docs/configuration#files) directory...
+A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](/docs/configuration#files) directory...
 
 ```js
 /// file: src/params/integer.js
-/** @type {import('@sveltejs/kit').ParamValidator} */
-export function validate(param) {
+/** @type {import('@sveltejs/kit').ParamMatcher} */
+export function match(param) {
 	return /^\d+$/.test(param);
 }
 ```
@@ -337,7 +337,7 @@ export function validate(param) {
 +src/routes/archive/[page=integer]
 ```
 
-If the pathname doesn't validate, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404.
+If the pathname doesn't match, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404.
 
 #### Sorting
 
