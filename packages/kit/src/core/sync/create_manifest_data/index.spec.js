@@ -10,7 +10,6 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
 /**
  * @param {string} dir
  * @param {import('types').Config} config
- * @returns
  */
 const create = (dir, config = {}) => {
 	const initial = options(config, 'config');
