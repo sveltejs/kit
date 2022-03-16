@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 1.0.0-next.299
+
+### Patch Changes
+
+- Populate fallback page when trailingSlash is "always" ([#4351](https://github.com/sveltejs/kit/pull/4351))
+
+* Expose `event.routeId` and `page.routeId` ([#4344](https://github.com/sveltejs/kit/pull/4344))
+
+- [breaking] remove fallthrough routes ([#4330](https://github.com/sveltejs/kit/pull/4330))
+
+* Add param validators ([#4334](https://github.com/sveltejs/kit/pull/4334))
+
+- [breaking] disallow \$ character in dynamic parameters ([#4334](https://github.com/sveltejs/kit/pull/4334))
+
+* Populate event.params before calling handle ([#4344](https://github.com/sveltejs/kit/pull/4344))
+
 ## 1.0.0-next.298
 
 ### Patch Changes
