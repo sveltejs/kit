@@ -105,12 +105,12 @@ export async function create_plugin(config, cwd) {
 							};
 						}),
 						routes: manifest_data.routes.map((route) => {
-							const { pattern, names, types } = parse_route_id(route.key);
+							const { pattern, names, types } = parse_route_id(route.id);
 
 							if (route.type === 'page') {
 								return {
 									type: 'page',
-									key: route.key,
+									id: route.id,
 									pattern,
 									names,
 									types,
@@ -127,7 +127,7 @@ export async function create_plugin(config, cwd) {
 
 							return {
 								type: 'endpoint',
-								key: route.key,
+								id: route.id,
 								pattern,
 								names,
 								types,

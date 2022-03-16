@@ -117,7 +117,7 @@ export async function respond(request, options, state) {
 		params,
 		platform: state.platform,
 		request,
-		routeId: route && route.key,
+		routeId: route && route.id,
 		url
 	};
 
