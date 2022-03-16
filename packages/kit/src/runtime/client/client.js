@@ -645,7 +645,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 							// TODO remove for 1.0
 							// @ts-expect-error
 							if (node.loaded.fallthrough) {
-								throw new Error('fallthrough is no longer supported');
+								throw new Error(
+									'fallthrough is no longer supported. Use validators instead: https://kit.svelte.dev/docs/routing#advanced-routing-validation'
+								);
 							}
 
 							if (node.loaded.error) {
