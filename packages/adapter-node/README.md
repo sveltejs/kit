@@ -102,7 +102,13 @@ If the `ADDRESS_HEADER` is `X-Forwarded-For`, the header value will contain a co
 <client address>, <proxy 1 address>, <proxy 2 address>
 ```
 
-To get the client address we could use `XFF_DEPTH=3`.
+Some guides will tell you to read the left-most address, but this leaves you [vulnerable to spoofing](https://adam-p.ca/blog/2022/03/x-forwarded-for/):
+
+```
+<spoofed address>, <client address>, <proxy 1 address>, <proxy 2 address>
+```
+
+Instead, we read from the _right_, accounting for the number of trusted proxies. In this case, we would use `XFF_DEPTH=3`.
 
 > If you need to read the left-most address instead (and don't care about spoofing) — for example, to offer a geolocation service, where it's more important for the IP address to be _real_ than _trusted_, you can do so by inspecting the `x-forwarded-for` header within your app.
 
