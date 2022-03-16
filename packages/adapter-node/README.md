@@ -83,17 +83,15 @@ export default {
 			// default options are shown
 			out: 'build',
 			precompress: false,
-			env: {
-				path: 'SOCKET_PATH',
-				host: 'HOST',
-				port: 'PORT',
-				origin: 'ORIGIN',
-				xffDepth: 'XFF_DEPTH',
-				headers: {
-					address: 'ADDRESS_HEADER',
-					protocol: 'PROTOCOL_HEADER',
-					host: 'HOST_HEADER'
-				}
+			environment: {
+				SOCKET_PATH: 'SOCKET_PATH',
+				HOST: 'HOST',
+				PORT: 'PORT',
+				ORIGIN: 'ORIGIN',
+				XFF_DEPTH: 'XFF_DEPTH',
+				ADDRESS_HEADER: 'ADDRESS_HEADER',
+				PROTOCOL_HEADER: 'PROTOCOL_HEADER',
+				HOST_HEADER: 'HOST_HEADER'
 			}
 		})
 	}
@@ -114,22 +112,21 @@ If you need to change the name of the environment variables used to configure th
 
 ```js
 env: {
-	host: 'MY_HOST_VARIABLE',
-	port: 'MY_PORT_VARIABLE',
-	origin: 'MY_ORIGINURL',
-	xffDepth: 'MY_XFF_DEPTH',
-	headers: {
-		address: 'MY_ADDRESS_HEADER',
-		protocol: 'MY_PROTOCOL_HEADER',
-		host: 'MY_HOST_HEADER'
-	}
+	SOCKET_PATH: 'MY_CUSTOM_SOCKET_PATH',
+	HOST: 'MY_CUSTOM_HOST',
+	PORT: 'MY_CUSTOM_PORT',
+	ORIGIN: 'MY_CUSTOM_ORIGIN',
+	XFF_DEPTH: 'MY_CUSTOM_XFF_DEPTH',
+	ADDRESS_HEADER: 'MY_CUSTOM_ADDRESS_HEADER',
+	PROTOCOL_HEADER: 'MY_CUSTOM_PROTOCOL_HEADER',
+	HOST_HEADER: 'MY_CUSTOM_HOST_HEADER'
 }
 ```
 
 ```
-MY_HOST_VARIABLE=127.0.0.1 \
-MY_PORT_VARIABLE=4000 \
-MY_ORIGINURL=https://my.site \
+MY_CUSTOM_HOST_VARIABLE=127.0.0.1 \
+MY_CUSTOM_PORT_VARIABLE=4000 \
+MY_CUSTOM_ORIGINURL=https://my.site \
 node build
 ```
 
