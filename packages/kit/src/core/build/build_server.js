@@ -163,9 +163,9 @@ export async function build_server(
 		input[name] = resolved;
 	});
 
-	// ...and every validator
-	Object.entries(manifest_data.validators).forEach(([key, file]) => {
-		const name = posixify(path.join('entries/validators', key));
+	// ...and every matcher
+	Object.entries(manifest_data.matchers).forEach(([key, file]) => {
+		const name = posixify(path.join('entries/matchers', key));
 		input[name] = path.resolve(cwd, file);
 	});
 

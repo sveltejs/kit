@@ -292,14 +292,14 @@ export default function create_manifest_data({
 	const params_base = path.relative(cwd, config.kit.files.params);
 
 	/** @type {Record<string, string>} */
-	const validators = {};
+	const matchers = {};
 	if (fs.existsSync(config.kit.files.params)) {
 		for (const file of fs.readdirSync(config.kit.files.params)) {
 			const ext = path.extname(file);
 			const type = file.slice(0, -ext.length);
 
 			if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(type)) {
-				validators[type] = path.join(params_base, file);
+				matchers[type] = path.join(params_base, file);
 			} else {
 				throw new Error(
 					`Validator names must match /^[a-zA-Z_][a-zA-Z0-9_]*$/ — "${file}" is invalid`
@@ -314,7 +314,7 @@ export default function create_manifest_data({
 		error,
 		components,
 		routes,
-		validators
+		matchers
 	};
 }
 

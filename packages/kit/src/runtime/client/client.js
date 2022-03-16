@@ -15,12 +15,12 @@ import {
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { components, dictionary, validators } from '__GENERATED__/client-manifest.js';
+import { components, dictionary, matchers } from '__GENERATED__/client-manifest.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
 
-const routes = parse(components, dictionary, validators);
+const routes = parse(components, dictionary, matchers);
 
 // we import the root layout/error components eagerly, so that
 // connectivity errors after initialisation don't nuke the app
@@ -660,7 +660,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 							// @ts-expect-error
 							if (node.loaded.fallthrough) {
 								throw new Error(
-									'fallthrough is no longer supported. Use validators instead: https://kit.svelte.dev/docs/routing#advanced-routing-validation'
+									'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-validation'
 								);
 							}
 

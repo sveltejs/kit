@@ -58,7 +58,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 	/** @param {string} id */
 	const get_index = (id) => id && /** @type {LookupEntry} */ (bundled_nodes.get(id)).index;
 
-	const validators = new Set();
+	const matchers = new Set();
 
 	// prettier-ignore
 	return `{
@@ -75,7 +75,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 					const { pattern, names, types } = parse_route_id(route.id);
 
 					types.forEach(type => {
-						if (type) validators.add(type);
+						if (type) matchers.add(type);
 					});
 
 					if (route.type === 'page') {
@@ -108,9 +108,9 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 					}
 				}).filter(Boolean).join(',\n\t\t\t\t')}
 			],
-			validators: async () => {
-				${Array.from(validators).map(type => `const { validate: ${type} } = await ${load(`${relative_path}/entries/validators/${type}.js`)}`).join('\n\t\t\t\t')}
-				return { ${Array.from(validators).join(', ')} };
+			matchers: async () => {
+				${Array.from(matchers).map(type => `const { match: ${type} } = await ${load(`${relative_path}/entries/matchers/${type}.js`)}`).join('\n\t\t\t\t')}
+				return { ${Array.from(matchers).join(', ')} };
 			}
 		}
 	}`.replace(/^\t/gm, '');

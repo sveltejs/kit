@@ -14,13 +14,13 @@ interface AdapterOptions {
 		host?: string;
 		port?: string;
 		origin?: string;
+		xffDepth?: string;
 		headers?: {
 			address?: string;
 			protocol?: string;
 			host?: string;
 		};
 	};
-	xForwardedForIndex?: number;
 }
 
 declare function plugin(options?: AdapterOptions): Adapter;
