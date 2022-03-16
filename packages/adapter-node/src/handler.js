@@ -7,10 +7,11 @@ import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 
-/* global ORIGIN, ADDRESS_HEADER, PROTOCOL_HEADER, HOST_HEADER, X_FORWARDED_FOR_PROXIES */
+/* global ORIGIN, ADDRESS_HEADER, PROTOCOL_HEADER, HOST_HEADER, XFF_DEPTH */
 
 const server = new Server(manifest);
 const origin = ORIGIN;
+const xff_depth = XFF_DEPTH_ENV ? parseInt(process.env[XFF_DEPTH_ENV]) : 1;
 
 const address_header = ADDRESS_HEADER && (process.env[ADDRESS_HEADER] || '').toLowerCase();
 const protocol_header = PROTOCOL_HEADER && process.env[PROTOCOL_HEADER];
@@ -62,12 +63,12 @@ const ssr = async (req, res) => {
 
 					if (address_header === 'x-forwarded-for') {
 						const addresses = value.split(',');
-						if (X_FORWARDED_FOR_PROXIES > addresses.length) {
-							throw new Error(
-								`Received xForwardedForNumProxies of ${X_FORWARDED_FOR_PROXIES}, but only found ${addresses.length} addresses`
-							);
+
+						if (xff_depth < 1) {
+							throw new Error(`${XFF_DEPTH_ENV} must be a positive integer`);
 						}
-						return addresses[addresses.length - X_FORWARDED_FOR_PROXIES].trim();
+
+						return addresses[addresses.length - xff_depth].trim();
 					}
 
 					return value;

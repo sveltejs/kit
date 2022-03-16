@@ -18,22 +18,18 @@ export default function ({
 		host: host_env = 'HOST',
 		port: port_env = 'PORT',
 		origin: origin_env = 'ORIGIN',
+		xffDepth: xff_depth_env = 'XFF_DEPTH',
 		headers: {
 			address: address_header_env = 'ADDRESS_HEADER',
 			protocol: protocol_header_env = 'PROTOCOL_HEADER',
 			host: host_header_env = 'HOST_HEADER'
 		} = {}
-	} = {},
-	xForwardedForNumProxies = 1
+	} = {}
 } = {}) {
 	return {
 		name: '@sveltejs/adapter-node',
 
 		async adapt(builder) {
-			if (xForwardedForNumProxies < 1) {
-				throw new Error('xForwardedForNumProxies cannot be less than 1');
-			}
-
 			builder.rimraf(out);
 
 			builder.log.minor('Copying assets');
@@ -57,10 +53,10 @@ export default function ({
 					HOST_ENV: JSON.stringify(host_env),
 					PORT_ENV: JSON.stringify(port_env),
 					ORIGIN: origin_env ? `process.env[${JSON.stringify(origin_env)}]` : 'undefined',
+					XFF_DEPTH_ENV: xff_depth_env,
 					PROTOCOL_HEADER: JSON.stringify(protocol_header_env),
 					HOST_HEADER: JSON.stringify(host_header_env),
-					ADDRESS_HEADER: JSON.stringify(address_header_env),
-					X_FORWARDED_FOR_PROXIES: JSON.stringify(xForwardedForNumProxies)
+					ADDRESS_HEADER: JSON.stringify(address_header_env)
 				}
 			});
 
