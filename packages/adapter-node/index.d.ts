@@ -1,9 +1,14 @@
 import { Adapter } from '@sveltejs/kit';
 
 declare global {
-	const HOST_ENV: string;
-	const PATH_ENV: string;
-	const PORT_ENV: string;
+	const SOCKET_PATH: string;
+	const HOST: string;
+	const PORT: string;
+	const ORIGIN: string;
+	const XFF_DEPTH: string;
+	const ADDRESS_HEADER: string;
+	const PROTOCOL_HEADER: string;
+	const HOST_HEADER: string;
 }
 
 interface AdapterOptions {
