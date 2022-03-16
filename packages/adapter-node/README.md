@@ -94,17 +94,17 @@ MY_ORIGINURL=https://my.site \
 node build
 ```
 
-### xForwardedForNumProxies
+### `XFF_DEPTH`
 
-If the `ADDRESS_HEADER` is `X-Forwarded-For`, the header value will contain a comma-separated list of IP addresses. `xForwardedForNumProxies` should specify how many trusted proxies sit between your server and the client. E.g. if there are three trusted proxies, proxy 3 will forward the addresses of the client and the first two proxies:
+If the `ADDRESS_HEADER` is `X-Forwarded-For`, the header value will contain a comma-separated list of IP addresses. The `XFF_DEPTH` environment variable should specify how many trusted proxies sit between your server and the client. E.g. if there are three trusted proxies, proxy 3 will forward the addresses of the client and the first two proxies:
 
 ```
 <client address>, <proxy 1 address>, <proxy 2 address>
 ```
 
-To get the client address we could use `xForwardedFor: 3`.
+To get the client address we could use `XFF_DEPTH=3`.
 
-If there may be a variable number of proxies, you would have to read the `X-Forwarded-For` header yourself and read the IP address from the left, but be very careful that you do not use the result for any applications with possible security implications since `X-Forwarded-For` is [trivial to spoof](https://adam-p.ca/blog/2022/03/x-forwarded-for/).
+This is [the most secure way](https://adam-p.ca/blog/2022/03/x-forwarded-for/) to read from the `X-Forwarded-For` header. It assumes a constant number of proxies between the client and server. If you are not using this value for a security-sensitive application, you may find it more reliable in some instances to avoid this assumption and read the first entry from the `X-Forwarded-For` header yourself (e.g. some users may be connecting through a corporate proxy while others are not breaking the assumption of a constant number of proxies).
 
 ## Custom server
 
