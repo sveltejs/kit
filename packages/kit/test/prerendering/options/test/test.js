@@ -31,4 +31,10 @@ test('does not copy `public` into `_app`', () => {
 	assert.ok(!fs.existsSync(`${build}/_app/robots.txt`));
 });
 
+// https://github.com/sveltejs/kit/issues/4340
+test('populates fallback 200.html file', () => {
+	const content = read('200.html');
+	assert.ok(content !== '');
+});
+
 test.run();
