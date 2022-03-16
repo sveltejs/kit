@@ -298,11 +298,11 @@ export default function create_manifest_data({
 			const ext = path.extname(file);
 			const type = file.slice(0, -ext.length);
 
-			if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(type)) {
+			if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(type)) {
 				validators[type] = path.join(params_base, file);
 			} else {
 				throw new Error(
-					`Validator names must be valid JavaScript variable names — "${file}" is invalid`
+					`Validator names must match /^[a-zA-Z_][a-zA-Z0-9_]*$/ — "${file}" is invalid`
 				);
 			}
 		}
@@ -403,7 +403,7 @@ function get_parts(part, file) {
 		const dynamic = i % 2 === 1;
 
 		const [, content, type] = dynamic
-			? /^((?:\.\.\.)?[a-zA-Z_$][a-zA-Z0-9_$]*)(?:=([a-zA-Z_$][a-zA-Z0-9_$]*))?$/.exec(str) || [
+			? /^((?:\.\.\.)?[a-zA-Z_][a-zA-Z0-9_]*)(?:=([a-zA-Z_][a-zA-Z0-9_]*))?$/.exec(str) || [
 					null,
 					null,
 					null
@@ -412,7 +412,7 @@ function get_parts(part, file) {
 
 		if (!content) {
 			throw new Error(
-				`Invalid route ${file} — parameter name and type must match /^[a-zA-Z_$][a-zA-Z0-9_$]*$/`
+				`Invalid route ${file} — parameter name and type must match /^[a-zA-Z_][a-zA-Z0-9_]*$/`
 			);
 		}
 

@@ -320,7 +320,7 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 
 #### Validation
 
-A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding _validators_ to your [`params`](/docs/configuration#files) directory...
+A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _validator_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](/docs/configuration#files) directory...
 
 ```js
 /// file: src/params/integer.js

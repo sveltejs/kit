@@ -26,7 +26,6 @@ export async function create_build(config) {
  * @param {import('vite').Manifest} manifest
  * @param {Set<string>} css
  * @param {Set<string>} js
- * @returns
  */
 export function find_deps(file, manifest, js, css) {
 	const chunk = manifest[file];
