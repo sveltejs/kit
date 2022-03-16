@@ -44,7 +44,8 @@ const ssr = async (req, res) => {
 		request = await getRequest(origin || get_origin(req.headers), req);
 	} catch (err) {
 		res.statusCode = err.status || 400;
-		return res.end(err.reason || 'Invalid request body');
+		res.end(err.reason || 'Invalid request body');
+		return;
 	}
 
 	if (address_header && !(address_header in req.headers)) {
