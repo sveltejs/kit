@@ -79,6 +79,7 @@ export async function load_node({
 			url: state.prerender ? create_prerendering_url_proxy(event.url) : event.url,
 			params: event.params,
 			props: shadow.body || {},
+			routeId: event.routeId,
 			get session() {
 				uses_credentials = true;
 				return $session;

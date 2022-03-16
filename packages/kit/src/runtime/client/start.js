@@ -18,6 +18,7 @@ import { set_paths } from '../paths.js';
  *     error: Error;
  *     nodes: Array<Promise<import('types').CSRComponent>>;
  *     params: Record<string, string>;
+ *     routeId: string | null;
  *   };
  * }} opts
  */

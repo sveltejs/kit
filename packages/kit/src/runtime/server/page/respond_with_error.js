@@ -32,9 +32,6 @@ export async function respond_with_error({
 		const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
 		const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
 
-		/** @type {Record<string, string>} */
-		const params = {}; // error page has no params
-
 		const layout_loaded = /** @type {Loaded} */ (
 			await load_node({
 				event,
@@ -77,8 +74,7 @@ export async function respond_with_error({
 			status,
 			error,
 			branch: [layout_loaded, error_loaded],
-			url: event.url,
-			params,
+			event,
 			resolve_opts
 		});
 	} catch (err) {

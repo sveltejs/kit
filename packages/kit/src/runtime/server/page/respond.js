@@ -36,8 +36,8 @@ export async function respond(opts) {
 				router: true
 			},
 			status: 200,
-			url: event.url,
-			params: event.params,
+			error: null,
+			event,
 			stuff: {}
 		});
 	}
@@ -85,8 +85,8 @@ export async function respond(opts) {
 	/** @type {number} */
 	let status = 200;
 
-	/** @type {Error|undefined} */
-	let error;
+	/** @type {Error | null} */
+	let error = null;
 
 	/** @type {string[]} */
 	let set_cookie_headers = [];
@@ -215,8 +215,7 @@ export async function respond(opts) {
 			await render_response({
 				...opts,
 				stuff,
-				url: event.url,
-				params: event.params,
+				event,
 				page_config,
 				status,
 				error,

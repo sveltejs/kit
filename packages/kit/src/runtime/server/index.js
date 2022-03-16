@@ -173,14 +173,14 @@ export async function respond(request, options, state) {
 
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
-						url: event.url,
-						params: event.params,
+						event,
 						options,
 						state,
 						$session: await options.hooks.getSession(event),
 						page_config: { router: true, hydrate: true },
 						stuff: {},
 						status: 200,
+						error: null,
 						branch: [],
 						resolve_opts: {
 							...resolve_opts,

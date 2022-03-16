@@ -1,5 +1,5 @@
 import { s } from '../../utils/misc.js';
-import { parse_route_key } from '../../utils/routing.js';
+import { parse_route_id } from '../../utils/routing.js';
 import { get_mime_lookup } from '../utils.js';
 
 /**
@@ -72,7 +72,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 			],
 			routes: [
 				${routes.map(route => {
-					const { pattern, names, types } = parse_route_key(route.key);
+					const { pattern, names, types } = parse_route_id(route.key);
 
 					types.forEach(type => {
 						if (type) validators.add(type);

@@ -24,6 +24,7 @@ export interface Client {
 		error: Error;
 		nodes: Array<Promise<CSRComponent>>;
 		params: Record<string, string>;
+		routeId: string | null;
 	}) => Promise<void>;
 	_start_router: () => void;
 }
