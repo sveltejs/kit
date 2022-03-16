@@ -41,8 +41,6 @@ export async function respond_with_error({
 				options,
 				state,
 				route: null,
-				url: event.url, // TODO this is redundant, no?
-				params,
 				node: default_layout,
 				$session,
 				stuff: {},
@@ -57,8 +55,6 @@ export async function respond_with_error({
 				options,
 				state,
 				route: null,
-				url: event.url,
-				params,
 				node: default_error,
 				$session,
 				stuff: layout_loaded ? layout_loaded.stuff : {},

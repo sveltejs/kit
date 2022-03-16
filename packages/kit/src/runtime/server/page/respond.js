@@ -18,9 +18,8 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   $session: any;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   route: import('types').SSRPage;
- *   params: Record<string, string>;
  * }} opts
- * @returns {Promise<Response | undefined>}
+ * @returns {Promise<Response>}
  */
 export async function respond(opts) {
 	const { event, options, state, $session, route, resolve_opts } = opts;
@@ -38,6 +37,7 @@ export async function respond(opts) {
 			},
 			status: 200,
 			url: event.url,
+			params: event.params,
 			stuff: {}
 		});
 	}
@@ -104,14 +104,11 @@ export async function respond(opts) {
 				try {
 					loaded = await load_node({
 						...opts,
-						url: event.url,
 						node,
 						stuff,
 						is_error: false,
 						is_leaf: i === nodes.length - 1
 					});
-
-					if (!loaded) return;
 
 					set_cookie_headers = set_cookie_headers.concat(loaded.set_cookie_headers);
 
@@ -159,7 +156,6 @@ export async function respond(opts) {
 								const error_loaded = /** @type {import('./types').Loaded} */ (
 									await load_node({
 										...opts,
-										url: event.url,
 										node: error_node,
 										stuff: node_loaded.stuff,
 										is_error: true,
@@ -220,6 +216,7 @@ export async function respond(opts) {
 				...opts,
 				stuff,
 				url: event.url,
+				params: event.params,
 				page_config,
 				status,
 				error,

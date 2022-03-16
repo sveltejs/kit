@@ -99,6 +99,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 
 						return `{
 							type: 'endpoint',
+							key: ${s(route.key)},
 							pattern: ${pattern},
 							names: ${s(names)},
 							types: ${s(types)},

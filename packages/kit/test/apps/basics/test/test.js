@@ -2160,6 +2160,7 @@ test.describe.parallel('Routing', () => {
 	test('event.params are available in handle', async ({ request }) => {
 		const response = await request.get('/routing/params-in-handle/banana');
 		expect(await response.json()).toStrictEqual({
+			key: 'routing/params-in-handle/[x]',
 			params: { x: 'banana' }
 		});
 	});

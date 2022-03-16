@@ -235,6 +235,7 @@ export interface RequestEvent<Params extends Record<string, string> = Record<str
 	params: Params;
 	platform: Readonly<App.Platform>;
 	request: Request;
+	routeKey: string | null;
 	url: URL;
 }
 

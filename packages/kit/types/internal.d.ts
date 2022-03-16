@@ -216,6 +216,7 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface SSREndpoint {
 	type: 'endpoint';
+	key: string;
 	pattern: RegExp;
 	names: string[];
 	types: string[];
@@ -276,6 +277,7 @@ export interface SSROptions {
 
 export interface SSRPage {
 	type: 'page';
+	key: string;
 	pattern: RegExp;
 	names: string[];
 	types: string[];
@@ -304,7 +306,6 @@ export type SSRRoute = SSREndpoint | SSRPage;
 
 export interface SSRState {
 	fallback?: string;
-	fetched?: string;
 	getClientAddress: () => string;
 	initiator?: SSRPage | null;
 	platform?: any;

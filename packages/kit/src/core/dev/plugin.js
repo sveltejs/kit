@@ -127,6 +127,7 @@ export async function create_plugin(config, cwd) {
 
 							return {
 								type: 'endpoint',
+								key: route.key,
 								pattern,
 								names,
 								types,
