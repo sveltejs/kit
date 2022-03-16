@@ -141,9 +141,15 @@ export async function create_plugin(config, cwd) {
 							const validators = {};
 
 							for (const key in manifest_data.validators) {
-								const url = path.resolve(cwd, manifest_data.validators[key]);
+								const file = manifest_data.validators[key];
+								const url = path.resolve(cwd, file);
 								const module = await vite.ssrLoadModule(url);
-								validators[key] = module.validate;
+
+								if (module.validate) {
+									validators[key] = module.validate;
+								} else {
+									throw new Error(`${file} does not export a \`validate\` function`);
+								}
 							}
 
 							return validators;
