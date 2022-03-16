@@ -60,7 +60,7 @@ export async function respond(request, options, state) {
 	/** @type {Record<string, string>} */
 	let params = {};
 
-	if (options.paths.base) {
+	if (options.paths.base && !state.prerender?.fallback) {
 		if (!decoded.startsWith(options.paths.base)) {
 			return new Response(undefined, { status: 404 });
 		}
