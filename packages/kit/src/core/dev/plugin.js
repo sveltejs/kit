@@ -137,23 +137,23 @@ export async function create_plugin(config, cwd) {
 								}
 							};
 						}),
-						validators: async () => {
-							/** @type {Record<string, import('types').ParamValidator>} */
-							const validators = {};
+						matchers: async () => {
+							/** @type {Record<string, import('types').ParamMatcher>} */
+							const matchers = {};
 
-							for (const key in manifest_data.validators) {
-								const file = manifest_data.validators[key];
+							for (const key in manifest_data.matchers) {
+								const file = manifest_data.matchers[key];
 								const url = path.resolve(cwd, file);
 								const module = await vite.ssrLoadModule(url);
 
-								if (module.validate) {
-									validators[key] = module.validate;
+								if (module.match) {
+									matchers[key] = module.match;
 								} else {
-									throw new Error(`${file} does not export a \`validate\` function`);
+									throw new Error(`${file} does not export a \`match\` function`);
 								}
 							}
 
-							return validators;
+							return matchers;
 						}
 					}
 				};

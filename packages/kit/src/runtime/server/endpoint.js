@@ -72,7 +72,7 @@ export async function render_endpoint(event, mod) {
 	// @ts-expect-error
 	if (response.fallthrough) {
 		throw new Error(
-			'fallthrough is no longer supported. Use validators instead: https://kit.svelte.dev/docs/routing#advanced-routing-validation'
+			'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
 		);
 	}
 

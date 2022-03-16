@@ -330,7 +330,7 @@ export async function load_node({
 		// @ts-expect-error
 		if (loaded.fallthrough) {
 			throw new Error(
-				'fallthrough is no longer supported. Use validators instead: https://kit.svelte.dev/docs/routing#advanced-routing-validation'
+				'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
 			);
 		}
 	} else if (shadow.body) {
@@ -407,7 +407,7 @@ async function load_shadow_data(route, event, options, prerender) {
 			// @ts-expect-error
 			if (result.fallthrough) {
 				throw new Error(
-					'fallthrough is no longer supported. Use validators instead: https://kit.svelte.dev/docs/routing#advanced-routing-validation'
+					'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
 				);
 			}
 
@@ -438,7 +438,7 @@ async function load_shadow_data(route, event, options, prerender) {
 			// @ts-expect-error
 			if (result.fallthrough) {
 				throw new Error(
-					'fallthrough is no longer supported. Use validators instead: https://kit.svelte.dev/docs/routing#advanced-routing-validation'
+					'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
 				);
 			}
 
