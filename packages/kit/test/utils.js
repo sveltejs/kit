@@ -98,14 +98,10 @@ export const test = base.extend({
 		if (javaScriptEnabled) {
 			page.addInitScript({
 				content: `
-					window.started = new Promise((fulfil, reject) => {
-						setTimeout(() => {
-							reject(new Error('Timed out'));
-						}, 5000);
+					window.started = false;
 
-						addEventListener('sveltekit:start', () => {
-							fulfil();
-						});
+					addEventListener('sveltekit:start', () => {
+						window.started = true;
 					});
 				`
 			});
@@ -120,7 +116,7 @@ export const test = base.extend({
 			async function (url, opts) {
 				const res = await goto.call(page, url, opts);
 				if (javaScriptEnabled) {
-					await page.waitForFunction(() => window.started);
+					await page.waitForFunction(() => window.started, undefined, { timeout: 5000 });
 				}
 				return res;
 			};

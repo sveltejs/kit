@@ -1,7 +1,7 @@
 declare global {
 	interface Window {
 		navigated: Promise<void>;
-		started: Promise<void>;
+		started: boolean;
 	}
 
 	const goto: (
