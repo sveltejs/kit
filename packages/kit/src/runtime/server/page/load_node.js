@@ -11,8 +11,6 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   route: import('types').SSRPage | null;
- *   url: URL;
- *   params: Record<string, string>;
  *   node: import('types').SSRNode;
  *   $session: any;
  *   stuff: Record<string, any>;
@@ -28,8 +26,6 @@ export async function load_node({
 	options,
 	state,
 	route,
-	url,
-	params,
 	node,
 	$session,
 	stuff,
@@ -80,9 +76,10 @@ export async function load_node({
 	} else if (module.load) {
 		/** @type {import('types').LoadInput | import('types').ErrorLoadInput} */
 		const load_input = {
-			url: state.prerender ? create_prerendering_url_proxy(url) : url,
-			params,
+			url: state.prerender ? create_prerendering_url_proxy(event.url) : event.url,
+			params: event.params,
 			props: shadow.body || {},
+			routeId: event.routeId,
 			get session() {
 				uses_credentials = true;
 				return $session;
@@ -160,7 +157,10 @@ export async function load_node({
 							headers: type ? { 'content-type': type } : {}
 						});
 					} else {
-						response = await fetch(`${url.origin}/${file}`, /** @type {RequestInit} */ (opts));
+						response = await fetch(
+							`${event.url.origin}/${file}`,
+							/** @type {RequestInit} */ (opts)
+						);
 					}
 				} else if (is_root_relative(resolved)) {
 					if (opts.credentials !== 'omit') {
@@ -187,7 +187,6 @@ export async function load_node({
 					}
 
 					response = await respond(new Request(new URL(requested, event.url).href, opts), options, {
-						fetched: requested,
 						getClientAddress: state.getClientAddress,
 						initiator: route,
 						prerender: state.prerender

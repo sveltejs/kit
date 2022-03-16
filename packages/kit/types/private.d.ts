@@ -162,12 +162,13 @@ export interface LoadInput<
 	Params extends Record<string, string> = Record<string, string>,
 	Props extends Record<string, any> = Record<string, any>
 > {
-	url: URL;
+	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
 	props: Props;
-	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
+	routeId: string | null;
 	session: App.Session;
 	stuff: Partial<App.Stuff>;
+	url: URL;
 }
 
 export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {
@@ -235,6 +236,7 @@ export interface RequestEvent<Params extends Record<string, string> = Record<str
 	params: Params;
 	platform: Readonly<App.Platform>;
 	request: Request;
+	routeId: string | null;
 	url: URL;
 }
 

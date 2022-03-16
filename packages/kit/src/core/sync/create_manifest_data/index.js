@@ -61,13 +61,13 @@ export default function create_manifest_data({
 
 	/**
 	 * @param {string} dir
-	 * @param {string[]} parent_key
+	 * @param {string[]} parent_id
 	 * @param {Part[][]} parent_segments
 	 * @param {string[]} parent_params
 	 * @param {Array<string|undefined>} layout_stack // accumulated __layout.svelte components
 	 * @param {Array<string|undefined>} error_stack // accumulated __error.svelte components
 	 */
-	function walk(dir, parent_key, parent_segments, parent_params, layout_stack, error_stack) {
+	function walk(dir, parent_id, parent_segments, parent_params, layout_stack, error_stack) {
 		/** @type {Item[]} */
 		let items = [];
 		fs.readdirSync(dir).forEach((basename) => {
@@ -135,7 +135,7 @@ export default function create_manifest_data({
 		items = items.sort(comparator);
 
 		items.forEach((item) => {
-			const key = parent_key.slice();
+			const id = parent_id.slice();
 			const segments = parent_segments.slice();
 
 			if (item.is_index) {
@@ -161,13 +161,13 @@ export default function create_manifest_data({
 						}
 
 						segments[segments.length - 1] = last_segment;
-						key[key.length - 1] += item.route_suffix;
+						id[id.length - 1] += item.route_suffix;
 					} else {
 						segments.push(item.parts);
 					}
 				}
 			} else {
-				key.push(item.name);
+				id.push(item.name);
 				segments.push(item.parts);
 			}
 
@@ -201,7 +201,7 @@ export default function create_manifest_data({
 
 				walk(
 					path.join(dir, item.basename),
-					key,
+					id,
 					segments,
 					params,
 					layout_reset ? [layout_reset] : layout_stack.concat(layout),
@@ -236,7 +236,7 @@ export default function create_manifest_data({
 
 				routes.push({
 					type: 'page',
-					key: key.join('/'),
+					id: id.join('/'),
 					segments: simple_segments,
 					pattern,
 					params,
@@ -250,7 +250,7 @@ export default function create_manifest_data({
 
 				routes.push({
 					type: 'endpoint',
-					key: key.join('/'),
+					id: id.join('/'),
 					segments: simple_segments,
 					pattern,
 					file: item.file,
@@ -272,15 +272,15 @@ export default function create_manifest_data({
 	const lookup = new Map();
 	for (const route of routes) {
 		if (route.type === 'page') {
-			lookup.set(route.key, route);
+			lookup.set(route.id, route);
 		}
 	}
 
 	let i = routes.length;
 	while (i--) {
 		const route = routes[i];
-		if (route.type === 'endpoint' && lookup.has(route.key)) {
-			lookup.get(route.key).shadow = route.file;
+		if (route.type === 'endpoint' && lookup.has(route.id)) {
+			lookup.get(route.id).shadow = route.file;
 			routes.splice(i, 1);
 		}
 	}

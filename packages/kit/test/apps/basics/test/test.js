@@ -2160,8 +2160,17 @@ test.describe.parallel('Routing', () => {
 	test('event.params are available in handle', async ({ request }) => {
 		const response = await request.get('/routing/params-in-handle/banana');
 		expect(await response.json()).toStrictEqual({
+			key: 'routing/params-in-handle/[x]',
 			params: { x: 'banana' }
 		});
+	});
+
+	test('exposes page.routeId', async ({ page, clicknav }) => {
+		await page.goto('/routing/route-id');
+		await clicknav('[href="/routing/route-id/foo"]');
+
+		expect(await page.textContent('h1')).toBe('routeId in load: routing/route-id/[x]');
+		expect(await page.textContent('h2')).toBe('routeId in store: routing/route-id/[x]');
 	});
 });
 

@@ -1,5 +1,5 @@
 /** @param {string} key */
-export function parse_route_key(key) {
+export function parse_route_id(key) {
 	/** @type {string[]} */
 	const names = [];
 
