@@ -115,7 +115,44 @@ export async function respond(request, options, state) {
 		transformPage: default_transform
 	};
 
-	// TODO match route before calling handle?
+	const validators = await options.manifest._.validators();
+
+	let decoded = decodeURI(event.url.pathname);
+
+	/** @type {import('types').SSRRoute} */
+	let matched;
+
+	if (options.paths.base) {
+		if (!decoded.startsWith(options.paths.base)) {
+			return new Response(undefined, { status: 404 });
+		}
+		decoded = decoded.slice(options.paths.base.length) || '/';
+	}
+
+	const is_data_request = decoded.endsWith(DATA_SUFFIX);
+
+	if (is_data_request) {
+		decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
+
+		const normalized = normalize_path(
+			url.pathname.slice(0, -DATA_SUFFIX.length),
+			options.trailing_slash
+		);
+
+		event.url = new URL(event.url.origin + normalized + event.url.search);
+	}
+
+	for (const route of options.manifest._.routes) {
+		const match = route.pattern.exec(decoded);
+		if (!match) continue;
+
+		const params = exec(match, route.names, route.types, validators);
+		if (params) {
+			event.params = decode_params(params);
+			matched = route;
+			break;
+		}
+	}
 
 	try {
 		const response = await options.hooks.handle({
@@ -146,44 +183,12 @@ export async function respond(request, options, state) {
 					});
 				}
 
-				let decoded = decodeURI(event.url.pathname);
-
-				if (options.paths.base) {
-					if (!decoded.startsWith(options.paths.base)) {
-						return new Response(undefined, { status: 404 });
-					}
-					decoded = decoded.slice(options.paths.base.length) || '/';
-				}
-
-				const is_data_request = decoded.endsWith(DATA_SUFFIX);
-
-				if (is_data_request) {
-					decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
-
-					const normalized = normalize_path(
-						url.pathname.slice(0, -DATA_SUFFIX.length),
-						options.trailing_slash
-					);
-
-					event.url = new URL(event.url.origin + normalized + event.url.search);
-				}
-
-				const validators = await options.manifest._.validators();
-
-				for (const route of options.manifest._.routes) {
-					const match = route.pattern.exec(decoded);
-					if (!match) continue;
-
-					const params = exec(match, route.names, route.types, validators);
-					if (!params) continue;
-
-					event.params = decode_params(params);
-
+				if (matched) {
 					/** @type {Response | undefined} */
 					let response;
 
-					if (is_data_request && route.type === 'page' && route.shadow) {
-						response = await render_endpoint(event, await route.shadow());
+					if (is_data_request && matched.type === 'page' && matched.shadow) {
+						response = await render_endpoint(event, await matched.shadow());
 
 						// loading data for a client-side transition is a special case
 						if (request.headers.has('x-sveltekit-load')) {
@@ -210,9 +215,9 @@ export async function respond(request, options, state) {
 						}
 					} else {
 						response =
-							route.type === 'endpoint'
-								? await render_endpoint(event, await route.load())
-								: await render_page(event, route, options, state, resolve_opts);
+							matched.type === 'endpoint'
+								? await render_endpoint(event, await matched.load())
+								: await render_page(event, matched, options, state, resolve_opts);
 					}
 
 					if (response) {
@@ -251,8 +256,6 @@ export async function respond(request, options, state) {
 
 						return response;
 					}
-
-					break;
 				}
 
 				// if this request came direct from the user, rather than

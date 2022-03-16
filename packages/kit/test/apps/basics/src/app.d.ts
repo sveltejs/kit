@@ -2,6 +2,7 @@ declare namespace App {
 	interface Locals {
 		answer: number;
 		name: string;
+		params: Record<string, string>;
 	}
 
 	interface Platform {}
