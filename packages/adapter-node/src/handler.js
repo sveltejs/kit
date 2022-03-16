@@ -7,16 +7,31 @@ import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 
-/* global ORIGIN, ADDRESS_HEADER, PROTOCOL_HEADER, HOST_HEADER, X_FORWARDED_FOR_PROXIES */
+/* global ORIGIN, ADDRESS_HEADER, PROTOCOL_HEADER, HOST_HEADER */
 
 const server = new Server(manifest);
 const origin = ORIGIN;
 
+const xff_depth = get_xff_depth();
 const address_header = ADDRESS_HEADER && (process.env[ADDRESS_HEADER] || '').toLowerCase();
 const protocol_header = PROTOCOL_HEADER && process.env[PROTOCOL_HEADER];
 const host_header = (HOST_HEADER && process.env[HOST_HEADER]) || 'host';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function get_xff_depth() {
+	const value = process.env['XFF_DEPTH'];
+	let xff_depth;
+	try {
+		xff_depth = value ? parseInt(value) : 1;
+	} catch (err) {
+		throw new Error('Expected XFF_DEPTH to be an integer. Received ${value}');
+	}
+	if (xff_depth < 1) {
+		throw new Error('XFF_DEPTH cannot be less than 1');
+	}
+	return xff_depth;
+}
 
 /**
  * @param {string} path
@@ -62,12 +77,12 @@ const ssr = async (req, res) => {
 
 					if (address_header === 'x-forwarded-for') {
 						const addresses = value.split(',');
-						if (X_FORWARDED_FOR_PROXIES > addresses.length) {
+						if (xff_depth > addresses.length) {
 							throw new Error(
-								`Received xForwardedForNumProxies of ${X_FORWARDED_FOR_PROXIES}, but only found ${addresses.length} addresses`
+								`XFF_DEPTH specified as ${xff_depth}, but only found ${addresses.length} addresses`
 							);
 						}
-						return addresses[addresses.length - X_FORWARDED_FOR_PROXIES].trim();
+						return addresses[addresses.length - xff_depth].trim();
 					}
 
 					return value;

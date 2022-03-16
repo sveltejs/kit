@@ -20,7 +20,6 @@ interface AdapterOptions {
 			host?: string;
 		};
 	};
-	xForwardedForNumProxies?: number;
 }
 
 declare function plugin(options?: AdapterOptions): Adapter;
