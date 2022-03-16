@@ -68,6 +68,7 @@ export type CSRComponent = any; // TODO
 export type CSRComponentLoader = () => Promise<CSRComponent>;
 
 export type CSRRoute = {
+	id: string;
 	exec: (path: string) => undefined | Record<string, string>;
 	a: CSRComponentLoader[];
 	b: CSRComponentLoader[];
@@ -76,7 +77,7 @@ export type CSRRoute = {
 
 export interface EndpointData {
 	type: 'endpoint';
-	key: string;
+	id: string;
 	segments: RouteSegment[];
 	pattern: RegExp;
 	params: string[];
@@ -126,7 +127,7 @@ export type NormalizedLoadOutput = {
 
 export interface PageData {
 	type: 'page';
-	key: string;
+	id: string;
 	shadow: string | null;
 	segments: RouteSegment[];
 	pattern: RegExp;
@@ -216,6 +217,7 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface SSREndpoint {
 	type: 'endpoint';
+	id: string;
 	pattern: RegExp;
 	names: string[];
 	types: string[];
@@ -276,6 +278,7 @@ export interface SSROptions {
 
 export interface SSRPage {
 	type: 'page';
+	id: string;
 	pattern: RegExp;
 	names: string[];
 	types: string[];
@@ -304,7 +307,6 @@ export type SSRRoute = SSREndpoint | SSRPage;
 
 export interface SSRState {
 	fallback?: string;
-	fetched?: string;
 	getClientAddress: () => string;
 	initiator?: SSRPage | null;
 	platform?: any;

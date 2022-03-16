@@ -204,6 +204,7 @@ export interface Navigation {
 export interface Page<Params extends Record<string, string> = Record<string, string>> {
 	url: URL;
 	params: Params;
+	routeId: string | null;
 	stuff: App.Stuff;
 	status: number;
 	error: Error | null;

@@ -35,7 +35,7 @@ export function write_manifest(manifest_data, base, output) {
 					const tuple = [get_indices(route.a), get_indices(route.b)];
 					if (route.shadow) tuple.push('1');
 
-					return `${s(route.key)}: [${tuple.join(', ')}]`;
+					return `${s(route.id)}: [${tuple.join(', ')}]`;
 				}
 			})
 			.filter(Boolean)

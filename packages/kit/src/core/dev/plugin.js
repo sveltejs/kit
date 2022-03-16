@@ -12,7 +12,7 @@ import { coalesce_to_error } from '../../utils/error.js';
 import { load_template } from '../config/index.js';
 import { sequence } from '../../hooks.js';
 import { posixify } from '../../utils/filesystem.js';
-import { parse_route_key } from '../../utils/routing.js';
+import { parse_route_id } from '../../utils/routing.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -105,12 +105,12 @@ export async function create_plugin(config, cwd) {
 							};
 						}),
 						routes: manifest_data.routes.map((route) => {
-							const { pattern, names, types } = parse_route_key(route.key);
+							const { pattern, names, types } = parse_route_id(route.id);
 
 							if (route.type === 'page') {
 								return {
 									type: 'page',
-									key: route.key,
+									id: route.id,
 									pattern,
 									names,
 									types,
@@ -127,6 +127,7 @@ export async function create_plugin(config, cwd) {
 
 							return {
 								type: 'endpoint',
+								id: route.id,
 								pattern,
 								names,
 								types,

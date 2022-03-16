@@ -211,7 +211,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 			navigation_result = await load_root_error_page({
 				status: 404,
 				error: new Error(`Not found: ${url.pathname}`),
-				url
+				url,
+				routeId: null
 			});
 		}
 
@@ -230,7 +231,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 				navigation_result = await load_root_error_page({
 					status: 500,
 					error: new Error('Redirect loop'),
-					url
+					url,
+					routeId: null
 				});
 			} else {
 				if (router_enabled) {
@@ -359,9 +361,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   branch: Array<import('./types').BranchNode | undefined>;
 	 *   status: number;
 	 *   error?: Error;
+	 *   routeId: string | null;
 	 * }} opts
 	 */
-	async function get_navigation_result_from_branch({ url, params, stuff, branch, status, error }) {
+	async function get_navigation_result_from_branch({
+		url,
+		params,
+		stuff,
+		branch,
+		status,
+		error,
+		routeId
+	}) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 		const redirect = filtered.find((f) => f.loaded?.redirect);
 
@@ -385,7 +396,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		if (!current.url || url.href !== current.url.href) {
-			result.props.page = { url, params, status, error, stuff };
+			result.props.page = { error, params, routeId, status, stuff, url };
 
 			// TODO remove this for 1.0
 			/**
@@ -444,9 +455,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   params: Record<string, string>;
 	 *   stuff: Record<string, any>;
 	 *   props?: Record<string, any>;
+	 *   routeId: string | null;
 	 * }} options
 	 */
-	async function load_node({ status, error, module, url, params, stuff, props }) {
+	async function load_node({ status, error, module, url, params, stuff, props, routeId }) {
 		/** @type {import('./types').BranchNode} */
 		const node = {
 			module,
@@ -483,6 +495,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (module.load) {
 			/** @type {import('types').LoadInput | import('types').ErrorLoadInput} */
 			const load_input = {
+				routeId,
 				params: uses_params,
 				props: props || {},
 				get url() {
@@ -632,7 +645,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 							url,
 							params,
 							props,
-							stuff
+							stuff,
+							routeId: route.id
 						});
 					}
 
@@ -695,7 +709,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 								module: await b[i](),
 								url,
 								params,
-								stuff: node_loaded.stuff
+								stuff: node_loaded.stuff,
+								routeId: route.id
 							});
 
 							if (error_loaded?.loaded?.error) {
@@ -720,7 +735,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 				return await load_root_error_page({
 					status,
 					error,
-					url
+					url,
+					routeId: route.id
 				});
 			} else {
 				if (node?.loaded?.stuff) {
@@ -740,7 +756,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 			stuff,
 			branch,
 			status,
-			error
+			error,
+			routeId: route.id
 		});
 	}
 
@@ -749,9 +766,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   status: number;
 	 *   error: Error;
 	 *   url: URL;
+	 *   routeId: string | null
 	 * }} opts
 	 */
-	async function load_root_error_page({ status, error, url }) {
+	async function load_root_error_page({ status, error, url, routeId }) {
 		/** @type {Record<string, string>} */
 		const params = {}; // error page does not have params
 
@@ -759,7 +777,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 			module: await default_layout,
 			url,
 			params,
-			stuff: {}
+			stuff: {},
+			routeId
 		});
 
 		const root_error = await load_node({
@@ -768,7 +787,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 			module: await default_error,
 			url,
 			params,
-			stuff: (root_layout && root_layout.loaded && root_layout.loaded.stuff) || {}
+			stuff: (root_layout && root_layout.loaded && root_layout.loaded.stuff) || {},
+			routeId
 		});
 
 		return await get_navigation_result_from_branch({
@@ -780,7 +800,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 			},
 			branch: [root_layout, root_error],
 			status,
-			error
+			error,
+			routeId
 		});
 	}
 
@@ -1126,7 +1147,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		},
 
-		_hydrate: async ({ status, error, nodes, params }) => {
+		_hydrate: async ({ status, error, nodes, params, routeId }) => {
 			const url = new URL(location.href);
 
 			/** @type {Array<import('./types').BranchNode | undefined>} */
@@ -1160,7 +1181,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 						stuff,
 						status: is_leaf ? status : undefined,
 						error: is_leaf ? error : undefined,
-						props
+						props,
+						routeId
 					});
 
 					if (props) {
@@ -1176,7 +1198,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 							error_args = {
 								status: node.loaded.status,
 								error: node.loaded.error,
-								url
+								url,
+								routeId
 							};
 						} else if (node.loaded.stuff) {
 							stuff = {
@@ -1195,7 +1218,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 							stuff,
 							branch,
 							status,
-							error
+							error,
+							routeId
 					  });
 			} catch (e) {
 				if (error) throw e;
@@ -1203,7 +1227,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 				result = await load_root_error_page({
 					status: 500,
 					error: coalesce_to_error(e),
-					url
+					url,
+					routeId
 				});
 			}
 

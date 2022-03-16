@@ -14,7 +14,7 @@ const default_transform = ({ html }) => html;
 
 /** @type {import('types').Respond} */
 export async function respond(request, options, state) {
-	const url = new URL(request.url);
+	let url = new URL(request.url);
 
 	const normalized = normalize_path(url.pathname, options.trailing_slash);
 
@@ -52,6 +52,50 @@ export async function respond(request, options, state) {
 		}
 	}
 
+	let decoded = decodeURI(url.pathname);
+
+	/** @type {import('types').SSRRoute | null} */
+	let route = null;
+
+	/** @type {Record<string, string>} */
+	let params = {};
+
+	if (options.paths.base) {
+		if (!decoded.startsWith(options.paths.base)) {
+			return new Response(undefined, { status: 404 });
+		}
+		decoded = decoded.slice(options.paths.base.length) || '/';
+	}
+
+	const is_data_request = decoded.endsWith(DATA_SUFFIX);
+
+	if (is_data_request) {
+		decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
+
+		const normalized = normalize_path(
+			url.pathname.slice(0, -DATA_SUFFIX.length),
+			options.trailing_slash
+		);
+
+		url = new URL(url.origin + normalized + url.search);
+	}
+
+	if (!state.prerender || !state.prerender.fallback) {
+		const validators = await options.manifest._.validators();
+
+		for (const candidate of options.manifest._.routes) {
+			const match = candidate.pattern.exec(decoded);
+			if (!match) continue;
+
+			const matched = exec(match, candidate.names, candidate.types, validators);
+			if (matched) {
+				route = candidate;
+				params = decode_params(matched);
+				break;
+			}
+		}
+	}
+
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		get clientAddress() {
@@ -70,9 +114,10 @@ export async function respond(request, options, state) {
 			return event.clientAddress;
 		},
 		locals: {},
-		params: {},
+		params,
 		platform: state.platform,
 		request,
+		routeId: route && route.id,
 		url
 	};
 
@@ -130,14 +175,14 @@ export async function respond(request, options, state) {
 
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
-						url: event.url,
-						params: event.params,
+						event,
 						options,
 						state,
 						$session: await options.hooks.getSession(event),
 						page_config: { router: true, hydrate: true },
 						stuff: {},
 						status: 200,
+						error: null,
 						branch: [],
 						resolve_opts: {
 							...resolve_opts,
@@ -146,40 +191,8 @@ export async function respond(request, options, state) {
 					});
 				}
 
-				let decoded = decodeURI(event.url.pathname);
-
-				if (options.paths.base) {
-					if (!decoded.startsWith(options.paths.base)) {
-						return new Response(undefined, { status: 404 });
-					}
-					decoded = decoded.slice(options.paths.base.length) || '/';
-				}
-
-				const is_data_request = decoded.endsWith(DATA_SUFFIX);
-
-				if (is_data_request) {
-					decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
-
-					const normalized = normalize_path(
-						url.pathname.slice(0, -DATA_SUFFIX.length),
-						options.trailing_slash
-					);
-
-					event.url = new URL(event.url.origin + normalized + event.url.search);
-				}
-
-				const validators = await options.manifest._.validators();
-
-				for (const route of options.manifest._.routes) {
-					const match = route.pattern.exec(decoded);
-					if (!match) continue;
-
-					const params = exec(match, route.names, route.types, validators);
-					if (!params) continue;
-
-					event.params = decode_params(params);
-
-					/** @type {Response | undefined} */
+				if (route) {
+					/** @type {Response} */
 					let response;
 
 					if (is_data_request && route.type === 'page' && route.shadow) {
@@ -187,25 +200,19 @@ export async function respond(request, options, state) {
 
 						// loading data for a client-side transition is a special case
 						if (request.headers.has('x-sveltekit-load')) {
-							if (response) {
-								// since redirects are opaque to the browser, we need to repackage
-								// 3xx responses as 200s with a custom header
-								if (response.status >= 300 && response.status < 400) {
-									const location = response.headers.get('location');
+							// since redirects are opaque to the browser, we need to repackage
+							// 3xx responses as 200s with a custom header
+							if (response.status >= 300 && response.status < 400) {
+								const location = response.headers.get('location');
 
-									if (location) {
-										const headers = new Headers(response.headers);
-										headers.set('x-sveltekit-location', location);
-										response = new Response(undefined, {
-											status: 204,
-											headers
-										});
-									}
+								if (location) {
+									const headers = new Headers(response.headers);
+									headers.set('x-sveltekit-location', location);
+									response = new Response(undefined, {
+										status: 204,
+										headers
+									});
 								}
-							} else {
-								response = new Response(undefined, {
-									status: 204
-								});
 							}
 						}
 					} else {
@@ -251,8 +258,6 @@ export async function respond(request, options, state) {
 
 						return response;
 					}
-
-					break;
 				}
 
 				// if this request came direct from the user, rather than
