@@ -15,7 +15,7 @@ export default function (opts = {}) {
 	// @ts-expect-error
 	if (opts.env) {
 		throw new Error(
-			`options.env has been removed in favour of options.environment, which has different properties. Consult the adapter-node README: https://github.com/sveltejs/kit/tree/master/packages/adapter-node`
+			'options.env has been removed in favour of options.environment, which has different properties. Consult the adapter-node README: https://github.com/sveltejs/kit/tree/master/packages/adapter-node'
 		);
 	}
 
