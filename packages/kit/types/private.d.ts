@@ -144,10 +144,6 @@ export interface ErrorLoadInput<Params extends Record<string, string> = Record<s
 	error?: Error;
 }
 
-export interface Fallthrough {
-	fallthrough: true;
-}
-
 export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
 
 export interface JSONObject {

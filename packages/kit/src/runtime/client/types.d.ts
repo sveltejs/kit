@@ -38,9 +38,9 @@ export type NavigationIntent = {
 	 */
 	path: string;
 	/**
-	 * The routes that could satisfy this navigation intent
+	 * The route that matches `path`
 	 */
-	routes: CSRRoute[];
+	route: CSRRoute | undefined; // TODO i'm pretty sure we can make this required, and simplify some stuff
 	/**
 	 * The destination URL
 	 */

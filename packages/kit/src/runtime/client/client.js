@@ -177,7 +177,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		const intent = get_navigation_intent(url);
 
-		load_cache.promise = get_navigation_result(intent, false);
+		load_cache.promise = load_route(intent, false);
 		load_cache.id = intent.id;
 
 		return load_cache.promise;
@@ -191,7 +191,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 */
 	async function update(intent, redirect_chain, no_cache, opts) {
 		const current_token = (token = {});
-		let navigation_result = await get_navigation_result(intent, no_cache);
+		let navigation_result = await load_route(intent, no_cache);
 
 		if (!navigation_result && intent.url.pathname === location.pathname) {
 			// this could happen in SPA fallback mode if the user navigated to
@@ -338,36 +338,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (router_enabled) {
 			const navigation = { from: null, to: new URL(location.href) };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
-		}
-	}
-
-	/**
-	 * @param {import('./types').NavigationIntent} intent
-	 * @param {boolean} no_cache
-	 */
-	async function get_navigation_result(intent, no_cache) {
-		if (load_cache.id === intent.id && load_cache.promise) {
-			return load_cache.promise;
-		}
-
-		for (let i = 0; i < intent.routes.length; i += 1) {
-			const route = intent.routes[i];
-
-			// load code for subsequent routes immediately, if they are as
-			// likely to match the current path/query as the current one
-			let j = i + 1;
-			while (j < intent.routes.length) {
-				const next = intent.routes[j];
-				if (next[0].toString() === route[0].toString()) {
-					next[1].forEach((loader) => loader());
-					j += 1;
-				} else {
-					break;
-				}
-			}
-
-			const result = await load_route(route, intent, no_cache);
-			if (result) return result;
 		}
 	}
 
@@ -557,11 +527,16 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('types').CSRRoute} route
 	 * @param {import('./types').NavigationIntent} intent
 	 * @param {boolean} no_cache
 	 */
-	async function load_route(route, { id, url, path, routes }, no_cache) {
+	async function load_route({ id, url, path, route }, no_cache) {
+		if (!route) return;
+
+		if (load_cache.id === id && load_cache.promise) {
+			return load_cache.promise;
+		}
+
 		if (!no_cache) {
 			const cached = cache.get(id);
 			if (cached) return cached;
@@ -625,7 +600,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
 								headers: {
-									'x-sveltekit-load': /** @type {string} */ (shadow_key)
+									'x-sveltekit-load': 'true'
 								}
 							}
 						);
@@ -641,15 +616,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 								};
 							}
 
-							if (res.status === 204) {
-								if (route !== routes[routes.length - 1]) {
-									// fallthrough
-									return;
-								}
-								props = {};
-							} else {
-								props = await res.json();
-							}
+							props = res.status === 204 ? {} : await res.json();
 						} else {
 							status = res.status;
 							error = new Error('Failed to load data');
@@ -672,9 +639,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 						}
 
 						if (node.loaded) {
+							// TODO remove for 1.0
+							// @ts-expect-error
 							if (node.loaded.fallthrough) {
-								return;
+								throw new Error('fallthrough is no longer supported');
 							}
+
 							if (node.loaded.error) {
 								status = node.loaded.status;
 								error = node.loaded.error;
@@ -811,6 +781,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	/** @param {URL} url */
 	function owns(url) {
+		// TODO now that we've got rid of fallthrough, check against routes immediately
 		return url.origin === location.origin && url.pathname.startsWith(base);
 	}
 
@@ -821,7 +792,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		/** @type {import('./types').NavigationIntent} */
 		const intent = {
 			id: url.pathname + url.search,
-			routes: routes.filter(([pattern]) => pattern.test(path)),
+			route: routes.find(([pattern]) => pattern.test(path)),
 			url,
 			path
 		};
@@ -860,14 +831,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 			return;
 		}
 
-		if (!owns(url)) {
+		const pathname = normalize_path(url.pathname, trailing_slash);
+		const normalized = new URL(url.origin + pathname + url.search + url.hash);
+
+		if (!owns(normalized)) {
 			await native_navigation(url);
 		}
 
-		const pathname = normalize_path(url.pathname, trailing_slash);
-		url = new URL(url.origin + pathname + url.search + url.hash);
-
-		const intent = get_navigation_intent(url);
+		const intent = get_navigation_intent(normalized);
 
 		update_scroll_positions(current_history_index);
 
@@ -896,7 +867,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (navigating_token !== current_navigating_token) return;
 
 		if (!navigating) {
-			const navigation = { from, to: url };
+			const navigation = { from, to: normalized };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
 
 			stores.navigating.set(null);

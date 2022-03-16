@@ -21,7 +21,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   status?: number;
  *   error?: Error;
  * }} opts
- * @returns {Promise<import('./types').Loaded | undefined>} undefined for fallthrough
+ * @returns {Promise<import('./types').Loaded>}
  */
 export async function load_node({
 	event,
@@ -50,7 +50,7 @@ export async function load_node({
 	 */
 	let set_cookie_headers = [];
 
-	/** @type {import('types').Either<import('types').Fallthrough, import('types').LoadOutput>} */
+	/** @type {import('types').LoadOutput} */
 	let loaded;
 
 	/** @type {import('types').ShadowData} */
@@ -62,8 +62,6 @@ export async function load_node({
 				!!state.prerender
 		  )
 		: {};
-
-	if (shadow.fallthrough) return;
 
 	if (shadow.cookies) {
 		set_cookie_headers.push(...shadow.cookies);
@@ -325,7 +323,14 @@ export async function load_node({
 		loaded = await module.load.call(null, load_input);
 
 		if (!loaded) {
+			// TODO do we still want to enforce this now that there's no fallthrough?
 			throw new Error(`load function must return a value${options.dev ? ` (${node.entry})` : ''}`);
+		}
+
+		// TODO remove for 1.0
+		// @ts-expect-error
+		if (loaded.fallthrough) {
+			throw new Error('fallthrough is no longer supported');
 		}
 	} else if (shadow.body) {
 		loaded = {
@@ -333,10 +338,6 @@ export async function load_node({
 		};
 	} else {
 		loaded = {};
-	}
-
-	if (loaded.fallthrough && !is_error) {
-		return;
 	}
 
 	// generate __data.json files when prerendering
@@ -401,7 +402,11 @@ async function load_shadow_data(route, event, options, prerender) {
 		if (!is_get) {
 			const result = await handler(event);
 
-			if (result.fallthrough) return result;
+			// TODO remove for 1.0
+			// @ts-expect-error
+			if (result.fallthrough) {
+				throw new Error('fallthrough is no longer supported');
+			}
 
 			const { status, headers, body } = validate_shadow_output(result);
 			data.status = status;
@@ -426,7 +431,11 @@ async function load_shadow_data(route, event, options, prerender) {
 		if (get) {
 			const result = await get(event);
 
-			if (result.fallthrough) return result;
+			// TODO remove for 1.0
+			// @ts-expect-error
+			if (result.fallthrough) {
+				throw new Error('fallthrough is no longer supported');
+			}
 
 			const { status, headers, body } = validate_shadow_output(result);
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);

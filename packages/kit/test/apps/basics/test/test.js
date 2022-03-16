@@ -505,18 +505,6 @@ test.describe.parallel('Shadowed pages', () => {
 		expect(await page.textContent('h1')).toBe('slug: bar');
 	});
 
-	test('Shadow fallthrough to shadowed page', async ({ page, clicknav }) => {
-		await page.goto('/shadowed/fallthrough');
-		await clicknav('[href="/shadowed/fallthrough/b"]');
-		expect(await page.textContent('h2')).toBe('b-b');
-	});
-
-	test('Shadow fallthrough to unshadowed page', async ({ page, clicknav }) => {
-		await page.goto('/shadowed/fallthrough');
-		await clicknav('[href="/shadowed/fallthrough/c"]');
-		expect(await page.textContent('h2')).toBe('c');
-	});
-
 	test('Shadow redirect', async ({ page, clicknav }) => {
 		await page.goto('/shadowed/redirect');
 		await clicknav('[href="/shadowed/redirect/a"]');
@@ -548,11 +536,6 @@ test.describe.parallel('Endpoints', () => {
 			await page.click('.del');
 			expect(await page.innerHTML('h1')).toBe('deleted 42');
 		}
-	});
-
-	test('not ok on void endpoint', async ({ request }) => {
-		const response = await request.delete('/endpoint-output/empty');
-		expect(response.ok()).toBe(false);
 	});
 
 	test('200 status on empty endpoint', async ({ request }) => {
@@ -2030,33 +2013,6 @@ test.describe.parallel('Routing', () => {
 			expect(await page.textContent('#window-hash')).toBe('#target');
 			expect(await page.textContent('#page-url-hash')).toBe('#target');
 		}
-	});
-
-	test('fallthrough', async ({ page }) => {
-		await page.goto('/routing/fallthrough-simple/invalid');
-		expect(await page.textContent('h1')).toBe('Page');
-	});
-
-	test('dynamic fallthrough of pages and endpoints', async ({ page, clicknav }) => {
-		await page.goto('/routing/fallthrough-advanced/borax');
-		expect(await page.textContent('h1')).toBe('borax is a mineral');
-
-		await clicknav('[href="/routing/fallthrough-advanced/camel"]');
-		expect(await page.textContent('h1')).toBe('camel is an animal');
-
-		await clicknav('[href="/routing/fallthrough-advanced/potato"]');
-		expect(await page.textContent('h1')).toBe('404');
-	});
-
-	test('dynamic fallthrough of layout', async ({ page, clicknav }) => {
-		await page.goto('/routing/fallthrough-layout/okay');
-		expect(await page.textContent('h1')).toBe('foo is okay');
-
-		await clicknav('[href="/routing/fallthrough-layout/ok"]');
-		expect(await page.textContent('h1')).toBe('xyz is ok');
-
-		await clicknav('[href="/routing/fallthrough-layout/notok"]');
-		expect(await page.textContent('h1')).toBe('404');
 	});
 
 	test('last parameter in a segment wins in cases of ambiguity', async ({ page, clicknav }) => {

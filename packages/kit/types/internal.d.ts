@@ -12,7 +12,6 @@ import {
 } from './index';
 import {
 	Either,
-	Fallthrough,
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
@@ -111,17 +110,14 @@ export interface MethodOverride {
 	allowed: string[];
 }
 
-export type NormalizedLoadOutput = Either<
-	{
-		status: number;
-		error?: Error;
-		redirect?: string;
-		props?: Record<string, any> | Promise<Record<string, any>>;
-		stuff?: Record<string, any>;
-		maxage?: number;
-	},
-	Fallthrough
->;
+export type NormalizedLoadOutput = {
+	status: number;
+	error?: Error;
+	redirect?: string;
+	props?: Record<string, any> | Promise<Record<string, any>>;
+	stuff?: Record<string, any>;
+	maxage?: number;
+};
 
 export interface PageData {
 	type: 'page';
@@ -183,11 +179,10 @@ export interface ShadowEndpointOutput<Output extends JSONObject = JSONObject> {
 type ShadowKey = string;
 
 export interface ShadowRequestHandler<Output extends JSONObject = JSONObject> {
-	(event: RequestEvent): MaybePromise<Either<ShadowEndpointOutput<Output>, Fallthrough>>;
+	(event: RequestEvent): MaybePromise<ShadowEndpointOutput<Output>>;
 }
 
 export interface ShadowData {
-	fallthrough?: boolean;
 	status?: number;
 	error?: Error;
 	redirect?: string;

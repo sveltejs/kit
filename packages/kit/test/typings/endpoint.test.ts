@@ -105,18 +105,3 @@ export const error_nested_instances: RequestHandler = () => {
 		body: { typed: new Uint8Array() }
 	};
 };
-
-// @ts-expect-error - fallthrough must be isolated
-export const error_fallthrough_not_isolated: RequestHandler = () => {
-	return {
-		body: {},
-		fallthrough: true
-	};
-};
-
-// @ts-expect-error - fallthrough must be of value `true`
-export const error_fallthrough_not_true: RequestHandler = () => {
-	return {
-		fallthrough: null
-	};
-};

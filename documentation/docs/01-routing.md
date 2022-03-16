@@ -323,11 +323,10 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 It's possible for multiple routes to match a given path. For example each of these routes would match `/foo-abc`:
 
 ```bash
+src/routes/[...catchall].svelte
 src/routes/[a].js
 src/routes/[b].svelte
-src/routes/[c].svelte
-src/routes/[...catchall].svelte
-src/routes/foo-[bar].svelte
+src/routes/foo-[c].svelte
 ```
 
 SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
@@ -340,48 +339,8 @@ SvelteKit needs to know which route is being requested. To do so, it sorts them 
 ...resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-[bar].svelte` rather than a less specific route:
 
 ```bash
-src/routes/foo-[bar].svelte
+src/routes/foo-[c].svelte
 src/routes/[a].js
 src/routes/[b].svelte
-src/routes/[c].svelte
 src/routes/[...catchall].svelte
-```
-
-#### Fallthrough routes
-
-In rare cases, the ordering above might not be what you want for a given path. For example, perhaps `/foo-abc` should resolve to `src/routes/foo-[bar].svelte`, but `/foo-def` should resolve to `src/routes/[b].svelte`.
-
-Higher priority routes can _fall through_ to lower priority routes by returning `{ fallthrough: true }`, either from `load` (for pages) or a request handler (for endpoints):
-
-```svelte
-/// file: src/routes/foo-[bar].svelte
-<script context="module">
-	export function load({ params }) {
-		if (params.bar === 'def') {
-			return { fallthrough: true };
-		}
-
-		// ...
-	}
-</script>
-```
-
-```js
-/// file: src/routes/[a].js
-
-// @filename: [a].d.ts
-import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
-export type RequestHandler<Body = any> = GenericRequestHandler<{ a: string }, Body>;
-
-// @filename: index.js
-// @errors: 2366
-// ---cut---
-/** @type {import('./[a]').RequestHandler} */
-export function get({ params }) {
-	if (params.a === 'foo-def') {
-		return { fallthrough: true };
-	}
-
-	// ...
-}
 ```
