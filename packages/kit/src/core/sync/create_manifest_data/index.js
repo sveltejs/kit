@@ -403,7 +403,7 @@ function get_parts(part, file) {
 		const dynamic = i % 2 === 1;
 
 		const [, content, type] = dynamic
-			? /^((?:\.\.\.)?[a-zA-Z_$][a-zA-Z0-9_$]*)(?:=([a-zA-Z_$][a-zA-Z0-9_$]*))?$/.exec(str) || [
+			? /^((?:\.\.\.)?[a-zA-Z_][a-zA-Z0-9_]*)(?:=([a-zA-Z_][a-zA-Z0-9_]*))?$/.exec(str) || [
 					null,
 					null,
 					null
@@ -412,7 +412,7 @@ function get_parts(part, file) {
 
 		if (!content) {
 			throw new Error(
-				`Invalid route ${file} — parameter name and type must match /^[a-zA-Z_$][a-zA-Z0-9_$]*$/`
+				`Invalid route ${file} — parameter name and type must match /^[a-zA-Z_][a-zA-Z0-9_]*$/`
 			);
 		}
 
