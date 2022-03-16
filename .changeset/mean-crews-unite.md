@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Expose event.routeKey
+Expose `event.routeId` and `page.routeId`
