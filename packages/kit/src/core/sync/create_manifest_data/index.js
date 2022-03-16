@@ -298,11 +298,11 @@ export default function create_manifest_data({
 			const ext = path.extname(file);
 			const type = file.slice(0, -ext.length);
 
-			if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(type)) {
+			if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(type)) {
 				validators[type] = path.join(params_base, file);
 			} else {
 				throw new Error(
-					`Validator names must be valid JavaScript variable names — "${file}" is invalid`
+					`Validator names must match /^[a-zA-Z_][a-zA-Z0-9_]*$/ — "${file}" is invalid`
 				);
 			}
 		}
