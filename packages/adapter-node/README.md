@@ -106,12 +106,12 @@ The directory to build the server to. It defaults to `build` — i.e. `node buil
 
 Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `false`.
 
-### env
+### environment
 
-If you need to change the name of the environment variables used to configure the deployment (for example, you need to run multiple deployments from a single environment), you can tell the app to expect custom environment variables using the `env` option:
+If you need to change the name of the environment variables used to configure the deployment (for example, you need to run multiple deployments from a single environment), you can tell the app to expect custom environment variables using the `environment` option:
 
 ```js
-env: {
+environment: {
 	SOCKET_PATH: 'MY_CUSTOM_SOCKET_PATH',
 	HOST: 'MY_CUSTOM_HOST',
 	PORT: 'MY_CUSTOM_PORT',
