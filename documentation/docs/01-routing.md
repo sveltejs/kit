@@ -324,7 +324,7 @@ A route like `src/routes/archive/[page]` would match `/archive/3`, but it would 
 
 ```js
 /// file: src/params/integer.js
-/** @type {import('@sveltejs/kit').ParamValidator} */
+/** @type {import('@sveltejs/kit').ParamMatcher} */
 export function match(param) {
 	return /^\d+$/.test(param);
 }
