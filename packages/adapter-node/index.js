@@ -10,20 +10,30 @@ const pipe = promisify(pipeline);
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('.')} */
-export default function ({
-	out = 'build',
-	precompress,
-	environment: {
-		SOCKET_PATH = 'SOCKET_PATH',
-		HOST = 'HOST',
-		PORT = 'PORT',
-		ORIGIN = 'ORIGIN',
-		XFF_DEPTH = 'XFF_DEPTH',
-		ADDRESS_HEADER = 'ADDRESS_HEADER',
-		PROTOCOL_HEADER = 'PROTOCOL_HEADER',
-		HOST_HEADER = 'HOST_HEADER'
-	} = {}
-} = {}) {
+export default function (opts = {}) {
+	// TODO remove for 1.0
+	// @ts-expect-error
+	if (opts.env) {
+		throw new Error(
+			`options.env has been removed in favour of options.environment, which has different properties. Consult the adapter-node README: https://github.com/sveltejs/kit/tree/master/packages/adapter-node`
+		);
+	}
+
+	const {
+		out = 'build',
+		precompress,
+		environment: {
+			SOCKET_PATH = 'SOCKET_PATH',
+			HOST = 'HOST',
+			PORT = 'PORT',
+			ORIGIN = 'ORIGIN',
+			XFF_DEPTH = 'XFF_DEPTH',
+			ADDRESS_HEADER = 'ADDRESS_HEADER',
+			PROTOCOL_HEADER = 'PROTOCOL_HEADER',
+			HOST_HEADER = 'HOST_HEADER'
+		} = {}
+	} = opts;
+
 	return {
 		name: '@sveltejs/adapter-node',
 
