@@ -112,14 +112,6 @@ export default function create_manifest_data({
 				id_parts.push(item.name);
 			}
 
-			const segments = id_parts.map((segment) => {
-				return {
-					dynamic: segment.includes('['),
-					rest: segment.includes('[...'),
-					content: segment
-				};
-			});
-
 			if (item.is_dir) {
 				const layout_reset = find_layout('__layout.reset', item.file);
 				const layout = find_layout('__layout', item.file);
@@ -139,52 +131,50 @@ export default function create_manifest_data({
 					layout_reset ? [layout_reset] : layout_stack.concat(layout),
 					layout_reset ? [error] : error_stack.concat(error)
 				);
-			} else if (item.is_page) {
-				components.push(item.file);
-
-				const concatenated = layout_stack.concat(item.file);
-				const errors = error_stack.slice();
-
-				const id = id_parts.join('/');
-
-				const { pattern } = parse_route_id(id);
-
-				let i = concatenated.length;
-				while (i--) {
-					if (!errors[i] && !concatenated[i]) {
-						errors.splice(i, 1);
-						concatenated.splice(i, 1);
-					}
-				}
-
-				i = errors.length;
-				while (i--) {
-					if (errors[i]) break;
-				}
-
-				errors.splice(i + 1);
-
-				const path = id.includes('[') ? '' : `/${id}`;
-
-				routes.push({
-					type: 'page',
-					id,
-					pattern,
-					path,
-					shadow: null,
-					a: /** @type {string[]} */ (concatenated),
-					b: /** @type {string[]} */ (errors)
-				});
 			} else {
 				const id = id_parts.join('/');
 				const { pattern } = parse_route_id(id);
 
-				routes.push({
-					type: 'endpoint',
-					id,
-					pattern,
-					file: item.file
-				});
+				if (item.is_page) {
+					components.push(item.file);
+
+					const concatenated = layout_stack.concat(item.file);
+					const errors = error_stack.slice();
+
+					let i = concatenated.length;
+					while (i--) {
+						if (!errors[i] && !concatenated[i]) {
+							errors.splice(i, 1);
+							concatenated.splice(i, 1);
+						}
+					}
+
+					i = errors.length;
+					while (i--) {
+						if (errors[i]) break;
+					}
+
+					errors.splice(i + 1);
+
+					const path = id.includes('[') ? '' : `/${id}`;
+
+					routes.push({
+						type: 'page',
+						id,
+						pattern,
+						path,
+						shadow: null,
+						a: /** @type {string[]} */ (concatenated),
+						b: /** @type {string[]} */ (errors)
+					});
+				} else {
+					routes.push({
+						type: 'endpoint',
+						id,
+						pattern,
+						file: item.file
+					});
+				}
 			}
 		});
 	}

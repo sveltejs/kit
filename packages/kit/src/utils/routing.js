@@ -1,7 +1,7 @@
 const param_pattern = /^(\.\.\.)?(\w+)(?:=\w+)?$/;
 
-/** @param {string} key */
-export function parse_route_id(key) {
+/** @param {string} id */
+export function parse_route_id(id) {
 	/** @type {string[]} */
 	const names = [];
 
@@ -13,10 +13,10 @@ export function parse_route_id(key) {
 	let add_trailing_slash = true;
 
 	const pattern =
-		key === ''
+		id === ''
 			? /^\/$/
 			: new RegExp(
-					`^${decodeURIComponent(key)
+					`^${decodeURIComponent(id)
 						.split('/')
 						.map((segment, i, segments) => {
 							// special case — /[...rest]/ could contain zero segments
