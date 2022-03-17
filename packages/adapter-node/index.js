@@ -15,24 +15,11 @@ export default function (opts = {}) {
 	// @ts-expect-error
 	if (opts.env) {
 		throw new Error(
-			'options.env has been removed in favour of options.environment, which has different properties. Consult the adapter-node README: https://github.com/sveltejs/kit/tree/master/packages/adapter-node'
+			'options.env has been removed in favour of options.envPrefix. Consult the adapter-node README: https://github.com/sveltejs/kit/tree/master/packages/adapter-node'
 		);
 	}
 
-	const {
-		out = 'build',
-		precompress,
-		environment: {
-			SOCKET_PATH = 'SOCKET_PATH',
-			HOST = 'HOST',
-			PORT = 'PORT',
-			ORIGIN = 'ORIGIN',
-			XFF_DEPTH = 'XFF_DEPTH',
-			ADDRESS_HEADER = 'ADDRESS_HEADER',
-			PROTOCOL_HEADER = 'PROTOCOL_HEADER',
-			HOST_HEADER = 'HOST_HEADER'
-		} = {}
-	} = opts;
+	const { out = 'build', precompress, envPrefix = '' } = opts;
 
 	return {
 		name: '@sveltejs/adapter-node',
@@ -57,14 +44,7 @@ export default function (opts = {}) {
 				replace: {
 					SERVER: './server/index.js',
 					MANIFEST: './manifest.js',
-					SOCKET_PATH: JSON.stringify(SOCKET_PATH),
-					HOST: JSON.stringify(HOST),
-					PORT: JSON.stringify(PORT),
-					ORIGIN: JSON.stringify(ORIGIN),
-					XFF_DEPTH: JSON.stringify(XFF_DEPTH),
-					PROTOCOL_HEADER: JSON.stringify(PROTOCOL_HEADER),
-					HOST_HEADER: JSON.stringify(HOST_HEADER),
-					ADDRESS_HEADER: JSON.stringify(ADDRESS_HEADER)
+					ENV_PREFIX: JSON.stringify(ENV_PREFIX)
 				}
 			});
 
