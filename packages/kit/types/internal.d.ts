@@ -78,9 +78,7 @@ export type CSRRoute = {
 export interface EndpointData {
 	type: 'endpoint';
 	id: string;
-	segments: RouteSegment[];
 	pattern: RegExp;
-	params: string[];
 	file: string;
 }
 
@@ -129,9 +127,7 @@ export interface PageData {
 	type: 'page';
 	id: string;
 	shadow: string | null;
-	segments: RouteSegment[];
 	pattern: RegExp;
-	params: string[];
 	path: string;
 	a: string[];
 	b: string[];
