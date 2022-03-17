@@ -249,11 +249,7 @@ function count_occurrences(needle, haystack) {
 	return count;
 }
 
-/** @param {string} path */
-function is_spread(path) {
-	const spread_pattern = /\[\.{3}/g;
-	return spread_pattern.test(path);
-}
+const spread_pattern = /\[\.{3}/;
 
 /**
  * @param {Item} a
@@ -261,9 +257,8 @@ function is_spread(path) {
  */
 function comparator(a, b) {
 	if (a.is_index !== b.is_index) {
-		if (a.is_index) return is_spread(a.file) ? 1 : -1;
-
-		return is_spread(b.file) ? -1 : 1;
+		if (a.is_index) return spread_pattern.test(a.file) ? 1 : -1;
+		return spread_pattern.test(b.file) ? -1 : 1;
 	}
 
 	const max = Math.max(a.parts.length, b.parts.length);
