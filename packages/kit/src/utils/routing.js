@@ -1,4 +1,4 @@
-const param_pattern = /^(\.\.\.)?(\w+)(?:=\w+)?$/;
+const param_pattern = /^(\.\.\.)?(\w+)(?:=(\w+))?$/;
 
 /** @param {string} id */
 export function parse_route_id(id) {
@@ -20,7 +20,7 @@ export function parse_route_id(id) {
 						.split('/')
 						.map((segment, i, segments) => {
 							// special case — /[...rest]/ could contain zero segments
-							const match = /^\[\.\.\.(\w+)(?:=\w+)?\]$/.exec(segment);
+							const match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(segment);
 							if (match) {
 								names.push(match[1]);
 								types.push(match[2]);
@@ -81,6 +81,8 @@ export function parse_route_id(id) {
 export function exec(match, names, types, matchers) {
 	/** @type {Record<string, string>} */
 	const params = {};
+
+	console.log({ match, names, types, matchers });
 
 	for (let i = 0; i < names.length; i += 1) {
 		const name = names[i];

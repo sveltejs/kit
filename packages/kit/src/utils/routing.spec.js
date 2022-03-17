@@ -21,22 +21,27 @@ const tests = {
 	'blog/[slug]': {
 		pattern: /^\/blog\/([^/]+?)\/?$/,
 		names: ['slug'],
-		types: []
+		types: [undefined]
 	},
 	'blog/[slug].json': {
 		pattern: /^\/blog\/([^/]+?)\.json$/,
 		names: ['slug'],
-		types: []
+		types: [undefined]
 	},
 	'[...catchall]': {
 		pattern: /^(?:\/(.*))?\/?$/,
 		names: ['catchall'],
-		types: []
+		types: [undefined]
 	},
 	'foo/[...catchall]/bar': {
 		pattern: /^\/foo(?:\/(.*))?\/bar\/?$/,
 		names: ['catchall'],
-		types: []
+		types: [undefined]
+	},
+	'matched/[id=uuid]': {
+		pattern: /^\/matched\/([^/]+?)\/?$/,
+		names: ['id'],
+		types: ['uuid']
 	}
 };
 
@@ -45,6 +50,8 @@ for (const [key, expected] of Object.entries(tests)) {
 		const actual = parse_route_id(key);
 
 		assert.equal(actual.pattern.toString(), expected.pattern.toString());
+		assert.equal(actual.names, expected.names);
+		assert.equal(actual.types, expected.types);
 	});
 }
 
