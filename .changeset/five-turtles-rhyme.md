@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] populate event.url when using http2
+[fix] correctly populate `event.url.host` in dev mode when using `--https`
