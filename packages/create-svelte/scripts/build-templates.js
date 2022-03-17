@@ -6,6 +6,21 @@ import { transform } from 'sucrase';
 import glob from 'tiny-glob/sync.js';
 import { mkdirp, rimraf } from '../utils.js';
 
+/** @param {string} typescript */
+function convert_typescript(typescript) {
+	const transformed = transform(typescript, {
+		transforms: ['typescript']
+	});
+
+	return prettier.format(transformed.code, {
+		parser: 'babel',
+		useTabs: true,
+		singleQuote: true,
+		trailingComma: 'none',
+		printWidth: 100
+	});
+}
+
 /** @param {Set<string>} shared */
 async function generate_templates(shared) {
 	const templates = fs.readdirSync('templates');
@@ -71,21 +86,9 @@ async function generate_templates(shared) {
 			if (file.name.endsWith('.d.ts')) {
 				if (file.name.endsWith('app.d.ts')) js.push(file);
 			} else if (file.name.endsWith('.ts')) {
-				const transformed = transform(file.contents, {
-					transforms: ['typescript']
-				});
-
-				const contents = prettier.format(transformed.code, {
-					parser: 'babel',
-					useTabs: true,
-					singleQuote: true,
-					trailingComma: 'none',
-					printWidth: 100
-				});
-
 				js.push({
 					name: file.name.replace(/\.ts$/, '.js'),
-					contents
+					contents: convert_typescript(file.contents)
 				});
 			} else if (file.name.endsWith('.svelte')) {
 				// we jump through some hoops, rather than just using svelte.preprocess,
@@ -152,36 +155,53 @@ async function generate_shared() {
 	/** @type {Set<string>} */
 	const shared = new Set();
 
-	const files = glob('**/*', { cwd, filesOnly: true, dot: true })
-		.map((file) => {
-			const contents = fs.readFileSync(path.join(cwd, file), 'utf8');
+	/** @type {Array<{ name: string, include: string[], exclude: string[], contents: string }>} */
+	const files = [];
 
-			/** @type {string[]} */
-			const include = [];
+	glob('**/*', { cwd, filesOnly: true, dot: true }).forEach((file) => {
+		const contents = fs.readFileSync(path.join(cwd, file), 'utf8');
 
-			/** @type {string[]} */
-			const exclude = [];
+		/** @type {string[]} */
+		const include = [];
 
-			let name = file;
+		/** @type {string[]} */
+		const exclude = [];
 
-			if (file.startsWith('+') || file.startsWith('-')) {
-				const [conditions, ...rest] = file.split(path.sep);
+		let name = file;
 
-				const pattern = /([+-])([a-z]+)/g;
-				let match;
-				while ((match = pattern.exec(conditions))) {
-					const set = match[1] === '+' ? include : exclude;
-					set.push(match[2]);
-				}
+		if (file.startsWith('+') || file.startsWith('-')) {
+			const [conditions, ...rest] = file.split(path.sep);
 
-				name = rest.join('/');
+			const pattern = /([+-])([a-z]+)/g;
+			let match;
+			while ((match = pattern.exec(conditions))) {
+				const set = match[1] === '+' ? include : exclude;
+				set.push(match[2]);
 			}
 
-			shared.add(name);
+			name = rest.join('/');
+		}
 
-			return { name, include, exclude, contents };
-		})
-		.sort((a, b) => a.include.length + a.exclude.length - (b.include.length + b.exclude.length));
+		if (name.endsWith('.ts') && !include.includes('typescript')) {
+			const js_name = name.replace(/\.ts$/, '.js');
+			shared.add(js_name);
+
+			files.push({
+				name: js_name,
+				include: [...include],
+				exclude: [...exclude, 'typescript'],
+				contents: convert_typescript(contents)
+			});
+
+			include.push('typescript');
+		}
+
+		shared.add(name);
+
+		files.push({ name, include, exclude, contents });
+	});
+
+	files.sort((a, b) => a.include.length + a.exclude.length - (b.include.length + b.exclude.length));
 
 	fs.writeFileSync('dist/shared.json', JSON.stringify({ files }, null, '\t'));
 
