@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.72",
+	"version": "1.0.0-next.73",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
