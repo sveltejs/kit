@@ -416,7 +416,7 @@ test('errors on encountering an illegal __file', () => {
 	);
 });
 
-test('creates routes with named layouts', () => {
+test.only('creates routes with named layouts', () => {
 	const { components, routes } = create('samples/named-layouts');
 
 	assert.equal(components, [
@@ -428,12 +428,11 @@ test('creates routes with named layouts', () => {
 		'samples/named-layouts/b/d#special/__layout.svelte',
 		'samples/named-layouts/b/d#special/d2#extraspecial.svelte',
 		'samples/named-layouts/b/d#special/d1.svelte',
+		'samples/named-layouts/b/c/__layout.svelte',
 		'samples/named-layouts/b/c/c1#alsospecial.svelte',
 		'samples/named-layouts/b/c/c2#~.svelte',
 		'samples/named-layouts/b/c/c3#.svelte'
 	]);
-
-	console.log(routes);
 
 	assert.equal(routes, [
 		{

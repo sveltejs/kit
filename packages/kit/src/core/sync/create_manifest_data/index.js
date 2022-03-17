@@ -23,6 +23,11 @@ import { parse_route_id } from '../../../utils/routing.js';
  *   is_page: boolean;
  *   route_suffix: string
  * }} Item
+ * @typedef {{
+ *   parts: Part[];
+ *   component?: string;
+ *   module?: string;
+ * }} Unit
  */
 
 const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+)(?:#([a-zA-Z0-9_-]+))?)?$/;
@@ -58,15 +63,55 @@ export default function create_manifest_data({
 	const default_layout = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
 	const default_error = posixify(path.relative(cwd, `${fallback}/error.svelte`));
 
+	const extensions = [...config.extensions, ...config.kit.endpointExtensions];
+
 	/**
 	 * @param {string} dir
 	 * @param {string[]} parent_id
-	 * @param {Array<string|undefined>} layout_stack // accumulated __layout.svelte components
+	 * @param {Map<string, Array<string|undefined>>} layout_stack // accumulated __layout.svelte components
 	 * @param {Array<string|undefined>} error_stack // accumulated __error.svelte components
 	 */
 	function walk(dir, parent_id, layout_stack, error_stack) {
 		/** @type {Item[]} */
 		const items = [];
+
+		/** @type {Map<string, Unit>} */
+		const units = new Map();
+
+		/** @type {string[]} */
+		const directories = [];
+
+		fs.readdirSync(dir).forEach((basename) => {
+			const resolved = path.join(dir, basename);
+			const file = posixify(path.relative(cwd, resolved));
+
+			if (fs.statSync(resolved).isDirectory()) {
+				directories.push(file);
+				return;
+			}
+
+			const extension = extensions.find((ext) => basename.endsWith(ext));
+			if (!extension) return;
+
+			const name = basename.slice(0, -extension.length);
+
+			if (!units.has(name)) {
+				units.set(name, {
+					parts: get_parts(name, file)
+				});
+			}
+
+			const unit = /** @type {Unit} */ (units.get(name));
+			const type = config.extensions.includes(extension) ? 'component' : 'module';
+
+			if (unit[type]) {
+				throw new Error(`Conflict between ${unit[type]} and ${file}`);
+			}
+
+			unit[type] = file;
+		});
+
+		// console.log('units', units);
 
 		fs.readdirSync(dir).forEach((basename) => {
 			const resolved = path.join(dir, basename);
