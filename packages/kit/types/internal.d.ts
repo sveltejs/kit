@@ -102,8 +102,6 @@ export class InternalServer extends Server {
 
 export interface ManifestData {
 	assets: Asset[];
-	layout: string;
-	error: string;
 	components: string[];
 	routes: RouteData[];
 	matchers: Record<string, string>;
