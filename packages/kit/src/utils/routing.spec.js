@@ -7,6 +7,36 @@ const tests = {
 		pattern: /^\/$/,
 		names: [],
 		types: []
+	},
+	blog: {
+		pattern: /^\/blog\/?$/,
+		names: [],
+		types: []
+	},
+	'blog.json': {
+		pattern: /^\/blog\.json$/,
+		names: [],
+		types: []
+	},
+	'blog/[slug]': {
+		pattern: /^\/blog\/([^/]+?)\/?$/,
+		names: ['slug'],
+		types: []
+	},
+	'blog/[slug].json': {
+		pattern: /^\/blog\/([^/]+?)\.json$/,
+		names: ['slug'],
+		types: []
+	},
+	'[...catchall]': {
+		pattern: /^(?:\/(.*))?\/?$/,
+		names: ['catchall'],
+		types: []
+	},
+	'foo/[...catchall]/bar': {
+		pattern: /^\/foo(?:\/(.*))?\/bar\/?$/,
+		names: ['catchall'],
+		types: []
 	}
 };
 

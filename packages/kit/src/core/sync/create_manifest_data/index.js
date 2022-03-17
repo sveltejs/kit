@@ -3,6 +3,7 @@ import path from 'path';
 import mime from 'mime';
 import { get_runtime_path } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
+import { parse_route_id } from '../../../utils/routing.js';
 
 /**
  * A portion of a file or directory name where the name has been split into
@@ -102,7 +103,7 @@ export default function create_manifest_data({
 		items.sort(comparator);
 
 		items.forEach((item) => {
-			const id = parent_id.slice();
+			const id_parts = parent_id.slice();
 			const segments = parent_segments.slice(); // TODO we don't actually need this
 
 			if (item.is_index) {
@@ -128,17 +129,17 @@ export default function create_manifest_data({
 						}
 
 						segments[segments.length - 1] = last_segment;
-						id[id.length - 1] += item.route_suffix;
+						id_parts[id_parts.length - 1] += item.route_suffix;
 					} else {
 						segments.push(item.parts);
 					}
 				}
 			} else {
-				id.push(item.name);
+				id_parts.push(item.name);
 				segments.push(item.parts);
 			}
 
-			const simple_segments = id.map((segment) => {
+			const simple_segments = id_parts.map((segment) => {
 				return {
 					dynamic: segment.includes('['),
 					rest: segment.includes('[...'),
@@ -161,7 +162,7 @@ export default function create_manifest_data({
 
 				walk(
 					path.join(dir, item.name),
-					id,
+					id_parts,
 					segments,
 					layout_reset ? [layout_reset] : layout_stack.concat(layout),
 					layout_reset ? [error] : error_stack.concat(error)
@@ -172,7 +173,9 @@ export default function create_manifest_data({
 				const concatenated = layout_stack.concat(item.file);
 				const errors = error_stack.slice();
 
-				const pattern = get_pattern(segments, true);
+				const id = id_parts.join('/');
+
+				const { pattern } = parse_route_id(id);
 
 				let i = concatenated.length;
 				while (i--) {
@@ -195,7 +198,7 @@ export default function create_manifest_data({
 
 				routes.push({
 					type: 'page',
-					id: id.join('/'),
+					id,
 					segments: simple_segments,
 					pattern,
 					path,
@@ -204,11 +207,12 @@ export default function create_manifest_data({
 					b: /** @type {string[]} */ (errors)
 				});
 			} else {
-				const pattern = get_pattern(segments, !item.route_suffix);
+				const id = id_parts.join('/');
+				const { pattern } = parse_route_id(id);
 
 				routes.push({
 					type: 'endpoint',
-					id: id.join('/'),
+					id,
 					segments: simple_segments,
 					pattern,
 					file: item.file
@@ -390,52 +394,6 @@ function get_parts(part, file) {
 	});
 
 	return result;
-}
-
-/**
- * @param {Part[][]} segments
- * @param {boolean} add_trailing_slash
- */
-function get_pattern(segments, add_trailing_slash) {
-	const path = segments
-		.map((segment) => {
-			if (segment.length === 1 && segment[0].rest) {
-				// special case — `src/routes/foo/[...bar]/baz` matches `/foo/baz`
-				// so we need to make the leading slash optional
-				return '(?:\\/(.*))?';
-			}
-
-			const parts = segment.map((part) => {
-				if (part.rest) return '(.*?)';
-				if (part.dynamic) return '([^/]+?)';
-
-				return (
-					part.content
-						// allow users to specify characters on the file system in an encoded manner
-						.normalize()
-						// We use [ and ] to denote parameters, so users must encode these on the file
-						// system to match against them. We don't decode all characters since others
-						// can already be epressed and so that '%' can be easily used directly in filenames
-						.replace(/%5[Bb]/g, '[')
-						.replace(/%5[Dd]/g, ']')
-						// '#', '/', and '?' can only appear in URL path segments in an encoded manner.
-						// They will not be touched by decodeURI so need to be encoded here, so
-						// that we can match against them.
-						// We skip '/' since you can't create a file with it on any OS
-						.replace(/#/g, '%23')
-						.replace(/\?/g, '%3F')
-						// escape characters that have special meaning in regex
-						.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-				);
-			});
-
-			return '\\/' + parts.join('');
-		})
-		.join('');
-
-	const trailing = add_trailing_slash && segments.length ? '\\/?$' : '$';
-
-	return new RegExp(`^${path || '\\/'}${trailing}`);
 }
 
 /**
