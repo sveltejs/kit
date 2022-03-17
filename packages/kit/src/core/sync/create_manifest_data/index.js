@@ -14,9 +14,7 @@ import { posixify } from '../../../utils/filesystem.js';
  *   type: string | null;
  * }} Part
  * @typedef {{
- *   basename: string;
  *   name: string;
- *   ext: string;
  *   parts: Part[],
  *   file: string;
  *   is_dir: boolean;
@@ -70,6 +68,7 @@ export default function create_manifest_data({
 	function walk(dir, parent_id, parent_segments, parent_params, layout_stack, error_stack) {
 		/** @type {Item[]} */
 		let items = [];
+
 		fs.readdirSync(dir).forEach((basename) => {
 			const resolved = path.join(dir, basename);
 			const file = posixify(path.relative(cwd, resolved));
@@ -82,57 +81,26 @@ export default function create_manifest_data({
 
 			if (ext === undefined) return;
 
-			const name = ext ? basename.slice(0, -ext.length) : basename;
+			const name = basename.slice(0, basename.length - ext.length);
 
-			// TODO remove this after a while
-			['layout', 'layout.reset', 'error'].forEach((reserved) => {
-				if (name === `$${reserved}`) {
-					const prefix = posixify(path.relative(cwd, dir));
-					const bad = `${prefix}/$${reserved}${ext}`;
-					const good = `${prefix}/__${reserved}${ext}`;
-
-					throw new Error(`${bad} should be renamed ${good}`);
-				}
-			});
-
-			if (basename.startsWith('__') && !specials.has(name)) {
+			if (name.startsWith('__') && !specials.has(name)) {
 				throw new Error(`Files and directories prefixed with __ are reserved (saw ${file})`);
 			}
 
-			if (!is_dir && !/^(\.[a-z0-9]+)+$/i.test(ext)) return null; // filter out tmp files etc
-
-			if (!config.kit.routes(file)) {
-				return;
-			}
-
-			const segment = is_dir ? basename : name;
-
-			if (/\]\[/.test(segment)) {
-				throw new Error(`Invalid route ${file} — parameters must be separated`);
-			}
-
-			if (count_occurrences('[', segment) !== count_occurrences(']', segment)) {
-				throw new Error(`Invalid route ${file} — brackets are unbalanced`);
-			}
-
-			const parts = get_parts(segment, file);
-			const is_index = is_dir ? false : basename.startsWith('index.');
-			const is_page = config.extensions.indexOf(ext) !== -1;
-			const route_suffix = basename.slice(basename.indexOf('.'), -ext.length);
+			if (!config.kit.routes(file)) return;
 
 			items.push({
-				basename,
-				name,
-				ext,
-				parts,
 				file,
+				name,
+				parts: get_parts(name, file),
+				route_suffix: basename.slice(basename.indexOf('.'), -ext.length),
 				is_dir,
-				is_index,
-				is_page,
-				route_suffix
+				is_index: !is_dir && basename.startsWith('index.'),
+				is_page: config.extensions.includes(ext)
 			});
 		});
-		items = items.sort(comparator);
+
+		items.sort(comparator);
 
 		items.forEach((item) => {
 			const id = parent_id.slice();
@@ -200,7 +168,7 @@ export default function create_manifest_data({
 				if (error) components.push(error);
 
 				walk(
-					path.join(dir, item.basename),
+					path.join(dir, item.name),
 					id,
 					segments,
 					params,
@@ -396,6 +364,14 @@ function comparator(a, b) {
  * @param {string} file
  */
 function get_parts(part, file) {
+	if (/\]\[/.test(part)) {
+		throw new Error(`Invalid route ${file} — parameters must be separated`);
+	}
+
+	if (count_occurrences('[', part) !== count_occurrences(']', part)) {
+		throw new Error(`Invalid route ${file} — brackets are unbalanced`);
+	}
+
 	/** @type {Part[]} */
 	const result = [];
 	part.split(/\[(.+?\(.+?\)|.+?)\]/).map((str, i) => {
