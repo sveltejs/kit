@@ -156,7 +156,7 @@ test('encodes invalid characters', () => {
 	);
 });
 
-test('sorts routes correctly', () => {
+test.only('sorts routes correctly', () => {
 	const { routes } = create('samples/sorting');
 
 	assert.equal(
@@ -416,7 +416,7 @@ test('errors on encountering an illegal __file', () => {
 	);
 });
 
-test.only('creates routes with named layouts', () => {
+test('creates routes with named layouts', () => {
 	const { components, routes } = create('samples/named-layouts');
 
 	assert.equal(components, [

@@ -65,6 +65,104 @@ export default function create_manifest_data({
 
 	const extensions = [...config.extensions, ...config.kit.endpointExtensions];
 
+	/** @type {Array<{ id: string, file: string, segments: Part[][] }>} */
+	const files = [];
+
+	list_files(config.kit.files.routes).forEach((file) => {
+		if (!config.kit.routes(file)) return;
+		if (/(^|\/)__/.test(file)) return;
+
+		const extension = extensions.find((ext) => file.endsWith(ext));
+		if (!extension) return;
+
+		const id = file.slice(0, -extension.length).replace(/\/?index$/, '');
+
+		/** @type {Part[][]} */
+		const segments = [];
+
+		id.split('/').forEach((segment) => {
+			/** @type {Part[]} */
+			const parts = [];
+			segment.split(/\[(.+?)\]/).map((content, i) => {
+				const dynamic = !!(i % 2);
+
+				if (!content) return;
+
+				parts.push({
+					content,
+					dynamic,
+					rest: dynamic && content.startsWith('...'),
+					type: (dynamic && content.split('=')[1]) || null
+				});
+			});
+			segments.push(parts);
+		});
+
+		return files.push({
+			id,
+			file,
+			segments
+		});
+	});
+
+	function compare(a, b) {
+		const max_segments = Math.max(a.segments.length, b.segments.length);
+		for (let i = 0; i < max_segments; i += 1) {
+			const sa = a.segments[i];
+			const sb = b.segments[i];
+
+			// /x < /x/y, but /[...x]/y < /[...x]
+			if (!sa) return a.id.includes('[...') ? +1 : -1;
+			if (!sb) return b.id.includes('[...') ? -1 : +1;
+
+			const max_parts = Math.max(sa.length, sb.length);
+			for (let i = 0; i < max_parts; i += 1) {
+				const pa = sa[i];
+				const pb = sb[i];
+
+				if (pa === undefined) return -1;
+				if (pb === undefined) return +1;
+
+				// x < [x]
+				if (pa.dynamic !== pb.dynamic) {
+					return pa.dynamic ? +1 : -1;
+				}
+
+				if (pa.dynamic) {
+					// [x] < [...x]
+					if (pa.rest !== pb.rest) {
+						return pa.rest ? +1 : -1;
+					}
+
+					// [x=type] < [x]
+					if (!!pa.type !== !!pb.type) {
+						return pa.type ? -1 : +1;
+					}
+				}
+			}
+		}
+
+		const a_is_endpoint = config.kit.endpointExtensions.find((ext) => a.file.endsWith(ext));
+		const b_is_endpoint = config.kit.endpointExtensions.find((ext) => b.file.endsWith(ext));
+
+		if (a_is_endpoint !== b_is_endpoint) {
+			return a_is_endpoint ? -1 : +1;
+		}
+
+		return a < b ? -1 : 1;
+	}
+
+	files.sort((a, b) => {
+		console.group('comparing:');
+		console.log('a', a.id);
+		console.log('b', b.id);
+		const n = compare(a, b);
+		console.log(n === -1 ? 'a wins' : n === +1 ? 'b wins' : 'wtf');
+		console.groupEnd();
+		return n;
+	});
+	console.log(files.map((f) => f.id));
+
 	/**
 	 * @param {string} dir
 	 * @param {string[]} parent_id
@@ -249,9 +347,19 @@ export default function create_manifest_data({
 		}
 	}
 
-	const assets = fs.existsSync(config.kit.files.assets)
-		? list_files({ config, dir: config.kit.files.assets, path: '' })
-		: [];
+	/** @type {import('types').Asset[]} */
+	const assets = [];
+
+	if (fs.existsSync(config.kit.files.assets)) {
+		list_files(config.kit.files.assets).forEach((file) => {
+			if (!config.kit.serviceWorker.files(file)) return null;
+			assets.push({
+				file,
+				size: fs.statSync(`${config.kit.files.assets}/${file}`).size,
+				type: mime.getType(file)
+			});
+		});
+	}
 
 	const params_base = path.relative(cwd, config.kit.files.params);
 
@@ -274,8 +382,6 @@ export default function create_manifest_data({
 
 	return {
 		assets,
-		layout,
-		error,
 		components,
 		routes,
 		matchers
@@ -395,28 +501,21 @@ function get_parts(part, file) {
 }
 
 /**
- * @param {{
- *  config: import('types').ValidatedConfig;
- * 	dir: string;
- * 	path: string;
- * 	files?: import('types').Asset[]
- * }} args
+ * @param {string} dir
+ * @param {string} [path]
+ * @param {string[]} [files]
  */
-function list_files({ config, dir, path, files = [] }) {
+function list_files(dir, path = '', files = []) {
 	fs.readdirSync(dir).forEach((file) => {
-		const full = `${dir}/${file}`;
+		const resolved = `${dir}/${file}`;
 
-		const stats = fs.statSync(full);
+		const stats = fs.statSync(resolved);
 		const joined = path ? `${path}/${file}` : file;
 
 		if (stats.isDirectory()) {
-			list_files({ config, dir: full, path: joined, files });
-		} else if (config.kit.serviceWorker.files(joined)) {
-			files.push({
-				file: joined,
-				size: stats.size,
-				type: mime.getType(joined)
-			});
+			list_files(resolved, joined, files);
+		} else {
+			files.push(joined);
 		}
 	});
 
