@@ -409,52 +409,15 @@ test('includes nested error components', () => {
 	]);
 });
 
-test('resets layout', () => {
-	const { routes } = create('samples/layout-reset');
-
-	assert.equal(routes, [
-		{
-			type: 'page',
-			id: '',
-			pattern: /^\/$/,
-			path: '/',
-			shadow: null,
-			a: [layout, 'samples/layout-reset/index.svelte'],
-			b: [error]
-		},
-		{
-			type: 'page',
-			id: 'foo',
-			pattern: /^\/foo\/?$/,
-			path: '/foo',
-			shadow: null,
-			a: [
-				layout,
-				'samples/layout-reset/foo/__layout.svelte',
-				'samples/layout-reset/foo/index.svelte'
-			],
-			b: [error]
-		},
-		{
-			type: 'page',
-			id: 'foo/bar',
-			pattern: /^\/foo\/bar\/?$/,
-			path: '/foo/bar',
-			shadow: null,
-			a: [
-				'samples/layout-reset/foo/bar/__layout.reset.svelte',
-				'samples/layout-reset/foo/bar/index.svelte'
-			],
-			b: ['samples/layout-reset/foo/bar/__error.svelte']
-		}
-	]);
-});
-
 test('errors on encountering an illegal __file', () => {
 	assert.throws(
 		() => create('samples/illegal-dunder'),
 		/Files and directories prefixed with __ are reserved \(saw samples\/illegal-dunder\/__foo.svelte\)/
 	);
+});
+
+test('creates routes with named layouts', () => {
+	const { components, routes } = create('samples/named-layouts');
 });
 
 test('creates param matchers', () => {
