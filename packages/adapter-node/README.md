@@ -99,7 +99,7 @@ Enables precompressing using gzip and brotli for assets and prerendered pages. I
 
 ### envPrefix
 
-If you need to change the name of the environment variables used to configure the deployment (for example,to deconflict with environment variables you don't control), you can specify a prefix:
+If you need to change the name of the environment variables used to configure the deployment (for example, to deconflict with environment variables you don't control), you can specify a prefix:
 
 ```js
 envPrefix: 'MY_CUSTOM_';
