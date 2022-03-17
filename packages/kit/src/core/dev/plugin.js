@@ -197,7 +197,9 @@ export async function create_plugin(config, cwd) {
 					try {
 						if (!req.url || !req.method) throw new Error('Incomplete request');
 
-						const base = `${vite.config.server.https ? 'https' : 'http'}://${req.headers.host}`;
+						const base = `${vite.config.server.https ? 'https' : 'http'}://${
+							req.headers[':authority'] || req.headers.host
+						}`;
 
 						const decoded = decodeURI(new URL(base + req.url).pathname);
 
