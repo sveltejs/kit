@@ -188,8 +188,8 @@ async function generate_shared() {
 
 			files.push({
 				name: js_name,
-				include,
-				exclude: [...exclude, 'typesscript'],
+				include: [...include],
+				exclude: [...exclude, 'typescript'],
 				contents: convert_typescript(contents)
 			});
 
