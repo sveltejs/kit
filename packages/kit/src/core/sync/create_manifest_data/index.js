@@ -66,7 +66,7 @@ export default function create_manifest_data({
 	 */
 	function walk(dir, parent_id, layout_stack, error_stack) {
 		/** @type {Item[]} */
-		let items = [];
+		const items = [];
 
 		fs.readdirSync(dir).forEach((basename) => {
 			const resolved = path.join(dir, basename);
