@@ -39,7 +39,11 @@ export function create_builder({ config, build_data, prerendered, log }) {
 			/** @type {import('types').RouteDefinition[]} */
 			const facades = routes.map((route) => ({
 				type: route.type,
-				segments: route.segments,
+				segments: route.id.split('/').map((segment) => ({
+					dynamic: segment.includes('['),
+					rest: segment.includes('[...'),
+					content: segment
+				})),
 				pattern: route.pattern,
 				methods: route.type === 'page' ? ['get'] : build_data.server.methods[route.file]
 			}));
@@ -68,22 +72,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 				// also be included, since the page likely needs the endpoint
 				filtered.forEach((route) => {
 					if (route.type === 'page') {
-						const length = route.segments.length;
-
-						const endpoint = routes.find((candidate) => {
-							if (candidate.segments.length !== length) return false;
-
-							for (let i = 0; i < length; i += 1) {
-								const a = route.segments[i];
-								const b = candidate.segments[i];
-
-								if (i === length - 1) {
-									return b.content === `${a.content}.json`;
-								}
-
-								if (a.content !== b.content) return false;
-							}
-						});
+						const endpoint = routes.find((candidate) => candidate.id === route.id + '.json');
 
 						if (endpoint) {
 							filtered.add(endpoint);

@@ -42,7 +42,6 @@ test('creates routes', () => {
 		{
 			type: 'page',
 			id: '',
-			segments: [],
 			pattern: /^\/$/,
 			path: '/',
 			shadow: null,
@@ -53,7 +52,6 @@ test('creates routes', () => {
 		{
 			type: 'page',
 			id: 'about',
-			segments: [{ rest: false, dynamic: false, content: 'about' }],
 			pattern: /^\/about\/?$/,
 			path: '/about',
 			shadow: null,
@@ -64,7 +62,6 @@ test('creates routes', () => {
 		{
 			type: 'endpoint',
 			id: 'blog.json',
-			segments: [{ rest: false, dynamic: false, content: 'blog.json' }],
 			pattern: /^\/blog\.json$/,
 			file: 'samples/basic/blog/index.json.js'
 		},
@@ -72,7 +69,6 @@ test('creates routes', () => {
 		{
 			type: 'page',
 			id: 'blog',
-			segments: [{ rest: false, dynamic: false, content: 'blog' }],
 			pattern: /^\/blog\/?$/,
 			path: '/blog',
 			shadow: null,
@@ -83,10 +79,6 @@ test('creates routes', () => {
 		{
 			type: 'endpoint',
 			id: 'blog/[slug].json',
-			segments: [
-				{ rest: false, dynamic: false, content: 'blog' },
-				{ rest: false, dynamic: true, content: '[slug].json' }
-			],
 			pattern: /^\/blog\/([^/]+?)\.json$/,
 			file: 'samples/basic/blog/[slug].json.ts'
 		},
@@ -94,10 +86,6 @@ test('creates routes', () => {
 		{
 			type: 'page',
 			id: 'blog/[slug]',
-			segments: [
-				{ rest: false, dynamic: false, content: 'blog' },
-				{ rest: false, dynamic: true, content: '[slug]' }
-			],
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			path: '',
 			shadow: null,
@@ -122,7 +110,6 @@ test('creates routes with layout', () => {
 		{
 			type: 'page',
 			id: '',
-			segments: [],
 			pattern: /^\/$/,
 			path: '/',
 			shadow: null,
@@ -133,7 +120,6 @@ test('creates routes with layout', () => {
 		{
 			type: 'page',
 			id: 'foo',
-			segments: [{ rest: false, dynamic: false, content: 'foo' }],
 			pattern: /^\/foo\/?$/,
 			path: '/foo',
 			shadow: null,
@@ -209,20 +195,13 @@ test('sorts routes with rest correctly', () => {
 	);
 });
 
-test('disallows rest parameters inside segments', () => {
+test('allows rest parameters inside segments', () => {
 	const { routes } = create('samples/rest-prefix-suffix');
 
 	assert.equal(routes, [
 		{
 			type: 'page',
 			id: 'prefix-[...rest]',
-			segments: [
-				{
-					dynamic: true,
-					rest: true,
-					content: 'prefix-[...rest]'
-				}
-			],
 			pattern: /^\/prefix-(.*?)\/?$/,
 			path: '',
 			shadow: null,
@@ -232,13 +211,6 @@ test('disallows rest parameters inside segments', () => {
 		{
 			type: 'endpoint',
 			id: '[...rest].json',
-			segments: [
-				{
-					dynamic: true,
-					rest: true,
-					content: '[...rest].json'
-				}
-			],
 			pattern: /^\/(.*?)\.json$/,
 			file: 'samples/rest-prefix-suffix/[...rest].json.js'
 		}
@@ -298,7 +270,6 @@ test('allows multiple slugs', () => {
 			{
 				type: 'endpoint',
 				id: '[file].[ext]',
-				segments: [{ dynamic: true, rest: false, content: '[file].[ext]' }],
 				pattern: /^\/([^/]+?)\.([^/]+?)$/,
 				file: 'samples/multiple-slugs/[file].[ext].js'
 			}
@@ -319,7 +290,6 @@ test('ignores things that look like lockfiles', () => {
 		{
 			type: 'endpoint',
 			id: 'foo',
-			segments: [{ rest: false, dynamic: false, content: 'foo' }],
 			file: 'samples/lockfiles/foo.js',
 			pattern: /^\/foo\/?$/
 		}
@@ -342,7 +312,6 @@ test('works with custom extensions', () => {
 		{
 			type: 'page',
 			id: '',
-			segments: [],
 			pattern: /^\/$/,
 			path: '/',
 			shadow: null,
@@ -353,7 +322,6 @@ test('works with custom extensions', () => {
 		{
 			type: 'page',
 			id: 'about',
-			segments: [{ rest: false, dynamic: false, content: 'about' }],
 			pattern: /^\/about\/?$/,
 			path: '/about',
 			shadow: null,
@@ -364,7 +332,6 @@ test('works with custom extensions', () => {
 		{
 			type: 'endpoint',
 			id: 'blog.json',
-			segments: [{ rest: false, dynamic: false, content: 'blog.json' }],
 			pattern: /^\/blog\.json$/,
 			file: 'samples/custom-extension/blog/index.json.js'
 		},
@@ -372,7 +339,6 @@ test('works with custom extensions', () => {
 		{
 			type: 'page',
 			id: 'blog',
-			segments: [{ rest: false, dynamic: false, content: 'blog' }],
 			pattern: /^\/blog\/?$/,
 			path: '/blog',
 			shadow: null,
@@ -383,10 +349,6 @@ test('works with custom extensions', () => {
 		{
 			type: 'endpoint',
 			id: 'blog/[slug].json',
-			segments: [
-				{ rest: false, dynamic: false, content: 'blog' },
-				{ rest: false, dynamic: true, content: '[slug].json' }
-			],
 			pattern: /^\/blog\/([^/]+?)\.json$/,
 			file: 'samples/custom-extension/blog/[slug].json.js'
 		},
@@ -394,10 +356,6 @@ test('works with custom extensions', () => {
 		{
 			type: 'page',
 			id: 'blog/[slug]',
-			segments: [
-				{ rest: false, dynamic: false, content: 'blog' },
-				{ rest: false, dynamic: true, content: '[slug]' }
-			],
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			path: '',
 			shadow: null,
@@ -431,11 +389,6 @@ test('includes nested error components', () => {
 		{
 			type: 'page',
 			id: 'foo/bar/baz',
-			segments: [
-				{ rest: false, dynamic: false, content: 'foo' },
-				{ rest: false, dynamic: false, content: 'bar' },
-				{ rest: false, dynamic: false, content: 'baz' }
-			],
 			pattern: /^\/foo\/bar\/baz\/?$/,
 			path: '/foo/bar/baz',
 			shadow: null,
@@ -463,7 +416,6 @@ test('resets layout', () => {
 		{
 			type: 'page',
 			id: '',
-			segments: [],
 			pattern: /^\/$/,
 			path: '/',
 			shadow: null,
@@ -473,7 +425,6 @@ test('resets layout', () => {
 		{
 			type: 'page',
 			id: 'foo',
-			segments: [{ rest: false, dynamic: false, content: 'foo' }],
 			pattern: /^\/foo\/?$/,
 			path: '/foo',
 			shadow: null,
@@ -487,10 +438,6 @@ test('resets layout', () => {
 		{
 			type: 'page',
 			id: 'foo/bar',
-			segments: [
-				{ rest: false, dynamic: false, content: 'foo' },
-				{ rest: false, dynamic: false, content: 'bar' }
-			],
 			pattern: /^\/foo\/bar\/?$/,
 			path: '/foo/bar',
 			shadow: null,

@@ -169,7 +169,6 @@ export default function create_manifest_data({
 				routes.push({
 					type: 'page',
 					id,
-					segments,
 					pattern,
 					path,
 					shadow: null,
@@ -183,7 +182,6 @@ export default function create_manifest_data({
 				routes.push({
 					type: 'endpoint',
 					id,
-					segments,
 					pattern,
 					file: item.file
 				});
