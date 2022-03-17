@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.300
+
+### Patch Changes
+
+- [fix] correctly populate `event.url.host` in dev mode when using `--https` ([#4364](https://github.com/sveltejs/kit/pull/4364))
+
+* fix rest param type generation ([#4361](https://github.com/sveltejs/kit/pull/4361))
+
+- [breaking] Rename validators to matchers ([#4358](https://github.com/sveltejs/kit/pull/4358))
+
 ## 1.0.0-next.299
 
 ### Patch Changes
