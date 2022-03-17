@@ -8,7 +8,7 @@ import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 import { env } from './env.js';
 
-/* global ORIGIN, ADDRESS_HEADER, PROTOCOL_HEADER, HOST_HEADER, XFF_DEPTH */
+/* global ENV_PREFIX */
 
 const server = new Server(manifest);
 const origin = env('ORIGIN', undefined);
