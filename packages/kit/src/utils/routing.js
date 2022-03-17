@@ -82,8 +82,6 @@ export function exec(match, names, types, matchers) {
 	/** @type {Record<string, string>} */
 	const params = {};
 
-	console.log({ match, names, types, matchers });
-
 	for (let i = 0; i < names.length; i += 1) {
 		const name = names[i];
 		const type = types[i];
