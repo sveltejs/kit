@@ -83,18 +83,7 @@ export default {
 			// default options are shown
 			out: 'build',
 			precompress: false,
-			env: {
-				path: 'SOCKET_PATH',
-				host: 'HOST',
-				port: 'PORT',
-				origin: 'ORIGIN',
-				xffDepth: 'XFF_DEPTH',
-				headers: {
-					address: 'ADDRESS_HEADER',
-					protocol: 'PROTOCOL_HEADER',
-					host: 'HOST_HEADER'
-				}
-			}
+			envPrefix: ''
 		})
 	}
 };
@@ -108,28 +97,18 @@ The directory to build the server to. It defaults to `build` — i.e. `node buil
 
 Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `false`.
 
-### env
+### envPrefix
 
-If you need to change the name of the environment variables used to configure the deployment (for example, you need to run multiple deployments from a single environment), you can tell the app to expect custom environment variables using the `env` option:
+If you need to change the name of the environment variables used to configure the deployment (for example, to deconflict with environment variables you don't control), you can specify a prefix:
 
 ```js
-env: {
-	host: 'MY_HOST_VARIABLE',
-	port: 'MY_PORT_VARIABLE',
-	origin: 'MY_ORIGINURL',
-	xffDepth: 'MY_XFF_DEPTH',
-	headers: {
-		address: 'MY_ADDRESS_HEADER',
-		protocol: 'MY_PROTOCOL_HEADER',
-		host: 'MY_HOST_HEADER'
-	}
-}
+envPrefix: 'MY_CUSTOM_';
 ```
 
 ```
-MY_HOST_VARIABLE=127.0.0.1 \
-MY_PORT_VARIABLE=4000 \
-MY_ORIGINURL=https://my.site \
+MY_CUSTOM_HOST=127.0.0.1 \
+MY_CUSTOM_PORT=4000 \
+MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
 
