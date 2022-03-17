@@ -44,7 +44,6 @@ test('creates routes', () => {
 			id: '',
 			segments: [],
 			pattern: /^\/$/,
-			params: [],
 			path: '/',
 			shadow: null,
 			a: [layout, index],
@@ -56,7 +55,6 @@ test('creates routes', () => {
 			id: 'about',
 			segments: [{ rest: false, dynamic: false, content: 'about' }],
 			pattern: /^\/about\/?$/,
-			params: [],
 			path: '/about',
 			shadow: null,
 			a: [layout, about],
@@ -68,8 +66,7 @@ test('creates routes', () => {
 			id: 'blog.json',
 			segments: [{ rest: false, dynamic: false, content: 'blog.json' }],
 			pattern: /^\/blog\.json$/,
-			file: 'samples/basic/blog/index.json.js',
-			params: []
+			file: 'samples/basic/blog/index.json.js'
 		},
 
 		{
@@ -77,7 +74,6 @@ test('creates routes', () => {
 			id: 'blog',
 			segments: [{ rest: false, dynamic: false, content: 'blog' }],
 			pattern: /^\/blog\/?$/,
-			params: [],
 			path: '/blog',
 			shadow: null,
 			a: [layout, blog],
@@ -92,8 +88,7 @@ test('creates routes', () => {
 				{ rest: false, dynamic: true, content: '[slug].json' }
 			],
 			pattern: /^\/blog\/([^/]+?)\.json$/,
-			file: 'samples/basic/blog/[slug].json.ts',
-			params: ['slug']
+			file: 'samples/basic/blog/[slug].json.ts'
 		},
 
 		{
@@ -104,7 +99,6 @@ test('creates routes', () => {
 				{ rest: false, dynamic: true, content: '[slug]' }
 			],
 			pattern: /^\/blog\/([^/]+?)\/?$/,
-			params: ['slug'],
 			path: '',
 			shadow: null,
 			a: [layout, blog_$slug],
@@ -130,7 +124,6 @@ test('creates routes with layout', () => {
 			id: '',
 			segments: [],
 			pattern: /^\/$/,
-			params: [],
 			path: '/',
 			shadow: null,
 			a: [layout, index],
@@ -142,7 +135,6 @@ test('creates routes with layout', () => {
 			id: 'foo',
 			segments: [{ rest: false, dynamic: false, content: 'foo' }],
 			pattern: /^\/foo\/?$/,
-			params: [],
 			path: '/foo',
 			shadow: null,
 			a: [layout, foo___layout, foo],
@@ -232,7 +224,6 @@ test('disallows rest parameters inside segments', () => {
 				}
 			],
 			pattern: /^\/prefix-(.*?)\/?$/,
-			params: ['...rest'],
 			path: '',
 			shadow: null,
 			a: [layout, 'samples/rest-prefix-suffix/prefix-[...rest].svelte'],
@@ -249,8 +240,7 @@ test('disallows rest parameters inside segments', () => {
 				}
 			],
 			pattern: /^\/(.*?)\.json$/,
-			file: 'samples/rest-prefix-suffix/[...rest].json.js',
-			params: ['...rest']
+			file: 'samples/rest-prefix-suffix/[...rest].json.js'
 		}
 	]);
 });
@@ -310,8 +300,7 @@ test('allows multiple slugs', () => {
 				id: '[file].[ext]',
 				segments: [{ dynamic: true, rest: false, content: '[file].[ext]' }],
 				pattern: /^\/([^/]+?)\.([^/]+?)$/,
-				file: 'samples/multiple-slugs/[file].[ext].js',
-				params: ['file', 'ext']
+				file: 'samples/multiple-slugs/[file].[ext].js'
 			}
 		]
 	);
@@ -332,7 +321,6 @@ test('ignores things that look like lockfiles', () => {
 			id: 'foo',
 			segments: [{ rest: false, dynamic: false, content: 'foo' }],
 			file: 'samples/lockfiles/foo.js',
-			params: [],
 			pattern: /^\/foo\/?$/
 		}
 	]);
@@ -356,7 +344,6 @@ test('works with custom extensions', () => {
 			id: '',
 			segments: [],
 			pattern: /^\/$/,
-			params: [],
 			path: '/',
 			shadow: null,
 			a: [layout, index],
@@ -368,7 +355,6 @@ test('works with custom extensions', () => {
 			id: 'about',
 			segments: [{ rest: false, dynamic: false, content: 'about' }],
 			pattern: /^\/about\/?$/,
-			params: [],
 			path: '/about',
 			shadow: null,
 			a: [layout, about],
@@ -380,8 +366,7 @@ test('works with custom extensions', () => {
 			id: 'blog.json',
 			segments: [{ rest: false, dynamic: false, content: 'blog.json' }],
 			pattern: /^\/blog\.json$/,
-			file: 'samples/custom-extension/blog/index.json.js',
-			params: []
+			file: 'samples/custom-extension/blog/index.json.js'
 		},
 
 		{
@@ -389,7 +374,6 @@ test('works with custom extensions', () => {
 			id: 'blog',
 			segments: [{ rest: false, dynamic: false, content: 'blog' }],
 			pattern: /^\/blog\/?$/,
-			params: [],
 			path: '/blog',
 			shadow: null,
 			a: [layout, blog],
@@ -404,8 +388,7 @@ test('works with custom extensions', () => {
 				{ rest: false, dynamic: true, content: '[slug].json' }
 			],
 			pattern: /^\/blog\/([^/]+?)\.json$/,
-			file: 'samples/custom-extension/blog/[slug].json.js',
-			params: ['slug']
+			file: 'samples/custom-extension/blog/[slug].json.js'
 		},
 
 		{
@@ -416,7 +399,6 @@ test('works with custom extensions', () => {
 				{ rest: false, dynamic: true, content: '[slug]' }
 			],
 			pattern: /^\/blog\/([^/]+?)\/?$/,
-			params: ['slug'],
 			path: '',
 			shadow: null,
 			a: [layout, blog_$slug],
@@ -455,7 +437,6 @@ test('includes nested error components', () => {
 				{ rest: false, dynamic: false, content: 'baz' }
 			],
 			pattern: /^\/foo\/bar\/baz\/?$/,
-			params: [],
 			path: '/foo/bar/baz',
 			shadow: null,
 			a: [
@@ -484,7 +465,6 @@ test('resets layout', () => {
 			id: '',
 			segments: [],
 			pattern: /^\/$/,
-			params: [],
 			path: '/',
 			shadow: null,
 			a: [layout, 'samples/layout-reset/index.svelte'],
@@ -495,7 +475,6 @@ test('resets layout', () => {
 			id: 'foo',
 			segments: [{ rest: false, dynamic: false, content: 'foo' }],
 			pattern: /^\/foo\/?$/,
-			params: [],
 			path: '/foo',
 			shadow: null,
 			a: [
@@ -513,7 +492,6 @@ test('resets layout', () => {
 				{ rest: false, dynamic: false, content: 'bar' }
 			],
 			pattern: /^\/foo\/bar\/?$/,
-			params: [],
 			path: '/foo/bar',
 			shadow: null,
 			a: [

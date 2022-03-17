@@ -80,7 +80,6 @@ export interface EndpointData {
 	id: string;
 	segments: RouteSegment[];
 	pattern: RegExp;
-	params: string[];
 	file: string;
 }
 
@@ -131,7 +130,6 @@ export interface PageData {
 	shadow: string | null;
 	segments: RouteSegment[];
 	pattern: RegExp;
-	params: string[];
 	path: string;
 	a: string[];
 	b: string[];

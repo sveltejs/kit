@@ -61,11 +61,10 @@ export default function create_manifest_data({
 	 * @param {string} dir
 	 * @param {string[]} parent_id
 	 * @param {Part[][]} parent_segments
-	 * @param {string[]} parent_params
 	 * @param {Array<string|undefined>} layout_stack // accumulated __layout.svelte components
 	 * @param {Array<string|undefined>} error_stack // accumulated __error.svelte components
 	 */
-	function walk(dir, parent_id, parent_segments, parent_params, layout_stack, error_stack) {
+	function walk(dir, parent_id, parent_segments, layout_stack, error_stack) {
 		/** @type {Item[]} */
 		let items = [];
 
@@ -139,9 +138,6 @@ export default function create_manifest_data({
 				segments.push(item.parts);
 			}
 
-			const params = parent_params.slice();
-			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
-
 			// TODO seems slightly backwards to derive the simple segment representation
 			// from the more complex form, rather than vice versa — maybe swap it round
 			const simple_segments = segments.map((segment) => {
@@ -171,7 +167,6 @@ export default function create_manifest_data({
 					path.join(dir, item.name),
 					id,
 					segments,
-					params,
 					layout_reset ? [layout_reset] : layout_stack.concat(layout),
 					layout_reset ? [error] : error_stack.concat(error)
 				);
@@ -207,7 +202,6 @@ export default function create_manifest_data({
 					id: id.join('/'),
 					segments: simple_segments,
 					pattern,
-					params,
 					path,
 					shadow: null,
 					a: /** @type {string[]} */ (concatenated),
@@ -221,8 +215,7 @@ export default function create_manifest_data({
 					id: id.join('/'),
 					segments: simple_segments,
 					pattern,
-					file: item.file,
-					params
+					file: item.file
 				});
 			}
 		});
@@ -235,7 +228,7 @@ export default function create_manifest_data({
 
 	components.push(layout, error);
 
-	walk(config.kit.files.routes, [], [], [], [layout], [error]);
+	walk(config.kit.files.routes, [], [], [layout], [error]);
 
 	const lookup = new Map();
 	for (const route of routes) {
