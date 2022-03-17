@@ -2,9 +2,9 @@
 title: Asset handling
 ---
 
-### Hashing
+### Importing
 
-To include hashes in your asset file names and cache them, you can have Vite process your assets by importing them as shown below:
+[Vite will automatically process imported assets](https://vitejs.dev/guide/assets.html) for improved performance. Hashes will be added to the filenames so that they can be cached and assets smaller than `assetsInlineLimit` will be inlined.
 
 ```html
 <script>
