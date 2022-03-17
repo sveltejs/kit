@@ -103,7 +103,7 @@ export default function create_manifest_data({
 
 		items.forEach((item) => {
 			const id = parent_id.slice();
-			const segments = parent_segments.slice();
+			const segments = parent_segments.slice(); // TODO we don't actually need this
 
 			if (item.is_index) {
 				if (item.route_suffix) {
@@ -138,15 +138,11 @@ export default function create_manifest_data({
 				segments.push(item.parts);
 			}
 
-			// TODO seems slightly backwards to derive the simple segment representation
-			// from the more complex form, rather than vice versa — maybe swap it round
-			const simple_segments = segments.map((segment) => {
+			const simple_segments = id.map((segment) => {
 				return {
-					dynamic: segment.some((part) => part.dynamic),
-					rest: segment.some((part) => part.rest),
+					dynamic: segment.includes('['),
+					rest: segment.includes('[...'),
 					content: segment
-						.map((part) => (part.dynamic ? `[${part.content}]` : part.content))
-						.join('')
 				};
 			});
 
