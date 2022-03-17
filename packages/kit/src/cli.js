@@ -1,5 +1,6 @@
 import sade from 'sade';
 import colors from 'kleur';
+import fs from 'fs';
 import { relative } from 'path';
 import * as ports from 'port-authority';
 import { load_config } from './core/config/index.js';
@@ -167,6 +168,11 @@ prog
 	.command('sync')
 	.describe('Synchronise generated files')
 	.action(async () => {
+		if (!fs.existsSync('svelte.config.js')) {
+			console.warn('Missing svelte.config.js — skipping');
+			return;
+		}
+
 		try {
 			const config = await load_config();
 			const sync = await import('./core/sync/sync.js');
