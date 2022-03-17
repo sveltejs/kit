@@ -44,7 +44,7 @@ export default function (opts = {}) {
 				replace: {
 					SERVER: './server/index.js',
 					MANIFEST: './manifest.js',
-					ENV_PREFIX: JSON.stringify(ENV_PREFIX)
+					ENV_PREFIX: JSON.stringify(envPrefix)
 				}
 			});
 
