@@ -418,6 +418,103 @@ test('errors on encountering an illegal __file', () => {
 
 test('creates routes with named layouts', () => {
 	const { components, routes } = create('samples/named-layouts');
+
+	assert.equal(components, [
+		layout,
+		error,
+		'samples/named-layouts/a/__layout.svelte',
+		'samples/named-layouts/a/a2#special.svelte',
+		'samples/named-layouts/a/a1.svelte',
+		'samples/named-layouts/b/d#special/__layout.svelte',
+		'samples/named-layouts/b/d#special/d2#extraspecial.svelte',
+		'samples/named-layouts/b/d#special/d1.svelte',
+		'samples/named-layouts/b/c/c1#alsospecial.svelte',
+		'samples/named-layouts/b/c/c2#~.svelte',
+		'samples/named-layouts/b/c/c3#.svelte'
+	]);
+
+	console.log(routes);
+
+	assert.equal(routes, [
+		{
+			type: 'page',
+			id: 'a/a2#special',
+			pattern: /^\/a\/a2\/?$/,
+			path: '/a/a2',
+			shadow: null,
+			a: [
+				'samples/named-layouts/layout-special.svelte',
+				'samples/named-layouts/a/a2#special.svelte'
+			],
+			b: [error]
+		},
+		{
+			type: 'page',
+			id: 'a/a1',
+			pattern: /^\/a\/a1\/?$/,
+			path: '/a/a1',
+			shadow: null,
+			a: [layout, 'samples/named-layouts/a/__layout.svelte', 'samples/named-layouts/a/a1.svelte'],
+			b: [error]
+		},
+		{
+			type: 'page',
+			id: 'b/d#special/d2#extraspecial',
+			pattern: /^\/b\/d\/d2\/?$/,
+			path: '/b/d#special/d2#extraspecial',
+			shadow: null,
+			a: [
+				'samples/named-layouts/layout-special.svelte',
+				'samples/named-layouts/b/d#special/__layout-extraspecial.svelte',
+				'samples/named-layouts/b/d#special/d2#extraspecial.svelte'
+			],
+			b: [error]
+		},
+		{
+			type: 'page',
+			id: 'b/d#special/d1',
+			pattern: /^\/b\/d\/d1\/?$/,
+			path: '/b/d#special/d1',
+			shadow: null,
+			a: [
+				'samples/named-layouts/layout-special.svelte',
+				'samples/named-layouts/b/d#special/__layout.svelte',
+				'samples/named-layouts/b/d#special/d1.svelte'
+			],
+			b: [error]
+		},
+		{
+			type: 'page',
+			id: 'b/c/c1#alsospecial',
+			pattern: /^\/b\/c\/c1\/?$/,
+			path: '/b/c/c1#alsospecial',
+			shadow: null,
+			a: [
+				'samples/named-layouts/layout-special.svelte',
+				'samples/named-layouts/b/layout-alsospecial#special.svelte',
+				'samples/named-layouts/b/c/c1#alsospecial.svelte'
+			],
+			b: [error]
+		},
+		{
+			type: 'page',
+			id: 'b/c/c2#~',
+			pattern: /^\/b\/c\/c2\/?$/,
+			path: '/b/c/c2#~',
+			shadow: null,
+			a: [layout, 'samples/named-layouts/b/c/c2#~.svelte'],
+			b: [error]
+		},
+		{
+			type: 'page',
+			id: 'b/c/c3#',
+			pattern: /^\/b\/c\/c3\/?$/,
+			path: '/b/c/c3#',
+			shadow: null,
+			a: ['samples/named-layouts/b/c/c3#.svelte'],
+			b: [error]
+		}
+	]);
 });
 
 test('creates param matchers', () => {
