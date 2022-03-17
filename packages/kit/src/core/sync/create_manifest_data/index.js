@@ -61,11 +61,10 @@ export default function create_manifest_data({
 	/**
 	 * @param {string} dir
 	 * @param {string[]} parent_id
-	 * @param {Part[][]} parent_segments
 	 * @param {Array<string|undefined>} layout_stack // accumulated __layout.svelte components
 	 * @param {Array<string|undefined>} error_stack // accumulated __error.svelte components
 	 */
-	function walk(dir, parent_id, parent_segments, layout_stack, error_stack) {
+	function walk(dir, parent_id, layout_stack, error_stack) {
 		/** @type {Item[]} */
 		let items = [];
 
@@ -104,42 +103,16 @@ export default function create_manifest_data({
 
 		items.forEach((item) => {
 			const id_parts = parent_id.slice();
-			const segments = parent_segments.slice(); // TODO we don't actually need this
 
 			if (item.is_index) {
-				if (item.route_suffix) {
-					if (segments.length > 0) {
-						const last_segment = segments[segments.length - 1].slice();
-						const last_part = last_segment[last_segment.length - 1];
-
-						if (last_part.dynamic) {
-							last_segment.push({
-								dynamic: false,
-								rest: false,
-								content: item.route_suffix,
-								type: null
-							});
-						} else {
-							last_segment[last_segment.length - 1] = {
-								dynamic: false,
-								rest: false,
-								content: `${last_part.content}${item.route_suffix}`,
-								type: null
-							};
-						}
-
-						segments[segments.length - 1] = last_segment;
-						id_parts[id_parts.length - 1] += item.route_suffix;
-					} else {
-						segments.push(item.parts);
-					}
+				if (item.route_suffix && id_parts.length > 0) {
+					id_parts[id_parts.length - 1] += item.route_suffix;
 				}
 			} else {
 				id_parts.push(item.name);
-				segments.push(item.parts);
 			}
 
-			const simple_segments = id_parts.map((segment) => {
+			const segments = id_parts.map((segment) => {
 				return {
 					dynamic: segment.includes('['),
 					rest: segment.includes('[...'),
@@ -163,7 +136,6 @@ export default function create_manifest_data({
 				walk(
 					path.join(dir, item.name),
 					id_parts,
-					segments,
 					layout_reset ? [layout_reset] : layout_stack.concat(layout),
 					layout_reset ? [error] : error_stack.concat(error)
 				);
@@ -192,14 +164,12 @@ export default function create_manifest_data({
 
 				errors.splice(i + 1);
 
-				const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
-					? `/${segments.map((segment) => segment[0].content).join('/')}`
-					: '';
+				const path = id.includes('[') ? '' : `/${id}`;
 
 				routes.push({
 					type: 'page',
 					id,
-					segments: simple_segments,
+					segments,
 					pattern,
 					path,
 					shadow: null,
@@ -213,7 +183,7 @@ export default function create_manifest_data({
 				routes.push({
 					type: 'endpoint',
 					id,
-					segments: simple_segments,
+					segments,
 					pattern,
 					file: item.file
 				});
@@ -228,7 +198,7 @@ export default function create_manifest_data({
 
 	components.push(layout, error);
 
-	walk(config.kit.files.routes, [], [], [layout], [error]);
+	walk(config.kit.files.routes, [], [layout], [error]);
 
 	const lookup = new Map();
 	for (const route of routes) {
