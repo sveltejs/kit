@@ -120,8 +120,8 @@ export async function create_plugin(config, cwd) {
 												return await vite.ssrLoadModule(url);
 										  }
 										: null,
-									a: route.a.map((id) => manifest_data.components.indexOf(id)),
-									b: route.b.map((id) => manifest_data.components.indexOf(id))
+									a: route.a.map((id) => (id ? manifest_data.components.indexOf(id) : undefined)),
+									b: route.b.map((id) => (id ? manifest_data.components.indexOf(id) : undefined))
 								};
 							}
 

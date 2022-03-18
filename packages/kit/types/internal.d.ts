@@ -284,12 +284,12 @@ export interface SSRPage {
 	/**
 	 * plan a is to render 1 or more layout components followed by a leaf component.
 	 */
-	a: number[];
+	a: Array<number | undefined>;
 	/**
 	 * plan b — if one of them components fails in `load` we backtrack until we find
 	 * the nearest error component.
 	 */
-	b: number[];
+	b: Array<number | undefined>;
 }
 
 export interface SSRPagePart {
