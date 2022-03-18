@@ -36,7 +36,7 @@ test('creates routes', () => {
 	const blog = 'samples/basic/blog/index.svelte';
 	const blog_$slug = 'samples/basic/blog/[slug].svelte';
 
-	assert.equal(components, [layout, error, index, about, blog, blog_$slug]);
+	assert.equal(components, [layout, error, about, blog_$slug, blog, index]);
 
 	assert.equal(routes, [
 		{
