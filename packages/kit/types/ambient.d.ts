@@ -133,6 +133,8 @@ declare module '$app/navigation' {
 	/**
 	 * A navigation interceptor that triggers before we navigate to a new URL (internal or external) whether by clicking a link, calling `goto`, or using the browser back/forward controls.
 	 * This is helpful if we want to conditionally prevent a navigation from completing or lookup the upcoming url.
+	 *
+	 * If the navigation is to an external URL, `to` will be `null`, and calling `cancel` will cause the browser to open a confirmation dialog. 
 	 */
 	export function beforeNavigate(
 		fn: (navigation: { from: URL; to: URL | null; cancel: () => void }) => void
