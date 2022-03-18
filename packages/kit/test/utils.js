@@ -98,10 +98,8 @@ export const test = base.extend({
 		if (javaScriptEnabled) {
 			page.addInitScript({
 				content: `
-					window.started = false;
-
 					addEventListener('sveltekit:start', () => {
-						window.started = true;
+						document.body.classList.add('started');
 					});
 				`
 			});
@@ -116,7 +114,7 @@ export const test = base.extend({
 			async function (url, opts) {
 				const res = await goto.call(page, url, opts);
 				if (javaScriptEnabled) {
-					await page.waitForFunction(() => window.started, undefined, { timeout: 5000 });
+					await page.waitForSelector('body.started', { timeout: 5000 });
 				}
 				return res;
 			};
