@@ -91,7 +91,7 @@ export default function create_manifest_data({
 
 				if (!special.has(dir)) {
 					special.set(dir, {
-						error: null,
+						error: undefined,
 						layouts: {}
 					});
 				}
@@ -99,7 +99,7 @@ export default function create_manifest_data({
 				const group = special.get(dir);
 
 				if (name === '__error') {
-					group.error = file;
+					group.error = path.join(routes_base, file);
 				} else {
 					const match = /** @type {RegExpMatchArray} */ (layout_pattern.exec(name));
 					const layout_id = match[1] || 'default';
@@ -112,10 +112,22 @@ export default function create_manifest_data({
 				return;
 			}
 
-			throw new Error(`Files and directories prefixed with __ are reserved (saw ${file})`);
+			throw new Error(
+				`Files and directories prefixed with __ are reserved (saw ${path.join(routes_base, file)})`
+			);
 		}
 
 		if (!config.kit.routes(file)) return;
+
+		if (/\]\[/.test(id)) {
+			throw new Error(
+				`Invalid route ${path.join(routes_base, file)} — parameters must be separated`
+			);
+		}
+
+		if (count_occurrences('[', id) !== count_occurrences(']', id)) {
+			throw new Error(`Invalid route ${path.join(routes_base, file)} — brackets are unbalanced`);
+		}
 
 		/** @type {Part[][]} */
 		const segments = [];
@@ -342,7 +354,8 @@ export default function create_manifest_data({
 
 	if (fs.existsSync(config.kit.files.assets)) {
 		list_files(config.kit.files.assets).forEach((file) => {
-			if (!config.kit.serviceWorker.files(file)) return null;
+			if (!config.kit.serviceWorker.files(file)) return;
+
 			assets.push({
 				file,
 				size: fs.statSync(`${config.kit.files.assets}/${file}`).size,
