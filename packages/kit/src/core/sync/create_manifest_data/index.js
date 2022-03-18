@@ -28,6 +28,11 @@ import { parse_route_id } from '../../../utils/routing.js';
  *   component?: string;
  *   module?: string;
  * }} Unit
+ * @typedef {{
+ *   error: string | undefined;
+ *   layouts: Record<string, { file: string, name: string }>
+ * }} Node
+ * @typedef {Map<string, Node>} Tree
  */
 
 const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+))?(?:@(~|[a-zA-Z0-9_-]+)?)?$/;
@@ -56,13 +61,14 @@ export default function create_manifest_data({
 	/** @type {Array<{ id: string, file: string, segments: Part[][] }>} */
 	const files = [];
 
+	/** @type {Tree} */
 	const tree = new Map();
 
 	// set default root layout/error
 	tree.set('', {
 		error: default_error,
 		layouts: {
-			default: { file: default_layout }
+			default: { file: default_layout, name: 'default' }
 		}
 	});
 
@@ -89,7 +95,7 @@ export default function create_manifest_data({
 					});
 				}
 
-				const group = tree.get(dir);
+				const group = /** @type {Node} */ (tree.get(dir));
 
 				if (name === '__error') {
 					group.error = project_relative;
@@ -229,7 +235,7 @@ export default function create_manifest_data({
 	files.sort(compare);
 
 	/** @param {string} file */
-	function find_specials(file) {
+	function trace(file) {
 		/** @type {Array<string | undefined>} */
 		const layouts = [];
 
@@ -265,7 +271,7 @@ export default function create_manifest_data({
 		}
 
 		if (layout_id !== '') {
-			const node = tree.get('');
+			const node = /** @type {Node} */ (tree.get(''));
 			if (layout_id === '~') layout_id = 'default';
 			errors.unshift(node.error);
 			layouts.unshift(node.layouts[layout_id].file);
@@ -294,7 +300,7 @@ export default function create_manifest_data({
 		const is_page = config.extensions.find((ext) => file.endsWith(ext)); // TODO tidy up
 
 		if (is_page) {
-			const { layouts, errors } = find_specials(file);
+			const { layouts, errors } = trace(file);
 
 			routes.push({
 				type: 'page',
