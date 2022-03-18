@@ -122,35 +122,30 @@ export default function create_manifest_data({
 			throw new Error(`Invalid route ${project_relative} — brackets are unbalanced`);
 		}
 
-		/** @type {Part[][]} */
-		const segments = id
-			.split('/')
-			.filter(Boolean)
-			.map((segment) => {
-				/** @type {Part[]} */
-				const parts = [];
-				segment.split(/\[(.+?)\]/).map((content, i) => {
-					const dynamic = !!(i % 2);
-
-					if (!content) return;
-
-					parts.push({
-						content,
-						dynamic,
-						rest: dynamic && content.startsWith('...'),
-						type: (dynamic && content.split('=')[1]) || null
-					});
-				});
-				return parts;
-			});
-
 		if (!units.has(id)) {
-			const { pattern } = parse_route_id(id);
-
 			units.set(id, {
 				id,
-				pattern,
-				segments,
+				pattern: parse_route_id(id).pattern,
+				segments: id
+					.split('/')
+					.filter(Boolean)
+					.map((segment) => {
+						/** @type {Part[]} */
+						const parts = [];
+						segment.split(/\[(.+?)\]/).map((content, i) => {
+							const dynamic = !!(i % 2);
+
+							if (!content) return;
+
+							parts.push({
+								content,
+								dynamic,
+								rest: dynamic && content.startsWith('...'),
+								type: (dynamic && content.split('=')[1]) || null
+							});
+						});
+						return parts;
+					}),
 				page: undefined,
 				endpoint: undefined
 			});
@@ -276,6 +271,8 @@ function trace(file, tree, extensions) {
 
 	let layout_id = base.includes('@') ? base.split('@')[1] : 'default';
 
+	// walk up the tree, find which __layout and __error components
+	// apply to this page
 	while (parts.length) {
 		const node = tree.get(parts.join('/'));
 
