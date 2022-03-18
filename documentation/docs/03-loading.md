@@ -30,8 +30,6 @@ As with [endpoints](/docs/routing#endpoints), pages can import [generated types]
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that `load` runs on both the server and the client. In the example above, if a user clicks on a link to this page the data will be fetched from `cms.example.com` without going via our server.
 
-If `load` returns `{fallthrough: true}`, SvelteKit will [fall through](/docs/routing#advanced-routing-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
-
 SvelteKit's `load` receives an implementation of `fetch`, which has the following special properties:
 
 - it has access to cookies on the server
