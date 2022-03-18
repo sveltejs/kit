@@ -62,9 +62,6 @@ export default function create_manifest_data({
 	const default_layout = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
 	const default_error = posixify(path.relative(cwd, `${fallback}/error.svelte`));
 
-	/** @type {string[]} */
-	const components = [default_layout, default_error]; // TODO only add defaults if necessary
-
 	const extensions = [...config.extensions, ...config.kit.endpointExtensions];
 
 	/** @type {Array<{ id: string, file: string, segments: Part[][] }>} */
@@ -72,21 +69,24 @@ export default function create_manifest_data({
 
 	const special = new Map();
 
+	special.set('', {
+		error: default_error,
+		layouts: {
+			default: { file: default_layout }
+		}
+	});
+
 	list_files(config.kit.files.routes).forEach((file) => {
 		const extension = extensions.find((ext) => file.endsWith(ext));
 		if (!extension) return;
 
-		const id = file.slice(0, -extension.length).replace(/\/?index$/, '');
+		const id = file.slice(0, -extension.length).replace(/\/?index(\.[a-z]+)?$/, '$1');
 
-		if (/(^|\/)__/.test(id)) {
+		if (/(^|\/)__/.test(file)) {
 			const segments = id.split('/');
 			const name = /** @type {string} */ (segments.pop());
 
 			if (name === '__error' || layout_pattern.test(name)) {
-				if (config.extensions.includes(extension)) {
-					components.push(path.join(routes_base, file));
-				}
-
 				const dir = segments.join('/');
 
 				if (!special.has(dir)) {
@@ -117,36 +117,59 @@ export default function create_manifest_data({
 
 		if (!config.kit.routes(file)) return;
 
-		if (config.extensions.includes(extension)) {
-			components.push(path.join(routes_base, file));
-		}
-
 		/** @type {Part[][]} */
 		const segments = [];
 
-		id.split('/').forEach((segment) => {
-			/** @type {Part[]} */
-			const parts = [];
-			segment.split(/\[(.+?)\]/).map((content, i) => {
-				const dynamic = !!(i % 2);
+		id.split('/')
+			.filter(Boolean)
+			.forEach((segment) => {
+				/** @type {Part[]} */
+				const parts = [];
+				segment.split(/\[(.+?)\]/).map((content, i) => {
+					const dynamic = !!(i % 2);
 
-				if (!content) return;
+					if (!content) return;
 
-				parts.push({
-					content,
-					dynamic,
-					rest: dynamic && content.startsWith('...'),
-					type: (dynamic && content.split('=')[1]) || null
+					parts.push({
+						content,
+						dynamic,
+						rest: dynamic && content.startsWith('...'),
+						type: (dynamic && content.split('=')[1]) || null
+					});
 				});
+				segments.push(parts);
 			});
-			segments.push(parts);
-		});
 
-		return files.push({
+		files.push({
 			id,
 			file,
 			segments
 		});
+	});
+
+	/** @type {string[]} */
+	const components = [];
+
+	special.forEach(({ layouts, error }) => {
+		// we do [default, error, ...other_layouts] so that components[0] and [1]
+		// are the root layout/error. kinda janky, there's probably a nicer way
+		if (layouts.default) {
+			components.push(layouts.default.file);
+		}
+
+		if (error) {
+			components.push(error);
+		}
+
+		for (const id in layouts) {
+			if (id !== 'default') components.push(layouts[id].file);
+		}
+	});
+
+	files.forEach((item) => {
+		if (config.extensions.find((ext) => item.file.endsWith(ext))) {
+			components.push(path.join(routes_base, item.file));
+		}
 	});
 
 	/**
@@ -168,8 +191,9 @@ export default function create_manifest_data({
 				const pa = sa[i];
 				const pb = sb[i];
 
-				if (pa === undefined) return -1;
-				if (pb === undefined) return +1;
+				// xy < x[y], but [x].json < [x]
+				if (pa === undefined) return pb.dynamic ? -1 : +1;
+				if (pb === undefined) return pa.dynamic ? +1 : -1;
 
 				// x < [x]
 				if (pa.dynamic !== pb.dynamic) {
@@ -202,16 +226,18 @@ export default function create_manifest_data({
 
 	files.sort(compare);
 
-	/** @param {string} id */
-	function find_specials(id) {
+	/** @param {string} file */
+	function find_specials(file) {
 		/** @type {Array<string | undefined>} */
 		const layouts = [];
 
 		/** @type {Array<string | undefined>} */
 		const errors = [];
 
-		const parts = id.split('/');
-		const base = /** @type {string} */ (parts.pop());
+		const parts = file.split('/');
+		const filename = /** @type {string} */ (parts.pop());
+		const extension = /** @type {string} */ (config.extensions.find((ext) => file.endsWith(ext)));
+		const base = filename.slice(0, -extension.length);
 
 		let layout_id = base.includes('#') ? base.split('#')[1] : 'default';
 
@@ -269,7 +295,7 @@ export default function create_manifest_data({
 		const is_page = config.extensions.find((ext) => file.endsWith(ext)); // TODO tidy up
 
 		if (is_page) {
-			const { layouts, errors } = find_specials(id);
+			const { layouts, errors } = find_specials(file);
 
 			routes.push({
 				type: 'page',
@@ -285,7 +311,7 @@ export default function create_manifest_data({
 				type: 'endpoint',
 				id,
 				pattern,
-				file
+				file: path.join(routes_base, file)
 			});
 		}
 	});

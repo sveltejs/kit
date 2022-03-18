@@ -50,6 +50,13 @@ test('creates routes', () => {
 		},
 
 		{
+			type: 'endpoint',
+			id: 'blog.json',
+			pattern: /^\/blog\.json$/,
+			file: 'samples/basic/blog/index.json.js'
+		},
+
+		{
 			type: 'page',
 			id: 'about',
 			pattern: /^\/about\/?$/,
@@ -57,13 +64,6 @@ test('creates routes', () => {
 			shadow: null,
 			a: [layout, about],
 			b: [error]
-		},
-
-		{
-			type: 'endpoint',
-			id: 'blog.json',
-			pattern: /^\/blog\.json$/,
-			file: 'samples/basic/blog/index.json.js'
 		},
 
 		{
@@ -96,15 +96,14 @@ test('creates routes', () => {
 });
 
 test('creates routes with layout', () => {
-	const { layout, components, routes } = create('samples/basic-layout');
+	const { components, routes } = create('samples/basic-layout');
 
-	const __layout = 'samples/basic-layout/__layout.svelte';
+	const layout = 'samples/basic-layout/__layout.svelte';
 	const index = 'samples/basic-layout/index.svelte';
 	const foo___layout = 'samples/basic-layout/foo/__layout.svelte';
 	const foo = 'samples/basic-layout/foo/index.svelte';
 
-	assert.equal(layout, __layout);
-	assert.equal(components, [layout, error, index, foo___layout, foo]);
+	assert.equal(components, [layout, error, foo___layout, foo, index]);
 
 	assert.equal(routes, [
 		{
@@ -160,25 +159,26 @@ test('sorts routes correctly', () => {
 	const { routes } = create('samples/sorting');
 
 	assert.equal(
-		routes.map((p) => (p.type === 'page' ? p.a : p.file)),
+		routes.map((p) => p.id),
 		[
-			[layout, 'samples/sorting/index.svelte'],
-			[layout, 'samples/sorting/about.svelte'],
-			[layout, 'samples/sorting/post/index.svelte'],
-			[layout, 'samples/sorting/post/bar.svelte'],
-			[layout, 'samples/sorting/post/foo.svelte'],
-			'samples/sorting/post/f[zz].ts',
-			[layout, 'samples/sorting/post/f[xx].svelte'],
-			[layout, 'samples/sorting/post/f[yy].svelte'],
-			[layout, 'samples/sorting/post/[id].svelte'],
-			'samples/sorting/[endpoint].js',
-			[layout, 'samples/sorting/[wildcard].svelte'],
-			[layout, 'samples/sorting/[...anotherrest]/index.svelte'],
-			[layout, 'samples/sorting/[...rest]/deep/[...deep_rest]/xyz.svelte'],
-			[layout, 'samples/sorting/[...rest]/deep/[...deep_rest]/index.svelte'],
-			[layout, 'samples/sorting/[...rest]/deep/index.svelte'],
-			[layout, 'samples/sorting/[...rest]/abc.svelte'],
-			[layout, 'samples/sorting/[...rest]/index.svelte']
+			'',
+			'about',
+			'post',
+			'post/bar',
+			'post/foo',
+			'post/f[yy].json',
+			'post/f[zz]',
+			'post/f[xx]',
+			'post/f[yy]',
+			'post/[id]',
+			'[endpoint]',
+			'[wildcard]',
+			'[...rest]/deep/[...deep_rest]/xyz',
+			'[...rest]/deep/[...deep_rest]',
+			'[...rest]/abc',
+			'[...rest]/deep',
+			'[...anotherrest]',
+			'[...rest]'
 		]
 	);
 });
@@ -306,7 +306,7 @@ test('works with custom extensions', () => {
 	const blog = 'samples/custom-extension/blog/index.svelte';
 	const blog_$slug = 'samples/custom-extension/blog/[slug].beebop';
 
-	assert.equal(components, [layout, error, index, about, blog, blog_$slug]);
+	assert.equal(components, [layout, error, about, blog_$slug, blog, index]);
 
 	assert.equal(routes, [
 		{
@@ -320,6 +320,13 @@ test('works with custom extensions', () => {
 		},
 
 		{
+			type: 'endpoint',
+			id: 'blog.json',
+			pattern: /^\/blog\.json$/,
+			file: 'samples/custom-extension/blog/index.json.js'
+		},
+
+		{
 			type: 'page',
 			id: 'about',
 			pattern: /^\/about\/?$/,
@@ -327,13 +334,6 @@ test('works with custom extensions', () => {
 			shadow: null,
 			a: [layout, about],
 			b: [error]
-		},
-
-		{
-			type: 'endpoint',
-			id: 'blog.json',
-			pattern: /^\/blog\.json$/,
-			file: 'samples/custom-extension/blog/index.json.js'
 		},
 
 		{
