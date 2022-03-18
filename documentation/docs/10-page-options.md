@@ -46,7 +46,7 @@ Prerendering happens automatically for any page with the `prerender` annotation:
 </script>
 ```
 
-Alternatively, you can set [`confit.kit.prerender.default`](/docs/configuration#prerender) to `true` and prerender everything except pages that are explicitly marked as _not_ prerenderable:
+Alternatively, you can set [`config.kit.prerender.default`](/docs/configuration#prerender) to `true` and prerender everything except pages that are explicitly marked as _not_ prerenderable:
 
 ```html
 <script context="module">

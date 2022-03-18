@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.301
+
+### Patch Changes
+
+- Skip svelte-kit sync if no config file exists yet ([#4372](https://github.com/sveltejs/kit/pull/4372))
+
 ## 1.0.0-next.300
 
 ### Patch Changes
