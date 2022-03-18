@@ -1414,7 +1414,7 @@ test.describe.parallel.only('Nested layouts', () => {
 		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
 	});
 
-	test.only('resets layout', async ({ page }) => {
+	test('resets layout', async ({ page }) => {
 		await page.goto('/nested-layout/reset');
 
 		expect(await page.evaluate(() => document.querySelector('footer'))).toBe(null);

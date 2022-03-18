@@ -488,8 +488,8 @@ test('creates routes with named layouts', () => {
 			pattern: /^\/b\/c\/c3\/?$/,
 			path: '/b/c/c3',
 			shadow: null,
-			a: [layout, 'samples/named-layouts/b/c/c3@.svelte'],
-			b: [error]
+			a: ['samples/named-layouts/b/c/c3@.svelte'],
+			b: []
 		},
 		{
 			type: 'page',

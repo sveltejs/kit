@@ -62,8 +62,6 @@ export default function create_manifest_data({
 	const default_layout = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
 	const default_error = posixify(path.relative(cwd, `${fallback}/error.svelte`));
 
-	console.log({ cwd, fallback, default_layout, default_error });
-
 	const extensions = [...config.extensions, ...config.kit.endpointExtensions];
 
 	/** @type {Array<{ id: string, file: string, segments: Part[][] }>} */

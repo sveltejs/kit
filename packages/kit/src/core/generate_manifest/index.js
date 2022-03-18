@@ -15,8 +15,6 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 	/** @type {Map<string, LookupEntry>} */
 	const bundled_nodes = new Map();
 
-	console.log(build_data.manifest_data.components);
-
 	// 0 and 1 are special, they correspond to the root layout and root error nodes
 	bundled_nodes.set(build_data.manifest_data.components[0], {
 		path: `${relative_path}/nodes/0.js`,
@@ -33,11 +31,6 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 			[...route.a, ...route.b].forEach((component) => {
 				if (component && !bundled_nodes.has(component)) {
 					const i = build_data.manifest_data.components.indexOf(component);
-
-					if (i === -1) {
-						console.log(route, component);
-						throw new Error('oops');
-					}
 
 					bundled_nodes.set(component, {
 						path: `${relative_path}/nodes/${i}.js`,
