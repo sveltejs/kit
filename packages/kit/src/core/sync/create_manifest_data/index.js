@@ -399,18 +399,37 @@ function count_occurrences(needle, haystack) {
  * @param {string[]} [files]
  */
 function list_files(dir, path = '', files = []) {
-	fs.readdirSync(dir).forEach((file) => {
-		const resolved = `${dir}/${file}`;
+	fs.readdirSync(dir)
+		.sort((a, b) => {
+			// sort each directory in (__layout, __error, everything else) order
+			// so that we can trace layouts/errors immediately
 
-		const stats = fs.statSync(resolved);
-		const joined = path ? `${path}/${file}` : file;
+			if (a.startsWith('__layout')) {
+				if (!b.startsWith('__layout')) return -1;
+			} else if (b.startsWith('__layout')) {
+				if (!a.startsWith('__layout')) return 1;
+			}
 
-		if (stats.isDirectory()) {
-			list_files(resolved, joined, files);
-		} else {
-			files.push(joined);
-		}
-	});
+			if (a.startsWith('__')) {
+				if (!b.startsWith('__')) return -1;
+			} else if (b.startsWith('__')) {
+				if (!a.startsWith('__')) return 1;
+			}
+
+			return a < b ? -1 : 1;
+		})
+		.forEach((file) => {
+			const resolved = `${dir}/${file}`;
+
+			const stats = fs.statSync(resolved);
+			const joined = path ? `${path}/${file}` : file;
+
+			if (stats.isDirectory()) {
+				list_files(resolved, joined, files);
+			} else {
+				files.push(joined);
+			}
+		});
 
 	return files;
 }

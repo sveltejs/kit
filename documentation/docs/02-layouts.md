@@ -62,11 +62,115 @@ We can create a layout that only applies to pages below `/settings` (while inher
 <slot></slot>
 ```
 
-### Resets
+### Named layouts
 
-To reset the layout stack, create a `__layout.reset.svelte` file instead of a `__layout.svelte` file. For example, if you want your `/admin/*` pages to _not_ inherit the root layout, create a file called `src/routes/admin/__layout.reset.svelte`.
+Some parts of your app might need something other than the default layout. For these cases you can create _named layouts_...
 
-Layout resets are otherwise identical to normal layout components.
+```svelte
+/// file: src/routes/__layout-foo.svelte
+<div class="foo">
+	<slot></slot>
+</div>
+```
+
+...and then use them by referencing the layout name (`foo`, in the example above) in the filename:
+
+```svelte
+/// file: src/routes/my-special-page@foo.svelte
+<h1>I am inside __layout-foo</h1>
+```
+
+Named layouts are very powerful, but it can take a minute to get your head round them. Don't worry if this doesn't make sense all at once.
+
+#### Scoping
+
+Named layouts can be created at any depth, and will apply to any components in the same subtree. For example, `__layout-foo` will apply to `one` and `two`, but not `three` or `four`:
+
+```
+src/routes/
+├ a/
+│ ├ b/
+│ │ ├ c/
+│ │ │ ├ __layout-foo.svelte
+│ │ │ ├ one@foo.svelte
+│ │ │ ├ two@foo.svelte
+│ │ │ └ three.svelte
+│ │ └ four.svelte
+```
+
+#### Directories
+
+You can apply a named layout to all pages inside a directory. Here, `one`, `two` and `three` will all inherit from `__layout-foo`, because their parent directory uses `@foo`:
+
+```
+src/routes/
+├ uses-default-layout.svelte
+├ uses-foo-layout@foo/
+│ ├ one.svelte
+│ ├ two.svelte
+│ └ three.svelte
+├ __layout.svelte
+└ __layout-foo.svelte
+```
+
+#### Resetting layouts
+
+Any page, at any depth, can reset to the home layout, ignoring any intermediate `__layout` components by referencing the special `~` layout:
+
+```
+src/routes/
+├ a/
+│ ├ b/
+│ │ ├ c/
+│ │ │ └ index@~.svelte
+│ │ └ __layout.svelte
+│ └ __layout.svelte
+└ __layout.svelte
+```
+
+To reset _all_ layouts, including the home layout, a page can specify no layout, like this `index@.svelte` component:
+
+```
+src/routes/
+├ a/
+│ ├ b/
+│ │ ├ c/
+│ │ │ └ index@.svelte
+│ │ └ __layout.svelte
+│ └ __layout.svelte
+└ __layout.svelte
+```
+
+#### Inheritance chains
+
+Layouts can themselves choose which other layouts they inherit from. Ordinarily, they will inherit from any default layouts 'above' them in the tree, but they can inherit named layouts using the same logic as pages. For example, `a/b/c/page.svelte` will inherit from `__layout-foo.svelte` and `a/b/c/__layout@foo.svelte` but _not_ `__layout.svelte` or `a/b/__layout.svelte`.
+
+```
+src/routes/
+├ a/
+│ ├ b/
+│ │ ├ c/
+│ │ │ ├ __layout@foo.svelte
+│ │ │ └ page.svelte
+│ │ └ __layout.svelte
+│ ├ __layout.svelte
+│ └ __layout-foo.svelte
+```
+
+By extension, another way to use a separate layout for an entire directory is for that directory to contain a layout that resets its inheritance chain:
+
+```diff
+src/routes/
+├ uses-default-layout.svelte
+-├ uses-foo-layout@foo/
++├ uses-foo-layout/
++│ ├ __layout@.svelte
+│ ├ one.svelte
+│ ├ two.svelte
+│ └ three.svelte
+├ __layout.svelte
+-└ __layout-foo.svelte
+```
 
 ### Error pages
 
