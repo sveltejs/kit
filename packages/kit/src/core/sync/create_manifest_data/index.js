@@ -30,7 +30,7 @@ import { parse_route_id } from '../../../utils/routing.js';
  * }} Unit
  */
 
-const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+))?(?:#(~|[a-zA-Z0-9_-]+)?)?$/;
+const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+))?(?:@(~|[a-zA-Z0-9_-]+)?)?$/;
 
 /**
  * @param {{
@@ -61,6 +61,8 @@ export default function create_manifest_data({
 
 	const default_layout = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
 	const default_error = posixify(path.relative(cwd, `${fallback}/error.svelte`));
+
+	console.log({ cwd, fallback, default_layout, default_error });
 
 	const extensions = [...config.extensions, ...config.kit.endpointExtensions];
 
@@ -251,7 +253,7 @@ export default function create_manifest_data({
 		const extension = /** @type {string} */ (config.extensions.find((ext) => file.endsWith(ext)));
 		const base = filename.slice(0, -extension.length);
 
-		let layout_id = base.includes('#') ? base.split('#')[1] : 'default';
+		let layout_id = base.includes('@') ? base.split('@')[1] : 'default';
 
 		while (parts.length) {
 			const dir = parts.join('/');
@@ -263,25 +265,22 @@ export default function create_manifest_data({
 			errors.unshift(x?.error);
 			layouts.unshift(layout?.file);
 
-			if (layout?.name.includes('#')) {
-				layout_id = layout.name.split('#')[1];
+			if (layout?.name.includes('@')) {
+				layout_id = layout.name.split('@')[1];
 			}
 
 			const next_dir = /** @type {string} */ (parts.pop());
 
-			if (next_dir.includes('#')) {
-				layout_id = next_dir.split('#')[1];
+			if (next_dir.includes('@')) {
+				layout_id = next_dir.split('@')[1];
 			}
 		}
 
-		const x = special.get('');
-		errors.unshift(x?.error || default_error);
-
-		if (layout_id === '') {
-			layouts.unshift(default_layout);
-		} else {
+		if (layout_id !== '') {
+			const x = special.get('');
 			if (layout_id === '~') layout_id = 'default';
-			layouts.unshift(x?.layouts[layout_id]?.file || default_layout);
+			errors.unshift(x.error);
+			layouts.unshift(x.layouts[layout_id].file);
 		}
 
 		let i = layouts.length;
@@ -313,7 +312,7 @@ export default function create_manifest_data({
 				type: 'page',
 				id,
 				pattern,
-				path: id.includes('[') ? '' : `/${id.replace(/#(?:~|[a-zA-Z0-9_-]*)/g, '')}`,
+				path: id.includes('[') ? '' : `/${id.replace(/@(?:~|[a-zA-Z0-9_-]*)/g, '')}`,
 				shadow: null,
 				a: layouts.concat(path.join(routes_base, file)),
 				b: errors

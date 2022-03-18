@@ -1374,7 +1374,7 @@ test.describe.parallel('Method overrides', () => {
 	});
 });
 
-test.describe.parallel('Nested layouts', () => {
+test.describe.parallel.only('Nested layouts', () => {
 	test('renders a nested layout', async ({ page }) => {
 		await page.goto('/nested-layout');
 
@@ -1414,7 +1414,7 @@ test.describe.parallel('Nested layouts', () => {
 		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
 	});
 
-	test('resets layout', async ({ page }) => {
+	test.only('resets layout', async ({ page }) => {
 		await page.goto('/nested-layout/reset');
 
 		expect(await page.evaluate(() => document.querySelector('footer'))).toBe(null);
