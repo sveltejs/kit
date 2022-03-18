@@ -17,6 +17,7 @@ import { parse_route_id } from '../../../utils/routing.js';
  *
  * @typedef {{
  *   id: string;
+ *   pattern: RegExp;
  *   segments: Part[][];
  *   page?: {
  *     a: Array<string | undefined>;
@@ -51,11 +52,6 @@ export default function create_manifest_data({
 	/** @type {import('types').RouteData[]} */
 	const routes = [];
 
-	const default_layout = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
-	const default_error = posixify(path.relative(cwd, `${fallback}/error.svelte`));
-
-	const extensions = [...config.extensions, ...config.kit.endpointExtensions];
-
 	/** @type {Map<string, Unit>} */
 	const units = new Map();
 
@@ -64,16 +60,17 @@ export default function create_manifest_data({
 
 	// set default root layout/error
 	tree.set('', {
-		error: default_error,
+		error: posixify(path.relative(cwd, `${fallback}/error.svelte`)),
 		layouts: {
-			default: { file: default_layout, name: 'default' }
+			default: { file: posixify(path.relative(cwd, `${fallback}/layout.svelte`)), name: 'default' }
 		}
 	});
 
 	const routes_base = path.relative(cwd, config.kit.files.routes);
+	const valid_extensions = [...config.extensions, ...config.kit.endpointExtensions];
 
 	list_files(config.kit.files.routes).forEach((file) => {
-		const extension = extensions.find((ext) => file.endsWith(ext));
+		const extension = valid_extensions.find((ext) => file.endsWith(ext));
 		if (!extension) return;
 
 		const id = file.slice(0, -extension.length).replace(/\/?index(\.[a-z]+)?$/, '$1');
@@ -147,8 +144,11 @@ export default function create_manifest_data({
 			});
 
 		if (!units.has(id)) {
+			const { pattern } = parse_route_id(id);
+
 			units.set(id, {
 				id,
+				pattern,
 				segments,
 				page: undefined,
 				endpoint: undefined
@@ -197,17 +197,14 @@ export default function create_manifest_data({
 	Array.from(units.values())
 		.sort(compare)
 		.forEach((unit) => {
-			const { pattern } = parse_route_id(unit.id);
-
-			// const is_page = config.extensions.find((ext) => file.endsWith(ext)); // TODO tidy up
-
+			// TODO when we introduce layout endpoints and scoped middlewares, we
+			// will probably want to have a single unified route type here
+			// (created in the list_files(...).forEach(...) callback)
 			if (unit.page) {
-				// const { layouts, errors } = trace(file, tree, config.extensions);
-
 				routes.push({
 					type: 'page',
 					id: unit.id,
-					pattern,
+					pattern: unit.pattern,
 					path: unit.id.includes('[') ? '' : `/${unit.id.replace(/@(?:~|[a-zA-Z0-9_-]*)/g, '')}`,
 					shadow: unit.endpoint || null,
 					a: unit.page.a,
@@ -217,7 +214,7 @@ export default function create_manifest_data({
 				routes.push({
 					type: 'endpoint',
 					id: unit.id,
-					pattern,
+					pattern: unit.pattern,
 					file: unit.endpoint
 				});
 			}
