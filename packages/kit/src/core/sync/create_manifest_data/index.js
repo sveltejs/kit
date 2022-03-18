@@ -35,6 +35,7 @@ import { parse_route_id } from '../../../utils/routing.js';
  */
 
 const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+))?(?:@(~|[a-zA-Z0-9_-]+)?)?$/;
+const dunder_pattern = /(^|\/)__/;
 
 /**
  * @param {{
@@ -76,7 +77,7 @@ export default function create_manifest_data({
 		const id = file.slice(0, -extension.length).replace(/\/?index(\.[a-z]+)?$/, '$1');
 		const project_relative = `${routes_base}/${file}`;
 
-		if (/(^|\/)__/.test(file)) {
+		if (dunder_pattern.test(file)) {
 			const segments = id.split('/');
 			const name = /** @type {string} */ (segments.pop());
 
@@ -276,9 +277,7 @@ function trace(file, tree, extensions) {
 	let layout_id = base.includes('@') ? base.split('@')[1] : 'default';
 
 	while (parts.length) {
-		const dir = parts.join('/');
-
-		const node = tree.get(dir);
+		const node = tree.get(parts.join('/'));
 
 		const layout = node?.layouts[layout_id];
 
@@ -303,6 +302,14 @@ function trace(file, tree, extensions) {
 		layouts.unshift(node.layouts[layout_id].file);
 	}
 
+	// compact the arrays — any node that has neither a __layout
+	// nor an __error can be discarded. in other words these...
+	//  layouts: [a, , b, c]
+	//  errors:  [d, , e,  ]
+	//
+	// ...can be compacted to these:
+	//  layouts: [a, b, c]
+	//  errors:  [d, e,  ]
 	let i = layouts.length;
 	while (i--) {
 		if (!errors[i] && !layouts[i]) {
@@ -311,12 +318,11 @@ function trace(file, tree, extensions) {
 		}
 	}
 
+	// trim empty space off the end of the errors array
 	i = errors.length;
-	while (i--) {
-		if (errors[i]) break;
-	}
+	while (i--) if (errors[i]) break;
+	errors.length = i + 1;
 
-	errors.splice(i + 1);
 	return { layouts, errors };
 }
 
