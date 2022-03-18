@@ -107,6 +107,12 @@ export default function create_manifest_data({
 				return;
 			}
 
+			if (name === '__layout.reset') {
+				throw new Error(
+					'__layout.reset has been removed in favour of named layouts: https://kit.svelte.dev/docs/layouts#named-layouts'
+				);
+			}
+
 			throw new Error(
 				`Files and directories prefixed with __ are reserved (saw ${project_relative})`
 			);
