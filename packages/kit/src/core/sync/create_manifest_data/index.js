@@ -30,7 +30,7 @@ import { parse_route_id } from '../../../utils/routing.js';
  * }} Unit
  */
 
-const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+)(?:#([a-zA-Z0-9_-]+))?)?$/;
+const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+))?(?:#(~|[a-zA-Z0-9_-]+)?)?$/;
 
 /**
  * @param {{
