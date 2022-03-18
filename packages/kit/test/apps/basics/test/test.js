@@ -1374,7 +1374,7 @@ test.describe.parallel('Method overrides', () => {
 	});
 });
 
-test.describe.parallel.only('Nested layouts', () => {
+test.describe.parallel('Nested layouts', () => {
 	test('renders a nested layout', async ({ page }) => {
 		await page.goto('/nested-layout');
 
