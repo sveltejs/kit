@@ -54,8 +54,7 @@ export default function create_manifest_data({
 		return files.find((file) => fs.existsSync(path.resolve(cwd, file)));
 	}
 
-	/** @type {string[]} */
-	const components = [];
+	const routes_base = path.relative(cwd, config.kit.files.routes);
 
 	/** @type {import('types').RouteData[]} */
 	const routes = [];
@@ -63,19 +62,64 @@ export default function create_manifest_data({
 	const default_layout = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
 	const default_error = posixify(path.relative(cwd, `${fallback}/error.svelte`));
 
+	/** @type {string[]} */
+	const components = [default_layout, default_error]; // TODO only add defaults if necessary
+
 	const extensions = [...config.extensions, ...config.kit.endpointExtensions];
 
 	/** @type {Array<{ id: string, file: string, segments: Part[][] }>} */
 	const files = [];
 
-	list_files(config.kit.files.routes).forEach((file) => {
-		if (!config.kit.routes(file)) return;
-		if (/(^|\/)__/.test(file)) return;
+	const special = new Map();
 
+	list_files(config.kit.files.routes).forEach((file) => {
 		const extension = extensions.find((ext) => file.endsWith(ext));
 		if (!extension) return;
 
 		const id = file.slice(0, -extension.length).replace(/\/?index$/, '');
+
+		if (/(^|\/)__/.test(id)) {
+			const segments = id.split('/');
+			const name = /** @type {string} */ (segments.pop());
+
+			if (name === '__error' || layout_pattern.test(name)) {
+				if (config.extensions.includes(extension)) {
+					components.push(path.join(routes_base, file));
+				}
+
+				const dir = segments.join('/');
+
+				if (!special.has(dir)) {
+					special.set(dir, {
+						error: null,
+						layouts: {}
+					});
+				}
+
+				const group = special.get(dir);
+
+				if (name === '__error') {
+					group.error = file;
+				} else {
+					const match = /** @type {RegExpMatchArray} */ (layout_pattern.exec(name));
+					const layout_id = match[1] || 'default';
+					group.layouts[layout_id] = {
+						file: path.join(routes_base, file),
+						name
+					};
+				}
+
+				return;
+			}
+
+			throw new Error(`Files and directories prefixed with __ are reserved (saw ${file})`);
+		}
+
+		if (!config.kit.routes(file)) return;
+
+		if (config.extensions.includes(extension)) {
+			components.push(path.join(routes_base, file));
+		}
 
 		/** @type {Part[][]} */
 		const segments = [];
@@ -105,6 +149,10 @@ export default function create_manifest_data({
 		});
 	});
 
+	/**
+	 * @param {{ id: string, file: string, segments: Part[][] }} a
+	 * @param {{ id: string, file: string, segments: Part[][] }} b
+	 */
 	function compare(a, b) {
 		const max_segments = Math.max(a.segments.length, b.segments.length);
 		for (let i = 0; i < max_segments; i += 1) {
@@ -152,184 +200,100 @@ export default function create_manifest_data({
 		return a < b ? -1 : 1;
 	}
 
-	files.sort((a, b) => {
-		console.group('comparing:');
-		console.log('a', a.id);
-		console.log('b', b.id);
-		const n = compare(a, b);
-		console.log(n === -1 ? 'a wins' : n === +1 ? 'b wins' : 'wtf');
-		console.groupEnd();
-		return n;
-	});
-	console.log(files.map((f) => f.id));
+	files.sort(compare);
 
-	/**
-	 * @param {string} dir
-	 * @param {string[]} parent_id
-	 * @param {Map<string, Array<string|undefined>>} layout_stack // accumulated __layout.svelte components
-	 * @param {Array<string|undefined>} error_stack // accumulated __error.svelte components
-	 */
-	function walk(dir, parent_id, layout_stack, error_stack) {
-		/** @type {Item[]} */
-		const items = [];
+	/** @param {string} id */
+	function find_specials(id) {
+		/** @type {Array<string | undefined>} */
+		const layouts = [];
 
-		/** @type {Map<string, Unit>} */
-		const units = new Map();
+		/** @type {Array<string | undefined>} */
+		const errors = [];
 
-		/** @type {string[]} */
-		const directories = [];
+		const parts = id.split('/');
+		const base = /** @type {string} */ (parts.pop());
 
-		fs.readdirSync(dir).forEach((basename) => {
-			const resolved = path.join(dir, basename);
-			const file = posixify(path.relative(cwd, resolved));
+		let layout_id = base.includes('#') ? base.split('#')[1] : 'default';
 
-			if (fs.statSync(resolved).isDirectory()) {
-				directories.push(file);
-				return;
+		while (parts.length) {
+			const dir = parts.join('/');
+
+			const x = special.get(dir);
+
+			const layout = x?.layouts[layout_id];
+
+			errors.unshift(x?.error);
+			layouts.unshift(layout?.file);
+
+			if (layout?.name.includes('#')) {
+				layout_id = layout.name.split('#')[1];
 			}
 
-			const extension = extensions.find((ext) => basename.endsWith(ext));
-			if (!extension) return;
+			const next_dir = /** @type {string} */ (parts.pop());
 
-			const name = basename.slice(0, -extension.length);
-
-			if (!units.has(name)) {
-				units.set(name, {
-					parts: get_parts(name, file)
-				});
+			if (next_dir.includes('#')) {
+				layout_id = next_dir.split('#')[1];
 			}
+		}
 
-			const unit = /** @type {Unit} */ (units.get(name));
-			const type = config.extensions.includes(extension) ? 'component' : 'module';
+		const x = special.get('');
+		errors.unshift(x?.error || default_error);
 
-			if (unit[type]) {
-				throw new Error(`Conflict between ${unit[type]} and ${file}`);
+		if (layout_id === '') {
+			layouts.unshift(default_layout);
+		} else {
+			if (layout_id === '~') layout_id = 'default';
+			layouts.unshift(x?.layouts[layout_id]?.file || default_layout);
+		}
+
+		let i = layouts.length;
+		while (i--) {
+			if (!errors[i] && !layouts[i]) {
+				errors.splice(i, 1);
+				layouts.splice(i, 1);
 			}
+		}
 
-			unit[type] = file;
-		});
+		i = errors.length;
+		while (i--) {
+			if (errors[i]) break;
+		}
 
-		// console.log('units', units);
-
-		fs.readdirSync(dir).forEach((basename) => {
-			const resolved = path.join(dir, basename);
-			const file = posixify(path.relative(cwd, resolved));
-			const is_dir = fs.statSync(resolved).isDirectory();
-
-			const ext = is_dir
-				? ''
-				: config.extensions.find((ext) => basename.endsWith(ext)) ||
-				  config.kit.endpointExtensions.find((ext) => basename.endsWith(ext));
-
-			if (ext === undefined) return;
-
-			const name = basename.slice(0, basename.length - ext.length);
-
-			if (name.startsWith('__') && name !== '__error' && !layout_pattern.test(name)) {
-				throw new Error(`Files and directories prefixed with __ are reserved (saw ${file})`);
-			}
-
-			if (!config.kit.routes(file)) return;
-
-			items.push({
-				file,
-				name,
-				parts: get_parts(name, file),
-				route_suffix: basename.slice(basename.indexOf('.'), -ext.length),
-				is_dir,
-				is_index: !is_dir && basename.startsWith('index.'),
-				is_page: config.extensions.includes(ext)
-			});
-		});
-
-		items.sort(comparator);
-
-		items.forEach((item) => {
-			const id_parts = parent_id.slice();
-
-			if (item.is_index) {
-				if (item.route_suffix && id_parts.length > 0) {
-					id_parts[id_parts.length - 1] += item.route_suffix;
-				}
-			} else {
-				id_parts.push(item.name);
-			}
-
-			if (item.is_dir) {
-				const layout_reset = find_layout('__layout.reset', item.file);
-				const layout = find_layout('__layout', item.file);
-				const error = find_layout('__error', item.file);
-
-				if (layout_reset && layout) {
-					throw new Error(`Cannot have __layout next to __layout.reset: ${layout_reset}`);
-				}
-
-				if (layout_reset) components.push(layout_reset);
-				if (layout) components.push(layout);
-				if (error) components.push(error);
-
-				walk(
-					path.join(dir, item.name),
-					id_parts,
-					layout_reset ? [layout_reset] : layout_stack.concat(layout),
-					layout_reset ? [error] : error_stack.concat(error)
-				);
-			} else {
-				const id = id_parts.join('/');
-				const { pattern } = parse_route_id(id);
-
-				if (item.is_page) {
-					components.push(item.file);
-
-					const concatenated = layout_stack.concat(item.file);
-					const errors = error_stack.slice();
-
-					let i = concatenated.length;
-					while (i--) {
-						if (!errors[i] && !concatenated[i]) {
-							errors.splice(i, 1);
-							concatenated.splice(i, 1);
-						}
-					}
-
-					i = errors.length;
-					while (i--) {
-						if (errors[i]) break;
-					}
-
-					errors.splice(i + 1);
-
-					const path = id.includes('[') ? '' : `/${id}`;
-
-					routes.push({
-						type: 'page',
-						id,
-						pattern,
-						path,
-						shadow: null,
-						a: /** @type {string[]} */ (concatenated),
-						b: /** @type {string[]} */ (errors)
-					});
-				} else {
-					routes.push({
-						type: 'endpoint',
-						id,
-						pattern,
-						file: item.file
-					});
-				}
-			}
-		});
+		errors.splice(i + 1);
+		return { layouts, errors };
 	}
 
-	const routes_base = path.relative(cwd, config.kit.files.routes);
+	files.forEach(({ id, file }) => {
+		const { pattern } = parse_route_id(id);
 
-	const layout = find_layout('__layout', routes_base) || default_layout;
-	const error = find_layout('__error', routes_base) || default_error;
+		const is_page = config.extensions.find((ext) => file.endsWith(ext)); // TODO tidy up
 
-	components.push(layout, error);
+		if (is_page) {
+			const { layouts, errors } = find_specials(id);
 
-	walk(config.kit.files.routes, [], [layout], [error]);
+			routes.push({
+				type: 'page',
+				id,
+				pattern,
+				path: id.includes('[') ? '' : `/${id.replace(/#(?:~|[a-zA-Z0-9_-]*)/g, '')}`,
+				shadow: null,
+				a: layouts.concat(path.join(routes_base, file)),
+				b: errors
+			});
+		} else {
+			routes.push({
+				type: 'endpoint',
+				id,
+				pattern,
+				file
+			});
+		}
+	});
+
+	// const layout = find_layout('__layout', routes_base) || default_layout;
+	// const error = find_layout('__error', routes_base) || default_error;
+
+	// components.push(layout, error);
 
 	const lookup = new Map();
 	for (const route of routes) {
