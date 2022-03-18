@@ -56,9 +56,10 @@ export default function create_manifest_data({
 	/** @type {Array<{ id: string, file: string, segments: Part[][] }>} */
 	const files = [];
 
-	const special = new Map();
+	const tree = new Map();
 
-	special.set('', {
+	// set default root layout/error
+	tree.set('', {
 		error: default_error,
 		layouts: {
 			default: { file: default_layout }
@@ -81,14 +82,14 @@ export default function create_manifest_data({
 			if (name === '__error' || layout_pattern.test(name)) {
 				const dir = segments.join('/');
 
-				if (!special.has(dir)) {
-					special.set(dir, {
+				if (!tree.has(dir)) {
+					tree.set(dir, {
 						error: undefined,
 						layouts: {}
 					});
 				}
 
-				const group = special.get(dir);
+				const group = tree.get(dir);
 
 				if (name === '__error') {
 					group.error = project_relative;
@@ -120,11 +121,10 @@ export default function create_manifest_data({
 		}
 
 		/** @type {Part[][]} */
-		const segments = [];
-
-		id.split('/')
+		const segments = id
+			.split('/')
 			.filter(Boolean)
-			.forEach((segment) => {
+			.map((segment) => {
 				/** @type {Part[]} */
 				const parts = [];
 				segment.split(/\[(.+?)\]/).map((content, i) => {
@@ -139,7 +139,7 @@ export default function create_manifest_data({
 						type: (dynamic && content.split('=')[1]) || null
 					});
 				});
-				segments.push(parts);
+				return parts;
 			});
 
 		files.push({
@@ -152,7 +152,7 @@ export default function create_manifest_data({
 	/** @type {string[]} */
 	const components = [];
 
-	special.forEach(({ layouts, error }) => {
+	tree.forEach(({ layouts, error }) => {
 		// we do [default, error, ...other_layouts] so that components[0] and [1]
 		// are the root layout/error. kinda janky, there's probably a nicer way
 		if (layouts.default) {
@@ -246,11 +246,11 @@ export default function create_manifest_data({
 		while (parts.length) {
 			const dir = parts.join('/');
 
-			const x = special.get(dir);
+			const node = tree.get(dir);
 
-			const layout = x?.layouts[layout_id];
+			const layout = node?.layouts[layout_id];
 
-			errors.unshift(x?.error);
+			errors.unshift(node?.error);
 			layouts.unshift(layout?.file);
 
 			if (layout?.name.includes('@')) {
@@ -265,10 +265,10 @@ export default function create_manifest_data({
 		}
 
 		if (layout_id !== '') {
-			const x = special.get('');
+			const node = tree.get('');
 			if (layout_id === '~') layout_id = 'default';
-			errors.unshift(x.error);
-			layouts.unshift(x.layouts[layout_id].file);
+			errors.unshift(node.error);
+			layouts.unshift(node.layouts[layout_id].file);
 		}
 
 		let i = layouts.length;
