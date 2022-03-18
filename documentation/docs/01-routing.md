@@ -352,7 +352,7 @@ SvelteKit needs to know which route is being requested. To do so, it sorts them 
 
 - More specific routes are higher priority
 - Standalone endpoints have higher priority than pages with the same specificity
-- Parameters with [validators](#validation) (`[name=type]`) are higher priority than those without (`[name]`)
+- Parameters with [matchers](#advanced-routing-matching) (`[name=type]`) are higher priority than those without (`[name]`)
 - Rest parameters have lowest priority
 - Ties are resolved alphabetically
 
