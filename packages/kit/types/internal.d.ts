@@ -127,8 +127,8 @@ export interface PageData {
 	shadow: string | null;
 	pattern: RegExp;
 	path: string;
-	a: string[];
-	b: string[];
+	a: Array<string | undefined>;
+	b: Array<string | undefined>;
 }
 
 export type PayloadScriptAttributes =

@@ -45,17 +45,6 @@ export default function create_manifest_data({
 	fallback = `${get_runtime_path(config)}/components`,
 	cwd = process.cwd()
 }) {
-	/**
-	 * @param {string} file_name
-	 * @param {string} dir
-	 */
-	function find_layout(file_name, dir) {
-		const files = config.extensions.map((ext) => posixify(path.join(dir, `${file_name}${ext}`)));
-		return files.find((file) => fs.existsSync(path.resolve(cwd, file)));
-	}
-
-	const routes_base = path.relative(cwd, config.kit.files.routes);
-
 	/** @type {import('types').RouteData[]} */
 	const routes = [];
 
@@ -76,11 +65,14 @@ export default function create_manifest_data({
 		}
 	});
 
+	const routes_base = path.relative(cwd, config.kit.files.routes);
+
 	list_files(config.kit.files.routes).forEach((file) => {
 		const extension = extensions.find((ext) => file.endsWith(ext));
 		if (!extension) return;
 
 		const id = file.slice(0, -extension.length).replace(/\/?index(\.[a-z]+)?$/, '$1');
+		const project_relative = `${routes_base}/${file}`;
 
 		if (/(^|\/)__/.test(file)) {
 			const segments = id.split('/');
@@ -99,12 +91,12 @@ export default function create_manifest_data({
 				const group = special.get(dir);
 
 				if (name === '__error') {
-					group.error = path.join(routes_base, file);
+					group.error = project_relative;
 				} else {
 					const match = /** @type {RegExpMatchArray} */ (layout_pattern.exec(name));
 					const layout_id = match[1] || 'default';
 					group.layouts[layout_id] = {
-						file: path.join(routes_base, file),
+						file: project_relative,
 						name
 					};
 				}
@@ -113,20 +105,18 @@ export default function create_manifest_data({
 			}
 
 			throw new Error(
-				`Files and directories prefixed with __ are reserved (saw ${path.join(routes_base, file)})`
+				`Files and directories prefixed with __ are reserved (saw ${project_relative})`
 			);
 		}
 
 		if (!config.kit.routes(file)) return;
 
 		if (/\]\[/.test(id)) {
-			throw new Error(
-				`Invalid route ${path.join(routes_base, file)} — parameters must be separated`
-			);
+			throw new Error(`Invalid route ${project_relative} — parameters must be separated`);
 		}
 
 		if (count_occurrences('[', id) !== count_occurrences(']', id)) {
-			throw new Error(`Invalid route ${path.join(routes_base, file)} — brackets are unbalanced`);
+			throw new Error(`Invalid route ${project_relative} — brackets are unbalanced`);
 		}
 
 		/** @type {Part[][]} */
@@ -325,11 +315,6 @@ export default function create_manifest_data({
 		}
 	});
 
-	// const layout = find_layout('__layout', routes_base) || default_layout;
-	// const error = find_layout('__error', routes_base) || default_error;
-
-	// components.push(layout, error);
-
 	const lookup = new Map();
 	for (const route of routes) {
 		if (route.type === 'page') {
@@ -347,19 +332,13 @@ export default function create_manifest_data({
 	}
 
 	/** @type {import('types').Asset[]} */
-	const assets = [];
-
-	if (fs.existsSync(config.kit.files.assets)) {
-		list_files(config.kit.files.assets).forEach((file) => {
-			if (!config.kit.serviceWorker.files(file)) return;
-
-			assets.push({
+	const assets = fs.existsSync(config.kit.files.assets)
+		? list_files(config.kit.files.assets).map((file) => ({
 				file,
 				size: fs.statSync(`${config.kit.files.assets}/${file}`).size,
 				type: mime.getType(file)
-			});
-		});
-	}
+		  }))
+		: [];
 
 	const params_base = path.relative(cwd, config.kit.files.params);
 
@@ -398,106 +377,6 @@ function count_occurrences(needle, haystack) {
 		if (haystack[i] === needle) count += 1;
 	}
 	return count;
-}
-
-const spread_pattern = /\[\.{3}/;
-
-/**
- * @param {Item} a
- * @param {Item} b
- */
-function comparator(a, b) {
-	if (a.is_index !== b.is_index) {
-		if (a.is_index) return spread_pattern.test(a.file) ? 1 : -1;
-		return spread_pattern.test(b.file) ? -1 : 1;
-	}
-
-	const max = Math.max(a.parts.length, b.parts.length);
-
-	for (let i = 0; i < max; i += 1) {
-		const a_sub_part = a.parts[i];
-		const b_sub_part = b.parts[i];
-
-		if (!a_sub_part) return 1; // b is more specific, so goes first
-		if (!b_sub_part) return -1;
-
-		if (a_sub_part.rest && b_sub_part.rest) {
-			if (a.is_page !== b.is_page) {
-				return a.is_page ? 1 : -1;
-			}
-			// sort alphabetically
-			return a_sub_part.content < b_sub_part.content ? -1 : 1;
-		}
-
-		// If one is ...rest order it later
-		if (a_sub_part.rest !== b_sub_part.rest) return a_sub_part.rest ? 1 : -1;
-
-		if (a_sub_part.dynamic !== b_sub_part.dynamic) {
-			return a_sub_part.dynamic ? 1 : -1;
-		}
-
-		if (a_sub_part.dynamic && !!a_sub_part.type !== !!b_sub_part.type) {
-			return a_sub_part.type ? -1 : 1;
-		}
-
-		if (!a_sub_part.dynamic && a_sub_part.content !== b_sub_part.content) {
-			return (
-				b_sub_part.content.length - a_sub_part.content.length ||
-				(a_sub_part.content < b_sub_part.content ? -1 : 1)
-			);
-		}
-	}
-
-	if (a.is_page !== b.is_page) {
-		return a.is_page ? 1 : -1;
-	}
-
-	// otherwise sort alphabetically
-	return a.file < b.file ? -1 : 1;
-}
-
-/**
- * @param {string} part
- * @param {string} file
- */
-function get_parts(part, file) {
-	if (/\]\[/.test(part)) {
-		throw new Error(`Invalid route ${file} — parameters must be separated`);
-	}
-
-	if (count_occurrences('[', part) !== count_occurrences(']', part)) {
-		throw new Error(`Invalid route ${file} — brackets are unbalanced`);
-	}
-
-	/** @type {Part[]} */
-	const result = [];
-	part.split(/\[(.+?\(.+?\)|.+?)\]/).map((str, i) => {
-		if (!str) return;
-		const dynamic = i % 2 === 1;
-
-		const [, content, type] = dynamic
-			? /^((?:\.\.\.)?[a-zA-Z_][a-zA-Z0-9_]*)(?:=([a-zA-Z_][a-zA-Z0-9_]*))?$/.exec(str) || [
-					null,
-					null,
-					null
-			  ]
-			: [null, str, null];
-
-		if (!content) {
-			throw new Error(
-				`Invalid route ${file} — parameter name and type must match /^[a-zA-Z_][a-zA-Z0-9_]*$/`
-			);
-		}
-
-		result.push({
-			content,
-			dynamic,
-			rest: dynamic && /^\.{3}.+$/.test(content),
-			type
-		});
-	});
-
-	return result;
 }
 
 /**
