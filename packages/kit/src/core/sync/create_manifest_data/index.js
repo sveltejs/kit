@@ -14,24 +14,22 @@ import { parse_route_id } from '../../../utils/routing.js';
  *   rest: boolean;
  *   type: string | null;
  * }} Part
+ *
  * @typedef {{
- *   name: string;
- *   parts: Part[],
- *   file: string;
- *   is_dir: boolean;
- *   is_index: boolean;
- *   is_page: boolean;
- *   route_suffix: string
- * }} Item
- * @typedef {{
- *   parts: Part[];
- *   component?: string;
- *   module?: string;
+ *   id: string;
+ *   segments: Part[][];
+ *   page?: {
+ *     a: Array<string | undefined>;
+ *     b: Array<string | undefined>;
+ *   };
+ *   endpoint?: string;
  * }} Unit
+ *
  * @typedef {{
  *   error: string | undefined;
  *   layouts: Record<string, { file: string, name: string }>
  * }} Node
+ *
  * @typedef {Map<string, Node>} Tree
  */
 
@@ -58,8 +56,8 @@ export default function create_manifest_data({
 
 	const extensions = [...config.extensions, ...config.kit.endpointExtensions];
 
-	/** @type {Array<{ id: string, file: string, segments: Part[][] }>} */
-	const files = [];
+	/** @type {Map<string, Unit>} */
+	const units = new Map();
 
 	/** @type {Tree} */
 	const tree = new Map();
@@ -148,11 +146,26 @@ export default function create_manifest_data({
 				return parts;
 			});
 
-		files.push({
-			id,
-			file,
-			segments
-		});
+		if (!units.has(id)) {
+			units.set(id, {
+				id,
+				segments,
+				page: undefined,
+				endpoint: undefined
+			});
+		}
+
+		const unit = /** @type {Unit} */ (units.get(id));
+
+		if (config.extensions.find((ext) => file.endsWith(ext))) {
+			const { layouts, errors } = trace(file, tree, config.extensions);
+			unit.page = {
+				a: layouts.concat(project_relative),
+				b: errors
+			};
+		} else {
+			unit.endpoint = project_relative;
+		}
 	});
 
 	/** @type {string[]} */
@@ -174,168 +187,41 @@ export default function create_manifest_data({
 		}
 	});
 
-	files.forEach((item) => {
-		if (config.extensions.find((ext) => item.file.endsWith(ext))) {
-			components.push(path.join(routes_base, item.file));
+	units.forEach((unit) => {
+		if (unit.page) {
+			const leaf = /** @type {string} */ (unit.page.a[unit.page.a.length - 1]);
+			components.push(leaf);
 		}
 	});
 
-	/**
-	 * @param {{ id: string, file: string, segments: Part[][] }} a
-	 * @param {{ id: string, file: string, segments: Part[][] }} b
-	 */
-	function compare(a, b) {
-		const max_segments = Math.max(a.segments.length, b.segments.length);
-		for (let i = 0; i < max_segments; i += 1) {
-			const sa = a.segments[i];
-			const sb = b.segments[i];
+	Array.from(units.values())
+		.sort(compare)
+		.forEach((unit) => {
+			const { pattern } = parse_route_id(unit.id);
 
-			// /x < /x/y, but /[...x]/y < /[...x]
-			if (!sa) return a.id.includes('[...') ? +1 : -1;
-			if (!sb) return b.id.includes('[...') ? -1 : +1;
+			// const is_page = config.extensions.find((ext) => file.endsWith(ext)); // TODO tidy up
 
-			const max_parts = Math.max(sa.length, sb.length);
-			for (let i = 0; i < max_parts; i += 1) {
-				const pa = sa[i];
-				const pb = sb[i];
+			if (unit.page) {
+				// const { layouts, errors } = trace(file, tree, config.extensions);
 
-				// xy < x[y], but [x].json < [x]
-				if (pa === undefined) return pb.dynamic ? -1 : +1;
-				if (pb === undefined) return pa.dynamic ? +1 : -1;
-
-				// x < [x]
-				if (pa.dynamic !== pb.dynamic) {
-					return pa.dynamic ? +1 : -1;
-				}
-
-				if (pa.dynamic) {
-					// [x] < [...x]
-					if (pa.rest !== pb.rest) {
-						return pa.rest ? +1 : -1;
-					}
-
-					// [x=type] < [x]
-					if (!!pa.type !== !!pb.type) {
-						return pa.type ? -1 : +1;
-					}
-				}
+				routes.push({
+					type: 'page',
+					id: unit.id,
+					pattern,
+					path: unit.id.includes('[') ? '' : `/${unit.id.replace(/@(?:~|[a-zA-Z0-9_-]*)/g, '')}`,
+					shadow: unit.endpoint || null,
+					a: unit.page.a,
+					b: unit.page.b
+				});
+			} else if (unit.endpoint) {
+				routes.push({
+					type: 'endpoint',
+					id: unit.id,
+					pattern,
+					file: unit.endpoint
+				});
 			}
-		}
-
-		const a_is_endpoint = config.kit.endpointExtensions.find((ext) => a.file.endsWith(ext));
-		const b_is_endpoint = config.kit.endpointExtensions.find((ext) => b.file.endsWith(ext));
-
-		if (a_is_endpoint !== b_is_endpoint) {
-			return a_is_endpoint ? -1 : +1;
-		}
-
-		return a < b ? -1 : 1;
-	}
-
-	files.sort(compare);
-
-	/** @param {string} file */
-	function trace(file) {
-		/** @type {Array<string | undefined>} */
-		const layouts = [];
-
-		/** @type {Array<string | undefined>} */
-		const errors = [];
-
-		const parts = file.split('/');
-		const filename = /** @type {string} */ (parts.pop());
-		const extension = /** @type {string} */ (config.extensions.find((ext) => file.endsWith(ext)));
-		const base = filename.slice(0, -extension.length);
-
-		let layout_id = base.includes('@') ? base.split('@')[1] : 'default';
-
-		while (parts.length) {
-			const dir = parts.join('/');
-
-			const node = tree.get(dir);
-
-			const layout = node?.layouts[layout_id];
-
-			errors.unshift(node?.error);
-			layouts.unshift(layout?.file);
-
-			if (layout?.name.includes('@')) {
-				layout_id = layout.name.split('@')[1];
-			}
-
-			const next_dir = /** @type {string} */ (parts.pop());
-
-			if (next_dir.includes('@')) {
-				layout_id = next_dir.split('@')[1];
-			}
-		}
-
-		if (layout_id !== '') {
-			const node = /** @type {Node} */ (tree.get(''));
-			if (layout_id === '~') layout_id = 'default';
-			errors.unshift(node.error);
-			layouts.unshift(node.layouts[layout_id].file);
-		}
-
-		let i = layouts.length;
-		while (i--) {
-			if (!errors[i] && !layouts[i]) {
-				errors.splice(i, 1);
-				layouts.splice(i, 1);
-			}
-		}
-
-		i = errors.length;
-		while (i--) {
-			if (errors[i]) break;
-		}
-
-		errors.splice(i + 1);
-		return { layouts, errors };
-	}
-
-	files.forEach(({ id, file }) => {
-		const { pattern } = parse_route_id(id);
-
-		const is_page = config.extensions.find((ext) => file.endsWith(ext)); // TODO tidy up
-
-		if (is_page) {
-			const { layouts, errors } = trace(file);
-
-			routes.push({
-				type: 'page',
-				id,
-				pattern,
-				path: id.includes('[') ? '' : `/${id.replace(/@(?:~|[a-zA-Z0-9_-]*)/g, '')}`,
-				shadow: null,
-				a: layouts.concat(path.join(routes_base, file)),
-				b: errors
-			});
-		} else {
-			routes.push({
-				type: 'endpoint',
-				id,
-				pattern,
-				file: path.join(routes_base, file)
-			});
-		}
-	});
-
-	const lookup = new Map();
-	for (const route of routes) {
-		if (route.type === 'page') {
-			lookup.set(route.id, route);
-		}
-	}
-
-	let i = routes.length;
-	while (i--) {
-		const route = routes[i];
-		if (route.type === 'endpoint' && lookup.has(route.id)) {
-			lookup.get(route.id).shadow = route.file;
-			routes.splice(i, 1);
-		}
-	}
+		});
 
 	/** @type {import('types').Asset[]} */
 	const assets = fs.existsSync(config.kit.files.assets)
@@ -371,6 +257,122 @@ export default function create_manifest_data({
 		routes,
 		matchers
 	};
+}
+
+/**
+ * @param {string} file
+ * @param {Tree} tree
+ * @param {string[]} extensions
+ */
+function trace(file, tree, extensions) {
+	/** @type {Array<string | undefined>} */
+	const layouts = [];
+
+	/** @type {Array<string | undefined>} */
+	const errors = [];
+
+	const parts = file.split('/');
+	const filename = /** @type {string} */ (parts.pop());
+	const extension = /** @type {string} */ (extensions.find((ext) => file.endsWith(ext)));
+	const base = filename.slice(0, -extension.length);
+
+	let layout_id = base.includes('@') ? base.split('@')[1] : 'default';
+
+	while (parts.length) {
+		const dir = parts.join('/');
+
+		const node = tree.get(dir);
+
+		const layout = node?.layouts[layout_id];
+
+		errors.unshift(node?.error);
+		layouts.unshift(layout?.file);
+
+		if (layout?.name.includes('@')) {
+			layout_id = layout.name.split('@')[1];
+		}
+
+		const next_dir = /** @type {string} */ (parts.pop());
+
+		if (next_dir.includes('@')) {
+			layout_id = next_dir.split('@')[1];
+		}
+	}
+
+	if (layout_id !== '') {
+		const node = /** @type {Node} */ (tree.get(''));
+		if (layout_id === '~') layout_id = 'default';
+		errors.unshift(node.error);
+		layouts.unshift(node.layouts[layout_id].file);
+	}
+
+	let i = layouts.length;
+	while (i--) {
+		if (!errors[i] && !layouts[i]) {
+			errors.splice(i, 1);
+			layouts.splice(i, 1);
+		}
+	}
+
+	i = errors.length;
+	while (i--) {
+		if (errors[i]) break;
+	}
+
+	errors.splice(i + 1);
+	return { layouts, errors };
+}
+
+/**
+ * @param {Unit} a
+ * @param {Unit} b
+ */
+function compare(a, b) {
+	const max_segments = Math.max(a.segments.length, b.segments.length);
+	for (let i = 0; i < max_segments; i += 1) {
+		const sa = a.segments[i];
+		const sb = b.segments[i];
+
+		// /x < /x/y, but /[...x]/y < /[...x]
+		if (!sa) return a.id.includes('[...') ? +1 : -1;
+		if (!sb) return b.id.includes('[...') ? -1 : +1;
+
+		const max_parts = Math.max(sa.length, sb.length);
+		for (let i = 0; i < max_parts; i += 1) {
+			const pa = sa[i];
+			const pb = sb[i];
+
+			// xy < x[y], but [x].json < [x]
+			if (pa === undefined) return pb.dynamic ? -1 : +1;
+			if (pb === undefined) return pa.dynamic ? +1 : -1;
+
+			// x < [x]
+			if (pa.dynamic !== pb.dynamic) {
+				return pa.dynamic ? +1 : -1;
+			}
+
+			if (pa.dynamic) {
+				// [x] < [...x]
+				if (pa.rest !== pb.rest) {
+					return pa.rest ? +1 : -1;
+				}
+
+				// [x=type] < [x]
+				if (!!pa.type !== !!pb.type) {
+					return pa.type ? -1 : +1;
+				}
+			}
+		}
+	}
+
+	const a_is_endpoint = !a.page && a.endpoint;
+	const b_is_endpoint = !b.page && b.endpoint;
+
+	if (a_is_endpoint !== b_is_endpoint) {
+		return a_is_endpoint ? -1 : +1;
+	}
+
+	return a < b ? -1 : 1;
 }
 
 /**
