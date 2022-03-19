@@ -14,7 +14,9 @@ import { parse_route_id } from '../../../utils/routing.js';
  *   rest: boolean;
  *   type: string | null;
  * }} Part
- *
+ */
+ 
+ /**
  * @typedef {{
  *   id: string;
  *   pattern: RegExp;
