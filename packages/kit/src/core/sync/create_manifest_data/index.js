@@ -67,7 +67,7 @@ export default function create_manifest_data({
 		}
 	});
 
-	const routes_base = path.relative(cwd, config.kit.files.routes);
+	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
 	const valid_extensions = [...config.extensions, ...config.kit.endpointExtensions];
 
 	list_files(config.kit.files.routes).forEach((file) => {
