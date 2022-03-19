@@ -1599,7 +1599,7 @@ test.describe.parallel('$app/stores', () => {
 		clicknav,
 		javaScriptEnabled
 	}) => {
-		const stuff1 = 	JSON.stringify({ name: 'SvelteKit', value: 789, error: 'uh oh' });
+		const stuff1 = JSON.stringify({ name: 'SvelteKit', value: 789, error: 'uh oh' });
 		const stuff2 = JSON.stringify({ name: 'SvelteKit', value: 123, foo: true });
 		await page.goto('/store/stuff/www');
 
@@ -1608,7 +1608,6 @@ test.describe.parallel('$app/stores', () => {
 
 		await clicknav('#reload-button');
 		expect(await page.textContent('#store-stuff')).toBe(javaScriptEnabled ? stuff2 : stuff1);
-
 
 		await clicknav('a[href="/store/stuff/zzz"]');
 		await clicknav('a[href="/store/stuff/foo"]');

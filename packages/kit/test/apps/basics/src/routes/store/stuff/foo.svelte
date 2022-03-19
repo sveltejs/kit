@@ -14,7 +14,7 @@
       props: {
         number: 2
       }
-		}
+		};
 	}
 </script>
 
