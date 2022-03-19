@@ -540,6 +540,13 @@ test('creates routes with named layouts', () => {
 	]);
 });
 
+test('errors on duplicate layout definition', () => {
+	assert.throws(
+		() => create('samples/duplicate-layout'),
+		/Duplicate layout samples\/duplicate-layout\/__layout-a@.svelte already defined at samples\/duplicate-layout\/__layout-a.svelte/
+	);
+});
+
 test('creates param matchers', () => {
 	const { matchers } = create('samples/basic'); // directory doesn't matter for the test
 

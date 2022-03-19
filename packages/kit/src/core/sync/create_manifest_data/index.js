@@ -65,12 +65,15 @@ export default function create_manifest_data({
 	/** @type {Tree} */
 	const tree = new Map();
 
+	const default_layout = {
+		file: posixify(path.relative(cwd, `${fallback}/layout.svelte`)),
+		name: 'default'
+	};
+
 	// set default root layout/error
 	tree.set('', {
 		error: posixify(path.relative(cwd, `${fallback}/error.svelte`)),
-		layouts: {
-			default: { file: posixify(path.relative(cwd, `${fallback}/layout.svelte`)), name: 'default' }
-		}
+		layouts: { default: default_layout }
 	});
 
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
@@ -104,6 +107,14 @@ export default function create_manifest_data({
 				} else {
 					const match = /** @type {RegExpMatchArray} */ (layout_pattern.exec(name));
 					const layout_id = match[1] || 'default';
+
+					const defined = group.layouts[layout_id];
+					if (defined && defined !== default_layout) {
+						throw new Error(
+							`Duplicate layout ${project_relative} already defined at ${defined.file}`
+						);
+					}
+
 					group.layouts[layout_id] = {
 						file: project_relative,
 						name
