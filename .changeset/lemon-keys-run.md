@@ -2,4 +2,4 @@
 'create-svelte': patch
 ---
 
-Add touch-interaction property to button selector in Counter.svelte
+Fix iOS double-tap zoom on counter buttons
