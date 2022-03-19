@@ -295,12 +295,12 @@ function trace(file, tree, extensions) {
 
 		if (layout?.name.includes('@')) {
 			layout_id = layout.name.split('@')[1];
-		}
+		} else {
+			const next_dir = /** @type {string} */ (parts.pop());
 
-		const next_dir = /** @type {string} */ (parts.pop());
-
-		if (next_dir.includes('@')) {
-			layout_id = next_dir.split('@')[1];
+			if (next_dir.includes('@')) {
+				layout_id = next_dir.split('@')[1];
+			}
 		}
 	}
 
