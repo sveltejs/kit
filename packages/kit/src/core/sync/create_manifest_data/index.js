@@ -15,8 +15,8 @@ import { parse_route_id } from '../../../utils/routing.js';
  *   type: string | null;
  * }} Part
  */
- 
- /**
+
+/**
  * @typedef {{
  *   id: string;
  *   pattern: RegExp;
@@ -27,12 +27,16 @@ import { parse_route_id } from '../../../utils/routing.js';
  *   };
  *   endpoint?: string;
  * }} Unit
- *
+ */
+
+/**
  * @typedef {{
  *   error: string | undefined;
  *   layouts: Record<string, { file: string, name: string }>
  * }} Node
- *
+ */
+
+/**
  * @typedef {Map<string, Node>} Tree
  */
 
