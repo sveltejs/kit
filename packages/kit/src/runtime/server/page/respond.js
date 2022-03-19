@@ -44,7 +44,8 @@ export async function respond(opts) {
 
 	try {
 		nodes = await Promise.all(
-			route.a.map((n) => (n === undefined ? n : options.manifest._.nodes[n]()))
+			// we use == here rather than === because [undefined] serializes as "[null]"
+			route.a.map((n) => (n == undefined ? n : options.manifest._.nodes[n]()))
 		);
 	} catch (err) {
 		const error = coalesce_to_error(err);
