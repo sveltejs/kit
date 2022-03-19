@@ -386,7 +386,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 				session_id
 			},
 			props: {
-				components: filtered.map((node) => node.module.default)
+				components: filtered.map((node) => node.module.default),
+				page: { error, params, routeId, status, stuff, url }
 			}
 		};
 
