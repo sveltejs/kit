@@ -14,11 +14,13 @@
 	});
 
 	const unsubscribe = page.subscribe(() => {
-		calls++;
-		session.update(($session) => ({
-			...$session,
-			calls
-		}));
+		if (calls === 0) {
+			calls++;
+			session.update(($session) => ({
+				...$session,
+				calls
+			}));
+		}
 	});
 
 	onDestroy(unsubscribe);

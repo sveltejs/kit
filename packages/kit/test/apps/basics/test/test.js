@@ -1594,6 +1594,27 @@ test.describe.parallel('$app/stores', () => {
 		);
 	});
 
+	test('should load stuff after reloading by goto', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		const stuff1 = 	JSON.stringify({ name: 'SvelteKit', value: 789, error: 'uh oh' });
+		const stuff2 = JSON.stringify({ name: 'SvelteKit', value: 123, foo: true });
+		await page.goto('/store/stuff/www');
+
+		await clicknav('a[href="/store/stuff/foo"]');
+		expect(await page.textContent('#store-stuff')).toBe(stuff1);
+
+		await clicknav('#reload-button');
+		expect(await page.textContent('#store-stuff')).toBe(javaScriptEnabled ? stuff2 : stuff1);
+
+
+		await clicknav('a[href="/store/stuff/zzz"]');
+		await clicknav('a[href="/store/stuff/foo"]');
+		expect(await page.textContent('#store-stuff')).toBe(stuff2);
+	});
+
 	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
 		await page.goto('/store/navigating/a');
 
