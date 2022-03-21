@@ -65,12 +65,15 @@ export default function create_manifest_data({
 	/** @type {Tree} */
 	const tree = new Map();
 
+	const default_layout = {
+		file: posixify(path.relative(cwd, `${fallback}/layout.svelte`)),
+		name: 'default'
+	};
+
 	// set default root layout/error
 	tree.set('', {
 		error: posixify(path.relative(cwd, `${fallback}/error.svelte`)),
-		layouts: {
-			default: { file: posixify(path.relative(cwd, `${fallback}/layout.svelte`)), name: 'default' }
-		}
+		layouts: { default: default_layout }
 	});
 
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
@@ -104,6 +107,14 @@ export default function create_manifest_data({
 				} else {
 					const match = /** @type {RegExpMatchArray} */ (layout_pattern.exec(name));
 					const layout_id = match[1] || 'default';
+
+					const defined = group.layouts[layout_id];
+					if (defined && defined !== default_layout) {
+						throw new Error(
+							`Duplicate layout ${project_relative} already defined at ${defined.file}`
+						);
+					}
+
 					group.layouts[layout_id] = {
 						file: project_relative,
 						name
@@ -295,12 +306,12 @@ function trace(file, tree, extensions) {
 
 		if (layout?.name.includes('@')) {
 			layout_id = layout.name.split('@')[1];
-		}
+		} else {
+			const next_dir = /** @type {string} */ (parts.pop());
 
-		const next_dir = /** @type {string} */ (parts.pop());
-
-		if (next_dir.includes('@')) {
-			layout_id = next_dir.split('@')[1];
+			if (next_dir.includes('@')) {
+				layout_id = next_dir.split('@')[1];
+			}
 		}
 	}
 
@@ -405,33 +416,28 @@ function count_occurrences(needle, haystack) {
  * @param {string[]} [files]
  */
 function list_files(dir, path = '', files = []) {
-	fs.readdirSync(dir)
-		.sort((a, b) => {
+	fs.readdirSync(dir, { withFileTypes: true })
+		.sort(({ name: a }, { name: b }) => {
 			// sort each directory in (__layout, __error, everything else) order
 			// so that we can trace layouts/errors immediately
 
 			if (a.startsWith('__layout')) {
 				if (!b.startsWith('__layout')) return -1;
 			} else if (b.startsWith('__layout')) {
-				if (!a.startsWith('__layout')) return 1;
-			}
-
-			if (a.startsWith('__')) {
+				return 1;
+			} else if (a.startsWith('__')) {
 				if (!b.startsWith('__')) return -1;
 			} else if (b.startsWith('__')) {
-				if (!a.startsWith('__')) return 1;
+				return 1;
 			}
 
 			return a < b ? -1 : 1;
 		})
 		.forEach((file) => {
-			const resolved = `${dir}/${file}`;
+			const joined = path ? `${path}/${file.name}` : file.name;
 
-			const stats = fs.statSync(resolved);
-			const joined = path ? `${path}/${file}` : file;
-
-			if (stats.isDirectory()) {
-				list_files(resolved, joined, files);
+			if (file.isDirectory()) {
+				list_files(`${dir}/${file.name}`, joined, files);
 			} else {
 				files.push(joined);
 			}

@@ -428,6 +428,7 @@ test('creates routes with named layouts', () => {
 		'samples/named-layouts/b/__layout-alsospecial@special.svelte',
 		'samples/named-layouts/b/c/__layout.svelte',
 		'samples/named-layouts/b/d@special/__layout.svelte',
+		'samples/named-layouts/b/d@special/__layout-extended@extraspecial.svelte',
 		'samples/named-layouts/b/d@special/__layout-extraspecial.svelte',
 		'samples/named-layouts/a/a1.svelte',
 		'samples/named-layouts/a/a2@special.svelte',
@@ -435,7 +436,8 @@ test('creates routes with named layouts', () => {
 		'samples/named-layouts/b/c/c2@~.svelte',
 		'samples/named-layouts/b/c/c3@.svelte',
 		'samples/named-layouts/b/d@special/d1.svelte',
-		'samples/named-layouts/b/d@special/d2@extraspecial.svelte'
+		'samples/named-layouts/b/d@special/d2@extraspecial.svelte',
+		'samples/named-layouts/b/d@special/d3@extended.svelte'
 	]);
 
 	assert.equal(routes, [
@@ -520,8 +522,29 @@ test('creates routes with named layouts', () => {
 				'samples/named-layouts/b/d@special/d2@extraspecial.svelte'
 			],
 			b: [default_error]
+		},
+		{
+			type: 'page',
+			id: 'b/d@special/d3@extended',
+			pattern: /^\/b\/d\/d3\/?$/,
+			path: '/b/d/d3',
+			shadow: null,
+			a: [
+				'samples/named-layouts/__layout-special.svelte',
+				'samples/named-layouts/b/d@special/__layout-extraspecial.svelte',
+				'samples/named-layouts/b/d@special/__layout-extended@extraspecial.svelte',
+				'samples/named-layouts/b/d@special/d3@extended.svelte'
+			],
+			b: [default_error]
 		}
 	]);
+});
+
+test('errors on duplicate layout definition', () => {
+	assert.throws(
+		() => create('samples/duplicate-layout'),
+		/Duplicate layout samples\/duplicate-layout\/__layout-a@.svelte already defined at samples\/duplicate-layout\/__layout-a.svelte/
+	);
 });
 
 test('creates param matchers', () => {
