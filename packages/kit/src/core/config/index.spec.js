@@ -54,10 +54,12 @@ const get_defaults = (prefix = '') => ({
 				referrer: undefined
 			}
 		},
+		endpointExtensions: ['.js', '.ts'],
 		files: {
 			assets: join(prefix, 'static'),
 			hooks: join(prefix, 'src/hooks'),
 			lib: join(prefix, 'src/lib'),
+			params: join(prefix, 'src/params'),
 			routes: join(prefix, 'src/routes'),
 			serviceWorker: join(prefix, 'src/service-worker'),
 			template: join(prefix, 'src/app.html')
@@ -71,6 +73,7 @@ const get_defaults = (prefix = '') => ({
 			parameter: '_method',
 			allowed: []
 		},
+		outDir: join(prefix, '.svelte-kit'),
 		package: {
 			dir: 'package',
 			emitTypes: true
@@ -86,6 +89,7 @@ const get_defaults = (prefix = '') => ({
 			concurrency: 1,
 			crawl: true,
 			createIndexFiles: undefined,
+			default: false,
 			enabled: true,
 			entries: ['*'],
 			force: undefined,

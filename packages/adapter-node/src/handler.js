@@ -6,13 +6,17 @@ import { fileURLToPath } from 'url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
+import { env } from './env.js';
 
-/* global ORIGIN, PROTOCOL_HEADER, HOST_HEADER */
+/* global ENV_PREFIX */
 
 const server = new Server(manifest);
-const origin = ORIGIN;
-const protocol_header = PROTOCOL_HEADER && process.env[PROTOCOL_HEADER];
-const host_header = (HOST_HEADER && process.env[HOST_HEADER]) || 'host';
+const origin = env('ORIGIN', undefined);
+const xff_depth = parseInt(env('XFF_DEPTH', '1'));
+
+const address_header = env('ADDRESS_HEADER', '').toLowerCase();
+const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
+const host_header = env('HOST_HEADER', 'host').toLowerCase();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -42,10 +46,56 @@ const ssr = async (req, res) => {
 		request = await getRequest(origin || get_origin(req.headers), req);
 	} catch (err) {
 		res.statusCode = err.status || 400;
-		return res.end(err.reason || 'Invalid request body');
+		res.end(err.reason || 'Invalid request body');
+		return;
 	}
 
-	setResponse(res, await server.respond(request));
+	if (address_header && !(address_header in req.headers)) {
+		throw new Error(
+			`Address header was specified with ${
+				ENV_PREFIX + 'ADDRESS_HEADER'
+			}=${address_header} but is absent from request`
+		);
+	}
+
+	setResponse(
+		res,
+		await server.respond(request, {
+			getClientAddress: () => {
+				if (address_header) {
+					const value = /** @type {string} */ (req.headers[address_header]) || '';
+
+					if (address_header === 'x-forwarded-for') {
+						const addresses = value.split(',');
+
+						if (xff_depth < 1) {
+							throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
+						}
+
+						if (xff_depth > addresses.length) {
+							throw new Error(
+								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
+									addresses.length
+								} addresses`
+							);
+						}
+						return addresses[addresses.length - xff_depth].trim();
+					}
+
+					return value;
+				}
+
+				return (
+					req.connection?.remoteAddress ||
+					// @ts-expect-error
+					req.connection?.socket?.remoteAddress ||
+					req.socket?.remoteAddress ||
+					// @ts-expect-error
+					req.info?.remoteAddress
+				);
+			}
+		})
+	);
 };
 
 /** @param {import('polka').Middleware[]} handlers */

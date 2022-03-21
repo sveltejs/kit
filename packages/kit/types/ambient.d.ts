@@ -208,13 +208,8 @@ declare module '$app/stores' {
 }
 
 /**
- * This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](/docs/configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.
- */
-declare module '$lib' {}
-
-/**
  * ```ts
- * import { build, files, timestamp } from '$service-worker';
+ * import { build, files, prerendered, version } from '$service-worker';
  * ```
  *
  * This module is only available to [service workers](/docs/service-workers).
@@ -229,9 +224,13 @@ declare module '$service-worker' {
 	 */
 	export const files: string[];
 	/**
-	 * The result of calling `Date.now()` at build time. It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
+	 * An array of pathnames corresponding to prerendered pages and endpoints.
 	 */
-	export const timestamp: number;
+	export const prerendered: string[];
+	/**
+	 * See [`config.kit.version`](/docs/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
+	 */
+	export const version: string;
 }
 
 declare module '@sveltejs/kit/hooks' {

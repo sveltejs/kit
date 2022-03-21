@@ -98,14 +98,8 @@ export const test = base.extend({
 		if (javaScriptEnabled) {
 			page.addInitScript({
 				content: `
-					window.started = new Promise((fulfil, reject) => {
-						setTimeout(() => {
-							reject(new Error('Timed out'));
-						}, 5000);
-
-						addEventListener('sveltekit:start', () => {
-							fulfil();
-						});
+					addEventListener('sveltekit:start', () => {
+						document.body.classList.add('started');
 					});
 				`
 			});
@@ -120,7 +114,7 @@ export const test = base.extend({
 			async function (url, opts) {
 				const res = await goto.call(page, url, opts);
 				if (javaScriptEnabled) {
-					await page.waitForFunction(() => window.started);
+					await page.waitForSelector('body.started', { timeout: 5000 });
 				}
 				return res;
 			};
@@ -169,7 +163,8 @@ export const config = {
 	use: {
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
-	}
+	},
+	workers: process.env.CI ? 2 : undefined
 };
 
 /**

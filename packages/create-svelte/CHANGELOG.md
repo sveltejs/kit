@@ -1,5 +1,31 @@
 # create-svelte
 
+## 2.0.0-next.126
+
+### Patch Changes
+
+- [fix] use .ts extension for tests when using TypeScript ([#4368](https://github.com/sveltejs/kit/pull/4368))
+
+## 2.0.0-next.125
+
+### Patch Changes
+
+- [fix] check for app.d.ts rather than global.d.ts ([#4295](https://github.com/sveltejs/kit/pull/4295))
+
+## 2.0.0-next.124
+
+### Patch Changes
+
+- Add sync CLI command ([#4182](https://github.com/sveltejs/kit/pull/4182))
+
+* Upgrade to TypeScript 4.6 ([#4190](https://github.com/sveltejs/kit/pull/4190))
+
+## 2.0.0-next.123
+
+### Patch Changes
+
+- Extend user tsconfig from generated .svelte-kit/tsconfig.json ([#4118](https://github.com/sveltejs/kit/pull/4118))
+
 ## 2.0.0-next.122
 
 ### Patch Changes

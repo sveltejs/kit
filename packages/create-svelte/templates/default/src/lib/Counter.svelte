@@ -50,6 +50,7 @@
 		justify-content: center;
 		border: 0;
 		background-color: transparent;
+		touch-action: manipulation;
 		color: var(--text-color);
 		font-size: 2rem;
 	}

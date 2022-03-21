@@ -40,12 +40,12 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 
 	const validated = validate_config(config.default);
 
-	validated.kit.files.assets = path.resolve(cwd, validated.kit.files.assets);
-	validated.kit.files.hooks = path.resolve(cwd, validated.kit.files.hooks);
-	validated.kit.files.lib = path.resolve(cwd, validated.kit.files.lib);
-	validated.kit.files.routes = path.resolve(cwd, validated.kit.files.routes);
-	validated.kit.files.serviceWorker = path.resolve(cwd, validated.kit.files.serviceWorker);
-	validated.kit.files.template = path.resolve(cwd, validated.kit.files.template);
+	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
+
+	for (const key in validated.kit.files) {
+		// @ts-expect-error this is typescript at its stupidest
+		validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
+	}
 
 	return validated;
 }

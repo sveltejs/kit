@@ -284,7 +284,7 @@ test.describe.parallel('Imports', () => {
 		await page.goto('/asset-import');
 
 		const sources = await page.evaluate(() =>
-			[...document.querySelectorAll('img')].map((img) => img.src)
+			Array.from(document.querySelectorAll('img'), (img) => img.src)
 		);
 
 		if (process.env.DEV) {
@@ -504,6 +504,29 @@ test.describe.parallel('Shadowed pages', () => {
 		await clicknav('[href="/shadowed/dynamic/bar"]');
 		expect(await page.textContent('h1')).toBe('slug: bar');
 	});
+
+	test('Shadow redirect', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/redirect');
+		await clicknav('[href="/shadowed/redirect/a"]');
+		expect(await page.textContent('h1')).toBe('done');
+	});
+
+	test('Endpoint without GET', async ({ page, clicknav, baseURL, javaScriptEnabled }) => {
+		await page.goto('/shadowed');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await clicknav('[href="/shadowed/missing-get"]');
+
+		expect(await page.textContent('h1')).toBe('post without get');
+
+		// check that the router didn't fall back to the server
+		if (javaScriptEnabled) {
+			expect(requests).not.toContain(`${baseURL}/shadowed/missing-get`);
+		}
+	});
 });
 
 test.describe.parallel('Endpoints', () => {
@@ -513,11 +536,6 @@ test.describe.parallel('Endpoints', () => {
 			await page.click('.del');
 			expect(await page.innerHTML('h1')).toBe('deleted 42');
 		}
-	});
-
-	test('not ok on void endpoint', async ({ request }) => {
-		const response = await request.delete('/endpoint-output/empty');
-		expect(response.ok()).toBe(false);
 	});
 
 	test('200 status on empty endpoint', async ({ request }) => {
@@ -875,7 +893,7 @@ test.describe.parallel('Errors', () => {
 		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint.svelte:12:15';
+		const location = /endpoint\.svelte:12:9|endpoint\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
@@ -893,7 +911,7 @@ test.describe.parallel('Errors', () => {
 		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint-not-ok.svelte:12:15';
+		const location = /endpoint-not-ok\.svelte:12:9|endpoint-not-ok\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
@@ -1997,33 +2015,6 @@ test.describe.parallel('Routing', () => {
 		}
 	});
 
-	test('fallthrough', async ({ page }) => {
-		await page.goto('/routing/fallthrough-simple/invalid');
-		expect(await page.textContent('h1')).toBe('Page');
-	});
-
-	test('dynamic fallthrough of pages and endpoints', async ({ page, clicknav }) => {
-		await page.goto('/routing/fallthrough-advanced/borax');
-		expect(await page.textContent('h1')).toBe('borax is a mineral');
-
-		await clicknav('[href="/routing/fallthrough-advanced/camel"]');
-		expect(await page.textContent('h1')).toBe('camel is an animal');
-
-		await clicknav('[href="/routing/fallthrough-advanced/potato"]');
-		expect(await page.textContent('h1')).toBe('404');
-	});
-
-	test('dynamic fallthrough of layout', async ({ page, clicknav }) => {
-		await page.goto('/routing/fallthrough-layout/okay');
-		expect(await page.textContent('h1')).toBe('foo is okay');
-
-		await clicknav('[href="/routing/fallthrough-layout/ok"]');
-		expect(await page.textContent('h1')).toBe('xyz is ok');
-
-		await clicknav('[href="/routing/fallthrough-layout/notok"]');
-		expect(await page.textContent('h1')).toBe('404');
-	});
-
 	test('last parameter in a segment wins in cases of ambiguity', async ({ page, clicknav }) => {
 		await page.goto('/routing/split-params');
 		await clicknav('[href="/routing/split-params/x-y-z"]');
@@ -2156,6 +2147,31 @@ test.describe.parallel('Routing', () => {
 		await page.evaluate('window.fulfil_navigation && window.fulfil_navigation()');
 		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
 	});
+
+	test('Relative paths are relative to the current URL', async ({ page, clicknav }) => {
+		await page.goto('/iframes');
+		await clicknav('[href="/iframes/nested/parent"]');
+
+		expect(await page.frameLocator('iframe').locator('h1').textContent()).toBe(
+			'Hello from the child'
+		);
+	});
+
+	test('event.params are available in handle', async ({ request }) => {
+		const response = await request.get('/routing/params-in-handle/banana');
+		expect(await response.json()).toStrictEqual({
+			key: 'routing/params-in-handle/[x]',
+			params: { x: 'banana' }
+		});
+	});
+
+	test('exposes page.routeId', async ({ page, clicknav }) => {
+		await page.goto('/routing/route-id');
+		await clicknav('[href="/routing/route-id/foo"]');
+
+		expect(await page.textContent('h1')).toBe('routeId in load: routing/route-id/[x]');
+		expect(await page.textContent('h2')).toBe('routeId in store: routing/route-id/[x]');
+	});
 });
 
 test.describe.parallel('Session', () => {
@@ -2210,6 +2226,24 @@ test.describe.parallel('Static files', () => {
 
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
+	});
+});
+
+test.describe.parallel('Matchers', () => {
+	test('Matches parameters', async ({ page, clicknav }) => {
+		await page.goto('/routing/matched');
+
+		await clicknav('[href="/routing/matched/a"]');
+		expect(await page.textContent('h1')).toBe('lowercase: a');
+
+		await clicknav('[href="/routing/matched/B"]');
+		expect(await page.textContent('h1')).toBe('uppercase: B');
+
+		await clicknav('[href="/routing/matched/1"]');
+		expect(await page.textContent('h1')).toBe('number: 1');
+
+		await clicknav('[href="/routing/matched/everything-else"]');
+		expect(await page.textContent('h1')).toBe('fallback: everything-else');
 	});
 });
 

@@ -25,6 +25,8 @@ export const handleError = ({ event, error }) => {
 
 export const handle = sequence(
 	({ event, resolve }) => {
+		event.locals.key = event.routeId;
+		event.locals.params = event.params;
 		event.locals.answer = 42;
 		return resolve(event);
 	},

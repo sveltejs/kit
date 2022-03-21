@@ -19,14 +19,11 @@ export default function () {
 			// @ts-ignore
 			const entrypoint = site['entry-point'] || 'workers-site';
 
-			const files = fileURLToPath(new URL('./files', import.meta.url));
+			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
 
 			builder.rimraf(bucket);
 			builder.rimraf(entrypoint);
-
-			builder.log.info('Prerendering static pages...');
-			const prerendered = await builder.prerender({ dest: bucket });
 
 			builder.log.info('Installing worker dependencies...');
 			builder.copy(`${files}/_package.json`, `${tmp}/package.json`);
@@ -49,7 +46,7 @@ export default function () {
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({
 					relativePath
-				})};\n\nexport const prerendered = new Set(${JSON.stringify(prerendered.paths)});\n`
+				})};\n\nexport const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n`
 			);
 
 			await esbuild.build({
@@ -65,6 +62,7 @@ export default function () {
 			builder.log.minor('Copying assets...');
 			builder.writeClient(bucket);
 			builder.writeStatic(bucket);
+			builder.writePrerendered(bucket);
 		}
 	};
 }

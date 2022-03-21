@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare-workers",
-	"version": "1.0.0-next.34",
+	"version": "1.0.0-next.36",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -24,6 +24,7 @@
 	"scripts": {
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
 		"format": "npm run check-format -- --write",
+		"check": "tsc",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {
@@ -32,6 +33,6 @@
 	},
 	"devDependencies": {
 		"@cloudflare/kv-asset-handler": "^0.2.0",
-		"@sveltejs/kit": "workspace:*"
+		"typescript": "^4.6.2"
 	}
 }

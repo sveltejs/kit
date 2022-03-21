@@ -37,7 +37,7 @@ export function is_text(content_type) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {{ [method: string]: import('types').RequestHandler }} mod
- * @returns {Promise<Response | undefined>}
+ * @returns {Promise<Response>}
  */
 export async function render_endpoint(event, mod) {
 	const method = normalize_request_method(event);
@@ -48,8 +48,17 @@ export async function render_endpoint(event, mod) {
 	if (!handler && method === 'head') {
 		handler = mod.get;
 	}
+
 	if (!handler) {
-		return;
+		return event.request.headers.get('x-sveltekit-load')
+			? // TODO would be nice to avoid these requests altogether,
+			  // by noting whether or not page endpoints export `get`
+			  new Response(undefined, {
+					status: 204
+			  })
+			: new Response('Method not allowed', {
+					status: 405
+			  });
 	}
 
 	const response = await handler(event);
@@ -59,8 +68,12 @@ export async function render_endpoint(event, mod) {
 		return error(`${preface}: expected an object, got ${typeof response}`);
 	}
 
+	// TODO remove for 1.0
+	// @ts-expect-error
 	if (response.fallthrough) {
-		return;
+		throw new Error(
+			'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
+		);
 	}
 
 	const { status = 200, body = {} } = response;

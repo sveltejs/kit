@@ -2,7 +2,7 @@
 // but which cannot be imported from `@sveltejs/kit`. Care should
 // be taken to avoid breaking changes when editing this file
 
-import { SSRNodeLoader, SSRRoute } from './internal';
+import { ValidatedConfig } from './internal';
 
 export interface AdapterEntry {
 	/**
@@ -26,67 +26,6 @@ export interface AdapterEntry {
 	complete: (entry: {
 		generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
 	}) => void;
-}
-
-export type Body = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
-
-export type BodyValidator<T> = {
-	[P in keyof T]: T[P] extends JSONValue ? BodyValidator<T[P]> : never;
-};
-
-export interface Builder {
-	log: Logger;
-	rimraf(dir: string): void;
-	mkdirp(dir: string): void;
-
-	appDir: string;
-	trailingSlash: TrailingSlash;
-
-	/**
-	 * Create entry points that map to individual functions
-	 * @param fn A function that groups a set of routes into an entry point
-	 */
-	createEntries(fn: (route: RouteDefinition) => AdapterEntry): void;
-
-	generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
-
-	getBuildDirectory(name: string): string;
-	getClientDirectory(): string;
-	getServerDirectory(): string;
-	getStaticDirectory(): string;
-
-	/**
-	 * @param dest the destination folder to which files should be copied
-	 * @returns an array of paths corresponding to the files that have been created by the copy
-	 */
-	writeClient(dest: string): string[];
-	/**
-	 * @param dest the destination folder to which files should be copied
-	 * @returns an array of paths corresponding to the files that have been created by the copy
-	 */
-	writeServer(dest: string): string[];
-	/**
-	 * @param dest the destination folder to which files should be copied
-	 * @returns an array of paths corresponding to the files that have been created by the copy
-	 */
-	writeStatic(dest: string): string[];
-	/**
-	 * @param from the source file or folder
-	 * @param to the destination file or folder
-	 * @param opts.filter a function to determine whether a file or folder should be copied
-	 * @param opts.replace a map of strings to replace
-	 * @returns an array of paths corresponding to the files that have been created by the copy
-	 */
-	copy(
-		from: string,
-		to: string,
-		opts?: {
-			filter?: (basename: string) => boolean;
-			replace?: Record<string, string>;
-		}
-	): string[];
-
-	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<Prerendered>;
 }
 
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
@@ -130,7 +69,7 @@ export namespace Csp {
 	type UriPath = `${HttpDelineator}${string}`;
 }
 
-export type CspDirectives = {
+export interface CspDirectives {
 	'child-src'?: Csp.Sources;
 	'default-src'?: Array<Csp.Source | Csp.ActionSource>;
 	'frame-src'?: Csp.Sources;
@@ -195,22 +134,19 @@ export type CspDirectives = {
 		| 'unsafe-url'
 		| 'none'
 	>;
-};
+}
 
-export type Either<T, U> = Only<T, U> | Only<U, T>;
-
-export interface ErrorLoadInput<Params = Record<string, string>> extends LoadInput<Params> {
+export interface ErrorLoadInput<Params extends Record<string, string> = Record<string, string>>
+	extends LoadInput<Params> {
 	status?: number;
 	error?: Error;
 }
 
-export interface Fallthrough {
-	fallthrough: true;
-}
-
 export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
 
-export type JSONObject = { [key: string]: JSONValue };
+export interface JSONObject {
+	[key: string]: JSONValue;
+}
 
 export type JSONValue =
 	| string
@@ -222,16 +158,20 @@ export type JSONValue =
 	| JSONValue[]
 	| JSONObject;
 
-export interface LoadInput<Params = Record<string, string>> {
-	url: URL;
-	params: Params;
-	props: Record<string, any>;
+export interface LoadInput<
+	Params extends Record<string, string> = Record<string, string>,
+	Props extends Record<string, any> = Record<string, any>
+> {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
+	params: Params;
+	props: Props;
+	routeId: string | null;
 	session: App.Session;
 	stuff: Partial<App.Stuff>;
+	url: URL;
 }
 
-export interface LoadOutput<Props = Record<string, any>> {
+export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {
 	status?: number;
 	error?: string | Error;
 	redirect?: string;
@@ -252,12 +192,6 @@ export interface Logger {
 export type MaybePromise<T> = T | Promise<T>;
 
 export type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
-
-export type PayloadScriptAttributes = PayloadScriptAttributesData | PayloadScriptAttributesProps;
-
-type PayloadScriptAttributesData = { type: 'data'; url: string; body?: string };
-
-type PayloadScriptAttributesProps = { type: 'props' };
 
 export interface Prerendered {
 	pages: Map<
@@ -296,22 +230,25 @@ export interface PrerenderErrorHandler {
 
 export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
-export interface RequestEvent<Params = Record<string, string>> {
-	request: Request;
-	url: URL;
-	params: Params;
+export interface RequestEvent<Params extends Record<string, string> = Record<string, string>> {
+	clientAddress: string;
 	locals: App.Locals;
+	params: Params;
 	platform: Readonly<App.Platform>;
+	request: Request;
+	routeId: string | null;
+	url: URL;
 }
 
 export interface RequestOptions {
+	getClientAddress: () => string;
 	platform?: App.Platform;
 }
 
-export type ResolveOptions = {
+export interface ResolveOptions {
 	ssr?: boolean;
 	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
-};
+}
 
 /** `string[]` is only for set-cookie, everything else must be type of `string` */
 export type ResponseHeaders = Record<string, string | number | string[]>;
@@ -329,27 +266,8 @@ export interface RouteSegment {
 	rest: boolean;
 }
 
-export class Server {
-	constructor(manifest: SSRManifest);
-	respond(request: Request, options?: RequestOptions): Promise<Response>;
+export interface ToJSON {
+	toJSON(...args: any[]): Exclude<JSONValue, ToJSON>;
 }
-
-export interface SSRManifest {
-	appDir: string;
-	assets: Set<string>;
-	/** private fields */
-	_: {
-		mime: Record<string, string>;
-		entry: {
-			file: string;
-			js: string[];
-			css: string[];
-		};
-		nodes: SSRNodeLoader[];
-		routes: SSRRoute[];
-	};
-}
-
-export type ToJSON = { toJSON(...args: any[]): Exclude<JSONValue, ToJSON> };
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';

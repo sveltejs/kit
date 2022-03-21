@@ -54,10 +54,10 @@ This file also has no direct equivalent, since SvelteKit apps can run in serverl
 
 Most imports from `@sapper/service-worker` have equivalents in [`$service-worker`](/docs/modules#$service-worker):
 
-- `timestamp` is unchanged
 - `files` is unchanged
-- `shell` is now `build`
 - `routes` has been removed
+- `shell` is now `build`
+- `timestamp` is now `version`
 
 #### src/template.html
 
@@ -113,7 +113,7 @@ You access them differently in SvelteKit. `stores` is now `getStores`, but in mo
 
 #### Routing
 
-Regex routes are no longer supported. Instead, use [fallthrough routes](/docs/routing#advanced-routing-fallthrough-routes).
+Regex routes are no longer supported. Instead, use [advanced route matching](/docs/routing#advanced-routing-matching).
 
 #### URLs
 

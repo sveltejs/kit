@@ -1,5 +1,149 @@
 # @sveltejs/kit
 
+## 1.0.0-next.301
+
+### Patch Changes
+
+- Skip svelte-kit sync if no config file exists yet ([#4372](https://github.com/sveltejs/kit/pull/4372))
+
+## 1.0.0-next.300
+
+### Patch Changes
+
+- [fix] correctly populate `event.url.host` in dev mode when using `--https` ([#4364](https://github.com/sveltejs/kit/pull/4364))
+
+* fix rest param type generation ([#4361](https://github.com/sveltejs/kit/pull/4361))
+
+- [breaking] Rename validators to matchers ([#4358](https://github.com/sveltejs/kit/pull/4358))
+
+## 1.0.0-next.299
+
+### Patch Changes
+
+- Populate fallback page when trailingSlash is "always" ([#4351](https://github.com/sveltejs/kit/pull/4351))
+
+* Expose `event.routeId` and `page.routeId` ([#4344](https://github.com/sveltejs/kit/pull/4344))
+
+- [breaking] remove fallthrough routes ([#4330](https://github.com/sveltejs/kit/pull/4330))
+
+* Add param validators ([#4334](https://github.com/sveltejs/kit/pull/4334))
+
+- [breaking] disallow \$ character in dynamic parameters ([#4334](https://github.com/sveltejs/kit/pull/4334))
+
+* Populate event.params before calling handle ([#4344](https://github.com/sveltejs/kit/pull/4344))
+
+## 1.0.0-next.298
+
+### Patch Changes
+
+- fix: correctly detect removal of route ([#4333](https://github.com/sveltejs/kit/pull/4333))
+
+## 1.0.0-next.297
+
+### Patch Changes
+
+- [breaking] allow `InputProps` and `OutputProps` to be typed separately in generated `Load` ([#4305](https://github.com/sveltejs/kit/pull/4305))
+
+* allow `Output` to be typed in generated `RequestHandler` ([#4305](https://github.com/sveltejs/kit/pull/4305))
+
+- [breaking] require adapters to supply a getClientAddress function ([#4289](https://github.com/sveltejs/kit/pull/4289))
+
+* Allow page endpoint without GET handler ([#4318](https://github.com/sveltejs/kit/pull/4318))
+
+- Return 404 when fetching missing data during prerender ([#4324](https://github.com/sveltejs/kit/pull/4324))
+
+* expose client IP address as event.clientAddress ([#4289](https://github.com/sveltejs/kit/pull/4289))
+
+## 1.0.0-next.296
+
+### Patch Changes
+
+- Allow adapter.adapt to be synchronous ([#4299](https://github.com/sveltejs/kit/pull/4299))
+
+* Make `manifest.mimeTypes` part of the public API ([#4302](https://github.com/sveltejs/kit/pull/4302))
+
+- load hooks after server initialisation, to ensure `prerendering` is correct ([#4322](https://github.com/sveltejs/kit/pull/4322))
+
+## 1.0.0-next.295
+
+### Patch Changes
+
+- fix error message for invalid request object ([#4277](https://github.com/sveltejs/kit/pull/4277))
+
+* Handle explicit redirects from endpoints ([#4260](https://github.com/sveltejs/kit/pull/4260))
+
+- Allow routes with the same name as fallback components ([#4284](https://github.com/sveltejs/kit/pull/4284))
+
+## 1.0.0-next.294
+
+### Patch Changes
+
+- [breaking] Replace timestamp in \$service-worker with version ([#4213](https://github.com/sveltejs/kit/pull/4213))
+
+* Remove declared `$lib` module ([#4227](https://github.com/sveltejs/kit/pull/4227))
+
+## 1.0.0-next.293
+
+### Patch Changes
+
+- Expose Server and SSRManifest as public types ([#4220](https://github.com/sveltejs/kit/pull/4220))
+
+* fetch `version.json` relative to `paths.assets`, if set ([#4234](https://github.com/sveltejs/kit/pull/4234))
+
+## 1.0.0-next.292
+
+### Patch Changes
+
+- Prevent Vite from copying static assets if directory is called "public" ([#4214](https://github.com/sveltejs/kit/pull/4214))
+
+* Add sync CLI command ([#4182](https://github.com/sveltejs/kit/pull/4182))
+
+- [breaking] expose entire config to adapters, rather than just appDir and trailingSlash ([#4192](https://github.com/sveltejs/kit/pull/4192))
+
+* [breaking] replace builder.prerender() with builder.writePrerendered() and builder.prerendered ([#4192](https://github.com/sveltejs/kit/pull/4192))
+
+- [breaking] prerender pages during build, regardless of adapter ([#4192](https://github.com/sveltejs/kit/pull/4192))
+
+* Add config.kit.prerender.default option ([#4192](https://github.com/sveltejs/kit/pull/4192))
+
+- Ensure props are loaded from matching endpoint during client-side navigation ([#4203](https://github.com/sveltejs/kit/pull/4203))
+
+* Use prerendered pages in svelte-kit preview ([#4192](https://github.com/sveltejs/kit/pull/4192))
+
+- Upgrade to TypeScript 4.6 ([#4190](https://github.com/sveltejs/kit/pull/4190))
+
+* Fix `svelte-kit preview` ([#4207](https://github.com/sveltejs/kit/pull/4207))
+
+- Make prerendered paths available to service workers ([#4192](https://github.com/sveltejs/kit/pull/4192))
+
+* Update history immediately before updating DOM ([#4191](https://github.com/sveltejs/kit/pull/4191))
+
+- Add config.kit.endpointExtensions option ([#4197](https://github.com/sveltejs/kit/pull/4197))
+
+## 1.0.0-next.291
+
+### Patch Changes
+
+- Focus on `body` instead of `html` on navigation due to issues on Firefox ([#4184](https://github.com/sveltejs/kit/pull/4184))
+
+## 1.0.0-next.290
+
+### Patch Changes
+
+- Add config.kit.outDir ([#4176](https://github.com/sveltejs/kit/pull/4176))
+
+* [breaking] allow `InputProps` and `OutputProps` to be typed separately in `Load` ([#4160](https://github.com/sveltejs/kit/pull/4160))
+
+## 1.0.0-next.289
+
+### Patch Changes
+
+- Only fall back to full page reload if pathname has changed ([#4116](https://github.com/sveltejs/kit/pull/4116))
+
+* Generate types for each page/endpoint ([#4120](https://github.com/sveltejs/kit/pull/4120))
+
+- Extend user tsconfig from generated .svelte-kit/tsconfig.json ([#4118](https://github.com/sveltejs/kit/pull/4118))
+
 ## 1.0.0-next.288
 
 ### Patch Changes

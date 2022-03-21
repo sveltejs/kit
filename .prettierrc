@@ -13,7 +13,7 @@
 		{
 			"files": [
 				"packages/kit/src/packaging/test/fixtures/**/expected/**/*",
-				"packages/kit/src/core/adapt/prerender/fixtures/**/*"
+				"packages/kit/src/core/build/prerender/fixtures/**/*"
 			],
 			"options": {
 				"requirePragma": true

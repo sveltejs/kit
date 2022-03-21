@@ -1,0 +1,11 @@
+{
+	"compilerOptions": {
+		"noEmit": true,
+		"paths": {
+			"$lib": ["source/components"],
+			"$lib/*": ["source/components/*"],
+			"types": ["../../../types/internal"]
+		}
+	},
+	"extends": "./.custom-out-dir/tsconfig.json"
+}

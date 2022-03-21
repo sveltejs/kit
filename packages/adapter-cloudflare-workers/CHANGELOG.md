@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.36
+
+### Patch Changes
+
+- Provide getClientAddress function ([#4289](https://github.com/sveltejs/kit/pull/4289))
+
+## 1.0.0-next.35
+
+### Patch Changes
+
+- [breaking] replace builder.prerender() with builder.writePrerendered() and builder.prerendered ([#4192](https://github.com/sveltejs/kit/pull/4192)) ([#4229](https://github.com/sveltejs/kit/pull/4229))
+
 ## 1.0.0-next.34
 
 ### Patch Changes

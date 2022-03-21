@@ -5,6 +5,7 @@ import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { decode_params } from './utils.js';
 import { normalize_path } from '../../utils/url.js';
+import { exec } from '../../utils/routing.js';
 
 const DATA_SUFFIX = '/__data.json';
 
@@ -12,12 +13,12 @@ const DATA_SUFFIX = '/__data.json';
 const default_transform = ({ html }) => html;
 
 /** @type {import('types').Respond} */
-export async function respond(request, options, state = {}) {
-	const url = new URL(request.url);
+export async function respond(request, options, state) {
+	let url = new URL(request.url);
 
 	const normalized = normalize_path(url.pathname, options.trailing_slash);
 
-	if (normalized !== url.pathname) {
+	if (normalized !== url.pathname && !state.prerender?.fallback) {
 		return new Response(undefined, {
 			status: 301,
 			headers: {
@@ -51,14 +52,73 @@ export async function respond(request, options, state = {}) {
 		}
 	}
 
+	let decoded = decodeURI(url.pathname);
+
+	/** @type {import('types').SSRRoute | null} */
+	let route = null;
+
+	/** @type {Record<string, string>} */
+	let params = {};
+
+	if (options.paths.base && !state.prerender?.fallback) {
+		if (!decoded.startsWith(options.paths.base)) {
+			return new Response(undefined, { status: 404 });
+		}
+		decoded = decoded.slice(options.paths.base.length) || '/';
+	}
+
+	const is_data_request = decoded.endsWith(DATA_SUFFIX);
+
+	if (is_data_request) {
+		decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
+
+		const normalized = normalize_path(
+			url.pathname.slice(0, -DATA_SUFFIX.length),
+			options.trailing_slash
+		);
+
+		url = new URL(url.origin + normalized + url.search);
+	}
+
+	if (!state.prerender || !state.prerender.fallback) {
+		const matchers = await options.manifest._.matchers();
+
+		for (const candidate of options.manifest._.routes) {
+			const match = candidate.pattern.exec(decoded);
+			if (!match) continue;
+
+			const matched = exec(match, candidate.names, candidate.types, matchers);
+			if (matched) {
+				route = candidate;
+				params = decode_params(matched);
+				break;
+			}
+		}
+	}
+
 	/** @type {import('types').RequestEvent} */
 	const event = {
-		request,
-		url,
-		params: {},
-		// @ts-expect-error this picks up types that belong to the tests
+		get clientAddress() {
+			if (!state.getClientAddress) {
+				throw new Error(
+					`${
+						import.meta.env.VITE_SVELTEKIT_ADAPTER_NAME
+					} does not specify getClientAddress. Please raise an issue`
+				);
+			}
+
+			Object.defineProperty(event, 'clientAddress', {
+				value: state.getClientAddress()
+			});
+
+			return event.clientAddress;
+		},
 		locals: {},
-		platform: state.platform
+		params,
+		platform: state.platform,
+		request,
+		routeId: route && route.id,
+		url
 	};
 
 	// TODO remove this for 1.0
@@ -100,6 +160,8 @@ export async function respond(request, options, state = {}) {
 		transformPage: default_transform
 	};
 
+	// TODO match route before calling handle?
+
 	try {
 		const response = await options.hooks.handle({
 			event,
@@ -113,14 +175,14 @@ export async function respond(request, options, state = {}) {
 
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
-						url: event.url,
-						params: event.params,
+						event,
 						options,
 						state,
 						$session: await options.hooks.getSession(event),
 						page_config: { router: true, hydrate: true },
 						stuff: {},
 						status: 200,
+						error: null,
 						branch: [],
 						resolve_opts: {
 							...resolve_opts,
@@ -129,65 +191,28 @@ export async function respond(request, options, state = {}) {
 					});
 				}
 
-				let decoded = decodeURI(event.url.pathname);
-
-				if (options.paths.base) {
-					if (!decoded.startsWith(options.paths.base)) {
-						return new Response(undefined, { status: 404 });
-					}
-					decoded = decoded.slice(options.paths.base.length) || '/';
-				}
-
-				const is_data_request = decoded.endsWith(DATA_SUFFIX);
-
-				if (is_data_request) {
-					decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
-
-					const normalized = normalize_path(
-						url.pathname.slice(0, -DATA_SUFFIX.length),
-						options.trailing_slash
-					);
-
-					event.url = new URL(event.url.origin + normalized + event.url.search);
-				}
-
-				for (const route of options.manifest._.routes) {
-					const match = route.pattern.exec(decoded);
-					if (!match) continue;
-
-					event.params = route.params ? decode_params(route.params(match)) : {};
-
-					/** @type {Response | undefined} */
+				if (route) {
+					/** @type {Response} */
 					let response;
 
 					if (is_data_request && route.type === 'page' && route.shadow) {
 						response = await render_endpoint(event, await route.shadow());
 
 						// loading data for a client-side transition is a special case
-						if (request.headers.get('x-sveltekit-load') === 'true') {
-							if (response) {
-								// since redirects are opaque to the browser, we need to repackage
-								// 3xx responses as 200s with a custom header
-								if (response.status >= 300 && response.status < 400) {
-									const location = response.headers.get('location');
+						if (request.headers.has('x-sveltekit-load')) {
+							// since redirects are opaque to the browser, we need to repackage
+							// 3xx responses as 200s with a custom header
+							if (response.status >= 300 && response.status < 400) {
+								const location = response.headers.get('location');
 
-									if (location) {
-										const headers = new Headers(response.headers);
-										headers.set('x-sveltekit-location', location);
-										response = new Response(undefined, {
-											status: 204,
-											headers
-										});
-									}
+								if (location) {
+									const headers = new Headers(response.headers);
+									headers.set('x-sveltekit-location', location);
+									response = new Response(undefined, {
+										status: 204,
+										headers
+									});
 								}
-							} else {
-								// TODO ideally, the client wouldn't request this data
-								// in the first place (at least in production)
-								response = new Response('{}', {
-									headers: {
-										'content-type': 'application/json'
-									}
-								});
 							}
 						}
 					} else {
@@ -248,6 +273,10 @@ export async function respond(request, options, state = {}) {
 						error: new Error(`Not found: ${event.url.pathname}`),
 						resolve_opts
 					});
+				}
+
+				if (state.prerender) {
+					return new Response('not found', { status: 404 });
 				}
 
 				// we can't load the endpoint from our own manifest,

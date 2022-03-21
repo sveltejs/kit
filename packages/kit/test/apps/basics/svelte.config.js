@@ -3,6 +3,9 @@ import path from 'path';
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
+		prerender: {
+			onError: 'continue'
+		},
 		vite: {
 			build: {
 				minify: false

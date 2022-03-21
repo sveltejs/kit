@@ -29,10 +29,12 @@ const config = {
 				// ...
 			}
 		},
+		endpointExtensions: ['.js', '.ts'],
 		files: {
 			assets: 'static',
 			hooks: 'src/hooks',
 			lib: 'src/lib',
+			params: 'src/params',
 			routes: 'src/routes',
 			serviceWorker: 'src/service-worker',
 			template: 'src/app.html'
@@ -43,6 +45,7 @@ const config = {
 			parameter: '_method',
 			allowed: []
 		},
+		outDir: '.svelte-kit',
 		package: {
 			dir: 'package',
 			emitTypes: true,
@@ -57,6 +60,7 @@ const config = {
 		prerender: {
 			concurrency: 1,
 			crawl: true,
+			default: false,
 			enabled: true,
 			entries: ['*'],
 			onError: 'fail'
@@ -134,6 +138,10 @@ When pages are prerendered, the CSP header is added via a `<meta http-equiv>` ta
 
 > When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
 
+### endpointExtensions
+
+An array of file extensions that SvelteKit will treat as endpoints. Files with extensions that match neither `config.extensions` nor `config.kit.endpointExtensions` will be ignored by the router.
+
 ### files
 
 An object containing zero or more of the following `string` values:
@@ -141,6 +149,7 @@ An object containing zero or more of the following `string` values:
 - `assets` — a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
 - `hooks` — the location of your hooks module (see [Hooks](/docs/hooks))
 - `lib` — your app's internal library, accessible throughout the codebase as `$lib`
+- `params` — a directory containing [parameter validators](/docs/routing#advanced-routing-validation)
 - `routes` — the files that define the structure of your app (see [Routing](/docs/routing))
 - `serviceWorker` — the location of your service worker's entry point (see [Service workers](/docs/service-workers))
 - `template` — the location of the template for HTML responses
@@ -169,6 +178,10 @@ See [HTTP Method Overrides](/docs/routing#endpoints-http-method-overrides). An o
 
 - `parameter` — query parameter name to use for passing the intended method value
 - `allowed` - array of HTTP methods that can be used when overriding the original request method
+
+### outDir
+
+The directory that SvelteKit writes files to during `dev` and `build`. You should exclude this directory from version control.
 
 ### package
 
@@ -219,6 +232,7 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
 
 - `concurrency` — how many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
+- `default` — set to `true` to prerender every page without `export const prerender = false`
 - `enabled` — set to `false` to disable prerendering altogether
 - `entries` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 - `onError`
@@ -263,9 +277,9 @@ An object containing zero or more of the following values:
 
 Whether to remove, append, or ignore trailing slashes when resolving URLs to routes.
 
-- `"never"` — redirect `/x/` to `/x`
-- `"always"` — redirect `/x` to `/x/`
-- `"ignore"` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
+- `'never'` — redirect `/x/` to `/x`
+- `'always'` — redirect `/x` to `/x/`
+- `'ignore'` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
 
 This option also affects [prerendering](/docs/page-options#prerender). If `trailingSlash` is `always`, a route like `/about` will result in an `about/index.html` file, otherwise it will create `about.html`, mirroring static webserver conventions.
 

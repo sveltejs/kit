@@ -12,7 +12,7 @@ import toml from '@iarna/toml';
  * } & toml.JsonMap} NetlifyConfig
  */
 
-const files = fileURLToPath(new URL('./files', import.meta.url));
+const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('.')} */
 export default function ({ split = false } = {}) {
@@ -35,11 +35,6 @@ export default function ({ split = false } = {}) {
 			builder.mkdirp('.netlify/functions-internal');
 
 			builder.log.minor(`Publishing to "${publish}"`);
-
-			builder.log.minor('Prerendering static pages...');
-			await builder.prerender({
-				dest: publish
-			});
 
 			builder.writeServer('.netlify/server');
 
@@ -74,6 +69,8 @@ export default function ({ split = false } = {}) {
 				builder.createEntries((route) => {
 					const parts = [];
 
+					// Netlify's syntax uses '*' and ':param' as "splats" and "placeholders"
+					// https://docs.netlify.com/routing/redirects/redirect-options/#splats
 					for (const segment of route.segments) {
 						if (segment.rest) {
 							parts.push('*');
@@ -127,6 +124,7 @@ export default function ({ split = false } = {}) {
 			builder.log.minor('Copying assets...');
 			builder.writeStatic(publish);
 			builder.writeClient(publish);
+			builder.writePrerendered(publish);
 
 			builder.log.minor('Writing redirects...');
 			const redirect_file = join(publish, '_redirects');
@@ -138,7 +136,7 @@ export default function ({ split = false } = {}) {
 			builder.copy('_headers', headers_file);
 			appendFileSync(
 				headers_file,
-				`\n\n/${builder.appDir}/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
+				`\n\n/${builder.config.kit.appDir}/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
 			);
 		}
 	};

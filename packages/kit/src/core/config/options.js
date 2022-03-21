@@ -99,10 +99,13 @@ const options = object(
 				})
 			}),
 
+			endpointExtensions: string_array(['.js', '.ts']),
+
 			files: object({
 				assets: string('static'),
 				hooks: string(join('src', 'hooks')),
 				lib: string(join('src', 'lib')),
+				params: string(join('src', 'params')),
 				routes: string(join('src', 'routes')),
 				serviceWorker: string(join('src', 'service-worker')),
 				template: string(join('src', 'app.html'))
@@ -141,6 +144,8 @@ const options = object(
 					return input;
 				})
 			}),
+
+			outDir: string('.svelte-kit'),
 
 			package: object({
 				dir: string('package'),
@@ -190,6 +195,7 @@ const options = object(
 					(keypath) =>
 						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/configuration#trailingslash`
 				),
+				default: boolean(false),
 				enabled: boolean(true),
 				entries: validate(['*'], (input, keypath) => {
 					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {

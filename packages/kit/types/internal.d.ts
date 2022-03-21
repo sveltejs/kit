@@ -1,16 +1,16 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import {
-	RequestHandler,
-	Load,
+	Config,
 	ExternalFetch,
 	GetSession,
 	Handle,
 	HandleError,
-	Config
+	Load,
+	RequestHandler,
+	Server,
+	SSRManifest
 } from './index';
 import {
-	Either,
-	Fallthrough,
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
@@ -19,8 +19,6 @@ import {
 	ResolveOptions,
 	ResponseHeaders,
 	RouteSegment,
-	Server,
-	SSRManifest,
 	TrailingSlash
 } from './private';
 
@@ -63,28 +61,28 @@ export interface BuildData {
 		methods: Record<string, HttpMethod[]>;
 		vite_manifest: import('vite').Manifest;
 	};
-	static: string[];
-	entries: string[];
 }
 
 export type CSRComponent = any; // TODO
 
 export type CSRComponentLoader = () => Promise<CSRComponent>;
 
-export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?, HasShadow?];
+export type CSRRoute = {
+	id: string;
+	exec: (path: string) => undefined | Record<string, string>;
+	a: CSRComponentLoader[];
+	b: CSRComponentLoader[];
+	has_shadow: boolean;
+};
 
 export interface EndpointData {
 	type: 'endpoint';
-	key: string;
-	segments: RouteSegment[];
+	id: string;
 	pattern: RegExp;
-	params: string[];
 	file: string;
 }
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
-
-type HasShadow = 1;
 
 export interface Hooks {
 	externalFetch: ExternalFetch;
@@ -96,7 +94,7 @@ export interface Hooks {
 export class InternalServer extends Server {
 	respond(
 		request: Request,
-		options?: RequestOptions & {
+		options: RequestOptions & {
 			prerender?: PrerenderOptions;
 		}
 	): Promise<Response>;
@@ -108,6 +106,7 @@ export interface ManifestData {
 	error: string;
 	components: string[];
 	routes: RouteData[];
+	matchers: Record<string, string>;
 }
 
 export interface MethodOverride {
@@ -115,29 +114,28 @@ export interface MethodOverride {
 	allowed: string[];
 }
 
-export type NormalizedLoadOutput = Either<
-	{
-		status: number;
-		error?: Error;
-		redirect?: string;
-		props?: Record<string, any> | Promise<Record<string, any>>;
-		stuff?: Record<string, any>;
-		maxage?: number;
-	},
-	Fallthrough
->;
+export type NormalizedLoadOutput = {
+	status: number;
+	error?: Error;
+	redirect?: string;
+	props?: Record<string, any> | Promise<Record<string, any>>;
+	stuff?: Record<string, any>;
+	maxage?: number;
+};
 
 export interface PageData {
 	type: 'page';
-	key: string;
+	id: string;
 	shadow: string | null;
-	segments: RouteSegment[];
 	pattern: RegExp;
-	params: string[];
 	path: string;
 	a: string[];
 	b: string[];
 }
+
+export type PayloadScriptAttributes =
+	| { type: 'data'; url: string; body?: string }
+	| { type: 'props' };
 
 export interface PrerenderDependency {
 	response: Response;
@@ -145,8 +143,8 @@ export interface PrerenderDependency {
 }
 
 export interface PrerenderOptions {
-	fallback?: string;
-	all: boolean;
+	fallback?: boolean;
+	default: boolean;
 	dependencies: Map<string, PrerenderDependency>;
 }
 
@@ -164,7 +162,7 @@ export type RecursiveRequired<T> = {
 export type RequiredResolveOptions = Required<ResolveOptions>;
 
 export interface Respond {
-	(request: Request, options: SSROptions, state?: SSRState): Promise<Response>;
+	(request: Request, options: SSROptions, state: SSRState): Promise<Response>;
 }
 
 export type RouteData = PageData | EndpointData;
@@ -175,12 +173,18 @@ export interface ShadowEndpointOutput<Output extends JSONObject = JSONObject> {
 	body?: Output;
 }
 
+/**
+ * The route key of a page with a matching endpoint — used to ensure the
+ * client loads data from the right endpoint during client-side navigation
+ * rather than a different route that happens to match the path
+ */
+type ShadowKey = string;
+
 export interface ShadowRequestHandler<Output extends JSONObject = JSONObject> {
-	(event: RequestEvent): MaybePromise<Either<ShadowEndpointOutput<Output>, Fallthrough>>;
+	(event: RequestEvent): MaybePromise<ShadowEndpointOutput<Output>>;
 }
 
 export interface ShadowData {
-	fallthrough?: boolean;
 	status?: number;
 	error?: Error;
 	redirect?: string;
@@ -209,8 +213,10 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface SSREndpoint {
 	type: 'endpoint';
+	id: string;
 	pattern: RegExp;
-	params: GetParams;
+	names: string[];
+	types: string[];
 	load(): Promise<{
 		[method: string]: RequestHandler;
 	}>;
@@ -268,8 +274,10 @@ export interface SSROptions {
 
 export interface SSRPage {
 	type: 'page';
+	id: string;
 	pattern: RegExp;
-	params: GetParams;
+	names: string[];
+	types: string[];
 	shadow:
 		| null
 		| (() => Promise<{
@@ -294,11 +302,11 @@ export interface SSRPagePart {
 export type SSRRoute = SSREndpoint | SSRPage;
 
 export interface SSRState {
-	fetched?: string;
+	fallback?: string;
+	getClientAddress: () => string;
 	initiator?: SSRPage | null;
 	platform?: any;
 	prerender?: PrerenderOptions;
-	fallback?: string;
 }
 
 export type StrictBody = string | Uint8Array;

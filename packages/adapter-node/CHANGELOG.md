@@ -1,5 +1,25 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.73
+
+### Patch Changes
+
+- [breaking] rename `xForwardedForIndex` to `XFF_DEPTH` and make it an environment variable ([#4332](https://github.com/sveltejs/kit/pull/4332))
+
+* [breaking] Replace `options.env` with `options.envPrefix` ([#4360](https://github.com/sveltejs/kit/pull/4360))
+
+## 1.0.0-next.72
+
+### Patch Changes
+
+- Provide getClientAddress function ([#4289](https://github.com/sveltejs/kit/pull/4289))
+
+## 1.0.0-next.71
+
+### Patch Changes
+
+- [breaking] replace builder.prerender() with builder.writePrerendered() and builder.prerendered ([#4192](https://github.com/sveltejs/kit/pull/4192)) ([#4229](https://github.com/sveltejs/kit/pull/4229))
+
 ## 1.0.0-next.70
 
 ### Patch Changes

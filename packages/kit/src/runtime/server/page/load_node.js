@@ -11,8 +11,6 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   route: import('types').SSRPage | null;
- *   url: URL;
- *   params: Record<string, string>;
  *   node: import('types').SSRNode;
  *   $session: any;
  *   stuff: Record<string, any>;
@@ -21,15 +19,13 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   status?: number;
  *   error?: Error;
  * }} opts
- * @returns {Promise<import('./types').Loaded | undefined>} undefined for fallthrough
+ * @returns {Promise<import('./types').Loaded>}
  */
 export async function load_node({
 	event,
 	options,
 	state,
 	route,
-	url,
-	params,
 	node,
 	$session,
 	stuff,
@@ -50,7 +46,7 @@ export async function load_node({
 	 */
 	let set_cookie_headers = [];
 
-	/** @type {import('types').Either<import('types').Fallthrough, import('types').LoadOutput>} */
+	/** @type {import('types').LoadOutput} */
 	let loaded;
 
 	/** @type {import('types').ShadowData} */
@@ -62,8 +58,6 @@ export async function load_node({
 				!!state.prerender
 		  )
 		: {};
-
-	if (shadow.fallthrough) return;
 
 	if (shadow.cookies) {
 		set_cookie_headers.push(...shadow.cookies);
@@ -82,9 +76,10 @@ export async function load_node({
 	} else if (module.load) {
 		/** @type {import('types').LoadInput | import('types').ErrorLoadInput} */
 		const load_input = {
-			url: state.prerender ? create_prerendering_url_proxy(url) : url,
-			params,
+			url: state.prerender ? create_prerendering_url_proxy(event.url) : event.url,
+			params: event.params,
 			props: shadow.body || {},
+			routeId: event.routeId,
 			get session() {
 				uses_credentials = true;
 				return $session;
@@ -155,14 +150,17 @@ export async function load_node({
 
 					if (options.read) {
 						const type = is_asset
-							? options.manifest._.mime[filename.slice(filename.lastIndexOf('.'))]
+							? options.manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
 							: 'text/html';
 
 						response = new Response(options.read(file), {
 							headers: type ? { 'content-type': type } : {}
 						});
 					} else {
-						response = await fetch(`${url.origin}/${file}`, /** @type {RequestInit} */ (opts));
+						response = await fetch(
+							`${event.url.origin}/${file}`,
+							/** @type {RequestInit} */ (opts)
+						);
 					}
 				} else if (is_root_relative(resolved)) {
 					if (opts.credentials !== 'omit') {
@@ -189,8 +187,9 @@ export async function load_node({
 					}
 
 					response = await respond(new Request(new URL(requested, event.url).href, opts), options, {
-						fetched: requested,
-						initiator: route
+						getClientAddress: state.getClientAddress,
+						initiator: route,
+						prerender: state.prerender
 					});
 
 					if (state.prerender) {
@@ -323,7 +322,16 @@ export async function load_node({
 		loaded = await module.load.call(null, load_input);
 
 		if (!loaded) {
+			// TODO do we still want to enforce this now that there's no fallthrough?
 			throw new Error(`load function must return a value${options.dev ? ` (${node.entry})` : ''}`);
+		}
+
+		// TODO remove for 1.0
+		// @ts-expect-error
+		if (loaded.fallthrough) {
+			throw new Error(
+				'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
+			);
 		}
 	} else if (shadow.body) {
 		loaded = {
@@ -331,10 +339,6 @@ export async function load_node({
 		};
 	} else {
 		loaded = {};
-	}
-
-	if (loaded.fallthrough && !is_error) {
-		return;
 	}
 
 	// generate __data.json files when prerendering
@@ -399,7 +403,13 @@ async function load_shadow_data(route, event, options, prerender) {
 		if (!is_get) {
 			const result = await handler(event);
 
-			if (result.fallthrough) return result;
+			// TODO remove for 1.0
+			// @ts-expect-error
+			if (result.fallthrough) {
+				throw new Error(
+					'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
+				);
+			}
 
 			const { status, headers, body } = validate_shadow_output(result);
 			data.status = status;
@@ -424,7 +434,13 @@ async function load_shadow_data(route, event, options, prerender) {
 		if (get) {
 			const result = await get(event);
 
-			if (result.fallthrough) return result;
+			// TODO remove for 1.0
+			// @ts-expect-error
+			if (result.fallthrough) {
+				throw new Error(
+					'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
+				);
+			}
 
 			const { status, headers, body } = validate_shadow_output(result);
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);

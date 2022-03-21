@@ -1,18 +1,16 @@
 import { s } from '../../utils/misc.js';
+import { parse_route_id } from '../../utils/routing.js';
 import { get_mime_lookup } from '../utils.js';
 
 /**
- * @param {import('types').BuildData} build_data;
- * @param {string} relative_path;
- * @param {import('types').RouteData[]} routes;
- * @param {'esm' | 'cjs'} format
+ * @param {{
+ *   build_data: import('types').BuildData;
+ *   relative_path: string;
+ *   routes: import('types').RouteData[];
+ *   format?: 'esm' | 'cjs'
+ * }} opts
  */
-export function generate_manifest(
-	build_data,
-	relative_path,
-	routes = build_data.manifest_data.routes,
-	format = 'esm'
-) {
+export function generate_manifest({ build_data, relative_path, routes, format = 'esm' }) {
 	/** @typedef {{ index: number, path: string }} LookupEntry */
 	/** @type {Map<string, LookupEntry>} */
 	const bundled_nodes = new Map();
@@ -44,10 +42,13 @@ export function generate_manifest(
 	});
 
 	/** @type {(path: string) => string} */
-	const importer =
+	const load =
 		format === 'esm'
-			? (path) => `() => import('${path}')`
-			: (path) => `() => Promise.resolve().then(() => require('${path}'))`;
+			? (path) => `import('${path}')`
+			: (path) => `Promise.resolve().then(() => require('${path}'))`;
+
+	/** @type {(path: string) => string} */
+	const loader = (path) => `() => ${load(path)}`;
 
 	const assets = build_data.manifest_data.assets.map((asset) => asset.file);
 	if (build_data.service_worker) {
@@ -57,25 +58,35 @@ export function generate_manifest(
 	/** @param {string} id */
 	const get_index = (id) => id && /** @type {LookupEntry} */ (bundled_nodes.get(id)).index;
 
+	const matchers = new Set();
+
 	// prettier-ignore
 	return `{
 		appDir: ${s(build_data.app_dir)},
 		assets: new Set(${s(assets)}),
+		mimeTypes: ${s(get_mime_lookup(build_data.manifest_data))},
 		_: {
-			mime: ${s(get_mime_lookup(build_data.manifest_data))},
 			entry: ${s(build_data.client.entry)},
 			nodes: [
-				${Array.from(bundled_nodes.values()).map(node => importer(node.path)).join(',\n\t\t\t\t')}
+				${Array.from(bundled_nodes.values()).map(node => loader(node.path)).join(',\n\t\t\t\t')}
 			],
 			routes: [
 				${routes.map(route => {
+					const { pattern, names, types } = parse_route_id(route.id);
+
+					types.forEach(type => {
+						if (type) matchers.add(type);
+					});
+
 					if (route.type === 'page') {
 						return `{
 							type: 'page',
-							pattern: ${route.pattern},
-							params: ${get_params(route.params)},
+							id: ${s(route.id)},
+							pattern: ${pattern},
+							names: ${s(names)},
+							types: ${s(types)},
 							path: ${route.path ? s(route.path) : null},
-							shadow: ${route.shadow ? importer(`${relative_path}/${build_data.server.vite_manifest[route.shadow].file}`) : null},
+							shadow: ${route.shadow ? loader(`${relative_path}/${build_data.server.vite_manifest[route.shadow].file}`) : null},
 							a: ${s(route.a.map(get_index))},
 							b: ${s(route.b.map(get_index))}
 						}`.replace(/^\t\t/gm, '');
@@ -88,31 +99,19 @@ export function generate_manifest(
 
 						return `{
 							type: 'endpoint',
-							pattern: ${route.pattern},
-							params: ${get_params(route.params)},
-							load: ${importer(`${relative_path}/${build_data.server.vite_manifest[route.file].file}`)}
+							id: ${s(route.id)},
+							pattern: ${pattern},
+							names: ${s(names)},
+							types: ${s(types)},
+							load: ${loader(`${relative_path}/${build_data.server.vite_manifest[route.file].file}`)}
 						}`.replace(/^\t\t/gm, '');
 					}
 				}).filter(Boolean).join(',\n\t\t\t\t')}
-			]
+			],
+			matchers: async () => {
+				${Array.from(matchers).map(type => `const { match: ${type} } = await ${load(`${relative_path}/entries/matchers/${type}.js`)}`).join('\n\t\t\t\t')}
+				return { ${Array.from(matchers).join(', ')} };
+			}
 		}
 	}`.replace(/^\t/gm, '');
-}
-
-/** @param {string[]} array */
-function get_params(array) {
-	// given an array of params like `['x', 'y', 'z']` for
-	// src/routes/[x]/[y]/[z]/svelte, create a function
-	// that turns a RexExpMatchArray into ({ x, y, z })
-	return array.length
-		? '(m) => ({ ' +
-				array
-					.map((param, i) => {
-						return param.startsWith('...')
-							? `${param.slice(3)}: m[${i + 1}] || ''`
-							: `${param}: m[${i + 1}]`;
-					})
-					.join(', ') +
-				'})'
-		: 'null';
 }
