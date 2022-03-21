@@ -18,7 +18,11 @@ export async function respond(request, options, state) {
 
 	const normalized = normalize_path(url.pathname, options.trailing_slash);
 
-	if (normalized !== url.pathname && !state.prerender?.fallback && !/^(https?:)?\/\//.test(normalized)) {
+	if (
+		normalized !== url.pathname &&
+		!state.prerender?.fallback &&
+		!/^(https?:)?\/\//.test(normalized)
+	) {
 		return new Response(undefined, {
 			status: 301,
 			headers: {
