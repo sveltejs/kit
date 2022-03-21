@@ -660,7 +660,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 							// @ts-expect-error
 							if (node.loaded.fallthrough) {
 								throw new Error(
-									'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-validation'
+									'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
 								);
 							}
 

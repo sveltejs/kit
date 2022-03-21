@@ -6,7 +6,7 @@ import { write_if_changed } from './utils.js';
  * @param {import('types').ManifestData} manifest_data
  * @param {string} output
  */
-export function write_validators(manifest_data, output) {
+export function write_matchers(manifest_data, output) {
 	const imports = [];
 	const matchers = [];
 

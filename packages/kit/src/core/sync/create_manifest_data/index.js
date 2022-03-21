@@ -221,7 +221,7 @@ export default function create_manifest_data({
 				matchers[type] = path.join(params_base, file);
 			} else {
 				throw new Error(
-					`Validator names must match /^[a-zA-Z_][a-zA-Z0-9_]*$/ — "${file}" is invalid`
+					`Matcher names must match /^[a-zA-Z_][a-zA-Z0-9_]*$/ — "${file}" is invalid`
 				);
 			}
 		}
