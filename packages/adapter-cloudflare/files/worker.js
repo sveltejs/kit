@@ -65,7 +65,7 @@ export default {
 				// Use context so you can return the response without blocking on
 				// writing to cache
 				try {
-					context(cache.put(req, response.clone()));
+					context.waitUntil(cache.put(req, response.clone()));
 				} catch {
 					// noop
 				}
