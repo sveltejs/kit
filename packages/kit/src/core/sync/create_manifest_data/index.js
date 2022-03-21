@@ -297,11 +297,11 @@ function trace(file, tree, extensions) {
 
 	let layout_id = base.includes('@') ? base.split('@')[1] : 'default';
 
+	let node = tree.get(parts.join('/'));
+
 	// walk up the tree, find which __layout and __error components
 	// apply to this page
-	while (parts.length) {
-		const node = tree.get(parts.join('/'));
-
+	while (true) {
 		const layout = node?.layouts[layout_id];
 
 		errors.unshift(node?.error);
@@ -309,20 +309,17 @@ function trace(file, tree, extensions) {
 
 		if (layout?.name.includes('@')) {
 			layout_id = layout.name.split('@')[1];
-		} else {
+		} else if (parts.length > 0) {
 			const next_dir = /** @type {string} */ (parts.pop());
 
 			if (next_dir.includes('@')) {
 				layout_id = next_dir.split('@')[1];
 			}
-		}
-	}
 
-	if (layout_id !== '') {
-		const node = /** @type {Node} */ (tree.get(''));
-		if (layout_id === '~') layout_id = 'default';
-		errors.unshift(node.error);
-		layouts.unshift(node.layouts[layout_id].file);
+			node = tree.get(parts.join('/'));
+		} else {
+			break;
+		}
 	}
 
 	// compact the arrays — any node that has neither a __layout
