@@ -46,6 +46,8 @@ import { parse_route_id } from '../../../utils/routing.js';
 const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+))?(?:@(~|[a-zA-Z0-9_-]+)?)?$/;
 const dunder_pattern = /(^|\/)__/;
 
+const DEFAULT = '~'; // any character that isn't allowed in layout names will do
+
 /**
  * @param {{
  *   config: import('types').ValidatedConfig;
@@ -70,13 +72,13 @@ export default function create_manifest_data({
 
 	const default_layout = {
 		file: posixify(path.relative(cwd, `${fallback}/layout.svelte`)),
-		name: 'default'
+		name: DEFAULT
 	};
 
 	// set default root layout/error
 	tree.set('', {
 		error: posixify(path.relative(cwd, `${fallback}/error.svelte`)),
-		layouts: { default: default_layout }
+		layouts: { [DEFAULT]: default_layout }
 	});
 
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
@@ -109,7 +111,7 @@ export default function create_manifest_data({
 					group.error = project_relative;
 				} else {
 					const match = /** @type {RegExpMatchArray} */ (layout_pattern.exec(name));
-					const layout_id = match[1] || 'default';
+					const layout_id = match[1] || DEFAULT;
 
 					const defined = group.layouts[layout_id];
 					if (defined && defined !== default_layout) {
@@ -196,8 +198,8 @@ export default function create_manifest_data({
 	tree.forEach(({ layouts, error }) => {
 		// we do [default, error, ...other_layouts] so that components[0] and [1]
 		// are the root layout/error. kinda janky, there's probably a nicer way
-		if (layouts.default) {
-			components.push(layouts.default.file);
+		if (layouts[DEFAULT]) {
+			components.push(layouts[DEFAULT].file);
 		}
 
 		if (error) {
@@ -205,7 +207,7 @@ export default function create_manifest_data({
 		}
 
 		for (const id in layouts) {
-			if (id !== 'default') components.push(layouts[id].file);
+			if (id !== DEFAULT) components.push(layouts[id].file);
 		}
 	});
 
@@ -295,7 +297,7 @@ function trace(file, tree, extensions) {
 	const extension = /** @type {string} */ (extensions.find((ext) => file.endsWith(ext)));
 	const base = filename.slice(0, -extension.length);
 
-	let layout_id = base.includes('@') ? base.split('@')[1] : 'default';
+	let layout_id = base.includes('@') ? base.split('@')[1] : DEFAULT;
 
 	let node = tree.get(parts.join('/'));
 
@@ -308,7 +310,7 @@ function trace(file, tree, extensions) {
 		layouts.unshift(layout?.file);
 
 		if (layout?.name.includes('@')) {
-			layout_id = layout.name.split('@')[1] || 'default';
+			layout_id = layout.name.split('@')[1] || DEFAULT;
 		} else if (parts.length > 0) {
 			const next_dir = /** @type {string} */ (parts.pop());
 
