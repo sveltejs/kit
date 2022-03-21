@@ -308,7 +308,7 @@ function trace(file, tree, extensions) {
 		layouts.unshift(layout?.file);
 
 		if (layout?.name.includes('@')) {
-			layout_id = layout.name.split('@')[1];
+			layout_id = layout.name.split('@')[1] || 'default';
 		} else if (parts.length > 0) {
 			const next_dir = /** @type {string} */ (parts.pop());
 
