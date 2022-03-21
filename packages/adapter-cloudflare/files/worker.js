@@ -50,6 +50,7 @@ export default {
 
 		// dynamically-generated pages
 		try {
+			// @ts-ignore
 			const cache = caches.default;
 			let response = await cache.match(req);
 
@@ -65,7 +66,9 @@ export default {
 				// writing to cache
 				try {
 					context(cache.put(req, response.clone()));
-				} catch {}
+				} catch {
+					// noop
+				}
 			}
 
 			return response;
