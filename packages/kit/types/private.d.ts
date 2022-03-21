@@ -191,8 +191,6 @@ export interface Logger {
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
-
 export interface Prerendered {
 	pages: Map<
 		string,
