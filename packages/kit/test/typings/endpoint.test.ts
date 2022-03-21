@@ -85,9 +85,22 @@ export const generic_case: RequestHandler<Record<string, string>, ExamplePost> =
 // --- invalid cases ---
 
 // @ts-expect-error - body must be JSON serializable
-export const error_body_must_be_serializable: RequestHandler = () => {
+export const error_unserializable_literal: RequestHandler = () => {
 	return {
 		body: () => {}
+	};
+};
+
+interface InvalidPost {
+	sorter(a: any, b: any): number;
+}
+// @ts-expect-error - body must be JSON serializable with Generic passed
+export const error_unserializable_generic: RequestHandler<
+	Record<string, string>,
+	InvalidPost
+> = () => {
+	return {
+		body: {} as InvalidPost
 	};
 };
 
