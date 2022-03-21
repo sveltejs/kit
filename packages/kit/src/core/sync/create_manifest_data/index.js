@@ -17,6 +17,9 @@ import { parse_route_id } from '../../../utils/routing.js';
  */
 
 /**
+ * A route, consisting of an endpoint module and/or an array of components
+ * (n layouts and one leaf) for successful navigations and an array of
+ * n error components to render if navigation fails
  * @typedef {{
  *   id: string;
  *   pattern: RegExp;
