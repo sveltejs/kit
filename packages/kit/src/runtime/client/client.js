@@ -19,6 +19,7 @@ import { components, dictionary, matchers } from '__GENERATED__/client-manifest.
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
+const RESTORATION_KEY = 'sveltekit:restoration';
 
 const routes = parse(components, dictionary, matchers);
 
@@ -33,7 +34,7 @@ const default_error = components[1]();
 // state we're navigating from
 
 /** @typedef {{ x: number, y: number }} ScrollPosition */
-/** @type {Record<number, ScrollPosition>} */
+/** @type {Record<String, ScrollPosition>} */
 let scroll_positions = {};
 try {
 	scroll_positions = JSON.parse(sessionStorage[SCROLL_KEY]);
@@ -41,7 +42,7 @@ try {
 	// do nothing
 }
 
-/** @param {number} index */
+/** @param {String} index */
 function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
@@ -123,16 +124,25 @@ export function create_client({ target, session, base, trailing_slash }) {
 	let router_enabled = true;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
+	/** @type {Number} */
 	let current_history_index = history.state?.[INDEX_KEY] ?? 0;
+	// keeping track of the position index in order to restore scroll position
+	/** @type {String} */
+	let current_position_index =
+		history.state?.[RESTORATION_KEY] ?? Math.random().toString(32).slice(2);
 
 	if (current_history_index === 0) {
 		// create initial history entry, so we can return here
-		history.replaceState({ ...history.state, [INDEX_KEY]: 0 }, '', location.href);
+		history.replaceState(
+			{ ...history.state, [INDEX_KEY]: 0, [RESTORATION_KEY]: current_position_index },
+			'',
+			location.href
+		);
 	}
 
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
-	const scroll = scroll_positions[current_history_index];
+	const scroll = scroll_positions[current_position_index];
 	if (scroll) scrollTo(scroll.x, scroll.y);
 
 	let hash_navigating = false;
@@ -259,6 +269,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			const { details } = opts;
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
+			details.state[RESTORATION_KEY] = current_position_index = Math.random().toString(32).slice(2);
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 
@@ -862,7 +873,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const pathname = normalize_path(url.pathname, trailing_slash);
 		const normalized = new URL(url.origin + pathname + url.search + url.hash);
 
-		update_scroll_positions(current_history_index);
+		update_scroll_positions(current_position_index);
 
 		accepted();
 
@@ -1002,7 +1013,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			addEventListener('visibilitychange', () => {
 				if (document.visibilityState === 'hidden') {
-					update_scroll_positions(current_history_index);
+					update_scroll_positions(current_position_index);
 
 					try {
 						sessionStorage[SCROLL_KEY] = JSON.stringify(scroll_positions);
@@ -1088,7 +1099,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					// clicking a hash link and those triggered by popstate
 					hash_navigating = true;
 
-					update_scroll_positions(current_history_index);
+					update_scroll_positions(current_position_index);
 
 					stores.page.set({ ...page, url });
 					stores.page.notify();
@@ -1118,12 +1129,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 					navigate({
 						url: new URL(location.href),
-						scroll: scroll_positions[event.state[INDEX_KEY]],
+						scroll: scroll_positions[event.state[RESTORATION_KEY]],
 						keepfocus: false,
 						redirect_chain: [],
 						details: null,
 						accepted: () => {
 							current_history_index = event.state[INDEX_KEY];
+							current_position_index = event.state[RESTORATION_KEY];
 						},
 						blocked: () => {
 							const delta = current_history_index - event.state[INDEX_KEY];
@@ -1138,8 +1150,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 				// we need to update history, otherwise we have to leave it alone
 				if (hash_navigating) {
 					hash_navigating = false;
+					current_position_index = Math.random().toString(32).slice(2);
 					history.replaceState(
-						{ ...history.state, [INDEX_KEY]: ++current_history_index },
+						{
+							...history.state,
+							[INDEX_KEY]: ++current_history_index,
+							[RESTORATION_KEY]: current_position_index
+						},
 						'',
 						location.href
 					);
