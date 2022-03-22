@@ -19,6 +19,7 @@
 		"@types/gitignore-parser": "^0.0.0",
 		"@types/prettier": "^2.4.2",
 		"@types/prompts": "^2.0.14",
+		"eslint": "^8.11.0",
 		"gitignore-parser": "^0.0.2",
 		"prettier": "^2.5.0",
 		"prettier-plugin-svelte": "^2.5.0",
@@ -28,6 +29,7 @@
 		"tiny-glob": "^0.2.9"
 	},
 	"scripts": {
+		"start": "node bin.js",
 		"build": "node scripts/build-templates",
 		"check": "tsc",
 		"lint": "eslint --ignore-path .gitignore --ignore-path ../../.gitignore \"./*.js\" && npm run check-format",
