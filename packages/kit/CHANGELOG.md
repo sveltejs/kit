@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.302
+
+### Patch Changes
+
+- [fix] don't redirect to external URLs when normalizing paths ([#4414](https://github.com/sveltejs/kit/pull/4414))
+
+* Fix error link for fallthrough replacement ([#4408](https://github.com/sveltejs/kit/pull/4408))
+
 ## 1.0.0-next.301
 
 ### Patch Changes
