@@ -39,6 +39,8 @@ const options = object(
 				return input;
 			}),
 
+			additionalSpecials: string_array([]),
+
 			amp: boolean(false),
 
 			appDir: validate('_app', (input, keypath) => {

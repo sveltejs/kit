@@ -97,6 +97,7 @@ export interface Config {
 	extensions?: string[];
 	kit?: {
 		adapter?: Adapter;
+		additionalSpecials?: string[];
 		amp?: boolean;
 		appDir?: string;
 		browser?: {

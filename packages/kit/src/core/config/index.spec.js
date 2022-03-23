@@ -12,6 +12,7 @@ const get_defaults = (prefix = '') => ({
 	extensions: ['.svelte'],
 	kit: {
 		adapter: null,
+		additionalSpecials: [],
 		amp: false,
 		appDir: '_app',
 		browser: {

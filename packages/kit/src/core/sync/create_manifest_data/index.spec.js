@@ -457,6 +457,16 @@ test('errors on encountering an illegal __file', () => {
 	);
 });
 
+test('allows config specified legal __file', () => {
+	const { routes } = create('samples/legal-dunder', {
+		kit: {
+			additionalSpecials: ['__foo']
+		}
+	});
+
+	assert.equal(routes, []);
+});
+
 test('creates param matchers', () => {
 	const { matchers } = create('samples/basic'); // directory doesn't matter for the test
 
