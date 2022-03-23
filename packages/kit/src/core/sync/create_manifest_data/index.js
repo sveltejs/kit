@@ -25,7 +25,7 @@ import { parse_route_id } from '../../../utils/routing.js';
  * }} Item
  */
 
-const defaultSpecials = new Set(['__layout', '__layout.reset', '__error']);
+const default_specials = new Set(['__layout', '__layout.reset', '__error']);
 
 /**
  * @param {{
@@ -82,7 +82,7 @@ export default function create_manifest_data({
 
 			const name = basename.slice(0, basename.length - ext.length);
 
-			const specials = new Set([...defaultSpecials, ...config.kit.additionalSpecials]);
+			const specials = new Set([...default_specials, ...config.kit.additionalSpecials]);
 
 			if (name.startsWith('__') && !specials.has(name)) {
 				throw new Error(`Files and directories prefixed with __ are reserved (saw ${file})`);
