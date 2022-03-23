@@ -202,7 +202,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const current_token = (token = {});
 		let navigation_result = intent && (await load_route(intent, no_cache));
 
-		if (!navigation_result && url.pathname === location.pathname) {
+		if (
+			!navigation_result &&
+			url.origin === location.origin &&
+			url.pathname === location.pathname
+		) {
 			// this could happen in SPA fallback mode if the user navigated to
 			// `/non-existent-page`. if we fall back to reloading the page, it
 			// will create an infinite loop. so whereas we normally handle
