@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.303
+
+### Patch Changes
+
+- [fix] don't use client-side navigation when clicking on a link to the same path on a different origin ([#4433](https://github.com/sveltejs/kit/pull/4433))
+
 ## 1.0.0-next.302
 
 ### Patch Changes
