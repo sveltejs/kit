@@ -137,3 +137,7 @@ export function initial_fetch(resource, opts) {
 
 	return fetch(resource, opts);
 }
+
+export function get_random_string() {
+	return Math.random().toString(32).slice(2);
+}

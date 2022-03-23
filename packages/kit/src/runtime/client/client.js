@@ -10,7 +10,8 @@ import {
 	get_href,
 	initial_fetch,
 	notifiable_store,
-	scroll_state
+	scroll_state,
+	get_random_string
 } from './utils.js';
 import { parse } from './parse.js';
 
@@ -34,7 +35,7 @@ const default_error = components[1]();
 // state we're navigating from
 
 /** @typedef {{ x: number, y: number }} ScrollPosition */
-/** @type {Record<String, ScrollPosition>} */
+/** @type {Record<string, ScrollPosition>} */
 let scroll_positions = {};
 try {
 	scroll_positions = JSON.parse(sessionStorage[SCROLL_KEY]);
@@ -42,7 +43,7 @@ try {
 	// do nothing
 }
 
-/** @param {String} index */
+/** @param {string} index */
 function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
@@ -124,12 +125,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 	let router_enabled = true;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
-	/** @type {Number} */
+	/** @type {number} */
 	let current_history_index = history.state?.[INDEX_KEY] ?? 0;
 	// keeping track of the position index in order to restore scroll position
-	/** @type {String} */
-	let current_position_index =
-		history.state?.[RESTORATION_KEY] ?? Math.random().toString(32).slice(2);
+	/** @type {string} */
+	let current_position_index = history.state?.[RESTORATION_KEY] ?? get_random_string();
 
 	if (current_history_index === 0) {
 		// create initial history entry, so we can return here
@@ -269,7 +269,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 			const { details } = opts;
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
-			details.state[RESTORATION_KEY] = current_position_index = Math.random().toString(32).slice(2);
+			if (!details.replaceState) {
+				details.state[RESTORATION_KEY] = current_position_index = get_random_string();
+			}
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 
@@ -1150,7 +1152,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				// we need to update history, otherwise we have to leave it alone
 				if (hash_navigating) {
 					hash_navigating = false;
-					current_position_index = Math.random().toString(32).slice(2);
+					current_position_index = get_random_string();
 					history.replaceState(
 						{
 							...history.state,
