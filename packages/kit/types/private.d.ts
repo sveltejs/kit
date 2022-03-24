@@ -2,8 +2,6 @@
 // but which cannot be imported from `@sveltejs/kit`. Care should
 // be taken to avoid breaking changes when editing this file
 
-import { ValidatedConfig } from './internal';
-
 export interface AdapterEntry {
 	/**
 	 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -190,8 +188,6 @@ export interface Logger {
 }
 
 export type MaybePromise<T> = T | Promise<T>;
-
-export type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
 
 export interface Prerendered {
 	pages: Map<
