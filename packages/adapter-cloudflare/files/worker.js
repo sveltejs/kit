@@ -50,7 +50,8 @@ export default {
 
 		// dynamically-generated pages
 		try {
-			// @ts-ignore
+			// `default` cache property exists in the cloudflare workers environment only.
+			// @ts-expect-error
 			const cache = caches.default;
 			let response = await cache.match(req);
 
@@ -62,9 +63,15 @@ export default {
 					}
 				});
 
-				// Use context so you can return the response without blocking on
+				// Use waitUntil so you can return the response without blocking on
 				// writing to cache
 				try {
+					// If cookies are being set, ensure we dont cache the page.
+					if (response.headers.has('Set-Cookie')) {
+						response = new Response(response.body, response);
+						response.headers.append('Cache-Control', 'private=Set-Cookie');
+					}
+
 					context.waitUntil(cache.put(req, response.clone()));
 				} catch {
 					// noop
