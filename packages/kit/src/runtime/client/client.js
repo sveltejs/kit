@@ -134,7 +134,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 	if (current_history_index === 0) {
 		// create initial history entry, so we can return here
 		history.replaceState(
-			{ ...history.state, [INDEX_KEY]: current_history_index, [SCROLL_INDEX_KEY]: current_scroll_index },
+			{
+				...history.state,
+				[INDEX_KEY]: current_history_index,
+				[SCROLL_INDEX_KEY]: current_scroll_index
+			},
 			'',
 			location.href
 		);
@@ -267,13 +271,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		if (opts && opts.details) {
 			const { details } = opts;
-			console.log({details, current_history_index, current_scroll_index});
+			console.log({ details, current_history_index, current_scroll_index });
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
 			if (!details.replaceState) {
 				details.state[SCROLL_INDEX_KEY] = current_scroll_index = get_random_string();
 			}
-			console.log({details, current_history_index, current_scroll_index});
+			console.log({ details, current_history_index, current_scroll_index });
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 
