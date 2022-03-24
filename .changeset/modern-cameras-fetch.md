@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-allows for **tests** directories
+allow files and directories named `__tests__` in the routes directory
