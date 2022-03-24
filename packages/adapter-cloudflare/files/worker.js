@@ -50,8 +50,7 @@ export default {
 
 		// dynamically-generated pages
 		try {
-			// `default` cache property exists in the cloudflare workers environment only.
-			// @ts-expect-error
+			// @ts-expect-error - `default` exists only in the cloudflare workers environment
 			const cache = caches.default;
 			let response = await cache.match(req);
 
