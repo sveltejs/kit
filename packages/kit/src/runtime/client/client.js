@@ -20,7 +20,7 @@ import { components, dictionary, matchers } from '__GENERATED__/client-manifest.
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
-const RESTORATION_KEY = 'sveltekit:restoration';
+const SCROLL_INDEX_KEY = 'sveltekit:scroll_index';
 
 const routes = parse(components, dictionary, matchers);
 
@@ -129,12 +129,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 	let current_history_index = history.state?.[INDEX_KEY] ?? 0;
 	// keeping track of the position index in order to restore scroll position
 	/** @type {string} */
-	let current_position_index = history.state?.[RESTORATION_KEY] ?? get_random_string();
+	let current_scroll_index = history.state?.[SCROLL_INDEX_KEY] ?? get_random_string();
 
 	if (current_history_index === 0) {
 		// create initial history entry, so we can return here
 		history.replaceState(
-			{ ...history.state, [INDEX_KEY]: 0, [RESTORATION_KEY]: current_position_index },
+			{ ...history.state, [INDEX_KEY]: current_history_index, [SCROLL_INDEX_KEY]: current_scroll_index },
 			'',
 			location.href
 		);
@@ -142,7 +142,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
-	const scroll = scroll_positions[current_position_index];
+	const scroll = scroll_positions[current_scroll_index];
 	if (scroll) scrollTo(scroll.x, scroll.y);
 
 	let hash_navigating = false;
@@ -204,7 +204,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
 	 * @param {boolean} no_cache
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {{hash?: string, scroll: ScrollPosition | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
 	 */
 	async function update(url, redirect_chain, no_cache, opts) {
 		const intent = get_navigation_intent(url);
@@ -267,11 +267,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		if (opts && opts.details) {
 			const { details } = opts;
+			console.log({details, current_history_index, current_scroll_index});
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
 			if (!details.replaceState) {
-				details.state[RESTORATION_KEY] = current_position_index = get_random_string();
+				details.state[SCROLL_INDEX_KEY] = current_scroll_index = get_random_string();
 			}
+			console.log({details, current_history_index, current_scroll_index});
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 
@@ -844,7 +846,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	/**
 	 * @param {{
 	 *   url: URL;
-	 *   scroll: { x: number, y: number } | null;
+	 *   scroll: ScrollPosition | null;
 	 *   keepfocus: boolean;
 	 *   redirect_chain: string[];
 	 *   details: {
@@ -875,7 +877,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const pathname = normalize_path(url.pathname, trailing_slash);
 		const normalized = new URL(url.origin + pathname + url.search + url.hash);
 
-		update_scroll_positions(current_position_index);
+		update_scroll_positions(current_scroll_index);
 
 		accepted();
 
@@ -1015,7 +1017,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			addEventListener('visibilitychange', () => {
 				if (document.visibilityState === 'hidden') {
-					update_scroll_positions(current_position_index);
+					update_scroll_positions(current_scroll_index);
 
 					try {
 						sessionStorage[SCROLL_KEY] = JSON.stringify(scroll_positions);
@@ -1101,7 +1103,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					// clicking a hash link and those triggered by popstate
 					hash_navigating = true;
 
-					update_scroll_positions(current_position_index);
+					update_scroll_positions(current_scroll_index);
 
 					stores.page.set({ ...page, url });
 					stores.page.notify();
@@ -1131,13 +1133,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 					navigate({
 						url: new URL(location.href),
-						scroll: scroll_positions[event.state[RESTORATION_KEY]],
+						scroll: scroll_positions[event.state[SCROLL_INDEX_KEY]],
 						keepfocus: false,
 						redirect_chain: [],
 						details: null,
 						accepted: () => {
 							current_history_index = event.state[INDEX_KEY];
-							current_position_index = event.state[RESTORATION_KEY];
+							current_scroll_index = event.state[SCROLL_INDEX_KEY];
 						},
 						blocked: () => {
 							const delta = current_history_index - event.state[INDEX_KEY];
@@ -1152,12 +1154,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 				// we need to update history, otherwise we have to leave it alone
 				if (hash_navigating) {
 					hash_navigating = false;
-					current_position_index = get_random_string();
+					current_scroll_index = get_random_string();
 					history.replaceState(
 						{
 							...history.state,
 							[INDEX_KEY]: ++current_history_index,
-							[RESTORATION_KEY]: current_position_index
+							[SCROLL_INDEX_KEY]: current_scroll_index
 						},
 						'',
 						location.href
