@@ -271,13 +271,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		if (opts && opts.details) {
 			const { details } = opts;
-			console.log({ details, current_history_index, current_scroll_index });
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
-			if (!details.replaceState) {
-				details.state[SCROLL_INDEX_KEY] = current_scroll_index = get_random_string();
-			}
-			console.log({ details, current_history_index, current_scroll_index });
+			details.state[SCROLL_INDEX_KEY] = current_scroll_index = details.replaceState
+				? current_scroll_index
+				: get_random_string();
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 
