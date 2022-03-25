@@ -29,7 +29,8 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {
-		"esbuild": "^0.14.21"
+		"esbuild": "^0.14.21",
+		"worktop": "0.8.0-next.12"
 	},
 	"devDependencies": {
 		"typescript": "^4.6.2"
