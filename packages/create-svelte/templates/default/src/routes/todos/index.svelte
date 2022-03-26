@@ -61,6 +61,10 @@
 				<button class="save" aria-label="Save todo" />
 			</form>
 
+			<div>
+				<a sveltekit:prefetch href={`/todos/${todo.uid}`}>detail</a>
+			</div>
+
 			<form
 				action="/todos?_method=DELETE"
 				method="post"
@@ -109,7 +113,7 @@
 
 	.todo {
 		display: grid;
-		grid-template-columns: 2rem 1fr 2rem;
+		grid-template-columns: 2rem 1fr 2.5rem 2rem;
 		grid-gap: 0.5rem;
 		align-items: center;
 		margin: 0 0 0.5rem 0;
