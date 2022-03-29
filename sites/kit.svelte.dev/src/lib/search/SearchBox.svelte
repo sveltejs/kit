@@ -313,7 +313,6 @@
 		flex: 1;
 		overflow: auto;
 		overscroll-behavior-y: none;
-		pointer-events: none;
 	}
 
 	ul {
