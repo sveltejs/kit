@@ -29,7 +29,7 @@ export function write_types(config, manifest_data) {
 		/** @type {string[]} */
 		const params = [];
 
-		const pattern = /\[(?:\.{3})?([^\]]+)\]/g;
+		const pattern = /\[(?:\.{3})?([^\]=]+)[^\]]*\]/g;
 		let match;
 
 		while ((match = pattern.exec(key))) {
