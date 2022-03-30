@@ -62,7 +62,7 @@ export async function create_plugin(config, cwd) {
 								const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
 								const module = /** @type {import('types').SSRComponent} */ (
-									await vite.ssrLoadModule(url)
+									await vite.ssrLoadModule(url, { fixStacktrace: false })
 								);
 								const node = await vite.moduleGraph.getModuleByUrl(url);
 
@@ -84,7 +84,7 @@ export async function create_plugin(config, cwd) {
 										(query.has('svelte') && query.get('type') === 'style')
 									) {
 										try {
-											const mod = await vite.ssrLoadModule(dep.url);
+											const mod = await vite.ssrLoadModule(dep.url, { fixStacktrace: false });
 											styles[dep.url] = mod.default;
 										} catch {
 											// this can happen with dynamically imported modules, I think
@@ -117,7 +117,7 @@ export async function create_plugin(config, cwd) {
 									shadow: route.shadow
 										? async () => {
 												const url = path.resolve(cwd, /** @type {string} */ (route.shadow));
-												return await vite.ssrLoadModule(url);
+												return await vite.ssrLoadModule(url, { fixStacktrace: false });
 										  }
 										: null,
 									a: route.a.map((id) => manifest_data.components.indexOf(id)),
@@ -133,7 +133,7 @@ export async function create_plugin(config, cwd) {
 								types,
 								load: async () => {
 									const url = path.resolve(cwd, route.file);
-									return await vite.ssrLoadModule(url);
+									return await vite.ssrLoadModule(url, { fixStacktrace: false });
 								}
 							};
 						}),
@@ -144,7 +144,7 @@ export async function create_plugin(config, cwd) {
 							for (const key in manifest_data.matchers) {
 								const file = manifest_data.matchers[key];
 								const url = path.resolve(cwd, file);
-								const module = await vite.ssrLoadModule(url);
+								const module = await vite.ssrLoadModule(url, { fixStacktrace: false });
 
 								if (module.match) {
 									matchers[key] = module.match;
@@ -161,20 +161,7 @@ export async function create_plugin(config, cwd) {
 
 			/** @param {Error} error */
 			function fix_stack_trace(error) {
-				// TODO https://github.com/vitejs/vite/issues/7045
-
-				// ideally vite would expose ssrRewriteStacktrace, but
-				// in lieu of that, we can implement it ourselves. we
-				// don't want to mutate the error object, because
-				// the stack trace could be 'fixed' multiple times,
-				// and Vite will fix stack traces before we even
-				// see them if they occur during ssrLoadModule
-				const original = error.stack;
-				vite.ssrFixStacktrace(error);
-				const fixed = error.stack;
-				error.stack = original;
-
-				return fixed;
+				return error.stack ? vite.ssrRewriteStacktrace(error.stack) : error.stack;
 			}
 
 			update_manifest();
@@ -220,7 +207,7 @@ export async function create_plugin(config, cwd) {
 
 						/** @type {Partial<import('types').Hooks>} */
 						const user_hooks = resolve_entry(config.kit.files.hooks)
-							? await vite.ssrLoadModule(`/${config.kit.files.hooks}`)
+							? await vite.ssrLoadModule(`/${config.kit.files.hooks}`, { fixStacktrace: false })
 							: {};
 
 						const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
@@ -260,13 +247,15 @@ export async function create_plugin(config, cwd) {
 						// can get loaded twice via different URLs, which causes failures. Might
 						// require changes to Vite to fix
 						const { default: root } = await vite.ssrLoadModule(
-							`/${posixify(path.relative(cwd, `${config.kit.outDir}/generated/root.svelte`))}`
+							`/${posixify(path.relative(cwd, `${config.kit.outDir}/generated/root.svelte`))}`,
+							{ fixStacktrace: false }
 						);
 
 						const paths = await vite.ssrLoadModule(
 							process.env.BUNDLED
 								? `/${posixify(path.relative(cwd, `${config.kit.outDir}/runtime/paths.js`))}`
-								: `/@fs${runtime}/paths.js`
+								: `/@fs${runtime}/paths.js`,
+							{ fixStacktrace: false }
 						);
 
 						paths.set_paths({
