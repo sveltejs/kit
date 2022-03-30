@@ -6,7 +6,7 @@ import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
 
 /** @type {import('.')} */
-export default function () {
+export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -50,11 +50,12 @@ export default function () {
 			);
 
 			await esbuild.build({
+				target: 'es2020',
+				platform: 'browser',
+				...options,
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: `${entrypoint}/index.js`,
-				bundle: true,
-				target: 'es2020',
-				platform: 'browser'
+				bundle: true
 			});
 
 			writeFileSync(`${entrypoint}/package.json`, JSON.stringify({ main: 'index.js' }));
