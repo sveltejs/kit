@@ -69,11 +69,13 @@ importers:
 
   packages/adapter-cloudflare:
     specifiers:
+      '@types/ws': ^8.5.3
       esbuild: ^0.14.21
       typescript: ^4.6.2
     dependencies:
       esbuild: 0.14.21
     devDependencies:
+      '@types/ws': 8.5.3
       typescript: 4.6.2
 
   packages/adapter-cloudflare-workers:
@@ -1771,6 +1773,12 @@ packages:
 
   /@types/unist/2.0.6:
     resolution: {integrity: sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==}
+    dev: true
+
+  /@types/ws/8.5.3:
+    resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
+    dependencies:
+      '@types/node': 17.0.21
     dev: true
 
   /@types/yargs-parser/20.2.1:
@@ -4188,7 +4196,7 @@ packages:
   /jsonfile/4.0.0:
     resolution: {integrity: sha1-h3Gq4HmbZAdrdmQPygWPnBDjPss=}
     optionalDependencies:
-      graceful-fs: 4.2.8
+      graceful-fs: 4.2.9
     dev: true
 
   /kind-of/6.0.3:
