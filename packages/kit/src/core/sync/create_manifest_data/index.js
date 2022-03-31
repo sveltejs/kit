@@ -301,6 +301,7 @@ function trace(file, tree, extensions) {
 
 	// walk up the tree, find which __layout and __error components
 	// apply to this page
+	// eslint-disable-next-line
 	while (true) {
 		const layout = node?.layouts[layout_id];
 
