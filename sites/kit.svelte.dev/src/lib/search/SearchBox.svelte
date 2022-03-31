@@ -189,28 +189,30 @@
 					{/if}
 				{:else}
 					<h2 class="info">{recent_searches.length ? 'Recent searches' : 'No recent searches'}</h2>
-					<ul>
-						{#each recent_searches as search, i}
-							<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-							<li class="recent">
-								<a on:click={() => navigate(search.href)} href={search.href}>
-									<small>{search.breadcrumbs.join('/')}</small>
-									<strong>{search.title}</strong>
-								</a>
+					{#if recent_searches.length}
+						<ul>
+							{#each recent_searches as search, i}
+								<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+								<li class="recent">
+									<a on:click={() => navigate(search.href)} href={search.href}>
+										<small>{search.breadcrumbs.join('/')}</small>
+										<strong>{search.title}</strong>
+									</a>
 
-								<button
-									aria-label="Delete"
-									on:click={(e) => {
-										$recent = $recent.filter((href) => href !== search.href);
-										e.stopPropagation();
-										e.preventDefault();
-									}}
-								>
-									<Icon name="delete" />
-								</button>
-							</li>
-						{/each}
-					</ul>
+									<button
+										aria-label="Delete"
+										on:click={(e) => {
+											$recent = $recent.filter((href) => href !== search.href);
+											e.stopPropagation();
+											e.preventDefault();
+										}}
+									>
+										<Icon name="delete" />
+									</button>
+								</li>
+							{/each}
+						</ul>
+					{/if}
 				{/if}
 			</div>
 		</div>
@@ -286,23 +288,25 @@
 
 	.modal {
 		display: flex;
-		align-items: center;
 		justify-content: center;
 		pointer-events: none;
+
+		top: 50%;
+		transform: translateY(-50%);
+
+		height: calc(100% - 2rem);
+		max-height: 50rem;
 	}
 
 	.search-box {
 		position: relative;
 		width: calc(100vw - 2rem);
-		height: calc(100% - 2rem);
 		max-width: 50rem;
-		max-height: 50rem;
 		filter: drop-shadow(2px 4px 16px rgba(0, 0, 0, 0.2));
 		border-radius: var(--border-r);
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-		pointer-events: none;
 	}
 
 	.search-box > * {
@@ -310,7 +314,6 @@
 	}
 
 	.results {
-		flex: 1;
 		overflow: auto;
 		overscroll-behavior-y: none;
 	}
