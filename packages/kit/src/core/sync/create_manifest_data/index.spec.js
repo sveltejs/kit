@@ -457,6 +457,12 @@ test('errors on encountering an illegal __file', () => {
 	);
 });
 
+test('allows for __tests__ directories', () => {
+	const { routes } = create('samples/legal-dunder');
+
+	assert.equal(routes, []);
+});
+
 test('creates param matchers', () => {
 	const { matchers } = create('samples/basic'); // directory doesn't matter for the test
 

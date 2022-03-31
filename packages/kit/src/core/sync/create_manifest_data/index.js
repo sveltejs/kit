@@ -25,7 +25,7 @@ import { parse_route_id } from '../../../utils/routing.js';
  * }} Item
  */
 
-const specials = new Set(['__layout', '__layout.reset', '__error']);
+const specials = new Set(['__layout', '__layout.reset', '__error', '__tests__', '__test__']);
 
 /**
  * @param {{
