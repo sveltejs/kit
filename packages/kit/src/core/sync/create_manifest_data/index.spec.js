@@ -431,123 +431,134 @@ test('creates routes with named layouts', () => {
 		'samples/named-layouts/a/__layout.svelte',
 		'samples/named-layouts/b/__layout-alsospecial@special.svelte',
 		'samples/named-layouts/b/c/__layout.svelte',
-		'samples/named-layouts/b/d@special/__layout.svelte',
-		'samples/named-layouts/b/d@special/__layout-extended@extraspecial.svelte',
-		'samples/named-layouts/b/d@special/__layout-extraspecial.svelte',
+		'samples/named-layouts/b/d/__layout@special.svelte',
+		'samples/named-layouts/b/d/__layout-extended@extraspecial.svelte',
+		'samples/named-layouts/b/d/__layout-extraspecial.svelte',
 		'samples/named-layouts/a/a1.svelte',
 		'samples/named-layouts/a/a2@special.svelte',
 		'samples/named-layouts/b/c/c1@alsospecial.svelte',
 		'samples/named-layouts/b/c/c2@home.svelte',
 		'samples/named-layouts/b/c/c3@c.svelte',
-		'samples/named-layouts/b/d@special/d1.svelte',
-		'samples/named-layouts/b/d@special/d2@extraspecial.svelte',
-		'samples/named-layouts/b/d@special/d3@extended.svelte'
+		'samples/named-layouts/b/d/d1.svelte',
+		'samples/named-layouts/b/d/d2@extraspecial.svelte',
+		'samples/named-layouts/b/d/d3@extended.svelte'
 	]);
 
-	assert.equal(routes, [
-		{
-			type: 'page',
-			id: 'a/a1',
-			pattern: /^\/a\/a1\/?$/,
-			path: '/a/a1',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout.svelte',
-				'samples/named-layouts/a/__layout.svelte',
-				'samples/named-layouts/a/a1.svelte'
-			],
-			b: [default_error]
-		},
-		{
-			type: 'page',
-			id: 'a/a2@special',
-			pattern: /^\/a\/a2\/?$/,
-			path: '/a/a2',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout-special.svelte',
-				'samples/named-layouts/a/a2@special.svelte'
-			],
-			b: [default_error]
-		},
-		{
-			type: 'page',
-			id: 'b/c/c1@alsospecial',
-			pattern: /^\/b\/c\/c1\/?$/,
-			path: '/b/c/c1',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout-special.svelte',
-				'samples/named-layouts/b/__layout-alsospecial@special.svelte',
-				'samples/named-layouts/b/c/c1@alsospecial.svelte'
-			],
-			b: [default_error]
-		},
-		{
-			type: 'page',
-			id: 'b/c/c2@home',
-			pattern: /^\/b\/c\/c2\/?$/,
-			path: '/b/c/c2',
-			shadow: null,
-			a: ['samples/named-layouts/__layout-home.svelte', 'samples/named-layouts/b/c/c2@home.svelte'],
-			b: [default_error]
-		},
-		{
-			type: 'page',
-			id: 'b/c/c3@c',
-			pattern: /^\/b\/c\/c3\/?$/,
-			path: '/b/c/c3',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout-home.svelte',
-				'samples/named-layouts/__layout-a@home.svelte',
-				'samples/named-layouts/__layout-b@a.svelte',
-				'samples/named-layouts/__layout-c@b.svelte',
-				'samples/named-layouts/b/c/c3@c.svelte'
-			],
-			b: [default_error, default_error, default_error, default_error]
-		},
-		{
-			type: 'page',
-			id: 'b/d@special/d1',
-			pattern: /^\/b\/d\/d1\/?$/,
-			path: '/b/d/d1',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout-special.svelte',
-				'samples/named-layouts/b/d@special/__layout.svelte',
-				'samples/named-layouts/b/d@special/d1.svelte'
-			],
-			b: [default_error]
-		},
-		{
-			type: 'page',
-			id: 'b/d@special/d2@extraspecial',
-			pattern: /^\/b\/d\/d2\/?$/,
-			path: '/b/d/d2',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout-special.svelte',
-				'samples/named-layouts/b/d@special/__layout-extraspecial.svelte',
-				'samples/named-layouts/b/d@special/d2@extraspecial.svelte'
-			],
-			b: [default_error]
-		},
-		{
-			type: 'page',
-			id: 'b/d@special/d3@extended',
-			pattern: /^\/b\/d\/d3\/?$/,
-			path: '/b/d/d3',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout-special.svelte',
-				'samples/named-layouts/b/d@special/__layout-extraspecial.svelte',
-				'samples/named-layouts/b/d@special/__layout-extended@extraspecial.svelte',
-				'samples/named-layouts/b/d@special/d3@extended.svelte'
-			],
-			b: [default_error]
-		}
-	]);
+	let a = 6;
+	let b = a + 1;
+
+	assert.equal(
+		routes.slice(a, b),
+		[
+			{
+				type: 'page',
+				id: 'a/a1',
+				pattern: /^\/a\/a1\/?$/,
+				path: '/a/a1',
+				shadow: null,
+				a: [
+					'samples/named-layouts/__layout.svelte',
+					'samples/named-layouts/a/__layout.svelte',
+					'samples/named-layouts/a/a1.svelte'
+				],
+				b: [default_error]
+			},
+			{
+				type: 'page',
+				id: 'a/a2@special',
+				pattern: /^\/a\/a2\/?$/,
+				path: '/a/a2',
+				shadow: null,
+				a: [
+					'samples/named-layouts/__layout-special.svelte',
+					'samples/named-layouts/a/a2@special.svelte'
+				],
+				b: [default_error]
+			},
+			{
+				type: 'page',
+				id: 'b/c/c1@alsospecial',
+				pattern: /^\/b\/c\/c1\/?$/,
+				path: '/b/c/c1',
+				shadow: null,
+				a: [
+					'samples/named-layouts/__layout-special.svelte',
+					'samples/named-layouts/b/__layout-alsospecial@special.svelte',
+					'samples/named-layouts/b/c/c1@alsospecial.svelte'
+				],
+				b: [default_error]
+			},
+			{
+				type: 'page',
+				id: 'b/c/c2@home',
+				pattern: /^\/b\/c\/c2\/?$/,
+				path: '/b/c/c2',
+				shadow: null,
+				a: [
+					'samples/named-layouts/__layout-home.svelte',
+					'samples/named-layouts/b/c/c2@home.svelte'
+				],
+				b: [default_error]
+			},
+			{
+				type: 'page',
+				id: 'b/c/c3@c',
+				pattern: /^\/b\/c\/c3\/?$/,
+				path: '/b/c/c3',
+				shadow: null,
+				a: [
+					'samples/named-layouts/__layout-home.svelte',
+					'samples/named-layouts/__layout-a@home.svelte',
+					'samples/named-layouts/__layout-b@a.svelte',
+					'samples/named-layouts/__layout-c@b.svelte',
+					'samples/named-layouts/b/c/c3@c.svelte'
+				],
+				b: [default_error, default_error, default_error, default_error]
+			},
+			{
+				type: 'page',
+				id: 'b/d/d1',
+				pattern: /^\/b\/d\/d1\/?$/,
+				path: '/b/d/d1',
+				shadow: null,
+				a: [
+					'samples/named-layouts/__layout-special.svelte',
+					'samples/named-layouts/b/d/__layout@special.svelte',
+					'samples/named-layouts/b/d/d1.svelte'
+				],
+				b: [default_error]
+			},
+			{
+				type: 'page',
+				id: 'b/d/d2@extraspecial',
+				pattern: /^\/b\/d\/d2\/?$/,
+				path: '/b/d/d2',
+				shadow: null,
+				a: [
+					'samples/named-layouts/__layout-special.svelte',
+					'samples/named-layouts/b/d/__layout@special.svelte',
+					'samples/named-layouts/b/d/__layout-extraspecial.svelte',
+					'samples/named-layouts/b/d/d2@extraspecial.svelte'
+				],
+				b: [default_error]
+			},
+			{
+				type: 'page',
+				id: 'b/d/d3@extended',
+				pattern: /^\/b\/d\/d3\/?$/,
+				path: '/b/d/d3',
+				shadow: null,
+				a: [
+					'samples/named-layouts/__layout-special.svelte',
+					'samples/named-layouts/b/d/__layout@special.svelte',
+					'samples/named-layouts/b/d/__layout-extraspecial.svelte',
+					'samples/named-layouts/b/d/__layout-extended@extraspecial.svelte',
+					'samples/named-layouts/b/d/d3@extended.svelte'
+				],
+				b: [default_error]
+			}
+		].slice(a, b)
+	);
 });
 
 test.skip('errors on missing layout', () => {
