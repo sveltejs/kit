@@ -1,6 +1,6 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered } from 'MANIFEST';
-import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
+import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler';
 
 const server = new Server(manifest);
 
@@ -45,7 +45,15 @@ async function handle(event) {
 		manifest.assets.has(file + '/index.html') ||
 		prerendered.has(pathname || '/')
 	) {
-		return await getAssetFromKV(event);
+		return await getAssetFromKV(event, {
+			mapRequestToAsset(request, options) {
+				if (prerendered.has(pathname || '/')) {
+					url.pathname = '/' + prerendered.get(pathname || '/').file;
+					return new Request(url.toString(), request);
+				}
+				return mapRequestToAsset(request, options);
+			}
+		});
 	}
 
 	// dynamically-generated pages
