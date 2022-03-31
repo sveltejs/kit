@@ -2,18 +2,12 @@ import { Server } from 'SERVER';
 import { manifest, prerendered } from 'MANIFEST';
 import * as Cache from 'worktop/cfw.cache';
 
-import type { Module, Bindings } from 'worktop/cfw';
-import type { Durable } from 'worktop/cfw.durable';
-
-interface Environment extends Bindings {
-	ASSETS: Durable.Object;
-}
-
 const server = new Server(manifest);
 
 const prefix = `/${manifest.appDir}/`;
 
-const worker: Module.Worker<Environment> = {
+/** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
+const worker = {
 	async fetch(req, env, context) {
 		try {
 			let res = await Cache.lookup(req);
