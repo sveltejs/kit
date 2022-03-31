@@ -29,7 +29,7 @@ export default function (options = {}) {
 				})};\n\nexport const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n`
 			);
 
-			builder.copy(`${files}/worker.ts`, `${tmp}/_worker.ts`, {
+			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
 					MANIFEST: './manifest.js'
@@ -40,7 +40,7 @@ export default function (options = {}) {
 				target: 'es2020',
 				platform: 'browser',
 				...options,
-				entryPoints: [`${tmp}/_worker.ts`],
+				entryPoints: [`${tmp}/_worker.js`],
 				outfile: `${dest}/_worker.js`,
 				allowOverwrite: true,
 				format: 'esm',
