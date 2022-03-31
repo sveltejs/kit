@@ -44,7 +44,7 @@ import { parse_route_id } from '../../../utils/routing.js';
  */
 
 const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+))?(?:@(~|[a-zA-Z0-9_-]+)?)?$/;
-const dunder_pattern = /(^|\/)__/;
+const dunder_pattern = /(^|\/)__(?!tests?__)/; // forbid __-prefixed files/directories except __error, __layout[-...], __test__, __tests__
 
 const DEFAULT = '~'; // any character that isn't allowed in layout names will do
 
@@ -91,50 +91,48 @@ export default function create_manifest_data({
 		const id = file.slice(0, -extension.length).replace(/\/?index(\.[a-z]+)?$/, '$1');
 		const project_relative = `${routes_base}/${file}`;
 
-		if (dunder_pattern.test(file)) {
-			const segments = id.split('/');
-			const name = /** @type {string} */ (segments.pop());
+		const segments = id.split('/');
+		const name = /** @type {string} */ (segments.pop());
 
-			if (name === '__error' || layout_pattern.test(name)) {
-				const dir = segments.join('/');
+		if (name === '__layout.reset') {
+			throw new Error(
+				'__layout.reset has been removed in favour of named layouts: https://kit.svelte.dev/docs/layouts#named-layouts'
+			);
+		}
 
-				if (!tree.has(dir)) {
-					tree.set(dir, {
-						error: undefined,
-						layouts: {}
-					});
-				}
+		if (name === '__error' || layout_pattern.test(name)) {
+			const dir = segments.join('/');
 
-				const group = /** @type {Node} */ (tree.get(dir));
-
-				if (name === '__error') {
-					group.error = project_relative;
-				} else {
-					const match = /** @type {RegExpMatchArray} */ (layout_pattern.exec(name));
-					const layout_id = match[1] || DEFAULT;
-
-					const defined = group.layouts[layout_id];
-					if (defined && defined !== default_layout) {
-						throw new Error(
-							`Duplicate layout ${project_relative} already defined at ${defined.file}`
-						);
-					}
-
-					group.layouts[layout_id] = {
-						file: project_relative,
-						name
-					};
-				}
-
-				return;
+			if (!tree.has(dir)) {
+				tree.set(dir, {
+					error: undefined,
+					layouts: {}
+				});
 			}
 
-			if (name === '__layout.reset') {
-				throw new Error(
-					'__layout.reset has been removed in favour of named layouts: https://kit.svelte.dev/docs/layouts#named-layouts'
-				);
+			const group = /** @type {Node} */ (tree.get(dir));
+
+			if (name === '__error') {
+				group.error = project_relative;
+			} else {
+				const match = /** @type {RegExpMatchArray} */ (layout_pattern.exec(name));
+				const layout_id = match[1] || DEFAULT;
+
+				const defined = group.layouts[layout_id];
+				if (defined && defined !== default_layout) {
+					throw new Error(
+						`Duplicate layout ${project_relative} already defined at ${defined.file}`
+					);
+				}
+
+				group.layouts[layout_id] = {
+					file: project_relative,
+					name
+				};
 			}
 
+			return;
+		} else if (dunder_pattern.test(file)) {
 			throw new Error(
 				`Files and directories prefixed with __ are reserved (saw ${project_relative})`
 			);
@@ -266,7 +264,7 @@ export default function create_manifest_data({
 				matchers[type] = path.join(params_base, file);
 			} else {
 				throw new Error(
-					`Validator names must match /^[a-zA-Z_][a-zA-Z0-9_]*$/ — "${file}" is invalid`
+					`Matcher names must match /^[a-zA-Z_][a-zA-Z0-9_]*$/ — "${file}" is invalid`
 				);
 			}
 		}

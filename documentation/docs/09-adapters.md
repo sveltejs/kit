@@ -10,7 +10,7 @@ By default, projects are configured to use `@sveltejs/adapter-auto`, which detec
 
 ### Supported environments
 
-SvelteKit offers a number of officially-supported adapters.
+SvelteKit offers a number of officially supported adapters.
 
 You can deploy to the following platforms with the default adapter, `adapter-auto`:
 

@@ -564,6 +564,12 @@ test('errors on duplicate layout definition', () => {
 	);
 });
 
+test('allows for __tests__ directories', () => {
+	const { routes } = create('samples/legal-dunder');
+
+	assert.equal(routes, []);
+});
+
 test('creates param matchers', () => {
 	const { matchers } = create('samples/basic'); // directory doesn't matter for the test
 

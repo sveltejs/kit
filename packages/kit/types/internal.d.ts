@@ -18,7 +18,6 @@ import {
 	RequestOptions,
 	ResolveOptions,
 	ResponseHeaders,
-	RouteSegment,
 	TrailingSlash
 } from './private';
 
