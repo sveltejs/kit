@@ -289,19 +289,16 @@
 	.modal {
 		display: flex;
 		justify-content: center;
+		align-items: center;
 		pointer-events: none;
-
-		top: 50%;
-		transform: translateY(-50%);
-
-		height: calc(100% - 2rem);
-		max-height: 50rem;
 	}
 
 	.search-box {
 		position: relative;
+		height: calc(100% - 2rem);
 		width: calc(100vw - 2rem);
 		max-width: 50rem;
+		max-height: 50rem;
 		filter: drop-shadow(2px 4px 16px rgba(0, 0, 0, 0.2));
 		border-radius: var(--border-r);
 		display: flex;
