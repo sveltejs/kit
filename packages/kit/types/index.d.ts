@@ -215,13 +215,9 @@ export interface ParamMatcher {
 }
 
 /**
- * A function exported from an endpoint that corresponds to an
- * HTTP verb (`get`, `put`, `patch`, etc) and handles requests with
- * that method. Note that since 'delete' is a reserved word in
- * JavaScript, delete handles are called `del` instead.
+ * A `(event: RequestEvent) => RequestHandlerOutput` function exported from an endpoint that corresponds to an HTTP verb (`get`, `put`, `patch`, etc) and handles requests with that method. Note that since 'delete' is a reserved word in JavaScript, delete handles are called `del` instead.
  *
- * Note that you can use [generated types](/docs/types#generated-types)
- * instead of manually specifying the `Params` generic argument.
+ * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the `Params` generic argument.
  */
 export interface RequestHandler<
 	Params extends Record<string, string> = Record<string, string>,
