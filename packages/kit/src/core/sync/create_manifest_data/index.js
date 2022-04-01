@@ -291,35 +291,25 @@ function trace(file, tree, extensions) {
 	const errors = [];
 
 	const parts = file.split('/');
-	const filename = /** @type {string} */ (parts.pop());
+	const filename = /** @type {string} */ (parts[parts.length - 1]);
 	const extension = /** @type {string} */ (extensions.find((ext) => file.endsWith(ext)));
 	const base = filename.slice(0, -extension.length);
 
 	let layout_id = base.includes('@') ? base.split('@')[1] : DEFAULT;
 
-	let node = tree.get(parts.join('/'));
-
 	// walk up the tree, find which __layout and __error components
 	// apply to this page
-	// eslint-disable-next-line
-	while (true) {
+	while (parts.length > 0) {
+		parts.pop();
+		const node = tree.get(parts.join('/'));
+
 		const layout = node?.layouts[layout_id];
 
 		errors.unshift(node?.error);
 		layouts.unshift(layout?.file);
 
-		if (layout?.name.includes('@')) {
+		if (layout) {
 			layout_id = layout.name.split('@')[1] || DEFAULT;
-		} else if (parts.length > 0) {
-			const next_dir = /** @type {string} */ (parts.pop());
-
-			if (next_dir.includes('@')) {
-				layout_id = next_dir.split('@')[1];
-			}
-
-			node = tree.get(parts.join('/'));
-		} else {
-			break;
 		}
 	}
 
