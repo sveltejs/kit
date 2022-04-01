@@ -428,8 +428,8 @@ test('creates routes with named layouts', () => {
 		'samples/named-layouts/a/__layout.svelte',
 		'samples/named-layouts/b/__layout-alsospecial@special.svelte',
 		'samples/named-layouts/b/c/__layout.svelte',
-		'samples/named-layouts/b/d/__layout@special.svelte',
-		'samples/named-layouts/b/d/__layout-extraspecial.svelte',
+		'samples/named-layouts/b/d/__layout-extraspecial@special.svelte',
+		'samples/named-layouts/b/d/__layout-special.svelte',
 		'samples/named-layouts/a/a1.svelte',
 		'samples/named-layouts/a/a2@special.svelte',
 		'samples/named-layouts/b/c/c1@alsospecial.svelte',
@@ -492,11 +492,7 @@ test('creates routes with named layouts', () => {
 			pattern: /^\/b\/d\/d1\/?$/,
 			path: '/b/d/d1',
 			shadow: null,
-			a: [
-				'samples/named-layouts/__layout-special.svelte',
-				'samples/named-layouts/b/d/__layout@special.svelte',
-				'samples/named-layouts/b/d/d1.svelte'
-			],
+			a: ['samples/named-layouts/__layout.svelte', 'samples/named-layouts/b/d/d1.svelte'],
 			b: [default_error]
 		},
 		{
@@ -507,7 +503,8 @@ test('creates routes with named layouts', () => {
 			shadow: null,
 			a: [
 				'samples/named-layouts/__layout.svelte',
-				'samples/named-layouts/b/d/__layout-extraspecial.svelte',
+				'samples/named-layouts/b/d/__layout-special.svelte',
+				'samples/named-layouts/b/d/__layout-extraspecial@special.svelte',
 				'samples/named-layouts/b/d/d2@extraspecial.svelte'
 			],
 			b: [default_error]

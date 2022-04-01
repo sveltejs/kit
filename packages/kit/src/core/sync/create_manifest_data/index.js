@@ -291,7 +291,7 @@ function trace(file, tree, extensions) {
 	const errors = [];
 
 	const parts = file.split('/');
-	const filename = /** @type {string} */ (parts[parts.length - 1]);
+	const filename = /** @type {string} */ (parts.pop());
 	const extension = /** @type {string} */ (extensions.find((ext) => file.endsWith(ext)));
 	const base = filename.slice(0, -extension.length);
 
@@ -299,17 +299,19 @@ function trace(file, tree, extensions) {
 
 	// walk up the tree, find which __layout and __error components
 	// apply to this page
-	while (parts.length > 0) {
-		parts.pop();
+	while (true) {
 		const node = tree.get(parts.join('/'));
-
 		const layout = node?.layouts[layout_id];
 
 		errors.unshift(node?.error);
 		layouts.unshift(layout?.file);
 
-		if (layout) {
-			layout_id = layout.name.split('@')[1] || DEFAULT;
+		if (layout?.name.includes('@')) {
+			layout_id = layout.name.split('@')[1];
+		} else {
+			if (parts.length === 0) break;
+			if (layout) layout_id = DEFAULT;
+			parts.pop();
 		}
 	}
 
