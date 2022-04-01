@@ -95,27 +95,12 @@ src/routes/
 │ │ │ ├ one@foo.svelte
 │ │ │ ├ two@foo.svelte
 │ │ │ └ three.svelte
-│ │ └ four.svelte
-```
-
-#### Directories
-
-You can apply a named layout to all pages inside a directory. Here, `one`, `two` and `three` will all inherit from `__layout-foo`, because their parent directory uses `@foo`:
-
-```
-src/routes/
-├ uses-default-layout.svelte
-├ uses-foo-layout@foo/
-│ ├ one.svelte
-│ ├ two.svelte
-│ └ three.svelte
-├ __layout.svelte
-└ __layout-foo.svelte
+│ │ └ four@foo.svelte
 ```
 
 #### Inheritance chains
 
-Layouts can themselves choose which other layouts they inherit from. Ordinarily, they will inherit from any default layouts 'above' them in the tree, but they can inherit named layouts using the same logic as pages. For example, `a/b/c/page.svelte` will inherit from `__layout-foo.svelte` and `a/b/c/__layout@foo.svelte` but _not_ `__layout.svelte` or `a/b/__layout.svelte`.
+Layouts can themselves choose which parent layouts they inherit from. Ordinarily, they will inherit from any default layouts 'above' them in the tree, but they can inherit named layouts using the same logic as pages. For example, all the pages under `a/b/c` will inherit from `a/b/c/__layout@foo.svelte`, which inherits from `__layout-foo.svelte`, but `__layout.svelte` or `a/b/__layout.svelte` will be skipped.
 
 ```
 src/routes/
@@ -123,34 +108,15 @@ src/routes/
 │ ├ b/
 │ │ ├ c/
 │ │ │ ├ __layout@foo.svelte
-│ │ │ └ page.svelte
+│ │ │ ├ one.svelte
+│ │ │ ├ two.svelte
+│ │ │ └ three.svelte
 │ │ └ __layout.svelte
 │ ├ __layout.svelte
 │ └ __layout-foo.svelte
 ```
 
-Layouts will inherit from 'sibling' layouts as well as parents — you'll never need to do this, but you _could_:
-
-```
-src/routes/
-├ __layout.svelte
-├ __layout-a@.svelte
-├ __layout-b@a.svelte
-├ __layout-c@b.svelte
-└ nested@c.svelte
-```
-
-Here, the inheritance chain would look like this (note that `__layout-a@` points at the unnamed default layout, because no name is specified):
-
-```
-__layout.svelte
-  __layout-a@.svelte
-    __layout-b@a.svelte
-      __layout-c@b.svelte
-        nested@c.svelte
-```
-
-#### Resetting layouts
+<!-- #### Resetting layouts
 
 Sometimes you need a page to use the 'home' layout, regardless of its URL. You can do this by creating a top-level named layout that inherits from the default layout by using `@` without a name:
 
@@ -166,7 +132,7 @@ src/routes/
 └ __layout-home@.svelte
 ```
 
-In this case, the `__layout-home@.svelte` component should consist of a single `<slot />`.
+In this case, the `__layout-home@.svelte` component should consist of a single `<slot />`. -->
 
 ### Error pages
 
