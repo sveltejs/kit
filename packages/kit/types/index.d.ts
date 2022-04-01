@@ -184,7 +184,7 @@ export interface HandleError {
 }
 
 /**
- * The type of a `load` function exported from `<script context="module">` in a page or layout.
+ * The `(input: LoadInput) => LoadOutput` `load` function exported from `<script context="module">` in a page or layout.
  *
  * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the Params generic argument.
  */
