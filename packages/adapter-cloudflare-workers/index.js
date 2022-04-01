@@ -46,9 +46,9 @@ export default function (options = {}) {
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({
 					relativePath
-				})};\n\nexport const prerendered = new Map(${
-					JSON.stringify(Array.from(builder.prerendered.pages.entries()))
-				});\n`
+				})};\n\nexport const prerendered = new Map(${JSON.stringify(
+					Array.from(builder.prerendered.pages.entries())
+				)});\n`
 			);
 
 			await esbuild.build({
