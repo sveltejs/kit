@@ -9,7 +9,6 @@
 	let modal;
 
 	let results = [];
-	let backspace_pressed;
 
 	let index;
 	let lookup;
@@ -19,7 +18,9 @@
 		const { blocks } = await response.json();
 
 		index = new flexsearch.Index({
-			tokenize: 'forward'
+			tokenize: 'forward',
+			// deprioritize type and migration related docs in search
+			boost: (words) => (/type|migrat/.test(words[0]) ? 0.5 : 1)
 		});
 
 		lookup = new Map();
@@ -27,13 +28,14 @@
 		let time = Date.now();
 		for (const block of blocks) {
 			const title = block.breadcrumbs[block.breadcrumbs.length - 1];
+			const category = block.breadcrumbs.length > 1 ? `${block.breadcrumbs[0]} ` : '';
 			lookup.set(block.href, {
 				title,
 				href: block.href,
 				breadcrumbs: block.breadcrumbs.slice(0, -1),
 				content: block.content
 			});
-			index.add(block.href, `${title} ${block.content}`);
+			index.add(block.href, `${category}${title} ${block.content}`);
 
 			// poor man's way of preventing blocking
 			if (Date.now() - time > 25) {
