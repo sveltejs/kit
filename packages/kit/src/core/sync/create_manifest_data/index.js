@@ -304,8 +304,18 @@ function trace(file, path, tree, extensions) {
 		const node = tree.get(parts.join('/'));
 		const layout = node?.layouts[layout_id];
 
-		errors.unshift(node?.error);
-		layouts.unshift(layout?.file);
+		// any segment that has neither a __layout nor an __error can be discarded.
+		// in other words these...
+		//  layouts: [a, , b, c]
+		//  errors:  [d, , e,  ]
+		//
+		// ...can be compacted to these:
+		//  layouts: [a, b, c]
+		//  errors:  [d, e,  ]
+		if (node?.error || layout?.file) {
+			errors.unshift(node?.error);
+			layouts.unshift(layout?.file);
+		}
 
 		if (layout?.name.includes('@')) {
 			layout_id = layout.name.split('@')[1];
@@ -320,24 +330,8 @@ function trace(file, path, tree, extensions) {
 		throw new Error(`${file} references missing layout "${layout_id}"`);
 	}
 
-	// compact the arrays — any node that has neither a __layout
-	// nor an __error can be discarded. in other words these...
-	//  layouts: [a, , b, c]
-	//  errors:  [d, , e,  ]
-	//
-	// ...can be compacted to these:
-	//  layouts: [a, b, c]
-	//  errors:  [d, e,  ]
-	let i = layouts.length;
-	while (i--) {
-		if (!errors[i] && !layouts[i]) {
-			errors.splice(i, 1);
-			layouts.splice(i, 1);
-		}
-	}
-
 	// trim empty space off the end of the errors array
-	i = errors.length;
+	let i = errors.length;
 	while (i--) if (errors[i]) break;
 	errors.length = i + 1;
 
