@@ -70,7 +70,7 @@
 			const result = lookup.get(href);
 			if (
 				requestedTypesOrMigrating ||
-				!filter.test([...result.breadcrumbs, result.title][0].toLowerCase())
+				!filter.test((result.breadcrumbs[0] || result.title).toLowerCase())
 			) {
 				return [...acc, result];
 			}
