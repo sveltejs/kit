@@ -117,19 +117,19 @@ src/routes/
 └ __layout-foo.svelte
 ```
 
-Layouts that specify a parent will ordinarily ignore any default layouts, but you can force a named layout to inherit from the nearest default layout with the reserved `default` parent identifier. For example, a layout called `__layout-home@default.svelte` that contained a single `<slot/>` in the root directory would effectively enable any page, anywhere in the app, to inherit directly from the root layout, ignoring any intermediate layouts:
+Layouts that don't specify a parent layout will inherit from default (i.e. unnamed) layouts in parent directories. If you'd like to inherit from a default layout in the _current_ directory you can specify `@default`. For example, a layout called `__layout-home@default.svelte` that contained a lone `<slot/>` in the root directory would effectively enable any page, anywhere in the app, to inherit directly from the root layout — ignoring any intermediate layouts — by specifying `@home`:
 
 ```
 src/routes/
 ├ a/
 │ ├ b/
 │ │ ├ c/
-│ │ │ ├ __layout.svelte                     # skipped
+│ │ │ ├ __layout.svelte
 │ │ │ └ page-with-root-layout@home.svelte
-│ │ └ __layout.svelte                       # skipped
-│ └ __layout.svelte                         # skipped
-├ __layout.svelte                           # inherited
-└ __layout-home@default.svelte              # inherited
+│ │ └ __layout.svelte
+│ └ __layout.svelte
+├ __layout.svelte                           # selected by `@default`
+└ __layout-home@default.svelte              # selected by `@home`
 ```
 
 ### Error pages
