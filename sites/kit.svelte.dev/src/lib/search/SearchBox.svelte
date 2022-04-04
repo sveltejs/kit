@@ -64,7 +64,13 @@
 	}
 
 	function update() {
-		results = (index ? index.search($query) : []).map((href) => lookup.get(href));
+		const filter = /type|migrat/;
+		let searchResults = index ? index.search($query.toLowerCase()) : [];
+		// only include type and migration docs if user is explicitly searching for them
+		if (!filter.test($query)) {
+			searchResults = searchResults.filter((href) => !filter.test(href));
+		}
+		results = searchResults.map((href) => lookup.get(href));
 	}
 
 	function escape(text) {
