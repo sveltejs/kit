@@ -84,53 +84,54 @@ Named layouts are very powerful, but it can take a minute to get your head round
 
 #### Scoping
 
-Named layouts can be created at any depth, and will apply to any components in the same subtree. For example, `__layout-foo` will apply to `one` and `two`, but not `three` or `four`:
+Named layouts can be created at any depth, and will apply to any components in the same subtree. For example, `__layout-foo` will apply to `/x/one` and `/x/two`, but not `/x/three` or `/four`:
 
 ```
 src/routes/
-├ a/
-│ ├ b/
-│ │ ├ c/
-│ │ │ ├ __layout-foo.svelte
-│ │ │ ├ one@foo.svelte
-│ │ │ ├ two@foo.svelte
-│ │ │ └ three.svelte
-│ │ └ four@foo.svelte
+├ x/
+│ ├ __layout-foo.svelte
+│ ├ one@foo.svelte
+│ ├ two@foo.svelte
+│ └ three.svelte
+└ four@foo.svelte
 ```
 
 #### Inheritance chains
 
-Layouts can themselves choose which parent layouts they inherit from. Ordinarily, they will inherit from any default layouts 'above' them in the tree, but they can inherit named layouts using the same logic as pages. For example, `a/b/c/__layout@foo.svelte` is the default layout for `a/b/c`, because it has no name (meaning `one`, `two` and `three` all inherit from it), and because it specifies `@foo`, it will inherit directly from the nearest `__layout-foo.svelte`, skipping `__layout.svelte`, `a/__layout.svelte` and `a/b/__layout.svelte`.
+Layouts can themselves choose to inherit from named layouts, from the same directory or a parent directory. For example, `x/y/__layout@root.svelte` is the default layout for `/x/y` (meaning `/x/y/one`, `/x/y/two` and `/x/y/three` all inherit from it) because it has no name. Because it specifies `@root`, it will inherit directly from the nearest `__layout-root.svelte`, skipping `__layout.svelte` and `x/__layout.svelte`.
 
 ```
 src/routes/
-├ a/
-│ ├ b/
-│ │ ├ c/
-│ │ │ ├ __layout@foo.svelte
-│ │ │ ├ one.svelte
-│ │ │ ├ two.svelte
-│ │ │ └ three.svelte
-│ │ └ __layout.svelte
+├ x/
+│ ├ y/
+│ │ ├ __layout@root.svelte
+│ │ ├ one.svelte
+│ │ ├ two.svelte
+│ │ └ three.svelte
 │ └ __layout.svelte
 ├ __layout.svelte
-└ __layout-foo.svelte
+└ __layout-root.svelte
 ```
 
-Layouts that don't specify a parent layout will inherit from default (i.e. unnamed) layouts in parent directories. If you'd like to inherit from a default layout in the _current_ directory you can specify `@default`. For example, a layout called `__layout-home@default.svelte` that contained a lone `<slot/>` in the root directory would effectively enable any page, anywhere in the app, to inherit directly from the root layout — ignoring any intermediate layouts — by specifying `@home`:
+> In the case where `__layout-root.svelte` contains a lone `<slot />`, this effectively means we're able to 'reset' to a blank layout for any page or nested layout in the app by adding `@root`.
 
-```
+If no parent is specified, a layout will inherit from the nearest default (i.e. unnamed) layout _above_ it in the tree. In some cases, it's helpful for a named layout to inherit from a default layout _alongside_ it in the tree, such as `__layout-root.svelte` inheriting from `__layout.svelte`. We can do this by explicitly specifying `@default`, allowing `/x/y/one` and siblings to use the app's default layout without using `x/__layout.svelte`:
+
+```diff
 src/routes/
-├ a/
-│ ├ b/
-│ │ ├ c/
-│ │ │ ├ __layout.svelte
-│ │ │ └ page-with-root-layout@home.svelte
-│ │ └ __layout.svelte
+├ x/
+│ ├ y/
+│ │ ├ __layout@root.svelte
+│ │ ├ one.svelte
+│ │ ├ two.svelte
+│ │ └ three.svelte
 │ └ __layout.svelte
-├ __layout.svelte                           # selected by `@default`
-└ __layout-home@default.svelte              # selected by `@home`
+├ __layout.svelte
+-└ __layout-root.svelte
++└ __layout-root@default.svelte
 ```
+
+> `default` is a reserved name — in other words, you can't have a `__layout-default.svelte` file.
 
 ### Error pages
 
