@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.305
+
+### Patch Changes
+
+- Generate correct types for routes with parameter matchers ([#4472](https://github.com/sveltejs/kit/pull/4472))
+
 ## 1.0.0-next.304
 
 ### Patch Changes
