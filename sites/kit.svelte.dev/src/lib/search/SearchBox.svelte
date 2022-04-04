@@ -9,7 +9,6 @@
 	let modal;
 
 	let results = [];
-	let backspace_pressed;
 
 	let index;
 	let lookup;
