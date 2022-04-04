@@ -523,6 +523,13 @@ test('errors on missing layout', () => {
 	);
 });
 
+test('errors on layout named default', () => {
+	assert.throws(
+		() => create('samples/named-layout-default'),
+		/samples\/named-layout-default\/__layout-default.svelte cannot use reserved "default" name/
+	);
+});
+
 test('errors on duplicate layout definition', () => {
 	assert.throws(
 		() => create('samples/duplicate-layout'),

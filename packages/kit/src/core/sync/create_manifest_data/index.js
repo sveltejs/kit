@@ -116,6 +116,11 @@ export default function create_manifest_data({
 				group.error = project_relative;
 			} else {
 				const match = /** @type {RegExpMatchArray} */ (layout_pattern.exec(name));
+
+				if (match[1] === DEFAULT) {
+					throw new Error(`${project_relative} cannot use reserved "${DEFAULT}" name`);
+				}
+
 				const layout_id = match[1] || DEFAULT;
 
 				const defined = group.layouts[layout_id];
