@@ -203,7 +203,14 @@ export async function create_plugin(config, cwd) {
 
 						if (req.url === '/favicon.ico') return not_found(res);
 
-						if (!decoded.startsWith(config.kit.paths.base)) return not_found(res);
+						if (!decoded.startsWith(config.kit.paths.base)) {
+							res.writeHead(307, {
+								location: config.kit.paths.base + req.url
+							});
+							res.end();
+
+							return;
+						}
 
 						/** @type {Partial<import('types').Hooks>} */
 						const user_hooks = resolve_entry(config.kit.files.hooks)
