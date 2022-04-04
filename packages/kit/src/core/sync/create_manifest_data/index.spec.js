@@ -516,7 +516,7 @@ test('creates routes with named layouts', () => {
 	]);
 });
 
-test.skip('errors on missing layout', () => {
+test('errors on missing layout', () => {
 	assert.throws(
 		() => create('samples/named-layout-missing'),
 		/samples\/named-layout-missing\/index@missing.svelte references missing layout "missing"/

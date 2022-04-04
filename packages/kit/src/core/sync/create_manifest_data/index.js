@@ -180,7 +180,7 @@ export default function create_manifest_data({
 		const unit = /** @type {Unit} */ (units.get(id));
 
 		if (config.extensions.find((ext) => file.endsWith(ext))) {
-			const { layouts, errors } = trace(file, tree, config.extensions);
+			const { layouts, errors } = trace(project_relative, file, tree, config.extensions);
 			unit.page = {
 				a: layouts.concat(project_relative),
 				b: errors
@@ -280,19 +280,20 @@ export default function create_manifest_data({
 
 /**
  * @param {string} file
+ * @param {string} path
  * @param {Tree} tree
  * @param {string[]} extensions
  */
-function trace(file, tree, extensions) {
+function trace(file, path, tree, extensions) {
 	/** @type {Array<string | undefined>} */
 	const layouts = [];
 
 	/** @type {Array<string | undefined>} */
 	const errors = [];
 
-	const parts = file.split('/');
+	const parts = path.split('/');
 	const filename = /** @type {string} */ (parts.pop());
-	const extension = /** @type {string} */ (extensions.find((ext) => file.endsWith(ext)));
+	const extension = /** @type {string} */ (extensions.find((ext) => path.endsWith(ext)));
 	const base = filename.slice(0, -extension.length);
 
 	let layout_id = base.includes('@') ? base.split('@')[1] : DEFAULT;
@@ -304,36 +305,34 @@ function trace(file, tree, extensions) {
 		const node = tree.get(parts.join('/'));
 		const layout = node?.layouts[layout_id];
 
-		errors.unshift(node?.error);
-		layouts.unshift(layout?.file);
+		// any segment that has neither a __layout nor an __error can be discarded.
+		// in other words these...
+		//  layouts: [a, , b, c]
+		//  errors:  [d, , e,  ]
+		//
+		// ...can be compacted to these:
+		//  layouts: [a, b, c]
+		//  errors:  [d, e,  ]
+		if (node?.error || layout?.file) {
+			errors.unshift(node?.error);
+			layouts.unshift(layout?.file);
+		}
 
 		if (layout?.name.includes('@')) {
 			layout_id = layout.name.split('@')[1];
 		} else {
-			if (parts.length === 0) break;
 			if (layout) layout_id = DEFAULT;
+			if (parts.length === 0) break;
 			parts.pop();
 		}
 	}
 
-	// compact the arrays — any node that has neither a __layout
-	// nor an __error can be discarded. in other words these...
-	//  layouts: [a, , b, c]
-	//  errors:  [d, , e,  ]
-	//
-	// ...can be compacted to these:
-	//  layouts: [a, b, c]
-	//  errors:  [d, e,  ]
-	let i = layouts.length;
-	while (i--) {
-		if (!errors[i] && !layouts[i]) {
-			errors.splice(i, 1);
-			layouts.splice(i, 1);
-		}
+	if (layout_id !== DEFAULT) {
+		throw new Error(`${file} references missing layout "${layout_id}"`);
 	}
 
 	// trim empty space off the end of the errors array
-	i = errors.length;
+	let i = errors.length;
 	while (i--) if (errors[i]) break;
 	errors.length = i + 1;
 
