@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.306
+
+### Patch Changes
+
+- Hint if `paths.base` is missing in dev ([#4510](https://github.com/sveltejs/kit/pull/4510))
+
+* Respect `paths.base` when using `--open` ([#4510](https://github.com/sveltejs/kit/pull/4510))
+
+- [breaking] Add named layouts, remove `__layout.reset` ([#4388](https://github.com/sveltejs/kit/pull/4388))
+
 ## 1.0.0-next.305
 
 ### Patch Changes
