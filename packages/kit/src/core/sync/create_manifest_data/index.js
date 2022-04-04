@@ -46,7 +46,7 @@ import { parse_route_id } from '../../../utils/routing.js';
 const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+))?(?:@(~|[a-zA-Z0-9_-]+)?)?$/;
 const dunder_pattern = /(^|\/)__(?!tests?__)/; // forbid __-prefixed files/directories except __error, __layout[-...], __test__, __tests__
 
-const DEFAULT = '~'; // any character that isn't allowed in layout names will do
+const DEFAULT = 'default';
 
 /**
  * @param {{

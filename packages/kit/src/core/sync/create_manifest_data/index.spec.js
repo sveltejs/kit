@@ -423,7 +423,7 @@ test('creates routes with named layouts', () => {
 	assert.equal(components, [
 		'samples/named-layouts/__layout.svelte',
 		default_error,
-		'samples/named-layouts/__layout-home.svelte',
+		'samples/named-layouts/__layout-home@default.svelte',
 		'samples/named-layouts/__layout-special.svelte',
 		'samples/named-layouts/a/__layout.svelte',
 		'samples/named-layouts/b/__layout-alsospecial@special.svelte',
@@ -483,8 +483,12 @@ test('creates routes with named layouts', () => {
 			pattern: /^\/b\/c\/c2\/?$/,
 			path: '/b/c/c2',
 			shadow: null,
-			a: ['samples/named-layouts/__layout-home.svelte', 'samples/named-layouts/b/c/c2@home.svelte'],
-			b: [default_error]
+			a: [
+				'samples/named-layouts/__layout.svelte',
+				'samples/named-layouts/__layout-home@default.svelte',
+				'samples/named-layouts/b/c/c2@home.svelte'
+			],
+			b: [default_error, default_error]
 		},
 		{
 			type: 'page',
