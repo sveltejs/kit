@@ -180,7 +180,7 @@ export default function create_manifest_data({
 		const unit = /** @type {Unit} */ (units.get(id));
 
 		if (config.extensions.find((ext) => file.endsWith(ext))) {
-			const { layouts, errors } = trace(file, tree, config.extensions);
+			const { layouts, errors } = trace(project_relative, file, tree, config.extensions);
 			unit.page = {
 				a: layouts.concat(project_relative),
 				b: errors
@@ -280,19 +280,20 @@ export default function create_manifest_data({
 
 /**
  * @param {string} file
+ * @param {string} path
  * @param {Tree} tree
  * @param {string[]} extensions
  */
-function trace(file, tree, extensions) {
+function trace(file, path, tree, extensions) {
 	/** @type {Array<string | undefined>} */
 	const layouts = [];
 
 	/** @type {Array<string | undefined>} */
 	const errors = [];
 
-	const parts = file.split('/');
+	const parts = path.split('/');
 	const filename = /** @type {string} */ (parts.pop());
-	const extension = /** @type {string} */ (extensions.find((ext) => file.endsWith(ext)));
+	const extension = /** @type {string} */ (extensions.find((ext) => path.endsWith(ext)));
 	const base = filename.slice(0, -extension.length);
 
 	let layout_id = base.includes('@') ? base.split('@')[1] : DEFAULT;
@@ -309,10 +310,14 @@ function trace(file, tree, extensions) {
 		if (layout?.name.includes('@')) {
 			layout_id = layout.name.split('@')[1];
 		} else {
-			if (parts.length === 0) break;
 			if (layout) layout_id = DEFAULT;
+			if (parts.length === 0) break;
 			parts.pop();
 		}
+	}
+
+	if (layout_id !== DEFAULT) {
+		throw new Error(`${file} references missing layout "${layout_id}"`);
 	}
 
 	// compact the arrays — any node that has neither a __layout
