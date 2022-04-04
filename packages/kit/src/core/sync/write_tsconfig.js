@@ -63,7 +63,8 @@ export function write_tsconfig(config) {
 						$lib: [project_relative(config.kit.files.lib)],
 						'$lib/*': [project_relative(config.kit.files.lib + '/*')]
 					},
-					rootDirs: [config_relative('.'), './types']
+					rootDirs: [config_relative('.'), './types'],
+					strict: true
 				},
 				include,
 				exclude: [config_relative('node_modules/**'), './**']
