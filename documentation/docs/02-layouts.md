@@ -100,7 +100,7 @@ src/routes/
 
 #### Inheritance chains
 
-Layouts can themselves choose which parent layouts they inherit from. Ordinarily, they will inherit from any default layouts 'above' them in the tree, but they can inherit named layouts using the same logic as pages. For example, all the pages under `a/b/c` will inherit from `a/b/c/__layout@foo.svelte`, which inherits from `__layout-foo.svelte`, but `__layout.svelte` or `a/b/__layout.svelte` will be skipped.
+Layouts can themselves choose which parent layouts they inherit from. Ordinarily, they will inherit from any default layouts 'above' them in the tree, but they can inherit named layouts using the same logic as pages. For example, `a/b/c/__layout@foo.svelte` is the default layout for `a/b/c`, because it has no name (meaning `one`, `two` and `three` all inherit from it), and because it specifies `@foo`, it will inherit directly from the nearest `__layout-foo.svelte`, skipping `__layout.svelte`, `a/__layout.svelte` and `a/b/__layout.svelte`.
 
 ```
 src/routes/
@@ -112,27 +112,25 @@ src/routes/
 │ │ │ ├ two.svelte
 │ │ │ └ three.svelte
 │ │ └ __layout.svelte
-│ ├ __layout.svelte
-│ └ __layout-foo.svelte
+│ └ __layout.svelte
+├ __layout.svelte
+└ __layout-foo.svelte
 ```
 
-<!-- #### Resetting layouts
-
-Sometimes you need a page to use the 'home' layout, regardless of its URL. You can do this by creating a top-level named layout that inherits from the default layout by using `@` without a name:
+Layouts that specify a parent will ordinarily ignore any default layouts, but you can force a named layout to inherit from the nearest default layout with the reserved `default` parent identifier. For example, a layout called `__layout-home@default.svelte` that contained a single `<slot/>` in the root directory would effectively enable any page, anywhere in the app, to inherit directly from the root layout, ignoring any intermediate layouts:
 
 ```
 src/routes/
 ├ a/
 │ ├ b/
 │ │ ├ c/
-│ │ │ └ index@home.svelte
-│ │ └ __layout.svelte
-│ └ __layout.svelte
-│ __layout.svelte
-└ __layout-home@.svelte
+│ │ │ ├ __layout.svelte                     # skipped
+│ │ │ └ page-with-root-layout@home.svelte
+│ │ └ __layout.svelte                       # skipped
+│ └ __layout.svelte                         # skipped
+├ __layout.svelte                           # inherited
+└ __layout-home@default.svelte              # inherited
 ```
-
-In this case, the `__layout-home@.svelte` component should consist of a single `<slot />`. -->
 
 ### Error pages
 
