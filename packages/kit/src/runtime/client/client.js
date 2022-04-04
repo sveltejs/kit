@@ -497,7 +497,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const session = $session;
 
 		if (module.load) {
-			/** @type {import('types').LoadInput | import('types').ErrorLoadInput} */
+			/** @type {import('types').LoadInput} */
 			const load_input = {
 				routeId,
 				params: uses_params,
@@ -520,7 +520,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 					node.uses.dependencies.add(href);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
-				}
+				},
+				status: null,
+				error: null
 			};
 
 			if (import.meta.env.DEV) {
@@ -533,8 +535,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 			}
 
 			if (error) {
-				/** @type {import('types').ErrorLoadInput} */ (load_input).status = status;
-				/** @type {import('types').ErrorLoadInput} */ (load_input).error = error;
+				load_input.status = status ?? 500;
+				load_input.error = coalesce_to_error(error);
 			}
 
 			const loaded = await module.load.call(null, load_input);
