@@ -43,7 +43,7 @@ import { parse_route_id } from '../../../utils/routing.js';
  * @typedef {Map<string, Node>} Tree
  */
 
-const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+))?(?:@(~|[a-zA-Z0-9_-]+)?)?$/;
+const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+))?(?:@([a-zA-Z0-9_-]+))?$/;
 const dunder_pattern = /(^|\/)__(?!tests?__)/; // forbid __-prefixed files/directories except __error, __layout[-...], __test__, __tests__
 
 const DEFAULT = 'default';
