@@ -526,7 +526,7 @@ test.skip('errors on missing layout', () => {
 test('errors on duplicate layout definition', () => {
 	assert.throws(
 		() => create('samples/duplicate-layout'),
-		/Duplicate layout samples\/duplicate-layout\/__layout-a@.svelte already defined at samples\/duplicate-layout\/__layout-a.svelte/
+		/Duplicate layout samples\/duplicate-layout\/__layout-a@x.svelte already defined at samples\/duplicate-layout\/__layout-a.svelte/
 	);
 });
 
