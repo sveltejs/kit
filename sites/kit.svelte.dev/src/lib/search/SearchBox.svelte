@@ -65,9 +65,9 @@
 
 	function update() {
 		const filter = /type|migrat/;
-		let searchResults = index ? index.search($query.toLowerCase()) : [];
+		let searchResults = index ? index.search($query) : [];
 		// only include type and migration docs if user is explicitly searching for them
-		if (!filter.test($query)) {
+		if (!filter.test($query.toLowerCase())) {
 			searchResults = searchResults.filter((href) => !filter.test(href));
 		}
 		results = searchResults.map((href) => lookup.get(href));
