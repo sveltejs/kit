@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Add missing paths.base prefix in dev, if necessary
+Hint if `paths.base` is missing in dev
