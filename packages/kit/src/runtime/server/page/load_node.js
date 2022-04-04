@@ -303,8 +303,8 @@ export async function load_node({
 				return proxy;
 			},
 			stuff: { ...stuff },
-			status: null,
-			error: null
+			status: is_error ? status ?? null : null,
+			error: is_error ? error ?? null : null
 		};
 
 		if (options.dev) {
@@ -314,11 +314,6 @@ export async function load_node({
 					throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
 				}
 			});
-		}
-
-		if (is_error) {
-			load_input.status = status ?? 500;
-			load_input.error = coalesce_to_error(error);
 		}
 
 		loaded = await module.load.call(null, load_input);

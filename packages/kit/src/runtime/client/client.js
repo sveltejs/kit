@@ -521,8 +521,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
 				},
-				status: null,
-				error: null
+				status: status ?? null,
+				error: error ?? null
 			};
 
 			if (import.meta.env.DEV) {
@@ -532,11 +532,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 						throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
 					}
 				});
-			}
-
-			if (error) {
-				load_input.status = status ?? 500;
-				load_input.error = coalesce_to_error(error);
 			}
 
 			const loaded = await module.load.call(null, load_input);
