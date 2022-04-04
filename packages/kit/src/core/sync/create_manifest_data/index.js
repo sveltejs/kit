@@ -227,7 +227,7 @@ export default function create_manifest_data({
 					type: 'page',
 					id: unit.id,
 					pattern: unit.pattern,
-					path: unit.id.includes('[') ? '' : `/${unit.id.replace(/@(?:~|[a-zA-Z0-9_-]*)/g, '')}`,
+					path: unit.id.includes('[') ? '' : `/${unit.id.replace(/@(?:[a-zA-Z0-9_-]+)/g, '')}`,
 					shadow: unit.endpoint || null,
 					a: unit.page.a,
 					b: unit.page.b
