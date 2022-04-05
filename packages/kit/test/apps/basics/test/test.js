@@ -2232,6 +2232,11 @@ test.describe.parallel('Static files', () => {
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
 	});
+
+	test('does not use Vite middleware', async ({ request }) => {
+		const response = await request.get('/static/static.json');
+		expect(response.status()).toBe(404);
+	});
 });
 
 test.describe.parallel('Matchers', () => {

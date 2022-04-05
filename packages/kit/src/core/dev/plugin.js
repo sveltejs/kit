@@ -378,7 +378,8 @@ function remove_html_middlewares(server) {
 	const html_middlewares = [
 		'viteIndexHtmlMiddleware',
 		'vite404Middleware',
-		'viteSpaFallbackMiddleware'
+		'viteSpaFallbackMiddleware',
+		'viteServeStaticMiddleware'
 	];
 	for (let i = server.stack.length - 1; i > 0; i--) {
 		// @ts-expect-error using internals until https://github.com/vitejs/vite/pull/4640 is merged
