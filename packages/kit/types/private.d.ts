@@ -176,6 +176,7 @@ export interface LoadOutput<Props extends Record<string, any> = Record<string, a
 	props?: Props;
 	stuff?: Partial<App.Stuff>;
 	maxage?: number;
+	dependencies?: string[];
 }
 
 export interface Logger {
