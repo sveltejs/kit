@@ -80,6 +80,8 @@ Some parts of your app might need something other than the default layout. For t
 <h1>I am inside __layout-foo</h1>
 ```
 
+> To use a named layout on an `index` route you can use `/@foo.svelte`.
+
 Named layouts are very powerful, but it can take a minute to get your head round them. Don't worry if this doesn't make sense all at once.
 
 #### Scoping
