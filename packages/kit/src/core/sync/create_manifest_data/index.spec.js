@@ -435,7 +435,8 @@ test('creates routes with named layouts', () => {
 		'samples/named-layouts/b/c/c1@alsospecial.svelte',
 		'samples/named-layouts/b/c/c2@home.svelte',
 		'samples/named-layouts/b/d/d1.svelte',
-		'samples/named-layouts/b/d/d2@extraspecial.svelte'
+		'samples/named-layouts/b/d/d2@extraspecial.svelte',
+		'samples/named-layouts/b/d/index@special.svelte'
 	]);
 
 	assert.equal(routes, [
@@ -461,6 +462,19 @@ test('creates routes with named layouts', () => {
 			a: [
 				'samples/named-layouts/__layout-special.svelte',
 				'samples/named-layouts/a/a2@special.svelte'
+			],
+			b: [default_error]
+		},
+		{
+			type: 'page',
+			id: 'b/d@special',
+			pattern: /^\/b\/d\/?$/,
+			path: '/b/d',
+			shadow: null,
+			a: [
+				'samples/named-layouts/__layout.svelte',
+				'samples/named-layouts/b/d/__layout-special.svelte',
+				'samples/named-layouts/b/d/index@special.svelte'
 			],
 			b: [default_error]
 		},
