@@ -16,7 +16,6 @@ importers:
       eslint: ^8.3.0
       eslint-plugin-import: ^2.25.3
       eslint-plugin-svelte3: ^3.2.1
-      playwright-chromium: ^1.19.1
       prettier: ^2.5.0
       rollup: ^2.60.2
       typescript: ~4.6.2
@@ -33,7 +32,6 @@ importers:
       eslint: 8.3.0
       eslint-plugin-import: 2.25.3_eslint@8.3.0
       eslint-plugin-svelte3: 3.2.1_eslint@8.3.0
-      playwright-chromium: 1.19.1
       prettier: 2.5.0
       rollup: 2.60.2
       typescript: 4.6.2
@@ -4898,19 +4896,6 @@ packages:
       find-up: 4.1.0
     dev: true
 
-  /playwright-chromium/1.19.1:
-    resolution: {integrity: sha512-gObASFcY8oOAqlJw89UXM/i4GNLvxKADn4DgoEMkXPxG7ATaN3eIyuWg5fGeYjKbAR15SHi+fCmP8n43LWKVTg==}
-    engines: {node: '>=12'}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      playwright-core: 1.19.1
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-    dev: true
-
   /playwright-chromium/1.20.2:
     resolution: {integrity: sha512-KsiPLRC1v56qLWqjzeEoDZNVW/eFrP5ad0PFQAa74u5EwnnId89LgOHEZFy487tt3xJdv3Ayyfdn8zwsUpS3Qg==}
     engines: {node: '>=12'}
@@ -4918,33 +4903,6 @@ packages:
     requiresBuild: true
     dependencies:
       playwright-core: 1.20.2
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-    dev: true
-
-  /playwright-core/1.19.1:
-    resolution: {integrity: sha512-+ByjhWX39PlINVRXr4ef9Kle85mk5QzA2WLioCoMQc3bSUtZpLV1mbeUDtRp/bvFw6YDIEyptj4QvzzRTXN3vg==}
-    engines: {node: '>=12'}
-    hasBin: true
-    dependencies:
-      commander: 8.3.0
-      debug: 4.3.3
-      extract-zip: 2.0.1
-      https-proxy-agent: 5.0.0
-      jpeg-js: 0.4.3
-      mime: 3.0.0
-      pngjs: 6.0.0
-      progress: 2.0.3
-      proper-lockfile: 4.1.2
-      proxy-from-env: 1.1.0
-      rimraf: 3.0.2
-      socks-proxy-agent: 6.1.1
-      stack-utils: 2.0.5
-      ws: 8.4.2
-      yauzl: 2.10.0
-      yazl: 2.5.1
     transitivePeerDependencies:
       - bufferutil
       - supports-color
