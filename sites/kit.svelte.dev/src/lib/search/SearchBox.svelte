@@ -20,7 +20,7 @@
 		index = new flexsearch.Index({
 			tokenize: 'forward',
 			// deprioritize type and migration related docs in search
-			boost: (words) => (/type|migrat/.test(words[0]) ? 0.5 : 1)
+			boost: (words) => (/types|migrating/.test(words[0]) ? 0.5 : 1)
 		});
 
 		lookup = new Map();
