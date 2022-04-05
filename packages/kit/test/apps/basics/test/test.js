@@ -1525,6 +1525,11 @@ test.describe.parallel('Page options', () => {
 			).toBe('absolute');
 		}
 	});
+
+	test('does not SSR error page for 404s with ssr=false', async ({ request }) => {
+		const html = await request.get('/no-ssr/missing');
+		expect(await html.text()).not.toContain('load function was called erroneously');
+	});
 });
 
 test.describe.parallel('$app/paths', () => {
