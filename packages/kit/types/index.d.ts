@@ -226,11 +226,11 @@ export interface RequestHandler<
 	(event: RequestEvent<Params>): MaybePromise<RequestHandlerOutput<Output>>;
 }
 
-export type RequestHandlerOutput<Output extends ResponseBody = ResponseBody> = {
+export interface RequestHandlerOutput<Output extends ResponseBody = ResponseBody> {
 	status?: number;
 	headers?: Headers | Partial<ResponseHeaders>;
 	body?: Output;
-};
+}
 
 export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
 
