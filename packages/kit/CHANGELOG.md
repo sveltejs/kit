@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.307
+
+### Patch Changes
+
+- Allow index files to use named layouts ([#4527](https://github.com/sveltejs/kit/pull/4527))
+
+* Respect ssr option when rendering 404 page ([#4513](https://github.com/sveltejs/kit/pull/4513))
+
+- Remove unimplemented option from CLI ([#4507](https://github.com/sveltejs/kit/pull/4507))
+
+* Move MaybePromise from RequestHandlerOutput to RequestHandler return value ([#4519](https://github.com/sveltejs/kit/pull/4519))
+
 ## 1.0.0-next.306
 
 ### Patch Changes
