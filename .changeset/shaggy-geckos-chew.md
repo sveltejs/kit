@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Remove Vite static asset middleware
+Remove `static` directory from Vite's control
