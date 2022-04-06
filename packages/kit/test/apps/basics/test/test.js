@@ -2235,7 +2235,7 @@ test.describe.parallel('Static files', () => {
 
 	test('does not use Vite middleware', async ({ request }) => {
 		const response = await request.get('/static/static.json');
-		expect(response.status()).toBe(404);
+		expect(response.status()).toBe(process.env.DEV ? 403 : 404);
 	});
 });
 
