@@ -2232,6 +2232,11 @@ test.describe.parallel('Static files', () => {
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
 	});
+
+	test('does not use Vite to serve contents of static directory', async ({ request }) => {
+		const response = await request.get('/static/static.json');
+		expect(response.status()).toBe(process.env.DEV ? 403 : 404);
+	});
 });
 
 test.describe.parallel('Matchers', () => {
