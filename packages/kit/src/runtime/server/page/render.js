@@ -84,17 +84,19 @@ export async function render_response({
 			maxage = loaded.maxage;
 		});
 
+		const session = writable($session);
+
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				/** @type {import('svelte/store').Readable<App.Session>} */
+				/** @type {import('svelte/store').Writable<App.Session>} */
 				session: {
+					...session,
 					subscribe: (fn) => {
 						is_private = true;
-						fn($session);
-						return () => {};
+						return session.subscribe(fn);
 					}
 				},
 				updated
