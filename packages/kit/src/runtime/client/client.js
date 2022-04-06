@@ -478,7 +478,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		};
 
 		/** @param dep {string} */
-		function addDependency(dep) {
+		function add_dependency(dep) {
 			const { href } = new URL(dep, url);
 			node.uses.dependencies.add(href);
 		}
@@ -522,7 +522,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				},
 				fetch(resource, info) {
 					const requested = typeof resource === 'string' ? resource : resource.url;
-					addDependency(requested);
+					add_dependency(requested);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
 				}
@@ -551,7 +551,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
 			if (node.loaded.dependencies) {
-				node.loaded.dependencies.forEach(addDependency);
+				node.loaded.dependencies.forEach(add_dependency);
 			}
 		} else if (props) {
 			node.loaded = normalize({ props });
