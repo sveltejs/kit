@@ -18,10 +18,11 @@
 		const { blocks } = await response.json();
 
 		// we have multiple indexes, so we can rank sections (migration guide comes last)
-		indexes = [
-			new flexsearch.Index({ tokenize: 'forward' }),
-			new flexsearch.Index({ tokenize: 'forward' })
-		];
+		const max_rank = Math.max(...blocks.map((block) => block.rank ?? 0));
+		indexes = Array.from(
+			{ length: max_rank + 1 },
+			() => new flexsearch.Index({ tokenize: 'forward' })
+		);
 
 		lookup = new Map();
 
