@@ -2233,7 +2233,7 @@ test.describe.parallel('Static files', () => {
 		expect(response.status()).toBe(200);
 	});
 
-	test('does not use Vite middleware', async ({ request }) => {
+	test('does not use Vite static middleware', async ({ request }) => {
 		const response = await request.get('/static/static.json');
 		expect(response.status()).toBe(404);
 	});
