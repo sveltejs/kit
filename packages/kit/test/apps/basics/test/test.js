@@ -305,8 +305,13 @@ test.describe.parallel('Caching', () => {
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
 	});
 
-	test('sets cache-control: private if page uses session', async ({ request }) => {
-		const response = await request.get('/caching/private/uses-session');
+	test('sets cache-control: private if page uses session in load', async ({ request }) => {
+		const response = await request.get('/caching/private/uses-session-in-load');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
+	});
+
+	test('sets cache-control: private if page uses session in init', async ({ request }) => {
+		const response = await request.get('/caching/private/uses-session-in-init');
 		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 

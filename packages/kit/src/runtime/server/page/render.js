@@ -84,7 +84,20 @@ export async function render_response({
 			maxage = loaded.maxage;
 		});
 
-		const session = writable($session);
+		/** @type {import('svelte/store').Writable<App.Session>} */
+		const session = {
+			subscribe: (fn) => {
+				is_private = true;
+				fn($session);
+				return () => {};
+			},
+			set: () => {
+				throw new Error('Cannot write to session during SSR');
+			},
+			update: () => {
+				throw new Error('Cannot write to session during SSR');
+			}
+		};
 
 		/** @type {Record<string, any>} */
 		const props = {
@@ -129,17 +142,7 @@ export async function render_response({
 			props[`props_${i}`] = await branch[i].loaded.props;
 		}
 
-		let session_tracking_active = false;
-		const unsubscribe = session.subscribe(() => {
-			if (session_tracking_active) is_private = true;
-		});
-		session_tracking_active = true;
-
-		try {
-			rendered = options.root.render(props);
-		} finally {
-			unsubscribe();
-		}
+		rendered = options.root.render(props);
 	} else {
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
