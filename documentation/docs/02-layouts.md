@@ -165,3 +165,43 @@ If an error component has a [`load`](/docs/loading) function, it will be called 
 > Layouts also have access to `error` and `status` via the [page store](/docs/modules#$app-stores)
 >
 > Server-side stack traces will be removed from `error` in production, to avoid exposing privileged information to users.
+
+#### 404s
+
+Nested error pages are only rendered when an error occurs while rendering a specific page. In the case of a request that doesn't match any existing route, SvelteKit will render a generic 404 instead. For example, given these routes...
+
+```
+src/routes/
+├ __error.svelte
+├ marx-brothers/
+│ ├ __error.svelte
+│ ├ chico.svelte
+│ ├ harpo.svelte
+│ └ groucho.svelte
+```
+
+...the `marx-brothers/__error.svelte` file will _not_ be rendered if you visit `/marx-brothers/karl`. If you want to render the nested error page, you should create a route that matches any `/marx-brothers/*` request, and return a 404 from it:
+
+```diff
+src/routes/
+├ __error.svelte
+├ marx-brothers/
+│ ├ __error.svelte
++│ ├ [...path].svelte
+│ ├ chico.svelte
+│ ├ harpo.svelte
+│ └ groucho.svelte
+```
+
+```svelte
+/// file: src/routes/marx-brothers/[...path.svelte]
+<script context="module">
+	/** @type {import('./[...path]').Load} */
+	export function load({ params }) {
+		return {
+			status: 404,
+			error: new Error(`Not found: /marx-brothers/${params.path}`)
+		};
+	}
+</script>
+```
