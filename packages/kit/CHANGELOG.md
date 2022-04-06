@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.308
+
+### Patch Changes
+
+- Remove `static` directory from Vite's control ([#4535](https://github.com/sveltejs/kit/pull/4535))
+
 ## 1.0.0-next.307
 
 ### Patch Changes
