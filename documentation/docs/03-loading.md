@@ -126,3 +126,11 @@ If the `load` function returns a `props` object, the props will be passed to the
 This will be merged with any existing `stuff` and passed to the `load` functions of subsequent layout and page components.
 
 The combined `stuff` is available to components using the [page store](/docs/modules#$app-stores) as `$page.stuff`, providing a mechanism for pages to pass data 'upward' to layouts.
+
+#### dependencies
+
+If the `load` function depends on custom resources a `dependencies` array can returned. A registered dependency can later be used as argument of `invalidate` to rerun the `load` function.
+
+> Note that the `fetch` function alreay registers the requested resources as dependencies. Manual registration is only necessary if it's not possible to use SvelteKits `fetch` function. 
+
+The items should be [properly encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding) URIs. Both absolute and relative URIs are acceptable.
