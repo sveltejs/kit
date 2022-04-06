@@ -84,27 +84,19 @@ export async function render_response({
 			maxage = loaded.maxage;
 		});
 
-		/** @type {import('svelte/store').Writable<App.Session>} */
-		const session = {
-			subscribe: (fn) => {
-				is_private = true;
-				fn($session);
-				return () => {};
-			},
-			set: () => {
-				throw new Error('Cannot write to session during SSR');
-			},
-			update: () => {
-				throw new Error('Cannot write to session during SSR');
-			}
-		};
-
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session,
+				/** @type {import('svelte/store').Readable<App.Session>} */
+				session: {
+					subscribe: (fn) => {
+						is_private = true;
+						fn($session);
+						return () => {};
+					}
+				},
 				updated
 			},
 			/** @type {import('types').Page} */
