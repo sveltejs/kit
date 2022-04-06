@@ -27,11 +27,11 @@
 
 		let time = Date.now();
 		for (const block of blocks) {
-			const title = block.breadcrumbs[block.breadcrumbs.length - 1];
+			const title = block.breadcrumbs.pop();
 			lookup.set(block.href, {
 				title,
 				href: block.href,
-				breadcrumbs: block.breadcrumbs.slice(0, -1),
+				breadcrumbs: block.breadcrumbs,
 				content: block.content
 			});
 			indexes[block.rank ?? 0].add(block.href, `${title} ${block.content}`);
