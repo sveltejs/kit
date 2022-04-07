@@ -80,7 +80,7 @@
 
 - Populate fallback page when trailingSlash is "always" ([#4351](https://github.com/sveltejs/kit/pull/4351))
 
-* Expose `event.routeId` and `page.routeId` ([#4344](https://github.com/sveltejs/kit/pull/4344))
+* Expose `event.routeId` and `page.routeId` ([#4345](https://github.com/sveltejs/kit/pull/4345))
 
 - [breaking] remove fallthrough routes ([#4330](https://github.com/sveltejs/kit/pull/4330))
 
