@@ -241,6 +241,25 @@ export async function post({ request }) {
 }
 ```
 
+#### URL parsing
+
+The `url` object is an instance of the standard [URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) class at the `searchParams` key. As such, you can access the params sent using query params.
+
+```js
+// @filename: index.js
+// /foo?limit=10&offset=20
+/** @type {import('@sveltejs/kit').RequestHandler} */
+export async function get({ url }) {
+	const limit = url.searchParams.get("limit");
+	const offset = url.searchParams.get("offset"); 
+
+	const response = await expensiveSearch({ limit, offset });
+	const items = await response.json();
+
+	return { items, status: 201 };
+}
+```
+
 #### Setting cookies
 
 Endpoints can set cookies by returning a `headers` object with `set-cookie`. To set multiple cookies simultaneously, return an array:
