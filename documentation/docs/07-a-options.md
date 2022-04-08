@@ -32,9 +32,7 @@ Adding a `sveltekit:reload` attribute to a link...
 
 ...will cause browser to navigate via a full page reload when the link is clicked.
 
-> SvelteKit does not exclude these links from prerendering, which will cause 404s if the URLs are intended to be served by a separate app. Use a custom [`prerender.onError`](/docs/configuration#prerender) handler if you need to ignore them.
-
-Links with a `rel="external"` attribute will receive the same treatment.
+Links with a `rel="external"` attribute will receive the same treatment. In addition, they will be ignored during [prerendering](https://kit.svelte.dev/docs/page-options#prerender).
 
 ### sveltekit:noscroll
 
