@@ -268,7 +268,7 @@ importers:
       selfsigned: ^2.0.0
       sirv: ^2.0.0
       svelte: ^3.44.2
-      svelte-check: ^2.2.10
+      svelte-check: ^2.5.0
       svelte-preprocess: ^4.9.8
       svelte2tsx: ~0.5.0
       tiny-glob: ^0.2.9
@@ -302,7 +302,7 @@ importers:
       selfsigned: 2.0.0
       sirv: 2.0.0
       svelte: 3.44.2
-      svelte-check: 2.2.10_svelte@3.44.2
+      svelte-check: 2.5.0_svelte@3.44.2
       svelte-preprocess: 4.9.8_svelte@3.44.2+typescript@4.6.2
       svelte2tsx: 0.5.0_svelte@3.44.2+typescript@4.6.2
       tiny-glob: 0.2.9
@@ -313,13 +313,13 @@ importers:
       '@sveltejs/kit': workspace:*
       cross-env: ^7.0.3
       svelte: ^3.43.0
-      svelte-check: ^2.2.10
+      svelte-check: ^2.5.0
       typescript: ~4.6.2
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
       svelte: 3.44.2
-      svelte-check: 2.2.10_svelte@3.44.2
+      svelte-check: 2.5.0_svelte@3.44.2
       typescript: 4.6.2
 
   packages/kit/test/apps/basics:
@@ -327,13 +327,13 @@ importers:
       '@sveltejs/kit': workspace:*
       cross-env: ^7.0.3
       svelte: ^3.43.0
-      svelte-check: ^2.2.10
+      svelte-check: ^2.5.0
       typescript: ~4.6.2
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
       svelte: 3.44.2
-      svelte-check: 2.2.10_svelte@3.44.2
+      svelte-check: 2.5.0_svelte@3.44.2
       typescript: 4.6.2
 
   packages/kit/test/apps/options:
@@ -341,13 +341,13 @@ importers:
       '@sveltejs/kit': workspace:*
       cross-env: ^7.0.3
       svelte: ^3.43.0
-      svelte-check: ^2.2.10
+      svelte-check: ^2.5.0
       typescript: ~4.6.2
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
       svelte: 3.44.2
-      svelte-check: 2.2.10_svelte@3.44.2
+      svelte-check: 2.5.0_svelte@3.44.2
       typescript: 4.6.2
 
   packages/kit/test/apps/options-2:
@@ -356,27 +356,27 @@ importers:
       '@sveltejs/kit': workspace:*
       cross-env: ^7.0.3
       svelte: ^3.43.0
-      svelte-check: ^2.2.10
+      svelte-check: ^2.5.0
       typescript: ~4.6.2
     devDependencies:
       '@sveltejs/adapter-node': link:../../../../adapter-node
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
       svelte: 3.44.2
-      svelte-check: 2.2.10_svelte@3.44.2
+      svelte-check: 2.5.0_svelte@3.44.2
       typescript: 4.6.2
 
   packages/kit/test/prerendering/basics:
     specifiers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.43.0
-      svelte-check: ^2.2.10
+      svelte-check: ^2.5.0
       typescript: ~4.6.2
       uvu: ^0.5.2
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.44.2
-      svelte-check: 2.2.10_svelte@3.44.2
+      svelte-check: 2.5.0_svelte@3.44.2
       typescript: 4.6.2
       uvu: 0.5.2
 
@@ -384,13 +384,13 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.43.0
-      svelte-check: ^2.2.10
+      svelte-check: ^2.5.0
       typescript: ~4.6.2
       uvu: ^0.5.2
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.44.2
-      svelte-check: 2.2.10_svelte@3.44.2
+      svelte-check: 2.5.0_svelte@3.44.2
       typescript: 4.6.2
       uvu: 0.5.2
 
@@ -1996,7 +1996,7 @@ packages:
     engines: {node: '>= 8'}
     dependencies:
       normalize-path: 3.0.0
-      picomatch: 2.3.0
+      picomatch: 2.3.1
     dev: true
 
   /aproba/1.2.0:
@@ -3350,7 +3350,7 @@ packages:
       '@nodelib/fs.walk': 1.2.8
       glob-parent: 5.1.2
       merge2: 1.4.1
-      micromatch: 4.0.4
+      micromatch: 4.0.5
     dev: true
 
   /fast-json-stable-stringify/2.1.0:
@@ -4129,7 +4129,7 @@ packages:
   /jsonfile/4.0.0:
     resolution: {integrity: sha1-h3Gq4HmbZAdrdmQPygWPnBDjPss=}
     optionalDependencies:
-      graceful-fs: 4.2.8
+      graceful-fs: 4.2.10
     dev: true
 
   /kind-of/6.0.3:
@@ -5213,7 +5213,7 @@ packages:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
     dependencies:
-      picomatch: 2.3.0
+      picomatch: 2.3.1
     dev: true
 
   /redent/3.0.0:
@@ -5744,22 +5744,21 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  /svelte-check/2.2.10_svelte@3.44.2:
-    resolution: {integrity: sha512-UVLd/N7hUIG2v6dytofsw8MxYn2iS2hpNSglsGz9Z9b8ZfbJ5jayl4Mm1SXhNwiFs5aklG90zSBJtd7NTK8dTg==}
+  /svelte-check/2.5.0_svelte@3.44.2:
+    resolution: {integrity: sha512-/laO032JQ1TpmYHgaaLndHNPeWW3VSL3liMB97sA9fYTEzlIy3jIo4Rgr7EzjNvieiNWG73C5voOAeNHlrwbpg==}
     hasBin: true
     peerDependencies:
       svelte: ^3.24.0
     dependencies:
-      chalk: 4.1.2
       chokidar: 3.5.2
       fast-glob: 3.2.7
       import-fresh: 3.3.0
-      minimist: 1.2.5
+      picocolors: 1.0.0
       sade: 1.7.4
       source-map: 0.7.3
       svelte: 3.44.2
-      svelte-preprocess: 4.9.8_svelte@3.44.2+typescript@4.5.5
-      typescript: 4.5.5
+      svelte-preprocess: 4.9.8_svelte@3.44.2+typescript@4.6.2
+      typescript: 4.6.2
     transitivePeerDependencies:
       - '@babel/core'
       - coffeescript
@@ -5780,57 +5779,6 @@ packages:
     dependencies:
       svelte: 3.44.2
     dev: false
-
-  /svelte-preprocess/4.9.8_svelte@3.44.2+typescript@4.5.5:
-    resolution: {integrity: sha512-EQS/oRZzMtYdAprppZxY3HcysKh11w54MgA63ybtL+TAZ4hVqYOnhw41JVJjWN9dhPnNjjLzvbZ2tMhTsla1Og==}
-    engines: {node: '>= 9.11.2'}
-    requiresBuild: true
-    peerDependencies:
-      '@babel/core': ^7.10.2
-      coffeescript: ^2.5.1
-      less: ^3.11.3
-      node-sass: '*'
-      postcss: ^7 || ^8
-      postcss-load-config: ^2.1.0 || ^3.0.0
-      pug: ^3.0.0
-      sass: ^1.26.8
-      stylus: ^0.54.7
-      sugarss: ^2.0.0
-      svelte: ^3.23.0
-      typescript: ^3.9.5 || ^4.0.0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-      coffeescript:
-        optional: true
-      less:
-        optional: true
-      node-sass:
-        optional: true
-      postcss:
-        optional: true
-      postcss-load-config:
-        optional: true
-      pug:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      typescript:
-        optional: true
-    dependencies:
-      '@types/pug': 2.0.5
-      '@types/sass': 1.43.1
-      detect-indent: 6.1.0
-      magic-string: 0.25.7
-      sorcery: 0.10.0
-      strip-indent: 3.0.0
-      svelte: 3.44.2
-      typescript: 4.5.5
-    dev: true
 
   /svelte-preprocess/4.9.8_svelte@3.44.2+typescript@4.6.2:
     resolution: {integrity: sha512-EQS/oRZzMtYdAprppZxY3HcysKh11w54MgA63ybtL+TAZ4hVqYOnhw41JVJjWN9dhPnNjjLzvbZ2tMhTsla1Og==}
