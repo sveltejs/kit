@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.310
+
+### Patch Changes
+
+- Remove credentials when creating request object in server-side fetch ([#4548](https://github.com/sveltejs/kit/pull/4548))
+
 ## 1.0.0-next.309
 
 ### Patch Changes
