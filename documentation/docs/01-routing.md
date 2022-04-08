@@ -246,7 +246,15 @@ export async function post({ request }) {
 The `url` object is a standard [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) object. As such, you can access the query via `url.searchParams`:
 
 ```js
+// @filename: ambient.d.ts
+declare global {
+  const search: (opts: { limit: string | null, offset: string | null }) => Response;
+}
+
+export {};
+
 // @filename: index.js
+// ---cut---
 // /foo?limit=10&offset=20
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export async function get({ url }) {
