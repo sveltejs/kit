@@ -1,29 +1,34 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { posix } from 'path';
 import { execSync } from 'child_process';
-import esbuild from 'esbuild';
+import * as esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
 
 /** @type {import('.')} */
-export default function () {
+export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
-
 		async adapt(builder) {
-			const { site } = validate_config(builder);
+			validate_config(builder);
 
 			// @ts-ignore
-			const { bucket } = site;
-
-			// @ts-ignore
-			const entrypoint = site['entry-point'] || 'workers-site';
-
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
-			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
+			const dest = builder.getBuildDirectory('cloudflare');
+			const bucket = builder.getBuildDirectory('cloudflare-bucket');
+			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
+			builder.rimraf(dest);
 			builder.rimraf(bucket);
-			builder.rimraf(entrypoint);
+			builder.rimraf(tmp);
+
+			builder.mkdirp(tmp);
+
+			builder.writeStatic(bucket);
+			builder.writeClient(bucket);
+			builder.writePrerendered(bucket);
+
+			const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
 			builder.log.info('Installing worker dependencies...');
 			builder.copy(`${files}/_package.json`, `${tmp}/package.json`);
@@ -33,83 +38,136 @@ export default function () {
 			builder.log.info(stdout.toString());
 
 			builder.log.minor('Generating worker...');
-			const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
-			builder.copy(`${files}/entry.js`, `${tmp}/entry.js`, {
+			writeFileSync(
+				`${tmp}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({
+					relativePath
+				})};\n\nexport const prerendered = new Map(${JSON.stringify(
+					Array.from(builder.prerendered.pages.entries())
+				)});\n`
+			);
+
+			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
 					MANIFEST: './manifest.js'
 				}
 			});
 
-			writeFileSync(
-				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({
-					relativePath
-				})};\n\nexport const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n`
-			);
+			const external = ['__STATIC_CONTENT_MANIFEST'];
+
+			if (options.external) {
+				external.push(...options.external);
+			}
 
 			await esbuild.build({
-				entryPoints: [`${tmp}/entry.js`],
-				outfile: `${entrypoint}/index.js`,
-				bundle: true,
 				target: 'es2020',
-				platform: 'browser'
+				platform: 'browser',
+				...options,
+				entryPoints: [`${tmp}/_worker.js`],
+				external,
+				outfile: `${dest}/_worker.mjs`,
+				allowOverwrite: true,
+				format: 'esm',
+				bundle: true
 			});
-
-			writeFileSync(`${entrypoint}/package.json`, JSON.stringify({ main: 'index.js' }));
-
-			builder.log.minor('Copying assets...');
-			builder.writeClient(bucket);
-			builder.writeStatic(bucket);
-			builder.writePrerendered(bucket);
 		}
 	};
 }
 
 /** @param {import('@sveltejs/kit').Builder} builder */
 function validate_config(builder) {
-	if (existsSync('wrangler.toml')) {
-		let wrangler_config;
+	if (!existsSync('wrangler.toml')) {
+		builder.log.error(
+			'Consult https://developers.cloudflare.com/workers/platform/sites/configuration on how to setup your site'
+		);
 
-		try {
-			wrangler_config = toml.parse(readFileSync('wrangler.toml', 'utf-8'));
-		} catch (err) {
-			err.message = `Error parsing wrangler.toml: ${err.message}`;
-			throw err;
-		}
+		builder.log(
+			`
+			Sample wrangler.toml:
 
-		// @ts-ignore
-		if (!wrangler_config.site || !wrangler_config.site.bucket) {
-			throw new Error(
-				'You must specify site.bucket in wrangler.toml. Consult https://developers.cloudflare.com/workers/platform/sites/configuration'
-			);
-		}
+			name = "<your-site-name>"
+			type = "javascript"
+			account_id = "<your-account-id>"
+			workers_dev = true
+			route = ""
+			zone_id = ""
 
-		return wrangler_config;
+			compatibility_date = "2022-02-09"
+
+			[build]
+			# Assume it's already been built. You can make this "npm run build" to ensure a build before publishing
+			command = ""
+
+			# All values below here are required by adapter-cloudflare-workers and should not change
+			[build.upload]
+			format = "modules"
+			dir = "./.svelte-kit/cloudflare"
+			main = "./_worker.mjs"
+
+			[site]
+			bucket = "./.svelte-kit/cloudflare-bucket"`
+				.replace(/^\t+/gm, '')
+				.trim()
+		);
+
+		throw new Error('Missing a wrangler.toml file');
 	}
 
-	builder.log.error(
-		'Consult https://developers.cloudflare.com/workers/platform/sites/configuration on how to setup your site'
-	);
+	let wrangler_config;
 
-	builder.log(
-		`
-		Sample wrangler.toml:
+	try {
+		wrangler_config = toml.parse(readFileSync('wrangler.toml', 'utf-8'));
+	} catch (err) {
+		err.message = `Error parsing wrangler.toml: ${err.message}`;
+		throw err;
+	}
 
-		name = "<your-site-name>"
-		type = "javascript"
-		account_id = "<your-account-id>"
-		workers_dev = true
-		route = ""
-		zone_id = ""
+	// @ts-ignore
+	if (!wrangler_config.site || wrangler_config.site.bucket !== './.svelte-kit/cloudflare-bucket') {
+		throw new Error(
+			'You must specify site.bucket in wrangler.toml, and it must equal "./.svelte-kit/cloudflare-bucket"'
+		);
+	}
 
-		[site]
-		bucket = "./.cloudflare/assets"
-		entry-point = "./.cloudflare/worker"`
-			.replace(/^\t+/gm, '')
-			.trim()
-	);
+	// @ts-ignore
+	if (
+		// @ts-ignore
+		!wrangler_config.build ||
+		// @ts-ignore
+		!wrangler_config.build.upload ||
+		// @ts-ignore
+		wrangler_config.build.upload.format !== 'modules'
+	) {
+		throw new Error(
+			'You must specify build.upload.format in wrangler.toml, and it must equal "modules"'
+		);
+	}
 
-	throw new Error('Missing a wrangler.toml file');
+	if (
+		// @ts-ignore
+		!wrangler_config.build ||
+		// @ts-ignore
+		!wrangler_config.build.upload ||
+		// @ts-ignore
+		wrangler_config.build.upload.dir !== './.svelte-kit/cloudflare'
+	) {
+		throw new Error(
+			'You must specify build.upload.dir in wrangler.toml, and it must equal "./.svelte-kit/cloudflare"'
+		);
+	}
+
+	if (
+		// @ts-ignore
+		!wrangler_config.build ||
+		// @ts-ignore
+		!wrangler_config.build.upload ||
+		// @ts-ignore
+		wrangler_config.build.upload.main !== './_worker.mjs'
+	) {
+		throw new Error(
+			'You must specify build.upload.main in wrangler.toml, and it must equal "./_worker.mjs"'
+		);
+	}
 }

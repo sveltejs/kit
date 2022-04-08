@@ -33,9 +33,19 @@ export default {
 
 **You will need [Wrangler](https://developers.cloudflare.com/workers/cli-wrangler/install-update) installed on your system**
 
-This adapter expects to find a [wrangler.toml](https://developers.cloudflare.com/workers/platform/sites/configuration) file in the project root. It will determine where to write static assets and the worker based on the `site.bucket` and `site.entry-point` settings.
+This adapter expects to find a [wrangler.toml](https://developers.cloudflare.com/workers/platform/sites/configuration) file in the project root. It will determine where to write static assets and the worker based on the `site.bucket` and `build.upload` settings. These values must be set to the following:
 
-Generate this file using `wrangler` from your project directory
+```toml
+[build.upload]
+format = "modules"
+dir = "./.svelte-kit/cloudflare"
+main = "./_worker.mjs"
+
+[site]
+bucket = "./.svelte-kit/cloudflare-bucket"
+```
+
+To get started, generate this file using `wrangler` from your project directory
 
 ```sh
 wrangler init --site my-site-name
@@ -48,24 +58,31 @@ Now you should get some details from Cloudflare. You should get your:
 
 Get them by visiting your [Cloudflare dashboard](https://dash.cloudflare.com) and click on any domain. There, you can scroll down and on the left, you can see your details under **API**.
 
-Then configure your sites build directory and your account-details in the config file:
+Then configure your account-details in the config file:
 
 ```toml
-account_id = 'YOUR ACCOUNT_ID'
-zone_id    = 'YOUR ZONE_ID' # optional, if you don't specify this a workers.dev subdomain will be used.
-site = {bucket = "./build", entry-point = "./workers-site"}
-
+name = "<your-site-name>"
 type = "javascript"
+account_id = "<your-account-id>"
+workers_dev = true
+route = ""
+zone_id = ""
+
+compatibility_date = "2022-02-09"
 
 [build]
 # Assume it's already been built. You can make this "npm run build" to ensure a build before publishing
 command = ""
 
+# All values below here are required by adapter-cloudflare-workers and should not change
 [build.upload]
-format = "service-worker"
-```
+format = "modules"
+dir = "./.svelte-kit/cloudflare"
+main = "./_worker.mjs"
 
-It's recommended that you add the `build` and `workers-site` folders (or whichever other folders you specify) to your `.gitignore`.
+[site]
+bucket = "./.svelte-kit/cloudflare-bucket"
+```
 
 Now, log in with wrangler:
 
