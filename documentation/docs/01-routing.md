@@ -243,7 +243,7 @@ export async function post({ request }) {
 
 #### URL parsing
 
-The `url` object is an instance of the standard [URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) class at the `searchParams` key. As such, you can access the params sent using query params.
+The `url` object is a standard [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) object. As such, you can access the query via `url.searchParams`:
 
 ```js
 // @filename: index.js
