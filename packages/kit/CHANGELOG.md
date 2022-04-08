@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.309
+
+### Patch Changes
+
+- Fix session store subscription tracking during SSR ([#4550](https://github.com/sveltejs/kit/pull/4550))
+
 ## 1.0.0-next.308
 
 ### Patch Changes
