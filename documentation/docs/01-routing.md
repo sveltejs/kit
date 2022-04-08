@@ -258,13 +258,16 @@ export {};
 // /foo?limit=10&offset=20
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export async function get({ url }) {
-	const limit = url.searchParams.get("limit");
-	const offset = url.searchParams.get("offset"); 
+	const limit = url.searchParams.get('limit');
+	const offset = url.searchParams.get('offset'); 
 
-	const response = await expensiveSearch({ limit, offset });
+	const response = await search({ limit, offset });
 	const items = await response.json();
 
-	return { items, status: 201 };
+	return {
+	  status: 201,
+	  body: { items }
+	};
 }
 ```
 
