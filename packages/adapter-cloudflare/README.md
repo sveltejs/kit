@@ -20,7 +20,7 @@ _**Comparisons**_
 ## Installation
 
 ```sh
-$ npm i --save-dev @sveltejs/adapter-cloudflare@next
+$ npm i --save-dev @sveltejs/adapter-cloudflare
 ```
 
 ## Usage
