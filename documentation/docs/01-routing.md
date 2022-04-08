@@ -265,7 +265,7 @@ export async function get({ url }) {
 	const items = await response.json();
 
 	return {
-	  status: 201,
+	  status: 200,
 	  body: { items }
 	};
 }
