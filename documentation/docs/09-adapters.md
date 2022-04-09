@@ -20,7 +20,7 @@ You can deploy to the following platforms with the default adapter, `adapter-aut
 
 #### Node.js
 
-To create a simple Node server, install the [`@sveltejs/adapter-node@next`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) package and update your `svelte.config.js`:
+To create a simple Node server, install the [`@sveltejs/adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) package and update your `svelte.config.js`:
 
 ```diff
 /// file: svelte.config.js
@@ -44,7 +44,7 @@ export default {
 
 #### Static sites
 
-Most adapters will generate static HTML for any [prerenderable](/docs/page-options#prerender) pages of your site. In some cases, your entire app might be prerenderable, in which case you can use [`@sveltejs/adapter-static@next`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static) to generate static HTML for _all_ your pages. A fully static site can be hosted on a wide variety of platforms, including static hosts like [GitHub Pages](https://pages.github.com/).
+Most adapters will generate static HTML for any [prerenderable](/docs/page-options#prerender) pages of your site. In some cases, your entire app might be prerenderable, in which case you can use [`@sveltejs/adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static) to generate static HTML for _all_ your pages. A fully static site can be hosted on a wide variety of platforms, including static hosts like [GitHub Pages](https://pages.github.com/).
 
 ```diff
 /// file: svelte.config.js
