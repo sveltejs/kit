@@ -243,7 +243,7 @@ export async function post({ request }) {
 
 #### URL parsing
 
-The `url` object is a standard [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) object. As such, you can access the query via `url.searchParams`:
+The `url` object is an instance of the standard [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) class. As such, you can access the query via `url.searchParams`:
 
 ```js
 // @filename: ambient.d.ts
