@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.311
+
+### Patch Changes
+
+- Skip client-side navigation for links with sveltekit:reload ([#4545](https://github.com/sveltejs/kit/pull/4545))
+
+* [breaking] Skip prerendering for rel="external" links ([#4545](https://github.com/sveltejs/kit/pull/4545))
+
 ## 1.0.0-next.310
 
 ### Patch Changes
