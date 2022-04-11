@@ -53,7 +53,8 @@ export default [
 		plugins: [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
-			})
+			}),
+			commonjs()
 		]
 	},
 
