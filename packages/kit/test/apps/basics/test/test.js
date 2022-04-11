@@ -1910,6 +1910,21 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
+	test('does not attempt client-side navigation to links with sveltekit:reload', async ({
+		baseURL,
+		page
+	}) => {
+		await page.goto('/routing');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/b"]')]);
+		expect(await page.textContent('h1')).toBe('b');
+		expect(requests).toContain(`${baseURL}/routing/b`);
+	});
+
 	test('allows reserved words as route names', async ({ page }) => {
 		await page.goto('/routing/const');
 		expect(await page.textContent('h1')).toBe('reserved words are okay as routes');
