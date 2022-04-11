@@ -1,5 +1,5 @@
-import cookie from 'cookie';
-import set_cookie_parser from 'set-cookie-parser';
+import * as cookie from 'cookie';
+import * as set_cookie_parser from 'set-cookie-parser';
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
