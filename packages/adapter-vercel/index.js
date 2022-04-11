@@ -3,7 +3,7 @@ import { posix } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
 
-const dir = '.vercel_build_output';
+const dir = '.vercel/output';
 
 // rules for clean URLs and trailing slash handling,
 // generated with @vercel/routing-utils
@@ -97,7 +97,7 @@ export default function ({ external = [] } = {}) {
 
 			const dirs = {
 				static: `${dir}/static`,
-				lambda: `${dir}/functions/node/render`
+				lambda: `${dir}/functions/render.func`
 			};
 
 			builder.log.minor('Generating serverless function...');
@@ -124,8 +124,17 @@ export default function ({ external = [] } = {}) {
 				target: 'node14',
 				bundle: true,
 				platform: 'node',
+				format: 'esm',
 				external
 			});
+
+			writeFileSync(
+				`${dirs.lambda}/.vc-config.json`,
+				JSON.stringify({
+					runtime: 'nodejs14.x',
+					handler: 'handle'
+				})
+			);
 
 			writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'commonjs' }));
 
@@ -136,8 +145,6 @@ export default function ({ external = [] } = {}) {
 			builder.writePrerendered(dirs.static);
 
 			builder.log.minor('Writing routes...');
-
-			builder.mkdirp(`${dir}/config`);
 
 			const prerendered_pages = Array.from(builder.prerendered.pages, ([src, page]) => ({
 				src,
@@ -156,25 +163,29 @@ export default function ({ external = [] } = {}) {
 			);
 
 			writeFileSync(
-				`${dir}/config/routes.json`,
-				JSON.stringify([
-					...redirects[builder.config.kit.trailingSlash],
-					...prerendered_pages,
-					...prerendered_redirects,
-					{
-						src: `/${builder.config.kit.appDir}/.+`,
-						headers: {
-							'cache-control': 'public, immutable, max-age=31536000'
+				`${dir}/config.json`,
+				JSON.stringify({
+					version: 3,
+					target: 'production',
+					routes: [
+						...redirects[builder.config.kit.trailingSlash],
+						...prerendered_pages,
+						...prerendered_redirects,
+						{
+							src: `/${builder.config.kit.appDir}/.+`,
+							headers: {
+								'cache-control': 'public, immutable, max-age=31536000'
+							}
+						},
+						{
+							handle: 'filesystem'
+						},
+						{
+							src: '/.*',
+							dest: 'render'
 						}
-					},
-					{
-						handle: 'filesystem'
-					},
-					{
-						src: '/.*',
-						dest: '.vercel/functions/render'
-					}
-				])
+					]
+				})
 			);
 		}
 	};
