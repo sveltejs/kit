@@ -156,9 +156,11 @@ importers:
   packages/adapter-static:
     specifiers:
       '@sveltejs/kit': workspace:*
+      cookie: ^0.4.1
       devalue: ^2.0.1
       playwright-chromium: ^1.20.2
       port-authority: ^1.1.2
+      set-cookie-parser: ^2.4.8
       sirv: ^2.0.0
       svelte: ^3.44.2
       tiny-glob: ^0.2.9
@@ -168,9 +170,11 @@ importers:
       tiny-glob: 0.2.9
     devDependencies:
       '@sveltejs/kit': link:../kit
+      cookie: 0.4.1
       devalue: 2.0.1
       playwright-chromium: 1.20.2
       port-authority: 1.1.2
+      set-cookie-parser: 2.4.8
       sirv: 2.0.0
       svelte: 3.44.2
       typescript: 4.6.2
