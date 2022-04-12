@@ -6,8 +6,6 @@ If you're using [adapter-auto](../adapter-auto), you don't need to install this 
 
 ## Installation
 
-> ⚠️ For the time being, the latest version of adapter-netlify is at the @next tag. If you get the error `config.kit.adapter should be an object with an "adapt" method.`, this is a sign that you are using the wrong version (eg `1.0.0-next.0` instead of `1.0.0-next.9`).
-
 ```bash
 npm i -D @sveltejs/adapter-netlify@next
 ```
@@ -20,8 +18,8 @@ import adapter from '@sveltejs/adapter-netlify';
 export default {
 	kit: {
 		adapter: adapter({
-			// if true, will split your app into multiple functions
-			// instead of creating a single one for the entire app
+			// Default is false. If set to true, will split your app into multiple
+			// functions instead of creating a single one for the entire app
 			split: false
 		})
 	}
@@ -37,6 +35,10 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
 ```
 
 If the `netlify.toml` file or the `build.publish` value is missing, a default value of `"build"` will be used. Note that if you have set the publish directory in the Netlify UI to something else then you will need to set it in `netlify.toml` too, or use the default value of `"build"`.
+
+## Netlify Edge Functions (beta)
+
+SvelteKit has support for the beta release of Netlify Edge Functions. If you pass the option `edge: true` to the `adapter` function, any server-side rendering will happen in a Deno-based edge function deployed close to the site visitor. If set to `false` (the default), the site will deploy to standard Node-based Netlify Functions.
 
 ## Netlify alternatives to SvelteKit functionality
 
