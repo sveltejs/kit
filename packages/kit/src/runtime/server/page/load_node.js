@@ -195,6 +195,7 @@ export async function load_node({
 						{
 							getClientAddress: state.getClientAddress,
 							initiator: route,
+							platform: state.platform,
 							prerender: state.prerender
 						}
 					);
