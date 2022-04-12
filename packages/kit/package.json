@@ -24,7 +24,7 @@
 		"@types/node": "^16.11.11",
 		"@types/sade": "^1.7.3",
 		"amphtml-validator": "^1.0.35",
-		"cookie": "^0.4.1",
+		"cookie": "^0.5.0",
 		"cross-env": "^7.0.3",
 		"devalue": "^2.0.1",
 		"eslint": "^8.3.0",
