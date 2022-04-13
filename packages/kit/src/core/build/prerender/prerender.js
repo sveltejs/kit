@@ -55,6 +55,10 @@ export async function prerender({ config, entries, files, log }) {
 		paths: []
 	};
 
+	if (!config.kit.prerender.enabled) {
+		return prerendered;
+	}
+
 	installFetch();
 
 	const server_root = join(config.kit.outDir, 'output');
@@ -70,23 +74,6 @@ export async function prerender({ config, entries, files, log }) {
 	});
 
 	const server = new Server(manifest);
-
-	const rendered = await server.respond(new Request('http://sveltekit-prerender/[fallback]'), {
-		getClientAddress,
-		prerender: {
-			fallback: true,
-			default: false,
-			dependencies: new Map()
-		}
-	});
-
-	const file = `${config.kit.outDir}/output/prerendered/fallback.html`;
-	mkdirp(dirname(file));
-	writeFileSync(file, await rendered.text());
-
-	if (!config.kit.prerender.enabled) {
-		return prerendered;
-	}
 
 	const error = normalise_error_handler(log, config.kit.prerender.onError);
 
@@ -280,6 +267,19 @@ export async function prerender({ config, entries, files, log }) {
 
 		await q.done();
 	}
+
+	const rendered = await server.respond(new Request('http://sveltekit-prerender/[fallback]'), {
+		getClientAddress,
+		prerender: {
+			fallback: true,
+			default: false,
+			dependencies: new Map()
+		}
+	});
+
+	const file = `${config.kit.outDir}/output/prerendered/fallback.html`;
+	mkdirp(dirname(file));
+	writeFileSync(file, await rendered.text());
 
 	return prerendered;
 }
