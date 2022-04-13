@@ -95,6 +95,18 @@ function validate_config(builder) {
 		}
 
 		// @ts-ignore
+		if (!wrangler_config.build || !wrangler_config.build.upload) {
+			throw new Error(
+				'You must specify build.upload options in wrangler.toml. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers'
+			);
+		}
+
+		// @ts-ignore
+		if (wrangler_config.build.upload.format !== 'modules') {
+			throw new Error('build.upload.format in wrangler.toml must be "modules"');
+		}
+
+		// @ts-ignore
 		const main_file = wrangler_config.build?.upload?.main;
 		const main_file_ext = main_file?.split('.').slice(-1)[0];
 		if (main_file_ext && main_file_ext !== 'mjs') {
