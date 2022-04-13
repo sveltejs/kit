@@ -380,6 +380,20 @@ importers:
       typescript: 4.6.2
       uvu: 0.5.2
 
+  packages/kit/test/prerendering/disabled:
+    specifiers:
+      '@sveltejs/kit': workspace:*
+      svelte: ^3.43.0
+      svelte-check: ^2.5.0
+      typescript: ~4.6.2
+      uvu: ^0.5.2
+    devDependencies:
+      '@sveltejs/kit': link:../../..
+      svelte: 3.44.2
+      svelte-check: 2.5.0_svelte@3.44.2
+      typescript: 4.6.2
+      uvu: 0.5.2
+
   packages/kit/test/prerendering/options:
     specifiers:
       '@sveltejs/kit': workspace:*
