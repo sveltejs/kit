@@ -226,14 +226,14 @@ importers:
       '@lukeed/uuid': ^2.0.0
       '@sveltejs/adapter-auto': workspace:*
       '@sveltejs/kit': workspace:*
-      cookie: ^0.4.1
+      cookie: ^0.5.0
       svelte: ^3.44.0
       svelte-preprocess: ^4.9.8
       typescript: ~4.6.2
     dependencies:
       '@fontsource/fira-mono': 4.5.0
       '@lukeed/uuid': 2.0.0
-      cookie: 0.4.1
+      cookie: 0.5.0
     devDependencies:
       '@sveltejs/adapter-auto': link:../../../adapter-auto
       '@sveltejs/kit': link:../../../kit
@@ -253,7 +253,7 @@ importers:
       '@types/node': ^16.11.11
       '@types/sade': ^1.7.3
       amphtml-validator: ^1.0.35
-      cookie: ^0.4.1
+      cookie: ^0.5.0
       cross-env: ^7.0.3
       devalue: ^2.0.1
       eslint: ^8.3.0
@@ -288,7 +288,7 @@ importers:
       '@types/node': 16.11.11
       '@types/sade': 1.7.3
       amphtml-validator: 1.0.35
-      cookie: 0.4.1
+      cookie: 0.5.0
       cross-env: 7.0.3
       devalue: 2.0.1
       eslint: 8.3.0
@@ -2418,8 +2418,8 @@ packages:
       safe-buffer: 5.1.2
     dev: true
 
-  /cookie/0.4.1:
-    resolution: {integrity: sha512-ZwrFkGJxUR3EIoXtO+yVE69Eb7KlixbaeAWfBQB9vVsNn/o+Yw69gBWSSDK825hQNdN+wF8zELf3dFNl/kxkUA==}
+  /cookie/0.5.0:
+    resolution: {integrity: sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==}
     engines: {node: '>= 0.6'}
 
   /core-util-is/1.0.3:
