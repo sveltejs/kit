@@ -5,9 +5,12 @@ on:
     branches:
       - master
   pull_request:
+
 env:
   CI: true
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
 jobs:
   Lint:
@@ -22,9 +25,7 @@ jobs:
           node-version: '14.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build --filter ./packages --filter !./packages/create-svelte/templates
-      - run: pnpm lint
-      - run: pnpm check
+      - run: pnpm turbo run lint check
   Tests:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
@@ -58,8 +59,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: ${{ steps.browser_cache.outputs.cache-hit == 'true' }}
-      - run: pnpm build --filter ./packages --filter !./packages/create-svelte/templates
-      - run: pnpm test
+      - run: pnpm turbo run test
       - name: archive test results
         if: failure()
         shell: bash
