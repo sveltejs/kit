@@ -10,7 +10,7 @@
 		},
 		"format": {},
 		"test": {
-			"dependsOn": ["^build", "$CI"],
+			"dependsOn": ["^build", "$CI", "$TURBO_CACHE_KEY"],
 			"outputs": []
 		},
 		"lint": {
