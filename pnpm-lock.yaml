@@ -399,7 +399,7 @@ importers:
       '@sveltejs/adapter-auto': workspace:*
       '@sveltejs/adapter-static': workspace:*
       '@sveltejs/kit': workspace:*
-      '@sveltejs/site-kit': ^2.0.3
+      '@sveltejs/site-kit': ^2.1.0
       '@types/node': ^16.11.11
       devalue: ^2.0.1
       flexsearch: ^0.7.21
@@ -415,7 +415,7 @@ importers:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
       '@sveltejs/adapter-static': link:../../packages/adapter-static
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': 2.0.3
+      '@sveltejs/site-kit': 2.1.0
       '@types/node': 16.11.11
       devalue: 2.0.1
       flexsearch: 0.7.21
@@ -1517,8 +1517,8 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.0
 
-  /@sveltejs/site-kit/2.0.3:
-    resolution: {integrity: sha512-l5fst4LmQOpvnqkpOagTE6yHqj5cm3xHnlFKLCYLMuvDENHUKhhYTX71oeRZhyboMZ2DO3gGhzlj3R6iP+TdLA==}
+  /@sveltejs/site-kit/2.1.0:
+    resolution: {integrity: sha512-nJddyYdBHXmiyhIAq0DQZpEjJ0B2Up4NCg08gVZuUxuOsshjUK8wZ5kuszP3Tl/q176MxFbceJo2Me4fj9bu9w==}
     dependencies:
       golden-fleece: 1.0.9
     dev: true
