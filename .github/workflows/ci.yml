@@ -25,7 +25,8 @@ jobs:
           node-version: '14.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: echo "cache key: $TURBO_CACHE_KEY" && pnpm turbo run lint check
+      - run: echo $TURBO_CACHE_KEY
+      - run: pnpm turbo run lint check
   Tests:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
