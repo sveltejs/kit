@@ -8,7 +8,6 @@ on:
 
 env:
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-  TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
@@ -25,7 +24,6 @@ jobs:
           node-version: '14.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: echo $TURBO_CACHE_KEY
       - run: pnpm turbo run lint check
   Tests:
     runs-on: ${{ matrix.os }}
@@ -38,7 +36,10 @@ jobs:
         include:
           - node-version: 16
             os: ubuntu-latest
+    env:
+      TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
     steps:
+      - run: echo $TURBO_CACHE_KEY
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v3
       - uses: pnpm/action-setup@v2.2.1
