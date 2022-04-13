@@ -4,13 +4,12 @@
 	"description": "monorepo for @sveltejs/kit and friends",
 	"private": true,
 	"scripts": {
-		"build": "pnpm build --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
-		"test": "pnpm -r test --workspace-concurrency=1",
-		"check": "pnpm -r check",
-		"lint": "pnpm -r lint",
-		"format": "pnpm -r format",
-		"release": "changeset publish",
-		"preview:docs": "action-deploy-docs --project=kit"
+		"build": "turbo run build",
+		"test": "turbo run test",
+		"check": "turbo run check",
+		"lint": "turbo run lint",
+		"format": "turbo run format",
+		"release": "changeset publish"
 	},
 	"repository": {
 		"type": "git",
