@@ -1,5 +1,5 @@
 ---
-"@sveltejs/kit": patch
+'@sveltejs/kit': patch
 ---
 
-[bug] add `platform` to root relative requests
+add `platform` to requests triggered by `fetch` in `load`
