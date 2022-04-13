@@ -39,7 +39,6 @@ jobs:
     env:
       TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
     steps:
-      - run: echo $TURBO_CACHE_KEY
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v3
       - uses: pnpm/action-setup@v2.2.1
