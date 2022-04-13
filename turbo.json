@@ -10,7 +10,7 @@
 		},
 		"format": {},
 		"test": {
-			"dependsOn": ["$CI"],
+			"dependsOn": ["^build", "$CI"],
 			"outputs": []
 		},
 		"lint": {
