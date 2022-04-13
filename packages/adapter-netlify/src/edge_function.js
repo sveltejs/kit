@@ -12,7 +12,7 @@ const prefix = `/${manifest.appDir}/`;
 export default async function handler(request, context) {
 	if (is_static_file(request)) {
 		// Static files can skip the handler
-		return context.next();
+		return;
 	}
 	try {
 		const response = await server.respond(request, {
