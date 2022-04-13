@@ -193,10 +193,8 @@ export async function load_node({
 						new Request(new URL(requested, event.url).href, { ...opts, credentials: undefined }),
 						options,
 						{
-							getClientAddress: state.getClientAddress,
-							initiator: route,
-							platform: state.platform,
-							prerender: state.prerender
+							...state,
+							initiator: route
 						}
 					);
 
