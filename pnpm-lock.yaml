@@ -247,7 +247,7 @@ importers:
       '@rollup/plugin-replace': ^4.0.0
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.32
       '@types/amphtml-validator': ^1.0.1
-      '@types/cookie': ^0.4.1
+      '@types/cookie': ^0.5.0
       '@types/marked': ^4.0.1
       '@types/mime': ^2.0.3
       '@types/node': ^16.11.11
@@ -282,7 +282,7 @@ importers:
       '@playwright/test': 1.21.0
       '@rollup/plugin-replace': 4.0.0_rollup@2.60.2
       '@types/amphtml-validator': 1.0.1
-      '@types/cookie': 0.4.1
+      '@types/cookie': 0.5.0
       '@types/marked': 4.0.1
       '@types/mime': 2.0.3
       '@types/node': 16.11.11
@@ -1595,8 +1595,8 @@ packages:
       '@types/node': 16.11.11
     dev: true
 
-  /@types/cookie/0.4.1:
-    resolution: {integrity: sha512-XW/Aa8APYr6jSVVA1y/DEIZX0/GMKLEVekNG727R8cs56ahETkRAy/3DR7+fJyh7oUgGwNQaRfXCun0+KbWY7Q==}
+  /@types/cookie/0.5.0:
+    resolution: {integrity: sha512-CJWHVHHupxBYfIlMM+qzXx4dRKIV1VzOm0cP3Wpqten8MDx1tK+y92YDXUshN1ONAfwodvKxDNkw35/pNs+izg==}
     dev: true
 
   /@types/estree/0.0.39:

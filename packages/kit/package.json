@@ -18,7 +18,7 @@
 		"@playwright/test": "^1.21.0",
 		"@rollup/plugin-replace": "^4.0.0",
 		"@types/amphtml-validator": "^1.0.1",
-		"@types/cookie": "^0.4.1",
+		"@types/cookie": "^0.5.0",
 		"@types/marked": "^4.0.1",
 		"@types/mime": "^2.0.3",
 		"@types/node": "^16.11.11",
