@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.312
+
+### Patch Changes
+
+- Only render fallback when prerendering is enabled ([#4604](https://github.com/sveltejs/kit/pull/4604))
+
 ## 1.0.0-next.311
 
 ### Patch Changes
