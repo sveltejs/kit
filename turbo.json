@@ -22,8 +22,5 @@
 			"cache": false
 		}
 	},
-	"remoteCache": {
-		"signature": true
-	},
 	"globalDependencies": [".eslintrc.json", ".prettierrc", "tsconfig.json"]
 }
