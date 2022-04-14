@@ -40,7 +40,7 @@ function write_template_files(template, types, name, cwd) {
 }
 
 /**
- build*
+ *
  * @param {string} cwd
  * @param {import('./types/internal').Options} options
  * @param {string} name
