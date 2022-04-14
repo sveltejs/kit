@@ -60,7 +60,8 @@ export function enhance(
 ) {
 	let current_token: unknown;
 
-	async function handle_submit(e: Event) {
+	/** @param {SubmitEvent} e */
+	async function handle_submit(e: SubmitEvent) {
 		const token = (current_token = {});
 
 		e.preventDefault();

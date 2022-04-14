@@ -72,12 +72,12 @@ async function main() {
 				{
 					type: 'select',
 					name: 'types',
-					message: 'Add type checking to your project?',
+					message: 'Add type checking?',
 					initial: false,
 					choices: [
-						{ title: 'No', value: false },
+						{ title: 'Type-checked JavaScript', value: 'checkjs' },
 						{ title: 'TypeScript', value: 'typescript' },
-						{ title: 'Type checked JavaScript', value: 'checkjs' }
+						{ title: 'None', value: null }
 					]
 				},
 				{
@@ -123,7 +123,7 @@ async function main() {
 		console.log(bold('✔ Typescript'));
 		console.log('  Inside Svelte components, use <script lang="ts">');
 	} else if (options.types === 'checkjs') {
-		console.log(bold('✔ Type checked JavaScript'));
+		console.log(bold('✔ Type-checked JavaScript'));
 		console.log('  https://www.typescriptlang.org/tsconfig#checkJs');
 	}
 

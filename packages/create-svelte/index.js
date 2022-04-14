@@ -17,7 +17,7 @@ export async function create(cwd, options) {
 
 /**
  * @param {string} template
- * @param {boolean} typescript
+ * @param {'typescript' | 'checkjs' | null} types
  * @param {string} name
  * @param {string} cwd
  */
