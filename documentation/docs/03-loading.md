@@ -95,11 +95,11 @@ If the page you're loading has an endpoint, the data returned from it is accessi
 
 #### status
 
-`status` is `null` in normal circumstances, but will contain the error status code if there was a problem prior to the call to `load`.
+`status` is the HTTP status code when rendering an error page, or `null` otherwise.
 
 #### error
 
-`error` is `null` in normal circumstances, but will contain an error if there was a problem prior to the call to `load`.
+`error` is the error that was thrown (or returned from a previous `load`) when rendering an error page, or `null` otherwise.
 
 ### Output
 
