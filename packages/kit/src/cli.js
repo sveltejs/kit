@@ -25,8 +25,9 @@ function handle_error(e) {
 /**
  * @param {number} port
  * @param {boolean} https
+ * @param {string} base
  */
-async function launch(port, https) {
+async function launch(port, https, base) {
 	const { exec } = await import('child_process');
 	let cmd = 'open';
 	if (process.platform == 'win32') {
@@ -38,7 +39,7 @@ async function launch(port, https) {
 			cmd = 'xdg-open';
 		}
 	}
-	exec(`${cmd} ${https ? 'https' : 'http'}://localhost:${port}`);
+	exec(`${cmd} ${https ? 'https' : 'http'}://localhost:${port}${base}`);
 }
 
 const prog = sade('svelte-kit').version('__VERSION__');
@@ -75,6 +76,7 @@ prog
 				host: address_info.address,
 				https: !!(https || server_config.https),
 				open: open || !!server_config.open,
+				base: config.kit.paths.base,
 				loose: server_config.fs.strict === false,
 				allow: server_config.fs.allow,
 				cwd
@@ -142,7 +144,7 @@ prog
 
 			await preview({ port, host, config, https });
 
-			welcome({ port, host, https, open });
+			welcome({ port, host, https, open, base: config.kit.paths.base });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -151,7 +153,6 @@ prog
 prog
 	.command('package')
 	.describe('Create a package')
-	.option('-d, --dir', 'Destination directory', 'package')
 	.action(async () => {
 		try {
 			const config = await load_config();
@@ -211,13 +212,14 @@ async function check_port(port) {
  *   host: string;
  *   https: boolean;
  *   port: number;
+ *   base: string;
  *   loose?: boolean;
  *   allow?: string[];
  *   cwd?: string;
  * }} param0
  */
-function welcome({ port, host, https, open, loose, allow, cwd }) {
-	if (open) launch(port, https);
+function welcome({ port, host, https, open, base, loose, allow, cwd }) {
+	if (open) launch(port, https, base);
 
 	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
 

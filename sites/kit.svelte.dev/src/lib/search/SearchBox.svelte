@@ -9,31 +9,33 @@
 	let modal;
 
 	let results = [];
-	let backspace_pressed;
 
-	let index;
+	let indexes;
 	let lookup;
 
 	onMount(async () => {
 		const response = await fetch('/content.json');
 		const { blocks } = await response.json();
 
-		index = new flexsearch.Index({
-			tokenize: 'forward'
-		});
+		// we have multiple indexes, so we can rank sections (migration guide comes last)
+		const max_rank = Math.max(...blocks.map((block) => block.rank ?? 0));
+		indexes = Array.from(
+			{ length: max_rank + 1 },
+			() => new flexsearch.Index({ tokenize: 'forward' })
+		);
 
 		lookup = new Map();
 
 		let time = Date.now();
 		for (const block of blocks) {
-			const title = block.breadcrumbs[block.breadcrumbs.length - 1];
+			const title = block.breadcrumbs.pop();
 			lookup.set(block.href, {
 				title,
 				href: block.href,
-				breadcrumbs: block.breadcrumbs.slice(0, -1),
+				breadcrumbs: block.breadcrumbs,
 				content: block.content
 			});
-			index.add(block.href, `${title} ${block.content}`);
+			indexes[block.rank ?? 0].add(block.href, `${title} ${block.content}`);
 
 			// poor man's way of preventing blocking
 			if (Date.now() - time > 25) {
@@ -65,7 +67,9 @@
 	}
 
 	function update() {
-		results = (index ? index.search($query) : []).map((href) => lookup.get(href));
+		results = (indexes ? indexes.map((index) => index.search($query)).flat() : []).map((href) =>
+			lookup.get(href)
+		);
 	}
 
 	function escape(text) {
@@ -120,7 +124,7 @@
 	}}
 />
 
-{#if $searching && index}
+{#if $searching && indexes}
 	<div class="modal-background" on:click={close} />
 
 	<div

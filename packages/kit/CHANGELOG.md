@@ -1,5 +1,71 @@
 # @sveltejs/kit
 
+## 1.0.0-next.313
+
+### Patch Changes
+
+- add `platform` to requests triggered by `fetch` in `load` during SSR ([#4599](https://github.com/sveltejs/kit/pull/4599))
+
+## 1.0.0-next.312
+
+### Patch Changes
+
+- Only render fallback when prerendering is enabled ([#4604](https://github.com/sveltejs/kit/pull/4604))
+
+## 1.0.0-next.311
+
+### Patch Changes
+
+- Skip client-side navigation for links with sveltekit:reload ([#4545](https://github.com/sveltejs/kit/pull/4545))
+
+* [breaking] Skip prerendering for rel="external" links ([#4545](https://github.com/sveltejs/kit/pull/4545))
+
+## 1.0.0-next.310
+
+### Patch Changes
+
+- Remove credentials when creating request object in server-side fetch ([#4548](https://github.com/sveltejs/kit/pull/4548))
+
+## 1.0.0-next.309
+
+### Patch Changes
+
+- Fix session store subscription tracking during SSR ([#4550](https://github.com/sveltejs/kit/pull/4550))
+
+## 1.0.0-next.308
+
+### Patch Changes
+
+- Remove `static` directory from Vite's control ([#4535](https://github.com/sveltejs/kit/pull/4535))
+
+## 1.0.0-next.307
+
+### Patch Changes
+
+- Allow index files to use named layouts ([#4527](https://github.com/sveltejs/kit/pull/4527))
+
+* Respect ssr option when rendering 404 page ([#4513](https://github.com/sveltejs/kit/pull/4513))
+
+- Remove unimplemented option from CLI ([#4507](https://github.com/sveltejs/kit/pull/4507))
+
+* Move MaybePromise from RequestHandlerOutput to RequestHandler return value ([#4519](https://github.com/sveltejs/kit/pull/4519))
+
+## 1.0.0-next.306
+
+### Patch Changes
+
+- Hint if `paths.base` is missing in dev ([#4510](https://github.com/sveltejs/kit/pull/4510))
+
+* Respect `paths.base` when using `--open` ([#4510](https://github.com/sveltejs/kit/pull/4510))
+
+- [breaking] Add named layouts, remove `__layout.reset` ([#4388](https://github.com/sveltejs/kit/pull/4388))
+
+## 1.0.0-next.305
+
+### Patch Changes
+
+- Generate correct types for routes with parameter matchers ([#4472](https://github.com/sveltejs/kit/pull/4472))
+
 ## 1.0.0-next.304
 
 ### Patch Changes
@@ -46,7 +112,7 @@
 
 - Populate fallback page when trailingSlash is "always" ([#4351](https://github.com/sveltejs/kit/pull/4351))
 
-* Expose `event.routeId` and `page.routeId` ([#4344](https://github.com/sveltejs/kit/pull/4344))
+* Expose `event.routeId` and `page.routeId` ([#4345](https://github.com/sveltejs/kit/pull/4345))
 
 - [breaking] remove fallthrough routes ([#4330](https://github.com/sveltejs/kit/pull/4330))
 
