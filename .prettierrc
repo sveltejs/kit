@@ -12,6 +12,7 @@
 		},
 		{
 			"files": [
+				"**/CHANGELOG.md",
 				"packages/kit/src/packaging/test/fixtures/**/expected/**/*",
 				"packages/kit/src/core/build/prerender/fixtures/**/*"
 			],
