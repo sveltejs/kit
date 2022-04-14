@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.313
+
+### Patch Changes
+
+- add `platform` to requests triggered by `fetch` in `load` during SSR ([#4599](https://github.com/sveltejs/kit/pull/4599))
+
 ## 1.0.0-next.312
 
 ### Patch Changes
