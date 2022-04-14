@@ -16,7 +16,6 @@ importers:
       eslint: ^8.3.0
       eslint-plugin-import: ^2.25.3
       eslint-plugin-svelte3: ^3.2.1
-      playwright-chromium: ^1.21.0
       prettier: ^2.5.0
       rollup: ^2.60.2
       turbo: ^1.2.3
@@ -34,7 +33,6 @@ importers:
       eslint: 8.3.0
       eslint-plugin-import: 2.25.3_eslint@8.3.0
       eslint-plugin-svelte3: 3.2.1_eslint@8.3.0
-      playwright-chromium: 1.21.0
       prettier: 2.5.0
       rollup: 2.60.2
       turbo: 1.2.3
