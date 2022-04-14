@@ -2,8 +2,6 @@
 title: Introduction
 ---
 
-testing testing 1 2 3
-
 ### Before we begin
 
 > SvelteKit is in early development, and some things may change before we hit version 1.0. This document is a work-in-progress. If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
