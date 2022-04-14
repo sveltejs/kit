@@ -74,7 +74,7 @@ export async function load_node({
 			redirect: shadow.redirect
 		};
 	} else if (module.load) {
-		/** @type {import('types').LoadInput | import('types').ErrorLoadInput} */
+		/** @type {import('types').LoadInput} */
 		const load_input = {
 			url: state.prerender ? create_prerendering_url_proxy(event.url) : event.url,
 			params: event.params,
@@ -308,7 +308,9 @@ export async function load_node({
 
 				return proxy;
 			},
-			stuff: { ...stuff }
+			stuff: { ...stuff },
+			status: is_error ? status ?? null : null,
+			error: is_error ? error ?? null : null
 		};
 
 		if (options.dev) {
@@ -318,11 +320,6 @@ export async function load_node({
 					throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
 				}
 			});
-		}
-
-		if (is_error) {
-			/** @type {import('types').ErrorLoadInput} */ (load_input).status = status;
-			/** @type {import('types').ErrorLoadInput} */ (load_input).error = error;
 		}
 
 		loaded = await module.load.call(null, load_input);
