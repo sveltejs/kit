@@ -30,7 +30,6 @@
 		"@svitejs/changesets-changelog-github-compact": "^0.1.1",
 		"@typescript-eslint/eslint-plugin": "^5.5.0",
 		"@typescript-eslint/parser": "^5.5.0",
-		"action-deploy-docs": "github:sveltejs/action-deploy-docs#main",
 		"eslint": "^8.3.0",
 		"eslint-plugin-import": "^2.25.3",
 		"eslint-plugin-svelte3": "^3.2.1",
