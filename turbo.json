@@ -20,5 +20,8 @@
 		"dev": {
 			"cache": false
 		}
+	},
+	"remoteCache": {
+		"signature": true
 	}
 }
