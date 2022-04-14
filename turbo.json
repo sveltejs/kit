@@ -2,9 +2,9 @@
 	"$schema": "https://turborepo.org/schema.json",
 	"pipeline": {
 		"build": {
-			"dependsOn": ["^build"],
+			"dependsOn": ["^build", "$VERCEL"],
 			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
-			"outputs": ["files/**", "dist/**", "assets/**", ".svelte-kit/**"]
+			"outputs": ["files/**", "dist/**", "assets/**", ".svelte-kit/**", ".vercel_build_output/**"]
 		},
 		"check": {
 			"outputs": []
