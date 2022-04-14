@@ -16,13 +16,23 @@ SvelteKit uses [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch)
 
 Besides `fetch` itself, the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) includes the following interfaces:
 
-- [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) — accessible in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints) as `event.request`; contains useful methods like `request.json()` and `request.formData()` for e.g. getting data that was posted to an endpoint
-- [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) — returned from `await fetch(...)`. Fundamentally, a SvelteKit app is a machine for turning a `Request` into a `Response`
-- [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) — allows you to read incoming request headers and set outgoing response headers
+#### Request
+
+An instance of [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) is accessible in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints) as `event.request`. It contains useful methods like `request.json()` and `request.formData()` for e.g. getting data that was posted to an endpoint.
+
+#### Response
+
+An instance of [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) is returned from `await fetch(...)`. Fundamentally, a SvelteKit app is a machine for turning a `Request` into a `Response`.
+
+#### Headers
+
+The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interface allows you to read incoming `request.headers` and set outgoing `response.headers`.
 
 ### URL APIs
 
 URLs are represented by the [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) interface, which includes useful properties like `origin` and `pathname` (and, in the browser, `hash`). This interface shows up in various places — `event.url` in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints), [`$page.url`](http://localhost:3000/docs/modules#$app-stores) in [pages](http://localhost:3000/docs/routing#pages), `from` and `to` in [`beforeNavigate` and `afterNavigate`](http://localhost:3000/docs/modules#$app-navigation) and so on.
+
+#### URLSearchParams
 
 Wherever you encounter a URL, you can access query parameters via `url.searchParams`, which is an instance of [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams):
 
