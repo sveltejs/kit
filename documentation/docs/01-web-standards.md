@@ -26,7 +26,24 @@ An instance of [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Res
 
 #### Headers
 
-The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interface allows you to read incoming `request.headers` and set outgoing `response.headers`.
+The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interface allows you to read incoming `request.headers` and set outgoing `response.headers`:
+
+```js
+// @errors: 2461
+/// file: src/routes/what-is-my-user-agent.js
+/** @type {import('@sveltejs/kit').RequestHandler} */
+export function get(event) {
+	// log all headers
+	console.log(...event.request.headers);
+
+	return {
+		body: {
+			// retrieve a specific header
+			userAgent: event.request.headers.get('user-agent')
+		}
+	};
+}
+```
 
 ### URL APIs
 
