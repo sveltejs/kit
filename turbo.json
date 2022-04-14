@@ -4,7 +4,14 @@
 		"build": {
 			"dependsOn": ["^build", "$VERCEL"],
 			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
-			"outputs": ["files/**", "dist/**", "assets/**", ".svelte-kit/**", ".vercel_build_output/**"]
+			"outputs": [
+				"files/**",
+				"dist/**",
+				"docs/**",
+				"assets/**",
+				".svelte-kit/**",
+				".vercel_build_output/**"
+			]
 		},
 		"check": {
 			"outputs": []
