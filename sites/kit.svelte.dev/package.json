@@ -11,7 +11,7 @@
 		"@sveltejs/adapter-auto": "workspace:*",
 		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"@sveltejs/site-kit": "^2.0.3",
+		"@sveltejs/site-kit": "^2.1.0",
 		"@types/node": "^16.11.11",
 		"devalue": "^2.0.1",
 		"flexsearch": "^0.7.21",

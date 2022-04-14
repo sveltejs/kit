@@ -20,6 +20,20 @@ Note that prefetching will not work if the [`router`](/docs/page-options#router)
 
 You can also programmatically invoke `prefetch` from `$app/navigation`.
 
+### sveltekit:reload
+
+By default, the SvelteKit runtime intercepts clicks on `<a>` elements and bypasses the normal browser navigation for relative (same-origin) URLs that match one of your page routes. We sometimes need to tell SvelteKit that certain links need to be handled by normal browser navigation. Examples of this might be linking to another page on your domain that's not part of your SvelteKit app or linking to an endpoint.
+
+Adding a `sveltekit:reload` attribute to a link...
+
+```html
+<a sveltekit:reload href="path">Path</a>
+```
+
+...will cause browser to navigate via a full page reload when the link is clicked.
+
+Links with a `rel="external"` attribute will receive the same treatment. In addition, they will be ignored during [prerendering](https://kit.svelte.dev/docs/page-options#prerender).
+
 ### sveltekit:noscroll
 
 When navigating to internal links, SvelteKit mirrors the browser's default navigation behaviour: it will change the scroll position to 0,0 so that the user is at the very top left of the page (unless the link includes a `#hash`, in which case it will scroll to the element with a matching ID).
@@ -31,17 +45,3 @@ In certain cases, you may wish to disable this behaviour. Adding a `sveltekit:no
 ```
 
 ...will prevent scrolling after the link is clicked.
-
-### rel=external
-
-By default, the SvelteKit runtime intercepts clicks on `<a>` elements and bypasses the normal browser navigation for relative (same-origin) URLs that match one of your page routes. We sometimes need to tell SvelteKit that certain links need to be handled by normal browser navigation. Examples of this might be linking to another page on your domain that's not part of your SvelteKit app or linking to an endpoint.
-
-Adding a `rel=external` attribute to a link...
-
-```html
-<a rel="external" href="path">Path</a>
-```
-
-...will trigger a browser navigation when the link is clicked.
-
-> SvelteKit does not exclude root-relative external links from prerendering, which will cause 404s if these URLs are intended to be served by a separate app. Use a custom [`prerender.onError`](/docs/configuration#prerender) handler if you need to ignore them.

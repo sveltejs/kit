@@ -13,6 +13,7 @@ import { load_template } from '../config/index.js';
 import { sequence } from '../../hooks.js';
 import { posixify } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
+import { normalize_path } from '../../utils/url.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -120,8 +121,8 @@ export async function create_plugin(config, cwd) {
 												return await vite.ssrLoadModule(url, { fixStacktrace: false });
 										  }
 										: null,
-									a: route.a.map((id) => manifest_data.components.indexOf(id)),
-									b: route.b.map((id) => manifest_data.components.indexOf(id))
+									a: route.a.map((id) => (id ? manifest_data.components.indexOf(id) : undefined)),
+									b: route.b.map((id) => (id ? manifest_data.components.indexOf(id) : undefined))
 								};
 							}
 
@@ -203,7 +204,13 @@ export async function create_plugin(config, cwd) {
 
 						if (req.url === '/favicon.ico') return not_found(res);
 
-						if (!decoded.startsWith(config.kit.paths.base)) return not_found(res);
+						if (!decoded.startsWith(config.kit.paths.base)) {
+							const suggestion = normalize_path(
+								config.kit.paths.base + req.url,
+								config.kit.trailingSlash
+							);
+							return not_found(res, `Not found (did you mean ${suggestion}?)`);
+						}
 
 						/** @type {Partial<import('types').Hooks>} */
 						const user_hooks = resolve_entry(config.kit.files.hooks)
@@ -359,9 +366,9 @@ export async function create_plugin(config, cwd) {
 }
 
 /** @param {import('http').ServerResponse} res */
-function not_found(res) {
+function not_found(res, message = 'Not found') {
 	res.statusCode = 404;
-	res.end('Not found');
+	res.end(message);
 }
 
 /**

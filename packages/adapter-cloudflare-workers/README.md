@@ -17,7 +17,7 @@ _**Comparisons**_
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-cloudflare-workers@next`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-cloudflare-workers`, then add the adapter to your `svelte.config.js`:
 
 ```js
 import adapter from '@sveltejs/adapter-cloudflare-workers';

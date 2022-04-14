@@ -62,11 +62,76 @@ We can create a layout that only applies to pages below `/settings` (while inher
 <slot></slot>
 ```
 
-### Resets
+### Named layouts
 
-To reset the layout stack, create a `__layout.reset.svelte` file instead of a `__layout.svelte` file. For example, if you want your `/admin/*` pages to _not_ inherit the root layout, create a file called `src/routes/admin/__layout.reset.svelte`.
+Some parts of your app might need something other than the default layout. For these cases you can create _named layouts_...
 
-Layout resets are otherwise identical to normal layout components.
+```svelte
+/// file: src/routes/__layout-foo.svelte
+<div class="foo">
+	<slot></slot>
+</div>
+```
+
+...and then use them by referencing the layout name (`foo`, in the example above) in the filename:
+
+```svelte
+/// file: src/routes/my-special-page@foo.svelte
+<h1>I am inside __layout-foo</h1>
+```
+
+Named layouts are very powerful, but it can take a minute to get your head round them. Don't worry if this doesn't make sense all at once.
+
+#### Scoping
+
+Named layouts can be created at any depth, and will apply to any components in the same subtree. For example, `__layout-foo` will apply to `/x/one` and `/x/two`, but not `/x/three` or `/four`:
+
+```
+src/routes/
+├ x/
+│ ├ __layout-foo.svelte
+│ ├ one@foo.svelte
+│ ├ two@foo.svelte
+│ └ three.svelte
+└ four@foo.svelte
+```
+
+#### Inheritance chains
+
+Layouts can themselves choose to inherit from named layouts, from the same directory or a parent directory. For example, `x/y/__layout@root.svelte` is the default layout for `/x/y` (meaning `/x/y/one`, `/x/y/two` and `/x/y/three` all inherit from it) because it has no name. Because it specifies `@root`, it will inherit directly from the nearest `__layout-root.svelte`, skipping `__layout.svelte` and `x/__layout.svelte`.
+
+```
+src/routes/
+├ x/
+│ ├ y/
+│ │ ├ __layout@root.svelte
+│ │ ├ one.svelte
+│ │ ├ two.svelte
+│ │ └ three.svelte
+│ └ __layout.svelte
+├ __layout.svelte
+└ __layout-root.svelte
+```
+
+> In the case where `__layout-root.svelte` contains a lone `<slot />`, this effectively means we're able to 'reset' to a blank layout for any page or nested layout in the app by adding `@root`.
+
+If no parent is specified, a layout will inherit from the nearest default (i.e. unnamed) layout _above_ it in the tree. In some cases, it's helpful for a named layout to inherit from a default layout _alongside_ it in the tree, such as `__layout-root.svelte` inheriting from `__layout.svelte`. We can do this by explicitly specifying `@default`, allowing `/x/y/one` and siblings to use the app's default layout without using `x/__layout.svelte`:
+
+```diff
+src/routes/
+├ x/
+│ ├ y/
+│ │ ├ __layout@root.svelte
+│ │ ├ one.svelte
+│ │ ├ two.svelte
+│ │ └ three.svelte
+│ └ __layout.svelte
+├ __layout.svelte
+-└ __layout-root.svelte
++└ __layout-root@default.svelte
+```
+
+> `default` is a reserved name — in other words, you can't have a `__layout-default.svelte` file.
 
 ### Error pages
 
@@ -100,3 +165,43 @@ If an error component has a [`load`](/docs/loading) function, it will be called 
 > Layouts also have access to `error` and `status` via the [page store](/docs/modules#$app-stores)
 >
 > Server-side stack traces will be removed from `error` in production, to avoid exposing privileged information to users.
+
+#### 404s
+
+Nested error pages are only rendered when an error occurs while rendering a specific page. In the case of a request that doesn't match any existing route, SvelteKit will render a generic 404 instead. For example, given these routes...
+
+```
+src/routes/
+├ __error.svelte
+├ marx-brothers/
+│ ├ __error.svelte
+│ ├ chico.svelte
+│ ├ harpo.svelte
+│ └ groucho.svelte
+```
+
+...the `marx-brothers/__error.svelte` file will _not_ be rendered if you visit `/marx-brothers/karl`. If you want to render the nested error page, you should create a route that matches any `/marx-brothers/*` request, and return a 404 from it:
+
+```diff
+src/routes/
+├ __error.svelte
+├ marx-brothers/
+│ ├ __error.svelte
++│ ├ [...path].svelte
+│ ├ chico.svelte
+│ ├ harpo.svelte
+│ └ groucho.svelte
+```
+
+```svelte
+/// file: src/routes/marx-brothers/[...path.svelte]
+<script context="module">
+	/** @type {import('./[...path]').Load} */
+	export function load({ params }) {
+		return {
+			status: 404,
+			error: new Error(`Not found: /marx-brothers/${params.path}`)
+		};
+	}
+</script>
+```
