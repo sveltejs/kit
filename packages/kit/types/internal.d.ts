@@ -118,6 +118,7 @@ export type NormalizedLoadOutput = {
 	props?: Record<string, any> | Promise<Record<string, any>>;
 	stuff?: Record<string, any>;
 	maxage?: number;
+	dependencies?: string[];
 };
 
 export interface PageData {

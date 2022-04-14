@@ -134,3 +134,9 @@ If the `load` function returns a `props` object, the props will be passed to the
 This will be merged with any existing `stuff` and passed to the `load` functions of subsequent layout and page components.
 
 The combined `stuff` is available to components using the [page store](/docs/modules#$app-stores) as `$page.stuff`, providing a mechanism for pages to pass data 'upward' to layouts.
+
+#### dependencies
+
+An array of strings representing URLs the page depends on, which can subsequently be used with [`invalidate`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun. You only need to add them to `dependencies` if you're using a custom API client; URLs loaded with the provided `fetch` function are added automatically.
+
+URLs can be absolute or relative to the page being loaded, and must be [encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding).

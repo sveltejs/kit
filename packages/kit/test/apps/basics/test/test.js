@@ -1197,6 +1197,10 @@ test.describe.parallel('Load', () => {
 			await app.invalidate('/load/change-detection/data.json');
 			expect(await page.textContent('h1')).toBe('layout loads: 3');
 			expect(await page.textContent('h2')).toBe('x: b: 2');
+
+			await app.invalidate('custom:change-detection-layout');
+			expect(await page.textContent('h1')).toBe('layout loads: 4');
+			expect(await page.textContent('h2')).toBe('x: b: 2');
 		}
 	});
 

@@ -477,6 +477,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			stuff
 		};
 
+		/** @param dep {string} */
+		function add_dependency(dep) {
+			const { href } = new URL(dep, url);
+			node.uses.dependencies.add(href);
+		}
+
 		if (props) {
 			// shadow endpoint props means we need to mark this URL as a dependency of itself
 			node.uses.dependencies.add(url.href);
@@ -516,8 +522,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				},
 				fetch(resource, info) {
 					const requested = typeof resource === 'string' ? resource : resource.url;
-					const { href } = new URL(requested, url);
-					node.uses.dependencies.add(href);
+					add_dependency(requested);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
 				},
@@ -542,6 +547,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
+			if (node.loaded.dependencies) {
+				node.loaded.dependencies.forEach(add_dependency);
+			}
 		} else if (props) {
 			node.loaded = normalize({ props });
 		}
