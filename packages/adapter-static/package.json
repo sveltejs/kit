@@ -29,7 +29,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"cookie": "^0.4.1",
+		"cookie": "^0.5.0",
 		"devalue": "^2.0.1",
 		"playwright-chromium": "^1.21.0",
 		"port-authority": "^1.1.2",
