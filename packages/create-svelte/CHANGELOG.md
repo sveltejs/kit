@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.128
+
+### Patch Changes
+
+- [chore] upgrade to Playwright 1.21.0 ([#4601](https://github.com/sveltejs/kit/pull/4601))
+
 ## 2.0.0-next.127
 
 ### Patch Changes

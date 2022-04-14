@@ -87,6 +87,7 @@ export function crawl(html) {
 				}
 
 				let href = '';
+				let rel = '';
 
 				while (i < html.length) {
 					const start = i;
@@ -148,6 +149,8 @@ export function crawl(html) {
 
 							if (name === 'href') {
 								href = value;
+							} else if (name === 'rel') {
+								rel = value;
 							} else if (name === 'src') {
 								hrefs.push(value);
 							} else if (name === 'srcset') {
@@ -178,7 +181,7 @@ export function crawl(html) {
 					i += 1;
 				}
 
-				if (href) {
+				if (href && !/\bexternal\b/i.test(rel)) {
 					hrefs.push(href);
 				}
 			}

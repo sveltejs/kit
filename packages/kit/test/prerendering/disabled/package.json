@@ -1,23 +1,20 @@
 {
-	"name": "test-options-2",
+	"name": "prerendering-test-basics",
 	"private": true,
-	"version": "0.0.1",
+	"version": "0.0.2-next.0",
 	"scripts": {
 		"dev": "node ../../cli.js dev",
 		"build": "node ../../cli.js build",
 		"preview": "node ../../cli.js preview",
 		"check": "tsc && svelte-check",
-		"test": "npm run test:dev && npm run test:build",
-		"test:dev": "cross-env DEV=true playwright test",
-		"test:build": "playwright test"
+		"test": "npm run build"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"cross-env": "^7.0.3",
 		"svelte": "^3.43.0",
 		"svelte-check": "^2.5.0",
-		"typescript": "~4.6.2"
+		"typescript": "~4.6.2",
+		"uvu": "^0.5.2"
 	},
 	"type": "module"
 }
