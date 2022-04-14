@@ -186,11 +186,17 @@ export async function load_node({
 						throw new Error('Request body must be a string');
 					}
 
-					response = await respond(new Request(new URL(requested, event.url).href, opts), options, {
-						getClientAddress: state.getClientAddress,
-						initiator: route,
-						prerender: state.prerender
-					});
+					response = await respond(
+						// we set `credentials` to `undefined` to workaround a bug in Cloudflare
+						// (https://github.com/sveltejs/kit/issues/3728) — which is fine, because
+						// we only need the headers
+						new Request(new URL(requested, event.url).href, { ...opts, credentials: undefined }),
+						options,
+						{
+							...state,
+							initiator: route
+						}
+					);
 
 					if (state.prerender) {
 						dependency = { response, body: null };

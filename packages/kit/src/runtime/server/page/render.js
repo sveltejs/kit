@@ -91,7 +91,14 @@ export async function render_response({
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session,
+				/** @type {import('svelte/store').Writable<App.Session>} */
+				session: {
+					...session,
+					subscribe: (fn) => {
+						is_private = true;
+						return session.subscribe(fn);
+					}
+				},
 				updated
 			},
 			/** @type {import('types').Page} */
@@ -129,17 +136,7 @@ export async function render_response({
 			props[`props_${i}`] = await branch[i].loaded.props;
 		}
 
-		let session_tracking_active = false;
-		const unsubscribe = session.subscribe(() => {
-			if (session_tracking_active) is_private = true;
-		});
-		session_tracking_active = true;
-
-		try {
-			rendered = options.root.render(props);
-		} finally {
-			unsubscribe();
-		}
+		rendered = options.root.render(props);
 	} else {
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}

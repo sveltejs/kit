@@ -17,7 +17,7 @@ export function parse_route_id(id) {
 			? /^\/$/
 			: new RegExp(
 					`^${decodeURIComponent(id)
-						.split(/(?:@(?:~|[a-zA-Z0-9_-]*))?(?:\/|$)/)
+						.split(/(?:@[a-zA-Z0-9_-]+)?(?:\/|$)/)
 						.map((segment, i, segments) => {
 							// special case — /[...rest]/ could contain zero segments
 							const match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(segment);

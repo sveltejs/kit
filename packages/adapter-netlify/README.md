@@ -6,10 +6,8 @@ If you're using [adapter-auto](../adapter-auto), you don't need to install this 
 
 ## Installation
 
-> ⚠️ For the time being, the latest version of adapter-netlify is at the @next tag. If you get the error `config.kit.adapter should be an object with an "adapt" method.`, this is a sign that you are using the wrong version (eg `1.0.0-next.0` instead of `1.0.0-next.9`).
-
 ```bash
-npm i -D @sveltejs/adapter-netlify@next
+npm i -D @sveltejs/adapter-netlify
 ```
 
 You can then configure it inside of `svelte.config.js`:
