@@ -3,6 +3,7 @@
 	"pipeline": {
 		"build": {
 			"dependsOn": ["^build"],
+			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
 			"outputs": ["files/**", "dist/**", "assets/**", ".svelte-kit/**"]
 		},
 		"check": {
@@ -23,5 +24,6 @@
 	},
 	"remoteCache": {
 		"signature": true
-	}
+	},
+	"globalDependencies": [".eslintrc.json", ".prettierrc", "tsconfig.json"]
 }
