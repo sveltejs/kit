@@ -7,7 +7,7 @@
 		{
 			"files": ["*.svelte"],
 			"options": {
-				"svelteBracketNewLine": true
+				"bracketSameLine": false
 			}
 		},
 		{
