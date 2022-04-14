@@ -1,6 +1,7 @@
 import { api } from './_api';
-import type { RequestHandler } from '@sveltejs/kit';
+import type { RequestHandler } from './index';
 
+/** @type {import('./index').RequestHandler} */
 export const get: RequestHandler = async ({ locals }) => {
 	// locals.userid comes from src/hooks.js
 	const response = await api('get', `todos/${locals.userid}`);
@@ -28,6 +29,7 @@ export const get: RequestHandler = async ({ locals }) => {
 	};
 };
 
+/** @type {import('./index').RequestHandler} */
 export const post: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
@@ -47,6 +49,7 @@ const redirect = {
 	}
 };
 
+/** @type {import('./index').RequestHandler} */
 export const patch: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
@@ -58,6 +61,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 	return redirect;
 };
 
+/** @type {import('./index').RequestHandler} */
 export const del: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
