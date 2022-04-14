@@ -137,8 +137,6 @@ The combined `stuff` is available to components using the [page store](/docs/mod
 
 #### dependencies
 
-If the `load` function depends on custom resources a `dependencies` array can returned. A registered dependency can later be used as argument of `invalidate` to rerun the `load` function.
+An array of strings representing URLs the page depends on, which can subsequently be used with [`invalidate`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun. You only need to add them to `dependencies` if you're using a custom API client; URLs loaded with the provided `fetch` function are added automatically.
 
-> Note that the `fetch` function alreay registers the requested resources as dependencies. Manual registration is only necessary if it's not possible to use SvelteKits `fetch` function. 
-
-The items should be [properly encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding) URIs. Both absolute and relative URIs are acceptable.
+URLs can be absolute or relative to the page being loaded, and must be [encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding).
