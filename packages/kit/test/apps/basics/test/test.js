@@ -305,8 +305,13 @@ test.describe.parallel('Caching', () => {
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
 	});
 
-	test('sets cache-control: private if page uses session', async ({ request }) => {
-		const response = await request.get('/caching/private/uses-session');
+	test('sets cache-control: private if page uses session in load', async ({ request }) => {
+		const response = await request.get('/caching/private/uses-session-in-load');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
+	});
+
+	test('sets cache-control: private if page uses session in init', async ({ request }) => {
+		const response = await request.get('/caching/private/uses-session-in-init');
 		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 
@@ -1909,6 +1914,21 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
+	test('does not attempt client-side navigation to links with sveltekit:reload', async ({
+		baseURL,
+		page
+	}) => {
+		await page.goto('/routing');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/b"]')]);
+		expect(await page.textContent('h1')).toBe('b');
+		expect(requests).toContain(`${baseURL}/routing/b`);
+	});
+
 	test('allows reserved words as route names', async ({ page }) => {
 		await page.goto('/routing/const');
 		expect(await page.textContent('h1')).toBe('reserved words are okay as routes');
@@ -2235,6 +2255,11 @@ test.describe.parallel('Static files', () => {
 
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
+	});
+
+	test('does not use Vite to serve contents of static directory', async ({ request }) => {
+		const response = await request.get('/static/static.json');
+		expect(response.status()).toBe(process.env.DEV ? 403 : 404);
 	});
 });
 

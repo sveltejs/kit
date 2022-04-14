@@ -12,4 +12,8 @@
 	}
 </script>
 
-<h1>this page will be cached for 30 seconds</h1>
+<script>
+	export let session_exists;
+</script>
+
+<h1>this page will be cached for 30 seconds ({session_exists})</h1>

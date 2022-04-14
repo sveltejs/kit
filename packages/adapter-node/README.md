@@ -4,7 +4,7 @@
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-node@next`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `svelte.config.js`:
 
 ```js
 // svelte.config.js

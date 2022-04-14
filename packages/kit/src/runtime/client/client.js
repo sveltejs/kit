@@ -503,7 +503,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const session = $session;
 
 		if (module.load) {
-			/** @type {import('types').LoadInput | import('types').ErrorLoadInput} */
+			/** @type {import('types').LoadInput} */
 			const load_input = {
 				routeId,
 				params: uses_params,
@@ -525,7 +525,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 					add_dependency(requested);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
-				}
+				},
+				status: status ?? null,
+				error: error ?? null
 			};
 
 			if (import.meta.env.DEV) {
@@ -535,11 +537,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 						throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
 					}
 				});
-			}
-
-			if (error) {
-				/** @type {import('types').ErrorLoadInput} */ (load_input).status = status;
-				/** @type {import('types').ErrorLoadInput} */ (load_input).error = error;
 			}
 
 			const loaded = await module.load.call(null, load_input);
@@ -1079,7 +1076,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 				// 2. 'rel' attribute includes external
 				const rel = (a.getAttribute('rel') || '').split(/\s+/);
 
-				if (a.hasAttribute('download') || rel.includes('external')) {
+				if (
+					a.hasAttribute('download') ||
+					rel.includes('external') ||
+					a.hasAttribute('sveltekit:reload')
+				) {
 					return;
 				}
 

@@ -1,5 +1,43 @@
 # @sveltejs/kit
 
+## 1.0.0-next.313
+
+### Patch Changes
+
+- add `platform` to requests triggered by `fetch` in `load` during SSR ([#4599](https://github.com/sveltejs/kit/pull/4599))
+
+## 1.0.0-next.312
+
+### Patch Changes
+
+- Only render fallback when prerendering is enabled ([#4604](https://github.com/sveltejs/kit/pull/4604))
+
+## 1.0.0-next.311
+
+### Patch Changes
+
+- Skip client-side navigation for links with sveltekit:reload ([#4545](https://github.com/sveltejs/kit/pull/4545))
+
+* [breaking] Skip prerendering for rel="external" links ([#4545](https://github.com/sveltejs/kit/pull/4545))
+
+## 1.0.0-next.310
+
+### Patch Changes
+
+- Remove credentials when creating request object in server-side fetch ([#4548](https://github.com/sveltejs/kit/pull/4548))
+
+## 1.0.0-next.309
+
+### Patch Changes
+
+- Fix session store subscription tracking during SSR ([#4550](https://github.com/sveltejs/kit/pull/4550))
+
+## 1.0.0-next.308
+
+### Patch Changes
+
+- Remove `static` directory from Vite's control ([#4535](https://github.com/sveltejs/kit/pull/4535))
+
 ## 1.0.0-next.307
 
 ### Patch Changes
@@ -74,7 +112,7 @@
 
 - Populate fallback page when trailingSlash is "always" ([#4351](https://github.com/sveltejs/kit/pull/4351))
 
-* Expose `event.routeId` and `page.routeId` ([#4344](https://github.com/sveltejs/kit/pull/4344))
+* Expose `event.routeId` and `page.routeId` ([#4345](https://github.com/sveltejs/kit/pull/4345))
 
 - [breaking] remove fallthrough routes ([#4330](https://github.com/sveltejs/kit/pull/4330))
 
