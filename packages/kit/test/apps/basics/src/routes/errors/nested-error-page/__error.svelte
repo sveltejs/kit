@@ -1,5 +1,5 @@
 <script context="module">
-	/** @type {import('@sveltejs/kit').ErrorLoad} */
+	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ status, error }) {
 		return {
 			props: {

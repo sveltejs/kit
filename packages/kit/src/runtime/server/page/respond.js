@@ -44,7 +44,8 @@ export async function respond(opts) {
 
 	try {
 		nodes = await Promise.all(
-			route.a.map((n) => options.manifest._.nodes[n] && options.manifest._.nodes[n]())
+			// we use == here rather than === because [undefined] serializes as "[null]"
+			route.a.map((n) => (n == undefined ? n : options.manifest._.nodes[n]()))
 		);
 	} catch (err) {
 		const error = coalesce_to_error(err);
@@ -143,7 +144,8 @@ export async function respond(opts) {
 				if (error) {
 					while (i--) {
 						if (route.b[i]) {
-							const error_node = await options.manifest._.nodes[route.b[i]]();
+							const index = /** @type {number} */ (route.b[i]);
+							const error_node = await options.manifest._.nodes[index]();
 
 							/** @type {Loaded} */
 							let node_loaded;

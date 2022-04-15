@@ -13,6 +13,10 @@
 		"afterNavigate": true
 	},
 	"rules": {
+		"no-restricted-properties": [
+			"error",
+			{ "property": "substr", "message": "Use .slice instead of .substr." }
+		],
 		"@typescript-eslint/no-empty-interface": "off"
 	}
 }

@@ -1,6 +1,11 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').ErrorLoad} */
-	export function load({ status, error }) {
+	export function load({ status, error, url }) {
+		if (url.pathname === '/no-ssr/missing') {
+			// load functions should not be called on the server if `ssr: false`
+			throw new Error('load function was called erroneously');
+		}
+
 		return {
 			props: { status, error }
 		};

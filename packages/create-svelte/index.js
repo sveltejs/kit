@@ -105,7 +105,11 @@ function merge(target, source) {
 				throw new Error('Mismatched values');
 			}
 
-			merge(target_value, source_value);
+			if (typeof source_value === 'object') {
+				merge(target_value, source_value);
+			} else {
+				target[key] = source_value;
+			}
 		} else {
 			target[key] = source[key];
 		}

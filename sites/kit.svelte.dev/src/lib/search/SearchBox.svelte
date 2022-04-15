@@ -9,31 +9,33 @@
 	let modal;
 
 	let results = [];
-	let backspace_pressed;
 
-	let index;
+	let indexes;
 	let lookup;
 
 	onMount(async () => {
 		const response = await fetch('/content.json');
 		const { blocks } = await response.json();
 
-		index = new flexsearch.Index({
-			tokenize: 'forward'
-		});
+		// we have multiple indexes, so we can rank sections (migration guide comes last)
+		const max_rank = Math.max(...blocks.map((block) => block.rank ?? 0));
+		indexes = Array.from(
+			{ length: max_rank + 1 },
+			() => new flexsearch.Index({ tokenize: 'forward' })
+		);
 
 		lookup = new Map();
 
 		let time = Date.now();
 		for (const block of blocks) {
-			const title = block.breadcrumbs[block.breadcrumbs.length - 1];
+			const title = block.breadcrumbs.pop();
 			lookup.set(block.href, {
 				title,
 				href: block.href,
-				breadcrumbs: block.breadcrumbs.slice(0, -1),
+				breadcrumbs: block.breadcrumbs,
 				content: block.content
 			});
-			index.add(block.href, `${title} ${block.content}`);
+			indexes[block.rank ?? 0].add(block.href, `${title} ${block.content}`);
 
 			// poor man's way of preventing blocking
 			if (Date.now() - time > 25) {
@@ -65,7 +67,9 @@
 	}
 
 	function update() {
-		results = (index ? index.search($query) : []).map((href) => lookup.get(href));
+		results = (indexes ? indexes.map((index) => index.search($query)).flat() : []).map((href) =>
+			lookup.get(href)
+		);
 	}
 
 	function escape(text) {
@@ -120,7 +124,7 @@
 	}}
 />
 
-{#if $searching && index}
+{#if $searching && indexes}
 	<div class="modal-background" on:click={close} />
 
 	<div
@@ -189,28 +193,30 @@
 					{/if}
 				{:else}
 					<h2 class="info">{recent_searches.length ? 'Recent searches' : 'No recent searches'}</h2>
-					<ul>
-						{#each recent_searches as search, i}
-							<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-							<li class="recent">
-								<a on:click={() => navigate(search.href)} href={search.href}>
-									<small>{search.breadcrumbs.join('/')}</small>
-									<strong>{search.title}</strong>
-								</a>
+					{#if recent_searches.length}
+						<ul>
+							{#each recent_searches as search, i}
+								<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+								<li class="recent">
+									<a on:click={() => navigate(search.href)} href={search.href}>
+										<small>{search.breadcrumbs.join('/')}</small>
+										<strong>{search.title}</strong>
+									</a>
 
-								<button
-									aria-label="Delete"
-									on:click={(e) => {
-										$recent = $recent.filter((href) => href !== search.href);
-										e.stopPropagation();
-										e.preventDefault();
-									}}
-								>
-									<Icon name="delete" />
-								</button>
-							</li>
-						{/each}
-					</ul>
+									<button
+										aria-label="Delete"
+										on:click={(e) => {
+											$recent = $recent.filter((href) => href !== search.href);
+											e.stopPropagation();
+											e.preventDefault();
+										}}
+									>
+										<Icon name="delete" />
+									</button>
+								</li>
+							{/each}
+						</ul>
+					{/if}
 				{/if}
 			</div>
 		</div>
@@ -233,6 +239,7 @@
 		border: none;
 		border-bottom: 1px solid #eee;
 		font-weight: 600;
+		flex-shrink: 0;
 	}
 
 	input::selection {
@@ -286,15 +293,15 @@
 
 	.modal {
 		display: flex;
-		align-items: center;
 		justify-content: center;
+		align-items: center;
 		pointer-events: none;
 	}
 
 	.search-box {
 		position: relative;
-		width: calc(100vw - 2rem);
 		height: calc(100% - 2rem);
+		width: calc(100vw - 2rem);
 		max-width: 50rem;
 		max-height: 50rem;
 		filter: drop-shadow(2px 4px 16px rgba(0, 0, 0, 0.2));
@@ -302,7 +309,6 @@
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-		pointer-events: none;
 	}
 
 	.search-box > * {
@@ -310,10 +316,8 @@
 	}
 
 	.results {
-		flex: 1;
 		overflow: auto;
 		overscroll-behavior-y: none;
-		pointer-events: none;
 	}
 
 	ul {
