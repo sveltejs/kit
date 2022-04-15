@@ -101,9 +101,10 @@ Others are required for SvelteKit to work properly, and should also be left unto
 /// file: .svelte-kit/tsconfig.json
 {
 	"compilerOptions": {
-		// you must use `import type` to
-		// import types, rather than `import`,
-		// for svelte-preprocess to work
+		// this ensures that types are explicitly
+		// imported with `import type`, which is
+		// necessary as svelte-preprocess cannot
+		// otherwise compile components correctly
 		"importsNotUsedAsValues": "error",
 
 		// Vite compiles one TypeScript module
@@ -115,25 +116,6 @@ Others are required for SvelteKit to work properly, and should also be left unto
 		// use an imported value in your
 		// markup, so we need this
 		"preserveValueImports": true
-	}
-}
-```
-
-The remaining options are simply recommended defaults, included because they will make life easier. You can freely override these:
-
-```json
-/// file: .svelte-kit/tsconfig.json
-{
-	"compilerOptions": {
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
-		"lib": ["es2020", "DOM"],
-		"moduleResolution": "node",
-		"module": "es2020",
-		"resolveJsonModule": true,
-		"skipLibCheck": true,
-		"sourceMap": true,
-		"target": "es2020"
 	}
 }
 ```
