@@ -1,6 +1,6 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered } from 'MANIFEST';
-import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
+import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler';
 import static_asset_manifest_json from '__STATIC_CONTENT_MANIFEST';
 const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
@@ -21,9 +21,8 @@ export default {
 		if (url.pathname.startsWith(prefix)) {
 			/** @type {Response} */
 			const res = await get_asset_from_kv(req, env, context);
-			if (is_error(res.status)) {
-				return res;
-			}
+			if (is_error(res.status)) return res;
+
 			return new Response(res.body, {
 				headers: {
 					// include original cache headers, minus cache-control which
@@ -50,7 +49,14 @@ export default {
 			manifest.assets.has(file + '/index.html') ||
 			prerendered.has(pathname || '/')
 		) {
-			return get_asset_from_kv(req, env, context);
+			return get_asset_from_kv(req, env, context, (request, options) => {
+				if (prerendered.has(pathname || '/')) {
+					url.pathname = '/' + prerendered.get(pathname || '/').file;
+					return new Request(url.toString(), request);
+				}
+
+				return mapRequestToAsset(request, options);
+			});
 		}
 
 		// dynamically-generated pages
@@ -72,7 +78,7 @@ export default {
  * @param {any} env
  * @param {any} context
  */
-async function get_asset_from_kv(req, env, context) {
+async function get_asset_from_kv(req, env, context, map = mapRequestToAsset) {
 	try {
 		return await getAssetFromKV(
 			{
@@ -83,7 +89,8 @@ async function get_asset_from_kv(req, env, context) {
 			},
 			{
 				ASSET_NAMESPACE: env.__STATIC_CONTENT,
-				ASSET_MANIFEST: static_asset_manifest
+				ASSET_MANIFEST: static_asset_manifest,
+				mapRequestToAsset: map
 			}
 		);
 	} catch (e) {

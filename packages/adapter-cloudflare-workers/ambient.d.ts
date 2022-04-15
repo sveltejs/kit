@@ -6,7 +6,7 @@ declare module 'MANIFEST' {
 	import { SSRManifest } from '@sveltejs/kit';
 
 	export const manifest: SSRManifest;
-	export const prerendered: Set<string>;
+	export const prerendered: Map<string, { file: string }>;
 }
 
 declare module '__STATIC_CONTENT_MANIFEST' {
