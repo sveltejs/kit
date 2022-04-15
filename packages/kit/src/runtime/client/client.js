@@ -27,6 +27,8 @@ const routes = parse(components, dictionary, matchers);
 const default_layout = components[0]();
 const default_error = components[1]();
 
+const root_stuff = {};
+
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
 // popstate it's too late to update the scroll position associated with the
@@ -86,10 +88,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	/** @type {import('./types').NavigationState} */
 	let current = {
-		// @ts-ignore - we need the initial value to be null
-		url: null,
+		branch: [],
+		error: null,
 		session_id: 0,
-		branch: []
+		stuff: root_stuff,
+		// @ts-ignore - we need the initial value to be null
+		url: null
 	};
 
 	let started = false;
@@ -364,7 +368,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   stuff: Record<string, any>;
 	 *   branch: Array<import('./types').BranchNode | undefined>;
 	 *   status: number;
-	 *   error?: Error;
+	 *   error: Error | null;
 	 *   routeId: string | null;
 	 * }} opts
 	 */
@@ -387,6 +391,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 				url,
 				params,
 				branch,
+				error,
+				stuff,
 				session_id
 			},
 			props: {
@@ -399,7 +405,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 			result.props[`props_${i}`] = loaded ? await loaded.props : null;
 		}
 
-		if (!current.url || url.href !== current.url.href) {
+		const page_changed =
+			!current.url ||
+			url.href !== current.url.href ||
+			current.error !== error ||
+			current.stuff !== stuff;
+
+		if (page_changed) {
 			result.props.page = { error, params, routeId, status, stuff, url };
 
 			// TODO remove this for 1.0
@@ -583,14 +595,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 		let branch = [];
 
 		/** @type {Record<string, any>} */
-		let stuff = {};
+		let stuff = root_stuff;
 		let stuff_changed = false;
 
 		/** @type {number | undefined} */
 		let status = 200;
 
-		/** @type {Error | undefined} */
-		let error;
+		/** @type {Error | null} */
+		let error = null;
 
 		// preload modules
 		a.forEach((loader) => loader());

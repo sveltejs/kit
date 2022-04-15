@@ -1590,11 +1590,11 @@ test.describe.parallel('$app/stores', () => {
 		await page.goto('/store');
 
 		expect(await page.textContent('h1')).toBe('Test');
-		expect(await page.textContent('h2')).toBe('Calls: 1');
+		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 2' : 'Calls: 1');
 
 		await clicknav('a[href="/store/result"]');
 		expect(await page.textContent('h1')).toBe('Result');
-		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 1' : 'Calls: 0');
+		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 2' : 'Calls: 0');
 
 		const oops = await page.evaluate(() => window.oops);
 		expect(oops).toBeUndefined();
@@ -1621,6 +1621,26 @@ test.describe.parallel('$app/stores', () => {
 		expect(await page.textContent('#store-stuff')).toBe(
 			JSON.stringify({ name: 'SvelteKit', value: 789, error: 'Params = yyy' })
 		);
+	});
+
+	test('should load stuff after reloading by goto', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		const stuff1 = JSON.stringify({ name: 'SvelteKit', value: 789, error: 'uh oh' });
+		const stuff2 = JSON.stringify({ name: 'SvelteKit', value: 123, foo: true });
+		await page.goto('/store/stuff/www');
+
+		await clicknav('a[href="/store/stuff/foo"]');
+		expect(await page.textContent('#store-stuff')).toBe(stuff1);
+
+		await clicknav('#reload-button');
+		expect(await page.textContent('#store-stuff')).toBe(javaScriptEnabled ? stuff2 : stuff1);
+
+		await clicknav('a[href="/store/stuff/zzz"]');
+		await clicknav('a[href="/store/stuff/foo"]');
+		expect(await page.textContent('#store-stuff')).toBe(stuff2);
 	});
 
 	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
