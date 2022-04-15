@@ -2,5 +2,11 @@
 	"devDependencies": {
 		"prettier": "^2.5.1",
 		"prettier-plugin-svelte": "^2.5.0"
+	},
+	"prettier": {
+		"useTabs": true,
+		"singleQuote": true,
+		"trailingComma": "none",
+		"printWidth": 100
 	}
 }
