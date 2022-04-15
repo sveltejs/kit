@@ -107,6 +107,11 @@ declare module '$app/navigation' {
 	 */
 	export function invalidate(href: string): Promise<void>;
 	/**
+	 * Causes any `load` functions belonging to the currently active page to re-run if the `predicate` evaluates to `true`. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * @param predicate Is run for each fetched resource
+	 */
+	export function invalidate(predicate: (href: string) => boolean): Promise<void>;
+	/**
 	 * Programmatically prefetches the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
 	 *  2. calling the page's load function with the appropriate options.
