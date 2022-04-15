@@ -6,7 +6,7 @@ import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
 
 /** @type {import('.')} */
-export default function (options = {}) {
+export default function ({ external = [] } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -57,11 +57,10 @@ export default function (options = {}) {
 			await esbuild.build({
 				target: 'es2020',
 				platform: 'browser',
-				...options,
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: `${entrypoint}/${main_path}`,
 				bundle: true,
-				external: ['__STATIC_CONTENT_MANIFEST', ...(options?.external || [])],
+				external: ['__STATIC_CONTENT_MANIFEST', ...external],
 				format: 'esm'
 			});
 

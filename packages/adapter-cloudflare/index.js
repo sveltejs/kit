@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import * as esbuild from 'esbuild';
 
 /** @type {import('.')} */
-export default function (options = {}) {
+export default function ({ external = [] } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
@@ -39,12 +39,12 @@ export default function (options = {}) {
 			await esbuild.build({
 				target: 'es2020',
 				platform: 'browser',
-				...options,
 				entryPoints: [`${tmp}/_worker.js`],
 				outfile: `${dest}/_worker.js`,
 				allowOverwrite: true,
 				format: 'esm',
-				bundle: true
+				bundle: true,
+				external
 			});
 		}
 	};
