@@ -5,4 +5,5 @@ wrangler.toml
 vercel.json
 .cloudflare
 .netlify
+.turbo
 README.md
