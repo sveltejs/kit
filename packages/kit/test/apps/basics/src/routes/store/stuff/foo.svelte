@@ -1,9 +1,9 @@
 <script context="module">
-	let isFirst = true;
+	let is_first = true;
 
 	export function load() {
-		if (isFirst) {
-			isFirst = false;
+		if (is_first) {
+			is_first = false;
 			throw new Error('uh oh');
 		}
 
@@ -11,15 +11,15 @@
 			stuff: {
 				foo: true
 			},
-      props: {
-        number: 2
-      }
+			props: {
+				number: 2
+			}
 		};
 	}
 </script>
 
 <script>
-  export let number;
+	export let number;
 </script>
 
 <h1>stuff - foo</h1>
