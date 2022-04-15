@@ -1202,7 +1202,8 @@ test.describe.parallel('Load', () => {
 			expect(await page.textContent('h1')).toBe('layout loads: 4');
 			expect(await page.textContent('h2')).toBe('x: b: 2');
 
-			await app.invalidate((dep) => dep.includes('change-detection/data.json'));
+			await page.click('button');
+			await page.waitForFunction('window.invalidated');
 			expect(await page.textContent('h1')).toBe('layout loads: 5');
 			expect(await page.textContent('h2')).toBe('x: b: 2');
 		}

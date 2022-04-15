@@ -1,5 +1,6 @@
 <script context="module">
 	import { browser } from '$app/env';
+	import { invalidate } from '$app/navigation';
 
 	let count = 0;
 
@@ -28,3 +29,10 @@
 </script>
 
 <h2>x: {x}: {loads}</h2>
+
+<button
+	on:click={async () => {
+		await invalidate((dep) => dep.includes('change-detection/data.json'));
+		window.invalidated = true;
+	}}>invalidate change-detection/data.json</button
+>
