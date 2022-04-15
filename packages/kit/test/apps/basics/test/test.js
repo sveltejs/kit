@@ -876,11 +876,11 @@ test.describe.parallel('Errors', () => {
 	// TODO before we implemented route fallthroughs, and there was a 1:1
 	// regex:route relationship, it was simple to say 'method not implemented
 	// for this endpoint'. now it's a little tricker. does a 404 suffice?
-	test.skip('unhandled http method', async ({ request }) => {
+	test('unhandled http method', async ({ request }) => {
 		const response = await request.put('/errors/invalid-route-response');
 
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(501);
-		expect(await response.text()).toMatch('PUT is not implemented');
+		expect(response.status()).toBe(405);
+		expect(await response.text()).toMatch('PUT method not allowed');
 	});
 
 	test('error in endpoint', async ({ page, read_errors }) => {
@@ -2078,8 +2078,7 @@ test.describe.parallel('Routing', () => {
 		server.close();
 	});
 
-	// skipping this test because it causes a bunch of failures locally
-	test.skip('watch new route in dev', async ({ page, javaScriptEnabled }) => {
+	test('watch new route in dev', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/routing');
 
 		if (!process.env.DEV || javaScriptEnabled) {
@@ -2091,10 +2090,11 @@ test.describe.parallel('Routing', () => {
 		const route = 'bar' + new Date().valueOf();
 		const content = 'Hello new route';
 		const __dirname = path.dirname(fileURLToPath(import.meta.url));
-		const filePath = path.join(__dirname, `${route}.svelte`);
+		const filePath = path.join(__dirname, `../src/routes/routing/${route}.svelte`);
 
 		try {
 			fs.writeFileSync(filePath, `<h1>${content}</h1>`);
+			await page.waitForTimeout(250); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
 			await page.goto(`/routing/${route}`);
 
 			expect(await page.textContent('h1')).toBe(content);
