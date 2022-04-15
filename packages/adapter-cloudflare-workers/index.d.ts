@@ -1,4 +1,4 @@
 import { Adapter } from '@sveltejs/kit';
 
-declare function plugin(options?: { external?: string[] }): Adapter;
+declare function plugin(): Adapter;
 export = plugin;

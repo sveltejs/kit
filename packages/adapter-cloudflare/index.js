@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import * as esbuild from 'esbuild';
 
 /** @type {import('.')} */
-export default function ({ external = [] } = {}) {
+export default function () {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
@@ -43,8 +43,7 @@ export default function ({ external = [] } = {}) {
 				outfile: `${dest}/_worker.js`,
 				allowOverwrite: true,
 				format: 'esm',
-				bundle: true,
-				external
+				bundle: true
 			});
 		}
 	};

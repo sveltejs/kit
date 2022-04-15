@@ -6,7 +6,7 @@ import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
 
 /** @type {import('.')} */
-export default function ({ external = [] } = {}) {
+export default function () {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -60,7 +60,7 @@ export default function ({ external = [] } = {}) {
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: `${entrypoint}/${main_path}`,
 				bundle: true,
-				external: ['__STATIC_CONTENT_MANIFEST', ...external],
+				external: ['__STATIC_CONTENT_MANIFEST'],
 				format: 'esm'
 			});
 
