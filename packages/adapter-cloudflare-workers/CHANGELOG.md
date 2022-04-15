@@ -1,5 +1,19 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.37
+
+### Patch Changes
+
+- [Breaking] refactor implementation from "Service Worker" pattern to "Module Worker" used in adapter-cloudflare ([#4276](https://github.com/sveltejs/kit/pull/4276))
+
+  #### add the following to your wrangler.toml
+
+  ```toml
+  		[build.upload]
+  		format = "modules"
+  		main = "./worker.mjs"
+  ```
+
 ## 1.0.0-next.36
 
 ### Patch Changes

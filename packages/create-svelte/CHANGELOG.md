@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.129
+
+### Patch Changes
+
+- type check exception handling on form action ([#4532](https://github.com/sveltejs/kit/pull/4532))
+
+* Update broken documentation links for `App` namespaces ([#4627](https://github.com/sveltejs/kit/pull/4627))
+
 ## 2.0.0-next.128
 
 ### Patch Changes
