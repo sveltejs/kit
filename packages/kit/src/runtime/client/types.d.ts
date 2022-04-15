@@ -68,8 +68,10 @@ export type BranchNode = {
 };
 
 export type NavigationState = {
-	url: URL;
-	params: Record<string, string>;
 	branch: Array<BranchNode | undefined>;
+	error: Error | null;
+	params: Record<string, string>;
 	session_id: number;
+	stuff: Record<string, any>;
+	url: URL;
 };
