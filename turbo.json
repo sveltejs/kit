@@ -1,17 +1,20 @@
 {
 	"$schema": "https://turborepo.org/schema.json",
 	"pipeline": {
+		"@sveltejs/kit#build": {
+			"dependsOn": ["^build"],
+			"inputs": ["src/**", "scripts/**"],
+			"outputs": ["dist/**", "docs/**", "assets/**"]
+		},
+		"kit.svelte.dev#build": {
+			"dependsOn": ["^build", "$VERCEL"],
+			"inputs": ["src/**", "../../documentation/**"],
+			"outputs": [".vercel_build_output/**"]
+		},
 		"build": {
 			"dependsOn": ["^build", "$VERCEL"],
 			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
-			"outputs": [
-				"files/**",
-				"dist/**",
-				"docs/**",
-				"assets/**",
-				".svelte-kit/**",
-				".vercel_build_output/**"
-			]
+			"outputs": ["files/**", "dist/**", ".svelte-kit/**", ".vercel_build_output/**"]
 		},
 		"check": {
 			"outputs": []
