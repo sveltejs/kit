@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.314
+
+### Patch Changes
+
+- Custom `load` `dependencies` in `LoadOutput` ([#4536](https://github.com/sveltejs/kit/pull/4536))
+
+* Made LoadInput and LoadOutput types public, merged ErrorLoad and Load declarations ([#4515](https://github.com/sveltejs/kit/pull/4515))
+
 ## 1.0.0-next.313
 
 ### Patch Changes
