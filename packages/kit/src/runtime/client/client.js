@@ -59,8 +59,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 	/** @type {Map<string, import('./types').NavigationResult>} */
 	const cache = new Map();
 
-	/** @type {Set<string | ((href: string) => boolean)>} */
-	const invalidated = new Set();
+	/** @type {Array<((href: string) => boolean)>} */
+	const invalidated = [];
 
 	const stores = {
 		url: notifiable_store({}),
@@ -228,7 +228,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		// abort if user navigated during update
 		if (token !== current_token) return;
 
-		invalidated.clear();
+		invalidated.length = 0;
 
 		if (navigation_result.redirect) {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
@@ -611,7 +611,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					(changed.url && previous.uses.url) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.session && previous.uses.session) ||
-					Array.from(previous.uses.dependencies).some(is_invalidated_dependency) ||
+					Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep))) ||
 					(stuff_changed && previous.uses.stuff);
 
 				if (changed_since_last_render) {
@@ -916,13 +916,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		return new Promise(() => {});
 	}
 
-	/** @param dep {string} */
-	function is_invalidated_dependency(dep) {
-		return Array.from(invalidated).some((invalid) =>
-			typeof invalid === 'function' ? invalid(dep) : dep === invalid
-		);
-	}
-
 	return {
 		after_navigate: (fn) => {
 			onMount(() => {
@@ -960,10 +953,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		invalidate: (resource) => {
 			if (typeof resource === 'function') {
-				invalidated.add(resource);
+				invalidated.push(resource);
 			} else {
 				const { href } = new URL(resource, location.href);
-				invalidated.add(href);
+				invalidated.push((dep) => dep === href);
 			}
 
 			if (!invalidating) {
