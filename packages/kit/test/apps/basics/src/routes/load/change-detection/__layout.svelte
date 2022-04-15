@@ -13,7 +13,8 @@
 			props: {
 				type,
 				loads: count
-			}
+			},
+			dependencies: ['custom:change-detection-layout']
 		};
 	}
 </script>
