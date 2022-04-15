@@ -11,22 +11,22 @@ import { mkdirp, copy, dist } from './utils.js';
 export async function create(cwd, options) {
 	mkdirp(cwd);
 
-	write_template_files(options.template, options.typescript, options.name, cwd);
+	write_template_files(options.template, options.types, options.name, cwd);
 	write_common_files(cwd, options, options.name);
 }
 
 /**
  * @param {string} template
- * @param {boolean} typescript
+ * @param {'typescript' | 'checkjs' | null} types
  * @param {string} name
  * @param {string} cwd
  */
-function write_template_files(template, typescript, name, cwd) {
+function write_template_files(template, types, name, cwd) {
 	const dir = dist(`templates/${template}`);
 	copy(`${dir}/assets`, cwd, (name) => name.replace('DOT-', '.'));
 	copy(`${dir}/package.json`, `${cwd}/package.json`);
 
-	const manifest = `${dir}/files.${typescript ? 'ts' : 'js'}.json`;
+	const manifest = `${dir}/files.types=${types}.json`;
 	const files = /** @type {import('./types/internal').File[]} */ (
 		JSON.parse(fs.readFileSync(manifest, 'utf-8'))
 	);
@@ -83,9 +83,13 @@ function write_common_files(cwd, options, name) {
  * @returns {boolean}
  */
 function matches_condition(condition, options) {
-	return condition === 'default' || condition === 'skeleton'
-		? options.template === condition
-		: options[condition];
+	if (condition === 'default' || condition === 'skeleton') {
+		return options.template === condition;
+	}
+	if (condition === 'typescript' || condition === 'checkjs') {
+		return options.types === condition;
+	}
+	return options[condition];
 }
 
 /**

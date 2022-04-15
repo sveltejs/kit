@@ -129,7 +129,7 @@ test('creates routes with layout', () => {
 });
 
 // TODO some characters will need to be URL-encoded in the filename
-test.skip('encodes invalid characters', () => {
+test('encodes invalid characters', () => {
 	const { components, routes } = create('samples/encoding');
 
 	// had to remove ? and " because windows
