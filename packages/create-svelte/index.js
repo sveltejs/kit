@@ -26,7 +26,7 @@ function write_template_files(template, types, name, cwd) {
 	copy(`${dir}/assets`, cwd, (name) => name.replace('DOT-', '.'));
 	copy(`${dir}/package.json`, `${cwd}/package.json`);
 
-	const manifest = `${dir}/files.${types === 'typescript' ? 'ts' : 'js'}.json`;
+	const manifest = `${dir}/files.types=${types}.json`;
 	const files = /** @type {import('./types/internal').File[]} */ (
 		JSON.parse(fs.readFileSync(manifest, 'utf-8'))
 	);

@@ -48,11 +48,12 @@ async function generate_templates(shared) {
 		const meta_file = path.join(cwd, '.meta.json');
 		if (!fs.existsSync(meta_file)) throw new Error('Template must have a .meta.json file');
 
-		/** @type {import('../types/internal.js').File[]} */
-		const js = [];
-
-		/** @type {import('../types/internal.js').File[]} */
-		const ts = [];
+		/** @type {Record<string, import('../types/internal.js').File[]>} */
+		const types = {
+			typescript: [],
+			checkjs: [],
+			null: []
+		};
 
 		glob('**/*', { cwd, filesOnly: true, dot: true }).forEach((name) => {
 			// the package.template.json thing is a bit annoying — basically we want
@@ -76,17 +77,24 @@ async function generate_templates(shared) {
 				const contents = fs.readFileSync(path.join(cwd, name), 'utf8');
 
 				if (name.endsWith('.d.ts')) {
-					if (name.endsWith('app.d.ts')) js.push({ name, contents });
-					ts.push({ name, contents });
+					if (name.endsWith('app.d.ts')) types.checkjs.push({ name, contents });
+					types.typescript.push({ name, contents });
 				} else if (name.endsWith('.ts')) {
-					ts.push({
+					const js = convert_typescript(contents);
+
+					types.typescript.push({
 						name,
 						contents: strip_jsdoc(contents)
 					});
 
-					js.push({
+					types.checkjs.push({
 						name: name.replace(/\.ts$/, '.js'),
-						contents: convert_typescript(contents)
+						contents: js
+					});
+
+					types.null.push({
+						name: name.replace(/\.ts$/, '.js'),
+						contents: strip_jsdoc(js)
 					});
 				} else {
 					// we jump through some hoops, rather than just using svelte.preprocess,
@@ -132,14 +140,19 @@ async function generate_templates(shared) {
 						}
 					);
 
-					js.push({
+					types.typescript.push({
+						name,
+						contents: strip_jsdoc(contents)
+					});
+
+					types.checkjs.push({
 						name,
 						contents: js_contents
 					});
 
-					ts.push({
+					types.null.push({
 						name,
-						contents: strip_jsdoc(contents)
+						contents: strip_jsdoc(js_contents)
 					});
 				}
 			} else {
@@ -150,8 +163,12 @@ async function generate_templates(shared) {
 		});
 
 		fs.copyFileSync(meta_file, `${dir}/meta.json`);
-		fs.writeFileSync(`${dir}/files.ts.json`, JSON.stringify(ts, null, '\t'));
-		fs.writeFileSync(`${dir}/files.js.json`, JSON.stringify(js, null, '\t'));
+		fs.writeFileSync(
+			`${dir}/files.types=typescript.json`,
+			JSON.stringify(types.typescript, null, '\t')
+		);
+		fs.writeFileSync(`${dir}/files.types=checkjs.json`, JSON.stringify(types.checkjs, null, '\t'));
+		fs.writeFileSync(`${dir}/files.types=null.json`, JSON.stringify(types.null, null, '\t'));
 	}
 }
 
