@@ -1,5 +1,4 @@
 ---
-'default-template': patch
 'create-svelte': patch
 ---
 
