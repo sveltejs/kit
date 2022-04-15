@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "1.0.0-next.16",
+	"version": "1.0.0-next.17",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -23,15 +23,19 @@
 	],
 	"main": "index.js",
 	"scripts": {
+		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --format=esm",
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
 		"format": "npm run check-format -- --write",
-		"check": "tsc",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
+		"check": "tsc --skipLibCheck",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
-		"esbuild": "^0.14.21"
+		"esbuild": "^0.14.21",
+		"worktop": "0.8.0-next.12"
 	},
 	"devDependencies": {
+		"@types/ws": "^8.5.3",
 		"typescript": "^4.6.2"
 	},
 	"publishConfig": {

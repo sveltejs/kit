@@ -6,7 +6,7 @@ import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
 import 'prism-svelte';
 import { extract_frontmatter, transform } from './markdown';
-import { modules } from '../../../../../../documentation/types.js';
+import { modules } from '../../../../../../packages/kit/docs/types.js';
 import { render_modules } from './modules';
 
 const languages = {
@@ -171,6 +171,16 @@ export async function read_file(dir, file) {
 							.join('');
 					}
 				);
+		},
+		codespan: (text) => {
+			return (
+				'<code>' +
+				text.replace(type_regex, (match, prefix, name) => {
+					const link = `<a href="${type_links.get(name)}">${name}</a>`;
+					return `${prefix || ''}${link}`;
+				}) +
+				'</code>'
+			);
 		}
 	});
 
@@ -241,7 +251,8 @@ export function read_headings(dir) {
 				file,
 				// gross hack to accommodate FAQ
 				slug: dir === 'faq' ? slug : undefined,
-				code: () => ''
+				code: () => '',
+				codespan: () => ''
 			});
 
 			return {
@@ -259,9 +270,10 @@ export function read_headings(dir) {
  *   file: string;
  *   slug: string;
  *   code: (source: string, language: string, current: string) => string;
+ *   codespan: (source: string) => string;
  * }} opts
  */
-function parse({ body, file, slug, code }) {
+function parse({ body, file, slug, code, codespan }) {
 	const headings = slug ? [slug] : [];
 	const sections = [];
 
@@ -307,7 +319,8 @@ function parse({ body, file, slug, code }) {
 
 			return `<h${level} id="${slug}">${html}<a href="#${slug}" class="anchor"><span class="visually-hidden">permalink</span></a></h${level}>`;
 		},
-		code: (source, language) => code(source, language, current)
+		code: (source, language) => code(source, language, current),
+		codespan
 	});
 
 	return {

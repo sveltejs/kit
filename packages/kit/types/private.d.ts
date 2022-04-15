@@ -2,8 +2,6 @@
 // but which cannot be imported from `@sveltejs/kit`. Care should
 // be taken to avoid breaking changes when editing this file
 
-import { ValidatedConfig } from './internal';
-
 export interface AdapterEntry {
 	/**
 	 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -136,12 +134,6 @@ export interface CspDirectives {
 	>;
 }
 
-export interface ErrorLoadInput<Params extends Record<string, string> = Record<string, string>>
-	extends LoadInput<Params> {
-	status?: number;
-	error?: Error;
-}
-
 export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
 
 export interface JSONObject {
@@ -158,28 +150,6 @@ export type JSONValue =
 	| JSONValue[]
 	| JSONObject;
 
-export interface LoadInput<
-	Params extends Record<string, string> = Record<string, string>,
-	Props extends Record<string, any> = Record<string, any>
-> {
-	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
-	params: Params;
-	props: Props;
-	routeId: string | null;
-	session: App.Session;
-	stuff: Partial<App.Stuff>;
-	url: URL;
-}
-
-export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {
-	status?: number;
-	error?: string | Error;
-	redirect?: string;
-	props?: Props;
-	stuff?: Partial<App.Stuff>;
-	maxage?: number;
-}
-
 export interface Logger {
 	(msg: string): void;
 	success(msg: string): void;
@@ -190,8 +160,6 @@ export interface Logger {
 }
 
 export type MaybePromise<T> = T | Promise<T>;
-
-export type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
 
 export interface Prerendered {
 	pages: Map<

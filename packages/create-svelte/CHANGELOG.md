@@ -1,5 +1,25 @@
 # create-svelte
 
+## 2.0.0-next.129
+
+### Patch Changes
+
+- type check exception handling on form action ([#4532](https://github.com/sveltejs/kit/pull/4532))
+
+* Update broken documentation links for `App` namespaces ([#4627](https://github.com/sveltejs/kit/pull/4627))
+
+## 2.0.0-next.128
+
+### Patch Changes
+
+- [chore] upgrade to Playwright 1.21.0 ([#4601](https://github.com/sveltejs/kit/pull/4601))
+
+## 2.0.0-next.127
+
+### Patch Changes
+
+- Fix iOS double-tap zoom on counter buttons ([#4390](https://github.com/sveltejs/kit/pull/4390))
+
 ## 2.0.0-next.126
 
 ### Patch Changes

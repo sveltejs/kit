@@ -305,8 +305,13 @@ test.describe.parallel('Caching', () => {
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
 	});
 
-	test('sets cache-control: private if page uses session', async ({ request }) => {
-		const response = await request.get('/caching/private/uses-session');
+	test('sets cache-control: private if page uses session in load', async ({ request }) => {
+		const response = await request.get('/caching/private/uses-session-in-load');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
+	});
+
+	test('sets cache-control: private if page uses session in init', async ({ request }) => {
+		const response = await request.get('/caching/private/uses-session-in-init');
 		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 
@@ -871,11 +876,11 @@ test.describe.parallel('Errors', () => {
 	// TODO before we implemented route fallthroughs, and there was a 1:1
 	// regex:route relationship, it was simple to say 'method not implemented
 	// for this endpoint'. now it's a little tricker. does a 404 suffice?
-	test.skip('unhandled http method', async ({ request }) => {
+	test('unhandled http method', async ({ request }) => {
 		const response = await request.put('/errors/invalid-route-response');
 
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(501);
-		expect(await response.text()).toMatch('PUT is not implemented');
+		expect(response.status()).toBe(405);
+		expect(await response.text()).toMatch('PUT method not allowed');
 	});
 
 	test('error in endpoint', async ({ page, read_errors }) => {
@@ -1192,6 +1197,10 @@ test.describe.parallel('Load', () => {
 			await app.invalidate('/load/change-detection/data.json');
 			expect(await page.textContent('h1')).toBe('layout loads: 3');
 			expect(await page.textContent('h2')).toBe('x: b: 2');
+
+			await app.invalidate('custom:change-detection-layout');
+			expect(await page.textContent('h1')).toBe('layout loads: 4');
+			expect(await page.textContent('h2')).toBe('x: b: 2');
 		}
 	});
 
@@ -1325,6 +1334,21 @@ test.describe.parallel('Load', () => {
 		expect(await page.textContent('p')).toBe('Data: Hello from Index!');
 		await clicknav('[href="/load/props/about"]');
 		expect(await page.textContent('p')).toBe('Data: undefined');
+	});
+
+	test('server-side fetch respects set-cookie header', async ({ page, context }) => {
+		await context.clearCookies();
+
+		await page.goto('/load/set-cookie-fetch');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+
+		const cookies = {};
+		for (const cookie of await context.cookies()) {
+			cookies[cookie.name] = cookie.value;
+		}
+
+		expect(cookies.answer).toBe('42');
+		expect(cookies.doubled).toBe('84');
 	});
 });
 
@@ -1524,6 +1548,11 @@ test.describe.parallel('Page options', () => {
 				})
 			).toBe('absolute');
 		}
+	});
+
+	test('does not SSR error page for 404s with ssr=false', async ({ request }) => {
+		const html = await request.get('/no-ssr/missing');
+		expect(await html.text()).not.toContain('load function was called erroneously');
 	});
 });
 
@@ -1920,6 +1949,21 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
+	test('does not attempt client-side navigation to links with sveltekit:reload', async ({
+		baseURL,
+		page
+	}) => {
+		await page.goto('/routing');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/b"]')]);
+		expect(await page.textContent('h1')).toBe('b');
+		expect(requests).toContain(`${baseURL}/routing/b`);
+	});
+
 	test('allows reserved words as route names', async ({ page }) => {
 		await page.goto('/routing/const');
 		expect(await page.textContent('h1')).toBe('reserved words are okay as routes');
@@ -2054,8 +2098,7 @@ test.describe.parallel('Routing', () => {
 		server.close();
 	});
 
-	// skipping this test because it causes a bunch of failures locally
-	test.skip('watch new route in dev', async ({ page, javaScriptEnabled }) => {
+	test('watch new route in dev', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/routing');
 
 		if (!process.env.DEV || javaScriptEnabled) {
@@ -2067,10 +2110,11 @@ test.describe.parallel('Routing', () => {
 		const route = 'bar' + new Date().valueOf();
 		const content = 'Hello new route';
 		const __dirname = path.dirname(fileURLToPath(import.meta.url));
-		const filePath = path.join(__dirname, `${route}.svelte`);
+		const filePath = path.join(__dirname, `../src/routes/routing/${route}.svelte`);
 
 		try {
 			fs.writeFileSync(filePath, `<h1>${content}</h1>`);
+			await page.waitForTimeout(250); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
 			await page.goto(`/routing/${route}`);
 
 			expect(await page.textContent('h1')).toBe(content);
@@ -2246,6 +2290,11 @@ test.describe.parallel('Static files', () => {
 
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
+	});
+
+	test('does not use Vite to serve contents of static directory', async ({ request }) => {
+		const response = await request.get('/static/static.json');
+		expect(response.status()).toBe(process.env.DEV ? 403 : 404);
 	});
 });
 

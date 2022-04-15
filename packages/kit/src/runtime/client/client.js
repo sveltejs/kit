@@ -202,7 +202,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const current_token = (token = {});
 		let navigation_result = intent && (await load_route(intent, no_cache));
 
-		if (!navigation_result && url.pathname === location.pathname) {
+		if (
+			!navigation_result &&
+			url.origin === location.origin &&
+			url.pathname === location.pathname
+		) {
 			// this could happen in SPA fallback mode if the user navigated to
 			// `/non-existent-page`. if we fall back to reloading the page, it
 			// will create an infinite loop. so whereas we normally handle
@@ -474,6 +478,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			stuff
 		};
 
+		/** @param dep {string} */
+		function add_dependency(dep) {
+			const { href } = new URL(dep, url);
+			node.uses.dependencies.add(href);
+		}
+
 		if (props) {
 			// shadow endpoint props means we need to mark this URL as a dependency of itself
 			node.uses.dependencies.add(url.href);
@@ -494,7 +504,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const session = $session;
 
 		if (module.load) {
-			/** @type {import('types').LoadInput | import('types').ErrorLoadInput} */
+			/** @type {import('types').LoadInput} */
 			const load_input = {
 				routeId,
 				params: uses_params,
@@ -513,11 +523,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 				},
 				fetch(resource, info) {
 					const requested = typeof resource === 'string' ? resource : resource.url;
-					const { href } = new URL(requested, url);
-					node.uses.dependencies.add(href);
+					add_dependency(requested);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
-				}
+				},
+				status: status ?? null,
+				error: error ?? null
 			};
 
 			if (import.meta.env.DEV) {
@@ -529,11 +540,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 				});
 			}
 
-			if (error) {
-				/** @type {import('types').ErrorLoadInput} */ (load_input).status = status;
-				/** @type {import('types').ErrorLoadInput} */ (load_input).error = error;
-			}
-
 			const loaded = await module.load.call(null, load_input);
 
 			if (!loaded) {
@@ -542,6 +548,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
+			if (node.loaded.dependencies) {
+				node.loaded.dependencies.forEach(add_dependency);
+			}
 		} else if (props) {
 			node.loaded = normalize({ props });
 		}
@@ -661,7 +670,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 							// @ts-expect-error
 							if (node.loaded.fallthrough) {
 								throw new Error(
-									'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-validation'
+									'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
 								);
 							}
 
@@ -1068,7 +1077,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 				// 2. 'rel' attribute includes external
 				const rel = (a.getAttribute('rel') || '').split(/\s+/);
 
-				if (a.hasAttribute('download') || rel.includes('external')) {
+				if (
+					a.hasAttribute('download') ||
+					rel.includes('external') ||
+					a.hasAttribute('sveltekit:reload')
+				) {
 					return;
 				}
 

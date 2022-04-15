@@ -1,5 +1,13 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.17
+
+### Patch Changes
+
+- Check for Cache match sooner; use `worktop` for types & Cache operations ([#4453](https://github.com/sveltejs/kit/pull/4453))
+
+* Add cloudflare cache to store responses with a cache header. ([#4412](https://github.com/sveltejs/kit/pull/4412))
+
 ## 1.0.0-next.16
 
 ### Patch Changes

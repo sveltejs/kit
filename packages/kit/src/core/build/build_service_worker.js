@@ -54,6 +54,7 @@ export async function build_service_worker(
 
 			export const files = [
 				${manifest_data.assets
+					.filter((asset) => config.kit.serviceWorker.files(asset.file))
 					.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
