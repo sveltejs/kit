@@ -154,9 +154,11 @@ importers:
   packages/adapter-static:
     specifiers:
       '@sveltejs/kit': workspace:*
+      cookie: ^0.5.0
       devalue: ^2.0.1
       playwright-chromium: ^1.21.0
       port-authority: ^1.1.2
+      set-cookie-parser: ^2.4.8
       sirv: ^2.0.0
       svelte: ^3.44.2
       tiny-glob: ^0.2.9
@@ -166,9 +168,11 @@ importers:
       tiny-glob: 0.2.9
     devDependencies:
       '@sveltejs/kit': link:../kit
+      cookie: 0.5.0
       devalue: 2.0.1
       playwright-chromium: 1.21.0
       port-authority: 1.1.2
+      set-cookie-parser: 2.4.8
       sirv: 2.0.0
       svelte: 3.44.2
       typescript: 4.6.2
@@ -250,6 +254,7 @@ importers:
       '@types/mime': ^2.0.3
       '@types/node': ^16.11.11
       '@types/sade': ^1.7.3
+      '@types/set-cookie-parser': ^2.4.2
       amphtml-validator: ^1.0.35
       cookie: ^0.5.0
       cross-env: ^7.0.3
@@ -264,6 +269,7 @@ importers:
       rollup: ^2.60.2
       sade: ^1.7.4
       selfsigned: ^2.0.0
+      set-cookie-parser: ^2.4.8
       sirv: ^2.0.0
       svelte: ^3.44.2
       svelte-check: ^2.5.0
@@ -285,6 +291,7 @@ importers:
       '@types/mime': 2.0.3
       '@types/node': 16.11.11
       '@types/sade': 1.7.3
+      '@types/set-cookie-parser': 2.4.2
       amphtml-validator: 1.0.35
       cookie: 0.5.0
       cross-env: 7.0.3
@@ -298,6 +305,7 @@ importers:
       port-authority: 1.1.2
       rollup: 2.60.2
       selfsigned: 2.0.0
+      set-cookie-parser: 2.4.8
       sirv: 2.0.0
       svelte: 3.44.2
       svelte-check: 2.5.0_svelte@3.44.2
@@ -1635,6 +1643,12 @@ packages:
     dependencies:
       '@types/mime': 1.3.2
       '@types/node': 16.11.11
+    dev: true
+
+  /@types/set-cookie-parser/2.4.2:
+    resolution: {integrity: sha512-fBZgytwhYAUkj/jC/FAV4RQ5EerRup1YQsXQCh8rZfiHkc4UahC192oH0smGwsXol3cL3A5oETuAHeQHmhXM4w==}
+    dependencies:
+      '@types/node': 17.0.21
     dev: true
 
   /@types/stack-utils/2.0.1:
@@ -5040,6 +5054,10 @@ packages:
 
   /set-blocking/2.0.0:
     resolution: {integrity: sha1-BF+XgtARrppoA93TgrJDkrPYkPc=}
+    dev: true
+
+  /set-cookie-parser/2.4.8:
+    resolution: {integrity: sha512-edRH8mBKEWNVIVMKejNnuJxleqYE/ZSdcT8/Nem9/mmosx12pctd80s2Oy00KNZzrogMZS5mauK2/ymL1bvlvg==}
     dev: true
 
   /sharp/0.29.3:

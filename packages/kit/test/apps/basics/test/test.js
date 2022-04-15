@@ -1335,6 +1335,21 @@ test.describe.parallel('Load', () => {
 		await clicknav('[href="/load/props/about"]');
 		expect(await page.textContent('p')).toBe('Data: undefined');
 	});
+
+	test('server-side fetch respects set-cookie header', async ({ page, context }) => {
+		await context.clearCookies();
+
+		await page.goto('/load/set-cookie-fetch');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+
+		const cookies = {};
+		for (const cookie of await context.cookies()) {
+			cookies[cookie.name] = cookie.value;
+		}
+
+		expect(cookies.answer).toBe('42');
+		expect(cookies.doubled).toBe('84');
+	});
 });
 
 test.describe.parallel('Method overrides', () => {
