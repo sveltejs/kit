@@ -127,11 +127,19 @@ export function create_client({ target, session, base, trailing_slash }) {
 	let router_enabled = true;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
-	let current_history_index = history.state?.[INDEX_KEY] ?? 0;
+	let current_history_index = history.state?.[INDEX_KEY];
 
-	if (current_history_index === 0) {
+	if (!current_history_index) {
+		// we use Date.now() as an offset so that cross-document navigations
+		// within the app don't result in data loss
+		current_history_index = Date.now();
+
 		// create initial history entry, so we can return here
-		history.replaceState({ ...history.state, [INDEX_KEY]: 0 }, '', location.href);
+		history.replaceState(
+			{ ...history.state, [INDEX_KEY]: current_history_index },
+			'',
+			location.href
+		);
 	}
 
 	// if we reload the page, or Cmd-Shift-T back to it,

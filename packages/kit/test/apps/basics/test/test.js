@@ -221,6 +221,26 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
 
+	test('scroll is restored after hitting the back button for an in-app cross-document navigation', async ({
+		page
+	}) => {
+		await page.goto('/scroll/cross-document/a');
+		await page.locator('[href="/scroll/cross-document/b"]').scrollIntoViewIfNeeded();
+
+		const y1 = await page.evaluate(() => scrollY);
+
+		await page.click('[href="/scroll/cross-document/b"]');
+		expect(await page.textContent('h1')).toBe('b');
+
+		await page.goBack();
+		expect(await page.textContent('h1')).toBe('a');
+		await page.waitForSelector('body.started');
+
+		const y2 = await page.evaluate(() => scrollY);
+
+		expect(Math.abs(y2 - y1)).toBeLessThan(10); // we need a few pixels wiggle room, because browsers
+	});
+
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
 		page,
 		in_view
