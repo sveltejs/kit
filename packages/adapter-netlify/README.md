@@ -38,7 +38,7 @@ If the `netlify.toml` file or the `build.publish` value is missing, a default va
 
 ## Netlify Edge Functions (beta)
 
-SvelteKit has support for the beta release of Netlify Edge Functions. If you pass the option `edge: true` to the `adapter` function, any server-side rendering will happen in a Deno-based edge function deployed close to the site visitor. If set to `false` (the default), the site will deploy to standard Node-based Netlify Functions.
+SvelteKit supports the beta release of Netlify Edge Functions. If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor. If set to `false` (the default), the site will deploy to standard Node-based Netlify Functions.
 
 ## Netlify alternatives to SvelteKit functionality
 
