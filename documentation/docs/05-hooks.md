@@ -14,7 +14,7 @@ This function runs every time the SvelteKit server receives a [request](/docs/we
 /// file: src/hooks.js
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
-	if (event.request.url.startsWith('/custom')) {
+	if (event.url.pathname.startsWith('/custom')) {
 		return new Response('custom response');
 	}
 
