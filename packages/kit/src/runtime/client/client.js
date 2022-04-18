@@ -145,7 +145,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
 	const scroll = scroll_positions[current_history_index];
-	if (scroll) scrollTo(scroll.x, scroll.y);
+	if (scroll) {
+		history.scrollRestoration = 'manual';
+		scrollTo(scroll.x, scroll.y);
+	}
 
 	let hash_navigating = false;
 
