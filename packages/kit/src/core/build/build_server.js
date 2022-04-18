@@ -191,6 +191,17 @@ export async function build_server(
 	const default_config = {
 		build: {
 			target: 'es2020'
+		},
+		ssr: {
+			// when developing against the Kit src code, we want to ensure that
+			// our dependencies are bundled so that apps don't need to install
+			// them as peerDependencies
+			noExternal: process.env.BUNDLED
+				? []
+				: Object.keys(
+						JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8'))
+							.devDependencies
+				  )
 		}
 	};
 
