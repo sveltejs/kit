@@ -17,9 +17,8 @@ export async function build(config, cwd = process.cwd()) {
 		throw new Error(`${config.kit.files.lib} does not exist`);
 	}
 
-	const package_dir = path.isAbsolute(config.kit.package.dir)
-		? config.kit.package.dir
-		: path.join(cwd, config.kit.package.dir);
+	const package_dir = path.resolve(cwd, config.kit.package.dir);
+
 	rimraf(package_dir);
 	mkdirp(package_dir); // TODO https://github.com/sveltejs/kit/issues/2333
 
