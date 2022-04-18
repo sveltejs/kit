@@ -1,10 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { createRequire } from 'module';
 import colors from 'kleur';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
+import { resolve_lib_alias, strip_lang_tags } from './utils.js';
+import { emit_dts, transpile_ts } from './typescript.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
 
@@ -189,163 +190,10 @@ export async function watch(config) {
 }
 
 /**
- * Resolves the `$lib` alias.
- *
- * TODO: make this more generic to also handle other aliases the user could have defined
- * via `kit.vite.resolve.alias`. Also investigate how to do this in a more robust way
- * (right now regex string replacement is used).
- * For more discussion see https://github.com/sveltejs/kit/pull/2453
- *
- * @param {string} file Relative to the lib root
- * @param {string} content
- * @param {import('types').ValidatedConfig} config
- * @returns {string}
- */
-function resolve_lib_alias(file, content, config) {
-	/**
-	 * @param {string} match
-	 * @param {string} _
-	 * @param {string} import_path
-	 */
-	const replace_import_path = (match, _, import_path) => {
-		if (!import_path.startsWith('$lib/')) {
-			return match;
-		}
-
-		const full_path = path.join(config.kit.files.lib, file);
-		const full_import_path = path.join(config.kit.files.lib, import_path.slice('$lib/'.length));
-		let resolved = path.relative(path.dirname(full_path), full_import_path).replace(/\\/g, '/');
-		resolved = resolved.startsWith('.') ? resolved : './' + resolved;
-		return match.replace(import_path, resolved);
-	};
-	content = content.replace(/from\s+('|")([^"';,]+?)\1/g, replace_import_path);
-	content = content.replace(/import\s*\(\s*('|")([^"';,]+?)\1\s*\)/g, replace_import_path);
-	return content;
-}
-
-/**
- * Strip out lang="X" or type="text/X" tags. Doing it here is only a temporary solution.
- * See https://github.com/sveltejs/kit/issues/2450 for ideas for places where it's handled better.
- *
- * @param {string} content
- */
-function strip_lang_tags(content) {
-	strip_lang_tag('script');
-	strip_lang_tag('style');
-	return content;
-
-	/**
-	 * @param {string} tagname
-	 */
-	function strip_lang_tag(tagname) {
-		const regexp = new RegExp(
-			`/<!--[^]*?-->|<${tagname}(\\s[^]*?)?(?:>([^]*?)<\\/${tagname}>|\\/>)`,
-			'g'
-		);
-		content = content.replace(regexp, (tag, attributes) => {
-			if (!attributes) return tag;
-			const idx = tag.indexOf(attributes);
-			return (
-				tag.substring(0, idx) +
-				attributes.replace(/\s(type|lang)=(["']).*?\2/, ' ') +
-				tag.substring(idx + attributes.length)
-			);
-		});
-	}
-}
-
-/**
- * @param {string} filename
- * @param {string} source
- */
-async function transpile_ts(filename, source) {
-	const ts = await try_load_ts();
-	return ts.transpileModule(source, {
-		compilerOptions: load_tsconfig(filename, ts),
-		fileName: filename
-	}).outputText;
-}
-
-async function try_load_ts() {
-	try {
-		return (await import('typescript')).default;
-	} catch (e) {
-		throw new Error(
-			'You need to install TypeScript if you want to transpile TypeScript files and/or generate type definitions'
-		);
-	}
-}
-
-/**
- * @param {string} filename
- * @param {import('typescript')} ts
- */
-function load_tsconfig(filename, ts) {
-	const filedir = path.dirname(filename);
-	const tsconfig_filename = ts.findConfigFile(filedir, ts.sys.fileExists);
-
-	if (!tsconfig_filename) {
-		throw new Error('Failed to locate tsconfig or jsconfig');
-	}
-
-	const { error, config } = ts.readConfigFile(tsconfig_filename, ts.sys.readFile);
-
-	if (error) {
-		throw new Error('Malformed tsconfig\n' + JSON.stringify(error, null, 2));
-	}
-
-	// Do this so TS will not search for initial files which might take a while
-	config.include = [];
-	config.files = [];
-	const { options } = ts.parseJsonConfigFileContent(
-		config,
-		ts.sys,
-		path.dirname(tsconfig_filename),
-		{ sourceMap: false },
-		tsconfig_filename
-	);
-	return options;
-}
-
-/**
  * @param {string} file
  * @param {Parameters<typeof fs.writeFileSync>[1]} contents
  */
 function write(file, contents) {
 	mkdirp(path.dirname(file));
 	fs.writeFileSync(file, contents);
-}
-
-/**
- * @param {import('types').ValidatedConfig} config
- */
-export async function emit_dts(config) {
-	const require = createRequire(import.meta.url);
-	const emit = await try_load_svelte2tsx();
-	await emit({
-		libRoot: config.kit.files.lib,
-		svelteShimsPath: require.resolve('svelte2tsx/svelte-shims.d.ts'),
-		declarationDir: config.kit.package.dir
-	});
-}
-
-async function try_load_svelte2tsx() {
-	const svelte2tsx = await load();
-	const emit_dts = svelte2tsx.emitDts;
-	if (!emit_dts) {
-		throw new Error(
-			'You need to install svelte2tsx >=0.4.1 if you want to generate type definitions'
-		);
-	}
-	return emit_dts;
-
-	async function load() {
-		try {
-			return await import('svelte2tsx');
-		} catch (e) {
-			throw new Error(
-				'You need svelte2tsx and typescript if you want to generate type definitions. Install it through your package manager, or disable generation which is highly discouraged. See https://kit.svelte.dev/docs/packaging'
-			);
-		}
-	}
 }

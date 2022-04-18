@@ -6,7 +6,7 @@ import prettier from 'prettier';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 
-import { make_package } from '../index.js';
+import { build } from '../index.js';
 import { load_config } from '../../core/config/index.js';
 import { rimraf, walk } from '../../utils/filesystem.js';
 
@@ -23,7 +23,7 @@ async function test_make_package(path) {
 
 	try {
 		const config = await load_config({ cwd });
-		await make_package(config, cwd);
+		await build(config, cwd);
 		const expected_files = walk(ewd, true);
 		const actual_files = walk(pwd, true);
 		assert.equal(
@@ -82,8 +82,8 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 
 		const config = await load_config({ cwd });
 		try {
-			await make_package(config, cwd);
-			assert.unreachable('Must not pass make_package');
+			await build(config, cwd);
+			assert.unreachable('Must not pass build');
 		} catch (/** @type {any} */ error) {
 			assert.instance(error, Error);
 			switch (dir) {
