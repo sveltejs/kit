@@ -221,6 +221,35 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
 
+	test('scroll is restored after hitting the back button for an in-app cross-document navigation', async ({
+		page,
+		clicknav,
+		back
+	}) => {
+		await page.goto('/scroll/cross-document/a');
+		await page.locator('[href="/scroll/cross-document/b"]').scrollIntoViewIfNeeded();
+
+		const y1 = await page.evaluate(() => scrollY);
+
+		await page.click('[href="/scroll/cross-document/b"]');
+		expect(await page.textContent('h1')).toBe('b');
+		await page.waitForSelector('body.started');
+
+		await clicknav('[href="/scroll/cross-document/c"]');
+		expect(await page.textContent('h1')).toBe('c');
+
+		await back(); // client-side back
+		await page.goBack(); // native back
+		expect(await page.textContent('h1')).toBe('a');
+		await page.waitForSelector('body.started');
+
+		await page.waitForTimeout(250); // needed for the test to fail reliably without the fix
+
+		const y2 = await page.evaluate(() => scrollY);
+
+		expect(Math.abs(y2 - y1)).toBeLessThan(10); // we need a few pixels wiggle room, because browsers
+	});
+
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
 		page,
 		in_view
