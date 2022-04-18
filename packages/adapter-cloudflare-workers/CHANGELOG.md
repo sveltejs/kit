@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.38
+
+### Patch Changes
+
+- - Fix an issue related to prerendered pages incorrectly resolving in @sveltejs/adapter-cloudflare-workers ([#4626](https://github.com/sveltejs/kit/pull/4626))
+
 ## 1.0.0-next.37
 
 ### Patch Changes
