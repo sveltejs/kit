@@ -79,7 +79,7 @@ export async function build(config, { log }) {
 	const prerendered = await prerender({
 		config,
 		entries: options.manifest_data.routes
-			.map((route) => (route.type === 'page' ? route.path : ''))
+			.map((route) => (route.id.includes('[') ? '' : '/' + route.id.replace(/@.+$/, '')))
 			.filter(Boolean),
 		files,
 		log

@@ -126,7 +126,6 @@ export interface PageData {
 	id: string;
 	shadow: string | null;
 	pattern: RegExp;
-	path: string;
 	a: Array<string | undefined>;
 	b: Array<string | undefined>;
 }

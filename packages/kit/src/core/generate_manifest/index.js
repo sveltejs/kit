@@ -85,7 +85,6 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 							pattern: ${pattern},
 							names: ${s(names)},
 							types: ${s(types)},
-							path: ${route.path ? s(route.path) : null},
 							shadow: ${route.shadow ? loader(`${relative_path}/${build_data.server.vite_manifest[route.shadow].file}`) : null},
 							a: ${s(route.a.map(get_index))},
 							b: ${s(route.b.map(get_index))}

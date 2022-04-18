@@ -114,4 +114,9 @@ test('fetching missing content results in a 404', () => {
 	assert.ok(content.includes('<h1>status: 404</h1>'), content);
 });
 
+test('prerenders an entry point endpoint', () => {
+	const content = read('hello.txt');
+	assert.equal(content, 'prerendered endpoint');
+});
+
 test.run();
