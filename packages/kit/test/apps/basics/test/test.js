@@ -1230,6 +1230,11 @@ test.describe.parallel('Load', () => {
 			await app.invalidate('custom:change-detection-layout');
 			expect(await page.textContent('h1')).toBe('layout loads: 4');
 			expect(await page.textContent('h2')).toBe('x: b: 2');
+
+			await page.click('button');
+			await page.waitForFunction('window.invalidated');
+			expect(await page.textContent('h1')).toBe('layout loads: 5');
+			expect(await page.textContent('h2')).toBe('x: b: 2');
 		}
 	});
 

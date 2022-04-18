@@ -61,8 +61,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 	/** @type {Map<string, import('./types').NavigationResult>} */
 	const cache = new Map();
 
-	/** @type {Set<string>} */
-	const invalidated = new Set();
+	/** @type {Array<((href: string) => boolean)>} */
+	const invalidated = [];
 
 	const stores = {
 		url: notifiable_store({}),
@@ -243,7 +243,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		// abort if user navigated during update
 		if (token !== current_token) return;
 
-		invalidated.clear();
+		invalidated.length = 0;
 
 		if (navigation_result.redirect) {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
@@ -634,7 +634,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					(changed.url && previous.uses.url) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.session && previous.uses.session) ||
-					Array.from(previous.uses.dependencies).some((dep) => invalidated.has(dep)) ||
+					Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep))) ||
 					(stuff_changed && previous.uses.stuff);
 
 				if (changed_since_last_render) {
@@ -975,9 +975,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 		goto: (href, opts = {}) => goto(href, opts, []),
 
 		invalidate: (resource) => {
-			const { href } = new URL(resource, location.href);
-
-			invalidated.add(href);
+			if (typeof resource === 'function') {
+				invalidated.push(resource);
+			} else {
+				const { href } = new URL(resource, location.href);
+				invalidated.push((dep) => dep === href);
+			}
 
 			if (!invalidating) {
 				invalidating = Promise.resolve().then(async () => {
