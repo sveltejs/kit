@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { createRequire } from 'module';
 import colors from 'kleur';
+import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
 
@@ -11,7 +12,7 @@ const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmig
  * @param {import('types').ValidatedConfig} config
  * @param {string} cwd
  */
-export async function make_package(config, cwd = process.cwd()) {
+export async function build(config, cwd = process.cwd()) {
 	if (!fs.existsSync(config.kit.files.lib)) {
 		throw new Error(`${config.kit.files.lib} does not exist`);
 	}
@@ -175,6 +176,17 @@ export async function make_package(config, cwd = process.cwd()) {
 	console.log(`Successfully built '${pkg.name}' package. To publish it to npm:`);
 	console.log(colors.bold().cyan(`  cd ${to}`));
 	console.log(colors.bold().cyan('  npm publish\n'));
+}
+
+/**
+ * @param {import('types').ValidatedConfig} config
+ */
+export async function watch(config) {
+	await build(config);
+
+	chokidar.watch(config.kit.files.lib, { ignoreInitial: true }).on('all', () => {
+		build(config);
+	});
 }
 
 /**

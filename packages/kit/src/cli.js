@@ -153,13 +153,18 @@ prog
 prog
 	.command('package')
 	.describe('Create a package')
-	.action(async () => {
+	.option('-w, --watch', 'Rerun when files change', false)
+	.action(async ({ watch }) => {
 		try {
 			const config = await load_config();
 
-			const { make_package } = await import('./packaging/index.js');
+			const packaging = await import('./packaging/index.js');
 
-			await make_package(config);
+			if (watch) {
+				packaging.watch(config);
+			} else {
+				await packaging.build(config);
+			}
 		} catch (error) {
 			handle_error(error);
 		}
