@@ -146,7 +146,7 @@ function validate_config(builder) {
 		zone_id = ""
 
 		[build]
-    command = ""
+		command = ""
 
 		[build.upload]
 		format = "modules"
