@@ -30,7 +30,7 @@ export async function build(config, cwd = process.cwd()) {
 		for (const file of files) {
 			const filename = path.join(package_dir, file);
 			const source = fs.readFileSync(filename, 'utf8');
-			fs.writeFileSync(filename, resolve_$lib_alias(file, source, config));
+			fs.writeFileSync(filename, resolve_lib_alias(file, source, config));
 		}
 	}
 
@@ -86,12 +86,12 @@ export async function build(config, cwd = process.cwd()) {
 			out_contents = config.preprocess
 				? strip_lang_tags((await preprocess(out_contents, config.preprocess, { filename })).code)
 				: out_contents;
-			out_contents = resolve_$lib_alias(out_file, out_contents, config);
+			out_contents = resolve_lib_alias(out_file, out_contents, config);
 		} else if (ext === '.ts' && file.endsWith('.d.ts')) {
 			// TypeScript's declaration emit won't copy over the d.ts files, so we do it here
 			out_file = file;
 			out_contents = source.toString('utf-8');
-			out_contents = resolve_$lib_alias(out_file, out_contents, config);
+			out_contents = resolve_lib_alias(out_file, out_contents, config);
 			if (fs.existsSync(path.join(package_dir, out_file))) {
 				console.warn(
 					'Found already existing file from d.ts generation for ' +
@@ -102,7 +102,7 @@ export async function build(config, cwd = process.cwd()) {
 		} else if (ext === '.ts') {
 			out_file = file.slice(0, -'.ts'.length) + '.js';
 			out_contents = await transpile_ts(filename, source.toString('utf-8'));
-			out_contents = resolve_$lib_alias(out_file, out_contents, config);
+			out_contents = resolve_lib_alias(out_file, out_contents, config);
 		} else {
 			out_file = file;
 			out_contents = source;
@@ -201,7 +201,7 @@ export async function watch(config) {
  * @param {import('types').ValidatedConfig} config
  * @returns {string}
  */
-function resolve_$lib_alias(file, content, config) {
+function resolve_lib_alias(file, content, config) {
 	/**
 	 * @param {string} match
 	 * @param {string} _
