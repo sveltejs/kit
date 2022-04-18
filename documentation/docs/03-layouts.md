@@ -145,7 +145,7 @@ If an error component has a [`load`](/docs/loading) function, it will be called 
 
 ```html
 <script context="module">
-	/** @type {import('@sveltejs/kit').ErrorLoad} */
+	/** @type {import('@sveltejs/kit').Load} */
 	export function load({ error, status }) {
 		return {
 			props: {
