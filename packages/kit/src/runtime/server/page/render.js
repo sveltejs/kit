@@ -206,7 +206,7 @@ export async function render_response({
 	} else {
 		if (inlined_style) {
 			const attributes = [];
-			if (options.dev) attributes.push(' data-svelte');
+			if (options.dev) attributes.push(' data-sveltekit');
 			if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
 			csp.add_style(inlined_style);

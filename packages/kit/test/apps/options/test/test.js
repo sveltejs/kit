@@ -45,10 +45,10 @@ test.describe.parallel('base path', () => {
 	test('inlines CSS', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
 		if (process.env.DEV) {
-			const ssr_style = await page.evaluate(() => document.querySelector('style[data-svelte]'));
+			const ssr_style = await page.evaluate(() => document.querySelector('style[data-sveltekit]'));
 
 			if (javaScriptEnabled) {
-				// <style data-svelte> is removed upon hydration
+				// <style data-sveltekit> is removed upon hydration
 				expect(ssr_style).toBeNull();
 			} else {
 				expect(ssr_style).not.toBeNull();

@@ -341,7 +341,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	function initialize(result) {
 		current = result.state;
 
-		const style = document.querySelector('style[data-svelte]');
+		const style = document.querySelector('style[data-sveltekit]');
 		if (style) style.remove();
 
 		page = result.props.page;

@@ -1527,7 +1527,7 @@ test.describe.parallel('Page options', () => {
 			expect(await page.textContent('h1')).toBe('content was rendered');
 		} else {
 			expect(await page.evaluate(() => document.querySelector('h1'))).toBe(null);
-			expect(await page.evaluate(() => document.querySelector('style[data-svelte]'))).toBe(null);
+			expect(await page.evaluate(() => document.querySelector('style[data-sveltekit]'))).toBe(null);
 		}
 	});
 
