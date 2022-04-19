@@ -258,7 +258,7 @@ async function v3(builder, external, edge, split) {
 		const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 		const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
-		builder.copy(files, tmp, {
+		builder.copy(`${files}/serverless.js`, `${tmp}/serverless.js`, {
 			replace: {
 				SERVER: `${relativePath}/index.js`,
 				MANIFEST: './manifest.js'
@@ -271,7 +271,7 @@ async function v3(builder, external, edge, split) {
 		);
 
 		await esbuild.build({
-			entryPoints: [`${tmp}/entry.js`],
+			entryPoints: [`${tmp}/serverless.js`],
 			outfile: `${dirs.functions}/${name}.func/index.js`,
 			target: 'node14',
 			bundle: true,
@@ -297,8 +297,45 @@ async function v3(builder, external, edge, split) {
 	/**
 	 * @param {string} name
 	 * @param {string} pattern
+	 * @param {(options: { relativePath: string }) => string} generate_manifest
 	 */
-	async function generate_edge_function(name, pattern) {}
+	async function generate_edge_function(name, pattern, generate_manifest) {
+		const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
+		const relativePath = posix.relative(tmp, builder.getServerDirectory());
+
+		builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
+			replace: {
+				SERVER: `${relativePath}/index.js`,
+				MANIFEST: './manifest.js'
+			}
+		});
+
+		write(
+			`${tmp}/manifest.js`,
+			`export const manifest = ${generate_manifest({ relativePath })};\n`
+		);
+
+		await esbuild.build({
+			entryPoints: [`${tmp}/edge.js`],
+			outfile: `${dirs.functions}/${name}.func/index.js`,
+			target: 'node14',
+			bundle: true,
+			platform: 'node',
+			format: 'esm',
+			external
+		});
+
+		write(
+			`${dirs.functions}/${name}.func/.vc-config.json`,
+			JSON.stringify({
+				runtime: 'edge',
+				handler: 'index.js'
+				// TODO expose envVarsInUse
+			})
+		);
+
+		routes.push({ src: pattern, dest: name });
+	}
 
 	const generate_function = edge ? generate_edge_function : generate_serverless_function;
 
