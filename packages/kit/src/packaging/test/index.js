@@ -26,13 +26,8 @@ async function test_make_package(path) {
 		await build(config, cwd);
 		const expected_files = walk(ewd, true);
 		const actual_files = walk(pwd, true);
-		assert.equal(
-			actual_files.length,
-			expected_files.length,
-			'Contains a different number of files.' +
-				`\n\t expected: ${JSON.stringify(expected_files)}` +
-				`\n\t actually: ${JSON.stringify(actual_files)}`
-		);
+
+		assert.equal(actual_files, expected_files);
 
 		const extensions = ['.json', '.svelte', '.ts', 'js'];
 		for (const file of actual_files) {
