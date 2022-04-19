@@ -24,12 +24,13 @@ export async function emit_dts(config, cwd, source) {
 		declarationDir: path.relative(cwd, tmp)
 	});
 
+	const handwritten = new Set();
 	const excluded = new Set();
 
 	// remove excluded files, and files that conflict with hand-written .d.ts
 	for (const { name, base } of source) {
 		if (name.endsWith('.d.ts')) {
-			excluded.add(name);
+			handwritten.add(name);
 		}
 
 		if (!config.kit.package.files(name)) {
@@ -41,6 +42,10 @@ export async function emit_dts(config, cwd, source) {
 
 	// resolve $lib alias (TODO others), copy into package dir
 	for (const file of walk(tmp)) {
+		if (handwritten.has(file)) {
+			console.warn(`Using $lib/${file} instead of generated .d.ts file`);
+		}
+
 		// don't overwrite hand-written .d.ts files
 		if (excluded.has(file)) continue;
 

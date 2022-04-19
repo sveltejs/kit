@@ -3,7 +3,7 @@ import * as path from 'path';
 import colors from 'kleur';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
-import { mkdirp, rimraf } from '../utils/filesystem.js';
+import { copy, mkdirp, rimraf } from '../utils/filesystem.js';
 import {
 	generate_pkg,
 	resolve_lib_alias,
@@ -41,43 +41,27 @@ export async function build(config, cwd = process.cwd()) {
 	for (const file of source) {
 		if (!file.included) continue;
 
-		const ext = path.extname(file.name);
-		const svelte_ext = config.extensions.find((ext) => file.name.endsWith(ext)); // unlike `ext`, could be e.g. `.svelte.md`
-
 		const filename = path.join(lib, file.name);
 
-		let out_file = file.name;
+		if (file.is_svelte || file.name.endsWith('.ts')) {
+			let contents = fs.readFileSync(filename, 'utf-8');
 
-		/** @type {string | Buffer} */
-		let out_contents = fs.readFileSync(filename);
-
-		if (svelte_ext) {
-			// it's a Svelte component
-			out_file = file.name.slice(0, -svelte_ext.length) + '.svelte';
-			out_contents = out_contents.toString('utf-8');
-
-			if (config.preprocess) {
-				const preprocessed = (await preprocess(out_contents, config.preprocess, { filename })).code;
-				out_contents = strip_lang_tags(preprocessed);
+			if (file.is_svelte) {
+				if (config.preprocess) {
+					const preprocessed = (await preprocess(contents, config.preprocess, { filename })).code;
+					contents = strip_lang_tags(preprocessed);
+				}
 			}
 
-			out_contents = resolve_lib_alias(out_file, out_contents, config);
-		} else if (file.name.endsWith('.d.ts')) {
-			// TypeScript's declaration emit won't copy over the d.ts files, so we do it here
-			out_contents = out_contents.toString('utf-8');
-			out_contents = resolve_lib_alias(out_file, out_contents, config);
-			if (fs.existsSync(path.join(dir, out_file))) {
-				console.warn(
-					`Found already existing file from d.ts generation for ${out_file}. This file will be overwritten.`
-				);
+			if (file.name.endsWith('.ts') && !file.name.endsWith('.d.ts')) {
+				contents = await transpile_ts(filename, contents);
 			}
-		} else if (ext === '.ts') {
-			out_file = file.base + '.js';
-			out_contents = await transpile_ts(filename, out_contents.toString('utf-8'));
-			out_contents = resolve_lib_alias(out_file, out_contents, config);
+
+			contents = resolve_lib_alias(file.name, contents, config);
+			write(path.join(dir, file.dest), contents);
+		} else {
+			copy(filename, path.join(dir, file.dest));
 		}
-
-		write(path.join(dir, out_file), out_contents);
 	}
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {
