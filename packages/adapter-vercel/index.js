@@ -329,7 +329,7 @@ async function v3(builder, external, edge, split) {
 			`${dirs.functions}/${name}.func/.vc-config.json`,
 			JSON.stringify({
 				runtime: 'edge',
-				handler: 'index.js'
+				entrypoint: 'index.js'
 				// TODO expose envVarsInUse
 			})
 		);
@@ -367,24 +367,7 @@ async function v3(builder, external, edge, split) {
 		JSON.stringify({
 			version: 3,
 			target: 'production',
-			routes: [
-				...redirects[builder.config.kit.trailingSlash],
-				...prerendered_pages,
-				...prerendered_redirects,
-				{
-					src: `/${builder.config.kit.appDir}/.+`,
-					headers: {
-						'cache-control': 'public, immutable, max-age=31536000'
-					}
-				},
-				{
-					handle: 'filesystem'
-				},
-				{
-					src: '/.*',
-					dest: 'render'
-				}
-			]
+			routes
 		})
 	);
 }
