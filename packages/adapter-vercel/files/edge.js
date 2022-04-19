@@ -5,9 +5,8 @@ const server = new Server(manifest);
 
 /**
  * @param {Request} request
- * @param {any} event
  */
-export default (request, event) => {
+export default (request) => {
 	return server.respond(request, {
 		getClientAddress() {
 			return request.headers.get('x-forwarded-for');
