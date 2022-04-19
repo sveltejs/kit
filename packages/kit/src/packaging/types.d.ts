@@ -1,8 +1,8 @@
-export type Source = {
+export type File = {
 	name: string;
 	dest: string;
 	base: string;
-	included: boolean;
-	exported: boolean;
+	is_included: boolean;
+	is_exported: boolean;
 	is_svelte: boolean;
 };

@@ -44,50 +44,9 @@ export function resolve_lib_alias(file, content, config) {
  * @param {string} content
  */
 export function strip_lang_tags(content) {
-	strip_lang_tag('script');
-	strip_lang_tag('style');
-	return content;
-
-	/**
-	 * @param {string} tagname
-	 */
-	function strip_lang_tag(tagname) {
-		const regexp = new RegExp(
-			`/<!--[^]*?-->|<${tagname}(\\s[^]*?)?(?:>([^]*?)<\\/${tagname}>|\\/>)`,
-			'g'
-		);
-		content = content.replace(regexp, (tag, attributes) => {
-			if (!attributes) return tag;
-			const idx = tag.indexOf(attributes);
-			return (
-				tag.substring(0, idx) +
-				attributes.replace(/\s(type|lang)=(["']).*?\2/, ' ') +
-				tag.substring(idx + attributes.length)
-			);
-		});
-	}
-}
-
-/**
- * Delete the specified file, plus any declaration files
- * that belong with it
- * @param {string} output
- * @param {string} file
- * @param {string} base
- */
-export function unlink_all(output, file, base) {
-	for (const candidate of [file, `${base}.d.ts`, `${base}.d.mts`, `${base}.d.cts`]) {
-		const resolved = path.join(output, candidate);
-
-		if (fs.existsSync(resolved)) {
-			fs.unlinkSync(resolved);
-
-			const dir = path.dirname(resolved);
-			if (dir !== output && fs.readdirSync(dir).length === 0) {
-				fs.rmdirSync(dir);
-			}
-		}
-	}
+	return content
+		.replace(/(<!--[^]*?-->)|(<script[^>]*?)\s(?:type|lang)=(["']).*?\3/g, '$1$2')
+		.replace(/(<!--[^]*?-->)|(<style[^>]*?)\s(?:type|lang)=(["']).*?\3/g, '$1$2');
 }
 
 /**
@@ -101,40 +60,47 @@ export function write(file, contents) {
 
 /**
  * @param {import('types').ValidatedConfig} config
- * @returns {import('./types').Source[]}
+ * @returns {import('./types').File[]}
  */
 export function scan(config) {
-	return walk(config.kit.files.lib).map((file) => {
-		const name = file.replace(/\\/g, '/');
+	return walk(config.kit.files.lib).map((file) => analyze(config, file));
+}
 
-		const svelte_extension = config.extensions.find((ext) => name.endsWith(ext));
+/**
+ * @param {import('types').ValidatedConfig} config
+ * @param {string} file
+ * @returns {import('./types').File}
+ */
+export function analyze(config, file) {
+	const name = file.replace(/\\/g, '/');
 
-		const base = svelte_extension ? name : name.slice(0, -path.extname(name).length);
+	const svelte_extension = config.extensions.find((ext) => name.endsWith(ext));
 
-		const dest = svelte_extension
-			? name.slice(0, -svelte_extension.length) + '.svelte'
-			: name.endsWith('.d.ts')
-			? name
-			: name.endsWith('.ts')
-			? name.slice(0, -3) + '.js'
-			: name;
+	const base = svelte_extension ? name : name.slice(0, -path.extname(name).length);
 
-		return {
-			name,
-			dest,
-			base,
-			included: config.kit.package.files(name),
-			exported: config.kit.package.exports(name),
-			is_svelte: !!svelte_extension
-		};
-	});
+	const dest = svelte_extension
+		? name.slice(0, -svelte_extension.length) + '.svelte'
+		: name.endsWith('.d.ts')
+		? name
+		: name.endsWith('.ts')
+		? name.slice(0, -3) + '.js'
+		: name;
+
+	return {
+		name,
+		dest,
+		base,
+		is_included: config.kit.package.files(name),
+		is_exported: config.kit.package.exports(name),
+		is_svelte: !!svelte_extension
+	};
 }
 
 /**
  * @param {string} cwd
- * @param {import('./types').Source[]} source
+ * @param {import('./types').File[]} files
  */
-export function generate_pkg(cwd, source) {
+export function generate_pkg(cwd, files) {
 	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
 
 	delete pkg.scripts;
@@ -148,8 +114,8 @@ export function generate_pkg(cwd, source) {
 	/** @type {Record<string, string>} */
 	const clashes = {};
 
-	for (const file of source) {
-		if (file.included && file.exported) {
+	for (const file of files) {
+		if (file.is_included && file.is_exported) {
 			const original = `$lib/${file.name}`;
 			const entry = `./${file.dest}`;
 			const key = entry.replace(/\/index\.js$|(\/[^/]+)\.js$/, '$1');
@@ -168,7 +134,7 @@ export function generate_pkg(cwd, source) {
 		}
 	}
 
-	if (!pkg.svelte && source.some((file) => file.is_svelte)) {
+	if (!pkg.svelte && files.some((file) => file.is_svelte)) {
 		// Several heuristics in Kit/vite-plugin-svelte to tell Vite to mark Svelte packages
 		// rely on the "svelte" property. Vite/Rollup/Webpack plugin can all deal with it.
 		// See https://github.com/sveltejs/kit/issues/1959 for more info and related threads.

@@ -7,11 +7,9 @@ import { resolve_lib_alias, write } from './utils.js';
 /**
  * @param {import('types').ValidatedConfig} config
  * @param {string} cwd
- * @param {import('./types').Source[]} source
+ * @param {import('./types').File[]} files
  */
-export async function emit_dts(config, cwd, source) {
-	if (!config.kit.package.emitTypes) return;
-
+export async function emit_dts(config, cwd, files) {
 	const tmp = `${config.kit.outDir}/package/types`;
 	rimraf(tmp);
 	mkdirp(tmp);
@@ -28,15 +26,15 @@ export async function emit_dts(config, cwd, source) {
 	const excluded = new Set();
 
 	// remove excluded files, and files that conflict with hand-written .d.ts
-	for (const { name, base } of source) {
-		if (name.endsWith('.d.ts')) {
-			handwritten.add(name);
+	for (const file of files) {
+		if (file.name.endsWith('.d.ts')) {
+			handwritten.add(file.name);
 		}
 
-		if (!config.kit.package.files(name)) {
-			excluded.add(base + '.d.ts');
-			excluded.add(base + '.d.mts');
-			excluded.add(base + '.d.cts');
+		if (!file.is_included) {
+			excluded.add(file.base + '.d.ts');
+			excluded.add(file.base + '.d.mts');
+			excluded.add(file.base + '.d.cts');
 		}
 	}
 
