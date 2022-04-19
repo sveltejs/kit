@@ -33,11 +33,12 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		config,
 		prerendered,
 
-		createEntries(fn) {
+		async createEntries(fn) {
 			const { routes } = build_data.manifest_data;
 
 			/** @type {import('types').RouteDefinition[]} */
 			const facades = routes.map((route) => ({
+				id: route.id,
 				type: route.type,
 				segments: route.id.split('/').map((segment) => ({
 					dynamic: segment.includes('['),
@@ -81,7 +82,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 				});
 
 				if (filtered.size > 0) {
-					complete({
+					await complete({
 						generateManifest: ({ relativePath, format }) =>
 							generate_manifest({
 								build_data,
