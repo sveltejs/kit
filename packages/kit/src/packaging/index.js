@@ -31,6 +31,30 @@ export async function build(config, cwd = process.cwd()) {
 	}
 
 	const pkg = generate_pkg(cwd, files);
+
+	if (!pkg.svelte && files.some((file) => file.is_svelte)) {
+		// Several heuristics in Kit/vite-plugin-svelte to tell Vite to mark Svelte packages
+		// rely on the "svelte" property. Vite/Rollup/Webpack plugin can all deal with it.
+		// See https://github.com/sveltejs/kit/issues/1959 for more info and related threads.
+		if (pkg.exports['.']) {
+			const svelte_export =
+				typeof pkg.exports['.'] === 'string'
+					? pkg.exports['.']
+					: pkg.exports['.'].import || pkg.exports['.'].default;
+			if (svelte_export) {
+				pkg.svelte = svelte_export;
+			} else {
+				console.warn(
+					'Cannot generate a "svelte" entry point because the "." entry in "exports" is not a string. If you set it by hand, please also set one of the options as a "svelte" entry point\n'
+				);
+			}
+		} else {
+			console.warn(
+				'Cannot generate a "svelte" entry point because the "." entry in "exports" is missing. Please specify one or set a "svelte" entry point yourself\n'
+			);
+		}
+	}
+
 	write(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
 
 	for (const file of files) {
@@ -64,51 +88,79 @@ export async function build(config, cwd = process.cwd()) {
 export async function watch(config, cwd = process.cwd()) {
 	await build(config);
 
+	const message = `\nWatching ${relative(cwd, config.kit.files.lib)} for changes...\n`;
+
+	console.log(message);
+
 	const { lib } = config.kit.files;
 	const { dir } = config.kit.package;
 
-	chokidar.watch(lib, { ignoreInitial: true }).on('all', async (event, path) => {
-		const file = analyze(config, path);
+	/** @type {Array<{ file: import('./types').File, type: string }>} */
+	const pending = [];
+
+	/** @type {NodeJS.Timeout} */
+	let timeout;
+
+	chokidar.watch(lib, { ignoreInitial: true }).on('all', async (type, path) => {
+		const file = analyze(config, relative(lib, path));
 		if (!file.is_included) return;
 
-		const files = scan(config);
+		pending.push({ file, type });
 
-		if ((event === 'unlink' || event === 'add') && file.is_exported) {
-			const pkg = generate_pkg(cwd, files);
-			write(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
-			console.log('Updated package.json');
-		}
+		clearTimeout(timeout);
+		timeout = setTimeout(async () => {
+			const files = scan(config);
 
-		if (event === 'unlink') {
-			for (const candidate of [
-				file.name,
-				`${file.base}.d.ts`,
-				`${file.base}.d.mts`,
-				`${file.base}.d.cts`
-			]) {
-				const resolved = join(dir, candidate);
+			let should_update_pkg = false;
 
-				if (fs.existsSync(resolved)) {
-					fs.unlinkSync(resolved);
+			const events = pending.slice();
+			pending.length = 0;
 
-					const parent = dirname(resolved);
-					if (parent !== dir && fs.readdirSync(parent).length === 0) {
-						fs.rmdirSync(parent);
+			for (const { file, type } of events) {
+				if ((type === 'unlink' || type === 'add') && file.is_exported) {
+					should_update_pkg = true;
+				}
+
+				if (type === 'unlink') {
+					for (const candidate of [
+						file.name,
+						`${file.base}.d.ts`,
+						`${file.base}.d.mts`,
+						`${file.base}.d.cts`
+					]) {
+						const resolved = join(dir, candidate);
+
+						if (fs.existsSync(resolved)) {
+							fs.unlinkSync(resolved);
+
+							const parent = dirname(resolved);
+							if (parent !== dir && fs.readdirSync(parent).length === 0) {
+								fs.rmdirSync(parent);
+							}
+						}
 					}
+					console.log(`Removed ${file.dest}`);
+				}
+
+				if (type === 'add' || type === 'change') {
+					await process_file(config, file);
+					console.log(`Processing ${file.name}`);
 				}
 			}
-			console.log(`Removed ${file.dest}`);
-		}
 
-		if (event === 'add' || event === 'change') {
-			await process_file(config, file);
-			console.log(`Processed ${file.name}`);
-		}
+			if (should_update_pkg) {
+				const pkg = generate_pkg(cwd, files);
+				write(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
+				console.log('Updated package.json');
+			}
 
-		if (config.kit.package.emitTypes) {
-			await emit_dts(config, cwd, scan(config));
-			console.log('Updated .d.ts files');
-		}
+			if (config.kit.package.emitTypes) {
+				await emit_dts(config, cwd, scan(config));
+				console.log('Updated .d.ts files');
+			}
+
+			console.log(message);
+		}, 100);
 	});
 }
 

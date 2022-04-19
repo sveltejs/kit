@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { createRequire } from 'module';
-import { copy, mkdirp, rimraf, walk } from '../utils/filesystem.js';
+import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
 import { resolve_lib_alias, write } from './utils.js';
 
 /**
