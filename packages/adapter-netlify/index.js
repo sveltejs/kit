@@ -227,7 +227,9 @@ function generate_lambda_functions({ builder, publish, split, esm }) {
 
 	builder.log.minor('Writing redirects...');
 	const redirect_file = join(publish, '_redirects');
-	builder.copy('_redirects', redirect_file);
+	if (existsSync('_redirects')) {
+		builder.copy('_redirects', redirect_file);
+	}
 	appendFileSync(redirect_file, `\n\n${redirects.join('\n')}`);
 }
 
