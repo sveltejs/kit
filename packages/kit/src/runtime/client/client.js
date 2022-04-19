@@ -158,9 +158,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 	/** @type {{}} */
 	let token;
 
-	/** @type {{}} */
-	let navigating_token;
-
 	/**
 	 * @param {string} href
 	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
@@ -206,6 +203,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/**
+	 * Returns `true` if update completes, `false` if it is aborted
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
 	 * @param {boolean} no_cache
@@ -237,11 +235,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		if (!navigation_result) {
 			await native_navigation(url);
-			return; // unnecessary, but TypeScript prefers it this way
+			return false; // unnecessary, but TypeScript prefers it this way
 		}
 
 		// abort if user navigated during update
-		if (token !== current_token) return;
+		if (token !== current_token) return false;
 
 		invalidated.length = 0;
 
@@ -263,7 +261,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					await native_navigation(new URL(navigation_result.redirect, location.href));
 				}
 
-				return;
+				return false;
 			}
 		} else if (navigation_result.props?.page?.status >= 400) {
 			const updated = await stores.updated.check();
@@ -346,6 +344,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		router_enabled = leaf_node?.module.router !== false;
+
+		return true;
 	}
 
 	/** @param {import('./types').NavigationResult} result */
@@ -900,8 +900,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		navigating++;
 
-		const current_navigating_token = (navigating_token = {});
-
 		if (started) {
 			stores.navigating.set({
 				from: current.url,
@@ -909,18 +907,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		}
 
-		await update(normalized, redirect_chain, false, {
+		const completed = await update(normalized, redirect_chain, false, {
 			scroll,
 			keepfocus,
 			details
 		});
 
-		navigating--;
-
-		// navigation was aborted
-		if (navigating_token !== current_navigating_token) return;
-
-		if (!navigating) {
+		if (completed) {
 			const navigation = { from, to: normalized };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
 
@@ -1113,11 +1106,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 				// Ignore if <a> has a target
 				if (is_svg_a_element ? a.target.baseVal : a.target) return;
 
-				if (url.href === location.href) {
-					if (!location.hash) event.preventDefault();
-					return;
-				}
-
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired
 				// Removing the hash does a full page navigation in the browser, so make sure a hash is present
@@ -1142,7 +1130,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					redirect_chain: [],
 					details: {
 						state: {},
-						replaceState: false
+						replaceState: url.href === location.href
 					},
 					accepted: () => event.preventDefault(),
 					blocked: () => event.preventDefault()
