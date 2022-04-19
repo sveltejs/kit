@@ -100,14 +100,32 @@ async function try_load_ts() {
  * @param {import('typescript')} ts
  */
 function load_tsconfig(filename, ts) {
-	const filedir = path.dirname(filename);
-	const tsconfig_filename = ts.findConfigFile(filedir, ts.sys.fileExists);
+	let config_filename;
 
-	if (!tsconfig_filename) {
+	// ts.findConfigFile is broken (it will favour a distant tsconfig
+	// over a near jsconfig, and then only when you call it twice)
+	// so we implement it ourselves
+	let dir = filename;
+	while (dir !== (dir = path.dirname(dir))) {
+		const tsconfig = path.join(dir, 'tsconfig.json');
+		const jsconfig = path.join(dir, 'jsconfig.json');
+
+		if (fs.existsSync(tsconfig)) {
+			config_filename = tsconfig;
+			break;
+		}
+
+		if (fs.existsSync(jsconfig)) {
+			config_filename = jsconfig;
+			break;
+		}
+	}
+
+	if (!config_filename) {
 		throw new Error('Failed to locate tsconfig or jsconfig');
 	}
 
-	const { error, config } = ts.readConfigFile(tsconfig_filename, ts.sys.readFile);
+	const { error, config } = ts.readConfigFile(config_filename, ts.sys.readFile);
 
 	if (error) {
 		throw new Error('Malformed tsconfig\n' + JSON.stringify(error, null, 2));
@@ -119,9 +137,9 @@ function load_tsconfig(filename, ts) {
 	const { options } = ts.parseJsonConfigFileContent(
 		config,
 		ts.sys,
-		path.dirname(tsconfig_filename),
+		path.dirname(config_filename),
 		{ sourceMap: false },
-		tsconfig_filename
+		config_filename
 	);
 	return options;
 }
