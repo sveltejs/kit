@@ -18,14 +18,14 @@ export async function build(config, cwd = process.cwd()) {
 		throw new Error(`${config.kit.files.lib} does not exist`);
 	}
 
-	const package_dir = path.resolve(cwd, config.kit.package.dir);
+	const package_dir = config.kit.package.dir;
 
 	rimraf(package_dir);
 	mkdirp(package_dir); // TODO https://github.com/sveltejs/kit/issues/2333
 
 	if (config.kit.package.emitTypes) {
 		// Generate type definitions first so hand-written types can overwrite generated ones
-		await emit_dts(config);
+		await emit_dts(config, path.relative(cwd, package_dir));
 		// Resolve aliases, TS leaves them as-is
 		const files = walk(package_dir);
 		for (const file of files) {

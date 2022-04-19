@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 import prettier from 'prettier';
@@ -23,6 +23,8 @@ async function test_make_package(path) {
 
 	try {
 		const config = await load_config({ cwd });
+		config.kit.package.dir = resolve(cwd, config.kit.package.dir);
+
 		await build(config, cwd);
 		const expected_files = walk(ewd, true);
 		const actual_files = walk(pwd, true);
@@ -76,6 +78,8 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 		const pwd = join(cwd, 'package');
 
 		const config = await load_config({ cwd });
+		config.kit.package.dir = resolve(cwd, config.kit.package.dir);
+
 		try {
 			await build(config, cwd);
 			assert.unreachable('Must not pass build');

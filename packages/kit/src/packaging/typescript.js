@@ -3,14 +3,15 @@ import { createRequire } from 'module';
 
 /**
  * @param {import('types').ValidatedConfig} config
+ * @param {string} out
  */
-export async function emit_dts(config) {
+export async function emit_dts(config, out) {
 	const require = createRequire(import.meta.url);
 	const emit = await try_load_svelte2tsx();
 	await emit({
 		libRoot: config.kit.files.lib,
 		svelteShimsPath: require.resolve('svelte2tsx/svelte-shims.d.ts'),
-		declarationDir: config.kit.package.dir
+		declarationDir: out
 	});
 }
 
