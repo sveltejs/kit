@@ -44,7 +44,7 @@ SvelteKit's `load` receives an implementation of `fetch`, which has the followin
 > - should not reference `window`, `document`, or any browser-specific objects
 > - should not directly reference any API keys or secrets, which will be exposed to the client, but instead call an endpoint that uses any required secrets
 
-It is recommended that you not store pre-request state in global variables, but instead use them only for cross-cutting concerns such as caching and holding database connections.
+It is recommended that you not store per-request state in global variables, but instead use them only for cross-cutting concerns such as caching and holding database connections.
 
 > Mutating any shared state on the server will affect all clients, not just the current one.
 
