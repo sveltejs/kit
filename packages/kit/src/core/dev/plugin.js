@@ -209,7 +209,7 @@ export async function create_plugin(config, cwd) {
 								config.kit.paths.base + req.url,
 								config.kit.trailingSlash
 							);
-							return not_found(res, `Not found (did you mean ${suggestion}?)`);
+							return not_found(res, `Not found (did you mean <a href="${suggestion}">${suggestion}</a>?)`);
 						}
 
 						/** @type {Partial<import('types').Hooks>} */
