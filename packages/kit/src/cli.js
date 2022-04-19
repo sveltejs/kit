@@ -153,7 +153,6 @@ prog
 prog
 	.command('package')
 	.describe('Create a package')
-	.option('-d, --dir', 'Destination directory', 'package')
 	.action(async () => {
 		try {
 			const config = await load_config();

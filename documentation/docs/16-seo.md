@@ -22,7 +22,7 @@ SvelteKit redirects pathnames with trailing slashes to ones without (or vice ver
 
 ### Manual setup
 
-#### `title` and `meta`
+#### &lt;title&gt; and &lt;meta&gt; 
 
 Every page should have well-written and unique `<title>` and `<meta name="description">` elements inside a [`<svelte:head>`](https://svelte.dev/docs#template-syntax-svelte-head). Guidance on how to write descriptive titles and descriptions, along with other suggestions on making content understandable by search engines, can be found on Google's [Lighthouse SEO audits](https://web.dev/lighthouse-seo/) documentation.
 

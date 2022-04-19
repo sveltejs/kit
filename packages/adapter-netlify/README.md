@@ -7,7 +7,7 @@ If you're using [adapter-auto](../adapter-auto), you don't need to install this 
 ## Installation
 
 ```bash
-npm i -D @sveltejs/adapter-netlify@next
+npm i -D @sveltejs/adapter-netlify
 ```
 
 You can then configure it inside of `svelte.config.js`:

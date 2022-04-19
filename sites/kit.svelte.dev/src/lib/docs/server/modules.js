@@ -1,4 +1,4 @@
-import { modules } from '../../../../../../documentation/types.js';
+import { modules } from '../../../../../../packages/kit/docs/types.js';
 
 /** @param {'types' | 'exports'} kind */
 export function render_modules(kind) {

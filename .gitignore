@@ -12,3 +12,4 @@ yarn.lock
 .cloudflare
 .pnpm-debug.log
 .netlify
+.turbo

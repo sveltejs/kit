@@ -26,8 +26,7 @@
 		following into your command line and following the prompts:
 	</p>
 
-	<!-- TODO lose the @next! -->
-	<pre>npm init svelte@next</pre>
+	<pre>npm init svelte</pre>
 
 	<p>
 		The page you're looking at is purely static HTML, with no client-side interactivity needed.

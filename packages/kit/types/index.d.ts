@@ -7,10 +7,7 @@ import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
 	CspDirectives,
-	ErrorLoadInput,
 	JSONValue,
-	LoadInput,
-	LoadOutput,
 	Logger,
 	MaybePromise,
 	Prerendered,
@@ -157,13 +154,6 @@ export interface Config {
 	preprocess?: any;
 }
 
-export interface ErrorLoad<
-	Params extends Record<string, string> = Record<string, string>,
-	Props extends Record<string, any> = Record<string, any>
-> {
-	(input: ErrorLoadInput<Params>): MaybePromise<LoadOutput<Props>>;
-}
-
 export interface ExternalFetch {
 	(req: Request): Promise<Response>;
 }
@@ -196,6 +186,31 @@ export interface Load<
 	(input: LoadInput<Params, InputProps>): MaybePromise<LoadOutput<OutputProps>>;
 }
 
+export interface LoadInput<
+	Params extends Record<string, string> = Record<string, string>,
+	Props extends Record<string, any> = Record<string, any>
+> {
+	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
+	params: Params;
+	props: Props;
+	routeId: string | null;
+	session: App.Session;
+	stuff: Partial<App.Stuff>;
+	url: URL;
+	status: number | null;
+	error: Error | null;
+}
+
+export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {
+	status?: number;
+	error?: string | Error;
+	redirect?: string;
+	props?: Props;
+	stuff?: Partial<App.Stuff>;
+	maxage?: number;
+	dependencies?: string[];
+}
+
 export interface Navigation {
 	from: URL;
 	to: URL;
@@ -223,14 +238,14 @@ export interface RequestHandler<
 	Params extends Record<string, string> = Record<string, string>,
 	Output extends ResponseBody = ResponseBody
 > {
-	(event: RequestEvent<Params>): RequestHandlerOutput<Output>;
+	(event: RequestEvent<Params>): MaybePromise<RequestHandlerOutput<Output>>;
 }
 
-export type RequestHandlerOutput<Output extends ResponseBody = ResponseBody> = MaybePromise<{
+export interface RequestHandlerOutput<Output extends ResponseBody = ResponseBody> {
 	status?: number;
 	headers?: Headers | Partial<ResponseHeaders>;
 	body?: Output;
-}>;
+}
 
 export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
 

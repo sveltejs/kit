@@ -88,7 +88,9 @@ export default function create_manifest_data({
 		const extension = valid_extensions.find((ext) => file.endsWith(ext));
 		if (!extension) return;
 
-		const id = file.slice(0, -extension.length).replace(/\/?index(\.[a-z]+)?$/, '$1');
+		const id = file
+			.slice(0, -extension.length)
+			.replace(/(?:^|\/)index((?:@[a-zA-Z0-9_-]+)?(?:\.[a-z]+)?)?$/, '$1');
 		const project_relative = `${routes_base}/${file}`;
 
 		const segments = id.split('/');

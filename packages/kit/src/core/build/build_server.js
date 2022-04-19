@@ -22,7 +22,6 @@ import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';
-import * as user_hooks from ${s(hooks)};
 
 const template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace('%svelte.head%', '" + head + "')
@@ -192,6 +191,17 @@ export async function build_server(
 	const default_config = {
 		build: {
 			target: 'es2020'
+		},
+		ssr: {
+			// when developing against the Kit src code, we want to ensure that
+			// our dependencies are bundled so that apps don't need to install
+			// them as peerDependencies
+			noExternal: process.env.BUNDLED
+				? []
+				: Object.keys(
+						JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8'))
+							.devDependencies
+				  )
 		}
 	};
 

@@ -9,10 +9,7 @@ export function normalize(loaded) {
 		const status = loaded.status;
 
 		if (!loaded.error && has_error_status) {
-			return {
-				status: status || 500,
-				error: new Error()
-			};
+			return { status: status || 500, error: new Error() };
 		}
 
 		const error = typeof loaded.error === 'string' ? new Error(loaded.error) : loaded.error;
@@ -48,6 +45,18 @@ export function normalize(loaded) {
 			return {
 				status: 500,
 				error: new Error('"redirect" property returned from load() must be a string')
+			};
+		}
+	}
+
+	if (loaded.dependencies) {
+		if (
+			!Array.isArray(loaded.dependencies) ||
+			loaded.dependencies.some((dep) => typeof dep !== 'string')
+		) {
+			return {
+				status: 500,
+				error: new Error('"dependencies" property returned from load() must be of type string[]')
 			};
 		}
 	}
