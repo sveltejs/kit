@@ -58,17 +58,7 @@ export async function build(config, cwd = process.cwd()) {
 
 		if (!config.kit.package.files(normalized)) {
 			const base = svelte_ext ? file : file.slice(0, -ext.length);
-			for (const e of ['.d.ts', '.d.mts', '.d.cts']) {
-				const dts_path = path.join(dir, base + e);
-				if (fs.existsSync(dts_path)) {
-					fs.unlinkSync(dts_path);
-
-					const dir = path.dirname(dts_path);
-					if (fs.readdirSync(dir).length === 0) {
-						fs.rmdirSync(dir);
-					}
-				}
-			}
+			unlink_all(dir, normalized, base);
 			continue;
 		}
 
