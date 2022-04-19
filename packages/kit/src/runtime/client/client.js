@@ -121,9 +121,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 	});
 	ready = true;
 
-	/** Keeps tracks of multiple navigations caused by redirects during rendering */
-	let navigating = 0;
-
 	let router_enabled = true;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
@@ -897,8 +894,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		update_scroll_positions(current_history_index);
 
 		accepted();
-
-		navigating++;
 
 		if (started) {
 			stores.navigating.set({
