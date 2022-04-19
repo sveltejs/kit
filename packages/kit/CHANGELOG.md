@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.316
+
+### Patch Changes
+
+- `invalidate` with `predicate` function ([#4636](https://github.com/sveltejs/kit/pull/4636))
+
 ## 1.0.0-next.315
 
 ### Patch Changes
