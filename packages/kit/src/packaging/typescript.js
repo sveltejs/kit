@@ -7,8 +7,9 @@ import { resolve_lib_alias, write } from './utils.js';
 /**
  * @param {import('types').ValidatedConfig} config
  * @param {string} cwd
+ * @param {import('./types').Source[]} source
  */
-export async function emit_dts(config, cwd) {
+export async function emit_dts(config, cwd, source) {
 	if (!config.kit.package.emitTypes) return;
 
 	const tmp = `${config.kit.outDir}/package/types`;
@@ -23,8 +24,26 @@ export async function emit_dts(config, cwd) {
 		declarationDir: path.relative(cwd, tmp)
 	});
 
+	const excluded = new Set();
+
+	// remove excluded files, and files that conflict with hand-written .d.ts
+	for (const { name, base } of source) {
+		if (name.endsWith('.d.ts')) {
+			excluded.add(name);
+		}
+
+		if (!config.kit.package.files(name)) {
+			excluded.add(base + '.d.ts');
+			excluded.add(base + '.d.mts');
+			excluded.add(base + '.d.cts');
+		}
+	}
+
 	// resolve $lib alias (TODO others), copy into package dir
 	for (const file of walk(tmp)) {
+		// don't overwrite hand-written .d.ts files
+		if (excluded.has(file)) continue;
+
 		const source = fs.readFileSync(path.join(tmp, file), 'utf8');
 		write(path.join(config.kit.package.dir, file), resolve_lib_alias(file, source, config));
 	}

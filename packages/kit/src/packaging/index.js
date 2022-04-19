@@ -3,8 +3,8 @@ import * as path from 'path';
 import colors from 'kleur';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
-import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
-import { resolve_lib_alias, strip_lang_tags, unlink_all, write } from './utils.js';
+import { mkdirp, rimraf } from '../utils/filesystem.js';
+import { resolve_lib_alias, scan, strip_lang_tags, unlink_all, write } from './utils.js';
 import { emit_dts, transpile_ts } from './typescript.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
@@ -15,7 +15,7 @@ const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmig
  */
 export async function build(config, cwd = process.cwd()) {
 	const { lib } = config.kit.files;
-	const { dir, emitTypes } = config.kit.package;
+	const { dir } = config.kit.package;
 
 	if (!fs.existsSync(lib)) {
 		throw new Error(`${lib} does not exist`);
@@ -24,10 +24,9 @@ export async function build(config, cwd = process.cwd()) {
 	rimraf(dir);
 	mkdirp(dir); // TODO https://github.com/sveltejs/kit/issues/2333
 
-	// Generate type definitions first so hand-written types can overwrite generated ones
-	await emit_dts(config, cwd);
+	const source = scan(config);
 
-	const files = walk(lib);
+	await emit_dts(config, cwd, source);
 
 	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
 
@@ -39,61 +38,51 @@ export async function build(config, cwd = process.cwd()) {
 
 	/** @type {Record<string, string>} */
 	const clashes = {};
-	let contains_svelte_files = false;
+	const contains_svelte_files = source.some((file) => file.is_svelte);
 
-	for (const file of files) {
-		const ext = path.extname(file);
-		const normalized = file.replace(/\\/g, '/');
-		const svelte_ext = config.extensions.find((ext) => file.endsWith(ext)); // unlike `ext`, could be e.g. `.svelte.md`
+	for (const file of source) {
+		if (!file.included) continue;
 
-		if (!config.kit.package.files(normalized)) {
-			const base = svelte_ext ? file : file.slice(0, -ext.length);
-			unlink_all(dir, normalized, base);
-			continue;
-		}
+		const ext = path.extname(file.name);
+		const normalized = file.name;
+		const svelte_ext = config.extensions.find((ext) => file.name.endsWith(ext)); // unlike `ext`, could be e.g. `.svelte.md`
 
-		const filename = path.join(lib, file);
-		const source = fs.readFileSync(filename);
+		const filename = path.join(lib, file.name);
 
-		/** @type {string} */
-		let out_file;
+		let out_file = file.name;
 
 		/** @type {string | Buffer} */
-		let out_contents;
+		let out_contents = fs.readFileSync(filename);
 
 		if (svelte_ext) {
 			// it's a Svelte component
-			contains_svelte_files = true;
-			out_file = file.slice(0, -svelte_ext.length) + '.svelte';
-			out_contents = source.toString('utf-8');
-			out_contents = config.preprocess
-				? strip_lang_tags((await preprocess(out_contents, config.preprocess, { filename })).code)
-				: out_contents;
+			out_file = file.name.slice(0, -svelte_ext.length) + '.svelte';
+			out_contents = out_contents.toString('utf-8');
+
+			if (config.preprocess) {
+				const preprocessed = (await preprocess(out_contents, config.preprocess, { filename })).code;
+				out_contents = strip_lang_tags(preprocessed);
+			}
+
 			out_contents = resolve_lib_alias(out_file, out_contents, config);
-		} else if (ext === '.ts' && file.endsWith('.d.ts')) {
+		} else if (file.name.endsWith('.d.ts')) {
 			// TypeScript's declaration emit won't copy over the d.ts files, so we do it here
-			out_file = file;
-			out_contents = source.toString('utf-8');
+			out_contents = out_contents.toString('utf-8');
 			out_contents = resolve_lib_alias(out_file, out_contents, config);
 			if (fs.existsSync(path.join(dir, out_file))) {
 				console.warn(
-					'Found already existing file from d.ts generation for ' +
-						out_file +
-						'. This file will be overwritten.'
+					`Found already existing file from d.ts generation for ${out_file}. This file will be overwritten.`
 				);
 			}
 		} else if (ext === '.ts') {
-			out_file = file.slice(0, -'.ts'.length) + '.js';
-			out_contents = await transpile_ts(filename, source.toString('utf-8'));
+			out_file = file.base + '.js';
+			out_contents = await transpile_ts(filename, out_contents.toString('utf-8'));
 			out_contents = resolve_lib_alias(out_file, out_contents, config);
-		} else {
-			out_file = file;
-			out_contents = source;
 		}
 
 		write(path.join(dir, out_file), out_contents);
 
-		if (config.kit.package.exports(normalized)) {
+		if (file.exported) {
 			const original = `$lib/${normalized}`;
 			const entry = `./${out_file.replace(/\\/g, '/')}`;
 			const key = entry.replace(/\/index\.js$|(\/[^/]+)\.js$/, '$1');
@@ -160,13 +149,13 @@ export async function build(config, cwd = process.cwd()) {
 /**
  * @param {import('types').ValidatedConfig} config
  */
-export async function watch(config) {
+export async function watch(config, cwd = process.cwd()) {
 	await build(config);
 
 	const { lib } = config.kit.files;
 	const { dir } = config.kit.package;
 
-	chokidar.watch(lib, { ignoreInitial: true }).on('all', (event, file) => {
+	chokidar.watch(lib, { ignoreInitial: true }).on('all', async (event, file) => {
 		const normalized = path.posix.relative(lib, file);
 
 		if (!config.kit.package.files(normalized)) return;
@@ -177,7 +166,6 @@ export async function watch(config) {
 
 		if (event === 'unlink' || event === 'add') {
 			console.log('TODO update package.json exports', { event, file });
-			console.log('TODO emit_dts', { event, file });
 		}
 
 		if (event === 'unlink') {
@@ -185,8 +173,9 @@ export async function watch(config) {
 		}
 
 		if (event === 'add' || event === 'change') {
-			console.log('TODO emit_dts', { event, file });
 			console.log('TODO process file', { event, file });
 		}
+
+		await emit_dts(config, cwd, scan(config));
 	});
 }

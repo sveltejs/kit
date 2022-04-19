@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { mkdirp } from '../utils/filesystem.js';
+import { mkdirp, walk } from '../utils/filesystem.js';
 
 /**
  * Resolves the `$lib` alias.
@@ -97,4 +97,26 @@ export function unlink_all(output, file, base) {
 export function write(file, contents) {
 	mkdirp(path.dirname(file));
 	fs.writeFileSync(file, contents);
+}
+
+/**
+ * @param {import('types').ValidatedConfig} config
+ * @returns {import('./types').Source[]}
+ */
+export function scan(config) {
+	return walk(config.kit.files.lib).map((file) => {
+		const name = file.replace(/\\/g, '/');
+
+		const svelte_extension = config.extensions.find((ext) => name.endsWith(ext));
+
+		const base = svelte_extension ? name : name.slice(0, -path.extname(name).length);
+
+		return {
+			name,
+			base,
+			included: config.kit.package.files(name),
+			exported: config.kit.package.exports(name),
+			is_svelte: !!svelte_extension
+		};
+	});
 }
