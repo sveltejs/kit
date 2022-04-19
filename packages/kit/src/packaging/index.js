@@ -4,7 +4,7 @@ import colors from 'kleur';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
-import { resolve_lib_alias, strip_lang_tags, write } from './utils.js';
+import { resolve_lib_alias, strip_lang_tags, unlink_all, write } from './utils.js';
 import { emit_dts, transpile_ts } from './typescript.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
@@ -187,7 +187,30 @@ export async function build(config, cwd = process.cwd()) {
 export async function watch(config) {
 	await build(config);
 
-	chokidar.watch(config.kit.files.lib, { ignoreInitial: true }).on('all', () => {
-		build(config);
+	const { lib } = config.kit.files;
+	const { dir } = config.kit.package;
+
+	chokidar.watch(lib, { ignoreInitial: true }).on('all', (event, file) => {
+		const normalized = path.posix.relative(lib, file);
+
+		if (!config.kit.package.files(normalized)) return;
+
+		const ext = path.extname(normalized);
+		const svelte_ext = config.extensions.find((ext) => normalized.endsWith(ext)); // unlike `ext`, could be e.g. `.svelte.md`
+		const base = svelte_ext ? normalized : normalized.slice(0, -ext.length);
+
+		if (event === 'unlink' || event === 'add') {
+			console.log('TODO update package.json exports', { event, file });
+			console.log('TODO emit_dts', { event, file });
+		}
+
+		if (event === 'unlink') {
+			unlink_all(dir, normalized, base);
+		}
+
+		if (event === 'add' || event === 'change') {
+			console.log('TODO emit_dts', { event, file });
+			console.log('TODO process file', { event, file });
+		}
 	});
 }
