@@ -172,7 +172,11 @@ export async function watch(config, cwd = process.cwd()) {
 
 	return {
 		watcher,
-		settled: () => new Promise((fulfil) => fulfillers.push(fulfil))
+		settled: () =>
+			new Promise((fulfil, reject) => {
+				fulfillers.push(fulfil);
+				setTimeout(() => reject(new Error('Timed out')), 1000);
+			})
 	};
 }
 

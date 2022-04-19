@@ -1,4 +1,5 @@
 {
+  "name": "watch",
   "type": "module",
   "exports": {
     "./package.json": "./package.json",
