@@ -18,18 +18,18 @@ export async function build(config, cwd = process.cwd()) {
 		throw new Error(`${config.kit.files.lib} does not exist`);
 	}
 
-	const package_dir = config.kit.package.dir;
+	const { dir, emitTypes } = config.kit.package;
 
-	rimraf(package_dir);
-	mkdirp(package_dir); // TODO https://github.com/sveltejs/kit/issues/2333
+	rimraf(dir);
+	mkdirp(dir); // TODO https://github.com/sveltejs/kit/issues/2333
 
-	if (config.kit.package.emitTypes) {
+	if (emitTypes) {
 		// Generate type definitions first so hand-written types can overwrite generated ones
-		await emit_dts(config, path.relative(cwd, package_dir));
+		await emit_dts(config, path.relative(cwd, dir));
 		// Resolve aliases, TS leaves them as-is
-		const files = walk(package_dir);
+		const files = walk(dir);
 		for (const file of files) {
-			const filename = path.join(package_dir, file);
+			const filename = path.join(dir, file);
 			const source = fs.readFileSync(filename, 'utf8');
 			fs.writeFileSync(filename, resolve_lib_alias(file, source, config));
 		}
@@ -57,7 +57,7 @@ export async function build(config, cwd = process.cwd()) {
 		if (!config.kit.package.files(normalized)) {
 			const base = svelte_ext ? file : file.slice(0, -ext.length);
 			for (const e of ['.d.ts', '.d.mts', '.d.cts']) {
-				const dts_path = path.join(package_dir, base + e);
+				const dts_path = path.join(dir, base + e);
 				if (fs.existsSync(dts_path)) {
 					fs.unlinkSync(dts_path);
 
@@ -93,7 +93,7 @@ export async function build(config, cwd = process.cwd()) {
 			out_file = file;
 			out_contents = source.toString('utf-8');
 			out_contents = resolve_lib_alias(out_file, out_contents, config);
-			if (fs.existsSync(path.join(package_dir, out_file))) {
+			if (fs.existsSync(path.join(dir, out_file))) {
 				console.warn(
 					'Found already existing file from d.ts generation for ' +
 						out_file +
@@ -109,7 +109,7 @@ export async function build(config, cwd = process.cwd()) {
 			out_contents = source;
 		}
 
-		write(path.join(package_dir, out_file), out_contents);
+		write(path.join(dir, out_file), out_contents);
 
 		if (config.kit.package.exports(normalized)) {
 			const original = `$lib/${normalized}`;
@@ -156,7 +156,7 @@ export async function build(config, cwd = process.cwd()) {
 		}
 	}
 
-	write(path.join(package_dir, 'package.json'), JSON.stringify(pkg, null, 2));
+	write(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {
 		const lowercased = file.toLowerCase();
@@ -166,12 +166,12 @@ export async function build(config, cwd = process.cwd()) {
 		const full_path = path.join(cwd, pathname);
 		if (fs.lstatSync(full_path).isDirectory()) continue; // just to be sure
 
-		const package_path = path.join(package_dir, pathname);
+		const package_path = path.join(dir, pathname);
 		if (!fs.existsSync(package_path)) fs.copyFileSync(full_path, package_path);
 	}
 
 	const from = path.relative(cwd, config.kit.files.lib);
-	const to = path.relative(cwd, config.kit.package.dir);
+	const to = path.relative(cwd, dir);
 	console.log(colors.bold().green(`${from} -> ${to}`));
 	console.log(`Successfully built '${pkg.name}' package. To publish it to npm:`);
 	console.log(colors.bold().cyan(`  cd ${to}`));
