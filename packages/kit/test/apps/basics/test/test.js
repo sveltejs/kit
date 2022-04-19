@@ -1384,6 +1384,15 @@ test.describe.parallel('Load', () => {
 		expect(cookies.answer).toBe('42');
 		expect(cookies.doubled).toBe('84');
 	});
+
+	test('fetching a non-existent resource in root layout fails without hanging', async ({
+		page
+	}) => {
+		await page.goto('/errors/error-in-layout');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Error"'
+		);
+	});
 });
 
 test.describe.parallel('Method overrides', () => {
