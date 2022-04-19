@@ -1,18 +1,33 @@
+import * as fs from 'fs';
 import * as path from 'path';
 import { createRequire } from 'module';
+import { copy, mkdirp, rimraf, walk } from '../utils/filesystem.js';
+import { resolve_lib_alias, write } from './utils.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
- * @param {string} out
+ * @param {string} cwd
  */
-export async function emit_dts(config, out) {
+export async function emit_dts(config, cwd) {
+	if (!config.kit.package.emitTypes) return;
+
+	const tmp = `${config.kit.outDir}/package/types`;
+	rimraf(tmp);
+	mkdirp(tmp);
+
 	const require = createRequire(import.meta.url);
 	const emit = await try_load_svelte2tsx();
 	await emit({
 		libRoot: config.kit.files.lib,
 		svelteShimsPath: require.resolve('svelte2tsx/svelte-shims.d.ts'),
-		declarationDir: out
+		declarationDir: path.relative(cwd, tmp)
 	});
+
+	// resolve $lib alias (TODO others), copy into package dir
+	for (const file of walk(tmp)) {
+		const source = fs.readFileSync(path.join(tmp, file), 'utf8');
+		write(path.join(config.kit.package.dir, file), resolve_lib_alias(file, source, config));
+	}
 }
 
 async function try_load_svelte2tsx() {

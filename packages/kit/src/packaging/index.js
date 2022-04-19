@@ -24,18 +24,8 @@ export async function build(config, cwd = process.cwd()) {
 	rimraf(dir);
 	mkdirp(dir); // TODO https://github.com/sveltejs/kit/issues/2333
 
-	if (emitTypes) {
-		// Generate type definitions first so hand-written types can overwrite generated ones
-		await emit_dts(config, path.relative(cwd, dir));
-
-		// Resolve aliases, TS leaves them as-is
-		const files = walk(dir);
-		for (const file of files) {
-			const filename = path.join(dir, file);
-			const source = fs.readFileSync(filename, 'utf8');
-			fs.writeFileSync(filename, resolve_lib_alias(file, source, config));
-		}
-	}
+	// Generate type definitions first so hand-written types can overwrite generated ones
+	await emit_dts(config, cwd);
 
 	const files = walk(lib);
 
@@ -134,16 +124,12 @@ export async function build(config, cwd = process.cwd()) {
 				pkg.svelte = svelte_export;
 			} else {
 				console.warn(
-					'Cannot generate a "svelte" entry point because ' +
-						'the "." entry in "exports" is not a string. ' +
-						'If you set it by hand, please also set one of the options as a "svelte" entry point\n'
+					'Cannot generate a "svelte" entry point because the "." entry in "exports" is not a string. If you set it by hand, please also set one of the options as a "svelte" entry point\n'
 				);
 			}
 		} else {
 			console.warn(
-				'Cannot generate a "svelte" entry point because ' +
-					'the "." entry in "exports" is missing. ' +
-					'Please specify one or set a "svelte" entry point yourself\n'
+				'Cannot generate a "svelte" entry point because the "." entry in "exports" is missing. Please specify one or set a "svelte" entry point yourself\n'
 			);
 		}
 	}
