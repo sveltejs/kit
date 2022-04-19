@@ -5,6 +5,11 @@ on:
     branches:
       - master
 
+env:
+  TURBO_CACHE_KEY: ubuntu-latest-16  # reuse cache key from ci workflow
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
 jobs:
   release:
     # prevents this action from running on forks
@@ -27,7 +32,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      - run: pnpm turbo run build
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
@@ -40,7 +45,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           UPDATE_TEMPLATE_SSH_KEY: ${{ secrets.UPDATE_TEMPLATE_SSH_KEY }}
 
-      - name: Update latest tag on published packages  # only needed until we release 1.0.0 and exit pre-release mode
+      - name: Update latest tag on published packages # only needed until we release 1.0.0 and exit pre-release mode
         if: steps.changesets.outputs.published == 'true'
         # wait a bit and then run "npm dist-tag add package@version latest" for all published packages
         env:

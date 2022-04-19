@@ -1,5 +1,29 @@
 # create-svelte
 
+## 2.0.0-next.130
+
+### Patch Changes
+
+- Ignore .turbo directory when building templates ([#4638](https://github.com/sveltejs/kit/pull/4638))
+
+* Disable type checking by default for non-typescript projects. ([#4621](https://github.com/sveltejs/kit/pull/4621))
+
+- [breaking] move non-essential TypeScript compilerOptions into user-editable config ([#4633](https://github.com/sveltejs/kit/pull/4633))
+
+## 2.0.0-next.129
+
+### Patch Changes
+
+- type check exception handling on form action ([#4532](https://github.com/sveltejs/kit/pull/4532))
+
+* Update broken documentation links for `App` namespaces ([#4627](https://github.com/sveltejs/kit/pull/4627))
+
+## 2.0.0-next.128
+
+### Patch Changes
+
+- [chore] upgrade to Playwright 1.21.0 ([#4601](https://github.com/sveltejs/kit/pull/4601))
+
 ## 2.0.0-next.127
 
 ### Patch Changes

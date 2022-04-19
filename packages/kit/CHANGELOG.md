@@ -1,5 +1,51 @@
 # @sveltejs/kit
 
+## 1.0.0-next.316
+
+### Patch Changes
+
+- `invalidate` with `predicate` function ([#4636](https://github.com/sveltejs/kit/pull/4636))
+
+## 1.0.0-next.315
+
+### Patch Changes
+
+- Apply set-cookie headers from page dependencies ([#4588](https://github.com/sveltejs/kit/pull/4588))
+
+* Include disallowed method name in 405 response, include Allow header ([#4614](https://github.com/sveltejs/kit/pull/4614))
+
+- apply updated `props.page` when update or goto page ([#4392](https://github.com/sveltejs/kit/pull/4392))
+
+* rename `data-svelte` attribute to `data-sveltekit` ([#4641](https://github.com/sveltejs/kit/pull/4641))
+
+## 1.0.0-next.314
+
+### Patch Changes
+
+- Custom `load` `dependencies` in `LoadOutput` ([#4536](https://github.com/sveltejs/kit/pull/4536))
+
+* Made LoadInput and LoadOutput types public, merged ErrorLoad and Load declarations ([#4515](https://github.com/sveltejs/kit/pull/4515))
+
+## 1.0.0-next.313
+
+### Patch Changes
+
+- add `platform` to requests triggered by `fetch` in `load` during SSR ([#4599](https://github.com/sveltejs/kit/pull/4599))
+
+## 1.0.0-next.312
+
+### Patch Changes
+
+- Only render fallback when prerendering is enabled ([#4604](https://github.com/sveltejs/kit/pull/4604))
+
+## 1.0.0-next.311
+
+### Patch Changes
+
+- Skip client-side navigation for links with sveltekit:reload ([#4545](https://github.com/sveltejs/kit/pull/4545))
+
+* [breaking] Skip prerendering for rel="external" links ([#4545](https://github.com/sveltejs/kit/pull/4545))
+
 ## 1.0.0-next.310
 
 ### Patch Changes

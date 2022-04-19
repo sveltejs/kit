@@ -44,13 +44,13 @@ SvelteKit's `load` receives an implementation of `fetch`, which has the followin
 > - should not reference `window`, `document`, or any browser-specific objects
 > - should not directly reference any API keys or secrets, which will be exposed to the client, but instead call an endpoint that uses any required secrets
 
-It is recommended that you not store pre-request state in global variables, but instead use them only for cross-cutting concerns such as caching and holding database connections.
+It is recommended that you not store per-request state in global variables, but instead use them only for cross-cutting concerns such as caching and holding database connections.
 
 > Mutating any shared state on the server will affect all clients, not just the current one.
 
 ### Input
 
-The `load` function receives an object containing six fields — `url`, `params`, `props`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `url`, `session` or `stuff` are used in the function, they will be re-run whenever their value changes, and likewise for the individual properties of `params`.
+The `load` function receives an object containing eight fields — `url`, `params`, `props`, `fetch`, `session`, `stuff`, `status`, and `error`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `url`, `session` or `stuff` are used in the function, they will be re-run whenever their value changes, and likewise for the individual properties of `params`.
 
 > Note that destructuring parameters in the function declaration is enough to count as using them.
 
@@ -93,6 +93,14 @@ If the page you're loading has an endpoint, the data returned from it is accessi
 
 `stuff` is passed from layouts to descendant layouts and pages, and can be filled with anything else you need to make available. For the root `__layout.svelte` component, it is equal to `{}`, but if that component's `load` function returns an object with a `stuff` property, it will be available to subsequent `load` functions.
 
+#### status
+
+`status` is the HTTP status code when rendering an error page, or `null` otherwise.
+
+#### error
+
+`error` is the error that was thrown (or returned from a previous `load`) when rendering an error page, or `null` otherwise.
+
 ### Output
 
 If you return a Promise from `load`, SvelteKit will delay rendering until the promise resolves. The return value has several properties, all optional:
@@ -126,3 +134,9 @@ If the `load` function returns a `props` object, the props will be passed to the
 This will be merged with any existing `stuff` and passed to the `load` functions of subsequent layout and page components.
 
 The combined `stuff` is available to components using the [page store](/docs/modules#$app-stores) as `$page.stuff`, providing a mechanism for pages to pass data 'upward' to layouts.
+
+#### dependencies
+
+An array of strings representing URLs the page depends on, which can subsequently be used with [`invalidate`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun. You only need to add them to `dependencies` if you're using a custom API client; URLs loaded with the provided `fetch` function are added automatically.
+
+URLs can be absolute or relative to the page being loaded, and must be [encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding).

@@ -1,9 +1,12 @@
+import * as cookie from 'cookie';
+import * as set_cookie_parser from 'set-cookie-parser';
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { create_prerendering_url_proxy } from './utils.js';
 import { is_pojo, lowercase_keys, normalize_request_method } from '../utils.js';
 import { coalesce_to_error } from '../../../utils/error.js';
+import { domain_matches, path_matches } from './cookie.js';
 
 /**
  * @param {{
@@ -41,10 +44,10 @@ export async function load_node({
 	/** @type {Array<import('./types').Fetched>} */
 	const fetched = [];
 
-	/**
-	 * @type {string[]}
-	 */
-	let set_cookie_headers = [];
+	const cookies = cookie.parse(event.request.headers.get('cookie') || '');
+
+	/** @type {import('set-cookie-parser').Cookie[]} */
+	const new_cookies = [];
 
 	/** @type {import('types').LoadOutput} */
 	let loaded;
@@ -60,7 +63,9 @@ export async function load_node({
 		: {};
 
 	if (shadow.cookies) {
-		set_cookie_headers.push(...shadow.cookies);
+		shadow.cookies.forEach((header) => {
+			new_cookies.push(set_cookie_parser.parseString(header));
+		});
 	}
 
 	if (shadow.error) {
@@ -74,7 +79,7 @@ export async function load_node({
 			redirect: shadow.redirect
 		};
 	} else if (module.load) {
-		/** @type {import('types').LoadInput | import('types').ErrorLoadInput} */
+		/** @type {import('types').LoadInput} */
 		const load_input = {
 			url: state.prerender ? create_prerendering_url_proxy(event.url) : event.url,
 			params: event.params,
@@ -166,8 +171,22 @@ export async function load_node({
 					if (opts.credentials !== 'omit') {
 						uses_credentials = true;
 
-						const cookie = event.request.headers.get('cookie');
 						const authorization = event.request.headers.get('authorization');
+
+						// combine cookies from the initiating request with any that were
+						// added via set-cookie
+						const combined_cookies = { ...cookies };
+
+						for (const cookie of new_cookies) {
+							if (!domain_matches(event.url.hostname, cookie.domain)) continue;
+							if (!path_matches(resolved, cookie.path)) continue;
+
+							combined_cookies[cookie.name] = cookie.value;
+						}
+
+						const cookie = Object.entries(combined_cookies)
+							.map(([name, value]) => `${name}=${value}`)
+							.join('; ');
 
 						if (cookie) {
 							opts.headers.set('cookie', cookie);
@@ -193,9 +212,8 @@ export async function load_node({
 						new Request(new URL(requested, event.url).href, { ...opts, credentials: undefined }),
 						options,
 						{
-							getClientAddress: state.getClientAddress,
-							initiator: route,
-							prerender: state.prerender
+							...state,
+							initiator: route
 						}
 					);
 
@@ -232,6 +250,15 @@ export async function load_node({
 					response = await options.hooks.externalFetch.call(null, external_request);
 				}
 
+				const set_cookie = response.headers.get('set-cookie');
+				if (set_cookie) {
+					new_cookies.push(
+						...set_cookie_parser
+							.splitCookiesString(set_cookie)
+							.map((str) => set_cookie_parser.parseString(str))
+					);
+				}
+
 				const proxy = new Proxy(response, {
 					get(response, key, _receiver) {
 						async function text() {
@@ -240,9 +267,8 @@ export async function load_node({
 							/** @type {import('types').ResponseHeaders} */
 							const headers = {};
 							for (const [key, value] of response.headers) {
-								if (key === 'set-cookie') {
-									set_cookie_headers = set_cookie_headers.concat(value);
-								} else if (key !== 'etag') {
+								// TODO skip others besides set-cookie and etag?
+								if (key !== 'set-cookie' && key !== 'etag') {
 									headers[key] = value;
 								}
 							}
@@ -309,7 +335,9 @@ export async function load_node({
 
 				return proxy;
 			},
-			stuff: { ...stuff }
+			stuff: { ...stuff },
+			status: is_error ? status ?? null : null,
+			error: is_error ? error ?? null : null
 		};
 
 		if (options.dev) {
@@ -319,11 +347,6 @@ export async function load_node({
 					throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
 				}
 			});
-		}
-
-		if (is_error) {
-			/** @type {import('types').ErrorLoadInput} */ (load_input).status = status;
-			/** @type {import('types').ErrorLoadInput} */ (load_input).error = error;
 		}
 
 		loaded = await module.load.call(null, load_input);
@@ -366,7 +389,11 @@ export async function load_node({
 		loaded: normalize(loaded),
 		stuff: loaded.stuff || stuff,
 		fetched,
-		set_cookie_headers,
+		set_cookie_headers: new_cookies.map((new_cookie) => {
+			const { name, value, ...options } = new_cookie;
+			// @ts-expect-error
+			return cookie.serialize(name, value, options);
+		}),
 		uses_credentials
 	};
 }

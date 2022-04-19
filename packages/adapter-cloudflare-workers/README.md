@@ -53,7 +53,6 @@ Then configure your sites build directory and your account-details in the config
 ```toml
 account_id = 'YOUR ACCOUNT_ID'
 zone_id    = 'YOUR ZONE_ID' # optional, if you don't specify this a workers.dev subdomain will be used.
-site = {bucket = "./build", entry-point = "./workers-site"}
 
 type = "javascript"
 
@@ -62,7 +61,12 @@ type = "javascript"
 command = ""
 
 [build.upload]
-format = "service-worker"
+format = "modules"
+main = "./worker.mjs"
+
+[site]
+bucket = "./.cloudflare/assets"
+entry-point = "./.cloudflare/worker"
 ```
 
 It's recommended that you add the `build` and `workers-site` folders (or whichever other folders you specify) to your `.gitignore`.

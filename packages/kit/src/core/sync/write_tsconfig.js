@@ -38,32 +38,23 @@ export function write_tsconfig(config) {
 		JSON.stringify(
 			{
 				compilerOptions: {
-					moduleResolution: 'node',
-					module: 'es2020',
-					lib: ['es2020', 'DOM'],
-					target: 'es2020',
-					// svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
-					// to enforce using \`import type\` instead of \`import\` for Types.
-					importsNotUsedAsValues: 'error',
-					// TypeScript doesn't know about import usages in the template because it only sees the
-					// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
-					preserveValueImports: true,
-					isolatedModules: true,
-					resolveJsonModule: true,
-					// To have warnings/errors of the Svelte compiler at the correct position,
-					// enable source maps by default.
-					sourceMap: true,
-					esModuleInterop: true,
-					skipLibCheck: true,
-					forceConsistentCasingInFileNames: true,
+					// generated options
 					baseUrl: config_relative('.'),
-					allowJs: true,
-					checkJs: true,
 					paths: {
 						$lib: [project_relative(config.kit.files.lib)],
 						'$lib/*': [project_relative(config.kit.files.lib + '/*')]
 					},
-					rootDirs: [config_relative('.'), './types']
+					rootDirs: [config_relative('.'), './types'],
+
+					// essential options
+					// svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
+					// to enforce using \`import type\` instead of \`import\` for Types.
+					importsNotUsedAsValues: 'error',
+					// Vite compiles modules one at a time
+					isolatedModules: true,
+					// TypeScript doesn't know about import usages in the template because it only sees the
+					// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
+					preserveValueImports: true
 				},
 				include,
 				exclude: [config_relative('node_modules/**'), './**']

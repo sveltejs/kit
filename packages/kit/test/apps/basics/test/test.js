@@ -221,6 +221,35 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
 
+	test('scroll is restored after hitting the back button for an in-app cross-document navigation', async ({
+		page,
+		clicknav,
+		back
+	}) => {
+		await page.goto('/scroll/cross-document/a');
+		await page.locator('[href="/scroll/cross-document/b"]').scrollIntoViewIfNeeded();
+
+		const y1 = await page.evaluate(() => scrollY);
+
+		await page.click('[href="/scroll/cross-document/b"]');
+		expect(await page.textContent('h1')).toBe('b');
+		await page.waitForSelector('body.started');
+
+		await clicknav('[href="/scroll/cross-document/c"]');
+		expect(await page.textContent('h1')).toBe('c');
+
+		await back(); // client-side back
+		await page.goBack(); // native back
+		expect(await page.textContent('h1')).toBe('a');
+		await page.waitForSelector('body.started');
+
+		await page.waitForTimeout(250); // needed for the test to fail reliably without the fix
+
+		const y2 = await page.evaluate(() => scrollY);
+
+		expect(Math.abs(y2 - y1)).toBeLessThan(10); // we need a few pixels wiggle room, because browsers
+	});
+
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
 		page,
 		in_view
@@ -876,11 +905,11 @@ test.describe.parallel('Errors', () => {
 	// TODO before we implemented route fallthroughs, and there was a 1:1
 	// regex:route relationship, it was simple to say 'method not implemented
 	// for this endpoint'. now it's a little tricker. does a 404 suffice?
-	test.skip('unhandled http method', async ({ request }) => {
+	test('unhandled http method', async ({ request }) => {
 		const response = await request.put('/errors/invalid-route-response');
 
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(501);
-		expect(await response.text()).toMatch('PUT is not implemented');
+		expect(response.status()).toBe(405);
+		expect(await response.text()).toMatch('PUT method not allowed');
 	});
 
 	test('error in endpoint', async ({ page, read_errors }) => {
@@ -1197,6 +1226,15 @@ test.describe.parallel('Load', () => {
 			await app.invalidate('/load/change-detection/data.json');
 			expect(await page.textContent('h1')).toBe('layout loads: 3');
 			expect(await page.textContent('h2')).toBe('x: b: 2');
+
+			await app.invalidate('custom:change-detection-layout');
+			expect(await page.textContent('h1')).toBe('layout loads: 4');
+			expect(await page.textContent('h2')).toBe('x: b: 2');
+
+			await page.click('button');
+			await page.waitForFunction('window.invalidated');
+			expect(await page.textContent('h1')).toBe('layout loads: 5');
+			expect(await page.textContent('h2')).toBe('x: b: 2');
 		}
 	});
 
@@ -1330,6 +1368,21 @@ test.describe.parallel('Load', () => {
 		expect(await page.textContent('p')).toBe('Data: Hello from Index!');
 		await clicknav('[href="/load/props/about"]');
 		expect(await page.textContent('p')).toBe('Data: undefined');
+	});
+
+	test('server-side fetch respects set-cookie header', async ({ page, context }) => {
+		await context.clearCookies();
+
+		await page.goto('/load/set-cookie-fetch');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+
+		const cookies = {};
+		for (const cookie of await context.cookies()) {
+			cookies[cookie.name] = cookie.value;
+		}
+
+		expect(cookies.answer).toBe('42');
+		expect(cookies.doubled).toBe('84');
 	});
 });
 
@@ -1508,7 +1561,7 @@ test.describe.parallel('Page options', () => {
 			expect(await page.textContent('h1')).toBe('content was rendered');
 		} else {
 			expect(await page.evaluate(() => document.querySelector('h1'))).toBe(null);
-			expect(await page.evaluate(() => document.querySelector('style[data-svelte]'))).toBe(null);
+			expect(await page.evaluate(() => document.querySelector('style[data-sveltekit]'))).toBe(null);
 		}
 	});
 
@@ -1571,11 +1624,11 @@ test.describe.parallel('$app/stores', () => {
 		await page.goto('/store');
 
 		expect(await page.textContent('h1')).toBe('Test');
-		expect(await page.textContent('h2')).toBe('Calls: 1');
+		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 2' : 'Calls: 1');
 
 		await clicknav('a[href="/store/result"]');
 		expect(await page.textContent('h1')).toBe('Result');
-		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 1' : 'Calls: 0');
+		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 2' : 'Calls: 0');
 
 		const oops = await page.evaluate(() => window.oops);
 		expect(oops).toBeUndefined();
@@ -1602,6 +1655,26 @@ test.describe.parallel('$app/stores', () => {
 		expect(await page.textContent('#store-stuff')).toBe(
 			JSON.stringify({ name: 'SvelteKit', value: 789, error: 'Params = yyy' })
 		);
+	});
+
+	test('should load stuff after reloading by goto', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		const stuff1 = JSON.stringify({ name: 'SvelteKit', value: 789, error: 'uh oh' });
+		const stuff2 = JSON.stringify({ name: 'SvelteKit', value: 123, foo: true });
+		await page.goto('/store/stuff/www');
+
+		await clicknav('a[href="/store/stuff/foo"]');
+		expect(await page.textContent('#store-stuff')).toBe(stuff1);
+
+		await clicknav('#reload-button');
+		expect(await page.textContent('#store-stuff')).toBe(javaScriptEnabled ? stuff2 : stuff1);
+
+		await clicknav('a[href="/store/stuff/zzz"]');
+		await clicknav('a[href="/store/stuff/foo"]');
+		expect(await page.textContent('#store-stuff')).toBe(stuff2);
 	});
 
 	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
@@ -1910,6 +1983,21 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
+	test('does not attempt client-side navigation to links with sveltekit:reload', async ({
+		baseURL,
+		page
+	}) => {
+		await page.goto('/routing');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/b"]')]);
+		expect(await page.textContent('h1')).toBe('b');
+		expect(requests).toContain(`${baseURL}/routing/b`);
+	});
+
 	test('allows reserved words as route names', async ({ page }) => {
 		await page.goto('/routing/const');
 		expect(await page.textContent('h1')).toBe('reserved words are okay as routes');
@@ -2044,8 +2132,7 @@ test.describe.parallel('Routing', () => {
 		server.close();
 	});
 
-	// skipping this test because it causes a bunch of failures locally
-	test.skip('watch new route in dev', async ({ page, javaScriptEnabled }) => {
+	test('watch new route in dev', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/routing');
 
 		if (!process.env.DEV || javaScriptEnabled) {
@@ -2057,10 +2144,11 @@ test.describe.parallel('Routing', () => {
 		const route = 'bar' + new Date().valueOf();
 		const content = 'Hello new route';
 		const __dirname = path.dirname(fileURLToPath(import.meta.url));
-		const filePath = path.join(__dirname, `${route}.svelte`);
+		const filePath = path.join(__dirname, `../src/routes/routing/${route}.svelte`);
 
 		try {
 			fs.writeFileSync(filePath, `<h1>${content}</h1>`);
+			await page.waitForTimeout(250); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
 			await page.goto(`/routing/${route}`);
 
 			expect(await page.textContent('h1')).toBe(content);

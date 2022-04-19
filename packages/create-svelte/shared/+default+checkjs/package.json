@@ -1,5 +1,5 @@
 {
 	"devDependencies": {
-		"@playwright/test": "next"
+		"@types/cookie": "^0.4.1"
 	}
 }
