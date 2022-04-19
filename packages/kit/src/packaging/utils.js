@@ -111,12 +111,85 @@ export function scan(config) {
 
 		const base = svelte_extension ? name : name.slice(0, -path.extname(name).length);
 
+		const dest = svelte_extension
+			? name.slice(0, -svelte_extension.length) + '.svelte'
+			: name.endsWith('.d.ts')
+			? name
+			: name.endsWith('.ts')
+			? name.slice(0, -3) + '.js'
+			: name;
+
 		return {
 			name,
+			dest,
 			base,
 			included: config.kit.package.files(name),
 			exported: config.kit.package.exports(name),
 			is_svelte: !!svelte_extension
 		};
 	});
+}
+
+/**
+ * @param {string} cwd
+ * @param {import('./types').Source[]} source
+ */
+export function generate_pkg(cwd, source) {
+	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
+
+	delete pkg.scripts;
+	pkg.type = 'module';
+
+	pkg.exports = {
+		'./package.json': './package.json',
+		...pkg.exports
+	};
+
+	/** @type {Record<string, string>} */
+	const clashes = {};
+
+	for (const file of source) {
+		if (file.included && file.exported) {
+			const original = `$lib/${file.name}`;
+			const entry = `./${file.dest}`;
+			const key = entry.replace(/\/index\.js$|(\/[^/]+)\.js$/, '$1');
+
+			if (clashes[key]) {
+				throw new Error(
+					`Duplicate "${key}" export. Please remove or rename either ${clashes[key]} or ${original}`
+				);
+			}
+
+			if (!pkg.exports[key]) {
+				pkg.exports[key] = entry;
+			}
+
+			clashes[key] = original;
+		}
+	}
+
+	if (!pkg.svelte && source.some((file) => file.is_svelte)) {
+		// Several heuristics in Kit/vite-plugin-svelte to tell Vite to mark Svelte packages
+		// rely on the "svelte" property. Vite/Rollup/Webpack plugin can all deal with it.
+		// See https://github.com/sveltejs/kit/issues/1959 for more info and related threads.
+		if (pkg.exports['.']) {
+			const svelte_export =
+				typeof pkg.exports['.'] === 'string'
+					? pkg.exports['.']
+					: pkg.exports['.'].import || pkg.exports['.'].default;
+			if (svelte_export) {
+				pkg.svelte = svelte_export;
+			} else {
+				console.warn(
+					'Cannot generate a "svelte" entry point because the "." entry in "exports" is not a string. If you set it by hand, please also set one of the options as a "svelte" entry point\n'
+				);
+			}
+		} else {
+			console.warn(
+				'Cannot generate a "svelte" entry point because the "." entry in "exports" is missing. Please specify one or set a "svelte" entry point yourself\n'
+			);
+		}
+	}
+
+	return pkg;
 }

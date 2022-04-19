@@ -4,7 +4,14 @@ import colors from 'kleur';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf } from '../utils/filesystem.js';
-import { resolve_lib_alias, scan, strip_lang_tags, unlink_all, write } from './utils.js';
+import {
+	generate_pkg,
+	resolve_lib_alias,
+	scan,
+	strip_lang_tags,
+	unlink_all,
+	write
+} from './utils.js';
 import { emit_dts, transpile_ts } from './typescript.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
@@ -28,23 +35,13 @@ export async function build(config, cwd = process.cwd()) {
 
 	await emit_dts(config, cwd, source);
 
-	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
-
-	delete pkg.scripts;
-	pkg.type = 'module';
-
-	/** @type {Record<string, string>} */
-	const generated = { './package.json': './package.json' };
-
-	/** @type {Record<string, string>} */
-	const clashes = {};
-	const contains_svelte_files = source.some((file) => file.is_svelte);
+	const pkg = generate_pkg(cwd, source);
+	write(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
 
 	for (const file of source) {
 		if (!file.included) continue;
 
 		const ext = path.extname(file.name);
-		const normalized = file.name;
 		const svelte_ext = config.extensions.find((ext) => file.name.endsWith(ext)); // unlike `ext`, could be e.g. `.svelte.md`
 
 		const filename = path.join(lib, file.name);
@@ -81,49 +78,7 @@ export async function build(config, cwd = process.cwd()) {
 		}
 
 		write(path.join(dir, out_file), out_contents);
-
-		if (file.exported) {
-			const original = `$lib/${normalized}`;
-			const entry = `./${out_file.replace(/\\/g, '/')}`;
-			const key = entry.replace(/\/index\.js$|(\/[^/]+)\.js$/, '$1');
-
-			if (clashes[key]) {
-				throw new Error(
-					`Duplicate "${key}" export. Please remove or rename either ${clashes[key]} or ${original}`
-				);
-			}
-
-			generated[key] = entry;
-			clashes[key] = original;
-		}
 	}
-
-	pkg.exports = { ...generated, ...pkg.exports };
-
-	if (!pkg.svelte && contains_svelte_files) {
-		// Several heuristics in Kit/vite-plugin-svelte to tell Vite to mark Svelte packages
-		// rely on the "svelte" property. Vite/Rollup/Webpack plugin can all deal with it.
-		// See https://github.com/sveltejs/kit/issues/1959 for more info and related threads.
-		if (pkg.exports['.']) {
-			const svelte_export =
-				typeof pkg.exports['.'] === 'string'
-					? pkg.exports['.']
-					: pkg.exports['.'].import || pkg.exports['.'].default;
-			if (svelte_export) {
-				pkg.svelte = svelte_export;
-			} else {
-				console.warn(
-					'Cannot generate a "svelte" entry point because the "." entry in "exports" is not a string. If you set it by hand, please also set one of the options as a "svelte" entry point\n'
-				);
-			}
-		} else {
-			console.warn(
-				'Cannot generate a "svelte" entry point because the "." entry in "exports" is missing. Please specify one or set a "svelte" entry point yourself\n'
-			);
-		}
-	}
-
-	write(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {
 		const lowercased = file.toLowerCase();
