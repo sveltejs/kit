@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { mkdirp } from '../utils/filesystem.js';
 
 /**
  * Resolves the `$lib` alias.
@@ -87,4 +88,13 @@ export function unlink_all(output, file, base) {
 			}
 		}
 	}
+}
+
+/**
+ * @param {string} file
+ * @param {Parameters<typeof fs.writeFileSync>[1]} contents
+ */
+export function write(file, contents) {
+	mkdirp(path.dirname(file));
+	fs.writeFileSync(file, contents);
 }

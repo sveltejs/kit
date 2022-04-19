@@ -4,7 +4,7 @@ import colors from 'kleur';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
-import { resolve_lib_alias, strip_lang_tags } from './utils.js';
+import { resolve_lib_alias, strip_lang_tags, write } from './utils.js';
 import { emit_dts, transpile_ts } from './typescript.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
@@ -27,6 +27,7 @@ export async function build(config, cwd = process.cwd()) {
 	if (emitTypes) {
 		// Generate type definitions first so hand-written types can overwrite generated ones
 		await emit_dts(config, path.relative(cwd, dir));
+
 		// Resolve aliases, TS leaves them as-is
 		const files = walk(dir);
 		for (const file of files) {
@@ -163,6 +164,7 @@ export async function build(config, cwd = process.cwd()) {
 		const lowercased = file.toLowerCase();
 		return essential_files.some((name) => lowercased.startsWith(name.toLowerCase()));
 	});
+
 	for (const pathname of whitelist) {
 		const full_path = path.join(cwd, pathname);
 		if (fs.lstatSync(full_path).isDirectory()) continue; // just to be sure
@@ -188,13 +190,4 @@ export async function watch(config) {
 	chokidar.watch(config.kit.files.lib, { ignoreInitial: true }).on('all', () => {
 		build(config);
 	});
-}
-
-/**
- * @param {string} file
- * @param {Parameters<typeof fs.writeFileSync>[1]} contents
- */
-function write(file, contents) {
-	mkdirp(path.dirname(file));
-	fs.writeFileSync(file, contents);
 }
