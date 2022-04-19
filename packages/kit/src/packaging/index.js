@@ -14,11 +14,12 @@ const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmig
  * @param {string} cwd
  */
 export async function build(config, cwd = process.cwd()) {
-	if (!fs.existsSync(config.kit.files.lib)) {
-		throw new Error(`${config.kit.files.lib} does not exist`);
-	}
-
+	const { lib } = config.kit.files;
 	const { dir, emitTypes } = config.kit.package;
+
+	if (!fs.existsSync(lib)) {
+		throw new Error(`${lib} does not exist`);
+	}
 
 	rimraf(dir);
 	mkdirp(dir); // TODO https://github.com/sveltejs/kit/issues/2333
@@ -35,7 +36,7 @@ export async function build(config, cwd = process.cwd()) {
 		}
 	}
 
-	const files = walk(config.kit.files.lib);
+	const files = walk(lib);
 
 	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
 
@@ -70,7 +71,7 @@ export async function build(config, cwd = process.cwd()) {
 			continue;
 		}
 
-		const filename = path.join(config.kit.files.lib, file);
+		const filename = path.join(lib, file);
 		const source = fs.readFileSync(filename);
 
 		/** @type {string} */
@@ -170,7 +171,7 @@ export async function build(config, cwd = process.cwd()) {
 		if (!fs.existsSync(package_path)) fs.copyFileSync(full_path, package_path);
 	}
 
-	const from = path.relative(cwd, config.kit.files.lib);
+	const from = path.relative(cwd, lib);
 	const to = path.relative(cwd, dir);
 	console.log(colors.bold().green(`${from} -> ${to}`));
 	console.log(`Successfully built '${pkg.name}' package. To publish it to npm:`);
