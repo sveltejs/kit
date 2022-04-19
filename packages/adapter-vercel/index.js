@@ -1,4 +1,4 @@
-import { fstat, mkdirSync, writeFileSync } from 'fs';
+import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, posix } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
