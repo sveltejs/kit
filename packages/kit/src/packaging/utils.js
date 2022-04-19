@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 
 /**
@@ -63,5 +64,27 @@ export function strip_lang_tags(content) {
 				tag.substring(idx + attributes.length)
 			);
 		});
+	}
+}
+
+/**
+ * Delete the specified file, plus any declaration files
+ * that belong with it
+ * @param {string} output
+ * @param {string} file
+ * @param {string} base
+ */
+export function unlink_all(output, file, base) {
+	for (const candidate of [file, `${base}.d.ts`, `${base}.d.mts`, `${base}.d.cts`]) {
+		const resolved = path.join(output, candidate);
+
+		if (fs.existsSync(resolved)) {
+			fs.unlinkSync(resolved);
+
+			const dir = path.dirname(resolved);
+			if (dir !== output && fs.readdirSync(dir).length === 0) {
+				fs.rmdirSync(dir);
+			}
+		}
 	}
 }
