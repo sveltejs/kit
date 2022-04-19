@@ -6,7 +6,7 @@ import prettier from 'prettier';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 
-import { build } from '../index.js';
+import { build, watch } from '../index.js';
 import { load_config } from '../../core/config/index.js';
 import { rimraf, walk } from '../../utils/filesystem.js';
 
@@ -144,6 +144,62 @@ test('create package with files.exclude settings', async () => {
 
 test('create package and resolves $lib alias', async () => {
 	await test_make_package('resolve-alias');
+});
+
+test('watches for changes', async () => {
+	const cwd = join(__dirname, 'watch');
+
+	const config = await load_config({ cwd });
+	config.kit.package.dir = resolve(cwd, config.kit.package.dir);
+
+	const { watcher, settled } = await watch(config, cwd);
+
+	/** @param {string} file */
+	function compare(file) {
+		assert.equal(read(`package/${file}`), read(`expected/${file}`));
+	}
+
+	/** @param {string} file */
+	function read(file) {
+		return fs.readFileSync(join(__dirname, 'watch', file), 'utf-8');
+	}
+
+	/**
+	 * @param {string} file
+	 * @param {string} data
+	 */
+	function write(file, data) {
+		return fs.writeFileSync(join(__dirname, 'watch', file), data);
+	}
+
+	try {
+		// completes initial build
+		compare('index.js');
+
+		// processes a .js file
+		write('src/lib/a.js', 'export const a = "a";');
+		await settled();
+		compare('a.js');
+		compare('a.d.ts');
+
+		// processes a .ts file
+		write('src/lib/b.ts', 'export const b = "b";');
+		await settled();
+		compare('b.js');
+		compare('b.d.ts');
+
+		// processes a Svelte file
+		write('src/lib/Test.svelte', '<script lang="ts">export let answer: number</script>');
+		await settled();
+		compare('Test.svelte');
+		compare('Test.svelte.d.ts');
+	} finally {
+		watcher.close();
+
+		fs.unlinkSync(join(__dirname, 'watch/src/lib/Test.svelte'));
+		fs.unlinkSync(join(__dirname, 'watch/src/lib/a.js'));
+		fs.unlinkSync(join(__dirname, 'watch/src/lib/b.ts'));
+	}
 });
 
 test.run();

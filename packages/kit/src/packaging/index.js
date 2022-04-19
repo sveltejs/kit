@@ -86,7 +86,7 @@ export async function build(config, cwd = process.cwd()) {
  * @param {import('types').ValidatedConfig} config
  */
 export async function watch(config, cwd = process.cwd()) {
-	await build(config);
+	await build(config, cwd);
 
 	const message = `\nWatching ${relative(cwd, config.kit.files.lib)} for changes...\n`;
 
@@ -98,10 +98,15 @@ export async function watch(config, cwd = process.cwd()) {
 	/** @type {Array<{ file: import('./types').File, type: string }>} */
 	const pending = [];
 
+	/** @type {Array<(value?: any) => void>} */
+	const fulfillers = [];
+
 	/** @type {NodeJS.Timeout} */
 	let timeout;
 
-	chokidar.watch(lib, { ignoreInitial: true }).on('all', async (type, path) => {
+	const watcher = chokidar.watch(lib, { ignoreInitial: true });
+
+	watcher.on('all', async (type, path) => {
 		const file = analyze(config, relative(lib, path));
 		if (!file.is_included) return;
 
@@ -160,8 +165,15 @@ export async function watch(config, cwd = process.cwd()) {
 			}
 
 			console.log(message);
+
+			fulfillers.forEach((fn) => fn());
 		}, 100);
 	});
+
+	return {
+		watcher,
+		settled: () => new Promise((fulfil) => fulfillers.push(fulfil))
+	};
 }
 
 /**
