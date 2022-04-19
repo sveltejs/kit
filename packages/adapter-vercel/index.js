@@ -124,7 +124,7 @@ export default function ({ external = [] } = {}) {
 				target: 'node14',
 				bundle: true,
 				platform: 'node',
-				format: 'esm',
+				format: 'cjs',
 				external
 			});
 
@@ -132,7 +132,8 @@ export default function ({ external = [] } = {}) {
 				`${dirs.lambda}/.vc-config.json`,
 				JSON.stringify({
 					runtime: 'nodejs14.x',
-					handler: 'handle'
+					handler: 'index.js',
+					launcherType: 'Nodejs'
 				})
 			);
 
