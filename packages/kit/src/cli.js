@@ -157,14 +157,9 @@ prog
 	.action(async ({ watch }) => {
 		try {
 			const config = await load_config();
-
 			const packaging = await import('./packaging/index.js');
 
-			if (watch) {
-				packaging.watch(config);
-			} else {
-				await packaging.build(config);
-			}
+			await (watch ? packaging.watch(config) : packaging.build(config));
 		} catch (error) {
 			handle_error(error);
 		}
