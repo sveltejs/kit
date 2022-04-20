@@ -59,6 +59,10 @@ export default function ({ split = false, edge = edgeSetInEnvVar } = {}) {
 			const esm = netlify_config?.functions?.node_bundler === 'esbuild';
 
 			if (edge) {
+				if (split) {
+					throw new Error('Cannot use `split: true` alongside `edge: true`');
+				}
+				
 				await generate_edge_functions({ builder });
 			} else {
 				await generate_lambda_functions({ builder, esm, split, publish });
