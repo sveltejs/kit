@@ -10,7 +10,9 @@ const prefix = `/${manifest.appDir}/`;
 const worker = {
 	async fetch(req, env, context) {
 		try {
-			let res = await Cache.lookup(req);
+			// skip cache if "cache-control: no-cache" in request
+			let pragma = req.headers.get('cache-control') || '';
+			let res = !pragma.includes('no-cache') && (await Cache.lookup(req));
 			if (res) return res;
 
 			let { pathname } = new URL(req.url);
@@ -57,8 +59,9 @@ const worker = {
 				}
 			}
 
-			// Writes to Cache only if allowed
-			return Cache.save(req, res, context);
+			// Writes to Cache only if allowed & specified
+			pragma = res.headers.get('cache-control');
+			return pragma ? Cache.save(req, res, context) : res;
 		} catch (e) {
 			return new Response('Error rendering route: ' + (e.message || e.toString()), { status: 500 });
 		}
