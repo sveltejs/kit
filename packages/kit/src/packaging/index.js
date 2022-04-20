@@ -104,13 +104,9 @@ export async function watch(config, cwd = process.cwd()) {
 	/** @type {NodeJS.Timeout} */
 	let timeout;
 
-	console.error(`watching ${lib}`);
-
 	const watcher = chokidar.watch(lib, { ignoreInitial: true });
 
 	watcher.on('all', async (type, path) => {
-		console.error(`type: ${type}, path: ${path}`);
-
 		const file = analyze(config, relative(lib, path));
 		if (!file.is_included) return;
 
@@ -170,7 +166,6 @@ export async function watch(config, cwd = process.cwd()) {
 
 			console.log(message);
 
-			console.error('settling');
 			fulfillers.forEach((fn) => fn());
 		}, 100);
 	});
@@ -179,7 +174,6 @@ export async function watch(config, cwd = process.cwd()) {
 		watcher,
 		settled: () =>
 			new Promise((fulfil, reject) => {
-				console.error('called settled()');
 				fulfillers.push(fulfil);
 				setTimeout(() => reject(new Error('Timed out')), 1000);
 			})
