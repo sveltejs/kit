@@ -38,7 +38,7 @@ export interface Builder {
 	 * Create entry points that map to individual functions
 	 * @param fn A function that groups a set of routes into an entry point
 	 */
-	createEntries(fn: (route: RouteDefinition) => AdapterEntry): void;
+	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
 	generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
 

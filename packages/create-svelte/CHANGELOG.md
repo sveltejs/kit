@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.131
+
+### Patch Changes
+
+- Make hooks file comply with TypeScript strictest mode ([#4667](https://github.com/sveltejs/kit/pull/4667))
+
 ## 2.0.0-next.130
 
 ### Patch Changes

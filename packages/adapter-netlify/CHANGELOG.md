@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.52
+
+### Patch Changes
+
+- Adds support for Netlify Edge Functions ([#4657](https://github.com/sveltejs/kit/pull/4657))
+
 ## 1.0.0-next.51
 
 ### Patch Changes

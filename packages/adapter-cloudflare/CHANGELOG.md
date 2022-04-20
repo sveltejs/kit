@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.18
+
+### Patch Changes
+
+- chore(cloudflare): more restrictive cache lookup & save conditions ([#4669](https://github.com/sveltejs/kit/pull/4669))
+
 ## 1.0.0-next.17
 
 ### Patch Changes

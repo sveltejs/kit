@@ -23,7 +23,7 @@ export interface AdapterEntry {
 	 */
 	complete: (entry: {
 		generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
-	}) => void;
+	}) => MaybePromise<void>;
 }
 
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
@@ -222,6 +222,7 @@ export interface ResolveOptions {
 export type ResponseHeaders = Record<string, string | number | string[]>;
 
 export interface RouteDefinition {
+	id: string;
 	type: 'page' | 'endpoint';
 	pattern: RegExp;
 	segments: RouteSegment[];
