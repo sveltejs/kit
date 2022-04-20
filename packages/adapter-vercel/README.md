@@ -6,6 +6,8 @@ If you're using [adapter-auto](../adapter-auto), you don't need to install this 
 
 ## Usage
 
+> The `edge` and `split` options depend on the Vercel Build Output API which is currently in beta. For now, you must opt in by visiting `https://vercel.com/svelte/[YOUR_PROJECT]/settings/environment-variables` and adding `ENABLE_VC_BUILD` with the value `1`.
+
 Add `"@sveltejs/adapter-vercel": "next"` to the `devDependencies` in your `package.json` and run `npm install`.
 
 Then in your `svelte.config.js`:
@@ -15,17 +17,24 @@ import vercel from '@sveltejs/adapter-vercel';
 
 export default {
 	kit: {
-		...
-		adapter: vercel(options)
+		// default options are shown
+		adapter: vercel({
+			// if true, will deploy the app using edge functions
+			// (https://vercel.com/docs/concepts/functions/edge-functions)
+			// rather than serverless functions
+			edge: false,
+
+			// an array of dependencies that esbuild should treat
+			// as external when bundling functions
+			external: [],
+
+			// if true, will split your app into multiple functions
+			// instead of creating a single one for the entire app
+			split: false
+		})
 	}
 };
 ```
-
-## Options
-
-You can pass an `options` argument, if necessary, with the following:
-
-- `external` — an array of dependencies that [esbuild](https://esbuild.github.io/api/#external) should treat as external
 
 ## Changelog
 
