@@ -122,7 +122,7 @@ async function v1(builder, external) {
 
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
-	builder.copy(files, tmp, {
+	builder.copy(`${files}/serverless.js`, `${tmp}/serverless.js`, {
 		replace: {
 			SERVER: `${relativePath}/index.js`,
 			MANIFEST: './manifest.js'
@@ -137,7 +137,7 @@ async function v1(builder, external) {
 	);
 
 	await esbuild.build({
-		entryPoints: [`${tmp}/entry.js`],
+		entryPoints: [`${tmp}/serverless.js`],
 		outfile: `${dirs.lambda}/index.js`,
 		target: 'node14',
 		bundle: true,
