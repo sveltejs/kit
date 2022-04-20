@@ -1,7 +1,9 @@
-import './shims';
+import { installFetch } from '@sveltejs/kit/install-fetch';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
+
+installFetch();
 
 const server = new Server(manifest);
 
