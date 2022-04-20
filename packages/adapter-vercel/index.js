@@ -366,7 +366,6 @@ async function v3(builder, external, edge, split) {
 		`${dir}/config.json`,
 		JSON.stringify({
 			version: 3,
-			target: 'production',
 			routes,
 			overrides
 		})
