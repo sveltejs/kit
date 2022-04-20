@@ -104,9 +104,13 @@ export async function watch(config, cwd = process.cwd()) {
 	/** @type {NodeJS.Timeout} */
 	let timeout;
 
+	console.error(`watching ${lib}`);
+
 	const watcher = chokidar.watch(lib, { ignoreInitial: true });
 
 	watcher.on('all', async (type, path) => {
+		console.error(`type: ${type}, path: ${path}`);
+
 		const file = analyze(config, relative(lib, path));
 		if (!file.is_included) return;
 
