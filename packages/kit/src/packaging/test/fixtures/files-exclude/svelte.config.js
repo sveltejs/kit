@@ -4,6 +4,7 @@ const config = {
 		package: {
 			files(filepath) {
 				const ext = filepath.slice(filepath.lastIndexOf('.') + 1);
+				console.error({ filepath, ext });
 				if (ext === 'js' || ext === 'svelte') return !filepath.includes('exclude');
 				return ext !== 'mjs';
 			}
