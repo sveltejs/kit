@@ -214,12 +214,6 @@ async function v3(builder, external, edge, split) {
 		functions: `${dir}/functions`
 	};
 
-	// TODO use `overrides` rather than `routes`
-	const prerendered_pages = Array.from(builder.prerendered.pages, ([src, page]) => ({
-		src,
-		dest: page.file
-	}));
-
 	const prerendered_redirects = Array.from(builder.prerendered.redirects, ([src, redirect]) => ({
 		src,
 		headers: {
@@ -231,7 +225,6 @@ async function v3(builder, external, edge, split) {
 	/** @type {any[]} */
 	const routes = [
 		...redirects[builder.config.kit.trailingSlash],
-		...prerendered_pages,
 		...prerendered_redirects,
 		{
 			src: `/${builder.config.kit.appDir}/.+`,
@@ -363,12 +356,19 @@ async function v3(builder, external, edge, split) {
 
 	builder.log.minor('Writing routes...');
 
+	/** @type {Record<string, { path: string }>} */
+	const overrides = {};
+	builder.prerendered.pages.forEach((page, src) => {
+		overrides[page.file] = { path: src.slice(1) };
+	});
+
 	write(
 		`${dir}/config.json`,
 		JSON.stringify({
 			version: 3,
 			target: 'production',
-			routes
+			routes,
+			overrides
 		})
 	);
 }
