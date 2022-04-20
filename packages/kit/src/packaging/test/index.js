@@ -169,8 +169,13 @@ test('watches for changes', async () => {
 	 * @param {string} data
 	 */
 	function write(file, data) {
-		console.error(`writing ${join(__dirname, 'watch', file)}`);
 		return fs.writeFileSync(join(__dirname, 'watch', file), data);
+	}
+
+	/** @param {string} file */
+	function remove(file) {
+		const filepath = join(__dirname, 'watch', file);
+		if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
 	}
 
 	try {
@@ -197,9 +202,9 @@ test('watches for changes', async () => {
 	} finally {
 		watcher.close();
 
-		fs.unlinkSync(join(__dirname, 'watch/src/lib/Test.svelte'));
-		fs.unlinkSync(join(__dirname, 'watch/src/lib/a.js'));
-		fs.unlinkSync(join(__dirname, 'watch/src/lib/b.ts'));
+		remove('src/lib/Test.svelte');
+		remove('src/lib/a.js');
+		remove('src/lib/b.ts');
 	}
 });
 

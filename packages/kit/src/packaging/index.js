@@ -166,6 +166,7 @@ export async function watch(config, cwd = process.cwd()) {
 
 			console.log(message);
 
+			console.error('settling');
 			fulfillers.forEach((fn) => fn());
 		}, 100);
 	});
@@ -174,6 +175,7 @@ export async function watch(config, cwd = process.cwd()) {
 		watcher,
 		settled: () =>
 			new Promise((fulfil, reject) => {
+				console.error('called settled()');
 				fulfillers.push(fulfil);
 				setTimeout(() => reject(new Error('Timed out')), 1000);
 			})
