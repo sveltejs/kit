@@ -240,10 +240,6 @@ async function v3(builder, external, edge, split) {
 		},
 		{
 			handle: 'filesystem'
-		},
-		{
-			src: '/.*',
-			dest: 'render'
 		}
 	];
 
