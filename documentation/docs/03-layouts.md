@@ -84,7 +84,10 @@ Named layouts are very powerful, but it can take a minute to get your head round
 
 #### Scoping
 
-Named layouts can be created at any depth, and will apply to any components in the same subtree. For example, `__layout-foo` will apply to `/x/one` and `/x/two`, but not `/x/three` or `/four`:
+Named layouts can be created at any depth, and will apply to any components in the same subtree. For example, 
+- `__layout-foo` will apply to `/x/one` and `/x/two` (Because they both include @foo in the route filename)
+- not `/x/three` (Because there is no @foo in the route filename)
+- not`/four` (Because it's not in the x/ subfolder where __layout-foo.svelte is located)
 
 ```
 src/routes/
