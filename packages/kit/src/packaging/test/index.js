@@ -169,6 +169,7 @@ test('watches for changes', async () => {
 	 * @param {string} data
 	 */
 	function write(file, data) {
+		console.error(`writing ${join(__dirname, 'watch', file)}`);
 		return fs.writeFileSync(join(__dirname, 'watch', file), data);
 	}
 
