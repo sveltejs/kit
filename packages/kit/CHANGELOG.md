@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.318
+
+### Patch Changes
+
+- fix broken AdapterEntry type ([#4674](https://github.com/sveltejs/kit/pull/4674))
+
 ## 1.0.0-next.317
 
 ### Patch Changes

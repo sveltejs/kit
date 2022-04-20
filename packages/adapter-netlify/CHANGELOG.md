@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.53
+
+### Patch Changes
+
+- Ensure build directory exists before writing \_redirects ([#4676](https://github.com/sveltejs/kit/pull/4676))
+
 ## 1.0.0-next.52
 
 ### Patch Changes

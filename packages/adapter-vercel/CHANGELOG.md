@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.49
+
+### Patch Changes
+
+- Remove unused target option from config.json ([#4678](https://github.com/sveltejs/kit/pull/4678))
+
 ## 1.0.0-next.48
 
 ### Patch Changes
