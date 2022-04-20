@@ -1,5 +1,5 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
-import { join, resolve, posix } from 'path';
+import { dirname, join, resolve, posix } from 'path';
 import { fileURLToPath } from 'url';
 import glob from 'tiny-glob/sync.js';
 import esbuild from 'esbuild';
@@ -234,6 +234,7 @@ function generate_lambda_functions({ builder, publish, split, esm }) {
 	if (existsSync('_redirects')) {
 		builder.copy('_redirects', redirect_file);
 	}
+	builder.mkdirp(dirname(redirect_file));
 	appendFileSync(redirect_file, `\n\n${redirects.join('\n')}`);
 }
 
