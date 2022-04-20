@@ -23,7 +23,7 @@ export interface AdapterEntry {
 	 */
 	complete: (entry: {
 		generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
-	}) => Promise<void>;
+	}) => MaybePromise<void>;
 }
 
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
