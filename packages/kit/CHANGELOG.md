@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.317
+
+### Patch Changes
+
+- Navigation to current URL is no longer a no-op ([#4664](https://github.com/sveltejs/kit/pull/4664))
+
+* builder.createEntries returns a promise that awaits complete() callbacks ([#4663](https://github.com/sveltejs/kit/pull/4663))
+
+- navigation store resets to null after aborted nav ([#4664](https://github.com/sveltejs/kit/pull/4664))
+
 ## 1.0.0-next.316
 
 ### Patch Changes

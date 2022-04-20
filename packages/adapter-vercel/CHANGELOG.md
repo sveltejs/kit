@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.48
+
+### Patch Changes
+
+- Support build output API, with edge functions and code-splitting ([#4663](https://github.com/sveltejs/kit/pull/4663))
+
 ## 1.0.0-next.47
 
 ### Patch Changes
