@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.319
+
+### Patch Changes
+
+- Add --watch flag to svelte-kit package ([#4658](https://github.com/sveltejs/kit/pull/4658))
+
 ## 1.0.0-next.318
 
 ### Patch Changes
