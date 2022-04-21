@@ -14,6 +14,8 @@
 			"files": [
 				"**/CHANGELOG.md",
 				"packages/kit/src/packaging/test/fixtures/**/expected/**/*",
+				"packages/kit/src/packaging/test/watch/expected/**/*",
+				"packages/kit/src/packaging/test/watch/package/**/*",
 				"packages/kit/src/core/build/prerender/fixtures/**/*"
 			],
 			"options": {

@@ -44,4 +44,6 @@ Like `svelte-kit dev`, it accepts the following options:
 
 > `svelte-kit package` is currently experimental and is not subject to Semantic Versioning rules. Non-backward compatible changes may occur in any future release.
 
-For package authors, see [packaging](/docs/packaging).
+For package authors, see [packaging](/docs/packaging). `svelte-kit package` accepts the following options:
+
+- `-w`/`--watch` — watch files in `src/lib` for changes and rebuild the package
