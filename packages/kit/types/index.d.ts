@@ -225,15 +225,19 @@ export interface ParamMatcher {
  */
 export interface RequestHandler<
 	Params extends Record<string, string> = Record<string, string>,
-	Output extends ResponseBody = ResponseBody
+	Output = ResponseBody
 > {
 	(event: RequestEvent<Params>): RequestHandlerOutput<Output>;
 }
 
-export type RequestHandlerOutput<Output extends ResponseBody = ResponseBody> = MaybePromise<{
+export type BodyValidator<T> = {
+	[P in keyof T]: T[P] extends JSONValue ? BodyValidator<T[P]> : never;
+};
+
+export type RequestHandlerOutput<Output = ResponseBody> = MaybePromise<{
 	status?: number;
 	headers?: Headers | Partial<ResponseHeaders>;
-	body?: Output;
+	body?: Output extends ResponseBody ? Output : BodyValidator<Output>;
 }>;
 
 export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
