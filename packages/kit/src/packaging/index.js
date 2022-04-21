@@ -22,7 +22,7 @@ export async function build(config, cwd = process.cwd()) {
 	}
 
 	rimraf(dir);
-	mkdirp(dir); // TODO https://github.com/sveltejs/kit/issues/2333
+	mkdirp(dir);
 
 	const files = scan(config);
 
