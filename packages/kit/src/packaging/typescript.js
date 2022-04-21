@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { createRequire } from 'module';
-import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
+import { posixify, mkdirp, rimraf, walk } from '../utils/filesystem.js';
 import { resolve_lib_alias, write } from './utils.js';
 
 /**
@@ -40,15 +40,20 @@ export async function emit_dts(config, cwd, files) {
 
 	// resolve $lib alias (TODO others), copy into package dir
 	for (const file of walk(tmp)) {
-		if (handwritten.has(file)) {
-			console.warn(`Using $lib/${file} instead of generated .d.ts file`);
+		const normalized = posixify(file);
+
+		if (handwritten.has(normalized)) {
+			console.warn(`Using $lib/${normalized} instead of generated .d.ts file`);
 		}
 
 		// don't overwrite hand-written .d.ts files
-		if (excluded.has(file)) continue;
+		if (excluded.has(normalized)) continue;
 
-		const source = fs.readFileSync(path.join(tmp, file), 'utf8');
-		write(path.join(config.kit.package.dir, file), resolve_lib_alias(file, source, config));
+		const source = fs.readFileSync(path.join(tmp, normalized), 'utf8');
+		write(
+			path.join(config.kit.package.dir, normalized),
+			resolve_lib_alias(normalized, source, config)
+		);
 	}
 }
 
