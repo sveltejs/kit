@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { mkdirp, walk } from '../utils/filesystem.js';
+import { posixify, mkdirp, walk } from '../utils/filesystem.js';
 
 /**
  * Resolves the `$lib` alias.
@@ -28,7 +28,7 @@ export function resolve_lib_alias(file, content, config) {
 
 		const full_path = path.join(config.kit.files.lib, file);
 		const full_import_path = path.join(config.kit.files.lib, import_path.slice('$lib/'.length));
-		let resolved = path.relative(path.dirname(full_path), full_import_path).replace(/\\/g, '/');
+		let resolved = posixify(path.relative(path.dirname(full_path), full_import_path));
 		resolved = resolved.startsWith('.') ? resolved : './' + resolved;
 		return match.replace(import_path, resolved);
 	};
@@ -72,7 +72,7 @@ export function scan(config) {
  * @returns {import('./types').File}
  */
 export function analyze(config, file) {
-	const name = file.replace(/\\/g, '/');
+	const name = posixify(file);
 
 	const svelte_extension = config.extensions.find((ext) => name.endsWith(ext));
 
