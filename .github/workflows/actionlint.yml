@@ -1,0 +1,21 @@
+name: Actionlint
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/*.yml'
+
+jobs:
+  actionlint:
+    name: Verify actions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Actionlint
+        env:
+          ACTIONLINT_VERSION: 1.6.12
+        run: |
+          wget -q -O- "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" | tar -x -z -C . actionlint && \
+          mv actionlint /usr/local/bin
+      - name: Run Actionlint
+        run: |
+          actionlint -format '{{range $err := .}}::error file={{$err.Filepath}},line={{$err.Line}},col={{$err.Column}}::{{$err.Message}}{{end}}' -ignore 'SC2016:' .github/workflows/*.yml
