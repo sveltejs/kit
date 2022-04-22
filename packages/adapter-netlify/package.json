@@ -23,7 +23,7 @@
 	],
 	"scripts": {
 		"dev": "rimraf files && rollup -cw",
-		"build": "rimraf files && rollup -c",
+		"build": "rimraf files && rollup -c && cp src/edge.js files/edge.js",
 		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"check": "tsc",
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
