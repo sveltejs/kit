@@ -119,9 +119,18 @@ If the page should redirect (because the page is deprecated, or the user needs t
 
 The `redirect` string should be a [properly encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding) URI. Both absolute and relative URIs are acceptable.
 
-#### maxage
+#### cache
 
-To cause pages to be cached, return a `number` describing the page's max age in seconds. The resulting cache header will include `private` if user data was involved in rendering the page (either via `session`, or because a credentialed `fetch` was made in a `load` function), but otherwise will include `public` so that it can be cached by CDNs.
+```json
+cache: {
+	"maxage": 300,
+	"private": false
+}
+```
+
+To cause pages to be cached, return a `cache` object containing a `maxage` property set to a `number` describing the page's max age in seconds. Optionally, also include a `boolean` `private` property indicating whether the resulting `Cache-Control` header should be `private` or `public` (meaning it can be cached by CDNs in addition to individual browsers).
+
+> If `cache.private` is `undefined`, SvelteKit will set it automatically using the following heuristic: if a `load` function makes a credentialled `fetch`, or the page uses `session`, the page is considered private.
 
 This only applies to pages, _not_ layouts.
 

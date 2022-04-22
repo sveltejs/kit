@@ -1,13 +1,18 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ session }) {
+	export async function load({ url, session }) {
 		const session_exists = !!session;
 
 		return {
 			props: {
 				session_exists
 			},
-			maxage: 30
+			cache: {
+				maxage: 30,
+				private: url.searchParams.has('private')
+					? url.searchParams.get('private') === 'true'
+					: undefined
+			}
 		};
 	}
 </script>

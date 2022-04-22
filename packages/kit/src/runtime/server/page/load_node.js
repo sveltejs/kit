@@ -355,14 +355,6 @@ export async function load_node({
 			// TODO do we still want to enforce this now that there's no fallthrough?
 			throw new Error(`load function must return a value${options.dev ? ` (${node.entry})` : ''}`);
 		}
-
-		// TODO remove for 1.0
-		// @ts-expect-error
-		if (loaded.fallthrough) {
-			throw new Error(
-				'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
-			);
-		}
 	} else if (shadow.body) {
 		loaded = {
 			props: shadow.body

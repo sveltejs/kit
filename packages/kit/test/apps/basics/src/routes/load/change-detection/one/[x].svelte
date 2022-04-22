@@ -11,7 +11,7 @@
 		}
 
 		return {
-			maxage: 5,
+			cache: { maxage: 5 },
 			props: {
 				x: params.x,
 				loads: count

@@ -441,9 +441,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		const leaf = filtered[filtered.length - 1];
-		const maxage = leaf.loaded && leaf.loaded.maxage;
+		const load_cache = leaf?.loaded?.cache;
 
-		if (maxage) {
+		if (load_cache) {
 			const key = url.pathname + url.search; // omit hash
 			let ready = false;
 
@@ -456,7 +456,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				clearTimeout(timeout);
 			};
 
-			const timeout = setTimeout(clear, maxage * 1000);
+			const timeout = setTimeout(clear, load_cache.maxage * 1000);
 
 			const unsubscribe = stores.session.subscribe(() => {
 				if (ready) clear();
@@ -685,14 +685,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 						}
 
 						if (node.loaded) {
-							// TODO remove for 1.0
-							// @ts-expect-error
-							if (node.loaded.fallthrough) {
-								throw new Error(
-									'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
-								);
-							}
-
 							if (node.loaded.error) {
 								status = node.loaded.status;
 								error = node.loaded.error;
