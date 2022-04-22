@@ -67,11 +67,6 @@ test('normalizes paths', () => {
 			ignore: '/foo/',
 			always: '/foo/',
 			never: '/foo'
-		},
-		'/foo.json': {
-			ignore: '/foo.json',
-			always: '/foo.json',
-			never: '/foo.json'
 		}
 	};
 
