@@ -99,7 +99,7 @@ export async function render_response({
 				session: {
 					...session,
 					subscribe: (fn) => {
-						is_private = true;
+						is_private = cache?.private ?? true;
 						return session.subscribe(fn);
 					}
 				},
