@@ -29,13 +29,13 @@ import toml from '@iarna/toml';
  */
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
-const src = fileURLToPath(new URL('./src', import.meta.url).href);
-const edgeSetInEnvVar =
+
+const edge_set_in_env_var =
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === 'true' ||
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === '1';
 
 /** @type {import('.')} */
-export default function ({ split = false, edge = edgeSetInEnvVar } = {}) {
+export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
 		name: '@sveltejs/adapter-netlify',
 
@@ -50,7 +50,7 @@ export default function ({ split = false, edge = edgeSetInEnvVar } = {}) {
 			builder.rimraf('.netlify/functions-internal');
 			builder.rimraf('.netlify/server');
 			builder.rimraf('.netlify/package.json');
-			builder.rimraf('.netlify/handler.js');
+			builder.rimraf('.netlify/serverless.js');
 
 			builder.log.minor(`Publishing to "${publish}"`);
 
@@ -114,7 +114,7 @@ async function generate_edge_functions({ builder }) {
 	builder.log.minor('Generating Edge Function...');
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
-	builder.copy(`${src}/edge_function.js`, `${tmp}/entry.js`, {
+	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
 		replace: {
 			'0SERVER': `${relativePath}/index.js`,
 			MANIFEST: './manifest.js'
@@ -205,8 +205,8 @@ function generate_lambda_functions({ builder, publish, split, esm }) {
 					});
 
 					const fn = esm
-						? `import { init } from '../handler.js';\n\nexport const handler = init(${manifest});\n`
-						: `const { init } = require('../handler.js');\n\nexports.handler = init(${manifest});\n`;
+						? `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`
+						: `const { init } = require('../serverless.js');\n\nexports.handler = init(${manifest});\n`;
 
 					writeFileSync(`.netlify/functions-internal/${name}.js`, fn);
 
@@ -223,8 +223,8 @@ function generate_lambda_functions({ builder, publish, split, esm }) {
 		});
 
 		const fn = esm
-			? `import { init } from '../handler.js';\n\nexport const handler = init(${manifest});\n`
-			: `const { init } = require('../handler.js');\n\nexports.handler = init(${manifest});\n`;
+			? `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`
+			: `const { init } = require('../serverless.js');\n\nexports.handler = init(${manifest});\n`;
 
 		writeFileSync('.netlify/functions-internal/render.js', fn);
 		redirects.push('* /.netlify/functions/render 200');
