@@ -86,14 +86,14 @@ Named layouts are very powerful, but it can take a minute to get your head round
 
 Named layouts can be created at any depth, and will apply to any components in the same subtree. For example, `__layout-foo` will apply to `/x/one` and `/x/two`, but not `/x/three` or `/four`:
 
-```
+```bash
 src/routes/
 ├ x/
 │ ├ __layout-foo.svelte
-│ ├ one@foo.svelte
-│ ├ two@foo.svelte
-│ └ three.svelte
-└ four@foo.svelte
+│ ├ one@foo.svelte       # ✅ page has `@foo`
+│ ├ two@foo.svelte       # ✅ page has `@foo`
+│ └ three.svelte         # ❌ page does not have `@foo`
+└ four@foo.svelte        # ❌ page has `@foo`, but __layout-foo is not 'in scope'
 ```
 
 #### Inheritance chains
