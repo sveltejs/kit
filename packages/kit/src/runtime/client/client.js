@@ -685,14 +685,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 						}
 
 						if (node.loaded) {
-							// TODO remove for 1.0
-							// @ts-expect-error
-							if (node.loaded.fallthrough) {
-								throw new Error(
-									'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
-								);
-							}
-
 							if (node.loaded.error) {
 								status = node.loaded.status;
 								error = node.loaded.error;
