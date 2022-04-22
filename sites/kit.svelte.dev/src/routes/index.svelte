@@ -1,7 +1,7 @@
 <script context="module">
 	export function load() {
 		return {
-			maxage: 60
+			cache: { maxage: 60 }
 		};
 	}
 </script>
