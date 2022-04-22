@@ -88,6 +88,12 @@ export default function ({ split = false, edge = edgeSetInEnvVar } = {}) {
  * @param {import('@sveltejs/kit').Builder} params.builder
  */
 async function generate_edge_functions({ builder }) {
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+	builder.rimraf(tmp);
+	builder.mkdirp(tmp);
+
+	builder.mkdirp('.netlify/edge-functions');
+
 	// Don't match the static directory
 	const pattern = '^/.*$';
 
@@ -104,11 +110,6 @@ async function generate_edge_functions({ builder }) {
 		],
 		version: 1
 	};
-	const tmp = builder.getBuildDirectory('netlify-tmp');
-
-	builder.rimraf(tmp);
-
-	builder.mkdirp('.netlify/edge-functions');
 
 	builder.log.minor('Generating Edge Function...');
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
