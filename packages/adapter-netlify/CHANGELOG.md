@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.55
+
+### Patch Changes
+
+- Fix adapter-netlify edge functions ([#4702](https://github.com/sveltejs/kit/pull/4702))
+
 ## 1.0.0-next.54
 
 ### Patch Changes
