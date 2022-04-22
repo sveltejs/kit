@@ -117,9 +117,14 @@ export type NormalizedLoadOutput = {
 	redirect?: string;
 	props?: Record<string, any> | Promise<Record<string, any>>;
 	stuff?: Record<string, any>;
-	maxage?: number;
+	cache?: NormalizedLoadOutputCache;
 	dependencies?: string[];
 };
+
+export interface NormalizedLoadOutputCache {
+	maxage: number;
+	private?: boolean;
+}
 
 export interface PageData {
 	type: 'page';
