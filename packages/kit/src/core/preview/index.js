@@ -92,16 +92,6 @@ export async function preview({ port, host, config, https: use_https = false }) 
 
 			const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
-			const normalized = normalize_path(pathname, config.kit.trailingSlash);
-
-			if (normalized !== pathname) {
-				res.writeHead(307, {
-					location: base + normalized + search
-				});
-				res.end();
-				return;
-			}
-
 			// only treat this as a page if it doesn't include an extension
 			if (pathname === '/' || /\/[^./]+\/?$/.test(pathname)) {
 				const file = join(

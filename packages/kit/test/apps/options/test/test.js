@@ -143,6 +143,14 @@ test.describe.parallel('trailingSlash', () => {
 		expect(page.url()).toBe(`${baseURL}/path-base/slash/child/`);
 		expect(await page.textContent('h2')).toBe('/slash/child/');
 	});
+
+	test('does not add trailing slash to endpoint', async ({ baseURL, request }) => {
+		const response = await request.get('/path-base/endpoint/');
+		expect(response.url()).toBe(`${baseURL}/path-base/endpoint`);
+		expect(await response.text()).toBe(
+			'this should be accessible as /path-base/endpoint, not /path-base/endpoint/'
+		);
+	});
 });
 
 test.describe.parallel('serviceWorker', () => {
