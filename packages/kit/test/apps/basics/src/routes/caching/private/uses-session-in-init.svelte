@@ -1,16 +1,12 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ url }) {
-		const privateParam = url.searchParams.get('private');
-		let privateCache = undefined;
-		if (privateParam) {
-			privateCache = privateParam === 'true' ? true : false;
-		}
-
 		return {
 			cache: {
 				maxage: 30,
-				private: privateCache
+				private: url.searchParams.has('private')
+					? url.searchParams.get('private') === 'true'
+					: undefined
 			}
 		};
 	}
