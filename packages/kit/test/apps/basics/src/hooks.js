@@ -44,6 +44,17 @@ export const handle = sequence(
 			ssr: !event.url.pathname.startsWith('/no-ssr'),
 			transformPage: event.url.pathname.startsWith('/transform-page')
 				? ({ html }) => html.replace('__REPLACEME__', 'Worked!')
+				: event.url.pathname === '/hoisted-script'
+				? ({ html }) => {
+						const scripts = [];
+
+						return html
+							.replace(/<script[^]+?<\/script>/g, (match) => {
+								scripts.push(match);
+								return '';
+							})
+							.replace('</head>', () => scripts.join('') + '</head>');
+				  }
 				: undefined
 		});
 		response.headers.append('set-cookie', 'name=SvelteKit; path=/; HttpOnly');

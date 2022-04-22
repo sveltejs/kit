@@ -241,7 +241,7 @@ export async function render_response({
 				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
 				.join('');
 
-			const attributes = ['type="module"', `data-hydrate="${target}"`];
+			const attributes = ['type="module"'];
 
 			csp.add_script(init_app);
 
@@ -249,7 +249,9 @@ export async function render_response({
 				attributes.push(`nonce="${csp.nonce}"`);
 			}
 
-			body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
+			body += `\n\t\t<span data-hydrate="${target}"/><script ${attributes.join(
+				' '
+			)}>${init_app}</script>`;
 
 			body += serialized_data
 				.map(({ url, body, response }) =>

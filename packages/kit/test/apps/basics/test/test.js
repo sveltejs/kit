@@ -2459,3 +2459,12 @@ test.describe.parallel('XSS', () => {
 		);
 	});
 });
+
+test.describe.parallel('Hydration', () => {
+	test('Hydration survives scripts being hoisted', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/hoisted-script');
+		expect(await page.textContent('body h1')).toBe(
+			`Hello from the ${javaScriptEnabled ? 'browser' : 'server'}`
+		);
+	});
+});
