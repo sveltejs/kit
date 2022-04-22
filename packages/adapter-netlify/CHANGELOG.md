@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.54
+
+### Patch Changes
+
+- Ensure tmp dir is created ([#4694](https://github.com/sveltejs/kit/pull/4694))
+
 ## 1.0.0-next.53
 
 ### Patch Changes
