@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.320
+
+### Patch Changes
+
+- [breaking] Replace `maxage` with `cache` in `LoadOutput` ([#4690](https://github.com/sveltejs/kit/pull/4690))
+
 ## 1.0.0-next.319
 
 ### Patch Changes
