@@ -84,7 +84,10 @@ Named layouts are very powerful, but it can take a minute to get your head round
 
 #### Scoping
 
-Named layouts can be created at any depth, and will apply to any components in the same subtree. For example, `__layout-foo` will apply to `/x/one` and `/x/two`, but not `/x/three` or `/four`:
+Named layouts can be created at any depth, and will apply to any components in the same subtree. For example, 
+- `__layout-foo` will apply to `/x/one` and `/x/two` (Because they both include @foo in the route filename)
+- not `/x/three` (Because there is no @foo in the route filename)
+- not`/four` (Because it's not in the x/ subfolder where __layout-foo.svelte is located)
 
 ```
 src/routes/
@@ -116,6 +119,7 @@ src/routes/
 > In the case where `__layout-root.svelte` contains a lone `<slot />`, this effectively means we're able to 'reset' to a blank layout for any page or nested layout in the app by adding `@root`.
 
 If no parent is specified, a layout will inherit from the nearest default (i.e. unnamed) layout _above_ it in the tree. In some cases, it's helpful for a named layout to inherit from a default layout _alongside_ it in the tree, such as `__layout-root.svelte` inheriting from `__layout.svelte`. We can do this by explicitly specifying `@default`, allowing `/x/y/one` and siblings to use the app's default layout without using `x/__layout.svelte`:
+
 
 ```diff
 src/routes/
