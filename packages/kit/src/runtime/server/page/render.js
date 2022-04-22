@@ -81,11 +81,7 @@ export async function render_response({
 			if (props) shadow_props = props;
 
 			cache = loaded?.cache;
-			if (cache?.private !== undefined) {
-				is_private = cache.private;
-			} else {
-				is_private = uses_credentials;
-			}
+			is_private = cache?.private ?? uses_credentials;
 		});
 
 		const session = writable($session);
