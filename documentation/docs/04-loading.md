@@ -121,10 +121,10 @@ The `redirect` string should be a [properly encoded](https://developer.mozilla.o
 
 #### cache
 
-```js
+```json
 cache: {
-  maxage: 300,
-  private: false,
+	"maxage": 300,
+	"private": false
 }
 ```
 
