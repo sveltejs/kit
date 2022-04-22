@@ -36,6 +36,9 @@ jobs:
         include:
           - node-version: 16
             os: ubuntu-latest
+        include:
+          - node-version: 18
+            os: ubuntu-latest
     env:
       TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
     steps:
