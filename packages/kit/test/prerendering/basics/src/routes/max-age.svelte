@@ -2,7 +2,7 @@
 	/** @type {import('@sveltejs/kit').Load} */
 	export function load() {
 		return {
-			maxage: 300
+			cache: { maxage: 300 }
 		};
 	}
 </script>

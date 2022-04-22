@@ -334,24 +334,72 @@ test.describe.parallel('Caching', () => {
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
 	});
 
-	test('sets cache-control: private if page uses session in load', async ({ request }) => {
+	test('sets cache-control: private if page uses session in load and cache.private is unset', async ({
+		request
+	}) => {
 		const response = await request.get('/caching/private/uses-session-in-load');
 		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 
-	test('sets cache-control: private if page uses session in init', async ({ request }) => {
+	test('sets cache-control: private if page uses session in init and cache.private is unset', async ({
+		request
+	}) => {
 		const response = await request.get('/caching/private/uses-session-in-init');
 		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 
-	test('sets cache-control: private if page uses fetch', async ({ request }) => {
+	test('sets cache-control: private if page uses fetch and cache.private is unset', async ({
+		request
+	}) => {
 		const response = await request.get('/caching/private/uses-fetch?credentials=include');
 		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 
-	test('sets cache-control: public if page uses fetch without credentials', async ({ request }) => {
+	test('sets cache-control: public if page uses fetch without credentials and cache.private is unset', async ({
+		request
+	}) => {
 		const response = await request.get('/caching/private/uses-fetch?credentials=omit');
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: private if cache.private is true', async ({ request }) => {
+		const response = await request.get('/caching/private/uses-cache-private?private=true');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
+	});
+
+	test('sets cache-control: public if cache.private is false', async ({ request }) => {
+		const response = await request.get('/caching/private/uses-cache-private?private=false');
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: public if page uses session in load and cache.private is false', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-session-in-load?private=false');
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: public if page uses session in init and cache.private is false', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-session-in-init?private=false');
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: public if page uses fetch and cache.private is false', async ({
+		request
+	}) => {
+		const response = await request.get(
+			'/caching/private/uses-fetch?credentials=include&private=false'
+		);
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: private if page uses fetch without credentials and cache.private is true', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-fetch?credentials=omit&private=true');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 });
 

@@ -1,8 +1,17 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load() {
+	export async function load({ url }) {
+		const privateParam = url.searchParams.get('private');
+		let privateCache = undefined;
+		if (privateParam) {
+			privateCache = privateParam === 'true' ? true : false;
+		}
+
 		return {
-			maxage: 30
+			cache: {
+				maxage: 30,
+				private: privateCache
+			}
 		};
 	}
 </script>
