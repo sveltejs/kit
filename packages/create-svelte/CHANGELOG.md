@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.132
+
+### Patch Changes
+
+- Remove default `<meta name="description">` and add separate descriptions to each page ([#4686](https://github.com/sveltejs/kit/pull/4686))
+
 ## 2.0.0-next.131
 
 ### Patch Changes
