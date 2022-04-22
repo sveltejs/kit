@@ -1,5 +1,5 @@
 import { api } from './_api';
-import type { RequestHandler } from './index';
+import type { RequestHandler } from './index.d';
 
 /** @type {import('./index').RequestHandler} */
 export const get: RequestHandler = async ({ locals }) => {
