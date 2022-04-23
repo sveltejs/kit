@@ -16,7 +16,6 @@ const config = {
 
 	kit: {
 		adapter: undefined,
-		amp: false,
 		appDir: '_app',
 		browser: {
 			hydrate: true,
@@ -91,10 +90,6 @@ export default config;
 ### adapter
 
 Required when running `svelte-kit build` and determines how the output is converted for different platforms. See [Adapters](/docs/adapters).
-
-### amp
-
-Enable [AMP](/docs/seo#amp) mode.
 
 ### appDir
 
