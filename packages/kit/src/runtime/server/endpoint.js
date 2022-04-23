@@ -75,7 +75,22 @@ export async function render_endpoint(event, mod) {
 			  });
 	}
 
-	const response = await handler(event);
+	let response;
+	try {
+		response = await handler(event);
+	} catch (err) {
+		const parsed_status = parseInt(err.status);
+		if (isNaN(parsed_status)) {
+			throw err;
+		}
+		response = {
+			status: parsed_status,
+			headers: err.headers,
+			body: err.body,
+			error: err.error
+		};
+	}
+
 	const preface = `Invalid response from route ${event.url.pathname}`;
 
 	if (typeof response !== 'object') {

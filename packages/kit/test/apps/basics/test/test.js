@@ -626,6 +626,12 @@ test.describe.parallel('Endpoints', () => {
 		expect(await response.json()).toEqual({});
 	});
 
+	test('200 status on thrown response', async ({ request }) => {
+		const response = await request.get('/endpoint-output/thrown-ok');
+		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
+		expect(await response.json()).toEqual({ hello: 'world' });
+	});
+
 	test('set-cookie without body', async ({ request }) => {
 		const response = await request.get('/endpoint-output/headers');
 		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
@@ -994,6 +1000,24 @@ test.describe.parallel('Errors', () => {
 
 		const contents = await page.textContent('#stack');
 		const location = /endpoint-not-ok\.svelte:12:9|endpoint-not-ok\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
+
+		if (process.env.DEV) {
+			expect(contents).toMatch(location);
+		} else {
+			expect(contents).not.toMatch(location);
+		}
+	});
+
+	test('thrown not ok response from endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-thrown-not-ok');
+
+		expect(read_errors('/errors/endpoint-not-ok.json')).toBeUndefined();
+
+		expect(res && res.status()).toBe(555);
+		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+
+		const contents = await page.textContent('#stack');
+		const location = /endpoint-thrown-not-ok\.svelte:12:9|endpoint-thrown-not-ok\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
