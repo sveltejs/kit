@@ -94,7 +94,6 @@ export interface Config {
 	extensions?: string[];
 	kit?: {
 		adapter?: Adapter;
-		amp?: boolean;
 		appDir?: string;
 		browser?: {
 			hydrate?: boolean;

@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
-test('amp is true', async ({ page, baseURL }) => {
+test('renders an AMP page', async ({ page, baseURL }) => {
 	await page.goto(`${baseURL}/valid`);
 
 	await expect(page.locator('h1')).toHaveText(
@@ -9,7 +9,6 @@ test('amp is true', async ({ page, baseURL }) => {
 	);
 
 	await expect(page.locator('h2')).toHaveText('The answer is 42');
-	await expect(page.locator('p')).toHaveText('amp is true');
 
 	// should not include serialized data
 	expect(await page.$('script[sveltekit\\:data-type="data"]')).toBeNull();
@@ -31,22 +30,6 @@ test('styles are applied', async ({ page, baseURL }) => {
 			return el && getComputedStyle(el).color;
 		})
 	).toEqual('rgb(128, 0, 128)');
-});
-
-test('prints validation errors', async ({ page, baseURL }) => {
-	await page.goto(`${baseURL}/invalid`);
-
-	const body = await page.innerHTML('body');
-
-	if (process.env.DEV) {
-		const h1 = page.locator('h1');
-		await expect(h1).toHaveText('AMP validation failed');
-
-		expect(body).toContain("Invalid URL protocol 'javascript:' for attribute 'href' in tag 'a'");
-		expect(body).toContain('&lt;a href="javascript:void(0);"&gt;invalid&lt;/a&gt;');
-	} else {
-		expect(body).toContain('<a href="javascript:void(0);">invalid</a>');
-	}
 });
 
 test('sets origin', async ({ baseURL, page }) => {

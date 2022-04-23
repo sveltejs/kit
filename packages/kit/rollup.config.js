@@ -60,6 +60,7 @@ export default [
 
 	{
 		input: {
+			amp: 'src/amp.js',
 			cli: 'src/cli.js',
 			node: 'src/node.js',
 			hooks: 'src/hooks.js',

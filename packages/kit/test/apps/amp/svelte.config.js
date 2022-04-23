@@ -1,7 +1,17 @@
+import path from 'path';
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		amp: true
+		inlineStyleThreshold: Infinity,
+
+		vite: {
+			server: {
+				fs: {
+					allow: [path.resolve('../../../src')]
+				}
+			}
+		}
 	}
 };
 
