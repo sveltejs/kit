@@ -5,7 +5,7 @@ importers:
   .:
     specifiers:
       '@changesets/cli': ^2.18.1
-      '@rollup/plugin-commonjs': ^21.0.1
+      '@rollup/plugin-commonjs': ^22.0.0
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^13.0.6
       '@sveltejs/eslint-config': github:sveltejs/eslint-config#v5.8.0
@@ -21,7 +21,7 @@ importers:
       typescript: ~4.6.2
     devDependencies:
       '@changesets/cli': 2.18.1
-      '@rollup/plugin-commonjs': 21.0.1_rollup@2.60.2
+      '@rollup/plugin-commonjs': 22.0.0_rollup@2.60.2
       '@rollup/plugin-json': 4.1.0_rollup@2.60.2
       '@rollup/plugin-node-resolve': 13.0.6_rollup@2.60.2
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641_69bc842e7e8ce444447ce4aad7520a79
@@ -95,7 +95,7 @@ importers:
     specifiers:
       '@iarna/toml': ^2.2.5
       '@netlify/functions': ^1.0.0
-      '@rollup/plugin-commonjs': ^21.0.0
+      '@rollup/plugin-commonjs': ^22.0.0
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^13.0.5
       '@sveltejs/kit': workspace:*
@@ -111,7 +111,7 @@ importers:
       tiny-glob: 0.2.9
     devDependencies:
       '@netlify/functions': 1.0.0
-      '@rollup/plugin-commonjs': 21.0.1_rollup@2.60.2
+      '@rollup/plugin-commonjs': 22.0.0_rollup@2.60.2
       '@rollup/plugin-json': 4.1.0_rollup@2.60.2
       '@rollup/plugin-node-resolve': 13.0.6_rollup@2.60.2
       '@sveltejs/kit': link:../kit
@@ -1358,11 +1358,11 @@ packages:
     resolution: {integrity: sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==}
     dev: true
 
-  /@rollup/plugin-commonjs/21.0.1_rollup@2.60.2:
-    resolution: {integrity: sha512-EA+g22lbNJ8p5kuZJUYyhhDK7WgJckW5g4pNN7n4mAFUM96VuwUnNT3xr2Db2iCZPI1pJPbGyfT5mS9T1dHfMg==}
-    engines: {node: '>= 8.0.0'}
+  /@rollup/plugin-commonjs/22.0.0_rollup@2.60.2:
+    resolution: {integrity: sha512-Ktvf2j+bAO+30awhbYoCaXpBcyPmJbaEUYClQns/+6SNCYFURbvBiNbWgHITEsIgDDWCDUclWRKEuf8cwZCFoQ==}
+    engines: {node: '>= 12.0.0'}
     peerDependencies:
-      rollup: ^2.38.3
+      rollup: ^2.68.0
     dependencies:
       '@rollup/pluginutils': 3.1.0_rollup@2.60.2
       commondir: 1.0.1
@@ -1370,7 +1370,7 @@ packages:
       glob: 7.2.0
       is-reference: 1.2.1
       magic-string: 0.25.7
-      resolve: 1.20.0
+      resolve: 1.22.0
       rollup: 2.60.2
     dev: true
 
@@ -1416,7 +1416,7 @@ packages:
     dependencies:
       '@types/estree': 0.0.39
       estree-walker: 1.0.1
-      picomatch: 2.3.0
+      picomatch: 2.3.1
       rollup: 2.60.2
     dev: true
 
