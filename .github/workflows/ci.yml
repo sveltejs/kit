@@ -36,7 +36,6 @@ jobs:
         include:
           - node-version: 16
             os: ubuntu-latest
-        include:
           - node-version: 18
             os: ubuntu-latest
     env:
