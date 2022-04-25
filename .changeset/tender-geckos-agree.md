@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Ignore `trailingSlash` for endpoint requests, apply `trailingSlash` to pages consistently
+[breaking] Ignore `trailingSlash` for endpoint requests, apply `trailingSlash` to pages consistently
