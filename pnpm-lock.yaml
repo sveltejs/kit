@@ -64,10 +64,10 @@ importers:
       '@types/ws': ^8.5.3
       esbuild: ^0.14.21
       typescript: ^4.6.2
-      worktop: 0.8.0-next.12
+      worktop: 0.8.0-next.13
     dependencies:
       esbuild: 0.14.21
-      worktop: 0.8.0-next.12
+      worktop: 0.8.0-next.13
     devDependencies:
       '@types/ws': 8.5.3
       typescript: 4.6.2
@@ -5964,8 +5964,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /worktop/0.8.0-next.12:
-    resolution: {integrity: sha512-ZXdgI9XOf0uB4IegFoViLdQ0Bf7hish0XMHwuV3nopOXygfLJkwAC5+HyA+sihBMSM2sLLQ5uGnD5aknL8+NQg==}
+  /worktop/0.8.0-next.13:
+    resolution: {integrity: sha512-aLPWSneFtPJr3RAf841orF9GNlVdVkQd2Wj/BbcGHp3whBZoXx6dcwwClA9fezm7muNan4SuT+ZTyMWdoJSCAg==}
     engines: {node: '>=12'}
     dependencies:
       mrmime: 1.0.0
