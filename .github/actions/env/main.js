@@ -1,6 +1,5 @@
-import core from '@actions/core';
-import { homedir, platform } from 'os';
-import { join } from 'path';
+const { homedir, platform, EOL } = require('os');
+const { join } = require('path');
 
 const WINDOWS_CACHE_PATH = 'D:\\.pnpm-store\\v3';
 const NIX_CACHE_PATH = '~/.pnpm-store/v3';
@@ -23,11 +22,7 @@ const paths = {
 	}
 };
 
-function run() {
-	const os = platform();
+const os = platform();
 
-	core.setOutput('pnpm_cache_path', paths[os].cache);
-	core.setOutput('browser_cache_path', paths[os].browser);
-}
-
-run();
+process.stdout.write(EOL + '::set-output name=pnpm_cache_path::' + paths[os].cache + EOL);
+process.stdout.write(EOL + '::set-output name=browser_cache_path::' + paths[os].browser + EOL);

@@ -10,4 +10,4 @@ outputs:
 
 runs:
   using: 'node12'
-  main: 'action/main.js'
+  main: 'main.js'
