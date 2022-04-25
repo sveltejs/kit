@@ -340,7 +340,7 @@ async function v3(builder, external, edge, split) {
 						.slice(1, -2) // remove leading / and trailing $/
 						.replace(/\\\//g, '/')}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
 
-					await generate_function(route.id, src, entry.generateManifest);
+					await generate_function(route.id || 'index', src, entry.generateManifest);
 				}
 			};
 		});
