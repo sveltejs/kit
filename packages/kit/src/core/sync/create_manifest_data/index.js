@@ -312,6 +312,10 @@ function trace(file, path, tree, extensions) {
 		const node = tree.get(parts.join('/'));
 		const layout = node?.layouts[layout_id];
 
+		if (layout?.file && layouts.indexOf(layout.file) > -1) {
+			throw new Error(`Recursive layout detected: ${layout.file} -> ${layouts.join(' -> ')}`);
+		}
+
 		// any segment that has neither a __layout nor an __error can be discarded.
 		// in other words these...
 		//  layouts: [a, , b, c]
