@@ -8,8 +8,5 @@
 		"type": "git",
 		"url": "git+https://github.com/sveltejs/kit.git"
 	},
-	"license": "MIT",
-	"devDependencies": {
-		"@actions/core": "^1.6.0"
-	}
+	"license": "MIT"
 }
