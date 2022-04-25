@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.320",
+	"version": "1.0.0-next.321",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",

@@ -7,7 +7,6 @@ on:
   pull_request:
 
 env:
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: svelte
 
@@ -36,6 +35,8 @@ jobs:
         include:
           - node-version: 16
             os: ubuntu-latest
+          - node-version: 18
+            os: ubuntu-latest
     env:
       TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
     steps:
@@ -48,18 +49,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
-      - name: Get paths for OS
-        uses: ./.github/actions/env
-        id: paths
-      - name: Cache browsers
-        id: browser_cache
-        uses: actions/cache@main
-        with:
-          path: ${{ steps.paths.outputs.browser_cache_path }}
-          key: chromium-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
-        env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: ${{ steps.browser_cache.outputs.cache-hit == 'true' }}
       - run: pnpm turbo run test
       - name: archive test results
         if: failure()

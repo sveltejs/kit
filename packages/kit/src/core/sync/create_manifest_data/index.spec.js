@@ -551,6 +551,22 @@ test('errors on duplicate layout definition', () => {
 	);
 });
 
+test.only('errors on recursive name layout', () => {
+	assert.throws(
+		() => create('samples/named-layout-recursive-1'),
+		/Recursive layout detected: samples\/named-layout-recursive-1\/__layout-a@b\.svelte -> samples\/named-layout-recursive-1\/__layout-b@a\.svelte -> samples\/named-layout-recursive-1\/__layout-a@b\.svelte/
+	);
+	assert.throws(
+		() => create('samples/named-layout-recursive-2'),
+		/Recursive layout detected: samples\/named-layout-recursive-2\/__layout-a@a\.svelte -> samples\/named-layout-recursive-2\/__layout-a@a\.svelte/
+	);
+
+	assert.throws(
+		() => create('samples/named-layout-recursive-3'),
+		/Recursive layout detected: samples\/named-layout-recursive-3\/__layout@a\.svelte -> samples\/named-layout-recursive-3\/__layout-a@default\.svelte -> samples\/named-layout-recursive-3\/__layout@a\.svelte/
+	);
+});
+
 test('allows for __tests__ directories', () => {
 	const { routes } = create('samples/legal-dunder');
 
