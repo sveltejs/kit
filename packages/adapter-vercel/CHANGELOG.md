@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.50
+
+### Patch Changes
+
+- Fix `edge: true, split: true` build error for root routes when deploying to Vercel ([#4731](https://github.com/sveltejs/kit/pull/4731))
+
 ## 1.0.0-next.49
 
 ### Patch Changes
