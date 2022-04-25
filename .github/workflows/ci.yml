@@ -7,7 +7,6 @@ on:
   pull_request:
 
 env:
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: svelte
 
