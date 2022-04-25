@@ -4,9 +4,6 @@
 	"description": "Action to set environment",
 	"main": "main.js",
 	"private": true,
-	"scripts": {
-		"build": "rollup -c"
-	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/sveltejs/kit.git"
