@@ -36,7 +36,7 @@
 		"mime": "^3.0.0",
 		"node-fetch": "^3.1.0",
 		"port-authority": "^1.1.2",
-		"rollup": "^2.60.2",
+		"rollup": "^2.70.2",
 		"selfsigned": "^2.0.0",
 		"set-cookie-parser": "^2.4.8",
 		"sirv": "^2.0.0",

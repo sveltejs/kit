@@ -5,9 +5,9 @@ importers:
   .:
     specifiers:
       '@changesets/cli': ^2.18.1
-      '@rollup/plugin-commonjs': ^21.0.1
+      '@rollup/plugin-commonjs': ^22.0.0
       '@rollup/plugin-json': ^4.1.0
-      '@rollup/plugin-node-resolve': ^13.0.6
+      '@rollup/plugin-node-resolve': ^13.2.1
       '@sveltejs/eslint-config': github:sveltejs/eslint-config#v5.8.0
       '@svitejs/changesets-changelog-github-compact': ^0.1.1
       '@typescript-eslint/eslint-plugin': ^5.5.0
@@ -16,14 +16,13 @@ importers:
       eslint-plugin-import: ^2.25.3
       eslint-plugin-svelte3: ^3.2.1
       prettier: ^2.5.0
-      rollup: ^2.60.2
       turbo: ^1.2.3
       typescript: ~4.6.2
     devDependencies:
       '@changesets/cli': 2.18.1
-      '@rollup/plugin-commonjs': 21.0.1_rollup@2.60.2
-      '@rollup/plugin-json': 4.1.0_rollup@2.60.2
-      '@rollup/plugin-node-resolve': 13.0.6_rollup@2.60.2
+      '@rollup/plugin-commonjs': 22.0.0
+      '@rollup/plugin-json': 4.1.0
+      '@rollup/plugin-node-resolve': 13.2.1
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641_69bc842e7e8ce444447ce4aad7520a79
       '@svitejs/changesets-changelog-github-compact': 0.1.1
       '@typescript-eslint/eslint-plugin': 5.5.0_399057d0d4da33caa499d36b7c87455b
@@ -32,7 +31,6 @@ importers:
       eslint-plugin-import: 2.25.3_eslint@8.3.0
       eslint-plugin-svelte3: 3.2.1_eslint@8.3.0
       prettier: 2.5.0
-      rollup: 2.60.2
       turbo: 1.2.3
       typescript: 4.6.2
 
@@ -50,14 +48,7 @@ importers:
       typescript: 4.6.2
 
   packages/adapter-begin:
-    specifiers:
-      '@sveltejs/kit': workspace:*
-      rollup: ^2.58.0
-      sirv: ^2.0.0
-    devDependencies:
-      '@sveltejs/kit': link:../kit
-      rollup: 2.60.2
-      sirv: 2.0.0
+    specifiers: {}
 
   packages/adapter-cloudflare:
     specifiers:
@@ -89,13 +80,13 @@ importers:
     specifiers:
       '@iarna/toml': ^2.2.5
       '@netlify/functions': ^1.0.0
-      '@rollup/plugin-commonjs': ^21.0.0
+      '@rollup/plugin-commonjs': ^22.0.0
       '@rollup/plugin-json': ^4.1.0
-      '@rollup/plugin-node-resolve': ^13.0.5
+      '@rollup/plugin-node-resolve': ^13.2.1
       '@sveltejs/kit': workspace:*
       esbuild: ^0.14.21
       rimraf: ^3.0.2
-      rollup: ^2.58.0
+      rollup: ^2.70.2
       tiny-glob: ^0.2.9
       typescript: ^4.6.2
       uvu: ^0.5.2
@@ -105,12 +96,12 @@ importers:
       tiny-glob: 0.2.9
     devDependencies:
       '@netlify/functions': 1.0.0
-      '@rollup/plugin-commonjs': 21.0.1_rollup@2.60.2
-      '@rollup/plugin-json': 4.1.0_rollup@2.60.2
-      '@rollup/plugin-node-resolve': 13.0.6_rollup@2.60.2
+      '@rollup/plugin-commonjs': 22.0.0_rollup@2.70.2
+      '@rollup/plugin-json': 4.1.0_rollup@2.70.2
+      '@rollup/plugin-node-resolve': 13.2.1_rollup@2.70.2
       '@sveltejs/kit': link:../kit
       rimraf: 3.0.2
-      rollup: 2.60.2
+      rollup: 2.70.2
       typescript: 4.6.2
       uvu: 0.5.2
 
@@ -124,7 +115,7 @@ importers:
       node-fetch: ^3.1.0
       polka: ^1.0.0-next.22
       rimraf: ^3.0.2
-      rollup: ^2.60.2
+      rollup: ^2.70.2
       sirv: ^2.0.0
       tiny-glob: ^0.2.9
       typescript: ^4.6.2
@@ -132,7 +123,7 @@ importers:
     dependencies:
       tiny-glob: 0.2.9
     devDependencies:
-      '@rollup/plugin-json': 4.1.0_rollup@2.60.2
+      '@rollup/plugin-json': 4.1.0_rollup@2.70.2
       '@sveltejs/kit': link:../kit
       '@types/compression': 1.7.2
       c8: 7.10.0
@@ -140,7 +131,7 @@ importers:
       node-fetch: 3.1.0
       polka: 1.0.0-next.22
       rimraf: 3.0.2
-      rollup: 2.60.2
+      rollup: 2.70.2
       sirv: 2.0.0
       typescript: 4.6.2
       uvu: 0.5.2
@@ -255,7 +246,7 @@ importers:
       mime: ^3.0.0
       node-fetch: ^3.1.0
       port-authority: ^1.1.2
-      rollup: ^2.60.2
+      rollup: ^2.70.2
       sade: ^1.7.4
       selfsigned: ^2.0.0
       set-cookie-parser: ^2.4.8
@@ -274,7 +265,7 @@ importers:
       vite: 2.9.0
     devDependencies:
       '@playwright/test': 1.21.0
-      '@rollup/plugin-replace': 4.0.0_rollup@2.60.2
+      '@rollup/plugin-replace': 4.0.0_rollup@2.70.2
       '@types/amphtml-validator': 1.0.1
       '@types/cookie': 0.5.0
       '@types/marked': 4.0.1
@@ -293,7 +284,7 @@ importers:
       mime: 3.0.0
       node-fetch: 3.1.0
       port-authority: 1.1.2
-      rollup: 2.60.2
+      rollup: 2.70.2
       selfsigned: 2.0.0
       set-cookie-parser: 2.4.8
       sirv: 2.0.0
@@ -1340,57 +1331,94 @@ packages:
     resolution: {integrity: sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==}
     dev: true
 
-  /@rollup/plugin-commonjs/21.0.1_rollup@2.60.2:
-    resolution: {integrity: sha512-EA+g22lbNJ8p5kuZJUYyhhDK7WgJckW5g4pNN7n4mAFUM96VuwUnNT3xr2Db2iCZPI1pJPbGyfT5mS9T1dHfMg==}
-    engines: {node: '>= 8.0.0'}
+  /@rollup/plugin-commonjs/22.0.0:
+    resolution: {integrity: sha512-Ktvf2j+bAO+30awhbYoCaXpBcyPmJbaEUYClQns/+6SNCYFURbvBiNbWgHITEsIgDDWCDUclWRKEuf8cwZCFoQ==}
+    engines: {node: '>= 12.0.0'}
     peerDependencies:
-      rollup: ^2.38.3
+      rollup: ^2.68.0
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.60.2
+      '@rollup/pluginutils': 3.1.0
       commondir: 1.0.1
       estree-walker: 2.0.2
       glob: 7.2.0
       is-reference: 1.2.1
       magic-string: 0.25.7
-      resolve: 1.20.0
-      rollup: 2.60.2
+      resolve: 1.22.0
     dev: true
 
-  /@rollup/plugin-json/4.1.0_rollup@2.60.2:
+  /@rollup/plugin-commonjs/22.0.0_rollup@2.70.2:
+    resolution: {integrity: sha512-Ktvf2j+bAO+30awhbYoCaXpBcyPmJbaEUYClQns/+6SNCYFURbvBiNbWgHITEsIgDDWCDUclWRKEuf8cwZCFoQ==}
+    engines: {node: '>= 12.0.0'}
+    peerDependencies:
+      rollup: ^2.68.0
+    dependencies:
+      '@rollup/pluginutils': 3.1.0_rollup@2.70.2
+      commondir: 1.0.1
+      estree-walker: 2.0.2
+      glob: 7.2.0
+      is-reference: 1.2.1
+      magic-string: 0.25.7
+      resolve: 1.22.0
+      rollup: 2.70.2
+    dev: true
+
+  /@rollup/plugin-json/4.1.0:
     resolution: {integrity: sha512-yfLbTdNS6amI/2OpmbiBoW12vngr5NW2jCJVZSBEz+H5KfUJZ2M7sDjk0U6GOOdCWFVScShte29o9NezJ53TPw==}
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.60.2
-      rollup: 2.60.2
+      '@rollup/pluginutils': 3.1.0
     dev: true
 
-  /@rollup/plugin-node-resolve/13.0.6_rollup@2.60.2:
-    resolution: {integrity: sha512-sFsPDMPd4gMqnh2gS0uIxELnoRUp5kBl5knxD2EO0778G1oOJv4G1vyT2cpWz75OU2jDVcXhjVUuTAczGyFNKA==}
+  /@rollup/plugin-json/4.1.0_rollup@2.70.2:
+    resolution: {integrity: sha512-yfLbTdNS6amI/2OpmbiBoW12vngr5NW2jCJVZSBEz+H5KfUJZ2M7sDjk0U6GOOdCWFVScShte29o9NezJ53TPw==}
+    peerDependencies:
+      rollup: ^1.20.0 || ^2.0.0
+    dependencies:
+      '@rollup/pluginutils': 3.1.0_rollup@2.70.2
+      rollup: 2.70.2
+    dev: true
+
+  /@rollup/plugin-node-resolve/13.2.1:
+    resolution: {integrity: sha512-btX7kzGvp1JwShQI9V6IM841YKNPYjKCvUbNrQ2EcVYbULtUd/GH6wZ/qdqH13j9pOHBER+EZXNN2L8RSJhVRA==}
     engines: {node: '>= 10.0.0'}
     peerDependencies:
       rollup: ^2.42.0
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.60.2
+      '@rollup/pluginutils': 3.1.0
       '@types/resolve': 1.17.1
       builtin-modules: 3.2.0
       deepmerge: 4.2.2
       is-module: 1.0.0
-      resolve: 1.20.0
-      rollup: 2.60.2
+      resolve: 1.22.0
     dev: true
 
-  /@rollup/plugin-replace/4.0.0_rollup@2.60.2:
+  /@rollup/plugin-node-resolve/13.2.1_rollup@2.70.2:
+    resolution: {integrity: sha512-btX7kzGvp1JwShQI9V6IM841YKNPYjKCvUbNrQ2EcVYbULtUd/GH6wZ/qdqH13j9pOHBER+EZXNN2L8RSJhVRA==}
+    engines: {node: '>= 10.0.0'}
+    peerDependencies:
+      rollup: ^2.42.0
+    dependencies:
+      '@rollup/pluginutils': 3.1.0_rollup@2.70.2
+      '@types/resolve': 1.17.1
+      builtin-modules: 3.2.0
+      deepmerge: 4.2.2
+      is-module: 1.0.0
+      resolve: 1.22.0
+      rollup: 2.70.2
+    dev: true
+
+  /@rollup/plugin-replace/4.0.0_rollup@2.70.2:
     resolution: {integrity: sha512-+rumQFiaNac9y64OHtkHGmdjm7us9bo1PlbgQfdihQtuNxzjpaB064HbRnewUOggLQxVCCyINfStkgmBeQpv1g==}
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.60.2
+      '@rollup/pluginutils': 3.1.0_rollup@2.70.2
       magic-string: 0.25.7
-      rollup: 2.60.2
+      rollup: 2.70.2
     dev: true
 
-  /@rollup/pluginutils/3.1.0_rollup@2.60.2:
+  /@rollup/pluginutils/3.1.0:
     resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
     engines: {node: '>= 8.0.0'}
     peerDependencies:
@@ -1399,7 +1427,18 @@ packages:
       '@types/estree': 0.0.39
       estree-walker: 1.0.1
       picomatch: 2.3.0
-      rollup: 2.60.2
+    dev: true
+
+  /@rollup/pluginutils/3.1.0_rollup@2.70.2:
+    resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
+    engines: {node: '>= 8.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0
+    dependencies:
+      '@types/estree': 0.0.39
+      estree-walker: 1.0.1
+      picomatch: 2.3.0
+      rollup: 2.70.2
     dev: true
 
   /@rollup/pluginutils/4.1.2:
@@ -1595,7 +1634,7 @@ packages:
   /@types/resolve/1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
     dependencies:
-      '@types/node': 16.11.11
+      '@types/node': 17.0.21
     dev: true
 
   /@types/sade/1.7.3:
@@ -4950,8 +4989,8 @@ packages:
       glob: 7.2.0
     dev: true
 
-  /rollup/2.60.2:
-    resolution: {integrity: sha512-1Bgjpq61sPjgoZzuiDSGvbI1tD91giZABgjCQBKM5aYLnzjq52GoDuWVwT/cm/MCxCMPU8gqQvkj8doQ5C8Oqw==}
+  /rollup/2.70.2:
+    resolution: {integrity: sha512-EitogNZnfku65I1DD5Mxe8JYRUCy0hkK5X84IlDtUs+O6JRMpRciXTzyCUuX11b5L5pvjH+OmFXiQ3XjabcXgg==}
     engines: {node: '>=10.0.0'}
     hasBin: true
     optionalDependencies:
@@ -5879,7 +5918,7 @@ packages:
       esbuild: 0.14.29
       postcss: 8.4.12
       resolve: 1.22.0
-      rollup: 2.60.2
+      rollup: 2.70.2
     optionalDependencies:
       fsevents: 2.3.2
 
