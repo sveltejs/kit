@@ -385,20 +385,3 @@ function write(file, data) {
 
 	writeFileSync(file, data);
 }
-
-/**
- * Make all root routes be called `index`:
- *
- * @example
- * ```js
- * createValidFunctionName("") // "index"
- * createValidFunctionName("nested") // "nested"
- * createValidFunctionName("nested/") // "nested/index"
- * ```
- *
- * @param {string} routeId
- * @returns {string} route id that is a valid function name
- */
-function createValidFunctionName(routeId) {
-	return routeId.replace(/(\/|^)$/, '$1index');
-}
