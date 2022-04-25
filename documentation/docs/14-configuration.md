@@ -275,7 +275,7 @@ An object containing zero or more of the following values:
 
 ### trailingSlash
 
-Whether to remove, append, or ignore trailing slashes when resolving URLs to routes.
+Whether to remove, append, or ignore trailing slashes when resolving URLs (note that this only applies to pages, not endpoints).
 
 - `'never'` — redirect `/x/` to `/x`
 - `'always'` — redirect `/x` to `/x/`

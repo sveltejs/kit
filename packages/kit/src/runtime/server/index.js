@@ -16,20 +16,6 @@ const default_transform = ({ html }) => html;
 export async function respond(request, options, state) {
 	let url = new URL(request.url);
 
-	const normalized = normalize_path(url.pathname, options.trailing_slash);
-
-	if (normalized !== url.pathname && !state.prerender?.fallback) {
-		return new Response(undefined, {
-			status: 301,
-			headers: {
-				location:
-					// ensure paths starting with '//' are not treated as protocol-relative
-					(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-					(url.search === '?' ? '' : url.search)
-			}
-		});
-	}
-
 	const { parameter, allowed } = options.method_override;
 	const method_override = url.searchParams.get(parameter)?.toUpperCase();
 
@@ -96,6 +82,22 @@ export async function respond(request, options, state) {
 				params = decode_params(matched);
 				break;
 			}
+		}
+	}
+
+	if (route?.type === 'page') {
+		const normalized = normalize_path(url.pathname, options.trailing_slash);
+
+		if (normalized !== url.pathname && !state.prerender?.fallback) {
+			return new Response(undefined, {
+				status: 301,
+				headers: {
+					location:
+						// ensure paths starting with '//' are not treated as protocol-relative
+						(normalized.startsWith('//') ? url.origin + normalized : normalized) +
+						(url.search === '?' ? '' : url.search)
+				}
+			});
 		}
 	}
 

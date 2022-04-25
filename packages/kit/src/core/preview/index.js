@@ -7,7 +7,6 @@ import { pathToFileURL } from 'url';
 import { getRequest, setResponse } from '../../node.js';
 import { installFetch } from '../../install-fetch.js';
 import { SVELTE_KIT_ASSETS } from '../constants.js';
-import { normalize_path } from '../../utils/url.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
 /** @typedef {import('http').ServerResponse} Res */
@@ -90,17 +89,7 @@ export async function preview({ port, host, config, https: use_https = false }) 
 				return;
 			}
 
-			const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
-
-			const normalized = normalize_path(pathname, config.kit.trailingSlash);
-
-			if (normalized !== pathname) {
-				res.writeHead(307, {
-					location: base + normalized + search
-				});
-				res.end();
-				return;
-			}
+			const { pathname } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
 			// only treat this as a page if it doesn't include an extension
 			if (pathname === '/' || /\/[^./]+\/?$/.test(pathname)) {
