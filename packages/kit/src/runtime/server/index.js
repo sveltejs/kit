@@ -85,11 +85,8 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	if (route) {
-		const normalized = normalize_path(
-			url.pathname,
-			route.type === 'endpoint' ? 'never' : options.trailing_slash
-		);
+	if (route?.type === 'page') {
+		const normalized = normalize_path(url.pathname, options.trailing_slash);
 
 		if (normalized !== url.pathname && !state.prerender?.fallback) {
 			return new Response(undefined, {
