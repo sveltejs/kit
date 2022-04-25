@@ -161,7 +161,7 @@ export async function preview({ port, host, config, https: use_https = false }) 
 	});
 
 	return new Promise((fulfil) => {
-		http_server.listen(port, host || '0.0.0.0', () => {
+		http_server.listen(port, host, () => {
 			fulfil(http_server);
 		});
 	});
