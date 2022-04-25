@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Never allow trailing slash for endpoints
+Ignore `trailingSlash` for endpoint requests, apply `trailingSlash` to pages consistently
