@@ -11,9 +11,9 @@ Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `sv
 import adapter from '@sveltejs/adapter-node';
 
 export default {
-	kit: {
-		adapter: adapter()
-	}
+  kit: {
+    adapter: adapter()
+  }
 };
 ```
 
@@ -78,14 +78,14 @@ The adapter can be configured with various options:
 import adapter from '@sveltejs/adapter-node';
 
 export default {
-	kit: {
-		adapter: adapter({
-			// default options are shown
-			out: 'build',
-			precompress: false,
-			envPrefix: ''
-		})
-	}
+  kit: {
+    adapter: adapter({
+      // default options are shown
+      out: 'build',
+      precompress: false,
+      envPrefix: ''
+    })
+  }
 };
 ```
 
@@ -127,14 +127,14 @@ const app = express();
 
 // add a route that lives separately from the SvelteKit app
 app.get('/healthcheck', (req, res) => {
-	res.end('ok');
+  res.end('ok');
 });
 
 // let SvelteKit handle everything else, including serving prerendered pages and static assets
 app.use(handler);
 
 app.listen(3000, () => {
-	console.log('listening on port 3000');
+  console.log('listening on port 3000');
 });
 ```
 

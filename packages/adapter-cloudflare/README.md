@@ -31,9 +31,9 @@ You can include these changes in your `svelte.config.js` configuration file:
 import adapter from '@sveltejs/adapter-cloudflare';
 
 export default {
-	kit: {
-		adapter: adapter()
-	}
+  kit: {
+    adapter: adapter()
+  }
 };
 ```
 
@@ -77,7 +77,7 @@ declare namespace App {
 
 ```js
 export async function post({ request, platform }) {
-	const counter = platform.env.COUNTER.idFromName('A');
+  const counter = platform.env.COUNTER.idFromName('A');
 }
 ```
 

@@ -11,20 +11,20 @@ Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `
 import adapter from '@sveltejs/adapter-static';
 
 export default {
-	kit: {
-		adapter: adapter({
-			// default options are shown
-			pages: 'build',
-			assets: 'build',
-			fallback: null,
-			precompress: false
-		}),
+  kit: {
+    adapter: adapter({
+      // default options are shown
+      pages: 'build',
+      assets: 'build',
+      fallback: null,
+      precompress: false
+    }),
 
-		prerender: {
-			// This can be false if you're using a fallback (i.e. SPA mode)
-			default: true
-		}
-	}
+    prerender: {
+      // This can be false if you're using a fallback (i.e. SPA mode)
+      default: true
+    }
+  }
 };
 ```
 
@@ -61,11 +61,11 @@ The fallback page is a blank HTML page that loads your SvelteKit app and navigat
 import adapter from '@sveltejs/adapter-static';
 
 export default {
-	kit: {
-		adapter: adapter({
-			fallback: '200.html'
-		})
-	}
+  kit: {
+    adapter: adapter({
+      fallback: '200.html'
+    })
+  }
 };
 ```
 
