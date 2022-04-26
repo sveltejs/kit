@@ -38,7 +38,7 @@ export default {
 
 ## Notes
 
-Vercel functions contained in an `api` directory will _not_ be included in the deployment — these should be implemented as [endpoints](https://kit.svelte.dev/docs/routing#endpoints) in your SvelteKit app.
+Vercel functions contained in the `/api` directory at the project's root will _not_ be included in the deployment — these should be implemented as [endpoints](https://kit.svelte.dev/docs/routing#endpoints) in your SvelteKit app.
 
 ## Changelog
 
