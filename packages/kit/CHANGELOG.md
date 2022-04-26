@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.322
+
+### Patch Changes
+
+- Copy dotfiles from .svelte-kit/output ([#4725](https://github.com/sveltejs/kit/pull/4725))
+
+* [breaking] Ignore `trailingSlash` for endpoint requests, apply `trailingSlash` to pages consistently ([#4699](https://github.com/sveltejs/kit/pull/4699))
+
 ## 1.0.0-next.321
 
 ### Patch Changes
