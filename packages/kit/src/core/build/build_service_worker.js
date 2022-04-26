@@ -22,16 +22,12 @@ export async function build_service_worker(
 	prerendered,
 	client_manifest
 ) {
-	// TODO add any assets referenced in template .html file, e.g. favicon?
-	const app_files = new Set();
+	const build = new Set();
 	for (const key in client_manifest) {
-		const { file, css } = client_manifest[key];
-		app_files.add(file);
-		if (css) {
-			css.forEach((file) => {
-				app_files.add(file);
-			});
-		}
+		const { file, css = [], assets = [] } = client_manifest[key];
+		build.add(file);
+		css.forEach((file) => build.add(file));
+		assets.forEach((file) => build.add(file));
 	}
 
 	const service_worker = `${config.kit.outDir}/generated/service-worker.js`;
@@ -47,7 +43,7 @@ export async function build_service_worker(
 			};
 
 			export const build = [
-				${Array.from(app_files)
+				${Array.from(build)
 					.map((file) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/${file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
