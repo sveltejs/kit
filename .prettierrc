@@ -11,6 +11,13 @@
 			}
 		},
 		{
+			"files": ["packages/*/README.md"],
+			"options": {
+				"useTabs": false,
+				"tabWidth": 2
+			}
+		},
+		{
 			"files": [
 				"**/CHANGELOG.md",
 				"packages/kit/src/packaging/test/fixtures/**/expected/**/*",
