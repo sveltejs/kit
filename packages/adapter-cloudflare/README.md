@@ -83,6 +83,10 @@ export async function post({ request, platform }) {
 
 > `platform.env` is only available in the production build. Use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally
 
+## Notes
+
+Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [endpoints](https://kit.svelte.dev/docs/routing#endpoints) in your SvelteKit app.
+
 ## Changelog
 
 [The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-cloudflare/CHANGELOG.md).
