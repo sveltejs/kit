@@ -190,7 +190,7 @@ export async function build_server(
 
 	const default_config = {
 		build: {
-			target: 'node16'
+			target: 'node14.8'
 		},
 		ssr: {
 			// when developing against the Kit src code, we want to ensure that
