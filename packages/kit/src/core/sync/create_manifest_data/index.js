@@ -305,6 +305,10 @@ function trace(file, path, tree, extensions) {
 
 	let layout_id = base.includes('@') ? base.split('@')[1] : DEFAULT;
 
+	if (parts.findIndex((part) => part.indexOf('@') > -1) > -1) {
+		throw new Error(`Invalid route ${file} - named layouts are not allowed in directories`);
+	}
+
 	// walk up the tree, find which __layout and __error components
 	// apply to this page
 	// eslint-disable-next-line
