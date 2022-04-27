@@ -232,9 +232,12 @@ export async function build_server(
 		plugins: [
 			svelte({
 				extensions: config.extensions,
+				preprocess: config.preprocess,
 				compilerOptions: {
+					...config.compilerOptions,
 					hydratable: !!config.kit.browser.hydrate
-				}
+				},
+				configFile: false
 			})
 		],
 		resolve: {
