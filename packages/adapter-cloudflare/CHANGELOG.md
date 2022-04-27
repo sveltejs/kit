@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.19
+
+### Patch Changes
+
+- [breaking] Remove try-catch around server.respond ([#4738](https://github.com/sveltejs/kit/pull/4738))
+
 ## 1.0.0-next.18
 
 ### Patch Changes
