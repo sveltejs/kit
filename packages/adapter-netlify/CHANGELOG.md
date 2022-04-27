@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.56
+
+### Patch Changes
+
+- [breaking] Remove try-catch around server.respond ([#4738](https://github.com/sveltejs/kit/pull/4738))
+
 ## 1.0.0-next.55
 
 ### Patch Changes

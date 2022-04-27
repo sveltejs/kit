@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.323
+
+### Patch Changes
+
+- Default to target: node14.8, so that top-level await is supported in user code ([#4742](https://github.com/sveltejs/kit/pull/4742))
+
+* Only complain about missing \$lib paths in tsconfig if src/lib exists ([#4735](https://github.com/sveltejs/kit/pull/4735))
+
+- Include all assets in `$service-worker` build, not just CSS ([#4744](https://github.com/sveltejs/kit/pull/4744))
+
 ## 1.0.0-next.322
 
 ### Patch Changes
