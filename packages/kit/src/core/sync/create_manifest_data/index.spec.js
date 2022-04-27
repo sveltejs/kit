@@ -551,7 +551,7 @@ test('errors on duplicate layout definition', () => {
 	);
 });
 
-test.only('errors on recursive name layout', () => {
+test('errors on recursive name layout', () => {
 	assert.throws(
 		() => create('samples/named-layout-recursive-1'),
 		/Recursive layout detected: samples\/named-layout-recursive-1\/__layout-a@b\.svelte -> samples\/named-layout-recursive-1\/__layout-b@a\.svelte -> samples\/named-layout-recursive-1\/__layout-a@b\.svelte/
