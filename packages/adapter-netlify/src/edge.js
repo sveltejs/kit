@@ -9,24 +9,18 @@ const prefix = `/${manifest.appDir}/`;
  * @param { any } context
  * @returns { Promise<Response> }
  */
-export default async function handler(request, context) {
+export default function handler(request, context) {
 	if (is_static_file(request)) {
 		// Static files can skip the handler
 		return;
 	}
-	try {
-		const response = await server.respond(request, {
-			platform: { context },
-			getClientAddress() {
-				return request.headers.get('x-nf-client-connection-ip');
-			}
-		});
-		return response;
-	} catch (error) {
-		return new Response('Error rendering route:' + (error.message || error.toString()), {
-			status: 500
-		});
-	}
+
+	return server.respond(request, {
+		platform: { context },
+		getClientAddress() {
+			return request.headers.get('x-nf-client-connection-ip');
+		}
+	});
 }
 
 /**
