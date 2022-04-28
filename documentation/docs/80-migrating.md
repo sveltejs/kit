@@ -116,6 +116,10 @@ You access them differently in SvelteKit. `stores` is now `getStores`, but in mo
 
 Regex routes are no longer supported. Instead, use [advanced route matching](/docs/routing#advanced-routing-matching).
 
+#### Segments
+
+Previously, layout components received a `segment` prop indicating the child segment. This has been removed; you should use the more flexible `$page.url.pathname` value to derive the segment you're interested in.
+
 #### URLs
 
 In Sapper, all relative URLs were resolved against the base URL — usually `/`, unless the `basepath` option was used — rather than against the current page.
