@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.324
+
+### Patch Changes
+
+- Throw errors on encountering named layout in directory ([#4756](https://github.com/sveltejs/kit/pull/4756))
+
 ## 1.0.0-next.323
 
 ### Patch Changes
