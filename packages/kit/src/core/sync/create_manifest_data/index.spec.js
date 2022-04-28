@@ -570,12 +570,12 @@ test('errors on recursive name layout', () => {
 test('errors on layout in directory', () => {
 	assert.throws(
 		() => create('samples/named-layout-on-directory-1'),
-		/Invalid route samples\/named-layout-on-directory-1\/foo@a\/index.svelte - named layouts are not allowed in directory/
+		/Invalid route samples\/named-layout-on-directory-1\/foo@a\/index.svelte - named layouts are not allowed in directories/
 	);
 
 	assert.throws(
 		() => create('samples/named-layout-on-directory-2'),
-		/Invalid route samples\/named-layout-on-directory-2\/foo@a\/bar.svelte - named layouts are not allowed in directory/
+		/Invalid route samples\/named-layout-on-directory-2\/foo@a\/bar.svelte - named layouts are not allowed in directories/
 	);
 });
 
