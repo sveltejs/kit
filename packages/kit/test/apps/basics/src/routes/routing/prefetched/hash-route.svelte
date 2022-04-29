@@ -1,20 +1,33 @@
+<script context="module">
+	let calls = 0;
+
+	export const load = () => {
+		calls += 1;
+		return { props: { calls } };
+	};
+</script>
+
 <script>
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 
-	const modalContents = [
-		{
-			id: 'please-dont-show-me',
+	export let calls;
+
+	const modalContents = {
+		'please-dont-show-me': {
 			title: 'Oopsie'
+		},
+		'please-dont-show-me-jr': {
+			title: 'Oopsie Jr.'
 		}
-	];
+	};
 
 	let modal = undefined;
 
 	const checkIfModalShouldBeShown = () => {
 		console.log('mount');
 		const modalToShow = $page.url.hash.substring(1);
-		modal = modalContents.find(({ id }) => id === modalToShow);
+		modal = modalContents[modalToShow];
 	};
 
 	onMount(checkIfModalShouldBeShown);
@@ -25,3 +38,7 @@
 <h1>
 	{modal?.title ?? ''}
 </h1>
+
+<p>
+	Loaded {calls} times.
+</p>
