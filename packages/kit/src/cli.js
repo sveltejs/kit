@@ -229,7 +229,8 @@ function welcome({ port, host, https, open, base, loose, allow, cwd }) {
 	Object.values(networkInterfaces()).forEach((interfaces) => {
 		if (!interfaces) return;
 		interfaces.forEach((details) => {
-			if (details.family !== 'IPv4') return;
+			// @ts-ignore node18 returns a number
+			if (details.family !== 'IPv4' && details.family !== 4) return;
 
 			// prettier-ignore
 			if (details.internal) {
