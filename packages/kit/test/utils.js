@@ -162,7 +162,7 @@ export const config = {
 	],
 	use: {
 		screenshot: 'only-on-failure',
-		trace: 'retain-on-failure',
+		trace: process.env.CI || process.env.TRACE ? 'retain-on-failure' : 'off',
 		// use stable chrome from host OS instead of downloading one
 		// see https://playwright.dev/docs/browsers#google-chrome--microsoft-edge
 		channel: 'chrome'
