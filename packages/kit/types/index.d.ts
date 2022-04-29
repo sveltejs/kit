@@ -140,6 +140,8 @@ export interface Config {
 			onError?: PrerenderOnErrorValue;
 		};
 		routes?: (filepath: string) => boolean;
+		layoutPrefix?: string;
+		layoutPattern?: (layoutPrefix: string) => RegExp;
 		serviceWorker?: {
 			register?: boolean;
 			files?: (filepath: string) => boolean;

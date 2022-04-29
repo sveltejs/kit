@@ -43,7 +43,6 @@ import { parse_route_id } from '../../../utils/routing.js';
  * @typedef {Map<string, Node>} Tree
  */
 
-const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+))?(?:@([a-zA-Z0-9_-]+))?$/;
 const dunder_pattern = /(^|\/)__(?!tests?__)/; // forbid __-prefixed files/directories except __error, __layout[-...], __test__, __tests__
 
 const DEFAULT = 'default';
@@ -81,10 +80,12 @@ export default function create_manifest_data({
 		layouts: { [DEFAULT]: default_layout }
 	});
 
+	const layoutPrefix = config.kit.layoutPrefix;
+	const layout_pattern = config.kit.layoutPattern(layoutPrefix);
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
 	const valid_extensions = [...config.extensions, ...config.kit.endpointExtensions];
 
-	list_files(config.kit.files.routes).forEach((file) => {
+	list_files(config.kit.files.routes, '', [], layoutPrefix).forEach((file) => {
 		const extension = valid_extensions.find((ext) => file.endsWith(ext));
 		if (!extension) return;
 
@@ -96,9 +97,9 @@ export default function create_manifest_data({
 		const segments = id.split('/');
 		const name = /** @type {string} */ (segments.pop());
 
-		if (name === '__layout.reset') {
+		if (name === `${layoutPrefix}.reset`) {
 			throw new Error(
-				'__layout.reset has been removed in favour of named layouts: https://kit.svelte.dev/docs/layouts#named-layouts'
+				`${layoutPrefix}.reset has been removed in favour of named layouts: https://kit.svelte.dev/docs/layouts#named-layouts`
 			);
 		}
 
@@ -251,7 +252,7 @@ export default function create_manifest_data({
 
 	/** @type {import('types').Asset[]} */
 	const assets = fs.existsSync(config.kit.files.assets)
-		? list_files(config.kit.files.assets).map((file) => ({
+		? list_files(config.kit.files.assets, '', [], layoutPrefix).map((file) => ({
 				file,
 				size: fs.statSync(`${config.kit.files.assets}/${file}`).size,
 				type: mime.getType(file)
@@ -422,16 +423,17 @@ function count_occurrences(needle, haystack) {
  * @param {string} dir
  * @param {string} [path]
  * @param {string[]} [files]
+ * @param {string} layoutPrefix
  */
-function list_files(dir, path = '', files = []) {
+function list_files(dir, path = '', files = [], layoutPrefix = '__layout') {
 	fs.readdirSync(dir, { withFileTypes: true })
 		.sort(({ name: a }, { name: b }) => {
 			// sort each directory in (__layout, __error, everything else) order
 			// so that we can trace layouts/errors immediately
 
-			if (a.startsWith('__layout')) {
-				if (!b.startsWith('__layout')) return -1;
-			} else if (b.startsWith('__layout')) {
+			if (a.startsWith(layoutPrefix)) {
+				if (!b.startsWith(layoutPrefix)) return -1;
+			} else if (b.startsWith(layoutPrefix)) {
 				return 1;
 			} else if (a.startsWith('__')) {
 				if (!b.startsWith('__')) return -1;
@@ -445,7 +447,7 @@ function list_files(dir, path = '', files = []) {
 			const joined = path ? `${path}/${file.name}` : file.name;
 
 			if (file.isDirectory()) {
-				list_files(`${dir}/${file.name}`, joined, files);
+				list_files(`${dir}/${file.name}`, joined, files, layoutPrefix);
 			} else {
 				files.push(joined);
 			}

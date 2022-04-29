@@ -104,7 +104,8 @@ const get_defaults = (prefix = '') => ({
 		version: {
 			name: Date.now().toString(),
 			pollInterval: 0
-		}
+		},
+		layoutPrefix: '__layout'
 	}
 });
 

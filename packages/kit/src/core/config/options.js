@@ -249,6 +249,25 @@ const options = object(
 
 			routes: fun((filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath)),
 
+			layoutPrefix: validate('__layout', (input, keypath) => {
+				if (typeof input === 'string') {
+					if (input.startsWith('__')) {
+						return input;
+					}
+					throw new Error(`${keypath} should be starts with '__'`);
+				}
+				throw new Error(`${keypath} should be a string`);
+			}),
+
+			layoutPattern: validate(
+				(layoutPrefix) =>
+					new RegExp(`^${layoutPrefix}(?:-([a-zA-Z0-9_-]+))?(?:@([a-zA-Z0-9_-]+))?$`),
+				(input, keypath) => {
+					if (typeof input === 'function') return input;
+					throw new Error(`${keypath} should be a custom function`);
+				}
+			),
+
 			serviceWorker: object({
 				register: boolean(true),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
