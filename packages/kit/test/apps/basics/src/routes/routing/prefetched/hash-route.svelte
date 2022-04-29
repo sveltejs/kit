@@ -1,9 +1,9 @@
 <script context="module">
-	let calls = 0;
+	let loadCalls = 0;
 
 	export const load = () => {
-		calls += 1;
-		return { props: { calls } };
+		loadCalls += 1;
+		return { props: { calls: loadCalls } };
 	};
 </script>
 
