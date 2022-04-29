@@ -838,7 +838,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (params) {
 				/** @type {import('./types').NavigationIntent} */
 				const intent = {
-					id: url.pathname + url.search,
+					id: url.pathname + url.hash + url.search,
 					route,
 					params,
 					url
