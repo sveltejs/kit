@@ -201,7 +201,7 @@ export async function prerender({ config, entries, files, log }) {
 			const location = response.headers.get('location');
 
 			if (location) {
-				let resolved = resolve(encoded, location);
+				const resolved = resolve(encoded, location);
 				if (is_root_relative(resolved)) {
 					enqueue(decoded, decodeURI(resolved), resolved);
 				}
