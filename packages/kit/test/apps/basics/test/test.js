@@ -2040,6 +2040,19 @@ test.describe.parallel('Routing', () => {
 		}
 	});
 
+	test('chooses correct route when hash route is prefetched but regular route is clicked', async ({
+		app,
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/a');
+			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+			await app.goto('/routing/prefetched/hash-route');
+			await expect(page.locator('h1')).not.toHaveText('Oopsie');
+		}
+	});
+
 	test('does not attempt client-side navigation to server routes', async ({ page }) => {
 		await page.goto('/routing');
 		await page.click('[href="/routing/ambiguous/ok.json"]');
