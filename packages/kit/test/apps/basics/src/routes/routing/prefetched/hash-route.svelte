@@ -12,7 +12,6 @@
 	let modal = undefined;
 
 	const checkIfModalShouldBeShown = () => {
-		console.log('mount');
 		const modalToShow = $page.url.hash.substring(1);
 		modal = modalContents.find(({ id }) => id === modalToShow);
 	};
