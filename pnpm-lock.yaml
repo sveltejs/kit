@@ -332,6 +332,20 @@ importers:
       svelte-check: 2.5.0_svelte@3.44.2
       typescript: 4.6.2
 
+  packages/kit/test/apps/custom-layout:
+    specifiers:
+      '@sveltejs/kit': workspace:*
+      cross-env: ^7.0.3
+      svelte: ^3.43.0
+      svelte-check: ^2.5.0
+      typescript: ~4.6.2
+    devDependencies:
+      '@sveltejs/kit': link:../../..
+      cross-env: 7.0.3
+      svelte: 3.44.2
+      svelte-check: 2.5.0_svelte@3.44.2
+      typescript: 4.6.2
+
   packages/kit/test/apps/options:
     specifiers:
       '@sveltejs/kit': workspace:*
