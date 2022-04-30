@@ -72,9 +72,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 		updated: create_updated_store()
 	};
 
-	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
+	/** @type {import('./types').NavigationResultCache} */
 	const load_cache = {
 		id: null,
+		url: null,
 		promise: null
 	};
 
@@ -194,6 +195,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		load_cache.promise = load_route(intent, false);
+		load_cache.url = intent.url;
 		load_cache.id = intent.id;
 
 		return load_cache.promise;
@@ -331,6 +333,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		load_cache.promise = null;
+		load_cache.url = null;
 		load_cache.id = null;
 		autoscroll = true;
 		updating = false;
@@ -582,8 +585,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {boolean} no_cache
 	 */
 	async function load_route({ id, url, params, route }, no_cache) {
-		if (load_cache.id === id && load_cache.promise) {
-			return load_cache.promise;
+		const validated_cache = validate_cache({ id, url, params, route });
+		if (validated_cache !== null) {
+			return validated_cache;
 		}
 
 		if (!no_cache) {
@@ -838,7 +842,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (params) {
 				/** @type {import('./types').NavigationIntent} */
 				const intent = {
-					id: url.pathname + url.hash + url.search,
+					id: url.pathname + url.search,
 					route,
 					params,
 					url
@@ -847,6 +851,32 @@ export function create_client({ target, session, base, trailing_slash }) {
 				return intent;
 			}
 		}
+	}
+
+	/**
+	 * @param {import('./types').NavigationIntent} intent
+	 * @returns {Promise<import('./types').NavigationResult | undefined> | null}
+	 */
+	function validate_cache({ id, url }) {
+		if (load_cache.id === id && load_cache.promise) {
+			// If the hash is the same, the cache is fully valid
+			if (load_cache?.url?.hash !== url.hash && load_cache?.url?.port === url.port) {
+				// If the hash is not the same, we know the URL is the same except for
+				// the hash, so replace the URL in the props with the new one.
+				// and leave everything else the same.
+				load_cache.promise = (async () => {
+					const nav_result = await load_cache.promise;
+					if (nav_result?.props?.page?.url) {
+						nav_result.props.page.url.hash = url.hash;
+					}
+					return nav_result ?? undefined;
+				})();
+			}
+
+			return load_cache.promise;
+		}
+
+		return null;
 	}
 
 	/**
