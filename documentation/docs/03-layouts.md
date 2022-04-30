@@ -133,6 +133,28 @@ src/routes/
 
 > `default` is a reserved name — in other words, you can't have a `__layout-default.svelte` file.
 
+### Custom filename
+
+If you don't want use to use default `__layout` prefix for layout file, you can define a custom `layoutPrefix` and `layoutPattern` in `svelte.config.js`.
+
+```js
+import adapter from '@sveltejs/adapter-auto';
+
+// This config is ignored and replaced with one of the configs in the shared folder when a project is created.
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		adapter: adapter(),
+		layoutPrefix: '__tmpl'
+	}
+};
+
+export default config;
+```
+
+Then, you can use `__tmpl.svelte`, `__tmpl-something.svelte` instead of hard-coded `__layout.svelte`, `__layout-something.svelte`. Other features related to layout are supported as well.
+
 ### Error pages
 
 If a page fails to load (see [Loading](/docs/loading)), SvelteKit will render an error page. You can customise this page by creating `__error.svelte` components alongside your layouts and pages.

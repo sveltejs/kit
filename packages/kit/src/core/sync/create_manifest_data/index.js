@@ -69,8 +69,12 @@ export default function create_manifest_data({
 	/** @type {Tree} */
 	const tree = new Map();
 
+	// get layout prefix from config like __layout, __tmpl
+	const layoutPrefix = config.kit.layoutPrefix;
+
+	// remove __ from layoutPrefix
 	const default_layout = {
-		file: posixify(path.relative(cwd, `${fallback}/layout.svelte`)),
+		file: posixify(path.relative(cwd, `${fallback}/${layoutPrefix.slice(2)}.svelte`)),
 		name: DEFAULT
 	};
 
@@ -80,8 +84,9 @@ export default function create_manifest_data({
 		layouts: { [DEFAULT]: default_layout }
 	});
 
-	const layoutPrefix = config.kit.layoutPrefix;
-	const layout_pattern = config.kit.layoutPattern(layoutPrefix);
+	const layout_pattern = new RegExp(
+		`^${layoutPrefix}(?:-([a-zA-Z0-9_-]+))?(?:@([a-zA-Z0-9_-]+))?$`
+	);
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
 	const valid_extensions = [...config.extensions, ...config.kit.endpointExtensions];
 

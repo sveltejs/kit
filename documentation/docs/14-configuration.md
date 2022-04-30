@@ -66,6 +66,7 @@ const config = {
 			onError: 'fail'
 		},
 		routes: (filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath),
+		layoutPrefix: '__layout',
 		serviceWorker: {
 			register: true,
 			files: (filepath) => !/\.DS_Store/.test(filepath)
@@ -265,6 +266,10 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
 ### routes
 
 A `(filepath: string) => boolean` function that determines which files create routes and which are treated as [private modules](/docs/routing#private-modules).
+
+### layoutPrefix
+
+A string that svelte uses as prefix for layout pages. By default, svelte use `__layout` as layoutPrefix.
 
 ### serviceWorker
 

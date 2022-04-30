@@ -259,15 +259,6 @@ const options = object(
 				throw new Error(`${keypath} should be a string`);
 			}),
 
-			layoutPattern: validate(
-				(layoutPrefix) =>
-					new RegExp(`^${layoutPrefix}(?:-([a-zA-Z0-9_-]+))?(?:@([a-zA-Z0-9_-]+))?$`),
-				(input, keypath) => {
-					if (typeof input === 'function') return input;
-					throw new Error(`${keypath} should be a custom function`);
-				}
-			),
-
 			serviceWorker: object({
 				register: boolean(true),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
