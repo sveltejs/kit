@@ -54,6 +54,7 @@ export async function render_response({
 	const modulepreloads = new Set(options.manifest._.entry.js);
 	/** @type {Map<string, string>} */
 	const styles = new Map();
+	const link_header_preload = new Set();
 
 	/** @type {Array<import('./types').Fetched>} */
 	const serialized_data = [];
@@ -217,11 +218,13 @@ export async function render_response({
 		// prettier-ignore
 		head += Array.from(stylesheets)
 			.map((dep) => {
+				const path = options.prefix + dep;
 				const attributes = [
 					'rel="stylesheet"',
-					`href="${options.prefix + dep}"`
+					`href="${path}"`
 				];
 
+				
 				if (csp.style_needs_nonce) {
 					attributes.push(`nonce="${csp.nonce}"`);
 				}
@@ -230,16 +233,18 @@ export async function render_response({
 					// don't load stylesheets that are already inlined
 					// include them in disabled state so that Vite can detect them and doesn't try to add them
 					attributes.push('disabled', 'media="(max-width: 0)"');
-				}
+				} else if (options.link_header) link_header_preload.add(path);
 
 				return `\n\t<link ${attributes.join(' ')}>`;
 			})
 			.join('');
 
 		if (page_config.router || page_config.hydrate) {
-			head += Array.from(modulepreloads)
-				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
-				.join('');
+			for (const dep of modulepreloads) {
+				const path = options.prefix + dep;
+				head += `\n\t<link rel="modulepreload" href="${path}">`;
+				if (options.link_header) link_header_preload.add(path);
+			}
 
 			const attributes = ['type="module"', `data-hydrate="${target}"`];
 
@@ -303,6 +308,15 @@ export async function render_response({
 		'content-type': 'text/html',
 		etag: `"${hash(html)}"`
 	});
+
+	if (link_header_preload.size) {
+		headers.set(
+			'link',
+			Array.from(link_header_preload)
+				.map((href) => `<${href}>; rel=preload`)
+				.join(',')
+		);
+	}
 
 	if (cache) {
 		headers.set('cache-control', `${is_private ? 'private' : 'public'}, max-age=${cache.maxage}`);
