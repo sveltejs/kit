@@ -530,7 +530,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 				props: props || {},
 				get url() {
 					node.uses.url = true;
-					return url;
+					const load_input_url = new URL(url);
+					load_input_url.hash = '';
+					return load_input_url;
 				},
 				get session() {
 					node.uses.session = true;
