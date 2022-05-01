@@ -1432,6 +1432,11 @@ test.describe.parallel('Load', () => {
 		expect(cookies.answer).toBe('42');
 		expect(cookies.doubled).toBe('84');
 	});
+
+	test('load does not receive hash in url', async ({ page }) => {
+		await page.goto('/load/url-hash#please-dont-send-me-to-load');
+		expect(await page.textContent('h1')).toBe('');
+	});
 });
 
 test.describe.parallel('Method overrides', () => {
