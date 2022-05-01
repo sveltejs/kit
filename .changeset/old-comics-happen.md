@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: sveltekit:prefetch correctly distinguishes between hash routes
+fix: page store correct after navigation when an identical route with a different hash had been prefetched
