@@ -60,10 +60,10 @@ export function write_tsconfig(config) {
 
 					// This is required for svelte-kit package to work as expected
 					// Can be overwritten
-					lib: ['es2020', 'DOM'],
+					lib: ['esnext', 'DOM'],
 					moduleResolution: 'node',
-					module: 'es2020',
-					target: 'es2020'
+					module: 'esnext',
+					target: 'esnext'
 				},
 				include,
 				exclude: [config_relative('node_modules/**'), './**']
