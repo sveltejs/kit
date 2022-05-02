@@ -93,7 +93,7 @@ export class Server {
 				getSession: module.getSession || (() => ({})),
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
 				handleError: module.handleError || (({ error }) => console.error(error.stack)),
-				externalFetch: module.externalFetch || fetch
+				externalFetch: module.externalFetch || ((r) => fetch(r))
 			};
 		}
 

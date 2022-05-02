@@ -155,7 +155,7 @@ export interface Config {
 }
 
 export interface ExternalFetch {
-	(req: Request): Promise<Response>;
+	(req: Request, platform?: any): Promise<Response>;
 }
 
 export interface GetSession {

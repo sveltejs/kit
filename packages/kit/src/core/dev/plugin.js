@@ -234,7 +234,7 @@ export async function create_plugin(config, cwd) {
 										console.error(colors.gray(error.stack));
 									}
 								}),
-							externalFetch: user_hooks.externalFetch || fetch
+							externalFetch: user_hooks.externalFetch || ((r) => fetch(r))
 						};
 
 						if (/** @type {any} */ (hooks).getContext) {
