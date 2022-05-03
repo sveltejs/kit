@@ -90,6 +90,9 @@ function validate_config(builder) {
 			throw err;
 		}
 
+		// rudamentary way to detect a wrangler2 config file
+		const is_wrangler_2 = wrangler_config['main'] != null;
+
 		// @ts-ignore
 		if (!wrangler_config.site || !wrangler_config.site.bucket) {
 			throw new Error(
@@ -97,20 +100,22 @@ function validate_config(builder) {
 			);
 		}
 
-		// @ts-ignore
-		if (!wrangler_config.build || !wrangler_config.build.upload) {
-			throw new Error(
-				'You must specify build.upload options in wrangler.toml. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers'
-			);
+		if (!is_wrangler_2) {
+			// @ts-ignore
+			if (!wrangler_config.build || !wrangler_config.build.upload) {
+				throw new Error(
+					'You must specify build.upload options in wrangler.toml. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers'
+				);
+			}
+
+			// @ts-ignore
+			if (wrangler_config.build.upload.format !== 'modules') {
+				throw new Error('build.upload.format in wrangler.toml must be "modules"');
+			}
 		}
 
 		// @ts-ignore
-		if (wrangler_config.build.upload.format !== 'modules') {
-			throw new Error('build.upload.format in wrangler.toml must be "modules"');
-		}
-
-		// @ts-ignore
-		const main_file = wrangler_config.build?.upload?.main;
+		const main_file = is_wrangler_2 ? wrangler_config.main : wrangler_config.build?.upload?.main;
 		const main_file_ext = main_file?.split('.').slice(-1)[0];
 		if (main_file_ext && main_file_ext !== 'mjs') {
 			// @ts-ignore
