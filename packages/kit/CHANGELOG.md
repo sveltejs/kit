@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.325
+
+### Patch Changes
+
+- Display network logs in node 18 ([#4778](https://github.com/sveltejs/kit/pull/4778))
+
 ## 1.0.0-next.324
 
 ### Patch Changes
