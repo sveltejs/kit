@@ -7,6 +7,8 @@ import {
 	HandleError,
 	Load,
 	RequestHandler,
+	ResolveOptions,
+	RequestEvent,
 	Server,
 	SSRManifest
 } from './index';
@@ -14,9 +16,7 @@ import {
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
-	RequestEvent,
 	RequestOptions,
-	ResolveOptions,
 	ResponseHeaders,
 	TrailingSlash
 } from './private';

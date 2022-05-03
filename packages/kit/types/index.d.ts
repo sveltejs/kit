@@ -12,9 +12,7 @@ import {
 	MaybePromise,
 	Prerendered,
 	PrerenderOnErrorValue,
-	RequestEvent,
 	RequestOptions,
-	ResolveOptions,
 	ResponseHeaders,
 	RouteDefinition,
 	TrailingSlash
@@ -171,6 +169,21 @@ export interface Handle {
 
 export interface HandleError {
 	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
+}
+
+export interface RequestEvent<Params extends Record<string, string> = Record<string, string>> {
+	clientAddress: string;
+	locals: App.Locals;
+	params: Params;
+	platform: Readonly<App.Platform>;
+	request: Request;
+	routeId: string | null;
+	url: URL;
+}
+
+export interface ResolveOptions {
+	ssr?: boolean;
+	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
 }
 
 /**
