@@ -52,13 +52,15 @@ export async function load_node({
 	/** @type {import('types').LoadOutput} */
 	let loaded;
 
+	const should_prerender = node.module.prerender ?? state?.prerender?.default ?? false;
+
 	/** @type {import('types').ShadowData} */
 	const shadow = is_leaf
 		? await load_shadow_data(
 				/** @type {import('types').SSRPage} */ (route),
 				event,
 				options,
-				node.module.prerender ?? state?.prerender?.default ?? false
+				should_prerender
 		  )
 		: {};
 
