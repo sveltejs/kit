@@ -88,7 +88,11 @@ The generated `.svelte-kit/tsconfig.json` file contains a mixture of options. So
 			"$lib": "src/lib",
 			"$lib/*": "src/lib/*"
 		},
-		"rootDirs": ["..", "./types"]
+		"rootDirs": ["..", "./types"],
+		"lib": ["esnext", "DOM"],
+		"moduleResolution": "node",
+		"module": "esnext",
+		"target": "esnext"
 	},
 	"include": ["../src/**/*.js", "../src/**/*.ts", "../src/**/*.svelte"],
 	"exclude": ["../node_modules/**", "./**"]
