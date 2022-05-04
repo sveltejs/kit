@@ -1074,6 +1074,15 @@ test.describe.parallel('Errors', () => {
 		expect(response.status()).toBe(500);
 		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
 	});
+
+	test('prerendering a page whose load accesses session results in a catchable error', async ({
+		page
+	}) => {
+		await page.goto('/prerendering');
+		expect(await page.textContent('h1')).toBe(
+			'500: Attempted to access session from a prerendered page. Session would never be populated.'
+		);
+	});
 });
 
 test.describe.parallel('ETags', () => {
