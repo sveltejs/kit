@@ -6,6 +6,7 @@ import { preprocess } from 'svelte/compiler';
 import { copy, mkdirp, rimraf } from '../utils/filesystem.js';
 import { analyze, generate_pkg, resolve_lib_alias, scan, strip_lang_tags, write } from './utils.js';
 import { emit_dts, transpile_ts } from './typescript.js';
+import { write_tsconfig } from '../core/sync/write_tsconfig.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
 
@@ -23,6 +24,9 @@ export async function build(config, cwd = process.cwd()) {
 
 	rimraf(dir);
 	mkdirp(dir);
+
+	// Make sure generated tsconfig is up-to-date
+	write_tsconfig(config);
 
 	const files = scan(config);
 
@@ -86,6 +90,9 @@ export async function build(config, cwd = process.cwd()) {
  * @param {import('types').ValidatedConfig} config
  */
 export async function watch(config, cwd = process.cwd()) {
+	// Make sure generated tsconfig is up-to-date
+	write_tsconfig(config);
+
 	await build(config, cwd);
 
 	const message = `\nWatching ${relative(cwd, config.kit.files.lib)} for changes...\n`;
