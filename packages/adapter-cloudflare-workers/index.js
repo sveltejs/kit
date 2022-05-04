@@ -90,7 +90,7 @@ function validate_config(builder) {
 			throw err;
 		}
 
-		// rudamentary way to detect a wrangler2 config file
+		// rudimentary way to detect a wrangler2 config file
 		const is_wrangler_2 = wrangler_config['main'] != null;
 
 		// @ts-ignore
