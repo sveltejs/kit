@@ -29,7 +29,6 @@ const config = {
 				// ...
 			}
 		},
-		link_header: false,
 		endpointExtensions: ['.js', '.ts'],
 		files: {
 			assets: 'static',
@@ -138,12 +137,6 @@ export default config;
 When pages are prerendered, the CSP header is added via a `<meta http-equiv>` tag (note that in this case, `frame-ancestors`, `report-uri` and `sandbox` directives will be ignored).
 
 > When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
-
-# link_header
-
-When `true` the server will inject a `Link: </my-files.js>; rel=preload` header defined by [MDN Link](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link). This can be used to let the browser know about modulepreloads before the html is parsed.
-
-> Cloudflare with [Early Hits](https://developers.cloudflare.com/cache/about/early-hints) enabled can then further optimize this by fetching these assets as it flies through the edge.
 
 ### endpointExtensions
 

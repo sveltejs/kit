@@ -233,7 +233,9 @@ export async function render_response({
 					// don't load stylesheets that are already inlined
 					// include them in disabled state so that Vite can detect them and doesn't try to add them
 					attributes.push('disabled', 'media="(max-width: 0)"');
-				} else if (options.link_header) link_header_preload.add(path);
+				} else {
+					link_header_preload.add(`<${path}>; rel="preload"`);
+				}
 
 				return `\n\t<link ${attributes.join(' ')}>`;
 			})
@@ -243,7 +245,7 @@ export async function render_response({
 			for (const dep of modulepreloads) {
 				const path = options.prefix + dep;
 				head += `\n\t<link rel="modulepreload" href="${path}">`;
-				if (options.link_header) link_header_preload.add(path);
+				link_header_preload.add(`<${path}>; rel="modulepreload"`);
 			}
 
 			const attributes = ['type="module"', `data-hydrate="${target}"`];
@@ -310,12 +312,7 @@ export async function render_response({
 	});
 
 	if (link_header_preload.size) {
-		headers.set(
-			'link',
-			Array.from(link_header_preload)
-				.map((href) => `<${href}>; rel=preload`)
-				.join(',')
-		);
+		headers.set('link', Array.from(link_header_preload).join(','));
 	}
 
 	if (cache) {
