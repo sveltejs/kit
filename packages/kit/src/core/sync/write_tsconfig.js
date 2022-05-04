@@ -56,7 +56,14 @@ export function write_tsconfig(config) {
 					isolatedModules: true,
 					// TypeScript doesn't know about import usages in the template because it only sees the
 					// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
-					preserveValueImports: true
+					preserveValueImports: true,
+
+					// This is required for svelte-kit package to work as expected
+					// Can be overwritten
+					lib: ['esnext', 'DOM'],
+					moduleResolution: 'node',
+					module: 'esnext',
+					target: 'esnext'
 				},
 				include,
 				exclude: [config_relative('node_modules/**'), './**']
