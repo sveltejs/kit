@@ -58,7 +58,7 @@ export async function load_node({
 				/** @type {import('types').SSRPage} */ (route),
 				event,
 				options,
-				!!state.prerender
+				node.module.prerender ?? state?.prerender?.default ?? false
 		  )
 		: {};
 
