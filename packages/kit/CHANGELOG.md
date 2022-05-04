@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.326
+
+### Patch Changes
+
+- [breaking] add lib, module, and target to generated tsconfig ([#4791](https://github.com/sveltejs/kit/pull/4791))
+
 ## 1.0.0-next.325
 
 ### Patch Changes
