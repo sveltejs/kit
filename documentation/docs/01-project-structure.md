@@ -81,7 +81,7 @@ Contains [param matchers](routing#advanced-routing-matching) that can be used fo
 
 Optionally contains code for your [service-worker](service-worker).
 
-#### other files in src/ folder.
+#### other files in src/ folder
 
 The `src/` folder can also contain an `app.css` file with global styles or an `app.d.ts` file with type definitions.
 
