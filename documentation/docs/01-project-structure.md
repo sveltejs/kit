@@ -53,7 +53,7 @@ Holds the Svelte, JS/TS, and other source files for your app.
 
 #### app.html
 
-Is entry files, to which is Svelte app parsed. It contain some placeholders like `%svelte.head%`, `%svelte.body%` or `%svelte.assets%`. These placeholders will be removed and replaced by actual content at build or ssr.
+This is the entry point to your application. It contain placeholders like `%svelte.head%`, `%svelte.body%`, and `%svelte.assets%`. These placeholders will be removed and replaced by actual content at build or SSR.
 
 `%svelte.head%` is replaced mostly with `<link>` and `<script>` tags, that makes your application possible to work. But it's also used as place to which put content from your `<svelte:head>` tags defined in your layouts and pages.
 
