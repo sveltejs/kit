@@ -41,8 +41,6 @@ The `package.json` file is a standard file where you can configure your `depende
 
 SvelteKit is ESM-first so we use `"type": "module"` settings. In the `"scripts"` property, you can see scripts used for building the project, running the dev server, packaging a library (optional), and running other tools for linting, formatting, type checking, testing etc.
 
-When you decide to install adapter, you should use `-D` option to install it as devDependency.
-
 ### svelte.config.js
 
 Contains [configuration](configuration) of SvelteKit project.
