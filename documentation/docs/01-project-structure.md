@@ -97,4 +97,4 @@ Holds Vite output used directly when you run `npm run dev` or as intermediate ou
 
 ### Other
 
-based on options you selected when initializing project, there are generated bunch of other files used for tools like Git, ESLint, Prettier, TypeScript, or PlayWright.
+Based on options you selected when initializing the project, there other files will be generated for tools like Git, ESLint, Prettier, TypeScript, and PlayWright.
