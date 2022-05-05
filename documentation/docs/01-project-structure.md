@@ -39,7 +39,7 @@ If using TypeScript, the scripts files in the `src/` directory will have a `.ts`
 
 The `package.json` file is a standard file where you can configure your `dependencies` and `devDependencies`. [Read more in the npm docs](https://docs.npmjs.com/cli/v7/configuring-npm/package-json).
 
-Content depends on what options you used when initializing project. SvelteKit is ESM first so we use `"type": "module"` settings. In `"scripts"` property, we can see scripts used for building SvelteKit project, running dev server, packaging and to run other tools for linting, formating, type-checking, testing etc.
+SvelteKit is ESM-first so we use `"type": "module"` settings. In the `"scripts"` property, you can see scripts used for building the project, running the dev server, packaging a library (optional), and running other tools for linting, formatting, type checking, testing etc.
 
 When you decide to install adapter, you should use `-D` option to install it as devDependency.
 
