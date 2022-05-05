@@ -90,9 +90,6 @@ export async function build(config, cwd = process.cwd()) {
  * @param {import('types').ValidatedConfig} config
  */
 export async function watch(config, cwd = process.cwd()) {
-	// Make sure generated tsconfig is up-to-date
-	write_tsconfig(config);
-
 	await build(config, cwd);
 
 	const message = `\nWatching ${relative(cwd, config.kit.files.lib)} for changes...\n`;
