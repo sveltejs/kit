@@ -115,7 +115,14 @@ Others are required for SvelteKit to work properly, and should also be left unto
 		// TypeScript cannot 'see' when you
 		// use an imported value in your
 		// markup, so we need this
-		"preserveValueImports": true
+		"preserveValueImports": true,
+
+		// This ensures both `svelte-kit build`
+		// and `svelte-kit package` work correctly
+		"lib": ["esnext", "DOM"],
+		"moduleResolution": "node",
+		"module": "esnext",
+		"target": "esnext"
 	}
 }
 ```
