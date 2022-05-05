@@ -37,7 +37,7 @@ If using TypeScript, the scripts files in the `src/` directory will have a `.ts`
 
 ### package.json
 
-Same as in any `node.js` app, contain `name`, `version`, `scripts`, `devDependencies`, `type` and `dependencies` and other informations about your project.
+The `package.json` file is a standard file where you can configure your `dependencies` and `devDependencies`. [Read more in the npm docs](https://docs.npmjs.com/cli/v7/configuring-npm/package-json).
 
 Content depends on what options you used when initializing project. SvelteKit is ESM first so we use `"type": "module"` settings. In `"scripts"` property, we can see scripts used for building SvelteKit project, running dev server, packaging and to run other tools for linting, formating, type-checking, testing etc.
 
