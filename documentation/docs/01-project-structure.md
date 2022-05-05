@@ -83,7 +83,7 @@ Optionally contains code for your [service-worker](service-worker).
 
 #### other files in src/ folder.
 
-`src/` folder can contain also `app.css` files that contain global styles, or `app.d.ts` (if you use type-checking) used by TypeScript that contains type definitions in `App` namespace.
+The `src/` folder can also contain an `app.css` file with global styles or an `app.d.ts` file with type definitions.
 
 ### build/
 
