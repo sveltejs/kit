@@ -71,7 +71,7 @@ A folder that contains source for non-routing related files used by your applica
 
 #### src/hooks.js or src/hooks/
 
-a folder or file that contain [hooks](hooks) functions executed at every request. The top scope of this file can be used for initialization code like a database connection.
+A folder or file that contain [hooks](hooks) functions executed at every request. The top scope of this file can be used for initialization code like a database connection.
 
 #### src/params/
 
