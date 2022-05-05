@@ -25,11 +25,9 @@ my-app/
  +---- .gitignore                   # (optional)
  +---- .npmrc
  +---- .prettierrc                  # (optional)
- +---- CHANGELOG.md                 # (optional)
  +---- jsconfig.json                # or 'tsconfig.json' (optional)
  +---- package.json
  +---- playwright.config.js         # (optional)
- +---- README.md                    # (optional)
  +---- svelte.config.js
 ```
 
