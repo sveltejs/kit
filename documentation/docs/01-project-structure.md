@@ -79,7 +79,7 @@ Contain [param matchers](routing#advanced-routing-matching) that can be used for
 
 #### service-worker.js or service-worker/
 
-Contain your code for [service-worker](service-workers). If is present, service-worker will be automatically registered by SvelteKit.
+Optionally contains code for your [service-worker](service-worker).
 
 #### other files in src/ folder.
 
