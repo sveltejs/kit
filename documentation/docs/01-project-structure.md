@@ -57,7 +57,7 @@ This is the entry point to your application. It contain placeholders like `%svel
 
 `%svelte.head%` is replaced with `<link>` and `<script>` tags that power the application as well as content from the `<svelte:head>` tags defined in your layouts and pages.
 
-`%svelte.body%` is where whole content (HTML) as well as self-hydratating JavaScript code is put.
+`%svelte.body%` is where the HTML for your application is rendered.
 
 `%svelte.assets%` is replaced by actual base path to assets. This is typically empty string and often not needed, but if you choose to change `config.kit.paths` option in `svelte.config.js` for some reasons, it will help to correctly load assets.
 
