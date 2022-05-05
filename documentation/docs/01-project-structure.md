@@ -51,7 +51,7 @@ Holds your static assets. These are files that are not processed by Vite but are
 
 Holds the Svelte, JS/TS, and other source files for your app.
 
-#### src/app.html
+#### app.html
 
 This is the entry point to your application. It contains placeholders like `%svelte.head%`, `%svelte.body%`, and `%svelte.assets%`. These placeholders will be removed and replaced by actual content at build or SSR.
 
