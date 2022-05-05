@@ -93,6 +93,10 @@ The output location for your project will depend on which adapter you use. Many 
 
 Holds Vite output used directly when you run `npm run dev` or as intermediate output of `npm run build`.
 
+### tests/
+
+If PlayWright is set, this folder is place for testing your app.
+
 ### Other
 
 Based on options you selected when initializing the project, there other files will be generated for tools like Git, ESLint, Prettier, TypeScript, and PlayWright.
