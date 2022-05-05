@@ -59,7 +59,7 @@ This is the entry point to your application. It contain placeholders like `%svel
 
 `%svelte.body%` is where the HTML for your application is rendered.
 
-`%svelte.assets%` is replaced by actual base path to assets. This is typically empty string and often not needed, but if you choose to change `config.kit.paths` option in `svelte.config.js` for some reasons, it will help to correctly load assets.
+`%svelte.assets%` is replaced by the [assets base path](configuration#paths).
 
 #### routes/
 
