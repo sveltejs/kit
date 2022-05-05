@@ -69,7 +69,7 @@ Contains your [pages](routing#pages), [endpoints](routing#endpoints), and [layou
 
 A folder that contains source for non-routing related files used by your application. They can be imported via the `$lib` alias. If you are creating a library, the contents of the `lib/` folder are used by default to generate the package when you run [`svelte-kit package`](packaging).
 
-#### src/hooks.js or src/hooks/
+#### hooks.js or hooks/
 
 A folder or file that contain [hooks](hooks) functions executed at every request. The top scope of this file can be used for initialization code like a database connection.
 
