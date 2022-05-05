@@ -2,7 +2,7 @@
 title: Project Structure
 ---
 
-Typicall structure of SvelteKit project is something like:
+The basic structure of a SvelteKit project is:
 
 ```sh
 my-app/
