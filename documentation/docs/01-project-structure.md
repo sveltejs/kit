@@ -93,7 +93,7 @@ The output location for your project will depend on which adapter you use. Many 
 
 ### .svelte-kit/
 
-Folder used when `npm run dev` command is used.
+Holds Vite output used directly when you run `npm run dev` or as intermediate output of `npm run build`.
 
 ### README.md
 
