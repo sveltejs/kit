@@ -61,7 +61,7 @@ This is the entry point to your application. It contain placeholders like `%svel
 
 `%svelte.assets%` is replaced by the [assets base path](configuration#paths).
 
-#### routes/
+#### src/routes/
 
 Is most important folder in your project. Those contain Pages and Endpoints as well as Layouts and private module files. SvelteKit use file-based routing, so Pages and Endpoints in this folder map to path of URL.
 
