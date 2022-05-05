@@ -35,7 +35,7 @@ my-app/
 
 ### package.json
 
-Same as in any `node.js` app, contain `name`, `version`, `scripts`, `devDependencies`, `type` and `dependencies`.
+Same as in any `node.js` app, contain `name`, `version`, `scripts`, `devDependencies`, `type` and `dependencies` and other informations about your project.
 
 Content depends on what options you used when initializing project. SvelteKit is ESM first so we use `"type": "module"` settings. In `"scripts"` property, we can see scripts used for building SvelteKit project, running dev server, packaging and to run other tools for linting, formating, type-checking, testing etc.
 
