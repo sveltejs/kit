@@ -43,7 +43,7 @@ SvelteKit is ESM-first so we use `"type": "module"` settings. In the `"scripts"`
 
 ### svelte.config.js
 
-Contains [configuration](configuration) of SvelteKit project.
+Contains [configuration](configuration) for the SvelteKit project.
 
 ### static/
 
