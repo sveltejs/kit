@@ -95,10 +95,6 @@ The output location for your project will depend on which adapter you use. Many 
 
 Holds Vite output used directly when you run `npm run dev` or as intermediate output of `npm run build`.
 
-### README.md
-
-Contain some informations about how to create, develop and build or deploy your app.
-
 ### other optional files and tests folder in root directory
 
 based on options you selected when initializing project, there are generated bunch of other files used for tools like Git, ESLint, Prettier, TypeScript, or PlayWright.
