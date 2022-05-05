@@ -89,7 +89,7 @@ Contain your code for [service-worker](service-workers). If is present, service-
 
 ### build/
 
-Is folder generated at build, that contain your compiled app prepared for deploying to production. In case You use adapter-node, you can execute it with `node build` command.
+The output location for your project will depend on which adapter you use. Many adapters will use the `build/` folder as the output location for your compiled app prepared for deploying to production.
 
 ### .svelte-kit/
 
