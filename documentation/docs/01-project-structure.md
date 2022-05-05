@@ -75,7 +75,7 @@ Is folder that contain other files you use in app. Those files can be Components
 
 #### hooks.js or hooks/
 
-Is folder that contain hooks. Those are functions executed at every request. Read more about them in [Hooks](hooks).
+Is folder or file that contain hooks. Those are functions executed at every request. Read more about them in [Hooks](hooks) section.
 
 #### params/
 
@@ -93,7 +93,7 @@ Contain your code for [service-worker](service-workers).
 
 Is folder generated at build, that contain your compiled app prepared for deploying to production. In case You use adapter-node, you can execute it with `node build` command.
 
-### .svelte-kit/
+### .svelte-kit/
 
 Folder used when `npm run dev` command is used.
 
