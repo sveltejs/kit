@@ -49,7 +49,7 @@ Holds your static assets. These are files that are not processed by Vite but are
 
 ### src/
 
-Holds all Svelte, JS and other files used to implement your app.
+Holds the Svelte, JS/TS, and other source files for your app.
 
 #### app.html
 
