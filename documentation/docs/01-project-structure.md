@@ -65,7 +65,7 @@ This is the entry point to your application. It contain placeholders like `%svel
 
 Contains your [pages](routing#pages), [endpoints](routing#endpoints), and [layouts](layouts) and can also hold private module files. SvelteKit use file-based routing, so the file path of the pages and endpoints in this folder map to the URL which renders them.
 
-#### lib/
+#### src/lib/
 
 Is folder that contain other files you use in app. Those files can be Components, Stores, util files, some data, or even server-side files (if they are not imported to any client-side file (like `.svelte` Page or Component file), they are not exposed to client-side). But if you are creating package, whole content of `lib/` folder is used to generate package, if it's not configured otherwise in `svelte.config.js`.
 
