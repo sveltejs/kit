@@ -67,7 +67,7 @@ Contains your [pages](routing#pages), [endpoints](routing#endpoints), and [layou
 
 #### src/lib/
 
-Is folder that contain other files you use in app. Those files can be Components, Stores, util files, some data, or even server-side files (if they are not imported to any client-side file (like `.svelte` Page or Component file), they are not exposed to client-side). But if you are creating package, whole content of `lib/` folder is used to generate package, if it's not configured otherwise in `svelte.config.js`.
+A folder that contains source for non-routing related files used by your application. They can be imported via the `$lib` alias. If you are creating a library, the contents of the `lib/` folder are used by default to generate the package when you run [`svelte-kit package`](packaging).
 
 #### hooks.js or hooks/
 
