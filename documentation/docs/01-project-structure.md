@@ -73,7 +73,7 @@ A folder that contains source for non-routing related files used by your applica
 
 A folder or file that contain [hooks](hooks) functions executed at every request. The top scope of this file can be used for initialization code like a database connection.
 
-#### src/params/
+#### params/
 
 Contains [param matchers](routing#advanced-routing-matching) that can be used for dynamic pages or endpoints.
 
