@@ -4,32 +4,32 @@ title: Project Structure
 
 Typicall structure of SvelteKit project is something like:
 
-```bash
+```sh
 my-app/
  |
- +---- .svelte-kit/ # (generated at dev)
- +---- build/ # (generated at build)
+ +---- .svelte-kit/					# (generated at dev)
+ +---- build/						# (generated at build)
  +---- src/
  |       |
- |       +---- lib/ # (optional)
- |       +---- params/ # (optional)
+ |       +---- lib/					# (optional)
+ |       +---- params/				# (optional)
  |       +---- routes/
- |       +---- app.css # (optional)
- |       +---- app.d.ts # (optional)
+ |       +---- app.css				# (optional)
+ |       +---- app.d.ts				# (optional)
  |       +---- app.html
- |       +---- hooks.js # or 'hooks/' (optional)
- |       +---- service-worker.js # (optional)
+ |       +---- hooks.js				# or 'hooks/' (optional)
+ |       +---- service-worker.js	# (optional)
  +---- static/
- +---- tests/ # (optional)
- +---- .eslintrtc.cjs # (optional)
- +---- .gitignore # (optional)
+ +---- tests/						# (optional)
+ +---- .eslintrtc.cjs				# (optional)
+ +---- .gitignore					# (optional)
  +---- .npmrc
- +---- .prettierrc # (optional)
- +---- CHANGELOG.md # (optional)
- +---- jsconfig.json # or 'tsconfig.json' (optional)
+ +---- .prettierrc					# (optional)
+ +---- CHANGELOG.md					# (optional)
+ +---- jsconfig.json				# or 'tsconfig.json' (optional)
  +---- package.json
- +---- playwright.config.js # (optional)
- +---- README.md # (optional)
+ +---- playwright.config.js			# (optional)
+ +---- README.md					# (optional)
  +---- svelte.config.js
 ```
 
