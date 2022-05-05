@@ -75,7 +75,7 @@ Is folder that contain other files you use in app. Those files can be Components
 
 #### hooks.js or hooks/
 
-Is folder or file that contain hooks. Those are functions executed at every request. Read more about them in [Hooks](hooks) section. Top scope of this file can be used for initialization code or database connection.
+Is folder or file that contain hooks. Those are functions executed at every request. Read more about them in [Hooks](hooks) section. Top scope of this file can be used for initialization code like database connection for example.
 
 #### params/
 
