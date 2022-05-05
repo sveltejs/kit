@@ -77,7 +77,7 @@ A folder or file that contain [hooks](hooks) functions executed at every request
 
 Contains [param matchers](routing#advanced-routing-matching) that can be used for dynamic pages or endpoints.
 
-#### src/service-worker.js or src/service-worker/
+#### service-worker.js or service-worker/
 
 Optionally contains code for your [service-worker](service-worker).
 
