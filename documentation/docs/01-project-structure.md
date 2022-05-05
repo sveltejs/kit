@@ -65,7 +65,7 @@ This is the entry point to your application. It contains placeholders like `%sve
 
 Contains your [pages](routing#pages), [endpoints](routing#endpoints), and [layouts](layouts) and can also hold private module files. SvelteKit use file-based routing, so the file path of the pages and endpoints in this folder map to the URL which renders them.
 
-#### src/lib/
+#### lib/
 
 A folder that contains source for non-routing related files used by your application. They can be imported via the `$lib` alias. If you are creating a library, the contents of the `lib/` folder are used by default to generate the package when you run [`svelte-kit package`](packaging).
 
