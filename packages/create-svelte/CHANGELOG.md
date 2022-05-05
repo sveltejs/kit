@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.133
+
+### Patch Changes
+
+- Bump `eslint` from version 7 to 8 ([#4553](https://github.com/sveltejs/kit/pull/4553))
+
 ## 2.0.0-next.132
 
 ### Patch Changes
