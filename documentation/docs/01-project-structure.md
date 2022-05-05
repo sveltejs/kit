@@ -33,6 +33,8 @@ my-app/
  +---- svelte.config.js
 ```
 
+note that in case of TypeScript scripts files in `src/` directory have `.ts` file extension.
+
 ### package.json
 
 Same as in any `node.js` app, contain `name`, `version`, `scripts`, `devDependencies`, `type` and `dependencies` and other informations about your project.
