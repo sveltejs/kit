@@ -9,20 +9,24 @@ import { start_server, test } from '../../../utils.js';
 /** @typedef {import('@playwright/test').Response} Response */
 
 test.describe.parallel('a11y', () => {
-	test('resets focus', async ({ page, clicknav }) => {
+	test('resets focus', async ({ page, clicknav, browserName }) => {
+		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+
 		await page.goto('/accessibility/a');
 
 		await clicknav('[href="/accessibility/b"]');
 		expect(await page.innerHTML('h1')).toBe('b');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
-		await page.keyboard.press('Tab');
+		await page.keyboard.press(tab);
+
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
 
 		await clicknav('[href="/accessibility/a"]');
 		expect(await page.innerHTML('h1')).toBe('a');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
-		await page.keyboard.press('Tab');
+
+		await page.keyboard.press(tab);
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
 
@@ -2122,20 +2126,20 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('h1')).toBe('a');
 	});
 
-	test('focus works if page load has hash', async ({ page }) => {
+	test('focus works if page load has hash', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target#p2');
 
-		await page.keyboard.press('Tab');
+		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe(
 			'next focus element'
 		);
 	});
 
-	test('focus works when navigating to a hash on the same page', async ({ page }) => {
+	test('focus works when navigating to a hash on the same page', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target');
 
 		await page.click('[href="#p2"]');
-		await page.keyboard.press('Tab');
+		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
 
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe(
 			'next focus element'
