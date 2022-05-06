@@ -63,7 +63,7 @@ This is the entry point to your application. It contains placeholders like `%sve
 
 #### routes/
 
-Contains your [pages](routing#pages), [endpoints](routing#endpoints), and [layouts](layouts) and can also hold private module files. SvelteKit use file-based routing, so the file path of the pages and endpoints in this folder map to the URL which renders them.
+Contains your [pages](routing#pages), [endpoints](routing#endpoints), [standalone endpoints](routing#endpoints-standalone-endpoints), [layouts](layouts) and can also hold [private module](routing#private-modules) files. SvelteKit uses file-based routing, so the file path of the pages and endpoints in this folder maps to the URL which renders them.
 
 #### lib/
 
