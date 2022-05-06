@@ -939,7 +939,7 @@ test.describe.parallel('Errors', () => {
 			const body = await page.textContent('body');
 
 			expect(body).toMatch(
-				'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
+				'"error" property returned from load() must be a string or instance of Error, received type "object"'
 			);
 		}
 	});
