@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
       - uses: pnpm/action-setup@v2.2.1
         with:
-          version: 6.23.2
+          version: 6.32.11
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
