@@ -1387,7 +1387,8 @@ test.describe.parallel('Load', () => {
 		baseURL,
 		page,
 		clicknav,
-		javaScriptEnabled
+		javaScriptEnabled,
+		browserName
 	}) => {
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-headers"]');
@@ -1401,8 +1402,11 @@ test.describe.parallel('Load', () => {
 			referer: `${baseURL}/load`,
 			// these headers aren't particularly useful, but they allow us to verify
 			// that page headers are being forwarded
-			'sec-fetch-dest': javaScriptEnabled ? 'empty' : 'document',
-			'sec-fetch-mode': javaScriptEnabled ? 'cors' : 'navigate'
+			'sec-fetch-dest':
+				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'empty' : 'document',
+			'sec-fetch-mode':
+				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'cors' : 'navigate',
+			connection: 'keep-alive'
 		});
 	});
 
