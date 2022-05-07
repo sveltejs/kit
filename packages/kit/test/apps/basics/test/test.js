@@ -1823,7 +1823,7 @@ test.describe.parallel('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
-	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled }) => {
+	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled, browserName }) => {
 		await page.goto('/redirect');
 
 		await page.click('[href="/redirect/loopy/a"]');
@@ -1837,7 +1837,11 @@ test.describe.parallel('Redirects', () => {
 			);
 		} else {
 			// there's not a lot we can do to handle server-side redirect loops
-			expect(page.url()).toBe('chrome-error://chromewebdata/');
+			if (browserName === 'webkit') {
+				expect(page.url()).toBe(`${baseURL}/redirect`);
+			} else {
+				expect(page.url()).toBe('chrome-error://chromewebdata/');
+			}
 		}
 	});
 
