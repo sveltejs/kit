@@ -127,11 +127,12 @@ test.describe.parallel('beforeNavigate', () => {
 
 	test('prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
 		await page.goto('/before-navigate/a');
-
 		await app.goto('/before-navigate/prevent-navigation');
+		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
+
 		await page.goBack();
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('true');
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 	});
 
 	test('prevents unload', async ({ page }) => {
