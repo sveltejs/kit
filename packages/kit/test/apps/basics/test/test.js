@@ -1719,6 +1719,7 @@ test.describe.parallel('$app/stores', () => {
 		clicknav,
 		javaScriptEnabled
 	}) => {
+		await page.goto('/store/stuff/foo?reset=true');
 		const stuff1 = JSON.stringify({ name: 'SvelteKit', value: 789, error: 'uh oh' });
 		const stuff2 = JSON.stringify({ name: 'SvelteKit', value: 123, foo: true });
 		await page.goto('/store/stuff/www');
