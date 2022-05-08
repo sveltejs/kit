@@ -21,16 +21,41 @@ async function main() {
 	console.log(gray(`\ncreate-svelte version ${version}`));
 	console.log(disclaimer);
 
-	let cwd = process.argv[2] || '.';
-
-	if (cwd === '.') {
-		const opts = await prompts([
+	const package_name = await prompts(
+		[
 			{
 				type: 'text',
-				name: 'dir',
-				message: 'Where should we create your project?\n  (leave blank to use current directory)'
+				name: 'packagename',
+				message: 'What would you like to name your project?',
+				validate: (value) => {
+					const regex = new RegExp(/^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/);
+					const match = regex.test(value);
+					return !match
+						? 'Value is not a valid NPM package name. Package names must be lowercase and one word, and may contain hyphens and underscores, or be scoped and of the form @scope/package.'
+						: true;
+				}
 			}
-		]);
+		],
+		{
+			onCancel: () => process.exit(1)
+		}
+	);
+
+	let cwd = process.argv[2] || `./${package_name.packagename}`;
+
+	if (cwd !== process.argv[2]) {
+		const opts = await prompts(
+			[
+				{
+					type: 'text',
+					name: 'dir',
+					message: `Where should we create your project?\n  (leave blank to use default: ${cwd})`
+				}
+			],
+			{
+				onCancel: () => process.exit(1)
+			}
+		);
 
 		if (opts.dir) {
 			cwd = opts.dir;
@@ -113,7 +138,7 @@ async function main() {
 		)
 	);
 
-	options.name = path.basename(path.resolve(cwd));
+	options.name = package_name.packagename;
 
 	await create(cwd, options);
 

@@ -72,7 +72,7 @@ function write_common_files(cwd, options, name) {
 
 	pkg.dependencies = sort_keys(pkg.dependencies);
 	pkg.devDependencies = sort_keys(pkg.devDependencies);
-	pkg.name = to_valid_package_name(name);
+	pkg.name = name;
 
 	fs.writeFileSync(pkg_file, JSON.stringify(pkg, null, '  '));
 }
@@ -133,14 +133,4 @@ function sort_keys(obj) {
 		});
 
 	return sorted;
-}
-
-/** @param {string} name */
-function to_valid_package_name(name) {
-	return name
-		.trim()
-		.toLowerCase()
-		.replace(/\s+/g, '-')
-		.replace(/^[._]/, '')
-		.replace(/[^a-z0-9~.-]+/g, '-');
 }
