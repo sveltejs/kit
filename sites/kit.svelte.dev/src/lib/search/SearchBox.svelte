@@ -115,7 +115,12 @@
 		if (e.key === 'k' && (navigator.platform === 'MacIntel' ? e.metaKey : e.ctrlKey)) {
 			e.preventDefault();
 			$query = '';
-			$searching = !$searching;
+
+			if ($searching) {
+				close();
+			} else {
+				$searching = true;
+			}
 		}
 
 		if (e.code === 'Escape') {
