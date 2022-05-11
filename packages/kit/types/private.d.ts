@@ -136,9 +136,7 @@ export interface CspDirectives {
 
 export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
 
-export interface JSONObject {
-	[key: string]: JSONValue;
-}
+export type JSONObject = Record<string, JSONValue>;
 
 export type JSONValue =
 	| string
