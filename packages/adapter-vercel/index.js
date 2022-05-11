@@ -329,7 +329,7 @@ async function v3(builder, external, edge, split) {
 			})
 		);
 
-		routes.push({ src: pattern, middlewarePath: name });
+		routes.push({ src: pattern, dest: `/${name}` });
 	}
 
 	const generate_function = edge ? generate_edge_function : generate_serverless_function;
