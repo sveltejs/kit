@@ -251,6 +251,7 @@ importers:
       '@rollup/plugin-replace': ^4.0.0
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.32
       '@types/amphtml-validator': ^1.0.1
+      '@types/connect': ^3.4.35
       '@types/cookie': ^0.5.0
       '@types/marked': ^4.0.1
       '@types/mime': ^2.0.3
@@ -290,6 +291,7 @@ importers:
       '@playwright/test': 1.21.0
       '@rollup/plugin-replace': 4.0.0_rollup@2.60.2
       '@types/amphtml-validator': 1.0.1
+      '@types/connect': 3.4.35
       '@types/cookie': 0.5.0
       '@types/marked': 4.0.1
       '@types/mime': 2.0.3
