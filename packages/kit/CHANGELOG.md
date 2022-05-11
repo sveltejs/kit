@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.328
+
+### Patch Changes
+
+- Print useful 404 response when requesting unprefixed path in preview ([#4751](https://github.com/sveltejs/kit/pull/4751))
+
+* Prevent naive path normalization during prerendering ([#4761](https://github.com/sveltejs/kit/pull/4761))
+
 ## 1.0.0-next.327
 
 ### Patch Changes
