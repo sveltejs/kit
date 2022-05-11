@@ -9,20 +9,24 @@ import { start_server, test } from '../../../utils.js';
 /** @typedef {import('@playwright/test').Response} Response */
 
 test.describe.parallel('a11y', () => {
-	test('resets focus', async ({ page, clicknav }) => {
+	test('resets focus', async ({ page, clicknav, browserName }) => {
+		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+
 		await page.goto('/accessibility/a');
 
 		await clicknav('[href="/accessibility/b"]');
 		expect(await page.innerHTML('h1')).toBe('b');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
-		await page.keyboard.press('Tab');
+		await page.keyboard.press(tab);
+
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
 
 		await clicknav('[href="/accessibility/a"]');
 		expect(await page.innerHTML('h1')).toBe('a');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
-		await page.keyboard.press('Tab');
+
+		await page.keyboard.press(tab);
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
 
@@ -127,11 +131,12 @@ test.describe.parallel('beforeNavigate', () => {
 
 	test('prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
 		await page.goto('/before-navigate/a');
-
 		await app.goto('/before-navigate/prevent-navigation');
+		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
+
 		await page.goBack();
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('true');
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 	});
 
 	test('prevents unload', async ({ page }) => {
@@ -938,7 +943,7 @@ test.describe.parallel('Errors', () => {
 			const body = await page.textContent('body');
 
 			expect(body).toMatch(
-				'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
+				'"error" property returned from load() must be a string or instance of Error, received type "object"'
 			);
 		}
 	});
@@ -1382,7 +1387,8 @@ test.describe.parallel('Load', () => {
 		baseURL,
 		page,
 		clicknav,
-		javaScriptEnabled
+		javaScriptEnabled,
+		browserName
 	}) => {
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-headers"]');
@@ -1396,8 +1402,11 @@ test.describe.parallel('Load', () => {
 			referer: `${baseURL}/load`,
 			// these headers aren't particularly useful, but they allow us to verify
 			// that page headers are being forwarded
-			'sec-fetch-dest': javaScriptEnabled ? 'empty' : 'document',
-			'sec-fetch-mode': javaScriptEnabled ? 'cors' : 'navigate'
+			'sec-fetch-dest':
+				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'empty' : 'document',
+			'sec-fetch-mode':
+				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'cors' : 'navigate',
+			connection: 'keep-alive'
 		});
 	});
 
@@ -1710,6 +1719,7 @@ test.describe.parallel('$app/stores', () => {
 		clicknav,
 		javaScriptEnabled
 	}) => {
+		await page.goto('/store/stuff/foo?reset=true');
 		const stuff1 = JSON.stringify({ name: 'SvelteKit', value: 789, error: 'uh oh' });
 		const stuff2 = JSON.stringify({ name: 'SvelteKit', value: 123, foo: true });
 		await page.goto('/store/stuff/www');
@@ -1822,7 +1832,7 @@ test.describe.parallel('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
-	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled }) => {
+	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled, browserName }) => {
 		await page.goto('/redirect');
 
 		await page.click('[href="/redirect/loopy/a"]');
@@ -1836,7 +1846,11 @@ test.describe.parallel('Redirects', () => {
 			);
 		} else {
 			// there's not a lot we can do to handle server-side redirect loops
-			expect(page.url()).toBe('chrome-error://chromewebdata/');
+			if (browserName === 'webkit') {
+				expect(page.url()).toBe(`${baseURL}/redirect`);
+			} else {
+				expect(page.url()).toBe('chrome-error://chromewebdata/');
+			}
 		}
 	});
 
@@ -2117,20 +2131,20 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('h1')).toBe('a');
 	});
 
-	test('focus works if page load has hash', async ({ page }) => {
+	test('focus works if page load has hash', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target#p2');
 
-		await page.keyboard.press('Tab');
+		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe(
 			'next focus element'
 		);
 	});
 
-	test('focus works when navigating to a hash on the same page', async ({ page }) => {
+	test('focus works when navigating to a hash on the same page', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target');
 
 		await page.click('[href="#p2"]');
-		await page.keyboard.press('Tab');
+		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
 
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe(
 			'next focus element'

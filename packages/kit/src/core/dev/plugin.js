@@ -13,7 +13,6 @@ import { load_template } from '../config/index.js';
 import { sequence } from '../../hooks.js';
 import { posixify } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
-import { normalize_path } from '../../utils/url.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -205,11 +204,7 @@ export async function create_plugin(config, cwd) {
 						if (req.url === '/favicon.ico') return not_found(res);
 
 						if (!decoded.startsWith(config.kit.paths.base)) {
-							const suggestion = normalize_path(
-								config.kit.paths.base + req.url,
-								config.kit.trailingSlash
-							);
-							return not_found(res, `Not found (did you mean ${suggestion}?)`);
+							return not_found(res, `Not found (did you mean ${config.kit.paths.base + req.url}?)`);
 						}
 
 						/** @type {Partial<import('types').Hooks>} */

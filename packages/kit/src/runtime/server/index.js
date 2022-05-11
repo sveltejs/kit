@@ -60,13 +60,7 @@ export async function respond(request, options, state) {
 
 	if (is_data_request) {
 		decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
-
-		const normalized = normalize_path(
-			url.pathname.slice(0, -DATA_SUFFIX.length),
-			options.trailing_slash
-		);
-
-		url = new URL(url.origin + normalized + url.search);
+		url = new URL(url.origin + url.pathname.slice(0, -DATA_SUFFIX.length) + url.search);
 	}
 
 	if (!state.prerender || !state.prerender.fallback) {
@@ -92,6 +86,7 @@ export async function respond(request, options, state) {
 			return new Response(undefined, {
 				status: 301,
 				headers: {
+					'x-sveltekit-normalize': '1',
 					location:
 						// ensure paths starting with '//' are not treated as protocol-relative
 						(normalized.startsWith('//') ? url.origin + normalized : normalized) +

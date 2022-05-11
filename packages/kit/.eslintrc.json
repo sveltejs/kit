@@ -15,7 +15,8 @@
 	"rules": {
 		"no-restricted-properties": [
 			"error",
-			{ "property": "substr", "message": "Use .slice instead of .substr." }
+			{ "property": "substr", "message": "Use .slice instead of .substr." },
+			{ "object": "test", "property": "only", "message": "Do not check in test.only tests." }
 		],
 		"@typescript-eslint/no-empty-interface": "off"
 	}

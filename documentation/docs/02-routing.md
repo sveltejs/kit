@@ -108,7 +108,7 @@ A page like `src/routes/items/[id].svelte` could get its props from the `body` i
 <h1>{item.title}</h1>
 ```
 
-Because the page and route have the same URL, you will need to include an `accept: application/json` header to get JSON from the endpoint rather than HTML from the page. You can also get the raw data by appending `/__data.json` to the URL, e.g. `/items/__data.json`.
+Because the page and route have the same URL, you will need to include an `accept: application/json` header to get JSON from the endpoint rather than HTML from the page. You can also get the raw data by appending `/__data.json` to the URL, e.g. `/items/[id]/__data.json`.
 
 #### Standalone endpoints
 

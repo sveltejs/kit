@@ -6,5 +6,11 @@
 	},
 	"settings": {
 		"import/ignore": "/template/"
+	},
+	"rules": {
+		"no-restricted-properties": [
+			"error",
+			{ "object": "test", "property": "only", "message": "Do not check in test.only tests." }
+		]
 	}
 }

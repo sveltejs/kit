@@ -23,9 +23,9 @@ Install with `npm i -D @sveltejs/adapter-cloudflare-workers`, then add the adapt
 import adapter from '@sveltejs/adapter-cloudflare-workers';
 
 export default {
-	kit: {
-		adapter: adapter()
-	}
+  kit: {
+    adapter: adapter()
+  }
 };
 ```
 
