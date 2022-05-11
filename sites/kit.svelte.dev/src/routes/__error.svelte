@@ -31,18 +31,18 @@
 			<p class="error">Encountered a {status} error</p>
 		{/if}
 
-		{#if dev && error.stack}
-			<pre>{error.stack}</pre>
-		{:else}
-			{#if status >= 500}
+		{#if status >= 500}
+			{#if dev && error.stack}
+				<pre>{error.stack}</pre>
+			{:else}
 				<p>Please try reloading the page.</p>
-			{/if}
 
-			<p>
-				If the error persists, please drop by <a href="https://svelte.dev/chat">Discord chatroom</a>
-				and let us know, or raise an issue on
-				<a href="https://github.com/sveltejs/svelte">GitHub</a>. Thanks!
-			</p>
+				<p>
+					If the error persists, please drop by <a href="https://svelte.dev/chat">Discord chatroom</a>
+					and let us know, or raise an issue on
+					<a href="https://github.com/sveltejs/svelte">GitHub</a>. Thanks!
+				</p>
+			{/if}
 		{/if}
 	{:else}
 		<h1>It looks like you're offline</h1>
