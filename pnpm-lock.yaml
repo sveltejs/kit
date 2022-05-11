@@ -41,12 +41,14 @@ importers:
       '@sveltejs/adapter-cloudflare': workspace:*
       '@sveltejs/adapter-netlify': workspace:*
       '@sveltejs/adapter-vercel': workspace:*
+      '@types/node': ^14.14.20
       typescript: ^4.6.2
     dependencies:
       '@sveltejs/adapter-cloudflare': link:../adapter-cloudflare
       '@sveltejs/adapter-netlify': link:../adapter-netlify
       '@sveltejs/adapter-vercel': link:../adapter-vercel
     devDependencies:
+      '@types/node': 14.18.17
       typescript: 4.6.2
 
   packages/adapter-begin:
