@@ -151,7 +151,7 @@ declare module '$app/navigation' {
  */
 declare module '$app/paths' {
 	/**
-	 * A string that matches [`config.kit.paths.base`](/docs/configuration#paths). It must begin, but not end, with a `/`.
+	 * A string that matches [`config.kit.paths.base`](/docs/configuration#paths). It must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string.
 	 */
 	export const base: `/${string}`;
 	/**
