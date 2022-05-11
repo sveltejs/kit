@@ -6,8 +6,7 @@
 		"dev": "node ../../cli.js dev",
 		"build": "node ../../cli.js build --verbose",
 		"preview": "node ../../cli.js preview",
-		"check": "tsc && svelte-check",
-		"test": "npm run build && uvu test"
+		"check": "tsc && svelte-check"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
