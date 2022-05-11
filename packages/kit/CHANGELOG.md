@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.327
+
+### Patch Changes
+
+- generate tsconfig when running svelte-kit package ([#4824](https://github.com/sveltejs/kit/pull/4824))
+
 ## 1.0.0-next.326
 
 ### Patch Changes
