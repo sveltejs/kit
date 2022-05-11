@@ -70,7 +70,7 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
 		"test": "npm run test:unit && npm run test:typings && npm run test:packaging && npm run test:integration",
-		"test:integration": "pnpm run -r --workspace-concurrency 1 --filter ./test test",
+		"test:integration": "pnpm run -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\" -i packaging",
 		"test:typings": "tsc --project test/typings",
 		"test:packaging": "uvu src/packaging \"(spec\\.js|test[\\\\/]index\\.js)\"",
