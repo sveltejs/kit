@@ -162,7 +162,8 @@ export const config = {
 	],
 	use: {
 		screenshot: 'only-on-failure',
-		trace: 'retain-on-failure'
+		trace: 'retain-on-failure',
+		channel: 'chrome'
 	},
 	workers: process.env.CI ? 2 : undefined
 };

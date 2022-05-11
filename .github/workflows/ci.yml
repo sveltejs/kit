@@ -46,8 +46,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # TODO: remove after dropping Node 14 support
-      - run: pnpm install --workspace-root playwright
       - run: pnpm turbo run test
       - name: archive test results
         if: failure()
