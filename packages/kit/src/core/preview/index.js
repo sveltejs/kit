@@ -7,7 +7,6 @@ import { pathToFileURL } from 'url';
 import { getRequest, setResponse } from '../../node.js';
 import { installFetch } from '../../install-fetch.js';
 import { SVELTE_KIT_ASSETS } from '../constants.js';
-import { normalize_path } from '../../utils/url.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
 /** @typedef {import('http').ServerResponse} Res */
@@ -79,9 +78,8 @@ export async function preview({ port, host, config, https: use_https = false }) 
 			if (pathname.startsWith(base)) {
 				next();
 			} else {
-				const suggestion = normalize_path(base + pathname, config.kit.trailingSlash);
 				res.statusCode = 404;
-				res.end(`Not found (did you mean ${suggestion}?)`);
+				res.end(`Not found (did you mean ${base + pathname}?)`);
 			}
 		},
 
