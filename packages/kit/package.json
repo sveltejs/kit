@@ -65,7 +65,7 @@
 		"dev": "rollup -cw",
 		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/packaging/test/**\" \"{src,test}/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"check": "tsc",
-		"check:all": "tsc && pnpm run -r --filter ./ check",
+		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
 		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
