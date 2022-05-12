@@ -230,6 +230,9 @@ function generate_lambda_functions({ builder, publish, split, esm }) {
 		redirects.push('* /.netlify/functions/render 200');
 	}
 
+	// this should happen at the end, after builder.writeStatic(...),
+	// so that generated redirects are appended to custom redirects
+	// rather than replaced by them
 	builder.log.minor('Writing redirects...');
 	const redirect_file = join(publish, '_redirects');
 	if (existsSync('_redirects')) {
