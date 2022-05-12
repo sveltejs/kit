@@ -54,6 +54,19 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 			builder.log.minor(`Publishing to "${publish}"`);
 
+			builder.log.minor('Copying assets...');
+			builder.writeStatic(publish);
+			builder.writeClient(publish);
+			builder.writePrerendered(publish);
+
+			builder.log.minor('Writing custom headers...');
+			const headers_file = join(publish, '_headers');
+			builder.copy('_headers', headers_file);
+			appendFileSync(
+				headers_file,
+				`\n\n/${builder.config.kit.appDir}/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
+			);
+
 			// for esbuild, use ESM
 			// for zip-it-and-ship-it, use CJS until https://github.com/netlify/zip-it-and-ship-it/issues/750
 			const esm = netlify_config?.functions?.node_bundler === 'esbuild';
@@ -67,19 +80,6 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			} else {
 				await generate_lambda_functions({ builder, esm, split, publish });
 			}
-
-			builder.log.minor('Copying assets...');
-			builder.writeStatic(publish);
-			builder.writeClient(publish);
-			builder.writePrerendered(publish);
-
-			builder.log.minor('Writing custom headers...');
-			const headers_file = join(publish, '_headers');
-			builder.copy('_headers', headers_file);
-			appendFileSync(
-				headers_file,
-				`\n\n/${builder.config.kit.appDir}/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
-			);
 		}
 	};
 }
