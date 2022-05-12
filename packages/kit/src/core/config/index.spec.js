@@ -284,6 +284,7 @@ test('fails if prerender.entries are invalid', () => {
 		validate_config({
 			kit: {
 				prerender: {
+					// @ts-expect-error - given value expected to throw
 					entries: ['foo']
 				}
 			}

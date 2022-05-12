@@ -136,7 +136,7 @@ export interface Config {
 			crawl?: boolean;
 			default?: boolean;
 			enabled?: boolean;
-			entries?: string[];
+			entries?: Array<'*' | `/${string}`>;
 			onError?: PrerenderOnErrorValue;
 		};
 		routes?: (filepath: string) => boolean;
