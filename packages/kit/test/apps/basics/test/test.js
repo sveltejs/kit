@@ -2488,6 +2488,6 @@ test.describe.parallel('Miscellaneous', () => {
 		await page.click('button');
 		await page.waitForTimeout(100);
 		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
-		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, `PLACEHOLDER:0`));
+		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, 'PLACEHOLDER:0'));
 	});
 });
