@@ -16,7 +16,7 @@ import { parse_route_id } from '../../utils/routing.js';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
-const css_langs = new Set(['css', 'less', 'sass', 'scss', 'styl', 'stylus', 'pcss', 'postcss']);
+const style_pattern = /\.(css|less|sass|scss|styl|stylus|pcss|postcss)$/;
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -82,10 +82,8 @@ export async function create_plugin(config, cwd) {
 									const parsed = new URL(dep.url, 'http://localhost/');
 									const query = parsed.searchParams;
 
-									const idx = dep.file.lastIndexOf('.');
-									const ext = idx ?? dep.file.substring(idx + 1);
 									if (
-										css_langs.has(ext) ||
+										style_pattern.test(dep.file) ||
 										(query.has('svelte') && query.get('type') === 'style')
 									) {
 										try {
