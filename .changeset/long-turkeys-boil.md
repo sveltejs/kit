@@ -2,4 +2,4 @@
 "@sveltejs/kit": patch
 ---
 
-fix: more reliable typings of config.kit.prerender.entries
+[feat] more specific types for `kit.prerender.entries` config
