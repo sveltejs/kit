@@ -15,6 +15,8 @@
  * }
  * ```
  * 
+ * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`.
+ * 
  * Note: Since it's an ambient dts file, you can't use `import` statements. Instead you should use the import() function, for example:
  * 
  * ```ts
@@ -31,8 +33,6 @@
  *
  * 	interface Stuff {}
  * }
- *
- * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`:
  */
 declare namespace App {
 	/**
