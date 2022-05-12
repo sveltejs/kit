@@ -88,13 +88,11 @@ git config core.hookspath .githooks
 
 ### Generating changelogs
 
-For changes to be reflected in package changelogs, run `pnpx changeset` and follow the prompts. All changesets should be `patch` until SvelteKit 1.0
+For changes to be reflected in package changelogs, run `pnpm changeset` and follow the prompts. All changesets should be `patch` until SvelteKit 1.0
 
 ## Releases
 
 The [Changesets GitHub action](https://github.com/changesets/action#with-publishing) will create and update a PR that applies changesets and publishes new versions of changed packages to npm.
-
-> It uses `pnpm publish` rather than `pnpx changeset publish` so that we can use the `--filter` and (while in beta) `--tag` flags — though perhaps they work with `pnpx changeset publish`?
 
 New packages will need to be published manually the first time if they are scoped to the `@sveltejs` organisation, by running this from the package directory:
 
