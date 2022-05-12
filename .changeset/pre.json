@@ -23,7 +23,8 @@
     "test-amp": "0.0.1",
     "test-basics": "0.0.1",
     "test-options": "0.0.1",
-    "test-options-2": "0.0.1"
+    "test-options-2": "0.0.1",
+    "prerendering-test-trailing-slash": "0.0.1"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -712,6 +713,7 @@
     "smooth-shoes-mix",
     "smooth-shrimps-fly",
     "soft-bikes-bake",
+    "soft-ears-share",
     "soft-houses-pump",
     "soft-news-teach",
     "soft-students-cover",
@@ -862,7 +864,9 @@
     "twenty-hairs-shave",
     "twenty-numbers-destroy",
     "twenty-papayas-compare",
+    "twenty-pigs-attend",
     "twenty-turkeys-promise",
+    "twenty-windows-build",
     "two-buttons-eat",
     "two-crabs-tease",
     "two-moles-brush",
@@ -879,6 +883,7 @@
     "unlucky-wasps-rest",
     "violet-goats-wave",
     "violet-jars-give",
+    "violet-ligers-doubt",
     "violet-mayflies-arrive",
     "violet-mugs-brake",
     "violet-spies-play",
