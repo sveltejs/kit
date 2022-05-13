@@ -81,16 +81,18 @@ const redirects = {
 };
 
 /** @type {import('.')} **/
-export default function ({ external = [], edge, split } = {}) {
+export default function ({ external = [], edge, split, runtime } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(builder) {
 			if (process.env.ENABLE_VC_BUILD) {
-				await v3(builder, external, edge, split);
+				await v3(builder, external, edge, split, runtime || '16.x');
 			} else {
-				if (edge || split) {
-					throw new Error('edge and split options can only be used with ENABLE_VC_BUILD');
+				if (edge || split || runtime) {
+					throw new Error(
+						'`edge`, `split` and `runtime` options can only be used with ENABLE_VC_BUILD'
+					);
 				}
 
 				await v1(builder, external);
@@ -198,8 +200,9 @@ async function v1(builder, external) {
  * @param {string[]} external
  * @param {boolean} edge
  * @param {boolean} split
+ * @param {'16.x' | '14.x' | '12.x'} runtime
  */
-async function v3(builder, external, edge, split) {
+async function v3(builder, external, edge, split, runtime) {
 	const dir = '.vercel/output';
 
 	const tmp = builder.getBuildDirectory('vercel-tmp');
@@ -263,7 +266,7 @@ async function v3(builder, external, edge, split) {
 		await esbuild.build({
 			entryPoints: [`${tmp}/serverless.js`],
 			outfile: `${dirs.functions}/${name}.func/index.js`,
-			target: 'node14',
+			target: `node${runtime}`,
 			bundle: true,
 			platform: 'node',
 			format: 'cjs',
@@ -273,7 +276,7 @@ async function v3(builder, external, edge, split) {
 		write(
 			`${dirs.functions}/${name}.func/.vc-config.json`,
 			JSON.stringify({
-				runtime: 'nodejs14.x',
+				runtime: `nodejs${runtime}`,
 				handler: 'index.js',
 				launcherType: 'Nodejs'
 			})
