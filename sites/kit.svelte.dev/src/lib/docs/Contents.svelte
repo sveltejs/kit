@@ -57,24 +57,25 @@
 		path = $page.url.pathname;
 	}
 
-	/** @param {Event & { currentTarget: HTMLAnchorElement }} e */
-	function select(e) {
-		const url = new URL(e.currentTarget.href);
+	/** @param {URL} url */
+	function select(url) {
+		// belt...
 		setTimeout(() => {
 			path = url.pathname + url.hash;
 		});
+
+		// ...and braces
+		window.addEventListener(
+			'scroll',
+			() => {
+				path = url.pathname + url.hash;
+			},
+			{ once: true }
+		);
 	}
 </script>
 
-<svelte:window
-	on:scroll={highlight}
-	on:resize={update}
-	on:hashchange={() => {
-		setTimeout(() => {
-			path = `${$page.url.pathname}${$page.url.hash}`;
-		});
-	}}
-/>
+<svelte:window on:scroll={highlight} on:resize={update} on:hashchange={() => select($page.url)} />
 
 <nav>
 	<ul class="sidebar">
@@ -85,7 +86,7 @@
 					class="section"
 					class:active={section.path === path}
 					href={section.path}
-					on:click={select}
+					on:click={(e) => select(new URL(e.currentTarget.href))}
 				>
 					{section.title}
 				</a>
@@ -98,7 +99,7 @@
 								class="subsection"
 								class:active={subsection.path === path}
 								href={subsection.path}
-								on:click={select}
+								on:click={(e) => select(new URL(e.currentTarget.href))}
 							>
 								{subsection.title}
 							</a>
@@ -112,7 +113,7 @@
 												class="nested subsection"
 												class:active={subsection.path === path}
 												href={subsection.path}
-												on:click={select}
+												on:click={(e) => select(new URL(e.currentTarget.href))}
 											>
 												{subsection.title}
 											</a>
