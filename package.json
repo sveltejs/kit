@@ -40,5 +40,9 @@
 		"turbo": "^1.2.6",
 		"typescript": "~4.6.2"
 	},
+	"packageManager": "pnpm@7.1.0",
+	"engines": {
+		"pnpm": "^7.0.0"
+	},
 	"type": "module"
 }
