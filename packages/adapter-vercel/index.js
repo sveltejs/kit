@@ -81,24 +81,23 @@ const redirects = {
 };
 
 /** @type {import('.')} **/
-export default function ({ external = [], edge, split, nodeVersion } = {}) {
+export default function ({ external = [], edge, split } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(builder) {
-			if (process.env.ENABLE_VC_BUILD) {
-				if (edge && nodeVersion) {
-					throw new Error(
-						'`nodeVersion` option can only be used with serverless functions, not edge functions'
-					);
-				}
+			const nodeVersion = getNodeVersion();
+			if (nodeVersion.major < 14) {
+				throw new Error(
+					`SvelteKit only support Node.js version 14 or greater (v${nodeVersion.full} was detected). Learn how to change the Node.js version of your Functiones here: https://vercel.com/docs/runtimes#official-runtimes/node-js/node-js-version`
+				);
+			}
 
-				await v3(builder, external, edge, split, nodeVersion || '16.x');
+			if (process.env.ENABLE_VC_BUILD) {
+				await v3(builder, external, edge, split);
 			} else {
-				if (edge || split || nodeVersion) {
-					throw new Error(
-						'`edge`, `split` and `nodeVersion` options can only be used with ENABLE_VC_BUILD'
-					);
+				if (edge || split) {
+					throw new Error('`edge` and `split` options can only be used with ENABLE_VC_BUILD');
 				}
 
 				await v1(builder, external);
@@ -206,9 +205,8 @@ async function v1(builder, external) {
  * @param {string[]} external
  * @param {boolean} edge
  * @param {boolean} split
- * @param {'16.x' | '14.x' | '12.x'} nodeVersion
  */
-async function v3(builder, external, edge, split, nodeVersion) {
+async function v3(builder, external, edge, split) {
 	const dir = '.vercel/output';
 
 	const tmp = builder.getBuildDirectory('vercel-tmp');
@@ -256,6 +254,7 @@ async function v3(builder, external, edge, split, nodeVersion) {
 	async function generate_serverless_function(name, pattern, generate_manifest) {
 		const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 		const relativePath = posix.relative(tmp, builder.getServerDirectory());
+		const nodeVersion = getNodeVersion();
 
 		builder.copy(`${files}/serverless.js`, `${tmp}/serverless.js`, {
 			replace: {
@@ -272,8 +271,7 @@ async function v3(builder, external, edge, split, nodeVersion) {
 		await esbuild.build({
 			entryPoints: [`${tmp}/serverless.js`],
 			outfile: `${dirs.functions}/${name}.func/index.js`,
-			target:
-				nodeVersion === '12.x' ? 'node12.22' : nodeVersion === '14.x' ? 'node14.19' : 'node16.15',
+			target: `node${nodeVersion.full}`,
 			bundle: true,
 			platform: 'node',
 			format: 'esm',
@@ -283,7 +281,7 @@ async function v3(builder, external, edge, split, nodeVersion) {
 		write(
 			`${dirs.functions}/${name}.func/.vc-config.json`,
 			JSON.stringify({
-				runtime: `nodejs${nodeVersion}`,
+				runtime: `nodejs${nodeVersion.major}.x`,
 				handler: 'index.js',
 				launcherType: 'Nodejs'
 			})
@@ -394,4 +392,15 @@ function write(file, data) {
 	}
 
 	writeFileSync(file, data);
+}
+
+function getNodeVersion() {
+	const full = process.version.slice(1); // 'v16.5.0' --> '16.5.0'
+	const major = parseInt(full.split('.')[0]); // '16.5.0' --> 16
+
+	if (!Number.isFinite(major)) {
+		throw new Error('There was an error getting the current Node version');
+	}
+
+	return { major, full };
 }
