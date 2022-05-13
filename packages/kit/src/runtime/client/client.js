@@ -411,6 +411,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 		for (let i = 0; i < filtered.length; i += 1) {
 			const loaded = filtered[i].loaded;
 			result.props[`props_${i}`] = loaded ? await loaded.props : null;
+			if (filtered[i].module.key) {
+				result.props[`key_${i}`] = filtered[i].module.key({ url, params });
+			}
 		}
 
 		const page_changed =

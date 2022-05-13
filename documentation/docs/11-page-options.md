@@ -22,6 +22,26 @@ In certain circumstances you might need to disable [client-side routing](/docs/a
 
 Note that this will disable client-side routing for any navigation from this page, regardless of whether the router is already active.
 
+### key
+
+By default, changing route parameters isn't considered a route change in SvelteKit. It's considered the same route with
+params and loaded data that update reactively via props.
+
+If instead you want to treat each logical URL as a separate route, with its own component instance and lifecycle, you can do that
+by exporting a key function. Internally, SvelteKit wraps the top-level components in a `{#key}` block so they can be destroyed
+and recreated based on arbitrary conditions, even when navigating to another route of the same pattern.
+
+The function accepts an object with url (URL instance) and params (a plain JS object), and returns a key used for
+equality comparison in a `{#key}` block.
+
+```html
+<script context="module">
+	export function key({ url, params }) {
+		return url.pathname;
+	}
+</script>
+```
+
 ### hydrate
 
 Ordinarily, SvelteKit [hydrates](/docs/appendix#hydration) your server-rendered HTML into an interactive page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can skip hydration when the app boots up with the app-wide [`browser.hydrate` config option](/docs/configuration#browser) or the page-level `hydrate` export:
