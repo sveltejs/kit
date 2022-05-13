@@ -86,13 +86,6 @@ export default function ({ external = [], edge, split } = {}) {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(builder) {
-			const nodeVersion = getNodeVersion();
-			if (nodeVersion.major < 14) {
-				throw new Error(
-					`SvelteKit only support Node.js version 14 or greater (v${nodeVersion.full} was detected). Learn how to change the Node.js version of your Functiones here: https://vercel.com/docs/runtimes#official-runtimes/node-js/node-js-version`
-				);
-			}
-
 			if (process.env.ENABLE_VC_BUILD) {
 				await v3(builder, external, edge, split);
 			} else {
@@ -394,12 +387,12 @@ function write(file, data) {
 	writeFileSync(file, data);
 }
 
-function getNodeVersion() {
+function get_node_version() {
 	const full = process.version.slice(1); // 'v16.5.0' --> '16.5.0'
 	const major = parseInt(full.split('.')[0]); // '16.5.0' --> 16
 
-	if (!Number.isFinite(major)) {
-		throw new Error('There was an error getting the current Node version');
+	if (major < 14) {
+		throw new Error(`SvelteKit only support Node.js version 14 or greater (currently using v${full}). Consult the documentation: https://vercel.com/docs/runtimes#official-runtimes/node-js/node-js-version`)
 	}
 
 	return { major, full };
