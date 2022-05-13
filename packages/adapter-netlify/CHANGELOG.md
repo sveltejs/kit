@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.57
+
+### Patch Changes
+
+- Copy existing `_redirects` file before appending function redirects ([#4890](https://github.com/sveltejs/kit/pull/4890))
+
 ## 1.0.0-next.56
 
 ### Patch Changes

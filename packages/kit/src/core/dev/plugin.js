@@ -14,6 +14,10 @@ import { sequence } from '../../hooks.js';
 import { posixify } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
 
+// Vite doesn't expose this so we just copy the list for now
+// https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
+const style_pattern = /\.(css|less|sass|scss|styl|stylus|pcss|postcss)$/;
+
 /**
  * @param {import('types').ValidatedConfig} config
  * @param {string} cwd
@@ -78,9 +82,8 @@ export async function create_plugin(config, cwd) {
 									const parsed = new URL(dep.url, 'http://localhost/');
 									const query = parsed.searchParams;
 
-									// TODO what about .scss files, etc?
 									if (
-										dep.file.endsWith('.css') ||
+										style_pattern.test(dep.file) ||
 										(query.has('svelte') && query.get('type') === 'style')
 									) {
 										try {

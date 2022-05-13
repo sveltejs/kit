@@ -304,6 +304,13 @@ test.describe('Scrolling', () => {
 		await back();
 		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
 	});
+
+	test('scroll position is top of page on ssr:false reload', async ({ page }) => {
+		await page.goto('/no-ssr/margin');
+		expect(await page.evaluate(() => window.scrollY)).toBe(0);
+		await page.reload();
+		expect(await page.evaluate(() => window.scrollY)).toBe(0);
+	});
 });
 
 test.describe.parallel('Imports', () => {
