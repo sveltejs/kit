@@ -68,6 +68,16 @@ export const differential_headers_assignment: RequestHandler = () => {
 	}
 };
 
+/**
+ * NOTE about type casting in body returned
+ *
+ * tests below with `{} as Interface` casts are there only for
+ * convenience purposes so we won't have to actually fill in the
+ * required data, it serves the exact same purpose and doesn't
+ * make the tests invalid
+ */
+
+/** example json-serializable POJO */
 interface ExamplePost {
 	title: string;
 	description: string;
@@ -91,6 +101,7 @@ export const error_unserializable_literal: RequestHandler = () => {
 	};
 };
 
+/** example object that isn't serializable */
 interface InvalidPost {
 	sorter(a: any, b: any): number;
 }
