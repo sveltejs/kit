@@ -68,27 +68,50 @@ export const differential_headers_assignment: RequestHandler = () => {
 	}
 };
 
-// TODO https://github.com/sveltejs/kit/issues/1997
-// interface ExamplePost {
-// 	title: string;
-// 	description: string;
-// 	published_date?: string;
-// 	author_name?: string;
-// 	author_link?: string;
-// }
-// // valid - should not be any different
-// export const generic_case: RequestHandler<Record<string, string>, ExamplePost> = () => {
-// 	return {
-// 		body: {} as ExamplePost
-// 	};
-// };
+/**
+ * NOTE about type casting in body returned
+ *
+ * tests below with `{} as Interface` casts are there only for
+ * convenience purposes so we won't have to actually fill in the
+ * required data, it serves the exact same purpose and doesn't
+ * make the tests invalid
+ */
+
+/** example json-serializable POJO */
+interface ExamplePost {
+	title: string;
+	description: string;
+	published_date?: string;
+	author_name?: string;
+	author_link?: string;
+}
+// valid - should not be any different
+export const generic_case: RequestHandler<Record<string, string>, ExamplePost> = () => {
+	return {
+		body: {} as ExamplePost
+	};
+};
 
 // --- invalid cases ---
 
 // @ts-expect-error - body must be JSON serializable
-export const error_body_must_be_serializable: RequestHandler = () => {
+export const error_unserializable_literal: RequestHandler = () => {
 	return {
 		body: () => {}
+	};
+};
+
+/** example object that isn't serializable */
+interface InvalidPost {
+	sorter(a: any, b: any): number;
+}
+// @ts-expect-error - body must be JSON serializable with Generic passed
+export const error_unserializable_generic: RequestHandler<
+	Record<string, string>,
+	InvalidPost
+> = () => {
+	return {
+		body: {} as InvalidPost
 	};
 };
 

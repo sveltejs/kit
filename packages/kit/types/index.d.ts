@@ -6,6 +6,7 @@ import './ambient';
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
+	BodyValidator,
 	CspDirectives,
 	JSONValue,
 	Logger,
@@ -241,15 +242,15 @@ export interface ParamMatcher {
  */
 export interface RequestHandler<
 	Params extends Record<string, string> = Record<string, string>,
-	Output extends ResponseBody = ResponseBody
+	Output = ResponseBody
 > {
 	(event: RequestEvent<Params>): MaybePromise<RequestHandlerOutput<Output>>;
 }
 
-export interface RequestHandlerOutput<Output extends ResponseBody = ResponseBody> {
+export interface RequestHandlerOutput<Output = ResponseBody> {
 	status?: number;
 	headers?: Headers | Partial<ResponseHeaders>;
-	body?: Output;
+	body?: Output extends ResponseBody ? Output : BodyValidator<Output>;
 }
 
 export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
