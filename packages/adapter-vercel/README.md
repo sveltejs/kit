@@ -32,9 +32,9 @@ export default {
       // instead of creating a single one for the entire app
       split: false
 
-			// which version of Node.js you want your serverless
-			// function to run on - it only works with edge=false
-			// and ENABLE_VC_BUILD=1
+      // which version of Node.js you want your serverless
+      // function to run on - it only works with edge=false
+      // and ENABLE_VC_BUILD=1
       nodeVersion: '16.x'
     })
   }
