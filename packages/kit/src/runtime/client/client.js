@@ -299,7 +299,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 				getSelection()?.removeAllRanges();
 				root.tabIndex = -1;
-				root.focus();
+				root.focus({ preventScroll: true });
 
 				// restore `tabindex` as to prevent `root` from stealing input from elements
 				if (tabindex !== null) {
