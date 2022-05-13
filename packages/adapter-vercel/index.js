@@ -269,7 +269,7 @@ async function v3(builder, external, edge, split, runtime) {
 			target: `node${runtime}`,
 			bundle: true,
 			platform: 'node',
-			format: 'cjs',
+			format: 'esm',
 			external
 		});
 
@@ -282,7 +282,7 @@ async function v3(builder, external, edge, split, runtime) {
 			})
 		);
 
-		write(`${dirs.functions}/${name}.func/package.json`, JSON.stringify({ type: 'commonjs' }));
+		write(`${dirs.functions}/${name}.func/package.json`, JSON.stringify({ type: 'module' }));
 
 		routes.push({ src: pattern, dest: `/${name}` });
 	}
