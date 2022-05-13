@@ -36,7 +36,8 @@
 		headings = content.querySelectorAll('[id]:not([data-scrollignore])');
 
 		positions = Array.from(headings).map((heading) => {
-			return heading.getBoundingClientRect().top - top;
+			const style = getComputedStyle(heading);
+			return heading.getBoundingClientRect().top - parseFloat(style.scrollMarginTop) - top;
 		});
 	}
 
@@ -46,7 +47,7 @@
 		let i = headings.length;
 
 		while (i--) {
-			if (positions[i] + top < 40) {
+			if (positions[i] + top < 10) {
 				const heading = headings[i];
 				path = `${$page.url.pathname}#${heading.id}`;
 				return;
@@ -55,19 +56,36 @@
 
 		path = $page.url.pathname;
 	}
+
+	/** @param {Event & { currentTarget: HTMLAnchorElement }} e */
+	function select(e) {
+		const url = new URL(e.currentTarget.href);
+		setTimeout(() => {
+			path = url.pathname + url.hash;
+		});
+	}
 </script>
 
-<svelte:window on:scroll={highlight} on:resize={update} />
+<svelte:window
+	on:scroll={highlight}
+	on:resize={update}
+	on:hashchange={() => {
+		setTimeout(() => {
+			path = `${$page.url.pathname}${$page.url.hash}`;
+		});
+	}}
+/>
 
 <nav>
 	<ul class="sidebar">
 		{#each contents as section}
 			<li>
 				<a
-					class="section"
 					sveltekit:prefetch
+					class="section"
 					class:active={section.path === path}
 					href={section.path}
+					on:click={select}
 				>
 					{section.title}
 				</a>
@@ -76,10 +94,11 @@
 					{#each section.sections as subsection}
 						<li>
 							<a
-								class="subsection"
 								sveltekit:prefetch
+								class="subsection"
 								class:active={subsection.path === path}
 								href={subsection.path}
+								on:click={select}
 							>
 								{subsection.title}
 							</a>
@@ -89,10 +108,11 @@
 									{#each subsection.sections as subsection}
 										<li>
 											<a
+												sveltekit:prefetch
 												class="nested subsection"
 												class:active={subsection.path === path}
 												href={subsection.path}
-												sveltekit:prefetch
+												on:click={select}
 											>
 												{subsection.title}
 											</a>
