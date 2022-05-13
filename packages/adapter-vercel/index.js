@@ -87,6 +87,12 @@ export default function ({ external = [], edge, split, nodeVersion } = {}) {
 
 		async adapt(builder) {
 			if (process.env.ENABLE_VC_BUILD) {
+				if (edge && nodeVersion) {
+					throw new Error(
+						'`nodeVersion` option can only be used with serverless functions, not edge functions'
+					);
+				}
+
 				await v3(builder, external, edge, split, nodeVersion || '16.x');
 			} else {
 				if (edge || split || nodeVersion) {
