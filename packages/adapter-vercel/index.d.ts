@@ -4,7 +4,7 @@ type Options = {
 	edge?: boolean;
 	external?: string[];
 	split?: boolean;
-	runtime?: '16.x' | '14.x' | '12.x';
+	nodeVersion?: '16.x' | '14.x' | '12.x';
 };
 
 declare function plugin(options?: Options): Adapter;
