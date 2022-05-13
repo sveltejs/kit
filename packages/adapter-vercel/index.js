@@ -104,6 +104,8 @@ export default function ({ external = [], edge, split } = {}) {
  * @param {string[]} external
  */
 async function v1(builder, external) {
+	const node_version = get_node_version();
+
 	const dir = '.vercel_build_output';
 
 	const tmp = builder.getBuildDirectory('vercel-tmp');
@@ -139,13 +141,14 @@ async function v1(builder, external) {
 	await esbuild.build({
 		entryPoints: [`${tmp}/serverless.js`],
 		outfile: `${dirs.lambda}/index.js`,
-		target: 'node14',
+		target: `node${node_version.full}`,
 		bundle: true,
 		platform: 'node',
-		external
+		external,
+		format: 'esm'
 	});
 
-	writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'commonjs' }));
+	writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'module' }));
 
 	builder.log.minor('Copying assets...');
 
@@ -200,6 +203,8 @@ async function v1(builder, external) {
  * @param {boolean} split
  */
 async function v3(builder, external, edge, split) {
+	const node_version = get_node_version();
+
 	const dir = '.vercel/output';
 
 	const tmp = builder.getBuildDirectory('vercel-tmp');
@@ -247,7 +252,6 @@ async function v3(builder, external, edge, split) {
 	async function generate_serverless_function(name, pattern, generate_manifest) {
 		const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 		const relativePath = posix.relative(tmp, builder.getServerDirectory());
-		const nodeVersion = getNodeVersion();
 
 		builder.copy(`${files}/serverless.js`, `${tmp}/serverless.js`, {
 			replace: {
@@ -264,7 +268,7 @@ async function v3(builder, external, edge, split) {
 		await esbuild.build({
 			entryPoints: [`${tmp}/serverless.js`],
 			outfile: `${dirs.functions}/${name}.func/index.js`,
-			target: `node${nodeVersion.full}`,
+			target: `node${node_version.full}`,
 			bundle: true,
 			platform: 'node',
 			format: 'esm',
@@ -274,7 +278,7 @@ async function v3(builder, external, edge, split) {
 		write(
 			`${dirs.functions}/${name}.func/.vc-config.json`,
 			JSON.stringify({
-				runtime: `nodejs${nodeVersion.major}.x`,
+				runtime: `nodejs${node_version.major}.x`,
 				handler: 'index.js',
 				launcherType: 'Nodejs'
 			})
@@ -309,7 +313,7 @@ async function v3(builder, external, edge, split) {
 		await esbuild.build({
 			entryPoints: [`${tmp}/edge.js`],
 			outfile: `${dirs.functions}/${name}.func/index.js`,
-			target: 'node14',
+			target: 'es2020', // TODO verify what the edge runtime supports
 			bundle: true,
 			platform: 'node',
 			format: 'esm',
