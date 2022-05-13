@@ -38,32 +38,32 @@ export function write_tsconfig(config) {
 		JSON.stringify(
 			{
 				compilerOptions: {
-					moduleResolution: 'node',
-					module: 'es2020',
-					lib: ['es2020', 'DOM'],
-					target: 'es2020',
+					// generated options
+					baseUrl: config_relative('.'),
+					paths: fs.existsSync(config.kit.files.lib)
+						? {
+								$lib: [project_relative(config.kit.files.lib)],
+								'$lib/*': [project_relative(config.kit.files.lib + '/*')]
+						  }
+						: {},
+					rootDirs: [config_relative('.'), './types'],
+
+					// essential options
 					// svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
 					// to enforce using \`import type\` instead of \`import\` for Types.
 					importsNotUsedAsValues: 'error',
+					// Vite compiles modules one at a time
+					isolatedModules: true,
 					// TypeScript doesn't know about import usages in the template because it only sees the
 					// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
 					preserveValueImports: true,
-					isolatedModules: true,
-					resolveJsonModule: true,
-					// To have warnings/errors of the Svelte compiler at the correct position,
-					// enable source maps by default.
-					sourceMap: true,
-					esModuleInterop: true,
-					skipLibCheck: true,
-					forceConsistentCasingInFileNames: true,
-					baseUrl: config_relative('.'),
-					allowJs: true,
-					checkJs: true,
-					paths: {
-						$lib: [project_relative(config.kit.files.lib)],
-						'$lib/*': [project_relative(config.kit.files.lib + '/*')]
-					},
-					rootDirs: [config_relative('.'), './types']
+
+					// This is required for svelte-kit package to work as expected
+					// Can be overwritten
+					lib: ['esnext', 'DOM'],
+					moduleResolution: 'node',
+					module: 'esnext',
+					target: 'esnext'
 				},
 				include,
 				exclude: [config_relative('node_modules/**'), './**']
@@ -91,7 +91,7 @@ function validate(config, out, user_file) {
 	if (extends_framework_config) {
 		const { paths: user_paths } = user_tsconfig.compilerOptions || {};
 
-		if (user_paths) {
+		if (user_paths && fs.existsSync(config.kit.files.lib)) {
 			/** @type {string[]} */
 			const lib = user_paths['$lib'] || [];
 			/** @type {string[]} */

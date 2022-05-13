@@ -1,5 +1,6 @@
 ---
 title: Migrating from Sapper
+rank: 1
 ---
 
 SvelteKit is the successor to Sapper and shares many elements of its design.
@@ -48,7 +49,8 @@ This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start
 
 #### src/server.js
 
-This file also has no direct equivalent, since SvelteKit apps can run in serverless environments. You can, however, use the [hooks module](/docs/hooks) to implement session logic.
+When using `adapter-node` the equivalent is a [custom server](https://github.com/sveltejs/kit/tree/master/packages/adapter-node#custom-server). Otherwise, this file has no direct equivalent, since SvelteKit apps can run in serverless environments. You can, however, use the [hooks module](/docs/hooks) to implement session logic.
+
 
 #### src/service-worker.js
 
@@ -115,11 +117,15 @@ You access them differently in SvelteKit. `stores` is now `getStores`, but in mo
 
 Regex routes are no longer supported. Instead, use [advanced route matching](/docs/routing#advanced-routing-matching).
 
+#### Segments
+
+Previously, layout components received a `segment` prop indicating the child segment. This has been removed; you should use the more flexible `$page.url.pathname` value to derive the segment you're interested in.
+
 #### URLs
 
 In Sapper, all relative URLs were resolved against the base URL — usually `/`, unless the `basepath` option was used — rather than against the current page.
 
-This caused problems and is no longer the case in SvelteKit. Instead, URLs are resolved against the current page (or the destination page, for `fetch` URLs in `load` functions) instead.
+This caused problems and is no longer the case in SvelteKit. Instead, relative URLs are resolved against the current page (or the destination page, for `fetch` URLs in `load` functions) instead. In most cases, it's easier to use root-relative (i.e. starts with `/`) URLs, since their meaning is not context-dependent.
 
 #### &lt;a&gt; attributes
 

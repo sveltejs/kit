@@ -103,9 +103,9 @@ declare module '$app/navigation' {
 	): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. Returns a `Promise` that resolves when the page is subsequently updated.
-	 * @param href The invalidated resource
+	 * @param dependency The invalidated resource
 	 */
-	export function invalidate(href: string): Promise<void>;
+	export function invalidate(dependency: string | ((href: string) => boolean)): Promise<void>;
 	/**
 	 * Programmatically prefetches the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
@@ -151,7 +151,7 @@ declare module '$app/navigation' {
  */
 declare module '$app/paths' {
 	/**
-	 * A string that matches [`config.kit.paths.base`](/docs/configuration#paths). It must begin, but not end, with a `/`.
+	 * A string that matches [`config.kit.paths.base`](/docs/configuration#paths). It must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string.
 	 */
 	export const base: `/${string}`;
 	/**

@@ -6,11 +6,9 @@ import './ambient';
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
+	BodyValidator,
 	CspDirectives,
-	ErrorLoadInput,
 	JSONValue,
-	LoadInput,
-	LoadOutput,
 	Logger,
 	MaybePromise,
 	Prerendered,
@@ -41,7 +39,7 @@ export interface Builder {
 	 * Create entry points that map to individual functions
 	 * @param fn A function that groups a set of routes into an entry point
 	 */
-	createEntries(fn: (route: RouteDefinition) => AdapterEntry): void;
+	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
 	generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
 
@@ -139,7 +137,7 @@ export interface Config {
 			crawl?: boolean;
 			default?: boolean;
 			enabled?: boolean;
-			entries?: string[];
+			entries?: Array<'*' | `/${string}`>;
 			onError?: PrerenderOnErrorValue;
 		};
 		routes?: (filepath: string) => boolean;
@@ -155,13 +153,6 @@ export interface Config {
 		vite?: import('vite').UserConfig | (() => MaybePromise<import('vite').UserConfig>);
 	};
 	preprocess?: any;
-}
-
-export interface ErrorLoad<
-	Params extends Record<string, string> = Record<string, string>,
-	Props extends Record<string, any> = Record<string, any>
-> {
-	(input: ErrorLoadInput<Params>): MaybePromise<LoadOutput<Props>>;
 }
 
 export interface ExternalFetch {
@@ -184,7 +175,7 @@ export interface HandleError {
 }
 
 /**
- * The type of a `load` function exported from `<script context="module">` in a page or layout.
+ * The `(input: LoadInput) => LoadOutput` `load` function exported from `<script context="module">` in a page or layout.
  *
  * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the Params generic argument.
  */
@@ -194,6 +185,36 @@ export interface Load<
 	OutputProps extends Record<string, any> = InputProps
 > {
 	(input: LoadInput<Params, InputProps>): MaybePromise<LoadOutput<OutputProps>>;
+}
+
+export interface LoadInput<
+	Params extends Record<string, string> = Record<string, string>,
+	Props extends Record<string, any> = Record<string, any>
+> {
+	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
+	params: Params;
+	props: Props;
+	routeId: string | null;
+	session: App.Session;
+	stuff: Partial<App.Stuff>;
+	url: URL;
+	status: number | null;
+	error: Error | null;
+}
+
+export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {
+	status?: number;
+	error?: string | Error;
+	redirect?: string;
+	props?: Props;
+	stuff?: Partial<App.Stuff>;
+	cache?: LoadOutputCache;
+	dependencies?: string[];
+}
+
+export interface LoadOutputCache {
+	maxage: number;
+	private?: boolean;
 }
 
 export interface Navigation {
@@ -215,30 +236,22 @@ export interface ParamMatcher {
 }
 
 /**
- * A function exported from an endpoint that corresponds to an
- * HTTP verb (`get`, `put`, `patch`, etc) and handles requests with
- * that method. Note that since 'delete' is a reserved word in
- * JavaScript, delete handles are called `del` instead.
+ * A `(event: RequestEvent) => RequestHandlerOutput` function exported from an endpoint that corresponds to an HTTP verb (`get`, `put`, `patch`, etc) and handles requests with that method. Note that since 'delete' is a reserved word in JavaScript, delete handles are called `del` instead.
  *
- * Note that you can use [generated types](/docs/types#generated-types)
- * instead of manually specifying the `Params` generic argument.
+ * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the `Params` generic argument.
  */
 export interface RequestHandler<
 	Params extends Record<string, string> = Record<string, string>,
 	Output = ResponseBody
 > {
-	(event: RequestEvent<Params>): RequestHandlerOutput<Output>;
+	(event: RequestEvent<Params>): MaybePromise<RequestHandlerOutput<Output>>;
 }
 
-export type BodyValidator<T> = {
-	[P in keyof T]: T[P] extends JSONValue ? BodyValidator<T[P]> : never;
-};
-
-export type RequestHandlerOutput<Output = ResponseBody> = MaybePromise<{
+export interface RequestHandlerOutput<Output = ResponseBody> {
 	status?: number;
 	headers?: Headers | Partial<ResponseHeaders>;
 	body?: Output extends ResponseBody ? Output : BodyValidator<Output>;
-}>;
+}
 
 export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
 

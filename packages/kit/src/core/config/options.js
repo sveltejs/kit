@@ -161,7 +161,7 @@ const options = object(
 
 					if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
 						throw new Error(
-							`${keypath} option must be a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
+							`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
 						);
 					}
 

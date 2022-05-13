@@ -1,8 +1,8 @@
 .DS_Store
 /node_modules
-/dist
 /assets/*
-/client/**/*.d.ts
+/dist
+/docs
 /test/**/.svelte-kit
 /test/**/build
 !/src/core/adapt/fixtures/*/.svelte-kit

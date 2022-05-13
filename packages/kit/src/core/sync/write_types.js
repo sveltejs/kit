@@ -1,3 +1,4 @@
+import { parse_route_id } from '../../utils/routing.js';
 import { write_if_changed } from './utils.js';
 
 /** @param {string} imports */
@@ -24,21 +25,6 @@ export function write_types(config, manifest_data) {
 	/** @type {Map<string, { params: string[], type: 'page' | 'endpoint' | 'both' }>} */
 	const shadow_types = new Map();
 
-	/** @param {string} key */
-	function extract_params(key) {
-		/** @type {string[]} */
-		const params = [];
-
-		const pattern = /\[(?:\.{3})?([^\]]+)\]/g;
-		let match;
-
-		while ((match = pattern.exec(key))) {
-			params.push(match[1]);
-		}
-
-		return params;
-	}
-
 	manifest_data.routes.forEach((route) => {
 		const file = route.type === 'endpoint' ? route.file : route.shadow;
 
@@ -48,7 +34,7 @@ export function write_types(config, manifest_data) {
 			);
 			const key = file.slice(0, -ext.length);
 			shadow_types.set(key, {
-				params: extract_params(key),
+				params: parse_route_id(key).names,
 				type: route.type === 'endpoint' ? 'endpoint' : 'both'
 			});
 		}
@@ -61,7 +47,7 @@ export function write_types(config, manifest_data) {
 		const key = component.slice(0, -ext.length);
 
 		if (!shadow_types.has(key)) {
-			shadow_types.set(key, { params: extract_params(key), type: 'page' });
+			shadow_types.set(key, { params: parse_route_id(key).names, type: 'page' });
 		}
 	});
 

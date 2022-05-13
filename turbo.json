@@ -1,0 +1,36 @@
+{
+	"$schema": "https://turborepo.org/schema.json",
+	"pipeline": {
+		"@sveltejs/kit#build": {
+			"dependsOn": ["^build"],
+			"inputs": ["src/**", "scripts/**"],
+			"outputs": ["dist/**", "docs/**", "assets/**"]
+		},
+		"kit.svelte.dev#build": {
+			"dependsOn": ["^build", "$VERCEL"],
+			"inputs": ["src/**", "../../documentation/**"],
+			"outputs": [".vercel_build_output/**"]
+		},
+		"build": {
+			"dependsOn": ["^build", "$VERCEL"],
+			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
+			"outputs": ["files/**", "dist/**", ".svelte-kit/**", ".vercel_build_output/**"]
+		},
+		"check": {
+			"outputs": []
+		},
+		"format": {},
+		"test": {
+			"dependsOn": ["^build", "$CI", "$TURBO_CACHE_KEY"],
+			"outputs": []
+		},
+		"lint": {
+			"dependsOn": ["format"],
+			"outputs": []
+		},
+		"dev": {
+			"cache": false
+		}
+	},
+	"globalDependencies": [".eslintrc.json", ".prettierrc", "tsconfig.json"]
+}

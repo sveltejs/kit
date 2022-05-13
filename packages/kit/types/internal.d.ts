@@ -18,7 +18,6 @@ import {
 	RequestOptions,
 	ResolveOptions,
 	ResponseHeaders,
-	RouteSegment,
 	TrailingSlash
 } from './private';
 
@@ -102,8 +101,6 @@ export class InternalServer extends Server {
 
 export interface ManifestData {
 	assets: Asset[];
-	layout: string;
-	error: string;
 	components: string[];
 	routes: RouteData[];
 	matchers: Record<string, string>;
@@ -120,8 +117,14 @@ export type NormalizedLoadOutput = {
 	redirect?: string;
 	props?: Record<string, any> | Promise<Record<string, any>>;
 	stuff?: Record<string, any>;
-	maxage?: number;
+	cache?: NormalizedLoadOutputCache;
+	dependencies?: string[];
 };
+
+export interface NormalizedLoadOutputCache {
+	maxage: number;
+	private?: boolean;
+}
 
 export interface PageData {
 	type: 'page';
@@ -129,8 +132,8 @@ export interface PageData {
 	shadow: string | null;
 	pattern: RegExp;
 	path: string;
-	a: string[];
-	b: string[];
+	a: Array<string | undefined>;
+	b: Array<string | undefined>;
 }
 
 export type PayloadScriptAttributes =
@@ -286,12 +289,12 @@ export interface SSRPage {
 	/**
 	 * plan a is to render 1 or more layout components followed by a leaf component.
 	 */
-	a: number[];
+	a: Array<number | undefined>;
 	/**
 	 * plan b — if one of them components fails in `load` we backtrack until we find
 	 * the nearest error component.
 	 */
-	b: number[];
+	b: Array<number | undefined>;
 }
 
 export interface SSRPagePart {

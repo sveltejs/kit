@@ -6,12 +6,10 @@ declare module 'MANIFEST' {
 	import { SSRManifest } from '@sveltejs/kit';
 
 	export const manifest: SSRManifest;
-	export const prerendered: Set<string>;
+	export const prerendered: Map<string, { file: string }>;
 }
 
-declare abstract class FetchEvent extends Event {
-	readonly request: Request;
-	respondWith(promise: Response | Promise<Response>): void;
-	passThroughOnException(): void;
-	waitUntil(promise: Promise<any>): void;
+declare module '__STATIC_CONTENT_MANIFEST' {
+	const json: string;
+	export default json;
 }

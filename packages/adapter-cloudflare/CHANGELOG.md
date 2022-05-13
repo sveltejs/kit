@@ -1,5 +1,25 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.19
+
+### Patch Changes
+
+- [breaking] Remove try-catch around server.respond ([#4738](https://github.com/sveltejs/kit/pull/4738))
+
+## 1.0.0-next.18
+
+### Patch Changes
+
+- chore(cloudflare): more restrictive cache lookup & save conditions ([#4669](https://github.com/sveltejs/kit/pull/4669))
+
+## 1.0.0-next.17
+
+### Patch Changes
+
+- Check for Cache match sooner; use `worktop` for types & Cache operations ([#4453](https://github.com/sveltejs/kit/pull/4453))
+
+* Add cloudflare cache to store responses with a cache header. ([#4412](https://github.com/sveltejs/kit/pull/4412))
+
 ## 1.0.0-next.16
 
 ### Patch Changes

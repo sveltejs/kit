@@ -1,5 +1,23 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.50
+
+### Patch Changes
+
+- Fix `edge: true, split: true` build error for root routes when deploying to Vercel ([#4731](https://github.com/sveltejs/kit/pull/4731))
+
+## 1.0.0-next.49
+
+### Patch Changes
+
+- Remove unused target option from config.json ([#4678](https://github.com/sveltejs/kit/pull/4678))
+
+## 1.0.0-next.48
+
+### Patch Changes
+
+- Support build output API, with edge functions and code-splitting ([#4663](https://github.com/sveltejs/kit/pull/4663))
+
 ## 1.0.0-next.47
 
 ### Patch Changes

@@ -63,7 +63,8 @@ export async function render_response({
 	let rendered;
 
 	let is_private = false;
-	let maxage;
+	/** @type {import('types').NormalizedLoadOutputCache | undefined} */
+	let cache;
 
 	if (error) {
 		error.stack = options.get_stack(error);
@@ -79,9 +80,8 @@ export async function render_response({
 			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
 			if (props) shadow_props = props;
 
-			if (uses_credentials) is_private = true;
-
-			maxage = loaded.maxage;
+			cache = loaded?.cache;
+			is_private = cache?.private ?? uses_credentials;
 		});
 
 		const session = writable($session);
@@ -91,7 +91,14 @@ export async function render_response({
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session,
+				/** @type {import('svelte/store').Writable<App.Session>} */
+				session: {
+					...session,
+					subscribe: (fn) => {
+						is_private = cache?.private ?? true;
+						return session.subscribe(fn);
+					}
+				},
 				updated
 			},
 			/** @type {import('types').Page} */
@@ -129,17 +136,7 @@ export async function render_response({
 			props[`props_${i}`] = await branch[i].loaded.props;
 		}
 
-		let session_tracking_active = false;
-		const unsubscribe = session.subscribe(() => {
-			if (session_tracking_active) is_private = true;
-		});
-		session_tracking_active = true;
-
-		try {
-			rendered = options.root.render(props);
-		} finally {
-			unsubscribe();
-		}
+		rendered = options.root.render(props);
 	} else {
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
@@ -209,7 +206,7 @@ export async function render_response({
 	} else {
 		if (inlined_style) {
 			const attributes = [];
-			if (options.dev) attributes.push(' data-svelte');
+			if (options.dev) attributes.push(' data-sveltekit');
 			if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
 			csp.add_style(inlined_style);
@@ -285,8 +282,8 @@ export async function render_response({
 			http_equiv.push(csp_headers);
 		}
 
-		if (maxage) {
-			http_equiv.push(`<meta http-equiv="cache-control" content="max-age=${maxage}">`);
+		if (cache) {
+			http_equiv.push(`<meta http-equiv="cache-control" content="max-age=${cache.maxage}">`);
 		}
 
 		if (http_equiv.length > 0) {
@@ -307,8 +304,8 @@ export async function render_response({
 		etag: `"${hash(html)}"`
 	});
 
-	if (maxage) {
-		headers.set('cache-control', `${is_private ? 'private' : 'public'}, max-age=${maxage}`);
+	if (cache) {
+		headers.set('cache-control', `${is_private ? 'private' : 'public'}, max-age=${cache.maxage}`);
 	}
 
 	if (!options.floc) {

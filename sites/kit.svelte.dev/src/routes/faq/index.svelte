@@ -1,7 +1,3 @@
-<script context="module">
-	export const prerender = true;
-</script>
-
 <script>
 	import { Permalink } from '@sveltejs/site-kit';
 	import '$lib/docs/client/docs.css';

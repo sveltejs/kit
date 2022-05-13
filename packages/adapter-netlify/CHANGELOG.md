@@ -1,5 +1,35 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.56
+
+### Patch Changes
+
+- [breaking] Remove try-catch around server.respond ([#4738](https://github.com/sveltejs/kit/pull/4738))
+
+## 1.0.0-next.55
+
+### Patch Changes
+
+- Fix adapter-netlify edge functions ([#4702](https://github.com/sveltejs/kit/pull/4702))
+
+## 1.0.0-next.54
+
+### Patch Changes
+
+- Ensure tmp dir is created ([#4694](https://github.com/sveltejs/kit/pull/4694))
+
+## 1.0.0-next.53
+
+### Patch Changes
+
+- Ensure build directory exists before writing \_redirects ([#4676](https://github.com/sveltejs/kit/pull/4676))
+
+## 1.0.0-next.52
+
+### Patch Changes
+
+- Adds support for Netlify Edge Functions ([#4657](https://github.com/sveltejs/kit/pull/4657))
+
 ## 1.0.0-next.51
 
 ### Patch Changes

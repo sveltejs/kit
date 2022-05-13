@@ -3,16 +3,26 @@
  * @returns {import('types').NormalizedLoadOutput}
  */
 export function normalize(loaded) {
+	// TODO remove for 1.0
+	// @ts-expect-error
+	if (loaded.fallthrough) {
+		throw new Error(
+			'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
+		);
+	}
+
+	// TODO remove for 1.0
+	if ('maxage' in loaded) {
+		throw new Error('maxage should be replaced with cache: { maxage }');
+	}
+
 	const has_error_status =
 		loaded.status && loaded.status >= 400 && loaded.status <= 599 && !loaded.redirect;
 	if (loaded.error || has_error_status) {
 		const status = loaded.status;
 
 		if (!loaded.error && has_error_status) {
-			return {
-				status: status || 500,
-				error: new Error()
-			};
+			return { status: status || 500, error: new Error() };
 		}
 
 		const error = typeof loaded.error === 'string' ? new Error(loaded.error) : loaded.error;
@@ -48,6 +58,18 @@ export function normalize(loaded) {
 			return {
 				status: 500,
 				error: new Error('"redirect" property returned from load() must be a string')
+			};
+		}
+	}
+
+	if (loaded.dependencies) {
+		if (
+			!Array.isArray(loaded.dependencies) ||
+			loaded.dependencies.some((dep) => typeof dep !== 'string')
+		) {
+			return {
+				status: 500,
+				error: new Error('"dependencies" property returned from load() must be of type string[]')
 			};
 		}
 	}

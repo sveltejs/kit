@@ -9,20 +9,24 @@ import { start_server, test } from '../../../utils.js';
 /** @typedef {import('@playwright/test').Response} Response */
 
 test.describe.parallel('a11y', () => {
-	test('resets focus', async ({ page, clicknav }) => {
+	test('resets focus', async ({ page, clicknav, browserName }) => {
+		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+
 		await page.goto('/accessibility/a');
 
 		await clicknav('[href="/accessibility/b"]');
 		expect(await page.innerHTML('h1')).toBe('b');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
-		await page.keyboard.press('Tab');
+		await page.keyboard.press(tab);
+
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
 
 		await clicknav('[href="/accessibility/a"]');
 		expect(await page.innerHTML('h1')).toBe('a');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
-		await page.keyboard.press('Tab');
+
+		await page.keyboard.press(tab);
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
 
@@ -127,11 +131,12 @@ test.describe.parallel('beforeNavigate', () => {
 
 	test('prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
 		await page.goto('/before-navigate/a');
-
 		await app.goto('/before-navigate/prevent-navigation');
+		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
+
 		await page.goBack();
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('true');
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 	});
 
 	test('prevents unload', async ({ page }) => {
@@ -221,6 +226,35 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
 
+	test('scroll is restored after hitting the back button for an in-app cross-document navigation', async ({
+		page,
+		clicknav,
+		back
+	}) => {
+		await page.goto('/scroll/cross-document/a');
+		await page.locator('[href="/scroll/cross-document/b"]').scrollIntoViewIfNeeded();
+
+		const y1 = await page.evaluate(() => scrollY);
+
+		await page.click('[href="/scroll/cross-document/b"]');
+		expect(await page.textContent('h1')).toBe('b');
+		await page.waitForSelector('body.started');
+
+		await clicknav('[href="/scroll/cross-document/c"]');
+		expect(await page.textContent('h1')).toBe('c');
+
+		await back(); // client-side back
+		await page.goBack(); // native back
+		expect(await page.textContent('h1')).toBe('a');
+		await page.waitForSelector('body.started');
+
+		await page.waitForTimeout(250); // needed for the test to fail reliably without the fix
+
+		const y2 = await page.evaluate(() => scrollY);
+
+		expect(Math.abs(y2 - y1)).toBeLessThan(10); // we need a few pixels wiggle room, because browsers
+	});
+
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
 		page,
 		in_view
@@ -305,19 +339,72 @@ test.describe.parallel('Caching', () => {
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
 	});
 
-	test('sets cache-control: private if page uses session', async ({ request }) => {
-		const response = await request.get('/caching/private/uses-session');
+	test('sets cache-control: private if page uses session in load and cache.private is unset', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-session-in-load');
 		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 
-	test('sets cache-control: private if page uses fetch', async ({ request }) => {
+	test('sets cache-control: private if page uses session in init and cache.private is unset', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-session-in-init');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
+	});
+
+	test('sets cache-control: private if page uses fetch and cache.private is unset', async ({
+		request
+	}) => {
 		const response = await request.get('/caching/private/uses-fetch?credentials=include');
 		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 
-	test('sets cache-control: public if page uses fetch without credentials', async ({ request }) => {
+	test('sets cache-control: public if page uses fetch without credentials and cache.private is unset', async ({
+		request
+	}) => {
 		const response = await request.get('/caching/private/uses-fetch?credentials=omit');
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: private if cache.private is true', async ({ request }) => {
+		const response = await request.get('/caching/private/uses-cache-private?private=true');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
+	});
+
+	test('sets cache-control: public if cache.private is false', async ({ request }) => {
+		const response = await request.get('/caching/private/uses-cache-private?private=false');
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: public if page uses session in load and cache.private is false', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-session-in-load?private=false');
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: public if page uses session in init and cache.private is false', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-session-in-init?private=false');
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: public if page uses fetch and cache.private is false', async ({
+		request
+	}) => {
+		const response = await request.get(
+			'/caching/private/uses-fetch?credentials=include&private=false'
+		);
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: private if page uses fetch without credentials and cache.private is true', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-fetch?credentials=omit&private=true');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 });
 
@@ -856,7 +943,7 @@ test.describe.parallel('Errors', () => {
 			const body = await page.textContent('body');
 
 			expect(body).toMatch(
-				'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
+				'"error" property returned from load() must be a string or instance of Error, received type "object"'
 			);
 		}
 	});
@@ -871,11 +958,11 @@ test.describe.parallel('Errors', () => {
 	// TODO before we implemented route fallthroughs, and there was a 1:1
 	// regex:route relationship, it was simple to say 'method not implemented
 	// for this endpoint'. now it's a little tricker. does a 404 suffice?
-	test.skip('unhandled http method', async ({ request }) => {
+	test('unhandled http method', async ({ request }) => {
 		const response = await request.put('/errors/invalid-route-response');
 
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(501);
-		expect(await response.text()).toMatch('PUT is not implemented');
+		expect(response.status()).toBe(405);
+		expect(await response.text()).toMatch('PUT method not allowed');
 	});
 
 	test('error in endpoint', async ({ page, read_errors }) => {
@@ -1192,6 +1279,15 @@ test.describe.parallel('Load', () => {
 			await app.invalidate('/load/change-detection/data.json');
 			expect(await page.textContent('h1')).toBe('layout loads: 3');
 			expect(await page.textContent('h2')).toBe('x: b: 2');
+
+			await app.invalidate('custom:change-detection-layout');
+			expect(await page.textContent('h1')).toBe('layout loads: 4');
+			expect(await page.textContent('h2')).toBe('x: b: 2');
+
+			await page.click('button');
+			await page.waitForFunction('window.invalidated');
+			expect(await page.textContent('h1')).toBe('layout loads: 5');
+			expect(await page.textContent('h2')).toBe('x: b: 2');
 		}
 	});
 
@@ -1291,7 +1387,8 @@ test.describe.parallel('Load', () => {
 		baseURL,
 		page,
 		clicknav,
-		javaScriptEnabled
+		javaScriptEnabled,
+		browserName
 	}) => {
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-headers"]');
@@ -1305,8 +1402,11 @@ test.describe.parallel('Load', () => {
 			referer: `${baseURL}/load`,
 			// these headers aren't particularly useful, but they allow us to verify
 			// that page headers are being forwarded
-			'sec-fetch-dest': javaScriptEnabled ? 'empty' : 'document',
-			'sec-fetch-mode': javaScriptEnabled ? 'cors' : 'navigate'
+			'sec-fetch-dest':
+				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'empty' : 'document',
+			'sec-fetch-mode':
+				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'cors' : 'navigate',
+			connection: 'keep-alive'
 		});
 	});
 
@@ -1325,6 +1425,21 @@ test.describe.parallel('Load', () => {
 		expect(await page.textContent('p')).toBe('Data: Hello from Index!');
 		await clicknav('[href="/load/props/about"]');
 		expect(await page.textContent('p')).toBe('Data: undefined');
+	});
+
+	test('server-side fetch respects set-cookie header', async ({ page, context }) => {
+		await context.clearCookies();
+
+		await page.goto('/load/set-cookie-fetch');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+
+		const cookies = {};
+		for (const cookie of await context.cookies()) {
+			cookies[cookie.name] = cookie.value;
+		}
+
+		expect(cookies.answer).toBe('42');
+		expect(cookies.doubled).toBe('84');
 	});
 });
 
@@ -1503,7 +1618,7 @@ test.describe.parallel('Page options', () => {
 			expect(await page.textContent('h1')).toBe('content was rendered');
 		} else {
 			expect(await page.evaluate(() => document.querySelector('h1'))).toBe(null);
-			expect(await page.evaluate(() => document.querySelector('style[data-svelte]'))).toBe(null);
+			expect(await page.evaluate(() => document.querySelector('style[data-sveltekit]'))).toBe(null);
 		}
 	});
 
@@ -1524,6 +1639,11 @@ test.describe.parallel('Page options', () => {
 				})
 			).toBe('absolute');
 		}
+	});
+
+	test('does not SSR error page for 404s with ssr=false', async ({ request }) => {
+		const html = await request.get('/no-ssr/missing');
+		expect(await html.text()).not.toContain('load function was called erroneously');
 	});
 });
 
@@ -1561,11 +1681,11 @@ test.describe.parallel('$app/stores', () => {
 		await page.goto('/store');
 
 		expect(await page.textContent('h1')).toBe('Test');
-		expect(await page.textContent('h2')).toBe('Calls: 1');
+		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 2' : 'Calls: 1');
 
 		await clicknav('a[href="/store/result"]');
 		expect(await page.textContent('h1')).toBe('Result');
-		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 1' : 'Calls: 0');
+		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 2' : 'Calls: 0');
 
 		const oops = await page.evaluate(() => window.oops);
 		expect(oops).toBeUndefined();
@@ -1594,6 +1714,27 @@ test.describe.parallel('$app/stores', () => {
 		);
 	});
 
+	test('should load stuff after reloading by goto', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/store/stuff/foo?reset=true');
+		const stuff1 = JSON.stringify({ name: 'SvelteKit', value: 789, error: 'uh oh' });
+		const stuff2 = JSON.stringify({ name: 'SvelteKit', value: 123, foo: true });
+		await page.goto('/store/stuff/www');
+
+		await clicknav('a[href="/store/stuff/foo"]');
+		expect(await page.textContent('#store-stuff')).toBe(stuff1);
+
+		await clicknav('#reload-button');
+		expect(await page.textContent('#store-stuff')).toBe(javaScriptEnabled ? stuff2 : stuff1);
+
+		await clicknav('a[href="/store/stuff/zzz"]');
+		await clicknav('a[href="/store/stuff/foo"]');
+		expect(await page.textContent('#store-stuff')).toBe(stuff2);
+	});
+
 	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
 		await page.goto('/store/navigating/a');
 
@@ -1610,6 +1751,21 @@ test.describe.parallel('$app/stores', () => {
 			expect(res[1]).toBe('navigating from /store/navigating/a to /store/navigating/b');
 
 			await page.waitForSelector('#not-navigating');
+			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+		}
+	});
+
+	test('navigating store clears after aborted navigation', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/store/navigating/a');
+
+		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+
+		if (javaScriptEnabled) {
+			page.click('a[href="/store/navigating/c"]');
+			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
+			page.click('a[href="/store/navigating/a"]');
+
+			await page.waitForSelector('#not-navigating', { timeout: 500 });
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 		}
 	});
@@ -1676,7 +1832,7 @@ test.describe.parallel('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
-	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled }) => {
+	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled, browserName }) => {
 		await page.goto('/redirect');
 
 		await page.click('[href="/redirect/loopy/a"]');
@@ -1690,7 +1846,11 @@ test.describe.parallel('Redirects', () => {
 			);
 		} else {
 			// there's not a lot we can do to handle server-side redirect loops
-			expect(page.url()).toBe('chrome-error://chromewebdata/');
+			if (browserName === 'webkit') {
+				expect(page.url()).toBe(`${baseURL}/redirect`);
+			} else {
+				expect(page.url()).toBe('chrome-error://chromewebdata/');
+			}
 		}
 	});
 
@@ -1900,6 +2060,21 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
+	test('does not attempt client-side navigation to links with sveltekit:reload', async ({
+		baseURL,
+		page
+	}) => {
+		await page.goto('/routing');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/b"]')]);
+		expect(await page.textContent('h1')).toBe('b');
+		expect(requests).toContain(`${baseURL}/routing/b`);
+	});
+
 	test('allows reserved words as route names', async ({ page }) => {
 		await page.goto('/routing/const');
 		expect(await page.textContent('h1')).toBe('reserved words are okay as routes');
@@ -1956,20 +2131,20 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('h1')).toBe('a');
 	});
 
-	test('focus works if page load has hash', async ({ page }) => {
+	test('focus works if page load has hash', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target#p2');
 
-		await page.keyboard.press('Tab');
+		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe(
 			'next focus element'
 		);
 	});
 
-	test('focus works when navigating to a hash on the same page', async ({ page }) => {
+	test('focus works when navigating to a hash on the same page', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target');
 
 		await page.click('[href="#p2"]');
-		await page.keyboard.press('Tab');
+		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
 
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe(
 			'next focus element'
@@ -2034,8 +2209,7 @@ test.describe.parallel('Routing', () => {
 		server.close();
 	});
 
-	// skipping this test because it causes a bunch of failures locally
-	test.skip('watch new route in dev', async ({ page, javaScriptEnabled }) => {
+	test('watch new route in dev', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/routing');
 
 		if (!process.env.DEV || javaScriptEnabled) {
@@ -2047,10 +2221,11 @@ test.describe.parallel('Routing', () => {
 		const route = 'bar' + new Date().valueOf();
 		const content = 'Hello new route';
 		const __dirname = path.dirname(fileURLToPath(import.meta.url));
-		const filePath = path.join(__dirname, `${route}.svelte`);
+		const filePath = path.join(__dirname, `../src/routes/routing/${route}.svelte`);
 
 		try {
 			fs.writeFileSync(filePath, `<h1>${content}</h1>`);
+			await page.waitForTimeout(250); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
 			await page.goto(`/routing/${route}`);
 
 			expect(await page.textContent('h1')).toBe(content);
@@ -2226,6 +2401,11 @@ test.describe.parallel('Static files', () => {
 
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
+	});
+
+	test('does not use Vite to serve contents of static directory', async ({ request }) => {
+		const response = await request.get('/static/static.json');
+		expect(response.status()).toBe(process.env.DEV ? 403 : 404);
 	});
 });
 

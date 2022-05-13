@@ -1,5 +1,209 @@
 # @sveltejs/kit
 
+## 1.0.0-next.328
+
+### Patch Changes
+
+- Print useful 404 response when requesting unprefixed path in preview ([#4751](https://github.com/sveltejs/kit/pull/4751))
+
+* Prevent naive path normalization during prerendering ([#4761](https://github.com/sveltejs/kit/pull/4761))
+
+## 1.0.0-next.327
+
+### Patch Changes
+
+- generate tsconfig when running svelte-kit package ([#4824](https://github.com/sveltejs/kit/pull/4824))
+
+## 1.0.0-next.326
+
+### Patch Changes
+
+- [breaking] add lib, module, and target to generated tsconfig ([#4791](https://github.com/sveltejs/kit/pull/4791))
+
+## 1.0.0-next.325
+
+### Patch Changes
+
+- Display network logs in node 18 ([#4778](https://github.com/sveltejs/kit/pull/4778))
+
+## 1.0.0-next.324
+
+### Patch Changes
+
+- Throw errors on encountering named layout in directory ([#4756](https://github.com/sveltejs/kit/pull/4756))
+
+## 1.0.0-next.323
+
+### Patch Changes
+
+- Default to target: node14.8, so that top-level await is supported in user code ([#4742](https://github.com/sveltejs/kit/pull/4742))
+
+* Only complain about missing \$lib paths in tsconfig if src/lib exists ([#4735](https://github.com/sveltejs/kit/pull/4735))
+
+- Include all assets in `$service-worker` build, not just CSS ([#4744](https://github.com/sveltejs/kit/pull/4744))
+
+## 1.0.0-next.322
+
+### Patch Changes
+
+- Copy dotfiles from .svelte-kit/output ([#4725](https://github.com/sveltejs/kit/pull/4725))
+
+* [breaking] Ignore `trailingSlash` for endpoint requests, apply `trailingSlash` to pages consistently ([#4699](https://github.com/sveltejs/kit/pull/4699))
+
+## 1.0.0-next.321
+
+### Patch Changes
+
+- Tweak error message for non-validating base paths ([#4713](https://github.com/sveltejs/kit/pull/4713))
+
+* [breaking] Supplying an empty `--host` option to `preview` exposes the server to both ipv4 and ipv6 networks ([#4729](https://github.com/sveltejs/kit/pull/4729))
+
+- throw error on encountering infinite layout loop ([#4730](https://github.com/sveltejs/kit/pull/4730))
+
+## 1.0.0-next.320
+
+### Patch Changes
+
+- [breaking] Replace `maxage` with `cache` in `LoadOutput` ([#4690](https://github.com/sveltejs/kit/pull/4690))
+
+## 1.0.0-next.319
+
+### Patch Changes
+
+- Add --watch flag to svelte-kit package ([#4658](https://github.com/sveltejs/kit/pull/4658))
+
+## 1.0.0-next.318
+
+### Patch Changes
+
+- fix broken AdapterEntry type ([#4674](https://github.com/sveltejs/kit/pull/4674))
+
+## 1.0.0-next.317
+
+### Patch Changes
+
+- Navigation to current URL is no longer a no-op ([#4664](https://github.com/sveltejs/kit/pull/4664))
+
+* builder.createEntries returns a promise that awaits complete() callbacks ([#4663](https://github.com/sveltejs/kit/pull/4663))
+
+- navigation store resets to null after aborted nav ([#4664](https://github.com/sveltejs/kit/pull/4664))
+
+## 1.0.0-next.316
+
+### Patch Changes
+
+- `invalidate` with `predicate` function ([#4636](https://github.com/sveltejs/kit/pull/4636))
+
+## 1.0.0-next.315
+
+### Patch Changes
+
+- Apply set-cookie headers from page dependencies ([#4588](https://github.com/sveltejs/kit/pull/4588))
+
+* Include disallowed method name in 405 response, include Allow header ([#4614](https://github.com/sveltejs/kit/pull/4614))
+
+- apply updated `props.page` when update or goto page ([#4392](https://github.com/sveltejs/kit/pull/4392))
+
+* rename `data-svelte` attribute to `data-sveltekit` ([#4641](https://github.com/sveltejs/kit/pull/4641))
+
+## 1.0.0-next.314
+
+### Patch Changes
+
+- Custom `load` `dependencies` in `LoadOutput` ([#4536](https://github.com/sveltejs/kit/pull/4536))
+
+* Made LoadInput and LoadOutput types public, merged ErrorLoad and Load declarations ([#4515](https://github.com/sveltejs/kit/pull/4515))
+
+## 1.0.0-next.313
+
+### Patch Changes
+
+- add `platform` to requests triggered by `fetch` in `load` during SSR ([#4599](https://github.com/sveltejs/kit/pull/4599))
+
+## 1.0.0-next.312
+
+### Patch Changes
+
+- Only render fallback when prerendering is enabled ([#4604](https://github.com/sveltejs/kit/pull/4604))
+
+## 1.0.0-next.311
+
+### Patch Changes
+
+- Skip client-side navigation for links with sveltekit:reload ([#4545](https://github.com/sveltejs/kit/pull/4545))
+
+* [breaking] Skip prerendering for rel="external" links ([#4545](https://github.com/sveltejs/kit/pull/4545))
+
+## 1.0.0-next.310
+
+### Patch Changes
+
+- Remove credentials when creating request object in server-side fetch ([#4548](https://github.com/sveltejs/kit/pull/4548))
+
+## 1.0.0-next.309
+
+### Patch Changes
+
+- Fix session store subscription tracking during SSR ([#4550](https://github.com/sveltejs/kit/pull/4550))
+
+## 1.0.0-next.308
+
+### Patch Changes
+
+- Remove `static` directory from Vite's control ([#4535](https://github.com/sveltejs/kit/pull/4535))
+
+## 1.0.0-next.307
+
+### Patch Changes
+
+- Allow index files to use named layouts ([#4527](https://github.com/sveltejs/kit/pull/4527))
+
+* Respect ssr option when rendering 404 page ([#4513](https://github.com/sveltejs/kit/pull/4513))
+
+- Remove unimplemented option from CLI ([#4507](https://github.com/sveltejs/kit/pull/4507))
+
+* Move MaybePromise from RequestHandlerOutput to RequestHandler return value ([#4519](https://github.com/sveltejs/kit/pull/4519))
+
+## 1.0.0-next.306
+
+### Patch Changes
+
+- Hint if `paths.base` is missing in dev ([#4510](https://github.com/sveltejs/kit/pull/4510))
+
+* Respect `paths.base` when using `--open` ([#4510](https://github.com/sveltejs/kit/pull/4510))
+
+- [breaking] Add named layouts, remove `__layout.reset` ([#4388](https://github.com/sveltejs/kit/pull/4388))
+
+## 1.0.0-next.305
+
+### Patch Changes
+
+- Generate correct types for routes with parameter matchers ([#4472](https://github.com/sveltejs/kit/pull/4472))
+
+## 1.0.0-next.304
+
+### Patch Changes
+
+- Upgrade to Vite 2.9 ([#4468](https://github.com/sveltejs/kit/pull/4468))
+
+* allow files and directories named `__tests__` and `__test__` in the routes directory ([#4438](https://github.com/sveltejs/kit/pull/4438))
+
+- Create fallback page when prerendering is disabled ([#4443](https://github.com/sveltejs/kit/pull/4443))
+
+## 1.0.0-next.303
+
+### Patch Changes
+
+- [fix] don't use client-side navigation when clicking on a link to the same path on a different origin ([#4433](https://github.com/sveltejs/kit/pull/4433))
+
+## 1.0.0-next.302
+
+### Patch Changes
+
+- [fix] don't redirect to external URLs when normalizing paths ([#4414](https://github.com/sveltejs/kit/pull/4414))
+
+* Fix error link for fallthrough replacement ([#4408](https://github.com/sveltejs/kit/pull/4408))
+
 ## 1.0.0-next.301
 
 ### Patch Changes
@@ -22,7 +226,7 @@
 
 - Populate fallback page when trailingSlash is "always" ([#4351](https://github.com/sveltejs/kit/pull/4351))
 
-* Expose `event.routeId` and `page.routeId` ([#4344](https://github.com/sveltejs/kit/pull/4344))
+* Expose `event.routeId` and `page.routeId` ([#4345](https://github.com/sveltejs/kit/pull/4345))
 
 - [breaking] remove fallthrough routes ([#4330](https://github.com/sveltejs/kit/pull/4330))
 

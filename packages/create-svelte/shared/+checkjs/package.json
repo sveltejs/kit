@@ -1,0 +1,10 @@
+{
+	"scripts": {
+		"check": "svelte-check --tsconfig ./jsconfig.json",
+		"check:watch": "svelte-check --tsconfig ./jsconfig.json --watch"
+	},
+	"devDependencies": {
+		"typescript": "~4.6.2",
+		"svelte-check": "^2.2.6"
+	}
+}

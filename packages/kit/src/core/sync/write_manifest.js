@@ -24,7 +24,7 @@ export function write_manifest(manifest_data, base, output) {
 			.join(',\n\t\t\t\t\t')}
 	]`.replace(/^\t/gm, '');
 
-	/** @param {string[]} parts */
+	/** @param {Array<string | undefined>} parts */
 	const get_indices = (parts) =>
 		`[${parts.map((part) => (part ? component_indexes[part] : '')).join(', ')}]`;
 

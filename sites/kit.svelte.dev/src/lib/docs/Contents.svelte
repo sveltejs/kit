@@ -159,6 +159,10 @@
 		padding-bottom: 0.6em;
 	}
 
+	.active {
+		font-weight: 700;
+	}
+
 	.active::after {
 		content: '';
 		position: absolute;

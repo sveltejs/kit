@@ -16,17 +16,6 @@ const default_transform = ({ html }) => html;
 export async function respond(request, options, state) {
 	let url = new URL(request.url);
 
-	const normalized = normalize_path(url.pathname, options.trailing_slash);
-
-	if (normalized !== url.pathname && !state.prerender?.fallback) {
-		return new Response(undefined, {
-			status: 301,
-			headers: {
-				location: normalized + (url.search === '?' ? '' : url.search)
-			}
-		});
-	}
-
 	const { parameter, allowed } = options.method_override;
 	const method_override = url.searchParams.get(parameter)?.toUpperCase();
 
@@ -71,13 +60,7 @@ export async function respond(request, options, state) {
 
 	if (is_data_request) {
 		decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
-
-		const normalized = normalize_path(
-			url.pathname.slice(0, -DATA_SUFFIX.length),
-			options.trailing_slash
-		);
-
-		url = new URL(url.origin + normalized + url.search);
+		url = new URL(url.origin + url.pathname.slice(0, -DATA_SUFFIX.length) + url.search);
 	}
 
 	if (!state.prerender || !state.prerender.fallback) {
@@ -93,6 +76,23 @@ export async function respond(request, options, state) {
 				params = decode_params(matched);
 				break;
 			}
+		}
+	}
+
+	if (route?.type === 'page') {
+		const normalized = normalize_path(url.pathname, options.trailing_slash);
+
+		if (normalized !== url.pathname && !state.prerender?.fallback) {
+			return new Response(undefined, {
+				status: 301,
+				headers: {
+					'x-sveltekit-normalize': '1',
+					location:
+						// ensure paths starting with '//' are not treated as protocol-relative
+						(normalized.startsWith('//') ? url.origin + normalized : normalized) +
+						(url.search === '?' ? '' : url.search)
+				}
+			});
 		}
 	}
 

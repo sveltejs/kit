@@ -1,13 +1,12 @@
 name = "svelte-kit-demo"
-type = "webpack"
 account_id = "32a8245cd45a24083dd0acae1d482048"
+route = "cloudflare-workers-demo.svelte.dev/*"
+
+main = "./.cloudflare/worker.js"
+site.bucket = "./.cloudflare/public"
+
+build.command = "npm run build"
+
+compatibility_date = "2021-11-12"
 workers_dev = true
-route = ""
-zone_id = ""
 
-[site]
-bucket = "./.cloudflare/assets"
-entry-point = "./.cloudflare/worker"
-
-[build]
-upload = { format = "service-worker" }

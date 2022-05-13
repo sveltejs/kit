@@ -28,7 +28,6 @@ export async function dev({ cwd, port, host, https, config }) {
 				fs: {
 					allow: [
 						...new Set([
-							config.kit.files.assets,
 							config.kit.files.lib,
 							config.kit.files.routes,
 							config.kit.outDir,

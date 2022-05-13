@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.30
+
+### Patch Changes
+
+- Bump version to trigger README update on npm ([#4875](https://github.com/sveltejs/kit/pull/4875))
+
 ## 1.0.0-next.29
 
 ### Patch Changes

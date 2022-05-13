@@ -1,5 +1,53 @@
 # create-svelte
 
+## 2.0.0-next.133
+
+### Patch Changes
+
+- Bump `eslint` from version 7 to 8 ([#4553](https://github.com/sveltejs/kit/pull/4553))
+
+## 2.0.0-next.132
+
+### Patch Changes
+
+- Remove default `<meta name="description">` and add separate descriptions to each page ([#4686](https://github.com/sveltejs/kit/pull/4686))
+
+## 2.0.0-next.131
+
+### Patch Changes
+
+- Make hooks file comply with TypeScript strictest mode ([#4667](https://github.com/sveltejs/kit/pull/4667))
+
+## 2.0.0-next.130
+
+### Patch Changes
+
+- Ignore .turbo directory when building templates ([#4638](https://github.com/sveltejs/kit/pull/4638))
+
+* Disable type checking by default for non-typescript projects. ([#4621](https://github.com/sveltejs/kit/pull/4621))
+
+- [breaking] move non-essential TypeScript compilerOptions into user-editable config ([#4633](https://github.com/sveltejs/kit/pull/4633))
+
+## 2.0.0-next.129
+
+### Patch Changes
+
+- type check exception handling on form action ([#4532](https://github.com/sveltejs/kit/pull/4532))
+
+* Update broken documentation links for `App` namespaces ([#4627](https://github.com/sveltejs/kit/pull/4627))
+
+## 2.0.0-next.128
+
+### Patch Changes
+
+- [chore] upgrade to Playwright 1.21.0 ([#4601](https://github.com/sveltejs/kit/pull/4601))
+
+## 2.0.0-next.127
+
+### Patch Changes
+
+- Fix iOS double-tap zoom on counter buttons ([#4390](https://github.com/sveltejs/kit/pull/4390))
+
 ## 2.0.0-next.126
 
 ### Patch Changes

@@ -28,6 +28,9 @@ const config = {
 			},
 			clearScreen: false,
 			server: {
+				// TODO: required to support ipv6, remove on vite 3
+				// https://github.com/vitejs/vite/issues/7075
+				host: 'localhost',
 				fs: {
 					allow: [path.resolve('../../../src')]
 				}

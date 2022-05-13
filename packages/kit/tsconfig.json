@@ -15,5 +15,5 @@
 		}
 	},
 	"include": ["scripts/**/*", "src/**/*", "types/**/*"],
-	"exclude": ["src/packaging/test/fixtures/**/*"]
+	"exclude": ["src/packaging/test/fixtures/**/*", "src/packaging/test/watch/**/*"]
 }

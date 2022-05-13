@@ -91,7 +91,7 @@ export async function prerender({ config, entries, files, log }) {
 		}
 
 		if (is_html && !file.endsWith('.html')) {
-			return file + (config.kit.trailingSlash === 'always' ? 'index.html' : '.html');
+			return file + (file.endsWith('/') ? 'index.html' : '.html');
 		}
 
 		return file;
@@ -166,13 +166,12 @@ export async function prerender({ config, entries, files, log }) {
 				const resolved = resolve(encoded, href);
 				if (!is_root_relative(resolved)) continue;
 
-				const parsed = new URL(resolved, 'http://localhost');
+				const { pathname, search } = new URL(resolved, 'http://localhost');
 
-				if (parsed.search) {
+				if (search) {
 					// TODO warn that query strings have no effect on statically-exported pages
 				}
 
-				const pathname = normalize_path(parsed.pathname, config.kit.trailingSlash);
 				enqueue(decoded, decodeURI(pathname), pathname);
 			}
 		}
@@ -202,28 +201,29 @@ export async function prerender({ config, entries, files, log }) {
 			const location = response.headers.get('location');
 
 			if (location) {
-				mkdirp(dirname(dest));
-
-				log.warn(`${response.status} ${decoded} -> ${location}`);
-
-				writeFileSync(
-					dest,
-					`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
-				);
-
-				let resolved = resolve(encoded, location);
+				const resolved = resolve(encoded, location);
 				if (is_root_relative(resolved)) {
-					resolved = normalize_path(resolved, config.kit.trailingSlash);
 					enqueue(decoded, decodeURI(resolved), resolved);
 				}
 
-				if (!prerendered.redirects.has(decoded)) {
-					prerendered.redirects.set(decoded, {
-						status: response.status,
-						location: resolved
-					});
+				if (!response.headers.get('x-sveltekit-normalize')) {
+					mkdirp(dirname(dest));
 
-					prerendered.paths.push(normalize_path(decoded, 'never'));
+					log.warn(`${response.status} ${decoded} -> ${location}`);
+
+					writeFileSync(
+						dest,
+						`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
+					);
+
+					if (!prerendered.redirects.has(decoded)) {
+						prerendered.redirects.set(decoded, {
+							status: response.status,
+							location: resolved
+						});
+
+						prerendered.paths.push(normalize_path(decoded, 'never'));
+					}
 				}
 			} else {
 				log.warn(`location header missing on redirect received from ${decoded}`);
@@ -258,10 +258,10 @@ export async function prerender({ config, entries, files, log }) {
 		for (const entry of config.kit.prerender.entries) {
 			if (entry === '*') {
 				for (const entry of entries) {
-					enqueue(null, normalize_path(config.kit.paths.base + entry, config.kit.trailingSlash)); // TODO can we pre-normalize these?
+					enqueue(null, config.kit.paths.base + entry); // TODO can we pre-normalize these?
 				}
 			} else {
-				enqueue(null, normalize_path(config.kit.paths.base + entry, config.kit.trailingSlash));
+				enqueue(null, config.kit.paths.base + entry);
 			}
 		}
 

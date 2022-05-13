@@ -27,6 +27,8 @@ const routes = parse(components, dictionary, matchers);
 const default_layout = components[0]();
 const default_error = components[1]();
 
+const root_stuff = {};
+
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
 // popstate it's too late to update the scroll position associated with the
@@ -59,8 +61,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 	/** @type {Map<string, import('./types').NavigationResult>} */
 	const cache = new Map();
 
-	/** @type {Set<string>} */
-	const invalidated = new Set();
+	/** @type {Array<((href: string) => boolean)>} */
+	const invalidated = [];
 
 	const stores = {
 		url: notifiable_store({}),
@@ -86,10 +88,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	/** @type {import('./types').NavigationState} */
 	let current = {
-		// @ts-ignore - we need the initial value to be null
-		url: null,
+		branch: [],
+		error: null,
 		session_id: 0,
-		branch: []
+		stuff: root_stuff,
+		// @ts-ignore - we need the initial value to be null
+		url: null
 	};
 
 	let started = false;
@@ -117,23 +121,31 @@ export function create_client({ target, session, base, trailing_slash }) {
 	});
 	ready = true;
 
-	/** Keeps tracks of multiple navigations caused by redirects during rendering */
-	let navigating = 0;
-
 	let router_enabled = true;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
-	let current_history_index = history.state?.[INDEX_KEY] ?? 0;
+	let current_history_index = history.state?.[INDEX_KEY];
 
-	if (current_history_index === 0) {
+	if (!current_history_index) {
+		// we use Date.now() as an offset so that cross-document navigations
+		// within the app don't result in data loss
+		current_history_index = Date.now();
+
 		// create initial history entry, so we can return here
-		history.replaceState({ ...history.state, [INDEX_KEY]: 0 }, '', location.href);
+		history.replaceState(
+			{ ...history.state, [INDEX_KEY]: current_history_index },
+			'',
+			location.href
+		);
 	}
 
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
 	const scroll = scroll_positions[current_history_index];
-	if (scroll) scrollTo(scroll.x, scroll.y);
+	if (scroll) {
+		history.scrollRestoration = 'manual';
+		scrollTo(scroll.x, scroll.y);
+	}
 
 	let hash_navigating = false;
 
@@ -142,9 +154,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	/** @type {{}} */
 	let token;
-
-	/** @type {{}} */
-	let navigating_token;
 
 	/**
 	 * @param {string} href
@@ -191,6 +200,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/**
+	 * Returns `true` if update completes, `false` if it is aborted
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
 	 * @param {boolean} no_cache
@@ -202,7 +212,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const current_token = (token = {});
 		let navigation_result = intent && (await load_route(intent, no_cache));
 
-		if (!navigation_result && url.pathname === location.pathname) {
+		if (
+			!navigation_result &&
+			url.origin === location.origin &&
+			url.pathname === location.pathname
+		) {
 			// this could happen in SPA fallback mode if the user navigated to
 			// `/non-existent-page`. if we fall back to reloading the page, it
 			// will create an infinite loop. so whereas we normally handle
@@ -218,13 +232,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		if (!navigation_result) {
 			await native_navigation(url);
-			return; // unnecessary, but TypeScript prefers it this way
+			return false; // unnecessary, but TypeScript prefers it this way
 		}
 
 		// abort if user navigated during update
-		if (token !== current_token) return;
+		if (token !== current_token) return false;
 
-		invalidated.clear();
+		invalidated.length = 0;
 
 		if (navigation_result.redirect) {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
@@ -244,7 +258,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					await native_navigation(new URL(navigation_result.redirect, location.href));
 				}
 
-				return;
+				return false;
 			}
 		} else if (navigation_result.props?.page?.status >= 400) {
 			const updated = await stores.updated.check();
@@ -327,13 +341,15 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		router_enabled = leaf_node?.module.router !== false;
+
+		return true;
 	}
 
 	/** @param {import('./types').NavigationResult} result */
 	function initialize(result) {
 		current = result.state;
 
-		const style = document.querySelector('style[data-svelte]');
+		const style = document.querySelector('style[data-sveltekit]');
 		if (style) style.remove();
 
 		page = result.props.page;
@@ -360,7 +376,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   stuff: Record<string, any>;
 	 *   branch: Array<import('./types').BranchNode | undefined>;
 	 *   status: number;
-	 *   error?: Error;
+	 *   error: Error | null;
 	 *   routeId: string | null;
 	 * }} opts
 	 */
@@ -383,6 +399,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 				url,
 				params,
 				branch,
+				error,
+				stuff,
 				session_id
 			},
 			props: {
@@ -395,7 +413,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 			result.props[`props_${i}`] = loaded ? await loaded.props : null;
 		}
 
-		if (!current.url || url.href !== current.url.href) {
+		const page_changed =
+			!current.url ||
+			url.href !== current.url.href ||
+			current.error !== error ||
+			current.stuff !== stuff;
+
+		if (page_changed) {
 			result.props.page = { error, params, routeId, status, stuff, url };
 
 			// TODO remove this for 1.0
@@ -417,9 +441,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		const leaf = filtered[filtered.length - 1];
-		const maxage = leaf.loaded && leaf.loaded.maxage;
+		const load_cache = leaf?.loaded?.cache;
 
-		if (maxage) {
+		if (load_cache) {
 			const key = url.pathname + url.search; // omit hash
 			let ready = false;
 
@@ -432,7 +456,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				clearTimeout(timeout);
 			};
 
-			const timeout = setTimeout(clear, maxage * 1000);
+			const timeout = setTimeout(clear, load_cache.maxage * 1000);
 
 			const unsubscribe = stores.session.subscribe(() => {
 				if (ready) clear();
@@ -473,6 +497,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			stuff
 		};
 
+		/** @param dep {string} */
+		function add_dependency(dep) {
+			const { href } = new URL(dep, url);
+			node.uses.dependencies.add(href);
+		}
+
 		if (props) {
 			// shadow endpoint props means we need to mark this URL as a dependency of itself
 			node.uses.dependencies.add(url.href);
@@ -493,7 +523,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const session = $session;
 
 		if (module.load) {
-			/** @type {import('types').LoadInput | import('types').ErrorLoadInput} */
+			/** @type {import('types').LoadInput} */
 			const load_input = {
 				routeId,
 				params: uses_params,
@@ -512,11 +542,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 				},
 				fetch(resource, info) {
 					const requested = typeof resource === 'string' ? resource : resource.url;
-					const { href } = new URL(requested, url);
-					node.uses.dependencies.add(href);
+					add_dependency(requested);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
-				}
+				},
+				status: status ?? null,
+				error: error ?? null
 			};
 
 			if (import.meta.env.DEV) {
@@ -528,11 +559,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 				});
 			}
 
-			if (error) {
-				/** @type {import('types').ErrorLoadInput} */ (load_input).status = status;
-				/** @type {import('types').ErrorLoadInput} */ (load_input).error = error;
-			}
-
 			const loaded = await module.load.call(null, load_input);
 
 			if (!loaded) {
@@ -541,6 +567,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
+			if (node.loaded.dependencies) {
+				node.loaded.dependencies.forEach(add_dependency);
+			}
 		} else if (props) {
 			node.loaded = normalize({ props });
 		}
@@ -574,14 +603,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 		let branch = [];
 
 		/** @type {Record<string, any>} */
-		let stuff = {};
+		let stuff = root_stuff;
 		let stuff_changed = false;
 
 		/** @type {number | undefined} */
 		let status = 200;
 
-		/** @type {Error | undefined} */
-		let error;
+		/** @type {Error | null} */
+		let error = null;
 
 		// preload modules
 		a.forEach((loader) => loader());
@@ -602,7 +631,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					(changed.url && previous.uses.url) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.session && previous.uses.session) ||
-					Array.from(previous.uses.dependencies).some((dep) => invalidated.has(dep)) ||
+					Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep))) ||
 					(stuff_changed && previous.uses.stuff);
 
 				if (changed_since_last_render) {
@@ -656,14 +685,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 						}
 
 						if (node.loaded) {
-							// TODO remove for 1.0
-							// @ts-expect-error
-							if (node.loaded.fallthrough) {
-								throw new Error(
-									'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-validation'
-								);
-							}
-
 							if (node.loaded.error) {
 								status = node.loaded.status;
 								error = node.loaded.error;
@@ -866,10 +887,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		accepted();
 
-		navigating++;
-
-		const current_navigating_token = (navigating_token = {});
-
 		if (started) {
 			stores.navigating.set({
 				from: current.url,
@@ -877,18 +894,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		}
 
-		await update(normalized, redirect_chain, false, {
+		const completed = await update(normalized, redirect_chain, false, {
 			scroll,
 			keepfocus,
 			details
 		});
 
-		navigating--;
-
-		// navigation was aborted
-		if (navigating_token !== current_navigating_token) return;
-
-		if (!navigating) {
+		if (completed) {
 			const navigation = { from, to: normalized };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
 
@@ -943,9 +955,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 		goto: (href, opts = {}) => goto(href, opts, []),
 
 		invalidate: (resource) => {
-			const { href } = new URL(resource, location.href);
-
-			invalidated.add(href);
+			if (typeof resource === 'function') {
+				invalidated.push(resource);
+			} else {
+				const { href } = new URL(resource, location.href);
+				invalidated.push((dep) => dep === href);
+			}
 
 			if (!invalidating) {
 				invalidating = Promise.resolve().then(async () => {
@@ -1067,17 +1082,16 @@ export function create_client({ target, session, base, trailing_slash }) {
 				// 2. 'rel' attribute includes external
 				const rel = (a.getAttribute('rel') || '').split(/\s+/);
 
-				if (a.hasAttribute('download') || rel.includes('external')) {
+				if (
+					a.hasAttribute('download') ||
+					rel.includes('external') ||
+					a.hasAttribute('sveltekit:reload')
+				) {
 					return;
 				}
 
 				// Ignore if <a> has a target
 				if (is_svg_a_element ? a.target.baseVal : a.target) return;
-
-				if (url.href === location.href) {
-					if (!location.hash) event.preventDefault();
-					return;
-				}
 
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired
@@ -1103,7 +1117,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					redirect_chain: [],
 					details: {
 						state: {},
-						replaceState: false
+						replaceState: url.href === location.href
 					},
 					accepted: () => event.preventDefault(),
 					blocked: () => event.preventDefault()

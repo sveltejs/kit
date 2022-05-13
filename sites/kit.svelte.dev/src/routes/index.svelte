@@ -1,7 +1,7 @@
 <script context="module">
 	export function load() {
 		return {
-			maxage: 60
+			cache: { maxage: 60 }
 		};
 	}
 </script>
@@ -83,7 +83,7 @@
 
 		<div slot="how">
 			<pre><code>
-npm init <span class="orange-highlight">svelte@next</span> my-app
+npm init <span class="orange-highlight">svelte</span> my-app
 cd my-app
 npm install
 npm run dev -- --open
