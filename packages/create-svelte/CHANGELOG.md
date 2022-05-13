@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.134
+
+### Patch Changes
+
+- fix lib, module, and target to not override the tsconfig they generate by default ([#4893](https://github.com/sveltejs/kit/pull/4893))
+
 ## 2.0.0-next.133
 
 ### Patch Changes
