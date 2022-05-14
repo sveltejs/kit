@@ -109,6 +109,7 @@ export async function watch(config, cwd = process.cwd()) {
 	let timeout;
 
 	const watcher = chokidar.watch(lib, { ignoreInitial: true });
+	const ready = new Promise((resolve) => watcher.on('ready', resolve));
 
 	watcher.on('all', async (type, path) => {
 		const file = analyze(config, relative(lib, path));
@@ -176,6 +177,7 @@ export async function watch(config, cwd = process.cwd()) {
 
 	return {
 		watcher,
+		ready,
 		settled: () =>
 			new Promise((fulfil, reject) => {
 				fulfillers.push(fulfil);
