@@ -176,10 +176,10 @@ export const config = {
 	],
 	use: {
 		screenshot: 'only-on-failure',
+		trace: 'retain-on-failure',
 		// use stable chrome from host OS instead of downloading one
 		// see https://playwright.dev/docs/browsers#google-chrome--microsoft-edge
-		channel: 'chrome',
-		trace: 'retain-on-failure'
+		channel: 'chrome'
 	},
 	workers: process.env.CI ? 2 : undefined
 };
