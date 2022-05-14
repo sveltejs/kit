@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.330
+
+### Patch Changes
+
+- Fix Safari scroll bug on ssr:false page reload ([#4846](https://github.com/sveltejs/kit/pull/4846))
+
 ## 1.0.0-next.329
 
 ### Patch Changes

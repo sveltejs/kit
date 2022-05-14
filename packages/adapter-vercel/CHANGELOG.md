@@ -1,5 +1,13 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.51
+
+### Patch Changes
+
+- Support for Node.js 16 ([#4904](https://github.com/sveltejs/kit/pull/4904))
+
+* The output of serverless now is ESM instead of CJS ([#4904](https://github.com/sveltejs/kit/pull/4904))
+
 ## 1.0.0-next.50
 
 ### Patch Changes
