@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.135
+
+### Patch Changes
+
+- remove unnecessary CHANGELOG.md ([#4903](https://github.com/sveltejs/kit/pull/4903))
+
 ## 2.0.0-next.134
 
 ### Patch Changes
