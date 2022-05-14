@@ -160,14 +160,14 @@ export const config = {
 			}
 		},
 		{
-			name: `${process.env.DEV ? 'dev' : 'build'}+js_safari`,
+			name: `${process.env.DEV ? 'dev' : 'build'}+js_webkit`,
 			use: {
 				use: { browserName: 'webkit' },
 				javaScriptEnabled: true
 			}
 		},
 		{
-			name: `${process.env.DEV ? 'dev' : 'build'}-js_safari`,
+			name: `${process.env.DEV ? 'dev' : 'build'}-js_webkit`,
 			use: {
 				use: { browserName: 'webkit' },
 				javaScriptEnabled: false
