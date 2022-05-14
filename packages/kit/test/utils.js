@@ -1,7 +1,7 @@
 import fs from 'fs';
 import http from 'http';
 import * as ports from 'port-authority';
-import { test as base } from '@playwright/test';
+import { test as base, devices } from '@playwright/test';
 
 export const test = base.extend({
 	// @ts-expect-error
@@ -136,6 +136,13 @@ export const test = base.extend({
 	}
 });
 
+const useDesktopChrome = {
+	...devices['Desktop Chrome'],
+	// use stable chrome from host OS instead of downloading one
+	// see https://playwright.dev/docs/browsers#google-chrome--microsoft-edge
+	channel: 'chrome'
+};
+
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
 	forbidOnly: !!process.env.CI,
@@ -148,24 +155,37 @@ export const config = {
 	retries: process.env.CI ? 5 : 0,
 	projects: [
 		{
-			name: `${process.env.DEV ? 'dev' : 'build'}+js`,
+			name: `${process.env.DEV ? 'dev' : 'build'}+js_chrome`,
 			use: {
+				use: useDesktopChrome,
 				javaScriptEnabled: true
 			}
 		},
 		{
-			name: `${process.env.DEV ? 'dev' : 'build'}-js`,
+			name: `${process.env.DEV ? 'dev' : 'build'}-js_chrome`,
 			use: {
+				use: useDesktopChrome,
+				javaScriptEnabled: false
+			}
+		},
+		{
+			name: `${process.env.DEV ? 'dev' : 'build'}+js_safari`,
+			use: {
+				use: { ...devices['Desktop Safari'] },
+				javaScriptEnabled: true
+			}
+		},
+		{
+			name: `${process.env.DEV ? 'dev' : 'build'}-js_safari`,
+			use: {
+				use: { ...devices['Desktop Safari'] },
 				javaScriptEnabled: false
 			}
 		}
 	],
 	use: {
 		screenshot: 'only-on-failure',
-		trace: 'retain-on-failure',
-		// use stable chrome from host OS instead of downloading one
-		// see https://playwright.dev/docs/browsers#google-chrome--microsoft-edge
-		channel: 'chrome'
+		trace: 'retain-on-failure'
 	},
 	workers: process.env.CI ? 2 : undefined
 };
