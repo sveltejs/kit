@@ -25,6 +25,8 @@ The filename determines the route. For example, `src/routes/index.svelte` is the
 </svelte:head>
 
 <h1>Hello and welcome to my site!</h1>
+
+<a href="/about">About my site</a>
 ```
 
 A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte` would correspond to the `/about` route:
@@ -37,7 +39,11 @@ A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte
 
 <h1>About this site</h1>
 <p>TODO...</p>
+
+<a href="/">Home</a>
 ```
+
+> Note that SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
 Dynamic parameters are encoded using `[brackets]`. For example, a blog post might be defined by `src/routes/blog/[slug].svelte`. These parameters can be accessed in a [`load`](/docs/loading#input-params) function or via the [`page`](/docs/modules#$app-stores) store.
 
