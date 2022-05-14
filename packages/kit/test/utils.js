@@ -137,7 +137,7 @@ export const test = base.extend({
 });
 
 const useDesktopChrome = {
-	...devices['Desktop Chrome'],
+	browserName: 'chromium',
 	// use stable chrome from host OS instead of downloading one
 	// see https://playwright.dev/docs/browsers#google-chrome--microsoft-edge
 	channel: 'chrome'
@@ -171,14 +171,14 @@ export const config = {
 		{
 			name: `${process.env.DEV ? 'dev' : 'build'}+js_safari`,
 			use: {
-				use: { ...devices['Desktop Safari'] },
+				use: { browserName: 'webkit' },
 				javaScriptEnabled: true
 			}
 		},
 		{
 			name: `${process.env.DEV ? 'dev' : 'build'}-js_safari`,
 			use: {
-				use: { ...devices['Desktop Safari'] },
+				use: { browserName: 'webkit' },
 				javaScriptEnabled: false
 			}
 		}
