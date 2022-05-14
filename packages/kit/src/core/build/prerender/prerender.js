@@ -195,7 +195,6 @@ export async function prerender({ config, entries, files, log }) {
 		const dest = `${config.kit.outDir}/output/prerendered/${category}/${file}`;
 
 		if (written.has(file)) return;
-		written.add(file);
 
 		if (response_type === REDIRECT) {
 			const location = response.headers.get('location');
@@ -215,6 +214,8 @@ export async function prerender({ config, entries, files, log }) {
 						dest,
 						`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
 					);
+
+					written.add(file);
 
 					if (!prerendered.redirects.has(decoded)) {
 						prerendered.redirects.set(decoded, {
@@ -237,6 +238,7 @@ export async function prerender({ config, entries, files, log }) {
 
 			log.info(`${response.status} ${decoded}`);
 			writeFileSync(dest, body);
+			written.add(file);
 
 			if (is_html) {
 				prerendered.pages.set(decoded, {
