@@ -6,9 +6,9 @@ import {
 	Handle,
 	HandleError,
 	Load,
+	RequestEvent,
 	RequestHandler,
 	ResolveOptions,
-	RequestEvent,
 	Server,
 	SSRManifest
 } from './index';

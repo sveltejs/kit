@@ -171,21 +171,6 @@ export interface HandleError {
 	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
 }
 
-export interface RequestEvent<Params extends Record<string, string> = Record<string, string>> {
-	clientAddress: string;
-	locals: App.Locals;
-	params: Params;
-	platform: Readonly<App.Platform>;
-	request: Request;
-	routeId: string | null;
-	url: URL;
-}
-
-export interface ResolveOptions {
-	ssr?: boolean;
-	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
-}
-
 /**
  * The `(input: LoadInput) => LoadOutput` `load` function exported from `<script context="module">` in a page or layout.
  *
@@ -247,6 +232,16 @@ export interface ParamMatcher {
 	(param: string): boolean;
 }
 
+export interface RequestEvent<Params extends Record<string, string> = Record<string, string>> {
+	clientAddress: string;
+	locals: App.Locals;
+	params: Params;
+	platform: Readonly<App.Platform>;
+	request: Request;
+	routeId: string | null;
+	url: URL;
+}
+
 /**
  * A `(event: RequestEvent) => RequestHandlerOutput` function exported from an endpoint that corresponds to an HTTP verb (`get`, `put`, `patch`, etc) and handles requests with that method. Note that since 'delete' is a reserved word in JavaScript, delete handles are called `del` instead.
  *
@@ -263,6 +258,11 @@ export interface RequestHandlerOutput<Output extends ResponseBody = ResponseBody
 	status?: number;
 	headers?: Headers | Partial<ResponseHeaders>;
 	body?: Output;
+}
+
+export interface ResolveOptions {
+	ssr?: boolean;
+	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
 }
 
 export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
