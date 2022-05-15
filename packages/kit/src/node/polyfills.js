@@ -1,4 +1,4 @@
-import { fetch, Response, Request, Headers } from 'undici';
+import fetch, { Response, Request, Headers } from 'node-fetch';
 
 // exported for dev/preview and node environments
 export function installPolyfills() {

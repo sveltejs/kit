@@ -1,7 +1,7 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { to_headers } from './http.js';
-import { Headers } from 'undici';
+import { Headers } from 'node-fetch';
 globalThis.Headers = Headers;
 
 test('handle header string value', () => {
