@@ -77,16 +77,11 @@ export async function setResponse(res, response) {
 
 	if (response.headers.has('set-cookie')) {
 		const header = /** @type {string} */ (response.headers.get('set-cookie'));
-
 		const split = set_cookie_parser.splitCookiesString(header);
-		console.error({ header, split });
 
 		// @ts-expect-error
 		headers['set-cookie'] = split;
 	}
-
-	console.error(headers);
-
 
 	res.writeHead(response.status, headers);
 

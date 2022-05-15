@@ -282,6 +282,7 @@ declare module '@sveltejs/kit/hooks' {
 declare module '@sveltejs/kit/node/polyfills' {
 	/**
 	 * Make various web APIs available as globals:
+	 * - `crypto`
 	 * - `fetch`
 	 * - `Headers`
 	 * - `Request`
