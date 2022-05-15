@@ -11,7 +11,7 @@ import * as sync from '../sync/sync.js';
  * @typedef {{
  *   cwd: string,
  *   port: number,
- *   host?: string,
+ *   host: string,
  *   https: boolean,
  *   config: import('types').ValidatedConfig
  * }} Options

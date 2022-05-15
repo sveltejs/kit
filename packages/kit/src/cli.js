@@ -47,10 +47,10 @@ const prog = sade('svelte-kit').version('__VERSION__');
 prog
 	.command('dev')
 	.describe('Start a development server')
-	.option('-p, --port', 'Port')
-	.option('-o, --open', 'Open a browser tab')
-	.option('--host', 'Host (only use this on trusted networks)')
-	.option('--https', 'Use self-signed HTTPS certificate')
+	.option('-p, --port', 'Port', 3000)
+	.option('-o, --open', 'Open a browser tab', false)
+	.option('--host', 'Host (only use this on trusted networks)', 'localhost')
+	.option('--https', 'Use self-signed HTTPS certificate', false)
 	.option('-H', 'no longer supported, use --https instead') // TODO remove for 1.0
 	.action(async ({ port, host, https, open, H }) => {
 		try {
