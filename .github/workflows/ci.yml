@@ -46,6 +46,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install
       - run: pnpm turbo run test
       - name: archive test results
         if: failure()
