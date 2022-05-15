@@ -61,7 +61,7 @@
 		"svelte-kit.js"
 	],
 	"scripts": {
-		"build": "rollup -c && node scripts/cp.js src/runtime/components assets/components && npm run types",
+		"build": "rollup -c && node scripts/cp.js src/runtime/components assets/components && npm run types && pnpm exec playwright install --with-deps",
 		"dev": "rollup -cw",
 		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/packaging/test/**\" \"{src,test}/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"check": "tsc",
