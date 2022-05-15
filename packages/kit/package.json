@@ -93,6 +93,6 @@
 	},
 	"types": "types/index.d.ts",
 	"engines": {
-		"node": ">=14.13"
+		"node": ">=16"
 	}
 }
