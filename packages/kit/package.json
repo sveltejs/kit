@@ -13,6 +13,7 @@
 		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.32",
 		"chokidar": "^3.5.3",
 		"sade": "^1.7.4",
+		"undici": "^5.2.0",
 		"vite": "^2.9.0"
 	},
 	"devDependencies": {
@@ -35,7 +36,6 @@
 		"locate-character": "^2.0.5",
 		"marked": "^4.0.5",
 		"mime": "^3.0.0",
-		"node-fetch": "^3.1.0",
 		"port-authority": "^1.1.2",
 		"rollup": "^2.60.2",
 		"selfsigned": "^2.0.0",
@@ -84,11 +84,11 @@
 		"./node": {
 			"import": "./dist/node.js"
 		},
+		"./node/polyfills": {
+			"import": "./dist/node/polyfills.js"
+		},
 		"./hooks": {
 			"import": "./dist/hooks.js"
-		},
-		"./install-fetch": {
-			"import": "./dist/install-fetch.js"
 		}
 	},
 	"types": "types/index.d.ts",

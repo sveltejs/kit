@@ -1,7 +1,7 @@
-import fetch, { Response, Request, Headers } from 'node-fetch';
+import { fetch, Response, Request, Headers } from 'undici';
 
 // exported for dev/preview and node environments
-export function installFetch() {
+export function installPolyfills() {
 	Object.defineProperties(globalThis, {
 		fetch: {
 			enumerable: true,

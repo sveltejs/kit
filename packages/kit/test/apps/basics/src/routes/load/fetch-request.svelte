@@ -5,7 +5,7 @@
 	export async function load({ fetch }) {
 		const url = '/load/fetch-request.json';
 
-		// this is contrived, but saves us faffing about with node-fetch here
+		// this is contrived, but saves us faffing about with undici here
 		const resource = browser ? new Request(url) : url;
 
 		const res = await fetch(resource);
