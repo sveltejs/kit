@@ -150,12 +150,18 @@ export const config = {
 		{
 			name: `${process.env.DEV ? 'dev' : 'build'}+js_chrome`,
 			use: {
+				// use stable chrome from host OS instead of downloading one
+				// see https://playwright.dev/docs/browsers#google-chrome--microsoft-edge
+				channel: 'chrome',
 				javaScriptEnabled: true
 			}
 		},
 		{
 			name: `${process.env.DEV ? 'dev' : 'build'}-js_chrome`,
 			use: {
+				// use stable chrome from host OS instead of downloading one
+				// see https://playwright.dev/docs/browsers#google-chrome--microsoft-edge
+				channel: 'chrome',
 				javaScriptEnabled: false
 			}
 		},
@@ -176,10 +182,7 @@ export const config = {
 	],
 	use: {
 		screenshot: 'only-on-failure',
-		trace: 'retain-on-failure',
-		// use stable chrome from host OS instead of downloading one
-		// see https://playwright.dev/docs/browsers#google-chrome--microsoft-edge
-		channel: 'chrome'
+		trace: 'retain-on-failure'
 	},
 	workers: process.env.CI ? 2 : undefined
 };
