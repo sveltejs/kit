@@ -58,8 +58,9 @@ export async function create_plugin(config, cwd) {
 					_: {
 						entry: {
 							file: `/@fs${runtime}/client/start.js`,
+							js: [],
 							css: [],
-							js: []
+							fonts: []
 						},
 						nodes: manifest_data.components.map((id) => {
 							return async () => {
@@ -100,6 +101,7 @@ export async function create_plugin(config, cwd) {
 								return {
 									module,
 									entry: url.endsWith('.svelte') ? url : url + '?import',
+									fonts: [],
 									css: [],
 									js: [],
 									// in dev we inline all styles to avoid FOUC

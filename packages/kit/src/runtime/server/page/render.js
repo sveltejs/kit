@@ -50,8 +50,10 @@ export async function render_response({
 		}
 	}
 
-	const stylesheets = new Set(options.manifest._.entry.css);
 	const modulepreloads = new Set(options.manifest._.entry.js);
+	const stylesheets = new Set(options.manifest._.entry.css);
+	const fonts = new Set(options.manifest._.entry.fonts);
+
 	/** @type {Map<string, string>} */
 	const styles = new Map();
 
@@ -72,8 +74,10 @@ export async function render_response({
 
 	if (resolve_opts.ssr) {
 		branch.forEach(({ node, props, loaded, fetched, uses_credentials }) => {
-			if (node.css) node.css.forEach((url) => stylesheets.add(url));
 			if (node.js) node.js.forEach((url) => modulepreloads.add(url));
+			if (node.css) node.css.forEach((url) => stylesheets.add(url));
+			if (node.fonts) node.fonts.forEach((url) => fonts.add(url));
+
 			if (node.styles) Object.entries(node.styles).forEach(([k, v]) => styles.set(k, v));
 
 			// TODO probably better if `fetched` wasn't populated unless `hydrate`
@@ -233,6 +237,23 @@ export async function render_response({
 					// include them in disabled state so that Vite can detect them and doesn't try to add them
 					attributes.push('disabled', 'media="(max-width: 0)"');
 				}
+
+				return `\n\t<link ${attributes.join(' ')}>`;
+			})
+			.join('');
+
+		// prettier-ignore
+		head += Array.from(fonts)
+			.map((dep) => {
+				const ext = dep.slice(dep.lastIndexOf('.') + 1);
+
+				const attributes = [
+					'rel="preload"',
+					'as="font"',
+					`type="font/${ext}"`,
+					`href="${options.prefix + dep}"`,
+					'crossorigin'
+				];
 
 				return `\n\t<link ${attributes.join(' ')}>`;
 			})

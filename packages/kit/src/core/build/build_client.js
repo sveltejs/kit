@@ -105,7 +105,8 @@ export async function build_client({
 	const entry = posixify(client_entry_file);
 	const entry_js = new Set();
 	const entry_css = new Set();
-	find_deps(entry, vite_manifest, entry_js, entry_css);
+	const entry_fonts = new Set();
+	find_deps(entry, vite_manifest, entry_js, entry_css, entry_fonts);
 
 	fs.writeFileSync(
 		`${client_out_dir}/version.json`,
@@ -118,7 +119,8 @@ export async function build_client({
 		entry: {
 			file: vite_manifest[entry].file,
 			js: Array.from(entry_js),
-			css: Array.from(entry_css)
+			css: Array.from(entry_css),
+			fonts: Array.from(entry_fonts)
 		},
 		vite_manifest
 	};

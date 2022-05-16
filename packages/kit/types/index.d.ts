@@ -271,6 +271,7 @@ export interface SSRManifest {
 			file: string;
 			js: string[];
 			css: string[];
+			fonts: string[]
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];

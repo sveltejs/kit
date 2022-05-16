@@ -52,6 +52,7 @@ export interface BuildData {
 			file: string;
 			js: string[];
 			css: string[];
+			fonts: string[];
 		};
 		vite_manifest: import('vite').Manifest;
 	};
@@ -228,13 +229,15 @@ export interface SSREndpoint {
 export interface SSRNode {
 	module: SSRComponent;
 	/** client-side module URL for this component */
-	entry: string;
-	/** external CSS files */
-	css: string[];
-	/** external JS files */
-	js: string[];
+	entry: string
+
 	/** inlined styles */
 	styles?: Record<string, string>;
+
+	/** assets this component depends on (including transitively) */
+	fonts: string[];
+	css: string[];
+	js: string[];
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;

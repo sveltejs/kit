@@ -24,20 +24,33 @@ export async function create_build(config) {
 /**
  * @param {string} file
  * @param {import('vite').Manifest} manifest
- * @param {Set<string>} css
  * @param {Set<string>} js
+ * @param {Set<string>} css
+ * @param {Set<string>} fonts
  */
-export function find_deps(file, manifest, js, css) {
+export function find_deps(file, manifest, js, css, fonts) {
 	const chunk = manifest[file];
 
 	if (js.has(chunk.file)) return;
 	js.add(chunk.file);
 
+	if (chunk.assets) {
+		for (const asset of chunk.assets) {
+			if (/\.(woff2?|ttf|otf)$/.test(asset)) {
+				fonts.add(asset);
+			}
+		}
+	}
+
 	if (chunk.css) {
-		chunk.css.forEach((file) => css.add(file));
+		for (const file of chunk.css) {
+			css.add(file);
+		}
 	}
 
 	if (chunk.imports) {
-		chunk.imports.forEach((file) => find_deps(file, manifest, js, css));
+		for (const file of chunk.imports) {
+			find_deps(file, manifest, js, css, fonts);
+		}
 	}
 }

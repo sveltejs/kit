@@ -273,7 +273,9 @@ export async function build_server(
 
 		const js = new Set();
 		const css = new Set();
-		find_deps(component, client.vite_manifest, js, css);
+		const fonts = new Set();
+
+		find_deps(component, client.vite_manifest, js, css, fonts);
 
 		const imports = [`import * as module from '../${vite_manifest[component].file}';`];
 
@@ -281,7 +283,8 @@ export async function build_server(
 			'export { module };',
 			`export const entry = '${client.vite_manifest[component].file}';`,
 			`export const js = ${s(Array.from(js))};`,
-			`export const css = ${s(Array.from(css))};`
+			`export const css = ${s(Array.from(css))};`,
+			`export const fonts = ${s(Array.from(fonts))};`
 		];
 
 		/** @type {string[]} */
