@@ -444,7 +444,7 @@ function list_files(dir, path = '', files = []) {
 		.forEach((file) => {
 			const joined = path ? `${path}/${file.name}` : file.name;
 
-			if (file.isDirectory()) {
+			if (file.isDirectory() || file.isSymbolicLink()) {
 				list_files(`${dir}/${file.name}`, joined, files);
 			} else {
 				files.push(joined);

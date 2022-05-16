@@ -95,6 +95,37 @@ test('creates routes', () => {
 	]);
 });
 
+test('creates sym-linked routes', () => {
+	const { components, routes } = create('samples/sym-link/routes');
+
+	const index = 'samples/sym-link/routes/index.svelte';
+	const symlinked_index = 'samples/sym-link/routes/foo/index.svelte';
+
+	assert.equal(components, [default_layout, default_error, symlinked_index, index]);
+
+	assert.equal(routes, [
+		{
+			type: 'page',
+			id: '',
+			pattern: /^\/$/,
+			path: '/',
+			shadow: null,
+			a: [default_layout, index],
+			b: [default_error]
+		},
+
+		{
+			type: 'page',
+			id: 'foo',
+			pattern: /^\/foo\/?$/,
+			path: '/foo',
+			shadow: null,
+			a: [default_layout, symlinked_index],
+			b: [default_error]
+		}
+	]);
+});
+
 test('creates routes with layout', () => {
 	const { components, routes } = create('samples/basic-layout');
 
