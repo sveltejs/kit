@@ -205,8 +205,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {string[]} redirect_chain
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {() => void} [callback]
 	 */
-	async function update(url, redirect_chain, no_cache, opts) {
+	async function update(url, redirect_chain, no_cache, opts, callback) {
 		const intent = get_navigation_intent(url);
 
 		const current_token = (token = {});
@@ -333,7 +334,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		load_cache.promise = null;
 		load_cache.id = null;
 		autoscroll = true;
-		updating = false;
 
 		if (navigation_result.props.page) {
 			page = navigation_result.props.page;
@@ -342,7 +342,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		router_enabled = leaf_node?.module.router !== false;
 
-		return true;
+		if (callback) callback();
+
+		updating = false;
 	}
 
 	/** @param {import('./types').NavigationResult} result */
@@ -360,12 +362,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			hydrate: true
 		});
 
-		started = true;
-
 		if (router_enabled) {
 			const navigation = { from: null, to: new URL(location.href) };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
 		}
+
+		started = true;
 	}
 
 	/**
@@ -896,18 +898,16 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		}
 
-		const completed = await update(normalized, redirect_chain, false, {
+		await update(normalized, redirect_chain, false, {
 			scroll,
 			keepfocus,
 			details
-		});
-
-		if (completed) {
+		}, () => {
 			const navigation = { from, to: normalized };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
 
 			stores.navigating.set(null);
-		}
+		});
 	}
 
 	/**
