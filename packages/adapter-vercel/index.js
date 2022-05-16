@@ -348,11 +348,11 @@ async function v3(builder, external, edge, split) {
 						.replace(/\\\//g, '/');
 
 					// replace the root route "^/" with "^/?"
-					if (slicedPattern === '^/') {
-						slicedPattern = '^/?';
+					if (sliced_pattern === '^/') {
+						sliced_pattern = '^/?';
 					}
 
-					const src = `${slicedPattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
+					const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
 
 					await generate_function(route.id || 'index', src, entry.generateManifest);
 				}
