@@ -302,7 +302,9 @@ Files and directories with a leading `_` or `.` (other than [`.well-known`](http
 
 #### Rest parameters
 
-A route can have multiple dynamic parameters, for example `src/routes/[category]/[item].svelte` or even `src/routes/[category]-[item].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `/x-y-z`, `category` would be `x` and `item` would be `y-z`.) If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
+A route can have multiple dynamic parameters, for example `src/routes/[category]/[item].svelte` or even `src/routes/[category]-[item].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `/x-y-z`, `category` would be `x` and `item` would be `y-z`.)
+
+If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
 
 ```bash
 /[org]/[repo]/tree/[branch]/[...file]
@@ -320,7 +322,7 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 }
 ```
 
-> `src/routes/a/[...rest]/z.svelte` will match `/a/z` as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid.
+> `src/routes/a/[...rest]/z.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#advanced-routing-matching).
 
 #### Matching
 
