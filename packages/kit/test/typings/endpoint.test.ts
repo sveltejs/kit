@@ -92,6 +92,18 @@ export const generic_case: RequestHandler<Record<string, string>, ExamplePost> =
 	};
 };
 
+interface NestedChild {
+	message: string;
+}
+interface ParentWrapper {
+	fields: NestedChild;
+}
+export const nested_interfaces: RequestHandler<Record<string, string>, ParentWrapper> = () => {
+	return {
+		body: {} as ParentWrapper
+	};
+};
+
 // --- invalid cases ---
 
 // @ts-expect-error - body must be JSON serializable
