@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Fix dev --host command behaviour
+Revert dev command default options
