@@ -1861,7 +1861,7 @@ test.describe.parallel('Redirects', () => {
 		}
 	});
 
-	test.only('errors on missing status', async ({ baseURL, page, clicknav, read_errors }) => {
+	test('errors on missing status', async ({ baseURL, page, clicknav, read_errors }) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/missing-status/a"]');
