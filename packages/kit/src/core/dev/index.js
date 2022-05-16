@@ -11,7 +11,7 @@ import * as sync from '../sync/sync.js';
  * @typedef {{
  *   cwd: string,
  *   port: number,
- *   host: string,
+ *   host?: string,
  *   https: boolean,
  *   config: import('types').ValidatedConfig
  * }} Options
@@ -35,7 +35,8 @@ export async function dev({ cwd, port, host, https, config }) {
 							path.resolve(cwd, 'node_modules'),
 							path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
 						])
-					]
+					],
+					port: 3000
 				},
 				strictPort: true
 			}
