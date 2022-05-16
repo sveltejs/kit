@@ -340,7 +340,7 @@ async function v3(builder, external, edge, split) {
 				id: route.pattern.toString(), // TODO is `id` necessary?
 				filter: (other) => route.pattern.toString() === other.pattern.toString(),
 				complete: async (entry) => {
-					let slicedPattern = route.pattern
+					let sliced_pattern = route.pattern
 						.toString()
 						// remove leading / and trailing $/
 						.slice(1, -2)
