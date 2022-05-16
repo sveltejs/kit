@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
 		"allowJs": true,
-		"checkJs": true
+		"checkJs": true,
+		"newLine": "lf"
 	}
 }
