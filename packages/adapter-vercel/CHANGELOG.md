@@ -1,5 +1,13 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.52
+
+### Patch Changes
+
+- [breaking] drop Node 14 support ([#4922](https://github.com/sveltejs/kit/pull/4922))
+
+* Use general purpose Edge Functions instead of piggybacking Middleware for Edge Deployment + fix split mode ([#4883](https://github.com/sveltejs/kit/pull/4883))
+
 ## 1.0.0-next.51
 
 ### Patch Changes
