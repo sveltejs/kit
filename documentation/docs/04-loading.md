@@ -144,6 +144,8 @@ This will be merged with any existing `stuff` and passed to the `load` functions
 
 The combined `stuff` is available to components using the [page store](/docs/modules#$app-stores) as `$page.stuff`, providing a mechanism for pages to pass data 'upward' to layouts.
 
+> `status`, `error`, `redirect` and `cache` are ignored when rendering error pages.
+
 #### dependencies
 
 An array of strings representing URLs the page depends on, which can subsequently be used with [`invalidate`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun. You only need to add them to `dependencies` if you're using a custom API client; URLs loaded with the provided `fetch` function are added automatically.
