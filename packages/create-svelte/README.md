@@ -16,12 +16,12 @@ You can also use `create-svelte` programmatically:
 import { create } from 'create-svelte';
 
 await create('my-new-app', {
-	name: 'my-new-app',
-	template: 'default', // or 'skeleton'
-	types: 'checkjs', // or 'typescript' or null;
-	prettier: false,
-	eslint: false,
-	playwright: false
+  name: 'my-new-app',
+  template: 'default', // or 'skeleton'
+  types: 'checkjs', // or 'typescript' or null;
+  prettier: false,
+  eslint: false,
+  playwright: false
 });
 ```
 
