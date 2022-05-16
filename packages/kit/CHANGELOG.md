@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.333
+
+### Patch Changes
+
+- [breaking] delay automatic service worker registration until load event ([#4950](https://github.com/sveltejs/kit/pull/4950))
+
 ## 1.0.0-next.332
 
 ### Patch Changes

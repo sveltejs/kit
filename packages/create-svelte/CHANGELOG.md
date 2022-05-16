@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.136
+
+### Patch Changes
+
+- Add README ([#4951](https://github.com/sveltejs/kit/pull/4951))
+
 ## 2.0.0-next.135
 
 ### Patch Changes

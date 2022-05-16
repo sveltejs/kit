@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.31
+
+### Patch Changes
+
+- Tweak fallback page README ([#4954](https://github.com/sveltejs/kit/pull/4954))
+
 ## 1.0.0-next.30
 
 ### Patch Changes
