@@ -14,25 +14,16 @@
  * 	interface Stuff {}
  * }
  * ```
- * 
+ *
  * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`.
- * 
- * Note: Since it's an ambient dts file, you can't use `import` statements. Instead you should use the import() function, for example:
- * 
+ *
+ * Note that since it's an ambient declaration file, you can't use `import` statements. Instead, use the `import(...)` function:
+ *
  * ```ts
- * /// <reference types="@sveltejs/kit" />
- *
- * declare namespace App {
- * 	interface Locals {
- * 		user: import('$lib/types').User;
- *  }
- *
- * 	interface Platform {}
- *
- * 	interface Session {}
- *
- * 	interface Stuff {}
+ * interface Locals {
+ * 	user: import('$lib/types').User;
  * }
+ * ```
  */
 declare namespace App {
 	/**
