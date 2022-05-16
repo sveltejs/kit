@@ -47,7 +47,7 @@ A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte
 
 Dynamic parameters are encoded using `[brackets]`. For example, a blog post might be defined by `src/routes/blog/[slug].svelte`. These parameters can be accessed in a [`load`](/docs/loading#input-params) function or via the [`page`](/docs/modules#$app-stores) store.
 
-A file or directory can have multiple dynamic parts, like `[id]-[category].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `x-y-z`, `id` would be `x` and `category` would be `y-z`.)
+A route can have multiple dynamic parameters, for example `src/routes/[category]/[item].svelte` or even `src/routes/[category]-[item].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `x-y-z`, `id` would be `x` and `category` would be `y-z`.)
 
 ### Endpoints
 
@@ -302,7 +302,7 @@ Files and directories with a leading `_` or `.` (other than [`.well-known`](http
 
 #### Rest parameters
 
-A route can have multiple dynamic parameters, for example `src/routes/[category]/[item].svelte` or even `src/routes/[category]-[item].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `/x-y-z`, `category` would be `x` and `item` would be `y-z`.) If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
+If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
 
 ```bash
 /[org]/[repo]/tree/[branch]/[...file]
@@ -320,7 +320,7 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 }
 ```
 
-> `src/routes/a/[...rest]/z.svelte` will match `/a/z` as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid.
+> `src/routes/a/[...rest]/z.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#advanced-routing-matching).
 
 #### Matching
 
