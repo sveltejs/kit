@@ -48,6 +48,19 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
+const fetch = window.fetch;
+let loading = 0;
+
+if (import.meta.env.DEV) {
+	window.fetch = (input, init) => {
+		const url = input instanceof Request ? input.url : input.toString();
+		if (loading) {
+			console.warn(`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`);
+		}
+		return fetch(input, init);
+	}
+}
+
 /**
  * @param {{
  *   target: Element;
@@ -559,7 +572,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 				});
 			}
 
-			const loaded = await module.load.call(null, load_input);
+			let loaded;
+
+			try {
+				if (import.meta.env.DEV) loading += 1;
+				loaded = await module.load.call(null, load_input);
+			} finally {
+				if (import.meta.env.DEV) loading -= 1;
+			}
 
 			if (!loaded) {
 				throw new Error('load function must return a value');
