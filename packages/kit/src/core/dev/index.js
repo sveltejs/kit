@@ -79,9 +79,7 @@ export async function dev({ cwd, port, host, https, config }) {
 
 	// optional config from command-line flags
 	// these should take precedence, but not print conflict warnings
-	if (host) {
-		merged_config.server.host = host;
-	}
+	merged_config.server.host = host;
 
 	// if https is already enabled then do nothing. it could be an object and we
 	// don't want to overwrite with a boolean
