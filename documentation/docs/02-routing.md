@@ -304,7 +304,7 @@ Files and directories with a leading `_` or `.` (other than [`.well-known`](http
 
 A route can have multiple dynamic parameters, for example `src/routes/[category]/[item].svelte` or even `src/routes/[category]-[item].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `/x-y-z`, `category` would be `x` and `item` would be `y-z`.)
 
-If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
+But if the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
 
 ```bash
 /[org]/[repo]/tree/[branch]/[...file]
