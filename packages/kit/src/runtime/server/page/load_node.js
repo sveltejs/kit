@@ -535,5 +535,33 @@ function validate_shadow_output(result) {
 		throw new Error('Body returned from endpoint request handler must be a plain object');
 	}
 
-	return { status, headers, body };
+	return { status, headers, body: json_value_to_pojo(body) };
+}
+
+/**
+ * @param {import('types').JSONValue} value
+ * @returns {any}
+ */
+function json_value_to_pojo(value) {
+	if (value && typeof value === 'object') {
+		if (Array.isArray(value)) {
+			return value.map(json_value_to_pojo);
+		}
+
+		if (typeof value.toJSON === 'function') {
+			// `.toJSON` should return a plain object, but if it doesn't, it's still being recursed.
+			return json_value_to_pojo(value.toJSON());
+		}
+
+		/** @type {Record<string, any>} This cast is required to prevent the for loop to complain. */
+		const object = value;
+		/** @type {Record<string, any>} */
+		const result = {};
+		for (const key in value) {
+			result[key] = json_value_to_pojo(object[key]);
+		}
+		return result;
+	}
+
+	return value;
 }
