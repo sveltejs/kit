@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.332
+
+### Patch Changes
+
+- Revert dev command default options ([#4949](https://github.com/sveltejs/kit/pull/4949))
+
 ## 1.0.0-next.331
 
 ### Patch Changes
