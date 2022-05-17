@@ -446,7 +446,9 @@ async function create_function_bundle(entry, dir, runtime) {
 
 		try {
 			fs.mkdirSync(path.dirname(dest), { recursive: true });
-		} catch {}
+		} catch {
+			// do nothing
+		}
 
 		if (source !== realpath) {
 			const realdest = path.join(dir, path.relative(ancestor, realpath));
