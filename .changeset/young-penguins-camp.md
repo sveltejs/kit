@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Remove unused viteServeStaticMiddleware
+Only run `viteServeStaticMiddleware` after server has attempted response
