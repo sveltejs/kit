@@ -73,7 +73,7 @@ export async function create_plugin(config, cwd) {
 								if (!node) throw new Error(`Could not find node for ${url}`);
 
 								const deps = new Set();
-								find_deps(node, deps);
+								await find_deps(vite, node, deps);
 
 								/** @type {Record<string, string>} */
 								const styles = {};
@@ -387,14 +387,36 @@ function remove_html_middlewares(server) {
 }
 
 /**
+ * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ModuleNode} node
  * @param {Set<import('vite').ModuleNode>} deps
  */
-function find_deps(node, deps) {
-	for (const dep of node.importedModules) {
-		if (!deps.has(dep)) {
-			deps.add(dep);
-			find_deps(dep, deps);
+function find_deps(vite, node, deps) {
+	// since `ssrTransformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
+	// instead of using `await`, we resolve all branches in parallel.
+	/** @type {Promise<void>[]} */
+	const branches = [];
+
+	/** @param {import('vite').ModuleNode} node */
+	function add(node) {
+		if (!deps.has(node)) {
+			deps.add(node);
+			branches.push(find_deps(vite, node, deps));
 		}
 	}
+
+	/** @param {string} url */
+	async function add_by_url(url) {
+		branches.push(vite.moduleGraph.getModuleByUrl(url).then((node) => node && add(node)));
+	}
+
+	if (node.ssrTransformResult) {
+		if (node.ssrTransformResult.deps) {
+			node.ssrTransformResult.deps.forEach(add_by_url);
+		}
+	} else {
+		node.importedModules.forEach(add);
+	}
+
+	return Promise.all(branches).then(() => {});
 }

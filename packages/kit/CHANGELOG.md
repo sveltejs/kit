@@ -1,5 +1,35 @@
 # @sveltejs/kit
 
+## 1.0.0-next.334
+
+### Patch Changes
+
+- [fix] deduplicate injected css during dev ([#4920](https://github.com/sveltejs/kit/pull/4920))
+
+## 1.0.0-next.333
+
+### Patch Changes
+
+- [breaking] delay automatic service worker registration until load event ([#4950](https://github.com/sveltejs/kit/pull/4950))
+
+## 1.0.0-next.332
+
+### Patch Changes
+
+- Revert dev command default options ([#4949](https://github.com/sveltejs/kit/pull/4949))
+
+## 1.0.0-next.331
+
+### Patch Changes
+
+- fix `BodyValidator` for nested interfaces ([#4939](https://github.com/sveltejs/kit/pull/4939))
+
+* [breaking] drop Node 14 support ([#4922](https://github.com/sveltejs/kit/pull/4922))
+
+- only skip files that were already written when prerendering ([#4928](https://github.com/sveltejs/kit/pull/4928))
+
+* Set default options for dev command ([#4932](https://github.com/sveltejs/kit/pull/4932))
+
 ## 1.0.0-next.330
 
 ### Patch Changes

@@ -35,7 +35,8 @@ export async function dev({ cwd, port, host, https, config }) {
 							path.resolve(cwd, 'node_modules'),
 							path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
 						])
-					]
+					],
+					port: 3000
 				},
 				strictPort: true
 			}
