@@ -26,6 +26,14 @@ export interface AdapterEntry {
 	}) => MaybePromise<void>;
 }
 
+export type BodyValidator<T> = {
+	[P in keyof T]: T[P] extends { [k: string]: infer V }
+		? BodyValidator<V> // recurse when T[P] is an object
+		: T[P] extends BigInt | Function | Symbol
+		? never
+		: T[P];
+};
+
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
 //
 // MIT License

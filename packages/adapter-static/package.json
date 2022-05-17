@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "1.0.0-next.30",
+	"version": "1.0.0-next.31",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -29,6 +29,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
+		"@types/node": "^14.14.20",
 		"playwright-chromium": "^1.21.0",
 		"port-authority": "^1.1.2",
 		"sirv": "^2.0.0",

@@ -1,3 +1,9 @@
+@import '_base.css';
+
 .styled {
 	color: red;
+}
+
+.overridden {
+	color: green;
 }
