@@ -35,8 +35,6 @@ export function write_tsconfig(config) {
 
 	/** @type {Record<string, string[]>} */
 	const paths = {};
-	// $lib should be moved into a default value for `config.kit.alias`, for now we have this secondary
-	// object to handle the default $lib
 	const alias = {
 		$lib: project_relative(config.kit.files.lib),
 		...config.kit.alias

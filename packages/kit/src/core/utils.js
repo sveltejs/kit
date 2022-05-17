@@ -85,7 +85,8 @@ export function get_aliases(config) {
 		__GENERATED__: path.posix.join(config.kit.outDir, 'generated'),
 		$app: `${get_runtime_path(config)}/app`,
 
-		// $lib should be moved into a default value for `config.kit.alias`
+		// For now, we handle `$lib` specially here rather than make it a default value for
+		// `config.kit.alias` since it has special meaning for packaging, etc.
 		$lib: config.kit.files.lib
 	};
 
