@@ -8,7 +8,7 @@
 		},
 		"kit.svelte.dev#build": {
 			"dependsOn": ["^build", "$VERCEL"],
-			"inputs": ["src/**", "../../documentation/**"],
+			"inputs": ["src/**", "../../packages/kit/docs/**", "../../documentation/**"],
 			"outputs": [".vercel_build_output/**"]
 		},
 		"build": {
