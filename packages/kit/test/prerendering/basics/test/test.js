@@ -114,7 +114,7 @@ test('fetching missing content results in a 404', () => {
 	assert.ok(content.includes('<h1>status: 404</h1>'), content);
 });
 
-test('targets the data-hydrate parent node', () => {
+test('targets the data-sveltekit-hydrate parent node', () => {
 	// this test ensures that we don't accidentally change the way
 	// the body is hydrated in a way that breaks apps that need
 	// to manipulate the markup in some way:
@@ -122,14 +122,16 @@ test('targets the data-hydrate parent node', () => {
 	const content = read('index.html');
 
 	const pattern =
-		/<body>([^]+?)<script type="module" data-hydrate="(\w+)">([^]+?)<\/script>[^]+?<\/body>/;
+		/<body>([^]+?)<script type="module" data-sveltekit-hydrate="(\w+)">([^]+?)<\/script>[^]+?<\/body>/;
 
 	const match = pattern.exec(content);
 
 	assert.equal(match[1].trim(), '<h1>hello</h1>');
 
 	assert.ok(
-		match[3].includes(`target: document.querySelector('[data-hydrate="${match[2]}"]').parentNode`)
+		match[3].includes(
+			`target: document.querySelector('[data-sveltekit-hydrate="${match[2]}"]').parentNode`
+		)
 	);
 });
 
