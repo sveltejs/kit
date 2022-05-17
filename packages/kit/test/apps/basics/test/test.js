@@ -2426,6 +2426,14 @@ test.describe.parallel('Static files', () => {
 		const response = await request.get('/static/static.json');
 		expect(response.status()).toBe(process.env.DEV ? 403 : 404);
 	});
+
+	test('Vite serves assets in src directory', async ({ page, request }) => {
+		await page.goto('/assets');
+		const path = await page.textContent('h1');
+
+		const response = await request.get(path);
+		expect(response.status()).toBe(200);
+	});
 });
 
 test.describe.parallel('Matchers', () => {
