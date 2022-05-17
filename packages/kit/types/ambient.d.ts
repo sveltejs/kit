@@ -17,7 +17,7 @@
  *
  * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`.
  *
- * Note that since it's an ambient declaration file, you can't use `import` statements. Instead, use the `import(...)` function:
+ * Note that since it's an ambient declaration file, you can't use `import` statements — instead, use the `import(...)` function:
  *
  * ```ts
  * interface Locals {
