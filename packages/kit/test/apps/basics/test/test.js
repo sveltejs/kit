@@ -2361,6 +2361,11 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('h1')).toBe('routeId in load: routing/route-id/[x]');
 		expect(await page.textContent('h2')).toBe('routeId in store: routing/route-id/[x]');
 	});
+
+	test('serves a page that clashes with a root directory', async ({ page }) => {
+		await page.goto('/static');
+		expect(await page.textContent('h1')).toBe('hello');
+	});
 });
 
 test.describe.parallel('Session', () => {
