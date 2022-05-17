@@ -105,6 +105,8 @@ If the page you're loading has an endpoint, the data returned from it is accessi
 
 If you return a Promise from `load`, SvelteKit will delay rendering until the promise resolves. The return value has several properties, all optional:
 
+> `status`, `error`, `redirect` and `cache` are ignored when rendering error pages.
+
 #### status
 
 The HTTP status code for the page. If returning an `error` this must be a `4xx` or `5xx` response; if returning a `redirect` it must be a `3xx` response. The default is `200`.
@@ -149,5 +151,3 @@ The combined `stuff` is available to components using the [page store](/docs/mod
 An array of strings representing URLs the page depends on, which can subsequently be used with [`invalidate`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun. You only need to add them to `dependencies` if you're using a custom API client; URLs loaded with the provided `fetch` function are added automatically.
 
 URLs can be absolute or relative to the page being loaded, and must be [encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding).
-
-> `status`, `error`, `redirect` and `cache` are ignored when rendering error pages.
