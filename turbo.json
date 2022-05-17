@@ -3,7 +3,7 @@
 	"pipeline": {
 		"@sveltejs/kit#build": {
 			"dependsOn": ["^build"],
-			"inputs": ["src/**", "scripts/**"],
+			"inputs": ["src/**", "scripts/**", "types/**"],
 			"outputs": ["dist/**", "docs/**", "assets/**"]
 		},
 		"kit.svelte.dev#build": {
