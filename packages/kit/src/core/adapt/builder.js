@@ -121,9 +121,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		},
 
 		writeClient(dest) {
-			return copy(`${config.kit.outDir}/output/client`, dest, {
-				filter: (file) => file[0] !== '.'
-			});
+			return copy(`${config.kit.outDir}/output/client`, dest);
 		},
 
 		writePrerendered(dest, { fallback } = {}) {
@@ -139,9 +137,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		},
 
 		writeServer(dest) {
-			return copy(`${config.kit.outDir}/output/server`, dest, {
-				filter: (file) => file[0] !== '.'
-			});
+			return copy(`${config.kit.outDir}/output/server`, dest);
 		},
 
 		writeStatic(dest) {

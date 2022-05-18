@@ -10,6 +10,10 @@
 	this text is blue
 </div>
 
+<div class="overridden">
+	this text is green
+</div>
+
 <a href="/css/other">other</a>
 
 <style>

@@ -11,20 +11,20 @@ Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `
 import adapter from '@sveltejs/adapter-static';
 
 export default {
-	kit: {
-		adapter: adapter({
-			// default options are shown
-			pages: 'build',
-			assets: 'build',
-			fallback: null,
-			precompress: false
-		}),
+  kit: {
+    adapter: adapter({
+      // default options are shown
+      pages: 'build',
+      assets: 'build',
+      fallback: null,
+      precompress: false
+    }),
 
-		prerender: {
-			// This can be false if you're using a fallback (i.e. SPA mode)
-			default: true
-		}
-	}
+    prerender: {
+      // This can be false if you're using a fallback (i.e. SPA mode)
+      default: true
+    }
+  }
 };
 ```
 
@@ -54,18 +54,18 @@ You can use `adapter-static` to create a single-page app or SPA by specifying a 
 
 > In most situations this is not recommended: it harms SEO, tends to slow down perceived performance, and makes your app inaccessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
 
-The fallback page is a blank HTML page that loads your SvelteKit app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't otherwise match. We can create that file like so:
+The fallback page is an HTML page created by SvelteKit that loads your app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't otherwise match. We can create that file like so:
 
 ```js
 // svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
 export default {
-	kit: {
-		adapter: adapter({
-			fallback: '200.html'
-		})
-	}
+  kit: {
+    adapter: adapter({
+      fallback: '200.html'
+    })
+  }
 };
 ```
 

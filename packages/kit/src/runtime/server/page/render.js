@@ -158,7 +158,7 @@ export async function render_response({
 	const init_app = `
 		import { start } from ${s(options.prefix + options.manifest._.entry.file)};
 		start({
-			target: document.querySelector('[data-hydrate="${target}"]').parentNode,
+			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
 			session: ${try_serialize($session, (error) => {
 				throw new Error(`Failed to serialize session data: ${error.message}`);
@@ -182,7 +182,9 @@ export async function render_response({
 
 	const init_service_worker = `
 		if ('serviceWorker' in navigator) {
-			navigator.serviceWorker.register('${options.service_worker}');
+			addEventListener('load', () => {
+				navigator.serviceWorker.register('${options.service_worker}');
+			});
 		}
 	`;
 
@@ -223,7 +225,7 @@ export async function render_response({
 			.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
 			.join('');
 
-		const attributes = ['type="module"', `data-hydrate="${target}"`];
+		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
 
 		csp.add_script(init_app);
 

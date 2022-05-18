@@ -94,7 +94,7 @@ export async function respond(opts) {
 
 	let stuff = {};
 
-	ssr: if (resolve_opts.ssr) {
+	ssr: {
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
 

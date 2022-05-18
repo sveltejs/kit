@@ -31,9 +31,9 @@ You can include these changes in your `svelte.config.js` configuration file:
 import adapter from '@sveltejs/adapter-cloudflare';
 
 export default {
-	kit: {
-		adapter: adapter()
-	}
+  kit: {
+    adapter: adapter()
+  }
 };
 ```
 
@@ -77,11 +77,15 @@ declare namespace App {
 
 ```js
 export async function post({ request, platform }) {
-	const counter = platform.env.COUNTER.idFromName('A');
+  const counter = platform.env.COUNTER.idFromName('A');
 }
 ```
 
 > `platform.env` is only available in the production build. Use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally
+
+## Notes
+
+Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [endpoints](https://kit.svelte.dev/docs/routing#endpoints) in your SvelteKit app.
 
 ## Changelog
 

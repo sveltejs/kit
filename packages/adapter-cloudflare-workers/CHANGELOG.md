@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.40
+
+### Patch Changes
+
+- [breaking] support Wrangler 2, drop Wrangler 1 ([#4887](https://github.com/sveltejs/kit/pull/4887))
+
+## 1.0.0-next.39
+
+### Patch Changes
+
+- [breaking] Remove try-catch around server.respond ([#4738](https://github.com/sveltejs/kit/pull/4738))
+
 ## 1.0.0-next.38
 
 ### Patch Changes

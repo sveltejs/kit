@@ -4,6 +4,12 @@ import { start_server, test } from '../../../utils.js';
 /** @typedef {import('@playwright/test').Response} Response */
 
 test.describe.parallel('base path', () => {
+	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
+		const response = await request.get('/');
+		expect(response.status()).toBe(404);
+		expect(await response.text()).toBe('Not found (did you mean /path-base/?)');
+	});
+
 	test('serves /', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/');
 
@@ -142,6 +148,16 @@ test.describe.parallel('trailingSlash', () => {
 		await clicknav('[href="/path-base/slash/child"]');
 		expect(page.url()).toBe(`${baseURL}/path-base/slash/child/`);
 		expect(await page.textContent('h2')).toBe('/slash/child/');
+	});
+
+	test('ignores trailing slash on endpoint', async ({ baseURL, request }) => {
+		const r1 = await request.get('/path-base/endpoint/');
+		expect(r1.url()).toBe(`${baseURL}/path-base/endpoint/`);
+		expect(await r1.text()).toBe('hi');
+
+		const r2 = await request.get('/path-base/endpoint');
+		expect(r2.url()).toBe(`${baseURL}/path-base/endpoint`);
+		expect(await r2.text()).toBe('hi');
 	});
 });
 

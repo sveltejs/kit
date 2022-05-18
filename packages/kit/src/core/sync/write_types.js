@@ -8,7 +8,7 @@ import type { ${imports} } from '@sveltejs/kit';`;
 
 /** @param {string} arg */
 const endpoint = (arg) => `
-export type RequestHandler<Output extends ResponseBody = ResponseBody> = GenericRequestHandler<${arg}, Output>;`;
+export type RequestHandler<Output = ResponseBody> = GenericRequestHandler<${arg}, Output>;`;
 
 /** @param {string} arg */
 const page = (arg) => `

@@ -6,7 +6,7 @@ If you're using [adapter-auto](../adapter-auto), you don't need to install this 
 
 ## Usage
 
-> The `edge` and `split` options depend on the Vercel Build Output API which is currently in beta. For now, you must opt in by visiting `https://vercel.com/svelte/[YOUR_PROJECT]/settings/environment-variables` and adding `ENABLE_VC_BUILD` with the value `1`.
+> The `edge` and `split` options depend on the Vercel Build Output API which is currently in beta. For now, you must opt in by visiting `https://vercel.com/[YOUR_USERNAME]/[YOUR_PROJECT]/settings/environment-variables` and adding `ENABLE_VC_BUILD` with the value `1`.
 
 Add `"@sveltejs/adapter-vercel": "next"` to the `devDependencies` in your `package.json` and run `npm install`.
 
@@ -16,25 +16,29 @@ Then in your `svelte.config.js`:
 import vercel from '@sveltejs/adapter-vercel';
 
 export default {
-	kit: {
-		// default options are shown
-		adapter: vercel({
-			// if true, will deploy the app using edge functions
-			// (https://vercel.com/docs/concepts/functions/edge-functions)
-			// rather than serverless functions
-			edge: false,
+  kit: {
+    // default options are shown
+    adapter: vercel({
+      // if true, will deploy the app using edge functions
+      // (https://vercel.com/docs/concepts/functions/edge-functions)
+      // rather than serverless functions
+      edge: false,
 
-			// an array of dependencies that esbuild should treat
-			// as external when bundling functions
-			external: [],
+      // an array of dependencies that esbuild should treat
+      // as external when bundling functions
+      external: [],
 
-			// if true, will split your app into multiple functions
-			// instead of creating a single one for the entire app
-			split: false
-		})
-	}
+      // if true, will split your app into multiple functions
+      // instead of creating a single one for the entire app
+      split: false
+    })
+  }
 };
 ```
+
+## Notes
+
+Vercel functions contained in the `/api` directory at the project's root will _not_ be included in the deployment — these should be implemented as [endpoints](https://kit.svelte.dev/docs/routing#endpoints) in your SvelteKit app.
 
 ## Changelog
 

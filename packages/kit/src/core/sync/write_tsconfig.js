@@ -40,10 +40,12 @@ export function write_tsconfig(config) {
 				compilerOptions: {
 					// generated options
 					baseUrl: config_relative('.'),
-					paths: {
-						$lib: [project_relative(config.kit.files.lib)],
-						'$lib/*': [project_relative(config.kit.files.lib + '/*')]
-					},
+					paths: fs.existsSync(config.kit.files.lib)
+						? {
+								$lib: [project_relative(config.kit.files.lib)],
+								'$lib/*': [project_relative(config.kit.files.lib + '/*')]
+						  }
+						: {},
 					rootDirs: [config_relative('.'), './types'],
 
 					// essential options
@@ -54,7 +56,14 @@ export function write_tsconfig(config) {
 					isolatedModules: true,
 					// TypeScript doesn't know about import usages in the template because it only sees the
 					// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
-					preserveValueImports: true
+					preserveValueImports: true,
+
+					// This is required for svelte-kit package to work as expected
+					// Can be overwritten
+					lib: ['esnext', 'DOM'],
+					moduleResolution: 'node',
+					module: 'esnext',
+					target: 'esnext'
 				},
 				include,
 				exclude: [config_relative('node_modules/**'), './**']
@@ -82,7 +91,7 @@ function validate(config, out, user_file) {
 	if (extends_framework_config) {
 		const { paths: user_paths } = user_tsconfig.compilerOptions || {};
 
-		if (user_paths) {
+		if (user_paths && fs.existsSync(config.kit.files.lib)) {
 			/** @type {string[]} */
 			const lib = user_paths['$lib'] || [];
 			/** @type {string[]} */

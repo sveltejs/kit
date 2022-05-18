@@ -37,6 +37,7 @@ export async function dev({ cwd, port, host, https, config }) {
 						])
 					]
 				},
+				port: 3000,
 				strictPort: true
 			}
 		},
