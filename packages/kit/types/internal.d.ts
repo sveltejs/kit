@@ -255,7 +255,10 @@ export interface SSROptions {
 		assets: string;
 	};
 	prefix: string;
-	prerender: boolean;
+	prerender: {
+		default: boolean;
+		enabled: boolean;
+	};
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
 	router: boolean;

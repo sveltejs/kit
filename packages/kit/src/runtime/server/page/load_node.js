@@ -52,7 +52,7 @@ export async function load_node({
 	/** @type {import('types').LoadOutput} */
 	let loaded;
 
-	const should_prerender = node.module.prerender ?? state?.prerender?.default ?? false;
+	const should_prerender = node.module.prerender ?? options.prerender.default;
 
 	/** @type {import('types').ShadowData} */
 	const shadow = is_leaf
