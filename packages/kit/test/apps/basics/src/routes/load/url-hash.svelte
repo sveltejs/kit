@@ -1,6 +1,6 @@
 <script context="module">
 	export const load = ({ url }) => {
-		let hash = url.hash;
+		const hash = url.hash;
 
 		return {
 			props: { hash }
