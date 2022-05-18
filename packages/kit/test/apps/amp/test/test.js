@@ -14,6 +14,14 @@ test('renders an AMP page', async ({ page, baseURL }) => {
 	expect(await page.$('script[sveltekit\\:data-type="data"]')).toBeNull();
 });
 
+test('prints validation errors', async ({ page, baseURL }) => {
+	await page.goto(`${baseURL}/invalid`);
+
+	const body = await page.innerHTML('body');
+
+	expect(body).toContain("Invalid URL protocol 'javascript:' for attribute 'href' in tag 'a'");
+});
+
 test('styles are applied', async ({ page, baseURL }) => {
 	await page.goto(`${baseURL}/valid`);
 
@@ -56,6 +64,6 @@ test('throws error on encountering stylesheet links', async ({ page }) => {
 	await page.goto('/invalid/has-stylesheet');
 
 	expect(await page.textContent('body')).toContain(
-		'An AMP document cannot contain <link rel="stylesheet"> — make that inlineStyleThreshold is set to Infinity, and remove links from your page template and <svelte:head> elements'
+		'An AMP document cannot contain <link rel="stylesheet"> — ensure that inlineStyleThreshold is set to Infinity, and remove links from your page template and <svelte:head> elements'
 	);
 });

@@ -1,5 +1,8 @@
 import purify from 'purify-css';
+import { getInstance } from 'amphtml-validator';
 import * as amp from '../../../../src/amp.js';
+
+const validator = await getInstance();
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
@@ -18,7 +21,15 @@ export async function handle({ event, resolve }) {
 			);
 
 			css = purify(markup, css);
-			return markup.replace('</style>', `${css}</style>`);
+			const purified = markup.replace('</style>', `${css}</style>`);
+
+			const result = validator.validateString(purified);
+
+			if (result.status === 'PASS') {
+				return purified;
+			}
+
+			return JSON.stringify(result.errors);
 		}
 	});
 

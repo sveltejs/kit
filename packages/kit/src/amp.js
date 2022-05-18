@@ -18,18 +18,24 @@ if (options.service_worker) {
  * @param {string} html
  */
 export function transform(html) {
-	if (/<link[^>]+rel=('|")?stylesheet\1/.test(html)) {
-		throw new Error(
-			'An AMP document cannot contain <link rel="stylesheet"> — make that inlineStyleThreshold is set to Infinity, and remove links from your page template and <svelte:head> elements'
-		);
-	}
-
 	// TODO
 	// * remove http-equiv
 	// * <amp-install-serviceworker>
 	// * probably lots of other stuff
-	return html
+	const cleaned = html
 		.replace(/<style([^]+?)<\/style>/, (match, $1) => `<style amp-custom${$1}</style>`)
 		.replace(/<script[^]+?<\/script>/g, '')
+		.replace(/<link[^>]+>/g, (match) => {
+			if (/rel=('|")?stylesheet\1/.test(match)) {
+				if (/ disabled /.test(match)) return '';
+				throw new Error(
+					'An AMP document cannot contain <link rel="stylesheet"> — ensure that inlineStyleThreshold is set to Infinity, and remove links from your page template and <svelte:head> elements'
+				);
+			}
+
+			return match;
+		})
 		.replace('</head>', boilerplate + '</head>');
+
+	return cleaned;
 }
