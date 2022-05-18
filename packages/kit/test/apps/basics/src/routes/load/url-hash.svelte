@@ -1,15 +1,17 @@
 <script context="module">
 	export const load = ({ url }) => {
+		let hash = url.hash;
+
 		return {
-			props: { url }
+			props: { hash }
 		};
 	};
 </script>
 
 <script>
-	export let url;
+	export let hash;
 </script>
 
-<h1>
-	{url.hash}
-</h1>
+<p id="hash">
+	{hash}
+</p>

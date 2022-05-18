@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-hash in url passed to load is now always the empty string
+accessing url.hash from load now results in a helpful error
