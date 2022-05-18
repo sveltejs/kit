@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.335
+
+### Patch Changes
+
+- [breaking] change data-hydrate to data-sveltekit-hydrate ([#4972](https://github.com/sveltejs/kit/pull/4972))
+
+* Fix default port override ([#4970](https://github.com/sveltejs/kit/pull/4970))
+
 ## 1.0.0-next.334
 
 ### Patch Changes
