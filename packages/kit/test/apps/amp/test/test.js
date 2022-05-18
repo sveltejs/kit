@@ -67,3 +67,12 @@ test('throws error on encountering stylesheet links', async ({ page }) => {
 		'An AMP document cannot contain <link rel="stylesheet"> — ensure that inlineStyleThreshold is set to Infinity, and remove links from your page template and <svelte:head> elements'
 	);
 });
+
+test('http-equiv tags are removed', async ({ page }) => {
+	await page.goto('/http-equiv/cache-control');
+
+	expect(await page.textContent('h1')).toBe(
+		'the cache-control headers should be removed from this page'
+	);
+	expect(await page.innerHTML('head')).not.toContain('http-equiv="cache-control"');
+});
