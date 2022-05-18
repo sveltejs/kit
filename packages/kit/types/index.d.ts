@@ -6,15 +6,14 @@ import './ambient';
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
+	BodyValidator,
 	CspDirectives,
 	JSONValue,
 	Logger,
 	MaybePromise,
 	Prerendered,
 	PrerenderOnErrorValue,
-	RequestEvent,
 	RequestOptions,
-	ResolveOptions,
 	ResponseHeaders,
 	RouteDefinition,
 	TrailingSlash
@@ -136,7 +135,7 @@ export interface Config {
 			crawl?: boolean;
 			default?: boolean;
 			enabled?: boolean;
-			entries?: string[];
+			entries?: Array<'*' | `/${string}`>;
 			onError?: PrerenderOnErrorValue;
 		};
 		routes?: (filepath: string) => boolean;
@@ -234,6 +233,16 @@ export interface ParamMatcher {
 	(param: string): boolean;
 }
 
+export interface RequestEvent<Params extends Record<string, string> = Record<string, string>> {
+	clientAddress: string;
+	locals: App.Locals;
+	params: Params;
+	platform: Readonly<App.Platform>;
+	request: Request;
+	routeId: string | null;
+	url: URL;
+}
+
 /**
  * A `(event: RequestEvent) => RequestHandlerOutput` function exported from an endpoint that corresponds to an HTTP verb (`get`, `put`, `patch`, etc) and handles requests with that method. Note that since 'delete' is a reserved word in JavaScript, delete handles are called `del` instead.
  *
@@ -241,15 +250,20 @@ export interface ParamMatcher {
  */
 export interface RequestHandler<
 	Params extends Record<string, string> = Record<string, string>,
-	Output extends ResponseBody = ResponseBody
+	Output = ResponseBody
 > {
 	(event: RequestEvent<Params>): MaybePromise<RequestHandlerOutput<Output>>;
 }
 
-export interface RequestHandlerOutput<Output extends ResponseBody = ResponseBody> {
+export interface RequestHandlerOutput<Output = ResponseBody> {
 	status?: number;
 	headers?: Headers | Partial<ResponseHeaders>;
-	body?: Output;
+	body?: Output extends ResponseBody ? Output : BodyValidator<Output>;
+}
+
+export interface ResolveOptions {
+	ssr?: boolean;
+	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
 }
 
 export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;

@@ -1,5 +1,29 @@
 # create-svelte
 
+## 2.0.0-next.136
+
+### Patch Changes
+
+- Add README ([#4951](https://github.com/sveltejs/kit/pull/4951))
+
+## 2.0.0-next.135
+
+### Patch Changes
+
+- remove unnecessary CHANGELOG.md ([#4903](https://github.com/sveltejs/kit/pull/4903))
+
+## 2.0.0-next.134
+
+### Patch Changes
+
+- fix lib, module, and target to not override the tsconfig they generate by default ([#4893](https://github.com/sveltejs/kit/pull/4893))
+
+## 2.0.0-next.133
+
+### Patch Changes
+
+- Bump `eslint` from version 7 to 8 ([#4553](https://github.com/sveltejs/kit/pull/4553))
+
 ## 2.0.0-next.132
 
 ### Patch Changes

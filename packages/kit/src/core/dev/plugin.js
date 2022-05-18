@@ -13,7 +13,10 @@ import { load_template } from '../config/index.js';
 import { sequence } from '../../hooks.js';
 import { posixify } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
-import { normalize_path } from '../../utils/url.js';
+
+// Vite doesn't expose this so we just copy the list for now
+// https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
+const style_pattern = /\.(css|less|sass|scss|styl|stylus|pcss|postcss)$/;
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -70,7 +73,7 @@ export async function create_plugin(config, cwd) {
 								if (!node) throw new Error(`Could not find node for ${url}`);
 
 								const deps = new Set();
-								find_deps(node, deps);
+								await find_deps(vite, node, deps);
 
 								/** @type {Record<string, string>} */
 								const styles = {};
@@ -79,9 +82,8 @@ export async function create_plugin(config, cwd) {
 									const parsed = new URL(dep.url, 'http://localhost/');
 									const query = parsed.searchParams;
 
-									// TODO what about .scss files, etc?
 									if (
-										dep.file.endsWith('.css') ||
+										style_pattern.test(dep.file) ||
 										(query.has('svelte') && query.get('type') === 'style')
 									) {
 										try {
@@ -205,11 +207,7 @@ export async function create_plugin(config, cwd) {
 						if (req.url === '/favicon.ico') return not_found(res);
 
 						if (!decoded.startsWith(config.kit.paths.base)) {
-							const suggestion = normalize_path(
-								config.kit.paths.base + req.url,
-								config.kit.trailingSlash
-							);
-							return not_found(res, `Not found (did you mean ${suggestion}?)`);
+							return not_found(res, `Not found (did you mean ${config.kit.paths.base + req.url}?)`);
 						}
 
 						/** @type {Partial<import('types').Hooks>} */
@@ -389,14 +387,36 @@ function remove_html_middlewares(server) {
 }
 
 /**
+ * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ModuleNode} node
  * @param {Set<import('vite').ModuleNode>} deps
  */
-function find_deps(node, deps) {
-	for (const dep of node.importedModules) {
-		if (!deps.has(dep)) {
-			deps.add(dep);
-			find_deps(dep, deps);
+function find_deps(vite, node, deps) {
+	// since `ssrTransformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
+	// instead of using `await`, we resolve all branches in parallel.
+	/** @type {Promise<void>[]} */
+	const branches = [];
+
+	/** @param {import('vite').ModuleNode} node */
+	function add(node) {
+		if (!deps.has(node)) {
+			deps.add(node);
+			branches.push(find_deps(vite, node, deps));
 		}
 	}
+
+	/** @param {string} url */
+	async function add_by_url(url) {
+		branches.push(vite.moduleGraph.getModuleByUrl(url).then((node) => node && add(node)));
+	}
+
+	if (node.ssrTransformResult) {
+		if (node.ssrTransformResult.deps) {
+			node.ssrTransformResult.deps.forEach(add_by_url);
+		}
+	} else {
+		node.importedModules.forEach(add);
+	}
+
+	return Promise.all(branches).then(() => {});
 }
