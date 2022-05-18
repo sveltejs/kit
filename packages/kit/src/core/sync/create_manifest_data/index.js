@@ -424,8 +424,8 @@ function count_occurrences(needle, haystack) {
  * @param {string[]} [files]
  */
 function list_files(dir, path = '', files = []) {
-	fs.readdirSync(dir, { withFileTypes: true })
-		.sort(({ name: a }, { name: b }) => {
+	fs.readdirSync(dir)
+		.sort((a, b) => {
 			// sort each directory in (__layout, __error, everything else) order
 			// so that we can trace layouts/errors immediately
 
@@ -442,10 +442,12 @@ function list_files(dir, path = '', files = []) {
 			return a < b ? -1 : 1;
 		})
 		.forEach((file) => {
-			const joined = path ? `${path}/${file.name}` : file.name;
+			const full = `${dir}/${file}`;
+			const stats = fs.statSync(full);
+			const joined = path ? `${path}/${file}` : file;
 
-			if (file.isDirectory() || file.isSymbolicLink()) {
-				list_files(`${dir}/${file.name}`, joined, files);
+			if (stats.isDirectory()) {
+				list_files(`${dir}/${file}`, joined, files);
 			} else {
 				files.push(joined);
 			}
