@@ -147,7 +147,6 @@ export interface PrerenderDependency {
 
 export interface PrerenderOptions {
 	fallback?: boolean;
-	default: boolean;
 	dependencies: Map<string, PrerenderDependency>;
 }
 
@@ -312,7 +311,7 @@ export interface SSRState {
 	getClientAddress: () => string;
 	initiator?: SSRPage | null;
 	platform?: any;
-	prerender?: PrerenderOptions;
+	prerendering?: PrerenderOptions;
 }
 
 export type StrictBody = string | Uint8Array;
