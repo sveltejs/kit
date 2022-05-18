@@ -447,7 +447,7 @@ function list_files(dir, path = '', files = []) {
 			const joined = path ? `${path}/${file}` : file;
 
 			if (stats.isDirectory()) {
-				list_files(`${dir}/${file}`, joined, files);
+				list_files(full, joined, files);
 			} else {
 				files.push(joined);
 			}
