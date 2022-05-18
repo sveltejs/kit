@@ -1,4 +1,4 @@
 <script>
-	/** @type {import('./foo').Foo} */
+	/** @type {import('./__types/foo').Foo} */
 	export let foo;
 </script>
