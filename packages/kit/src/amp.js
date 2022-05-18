@@ -18,6 +18,12 @@ if (options.service_worker) {
  * @param {string} html
  */
 export function transform(html) {
+	if (/<link[^>]+rel=('|")?stylesheet\1/.test(html)) {
+		throw new Error(
+			'An AMP document cannot contain <link rel="stylesheet"> — make that inlineStyleThreshold is set to Infinity, and remove links from your page template and <svelte:head> elements'
+		);
+	}
+
 	// TODO
 	// * remove http-equiv
 	// * <amp-install-serviceworker>

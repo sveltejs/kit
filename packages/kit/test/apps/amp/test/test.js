@@ -51,3 +51,11 @@ test('only includes CSS for rendered components', async ({ page, baseURL }) => {
 	expect(style).toContain('uppercase'); // imported styles
 	expect(style).not.toContain('#40b3ff'); // unrendered styles
 });
+
+test('throws error on encountering stylesheet links', async ({ page }) => {
+	await page.goto('/invalid/has-stylesheet');
+
+	expect(await page.textContent('body')).toContain(
+		'An AMP document cannot contain <link rel="stylesheet"> — make that inlineStyleThreshold is set to Infinity, and remove links from your page template and <svelte:head> elements'
+	);
+});
