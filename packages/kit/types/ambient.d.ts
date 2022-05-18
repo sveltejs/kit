@@ -300,3 +300,10 @@ declare module '@sveltejs/kit/node' {
 	): Promise<Request>;
 	export function setResponse(res: import('http').ServerResponse, response: Response): void;
 }
+
+/**
+ * Utilities for people who have to support AMP
+ */
+declare module '@sveltejs/kit/amp' {
+	export function transform(html: string): string;
+}
