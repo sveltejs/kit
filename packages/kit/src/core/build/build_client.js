@@ -78,8 +78,7 @@ export async function build_client({
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions,
-				preprocess: config.preprocess,
+				...config,
 				// In AMP mode, we know that there are no conditional component imports. In that case, we
 				// don't need to include CSS for components that are imported but unused, so we can just
 				// include rendered CSS.

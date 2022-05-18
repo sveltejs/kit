@@ -231,8 +231,7 @@ export async function build_server(
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions,
-				preprocess: config.preprocess,
+				...config,
 				compilerOptions: {
 					...config.compilerOptions,
 					hydratable: !!config.kit.browser.hydrate
