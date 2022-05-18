@@ -71,6 +71,18 @@ export async function preview({ port, host, config, https: use_https = false }) 
 			})
 		),
 
+		(req, res, next) => {
+			const original_url = /** @type {string} */ (req.url);
+			const { pathname } = new URL(original_url, 'http://dummy');
+
+			if (pathname.startsWith(base)) {
+				next();
+			} else {
+				res.statusCode = 404;
+				res.end(`Not found (did you mean ${base + pathname}?)`);
+			}
+		},
+
 		// prerendered dependencies
 		scoped(base, mutable(join(config.kit.outDir, 'output/prerendered/dependencies'))),
 

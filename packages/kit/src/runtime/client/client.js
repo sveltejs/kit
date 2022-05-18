@@ -299,7 +299,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 				getSelection()?.removeAllRanges();
 				root.tabIndex = -1;
-				root.focus();
+				root.focus({ preventScroll: true });
 
 				// restore `tabindex` as to prevent `root` from stealing input from elements
 				if (tabindex !== null) {
@@ -612,8 +612,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 		/** @type {Error | null} */
 		let error = null;
 
-		// preload modules
-		a.forEach((loader) => loader());
+		// preload modules to avoid waterfall, but handle rejections
+		// so they don't get reported to Sentry et al (we don't need
+		// to act on the failures at this point)
+		a.forEach((loader) => loader().catch(() => {}));
 
 		load: for (let i = 0; i < a.length; i += 1) {
 			/** @type {import('./types').BranchNode | undefined} */

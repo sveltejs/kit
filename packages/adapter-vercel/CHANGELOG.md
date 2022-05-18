@@ -1,5 +1,21 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.52
+
+### Patch Changes
+
+- [breaking] drop Node 14 support ([#4922](https://github.com/sveltejs/kit/pull/4922))
+
+* Use general purpose Edge Functions instead of piggybacking Middleware for Edge Deployment + fix split mode ([#4883](https://github.com/sveltejs/kit/pull/4883))
+
+## 1.0.0-next.51
+
+### Patch Changes
+
+- Support for Node.js 16 ([#4904](https://github.com/sveltejs/kit/pull/4904))
+
+* The output of serverless now is ESM instead of CJS ([#4904](https://github.com/sveltejs/kit/pull/4904))
+
 ## 1.0.0-next.50
 
 ### Patch Changes

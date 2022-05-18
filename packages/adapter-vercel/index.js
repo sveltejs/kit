@@ -90,7 +90,7 @@ export default function ({ external = [], edge, split } = {}) {
 				await v3(builder, external, edge, split);
 			} else {
 				if (edge || split) {
-					throw new Error('edge and split options can only be used with ENABLE_VC_BUILD');
+					throw new Error('`edge` and `split` options can only be used with ENABLE_VC_BUILD');
 				}
 
 				await v1(builder, external);
@@ -104,6 +104,8 @@ export default function ({ external = [], edge, split } = {}) {
  * @param {string[]} external
  */
 async function v1(builder, external) {
+	const node_version = get_node_version();
+
 	const dir = '.vercel_build_output';
 
 	const tmp = builder.getBuildDirectory('vercel-tmp');
@@ -139,13 +141,14 @@ async function v1(builder, external) {
 	await esbuild.build({
 		entryPoints: [`${tmp}/serverless.js`],
 		outfile: `${dirs.lambda}/index.js`,
-		target: 'node14',
+		target: `node${node_version.full}`,
 		bundle: true,
 		platform: 'node',
-		external
+		external,
+		format: 'esm'
 	});
 
-	writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'commonjs' }));
+	writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'module' }));
 
 	builder.log.minor('Copying assets...');
 
@@ -200,6 +203,8 @@ async function v1(builder, external) {
  * @param {boolean} split
  */
 async function v3(builder, external, edge, split) {
+	const node_version = get_node_version();
+
 	const dir = '.vercel/output';
 
 	const tmp = builder.getBuildDirectory('vercel-tmp');
@@ -263,23 +268,23 @@ async function v3(builder, external, edge, split) {
 		await esbuild.build({
 			entryPoints: [`${tmp}/serverless.js`],
 			outfile: `${dirs.functions}/${name}.func/index.js`,
-			target: 'node14',
+			target: `node${node_version.full}`,
 			bundle: true,
 			platform: 'node',
-			format: 'cjs',
+			format: 'esm',
 			external
 		});
 
 		write(
 			`${dirs.functions}/${name}.func/.vc-config.json`,
 			JSON.stringify({
-				runtime: 'nodejs14.x',
+				runtime: `nodejs${node_version.major}.x`,
 				handler: 'index.js',
 				launcherType: 'Nodejs'
 			})
 		);
 
-		write(`${dirs.functions}/${name}.func/package.json`, JSON.stringify({ type: 'commonjs' }));
+		write(`${dirs.functions}/${name}.func/package.json`, JSON.stringify({ type: 'module' }));
 
 		routes.push({ src: pattern, dest: `/${name}` });
 	}
@@ -308,7 +313,7 @@ async function v3(builder, external, edge, split) {
 		await esbuild.build({
 			entryPoints: [`${tmp}/edge.js`],
 			outfile: `${dirs.functions}/${name}.func/index.js`,
-			target: 'node14',
+			target: 'es2020', // TODO verify what the edge runtime supports
 			bundle: true,
 			platform: 'node',
 			format: 'esm',
@@ -324,7 +329,7 @@ async function v3(builder, external, edge, split) {
 			})
 		);
 
-		routes.push({ src: pattern, middlewarePath: name });
+		routes.push({ src: pattern, dest: `/${name}` });
 	}
 
 	const generate_function = edge ? generate_edge_function : generate_serverless_function;
@@ -335,10 +340,19 @@ async function v3(builder, external, edge, split) {
 				id: route.pattern.toString(), // TODO is `id` necessary?
 				filter: (other) => route.pattern.toString() === other.pattern.toString(),
 				complete: async (entry) => {
-					const src = `${route.pattern
+					let sliced_pattern = route.pattern
 						.toString()
-						.slice(1, -2) // remove leading / and trailing $/
-						.replace(/\\\//g, '/')}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
+						// remove leading / and trailing $/
+						.slice(1, -2)
+						// replace escaped \/ with /
+						.replace(/\\\//g, '/');
+
+					// replace the root route "^/" with "^/?"
+					if (sliced_pattern === '^/') {
+						sliced_pattern = '^/?';
+					}
+
+					const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
 
 					await generate_function(route.id || 'index', src, entry.generateManifest);
 				}
@@ -384,4 +398,15 @@ function write(file, data) {
 	}
 
 	writeFileSync(file, data);
+}
+
+function get_node_version() {
+	const full = process.version.slice(1); // 'v16.5.0' --> '16.5.0'
+	const major = parseInt(full.split('.')[0]); // '16.5.0' --> 16
+
+	if (major < 16) {
+		throw new Error(`SvelteKit only supports Node.js version 16 or greater (currently using v${full}). Consult the documentation: https://vercel.com/docs/runtimes#official-runtimes/node-js/node-js-version`)
+	}
+
+	return { major, full };
 }

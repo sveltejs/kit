@@ -4,6 +4,12 @@ import { start_server, test } from '../../../utils.js';
 /** @typedef {import('@playwright/test').Response} Response */
 
 test.describe.parallel('base path', () => {
+	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
+		const response = await request.get('/');
+		expect(response.status()).toBe(404);
+		expect(await response.text()).toBe('Not found (did you mean /path-base/?)');
+	});
+
 	test('serves /', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/');
 
