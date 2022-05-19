@@ -1,4 +1,4 @@
-/** @type {import('./[x]').RequestHandler} */
+/** @type {import('./__types/[x]').RequestHandler} */
 export function get({ locals }) {
 	return {
 		body: {

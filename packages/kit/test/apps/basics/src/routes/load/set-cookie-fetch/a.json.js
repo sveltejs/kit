@@ -1,4 +1,4 @@
-/** @type {import('./a.json').RequestHandler} */
+/** @type {import('./__types/a.json').RequestHandler} */
 export function get({ url }) {
 	const answer = url.searchParams.get('answer') || '42';
 

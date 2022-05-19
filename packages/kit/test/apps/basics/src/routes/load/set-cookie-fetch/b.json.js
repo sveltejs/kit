@@ -1,4 +1,4 @@
-/** @type {import('./b.json').RequestHandler} */
+/** @type {import('./__types/b.json').RequestHandler} */
 export function get({ request }) {
 	const cookie = request.headers.get('cookie');
 
