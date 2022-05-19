@@ -20,8 +20,5 @@
 		"svelte-check": "^2.5.0",
 		"typescript": "~4.6.2"
 	},
-	"type": "module",
-	"dependencies": {
-		"amphtml-validator": "^1.0.35"
-	}
+	"type": "module"
 }
