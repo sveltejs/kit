@@ -60,11 +60,13 @@ export async function dev({ cwd, port, host, https, config }) {
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions,
+				...config,
 				emitCss: true,
 				compilerOptions: {
+					...config.compilerOptions,
 					hydratable: !!config.kit.browser.hydrate
-				}
+				},
+				configFile: false
 			}),
 			await create_plugin(config, cwd)
 		],

@@ -76,11 +76,13 @@ export async function build_client({
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions,
+				...config,
 				emitCss: true,
 				compilerOptions: {
+					...config.compilerOptions,
 					hydratable: !!config.kit.browser.hydrate
-				}
+				},
+				configFile: false
 			})
 		],
 		// prevent Vite copying the contents of `config.kit.files.assets`,

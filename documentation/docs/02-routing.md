@@ -343,6 +343,8 @@ export function match(param) {
 
 If the pathname doesn't match, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404.
 
+> Matchers run both on the server and in the browser.
+
 #### Sorting
 
 It's possible for multiple routes to match a given path. For example each of these routes would match `/foo-abc`:
