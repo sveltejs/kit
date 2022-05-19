@@ -253,7 +253,7 @@ importers:
     specifiers:
       '@playwright/test': ^1.21.0
       '@rollup/plugin-replace': ^4.0.0
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.44
+      '@sveltejs/vite-plugin-svelte': ^1.0.0-next.44
       '@types/amphtml-validator': ^1.0.1
       '@types/connect': ^3.4.35
       '@types/cookie': ^0.5.0
