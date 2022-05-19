@@ -16,6 +16,7 @@
 		"./package.json": "./package.json"
 	},
 	"main": "index.js",
+	"types": "index.d.ts",
 	"files": [
 		"index.js"
 	],

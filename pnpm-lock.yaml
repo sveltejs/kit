@@ -465,6 +465,7 @@ importers:
       '@sveltejs/adapter-auto': workspace:*
       '@sveltejs/adapter-static': workspace:*
       '@sveltejs/kit': workspace:*
+      '@sveltejs/kit-amp': workspace:*
       '@sveltejs/site-kit': ^2.1.0
       '@types/node': ^16.11.11
       flexsearch: ^0.7.21
@@ -480,6 +481,7 @@ importers:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
       '@sveltejs/adapter-static': link:../../packages/adapter-static
       '@sveltejs/kit': link:../../packages/kit
+      '@sveltejs/kit-amp': link:../../packages/kit-amp
       '@sveltejs/site-kit': 2.1.0
       '@types/node': 16.11.11
       flexsearch: 0.7.21
