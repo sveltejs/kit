@@ -9,12 +9,14 @@ import { write_types } from './write_types.js';
 
 /** @param {import('types').ValidatedConfig} config */
 export function init(config) {
+	console.log('>>> sync init');
 	copy_assets(path.join(config.kit.outDir, 'runtime'));
 	write_tsconfig(config);
 }
 
 /** @param {import('types').ValidatedConfig} config */
 export function update(config) {
+	console.log('>>> sync update');
 	const manifest_data = create_manifest_data({ config });
 
 	const output = path.join(config.kit.outDir, 'generated');
