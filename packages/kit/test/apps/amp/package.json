@@ -13,6 +13,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/kit-amp": "workspace:*",
 		"cross-env": "^7.0.3",
 		"purify-css": "^1.2.5",
 		"svelte": "^3.43.0",

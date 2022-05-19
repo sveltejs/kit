@@ -5,25 +5,9 @@ const boilerplate = `
 	<script async src="https://cdn.ampproject.org/v0.js"></script>
 `;
 
-/*
-TODO not sure what to do about this
-if (options.service_worker) {
-	head +=
-		'<script async custom-element="amp-install-serviceworker" src="https://cdn.ampproject.org/v0/amp-install-serviceworker-0.1.js"></script>';
-
-	body += `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`;
-}
-*/
-
-/**
- * @param {string} html
- */
+/** @param {string} html */
 export function transform(html) {
-	// TODO
-	// * remove http-equiv
-	// * <amp-install-serviceworker>
-	// * probably lots of other stuff
-	const cleaned = html
+	return html
 		.replace(/<style([^]+?)<\/style>/, (match, $1) => `<style amp-custom${$1}</style>`)
 		.replace(/<script[^]+?<\/script>/g, '')
 		.replace(/<link[^>]+>/g, (match) => {
@@ -41,6 +25,4 @@ export function transform(html) {
 			return match;
 		})
 		.replace('</head>', boilerplate + '</head>');
-
-	return cleaned;
 }

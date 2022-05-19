@@ -322,9 +322,13 @@ importers:
       typescript: 4.6.4
       uvu: 0.5.2
 
+  packages/kit-amp:
+    specifiers: {}
+
   packages/kit/test/apps/amp:
     specifiers:
       '@sveltejs/kit': workspace:*
+      '@sveltejs/kit-amp': workspace:*
       amphtml-validator: ^1.0.35
       cross-env: ^7.0.3
       purify-css: ^1.2.5
@@ -335,6 +339,7 @@ importers:
       amphtml-validator: 1.0.35
     devDependencies:
       '@sveltejs/kit': link:../../..
+      '@sveltejs/kit-amp': link:../../../../kit-amp
       cross-env: 7.0.3
       purify-css: 1.2.5
       svelte: 3.44.2

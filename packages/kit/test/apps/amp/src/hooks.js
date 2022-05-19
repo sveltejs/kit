@@ -1,6 +1,6 @@
 import purify from 'purify-css';
 import { getInstance } from 'amphtml-validator';
-import * as amp from '../../../../src/amp.js';
+import * as amp from '@sveltejs/kit-amp';
 
 const validator = await getInstance();
 

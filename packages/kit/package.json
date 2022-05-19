@@ -80,9 +80,6 @@
 		".": {
 			"types": "./types/index.d.ts"
 		},
-		"./amp": {
-			"import": "./dist/amp.js"
-		},
 		"./node": {
 			"import": "./dist/node.js"
 		},
