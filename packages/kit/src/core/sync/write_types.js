@@ -1,4 +1,4 @@
-import { rimraf } from '../../utils/filesystem.js';
+import rimraf from 'rimraf';
 import { parse_route_id } from '../../utils/routing.js';
 import { write_if_changed } from './utils.js';
 
@@ -23,7 +23,7 @@ export type Load<
  * @param {import('types').ManifestData} manifest_data
  */
 export function write_types(config, manifest_data) {
-	rimraf(`${config.kit.outDir}/types`);
+	rimraf.sync(`${config.kit.outDir}/types`);
 
 	/** @type {Map<string, { params: string[], type: 'page' | 'endpoint' | 'both' }>} */
 	const shadow_types = new Map();

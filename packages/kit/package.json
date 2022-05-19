@@ -11,7 +11,9 @@
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.44",
+		"@types/rimraf": "^3.0.2",
 		"chokidar": "^3.5.3",
+		"rimraf": "^3.0.2",
 		"sade": "^1.7.4",
 		"vite": "^2.9.0"
 	},
