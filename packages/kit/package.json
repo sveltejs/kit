@@ -13,7 +13,7 @@
 		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.44",
 		"chokidar": "^3.5.3",
 		"sade": "^1.7.4",
-		"vite": "^2.9.0"
+		"vite": "^2.9.9"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.21.0",
