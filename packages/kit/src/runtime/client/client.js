@@ -588,11 +588,15 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			let loaded;
 
-			try {
-				if (import.meta.env.DEV) loading += 1;
+			if (import.meta.env.DEV) {
+				try {
+					loading += 1;
+					loaded = await module.load.call(null, load_input);
+				} finally {
+					loading -= 1;
+				}
+			} else {
 				loaded = await module.load.call(null, load_input);
-			} finally {
-				if (import.meta.env.DEV) loading -= 1;
 			}
 
 			if (!loaded) {
