@@ -14,7 +14,7 @@ export function mkdirp(dir) {
 /** @param {string} path */
 export function rimraf(path) {
 	if (!fs.existsSync(path)) return;
-	(fs.rmSync || fs.rmdirSync)(path, { recursive: true, force: true });
+	fs.rmSync(path, { recursive: true, force: true });
 }
 
 /**
