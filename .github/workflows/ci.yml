@@ -28,10 +28,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [16]
+        node-version: [18]
         os: [ubuntu-latest, macOS-latest, windows-2019]
         include:
-          - node-version: 18
+          - node-version: 16
             os: ubuntu-latest
     env:
       TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
