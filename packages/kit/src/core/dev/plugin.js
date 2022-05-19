@@ -391,32 +391,36 @@ function remove_html_middlewares(server) {
  * @param {import('vite').ModuleNode} node
  * @param {Set<import('vite').ModuleNode>} deps
  */
-function find_deps(vite, node, deps) {
+async function find_deps(vite, node, deps) {
 	// since `ssrTransformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
 	// instead of using `await`, we resolve all branches in parallel.
 	/** @type {Promise<void>[]} */
 	const branches = [];
 
 	/** @param {import('vite').ModuleNode} node */
-	function add(node) {
+	async function add(node) {
 		if (!deps.has(node)) {
 			deps.add(node);
-			branches.push(find_deps(vite, node, deps));
+			await find_deps(vite, node, deps);
 		}
 	}
 
 	/** @param {string} url */
 	async function add_by_url(url) {
-		branches.push(vite.moduleGraph.getModuleByUrl(url).then((node) => node && add(node)));
+		const node = await vite.moduleGraph.getModuleByUrl(url);
+
+		if (node) {
+			await add(node);
+		}
 	}
 
 	if (node.ssrTransformResult) {
 		if (node.ssrTransformResult.deps) {
-			node.ssrTransformResult.deps.forEach(add_by_url);
+			node.ssrTransformResult.deps.forEach((url) => branches.push(add_by_url(url)));
 		}
 	} else {
-		node.importedModules.forEach(add);
+		node.importedModules.forEach((node) => branches.push(add(node)));
 	}
 
-	return Promise.all(branches).then(() => {});
+	await Promise.all(branches);
 }
