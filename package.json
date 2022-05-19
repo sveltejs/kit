@@ -5,7 +5,7 @@
 	"private": true,
 	"scripts": {
 		"build": "turbo run build",
-		"test": "pnpm -r test",
+		"test": "turbo run test",
 		"check": "turbo run check",
 		"lint": "turbo run lint",
 		"format": "turbo run format",
