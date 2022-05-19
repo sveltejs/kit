@@ -105,7 +105,7 @@ const config = {
 export default config;
 ```
 
-...and transforming the HTML using `transformPage` along with `amp.transform` imported from `@sveltejs/kit/amp`:
+...and transforming the HTML using `transformPage` along with `transform` imported from `@sveltejs/kit/amp`:
 
 ```js
 import * as amp from '@sveltejs/kit/amp';
