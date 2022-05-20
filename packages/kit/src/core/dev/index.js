@@ -40,7 +40,7 @@ export async function dev({ cwd, port, host, https, config }) {
 				port: 3000,
 				strictPort: true,
 				watch: {
-					exclude: ['.svelte-kit']
+					exclude: [`${config.kit.outDir}/**`]
 				}
 			}
 		},
