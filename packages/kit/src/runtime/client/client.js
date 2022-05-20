@@ -48,6 +48,33 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
+const fetch = window.fetch;
+let loading = 0;
+
+if (import.meta.env.DEV) {
+	let can_inspect_stack_trace = false;
+
+	const check_stack_trace = async () => {
+		const stack = /** @type {string} */ (new Error().stack);
+		can_inspect_stack_trace = stack.includes('check_stack_trace');
+	};
+
+	check_stack_trace();
+
+	window.fetch = (input, init) => {
+		const url = input instanceof Request ? input.url : input.toString();
+		const stack = /** @type {string} */ (new Error().stack);
+
+		const heuristic = can_inspect_stack_trace ? stack.includes('load_node') : loading;
+		if (heuristic) {
+			console.warn(
+				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
+			);
+		}
+		return fetch(input, init);
+	};
+}
+
 /**
  * @param {{
  *   target: Element;
@@ -559,7 +586,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 				});
 			}
 
-			const loaded = await module.load.call(null, load_input);
+			let loaded;
+
+			if (import.meta.env.DEV) {
+				try {
+					loading += 1;
+					loaded = await module.load.call(null, load_input);
+				} finally {
+					loading -= 1;
+				}
+			} else {
+				loaded = await module.load.call(null, load_input);
+			}
 
 			if (!loaded) {
 				throw new Error('load function must return a value');

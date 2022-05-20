@@ -1455,6 +1455,25 @@ test.describe.parallel('Load', () => {
 		expect(cookies.answer).toBe('42');
 		expect(cookies.doubled).toBe('84');
 	});
+
+	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
+		const warnings = [];
+
+		page.on('console', (msg) => {
+			if (msg.type() === 'warning') {
+				warnings.push(msg.text());
+			}
+		});
+
+		await page.goto('/load/window-fetch');
+		expect(await page.textContent('h1')).toBe('42');
+
+		if (javaScriptEnabled && process.env.DEV) {
+			expect(warnings).toContain(
+				'Loading http://localhost:3000/load/window-fetch/data.json using `window.fetch`. For best results, use the `fetch` that is passed to your `load` function: https://kit.svelte.dev/docs/loading#input-fetch'
+			);
+		}
+	});
 });
 
 test.describe.parallel('Method overrides', () => {
@@ -2361,6 +2380,11 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('h1')).toBe('routeId in load: routing/route-id/[x]');
 		expect(await page.textContent('h2')).toBe('routeId in store: routing/route-id/[x]');
 	});
+
+	test('serves a page that clashes with a root directory', async ({ page }) => {
+		await page.goto('/static');
+		expect(await page.textContent('h1')).toBe('hello');
+	});
 });
 
 test.describe.parallel('Session', () => {
@@ -2420,6 +2444,14 @@ test.describe.parallel('Static files', () => {
 	test('does not use Vite to serve contents of static directory', async ({ request }) => {
 		const response = await request.get('/static/static.json');
 		expect(response.status()).toBe(process.env.DEV ? 403 : 404);
+	});
+
+	test('Vite serves assets in src directory', async ({ page, request }) => {
+		await page.goto('/assets');
+		const path = await page.textContent('h1');
+
+		const response = await request.get(path);
+		expect(response.status()).toBe(200);
 	});
 });
 

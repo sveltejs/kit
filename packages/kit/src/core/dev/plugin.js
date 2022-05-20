@@ -181,6 +181,11 @@ export async function create_plugin(config, cwd) {
 			});
 
 			return () => {
+				const serve_static_middleware = vite.middlewares.stack.find(
+					(middleware) =>
+						/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
+				);
+
 				remove_html_middlewares(vite.middlewares);
 
 				vite.middlewares.use(async (req, res) => {
@@ -346,10 +351,13 @@ export async function create_plugin(config, cwd) {
 							}
 						);
 
-						if (rendered) {
-							setResponse(res, rendered);
+						if (rendered.status === 404) {
+							// @ts-expect-error
+							serve_static_middleware.handle(req, res, () => {
+								setResponse(res, rendered);
+							});
 						} else {
-							not_found(res);
+							setResponse(res, rendered);
 						}
 					} catch (e) {
 						const error = coalesce_to_error(e);
@@ -376,7 +384,8 @@ function remove_html_middlewares(server) {
 	const html_middlewares = [
 		'viteIndexHtmlMiddleware',
 		'vite404Middleware',
-		'viteSpaFallbackMiddleware'
+		'viteSpaFallbackMiddleware',
+		'viteServeStaticMiddleware'
 	];
 	for (let i = server.stack.length - 1; i > 0; i--) {
 		// @ts-expect-error using internals until https://github.com/vitejs/vite/pull/4640 is merged

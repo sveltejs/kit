@@ -1,5 +1,27 @@
 # @sveltejs/kit
 
+## 1.0.0-next.337
+
+### Patch Changes
+
+- [fix] don't watch `outDir`, except for the `generated` directory ([#4997](https://github.com/sveltejs/kit/pull/4997))
+
+* Warn if load uses window.fetch ([#4958](https://github.com/sveltejs/kit/pull/4958))
+
+- Only run `viteServeStaticMiddleware` after server has attempted response ([#4974](https://github.com/sveltejs/kit/pull/4974))
+
+## 1.0.0-next.336
+
+### Patch Changes
+
+- Pass config to vite-plugin-svelte instead of reloading it ([#4760](https://github.com/sveltejs/kit/pull/4760))
+
+* fix FOUC regression during dev ([#4990](https://github.com/sveltejs/kit/pull/4990))
+
+- move `RequestEvent` and `ResolveOptions` as public types ([#4809](https://github.com/sveltejs/kit/pull/4809))
+
+* [breaking] write generated types to `__types` directories ([#4705](https://github.com/sveltejs/kit/pull/4705))
+
 ## 1.0.0-next.335
 
 ### Patch Changes

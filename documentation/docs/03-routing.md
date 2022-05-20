@@ -62,7 +62,7 @@ declare module '$lib/database' {
 	export const get: (id: string) => Promise<Item>;
 }
 
-// @filename: [id].d.ts
+// @filename: __types/[id].d.ts
 import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
 export type RequestHandler<Body = any> = GenericRequestHandler<{ id: string }, Body>;
 
@@ -70,7 +70,7 @@ export type RequestHandler<Body = any> = GenericRequestHandler<{ id: string }, B
 // ---cut---
 import db from '$lib/database';
 
-/** @type {import('./[id]').RequestHandler} */
+/** @type {import('./__types/[id]').RequestHandler} */
 export async function get({ params }) {
 	// `params.id` comes from [id].js
 	const item = await db.get(params.id);
@@ -158,7 +158,7 @@ declare module '$lib/database' {
 	export const create: (request: Request) => Promise<[Record<string, ValidationError>, Item]>;
 }
 
-// @filename: items.d.ts
+// @filename: __types/items.d.ts
 import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
 export type RequestHandler<Body = any> = GenericRequestHandler<{}, Body>;
 
@@ -166,7 +166,7 @@ export type RequestHandler<Body = any> = GenericRequestHandler<{}, Body>;
 // ---cut---
 import * as db from '$lib/database';
 
-/** @type {import('./items').RequestHandler} */
+/** @type {import('./__types/items').RequestHandler} */
 export async function get() {
 	const items = await db.list();
 
@@ -175,7 +175,7 @@ export async function get() {
 	};
 }
 
-/** @type {import('./items').RequestHandler} */
+/** @type {import('./__types/items').RequestHandler} */
 export async function post({ request }) {
 	const [errors, item] = await db.create(request);
 
