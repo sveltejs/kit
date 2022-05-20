@@ -13,8 +13,7 @@ const globals = {
 // exported for dev/preview and node environments
 export function installPolyfills() {
 	for (const name in globals) {
-		if (name in globalThis) continue;
-
+		// TODO use built-in fetch once https://github.com/nodejs/undici/issues/1262 is resolved
 		Object.defineProperty(globalThis, name, {
 			enumerable: true,
 			configurable: true,
