@@ -195,6 +195,9 @@ importers:
       '@types/node': 14.18.17
       typescript: 4.6.2
 
+  packages/amp:
+    specifiers: {}
+
   packages/create-svelte:
     specifiers:
       '@playwright/test': ^1.21.0
@@ -322,9 +325,6 @@ importers:
       typescript: 4.6.4
       uvu: 0.5.2
 
-  packages/kit-amp:
-    specifiers: {}
-
   packages/kit/test/apps/amp:
     specifiers:
       '@sveltejs/amp': workspace:*
@@ -335,7 +335,7 @@ importers:
       svelte-check: ^2.5.0
       typescript: ~4.6.2
     devDependencies:
-      '@sveltejs/amp': link:../../../../kit-amp
+      '@sveltejs/amp': link:../../../../amp
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
       purify-css: 1.2.5
@@ -477,7 +477,7 @@ importers:
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
       '@sveltejs/adapter-static': link:../../packages/adapter-static
-      '@sveltejs/amp': link:../../packages/kit-amp
+      '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': 2.1.0
       '@types/node': 16.11.11
