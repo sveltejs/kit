@@ -28,7 +28,7 @@
 		"check": "tsc"
 	},
 	"dependencies": {
-		"esbuild": "^0.14.21"
+		"esbuild": "^0.14.29"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",

@@ -38,7 +38,10 @@ export async function dev({ cwd, port, host, https, config }) {
 					]
 				},
 				port: 3000,
-				strictPort: true
+				strictPort: true,
+				watch: {
+					ignored: [`${config.kit.outDir}/**`, `!${config.kit.outDir}/generated/**`]
+				}
 			}
 		},
 		await config.kit.vite()
