@@ -531,19 +531,17 @@ export function create_client({ target, session, base, trailing_slash }) {
 				get url() {
 					node.uses.url = true;
 
-					/** @type {ProxyHandler<URL>} */
-					const nohash = {
-						get: (u, prop) => {
-							if (prop === 'hash') {
+					return new Proxy(url, {
+						get: (target, property) => {
+							if (property === 'hash') {
 								throw new Error(
 									'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
 								);
 							}
-							return Reflect.get(u, prop);
-						}
-					};
 
-					return new Proxy(url, nohash);
+							return Reflect.get(target, property, target);
+						}
+					});
 				},
 				get session() {
 					node.uses.session = true;
