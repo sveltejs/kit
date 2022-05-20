@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.330",
+	"version": "1.0.0-next.336",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -10,10 +10,10 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.32",
+		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.44",
 		"chokidar": "^3.5.3",
 		"sade": "^1.7.4",
-		"vite": "^2.9.0"
+		"vite": "^2.9.9"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.21.0",
@@ -46,6 +46,7 @@
 		"svelte-preprocess": "^4.9.8",
 		"svelte2tsx": "~0.5.0",
 		"tiny-glob": "^0.2.9",
+		"typescript": "^4.6.4",
 		"uvu": "^0.5.2"
 	},
 	"peerDependencies": {

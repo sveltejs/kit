@@ -329,7 +329,7 @@ async function v3(builder, external, edge, split) {
 			})
 		);
 
-		routes.push({ src: pattern, middlewarePath: name });
+		routes.push({ src: pattern, dest: `/${name}` });
 	}
 
 	const generate_function = edge ? generate_edge_function : generate_serverless_function;
@@ -340,10 +340,19 @@ async function v3(builder, external, edge, split) {
 				id: route.pattern.toString(), // TODO is `id` necessary?
 				filter: (other) => route.pattern.toString() === other.pattern.toString(),
 				complete: async (entry) => {
-					const src = `${route.pattern
+					let sliced_pattern = route.pattern
 						.toString()
-						.slice(1, -2) // remove leading / and trailing $/
-						.replace(/\\\//g, '/')}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
+						// remove leading / and trailing $/
+						.slice(1, -2)
+						// replace escaped \/ with /
+						.replace(/\\\//g, '/');
+
+					// replace the root route "^/" with "^/?"
+					if (sliced_pattern === '^/') {
+						sliced_pattern = '^/?';
+					}
+
+					const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
 
 					await generate_function(route.id || 'index', src, entry.generateManifest);
 				}

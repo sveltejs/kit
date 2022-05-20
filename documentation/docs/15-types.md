@@ -26,7 +26,7 @@ Needless to say, this is cumbersome to write out, and less portable (if you were
 To solve this problem, SvelteKit generates `.d.ts` files for each of your endpoints and pages:
 
 ```ts
-/// file: .svelte-kit/types/src/routes/[foo]/[bar]/[baz].d.ts
+/// file: .svelte-kit/types/src/routes/[foo]/[bar]/__types/[baz].d.ts
 /// link: false
 import type { RequestHandler as GenericRequestHandler, Load as GenericLoad } from '@sveltejs/kit';
 
@@ -45,7 +45,7 @@ These files can be imported into your endpoints and pages as siblings, thanks to
 
 ```js
 /// file: src/routes/[foo]/[bar]/[baz].js
-// @filename: [baz].d.ts
+// @filename: __types/[baz].d.ts
 import type { RequestHandler as GenericRequestHandler, Load as GenericLoad } from '@sveltejs/kit';
 
 export type RequestHandler<Body = any> = GenericRequestHandler<
@@ -56,7 +56,7 @@ export type RequestHandler<Body = any> = GenericRequestHandler<
 // @filename: index.js
 // @errors: 2355
 // ---cut---
-/** @type {import('./[baz]').RequestHandler} */
+/** @type {import('./__types/[baz]').RequestHandler} */
 export async function get({ params }) {
 	// ...
 }
@@ -64,7 +64,7 @@ export async function get({ params }) {
 
 ```svelte
 <script context="module">
-	/** @type {import('./[baz]').Load} */
+	/** @type {import('./__types/[baz]').Load} */
 	export async function load({ params, fetch, session, stuff }) {
 		// ...
 	}

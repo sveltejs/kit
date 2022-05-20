@@ -9,7 +9,7 @@ If the data for a page comes from its endpoint, you may not need a `load` functi
 ```html
 /// file: src/routes/blog/[slug].svelte
 <script context="module">
-	/** @type {import('./[slug]').Load} */
+	/** @type {import('./__types/[slug]').Load} */
 	export async function load({ params, fetch, session, stuff }) {
 		const url = `https://cms.example.com/article/${params.slug}.json`;
 		const response = await fetch(url);
@@ -103,7 +103,9 @@ If the page you're loading has an endpoint, the data returned from it is accessi
 
 ### Output
 
-If you return a Promise from `load`, SvelteKit will delay rendering until the promise resolves. The return value has several properties, all optional:
+If you return a Promise from `load`, SvelteKit will delay rendering until the promise resolves. The return value has several properties listed below, all of which are optional.
+
+> `status`, `error`, `redirect` and `cache` are ignored when rendering error pages.
 
 #### status
 

@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.58
+
+### Patch Changes
+
+- [docs] explain how to change node version ([#4921](https://github.com/sveltejs/kit/pull/4921))
+
 ## 1.0.0-next.57
 
 ### Patch Changes

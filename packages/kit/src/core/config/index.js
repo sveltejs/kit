@@ -36,7 +36,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		);
 	}
 
-	const config = await import(url.pathToFileURL(config_file).href);
+	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
 
 	const validated = validate_config(config.default);
 
