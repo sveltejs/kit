@@ -17,7 +17,6 @@ const config = {
 	kit: {
 		adapter: undefined,
 		alias: {},
-		amp: false,
 		appDir: '_app',
 		browser: {
 			hydrate: true,
@@ -113,10 +112,6 @@ const config = {
 ```
 
 > The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
-
-### amp
-
-Enable [AMP](/docs/seo#amp) mode.
 
 ### appDir
 

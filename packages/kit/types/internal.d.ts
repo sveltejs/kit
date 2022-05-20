@@ -6,7 +6,9 @@ import {
 	Handle,
 	HandleError,
 	Load,
+	RequestEvent,
 	RequestHandler,
+	ResolveOptions,
 	Server,
 	SSRManifest
 } from './index';
@@ -14,9 +16,7 @@ import {
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
-	RequestEvent,
 	RequestOptions,
-	ResolveOptions,
 	ResponseHeaders,
 	TrailingSlash
 } from './private';
@@ -240,7 +240,6 @@ export interface SSRNode {
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
-	amp: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
 	floc: boolean;

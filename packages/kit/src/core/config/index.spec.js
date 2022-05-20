@@ -13,7 +13,7 @@ const get_defaults = (prefix = '') => ({
 	kit: {
 		adapter: null,
 		alias: {},
-		amp: false,
+		amp: undefined,
 		appDir: '_app',
 		browser: {
 			hydrate: true,

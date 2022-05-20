@@ -10,7 +10,6 @@ import { SVELTE_KIT_ASSETS } from '../constants.js';
 import { get_mime_lookup, get_runtime_path, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { load_template } from '../config/index.js';
-import { sequence } from '../../hooks.js';
 import { posixify } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
 
@@ -25,14 +24,6 @@ const style_pattern = /\.(css|less|sass|scss|styl|stylus|pcss|postcss)$/;
  */
 export async function create_plugin(config, cwd) {
 	const runtime = get_runtime_path(config);
-
-	/** @type {import('types').Handle} */
-	let amp;
-
-	if (config.kit.amp) {
-		process.env.VITE_SVELTEKIT_AMP = 'true';
-		amp = (await import('./amp_hook.js')).handle;
-	}
 
 	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
 
@@ -73,7 +64,7 @@ export async function create_plugin(config, cwd) {
 								if (!node) throw new Error(`Could not find node for ${url}`);
 
 								const deps = new Set();
-								find_deps(node, deps);
+								await find_deps(vite, node, deps);
 
 								/** @type {Record<string, string>} */
 								const styles = {};
@@ -181,6 +172,11 @@ export async function create_plugin(config, cwd) {
 			});
 
 			return () => {
+				const serve_static_middleware = vite.middlewares.stack.find(
+					(middleware) =>
+						/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
+				);
+
 				remove_html_middlewares(vite.middlewares);
 
 				vite.middlewares.use(async (req, res) => {
@@ -220,7 +216,7 @@ export async function create_plugin(config, cwd) {
 						/** @type {import('types').Hooks} */
 						const hooks = {
 							getSession: user_hooks.getSession || (() => ({})),
-							handle: amp ? sequence(amp, handle) : handle,
+							handle,
 							handleError:
 								user_hooks.handleError ||
 								(({ /** @type {Error & { frame?: string }} */ error }) => {
@@ -282,7 +278,6 @@ export async function create_plugin(config, cwd) {
 						const rendered = await respond(
 							request,
 							{
-								amp: config.kit.amp,
 								csp: config.kit.csp,
 								dev: true,
 								floc: config.kit.floc,
@@ -346,10 +341,13 @@ export async function create_plugin(config, cwd) {
 							}
 						);
 
-						if (rendered) {
-							setResponse(res, rendered);
+						if (rendered.status === 404) {
+							// @ts-expect-error
+							serve_static_middleware.handle(req, res, () => {
+								setResponse(res, rendered);
+							});
 						} else {
-							not_found(res);
+							setResponse(res, rendered);
 						}
 					} catch (e) {
 						const error = coalesce_to_error(e);
@@ -376,7 +374,8 @@ function remove_html_middlewares(server) {
 	const html_middlewares = [
 		'viteIndexHtmlMiddleware',
 		'vite404Middleware',
-		'viteSpaFallbackMiddleware'
+		'viteSpaFallbackMiddleware',
+		'viteServeStaticMiddleware'
 	];
 	for (let i = server.stack.length - 1; i > 0; i--) {
 		// @ts-expect-error using internals until https://github.com/vitejs/vite/pull/4640 is merged
@@ -387,14 +386,40 @@ function remove_html_middlewares(server) {
 }
 
 /**
+ * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ModuleNode} node
  * @param {Set<import('vite').ModuleNode>} deps
  */
-function find_deps(node, deps) {
-	for (const dep of node.importedModules) {
-		if (!deps.has(dep)) {
-			deps.add(dep);
-			find_deps(dep, deps);
+async function find_deps(vite, node, deps) {
+	// since `ssrTransformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
+	// instead of using `await`, we resolve all branches in parallel.
+	/** @type {Promise<void>[]} */
+	const branches = [];
+
+	/** @param {import('vite').ModuleNode} node */
+	async function add(node) {
+		if (!deps.has(node)) {
+			deps.add(node);
+			await find_deps(vite, node, deps);
 		}
 	}
+
+	/** @param {string} url */
+	async function add_by_url(url) {
+		const node = await vite.moduleGraph.getModuleByUrl(url);
+
+		if (node) {
+			await add(node);
+		}
+	}
+
+	if (node.ssrTransformResult) {
+		if (node.ssrTransformResult.deps) {
+			node.ssrTransformResult.deps.forEach((url) => branches.push(add_by_url(url)));
+		}
+	} else {
+		node.importedModules.forEach((node) => branches.push(add(node)));
+	}
+
+	await Promise.all(branches);
 }
