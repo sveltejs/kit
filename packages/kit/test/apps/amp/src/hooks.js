@@ -1,5 +1,5 @@
 import purify from 'purify-css';
-import * as amp from '@sveltejs/kit-amp';
+import * as amp from '@sveltejs/amp';
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {

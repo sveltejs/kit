@@ -327,16 +327,16 @@ importers:
 
   packages/kit/test/apps/amp:
     specifiers:
+      '@sveltejs/amp': workspace:*
       '@sveltejs/kit': workspace:*
-      '@sveltejs/kit-amp': workspace:*
       cross-env: ^7.0.3
       purify-css: ^1.2.5
       svelte: ^3.43.0
       svelte-check: ^2.5.0
       typescript: ~4.6.2
     devDependencies:
+      '@sveltejs/amp': link:../../../../kit-amp
       '@sveltejs/kit': link:../../..
-      '@sveltejs/kit-amp': link:../../../../kit-amp
       cross-env: 7.0.3
       purify-css: 1.2.5
       svelte: 3.44.2
@@ -461,8 +461,8 @@ importers:
     specifiers:
       '@sveltejs/adapter-auto': workspace:*
       '@sveltejs/adapter-static': workspace:*
+      '@sveltejs/amp': workspace:*
       '@sveltejs/kit': workspace:*
-      '@sveltejs/kit-amp': workspace:*
       '@sveltejs/site-kit': ^2.1.0
       '@types/node': ^16.11.11
       flexsearch: ^0.7.21
@@ -477,8 +477,8 @@ importers:
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
       '@sveltejs/adapter-static': link:../../packages/adapter-static
+      '@sveltejs/amp': link:../../packages/kit-amp
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/kit-amp': link:../../packages/kit-amp
       '@sveltejs/site-kit': 2.1.0
       '@types/node': 16.11.11
       flexsearch: 0.7.21

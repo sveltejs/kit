@@ -105,10 +105,10 @@ const config = {
 export default config;
 ```
 
-...and transforming the HTML using `transformPage` along with `transform` imported from `@sveltejs/kit-amp`:
+...and transforming the HTML using `transformPage` along with `transform` imported from `@sveltejs/amp`:
 
 ```js
-import * as amp from '@sveltejs/kit-amp';
+import * as amp from '@sveltejs/amp';
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
