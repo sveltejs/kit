@@ -33,6 +33,9 @@ const config = {
 				host: 'localhost',
 				fs: {
 					allow: [path.resolve('../../../src')]
+				},
+				watch: {
+					usePolling: true
 				}
 			}
 		},

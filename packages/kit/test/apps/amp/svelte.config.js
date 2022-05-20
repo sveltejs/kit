@@ -6,7 +6,10 @@ const config = {
 			server: {
 				// TODO: required to support ipv6, remove on vite 3
 				// https://github.com/vitejs/vite/issues/7075
-				host: 'localhost'
+				host: 'localhost',
+				watch: {
+					usePolling: true
+				}
 			}
 		}
 	}
