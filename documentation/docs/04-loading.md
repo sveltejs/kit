@@ -9,7 +9,7 @@ If the data for a page comes from its endpoint, you may not need a `load` functi
 ```html
 /// file: src/routes/blog/[slug].svelte
 <script context="module">
-	/** @type {import('./[slug]').Load} */
+	/** @type {import('./__types/[slug]').Load} */
 	export async function load({ params, fetch, session, stuff }) {
 		const url = `https://cms.example.com/article/${params.slug}.json`;
 		const response = await fetch(url);

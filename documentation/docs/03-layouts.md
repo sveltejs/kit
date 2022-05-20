@@ -196,7 +196,7 @@ src/routes/
 ```svelte
 /// file: src/routes/marx-brothers/[...path].svelte
 <script context="module">
-	/** @type {import('./[...path]').Load} */
+	/** @type {import('./__types/[...path]').Load} */
 	export function load({ params }) {
 		return {
 			status: 404,
