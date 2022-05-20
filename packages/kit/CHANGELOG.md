@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.337
+
+### Patch Changes
+
+- [fix] don't watch `outDir`, except for the `generated` directory ([#4997](https://github.com/sveltejs/kit/pull/4997))
+
+* Warn if load uses window.fetch ([#4958](https://github.com/sveltejs/kit/pull/4958))
+
+- Only run `viteServeStaticMiddleware` after server has attempted response ([#4974](https://github.com/sveltejs/kit/pull/4974))
+
 ## 1.0.0-next.336
 
 ### Patch Changes
