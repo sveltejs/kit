@@ -1455,6 +1455,25 @@ test.describe.parallel('Load', () => {
 		expect(cookies.answer).toBe('42');
 		expect(cookies.doubled).toBe('84');
 	});
+
+	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
+		const warnings = [];
+
+		page.on('console', (msg) => {
+			if (msg.type() === 'warning') {
+				warnings.push(msg.text());
+			}
+		});
+
+		await page.goto('/load/window-fetch');
+		expect(await page.textContent('h1')).toBe('42');
+
+		if (javaScriptEnabled && process.env.DEV) {
+			expect(warnings).toContain(
+				'Loading http://localhost:3000/load/window-fetch/data.json using `window.fetch`. For best results, use the `fetch` that is passed to your `load` function: https://kit.svelte.dev/docs/loading#input-fetch'
+			);
+		}
+	});
 });
 
 test.describe.parallel('Method overrides', () => {
