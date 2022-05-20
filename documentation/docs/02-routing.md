@@ -62,7 +62,7 @@ declare module '$lib/database' {
 	export const get: (id: string) => Promise<Item>;
 }
 
-// @filename: [id].d.ts
+// @filename: __types/[id].d.ts
 import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
 export type RequestHandler<Body = any> = GenericRequestHandler<{ id: string }, Body>;
 
@@ -158,7 +158,7 @@ declare module '$lib/database' {
 	export const create: (request: Request) => Promise<[Record<string, ValidationError>, Item]>;
 }
 
-// @filename: items.d.ts
+// @filename: __types/items.d.ts
 import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
 export type RequestHandler<Body = any> = GenericRequestHandler<{}, Body>;
 
