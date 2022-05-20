@@ -7,5 +7,7 @@
 /test/**/build
 !/src/core/adapt/fixtures/*/.svelte-kit
 !/test/node_modules
+/src/packaging/test/errors/*/package
+/src/packaging/test/fixtures/*/package
 /test/apps/basics/test/errors.json
 .custom-out-dir
