@@ -38,7 +38,10 @@ export async function dev({ cwd, port, host, https, config }) {
 					]
 				},
 				port: 3000,
-				strictPort: true
+				strictPort: true,
+				watch: {
+					ignored: [`${config.kit.outDir}/**`, `!${config.kit.outDir}/generated/**`]
+				}
 			}
 		},
 		await config.kit.vite()
@@ -60,7 +63,7 @@ export async function dev({ cwd, port, host, https, config }) {
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions,
+				...config,
 				// In AMP mode, we know that there are no conditional component imports. In that case, we
 				// don't need to include CSS for components that are imported but unused, so we can just
 				// include rendered CSS.
@@ -68,8 +71,10 @@ export async function dev({ cwd, port, host, https, config }) {
 				// has been enabled at the page level, so we don't do anything there.
 				emitCss: !config.kit.amp,
 				compilerOptions: {
+					...config.compilerOptions,
 					hydratable: !!config.kit.browser.hydrate
-				}
+				},
+				configFile: false
 			}),
 			await create_plugin(config, cwd)
 		],

@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.137
+
+### Patch Changes
+
+- import generated types from `__types/index.d.ts` file ([#4705](https://github.com/sveltejs/kit/pull/4705))
+
 ## 2.0.0-next.136
 
 ### Patch Changes
