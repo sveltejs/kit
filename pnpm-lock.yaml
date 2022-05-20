@@ -286,12 +286,12 @@ importers:
       tiny-glob: ^0.2.9
       typescript: ^4.6.4
       uvu: ^0.5.2
-      vite: ^2.9.0
+      vite: ^2.9.9
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.44_svelte@3.44.2+vite@2.9.0
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.44_svelte@3.44.2+vite@2.9.9
       chokidar: 3.5.3
       sade: 1.7.4
-      vite: 2.9.0
+      vite: 2.9.9
     devDependencies:
       '@playwright/test': 1.21.0
       '@rollup/plugin-replace': 4.0.0_rollup@2.60.2
@@ -468,7 +468,7 @@ importers:
       shiki-twoslash: ^3.0.2
       svelte: ^3.43.0
       typescript: ~4.6.2
-      vite: ^2.9.0
+      vite: ^2.9.9
       vite-imagetools: ^4.0.3
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
@@ -483,7 +483,7 @@ importers:
       shiki-twoslash: 3.0.2
       svelte: 3.44.2
       typescript: 4.6.2
-      vite: 2.9.0
+      vite: 2.9.9
       vite-imagetools: 4.0.3
 
 packages:
@@ -1476,7 +1476,7 @@ packages:
       golden-fleece: 1.0.9
     dev: true
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.44_svelte@3.44.2+vite@2.9.0:
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.44_svelte@3.44.2+vite@2.9.9:
     resolution: {integrity: sha512-n+sssEWbzykPS447FmnNyU5GxEhrBPDVd0lxNZnxRGz9P6651LjjwAnISKr3CKgT9v8IybP8VD0n2i5XzbqExg==}
     engines: {node: ^14.13.1 || >= 16}
     peerDependencies:
@@ -1494,7 +1494,7 @@ packages:
       magic-string: 0.26.2
       svelte: 3.44.2
       svelte-hmr: 0.14.11_svelte@3.44.2
-      vite: 2.9.0
+      vite: 2.9.9
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -4173,8 +4173,8 @@ packages:
       thenify-all: 1.6.0
     dev: true
 
-  /nanoid/3.3.2:
-    resolution: {integrity: sha512-CuHBogktKwpm5g2sRgv83jEy2ijFzBwMoYA60orPDR7ynsLijJDqgsi4RDGj3OJpy3Ieb+LYwiRmIOGyytgITA==}
+  /nanoid/3.3.4:
+    resolution: {integrity: sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -4602,11 +4602,11 @@ packages:
     resolution: {integrity: sha512-me2dL+chJVb88zpE228MvA6wIRy1CuXxGTwI5hYe4DnSnXRbtJT+9ggRj+49kgHgs/AKMTKOt/EkTHSvQJmRXA==}
     dev: true
 
-  /postcss/8.4.12:
-    resolution: {integrity: sha512-lg6eITwYe9v6Hr5CncVbK70SoioNQIq81nsaG86ev5hAidQvmOeETBqs7jm43K2F5/Ley3ytDtriImV6TpNiSg==}
+  /postcss/8.4.14:
+    resolution: {integrity: sha512-E398TUmfAYFPBSdzgeieK2Y1+1cpdxJx8yXbK/m57nRhKSmk1GB2tO4lbLBtlkfPQTDKfe4Xqv1ASWPpayPEig==}
     engines: {node: ^10 || ^12 || >=14}
     dependencies:
-      nanoid: 3.3.2
+      nanoid: 3.3.4
       picocolors: 1.0.0
       source-map-js: 1.0.2
 
@@ -6005,8 +6005,8 @@ packages:
       magic-string: 0.25.7
     dev: true
 
-  /vite/2.9.0:
-    resolution: {integrity: sha512-5NAnNqzPmZzJvrswZGeTS2JHrBGIzIWJA2hBTTMYuoBVEMh0xwE0b5yyIXFxf7F07hrK4ugX2LJ7q6t7iIbd4Q==}
+  /vite/2.9.9:
+    resolution: {integrity: sha512-ffaam+NgHfbEmfw/Vuh6BHKKlI/XIAhxE5QSS7gFLIngxg171mg1P3a4LSRME0z2ZU1ScxoKzphkipcYwSD5Ew==}
     engines: {node: '>=12.2.0'}
     hasBin: true
     peerDependencies:
@@ -6022,7 +6022,7 @@ packages:
         optional: true
     dependencies:
       esbuild: 0.14.29
-      postcss: 8.4.12
+      postcss: 8.4.14
       resolve: 1.22.0
       rollup: 2.60.2
     optionalDependencies:
