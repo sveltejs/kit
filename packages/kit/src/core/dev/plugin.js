@@ -10,7 +10,6 @@ import { SVELTE_KIT_ASSETS } from '../constants.js';
 import { get_mime_lookup, get_runtime_path, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { load_template } from '../config/index.js';
-import { sequence } from '../../hooks.js';
 import { posixify } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
 
@@ -25,14 +24,6 @@ const style_pattern = /\.(css|less|sass|scss|styl|stylus|pcss|postcss)$/;
  */
 export async function create_plugin(config, cwd) {
 	const runtime = get_runtime_path(config);
-
-	/** @type {import('types').Handle} */
-	let amp;
-
-	if (config.kit.amp) {
-		process.env.VITE_SVELTEKIT_AMP = 'true';
-		amp = (await import('./amp_hook.js')).handle;
-	}
 
 	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
 
@@ -225,7 +216,7 @@ export async function create_plugin(config, cwd) {
 						/** @type {import('types').Hooks} */
 						const hooks = {
 							getSession: user_hooks.getSession || (() => ({})),
-							handle: amp ? sequence(amp, handle) : handle,
+							handle,
 							handleError:
 								user_hooks.handleError ||
 								(({ /** @type {Error & { frame?: string }} */ error }) => {
@@ -287,7 +278,6 @@ export async function create_plugin(config, cwd) {
 						const rendered = await respond(
 							request,
 							{
-								amp: config.kit.amp,
 								csp: config.kit.csp,
 								dev: true,
 								floc: config.kit.floc,

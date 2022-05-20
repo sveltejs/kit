@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.338
+
+### Patch Changes
+
+- [breaking] remove amp config option in favour of amp.transform helper function ([#4710](https://github.com/sveltejs/kit/pull/4710))
+
+* [breaking] accessing url.hash from load now results in a helpful error ([#4983](https://github.com/sveltejs/kit/pull/4983))
+
 ## 1.0.0-next.337
 
 ### Patch Changes

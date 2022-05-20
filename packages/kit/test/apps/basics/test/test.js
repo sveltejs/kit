@@ -1456,6 +1456,18 @@ test.describe.parallel('Load', () => {
 		expect(cookies.doubled).toBe('84');
 	});
 
+	test('accessing url.hash from load errors and suggests using page store', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/load/url-hash#please-dont-send-me-to-load');
+			expect(await page.textContent('#message')).toBe(
+				'This is your custom error page saying: "url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component."'
+			);
+		}
+	});
+
 	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
 		const warnings = [];
 
