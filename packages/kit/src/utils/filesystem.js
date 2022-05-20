@@ -13,15 +13,7 @@ export function mkdirp(dir) {
 
 /** @param {string} path */
 export function rimraf(path) {
-	if (!fs.existsSync(path)) return;
-
-	if (fs.statSync(path).isDirectory()) {
-		for (const child of fs.readdirSync(path)) {
-			rimraf(child);
-		}
-	} else {
-		fs.unlinkSync(path);
-	}
+	fs.rmSync(path, { force: true, recursive: true });
 }
 
 /**
