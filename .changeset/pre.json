@@ -25,7 +25,8 @@
     "test-options": "0.0.1",
     "test-options-2": "0.0.1",
     "prerendering-test-trailing-slash": "0.0.1",
-    "prerendering-test-paths-base": "0.0.1"
+    "prerendering-test-paths-base": "0.0.1",
+    "@sveltejs/amp": "1.0.0-next.0"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -42,6 +43,7 @@
     "beige-teachers-end",
     "beige-trees-confess",
     "big-countries-pump",
+    "big-cups-exist",
     "big-garlics-complain",
     "big-houses-bow",
     "blue-apes-type",
@@ -654,6 +656,7 @@
     "seven-impalas-march",
     "seven-jars-argue",
     "seven-planes-fly",
+    "shaggy-bugs-move",
     "shaggy-days-cheat",
     "shaggy-donkeys-run",
     "shaggy-elephants-sell",
