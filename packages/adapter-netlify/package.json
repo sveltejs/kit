@@ -33,7 +33,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.14.21",
+		"esbuild": "^0.14.29",
 		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {

@@ -474,6 +474,13 @@ test.describe.parallel('CSS', () => {
 			).toBe('absolute');
 		}
 	});
+
+	test('applies imported styles in the correct order', async ({ page }) => {
+		await page.goto('/css');
+
+		const color = await page.$eval('.overridden', (el) => getComputedStyle(el).color);
+		expect(color).toBe('rgb(0, 128, 0)');
+	});
 });
 
 test.describe.parallel('Shadowed pages', () => {

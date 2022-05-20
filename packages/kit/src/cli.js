@@ -3,6 +3,7 @@ import colors from 'kleur';
 import fs from 'fs';
 import { relative } from 'path';
 import * as ports from 'port-authority';
+import chokidar from 'chokidar';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
 import { coalesce_to_error } from './utils/error.js';
@@ -53,17 +54,20 @@ prog
 	.option('--https', 'Use self-signed HTTPS certificate')
 	.option('-H', 'no longer supported, use --https instead') // TODO remove for 1.0
 	.action(async ({ port, host, https, open, H }) => {
-		try {
-			if (H) throw new Error('-H is no longer supported — use --https instead');
+		let first = true;
+		let relaunching = false;
+		let uid = 1;
 
-			process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-			const config = await load_config();
+		/** @type {() => Promise<void>} */
+		let close;
 
+		/** @param {import('types').ValidatedConfig} config */
+		async function start(config) {
 			const { dev } = await import('./core/dev/index.js');
 
 			const cwd = process.cwd();
 
-			const { address_info, server_config } = await dev({
+			const { address_info, server_config, close } = await dev({
 				cwd,
 				port,
 				host,
@@ -75,11 +79,51 @@ prog
 				port: address_info.port,
 				host: address_info.address,
 				https: !!(https || server_config.https),
-				open: open || !!server_config.open,
+				open: first && (open || !!server_config.open),
 				base: config.kit.paths.base,
 				loose: server_config.fs.strict === false,
 				allow: server_config.fs.allow,
 				cwd
+			});
+
+			first = false;
+
+			return close;
+		}
+
+		async function relaunch() {
+			const id = uid;
+			relaunching = true;
+
+			try {
+				const updated_config = await load_config();
+				await close();
+				close = await start(updated_config);
+
+				if (id !== uid) relaunch();
+			} catch (e) {
+				const error = /** @type {Error} */ (e);
+
+				console.error(colors.bold().red(`> ${error.message}`));
+				if (error.stack) {
+					console.error(colors.gray(error.stack.split('\n').slice(1).join('\n')));
+				}
+			}
+
+			relaunching = false;
+		}
+
+		try {
+			if (H) throw new Error('-H is no longer supported — use --https instead');
+
+			process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+
+			const config = await load_config();
+			close = await start(config);
+
+			chokidar.watch('svelte.config.js', { ignoreInitial: true }).on('change', () => {
+				if (relaunching) uid += 1;
+				else relaunch();
 			});
 		} catch (error) {
 			handle_error(error);
