@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] don't watch .svelte-kit directory
+[fix] don't watch generated types directory
