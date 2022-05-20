@@ -3,5 +3,6 @@
 		"allowJs": true,
 		"checkJs": true,
 		"newLine": "lf"
-	}
+	},
+	"extends": "./.svelte-kit/tsconfig.json"
 }
