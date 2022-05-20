@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] don't watch generated types directory
+[fix] don't watch `outDir`, except for the `generated` directory
