@@ -268,7 +268,8 @@ async function v3(builder, external, edge, split) {
 		await create_function_bundle(
 			`${tmp}/index.js`,
 			`${dirs.functions}/${name}.func`,
-			`nodejs${node_version.major}.x`
+			`nodejs${node_version.major}.x`,
+			builder
 		);
 
 		routes.push({ src: pattern, dest: `/${name}` });
@@ -402,11 +403,13 @@ function get_node_version() {
  * @param {string} entry
  * @param {string} dir
  * @param {string} runtime
+ * @param {import('@sveltejs/kit').Builder} builder
  */
-async function create_function_bundle(entry, dir, runtime) {
+async function create_function_bundle(entry, dir, runtime, builder) {
 	let base = entry;
 	while (base !== (base = path.dirname(base)));
 
+	builder.log.minor('Tracing dependencies...');
 	const traced = await nodeFileTrace([entry], { base });
 
 	traced.warnings.forEach((error) => {
@@ -452,8 +455,11 @@ async function create_function_bundle(entry, dir, runtime) {
 
 		if (source !== realpath) {
 			const realdest = path.join(dir, path.relative(ancestor, realpath));
-			fs.symlinkSync(path.relative(path.dirname(dest), realdest), dest, is_dir ? 'dir' : 'file');
+			const target = path.relative(path.dirname(dest), realdest);
+			builder.log.minor(`Symlinking ${path.relative('.', dest)} to ${target}`);
+			fs.symlinkSync(target, dest, is_dir ? 'dir' : 'file');
 		} else if (!is_dir) {
+			builder.log.minor(`Copying ${path.relative('.', source)} to ${path.relative('.', dest)}`);
 			fs.copyFileSync(source, dest);
 		}
 	}
