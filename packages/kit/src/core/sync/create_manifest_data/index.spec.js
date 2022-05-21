@@ -128,6 +128,12 @@ test('creates routes with layout', () => {
 	]);
 });
 
+test('succeeds when routes does not exist', () => {
+	const { components, routes } = create('samples/basic/routes');
+	assert.equal(components, ['layout.svelte', 'error.svelte']);
+	assert.equal(routes, []);
+});
+
 // TODO some characters will need to be URL-encoded in the filename
 test('encodes invalid characters', () => {
 	const { components, routes } = create('samples/encoding');
