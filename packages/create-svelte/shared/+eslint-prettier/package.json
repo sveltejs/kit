@@ -1,5 +1,5 @@
 {
 	"scripts": {
-		"lint": "eslint --ignore-path .gitignore ."
+		"lint": "eslint ."
 	}
 }
