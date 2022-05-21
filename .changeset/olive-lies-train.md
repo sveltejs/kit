@@ -3,4 +3,4 @@
 '@sveltejs/kit': patch
 ---
 
-[breaking] Replace %svelte.body% etc with %sveltekit.body%
+[breaking] Replace `%svelte.body%` with `%sveltekit.body%`, etc.
