@@ -13,15 +13,22 @@ importers:
       '@svitejs/changesets-changelog-github-compact': ^0.1.1
       '@typescript-eslint/eslint-plugin': ^5.5.0
       '@typescript-eslint/parser': ^5.5.0
+      cross-env: ^7.0.3
       eslint: ^8.3.0
       eslint-plugin-import: ^2.25.3
       eslint-plugin-node: ^11.1.0
       eslint-plugin-svelte3: ^4.0.0
+      port-authority: ^1.1.2
       prettier: ^2.5.0
       prettier-plugin-svelte: ^2.5.0
       rimraf: ^3.0.2
       rollup: ^2.60.2
+      sirv: ^2.0.0
       svelte: ^3.48.0
+      svelte-check: ^2.5.0
+      svelte-preprocess: ^4.9.8
+      svelte2tsx: ~0.5.0
+      tiny-glob: ^0.2.9
       turbo: ^1.2.6
       typescript: ~4.6.2
       uvu: ^0.5.2
@@ -35,15 +42,22 @@ importers:
       '@svitejs/changesets-changelog-github-compact': 0.1.1
       '@typescript-eslint/eslint-plugin': 5.5.0_hgifpugu3iz4vjez2nvxzb2flm
       '@typescript-eslint/parser': 5.5.0_wxzcy32mnlkffm57qz2iyynkxq
+      cross-env: 7.0.3
       eslint: 8.3.0
       eslint-plugin-import: 2.25.3_iplecdnqcsfvmje2lfr4noy2lm
       eslint-plugin-node: 11.1.0_eslint@8.3.0
       eslint-plugin-svelte3: 4.0.0_eslint@8.3.0+svelte@3.48.0
+      port-authority: 1.1.2
       prettier: 2.5.0
       prettier-plugin-svelte: 2.5.0_gmp72aw2ck6cujyisndesbgjw4
       rimraf: 3.0.2
       rollup: 2.60.2
+      sirv: 2.0.0
       svelte: 3.48.0
+      svelte-check: 2.5.0_svelte@3.48.0
+      svelte-preprocess: 4.9.8_c64miirrcucob5yjzfkddrmila
+      svelte2tsx: 0.5.0_c64miirrcucob5yjzfkddrmila
+      tiny-glob: 0.2.9
       turbo: 1.2.6
       typescript: 4.6.2
       uvu: 0.5.2
@@ -101,9 +115,7 @@ importers:
       '@types/compression': ^1.7.2
       c8: ^7.10.0
       compression: ^1.7.4
-      node-fetch: ^3.1.0
       polka: ^1.0.0-next.22
-      sirv: ^2.0.0
       tiny-glob: ^0.2.9
     dependencies:
       tiny-glob: 0.2.9
@@ -112,24 +124,16 @@ importers:
       '@types/compression': 1.7.2
       c8: 7.10.0
       compression: 1.7.4
-      node-fetch: 3.1.0
       polka: 1.0.0-next.22
-      sirv: 2.0.0
 
   packages/adapter-static:
     specifiers:
       '@sveltejs/kit': workspace:*
-      playwright-chromium: ^1.21.0
-      port-authority: ^1.1.2
-      sirv: ^2.0.0
       tiny-glob: ^0.2.9
     dependencies:
       tiny-glob: 0.2.9
     devDependencies:
       '@sveltejs/kit': link:../kit
-      playwright-chromium: 1.21.0
-      port-authority: 1.1.2
-      sirv: 2.0.0
 
   packages/adapter-vercel:
     specifiers:
@@ -153,9 +157,6 @@ importers:
       kleur: ^4.1.4
       prompts: ^2.4.2
       sucrase: ^3.20.3
-      svelte: ^3.48.0
-      svelte-preprocess: ^4.9.8
-      tiny-glob: ^0.2.9
     dependencies:
       kleur: 4.1.4
       prompts: 2.4.2
@@ -166,9 +167,6 @@ importers:
       '@types/prompts': 2.0.14
       gitignore-parser: 0.0.2
       sucrase: 3.20.3
-      svelte: 3.48.0
-      svelte-preprocess: 4.9.8_svelte@3.48.0
-      tiny-glob: 0.2.9
 
   packages/create-svelte/templates/default:
     specifiers:
@@ -203,25 +201,15 @@ importers:
       '@types/set-cookie-parser': ^2.4.2
       chokidar: ^3.5.3
       cookie: ^0.5.0
-      cross-env: ^7.0.3
       devalue: ^2.0.1
       kleur: ^4.1.4
       locate-character: ^2.0.5
-      marked: ^4.0.5
       mime: ^3.0.0
       node-fetch: ^3.1.0
-      port-authority: ^1.1.2
       sade: ^1.7.4
       selfsigned: ^2.0.0
       set-cookie-parser: ^2.4.8
-      sirv: ^2.0.0
       svelte: ^3.48.0
-      svelte-check: ^2.5.0
-      svelte-preprocess: ^4.9.8
-      svelte2tsx: ~0.5.0
-      tiny-glob: ^0.2.9
-      typescript: ^4.6.4
-      uvu: ^0.5.2
       vite: ^2.9.9
     dependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.0-next.44_svelte@3.48.0+vite@2.9.9
@@ -237,86 +225,46 @@ importers:
       '@types/sade': 1.7.3
       '@types/set-cookie-parser': 2.4.2
       cookie: 0.5.0
-      cross-env: 7.0.3
       devalue: 2.0.1
       kleur: 4.1.4
       locate-character: 2.0.5
-      marked: 4.0.5
       mime: 3.0.0
       node-fetch: 3.1.0
-      port-authority: 1.1.2
       selfsigned: 2.0.0
       set-cookie-parser: 2.4.8
-      sirv: 2.0.0
       svelte: 3.48.0
-      svelte-check: 2.5.0_svelte@3.48.0
-      svelte-preprocess: 4.9.8_wwvk7nlptlrqo2czohjtk6eiqm
-      svelte2tsx: 0.5.0_wwvk7nlptlrqo2czohjtk6eiqm
-      tiny-glob: 0.2.9
-      typescript: 4.6.4
-      uvu: 0.5.2
 
   packages/kit/test/apps/amp:
     specifiers:
       '@sveltejs/amp': workspace:*
       '@sveltejs/kit': workspace:*
-      cross-env: ^7.0.3
       purify-css: ^1.2.5
-      svelte: ^3.43.0
-      svelte-check: ^2.5.0
-      typescript: ~4.6.2
     devDependencies:
       '@sveltejs/amp': link:../../../../amp
       '@sveltejs/kit': link:../../..
-      cross-env: 7.0.3
       purify-css: 1.2.5
-      svelte: 3.44.2
-      svelte-check: 2.5.0_svelte@3.44.2
-      typescript: 4.6.2
 
   packages/kit/test/apps/basics:
     specifiers:
       '@sveltejs/kit': workspace:*
-      cross-env: ^7.0.3
-      svelte: ^3.43.0
-      svelte-check: ^2.5.0
-      typescript: ~4.6.2
+      marked: ^4.0.5
     devDependencies:
       '@sveltejs/kit': link:../../..
-      cross-env: 7.0.3
-      svelte: 3.44.2
-      svelte-check: 2.5.0_svelte@3.44.2
-      typescript: 4.6.2
+      marked: 4.0.5
 
   packages/kit/test/apps/options:
     specifiers:
       '@sveltejs/kit': workspace:*
-      cross-env: ^7.0.3
-      svelte: ^3.43.0
-      svelte-check: ^2.5.0
-      typescript: ~4.6.2
     devDependencies:
       '@sveltejs/kit': link:../../..
-      cross-env: 7.0.3
-      svelte: 3.44.2
-      svelte-check: 2.5.0_svelte@3.44.2
-      typescript: 4.6.2
 
   packages/kit/test/apps/options-2:
     specifiers:
       '@sveltejs/adapter-node': workspace:*
       '@sveltejs/kit': workspace:*
-      cross-env: ^7.0.3
-      svelte: ^3.43.0
-      svelte-check: ^2.5.0
-      typescript: ~4.6.2
     devDependencies:
       '@sveltejs/adapter-node': link:../../../../adapter-node
       '@sveltejs/kit': link:../../..
-      cross-env: 7.0.3
-      svelte: 3.44.2
-      svelte-check: 2.5.0_svelte@3.44.2
-      typescript: 4.6.2
 
   packages/kit/test/prerendering/basics:
     specifiers:
@@ -355,7 +303,7 @@ importers:
       '@sveltejs/amp': workspace:*
       '@sveltejs/kit': workspace:*
       '@sveltejs/site-kit': ^2.1.0
-      '@types/node': ^16.11.11
+      '@types/node': ^17.0.21
       flexsearch: ^0.7.21
       marked: ^4.0.5
       prism-svelte: ^0.5.0
@@ -371,7 +319,7 @@ importers:
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': 2.1.0
-      '@types/node': 16.11.11
+      '@types/node': 17.0.21
       flexsearch: 0.7.21
       marked: 4.0.5
       prism-svelte: 0.5.0
@@ -4511,19 +4459,6 @@ packages:
       find-up: 4.1.0
     dev: true
 
-  /playwright-chromium/1.21.0:
-    resolution: {integrity: sha512-btps5gqqc4GUESv+H3/rTPMv5S6zUSsgEcpvM3HX08bqaHnpyy+cPK6XLJq9L8kGjm3SdzlmG8tkhSPP4iuWhA==}
-    engines: {node: '>=12'}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      playwright-core: 1.21.0
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-    dev: true
-
   /playwright-core/1.21.0:
     resolution: {integrity: sha512-yDGVs9qaaW6WiefgR7wH1CGt9D6D/X4U3jNpIzH0FjjrrWLCOYQo78Tu3SkW8X+/kWlBpj49iWf3QNSxhYc12Q==}
     engines: {node: '>=12'}
@@ -5361,34 +5296,6 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  /svelte-check/2.5.0_svelte@3.44.2:
-    resolution: {integrity: sha512-/laO032JQ1TpmYHgaaLndHNPeWW3VSL3liMB97sA9fYTEzlIy3jIo4Rgr7EzjNvieiNWG73C5voOAeNHlrwbpg==}
-    hasBin: true
-    peerDependencies:
-      svelte: ^3.24.0
-    dependencies:
-      chokidar: 3.5.3
-      fast-glob: 3.2.7
-      import-fresh: 3.3.0
-      picocolors: 1.0.0
-      sade: 1.7.4
-      source-map: 0.7.3
-      svelte: 3.44.2
-      svelte-preprocess: 4.9.8_wgapq35fvzy6mzjhiipmcyqsqu
-      typescript: 4.6.4
-    transitivePeerDependencies:
-      - '@babel/core'
-      - coffeescript
-      - less
-      - node-sass
-      - postcss
-      - postcss-load-config
-      - pug
-      - sass
-      - stylus
-      - sugarss
-    dev: true
-
   /svelte-check/2.5.0_svelte@3.48.0:
     resolution: {integrity: sha512-/laO032JQ1TpmYHgaaLndHNPeWW3VSL3liMB97sA9fYTEzlIy3jIo4Rgr7EzjNvieiNWG73C5voOAeNHlrwbpg==}
     hasBin: true
@@ -5426,7 +5333,7 @@ packages:
       svelte: 3.48.0
     dev: false
 
-  /svelte-preprocess/4.9.8_svelte@3.48.0:
+  /svelte-preprocess/4.9.8_c64miirrcucob5yjzfkddrmila:
     resolution: {integrity: sha512-EQS/oRZzMtYdAprppZxY3HcysKh11w54MgA63ybtL+TAZ4hVqYOnhw41JVJjWN9dhPnNjjLzvbZ2tMhTsla1Og==}
     engines: {node: '>= 9.11.2'}
     requiresBuild: true
@@ -5474,6 +5381,7 @@ packages:
       sorcery: 0.10.0
       strip-indent: 3.0.0
       svelte: 3.48.0
+      typescript: 4.6.2
     dev: true
 
   /svelte-preprocess/4.9.8_uydhuxrsxpjnlqukdpt4rb2fam:
@@ -5525,57 +5433,6 @@ packages:
       strip-indent: 3.0.0
       svelte: 3.44.2
       typescript: 4.6.2
-    dev: true
-
-  /svelte-preprocess/4.9.8_wgapq35fvzy6mzjhiipmcyqsqu:
-    resolution: {integrity: sha512-EQS/oRZzMtYdAprppZxY3HcysKh11w54MgA63ybtL+TAZ4hVqYOnhw41JVJjWN9dhPnNjjLzvbZ2tMhTsla1Og==}
-    engines: {node: '>= 9.11.2'}
-    requiresBuild: true
-    peerDependencies:
-      '@babel/core': ^7.10.2
-      coffeescript: ^2.5.1
-      less: ^3.11.3
-      node-sass: '*'
-      postcss: ^7 || ^8
-      postcss-load-config: ^2.1.0 || ^3.0.0
-      pug: ^3.0.0
-      sass: ^1.26.8
-      stylus: ^0.54.7
-      sugarss: ^2.0.0
-      svelte: ^3.23.0
-      typescript: ^3.9.5 || ^4.0.0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-      coffeescript:
-        optional: true
-      less:
-        optional: true
-      node-sass:
-        optional: true
-      postcss:
-        optional: true
-      postcss-load-config:
-        optional: true
-      pug:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      typescript:
-        optional: true
-    dependencies:
-      '@types/pug': 2.0.5
-      '@types/sass': 1.43.1
-      detect-indent: 6.1.0
-      magic-string: 0.25.7
-      sorcery: 0.10.0
-      strip-indent: 3.0.0
-      svelte: 3.44.2
-      typescript: 4.6.4
     dev: true
 
   /svelte-preprocess/4.9.8_wwvk7nlptlrqo2czohjtk6eiqm:
@@ -5639,7 +5496,7 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
-  /svelte2tsx/0.5.0_wwvk7nlptlrqo2czohjtk6eiqm:
+  /svelte2tsx/0.5.0_c64miirrcucob5yjzfkddrmila:
     resolution: {integrity: sha512-pgMMPzPylwzb/XTLXZQ0y6LUlYzVTep4537NJzHNyTbML864pfVS27iVFOgUK7XmKLyuIdG7tgweUZTsIwgKHw==}
     peerDependencies:
       svelte: ^3.24
@@ -5648,7 +5505,7 @@ packages:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
       svelte: 3.48.0
-      typescript: 4.6.4
+      typescript: 4.6.2
     dev: true
 
   /tar-fs/2.1.1:

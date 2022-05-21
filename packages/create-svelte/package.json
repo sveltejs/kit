@@ -20,10 +20,7 @@
 		"@types/prettier": "^2.4.2",
 		"@types/prompts": "^2.0.14",
 		"gitignore-parser": "^0.0.2",
-		"sucrase": "^3.20.3",
-		"svelte": "^3.48.0",
-		"svelte-preprocess": "^4.9.8",
-		"tiny-glob": "^0.2.9"
+		"sucrase": "^3.20.3"
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",

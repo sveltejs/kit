@@ -28,9 +28,6 @@
 		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*",
-		"playwright-chromium": "^1.21.0",
-		"port-authority": "^1.1.2",
-		"sirv": "^2.0.0"
+		"@sveltejs/kit": "workspace:*"
 	}
 }
