@@ -1,5 +1,5 @@
 <script context="module">
-	/** @type {import('./[slug]').Load} */
+	/** @type {import('./__types/[slug]').Load} */
 	export function load({ url, params }) {
 		return {
 			props: {
