@@ -19,10 +19,12 @@ importers:
       eslint-plugin-svelte3: ^4.0.0
       prettier: ^2.5.0
       prettier-plugin-svelte: ^2.5.0
+      rimraf: ^3.0.2
       rollup: ^2.60.2
       svelte: ^3.48.0
       turbo: ^1.2.6
       typescript: ~4.6.2
+      uvu: ^0.5.2
     devDependencies:
       '@changesets/cli': 2.18.1
       '@rollup/plugin-commonjs': 21.0.1_rollup@2.60.2
@@ -39,27 +41,25 @@ importers:
       eslint-plugin-svelte3: 4.0.0_eslint@8.3.0+svelte@3.48.0
       prettier: 2.5.0
       prettier-plugin-svelte: 2.5.0_gmp72aw2ck6cujyisndesbgjw4
+      rimraf: 3.0.2
       rollup: 2.60.2
       svelte: 3.48.0
       turbo: 1.2.6
       typescript: 4.6.2
+      uvu: 0.5.2
 
   packages/adapter-auto:
     specifiers:
       '@sveltejs/adapter-cloudflare': workspace:*
       '@sveltejs/adapter-netlify': workspace:*
       '@sveltejs/adapter-vercel': workspace:*
-      '@types/node': ^14.14.20
     dependencies:
       '@sveltejs/adapter-cloudflare': link:../adapter-cloudflare
       '@sveltejs/adapter-netlify': link:../adapter-netlify
       '@sveltejs/adapter-vercel': link:../adapter-vercel
-    devDependencies:
-      '@types/node': 14.18.17
 
   packages/adapter-cloudflare:
     specifiers:
-      '@types/node': ^14.14.20
       '@types/ws': ^8.5.3
       esbuild: ^0.14.29
       worktop: 0.8.0-next.14
@@ -67,32 +67,26 @@ importers:
       esbuild: 0.14.29
       worktop: 0.8.0-next.14
     devDependencies:
-      '@types/node': 14.18.17
       '@types/ws': 8.5.3
 
   packages/adapter-cloudflare-workers:
     specifiers:
       '@cloudflare/kv-asset-handler': ^0.2.0
       '@iarna/toml': ^2.2.5
-      '@types/node': ^14.14.20
       esbuild: ^0.14.29
     dependencies:
       '@iarna/toml': 2.2.5
       esbuild: 0.14.29
     devDependencies:
       '@cloudflare/kv-asset-handler': 0.2.0
-      '@types/node': 14.18.17
 
   packages/adapter-netlify:
     specifiers:
       '@iarna/toml': ^2.2.5
       '@netlify/functions': ^1.0.0
       '@sveltejs/kit': workspace:*
-      '@types/node': ^14.14.20
       esbuild: ^0.14.29
-      rimraf: ^3.0.2
       tiny-glob: ^0.2.9
-      uvu: ^0.5.2
     dependencies:
       '@iarna/toml': 2.2.5
       esbuild: 0.14.29
@@ -100,66 +94,51 @@ importers:
     devDependencies:
       '@netlify/functions': 1.0.0
       '@sveltejs/kit': link:../kit
-      '@types/node': 14.18.17
-      rimraf: 3.0.2
-      uvu: 0.5.2
 
   packages/adapter-node:
     specifiers:
       '@sveltejs/kit': workspace:*
       '@types/compression': ^1.7.2
-      '@types/node': ^14.14.20
       c8: ^7.10.0
       compression: ^1.7.4
       node-fetch: ^3.1.0
       polka: ^1.0.0-next.22
-      rimraf: ^3.0.2
       sirv: ^2.0.0
       tiny-glob: ^0.2.9
-      uvu: ^0.5.2
     dependencies:
       tiny-glob: 0.2.9
     devDependencies:
       '@sveltejs/kit': link:../kit
       '@types/compression': 1.7.2
-      '@types/node': 14.18.17
       c8: 7.10.0
       compression: 1.7.4
       node-fetch: 3.1.0
       polka: 1.0.0-next.22
-      rimraf: 3.0.2
       sirv: 2.0.0
-      uvu: 0.5.2
 
   packages/adapter-static:
     specifiers:
       '@sveltejs/kit': workspace:*
-      '@types/node': ^14.14.20
       playwright-chromium: ^1.21.0
       port-authority: ^1.1.2
       sirv: ^2.0.0
       tiny-glob: ^0.2.9
-      uvu: ^0.5.2
     dependencies:
       tiny-glob: 0.2.9
     devDependencies:
       '@sveltejs/kit': link:../kit
-      '@types/node': 14.18.17
       playwright-chromium: 1.21.0
       port-authority: 1.1.2
       sirv: 2.0.0
-      uvu: 0.5.2
 
   packages/adapter-vercel:
     specifiers:
       '@sveltejs/kit': workspace:*
-      '@types/node': ^14.14.20
       esbuild: ^0.14.29
     dependencies:
       esbuild: 0.14.29
     devDependencies:
       '@sveltejs/kit': link:../kit
-      '@types/node': 14.18.17
 
   packages/amp:
     specifiers: {}
@@ -220,7 +199,6 @@ importers:
       '@types/cookie': ^0.5.0
       '@types/marked': ^4.0.1
       '@types/mime': ^2.0.3
-      '@types/node': ^16.11.11
       '@types/sade': ^1.7.3
       '@types/set-cookie-parser': ^2.4.2
       chokidar: ^3.5.3
@@ -256,7 +234,6 @@ importers:
       '@types/cookie': 0.5.0
       '@types/marked': 4.0.1
       '@types/mime': 2.0.3
-      '@types/node': 16.11.11
       '@types/sade': 1.7.3
       '@types/set-cookie-parser': 2.4.2
       cookie: 0.5.0
@@ -344,72 +321,32 @@ importers:
   packages/kit/test/prerendering/basics:
     specifiers:
       '@sveltejs/kit': workspace:*
-      svelte: ^3.43.0
-      svelte-check: ^2.5.0
-      typescript: ~4.6.2
-      uvu: ^0.5.2
     devDependencies:
       '@sveltejs/kit': link:../../..
-      svelte: 3.44.2
-      svelte-check: 2.5.0_svelte@3.44.2
-      typescript: 4.6.2
-      uvu: 0.5.2
 
   packages/kit/test/prerendering/disabled:
     specifiers:
       '@sveltejs/kit': workspace:*
-      svelte: ^3.43.0
-      svelte-check: ^2.5.0
-      typescript: ~4.6.2
-      uvu: ^0.5.2
     devDependencies:
       '@sveltejs/kit': link:../../..
-      svelte: 3.44.2
-      svelte-check: 2.5.0_svelte@3.44.2
-      typescript: 4.6.2
-      uvu: 0.5.2
 
   packages/kit/test/prerendering/options:
     specifiers:
       '@sveltejs/kit': workspace:*
-      svelte: ^3.43.0
-      svelte-check: ^2.5.0
-      typescript: ~4.6.2
-      uvu: ^0.5.2
     devDependencies:
       '@sveltejs/kit': link:../../..
-      svelte: 3.44.2
-      svelte-check: 2.5.0_svelte@3.44.2
-      typescript: 4.6.2
-      uvu: 0.5.2
 
   packages/kit/test/prerendering/paths-base:
     specifiers:
       '@sveltejs/kit': workspace:*
-      svelte: ^3.43.0
-      svelte-check: ^2.5.0
-      typescript: ~4.6.2
-      uvu: ^0.5.2
     devDependencies:
       '@sveltejs/kit': link:../../..
-      svelte: 3.48.0
-      svelte-check: 2.5.0_svelte@3.48.0
-      typescript: 4.6.2
-      uvu: 0.5.2
 
   packages/kit/test/prerendering/trailing-slash:
     specifiers:
       '@sveltejs/kit': workspace:*
-      svelte: ^3.43.0
-      svelte-check: ^2.5.0
-      typescript: ~4.6.2
-      uvu: ^0.5.2
     devDependencies:
       '@sveltejs/kit': link:../../..
-      svelte: 3.44.2
-      svelte-check: 2.5.0_svelte@3.44.2
-      typescript: 4.6.2
-      uvu: 0.5.2
 
   sites/kit.svelte.dev:
     specifiers:
@@ -1570,10 +1507,6 @@ packages:
 
   /@types/node/12.20.37:
     resolution: {integrity: sha512-i1KGxqcvJaLQali+WuypQnXwcplhtNtjs66eNsZpp2P2FL/trJJxx/VWsM0YCL2iMoIJrbXje48lvIQAQ4p2ZA==}
-    dev: true
-
-  /@types/node/14.18.17:
-    resolution: {integrity: sha512-oajWz4kOajqpKJMPgnCvBajPq8QAvl2xIWoFjlAJPKGu6n7pjov5SxGE45a+0RxHDoo4ycOMoZw1SCOWtDERbw==}
     dev: true
 
   /@types/node/16.11.11:
