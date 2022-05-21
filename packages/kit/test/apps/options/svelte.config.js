@@ -18,7 +18,6 @@ const config = {
 			serviceWorker: 'source/service-worker'
 		},
 		appDir: '_wheee',
-		floc: true,
 		inlineStyleThreshold: 1024,
 		outDir: '.custom-out-dir',
 		trailingSlash: 'always',

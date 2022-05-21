@@ -115,8 +115,6 @@ const options = object(
 				template: string(join('src', 'app.html'))
 			}),
 
-			floc: boolean(false),
-
 			// TODO: remove this for the 1.0 release
 			headers: error(
 				(keypath) =>

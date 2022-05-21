@@ -130,14 +130,6 @@ test.describe.parallel('Custom extensions', () => {
 	});
 });
 
-test.describe.parallel('Headers', () => {
-	test('enables floc', async ({ page }) => {
-		const response = await page.goto('/path-base');
-		const headers = /** @type {Response} */ (response).headers();
-		expect(headers['permissions-policy']).toBeUndefined();
-	});
-});
-
 test.describe.parallel('trailingSlash', () => {
 	test('adds trailing slash', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/path-base/slash');

@@ -280,7 +280,6 @@ export async function create_plugin(config, cwd) {
 							{
 								csp: config.kit.csp,
 								dev: true,
-								floc: config.kit.floc,
 								get_stack: (error) => {
 									return fix_stack_trace(error);
 								},

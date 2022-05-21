@@ -112,7 +112,6 @@ export interface Config {
 			serviceWorker?: string;
 			template?: string;
 		};
-		floc?: boolean;
 		inlineStyleThreshold?: number;
 		methodOverride?: {
 			parameter?: string;

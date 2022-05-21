@@ -64,7 +64,6 @@ const get_defaults = (prefix = '') => ({
 			serviceWorker: join(prefix, 'src/service-worker'),
 			template: join(prefix, 'src/app.html')
 		},
-		floc: false,
 		headers: undefined,
 		host: undefined,
 		hydrate: undefined,
