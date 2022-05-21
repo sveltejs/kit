@@ -79,7 +79,7 @@ export async function load_node({
 			redirect: shadow.redirect
 		};
 	} else if (module.load) {
-		/** @type {import('types').LoadInput} */
+		/** @type {import('types').LoadEvent} */
 		const load_input = {
 			url: state.prerender ? create_prerendering_url_proxy(event.url) : event.url,
 			params: event.params,
