@@ -47,7 +47,6 @@ export function override(settings) {
 export class Server {
 	constructor(manifest) {
 		this.options = {
-			amp: ${config.kit.amp},
 			csp: ${s(config.kit.csp)},
 			dev: false,
 			floc: ${config.kit.floc},
@@ -231,10 +230,12 @@ export async function build_server(
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions,
+				...config,
 				compilerOptions: {
+					...config.compilerOptions,
 					hydratable: !!config.kit.browser.hydrate
-				}
+				},
+				configFile: false
 			})
 		],
 		resolve: {
@@ -258,7 +259,7 @@ export async function build_server(
 
 	client.assets.forEach((asset) => {
 		if (asset.fileName.endsWith('.css')) {
-			if (config.kit.amp || asset.source.length < config.kit.inlineStyleThreshold) {
+			if (asset.source.length < config.kit.inlineStyleThreshold) {
 				const index = stylesheet_lookup.size;
 				const file = `${output_dir}/server/stylesheets/${index}.js`;
 

@@ -49,14 +49,10 @@ declare namespace App {
 
 /**
  * ```ts
- * import { amp, browser, dev, mode, prerendering } from '$app/env';
+ * import { browser, dev, mode, prerendering } from '$app/env';
  * ```
  */
 declare module '$app/env' {
-	/**
-	 * Whether or not the app is running in [AMP mode](/docs/seo#manual-setup-amp).
-	 */
-	export const amp: boolean;
 	/**
 	 * Whether the app is running in the browser or on the server.
 	 */

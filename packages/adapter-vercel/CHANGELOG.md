@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.53
+
+### Patch Changes
+
+- Revert to cjs mode when building for lambda ([#4967](https://github.com/sveltejs/kit/pull/4967))
+
 ## 1.0.0-next.52
 
 ### Patch Changes

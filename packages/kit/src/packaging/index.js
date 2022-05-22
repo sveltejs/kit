@@ -26,7 +26,7 @@ export async function build(config, cwd = process.cwd()) {
 	mkdirp(dir);
 
 	// Make sure generated tsconfig is up-to-date
-	write_tsconfig(config);
+	write_tsconfig(config, cwd);
 
 	const files = scan(config);
 

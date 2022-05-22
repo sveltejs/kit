@@ -31,7 +31,7 @@
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
-		"esbuild": "^0.14.21",
+		"esbuild": "^0.14.29",
 		"worktop": "0.8.0-next.14"
 	},
 	"devDependencies": {
