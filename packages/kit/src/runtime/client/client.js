@@ -578,11 +578,44 @@ export function create_client({ target, session, base, trailing_slash }) {
 					node.uses.stuff = true;
 					return { ...stuff };
 				},
-				fetch(resource, info) {
-					const requested = typeof resource === 'string' ? resource : resource.url;
-					add_dependency(requested);
+				async fetch(resource, init) {
+					let requested;
 
-					return started ? fetch(resource, info) : initial_fetch(resource, info);
+					if (typeof resource === 'string') {
+						requested = resource;
+					} else {
+						requested = resource.url;
+
+						// we're not allowed to modify the received `Request` object, so in order
+						// to fixup relative urls we create a new equivalent `init` object instead
+						init = {
+							// the request body must be consumed in memory until browsers
+							// implement streaming request bodies and/or the body getter
+							body:
+								resource.method === 'GET' || resource.method === 'HEAD'
+									? undefined
+									: await resource.blob(),
+							cache: resource.cache,
+							credentials: resource.credentials,
+							headers: resource.headers,
+							integrity: resource.integrity,
+							keepalive: resource.keepalive,
+							method: resource.method,
+							mode: resource.mode,
+							redirect: resource.redirect,
+							referrer: resource.referrer,
+							referrerPolicy: resource.referrerPolicy,
+							signal: resource.signal,
+							...init
+						};
+					}
+
+					// we must fixup relative urls so they are resolved from the target page
+					const normalized = new URL(requested, url).href;
+					add_dependency(normalized);
+
+					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be normalized
+					return started ? fetch(normalized, init) : initial_fetch(requested, init);
 				},
 				status: status ?? null,
 				error: error ?? null
