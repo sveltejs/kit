@@ -1311,6 +1311,13 @@ test.describe.parallel('Load', () => {
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
+	test('fetch resolves urls relatively to the target page', async ({ page, clicknav }) => {
+		await page.goto('/load');
+		await clicknav('[href="/load/fetch-relative"]');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+		expect(await page.textContent('h2')).toBe('the question was ?');
+	});
+
 	test('handles large responses', async ({ page }) => {
 		await page.goto('/load');
 
