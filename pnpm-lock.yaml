@@ -12,7 +12,7 @@ importers:
       '@rollup/plugin-replace': ^4.0.0
       '@sveltejs/eslint-config': github:sveltejs/eslint-config#v5.8.0
       '@svitejs/changesets-changelog-github-compact': ^0.1.1
-      '@types/node': ~16.11.36
+      '@types/node': ^16.11.36
       '@typescript-eslint/eslint-plugin': ^5.5.0
       '@typescript-eslint/parser': ^5.5.0
       cross-env: ^7.0.3
@@ -305,7 +305,7 @@ importers:
       '@sveltejs/amp': workspace:*
       '@sveltejs/kit': workspace:*
       '@sveltejs/site-kit': ^2.1.0
-      '@types/node': ~16.11.36
+      '@types/node': ^16.11.36
       flexsearch: ^0.7.21
       marked: ^4.0.5
       prism-svelte: ^0.5.0
