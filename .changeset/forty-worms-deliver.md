@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: svelte-kit sync gracefully handles a nonexistent src/routes folder
+[fix] `svelte-kit sync` gracefully handles a nonexistent routes folder
