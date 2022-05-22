@@ -95,11 +95,11 @@ test('creates routes', () => {
 	]);
 });
 
-test('creates sym-linked routes', () => {
-	const { components, routes } = create('samples/sym-link/routes');
+test('creates symlinked routes', () => {
+	const { components, routes } = create('samples/symlinks/routes');
 
-	const index = 'samples/sym-link/routes/index.svelte';
-	const symlinked_index = 'samples/sym-link/routes/foo/index.svelte';
+	const index = 'samples/symlinks/routes/index.svelte';
+	const symlinked_index = 'samples/symlinks/routes/foo/index.svelte';
 
 	assert.equal(components, [default_layout, default_error, symlinked_index, index]);
 

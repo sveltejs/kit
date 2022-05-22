@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Allow sym-linked routes
+Allow symlinked directories in the routes folder
