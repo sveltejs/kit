@@ -12,6 +12,7 @@ importers:
       '@rollup/plugin-replace': ^4.0.0
       '@sveltejs/eslint-config': github:sveltejs/eslint-config#v5.8.0
       '@svitejs/changesets-changelog-github-compact': ^0.1.1
+      '@types/node': ~16.11.36
       '@typescript-eslint/eslint-plugin': ^5.5.0
       '@typescript-eslint/parser': ^5.5.0
       cross-env: ^7.0.3
@@ -42,6 +43,7 @@ importers:
       '@rollup/plugin-replace': 4.0.0_rollup@2.60.2
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641_joccrsvn3w5bf3zq72tg6cmv5a
       '@svitejs/changesets-changelog-github-compact': 0.1.1
+      '@types/node': 16.11.36
       '@typescript-eslint/eslint-plugin': 5.5.0_hgifpugu3iz4vjez2nvxzb2flm
       '@typescript-eslint/parser': 5.5.0_wxzcy32mnlkffm57qz2iyynkxq
       cross-env: 7.0.3
@@ -303,7 +305,7 @@ importers:
       '@sveltejs/amp': workspace:*
       '@sveltejs/kit': workspace:*
       '@sveltejs/site-kit': ^2.1.0
-      '@types/node': ^17.0.21
+      '@types/node': ~16.11.36
       flexsearch: ^0.7.21
       marked: ^4.0.5
       prism-svelte: ^0.5.0
@@ -319,7 +321,7 @@ importers:
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': 2.1.0
-      '@types/node': 17.0.21
+      '@types/node': 16.11.36
       flexsearch: 0.7.21
       marked: 4.0.5
       prism-svelte: 0.5.0
@@ -1438,6 +1440,10 @@ packages:
 
   /@types/node/16.11.11:
     resolution: {integrity: sha512-KB0sixD67CeecHC33MYn+eYARkqTheIRNuu97y2XMjR7Wu3XibO1vaY6VBV6O/a89SPI81cEUIYT87UqUWlZNw==}
+    dev: true
+
+  /@types/node/16.11.36:
+    resolution: {integrity: sha512-FR5QJe+TaoZ2GsMHkjuwoNabr+UrJNRr2HNOo+r/7vhcuntM6Ee/pRPOnRhhL2XE9OOvX9VLEq+BcXl3VjNoWA==}
     dev: true
 
   /@types/node/17.0.21:
@@ -3744,7 +3750,7 @@ packages:
   /jsonfile/4.0.0:
     resolution: {integrity: sha1-h3Gq4HmbZAdrdmQPygWPnBDjPss=}
     optionalDependencies:
-      graceful-fs: 4.2.8
+      graceful-fs: 4.2.10
     dev: true
 
   /kind-of/6.0.3:
