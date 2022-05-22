@@ -8,6 +8,7 @@
 		"test": "turbo run test",
 		"check": "turbo run check",
 		"lint": "turbo run lint",
+		"autolint": "turbo run autolint",
 		"format": "turbo run format",
 		"release": "changeset publish"
 	},
