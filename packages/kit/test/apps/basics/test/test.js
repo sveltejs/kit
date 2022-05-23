@@ -1505,7 +1505,7 @@ test.describe.parallel('Load', () => {
 		}
 	});
 
-	test.only('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
+	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
 		if (javaScriptEnabled && process.env.DEV) {
 			const warnings = [];
 
