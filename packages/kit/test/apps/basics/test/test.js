@@ -259,7 +259,19 @@ test.describe('Scrolling', () => {
 		page,
 		in_view
 	}) => {
-		await page.goto('/anchor-with-manual-scroll/anchor#go-to-element');
+		await page.goto('/anchor-with-manual-scroll/anchor-onmount#go-to-element');
+		expect(await in_view('#abcde')).toBe(true);
+	});
+
+	test('url-supplied anchor is ignored with afterNavigate() scrolling on direct page load', async ({
+		page,
+		in_view,
+		clicknav
+	}) => {
+		await page.goto('/anchor-with-manual-scroll/anchor-afternavigate#go-to-element');
+		expect(await in_view('#abcde')).toBe(true);
+
+		await clicknav('[href="/anchor-with-manual-scroll/anchor-afternavigate?x=y#go-to-element"]');
 		expect(await in_view('#abcde')).toBe(true);
 	});
 
@@ -270,7 +282,7 @@ test.describe('Scrolling', () => {
 		in_view
 	}) => {
 		await page.goto('/anchor-with-manual-scroll');
-		await clicknav('[href="/anchor-with-manual-scroll/anchor#go-to-element"]');
+		await clicknav('[href="/anchor-with-manual-scroll/anchor-onmount#go-to-element"]');
 		if (javaScriptEnabled) expect(await in_view('#abcde')).toBe(true);
 		else expect(await in_view('#go-to-element')).toBe(true);
 	});

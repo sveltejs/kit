@@ -88,7 +88,7 @@ declare module '$app/env' {
  */
 declare module '$app/navigation' {
 	/**
-	 * If called when the page is being updated following a navigation (in `onMount` or an action, for example), this disables SvelteKit's built-in scroll handling.
+	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
 	 */
 	export function disableScrollHandling(): void;
