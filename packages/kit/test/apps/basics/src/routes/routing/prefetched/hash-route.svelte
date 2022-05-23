@@ -1,9 +1,9 @@
 <script context="module">
-	let loadCalls = 0;
+	let load_calls = 0;
 
 	export const load = () => {
-		loadCalls += 1;
-		return { props: { calls: loadCalls } };
+		load_calls += 1;
+		return { props: { calls: load_calls } };
 	};
 </script>
 
@@ -13,7 +13,7 @@
 
 	export let calls;
 
-	const modalContents = {
+	const modal_contents = {
 		'please-dont-show-me': {
 			title: 'Oopsie'
 		},
@@ -24,20 +24,15 @@
 
 	let modal = undefined;
 
-	const checkIfModalShouldBeShown = () => {
-		const modalToShow = $page.url.hash.substring(1);
-		modal = modalContents[modalToShow];
+	const show_modal = () => {
+		const hash = $page.url.hash.substring(1);
+		modal = modal_contents[hash];
 	};
 
-	onMount(checkIfModalShouldBeShown);
+	onMount(show_modal);
 </script>
 
-<svelte:window on:popstate={checkIfModalShouldBeShown} />
+<svelte:window on:popstate={show_modal} />
 
-<h1>
-	{modal?.title ?? ''}
-</h1>
-
-<p>
-	Loaded {calls} times.
-</p>
+<h1>{modal?.title ?? ''}</h1>
+<p>Loaded {calls} times.</p>
