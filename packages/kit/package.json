@@ -68,11 +68,11 @@
 		"./node": {
 			"import": "./dist/node.js"
 		},
+		"./node/polyfills": {
+			"import": "./dist/node/polyfills.js"
+		},
 		"./hooks": {
 			"import": "./dist/hooks.js"
-		},
-		"./install-fetch": {
-			"import": "./dist/install-fetch.js"
 		}
 	},
 	"types": "types/index.d.ts",

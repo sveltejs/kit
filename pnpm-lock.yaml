@@ -103,15 +103,19 @@ importers:
       '@iarna/toml': ^2.2.5
       '@netlify/functions': ^1.0.0
       '@sveltejs/kit': workspace:*
+      '@types/set-cookie-parser': ^2.4.2
       esbuild: ^0.14.29
+      set-cookie-parser: ^2.4.8
       tiny-glob: ^0.2.9
     dependencies:
       '@iarna/toml': 2.2.5
       esbuild: 0.14.29
+      set-cookie-parser: 2.4.8
       tiny-glob: 0.2.9
     devDependencies:
       '@netlify/functions': 1.0.0
       '@sveltejs/kit': link:../kit
+      '@types/set-cookie-parser': 2.4.2
 
   packages/adapter-node:
     specifiers:
@@ -4898,7 +4902,6 @@ packages:
 
   /set-cookie-parser/2.4.8:
     resolution: {integrity: sha512-edRH8mBKEWNVIVMKejNnuJxleqYE/ZSdcT8/Nem9/mmosx12pctd80s2Oy00KNZzrogMZS5mauK2/ymL1bvlvg==}
-    dev: true
 
   /sharp/0.29.3:
     resolution: {integrity: sha512-fKWUuOw77E4nhpyzCCJR1ayrttHoFHBT2U/kR/qEMRhvPEcluG4BKj324+SCO1e84+knXHwhJ1HHJGnUt4ElGA==}

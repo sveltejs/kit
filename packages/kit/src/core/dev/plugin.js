@@ -3,9 +3,9 @@ import path from 'path';
 import { URL } from 'url';
 import colors from 'kleur';
 import sirv from 'sirv';
-import { installFetch } from '../../install-fetch.js';
+import { installPolyfills } from '../../node/polyfills.js';
 import * as sync from '../sync/sync.js';
-import { getRequest, setResponse } from '../../node.js';
+import { getRequest, setResponse } from '../../node/index.js';
 import { SVELTE_KIT_ASSETS } from '../constants.js';
 import { get_mime_lookup, get_runtime_path, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
@@ -34,7 +34,7 @@ export async function create_plugin(config, cwd) {
 		name: 'vite-plugin-svelte-kit',
 
 		configureServer(vite) {
-			installFetch();
+			installPolyfills();
 
 			/** @type {import('types').SSRManifest} */
 			let manifest;

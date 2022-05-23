@@ -34,9 +34,11 @@
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
 		"esbuild": "^0.14.29",
+		"set-cookie-parser": "^2.4.8",
 		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {
+		"@types/set-cookie-parser": "^2.4.2",
 		"@netlify/functions": "^1.0.0",
 		"@sveltejs/kit": "workspace:*"
 	}

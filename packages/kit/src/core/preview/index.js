@@ -4,8 +4,8 @@ import https from 'https';
 import { join } from 'path';
 import sirv from 'sirv';
 import { pathToFileURL } from 'url';
-import { getRequest, setResponse } from '../../node.js';
-import { installFetch } from '../../install-fetch.js';
+import { getRequest, setResponse } from '../../node/index.js';
+import { installPolyfills } from '../../node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../constants.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
@@ -34,7 +34,7 @@ const mutable = (dir) =>
  * }} opts
  */
 export async function preview({ port, host, config, https: use_https = false }) {
-	installFetch();
+	installPolyfills();
 
 	const { paths } = config.kit;
 	const base = paths.base;

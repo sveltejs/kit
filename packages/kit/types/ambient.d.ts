@@ -283,11 +283,16 @@ declare module '@sveltejs/kit/hooks' {
 /**
  * A polyfill for `fetch` and its related interfaces, used by adapters for environments that don't provide a native implementation.
  */
-declare module '@sveltejs/kit/install-fetch' {
+declare module '@sveltejs/kit/node/polyfills' {
 	/**
-	 * Make `fetch`, `Headers`, `Request` and `Response` available as globals, via `node-fetch`
+	 * Make various web APIs available as globals:
+	 * - `crypto`
+	 * - `fetch`
+	 * - `Headers`
+	 * - `Request`
+	 * - `Response`
 	 */
-	export function installFetch(): void;
+	export function installPolyfills(): void;
 }
 
 /**

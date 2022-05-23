@@ -1,4 +1,5 @@
 import { Readable } from 'stream';
+import * as set_cookie_parser from 'set-cookie-parser';
 
 /** @param {import('http').IncomingMessage} req */
 function get_raw_body(req) {
@@ -56,6 +57,7 @@ export async function getRequest(base, req) {
 	if (req.httpVersionMajor === 2) {
 		// we need to strip out the HTTP/2 pseudo-headers because node-fetch's
 		// Request implementation doesn't like them
+		// TODO is this still true with Node 18
 		headers = Object.assign({}, headers);
 		delete headers[':method'];
 		delete headers[':path'];
@@ -74,8 +76,11 @@ export async function setResponse(res, response) {
 	const headers = Object.fromEntries(response.headers);
 
 	if (response.headers.has('set-cookie')) {
-		// @ts-expect-error (headers.raw() is non-standard)
-		headers['set-cookie'] = response.headers.raw()['set-cookie'];
+		const header = /** @type {string} */ (response.headers.get('set-cookie'));
+		const split = set_cookie_parser.splitCookiesString(header);
+
+		// @ts-expect-error
+		headers['set-cookie'] = split;
 	}
 
 	res.writeHead(response.status, headers);
@@ -84,7 +89,7 @@ export async function setResponse(res, response) {
 		response.body.pipe(res);
 	} else {
 		if (response.body) {
-			res.write(await response.arrayBuffer());
+			res.write(new Uint8Array(await response.arrayBuffer()));
 		}
 
 		res.end();
