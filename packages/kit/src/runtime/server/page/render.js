@@ -46,7 +46,7 @@ export async function render_response({
 		}
 
 		if (options.template_contains_nonce) {
-			throw new Error('Cannot use prerendering if page template contains %svelte.nonce%');
+			throw new Error('Cannot use prerendering if page template contains %sveltekit.nonce%');
 		}
 	}
 

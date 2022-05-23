@@ -1711,7 +1711,7 @@ test.describe.parallel('$app/paths', () => {
 		);
 	});
 
-	test('replaces %svelte.assets% in template with relative path', async ({ page }) => {
+	test('replaces %sveltekit.assets% in template with relative path', async ({ page }) => {
 		await page.goto('/');
 		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
 
@@ -2493,7 +2493,7 @@ test.describe.parallel('Matchers', () => {
 });
 
 test.describe.parallel('XSS', () => {
-	test('replaces %svelte.xxx% tags safely', async ({ page }) => {
+	test('replaces %sveltekit.xxx% tags safely', async ({ page }) => {
 		await page.goto('/unsafe-replacement');
 
 		const content = await page.textContent('body');
