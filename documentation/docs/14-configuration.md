@@ -94,7 +94,7 @@ Required when running `svelte-kit build` and determines how the output is conver
 
 ### alias
 
-An object containing zero or more aliases used to replace values in `import` statements, where each key is the alias and the value is a relative path to the alias value. These aliases are automatically passed to Vite and TypeScript.
+An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
 
 For example, you can add aliases to a `components` and `utils` folder:
 
