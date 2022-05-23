@@ -52,13 +52,15 @@ export async function load_node({
 	/** @type {import('types').LoadOutput} */
 	let loaded;
 
+	const should_prerender = node.module.prerender ?? options.prerender.default;
+
 	/** @type {import('types').ShadowData} */
 	const shadow = is_leaf
 		? await load_shadow_data(
 				/** @type {import('types').SSRPage} */ (route),
 				event,
 				options,
-				!!state.prerender
+				should_prerender
 		  )
 		: {};
 
@@ -81,7 +83,7 @@ export async function load_node({
 	} else if (module.load) {
 		/** @type {import('types').LoadInput} */
 		const load_input = {
-			url: state.prerender ? create_prerendering_url_proxy(event.url) : event.url,
+			url: state.prerendering ? create_prerendering_url_proxy(event.url) : event.url,
 			params: event.params,
 			props: shadow.body || {},
 			routeId: event.routeId,
@@ -217,9 +219,9 @@ export async function load_node({
 						}
 					);
 
-					if (state.prerender) {
+					if (state.prerendering) {
 						dependency = { response, body: null };
-						state.prerender.dependencies.set(resolved, dependency);
+						state.prerendering.dependencies.set(resolved, dependency);
 					}
 				} else {
 					// external
@@ -364,7 +366,7 @@ export async function load_node({
 	}
 
 	// generate __data.json files when prerendering
-	if (shadow.body && state.prerender) {
+	if (shadow.body && state.prerendering) {
 		const pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
 
 		const dependency = {
@@ -372,7 +374,7 @@ export async function load_node({
 			body: JSON.stringify(shadow.body)
 		};
 
-		state.prerender.dependencies.set(pathname, dependency);
+		state.prerendering.dependencies.set(pathname, dependency);
 	}
 
 	return {

@@ -315,7 +315,10 @@ export async function create_plugin(config, cwd) {
 									assets
 								},
 								prefix: '',
-								prerender: config.kit.prerender.enabled,
+								prerender: {
+									default: config.kit.prerender.default,
+									enabled: config.kit.prerender.enabled
+								},
 								read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 								root,
 								router: config.kit.browser.router,

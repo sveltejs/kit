@@ -1105,6 +1105,15 @@ test.describe.parallel('Errors', () => {
 		expect(response.status()).toBe(500);
 		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
 	});
+
+	test('prerendering a page with a mutative page endpoint results in a catchable error', async ({
+		page
+	}) => {
+		await page.goto('/prerendering/mutative-endpoint');
+		expect(await page.textContent('h1')).toBe(
+			'500: Cannot prerender pages that have endpoints with mutative methods'
+		);
+	});
 });
 
 test.describe.parallel('ETags', () => {

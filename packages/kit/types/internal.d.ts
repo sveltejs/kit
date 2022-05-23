@@ -94,7 +94,7 @@ export class InternalServer extends Server {
 	respond(
 		request: Request,
 		options: RequestOptions & {
-			prerender?: PrerenderOptions;
+			prerendering?: PrerenderOptions;
 		}
 	): Promise<Response>;
 }
@@ -147,7 +147,6 @@ export interface PrerenderDependency {
 
 export interface PrerenderOptions {
 	fallback?: boolean;
-	default: boolean;
 	dependencies: Map<string, PrerenderDependency>;
 }
 
@@ -254,7 +253,10 @@ export interface SSROptions {
 		assets: string;
 	};
 	prefix: string;
-	prerender: boolean;
+	prerender: {
+		default: boolean;
+		enabled: boolean;
+	};
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
 	router: boolean;
@@ -308,7 +310,7 @@ export interface SSRState {
 	getClientAddress: () => string;
 	initiator?: SSRPage | null;
 	platform?: any;
-	prerender?: PrerenderOptions;
+	prerendering?: PrerenderOptions;
 }
 
 export type StrictBody = string | Uint8Array;

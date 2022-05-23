@@ -49,7 +49,7 @@ export async function respond(request, options, state) {
 	/** @type {Record<string, string>} */
 	let params = {};
 
-	if (options.paths.base && !state.prerender?.fallback) {
+	if (options.paths.base && !state.prerendering?.fallback) {
 		if (!decoded.startsWith(options.paths.base)) {
 			return new Response(undefined, { status: 404 });
 		}
@@ -63,7 +63,7 @@ export async function respond(request, options, state) {
 		url = new URL(url.origin + url.pathname.slice(0, -DATA_SUFFIX.length) + url.search);
 	}
 
-	if (!state.prerender || !state.prerender.fallback) {
+	if (!state.prerendering?.fallback) {
 		const matchers = await options.manifest._.matchers();
 
 		for (const candidate of options.manifest._.routes) {
@@ -82,7 +82,7 @@ export async function respond(request, options, state) {
 	if (route?.type === 'page') {
 		const normalized = normalize_path(url.pathname, options.trailing_slash);
 
-		if (normalized !== url.pathname && !state.prerender?.fallback) {
+		if (normalized !== url.pathname && !state.prerendering?.fallback) {
 			return new Response(undefined, {
 				status: 301,
 				headers: {
@@ -173,7 +173,7 @@ export async function respond(request, options, state) {
 					};
 				}
 
-				if (state.prerender && state.prerender.fallback) {
+				if (state.prerendering?.fallback) {
 					return await render_response({
 						event,
 						options,
@@ -275,7 +275,7 @@ export async function respond(request, options, state) {
 					});
 				}
 
-				if (state.prerender) {
+				if (state.prerendering) {
 					return new Response('not found', { status: 404 });
 				}
 
