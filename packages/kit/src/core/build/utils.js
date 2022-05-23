@@ -1,4 +1,4 @@
-import { build } from 'vite';
+import * as vite from 'vite';
 
 /**
  * @typedef {import('rollup').RollupOutput} RollupOutput
@@ -8,7 +8,7 @@ import { build } from 'vite';
 
 /** @param {import('vite').UserConfig} config */
 export async function create_build(config) {
-	const { output } = /** @type {RollupOutput} */ (await build(config));
+	const { output } = /** @type {RollupOutput} */ (await vite.build(config));
 
 	const chunks = output.filter(
 		/** @returns {output is OutputChunk} */ (output) => output.type === 'chunk'

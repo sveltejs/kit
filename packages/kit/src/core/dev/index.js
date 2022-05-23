@@ -1,6 +1,6 @@
 import path from 'path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { createServer, searchForWorkspaceRoot } from 'vite';
+import * as vite from 'vite';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
 import { get_aliases, get_runtime_path } from '../utils.js';
@@ -33,7 +33,7 @@ export async function dev({ cwd, port, host, https, config }) {
 							config.kit.outDir,
 							path.resolve(cwd, 'src'),
 							path.resolve(cwd, 'node_modules'),
-							path.resolve(searchForWorkspaceRoot(cwd), 'node_modules')
+							path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
 						])
 					]
 				},
@@ -94,7 +94,7 @@ export async function dev({ cwd, port, host, https, config }) {
 		merged_config.server.port = port;
 	}
 
-	const server = await createServer(merged_config);
+	const server = await vite.createServer(merged_config);
 	await server.listen(port);
 
 	const address_info = /** @type {import('net').AddressInfo} */ (
