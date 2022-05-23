@@ -1,0 +1,16 @@
+{
+	"name": "prerendering-test-paths-base",
+	"private": true,
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "node ../../cli.js dev",
+		"build": "node ../../cli.js build --verbose",
+		"preview": "node ../../cli.js preview",
+		"check": "tsc && svelte-check",
+		"test": "npm run build && uvu test"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:*"
+	},
+	"type": "module"
+}

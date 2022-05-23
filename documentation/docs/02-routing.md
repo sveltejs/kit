@@ -25,6 +25,8 @@ The filename determines the route. For example, `src/routes/index.svelte` is the
 </svelte:head>
 
 <h1>Hello and welcome to my site!</h1>
+
+<a href="/about">About my site</a>
 ```
 
 A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte` would correspond to the `/about` route:
@@ -37,11 +39,15 @@ A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte
 
 <h1>About this site</h1>
 <p>TODO...</p>
+
+<a href="/">Home</a>
 ```
+
+> Note that SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
 Dynamic parameters are encoded using `[brackets]`. For example, a blog post might be defined by `src/routes/blog/[slug].svelte`. These parameters can be accessed in a [`load`](/docs/loading#input-params) function or via the [`page`](/docs/modules#$app-stores) store.
 
-A file or directory can have multiple dynamic parts, like `[id]-[category].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `x-y-z`, `id` would be `x` and `category` would be `y-z`.)
+A route can have multiple dynamic parameters, for example `src/routes/[category]/[item].svelte` or even `src/routes/[category]-[item].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `x-y-z`, `category` would be `x` and `item` would be `y-z`.)
 
 ### Endpoints
 
@@ -56,7 +62,7 @@ declare module '$lib/database' {
 	export const get: (id: string) => Promise<Item>;
 }
 
-// @filename: [id].d.ts
+// @filename: __types/[id].d.ts
 import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
 export type RequestHandler<Body = any> = GenericRequestHandler<{ id: string }, Body>;
 
@@ -64,7 +70,7 @@ export type RequestHandler<Body = any> = GenericRequestHandler<{ id: string }, B
 // ---cut---
 import db from '$lib/database';
 
-/** @type {import('./[id]').RequestHandler} */
+/** @type {import('./__types/[id]').RequestHandler} */
 export async function get({ params }) {
 	// `params.id` comes from [id].js
 	const item = await db.get(params.id);
@@ -108,7 +114,7 @@ A page like `src/routes/items/[id].svelte` could get its props from the `body` i
 <h1>{item.title}</h1>
 ```
 
-Because the page and route have the same URL, you will need to include an `accept: application/json` header to get JSON from the endpoint rather than HTML from the page. You can also get the raw data by appending `/__data.json` to the URL, e.g. `/items/__data.json`.
+Because the page and route have the same URL, you will need to include an `accept: application/json` header to get JSON from the endpoint rather than HTML from the page. You can also get the raw data by appending `/__data.json` to the URL, e.g. `/items/[id]/__data.json`.
 
 #### Standalone endpoints
 
@@ -152,7 +158,7 @@ declare module '$lib/database' {
 	export const create: (request: Request) => Promise<[Record<string, ValidationError>, Item]>;
 }
 
-// @filename: items.d.ts
+// @filename: __types/items.d.ts
 import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
 export type RequestHandler<Body = any> = GenericRequestHandler<{}, Body>;
 
@@ -160,7 +166,7 @@ export type RequestHandler<Body = any> = GenericRequestHandler<{}, Body>;
 // ---cut---
 import * as db from '$lib/database';
 
-/** @type {import('./items').RequestHandler} */
+/** @type {import('./__types/items').RequestHandler} */
 export async function get() {
 	const items = await db.list();
 
@@ -169,7 +175,7 @@ export async function get() {
 	};
 }
 
-/** @type {import('./items').RequestHandler} */
+/** @type {import('./__types/items').RequestHandler} */
 export async function post({ request }) {
 	const [errors, item] = await db.create(request);
 
@@ -296,7 +302,7 @@ Files and directories with a leading `_` or `.` (other than [`.well-known`](http
 
 #### Rest parameters
 
-A route can have multiple dynamic parameters, for example `src/routes/[category]/[item].svelte` or even `src/routes/[category]-[item].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `/x-y-z`, `category` would be `x` and `item` would be `y-z`.) If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
+If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
 
 ```bash
 /[org]/[repo]/tree/[branch]/[...file]
@@ -314,7 +320,7 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 }
 ```
 
-> `src/routes/a/[...rest]/z.svelte` will match `/a/z` as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid.
+> `src/routes/a/[...rest]/z.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#advanced-routing-matching).
 
 #### Matching
 
@@ -336,6 +342,8 @@ export function match(param) {
 ```
 
 If the pathname doesn't match, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404.
+
+> Matchers run both on the server and in the browser.
 
 #### Sorting
 

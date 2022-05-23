@@ -15,7 +15,15 @@
  * }
  * ```
  *
- * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`:
+ * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`.
+ *
+ * Note that since it's an ambient declaration file, you can't use `import` statements — instead, use the `import(...)` function:
+ *
+ * ```ts
+ * interface Locals {
+ * 	user: import('$lib/types').User;
+ * }
+ * ```
  */
 declare namespace App {
 	/**
@@ -41,14 +49,10 @@ declare namespace App {
 
 /**
  * ```ts
- * import { amp, browser, dev, mode, prerendering } from '$app/env';
+ * import { browser, dev, mode, prerendering } from '$app/env';
  * ```
  */
 declare module '$app/env' {
-	/**
-	 * Whether or not the app is running in [AMP mode](/docs/seo#manual-setup-amp).
-	 */
-	export const amp: boolean;
 	/**
 	 * Whether the app is running in the browser or on the server.
 	 */
@@ -84,7 +88,7 @@ declare module '$app/env' {
  */
 declare module '$app/navigation' {
 	/**
-	 * If called when the page is being updated following a navigation (in `onMount` or an action, for example), this disables SvelteKit's built-in scroll handling.
+	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
 	 */
 	export function disableScrollHandling(): void;
@@ -151,7 +155,7 @@ declare module '$app/navigation' {
  */
 declare module '$app/paths' {
 	/**
-	 * A string that matches [`config.kit.paths.base`](/docs/configuration#paths). It must begin, but not end, with a `/`.
+	 * A string that matches [`config.kit.paths.base`](/docs/configuration#paths). It must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string.
 	 */
 	export const base: `/${string}`;
 	/**

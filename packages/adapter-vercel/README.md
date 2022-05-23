@@ -6,7 +6,7 @@ If you're using [adapter-auto](../adapter-auto), you don't need to install this 
 
 ## Usage
 
-> The `edge` and `split` options depend on the Vercel Build Output API which is currently in beta. For now, you must opt in by visiting `https://vercel.com/svelte/[YOUR_PROJECT]/settings/environment-variables` and adding `ENABLE_VC_BUILD` with the value `1`.
+> The `edge` and `split` options depend on the Vercel Build Output API which is currently in beta. For now, you must opt in by visiting `https://vercel.com/[YOUR_USERNAME]/[YOUR_PROJECT]/settings/environment-variables` and adding `ENABLE_VC_BUILD` with the value `1`.
 
 Add `"@sveltejs/adapter-vercel": "next"` to the `devDependencies` in your `package.json` and run `npm install`.
 

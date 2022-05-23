@@ -31,12 +31,11 @@
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
-		"esbuild": "^0.14.21",
-		"worktop": "0.8.0-next.13"
+		"esbuild": "^0.14.29",
+		"worktop": "0.8.0-next.14"
 	},
 	"devDependencies": {
-		"@types/ws": "^8.5.3",
-		"typescript": "^4.6.2"
+		"@types/ws": "^8.5.3"
 	},
 	"publishConfig": {
 		"access": "public"

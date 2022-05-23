@@ -73,6 +73,12 @@ test('does not prerender page with shadow endpoint with non-GET handler', () => 
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 
+test('does not prerender page accessing session in load', () => {
+	// This should fail to prerender as session can never be populated
+	// for a prerendered page.
+	assert.ok(!fs.existsSync(`${build}/accesses-session.html`));
+});
+
 test('decodes paths when writing files', () => {
 	let content = read('encoding/path with spaces.html');
 	assert.ok(content.includes('<p id="a">path with spaces</p>'));
@@ -112,6 +118,27 @@ test('prerendering is set to true in global code of hooks.js', () => {
 test('fetching missing content results in a 404', () => {
 	const content = read('fetch-404.html');
 	assert.ok(content.includes('<h1>status: 404</h1>'), content);
+});
+
+test('targets the data-sveltekit-hydrate parent node', () => {
+	// this test ensures that we don't accidentally change the way
+	// the body is hydrated in a way that breaks apps that need
+	// to manipulate the markup in some way:
+	// https://github.com/sveltejs/kit/issues/4685
+	const content = read('index.html');
+
+	const pattern =
+		/<body>([^]+?)<script type="module" data-sveltekit-hydrate="(\w+)">([^]+?)<\/script>[^]+?<\/body>/;
+
+	const match = pattern.exec(content);
+
+	assert.equal(match[1].trim(), '<h1>hello</h1>');
+
+	assert.ok(
+		match[3].includes(
+			`target: document.querySelector('[data-sveltekit-hydrate="${match[2]}"]').parentNode`
+		)
+	);
 });
 
 test.run();

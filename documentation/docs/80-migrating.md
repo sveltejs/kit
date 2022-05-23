@@ -49,7 +49,7 @@ This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start
 
 #### src/server.js
 
-This file also has no direct equivalent, since SvelteKit apps can run in serverless environments. You can, however, use the [hooks module](/docs/hooks) to implement session logic.
+When using `adapter-node` the equivalent is a [custom server](https://github.com/sveltejs/kit/tree/master/packages/adapter-node#custom-server). Otherwise, this file has no direct equivalent, since SvelteKit apps can run in serverless environments. You can, however, use the [hooks module](/docs/hooks) to implement session logic.
 
 #### src/service-worker.js
 
@@ -64,7 +64,7 @@ Most imports from `@sapper/service-worker` have equivalents in [`$service-worker
 
 The `src/template.html` file should be renamed `src/app.html`.
 
-Remove `%sapper.base%`, `%sapper.scripts%` and `%sapper.styles%`. Replace `%sapper.head%` with `%svelte.head%` and `%sapper.html%` with `%svelte.body%`. The `<div id="sapper">` is no longer necessary.
+Remove `%sapper.base%`, `%sapper.scripts%` and `%sapper.styles%`. Replace `%sapper.head%` with `%sveltekit.head%` and `%sapper.html%` with `%sveltekit.body%`. The `<div id="sapper">` is no longer necessary.
 
 #### src/node_modules
 
@@ -115,6 +115,10 @@ You access them differently in SvelteKit. `stores` is now `getStores`, but in mo
 #### Routing
 
 Regex routes are no longer supported. Instead, use [advanced route matching](/docs/routing#advanced-routing-matching).
+
+#### Segments
+
+Previously, layout components received a `segment` prop indicating the child segment. This has been removed; you should use the more flexible `$page.url.pathname` value to derive the segment you're interested in.
 
 #### URLs
 
