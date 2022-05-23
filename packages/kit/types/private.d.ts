@@ -206,24 +206,9 @@ export interface PrerenderErrorHandler {
 
 export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
-export interface RequestEvent<Params extends Record<string, string> = Record<string, string>> {
-	clientAddress: string;
-	locals: App.Locals;
-	params: Params;
-	platform: Readonly<App.Platform>;
-	request: Request;
-	routeId: string | null;
-	url: URL;
-}
-
 export interface RequestOptions {
 	getClientAddress: () => string;
 	platform?: App.Platform;
-}
-
-export interface ResolveOptions {
-	ssr?: boolean;
-	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
 }
 
 /** `string[]` is only for set-cookie, everything else must be type of `string` */

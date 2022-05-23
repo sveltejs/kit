@@ -12,7 +12,8 @@ const get_defaults = (prefix = '') => ({
 	extensions: ['.svelte'],
 	kit: {
 		adapter: null,
-		amp: false,
+		alias: {},
+		amp: undefined,
 		appDir: '_app',
 		browser: {
 			hydrate: true,

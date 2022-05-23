@@ -48,6 +48,33 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
+const fetch = window.fetch;
+let loading = 0;
+
+if (import.meta.env.DEV) {
+	let can_inspect_stack_trace = false;
+
+	const check_stack_trace = async () => {
+		const stack = /** @type {string} */ (new Error().stack);
+		can_inspect_stack_trace = stack.includes('check_stack_trace');
+	};
+
+	check_stack_trace();
+
+	window.fetch = (input, init) => {
+		const url = input instanceof Request ? input.url : input.toString();
+		const stack = /** @type {string} */ (new Error().stack);
+
+		const heuristic = can_inspect_stack_trace ? stack.includes('load_node') : loading;
+		if (heuristic) {
+			console.warn(
+				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
+			);
+		}
+		return fetch(input, init);
+	};
+}
+
 /**
  * @param {{
  *   target: Element;
@@ -532,7 +559,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 				props: props || {},
 				get url() {
 					node.uses.url = true;
-					return url;
+
+					return new Proxy(url, {
+						get: (target, property) => {
+							if (property === 'hash') {
+								throw new Error(
+									'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
+								);
+							}
+
+							return Reflect.get(target, property, target);
+						}
+					});
 				},
 				get session() {
 					node.uses.session = true;
@@ -542,11 +580,44 @@ export function create_client({ target, session, base, trailing_slash }) {
 					node.uses.stuff = true;
 					return { ...stuff };
 				},
-				fetch(resource, info) {
-					const requested = typeof resource === 'string' ? resource : resource.url;
-					add_dependency(requested);
+				async fetch(resource, init) {
+					let requested;
 
-					return started ? fetch(resource, info) : initial_fetch(resource, info);
+					if (typeof resource === 'string') {
+						requested = resource;
+					} else {
+						requested = resource.url;
+
+						// we're not allowed to modify the received `Request` object, so in order
+						// to fixup relative urls we create a new equivalent `init` object instead
+						init = {
+							// the request body must be consumed in memory until browsers
+							// implement streaming request bodies and/or the body getter
+							body:
+								resource.method === 'GET' || resource.method === 'HEAD'
+									? undefined
+									: await resource.blob(),
+							cache: resource.cache,
+							credentials: resource.credentials,
+							headers: resource.headers,
+							integrity: resource.integrity,
+							keepalive: resource.keepalive,
+							method: resource.method,
+							mode: resource.mode,
+							redirect: resource.redirect,
+							referrer: resource.referrer,
+							referrerPolicy: resource.referrerPolicy,
+							signal: resource.signal,
+							...init
+						};
+					}
+
+					// we must fixup relative urls so they are resolved from the target page
+					const normalized = new URL(requested, url).href;
+					add_dependency(normalized);
+
+					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be normalized
+					return started ? fetch(normalized, init) : initial_fetch(requested, init);
 				},
 				status: status ?? null,
 				error: error ?? null
@@ -561,7 +632,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 				});
 			}
 
-			const loaded = await module.load.call(null, load_input);
+			let loaded;
+
+			if (import.meta.env.DEV) {
+				try {
+					loading += 1;
+					loaded = await module.load.call(null, load_input);
+				} finally {
+					loading -= 1;
+				}
+			} else {
+				loaded = await module.load.call(null, load_input);
+			}
 
 			if (!loaded) {
 				throw new Error('load function must return a value');

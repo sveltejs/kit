@@ -39,7 +39,23 @@ const options = object(
 				return input;
 			}),
 
-			amp: boolean(false),
+			alias: validate({}, (input, keypath) => {
+				if (typeof input !== 'object') {
+					throw new Error(`${keypath} should be an object`);
+				}
+
+				for (const key in input) {
+					assert_string(input[key], `${keypath}.${key}`);
+				}
+
+				return input;
+			}),
+
+			// TODO: remove this for the 1.0 release
+			amp: error(
+				(keypath) =>
+					`${keypath} has been removed. See https://kit.svelte.dev/docs/seo#amp for details on how to support AMP`
+			),
 
 			appDir: validate('_app', (input, keypath) => {
 				assert_string(input, keypath);

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { test } from 'uvu';
@@ -95,6 +96,43 @@ test('creates routes', () => {
 	]);
 });
 
+const symlink_survived_git = fs
+	.statSync(path.join(cwd, 'samples/symlinks/routes/foo'))
+	.isSymbolicLink();
+
+const test_symlinks = symlink_survived_git ? test : test.skip;
+
+test_symlinks('creates symlinked routes', () => {
+	const { components, routes } = create('samples/symlinks/routes');
+
+	const index = 'samples/symlinks/routes/index.svelte';
+	const symlinked_index = 'samples/symlinks/routes/foo/index.svelte';
+
+	assert.equal(components, [default_layout, default_error, symlinked_index, index]);
+
+	assert.equal(routes, [
+		{
+			type: 'page',
+			id: '',
+			pattern: /^\/$/,
+			path: '/',
+			shadow: null,
+			a: [default_layout, index],
+			b: [default_error]
+		},
+
+		{
+			type: 'page',
+			id: 'foo',
+			pattern: /^\/foo\/?$/,
+			path: '/foo',
+			shadow: null,
+			a: [default_layout, symlinked_index],
+			b: [default_error]
+		}
+	]);
+});
+
 test('creates routes with layout', () => {
 	const { components, routes } = create('samples/basic-layout');
 
@@ -126,6 +164,12 @@ test('creates routes with layout', () => {
 			b: [default_error]
 		}
 	]);
+});
+
+test('succeeds when routes does not exist', () => {
+	const { components, routes } = create('samples/basic/routes');
+	assert.equal(components, ['layout.svelte', 'error.svelte']);
+	assert.equal(routes, []);
 });
 
 // TODO some characters will need to be URL-encoded in the filename
