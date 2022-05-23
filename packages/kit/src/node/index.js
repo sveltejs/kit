@@ -57,7 +57,7 @@ export async function getRequest(base, req) {
 	if (req.httpVersionMajor === 2) {
 		// we need to strip out the HTTP/2 pseudo-headers because node-fetch's
 		// Request implementation doesn't like them
-		// TODO is this still true with undici?
+		// TODO is this still true with Node 18
 		headers = Object.assign({}, headers);
 		delete headers[':method'];
 		delete headers[':path'];
