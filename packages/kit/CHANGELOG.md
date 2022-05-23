@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.0.0-next.340
+
+### Patch Changes
+
+- feat: Pages marked for prerendering fail during ssr at runtime ([#4812](https://github.com/sveltejs/kit/pull/4812))
+
+* Throw load validation errors so that they are caught by handleError ([#4953](https://github.com/sveltejs/kit/pull/4953))
+
+- Allow symlinked directories in the routes folder ([#4957](https://github.com/sveltejs/kit/pull/4957))
+
+* [breaking] Rename LoadInput to LoadEvent ([#5015](https://github.com/sveltejs/kit/pull/5015))
+
+- allow disableScrollHandling to be called in afterNavigate ([#4948](https://github.com/sveltejs/kit/pull/4948))
+
+* Add `config.kit.alias` ([#4964](https://github.com/sveltejs/kit/pull/4964))
+
+- use namespace import for vite to support upcoming vite 3.0 esm ([#5030](https://github.com/sveltejs/kit/pull/5030))
+
 ## 1.0.0-next.339
 
 ### Patch Changes
