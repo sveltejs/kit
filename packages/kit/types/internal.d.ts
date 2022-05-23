@@ -239,7 +239,6 @@ export interface SSRNode {
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
-	amp: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
 	floc: boolean;

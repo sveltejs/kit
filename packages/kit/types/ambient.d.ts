@@ -49,14 +49,10 @@ declare namespace App {
 
 /**
  * ```ts
- * import { amp, browser, dev, mode, prerendering } from '$app/env';
+ * import { browser, dev, mode, prerendering } from '$app/env';
  * ```
  */
 declare module '$app/env' {
-	/**
-	 * Whether or not the app is running in [AMP mode](/docs/seo#manual-setup-amp).
-	 */
-	export const amp: boolean;
 	/**
 	 * Whether the app is running in the browser or on the server.
 	 */
@@ -92,7 +88,7 @@ declare module '$app/env' {
  */
 declare module '$app/navigation' {
 	/**
-	 * If called when the page is being updated following a navigation (in `onMount` or an action, for example), this disables SvelteKit's built-in scroll handling.
+	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
 	 */
 	export function disableScrollHandling(): void;

@@ -84,118 +84,120 @@ export default function create_manifest_data({
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
 	const valid_extensions = [...config.extensions, ...config.kit.endpointExtensions];
 
-	list_files(config.kit.files.routes).forEach((file) => {
-		const extension = valid_extensions.find((ext) => file.endsWith(ext));
-		if (!extension) return;
+	if (fs.existsSync(config.kit.files.routes)) {
+		list_files(config.kit.files.routes).forEach((file) => {
+			const extension = valid_extensions.find((ext) => file.endsWith(ext));
+			if (!extension) return;
 
-		const id = file
-			.slice(0, -extension.length)
-			.replace(/(?:^|\/)index((?:@[a-zA-Z0-9_-]+)?(?:\.[a-z]+)?)?$/, '$1');
-		const project_relative = `${routes_base}/${file}`;
+			const id = file
+				.slice(0, -extension.length)
+				.replace(/(?:^|\/)index((?:@[a-zA-Z0-9_-]+)?(?:\.[a-z]+)?)?$/, '$1');
+			const project_relative = `${routes_base}/${file}`;
 
-		const segments = id.split('/');
-		const name = /** @type {string} */ (segments.pop());
+			const segments = id.split('/');
+			const name = /** @type {string} */ (segments.pop());
 
-		if (name === '__layout.reset') {
-			throw new Error(
-				'__layout.reset has been removed in favour of named layouts: https://kit.svelte.dev/docs/layouts#named-layouts'
-			);
-		}
+			if (name === '__layout.reset') {
+				throw new Error(
+					'__layout.reset has been removed in favour of named layouts: https://kit.svelte.dev/docs/layouts#named-layouts'
+				);
+			}
 
-		if (name === '__error' || layout_pattern.test(name)) {
-			const dir = segments.join('/');
+			if (name === '__error' || layout_pattern.test(name)) {
+				const dir = segments.join('/');
 
-			if (!tree.has(dir)) {
-				tree.set(dir, {
-					error: undefined,
-					layouts: {}
+				if (!tree.has(dir)) {
+					tree.set(dir, {
+						error: undefined,
+						layouts: {}
+					});
+				}
+
+				const group = /** @type {Node} */ (tree.get(dir));
+
+				if (name === '__error') {
+					group.error = project_relative;
+				} else {
+					const match = /** @type {RegExpMatchArray} */ (layout_pattern.exec(name));
+
+					if (match[1] === DEFAULT) {
+						throw new Error(`${project_relative} cannot use reserved "${DEFAULT}" name`);
+					}
+
+					const layout_id = match[1] || DEFAULT;
+
+					const defined = group.layouts[layout_id];
+					if (defined && defined !== default_layout) {
+						throw new Error(
+							`Duplicate layout ${project_relative} already defined at ${defined.file}`
+						);
+					}
+
+					group.layouts[layout_id] = {
+						file: project_relative,
+						name
+					};
+				}
+
+				return;
+			} else if (dunder_pattern.test(file)) {
+				throw new Error(
+					`Files and directories prefixed with __ are reserved (saw ${project_relative})`
+				);
+			}
+
+			if (!config.kit.routes(file)) return;
+
+			if (/\]\[/.test(id)) {
+				throw new Error(`Invalid route ${project_relative} — parameters must be separated`);
+			}
+
+			if (count_occurrences('[', id) !== count_occurrences(']', id)) {
+				throw new Error(`Invalid route ${project_relative} — brackets are unbalanced`);
+			}
+
+			if (!units.has(id)) {
+				units.set(id, {
+					id,
+					pattern: parse_route_id(id).pattern,
+					segments: id
+						.split('/')
+						.filter(Boolean)
+						.map((segment) => {
+							/** @type {Part[]} */
+							const parts = [];
+							segment.split(/\[(.+?)\]/).map((content, i) => {
+								const dynamic = !!(i % 2);
+
+								if (!content) return;
+
+								parts.push({
+									content,
+									dynamic,
+									rest: dynamic && content.startsWith('...'),
+									type: (dynamic && content.split('=')[1]) || null
+								});
+							});
+							return parts;
+						}),
+					page: undefined,
+					endpoint: undefined
 				});
 			}
 
-			const group = /** @type {Node} */ (tree.get(dir));
+			const unit = /** @type {Unit} */ (units.get(id));
 
-			if (name === '__error') {
-				group.error = project_relative;
-			} else {
-				const match = /** @type {RegExpMatchArray} */ (layout_pattern.exec(name));
-
-				if (match[1] === DEFAULT) {
-					throw new Error(`${project_relative} cannot use reserved "${DEFAULT}" name`);
-				}
-
-				const layout_id = match[1] || DEFAULT;
-
-				const defined = group.layouts[layout_id];
-				if (defined && defined !== default_layout) {
-					throw new Error(
-						`Duplicate layout ${project_relative} already defined at ${defined.file}`
-					);
-				}
-
-				group.layouts[layout_id] = {
-					file: project_relative,
-					name
+			if (config.extensions.find((ext) => file.endsWith(ext))) {
+				const { layouts, errors } = trace(project_relative, file, tree, config.extensions);
+				unit.page = {
+					a: layouts.concat(project_relative),
+					b: errors
 				};
+			} else {
+				unit.endpoint = project_relative;
 			}
-
-			return;
-		} else if (dunder_pattern.test(file)) {
-			throw new Error(
-				`Files and directories prefixed with __ are reserved (saw ${project_relative})`
-			);
-		}
-
-		if (!config.kit.routes(file)) return;
-
-		if (/\]\[/.test(id)) {
-			throw new Error(`Invalid route ${project_relative} — parameters must be separated`);
-		}
-
-		if (count_occurrences('[', id) !== count_occurrences(']', id)) {
-			throw new Error(`Invalid route ${project_relative} — brackets are unbalanced`);
-		}
-
-		if (!units.has(id)) {
-			units.set(id, {
-				id,
-				pattern: parse_route_id(id).pattern,
-				segments: id
-					.split('/')
-					.filter(Boolean)
-					.map((segment) => {
-						/** @type {Part[]} */
-						const parts = [];
-						segment.split(/\[(.+?)\]/).map((content, i) => {
-							const dynamic = !!(i % 2);
-
-							if (!content) return;
-
-							parts.push({
-								content,
-								dynamic,
-								rest: dynamic && content.startsWith('...'),
-								type: (dynamic && content.split('=')[1]) || null
-							});
-						});
-						return parts;
-					}),
-				page: undefined,
-				endpoint: undefined
-			});
-		}
-
-		const unit = /** @type {Unit} */ (units.get(id));
-
-		if (config.extensions.find((ext) => file.endsWith(ext))) {
-			const { layouts, errors } = trace(project_relative, file, tree, config.extensions);
-			unit.page = {
-				a: layouts.concat(project_relative),
-				b: errors
-			};
-		} else {
-			unit.endpoint = project_relative;
-		}
-	});
+		});
+	}
 
 	/** @type {string[]} */
 	const components = [];
@@ -424,8 +426,8 @@ function count_occurrences(needle, haystack) {
  * @param {string[]} [files]
  */
 function list_files(dir, path = '', files = []) {
-	fs.readdirSync(dir, { withFileTypes: true })
-		.sort(({ name: a }, { name: b }) => {
+	fs.readdirSync(dir)
+		.sort((a, b) => {
 			// sort each directory in (__layout, __error, everything else) order
 			// so that we can trace layouts/errors immediately
 
@@ -442,10 +444,12 @@ function list_files(dir, path = '', files = []) {
 			return a < b ? -1 : 1;
 		})
 		.forEach((file) => {
-			const joined = path ? `${path}/${file.name}` : file.name;
+			const full = `${dir}/${file}`;
+			const stats = fs.statSync(full);
+			const joined = path ? `${path}/${file}` : file;
 
-			if (file.isDirectory()) {
-				list_files(`${dir}/${file.name}`, joined, files);
+			if (stats.isDirectory()) {
+				list_files(full, joined, files);
 			} else {
 				files.push(joined);
 			}

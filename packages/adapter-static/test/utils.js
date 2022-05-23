@@ -4,7 +4,7 @@ import http from 'http';
 import { fileURLToPath } from 'url';
 import * as ports from 'port-authority';
 import sirv from 'sirv';
-import { chromium } from 'playwright-chromium';
+import { chromium } from '@playwright/test';
 import * as uvu from 'uvu';
 
 /**

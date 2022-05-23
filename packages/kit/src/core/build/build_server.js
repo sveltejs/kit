@@ -24,10 +24,10 @@ import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';
 
 const template = ({ head, body, assets, nonce }) => ${s(template)
-	.replace('%svelte.head%', '" + head + "')
-	.replace('%svelte.body%', '" + body + "')
-	.replace(/%svelte\.assets%/g, '" + assets + "')
-	.replace(/%svelte\.nonce%/g, '" + nonce + "')};
+	.replace('%sveltekit.head%', '" + head + "')
+	.replace('%sveltekit.body%', '" + body + "')
+	.replace(/%sveltekit\.assets%/g, '" + assets + "')
+	.replace(/%sveltekit\.nonce%/g, '" + nonce + "')};
 
 let read = null;
 
@@ -47,7 +47,6 @@ export function override(settings) {
 export class Server {
 	constructor(manifest) {
 		this.options = {
-			amp: ${config.kit.amp},
 			csp: ${s(config.kit.csp)},
 			dev: false,
 			floc: ${config.kit.floc},
@@ -80,7 +79,7 @@ export class Server {
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
 			router: ${s(config.kit.browser.router)},
 			template,
-			template_contains_nonce: ${template.includes('%svelte.nonce%')},
+			template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			trailing_slash: ${s(config.kit.trailingSlash)}
 		};
 	}
@@ -234,10 +233,12 @@ export async function build_server(
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions,
+				...config,
 				compilerOptions: {
+					...config.compilerOptions,
 					hydratable: !!config.kit.browser.hydrate
-				}
+				},
+				configFile: false
 			})
 		],
 		resolve: {
@@ -261,7 +262,7 @@ export async function build_server(
 
 	client.assets.forEach((asset) => {
 		if (asset.fileName.endsWith('.css')) {
-			if (config.kit.amp || asset.source.length < config.kit.inlineStyleThreshold) {
+			if (asset.source.length < config.kit.inlineStyleThreshold) {
 				const index = stylesheet_lookup.size;
 				const file = `${output_dir}/server/stylesheets/${index}.js`;
 

@@ -93,7 +93,7 @@ export interface Config {
 	extensions?: string[];
 	kit?: {
 		adapter?: Adapter;
-		amp?: boolean;
+		alias?: Record<string, string>;
 		appDir?: string;
 		browser?: {
 			hydrate?: boolean;
