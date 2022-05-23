@@ -1927,7 +1927,13 @@ test.describe.parallel('Redirects', () => {
 		}
 	});
 
-	test('errors on missing status', async ({ baseURL, page, clicknav }) => {
+	test('errors on missing status', async ({
+		baseURL,
+		page,
+		clicknav,
+		javaScriptEnabled,
+		read_errors
+	}) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/missing-status/a"]');
@@ -1937,6 +1943,14 @@ test.describe.parallel('Redirects', () => {
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: ""redirect" property returned from load() must be accompanied by a 3xx status code"'
 		);
+
+		if (!javaScriptEnabled) {
+			// handleError is not invoked for client-side navigation
+			const lines = read_errors('/redirect/missing-status/a').split('\n');
+			expect(lines[0]).toBe(
+				'Error: "redirect" property returned from load() must be accompanied by a 3xx status code'
+			);
+		}
 	});
 
 	test('errors on invalid status', async ({ baseURL, page, clicknav }) => {
