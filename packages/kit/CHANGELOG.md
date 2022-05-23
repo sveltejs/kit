@@ -1,5 +1,51 @@
 # @sveltejs/kit
 
+## 1.0.0-next.340
+
+### Patch Changes
+
+- feat: Pages marked for prerendering fail during ssr at runtime ([#4812](https://github.com/sveltejs/kit/pull/4812))
+
+* Throw load validation errors so that they are caught by handleError ([#4953](https://github.com/sveltejs/kit/pull/4953))
+
+- Allow symlinked directories in the routes folder ([#4957](https://github.com/sveltejs/kit/pull/4957))
+
+* [breaking] Rename LoadInput to LoadEvent ([#5015](https://github.com/sveltejs/kit/pull/5015))
+
+- allow disableScrollHandling to be called in afterNavigate ([#4948](https://github.com/sveltejs/kit/pull/4948))
+
+* Add `config.kit.alias` ([#4964](https://github.com/sveltejs/kit/pull/4964))
+
+- use namespace import for vite to support upcoming vite 3.0 esm ([#5030](https://github.com/sveltejs/kit/pull/5030))
+
+## 1.0.0-next.339
+
+### Patch Changes
+
+- [breaking] resolve relative urls from the target page when using load's fetch ([#5025](https://github.com/sveltejs/kit/pull/5025))
+
+* [fix] `svelte-kit sync` gracefully handles a nonexistent routes folder ([#5020](https://github.com/sveltejs/kit/pull/5020))
+
+- [breaking] Replace `%svelte.body%` with `%sveltekit.body%`, etc. ([#5016](https://github.com/sveltejs/kit/pull/5016))
+
+## 1.0.0-next.338
+
+### Patch Changes
+
+- [breaking] remove amp config option in favour of amp.transform helper function ([#4710](https://github.com/sveltejs/kit/pull/4710))
+
+* [breaking] accessing url.hash from load now results in a helpful error ([#4983](https://github.com/sveltejs/kit/pull/4983))
+
+## 1.0.0-next.337
+
+### Patch Changes
+
+- [fix] don't watch `outDir`, except for the `generated` directory ([#4997](https://github.com/sveltejs/kit/pull/4997))
+
+* Warn if load uses window.fetch ([#4958](https://github.com/sveltejs/kit/pull/4958))
+
+- Only run `viteServeStaticMiddleware` after server has attempted response ([#4974](https://github.com/sveltejs/kit/pull/4974))
+
 ## 1.0.0-next.336
 
 ### Patch Changes

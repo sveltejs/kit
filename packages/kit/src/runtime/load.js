@@ -46,19 +46,13 @@ export function normalize(loaded) {
 
 	if (loaded.redirect) {
 		if (!loaded.status || Math.floor(loaded.status / 100) !== 3) {
-			return {
-				status: 500,
-				error: new Error(
-					'"redirect" property returned from load() must be accompanied by a 3xx status code'
-				)
-			};
+			throw new Error(
+				'"redirect" property returned from load() must be accompanied by a 3xx status code'
+			);
 		}
 
 		if (typeof loaded.redirect !== 'string') {
-			return {
-				status: 500,
-				error: new Error('"redirect" property returned from load() must be a string')
-			};
+			throw new Error('"redirect" property returned from load() must be a string');
 		}
 	}
 
@@ -67,10 +61,7 @@ export function normalize(loaded) {
 			!Array.isArray(loaded.dependencies) ||
 			loaded.dependencies.some((dep) => typeof dep !== 'string')
 		) {
-			return {
-				status: 500,
-				error: new Error('"dependencies" property returned from load() must be of type string[]')
-			};
+			throw new Error('"dependencies" property returned from load() must be of type string[]');
 		}
 	}
 

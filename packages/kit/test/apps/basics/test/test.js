@@ -259,7 +259,19 @@ test.describe('Scrolling', () => {
 		page,
 		in_view
 	}) => {
-		await page.goto('/anchor-with-manual-scroll/anchor#go-to-element');
+		await page.goto('/anchor-with-manual-scroll/anchor-onmount#go-to-element');
+		expect(await in_view('#abcde')).toBe(true);
+	});
+
+	test('url-supplied anchor is ignored with afterNavigate() scrolling on direct page load', async ({
+		page,
+		in_view,
+		clicknav
+	}) => {
+		await page.goto('/anchor-with-manual-scroll/anchor-afternavigate#go-to-element');
+		expect(await in_view('#abcde')).toBe(true);
+
+		await clicknav('[href="/anchor-with-manual-scroll/anchor-afternavigate?x=y#go-to-element"]');
 		expect(await in_view('#abcde')).toBe(true);
 	});
 
@@ -270,7 +282,7 @@ test.describe('Scrolling', () => {
 		in_view
 	}) => {
 		await page.goto('/anchor-with-manual-scroll');
-		await clicknav('[href="/anchor-with-manual-scroll/anchor#go-to-element"]');
+		await clicknav('[href="/anchor-with-manual-scroll/anchor-onmount#go-to-element"]');
 		if (javaScriptEnabled) expect(await in_view('#abcde')).toBe(true);
 		else expect(await in_view('#go-to-element')).toBe(true);
 	});
@@ -1093,6 +1105,24 @@ test.describe.parallel('Errors', () => {
 		expect(response.status()).toBe(500);
 		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
 	});
+
+	test('prerendering a page whose load accesses session results in a catchable error', async ({
+		page
+	}) => {
+		await page.goto('/prerendering');
+		expect(await page.textContent('h1')).toBe(
+			'500: Attempted to access session from a prerendered page. Session would never be populated.'
+		);
+	});
+
+	test('prerendering a page with a mutative page endpoint results in a catchable error', async ({
+		page
+	}) => {
+		await page.goto('/prerendering/mutative-endpoint');
+		expect(await page.textContent('h1')).toBe(
+			'500: Cannot prerender pages that have endpoints with mutative methods'
+		);
+	});
 });
 
 test.describe.parallel('ETags', () => {
@@ -1311,6 +1341,13 @@ test.describe.parallel('Load', () => {
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
+	test('fetch resolves urls relatively to the target page', async ({ page, clicknav }) => {
+		await page.goto('/load');
+		await clicknav('[href="/load/fetch-relative"]');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+		expect(await page.textContent('h2')).toBe('the question was ?');
+	});
+
 	test('handles large responses', async ({ page }) => {
 		await page.goto('/load');
 
@@ -1454,6 +1491,18 @@ test.describe.parallel('Load', () => {
 
 		expect(cookies.answer).toBe('42');
 		expect(cookies.doubled).toBe('84');
+	});
+
+	test('accessing url.hash from load errors and suggests using page store', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/load/url-hash#please-dont-send-me-to-load');
+			expect(await page.textContent('#message')).toBe(
+				'This is your custom error page saying: "url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component."'
+			);
+		}
 	});
 
 	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
@@ -1692,7 +1741,7 @@ test.describe.parallel('$app/paths', () => {
 		);
 	});
 
-	test('replaces %svelte.assets% in template with relative path', async ({ page }) => {
+	test('replaces %sveltekit.assets% in template with relative path', async ({ page }) => {
 		await page.goto('/');
 		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
 
@@ -1887,7 +1936,13 @@ test.describe.parallel('Redirects', () => {
 		}
 	});
 
-	test('errors on missing status', async ({ baseURL, page, clicknav }) => {
+	test('errors on missing status', async ({
+		baseURL,
+		page,
+		clicknav,
+		javaScriptEnabled,
+		read_errors
+	}) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/missing-status/a"]');
@@ -1897,6 +1952,14 @@ test.describe.parallel('Redirects', () => {
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: ""redirect" property returned from load() must be accompanied by a 3xx status code"'
 		);
+
+		if (!javaScriptEnabled) {
+			// handleError is not invoked for client-side navigation
+			const lines = read_errors('/redirect/missing-status/a').split('\n');
+			expect(lines[0]).toBe(
+				'Error: "redirect" property returned from load() must be accompanied by a 3xx status code'
+			);
+		}
 	});
 
 	test('errors on invalid status', async ({ baseURL, page, clicknav }) => {
@@ -2474,7 +2537,7 @@ test.describe.parallel('Matchers', () => {
 });
 
 test.describe.parallel('XSS', () => {
-	test('replaces %svelte.xxx% tags safely', async ({ page }) => {
+	test('replaces %sveltekit.xxx% tags safely', async ({ page }) => {
 		await page.goto('/unsafe-replacement');
 
 		const content = await page.textContent('body');

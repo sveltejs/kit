@@ -40,13 +40,13 @@ export async function render_response({
 	resolve_opts,
 	stuff
 }) {
-	if (state.prerender) {
+	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
 			throw new Error('Cannot use prerendering if config.kit.csp.mode === "nonce"');
 		}
 
 		if (options.template_contains_nonce) {
-			throw new Error('Cannot use prerendering if page template contains %svelte.nonce%');
+			throw new Error('Cannot use prerendering if page template contains %sveltekit.nonce%');
 		}
 	}
 
@@ -108,7 +108,7 @@ export async function render_response({
 				routeId: event.routeId,
 				status,
 				stuff,
-				url: state.prerender ? create_prerendering_url_proxy(event.url) : event.url
+				url: state.prerendering ? create_prerendering_url_proxy(event.url) : event.url
 			},
 			components: branch.map(({ node }) => node.module.default)
 		};
@@ -148,7 +148,7 @@ export async function render_response({
 	await csp_ready;
 	const csp = new Csp(options.csp, {
 		dev: options.dev,
-		prerender: !!state.prerender,
+		prerender: !!state.prerendering,
 		needs_nonce: options.template_contains_nonce
 	});
 
@@ -188,95 +188,76 @@ export async function render_response({
 		}
 	`;
 
-	if (options.amp) {
-		// inline_style contains CSS files (i.e. `import './styles.css'`)
-		// rendered.css contains the CSS from `<style>` tags in Svelte components
-		const styles = `${inlined_style}\n${rendered.css.code}`;
-		head += `
-		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
-		<noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
-		<script async src="https://cdn.ampproject.org/v0.js"></script>
+	if (inlined_style) {
+		const attributes = [];
+		if (options.dev) attributes.push(' data-sveltekit');
+		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
-		<style amp-custom>${styles}</style>`;
+		csp.add_style(inlined_style);
 
-		if (options.service_worker) {
-			head +=
-				'<script async custom-element="amp-install-serviceworker" src="https://cdn.ampproject.org/v0/amp-install-serviceworker-0.1.js"></script>';
+		head += `\n\t<style${attributes.join('')}>${inlined_style}</style>`;
+	}
 
-			body += `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`;
-		}
-	} else {
-		if (inlined_style) {
-			const attributes = [];
-			if (options.dev) attributes.push(' data-sveltekit');
-			if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
+	// prettier-ignore
+	head += Array.from(stylesheets)
+		.map((dep) => {
+			const attributes = [
+				'rel="stylesheet"',
+				`href="${options.prefix + dep}"`
+			];
 
-			csp.add_style(inlined_style);
-
-			head += `\n\t<style${attributes.join('')}>${inlined_style}</style>`;
-		}
-
-		// prettier-ignore
-		head += Array.from(stylesheets)
-			.map((dep) => {
-				const attributes = [
-					'rel="stylesheet"',
-					`href="${options.prefix + dep}"`
-				];
-
-				if (csp.style_needs_nonce) {
-					attributes.push(`nonce="${csp.nonce}"`);
-				}
-
-				if (styles.has(dep)) {
-					// don't load stylesheets that are already inlined
-					// include them in disabled state so that Vite can detect them and doesn't try to add them
-					attributes.push('disabled', 'media="(max-width: 0)"');
-				}
-
-				return `\n\t<link ${attributes.join(' ')}>`;
-			})
-			.join('');
-
-		if (page_config.router || page_config.hydrate) {
-			head += Array.from(modulepreloads)
-				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
-				.join('');
-
-			const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
-
-			csp.add_script(init_app);
-
-			if (csp.script_needs_nonce) {
+			if (csp.style_needs_nonce) {
 				attributes.push(`nonce="${csp.nonce}"`);
 			}
 
-			body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
-
-			body += serialized_data
-				.map(({ url, body, response }) =>
-					render_json_payload_script(
-						{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
-						response
-					)
-				)
-				.join('\n\t');
-
-			if (shadow_props) {
-				body += render_json_payload_script({ type: 'props' }, shadow_props);
+			if (styles.has(dep)) {
+				// don't load stylesheets that are already inlined
+				// include them in disabled state so that Vite can detect them and doesn't try to add them
+				attributes.push('disabled', 'media="(max-width: 0)"');
 			}
+
+			return `\n\t<link ${attributes.join(' ')}>`;
+		})
+		.join('');
+
+	if (page_config.router || page_config.hydrate) {
+		head += Array.from(modulepreloads)
+			.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
+			.join('');
+
+		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
+
+		csp.add_script(init_app);
+
+		if (csp.script_needs_nonce) {
+			attributes.push(`nonce="${csp.nonce}"`);
 		}
 
-		if (options.service_worker) {
-			// always include service worker unless it's turned off explicitly
-			csp.add_script(init_service_worker);
+		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 
-			head += `
-				<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
+		body += serialized_data
+			.map(({ url, body, response }) =>
+				render_json_payload_script(
+					{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
+					response
+				)
+			)
+			.join('\n\t');
+
+		if (shadow_props) {
+			body += render_json_payload_script({ type: 'props' }, shadow_props);
 		}
 	}
 
-	if (state.prerender && !options.amp) {
+	if (options.service_worker) {
+		// always include service worker unless it's turned off explicitly
+		csp.add_script(init_service_worker);
+
+		head += `
+			<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
+	}
+
+	if (state.prerendering) {
 		const http_equiv = [];
 
 		const csp_headers = csp.get_meta();
@@ -314,7 +295,7 @@ export async function render_response({
 		headers.set('permissions-policy', 'interest-cohort=()');
 	}
 
-	if (!state.prerender) {
+	if (!state.prerendering) {
 		const csp_header = csp.get_header();
 		if (csp_header) {
 			headers.set('content-security-policy', csp_header);

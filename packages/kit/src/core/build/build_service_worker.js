@@ -1,5 +1,5 @@
 import fs from 'fs';
-import vite from 'vite';
+import * as vite from 'vite';
 import { s } from '../../utils/misc.js';
 import { deep_merge } from '../../utils/object.js';
 import { normalize_path } from '../../utils/url.js';

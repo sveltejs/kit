@@ -131,8 +131,7 @@ export async function prerender({ config, entries, files, log }) {
 
 		const response = await server.respond(new Request(`http://sveltekit-prerender${encoded}`), {
 			getClientAddress,
-			prerender: {
-				default: config.kit.prerender.default,
+			prerendering: {
 				dependencies
 			}
 		});
@@ -272,9 +271,8 @@ export async function prerender({ config, entries, files, log }) {
 
 	const rendered = await server.respond(new Request('http://sveltekit-prerender/[fallback]'), {
 		getClientAddress,
-		prerender: {
+		prerendering: {
 			fallback: true,
-			default: false,
 			dependencies: new Map()
 		}
 	});

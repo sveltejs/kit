@@ -14,7 +14,16 @@ export function load_template(cwd, config) {
 
 	if (fs.existsSync(template)) {
 		const contents = fs.readFileSync(template, 'utf8');
-		const expected_tags = ['%svelte.head%', '%svelte.body%'];
+
+		// TODO remove this for 1.0
+		const match = /%svelte\.([a-z]+)%/.exec(contents);
+		if (match) {
+			throw new Error(
+				`%svelte.${match[1]}% in ${relative} should be replaced with %sveltekit.${match[1]}%`
+			);
+		}
+
+		const expected_tags = ['%sveltekit.head%', '%sveltekit.body%'];
 		expected_tags.forEach((tag) => {
 			if (contents.indexOf(tag) === -1) {
 				throw new Error(`${relative} is missing ${tag}`);

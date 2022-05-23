@@ -93,7 +93,7 @@ export interface Config {
 	extensions?: string[];
 	kit?: {
 		adapter?: Adapter;
-		amp?: boolean;
+		alias?: Record<string, string>;
 		appDir?: string;
 		browser?: {
 			hydrate?: boolean;
@@ -173,7 +173,7 @@ export interface HandleError {
 }
 
 /**
- * The `(input: LoadInput) => LoadOutput` `load` function exported from `<script context="module">` in a page or layout.
+ * The `(event: LoadEvent) => LoadOutput` `load` function exported from `<script context="module">` in a page or layout.
  *
  * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the Params generic argument.
  */
@@ -182,10 +182,10 @@ export interface Load<
 	InputProps extends Record<string, any> = Record<string, any>,
 	OutputProps extends Record<string, any> = InputProps
 > {
-	(input: LoadInput<Params, InputProps>): MaybePromise<LoadOutput<OutputProps>>;
+	(event: LoadEvent<Params, InputProps>): MaybePromise<LoadOutput<OutputProps>>;
 }
 
-export interface LoadInput<
+export interface LoadEvent<
 	Params extends Record<string, string> = Record<string, string>,
 	Props extends Record<string, any> = Record<string, any>
 > {
