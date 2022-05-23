@@ -12,7 +12,8 @@ const get_defaults = (prefix = '') => ({
 	extensions: ['.svelte'],
 	kit: {
 		adapter: null,
-		amp: false,
+		alias: {},
+		amp: undefined,
 		appDir: '_app',
 		browser: {
 			hydrate: true,
@@ -284,6 +285,7 @@ test('fails if prerender.entries are invalid', () => {
 		validate_config({
 			kit: {
 				prerender: {
+					// @ts-expect-error - given value expected to throw
 					entries: ['foo']
 				}
 			}

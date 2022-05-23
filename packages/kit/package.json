@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.324",
+	"version": "1.0.0-next.339",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -10,42 +10,27 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.32",
+		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.44",
 		"chokidar": "^3.5.3",
 		"sade": "^1.7.4",
-		"vite": "^2.9.0"
+		"vite": "^2.9.9"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.21.0",
-		"@rollup/plugin-replace": "^4.0.0",
-		"@types/amphtml-validator": "^1.0.1",
+		"@types/connect": "^3.4.35",
 		"@types/cookie": "^0.5.0",
 		"@types/marked": "^4.0.1",
 		"@types/mime": "^2.0.3",
-		"@types/node": "^16.11.11",
 		"@types/sade": "^1.7.3",
 		"@types/set-cookie-parser": "^2.4.2",
-		"amphtml-validator": "^1.0.35",
 		"cookie": "^0.5.0",
-		"cross-env": "^7.0.3",
 		"devalue": "^2.0.1",
-		"eslint": "^8.3.0",
 		"kleur": "^4.1.4",
 		"locate-character": "^2.0.5",
-		"marked": "^4.0.5",
 		"mime": "^3.0.0",
 		"node-fetch": "^3.1.0",
-		"port-authority": "^1.1.2",
-		"rollup": "^2.60.2",
 		"selfsigned": "^2.0.0",
 		"set-cookie-parser": "^2.4.8",
-		"sirv": "^2.0.0",
-		"svelte": "^3.44.2",
-		"svelte-check": "^2.5.0",
-		"svelte-preprocess": "^4.9.8",
-		"svelte2tsx": "~0.5.0",
-		"tiny-glob": "^0.2.9",
-		"uvu": "^0.5.2"
+		"svelte": "^3.48.0"
 	},
 	"peerDependencies": {
 		"svelte": "^3.44.0"
@@ -64,12 +49,12 @@
 		"dev": "rollup -cw",
 		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/packaging/test/**\" \"{src,test}/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"check": "tsc",
-		"check:all": "tsc && pnpm run -r check --filter ./",
+		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
 		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
 		"test": "npm run test:unit && npm run test:typings && npm run test:packaging && npm run test:integration",
-		"test:integration": "pnpm run -r test --workspace-concurrency 1 --filter ./test",
+		"test:integration": "pnpm run -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\" -i packaging",
 		"test:typings": "tsc --project test/typings",
 		"test:packaging": "uvu src/packaging \"(spec\\.js|test[\\\\/]index\\.js)\"",
@@ -92,6 +77,6 @@
 	},
 	"types": "types/index.d.ts",
 	"engines": {
-		"node": ">=14.13"
+		"node": ">=16"
 	}
 }

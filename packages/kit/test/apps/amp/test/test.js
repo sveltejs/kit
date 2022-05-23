@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
-test('amp is true', async ({ page, baseURL }) => {
+test('renders an AMP page', async ({ page, baseURL }) => {
 	await page.goto(`${baseURL}/valid`);
 
 	await expect(page.locator('h1')).toHaveText(
@@ -9,7 +9,6 @@ test('amp is true', async ({ page, baseURL }) => {
 	);
 
 	await expect(page.locator('h2')).toHaveText('The answer is 42');
-	await expect(page.locator('p')).toHaveText('amp is true');
 
 	// should not include serialized data
 	expect(await page.$('script[sveltekit\\:data-type="data"]')).toBeNull();
@@ -33,22 +32,6 @@ test('styles are applied', async ({ page, baseURL }) => {
 	).toEqual('rgb(128, 0, 128)');
 });
 
-test('prints validation errors', async ({ page, baseURL }) => {
-	await page.goto(`${baseURL}/invalid`);
-
-	const body = await page.innerHTML('body');
-
-	if (process.env.DEV) {
-		const h1 = page.locator('h1');
-		await expect(h1).toHaveText('AMP validation failed');
-
-		expect(body).toContain("Invalid URL protocol 'javascript:' for attribute 'href' in tag 'a'");
-		expect(body).toContain('&lt;a href="javascript:void(0);"&gt;invalid&lt;/a&gt;');
-	} else {
-		expect(body).toContain('<a href="javascript:void(0);">invalid</a>');
-	}
-});
-
 test('sets origin', async ({ baseURL, page }) => {
 	const { origin } = new URL(/** @type {string} */ (baseURL));
 
@@ -67,4 +50,32 @@ test('only includes CSS for rendered components', async ({ page, baseURL }) => {
 	expect(style).toContain('#ff3e00'); // rendered styles
 	expect(style).toContain('uppercase'); // imported styles
 	expect(style).not.toContain('#40b3ff'); // unrendered styles
+});
+
+test('http-equiv tags are removed', async ({ page }) => {
+	await page.goto('/http-equiv/cache-control');
+
+	expect(await page.textContent('h1')).toBe(
+		'the cache-control headers should be removed from this page'
+	);
+	expect(await page.innerHTML('head')).not.toContain('http-equiv="cache-control"');
+});
+
+// validation tests are skipped because amphtml-validator doesn't
+// play nicely with CI, and is also abominably slow, because
+// everything AMP-related is awful
+test.skip('prints validation errors', async ({ page, baseURL }) => {
+	await page.goto(`${baseURL}/invalid`);
+
+	const body = await page.innerHTML('body');
+
+	expect(body).toContain("Invalid URL protocol 'javascript:' for attribute 'href' in tag 'a'");
+});
+
+test.skip('throws error on encountering stylesheet links', async ({ page }) => {
+	await page.goto('/invalid/has-stylesheet');
+
+	expect(await page.textContent('body')).toContain(
+		'An AMP document cannot contain <link rel="stylesheet"> — ensure that inlineStyleThreshold is set to Infinity, and remove links from your page template and <svelte:head> elements'
+	);
 });

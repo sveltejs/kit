@@ -154,7 +154,7 @@ if (!process.env.CI) {
 		const config = await load_config({ cwd });
 		config.kit.package.dir = resolve(cwd, config.kit.package.dir);
 
-		const { watcher, settled } = await watch(config, cwd);
+		const { watcher, ready, settled } = await watch(config, cwd);
 
 		/** @param {string} file */
 		function compare(file) {
@@ -181,6 +181,8 @@ if (!process.env.CI) {
 		}
 
 		try {
+			await ready;
+
 			// completes initial build
 			compare('index.js');
 
