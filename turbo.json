@@ -25,7 +25,10 @@
 			"outputs": []
 		},
 		"lint": {
-			"dependsOn": ["format"],
+			"outputs": []
+		},
+		"precommit": {
+			"dependsOn": ["format", "lint"],
 			"outputs": []
 		},
 		"dev": {

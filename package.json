@@ -9,6 +9,7 @@
 		"check": "turbo run check",
 		"lint": "turbo run lint",
 		"format": "turbo run format",
+		"precommit": "turbo run precommit",
 		"release": "changeset publish"
 	},
 	"repository": {
