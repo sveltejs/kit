@@ -552,7 +552,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const session = $session;
 
 		if (module.load) {
-			/** @type {import('types').LoadInput} */
+			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
 				params: uses_params,
