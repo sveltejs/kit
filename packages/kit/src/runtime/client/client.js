@@ -980,16 +980,22 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		}
 
-		await update(normalized, redirect_chain, false, {
-			scroll,
-			keepfocus,
-			details
-		}, () => {
-			const navigation = { from, to: normalized };
-			callbacks.after_navigate.forEach((fn) => fn(navigation));
+		await update(
+			normalized,
+			redirect_chain,
+			false,
+			{
+				scroll,
+				keepfocus,
+				details
+			},
+			() => {
+				const navigation = { from, to: normalized };
+				callbacks.after_navigate.forEach((fn) => fn(navigation));
 
-			stores.navigating.set(null);
-		});
+				stores.navigating.set(null);
+			}
+		);
 	}
 
 	/**
