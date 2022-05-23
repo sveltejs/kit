@@ -17,12 +17,13 @@ import { parse_route_id } from '../../utils/routing.js';
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
 const style_pattern = /\.(css|less|sass|scss|styl|stylus|pcss|postcss)$/;
 
+const cwd = process.cwd();
+
 /**
  * @param {import('types').ValidatedConfig} config
- * @param {string} cwd
  * @returns {Promise<import('vite').Plugin>}
  */
-export async function create_plugin(config, cwd) {
+export async function create_plugin(config) {
 	const runtime = get_runtime_path(config);
 
 	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';

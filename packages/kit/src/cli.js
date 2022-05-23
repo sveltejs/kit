@@ -65,10 +65,7 @@ prog
 		async function start(config) {
 			const { dev } = await import('./core/dev/index.js');
 
-			const cwd = process.cwd();
-
 			const { address_info, server_config, close } = await dev({
-				cwd,
 				port,
 				host,
 				https,
@@ -82,8 +79,7 @@ prog
 				open: first && (open || !!server_config.open),
 				base: config.kit.paths.base,
 				loose: server_config.fs.strict === false,
-				allow: server_config.fs.allow,
-				cwd
+				allow: server_config.fs.allow
 			});
 
 			first = false;

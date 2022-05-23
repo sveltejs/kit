@@ -7,9 +7,10 @@ import { get_aliases, get_runtime_path } from '../utils.js';
 import { create_plugin } from './plugin.js';
 import * as sync from '../sync/sync.js';
 
+const cwd = process.cwd();
+
 /**
  * @typedef {{
- *   cwd: string,
  *   port: number,
  *   host?: string,
  *   https: boolean,
@@ -19,7 +20,7 @@ import * as sync from '../sync/sync.js';
  */
 
 /** @param {Options} opts */
-export async function dev({ cwd, port, host, https, config }) {
+export async function dev({ port, host, https, config }) {
 	sync.init(config);
 
 	const [vite_config] = deep_merge(
@@ -71,7 +72,7 @@ export async function dev({ cwd, port, host, https, config }) {
 				},
 				configFile: false
 			}),
-			await create_plugin(config, cwd)
+			await create_plugin(config)
 		],
 		base: '/'
 	});
