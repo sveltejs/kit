@@ -16,36 +16,21 @@
 		"vite": "^2.9.9"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.21.0",
-		"@rollup/plugin-replace": "^4.0.0",
 		"@types/connect": "^3.4.35",
 		"@types/cookie": "^0.5.0",
 		"@types/marked": "^4.0.1",
 		"@types/mime": "^2.0.3",
-		"@types/node": "^16.11.11",
 		"@types/sade": "^1.7.3",
 		"@types/set-cookie-parser": "^2.4.2",
 		"cookie": "^0.5.0",
-		"cross-env": "^7.0.3",
 		"devalue": "^2.0.1",
-		"eslint": "^8.3.0",
 		"kleur": "^4.1.4",
 		"locate-character": "^2.0.5",
-		"marked": "^4.0.5",
 		"mime": "^3.0.0",
 		"node-fetch": "^3.1.0",
-		"port-authority": "^1.1.2",
-		"rollup": "^2.60.2",
 		"selfsigned": "^2.0.0",
 		"set-cookie-parser": "^2.4.8",
-		"sirv": "^2.0.0",
-		"svelte": "^3.44.2",
-		"svelte-check": "^2.5.0",
-		"svelte-preprocess": "^4.9.8",
-		"svelte2tsx": "~0.5.0",
-		"tiny-glob": "^0.2.9",
-		"typescript": "^4.6.4",
-		"uvu": "^0.5.2"
+		"svelte": "^3.48.0"
 	},
 	"peerDependencies": {
 		"svelte": "^3.44.0"

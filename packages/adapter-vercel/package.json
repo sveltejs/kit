@@ -31,8 +31,6 @@
 		"esbuild": "^0.14.29"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*",
-		"@types/node": "^14.14.20",
-		"typescript": "^4.6.2"
+		"@sveltejs/kit": "workspace:*"
 	}
 }
