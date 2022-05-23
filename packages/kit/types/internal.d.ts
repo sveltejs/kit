@@ -94,7 +94,7 @@ export class InternalServer extends Server {
 	respond(
 		request: Request,
 		options: RequestOptions & {
-			prerender?: PrerenderOptions;
+			prerendering?: PrerenderOptions;
 		}
 	): Promise<Response>;
 }
