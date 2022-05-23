@@ -27,7 +27,7 @@
 		"lint": {
 			"outputs": []
 		},
-		"autolint": {
+		"precommit": {
 			"dependsOn": ["format", "lint"],
 			"outputs": []
 		},
