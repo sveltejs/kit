@@ -88,7 +88,7 @@ export async function load_node({
 			props: shadow.body || {},
 			routeId: event.routeId,
 			get session() {
-				if (node.module.prerender ?? state?.prerender?.default) {
+				if (node.module.prerender ?? options.prerender.default) {
 					throw Error(
 						'Attempted to access session from a prerendered page. Session would never be populated.'
 					);
