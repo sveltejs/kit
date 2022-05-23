@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.138
+
+### Patch Changes
+
+- Use separate ignore files for prettier and eslint ([#5009](https://github.com/sveltejs/kit/pull/5009))
+
 ## 2.0.0-next.137
 
 ### Patch Changes
