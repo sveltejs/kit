@@ -9,8 +9,6 @@ import { networkInterfaces, release } from 'os';
 import { coalesce_to_error } from './utils/error.js';
 import { logger } from './core/utils.js';
 
-/** please clear the cache, turborepo */
-
 /** @param {unknown} e */
 function handle_error(e) {
 	const error = coalesce_to_error(e);
