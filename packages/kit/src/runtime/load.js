@@ -46,7 +46,9 @@ export function normalize(loaded) {
 
 	if (loaded.redirect) {
 		if (!loaded.status || Math.floor(loaded.status / 100) !== 3) {
-			throw new Error('"redirect" property returned from load() must be accompanied by a 3xx status code');
+			throw new Error(
+				'"redirect" property returned from load() must be accompanied by a 3xx status code'
+			);
 		}
 
 		if (typeof loaded.redirect !== 'string') {

@@ -1918,7 +1918,9 @@ test.describe.parallel('Redirects', () => {
 		);
 
 		const lines = read_errors('/redirect/missing-status/a').split('\n');
-		expect(lines[0]).toBe('Error: "redirect" property returned from load() must be accompanied by a 3xx status code');
+		expect(lines[0]).toBe(
+			'Error: "redirect" property returned from load() must be accompanied by a 3xx status code'
+		);
 	});
 
 	test('errors on invalid status', async ({ baseURL, page, clicknav }) => {
