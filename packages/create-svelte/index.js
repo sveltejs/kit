@@ -74,7 +74,7 @@ function write_common_files(cwd, options, name) {
 	pkg.devDependencies = sort_keys(pkg.devDependencies);
 	pkg.name = to_valid_package_name(name);
 
-	fs.writeFileSync(pkg_file, JSON.stringify(pkg, null, '  '));
+	fs.writeFileSync(pkg_file, JSON.stringify(pkg, null, '\t'));
 }
 
 /**

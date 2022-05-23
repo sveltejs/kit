@@ -474,6 +474,13 @@ test.describe.parallel('CSS', () => {
 			).toBe('absolute');
 		}
 	});
+
+	test('applies imported styles in the correct order', async ({ page }) => {
+		await page.goto('/css');
+
+		const color = await page.$eval('.overridden', (el) => getComputedStyle(el).color);
+		expect(color).toBe('rgb(0, 128, 0)');
+	});
 });
 
 test.describe.parallel('Shadowed pages', () => {
@@ -1304,6 +1311,13 @@ test.describe.parallel('Load', () => {
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
+	test('fetch resolves urls relatively to the target page', async ({ page, clicknav }) => {
+		await page.goto('/load');
+		await clicknav('[href="/load/fetch-relative"]');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+		expect(await page.textContent('h2')).toBe('the question was ?');
+	});
+
 	test('handles large responses', async ({ page }) => {
 		await page.goto('/load');
 
@@ -1447,6 +1461,37 @@ test.describe.parallel('Load', () => {
 
 		expect(cookies.answer).toBe('42');
 		expect(cookies.doubled).toBe('84');
+	});
+
+	test('accessing url.hash from load errors and suggests using page store', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/load/url-hash#please-dont-send-me-to-load');
+			expect(await page.textContent('#message')).toBe(
+				'This is your custom error page saying: "url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component."'
+			);
+		}
+	});
+
+	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
+		const warnings = [];
+
+		page.on('console', (msg) => {
+			if (msg.type() === 'warning') {
+				warnings.push(msg.text());
+			}
+		});
+
+		await page.goto('/load/window-fetch');
+		expect(await page.textContent('h1')).toBe('42');
+
+		if (javaScriptEnabled && process.env.DEV) {
+			expect(warnings).toContain(
+				'Loading http://localhost:3000/load/window-fetch/data.json using `window.fetch`. For best results, use the `fetch` that is passed to your `load` function: https://kit.svelte.dev/docs/loading#input-fetch'
+			);
+		}
 	});
 });
 
@@ -1666,7 +1711,7 @@ test.describe.parallel('$app/paths', () => {
 		);
 	});
 
-	test('replaces %svelte.assets% in template with relative path', async ({ page }) => {
+	test('replaces %sveltekit.assets% in template with relative path', async ({ page }) => {
 		await page.goto('/');
 		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
 
@@ -2357,6 +2402,11 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('h1')).toBe('routeId in load: routing/route-id/[x]');
 		expect(await page.textContent('h2')).toBe('routeId in store: routing/route-id/[x]');
 	});
+
+	test('serves a page that clashes with a root directory', async ({ page }) => {
+		await page.goto('/static');
+		expect(await page.textContent('h1')).toBe('hello');
+	});
 });
 
 test.describe.parallel('Session', () => {
@@ -2417,6 +2467,14 @@ test.describe.parallel('Static files', () => {
 		const response = await request.get('/static/static.json');
 		expect(response.status()).toBe(process.env.DEV ? 403 : 404);
 	});
+
+	test('Vite serves assets in src directory', async ({ page, request }) => {
+		await page.goto('/assets');
+		const path = await page.textContent('h1');
+
+		const response = await request.get(path);
+		expect(response.status()).toBe(200);
+	});
 });
 
 test.describe.parallel('Matchers', () => {
@@ -2438,7 +2496,7 @@ test.describe.parallel('Matchers', () => {
 });
 
 test.describe.parallel('XSS', () => {
-	test('replaces %svelte.xxx% tags safely', async ({ page }) => {
+	test('replaces %sveltekit.xxx% tags safely', async ({ page }) => {
 		await page.goto('/unsafe-replacement');
 
 		const content = await page.textContent('body');

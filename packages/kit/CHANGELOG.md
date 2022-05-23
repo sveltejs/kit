@@ -1,5 +1,71 @@
 # @sveltejs/kit
 
+## 1.0.0-next.339
+
+### Patch Changes
+
+- [breaking] resolve relative urls from the target page when using load's fetch ([#5025](https://github.com/sveltejs/kit/pull/5025))
+
+* [fix] `svelte-kit sync` gracefully handles a nonexistent routes folder ([#5020](https://github.com/sveltejs/kit/pull/5020))
+
+- [breaking] Replace `%svelte.body%` with `%sveltekit.body%`, etc. ([#5016](https://github.com/sveltejs/kit/pull/5016))
+
+## 1.0.0-next.338
+
+### Patch Changes
+
+- [breaking] remove amp config option in favour of amp.transform helper function ([#4710](https://github.com/sveltejs/kit/pull/4710))
+
+* [breaking] accessing url.hash from load now results in a helpful error ([#4983](https://github.com/sveltejs/kit/pull/4983))
+
+## 1.0.0-next.337
+
+### Patch Changes
+
+- [fix] don't watch `outDir`, except for the `generated` directory ([#4997](https://github.com/sveltejs/kit/pull/4997))
+
+* Warn if load uses window.fetch ([#4958](https://github.com/sveltejs/kit/pull/4958))
+
+- Only run `viteServeStaticMiddleware` after server has attempted response ([#4974](https://github.com/sveltejs/kit/pull/4974))
+
+## 1.0.0-next.336
+
+### Patch Changes
+
+- Pass config to vite-plugin-svelte instead of reloading it ([#4760](https://github.com/sveltejs/kit/pull/4760))
+
+* fix FOUC regression during dev ([#4990](https://github.com/sveltejs/kit/pull/4990))
+
+- move `RequestEvent` and `ResolveOptions` as public types ([#4809](https://github.com/sveltejs/kit/pull/4809))
+
+* [breaking] write generated types to `__types` directories ([#4705](https://github.com/sveltejs/kit/pull/4705))
+
+## 1.0.0-next.335
+
+### Patch Changes
+
+- [breaking] change data-hydrate to data-sveltekit-hydrate ([#4972](https://github.com/sveltejs/kit/pull/4972))
+
+* Fix default port override ([#4970](https://github.com/sveltejs/kit/pull/4970))
+
+## 1.0.0-next.334
+
+### Patch Changes
+
+- [fix] deduplicate injected css during dev ([#4920](https://github.com/sveltejs/kit/pull/4920))
+
+## 1.0.0-next.333
+
+### Patch Changes
+
+- [breaking] delay automatic service worker registration until load event ([#4950](https://github.com/sveltejs/kit/pull/4950))
+
+## 1.0.0-next.332
+
+### Patch Changes
+
+- Revert dev command default options ([#4949](https://github.com/sveltejs/kit/pull/4949))
+
 ## 1.0.0-next.331
 
 ### Patch Changes

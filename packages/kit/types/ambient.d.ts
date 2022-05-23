@@ -15,7 +15,15 @@
  * }
  * ```
  *
- * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`:
+ * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`.
+ *
+ * Note that since it's an ambient declaration file, you can't use `import` statements — instead, use the `import(...)` function:
+ *
+ * ```ts
+ * interface Locals {
+ * 	user: import('$lib/types').User;
+ * }
+ * ```
  */
 declare namespace App {
 	/**
@@ -41,14 +49,10 @@ declare namespace App {
 
 /**
  * ```ts
- * import { amp, browser, dev, mode, prerendering } from '$app/env';
+ * import { browser, dev, mode, prerendering } from '$app/env';
  * ```
  */
 declare module '$app/env' {
-	/**
-	 * Whether or not the app is running in [AMP mode](/docs/seo#manual-setup-amp).
-	 */
-	export const amp: boolean;
 	/**
 	 * Whether the app is running in the browser or on the server.
 	 */

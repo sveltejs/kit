@@ -1,4 +1,4 @@
-import vite from 'vite';
+import * as vite from 'vite';
 
 /**
  * @typedef {import('rollup').RollupOutput} RollupOutput

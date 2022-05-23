@@ -145,10 +145,10 @@ async function v1(builder, external) {
 		bundle: true,
 		platform: 'node',
 		external,
-		format: 'esm'
+		format: 'cjs'
 	});
 
-	writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'module' }));
+	writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'commonjs' }));
 
 	builder.log.minor('Copying assets...');
 
@@ -271,7 +271,7 @@ async function v3(builder, external, edge, split) {
 			target: `node${node_version.full}`,
 			bundle: true,
 			platform: 'node',
-			format: 'esm',
+			format: 'cjs',
 			external
 		});
 
@@ -284,7 +284,7 @@ async function v3(builder, external, edge, split) {
 			})
 		);
 
-		write(`${dirs.functions}/${name}.func/package.json`, JSON.stringify({ type: 'module' }));
+		write(`${dirs.functions}/${name}.func/package.json`, JSON.stringify({ type: 'commonjs' }));
 
 		routes.push({ src: pattern, dest: `/${name}` });
 	}
@@ -405,7 +405,9 @@ function get_node_version() {
 	const major = parseInt(full.split('.')[0]); // '16.5.0' --> 16
 
 	if (major < 16) {
-		throw new Error(`SvelteKit only supports Node.js version 16 or greater (currently using v${full}). Consult the documentation: https://vercel.com/docs/runtimes#official-runtimes/node-js/node-js-version`)
+		throw new Error(
+			`SvelteKit only supports Node.js version 16 or greater (currently using v${full}). Consult the documentation: https://vercel.com/docs/runtimes#official-runtimes/node-js/node-js-version`
+		);
 	}
 
 	return { major, full };
