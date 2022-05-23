@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.341
+
+### Patch Changes
+
+- fix: page store correct after navigation when an identical route with a different hash had been prefetched ([#5039](https://github.com/sveltejs/kit/pull/5039))
+
+* [breaking] replace @sveltejs/kit/install-fetch with @sveltejs/kit/node/polyfills ([#4934](https://github.com/sveltejs/kit/pull/4934))
+
+- fix: Prerendered pages fail if they access session. ([#4811](https://github.com/sveltejs/kit/pull/4811))
+
 ## 1.0.0-next.340
 
 ### Patch Changes
