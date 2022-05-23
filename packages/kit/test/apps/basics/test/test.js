@@ -275,14 +275,14 @@ test.describe('Scrolling', () => {
 		expect(await in_view('#abcde')).toBe(true);
 	});
 
-	test('url-supplied anchor is ignored with onMount() scrolling on navigation to page', async ({
+	test.only('url-supplied anchor is ignored with onMount() scrolling on navigation to page', async ({
 		page,
 		clicknav,
 		javaScriptEnabled,
 		in_view
 	}) => {
 		await page.goto('/anchor-with-manual-scroll');
-		await clicknav('[href="/anchor-with-manual-scroll/anchor#go-to-element"]');
+		await clicknav('[href="/anchor-with-manual-scroll/anchor-onmount#go-to-element"]');
 		if (javaScriptEnabled) expect(await in_view('#abcde')).toBe(true);
 		else expect(await in_view('#go-to-element')).toBe(true);
 	});
