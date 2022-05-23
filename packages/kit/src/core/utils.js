@@ -80,11 +80,19 @@ export function get_mime_lookup(manifest_data) {
 
 /** @param {import('types').ValidatedConfig} config */
 export function get_aliases(config) {
+	/** @type {Record<string, string>} */
 	const alias = {
 		__GENERATED__: path.posix.join(config.kit.outDir, 'generated'),
 		$app: `${get_runtime_path(config)}/app`,
+
+		// For now, we handle `$lib` specially here rather than make it a default value for
+		// `config.kit.alias` since it has special meaning for packaging, etc.
 		$lib: config.kit.files.lib
 	};
+
+	for (const [key, value] of Object.entries(config.kit.alias)) {
+		alias[key] = path.resolve(value);
+	}
 
 	return alias;
 }

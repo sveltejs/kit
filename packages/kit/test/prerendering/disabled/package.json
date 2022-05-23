@@ -10,11 +10,7 @@
 		"test": "npm run build"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*",
-		"svelte": "^3.43.0",
-		"svelte-check": "^2.5.0",
-		"typescript": "~4.6.2",
-		"uvu": "^0.5.2"
+		"@sveltejs/kit": "workspace:*"
 	},
 	"type": "module"
 }

@@ -24,10 +24,10 @@ import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';
 
 const template = ({ head, body, assets, nonce }) => ${s(template)
-	.replace('%svelte.head%', '" + head + "')
-	.replace('%svelte.body%', '" + body + "')
-	.replace(/%svelte\.assets%/g, '" + assets + "')
-	.replace(/%svelte\.nonce%/g, '" + nonce + "')};
+	.replace('%sveltekit.head%', '" + head + "')
+	.replace('%sveltekit.body%', '" + body + "')
+	.replace(/%sveltekit\.assets%/g, '" + assets + "')
+	.replace(/%sveltekit\.nonce%/g, '" + nonce + "')};
 
 let read = null;
 
@@ -76,7 +76,7 @@ export class Server {
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
 			router: ${s(config.kit.browser.router)},
 			template,
-			template_contains_nonce: ${template.includes('%svelte.nonce%')},
+			template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			trailing_slash: ${s(config.kit.trailingSlash)}
 		};
 	}

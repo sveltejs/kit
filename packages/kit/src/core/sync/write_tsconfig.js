@@ -34,6 +34,19 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 		include.push(config_relative(`${dir}/**/*.svelte`));
 	});
 
+	/** @type {Record<string, string[]>} */
+	const paths = {};
+	const alias = {
+		$lib: project_relative(config.kit.files.lib),
+		...config.kit.alias
+	};
+	for (const [key, value] of Object.entries(alias)) {
+		if (fs.existsSync(project_relative(value))) {
+			paths[key] = [project_relative(value)];
+			paths[key + '/*'] = [project_relative(value) + '/*'];
+		}
+	}
+
 	write_if_changed(
 		out,
 		JSON.stringify(
@@ -41,12 +54,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 				compilerOptions: {
 					// generated options
 					baseUrl: config_relative('.'),
-					paths: fs.existsSync(config.kit.files.lib)
-						? {
-								$lib: [project_relative(config.kit.files.lib)],
-								'$lib/*': [project_relative(config.kit.files.lib + '/*')]
-						  }
-						: {},
+					paths,
 					rootDirs: [config_relative('.'), './types'],
 
 					// essential options

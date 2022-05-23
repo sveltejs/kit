@@ -322,14 +322,14 @@ export async function create_plugin(config, cwd) {
 								template: ({ head, body, assets, nonce }) => {
 									return (
 										template
-											.replace(/%svelte\.assets%/g, assets)
-											.replace(/%svelte\.nonce%/g, nonce)
-											// head and body must be replaced last, in case someone tries to sneak in %svelte.assets% etc
-											.replace('%svelte.head%', () => head)
-											.replace('%svelte.body%', () => body)
+											.replace(/%sveltekit\.assets%/g, assets)
+											.replace(/%sveltekit\.nonce%/g, nonce)
+											// head and body must be replaced last, in case someone tries to sneak in %sveltekit.assets% etc
+											.replace('%sveltekit.head%', () => head)
+											.replace('%sveltekit.body%', () => body)
 									);
 								},
-								template_contains_nonce: template.includes('%svelte.nonce%'),
+								template_contains_nonce: template.includes('%sveltekit.nonce%'),
 								trailing_slash: config.kit.trailingSlash
 							},
 							{

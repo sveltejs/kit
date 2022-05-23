@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.339
+
+### Patch Changes
+
+- [breaking] resolve relative urls from the target page when using load's fetch ([#5025](https://github.com/sveltejs/kit/pull/5025))
+
+* [fix] `svelte-kit sync` gracefully handles a nonexistent routes folder ([#5020](https://github.com/sveltejs/kit/pull/5020))
+
+- [breaking] Replace `%svelte.body%` with `%sveltekit.body%`, etc. ([#5016](https://github.com/sveltejs/kit/pull/5016))
+
 ## 1.0.0-next.338
 
 ### Patch Changes

@@ -8,8 +8,7 @@
 		"start": "../../../../kit/svelte-kit.js start"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "next",
-		"svelte": "^3.43.0"
+		"@sveltejs/kit": "next"
 	},
 	"type": "module"
 }

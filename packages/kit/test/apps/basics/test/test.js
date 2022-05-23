@@ -1311,6 +1311,13 @@ test.describe.parallel('Load', () => {
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
+	test('fetch resolves urls relatively to the target page', async ({ page, clicknav }) => {
+		await page.goto('/load');
+		await clicknav('[href="/load/fetch-relative"]');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+		expect(await page.textContent('h2')).toBe('the question was ?');
+	});
+
 	test('handles large responses', async ({ page }) => {
 		await page.goto('/load');
 
@@ -1704,7 +1711,7 @@ test.describe.parallel('$app/paths', () => {
 		);
 	});
 
-	test('replaces %svelte.assets% in template with relative path', async ({ page }) => {
+	test('replaces %sveltekit.assets% in template with relative path', async ({ page }) => {
 		await page.goto('/');
 		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
 
@@ -2486,7 +2493,7 @@ test.describe.parallel('Matchers', () => {
 });
 
 test.describe.parallel('XSS', () => {
-	test('replaces %svelte.xxx% tags safely', async ({ page }) => {
+	test('replaces %sveltekit.xxx% tags safely', async ({ page }) => {
 		await page.goto('/unsafe-replacement');
 
 		const content = await page.textContent('body');
