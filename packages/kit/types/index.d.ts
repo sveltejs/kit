@@ -101,6 +101,7 @@ export interface Config {
 		csp?: {
 			mode?: 'hash' | 'nonce' | 'auto';
 			directives?: CspDirectives;
+			reportOnly?: boolean;
 		};
 		endpointExtensions?: string[];
 		files?: {

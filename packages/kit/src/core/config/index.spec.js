@@ -52,7 +52,8 @@ const get_defaults = (prefix = '') => ({
 				'block-all-mixed-content': false,
 				'plugin-types': undefined,
 				referrer: undefined
-			}
+			},
+			reportOnly: false
 		},
 		endpointExtensions: ['.js', '.ts'],
 		files: {

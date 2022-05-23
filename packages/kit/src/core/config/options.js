@@ -100,7 +100,8 @@ const options = object(
 					'block-all-mixed-content': boolean(false),
 					'plugin-types': string_array(),
 					referrer: string_array()
-				})
+				}),
+				reportOnly: boolean(false)
 			}),
 
 			endpointExtensions: string_array(['.js', '.ts']),

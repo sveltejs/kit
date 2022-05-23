@@ -36,6 +36,28 @@ test('generates CSP header with directive', () => {
 	assert.equal(csp.get_header(), "default-src 'self'");
 });
 
+test('generates CSP header with hash in report only mode', () => {
+	const csp = new Csp(
+		{
+			mode: 'hash',
+			directives: {
+				'default-src': ['self']
+			},
+			report_only: true
+		},
+		{
+			dev: false,
+			prerender: false,
+			needs_nonce: false
+		}
+	);
+
+	assert.equal(
+		csp.get_meta(),
+		'<meta http-equiv="content-security-policy-report-only" content="default-src \'self\'">'
+	);
+});
+
 test('generates CSP header with nonce', () => {
 	const csp = new Csp(
 		{
@@ -54,6 +76,33 @@ test('generates CSP header with nonce', () => {
 	csp.add_script('');
 
 	assert.ok(csp.get_header().startsWith("default-src 'self'; script-src 'self' 'nonce-"));
+});
+
+test('generates CSP header with nonce in report only mode', () => {
+	const csp = new Csp(
+		{
+			mode: 'nonce',
+			directives: {
+				'default-src': ['self']
+			},
+			report_only: true
+		},
+		{
+			dev: false,
+			prerender: false,
+			needs_nonce: false
+		}
+	);
+
+	csp.add_script('');
+
+	assert.ok(
+		csp
+			.get_meta()
+			.startsWith(
+				"<meta http-equiv=\"content-security-policy-report-only\" content=\"default-src 'self'; script-src 'self' 'nonce-"
+			)
+	);
 });
 
 test('skips nonce with unsafe-inline', () => {

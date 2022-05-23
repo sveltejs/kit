@@ -61,6 +61,9 @@ export class Csp {
 	/** @type {import('types').CspDirectives} */
 	#directives;
 
+	/** @type {boolean} */
+	#report_only;
+
 	/** @type {import('types').Csp.Source[]} */
 	#script_src;
 
@@ -71,6 +74,7 @@ export class Csp {
 	 * @param {{
 	 *   mode: string,
 	 *   directives: import('types').CspDirectives
+	 *   report_only?: boolean,
 	 * }} config
 	 * @param {{
 	 *   dev: boolean;
@@ -78,10 +82,11 @@ export class Csp {
 	 *   needs_nonce: boolean;
 	 * }} opts
 	 */
-	constructor({ mode, directives }, { dev, prerender, needs_nonce }) {
+	constructor({ mode, directives, report_only = false }, { dev, prerender, needs_nonce }) {
 		this.#use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
 		this.#directives = dev ? { ...directives } : directives; // clone in dev so we can safely mutate
 		this.#dev = dev;
+		this.#report_only = report_only;
 
 		const d = this.#directives;
 
@@ -206,6 +211,8 @@ export class Csp {
 
 	get_meta() {
 		const content = escape_html_attr(this.get_header(true));
-		return `<meta http-equiv="content-security-policy" content=${content}>`;
+		return `<meta http-equiv=${`"content-security-policy${
+			this.#report_only ? '-report-only"' : '"'
+		}`} content=${content}>`;
 	}
 }
