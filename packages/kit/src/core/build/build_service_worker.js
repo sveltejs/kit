@@ -1,5 +1,5 @@
 import fs from 'fs';
-import vite from 'vite';
+import { build } from 'vite';
 import { s } from '../../utils/misc.js';
 import { deep_merge } from '../../utils/object.js';
 import { normalize_path } from '../../utils/url.js';
@@ -22,12 +22,12 @@ export async function build_service_worker(
 	prerendered,
 	client_manifest
 ) {
-	const build = new Set();
+	const build_files = new Set();
 	for (const key in client_manifest) {
 		const { file, css = [], assets = [] } = client_manifest[key];
-		build.add(file);
-		css.forEach((file) => build.add(file));
-		assets.forEach((file) => build.add(file));
+		build_files.add(file);
+		css.forEach((file) => build_files.add(file));
+		assets.forEach((file) => build_files.add(file));
 	}
 
 	const service_worker = `${config.kit.outDir}/generated/service-worker.js`;
@@ -43,7 +43,7 @@ export async function build_service_worker(
 			};
 
 			export const build = [
-				${Array.from(build)
+				${Array.from(build_files)
 					.map((file) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/${file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
@@ -96,5 +96,5 @@ export async function build_service_worker(
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_service_worker');
 
-	await vite.build(merged_config);
+	await build(merged_config);
 }
