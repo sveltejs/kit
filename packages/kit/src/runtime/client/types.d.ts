@@ -75,9 +75,3 @@ export type NavigationState = {
 	stuff: Record<string, any>;
 	url: URL;
 };
-
-export type NavigationResultCache = {
-	id: string | null;
-	url: URL | null;
-	promise: Promise<NavigationResult | undefined> | null;
-};
