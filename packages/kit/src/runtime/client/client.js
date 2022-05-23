@@ -307,6 +307,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (started) {
 			current = navigation_result.state;
 
+			if (navigation_result.props.page) {
+				navigation_result.props.page.url = url;
+			}
+
 			root.$set(navigation_result.props);
 		} else {
 			initialize(navigation_result);

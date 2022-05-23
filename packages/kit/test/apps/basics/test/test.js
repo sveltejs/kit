@@ -1989,6 +1989,88 @@ test.describe.parallel('Redirects', () => {
 	});
 });
 
+test.describe.parallel('Prefetching', () => {
+	test('prefetches programmatically', async ({ baseURL, page, app, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/a');
+
+			/** @type {string[]} */
+			let requests = [];
+			page.on('request', (r) => requests.push(r.url()));
+
+			// also wait for network processing to complete, see
+			// https://playwright.dev/docs/network#network-events
+			await Promise.all([
+				page.waitForResponse(`${baseURL}/routing/prefetched.json`),
+				app.prefetch('/routing/prefetched')
+			]);
+
+			// svelte request made is environment dependent
+			if (process.env.DEV) {
+				expect(requests.filter((req) => req.endsWith('index.svelte')).length).toBe(1);
+			} else {
+				expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
+			}
+
+			expect(requests.includes(`${baseURL}/routing/prefetched.json`)).toBe(true);
+
+			requests = [];
+			await app.goto('/routing/prefetched');
+			expect(requests).toEqual([]);
+
+			try {
+				await app.prefetch('https://example.com');
+				throw new Error('Error was not thrown');
+			} catch (/** @type {any} */ e) {
+				expect(e.message).toMatch('Attempted to prefetch a URL that does not belong to this app');
+			}
+		}
+	});
+
+	test('chooses correct route when hash route is prefetched but regular route is clicked', async ({
+		app,
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/a');
+			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+			await app.goto('/routing/prefetched/hash-route');
+			await expect(page.locator('h1')).not.toHaveText('Oopsie');
+		}
+	});
+
+	test('does not rerun load on calls to duplicate preload hash route', async ({
+		app,
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/a');
+
+			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+			await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
+			await expect(page.locator('p')).toHaveText('Loaded 1 times.');
+		}
+	});
+
+	test('does not rerun load on calls to different preload hash route', async ({
+		app,
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/a');
+
+			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me-jr');
+			await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
+			await expect(page.locator('p')).toHaveText('Loaded 1 times.');
+		}
+	});
+});
+
 test.describe.parallel('Routing', () => {
 	test('redirects from /routing/ to /routing', async ({
 		baseURL,
@@ -2110,43 +2192,6 @@ test.describe.parallel('Routing', () => {
 			await page.goto('/routing/a');
 			await app.goto('/routing/b');
 			expect(await page.textContent('h1')).toBe('b');
-		}
-	});
-
-	test('prefetches programmatically', async ({ baseURL, page, app, javaScriptEnabled }) => {
-		if (javaScriptEnabled) {
-			await page.goto('/routing/a');
-
-			/** @type {string[]} */
-			let requests = [];
-			page.on('request', (r) => requests.push(r.url()));
-
-			// also wait for network processing to complete, see
-			// https://playwright.dev/docs/network#network-events
-			await Promise.all([
-				page.waitForResponse(`${baseURL}/routing/prefetched.json`),
-				app.prefetch('/routing/prefetched')
-			]);
-
-			// svelte request made is environment dependent
-			if (process.env.DEV) {
-				expect(requests.filter((req) => req.endsWith('index.svelte')).length).toBe(1);
-			} else {
-				expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
-			}
-
-			expect(requests.includes(`${baseURL}/routing/prefetched.json`)).toBe(true);
-
-			requests = [];
-			await app.goto('/routing/prefetched');
-			expect(requests).toEqual([]);
-
-			try {
-				await app.prefetch('https://example.com');
-				throw new Error('Error was not thrown');
-			} catch (/** @type {any} */ e) {
-				expect(e.message).toMatch('Attempted to prefetch a URL that does not belong to this app');
-			}
 		}
 	});
 
