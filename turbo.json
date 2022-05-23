@@ -7,12 +7,12 @@
 			"outputs": ["dist/**", "docs/**", "assets/**"]
 		},
 		"kit.svelte.dev#build": {
-			"dependsOn": ["^build", "$VERCEL"],
+			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
 			"inputs": ["src/**", "../../packages/kit/docs/**", "../../documentation/**"],
 			"outputs": [".vercel_build_output/**"]
 		},
 		"build": {
-			"dependsOn": ["^build", "$VERCEL"],
+			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
 			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
 			"outputs": ["files/**", "dist/**", ".svelte-kit/**", ".vercel_build_output/**"]
 		},
