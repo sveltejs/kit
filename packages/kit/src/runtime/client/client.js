@@ -8,10 +8,10 @@ import {
 	find_anchor,
 	get_base_uri,
 	get_href,
-	initial_fetch,
 	notifiable_store,
 	scroll_state
 } from './utils.js';
+import * as fetcher from './fetcher.js';
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
@@ -46,33 +46,6 @@ try {
 /** @param {number} index */
 function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
-}
-
-const fetch = window.fetch;
-let loading = 0;
-
-if (import.meta.env.DEV) {
-	let can_inspect_stack_trace = false;
-
-	const check_stack_trace = async () => {
-		const stack = /** @type {string} */ (new Error().stack);
-		can_inspect_stack_trace = stack.includes('check_stack_trace');
-	};
-
-	check_stack_trace();
-
-	window.fetch = (input, init) => {
-		const url = input instanceof Request ? input.url : input.toString();
-		const stack = /** @type {string} */ (new Error().stack);
-
-		const heuristic = can_inspect_stack_trace ? stack.includes('load_node') : loading;
-		if (heuristic) {
-			console.warn(
-				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
-			);
-		}
-		return fetch(input, init);
-	};
 }
 
 /**
@@ -621,7 +594,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					add_dependency(normalized);
 
 					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be normalized
-					return started ? fetch(normalized, init) : initial_fetch(requested, init);
+					return started ? fetcher.native(normalized, init) : fetcher.initial(requested, init);
 				},
 				status: status ?? null,
 				error: error ?? null
@@ -640,10 +613,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			if (import.meta.env.DEV) {
 				try {
-					loading += 1;
+					fetcher.increment();
 					loaded = await module.load.call(null, load_input);
 				} finally {
-					loading -= 1;
+					fetcher.decrement();
 				}
 			} else {
 				loaded = await module.load.call(null, load_input);
@@ -731,7 +704,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					const is_shadow_page = has_shadow && i === a.length - 1;
 
 					if (is_shadow_page) {
-						const res = await fetch(
+						const res = await fetcher.native(
 							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
 								headers: {
