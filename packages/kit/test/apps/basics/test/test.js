@@ -275,7 +275,7 @@ test.describe('Scrolling', () => {
 		expect(await in_view('#abcde')).toBe(true);
 	});
 
-	test.only('url-supplied anchor is ignored with onMount() scrolling on navigation to page', async ({
+	test('url-supplied anchor is ignored with onMount() scrolling on navigation to page', async ({
 		page,
 		clicknav,
 		javaScriptEnabled,
