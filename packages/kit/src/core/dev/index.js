@@ -1,6 +1,6 @@
 import path from 'path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import vite from 'vite';
+import * as vite from 'vite';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
 import { get_aliases, get_runtime_path } from '../utils.js';
