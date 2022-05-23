@@ -79,9 +79,13 @@ If the page you're loading has an endpoint, the data returned from it is accessi
 
 #### fetch
 
-`fetch` is equivalent to the native `fetch` web API, and can make credentialed requests. It can be used across both client and server contexts.
+`fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 
-> When `fetch` runs on the server, the resulting response will be serialized and inlined into the rendered HTML. This allows the subsequent client-side `load` to access identical data immediately without an additional network request.
+- it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request
+- it can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context)
+- requests for endpoints go direct to the handler function during server-side rendering, without the overhead of an HTTP call
+- during server-side rendering, the response will be captured and inlined into the rendered HTML
+- during hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request
 
 > Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
 

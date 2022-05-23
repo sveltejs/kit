@@ -12,7 +12,7 @@ In particular, you'll get comfortable with the following:
 
 SvelteKit uses [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch) for getting data from the network. It's available in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints) as well as in the browser.
 
-> A special version of `fetch` is available in [`load`](/docs/loading) functions for accessing data directly from endpoints while preserving credentials.
+> A special version of `fetch` is available in [`load`](/docs/loading) functions for invoking endpoints directly during server-side rendering, without making an HTTP call, while preserving credentials. (To make credentialled fetches in server-side code outside `load`, you must explicitly pass `cookie` and/or `authorization` headers.) It also allows you to make relative requests, whereas server-side `fetch` normally requires a fully qualified URL.
 
 Besides `fetch` itself, the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) includes the following interfaces:
 
