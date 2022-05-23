@@ -79,7 +79,7 @@ If the page you're loading has an endpoint, the data returned from it is accessi
 
 #### fetch
 
-`fetch` is equivalent to the native `fetch` web API, with a few additional features:
+`fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 
 - it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request
 - it can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context)
