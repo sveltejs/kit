@@ -61,25 +61,23 @@ prog
 		/** @type {() => Promise<void>} */
 		let close;
 
-		/** @param {import('types').ValidatedConfig} config */
-		async function start(config) {
+		async function start() {
 			const { dev } = await import('./core/dev/index.js');
 
-			const { address_info, server_config, close } = await dev({
+			const { address_info, config, close } = await dev({
 				port,
 				host,
-				https,
-				config
+				https
 			});
 
 			welcome({
 				port: address_info.port,
 				host: address_info.address,
-				https: !!(https || server_config.https),
-				open: first && (open || !!server_config.open),
-				base: config.kit.paths.base,
-				loose: server_config.fs.strict === false,
-				allow: server_config.fs.allow
+				https: !!(https || config.server.https),
+				open: first && (open || !!config.server.open),
+				base: config.base,
+				loose: config.server.fs.strict === false,
+				allow: config.server.fs.allow
 			});
 
 			first = false;
@@ -92,9 +90,8 @@ prog
 			relaunching = true;
 
 			try {
-				const updated_config = await load_config();
 				await close();
-				close = await start(updated_config);
+				close = await start();
 
 				if (id !== uid) relaunch();
 			} catch (e) {
@@ -114,8 +111,7 @@ prog
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
-			const config = await load_config();
-			close = await start(config);
+			close = await start();
 
 			chokidar.watch('svelte.config.js', { ignoreInitial: true }).on('change', () => {
 				if (relaunching) uid += 1;
@@ -178,13 +174,12 @@ prog
 			await check_port(port);
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-			const config = await load_config();
 
 			const { preview } = await import('./core/preview/index.js');
 
-			await preview({ port, host, config, https });
+			const server = await preview({ port, host, https });
 
-			welcome({ port, host, https, open, base: config.kit.paths.base });
+			welcome({ port, host, https, open, base: server.config.base });
 		} catch (error) {
 			handle_error(error);
 		}
