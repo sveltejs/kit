@@ -2069,26 +2069,6 @@ test.describe.parallel('Prefetching', () => {
 			await expect(page.locator('p')).toHaveText('Loaded 1 times.');
 		}
 	});
-
-	test('successfully preloads same route with different hashes many times', async ({
-		app,
-		page,
-		javaScriptEnabled
-	}) => {
-		// With the current implementation, I could maybe see some sort of stack overflow
-		// if the same route with different hashes were preloaded many many times, so
-		// just making sure we can preload a route a reasonable amount of times without any
-		// issues.
-
-		if (javaScriptEnabled) {
-			await page.goto('/routing/a');
-
-			for (let i = 0; i < 1000; i++) {
-				await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-				await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me-jr');
-			}
-		}
-	});
 });
 
 test.describe.parallel('Routing', () => {
