@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.139
+
+### Patch Changes
+
+- correct default package.json format ([#5013](https://github.com/sveltejs/kit/pull/5013))
+
+* [breaking] Replace `%svelte.body%` with `%sveltekit.body%`, etc. ([#5016](https://github.com/sveltejs/kit/pull/5016))
+
 ## 2.0.0-next.138
 
 ### Patch Changes
