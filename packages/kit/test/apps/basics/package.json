@@ -8,8 +8,8 @@
 		"preview": "node ../../cli.js preview",
 		"check": "tsc && svelte-check",
 		"test": "npm run test:dev && npm run test:build",
-		"test:dev": "cross-env DEV=true playwright test",
-		"test:build": "playwright test"
+		"test:dev": "rimraf test/errors.json && cross-env DEV=true playwright test",
+		"test:build": "rimraf test/errors.json && playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
