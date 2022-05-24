@@ -2572,7 +2572,7 @@ test.describe.parallel('Static files', () => {
 	});
 
 	test('Filenames are case-sensitive', async ({ request }) => {
-		let response = await request.get('/static.JSON');
+		const response = await request.get('/static.JSON');
 		expect(response.status()).toBe(404);
 	});
 });
