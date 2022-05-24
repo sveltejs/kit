@@ -1,6 +1,6 @@
 import { rimraf } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
-import { write_if_changed } from './utils.js';
+import { write } from './utils.js';
 
 /** @param {string} imports */
 const header = (imports) => `
@@ -76,9 +76,6 @@ export function write_types(config, manifest_data) {
 		const parts = (key || 'index').split('/');
 		parts.push('__types', /** @type {string} */ (parts.pop()));
 
-		write_if_changed(
-			`${config.kit.outDir}/types/${parts.join('/')}.d.ts`,
-			content.join('\n').trim()
-		);
+		write(`${config.kit.outDir}/types/${parts.join('/')}.d.ts`, content.join('\n').trim());
 	});
 }
