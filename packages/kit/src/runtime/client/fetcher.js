@@ -2,13 +2,13 @@ import { hash } from '../hash.js';
 
 let loading = 0;
 
-export const native = window.fetch;
+export const native_fetch = window.fetch;
 
-export function increment() {
+export function lock_fetch() {
 	loading += 1;
 }
 
-export function decrement() {
+export function unlock_fetch() {
 	loading -= 1;
 }
 
@@ -32,7 +32,8 @@ if (import.meta.env.DEV) {
 				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
 			);
 		}
-		return native(input, init);
+
+		return native_fetch(input, init);
 	};
 }
 
@@ -40,7 +41,7 @@ if (import.meta.env.DEV) {
  * @param {RequestInfo} resource
  * @param {RequestInit} [opts]
  */
-export function initial(resource, opts) {
+export function initial_fetch(resource, opts) {
 	const url = JSON.stringify(typeof resource === 'string' ? resource : resource.url);
 
 	let selector = `script[sveltekit\\:data-type="data"][sveltekit\\:data-url=${url}]`;
@@ -55,5 +56,5 @@ export function initial(resource, opts) {
 		return Promise.resolve(new Response(body, init));
 	}
 
-	return native(resource, opts);
+	return native_fetch(resource, opts);
 }

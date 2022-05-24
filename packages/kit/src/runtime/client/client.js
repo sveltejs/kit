@@ -11,7 +11,7 @@ import {
 	notifiable_store,
 	scroll_state
 } from './utils.js';
-import * as fetcher from './fetcher.js';
+import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
@@ -594,7 +594,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					add_dependency(normalized);
 
 					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be normalized
-					return started ? fetcher.native(normalized, init) : fetcher.initial(requested, init);
+					return started ? native_fetch(normalized, init) : initial_fetch(requested, init);
 				},
 				status: status ?? null,
 				error: error ?? null
@@ -613,10 +613,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			if (import.meta.env.DEV) {
 				try {
-					fetcher.increment();
+					lock_fetch();
 					loaded = await module.load.call(null, load_input);
 				} finally {
-					fetcher.decrement();
+					unlock_fetch();
 				}
 			} else {
 				loaded = await module.load.call(null, load_input);
@@ -704,7 +704,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					const is_shadow_page = has_shadow && i === a.length - 1;
 
 					if (is_shadow_page) {
-						const res = await fetcher.native(
+						const res = await native_fetch(
 							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
 								headers: {
