@@ -1,7 +1,7 @@
 import fs from 'fs';
 import http from 'http';
 import * as ports from 'port-authority';
-import { test as base } from '@playwright/test';
+import { test as base, devices } from '@playwright/test';
 
 export const test = base.extend({
 	// @ts-expect-error
@@ -135,6 +135,18 @@ export const test = base.extend({
 		use(read_errors);
 	}
 });
+const test_browser = process.env.KIT_E2E_BROWSER ?? 'chromium';
+const known_devices = {
+	chromium: devices['Desktop Chrome'],
+	firefox: devices['Desktop Firefox'],
+	safari: devices['Desktop Safari']
+};
+
+const test_browser_device = known_devices[test_browser];
+
+if (!test_browser_device) {
+	throw new Error(`invalid test browser specified: KIT_E2E_BROWSER=${process.env.KIT_E2E_BROWSER}. Allowed values: ${Object.keys(known_devices).join(', ')}`);
+}
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
@@ -148,24 +160,22 @@ export const config = {
 	retries: process.env.CI ? 5 : 0,
 	projects: [
 		{
-			name: `${process.env.DEV ? 'dev' : 'build'}+js`,
+			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}+js`,
 			use: {
 				javaScriptEnabled: true
 			}
 		},
 		{
-			name: `${process.env.DEV ? 'dev' : 'build'}-js`,
+			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}-js`,
 			use: {
 				javaScriptEnabled: false
 			}
 		}
 	],
 	use: {
+		...test_browser_device,
 		screenshot: 'only-on-failure',
-		trace: 'retain-on-failure',
-		// use stable chrome from host OS instead of downloading one
-		// see https://playwright.dev/docs/browsers#google-chrome--microsoft-edge
-		channel: 'chrome'
+		trace: process.env.KIT_E2E_TRACE ? 'on' : 'on-first-retry'
 	},
 	workers: process.env.CI ? 2 : undefined
 };
