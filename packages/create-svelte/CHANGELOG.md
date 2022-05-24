@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.140
+
+### Patch Changes
+
+- Use crypto.randomUUID() instead of @lukeed/uuid ([#5042](https://github.com/sveltejs/kit/pull/5042))
+
 ## 2.0.0-next.139
 
 ### Patch Changes
