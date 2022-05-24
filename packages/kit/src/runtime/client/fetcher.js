@@ -4,11 +4,11 @@ let loading = 0;
 
 export const native_fetch = window.fetch;
 
-export function increment() {
+export function lock_fetch() {
 	loading += 1;
 }
 
-export function decrement() {
+export function unlock_fetch() {
 	loading -= 1;
 }
 
