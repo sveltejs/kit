@@ -22,7 +22,6 @@ export function init(manifest) {
 			...split_headers(response.headers)
 		};
 
-		// TODO this is probably wrong now?
 		if (!is_text(response.headers.get('content-type'))) {
 			// Function responses should be strings (or undefined), and responses with binary
 			// content should be base64 encoded and set isBase64Encoded to true.
@@ -70,7 +69,7 @@ const text_types = new Set([
 ]);
 
 /**
- * Decides how the body should be parsed based on its mime type. Should match what's in parse_body
+ * Decides how the body should be parsed based on its mime type
  *
  * @param {string | undefined | null} content_type The `content-type` header of a request/response.
  * @returns {boolean}
