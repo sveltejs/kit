@@ -1,4 +1,4 @@
-/** @type {import('./data.json').RequestHandler} */
+/** @type {import('./__types/data.json').RequestHandler} */
 export function get() {
 	return {
 		body: {
