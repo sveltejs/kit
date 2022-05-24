@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.60
+
+### Patch Changes
+
+- Encode binary responses as base64 ([#5048](https://github.com/sveltejs/kit/pull/5048))
+
 ## 1.0.0-next.59
 
 ### Patch Changes
