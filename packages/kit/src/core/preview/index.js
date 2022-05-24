@@ -68,7 +68,7 @@ export async function preview({ port, host, config, https: use_https = false }) 
 			sirv(join(config.kit.outDir, 'output/client'), {
 				setHeaders: (res, pathname) => {
 					// only apply to build directory, not e.g. version.json
-					if (pathname.startsWith(`/${config.kit.appDir}/build`)) {
+					if (pathname.startsWith(`/${config.kit.appDir}/immutable`)) {
 						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
 					}
 				}
