@@ -7,4 +7,4 @@
 '@sveltejs/kit': patch
 ---
 
-only serve \_app/build with immutable cache header, not \_app/version.json
+only serve `_app/build` with immutable cache header, not `_app/version.json`
