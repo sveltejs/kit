@@ -69,7 +69,7 @@ export class Server {
 			manifest,
 			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
-			prefix: assets + '/${config.kit.appDir}/',
+			prefix: assets + '/${config.kit.appDir}/immutable/',
 			prerender: {
 				default: ${config.kit.prerender.default},
 				enabled: ${config.kit.prerender.enabled}

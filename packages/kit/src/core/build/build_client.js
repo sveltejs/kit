@@ -59,7 +59,7 @@ export async function build_client({
 		build: {
 			cssCodeSplit: true,
 			manifest: true,
-			outDir: client_out_dir,
+			outDir: `${client_out_dir}/immutable`,
 			polyfillDynamicImport: false,
 			rollupOptions: {
 				input,
@@ -95,7 +95,9 @@ export async function build_client({
 	const { chunks, assets } = await create_build(merged_config);
 
 	/** @type {import('vite').Manifest} */
-	const vite_manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
+	const vite_manifest = JSON.parse(
+		fs.readFileSync(`${client_out_dir}/immutable/manifest.json`, 'utf-8')
+	);
 
 	const entry = posixify(client_entry_file);
 	const entry_js = new Set();

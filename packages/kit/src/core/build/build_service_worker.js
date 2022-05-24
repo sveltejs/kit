@@ -44,7 +44,7 @@ export async function build_service_worker(
 
 			export const build = [
 				${Array.from(build)
-					.map((file) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/${file}`)}`)
+					.map((file) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/immutable/${file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
 

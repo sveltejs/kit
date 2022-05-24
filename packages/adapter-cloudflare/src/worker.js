@@ -20,11 +20,15 @@ const worker = {
 		if (pathname.startsWith(prefix)) {
 			res = await env.ASSETS.fetch(req);
 
+			const cache_control = pathname.startsWith(prefix + 'immutable/')
+				? 'public, immutable, max-age=31536000'
+				: 'no-cache';
+
 			res = new Response(res.body, {
 				headers: {
-					// include original cache headers, minus cache-control which
+					// include original headers, minus cache-control which
 					// is overridden, and etag which is no longer useful
-					'cache-control': 'public, immutable, max-age=31536000',
+					'cache-control': cache_control,
 					'content-type': res.headers.get('content-type'),
 					'x-robots-tag': 'noindex'
 				}

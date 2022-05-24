@@ -12,6 +12,7 @@ const prefix = `/${manifest.appDir}/`;
 export default function handler(request, context) {
 	if (is_static_file(request)) {
 		// Static files can skip the handler
+		// TODO can we serve _app/immutable files with an immutable cache header?
 		return;
 	}
 
@@ -33,6 +34,7 @@ function is_static_file(request) {
 	if (url.pathname.startsWith(prefix)) {
 		return true;
 	}
+
 	// prerendered pages and index.html files
 	const pathname = url.pathname.replace(/\/$/, '');
 	let file = pathname.substring(1);
