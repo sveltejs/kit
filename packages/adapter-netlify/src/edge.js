@@ -2,7 +2,7 @@ import { Server } from '0SERVER';
 import { manifest, prerendered } from 'MANIFEST';
 
 const server = new Server(manifest);
-const prefix = `/${manifest.appDir}/build/`;
+const prefix = `/${manifest.appDir}/`;
 
 /**
  * @param { Request } request
@@ -34,6 +34,7 @@ function is_static_file(request) {
 	if (url.pathname.startsWith(prefix)) {
 		return true;
 	}
+
 	// prerendered pages and index.html files
 	const pathname = url.pathname.replace(/\/$/, '');
 	let file = pathname.substring(1);
