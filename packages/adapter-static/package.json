@@ -12,7 +12,8 @@
 	"main": "index.js",
 	"exports": {
 		".": {
-			"import": "./index.js"
+			"import": "./index.js",
+			"types": "./index.d.ts"
 		},
 		"./package.json": "./package.json"
 	},
