@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-allow /favicon.ico to be a valid route
+[breaking] stop suppressing `/favicon.ico` requests, handle them as a valid route
