@@ -6,7 +6,7 @@ const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
 const server = new Server(manifest);
 
-const prefix = `/${manifest.appDir}/immutable/`;
+const prefix = `/${manifest.appDir}/`;
 
 export default {
 	/**
@@ -23,11 +23,15 @@ export default {
 			const res = await get_asset_from_kv(req, env, context);
 			if (is_error(res.status)) return res;
 
+			const cache_control = url.pathname.startsWith(prefix + 'immutable/')
+				? 'public, immutable, max-age=31536000'
+				: 'no-cache';
+
 			return new Response(res.body, {
 				headers: {
-					// include original cache headers, minus cache-control which
+					// include original headers, minus cache-control which
 					// is overridden, and etag which is no longer useful
-					'cache-control': 'public, immutable, max-age=31536000',
+					'cache-control': cache_control,
 					'content-type': res.headers.get('content-type'),
 					'x-robots-tag': 'noindex'
 				}
