@@ -39,7 +39,7 @@ jobs:
       matrix:
         node-version: [16]
         os: [ubuntu-latest , windows-2019]
-        e2e-browser: 'chromium'
+        e2e-browser: ['chromium']
         include:
           - node-version: 16
             os: ubuntu-latest
