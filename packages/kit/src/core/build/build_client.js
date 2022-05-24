@@ -59,7 +59,7 @@ export async function build_client({
 		build: {
 			cssCodeSplit: true,
 			manifest: true,
-			outDir: `${client_out_dir}/build`,
+			outDir: `${client_out_dir}/immutable`,
 			polyfillDynamicImport: false,
 			rollupOptions: {
 				input,
