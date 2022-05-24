@@ -11,7 +11,7 @@ const previous_contents = new Map();
  */
 export function write_if_changed(file, code) {
 	if (code !== previous_contents.get(file)) {
-		write(file, code)
+		write(file, code);
 	}
 }
 
