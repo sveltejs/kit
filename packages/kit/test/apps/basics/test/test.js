@@ -2636,3 +2636,13 @@ test.describe.parallel('XSS', () => {
 		);
 	});
 });
+
+test.describe.parallel('Version', () => {
+	test('does not serve version.json with an immutable cache header', async ({ request }) => {
+		// this isn't actually a great test, because caching behaviour is down to adapters.
+		// but it's better than nothing
+		const response = await request.get('/_app/version.json');
+		const headers = response.headers();
+		expect(headers['cache-control'] || '').not.toContain('immutable');
+	});
+});

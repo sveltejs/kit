@@ -66,8 +66,12 @@ export async function preview({ port, host, config, https: use_https = false }) 
 		scoped(
 			assets,
 			sirv(join(config.kit.outDir, 'output/client'), {
-				maxAge: 31536000,
-				immutable: true
+				setHeaders: (res, pathname) => {
+					// only apply to build directory, not e.g. version.json
+					if (pathname.startsWith(`/${config.kit.appDir}/build`)) {
+						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+					}
+				}
 			})
 		),
 
