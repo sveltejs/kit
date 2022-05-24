@@ -100,13 +100,8 @@ export async function dev({ port, host, https }) {
 	const server = await vite.createServer(merged_config);
 	await server.listen(port);
 
-	const address_info = /** @type {import('net').AddressInfo} */ (
-		/** @type {import('http').Server} */ (server.httpServer).address()
-	);
-
 	return {
-		address_info,
-		config: server.config,
-		close: () => server.close()
+		server,
+		config
 	};
 }

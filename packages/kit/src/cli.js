@@ -64,25 +64,31 @@ prog
 		async function start() {
 			const { dev } = await import('./core/dev/index.js');
 
-			const { address_info, config, close } = await dev({
+			const { server, config } = await dev({
 				port,
 				host,
 				https
 			});
 
+			const address_info = /** @type {import('net').AddressInfo} */ (
+				/** @type {import('http').Server} */ (server.httpServer).address()
+			);
+
+			const vite_config = server.config;
+
 			welcome({
 				port: address_info.port,
 				host: address_info.address,
-				https: !!(https || config.server.https),
-				open: first && (open || !!config.server.open),
-				base: config.base,
-				loose: config.server.fs.strict === false,
-				allow: config.server.fs.allow
+				https: !!(https || vite_config.server.https),
+				open: first && (open || !!vite_config.server.open),
+				base: config.kit.paths.base,
+				loose: vite_config.server.fs.strict === false,
+				allow: vite_config.server.fs.allow
 			});
 
 			first = false;
 
-			return close;
+			return server.close;
 		}
 
 		async function relaunch() {
@@ -177,9 +183,9 @@ prog
 
 			const { preview } = await import('./core/preview/index.js');
 
-			const server = await preview({ port, host, https });
+			const { config } = await preview({ port, host, https });
 
-			welcome({ port, host, https, open, base: server.config.base });
+			welcome({ port, host, https, open, base: config.kit.paths.base });
 		} catch (error) {
 			handle_error(error);
 		}
