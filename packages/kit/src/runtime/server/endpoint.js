@@ -22,7 +22,7 @@ const text_types = new Set([
 ]);
 
 /**
- * Decides how the body should be parsed based on its mime type. Should match what's in parse_body
+ * Decides how the body should be parsed based on its mime type
  *
  * @param {string | undefined | null} content_type The `content-type` header of a request/response.
  * @returns {boolean}

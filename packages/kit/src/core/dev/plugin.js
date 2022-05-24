@@ -195,13 +195,15 @@ export async function create_plugin(config) {
 							const file = config.kit.files.assets + pathname;
 
 							if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-								req.url = encodeURI(pathname); // don't need query/hash
-								asset_server(req, res);
-								return;
+								const has_correct_case = fs.realpathSync.native(file) === path.resolve(file);
+
+								if (has_correct_case) {
+									req.url = encodeURI(pathname); // don't need query/hash
+									asset_server(req, res);
+									return;
+								}
 							}
 						}
-
-						if (req.url === '/favicon.ico') return not_found(res);
 
 						if (!decoded.startsWith(config.kit.paths.base)) {
 							return not_found(res, `Not found (did you mean ${config.kit.paths.base + req.url}?)`);

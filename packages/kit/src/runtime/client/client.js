@@ -11,7 +11,7 @@ import {
 	notifiable_store,
 	scroll_state
 } from './utils.js';
-import { increment, decrement, initial_fetch, native_fetch } from './fetcher.js';
+import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
@@ -613,10 +613,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			if (import.meta.env.DEV) {
 				try {
-					increment();
+					lock_fetch();
 					loaded = await module.load.call(null, load_input);
 				} finally {
-					decrement();
+					unlock_fetch();
 				}
 			} else {
 				loaded = await module.load.call(null, load_input);

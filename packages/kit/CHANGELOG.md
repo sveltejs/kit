@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.342
+
+### Patch Changes
+
+- ensure static assets are only served if correct case is used ([#5047](https://github.com/sveltejs/kit/pull/5047))
+
+* [breaking] stop suppressing `/favicon.ico` requests, handle them as a valid route ([#5046](https://github.com/sveltejs/kit/pull/5046))
+
+- don't warn about window.fetch during hydration ([#5041](https://github.com/sveltejs/kit/pull/5041))
+
 ## 1.0.0-next.341
 
 ### Patch Changes
