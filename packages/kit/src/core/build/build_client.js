@@ -43,7 +43,7 @@ export async function build_client({
 	// their location in the source code, which is helpful for debugging
 	manifest_data.components.forEach((file) => {
 		const resolved = path.resolve(cwd, file);
-		const relative = path.relative(config.kit.files.routes, resolved);
+		const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
 
 		const name = relative.startsWith('..')
 			? path.basename(file)

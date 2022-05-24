@@ -147,7 +147,7 @@ export async function build_server(
 
 		if (file) {
 			const resolved = path.resolve(cwd, file);
-			const relative = path.relative(config.kit.files.routes, resolved);
+			const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
 			const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
 			input[name] = resolved;
 		}
@@ -156,7 +156,7 @@ export async function build_server(
 	// ...and every component used by pages...
 	manifest_data.components.forEach((file) => {
 		const resolved = path.resolve(cwd, file);
-		const relative = path.relative(config.kit.files.routes, resolved);
+		const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
 
 		const name = relative.startsWith('..')
 			? posixify(path.join('entries/fallbacks', path.basename(file)))
