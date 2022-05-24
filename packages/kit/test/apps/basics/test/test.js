@@ -347,7 +347,7 @@ test.describe.parallel('Imports', () => {
 			]);
 		} else {
 			expect(sources[0].startsWith('data:image/png;base64,')).toBeTruthy();
-			expect(sources[1]).toBe(`${baseURL}/_app/assets/large-3183867c.jpg`);
+			expect(sources[1]).toBe(`${baseURL}/_app/build/assets/large-3183867c.jpg`);
 		}
 	});
 });
