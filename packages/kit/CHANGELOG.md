@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.343
+
+### Patch Changes
+
+- [chore] return config from server start methods ([#5043](https://github.com/sveltejs/kit/pull/5043))
+
 ## 1.0.0-next.342
 
 ### Patch Changes
