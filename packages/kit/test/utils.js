@@ -145,7 +145,11 @@ const known_devices = {
 const test_browser_device = known_devices[test_browser];
 
 if (!test_browser_device) {
-	throw new Error(`invalid test browser specified: KIT_E2E_BROWSER=${process.env.KIT_E2E_BROWSER}. Allowed values: ${Object.keys(known_devices).join(', ')}`);
+	throw new Error(
+		`invalid test browser specified: KIT_E2E_BROWSER=${
+			process.env.KIT_E2E_BROWSER
+		}. Allowed values: ${Object.keys(known_devices).join(', ')}`
+	);
 }
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
