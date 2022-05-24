@@ -2502,6 +2502,14 @@ test.describe.parallel('Routing', () => {
 		await page.goto('/static');
 		expect(await page.textContent('h1')).toBe('hello');
 	});
+
+	test('/favicon.ico is a valid route', async ({ request }) => {
+		const response = await request.get('/favicon.ico');
+		expect(response.status()).toBe(200);
+
+		const data = await response.json();
+		expect(data).toEqual({ surprise: 'lol' });
+	});
 });
 
 test.describe.parallel('Session', () => {

@@ -96,6 +96,10 @@ export async function respond(request, options, state) {
 		}
 	}
 
+	if (!route && url.pathname === '/favicon.ico') {
+		return new Response('not found', { status: 404 });
+	}
+
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		get clientAddress() {
