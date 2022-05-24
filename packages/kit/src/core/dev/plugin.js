@@ -39,7 +39,6 @@ export async function create_plugin(config) {
 			/** @type {import('types').Respond} */
 			const respond = (await import(`${runtime}/server/index.js`)).respond;
 
-
 			/** @type {import('types').SSRManifest} */
 			let manifest;
 
