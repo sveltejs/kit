@@ -1,5 +1,16 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.47
+
+### Patch Changes
+
+- Add types to pkg.exports ([#5045](https://github.com/sveltejs/kit/pull/5045))
+
+- Updated dependencies [[`9b13c61c`](https://github.com/sveltejs/kit/commit/9b13c61c68ac4fe601e0a95cf958f7b63fa7a754)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.20
+  - @sveltejs/adapter-netlify@1.0.0-next.61
+  - @sveltejs/adapter-vercel@1.0.0-next.55
+
 ## 1.0.0-next.46
 
 ### Patch Changes

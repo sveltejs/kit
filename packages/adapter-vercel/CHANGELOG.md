@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.55
+
+### Patch Changes
+
+- Add types to pkg.exports ([#5045](https://github.com/sveltejs/kit/pull/5045))
+
 ## 1.0.0-next.54
 
 ### Patch Changes
