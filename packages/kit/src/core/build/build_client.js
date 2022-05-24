@@ -96,7 +96,7 @@ export async function build_client({
 
 	/** @type {import('vite').Manifest} */
 	const vite_manifest = JSON.parse(
-		fs.readFileSync(`${client_out_dir}/build/manifest.json`, 'utf-8')
+		fs.readFileSync(`${client_out_dir}/immutable/manifest.json`, 'utf-8')
 	);
 
 	const entry = posixify(client_entry_file);

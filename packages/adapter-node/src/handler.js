@@ -35,7 +35,7 @@ function serve(path, client = false) {
 				client &&
 				((res, pathname) => {
 					// only apply to build directory, not e.g. version.json
-					if (pathname.startsWith(`/${manifest.appDir}/build/`)) {
+					if (pathname.startsWith(`/${manifest.appDir}/immutable/`)) {
 						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
 					}
 				})

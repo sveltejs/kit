@@ -6,7 +6,7 @@ const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
 const server = new Server(manifest);
 
-const prefix = `/${manifest.appDir}/build/`;
+const prefix = `/${manifest.appDir}/immutable/`;
 
 export default {
 	/**
