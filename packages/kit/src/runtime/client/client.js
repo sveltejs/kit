@@ -616,7 +616,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					increment();
 					loaded = await module.load.call(null, load_input);
 				} finally {
-					decrement();
+					unlock_fetch();
 				}
 			} else {
 				loaded = await module.load.call(null, load_input);
