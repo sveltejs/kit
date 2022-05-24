@@ -834,8 +834,13 @@ test.describe.parallel('Encoded paths', () => {
 		expect(response.headers()['content-type']).toBe('application/json; charset=utf-8');
 	});
 
-	// TODO duplicate test for filenames
 	test('allows %-encoded characters in directory names', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/$SVLT"]');
+		expect(await page.textContent('h1')).toBe('$SVLT');
+	});
+
+	test('allows %-encoded characters in filenames', async ({ page, clicknav }) => {
 		await page.goto('/encoded');
 		await clicknav('[href="/encoded/@svelte"]');
 		expect(await page.textContent('h1')).toBe('@svelte');
