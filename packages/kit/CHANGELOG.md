@@ -1,5 +1,43 @@
 # @sveltejs/kit
 
+## 1.0.0-next.342
+
+### Patch Changes
+
+- ensure static assets are only served if correct case is used ([#5047](https://github.com/sveltejs/kit/pull/5047))
+
+* [breaking] stop suppressing `/favicon.ico` requests, handle them as a valid route ([#5046](https://github.com/sveltejs/kit/pull/5046))
+
+- don't warn about window.fetch during hydration ([#5041](https://github.com/sveltejs/kit/pull/5041))
+
+## 1.0.0-next.341
+
+### Patch Changes
+
+- fix: page store correct after navigation when an identical route with a different hash had been prefetched ([#5039](https://github.com/sveltejs/kit/pull/5039))
+
+* [breaking] replace @sveltejs/kit/install-fetch with @sveltejs/kit/node/polyfills ([#4934](https://github.com/sveltejs/kit/pull/4934))
+
+- fix: Prerendered pages fail if they access session. ([#4811](https://github.com/sveltejs/kit/pull/4811))
+
+## 1.0.0-next.340
+
+### Patch Changes
+
+- feat: Pages marked for prerendering fail during ssr at runtime ([#4812](https://github.com/sveltejs/kit/pull/4812))
+
+* Throw load validation errors so that they are caught by handleError ([#4953](https://github.com/sveltejs/kit/pull/4953))
+
+- Allow symlinked directories in the routes folder ([#4957](https://github.com/sveltejs/kit/pull/4957))
+
+* [breaking] Rename LoadInput to LoadEvent ([#5015](https://github.com/sveltejs/kit/pull/5015))
+
+- allow disableScrollHandling to be called in afterNavigate ([#4948](https://github.com/sveltejs/kit/pull/4948))
+
+* Add `config.kit.alias` ([#4964](https://github.com/sveltejs/kit/pull/4964))
+
+- use namespace import for vite to support upcoming vite 3.0 esm ([#5030](https://github.com/sveltejs/kit/pull/5030))
+
 ## 1.0.0-next.339
 
 ### Patch Changes

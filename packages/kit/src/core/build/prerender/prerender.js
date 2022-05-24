@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { pathToFileURL, URL } from 'url';
 import { mkdirp } from '../../../utils/filesystem.js';
-import { installFetch } from '../../../install-fetch.js';
+import { installPolyfills } from '../../../node/polyfills.js';
 import { is_root_relative, normalize_path, resolve } from '../../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
@@ -59,7 +59,7 @@ export async function prerender({ config, entries, files, log }) {
 		return prerendered;
 	}
 
-	installFetch();
+	installPolyfills();
 
 	const server_root = join(config.kit.outDir, 'output');
 
@@ -131,8 +131,7 @@ export async function prerender({ config, entries, files, log }) {
 
 		const response = await server.respond(new Request(`http://sveltekit-prerender${encoded}`), {
 			getClientAddress,
-			prerender: {
-				default: config.kit.prerender.default,
+			prerendering: {
 				dependencies
 			}
 		});
@@ -272,9 +271,8 @@ export async function prerender({ config, entries, files, log }) {
 
 	const rendered = await server.respond(new Request('http://sveltekit-prerender/[fallback]'), {
 		getClientAddress,
-		prerender: {
+		prerendering: {
 			fallback: true,
-			default: false,
 			dependencies: new Map()
 		}
 	});

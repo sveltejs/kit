@@ -61,34 +61,34 @@ prog
 		/** @type {() => Promise<void>} */
 		let close;
 
-		/** @param {import('types').ValidatedConfig} config */
-		async function start(config) {
+		async function start() {
 			const { dev } = await import('./core/dev/index.js');
 
-			const cwd = process.cwd();
-
-			const { address_info, server_config, close } = await dev({
-				cwd,
+			const { server, config } = await dev({
 				port,
 				host,
-				https,
-				config
+				https
 			});
+
+			const address_info = /** @type {import('net').AddressInfo} */ (
+				/** @type {import('http').Server} */ (server.httpServer).address()
+			);
+
+			const vite_config = server.config;
 
 			welcome({
 				port: address_info.port,
 				host: address_info.address,
-				https: !!(https || server_config.https),
-				open: first && (open || !!server_config.open),
+				https: !!(https || vite_config.server.https),
+				open: first && (open || !!vite_config.server.open),
 				base: config.kit.paths.base,
-				loose: server_config.fs.strict === false,
-				allow: server_config.fs.allow,
-				cwd
+				loose: vite_config.server.fs.strict === false,
+				allow: vite_config.server.fs.allow
 			});
 
 			first = false;
 
-			return close;
+			return server.close;
 		}
 
 		async function relaunch() {
@@ -96,9 +96,8 @@ prog
 			relaunching = true;
 
 			try {
-				const updated_config = await load_config();
 				await close();
-				close = await start(updated_config);
+				close = await start();
 
 				if (id !== uid) relaunch();
 			} catch (e) {
@@ -118,8 +117,7 @@ prog
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
-			const config = await load_config();
-			close = await start(config);
+			close = await start();
 
 			chokidar.watch('svelte.config.js', { ignoreInitial: true }).on('change', () => {
 				if (relaunching) uid += 1;
@@ -182,11 +180,10 @@ prog
 			await check_port(port);
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-			const config = await load_config();
 
 			const { preview } = await import('./core/preview/index.js');
 
-			await preview({ port, host, config, https });
+			const { config } = await preview({ port, host, https });
 
 			welcome({ port, host, https, open, base: config.kit.paths.base });
 		} catch (error) {

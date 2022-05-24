@@ -8,10 +8,10 @@ import {
 	find_anchor,
 	get_base_uri,
 	get_href,
-	initial_fetch,
 	notifiable_store,
 	scroll_state
 } from './utils.js';
+import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
@@ -46,33 +46,6 @@ try {
 /** @param {number} index */
 function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
-}
-
-const fetch = window.fetch;
-let loading = 0;
-
-if (import.meta.env.DEV) {
-	let can_inspect_stack_trace = false;
-
-	const check_stack_trace = async () => {
-		const stack = /** @type {string} */ (new Error().stack);
-		can_inspect_stack_trace = stack.includes('check_stack_trace');
-	};
-
-	check_stack_trace();
-
-	window.fetch = (input, init) => {
-		const url = input instanceof Request ? input.url : input.toString();
-		const stack = /** @type {string} */ (new Error().stack);
-
-		const heuristic = can_inspect_stack_trace ? stack.includes('load_node') : loading;
-		if (heuristic) {
-			console.warn(
-				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
-			);
-		}
-		return fetch(input, init);
-	};
 }
 
 /**
@@ -232,8 +205,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {string[]} redirect_chain
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {() => void} [callback]
 	 */
-	async function update(url, redirect_chain, no_cache, opts) {
+	async function update(url, redirect_chain, no_cache, opts, callback) {
 		const intent = get_navigation_intent(url);
 
 		const current_token = (token = {});
@@ -306,6 +280,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (started) {
 			current = navigation_result.state;
 
+			if (navigation_result.props.page) {
+				navigation_result.props.page.url = url;
+			}
+
 			root.$set(navigation_result.props);
 		} else {
 			initialize(navigation_result);
@@ -360,7 +338,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		load_cache.promise = null;
 		load_cache.id = null;
 		autoscroll = true;
-		updating = false;
 
 		if (navigation_result.props.page) {
 			page = navigation_result.props.page;
@@ -369,7 +346,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		router_enabled = leaf_node?.module.router !== false;
 
-		return true;
+		if (callback) callback();
+
+		updating = false;
 	}
 
 	/** @param {import('./types').NavigationResult} result */
@@ -387,12 +366,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			hydrate: true
 		});
 
-		started = true;
-
 		if (router_enabled) {
 			const navigation = { from: null, to: new URL(location.href) };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
 		}
+
+		started = true;
 	}
 
 	/**
@@ -550,7 +529,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const session = $session;
 
 		if (module.load) {
-			/** @type {import('types').LoadInput} */
+			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
 				params: uses_params,
@@ -615,7 +594,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					add_dependency(normalized);
 
 					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be normalized
-					return started ? fetch(normalized, init) : initial_fetch(requested, init);
+					return started ? native_fetch(normalized, init) : initial_fetch(requested, init);
 				},
 				status: status ?? null,
 				error: error ?? null
@@ -634,10 +613,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			if (import.meta.env.DEV) {
 				try {
-					loading += 1;
+					lock_fetch();
 					loaded = await module.load.call(null, load_input);
 				} finally {
-					loading -= 1;
+					unlock_fetch();
 				}
 			} else {
 				loaded = await module.load.call(null, load_input);
@@ -725,7 +704,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					const is_shadow_page = has_shadow && i === a.length - 1;
 
 					if (is_shadow_page) {
-						const res = await fetch(
+						const res = await native_fetch(
 							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
 								headers: {
@@ -978,18 +957,22 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		}
 
-		const completed = await update(normalized, redirect_chain, false, {
-			scroll,
-			keepfocus,
-			details
-		});
+		await update(
+			normalized,
+			redirect_chain,
+			false,
+			{
+				scroll,
+				keepfocus,
+				details
+			},
+			() => {
+				const navigation = { from, to: normalized };
+				callbacks.after_navigate.forEach((fn) => fn(navigation));
 
-		if (completed) {
-			const navigation = { from, to: normalized };
-			callbacks.after_navigate.forEach((fn) => fn(navigation));
-
-			stores.navigating.set(null);
-		}
+				stores.navigating.set(null);
+			}
+		);
 	}
 
 	/**

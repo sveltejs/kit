@@ -3,9 +3,9 @@ import path from 'path';
 import { URL } from 'url';
 import colors from 'kleur';
 import sirv from 'sirv';
-import { installFetch } from '../../install-fetch.js';
+import { installPolyfills } from '../../node/polyfills.js';
 import * as sync from '../sync/sync.js';
-import { getRequest, setResponse } from '../../node.js';
+import { getRequest, setResponse } from '../../node/index.js';
 import { SVELTE_KIT_ASSETS } from '../constants.js';
 import { get_mime_lookup, get_runtime_path, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
@@ -17,12 +17,13 @@ import { parse_route_id } from '../../utils/routing.js';
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
 const style_pattern = /\.(css|less|sass|scss|styl|stylus|pcss|postcss)$/;
 
+const cwd = process.cwd();
+
 /**
  * @param {import('types').ValidatedConfig} config
- * @param {string} cwd
  * @returns {Promise<import('vite').Plugin>}
  */
-export async function create_plugin(config, cwd) {
+export async function create_plugin(config) {
 	const runtime = get_runtime_path(config);
 
 	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
@@ -34,7 +35,7 @@ export async function create_plugin(config, cwd) {
 		name: 'vite-plugin-svelte-kit',
 
 		configureServer(vite) {
-			installFetch();
+			installPolyfills();
 
 			/** @type {import('types').SSRManifest} */
 			let manifest;
@@ -194,13 +195,15 @@ export async function create_plugin(config, cwd) {
 							const file = config.kit.files.assets + pathname;
 
 							if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-								req.url = encodeURI(pathname); // don't need query/hash
-								asset_server(req, res);
-								return;
+								const has_correct_case = fs.realpathSync.native(file) === path.resolve(file);
+
+								if (has_correct_case) {
+									req.url = encodeURI(pathname); // don't need query/hash
+									asset_server(req, res);
+									return;
+								}
 							}
 						}
-
-						if (req.url === '/favicon.ico') return not_found(res);
 
 						if (!decoded.startsWith(config.kit.paths.base)) {
 							return not_found(res, `Not found (did you mean ${config.kit.paths.base + req.url}?)`);
@@ -315,7 +318,10 @@ export async function create_plugin(config, cwd) {
 									assets
 								},
 								prefix: '',
-								prerender: config.kit.prerender.enabled,
+								prerender: {
+									default: config.kit.prerender.default,
+									enabled: config.kit.prerender.enabled
+								},
 								read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 								root,
 								router: config.kit.browser.router,

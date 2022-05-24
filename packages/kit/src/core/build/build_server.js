@@ -70,7 +70,10 @@ export class Server {
 			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
 			prefix: assets + '/${config.kit.appDir}/',
-			prerender: ${config.kit.prerender.enabled},
+			prerender: {
+				default: ${config.kit.prerender.default},
+				enabled: ${config.kit.prerender.enabled}
+			},
 			read,
 			root,
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},

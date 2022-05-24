@@ -40,7 +40,7 @@ export async function render_response({
 	resolve_opts,
 	stuff
 }) {
-	if (state.prerender) {
+	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
 			throw new Error('Cannot use prerendering if config.kit.csp.mode === "nonce"');
 		}
@@ -108,7 +108,7 @@ export async function render_response({
 				routeId: event.routeId,
 				status,
 				stuff,
-				url: state.prerender ? create_prerendering_url_proxy(event.url) : event.url
+				url: state.prerendering ? create_prerendering_url_proxy(event.url) : event.url
 			},
 			components: branch.map(({ node }) => node.module.default)
 		};
@@ -148,7 +148,7 @@ export async function render_response({
 	await csp_ready;
 	const csp = new Csp(options.csp, {
 		dev: options.dev,
-		prerender: !!state.prerender,
+		prerender: !!state.prerendering,
 		needs_nonce: options.template_contains_nonce
 	});
 
@@ -257,7 +257,7 @@ export async function render_response({
 			<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
 	}
 
-	if (state.prerender) {
+	if (state.prerendering) {
 		const http_equiv = [];
 
 		const csp_headers = csp.get_meta();
@@ -295,7 +295,7 @@ export async function render_response({
 		headers.set('permissions-policy', 'interest-cohort=()');
 	}
 
-	if (!state.prerender) {
+	if (!state.prerendering) {
 		const csp_header = csp.get_header();
 		if (csp_header) {
 			headers.set('content-security-policy', csp_header);
