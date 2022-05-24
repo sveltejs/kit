@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.338",
+	"version": "1.0.0-next.343",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -68,11 +68,11 @@
 		"./node": {
 			"import": "./dist/node.js"
 		},
+		"./node/polyfills": {
+			"import": "./dist/node/polyfills.js"
+		},
 		"./hooks": {
 			"import": "./dist/hooks.js"
-		},
-		"./install-fetch": {
-			"import": "./dist/install-fetch.js"
 		}
 	},
 	"types": "types/index.d.ts",

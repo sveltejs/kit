@@ -88,7 +88,7 @@ declare module '$app/env' {
  */
 declare module '$app/navigation' {
 	/**
-	 * If called when the page is being updated following a navigation (in `onMount` or an action, for example), this disables SvelteKit's built-in scroll handling.
+	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
 	 */
 	export function disableScrollHandling(): void;
@@ -283,11 +283,16 @@ declare module '@sveltejs/kit/hooks' {
 /**
  * A polyfill for `fetch` and its related interfaces, used by adapters for environments that don't provide a native implementation.
  */
-declare module '@sveltejs/kit/install-fetch' {
+declare module '@sveltejs/kit/node/polyfills' {
 	/**
-	 * Make `fetch`, `Headers`, `Request` and `Response` available as globals, via `node-fetch`
+	 * Make various web APIs available as globals:
+	 * - `crypto`
+	 * - `fetch`
+	 * - `Headers`
+	 * - `Request`
+	 * - `Response`
 	 */
-	export function installFetch(): void;
+	export function installPolyfills(): void;
 }
 
 /**

@@ -73,6 +73,12 @@ test('does not prerender page with shadow endpoint with non-GET handler', () => 
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 
+test('does not prerender page accessing session in load', () => {
+	// This should fail to prerender as session can never be populated
+	// for a prerendered page.
+	assert.ok(!fs.existsSync(`${build}/accesses-session.html`));
+});
+
 test('decodes paths when writing files', () => {
 	let content = read('encoding/path with spaces.html');
 	assert.ok(content.includes('<p id="a">path with spaces</p>'));

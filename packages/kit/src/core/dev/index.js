@@ -1,25 +1,28 @@
 import path from 'path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import vite from 'vite';
+import * as vite from 'vite';
 import { deep_merge } from '../../utils/object.js';
-import { print_config_conflicts } from '../config/index.js';
+import { load_config, print_config_conflicts } from '../config/index.js';
 import { get_aliases, get_runtime_path } from '../utils.js';
 import { create_plugin } from './plugin.js';
 import * as sync from '../sync/sync.js';
 
+const cwd = process.cwd();
+
 /**
  * @typedef {{
- *   cwd: string,
  *   port: number,
  *   host?: string,
  *   https: boolean,
- *   config: import('types').ValidatedConfig
  * }} Options
  * @typedef {import('types').SSRComponent} SSRComponent
  */
 
 /** @param {Options} opts */
-export async function dev({ cwd, port, host, https, config }) {
+export async function dev({ port, host, https }) {
+	/** @type {import('types').ValidatedConfig} */
+	const config = await load_config();
+
 	sync.init(config);
 
 	const [vite_config] = deep_merge(
@@ -71,7 +74,7 @@ export async function dev({ cwd, port, host, https, config }) {
 				},
 				configFile: false
 			}),
-			await create_plugin(config, cwd)
+			await create_plugin(config)
 		],
 		base: '/'
 	});
@@ -97,13 +100,8 @@ export async function dev({ cwd, port, host, https, config }) {
 	const server = await vite.createServer(merged_config);
 	await server.listen(port);
 
-	const address_info = /** @type {import('net').AddressInfo} */ (
-		/** @type {import('http').Server} */ (server.httpServer).address()
-	);
-
 	return {
-		address_info,
-		server_config: vite_config.server,
-		close: () => server.close()
+		server,
+		config
 	};
 }

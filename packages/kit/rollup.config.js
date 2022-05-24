@@ -61,9 +61,9 @@ export default [
 	{
 		input: {
 			cli: 'src/cli.js',
-			node: 'src/node.js',
-			hooks: 'src/hooks.js',
-			'install-fetch': 'src/install-fetch.js'
+			node: 'src/node/index.js',
+			'node/polyfills': 'src/node/polyfills.js',
+			hooks: 'src/hooks.js'
 		},
 		output: {
 			dir: 'dist',

@@ -1,2 +1,2 @@
-import { installFetch } from '@sveltejs/kit/install-fetch';
-installFetch();
+import { installPolyfills } from '@sveltejs/kit/node/polyfills';
+installPolyfills();

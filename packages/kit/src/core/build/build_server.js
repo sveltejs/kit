@@ -24,10 +24,10 @@ import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';
 
 const template = ({ head, body, assets, nonce }) => ${s(template)
-	.replace('%svelte.head%', '" + head + "')
-	.replace('%svelte.body%', '" + body + "')
-	.replace(/%svelte\.assets%/g, '" + assets + "')
-	.replace(/%svelte\.nonce%/g, '" + nonce + "')};
+	.replace('%sveltekit.head%', '" + head + "')
+	.replace('%sveltekit.body%', '" + body + "')
+	.replace(/%sveltekit\.assets%/g, '" + assets + "')
+	.replace(/%sveltekit\.nonce%/g, '" + nonce + "')};
 
 let read = null;
 
@@ -70,13 +70,16 @@ export class Server {
 			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
 			prefix: assets + '/${config.kit.appDir}/',
-			prerender: ${config.kit.prerender.enabled},
+			prerender: {
+				default: ${config.kit.prerender.default},
+				enabled: ${config.kit.prerender.enabled}
+			},
 			read,
 			root,
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
 			router: ${s(config.kit.browser.router)},
 			template,
-			template_contains_nonce: ${template.includes('%svelte.nonce%')},
+			template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			trailing_slash: ${s(config.kit.trailingSlash)}
 		};
 	}

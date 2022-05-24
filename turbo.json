@@ -23,6 +23,7 @@
 			]
 		},
 		"check": {
+			"dependsOn": ["build"],
 			"outputs": []
 		},
 		"format": {},
