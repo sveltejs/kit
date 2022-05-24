@@ -2570,6 +2570,11 @@ test.describe.parallel('Static files', () => {
 		const response = await request.get(path);
 		expect(response.status()).toBe(200);
 	});
+
+	test('Filenames are case-sensitive', async ({ request }) => {
+		const response = await request.get('/static.JSON');
+		expect(response.status()).toBe(404);
+	});
 });
 
 test.describe.parallel('Matchers', () => {
