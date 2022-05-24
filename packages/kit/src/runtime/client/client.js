@@ -11,7 +11,7 @@ import {
 	notifiable_store,
 	scroll_state
 } from './utils.js';
-import { increment, decrement, initial_fetch, native_fetch } from './fetcher.js';
+import { increment as lock_fetch, decrement as unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
