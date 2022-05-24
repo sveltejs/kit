@@ -17,6 +17,7 @@
 			"outputs": ["files/**", "dist/**", ".svelte-kit/**", ".vercel_build_output/**"]
 		},
 		"check": {
+			"dependsOn": ["build"],
 			"outputs": []
 		},
 		"format": {},
