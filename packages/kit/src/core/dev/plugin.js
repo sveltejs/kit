@@ -195,9 +195,15 @@ export async function create_plugin(config) {
 							const file = config.kit.files.assets + pathname;
 
 							if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-								req.url = encodeURI(pathname); // don't need query/hash
-								asset_server(req, res);
-								return;
+								const has_correct_case = fs
+									.readdirSync(path.dirname(file))
+									.includes(path.basename(file));
+
+								if (has_correct_case) {
+									req.url = encodeURI(pathname); // don't need query/hash
+									asset_server(req, res);
+									return;
+								}
 							}
 						}
 
