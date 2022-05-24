@@ -12,7 +12,7 @@ const prefix = `/${manifest.appDir}/`;
 export default function handler(request, context) {
 	if (is_static_file(request)) {
 		// Static files can skip the handler
-		// TODO can we serve _app/build files with an immutable cache header?
+		// TODO can we serve _app/immutable files with an immutable cache header?
 		return;
 	}
 
