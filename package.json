@@ -5,7 +5,7 @@
 	"private": true,
 	"scripts": {
 		"build": "turbo run build",
-		"test": "turbo run test",
+		"test": "turbo run test --filter=./packages/*",
 		"check": "turbo run check",
 		"lint": "turbo run lint",
 		"format": "turbo run format",
@@ -51,7 +51,7 @@
 		"svelte2tsx": "~0.5.0",
 		"tiny-glob": "^0.2.9",
 		"turbo": "^1.2.6",
-		"typescript": "~4.6.2",
+		"typescript": "~4.7.2",
 		"uvu": "^0.5.2"
 	},
 	"packageManager": "pnpm@7.1.5",

@@ -1,7 +1,7 @@
 <script context="module">
 	export const prerender = true;
 
-	/** @type {import('./__types/cache-control')} */
+	/** @type {import('./__types/cache-control').Load} */
 	export function load() {
 		return {
 			cache: {

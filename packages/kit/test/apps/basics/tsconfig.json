@@ -1,7 +1,11 @@
 {
 	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
 		"noEmit": true,
 		"paths": {
+			"@sveltejs/kit": ["../../../types"],
 			"$lib": ["src/lib"],
 			"$lib/*": ["src/lib/*"],
 			"types": ["../../../types/internal"]
