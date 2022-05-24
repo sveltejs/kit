@@ -180,7 +180,7 @@ async function v1(builder, external) {
 			...prerendered_pages,
 			...prerendered_redirects,
 			{
-				src: `/${builder.config.kit.appDir}/.+`,
+				src: `/${builder.config.kit.appDir}/build/.+`,
 				headers: {
 					'cache-control': 'public, immutable, max-age=31536000'
 				}

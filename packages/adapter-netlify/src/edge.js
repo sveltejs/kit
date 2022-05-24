@@ -2,7 +2,7 @@ import { Server } from '0SERVER';
 import { manifest, prerendered } from 'MANIFEST';
 
 const server = new Server(manifest);
-const prefix = `/${manifest.appDir}/`;
+const prefix = `/${manifest.appDir}/build/`;
 
 /**
  * @param { Request } request
@@ -12,6 +12,7 @@ const prefix = `/${manifest.appDir}/`;
 export default function handler(request, context) {
 	if (is_static_file(request)) {
 		// Static files can skip the handler
+		// TODO can we serve _app/build files with an immutable cache header?
 		return;
 	}
 
