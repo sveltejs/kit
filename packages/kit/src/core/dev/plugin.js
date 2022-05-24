@@ -205,8 +205,6 @@ export async function create_plugin(config) {
 							}
 						}
 
-						if (req.url === '/favicon.ico') return not_found(res);
-
 						if (!decoded.startsWith(config.kit.paths.base)) {
 							return not_found(res, `Not found (did you mean ${config.kit.paths.base + req.url}?)`);
 						}
