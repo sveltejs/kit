@@ -5,7 +5,6 @@ import { deep_merge } from '../../utils/object.js';
 import { load_config, print_config_conflicts } from '../config/index.js';
 import { get_aliases, get_runtime_path } from '../utils.js';
 import { create_plugin } from './plugin.js';
-import * as sync from '../sync/sync.js';
 
 const cwd = process.cwd();
 
@@ -22,8 +21,6 @@ const cwd = process.cwd();
 export async function dev({ port, host, https }) {
 	/** @type {import('types').ValidatedConfig} */
 	const config = await load_config();
-
-	sync.init(config);
 
 	const [vite_config] = deep_merge(
 		{
