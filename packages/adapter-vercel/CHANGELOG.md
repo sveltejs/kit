@@ -1,5 +1,13 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.56
+
+### Patch Changes
+
+- Use @vercel/nft to include dependencies in lambda without bundling with esbuild, when using v3 build output API ([#4969](https://github.com/sveltejs/kit/pull/4969))
+
+* only serve `_app/immutable` with immutable cache header, not `_app/version.json` ([#5051](https://github.com/sveltejs/kit/pull/5051))
+
 ## 1.0.0-next.55
 
 ### Patch Changes
