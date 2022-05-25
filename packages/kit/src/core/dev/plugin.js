@@ -163,8 +163,13 @@ export async function create_plugin(config) {
 
 			update_manifest();
 
-			vite.watcher.on('add', update_manifest);
-			vite.watcher.on('unlink', update_manifest);
+			for (const event of ['add', 'unlink']) {
+				vite.watcher.on(event, (file) => {
+					if (file.startsWith(config.kit.files.routes + path.sep)) {
+						update_manifest();
+					}
+				});
+			}
 
 			const assets = config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base;
 			const asset_server = sirv(config.kit.files.assets, {
