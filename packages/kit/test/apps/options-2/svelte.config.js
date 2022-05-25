@@ -16,6 +16,10 @@ const config = {
 				host: 'localhost',
 				fs: {
 					allow: [path.resolve('../../../src')]
+				},
+				watch: {
+					// perf, do not watch playwright output dir
+					ignored: ['**/test-results/**']
 				}
 			}
 		}
