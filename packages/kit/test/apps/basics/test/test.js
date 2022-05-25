@@ -2290,9 +2290,11 @@ test.describe.parallel('Routing', () => {
 
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
 		await page.waitForTimeout(50);
-		expect(await page.evaluate(() => (document.activeElement?.textContent || 'ERROR: document.activeElement not set'))).toBe(
-			'next focus element'
-		);
+		expect(
+			await page.evaluate(
+				() => document.activeElement?.textContent || 'ERROR: document.activeElement not set'
+			)
+		).toBe('next focus element');
 	});
 
 	test('focus works when navigating to a hash on the same page', async ({ page, browserName }) => {
