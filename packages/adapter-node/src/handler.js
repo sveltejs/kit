@@ -22,18 +22,23 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * @param {string} path
- * @param {number} max_age
- * @param {boolean} immutable
+ * @param {boolean} client
  */
-function serve(path, max_age, immutable = false) {
+function serve(path, client = false) {
 	return (
 		fs.existsSync(path) &&
 		sirv(path, {
 			etag: true,
-			maxAge: max_age,
-			immutable,
 			gzip: true,
-			brotli: true
+			brotli: true,
+			setHeaders:
+				client &&
+				((res, pathname) => {
+					// only apply to build directory, not e.g. version.json
+					if (pathname.startsWith(`/${manifest.appDir}/immutable/`)) {
+						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+					}
+				})
 		})
 	);
 }
@@ -126,9 +131,9 @@ function get_origin(headers) {
 
 export const handler = sequence(
 	[
-		serve(path.join(__dirname, '/client'), 31536000, true),
-		serve(path.join(__dirname, '/static'), 0),
-		serve(path.join(__dirname, '/prerendered'), 0),
+		serve(path.join(__dirname, '/client'), true),
+		serve(path.join(__dirname, '/static')),
+		serve(path.join(__dirname, '/prerendered')),
 		ssr
 	].filter(Boolean)
 );

@@ -64,7 +64,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.copy('_headers', headers_file);
 			appendFileSync(
 				headers_file,
-				`\n\n/${builder.config.kit.appDir}/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
+				`\n\n/${builder.config.kit.appDir}/immutable/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
 			);
 
 			// for esbuild, use ESM

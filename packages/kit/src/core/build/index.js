@@ -26,15 +26,18 @@ export async function build(config, { log }) {
 
 	const { manifest_data } = sync.all(config);
 
+	// TODO this is so that Vite's preloading works. Unfortunately, it fails
+	// during `svelte-kit preview`, because we use a local asset path. If Vite
+	// used relative paths, I _think_ this could get fixed. Issue here:
+	// https://github.com/vitejs/vite/issues/2009
+	const { base, assets } = config.kit.paths;
+	const assets_base = `${assets || base}/${config.kit.appDir}/immutable/`;
+
 	const options = {
 		cwd,
 		config,
 		build_dir,
-		// TODO this is so that Vite's preloading works. Unfortunately, it fails
-		// during `svelte-kit preview`, because we use a local asset path. If Vite
-		// used relative paths, I _think_ this could get fixed. Issue here:
-		// https://github.com/vitejs/vite/issues/2009
-		assets_base: `${config.kit.paths.assets || config.kit.paths.base}/${config.kit.appDir}/`,
+		assets_base,
 		manifest_data,
 		output_dir,
 		client_entry_file: path.relative(cwd, `${get_runtime_path(config)}/client/start.js`),
@@ -65,8 +68,8 @@ export async function build(config, { log }) {
 
 	const files = new Set([
 		...static_files,
-		...client.chunks.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`),
-		...client.assets.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`)
+		...client.chunks.map((chunk) => `${config.kit.appDir}/immutable/${chunk.fileName}`),
+		...client.assets.map((chunk) => `${config.kit.appDir}/immutable/${chunk.fileName}`)
 	]);
 
 	// TODO is this right?

@@ -1,15 +1,13 @@
 <script>
-	import { amp } from '$app/env';
 	import Unused from './Unused.svelte';
 	import './imported.css';
 </script>
 
-{#if amp}
+{#if Math.random() <= 1}
 	<p class="shouty">this text is rendered</p>
 {:else}
-	<Unused/>
+	<Unused />
 {/if}
-
 
 <style>
 	p {

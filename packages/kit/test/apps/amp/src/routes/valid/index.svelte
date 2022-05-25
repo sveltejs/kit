@@ -9,7 +9,7 @@
 </script>
 
 <script>
-	import { browser, dev, amp } from '$app/env';
+	import { browser, dev } from '$app/env';
 
 	/** @type {number} */
 	export let answer;
@@ -17,7 +17,7 @@
 
 <h1>Hello from the {browser ? 'client' : 'server'} in {dev ? 'dev' : 'prod'} mode!</h1>
 <h2>The answer is {answer}</h2>
-<p>amp is {amp}</p>
+<p>This text is red</p>
 
 <style>
 	p {

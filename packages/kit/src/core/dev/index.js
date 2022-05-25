@@ -1,26 +1,26 @@
 import path from 'path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import vite from 'vite';
+import * as vite from 'vite';
 import { deep_merge } from '../../utils/object.js';
-import { print_config_conflicts } from '../config/index.js';
+import { load_config, print_config_conflicts } from '../config/index.js';
 import { get_aliases, get_runtime_path } from '../utils.js';
 import { create_plugin } from './plugin.js';
-import * as sync from '../sync/sync.js';
+
+const cwd = process.cwd();
 
 /**
  * @typedef {{
- *   cwd: string,
  *   port: number,
  *   host?: string,
  *   https: boolean,
- *   config: import('types').ValidatedConfig
  * }} Options
  * @typedef {import('types').SSRComponent} SSRComponent
  */
 
 /** @param {Options} opts */
-export async function dev({ cwd, port, host, https, config }) {
-	sync.init(config);
+export async function dev({ port, host, https }) {
+	/** @type {import('types').ValidatedConfig} */
+	const config = await load_config();
 
 	const [vite_config] = deep_merge(
 		{
@@ -35,10 +35,13 @@ export async function dev({ cwd, port, host, https, config }) {
 							path.resolve(cwd, 'node_modules'),
 							path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
 						])
-					],
-					port: 3000
+					]
 				},
-				strictPort: true
+				port: 3000,
+				strictPort: true,
+				watch: {
+					ignored: [`${config.kit.outDir}/**`, `!${config.kit.outDir}/generated/**`]
+				}
 			}
 		},
 		await config.kit.vite()
@@ -60,18 +63,15 @@ export async function dev({ cwd, port, host, https, config }) {
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions,
-				// In AMP mode, we know that there are no conditional component imports. In that case, we
-				// don't need to include CSS for components that are imported but unused, so we can just
-				// include rendered CSS.
-				// This would also apply if hydrate and router are both false, but we don't know if one
-				// has been enabled at the page level, so we don't do anything there.
-				emitCss: !config.kit.amp,
+				...config,
+				emitCss: true,
 				compilerOptions: {
+					...config.compilerOptions,
 					hydratable: !!config.kit.browser.hydrate
-				}
+				},
+				configFile: false
 			}),
-			await create_plugin(config, cwd)
+			await create_plugin(config)
 		],
 		base: '/'
 	});
@@ -97,13 +97,8 @@ export async function dev({ cwd, port, host, https, config }) {
 	const server = await vite.createServer(merged_config);
 	await server.listen(port);
 
-	const address_info = /** @type {import('net').AddressInfo} */ (
-		/** @type {import('http').Server} */ (server.httpServer).address()
-	);
-
 	return {
-		address_info,
-		server_config: vite_config.server,
-		close: () => server.close()
+		server,
+		config
 	};
 }

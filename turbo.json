@@ -7,16 +7,23 @@
 			"outputs": ["dist/**", "docs/**", "assets/**"]
 		},
 		"kit.svelte.dev#build": {
-			"dependsOn": ["^build", "$VERCEL"],
+			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
 			"inputs": ["src/**", "../../packages/kit/docs/**", "../../documentation/**"],
-			"outputs": [".vercel_build_output/**"]
+			"outputs": [".vercel_build_output/**", ".vercel/output/**"]
 		},
 		"build": {
-			"dependsOn": ["^build", "$VERCEL"],
+			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
 			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
-			"outputs": ["files/**", "dist/**", ".svelte-kit/**", ".vercel_build_output/**"]
+			"outputs": [
+				"files/**",
+				"dist/**",
+				".svelte-kit/**",
+				".vercel_build_output/**",
+				".vercel/output/**"
+			]
 		},
 		"check": {
+			"dependsOn": ["build"],
 			"outputs": []
 		},
 		"format": {},
@@ -25,7 +32,10 @@
 			"outputs": []
 		},
 		"lint": {
-			"dependsOn": ["format"],
+			"outputs": []
+		},
+		"precommit": {
+			"dependsOn": ["format", "lint"],
 			"outputs": []
 		},
 		"dev": {

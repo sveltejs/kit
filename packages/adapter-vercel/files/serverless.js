@@ -1,9 +1,9 @@
-import { installFetch } from '@sveltejs/kit/install-fetch';
+import { installPolyfills } from '@sveltejs/kit/node/polyfills';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 
-installFetch();
+installPolyfills();
 
 const server = new Server(manifest);
 

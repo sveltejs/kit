@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "1.0.0-next.19",
+	"version": "1.0.0-next.21",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -11,6 +11,7 @@
 	"type": "module",
 	"exports": {
 		".": {
+			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
 		"./package.json": "./package.json"
@@ -31,13 +32,11 @@
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
-		"esbuild": "^0.14.21",
+		"esbuild": "^0.14.29",
 		"worktop": "0.8.0-next.14"
 	},
 	"devDependencies": {
-		"@types/node": "^14.14.20",
-		"@types/ws": "^8.5.3",
-		"typescript": "^4.6.2"
+		"@types/ws": "^8.5.3"
 	},
 	"publishConfig": {
 		"access": "public"

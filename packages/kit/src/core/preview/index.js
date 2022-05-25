@@ -4,8 +4,9 @@ import https from 'https';
 import { join } from 'path';
 import sirv from 'sirv';
 import { pathToFileURL } from 'url';
-import { getRequest, setResponse } from '../../node.js';
-import { installFetch } from '../../install-fetch.js';
+import { getRequest, setResponse } from '../../node/index.js';
+import { installPolyfills } from '../../node/polyfills.js';
+import { load_config } from '../config/index.js';
 import { SVELTE_KIT_ASSETS } from '../constants.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
@@ -28,14 +29,14 @@ const mutable = (dir) =>
  * @param {{
  *   port: number;
  *   host?: string;
- *   config: import('types').ValidatedConfig;
  *   https?: boolean;
  *   cwd?: string;
  * }} opts
  */
-export async function preview({ port, host, config, https: use_https = false }) {
-	installFetch();
+export async function preview({ port, host, https: use_https = false }) {
+	installPolyfills();
 
+	const config = await load_config();
 	const { paths } = config.kit;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
@@ -66,8 +67,12 @@ export async function preview({ port, host, config, https: use_https = false }) 
 		scoped(
 			assets,
 			sirv(join(config.kit.outDir, 'output/client'), {
-				maxAge: 31536000,
-				immutable: true
+				setHeaders: (res, pathname) => {
+					// only apply to build directory, not e.g. version.json
+					if (pathname.startsWith(`/${config.kit.appDir}/immutable`)) {
+						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+					}
+				}
 			})
 		),
 
@@ -163,7 +168,7 @@ export async function preview({ port, host, config, https: use_https = false }) 
 
 	return new Promise((fulfil) => {
 		http_server.listen(port, host, () => {
-			fulfil(http_server);
+			fulfil({ server: http_server, config });
 		});
 	});
 }

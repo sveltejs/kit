@@ -1,5 +1,29 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.62
+
+### Patch Changes
+
+- only serve `_app/immutable` with immutable cache header, not `_app/version.json` ([#5051](https://github.com/sveltejs/kit/pull/5051))
+
+## 1.0.0-next.61
+
+### Patch Changes
+
+- Add types to pkg.exports ([#5045](https://github.com/sveltejs/kit/pull/5045))
+
+## 1.0.0-next.60
+
+### Patch Changes
+
+- Encode binary responses as base64 ([#5048](https://github.com/sveltejs/kit/pull/5048))
+
+## 1.0.0-next.59
+
+### Patch Changes
+
+- [breaking] replace @sveltejs/kit/install-fetch with @sveltejs/kit/node/polyfills ([#4934](https://github.com/sveltejs/kit/pull/4934))
+
 ## 1.0.0-next.58
 
 ### Patch Changes

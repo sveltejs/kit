@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.42
+
+### Patch Changes
+
+- only serve `_app/immutable` with immutable cache header, not `_app/version.json` ([#5051](https://github.com/sveltejs/kit/pull/5051))
+
+## 1.0.0-next.41
+
+### Patch Changes
+
+- Add types to pkg.exports ([#5045](https://github.com/sveltejs/kit/pull/5045))
+
 ## 1.0.0-next.40
 
 ### Patch Changes

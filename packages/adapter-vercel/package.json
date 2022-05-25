@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "1.0.0-next.52",
+	"version": "1.0.0-next.56",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -11,6 +11,7 @@
 	"type": "module",
 	"exports": {
 		".": {
+			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
 		"./package.json": "./package.json"
@@ -28,11 +29,10 @@
 		"check": "tsc"
 	},
 	"dependencies": {
-		"esbuild": "^0.14.21"
+		"@vercel/nft": "^0.19.0",
+		"esbuild": "^0.14.29"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*",
-		"@types/node": "^14.14.20",
-		"typescript": "^4.6.2"
+		"@sveltejs/kit": "workspace:*"
 	}
 }

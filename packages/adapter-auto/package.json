@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-auto",
-	"version": "1.0.0-next.43",
+	"version": "1.0.0-next.48",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -11,6 +11,7 @@
 	"type": "module",
 	"exports": {
 		".": {
+			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
 		"./package.json": "./package.json"
@@ -33,9 +34,5 @@
 		"@sveltejs/adapter-cloudflare": "workspace:*",
 		"@sveltejs/adapter-netlify": "workspace:*",
 		"@sveltejs/adapter-vercel": "workspace:*"
-	},
-	"devDependencies": {
-		"@types/node": "^14.14.20",
-		"typescript": "^4.6.2"
 	}
 }

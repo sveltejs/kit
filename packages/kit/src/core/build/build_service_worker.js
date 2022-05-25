@@ -1,5 +1,5 @@
 import fs from 'fs';
-import vite from 'vite';
+import * as vite from 'vite';
 import { s } from '../../utils/misc.js';
 import { deep_merge } from '../../utils/object.js';
 import { normalize_path } from '../../utils/url.js';
@@ -44,7 +44,7 @@ export async function build_service_worker(
 
 			export const build = [
 				${Array.from(build)
-					.map((file) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/${file}`)}`)
+					.map((file) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/immutable/${file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
 

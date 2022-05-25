@@ -1,5 +1,31 @@
 # create-svelte
 
+## 2.0.0-next.140
+
+### Patch Changes
+
+- Use crypto.randomUUID() instead of @lukeed/uuid ([#5042](https://github.com/sveltejs/kit/pull/5042))
+
+## 2.0.0-next.139
+
+### Patch Changes
+
+- correct default package.json format ([#5013](https://github.com/sveltejs/kit/pull/5013))
+
+* [breaking] Replace `%svelte.body%` with `%sveltekit.body%`, etc. ([#5016](https://github.com/sveltejs/kit/pull/5016))
+
+## 2.0.0-next.138
+
+### Patch Changes
+
+- Use separate ignore files for prettier and eslint ([#5009](https://github.com/sveltejs/kit/pull/5009))
+
+## 2.0.0-next.137
+
+### Patch Changes
+
+- import generated types from `__types/index.d.ts` file ([#4705](https://github.com/sveltejs/kit/pull/4705))
+
 ## 2.0.0-next.136
 
 ### Patch Changes

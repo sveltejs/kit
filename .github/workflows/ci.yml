@@ -44,7 +44,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run test
+      - run: pnpm test
       - name: archive test results
         if: failure()
         shell: bash

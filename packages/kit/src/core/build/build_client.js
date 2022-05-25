@@ -31,8 +31,6 @@ export async function build_client({
 	process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${config.kit.appDir}/version.json`;
 	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${config.kit.version.pollInterval}`;
 
-	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
-
 	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
 
 	/** @type {Record<string, string>} */
@@ -61,7 +59,7 @@ export async function build_client({
 		build: {
 			cssCodeSplit: true,
 			manifest: true,
-			outDir: client_out_dir,
+			outDir: `${client_out_dir}/immutable`,
 			polyfillDynamicImport: false,
 			rollupOptions: {
 				input,
@@ -78,16 +76,13 @@ export async function build_client({
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions,
-				// In AMP mode, we know that there are no conditional component imports. In that case, we
-				// don't need to include CSS for components that are imported but unused, so we can just
-				// include rendered CSS.
-				// This would also apply if hydrate and router are both false, but we don't know if one
-				// has been enabled at the page level, so we don't do anything there.
-				emitCss: !config.kit.amp,
+				...config,
+				emitCss: true,
 				compilerOptions: {
+					...config.compilerOptions,
 					hydratable: !!config.kit.browser.hydrate
-				}
+				},
+				configFile: false
 			})
 		],
 		// prevent Vite copying the contents of `config.kit.files.assets`,
@@ -100,7 +95,9 @@ export async function build_client({
 	const { chunks, assets } = await create_build(merged_config);
 
 	/** @type {import('vite').Manifest} */
-	const vite_manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
+	const vite_manifest = JSON.parse(
+		fs.readFileSync(`${client_out_dir}/immutable/manifest.json`, 'utf-8')
+	);
 
 	const entry = posixify(client_entry_file);
 	const entry_js = new Set();

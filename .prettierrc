@@ -20,6 +20,7 @@
 		{
 			"files": [
 				"**/CHANGELOG.md",
+				"**/.svelte-kit/**",
 				"packages/kit/src/packaging/test/fixtures/**/expected/**/*",
 				"packages/kit/src/packaging/test/watch/expected/**/*",
 				"packages/kit/src/packaging/test/watch/package/**/*",
