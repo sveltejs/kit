@@ -283,6 +283,7 @@ export async function build_server(
 
 		const exports = [
 			'export { module };',
+			`export const index = ${i};`,
 			`export const entry = '${client.vite_manifest[component].file}';`,
 			`export const js = ${s(Array.from(js))};`,
 			`export const css = ${s(Array.from(css))};`

@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.345
+
+### Patch Changes
+
+- Prevent component double mounting caused by HMR invalidation ([#4891](https://github.com/sveltejs/kit/pull/4891))
+
+* Only recreate manifest when files inside `config.kit.files.routes` are added or deleted ([#5076](https://github.com/sveltejs/kit/pull/5076))
+
 ## 1.0.0-next.344
 
 ### Patch Changes

@@ -6,6 +6,7 @@
 		"dev": "node ../../cli.js dev",
 		"build": "node ../../cli.js build --verbose",
 		"preview": "node ../../cli.js preview",
+		"sync": "node ../../cli.js sync",
 		"check": "tsc && svelte-check",
 		"test": "npm run build && uvu test"
 	},

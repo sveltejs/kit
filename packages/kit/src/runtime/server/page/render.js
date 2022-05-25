@@ -169,11 +169,7 @@ export async function render_response({
 			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
 				status: ${status},
 				error: ${serialize_error(error)},
-				nodes: [
-					${(branch || [])
-					.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
-					.join(',\n\t\t\t\t\t\t')}
-				],
+				nodes: [${branch.map(({ node }) => node.index).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)}
 			}` : 'null'}

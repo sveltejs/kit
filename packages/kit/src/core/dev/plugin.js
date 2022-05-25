@@ -55,7 +55,7 @@ export async function create_plugin(config) {
 							css: [],
 							js: []
 						},
-						nodes: manifest_data.components.map((id) => {
+						nodes: manifest_data.components.map((id, index) => {
 							return async () => {
 								const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
@@ -93,6 +93,7 @@ export async function create_plugin(config) {
 
 								return {
 									module,
+									index,
 									entry: url.endsWith('.svelte') ? url : url + '?import',
 									css: [],
 									js: [],
@@ -163,8 +164,13 @@ export async function create_plugin(config) {
 
 			update_manifest();
 
-			vite.watcher.on('add', update_manifest);
-			vite.watcher.on('unlink', update_manifest);
+			for (const event of ['add', 'unlink']) {
+				vite.watcher.on(event, (file) => {
+					if (file.startsWith(config.kit.files.routes + path.sep)) {
+						update_manifest();
+					}
+				});
+			}
 
 			const assets = config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base;
 			const asset_server = sirv(config.kit.files.assets, {

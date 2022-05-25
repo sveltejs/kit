@@ -226,6 +226,8 @@ export interface SSREndpoint {
 
 export interface SSRNode {
 	module: SSRComponent;
+	/** index into the `components` array in client-manifest.js */
+	index: number;
 	/** client-side module URL for this component */
 	entry: string;
 	/** external CSS files */
