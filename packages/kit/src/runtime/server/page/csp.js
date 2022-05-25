@@ -23,7 +23,9 @@ const quoted = new Set([
 
 const crypto_pattern = /^(nonce|sha\d\d\d)-/;
 
-export class Csp {
+// CSP and CSP Report Only are extremely similar with a few caveats
+// the easiest/DRYest way to express this is with some private encapsulation
+class CspProvider {
 	/** @type {boolean} */
 	#use_hashes;
 
@@ -51,8 +53,8 @@ export class Csp {
 	/**
 	 * @param {{
 	 *   mode: string,
-	 *   directives: import('types').CspDirectives
-	 *   report_only?: boolean,
+	 *   directives: import('types').CspDirectives,
+	 *   report_only: boolean
 	 * }} config
 	 * @param {{
 	 *   dev: boolean;
@@ -67,6 +69,19 @@ export class Csp {
 		this.#report_only = report_only;
 
 		const d = this.#directives;
+
+		if (this.#report_only && Object.keys(d).length > 0) {
+			// If we're generating content-security-policy-report-only,
+			// if there are any directives, we need a report-uri or report-to (or both)
+			// else it's just an expensive noop.
+			const has_report_to = !!d['report-to'] && d['report-to']?.length > 0;
+			const has_report_uri = !!d['report-uri'] && d['report-uri']?.length > 0;
+			if (!has_report_to && !has_report_uri) {
+				throw Error(
+					'`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both'
+				);
+			}
+		}
 
 		if (dev) {
 			// remove strict-dynamic in dev...
@@ -134,7 +149,9 @@ export class Csp {
 		}
 	}
 
-	/** @param {boolean} [is_meta] */
+	/**
+	 * @param {boolean} [is_meta]
+	 */
 	get_header(is_meta = false) {
 		const header = [];
 
@@ -165,7 +182,7 @@ export class Csp {
 				continue;
 			}
 
-			// @ts-expect-error gimme a break typescript, `key` is obviously a member of directives
+			// @ts-expect-error gimme a break typescript, `key` is obviously a member of internal_directives
 			const value = /** @type {string[] | true} */ (directives[key]);
 
 			if (!value) continue;
@@ -188,9 +205,76 @@ export class Csp {
 	}
 
 	get_meta() {
+		if (this.#report_only) {
+			throw Error('`content-security-policy-report-only` is not valid in the <meta> tag');
+		}
 		const content = escape_html_attr(this.get_header(true));
-		return `<meta http-equiv=${`"content-security-policy${
-			this.#report_only ? '-report-only"' : '"'
-		}`} content=${content}>`;
+		return `<meta http-equiv="content-security-policy" content=${content}>`;
+	}
+}
+
+export class Csp {
+	/** @type {CspProvider} */
+	#csp_provider;
+
+	/** @type {CspProvider} */
+	#report_only_provider;
+
+	/**
+	 * @param {{
+	 *   mode: string,
+	 *   directives: import('types').CspDirectives
+	 *   reportOnly: import('types').CspDirectives,
+	 * }} config
+	 * @param {{
+	 *   dev: boolean;
+	 *   prerender: boolean;
+	 *   needs_nonce: boolean;
+	 * }} opts
+	 */
+	constructor({ mode, directives, reportOnly }, opts) {
+		this.#csp_provider = new CspProvider({ mode, directives, report_only: false }, opts);
+		this.#report_only_provider = new CspProvider(
+			{ mode, directives: reportOnly, report_only: true },
+			opts
+		);
+	}
+
+	get nonce() {
+		return this.#csp_provider.nonce;
+	}
+
+	get report_only_nonce() {
+		return this.#csp_provider.nonce;
+	}
+
+	/** @param {string} content */
+	add_script(content) {
+		this.#csp_provider.add_script(content);
+		this.#report_only_provider.add_script(content);
+	}
+
+	/** @param {string} content */
+	add_style(content) {
+		this.#csp_provider.add_style(content);
+		this.#report_only_provider.add_style(content);
+	}
+
+	/**
+	 * @param {boolean} [is_meta]
+	 */
+	get_header(is_meta = false) {
+		return this.#csp_provider.get_header(is_meta);
+	}
+
+	/**
+	 * @param {boolean} [is_meta]
+	 */
+	get_report_only_header(is_meta = false) {
+		return this.#report_only_provider.get_header(is_meta);
+	}
+
+	get_meta() {
+		return this.#csp_provider.get_meta();
 	}
 }

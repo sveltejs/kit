@@ -297,9 +297,12 @@ export async function render_response({
 
 	if (!state.prerendering) {
 		const csp_header = csp.get_header();
-		const is_report_only = options.csp.reportOnly ? '-report-only' : '';
 		if (csp_header) {
-			headers.set('content-security-policy' + is_report_only, csp_header);
+			headers.set('content-security-policy', csp_header);
+		}
+		const report_only_header = csp.get_report_only_header();
+		if (report_only_header) {
+			headers.set('content-security-policy-report-only', report_only_header);
 		}
 	}
 
