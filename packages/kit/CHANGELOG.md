@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.344
+
+### Patch Changes
+
+- [fix] svelte-kit sync no longer permanently deletes the types directory ([#5063](https://github.com/sveltejs/kit/pull/5063))
+
+* [chore] trigger sync and other setup from plugin ([#5067](https://github.com/sveltejs/kit/pull/5067))
+
+- Update `engines` to specify that Node 16.7 is required ([#5062](https://github.com/sveltejs/kit/pull/5062))
+
+* only serve `_app/immutable` with immutable cache header, not `_app/version.json` ([#5051](https://github.com/sveltejs/kit/pull/5051))
+
 ## 1.0.0-next.343
 
 ### Patch Changes
