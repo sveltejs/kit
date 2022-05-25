@@ -2650,7 +2650,23 @@ test.describe.parallel('XSS', () => {
 	});
 });
 
-test.describe.parallel('Version', () => {
+test.describe.parallel('Miscellaneous', () => {
+	test('Components are not double-mounted', async ({ page, javaScriptEnabled }) => {
+		const file = fileURLToPath(new URL('../src/routes/double-mount/index.svelte', import.meta.url));
+		const contents = fs.readFileSync(file, 'utf-8');
+
+		const mounted = javaScriptEnabled ? 1 : 0;
+
+		// we write to the file, to trigger HMR invalidation
+		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, `PLACEHOLDER:${Date.now()}`));
+		await page.goto('/double-mount');
+		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
+		await page.click('button');
+		await page.waitForTimeout(100);
+		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
+		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, 'PLACEHOLDER:0'));
+	});
+
 	test('does not serve version.json with an immutable cache header', async ({ request }) => {
 		// this isn't actually a great test, because caching behaviour is down to adapters.
 		// but it's better than nothing

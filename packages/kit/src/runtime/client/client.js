@@ -1256,7 +1256,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					}
 
 					const node = await load_node({
-						module: await nodes[i],
+						module: await components[nodes[i]](),
 						url,
 						params,
 						stuff,

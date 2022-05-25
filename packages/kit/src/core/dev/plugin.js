@@ -55,7 +55,7 @@ export async function create_plugin(config) {
 							css: [],
 							js: []
 						},
-						nodes: manifest_data.components.map((id) => {
+						nodes: manifest_data.components.map((id, index) => {
 							return async () => {
 								const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
@@ -93,6 +93,7 @@ export async function create_plugin(config) {
 
 								return {
 									module,
+									index,
 									entry: url.endsWith('.svelte') ? url : url + '?import',
 									css: [],
 									js: [],
