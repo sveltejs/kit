@@ -76,7 +76,7 @@ test.describe.parallel('base path', () => {
 		}
 	});
 
-	test('sets params correctly', async ({ page, clicknav }) => {
+	test.skip('sets params correctly', async ({ page, clicknav }) => {
 		await page.goto('/path-base/base/one');
 
 		expect(await page.textContent('h2')).toBe('one');
