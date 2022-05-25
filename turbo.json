@@ -23,10 +23,11 @@
 			]
 		},
 		"check": {
-			"dependsOn": ["build"],
+			"dependsOn": ["prepare"],
 			"outputs": []
 		},
 		"format": {},
+		"prepare": {},
 		"test": {
 			"dependsOn": ["^build", "$CI", "$TURBO_CACHE_KEY"],
 			"outputs": []
