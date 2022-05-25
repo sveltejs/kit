@@ -1,4 +1,4 @@
-import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { svelte as svelte_plugin } from '@sveltejs/vite-plugin-svelte';
 import fs from 'fs';
 import colors from 'kleur';
 import path from 'path';
@@ -11,7 +11,7 @@ import { getRequest, setResponse } from '../../node/index.js';
 import { SVELTE_KIT_ASSETS } from '../constants.js';
 import { get_aliases, get_mime_lookup, get_runtime_path, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
-import { load_config, load_template, print_config_conflicts } from '../config/index.js';
+import { load_template, print_config_conflicts } from '../config/index.js';
 import { posixify } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
 import { deep_merge } from '../../utils/object.js';
@@ -26,7 +26,7 @@ const cwd = process.cwd();
  * @param {import('types').ValidatedConfig} svelte_config
  * @return {import('vite').Plugin}
  */
-const create_sveltekit_plugin = function (svelte_config) {
+export const sveltekit = function (svelte_config) {
 	return {
 		name: 'vite-plugin-svelte-kit',
 
@@ -500,20 +500,17 @@ async function find_deps(vite, node, deps) {
 	await Promise.all(branches);
 }
 
-export const create = async function () {
-	const svelte_config = await load_config();
-	return {
-		svelte_config,
-		plugins: [
-			svelte({
-				...svelte_config,
-				compilerOptions: {
-					...svelte_config.compilerOptions,
-					hydratable: !!svelte_config.kit.browser.hydrate
-				},
-				configFile: false
-			}),
-			create_sveltekit_plugin(svelte_config)
-		]
-	};
+/**
+ * @param {import('types').ValidatedConfig} svelte_config
+ * @return {import('vite').Plugin[]}
+ */
+export const svelte = function (svelte_config) {
+	return svelte_plugin({
+		...svelte_config,
+		compilerOptions: {
+			...svelte_config.compilerOptions,
+			hydratable: !!svelte_config.kit.browser.hydrate
+		},
+		configFile: false
+	});
 };

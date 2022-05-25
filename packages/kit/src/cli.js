@@ -63,10 +63,11 @@ prog
 		let close;
 
 		async function start() {
-			const { plugins, svelte_config } = await (await import('./core/dev/plugin.js')).create();
+			const svelte_config = await load_config();
+			const { svelte, sveltekit } = await import('./core/dev/plugin.js');
 
 			/** @type {import('vite').UserConfig} */
-			const config = { plugins };
+			const config = { plugins: [svelte(svelte_config), sveltekit(svelte_config)] };
 			config.server = config.server || {};
 
 			// optional config from command-line flags
