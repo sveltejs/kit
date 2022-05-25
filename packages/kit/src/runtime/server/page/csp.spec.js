@@ -266,7 +266,7 @@ test('always creates a nonce when template needs it', () => {
 
 test('throws when reportOnly contains directives but no report-uri or report-to', () => {
 	assert.throws(() => {
-		const csp = new Csp(
+		new Csp(
 			{
 				mode: 'hash',
 				directives: {},
