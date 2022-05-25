@@ -24,18 +24,20 @@ const cwd = process.cwd();
  * @returns {Promise<import('vite').Plugin>}
  */
 export async function create_plugin(config) {
-	const runtime = get_runtime_path(config);
-
-	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
-
-	/** @type {import('types').Respond} */
-	const respond = (await import(`${runtime}/server/index.js`)).respond;
-
 	return {
 		name: 'vite-plugin-svelte-kit',
 
-		configureServer(vite) {
+		async configureServer(vite) {
 			installPolyfills();
+
+			sync.init(config);
+
+			const runtime = get_runtime_path(config);
+
+			process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
+
+			/** @type {import('types').Respond} */
+			const respond = (await import(`${runtime}/server/index.js`)).respond;
 
 			/** @type {import('types').SSRManifest} */
 			let manifest;
