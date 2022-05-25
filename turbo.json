@@ -23,11 +23,11 @@
 			]
 		},
 		"check": {
-			"dependsOn": ["prepare"],
+			"dependsOn": ["sync"],
 			"outputs": []
 		},
 		"format": {},
-		"prepare": {},
+		"sync": {},
 		"test": {
 			"dependsOn": ["^build", "$CI", "$TURBO_CACHE_KEY"],
 			"outputs": []
