@@ -188,6 +188,7 @@ export async function render_response({
 		const attributes = [];
 		if (options.dev) attributes.push(' data-sveltekit');
 		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
+		if (csp.report_only_style_needs_nonce) attributes.push(` nonce="${csp.report_only_nonce}"`);
 
 		csp.add_style(inlined_style);
 
@@ -204,6 +205,10 @@ export async function render_response({
 
 			if (csp.style_needs_nonce) {
 				attributes.push(`nonce="${csp.nonce}"`);
+      }
+      
+      if (csp.report_only_style_needs_nonce) {
+				attributes.push(`nonce="${csp.report_only_nonce}"`);
 			}
 
 			if (styles.has(dep)) {
@@ -229,6 +234,10 @@ export async function render_response({
 			attributes.push(`nonce="${csp.nonce}"`);
 		}
 
+		if (csp.report_only_script_needs_nonce) {
+			attributes.push(`nonce="${csp.report_only_nonce}"`);
+		}
+
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 
 		body += serialized_data
@@ -250,7 +259,9 @@ export async function render_response({
 		csp.add_script(init_service_worker);
 
 		head += `
-			<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
+			<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}${
+			csp.report_only_script_needs_nonce ? ` nonce="${csp.report_only_nonce}"` : ''
+		}>${init_service_worker}</script>`;
 	}
 
 	if (state.prerendering) {

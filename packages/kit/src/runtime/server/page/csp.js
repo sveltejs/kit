@@ -83,7 +83,7 @@ class CspProvider {
 			}
 		}
 
-		if (dev) {
+		if (this.#dev) {
 			// remove strict-dynamic in dev...
 			// TODO reinstate this if we can figure out how to make strict-dynamic work
 			// if (d['default-src']) {
@@ -245,7 +245,23 @@ export class Csp {
 	}
 
 	get report_only_nonce() {
-		return this.#csp_provider.nonce;
+		return this.#report_only_provider.nonce;
+	}
+
+	get script_needs_nonce() {
+		return this.#csp_provider.script_needs_nonce;
+	}
+
+	get report_only_script_needs_nonce() {
+		return this.#report_only_provider.script_needs_nonce;
+	}
+
+	get style_needs_nonce() {
+		return this.#csp_provider.style_needs_nonce;
+	}
+
+	get report_only_style_needs_nonce() {
+		return this.#report_only_provider.style_needs_nonce;
 	}
 
 	/** @param {string} content */
