@@ -76,7 +76,7 @@ test.describe.parallel('a11y', () => {
 					selection.addRange(range);
 					return selection.rangeCount;
 				}
-				return 0;
+				return -1;
 			})
 		).toBe(1);
 
@@ -87,7 +87,7 @@ test.describe.parallel('a11y', () => {
 				if (selection) {
 					return selection.rangeCount;
 				}
-				return 1;
+				return -1;
 			})
 		).toBe(0);
 	});
@@ -141,7 +141,7 @@ test.describe.parallel('beforeNavigate', () => {
 
 	test('prevents unload', async ({ page }) => {
 		await page.goto('/before-navigate/prevent-navigation');
-
+		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 		const type = new Promise((fulfil) => {
 			page.on('dialog', async (dialog) => {
 				fulfil(dialog.type());
@@ -1942,10 +1942,10 @@ test.describe.parallel('Redirects', () => {
 			);
 		} else {
 			// there's not a lot we can do to handle server-side redirect loops
-			if (browserName === 'webkit') {
-				expect(page.url()).toBe(`${baseURL}/redirect`);
-			} else {
+			if (browserName === 'chromium') {
 				expect(page.url()).toBe('chrome-error://chromewebdata/');
+			} else {
+				expect(page.url()).toBe(`${baseURL}/redirect`);
 			}
 		}
 	});
@@ -2289,7 +2289,8 @@ test.describe.parallel('Routing', () => {
 		await page.goto('/routing/hashes/target#p2');
 
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
-		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe(
+		await page.waitForTimeout(50);
+		expect(await page.evaluate(() => (document.activeElement?.textContent || 'ERROR: document.activeElement not set'))).toBe(
 			'next focus element'
 		);
 	});

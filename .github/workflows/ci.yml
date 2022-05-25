@@ -75,5 +75,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           retention-days: 3
-          name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}
+          name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
           path: test-results.tar.gz
