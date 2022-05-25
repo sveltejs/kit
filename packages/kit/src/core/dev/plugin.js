@@ -163,11 +163,8 @@ export async function create_plugin(config) {
 
 			update_manifest();
 
-			console.error(`config.kit.files.routes: ${config.kit.files.routes}`);
-
 			for (const event of ['add', 'unlink']) {
 				vite.watcher.on(event, (file) => {
-					console.error(`${event} ${file}`);
 					if (file.startsWith(config.kit.files.routes + path.sep)) {
 						update_manifest();
 					}
