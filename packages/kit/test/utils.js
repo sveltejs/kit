@@ -55,17 +55,6 @@ export const test = base.extend({
 	},
 
 	// @ts-expect-error
-	back: async ({ page, javaScriptEnabled }, use) => {
-		use(async () => {
-			if (javaScriptEnabled) {
-				await Promise.all([page.goBack(), page.evaluate(() => window.navigated)]);
-			} else {
-				return page.goBack().then(() => void 0);
-			}
-		});
-	},
-
-	// @ts-expect-error
 	clicknav: async ({ page, javaScriptEnabled }, use) => {
 		/**
 		 * @param {string} selector
@@ -105,19 +94,22 @@ export const test = base.extend({
 			});
 		}
 
-		const goto = page.goto;
-		page.goto =
-			/**
-			 * @param {string} url
-			 * @param {object}	opts
-			 */
-			async function (url, opts) {
-				const res = await goto.call(page, url, opts);
+		// automatically wait for kit started event after navigation functions if js is enabled
+		const page_navigation_functions = ['goto', 'goBack', 'reload'];
+		page_navigation_functions.forEach((fn) => {
+			const page_fn = page[fn];
+			if (!page_fn) {
+				throw new Error(`function does not exist on page: ${fn}`);
+			}
+			page[fn] = async function (...args) {
+				const res = await page_fn.call(page, ...args);
 				if (javaScriptEnabled) {
 					await page.waitForSelector('body.started', { timeout: 5000 });
 				}
 				return res;
 			};
+		});
+
 		await use(page);
 	},
 
@@ -179,7 +171,7 @@ export const config = {
 	use: {
 		...test_browser_device,
 		screenshot: 'only-on-failure',
-		trace: process.env.KIT_E2E_TRACE ? 'on' : 'on-first-retry'
+		trace: process.env.KIT_E2E_TRACE ? 'retain-on-failure' : 'on-first-retry'
 	},
 	workers: process.env.CI ? 2 : undefined
 };
