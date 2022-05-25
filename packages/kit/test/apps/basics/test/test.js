@@ -2577,6 +2577,7 @@ test.describe.parallel('Static files', () => {
 
 		const response = await request.get(path);
 		expect(response.status()).toBe(200);
+		expect(await response.text()).toContain('http://www.w3.org/2000/svg');
 	});
 
 	test('Filenames are case-sensitive', async ({ request }) => {
