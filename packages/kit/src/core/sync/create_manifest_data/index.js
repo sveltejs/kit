@@ -267,7 +267,7 @@ export default function create_manifest_data({
 	if (fs.existsSync(config.kit.files.params)) {
 		for (const file of fs.readdirSync(config.kit.files.params)) {
 			const ext = path.extname(file);
-			if (!['.js', '.ts'].includes(ext)) break;
+			if (!['.js', '.ts'].includes(ext)) continue;
 			const type = file.slice(0, -ext.length);
 
 			if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(type)) {
