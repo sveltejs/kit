@@ -514,3 +514,11 @@ export const svelte = function (svelte_config) {
 		configFile: false
 	});
 };
+
+/**
+ * @param {import('types').ValidatedConfig} svelte_config
+ * @return {import('vite').Plugin[]}
+ */
+export const plugins = function (svelte_config) {
+	return [...svelte(svelte_config), sveltekit(svelte_config)];
+};

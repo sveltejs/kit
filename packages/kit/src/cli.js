@@ -64,12 +64,12 @@ prog
 
 		async function start() {
 			const svelte_config = await load_config();
-			const { svelte, sveltekit } = await import('./core/dev/plugin.js');
+			const { plugins } = await import('./core/dev/plugin.js');
 			const vite_config = await svelte_config.kit.vite();
 
 			/** @type {import('vite').UserConfig} */
 			const config = {
-				plugins: [...(vite_config.plugins || []), svelte(svelte_config), sveltekit(svelte_config)]
+				plugins: [...(vite_config.plugins || []), plugins(svelte_config)]
 			};
 			config.server = config.server || {};
 
