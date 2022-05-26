@@ -71,7 +71,7 @@ prog
 			const config = {
 				plugins: [...(vite_config.plugins || []), plugins(svelte_config)]
 			};
-			config.server = config.server || {};
+			config.server = {};
 
 			// optional config from command-line flags
 			// these should take precedence, but not print conflict warnings
