@@ -65,9 +65,12 @@ prog
 		async function start() {
 			const svelte_config = await load_config();
 			const { svelte, sveltekit } = await import('./core/dev/plugin.js');
+			const vite_config = await svelte_config.kit.vite();
 
 			/** @type {import('vite').UserConfig} */
-			const config = { plugins: [svelte(svelte_config), sveltekit(svelte_config)] };
+			const config = {
+				plugins: [...(vite_config.plugins || []), svelte(svelte_config), sveltekit(svelte_config)]
+			};
 			config.server = config.server || {};
 
 			// optional config from command-line flags
@@ -78,7 +81,7 @@ prog
 
 			// if https is already enabled then do nothing. it could be an object and we
 			// don't want to overwrite with a boolean
-			if (https && !(await svelte_config.kit.vite())?.server?.https) {
+			if (https && !vite_config?.server?.https) {
 				config.server.https = https;
 			}
 
