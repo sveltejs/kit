@@ -20,7 +20,7 @@ importers:
       eslint-plugin-import: ^2.25.3
       eslint-plugin-node: ^11.1.0
       eslint-plugin-svelte3: ^4.0.0
-      port-authority: ^1.1.2
+      port-authority: ^2.0.0
       prettier: ^2.5.0
       prettier-plugin-svelte: ^2.5.0
       rimraf: ^3.0.2
@@ -51,7 +51,7 @@ importers:
       eslint-plugin-import: 2.25.3_iplecdnqcsfvmje2lfr4noy2lm
       eslint-plugin-node: 11.1.0_eslint@8.3.0
       eslint-plugin-svelte3: 4.0.0_eslint@8.3.0+svelte@3.48.0
-      port-authority: 1.1.2
+      port-authority: 2.0.1
       prettier: 2.5.0
       prettier-plugin-svelte: 2.5.0_gmp72aw2ck6cujyisndesbgjw4
       rimraf: 3.0.2
@@ -4680,8 +4680,8 @@ packages:
       trouter: 3.2.0
     dev: true
 
-  /port-authority/1.1.2:
-    resolution: {integrity: sha512-me2dL+chJVb88zpE228MvA6wIRy1CuXxGTwI5hYe4DnSnXRbtJT+9ggRj+49kgHgs/AKMTKOt/EkTHSvQJmRXA==}
+  /port-authority/2.0.1:
+    resolution: {integrity: sha512-Hz/WvSNt5+7x+Rq1Cn6DetJOZxKtLDehJ1mLCYge6ju4QvSF/PHvRgy94e1SKJVI96AJTcqEdNwkkaAFad+TXQ==}
     dev: true
 
   /postcss/8.4.14:
