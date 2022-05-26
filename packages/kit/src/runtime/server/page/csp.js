@@ -70,7 +70,7 @@ class CspProvider {
 
 		const d = this.#directives;
 
-		if (this.#report_only && Object.values(d).filter(v => !!v).length > 0) {
+		if (this.#report_only && Object.values(d).filter((v) => !!v).length > 0) {
 			// If we're generating content-security-policy-report-only,
 			// if there are any directives, we need a report-uri or report-to (or both)
 			// else it's just an expensive noop.
