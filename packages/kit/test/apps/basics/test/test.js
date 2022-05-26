@@ -2583,6 +2583,12 @@ test.describe.parallel('Static files', () => {
 		const response = await request.get('/static.JSON');
 		expect(response.status()).toBe(404);
 	});
+
+	// FIXME: disable on windows only
+	test.skip('Serves symlinked asset', async ({ request }) => {
+		const response = await request.get('/symlinked/asset.css');
+		expect(response.status()).toBe(200);
+	});
 });
 
 test.describe.parallel('Matchers', () => {

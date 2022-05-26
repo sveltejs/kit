@@ -1,0 +1,7 @@
+#symlinktest {
+	font-size: x-large;
+	color: blue;
+}
+#symlinktest::before {
+	content: 'YES! ';
+}
