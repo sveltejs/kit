@@ -13,5 +13,8 @@
 		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.44.0"
 	},
-	"type": "module"
+	"type": "module",
+	"engines": {
+		"node": ">=16.7"
+	}
 }
