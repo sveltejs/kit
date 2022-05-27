@@ -17,6 +17,12 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 					'You should set `config.kit.prerender.default` to `true` if no fallback is specified'
 				);
 			}
+			
+			if (process.env.NOW_BUILDER === '1') {
+				builder.log.warn(
+					'Some features may not work with `@sveltejs/adapter-static`. Please use `@sveltejs/adapter-vercel` instead. Learn more: https://kit.svelte.dev/docs/adapters'
+				);
+			}
 
 			builder.rimraf(assets);
 			builder.rimraf(pages);
