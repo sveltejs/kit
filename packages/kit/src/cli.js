@@ -69,7 +69,7 @@ prog
 
 			/** @type {import('vite').UserConfig} */
 			const config = {
-				plugins: [...(vite_config.plugins || []), plugins(svelte_config)]
+				plugins: [...(vite_config.plugins || []), await plugins(svelte_config)]
 			};
 			config.server = {};
 

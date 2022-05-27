@@ -1,7 +1,7 @@
 import { svelte as svelte_plugin } from '@sveltejs/vite-plugin-svelte';
 import path from 'path';
 import { searchForWorkspaceRoot } from 'vite';
-import { print_config_conflicts } from '../core/config/index.js';
+import { load_config, print_config_conflicts } from '../core/config/index.js';
 import { get_aliases, get_runtime_path } from '../core/utils.js';
 import { deep_merge } from '../utils/object.js';
 import { configure_server } from './dev.js';
@@ -99,9 +99,10 @@ const svelte = function (svelte_config) {
 };
 
 /**
- * @param {import('types').ValidatedConfig} svelte_config
- * @return {import('vite').Plugin[]}
+ * @param {import('types').ValidatedConfig} [svelte_config]
+ * @return {Promise<import('vite').Plugin[]>}
  */
-export const plugins = function (svelte_config) {
+export const plugins = async function (svelte_config) {
+	svelte_config = svelte_config || (await load_config());
 	return [...svelte(svelte_config), sveltekit(svelte_config)];
 };
