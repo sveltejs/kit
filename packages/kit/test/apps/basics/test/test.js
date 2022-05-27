@@ -2584,8 +2584,7 @@ test.describe.parallel('Static files', () => {
 		expect(response.status()).toBe(404);
 	});
 
-	// FIXME: disable on windows only
-	test.skip('Serves symlinked asset', async ({ request }) => {
+	test('Serves symlinked asset', async ({ request }) => {
 		const response = await request.get('/symlinked/asset.css');
 		expect(response.status()).toBe(200);
 	});

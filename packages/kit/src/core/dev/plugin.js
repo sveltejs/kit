@@ -203,7 +203,9 @@ export async function create_plugin(config) {
 							const file = config.kit.files.assets + pathname;
 
 							if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-								const has_correct_case = fs.realpathSync.native(file).endsWith(pathname);
+								const has_correct_case = fs.realpathSync
+									.native(file)
+									.endsWith(path.normalize(pathname));
 
 								if (has_correct_case) {
 									req.url = encodeURI(pathname); // don't need query/hash
