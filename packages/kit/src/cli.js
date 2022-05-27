@@ -1,9 +1,10 @@
-import sade from 'sade';
-import colors from 'kleur';
+import chokidar from 'chokidar';
 import fs from 'fs';
+import colors from 'kleur';
 import { relative } from 'path';
 import * as ports from 'port-authority';
-import chokidar from 'chokidar';
+import sade from 'sade';
+import * as vite from 'vite';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
 import { coalesce_to_error } from './utils/error.js';
@@ -62,28 +63,49 @@ prog
 		let close;
 
 		async function start() {
-			const { dev } = await import('./core/dev/index.js');
+			const svelte_config = await load_config();
+			const { plugins } = await import('./core/dev/plugin.js');
+			const vite_config = await svelte_config.kit.vite();
 
-			const { server, config } = await dev({
-				port,
-				host,
-				https
-			});
+			/** @type {import('vite').UserConfig} */
+			const config = {
+				plugins: [...(vite_config.plugins || []), plugins(svelte_config)]
+			};
+			config.server = {};
+
+			// optional config from command-line flags
+			// these should take precedence, but not print conflict warnings
+			if (host) {
+				config.server.host = host;
+			}
+
+			// if https is already enabled then do nothing. it could be an object and we
+			// don't want to overwrite with a boolean
+			if (https && !vite_config?.server?.https) {
+				config.server.https = https;
+			}
+
+			if (port) {
+				config.server.port = port;
+			}
+
+			const server = await vite.createServer(config);
+			await server.listen(port);
 
 			const address_info = /** @type {import('net').AddressInfo} */ (
 				/** @type {import('http').Server} */ (server.httpServer).address()
 			);
 
-			const vite_config = server.config;
+			const resolved_config = server.config;
 
 			welcome({
 				port: address_info.port,
 				host: address_info.address,
-				https: !!(https || vite_config.server.https),
-				open: first && (open || !!vite_config.server.open),
-				base: config.kit.paths.base,
-				loose: vite_config.server.fs.strict === false,
-				allow: vite_config.server.fs.allow
+				https: !!(https || resolved_config.server.https),
+				open: first && (open || !!resolved_config.server.open),
+				base: svelte_config.kit.paths.base,
+				loose: resolved_config.server.fs.strict === false,
+				allow: resolved_config.server.fs.allow
 			});
 
 			first = false;
@@ -91,6 +113,7 @@ prog
 			return server.close;
 		}
 
+		// TODO: we should probably replace this with something like vite-plugin-restart
 		async function relaunch() {
 			const id = uid;
 			relaunching = true;
