@@ -64,7 +64,7 @@ prog
 
 		async function start() {
 			const svelte_config = await load_config();
-			const { plugins } = await import('./core/dev/plugin.js');
+			const { plugins } = await import('./vite/plugin.js');
 			const vite_config = await svelte_config.kit.vite();
 
 			/** @type {import('vite').UserConfig} */
