@@ -3,11 +3,16 @@ import { pipeline } from 'stream';
 import glob from 'tiny-glob';
 import { promisify } from 'util';
 import zlib from 'zlib';
+import { platforms } from './platforms.js';
 
 const pipe = promisify(pipeline);
 
+const platform = platforms.find((platform) => platform.test());
+
 /** @type {import('.')} */
-export default function ({ pages = 'build', assets = pages, fallback, precompress = false } = {}) {
+export default function (
+	{ pages = 'build', assets = pages, fallback, precompress = false } = platform?.defaults() ?? {}
+) {
 	return {
 		name: '@sveltejs/adapter-static',
 
@@ -43,6 +48,8 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 			} else {
 				builder.log(`Wrote pages to "${pages}" and assets to "${assets}"`);
 			}
+
+			platform?.done(builder);
 		}
 	};
 }
