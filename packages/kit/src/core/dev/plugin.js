@@ -512,6 +512,9 @@ export const svelte = function (svelte_config) {
 			...svelte_config.compilerOptions,
 			hydratable: !!svelte_config.kit.browser.hydrate
 		},
+		hot: {
+			optimistic: false
+		},
 		configFile: false
 	});
 };
