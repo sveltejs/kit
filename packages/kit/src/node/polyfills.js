@@ -1,4 +1,5 @@
 import { fetch, Response, Request, Headers } from 'undici';
+import { ReadableStream, TransformStream, WritableStream } from 'stream/web';
 import { webcrypto as crypto } from 'crypto';
 
 /** @type {Record<string, any>} */
@@ -7,7 +8,10 @@ const globals = {
 	fetch,
 	Response,
 	Request,
-	Headers
+	Headers,
+	ReadableStream,
+	TransformStream,
+	WritableStream
 };
 
 // exported for dev/preview and node environments
