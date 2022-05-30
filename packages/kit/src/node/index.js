@@ -1,4 +1,3 @@
-import { Readable } from 'stream';
 import * as set_cookie_parser from 'set-cookie-parser';
 
 /** @param {import('http').IncomingMessage} req */
