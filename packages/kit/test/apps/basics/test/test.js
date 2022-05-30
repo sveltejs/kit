@@ -2585,8 +2585,9 @@ test.describe.parallel('Static files', () => {
 	});
 
 	test('Serves symlinked asset', async ({ request }) => {
-		const response = await request.get('/symlinked/asset.css');
+		const response = await request.get('/symlink-from/hello.txt');
 		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('hello');
 	});
 });
 
