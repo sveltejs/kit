@@ -83,7 +83,7 @@ const redirects = {
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
-/** @type {import('.')} **/
+/** @type {import('.').default} **/
 export default function ({ external = [], edge, split } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',

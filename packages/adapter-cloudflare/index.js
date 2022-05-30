@@ -3,7 +3,7 @@ import { posix } from 'path';
 import { fileURLToPath } from 'url';
 import * as esbuild from 'esbuild';
 
-/** @type {import('.')} */
+/** @type {import('.').default} */
 export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',

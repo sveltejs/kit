@@ -9,7 +9,7 @@ const pipe = promisify(pipeline);
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
-/** @type {import('.')} */
+/** @type {import('.').default} */
 export default function (opts = {}) {
 	// TODO remove for 1.0
 	// @ts-expect-error

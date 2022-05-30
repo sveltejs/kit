@@ -10,5 +10,4 @@ interface AdapterOptions {
 	envPrefix?: string;
 }
 
-declare function plugin(options?: AdapterOptions): Adapter;
-export = plugin;
+export default function plugin(options?: AdapterOptions): Adapter;

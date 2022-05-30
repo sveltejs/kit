@@ -14,7 +14,7 @@ import { fileURLToPath } from 'url';
  * }} WranglerConfig
  */
 
-/** @type {import('.')} */
+/** @type {import('.').default} */
 export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
