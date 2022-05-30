@@ -986,6 +986,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 		return new Promise(() => {});
 	}
 
+	if (import.meta.hot) {
+		import.meta.hot.on('vite:beforeUpdate', () => {
+			if (current.error) location.reload();
+		});
+	}
+
 	return {
 		after_navigate: (fn) => {
 			onMount(() => {

@@ -27,7 +27,9 @@
 			"outputs": []
 		},
 		"format": {},
-		"sync": {},
+		"sync": {
+			"outputs": [".svelte-kit/types/**", ".custom-out-dir/types/**"]
+		},
 		"test": {
 			"dependsOn": ["^build", "$CI", "$TURBO_CACHE_KEY"],
 			"outputs": []
