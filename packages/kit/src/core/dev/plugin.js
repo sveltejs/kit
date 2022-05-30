@@ -259,7 +259,7 @@ export const sveltekit = function (svelte_config) {
 							const file = svelte_config.kit.files.assets + pathname;
 
 							if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-								if (has_correct_case(file, config.kit.files.assets)) {
+								if (has_correct_case(file, svelte_config.kit.files.assets)) {
 									req.url = encodeURI(pathname); // don't need query/hash
 									asset_server(req, res);
 									return;
@@ -520,7 +520,7 @@ function has_correct_case(file, assets) {
 	return false;
 }
 
-/*
+/**
  * @param {import('types').ValidatedConfig} svelte_config
  * @return {import('vite').Plugin[]}
  */
