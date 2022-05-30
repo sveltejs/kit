@@ -500,6 +500,10 @@ async function find_deps(vite, node, deps) {
 }
 
 /**
+ * Determine if a file is being requested with the correct case,
+ * to ensure consistent behaviour between dev and prod and across
+ * operating systems. Note that we can't use realpath here,
+ * because we don't want to follow symlinks
  * @param {string} file
  * @param {string} assets
  * @returns {boolean}
