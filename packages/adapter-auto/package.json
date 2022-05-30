@@ -34,5 +34,9 @@
 		"@sveltejs/adapter-cloudflare": "workspace:*",
 		"@sveltejs/adapter-netlify": "workspace:*",
 		"@sveltejs/adapter-vercel": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/node": "^16.11.36",
+		"typescript": "^4.7.2"
 	}
 }

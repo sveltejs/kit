@@ -30,9 +30,11 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.14.29"
+		"esbuild": "^0.14.42"
 	},
 	"devDependencies": {
-		"@cloudflare/kv-asset-handler": "^0.2.0"
+		"@cloudflare/kv-asset-handler": "^0.2.0",
+		"@types/node": "^16.11.36",
+		"typescript": "^4.7.2"
 	}
 }

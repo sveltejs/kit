@@ -36,10 +36,18 @@
 		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {
+		"@rollup/plugin-json": "^4.1.0",
 		"@sveltejs/kit": "workspace:*",
 		"@types/compression": "^1.7.2",
-		"c8": "^7.10.0",
+		"@types/node": "^16.11.36",
+		"c8": "^7.11.3",
 		"compression": "^1.7.4",
-		"polka": "^1.0.0-next.22"
+		"node-fetch": "^3.2.4",
+		"polka": "^1.0.0-next.22",
+		"rimraf": "^3.0.2",
+		"rollup": "^2.75.3",
+		"sirv": "^2.0.2",
+		"typescript": "^4.7.2",
+		"uvu": "^0.5.3"
 	}
 }
