@@ -26,23 +26,14 @@ export async function build(config, { log }) {
 
 	const { manifest_data } = sync.all(config);
 
-	// TODO this is so that Vite's preloading works. Unfortunately, it fails
-	// during `svelte-kit preview`, because we use a local asset path. If Vite
-	// used relative paths, I _think_ this could get fixed. Issue here:
-	// https://github.com/vitejs/vite/issues/2009
-	const { base, assets } = config.kit.paths;
-	const assets_base = `${assets || base}/${config.kit.appDir}/immutable/`;
-
 	const options = {
 		cwd,
 		config,
 		build_dir,
-		assets_base,
 		manifest_data,
 		output_dir,
 		client_entry_file: path.relative(cwd, `${get_runtime_path(config)}/client/start.js`),
-		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
-		service_worker_register: config.kit.serviceWorker.register
+		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
 	};
 
 	const client = await build_client(options);

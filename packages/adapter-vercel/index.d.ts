@@ -6,5 +6,4 @@ type Options = {
 	split?: boolean;
 };
 
-declare function plugin(options?: Options): Adapter;
-export = plugin;
+export default function plugin(options?: Options): Adapter;

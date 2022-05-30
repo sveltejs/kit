@@ -34,7 +34,7 @@ const edge_set_in_env_var =
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === 'true' ||
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === '1';
 
-/** @type {import('.')} */
+/** @type {import('.').default} */
 export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
 		name: '@sveltejs/adapter-netlify',

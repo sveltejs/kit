@@ -7,5 +7,4 @@ interface AdapterOptions {
 	precompress?: boolean;
 }
 
-declare function plugin(options?: AdapterOptions): Adapter;
-export = plugin;
+export default function plugin(options?: AdapterOptions): Adapter;

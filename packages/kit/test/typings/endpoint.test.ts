@@ -104,6 +104,23 @@ export const nested_interfaces: RequestHandler<Record<string, string>, ParentWra
 	};
 };
 
+interface NestedLiteral {
+	date: {
+		published: string;
+		updated?: string;
+		time: {
+			hour: number;
+			min: number;
+			sec?: number;
+		};
+	};
+}
+export const nested_literal: RequestHandler<Record<string, string>, NestedLiteral> = () => {
+	return {
+		body: {} as NestedLiteral
+	};
+};
+
 // --- invalid cases ---
 
 // @ts-expect-error - bigint cannot be converted to JSON string
