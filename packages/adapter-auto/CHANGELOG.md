@@ -1,5 +1,16 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.49
+
+### Patch Changes
+
+- Update adapter entrypoint typings to be NodeNext/ESNext-compatible ([#5111](https://github.com/sveltejs/kit/pull/5111))
+
+- Updated dependencies [[`7d5fb308`](https://github.com/sveltejs/kit/commit/7d5fb3083a428c4b045d7845138efdb40e1ebad8)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.22
+  - @sveltejs/adapter-netlify@1.0.0-next.63
+  - @sveltejs/adapter-vercel@1.0.0-next.57
+
 ## 1.0.0-next.48
 
 ### Patch Changes
