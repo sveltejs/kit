@@ -8,7 +8,6 @@ import * as vite from 'vite';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
 import { coalesce_to_error } from './utils/error.js';
-import { logger } from './core/utils.js';
 
 /** @param {unknown} e */
 function handle_error(e) {
@@ -158,31 +157,18 @@ prog
 	.action(async ({ verbose }) => {
 		try {
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-			const config = await load_config();
+			process.env.VERBOSE = verbose;
 
-			const log = logger({ verbose });
+			const svelte_config = await load_config();
+			const { plugins } = await import('./vite/plugin.js');
+			const vite_config = await svelte_config.kit.vite();
 
-			const { build } = await import('./core/build/index.js');
-			const { build_data, prerendered } = await build(config, { log });
+			/** @type {import('vite').UserConfig} */
+			const config = {
+				plugins: [...(vite_config.plugins || []), await plugins(svelte_config)]
+			};
 
-			console.log(
-				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
-			);
-
-			if (config.kit.adapter) {
-				const { adapt } = await import('./core/adapt/index.js');
-				await adapt(config, build_data, prerendered, { log });
-
-				// this is necessary to close any open db connections, etc
-				process.exit(0);
-			}
-
-			console.log(colors.bold().yellow('\nNo adapter specified'));
-
-			// prettier-ignore
-			console.log(
-				`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
-			);
+			await vite.build(config);
 		} catch (error) {
 			handle_error(error);
 		}

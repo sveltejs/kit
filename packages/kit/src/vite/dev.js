@@ -448,7 +448,7 @@ async function find_deps(vite, node, deps) {
  * @param {string} assets
  * @returns {boolean}
  */
- function has_correct_case(file, assets) {
+function has_correct_case(file, assets) {
 	if (file === assets) return true;
 
 	const parent = path.dirname(file);
