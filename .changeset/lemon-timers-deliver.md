@@ -8,4 +8,4 @@
 "@sveltejs/adapter-vercel": patch
 ---
 
-Update adapter entrypoint typings to be NodeNext/ESNext-compatible.
+Update adapter entrypoint typings to be NodeNext/ESNext-compatible
