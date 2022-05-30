@@ -1,4 +1,4 @@
-import fetch, { Response, Request, Headers } from 'node-fetch';
+import { fetch, Response, Request, Headers } from 'undici';
 import { webcrypto as crypto } from 'crypto';
 
 /** @type {Record<string, any>} */

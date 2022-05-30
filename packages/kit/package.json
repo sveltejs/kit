@@ -27,10 +27,10 @@
 		"kleur": "^4.1.4",
 		"locate-character": "^2.0.5",
 		"mime": "^3.0.0",
-		"node-fetch": "^3.1.0",
 		"selfsigned": "^2.0.0",
 		"set-cookie-parser": "^2.4.8",
-		"svelte": "^3.48.0"
+		"svelte": "^3.48.0",
+		"undici": "^5.3.0"
 	},
 	"peerDependencies": {
 		"svelte": "^3.44.0"
