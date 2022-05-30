@@ -1,32 +1,35 @@
-import fs from 'node:fs';
-import glob from 'tiny-glob/sync.js';
+import { execSync } from 'node:child_process';
 
-const maps = {
-	dependencies: new Map(),
-	devDependencies: new Map()
-};
+const output = execSync('pnpm list --recursive --depth Infinity --json', {
+	encoding: 'utf8',
+	maxBuffer: 100 * 1024 * 1024
+});
 
-for (const file of glob('**/package.json', )) {
-	if (file.includes('node_modules')) continue;
+const packages = JSON.parse(output);
 
-	const pkg = JSON.parse(fs.readFileSync(file, 'utf-8'));
+const deps = new Map();
 
-	for (const type of ['dependencies', 'devDependencies']) {
-		for (const name in pkg[type]) {
-			const version = pkg[type][name];
-			if (version === 'workspace:*') continue;
+function get_or_default(map, key, constructor) {
+	let current = map.get(key);
+	if (!current) {
+		map.set(key, (current = new constructor()));
+	}
+	return current;
+}
 
-			if (!maps[type].has(name)) maps[type].set(name, new Map());
-			if (!maps[type].get(name).has(version)) maps[type].get(name).set(version, []);
-			maps[type].get(name).get(version).push(file);
-		}
+function add_deps(parent, dependencies, is_dev) {
+	for (const [name, { version }] of Object.entries(dependencies)) {
+		if (version.startsWith('link:')) continue;
+		const versions = get_or_default(deps, name, Map);
+		const parents = get_or_default(versions, version, Set);
+		parents.add(parent + (is_dev ? ':dev' : ''));
 	}
 }
 
-for (const type of ['dependencies', 'devDependencies']) {
-	for (const [name, map] of maps[type]) {
-		if (map.size > 1) {
-			console.log(name, map);
-		}
-	}
+for (const pkg of packages) {
+	if (pkg.dependencies) add_deps(pkg.name, pkg.dependencies);
+	if (pkg.devDependencies) add_deps(pkg.name, pkg.devDependencies, 'dev');
 }
+
+const duplicates = new Map([...deps].filter(([, versions]) => versions.size > 1));
+console.log(duplicates);
