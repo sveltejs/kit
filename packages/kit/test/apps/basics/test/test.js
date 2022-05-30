@@ -2583,6 +2583,12 @@ test.describe.parallel('Static files', () => {
 		const response = await request.get('/static.JSON');
 		expect(response.status()).toBe(404);
 	});
+
+	test('Serves symlinked asset', async ({ request }) => {
+		const response = await request.get('/symlink-from/hello.txt');
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('hello');
+	});
 });
 
 test.describe.parallel('Matchers', () => {
