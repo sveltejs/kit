@@ -1417,7 +1417,7 @@ test.describe.parallel('Load', () => {
 		});
 
 		await new Promise((fulfil) => {
-			server.listen(port, () => fulfil(undefined));
+			server.listen(port, 'localhost', () => fulfil(undefined));
 		});
 
 		await page.goto(`/load/server-fetch-request?port=${port}`);
