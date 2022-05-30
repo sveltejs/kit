@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.347
+
+### Patch Changes
+
+- Update dependencies ([#5121](https://github.com/sveltejs/kit/pull/5121))
+
+* allow symlinked static assets in dev ([#5089](https://github.com/sveltejs/kit/pull/5089))
+
 ## 1.0.0-next.346
 
 ### Patch Changes
