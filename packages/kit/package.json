@@ -30,7 +30,7 @@
 		"selfsigned": "^2.0.0",
 		"set-cookie-parser": "^2.4.8",
 		"svelte": "^3.48.0",
-		"undici": "^5.3.0"
+		"undici": "git://github.com/nodejs/undici"
 	},
 	"peerDependencies": {
 		"svelte": "^3.44.0"
