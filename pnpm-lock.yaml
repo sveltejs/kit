@@ -284,7 +284,7 @@ importers:
       svelte2tsx: ~0.5.10
       tiny-glob: ^0.2.9
       typescript: ^4.7.2
-      undici: https://github.com/nodejs/undici.git
+      undici: ^5.4.0
       uvu: ^0.5.3
       vite: ^2.9.9
     dependencies:
@@ -322,7 +322,7 @@ importers:
       svelte2tsx: 0.5.10_rxzurg3hjloskwsrdpptpplucy
       tiny-glob: 0.2.9
       typescript: 4.7.2
-      undici: github.com/nodejs/undici/ce98bea06104b620e22d23c7987e45aff15a6af4
+      undici: 5.4.0
       uvu: 0.5.3
 
   packages/kit/test/apps/amp:
@@ -5211,6 +5211,11 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
+  /undici/5.4.0:
+    resolution: {integrity: sha512-A1SRXysDg7J+mVP46jF+9cKANw0kptqSFZ8tGyL+HBiv0K1spjxPX8Z4EGu+Eu6pjClJUBdnUPlxrOafR668/g==}
+    engines: {node: '>=12.18'}
+    dev: true
+
   /universalify/0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
@@ -5499,15 +5504,6 @@ packages:
   /yocto-queue/0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
-    dev: true
-
-  github.com/nodejs/undici/ce98bea06104b620e22d23c7987e45aff15a6af4:
-    resolution: {tarball: https://codeload.github.com/nodejs/undici/tar.gz/ce98bea06104b620e22d23c7987e45aff15a6af4}
-    name: undici
-    version: 5.3.0
-    engines: {node: '>=12.18'}
-    prepare: true
-    requiresBuild: true
     dev: true
 
   github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641_w4rs2ccfif2v7dzo5nj6mjdwui:
