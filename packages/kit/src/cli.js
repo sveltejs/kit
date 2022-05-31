@@ -8,6 +8,7 @@ import * as vite from 'vite';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
 import { coalesce_to_error } from './utils/error.js';
+import { get_vite_config } from './vite/plugin.js';
 
 /** @param {unknown} e */
 function handle_error(e) {
@@ -63,14 +64,8 @@ prog
 
 		async function start() {
 			const svelte_config = await load_config();
-			const { plugins } = await import('./vite/plugin.js');
-			const vite_config = await svelte_config.kit.vite();
-
-			/** @type {import('vite').UserConfig} */
-			const config = {
-				plugins: [...(vite_config.plugins || []), await plugins(svelte_config)]
-			};
-			config.server = {};
+			const config = await get_vite_config(svelte_config);
+			config.server = config.server || {};
 
 			// optional config from command-line flags
 			// these should take precedence, but not print conflict warnings
@@ -80,7 +75,7 @@ prog
 
 			// if https is already enabled then do nothing. it could be an object and we
 			// don't want to overwrite with a boolean
-			if (https && !vite_config?.server?.https) {
+			if (https && !config?.server?.https) {
 				config.server.https = https;
 			}
 
@@ -160,15 +155,8 @@ prog
 			process.env.VERBOSE = verbose;
 
 			const svelte_config = await load_config();
-			const { plugins } = await import('./vite/plugin.js');
-			const vite_config = await svelte_config.kit.vite();
-
-			/** @type {import('vite').UserConfig} */
-			const config = {
-				plugins: [...(vite_config.plugins || []), await plugins(svelte_config)]
-			};
-
-			await vite.build(config);
+			const vite_config = await get_vite_config(svelte_config);
+			await vite.build(vite_config);
 		} catch (error) {
 			handle_error(error);
 		}

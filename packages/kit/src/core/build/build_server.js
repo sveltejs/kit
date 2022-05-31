@@ -6,6 +6,7 @@ import { load_template, print_config_conflicts } from '../config/index.js';
 import { get_runtime_path, resolve_entry } from '../utils.js';
 import { create_build, find_deps, get_default_config } from './utils.js';
 import { s } from '../../utils/misc.js';
+import { get_vite_config } from '../../vite/plugin.js';
 
 /**
  * @param {{
@@ -174,8 +175,7 @@ export async function build_server(options, client) {
 		})
 	);
 
-	/** @type {import('vite').UserConfig} */
-	const vite_config = await config.kit.vite();
+	const vite_config = await get_vite_config(config, false);
 
 	const default_config = {
 		build: {
@@ -204,6 +204,13 @@ export async function build_server(options, client) {
 	);
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
+
+	merged_config.plugins = (merged_config.plugins || []).flat(Infinity);
+	for (let i = merged_config.plugins.length - 1; i > 0; i--) {
+		if (merged_config.plugins[i]?.name === 'vite-plugin-svelte-kit') {
+			merged_config.plugins.splice(i, 1);
+		}
+	}
 
 	process.env.VITE_SVELTEKIT_ADAPTER_NAME = config.kit.adapter?.name;
 

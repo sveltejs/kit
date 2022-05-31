@@ -3,6 +3,7 @@ import * as vite from 'vite';
 import { s } from '../../utils/misc.js';
 import { deep_merge } from '../../utils/object.js';
 import { normalize_path } from '../../utils/url.js';
+import { get_vite_config } from '../../vite/plugin.js';
 import { print_config_conflicts } from '../config/index.js';
 import { assets_base } from './utils.js';
 
@@ -66,8 +67,10 @@ export async function build_service_worker(
 			.trim()
 	);
 
+	const vite_config = await get_vite_config(config, false);
+
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(await config.kit.vite(), {
+	const [merged_config, conflicts] = deep_merge(vite_config, {
 		base: assets_base(config),
 		build: {
 			lib: {
@@ -92,6 +95,13 @@ export async function build_service_worker(
 	});
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_service_worker');
+
+	merged_config.plugins = (merged_config.plugins || []).flat(Infinity);
+	for (let i = merged_config.plugins.length - 1; i > 0; i--) {
+		if (merged_config.plugins[i]?.name === 'vite-plugin-svelte-kit') {
+			merged_config.plugins.splice(i, 1);
+		}
+	}
 
 	await vite.build(merged_config);
 }

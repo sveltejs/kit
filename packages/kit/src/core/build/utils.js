@@ -1,5 +1,4 @@
 import * as vite from 'vite';
-import { svelte } from '../../vite/plugin.js';
 import { get_aliases } from '../utils.js';
 
 /**
@@ -74,7 +73,6 @@ export const get_default_config = function ({ client_out_dir, config, input, out
 			},
 			ssr
 		},
-		plugins: [svelte(config)],
 		// prevent Vite copying the contents of `config.kit.files.assets`,
 		// if it happens to be 'public' instead of 'static'
 		publicDir: false,

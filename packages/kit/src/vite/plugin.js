@@ -70,7 +70,7 @@ export const sveltekit = function (svelte_config) {
 
 				/** @type {[any, string[]]} */
 				const [merged_config, conflicts] = deep_merge(
-					await svelte_config.kit.vite(),
+					{},
 					get_default_config({
 						client_out_dir,
 						config: svelte_config,
@@ -82,44 +82,36 @@ export const sveltekit = function (svelte_config) {
 
 				print_config_conflicts(conflicts, 'kit.vite.', 'build_client');
 
-				merged_config.plugins.push(svelte_config);
-
 				return merged_config;
 			}
 
 			// dev and preview config can be shared
-			const [vite_config] = deep_merge(
-				{
-					preview: {
-						port: 3000,
-						strictPort: true
-					},
-					server: {
-						fs: {
-							allow: [
-								...new Set([
-									svelte_config.kit.files.lib,
-									svelte_config.kit.files.routes,
-									svelte_config.kit.outDir,
-									path.resolve(cwd, 'src'),
-									path.resolve(cwd, 'node_modules'),
-									path.resolve(searchForWorkspaceRoot(cwd), 'node_modules')
-								])
-							]
-						},
-						port: 3000,
-						strictPort: true,
-						watch: {
-							ignored: [
-								`${svelte_config.kit.outDir}/**`,
-								`!${svelte_config.kit.outDir}/generated/**`
-							]
-						}
-					},
-					spa: false
+			const vite_config = {
+				preview: {
+					port: 3000,
+					strictPort: true
 				},
-				await svelte_config.kit.vite()
-			);
+				server: {
+					fs: {
+						allow: [
+							...new Set([
+								svelte_config.kit.files.lib,
+								svelte_config.kit.files.routes,
+								svelte_config.kit.outDir,
+								path.resolve(cwd, 'src'),
+								path.resolve(cwd, 'node_modules'),
+								path.resolve(searchForWorkspaceRoot(cwd), 'node_modules')
+							])
+						]
+					},
+					port: 3000,
+					strictPort: true,
+					watch: {
+						ignored: [`${svelte_config.kit.outDir}/**`, `!${svelte_config.kit.outDir}/generated/**`]
+					}
+				},
+				spa: false
+			};
 
 			/** @type {[any, string[]]} */
 			const [merged_config, conflicts] = deep_merge(vite_config, {
@@ -138,6 +130,7 @@ export const sveltekit = function (svelte_config) {
 				base: '/'
 			});
 
+			// TODO: compare resolved config to defaults to validate
 			print_config_conflicts(conflicts, 'kit.vite.');
 
 			return merged_config;
@@ -185,6 +178,8 @@ export const sveltekit = function (svelte_config) {
 				},
 				vite_manifest
 			};
+			log.info(`Client build completed. Wrote ${chunks.length} chunks and ${assets.length} assets`);
+			process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED = 'true';
 
 			const options = {
 				cwd,
@@ -195,6 +190,8 @@ export const sveltekit = function (svelte_config) {
 				client_entry_file,
 				service_worker_entry_file: resolve_entry(svelte_config.kit.files.serviceWorker)
 			};
+
+			log.info('Building server');
 
 			const server = await build_server(options, client);
 
@@ -229,6 +226,8 @@ export const sveltekit = function (svelte_config) {
 				}
 			});
 
+			log.info('Prerendering');
+
 			const prerendered = await prerender({
 				config: svelte_config,
 				entries: manifest_data.routes
@@ -242,6 +241,8 @@ export const sveltekit = function (svelte_config) {
 				if (svelte_config.kit.paths.assets) {
 					throw new Error('Cannot use service worker alongside config.kit.paths.assets');
 				}
+
+				log.info('Building service worker');
 
 				await build_service_worker(options, prerendered, client.vite_manifest);
 			}
@@ -274,6 +275,24 @@ export const sveltekit = function (svelte_config) {
 
 /**
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {boolean} [config_file]
+ * @return {Promise<import('vite').UserConfig>}
+ */
+export async function get_vite_config(svelte_config, config_file) {
+	for (const file of ['vite.config.js', 'vite.config.mjs', 'vite.config.cjs']) {
+		if (fs.existsSync(file)) {
+			return config_file === false ? await import(path.resolve(cwd, file)) : {};
+		}
+	}
+	const vite_config = await svelte_config.kit.vite();
+	if (config_file !== false) {
+		vite_config.plugins = [...(vite_config.plugins || []), ...(await plugins(svelte_config))];
+	}
+	return vite_config;
+}
+
+/**
+ * @param {import('types').ValidatedConfig} svelte_config
  * @return {import('vite').Plugin[]}
  */
 export const svelte = function (svelte_config) {
@@ -293,5 +312,46 @@ export const svelte = function (svelte_config) {
  */
 export const plugins = async function (svelte_config) {
 	svelte_config = svelte_config || (await load_config());
-	return [...svelte(svelte_config), sveltekit(svelte_config)];
+	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
+		? [...svelte(svelte_config)]
+		: [...svelte(svelte_config), sveltekit(svelte_config)];
 };
+
+
+/**
+ * type {import('vite').Plugin}
+TODO: delete this debug plugin after switching to vite CLI
+const sveltekit_validation = {
+	name: 'vite-plugin-svelte-kit-validation',
+	async configResolved(config) {
+		let svelte_count = 0;
+		let svelte_kit_count = 0;
+		for (const plugin of config.plugins.flat(Infinity)) {
+			if (plugin.name === 'vite-plugin-svelte') {
+				svelte_count++;
+			} else if (plugin.name === 'vite-plugin-svelte-kit') {
+				svelte_kit_count++;
+			}
+		}
+
+		if (config.build.ssr) {
+			assert_plugin_count('vite-plugin-svelte', svelte_count, 1);
+			assert_plugin_count('vite-plugin-svelte-kit', svelte_kit_count, 0);
+		} else {
+			assert_plugin_count('vite-plugin-svelte', svelte_count, 1);
+			assert_plugin_count('vite-plugin-svelte-kit', svelte_kit_count, 1);
+		}
+	}
+};
+*/
+
+/**
+ * param {string} name
+ * param {number} count
+ * param {number} expected_count
+function assert_plugin_count(name, count, expected_count) {
+	if (count !== expected_count) {
+		throw Error(`Expected ${name} to be present ${expected_count} times, but found ${count}`);
+	}
+}
+*/
