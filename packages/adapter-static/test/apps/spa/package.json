@@ -10,7 +10,8 @@
 	"devDependencies": {
 		"@sveltejs/adapter-node": "next",
 		"@sveltejs/kit": "next",
-		"sirv-cli": "^2.0.2"
+		"sirv-cli": "^2.0.2",
+		"svelte": "^3.48.0"
 	},
 	"type": "module"
 }

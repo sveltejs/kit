@@ -1,5 +1,27 @@
 # @sveltejs/kit
 
+## 1.0.0-next.347
+
+### Patch Changes
+
+- Update dependencies ([#5121](https://github.com/sveltejs/kit/pull/5121))
+
+* allow symlinked static assets in dev ([#5089](https://github.com/sveltejs/kit/pull/5089))
+
+## 1.0.0-next.346
+
+### Patch Changes
+
+- [chore] provide Vite config via plugin ([#5073](https://github.com/sveltejs/kit/pull/5073))
+
+* Reload page to recover from HMR errors ([#5108](https://github.com/sveltejs/kit/pull/5108))
+
+- [chore] shared Vite build config ([#5105](https://github.com/sveltejs/kit/pull/5105))
+
+* fix `BodyValidator` handling for nested object literals ([#5118](https://github.com/sveltejs/kit/pull/5118))
+
+- [fix] don't set `credentials` to `undefined` in server-side `fetch` ([#5116](https://github.com/sveltejs/kit/pull/5116))
+
 ## 1.0.0-next.345
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 import { adapters } from './adapters.js';
 
-/** @type {import('./index')} */
+/** @type {import('./index').default} */
 let fn;
 
 for (const candidate of adapters) {

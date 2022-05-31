@@ -9,7 +9,7 @@ const pipe = promisify(pipeline);
 
 const platform = platforms.find((platform) => platform.test());
 
-/** @type {import('.')} */
+/** @type {import('.').default} */
 export default function (
 	{ pages = 'build', assets = pages, fallback, precompress = false } = platform?.defaults() ?? {}
 ) {

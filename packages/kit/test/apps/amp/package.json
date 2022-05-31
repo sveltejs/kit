@@ -15,7 +15,11 @@
 	"devDependencies": {
 		"@sveltejs/amp": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"purify-css": "^1.2.5"
+		"cross-env": "^7.0.3",
+		"purify-css": "^1.2.5",
+		"svelte": "^3.48.0",
+		"svelte-check": "^2.7.1",
+		"typescript": "^4.7.2"
 	},
 	"type": "module"
 }

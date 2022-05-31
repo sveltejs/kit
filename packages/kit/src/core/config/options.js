@@ -231,7 +231,7 @@ const options = object(
 
 				// TODO: remove this for the 1.0 release
 				force: validate(undefined, (input, keypath) => {
-					if (typeof input !== undefined) {
+					if (typeof input !== 'undefined') {
 						const newSetting = input ? 'continue' : 'fail';
 						const needsSetting = newSetting === 'continue';
 						throw new Error(

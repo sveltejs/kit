@@ -4,11 +4,10 @@ import { s } from '../../utils/misc.js';
 import { deep_merge } from '../../utils/object.js';
 import { normalize_path } from '../../utils/url.js';
 import { print_config_conflicts } from '../config/index.js';
+import { assets_base } from './utils.js';
 
 /**
  * @param {{
- *   cwd: string;
- *   assets_base: string;
  *   config: import('types').ValidatedConfig;
  *   manifest_data: import('types').ManifestData;
  *   output_dir: string;
@@ -18,7 +17,7 @@ import { print_config_conflicts } from '../config/index.js';
  * @param {import('vite').Manifest} client_manifest
  */
 export async function build_service_worker(
-	{ cwd, assets_base, config, manifest_data, output_dir, service_worker_entry_file },
+	{ config, manifest_data, output_dir, service_worker_entry_file },
 	prerendered,
 	client_manifest
 ) {
@@ -69,9 +68,7 @@ export async function build_service_worker(
 
 	/** @type {[any, string[]]} */
 	const [merged_config, conflicts] = deep_merge(await config.kit.vite(), {
-		configFile: false,
-		root: cwd,
-		base: assets_base,
+		base: assets_base(config),
 		build: {
 			lib: {
 				entry: service_worker_entry_file,
