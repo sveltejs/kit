@@ -3,7 +3,7 @@
 /** @typedef {typeof __propDef.slots}  TestSlots */
 export default class Test extends SvelteComponentTyped<
 	{
-		astring: string;
+		astring?: string;
 	},
 	{
 		event: CustomEvent<any>;
@@ -24,7 +24,7 @@ export type TestSlots = typeof __propDef.slots;
 import { SvelteComponentTyped } from 'svelte';
 declare const __propDef: {
 	props: {
-		astring: string;
+		astring?: string;
 	};
 	events: {
 		event: CustomEvent<any>;

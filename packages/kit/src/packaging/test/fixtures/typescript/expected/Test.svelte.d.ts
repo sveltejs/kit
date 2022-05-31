@@ -1,7 +1,7 @@
 import { SvelteComponentTyped } from 'svelte';
 declare const __propDef: {
 	props: {
-		astring: string;
+		astring?: string;
 	};
 	events: {
 		event: CustomEvent<boolean>;

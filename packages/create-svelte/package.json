@@ -15,12 +15,18 @@
 		"prompts": "^2.4.2"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.22.2",
 		"@sveltejs/kit": "workspace:*",
 		"@types/gitignore-parser": "^0.0.0",
-		"@types/prettier": "^2.4.2",
+		"@types/prettier": "^2.6.3",
 		"@types/prompts": "^2.0.14",
 		"gitignore-parser": "^0.0.2",
-		"sucrase": "^3.20.3"
+		"prettier": "^2.6.2",
+		"prettier-plugin-svelte": "^2.7.0",
+		"sucrase": "^3.21.0",
+		"svelte": "^3.48.0",
+		"svelte-preprocess": "^4.10.6",
+		"tiny-glob": "^0.2.9"
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",

@@ -259,9 +259,7 @@ export const sveltekit = function (svelte_config) {
 							const file = svelte_config.kit.files.assets + pathname;
 
 							if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-								const has_correct_case = fs.realpathSync.native(file) === path.resolve(file);
-
-								if (has_correct_case) {
+								if (has_correct_case(file, svelte_config.kit.files.assets)) {
 									req.url = encodeURI(pathname); // don't need query/hash
 									asset_server(req, res);
 									return;
@@ -499,6 +497,27 @@ async function find_deps(vite, node, deps) {
 	}
 
 	await Promise.all(branches);
+}
+
+/**
+ * Determine if a file is being requested with the correct case,
+ * to ensure consistent behaviour between dev and prod and across
+ * operating systems. Note that we can't use realpath here,
+ * because we don't want to follow symlinks
+ * @param {string} file
+ * @param {string} assets
+ * @returns {boolean}
+ */
+function has_correct_case(file, assets) {
+	if (file === assets) return true;
+
+	const parent = path.dirname(file);
+
+	if (fs.readdirSync(parent).includes(path.basename(file))) {
+		return has_correct_case(parent, assets);
+	}
+
+	return false;
 }
 
 /**

@@ -24,6 +24,7 @@
 		},
 		"check": {
 			"dependsOn": ["sync"],
+			"inputs": ["src/**", "types/**", ".svelte-kit/types/**", ".custom-out-dir/types/**"],
 			"outputs": []
 		},
 		"format": {},
