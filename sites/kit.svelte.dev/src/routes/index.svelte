@@ -82,12 +82,10 @@
 		</div>
 
 		<div slot="how">
-			<pre><code>
-npm init <span class="orange-highlight">svelte</span> my-app
+			<pre><code>npm init <span class="orange-highlight">svelte</span> my-app
 cd my-app
 npm install
-npm run dev -- --open
-</code></pre>
+npm run dev -- --open</code></pre>
 			<a sveltekit:prefetch href="/docs" class="cta">get started</a>
 		</div>
 	</Blurb>
