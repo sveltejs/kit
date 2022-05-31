@@ -211,6 +211,7 @@ export interface LoadOutput<Props extends Record<string, any> = Record<string, a
 	stuff?: Partial<App.Stuff>;
 	cache?: LoadOutputCache;
 	dependencies?: string[];
+	set_cookies?: string[];
 }
 
 export interface LoadOutputCache {

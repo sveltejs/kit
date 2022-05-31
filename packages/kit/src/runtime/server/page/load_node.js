@@ -6,7 +6,6 @@ import { is_root_relative, resolve } from '../../../utils/url.js';
 import { create_prerendering_url_proxy } from './utils.js';
 import { is_pojo, lowercase_keys, normalize_request_method } from '../utils.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { domain_matches, path_matches } from './cookie.js';
 
 /**
  * Calls the user's `load` function.
@@ -44,8 +43,6 @@ export async function load_node({
 
 	/** @type {Array<import('./types').Fetched>} */
 	const fetched = [];
-
-	const cookies = cookie.parse(event.request.headers.get('cookie') || '');
 
 	/** @type {import('set-cookie-parser').Cookie[]} */
 	const new_cookies = [];
@@ -124,21 +121,6 @@ export async function load_node({
 					};
 				}
 
-				opts.headers = new Headers(opts.headers);
-
-				// merge headers from request
-				for (const [key, value] of event.request.headers) {
-					if (
-						key !== 'authorization' &&
-						key !== 'cookie' &&
-						key !== 'host' &&
-						key !== 'if-none-match' &&
-						!opts.headers.has(key)
-					) {
-						opts.headers.set(key, value);
-					}
-				}
-
 				const resolved = resolve(event.url.pathname, requested.split('?')[0]);
 
 				/** @type {Response} */
@@ -176,35 +158,6 @@ export async function load_node({
 						);
 					}
 				} else if (is_root_relative(resolved)) {
-					if (opts.credentials !== 'omit') {
-						uses_credentials = true;
-
-						const authorization = event.request.headers.get('authorization');
-
-						// combine cookies from the initiating request with any that were
-						// added via set-cookie
-						const combined_cookies = { ...cookies };
-
-						for (const cookie of new_cookies) {
-							if (!domain_matches(event.url.hostname, cookie.domain)) continue;
-							if (!path_matches(resolved, cookie.path)) continue;
-
-							combined_cookies[cookie.name] = cookie.value;
-						}
-
-						const cookie = Object.entries(combined_cookies)
-							.map(([name, value]) => `${name}=${value}`)
-							.join('; ');
-
-						if (cookie) {
-							opts.headers.set('cookie', cookie);
-						}
-
-						if (authorization && !opts.headers.has('authorization')) {
-							opts.headers.set('authorization', authorization);
-						}
-					}
-
 					if (opts.body && typeof opts.body !== 'string') {
 						// per https://developer.mozilla.org/en-US/docs/Web/API/Request/Request, this can be a
 						// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object.
@@ -232,36 +185,8 @@ export async function load_node({
 						requested = event.url.protocol + requested;
 					}
 
-					// external fetch
-					// allow cookie passthrough for "same-origin"
-					// if SvelteKit is serving my.domain.com:
-					// -        domain.com WILL NOT receive cookies
-					// -     my.domain.com WILL receive cookies
-					// -    api.domain.dom WILL NOT receive cookies
-					// - sub.my.domain.com WILL receive cookies
-					// ports do not affect the resolution
-					// leading dot prevents mydomain.com matching domain.com
-					if (
-						`.${new URL(requested).hostname}`.endsWith(`.${event.url.hostname}`) &&
-						opts.credentials !== 'omit'
-					) {
-						uses_credentials = true;
-
-						const cookie = event.request.headers.get('cookie');
-						if (cookie) opts.headers.set('cookie', cookie);
-					}
-
 					const external_request = new Request(requested, /** @type {RequestInit} */ (opts));
 					response = await options.hooks.externalFetch.call(null, external_request);
-				}
-
-				const set_cookie = response.headers.get('set-cookie');
-				if (set_cookie) {
-					new_cookies.push(
-						...set_cookie_parser
-							.splitCookiesString(set_cookie)
-							.map((str) => set_cookie_parser.parseString(str))
-					);
 				}
 
 				const proxy = new Proxy(response, {
@@ -356,6 +281,12 @@ export async function load_node({
 		}
 
 		loaded = await module.load.call(null, load_input);
+
+		if (loaded.set_cookies) {
+			loaded.set_cookies.forEach((cookie) => {
+				new_cookies.push(set_cookie_parser.parseString(cookie));
+			});
+		}
 
 		if (!loaded) {
 			// TODO do we still want to enforce this now that there's no fallthrough?

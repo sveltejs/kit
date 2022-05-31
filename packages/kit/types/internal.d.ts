@@ -120,6 +120,7 @@ export type NormalizedLoadOutput = {
 	stuff?: Record<string, any>;
 	cache?: NormalizedLoadOutputCache;
 	dependencies?: string[];
+	set_cookies?: string[];
 };
 
 export interface NormalizedLoadOutputCache {

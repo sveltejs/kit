@@ -159,3 +159,7 @@ The combined `stuff` is available to components using the [page store](/docs/mod
 An array of strings representing URLs the page depends on, which can subsequently be used with [`invalidate`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun. You only need to add them to `dependencies` if you're using a custom API client; URLs loaded with the provided `fetch` function are added automatically.
 
 URLs can be absolute or relative to the page being loaded, and must be [encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding).
+
+#### set_cookies
+
+An array of strings, each in standard cookie form with key/value and semicolon delimited attributes, e.g. "cookie1=value;maxage=3600;path=/".
