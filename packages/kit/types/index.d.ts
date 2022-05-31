@@ -200,6 +200,7 @@ export interface LoadEvent<
 	url: URL;
 	status: number | null;
 	error: Error | null;
+	event: RequestEvent | null;
 }
 
 export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {

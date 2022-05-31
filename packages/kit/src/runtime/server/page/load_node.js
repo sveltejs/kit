@@ -342,7 +342,8 @@ export async function load_node({
 			},
 			stuff: { ...stuff },
 			status: is_error ? status ?? null : null,
-			error: is_error ? error ?? null : null
+			error: is_error ? error ?? null : null,
+			event
 		};
 
 		if (options.dev) {

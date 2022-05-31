@@ -50,7 +50,7 @@ It is recommended that you not store per-request state in global variables, but 
 
 ### Input
 
-The `load` function receives an object containing eight fields — `url`, `params`, `props`, `fetch`, `session`, `stuff`, `status`, and `error`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `url`, `session` or `stuff` are used in the function, they will be re-run whenever their value changes, and likewise for the individual properties of `params`.
+The `load` function receives an object containing nine fields — `url`, `params`, `props`, `fetch`, `session`, `stuff`, `status`, `error`, and `event`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `url`, `session` or `stuff` are used in the function, they will be re-run whenever their value changes, and likewise for the individual properties of `params`.
 
 > Note that destructuring parameters in the function declaration is enough to count as using them.
 
@@ -104,6 +104,10 @@ If the page you're loading has an endpoint, the data returned from it is accessi
 #### error
 
 `error` is the error that was thrown (or returned from a previous `load`) when rendering an error page, or `null` otherwise.
+
+#### event
+
+`event` represents the incoming request. This will be null on the client.
 
 ### Output
 

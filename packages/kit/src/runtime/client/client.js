@@ -597,7 +597,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 					return started ? native_fetch(normalized, init) : initial_fetch(requested, init);
 				},
 				status: status ?? null,
-				error: error ?? null
+				error: error ?? null,
+				event: null
 			};
 
 			if (import.meta.env.DEV) {
