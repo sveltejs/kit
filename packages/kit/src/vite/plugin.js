@@ -9,10 +9,10 @@ import { build_server } from '../core/build/build_server.js';
 import { build_service_worker } from '../core/build/build_service_worker.js';
 import { prerender } from '../core/build/prerender/prerender.js';
 import { load_config, print_config_conflicts } from '../core/config/index.js';
+import { configure_server } from '../core/dev/plugin.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_aliases, get_runtime_path, logger, resolve_entry } from '../core/utils.js';
 import { deep_merge } from '../utils/object.js';
-import { configure_server } from './dev.js';
 import { find_deps, get_default_config } from '../core/build/utils.js';
 
 const cwd = process.cwd();
