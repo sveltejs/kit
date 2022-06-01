@@ -18,10 +18,10 @@ import { find_deps, get_default_config } from '../core/build/utils.js';
 const cwd = process.cwd();
 
 /**
- * @param {import('types').ValidatedConfig} svelte_config
+ * @param {import('types').Config['kit']} svelte_config
  * @return {import('vite').Plugin}
  */
-export const sveltekit = function (svelte_config) {
+export const sveltekit = function (svelte_config = {}) {
 	const build_dir = path.join(svelte_config.kit.outDir, 'build');
 	const output_dir = path.join(svelte_config.kit.outDir, 'output');
 	const client_out_dir = `${output_dir}/client/${svelte_config.kit.appDir}`;
