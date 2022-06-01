@@ -59,7 +59,7 @@ export async function build_client(options) {
 	const entry = posixify(client_entry_file);
 	const entry_js = new Set();
 	const entry_css = new Set();
-	find_deps(entry, vite_manifest, entry_js, entry_css);
+	find_deps(entry, vite_manifest, entry_js, entry_css, false);
 
 	fs.writeFileSync(
 		`${client_out_dir}/version.json`,

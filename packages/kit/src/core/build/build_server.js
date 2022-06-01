@@ -234,7 +234,7 @@ export async function build_server(options, client) {
 
 		const js = new Set();
 		const css = new Set();
-		find_deps(component, client.vite_manifest, js, css);
+		find_deps(component, client.vite_manifest, js, css, false);
 
 		const imports = [`import * as module from '../${vite_manifest[component].file}';`];
 

@@ -28,19 +28,24 @@ export async function create_build(config) {
  * @param {import('vite').Manifest} manifest
  * @param {Set<string>} css
  * @param {Set<string>} js
+ * @param {boolean} dynamic
  */
-export function find_deps(file, manifest, js, css) {
+export function find_deps(file, manifest, js, css, dynamic) {
 	const chunk = manifest[file];
 
 	if (js.has(chunk.file)) return;
-	js.add(chunk.file);
+	if (!dynamic) js.add(chunk.file);
 
 	if (chunk.css) {
 		chunk.css.forEach((file) => css.add(file));
 	}
 
 	if (chunk.imports) {
-		chunk.imports.forEach((file) => find_deps(file, manifest, js, css));
+		chunk.imports.forEach((file) => find_deps(file, manifest, js, css, dynamic));
+	}
+
+	if (chunk.dynamicImports) {
+		chunk.dynamicImports.forEach((file) => find_deps(file, manifest, js, css, true));
 	}
 }
 

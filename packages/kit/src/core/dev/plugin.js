@@ -492,6 +492,10 @@ async function find_deps(vite, node, deps) {
 		if (node.ssrTransformResult.deps) {
 			node.ssrTransformResult.deps.forEach((url) => branches.push(add_by_url(url)));
 		}
+
+		if (node.ssrTransformResult.dynamicDeps) {
+			node.ssrTransformResult.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
+		}
 	} else {
 		node.importedModules.forEach((node) => branches.push(add(node)));
 	}
