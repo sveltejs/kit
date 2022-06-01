@@ -235,7 +235,7 @@ export interface SSRNode {
 	/** external JS files */
 	js: string[];
 	/** inlined styles */
-	styles?: Record<string, string>;
+	styles?: () => Promise<Record<string, string>>;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;

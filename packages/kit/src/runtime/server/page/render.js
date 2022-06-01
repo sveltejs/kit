@@ -71,10 +71,10 @@ export async function render_response({
 	}
 
 	if (resolve_opts.ssr) {
-		branch.forEach(({ node, props, loaded, fetched, uses_credentials }) => {
+		for (const { node, props, loaded, fetched, uses_credentials } of branch) {
 			if (node.css) node.css.forEach((url) => stylesheets.add(url));
 			if (node.js) node.js.forEach((url) => modulepreloads.add(url));
-			if (node.styles) Object.entries(node.styles).forEach(([k, v]) => styles.set(k, v));
+			if (node.styles) Object.entries(await node.styles()).forEach(([k, v]) => styles.set(k, v));
 
 			// TODO probably better if `fetched` wasn't populated unless `hydrate`
 			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
@@ -82,7 +82,7 @@ export async function render_response({
 
 			cache = loaded?.cache;
 			is_private = cache?.private ?? uses_credentials;
-		});
+		}
 
 		const session = writable($session);
 

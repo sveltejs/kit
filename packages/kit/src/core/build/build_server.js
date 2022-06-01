@@ -259,7 +259,7 @@ export async function build_server(options, client) {
 		});
 
 		if (styles.length > 0) {
-			exports.push(`export const styles = {\n${styles.join(',\n')}\n};`);
+			exports.push(`export const styles = () => ({\n${styles.join(',\n')}\n});`);
 		}
 
 		fs.writeFileSync(file, `${imports.join('\n')}\n\n${exports.join('\n')}\n`);
