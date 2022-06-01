@@ -36,18 +36,27 @@ export function load_template(cwd, config) {
 	return fs.readFileSync(template, 'utf-8');
 }
 
+/**
+ * @returns {Promise<import('types').ValidatedConfig>}
+ */
 export async function load_config({ cwd = process.cwd() } = {}) {
 	const config_file = path.join(cwd, 'svelte.config.js');
 
 	if (!fs.existsSync(config_file)) {
-		throw new Error(
-			'You need to create a svelte.config.js file. See https://kit.svelte.dev/docs/configuration'
-		);
+		return process_config({}, { cwd });
 	}
 
 	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
 
-	const validated = validate_config(config.default);
+	return process_config(config.default, { cwd });
+}
+
+/**
+ * @param {import('types').Config} config
+ * @returns {import('types').ValidatedConfig}
+ */
+export function process_config(config, { cwd = process.cwd() } = {}) {
+	const validated = validate_config(config);
 
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 

@@ -8,7 +8,7 @@ import * as sync from '../core/sync/sync.js';
 import { build_server } from '../core/build/build_server.js';
 import { build_service_worker } from '../core/build/build_service_worker.js';
 import { prerender } from '../core/build/prerender/prerender.js';
-import { load_config, print_config_conflicts } from '../core/config/index.js';
+import { print_config_conflicts, process_config } from '../core/config/index.js';
 import { configure_server } from '../core/dev/plugin.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_aliases, get_runtime_path, logger, resolve_entry } from '../core/utils.js';
@@ -287,35 +287,46 @@ export async function get_vite_config(svelte_config, config_file) {
 	// TODO: stop reading Vite config from SvelteKit config or move to CLI
 	const vite_config = await svelte_config.kit.vite();
 	if (config_file !== false) {
-		vite_config.plugins = [...(vite_config.plugins || []), ...(await plugins(svelte_config))];
+		vite_config.plugins = [...(vite_config.plugins || []), ...plugins_internal(svelte_config)];
 	}
 	return vite_config;
 }
 
 /**
- * @param {import('types').ValidatedConfig} svelte_config
+ * @param {import('types').Config} svelte_config
+ * @param {boolean} hydratable
  * @return {import('vite').Plugin[]}
  */
-export const svelte = function (svelte_config) {
+export const svelte = function (svelte_config, hydratable) {
 	return svelte_plugin({
 		...svelte_config,
 		compilerOptions: {
-			...svelte_config.compilerOptions,
-			hydratable: !!svelte_config.kit.browser.hydrate
+			...(svelte_config?.compilerOptions || {}),
+			hydratable
 		},
 		configFile: false
 	});
 };
 
 /**
- * @param {import('types').ValidatedConfig} [svelte_config]
- * @return {Promise<import('vite').Plugin[]>}
+ * @param {import('types').Config} raw_svelte_config
+ * @return {import('vite').Plugin[]}
  */
-export const plugins = async function (svelte_config) {
-	svelte_config = svelte_config || (await load_config());
+export const plugins = function (raw_svelte_config) {
+	const svelte_config = process_config(raw_svelte_config, { cwd });
 	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
-		? [...svelte(svelte_config)]
-		: [...svelte(svelte_config), sveltekit(svelte_config)];
+		? [...svelte({}, !!svelte_config.kit.browser.hydrate)]
+		: [...svelte({}, !!svelte_config.kit.browser.hydrate), sveltekit(svelte_config)];
+};
+
+/**
+ * @param {import('types').ValidatedConfig} svelte_config
+ * @return {import('vite').Plugin[]}
+ */
+const plugins_internal = function (svelte_config) {
+	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
+		? [...svelte(svelte_config, !!svelte_config.kit.browser.hydrate)]
+		: [...svelte(svelte_config, !!svelte_config.kit.browser.hydrate), sveltekit(svelte_config)];
 };
 
 /**
