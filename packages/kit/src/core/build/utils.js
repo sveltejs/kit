@@ -56,7 +56,7 @@ export function find_deps(file, manifest, js, css) {
  */
 export const get_default_config = function ({ client_out_dir, config, input, output_dir, ssr }) {
 	return {
-		base: assets_base(config),
+		base: assets_base(config.kit),
 		build: {
 			cssCodeSplit: true,
 			manifest: true,
@@ -88,19 +88,19 @@ export const get_default_config = function ({ client_out_dir, config, input, out
 		// if it happens to be 'public' instead of 'static'
 		publicDir: false,
 		resolve: {
-			alias: get_aliases(config)
+			alias: get_aliases(config.kit)
 		}
 	};
 };
 
 /**
- * @param {import('types').ValidatedConfig} config
+ * @param {import('types').ValidatedKitConfig} config
  * @returns {string}
  */
 export function assets_base(config) {
 	// TODO this is so that Vite's preloading works. Unfortunately, it fails
 	// during `svelte-kit preview`, because we use a local asset path. This
 	// may be fixed in Vite 3: https://github.com/vitejs/vite/issues/2009
-	const { base, assets } = config.kit.paths;
-	return `${assets || base}/${config.kit.appDir}/immutable/`;
+	const { base, assets } = config.paths;
+	return `${assets || base}/${config.appDir}/immutable/`;
 }

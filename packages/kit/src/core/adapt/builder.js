@@ -3,7 +3,7 @@ import { generate_manifest } from '../generate_manifest/index.js';
 
 /**
  * @param {{
- *   config: import('types').ValidatedConfig;
+ *   config: import('types').ValidatedKitConfig;
  *   build_data: import('types').BuildData;
  *   prerendered: import('types').Prerendered;
  *   log: import('types').Logger;
@@ -105,27 +105,27 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		},
 
 		getBuildDirectory(name) {
-			return `${config.kit.outDir}/${name}`;
+			return `${config.outDir}/${name}`;
 		},
 
 		getClientDirectory() {
-			return `${config.kit.outDir}/output/client`;
+			return `${config.outDir}/output/client`;
 		},
 
 		getServerDirectory() {
-			return `${config.kit.outDir}/output/server`;
+			return `${config.outDir}/output/server`;
 		},
 
 		getStaticDirectory() {
-			return config.kit.files.assets;
+			return config.files.assets;
 		},
 
 		writeClient(dest) {
-			return copy(`${config.kit.outDir}/output/client`, dest);
+			return copy(`${config.outDir}/output/client`, dest);
 		},
 
 		writePrerendered(dest, { fallback } = {}) {
-			const source = `${config.kit.outDir}/output/prerendered`;
+			const source = `${config.outDir}/output/prerendered`;
 			const files = [...copy(`${source}/pages`, dest), ...copy(`${source}/dependencies`, dest)];
 
 			if (fallback) {
@@ -137,11 +137,11 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		},
 
 		writeServer(dest) {
-			return copy(`${config.kit.outDir}/output/server`, dest);
+			return copy(`${config.outDir}/output/server`, dest);
 		},
 
 		writeStatic(dest) {
-			return copy(config.kit.files.assets, dest);
+			return copy(config.files.assets, dest);
 		},
 
 		// @ts-expect-error

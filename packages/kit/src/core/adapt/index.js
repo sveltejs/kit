@@ -2,13 +2,13 @@ import colors from 'kleur';
 import { create_builder } from './builder.js';
 
 /**
- * @param {import('types').ValidatedConfig} config
+ * @param {import('types').ValidatedKitConfig} config
  * @param {import('types').BuildData} build_data
  * @param {import('types').Prerendered} prerendered
  * @param {{ log: import('types').Logger }} opts
  */
 export async function adapt(config, build_data, prerendered, { log }) {
-	const { name, adapt } = config.kit.adapter;
+	const { name, adapt } = config.adapter;
 
 	console.log(colors.bold().cyan(`\n> Using ${name}`));
 

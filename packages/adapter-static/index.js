@@ -12,7 +12,7 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 		name: '@sveltejs/adapter-static',
 
 		async adapt(builder) {
-			if (!fallback && !builder.config.kit.prerender.default) {
+			if (!fallback && !builder.config.prerender.default) {
 				builder.log.warn(
 					'You should set `config.kit.prerender.default` to `true` if no fallback is specified'
 				);

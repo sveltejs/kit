@@ -171,7 +171,7 @@ prog
 
 			if (config.kit.adapter) {
 				const { adapt } = await import('./core/adapt/index.js');
-				await adapt(config, build_data, prerendered, { log });
+				await adapt(config.kit, build_data, prerendered, { log });
 
 				// this is necessary to close any open db connections, etc
 				process.exit(0);

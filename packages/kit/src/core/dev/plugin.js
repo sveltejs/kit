@@ -27,6 +27,7 @@ const cwd = process.cwd();
  * @return {import('vite').Plugin}
  */
 export const sveltekit = function (svelte_config) {
+	const kit_config = svelte_config.kit;
 	return {
 		name: 'vite-plugin-svelte-kit',
 
@@ -37,9 +38,9 @@ export const sveltekit = function (svelte_config) {
 						fs: {
 							allow: [
 								...new Set([
-									svelte_config.kit.files.lib,
-									svelte_config.kit.files.routes,
-									svelte_config.kit.outDir,
+									kit_config.files.lib,
+									kit_config.files.routes,
+									kit_config.outDir,
 									path.resolve(cwd, 'src'),
 									path.resolve(cwd, 'node_modules'),
 									path.resolve(searchForWorkspaceRoot(cwd), 'node_modules')
@@ -49,14 +50,11 @@ export const sveltekit = function (svelte_config) {
 						port: 3000,
 						strictPort: true,
 						watch: {
-							ignored: [
-								`${svelte_config.kit.outDir}/**`,
-								`!${svelte_config.kit.outDir}/generated/**`
-							]
+							ignored: [`${kit_config.outDir}/**`, `!${kit_config.outDir}/generated/**`]
 						}
 					}
 				},
-				await svelte_config.kit.vite()
+				await kit_config.vite()
 			);
 
 			/** @type {[any, string[]]} */
@@ -64,13 +62,13 @@ export const sveltekit = function (svelte_config) {
 				configFile: false,
 				root: cwd,
 				resolve: {
-					alias: get_aliases(svelte_config)
+					alias: get_aliases(kit_config)
 				},
 				build: {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point
 						// eventhough server otherwise works without it
-						input: `${get_runtime_path(svelte_config)}/client/start.js`
+						input: `${get_runtime_path(kit_config)}/client/start.js`
 					}
 				},
 				base: '/'
@@ -86,7 +84,7 @@ export const sveltekit = function (svelte_config) {
 
 			sync.init(svelte_config);
 
-			const runtime = get_runtime_path(svelte_config);
+			const runtime = get_runtime_path(kit_config);
 
 			process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
 
@@ -100,7 +98,7 @@ export const sveltekit = function (svelte_config) {
 				const { manifest_data } = sync.update(svelte_config);
 
 				manifest = {
-					appDir: svelte_config.kit.appDir,
+					appDir: kit_config.appDir,
 					assets: new Set(manifest_data.assets.map((asset) => asset.file)),
 					mimeTypes: get_mime_lookup(manifest_data),
 					_: {
@@ -220,16 +218,14 @@ export const sveltekit = function (svelte_config) {
 
 			for (const event of ['add', 'unlink']) {
 				vite.watcher.on(event, (file) => {
-					if (file.startsWith(svelte_config.kit.files.routes + path.sep)) {
+					if (file.startsWith(kit_config.files.routes + path.sep)) {
 						update_manifest();
 					}
 				});
 			}
 
-			const assets = svelte_config.kit.paths.assets
-				? SVELTE_KIT_ASSETS
-				: svelte_config.kit.paths.base;
-			const asset_server = sirv(svelte_config.kit.files.assets, {
+			const assets = kit_config.paths.assets ? SVELTE_KIT_ASSETS : kit_config.paths.base;
+			const asset_server = sirv(kit_config.files.assets, {
 				dev: true,
 				etag: true,
 				maxAge: 0,

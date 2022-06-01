@@ -32,7 +32,7 @@ export async function build(config, { log }) {
 		build_dir,
 		manifest_data,
 		output_dir,
-		client_entry_file: path.relative(cwd, `${get_runtime_path(config)}/client/start.js`),
+		client_entry_file: path.relative(cwd, `${get_runtime_path(config.kit)}/client/start.js`),
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
 	};
 
@@ -71,7 +71,7 @@ export async function build(config, { log }) {
 	});
 
 	const prerendered = await prerender({
-		config,
+		config: config.kit,
 		entries: options.manifest_data.routes
 			.map((route) => (route.type === 'page' ? route.path : ''))
 			.filter(Boolean),

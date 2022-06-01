@@ -169,7 +169,7 @@ export async function build_server(options, client) {
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: config.kit.serviceWorker.register && !!service_worker_entry_file,
-			runtime: get_runtime_path(config),
+			runtime: get_runtime_path(config.kit),
 			template: load_template(cwd, config)
 		})
 	);
