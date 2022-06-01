@@ -284,6 +284,7 @@ export async function get_vite_config(svelte_config, config_file) {
 			return config_file === false ? await import(path.resolve(cwd, file)) : {};
 		}
 	}
+	// TODO: stop reading Vite config from SvelteKit config or move to CLI
 	const vite_config = await svelte_config.kit.vite();
 	if (config_file !== false) {
 		vite_config.plugins = [...(vite_config.plugins || []), ...(await plugins(svelte_config))];
@@ -316,7 +317,6 @@ export const plugins = async function (svelte_config) {
 		? [...svelte(svelte_config)]
 		: [...svelte(svelte_config), sveltekit(svelte_config)];
 };
-
 
 /**
  * type {import('vite').Plugin}
