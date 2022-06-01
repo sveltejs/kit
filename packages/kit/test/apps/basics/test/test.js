@@ -1532,6 +1532,15 @@ test.describe.parallel('Load', () => {
 			);
 		}
 	});
+
+	test('CSS for dynamically imported components is reflected in server render', async ({
+		page
+	}) => {
+		await page.goto('/load/dynamic-import-styles');
+		expect(
+			await page.evaluate(() => getComputedStyle(document.querySelector('#thing')).color)
+		).toBe('rgb(255, 0, 0)');
+	});
 });
 
 test.describe.parallel('Method overrides', () => {
