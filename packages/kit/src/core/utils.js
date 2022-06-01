@@ -96,3 +96,19 @@ export function get_aliases(config) {
 
 	return alias;
 }
+
+/**
+ * @param {import('vite').UserConfig} config
+ * @param {string} name
+ */
+export function remove_plugin(config, name) {
+	// @ts-expect-error - it can't handle infinite type expansion
+	config.plugins = (config.plugins || []).flat(Infinity);
+	for (let i = config.plugins.length - 1; i > 0; i--) {
+		const plugin = config.plugins[i];
+		// @ts-expect-error - it doesn't know about the `flat` call we just made
+		if (plugin && plugin?.name === name) {
+			config.plugins.splice(i, 1);
+		}
+	}
+}
