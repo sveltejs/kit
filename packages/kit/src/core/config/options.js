@@ -115,7 +115,7 @@ const options = object(
 				})
 			}),
 
-			endpointExtensions: string_array(['.js', '.ts']),
+			moduleExtensions: string_array(['.js', '.ts']),
 
 			files: object({
 				assets: string('static'),

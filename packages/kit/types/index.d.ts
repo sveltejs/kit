@@ -103,7 +103,7 @@ export interface Config {
 			mode?: 'hash' | 'nonce' | 'auto';
 			directives?: CspDirectives;
 		};
-		endpointExtensions?: string[];
+		moduleExtensions?: string[];
 		files?: {
 			assets?: string;
 			hooks?: string;
