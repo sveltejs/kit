@@ -157,7 +157,7 @@ When pages are prerendered, the CSP header is added via a `<meta http-equiv>` ta
 
 ### moduleExtensions
 
-An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by SvelteKit.
+An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
 
 ### files
 
