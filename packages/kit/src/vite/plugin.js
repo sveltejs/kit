@@ -330,14 +330,17 @@ const plugins_internal = function (svelte_config) {
 };
 
 /**
- * type {import('vite').Plugin}
-TODO: delete this debug plugin after switching to vite CLI
+ * While we're supporting svelte.config.js and vite.config.js it's very easy
+ * to end up with duplicate plugins, which is hard to debug. Ensure we avoid that.
+ * @type {import('vite').Plugin}
+ */
 const sveltekit_validation = {
 	name: 'vite-plugin-svelte-kit-validation',
 	async configResolved(config) {
 		let svelte_count = 0;
 		let svelte_kit_count = 0;
-		for (const plugin of config.plugins.flat(Infinity)) {
+		const plugins = config.plugins.flat(Infinity);
+		for (const plugin of plugins) {
 			if (plugin.name === 'vite-plugin-svelte') {
 				svelte_count++;
 			} else if (plugin.name === 'vite-plugin-svelte-kit') {
@@ -354,15 +357,14 @@ const sveltekit_validation = {
 		}
 	}
 };
-*/
 
 /**
- * param {string} name
- * param {number} count
- * param {number} expected_count
+ * @param {string} name
+ * @param {number} count
+ * @param {number} expected_count
+ */
 function assert_plugin_count(name, count, expected_count) {
 	if (count !== expected_count) {
 		throw Error(`Expected ${name} to be present ${expected_count} times, but found ${count}`);
 	}
 }
-*/
