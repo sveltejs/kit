@@ -150,6 +150,7 @@
 				value={$query}
 				placeholder="Search"
 				aria-describedby="search-description"
+				spellcheck="false"
 			/>
 
 			<button aria-label="Close" on:click={close}>
