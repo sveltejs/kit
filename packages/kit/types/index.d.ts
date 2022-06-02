@@ -18,7 +18,7 @@ import {
 	RouteDefinition,
 	TrailingSlash
 } from './private';
-import { SSRNodeLoader, SSRRoute, ValidatedKitConfig } from './internal';
+import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal';
 
 export interface Adapter {
 	name: string;
@@ -30,7 +30,7 @@ export interface Builder {
 	rimraf(dir: string): void;
 	mkdirp(dir: string): void;
 
-	config: ValidatedKitConfig;
+	config: ValidatedConfig;
 	prerendered: Prerendered;
 
 	/**

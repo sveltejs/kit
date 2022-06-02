@@ -177,11 +177,11 @@ async function v1(builder, external) {
 	fs.writeFileSync(
 		`${dir}/config/routes.json`,
 		JSON.stringify([
-			...redirects[builder.config.trailingSlash],
+			...redirects[builder.config.kit.trailingSlash],
 			...prerendered_pages,
 			...prerendered_redirects,
 			{
-				src: `/${builder.config.appDir}/immutable/.+`,
+				src: `/${builder.config.kit.appDir}/immutable/.+`,
 				headers: {
 					'cache-control': 'public, immutable, max-age=31536000'
 				}
@@ -230,10 +230,10 @@ async function v3(builder, external, edge, split) {
 
 	/** @type {any[]} */
 	const routes = [
-		...redirects[builder.config.trailingSlash],
+		...redirects[builder.config.kit.trailingSlash],
 		...prerendered_redirects,
 		{
-			src: `/${builder.config.appDir}/.+`,
+			src: `/${builder.config.kit.appDir}/.+`,
 			headers: {
 				'cache-control': 'public, immutable, max-age=31536000'
 			}
