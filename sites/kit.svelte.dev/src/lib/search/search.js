@@ -8,6 +8,9 @@ let indexes;
 /** @type {Map<string, import('./types').Block>} */
 const map = new Map();
 
+/** @type {Map<string, string>} */
+const hrefs = new Map();
+
 export function init(blocks) {
 	if (inited) return;
 
@@ -20,7 +23,7 @@ export function init(blocks) {
 	);
 
 	for (const block of blocks) {
-		const title = block.breadcrumbs.pop();
+		const title = block.breadcrumbs.at(-1);
 		map.set(block.href, {
 			title,
 			href: block.href,
@@ -28,6 +31,8 @@ export function init(blocks) {
 			content: block.content
 		});
 		indexes[block.rank ?? 0].add(block.href, `${title} ${block.content}`);
+
+		hrefs.set(block.breadcrumbs.join('::'), block.href);
 	}
 
 	inited = true;
@@ -41,12 +46,40 @@ export function search(query) {
 	const blocks = indexes
 		.map((index) => index.search(query))
 		.flat()
-		.map(lookup);
+		.map(lookup)
+		.map((block, rank) => ({ block, rank }))
+		.sort((a, b) => a.block.breadcrumbs.length - b.block.breadcrumbs.length || a.rank - b.rank)
+		.map(({ block }) => block);
 
-	return blocks;
+	const results = tree([], blocks).children;
+
+	return results;
 }
 
 /** @param {string} href */
 export function lookup(href) {
 	return map.get(href);
+}
+
+function tree(breadcrumbs, blocks) {
+	const depth = breadcrumbs.length;
+
+	const node = blocks.find((block) => {
+		if (block.breadcrumbs.length !== depth) return false;
+		return breadcrumbs.every((part, i) => block.breadcrumbs[i] === part);
+	});
+
+	const descendants = blocks.filter((block) => {
+		if (block.breadcrumbs.length <= depth) return false;
+		return breadcrumbs.every((part, i) => block.breadcrumbs[i] === part);
+	});
+
+	const child_parts = Array.from(new Set(descendants.map((block) => block.breadcrumbs[depth])));
+
+	return {
+		breadcrumbs,
+		href: hrefs.get(breadcrumbs.join('::')),
+		node,
+		children: child_parts.map((part) => tree([...breadcrumbs, part], descendants))
+	};
 }
