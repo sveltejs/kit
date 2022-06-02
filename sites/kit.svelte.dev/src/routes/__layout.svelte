@@ -16,10 +16,10 @@
 <SkipLink href="#main" />
 <Nav {page} logo="/stopwar.svg">
 	<svelte:fragment slot="nav-center">
-		{#if browser}
+		{#if $page.url.pathname !== '/search'}
 			<!-- the <Nav> component renders this content inside a <ul>, so
-				 we need to wrap it in an <li>. TODO if we adopt this design
-				 on other sites, change <Nav> so we don't need to do this -->
+				we need to wrap it in an <li>. TODO if we adopt this design
+				on other sites, change <Nav> so we don't need to do this -->
 			<li><Search /></li>
 		{/if}
 	</svelte:fragment>
@@ -130,6 +130,11 @@
 
 	:global(body) {
 		font-size: 1.6rem !important;
+	}
+
+	li {
+		display: flex;
+		align-items: center;
 	}
 
 	/** Ukraine banner */

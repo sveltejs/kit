@@ -1,10 +1,14 @@
 <script>
+	import { browser } from '$app/env';
 	import { searching, query } from './stores.js';
+
+	export let q = '';
 </script>
 
-<div class="search-container">
+<form class="search-container" action="/search">
 	<input
 		id="search"
+		value={q}
 		on:input={(e) => {
 			$searching = true;
 			$query = e.target.value;
@@ -13,6 +17,7 @@
 		on:mousedown|preventDefault={() => ($searching = true)}
 		on:touchstart|preventDefault={() => ($searching = true)}
 		type="search"
+		name="q"
 	/>
 
 	<label for="#search">
@@ -23,9 +28,10 @@
 			/>
 		</svg>
 
-		<span>Search</span> <kbd>{navigator.platform === 'MacIntel' ? '⌘' : 'Ctrl'}</kbd> <kbd>K</kbd>
+		<span>Search</span>
+		{#if browser}<kbd>{navigator.platform === 'MacIntel' ? '⌘' : 'Ctrl'}</kbd> <kbd>K</kbd>{/if}
 	</label>
-</div>
+</form>
 
 <style>
 	.search-container {
