@@ -103,7 +103,8 @@
 		background: none;
 		color: #111;
 		background: rgba(255, 255, 0, 0.2);
-		outline: 1px solid rgba(255, 255, 0, 0.2);
+		outline: 2px solid rgba(255, 255, 0, 0.2);
+		border-top: 2px solid rgba(255, 255, 255, 0.2);
 	}
 
 	a:focus small,
@@ -122,7 +123,8 @@
 	a strong :global(mark) {
 		color: black;
 		background: rgba(255, 255, 0, 0.2);
-		outline: 1px solid rgba(255, 255, 0, 0.2);
+		outline: 2px solid rgba(255, 255, 0, 0.2);
+		border-top: 2px solid rgba(255, 255, 255, 0.2);
 		border-radius: 1px;
 	}
 

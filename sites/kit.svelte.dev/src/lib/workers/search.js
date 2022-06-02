@@ -1,7 +1,4 @@
-import { init } from '../search/init.js';
-
-let indexes;
-let lookup;
+import { init, search, lookup } from '../search/search.js';
 
 addEventListener('message', async (event) => {
 	const { type, payload } = event.data;
@@ -9,24 +6,20 @@ addEventListener('message', async (event) => {
 	if (type === 'init') {
 		const res = await fetch(`${payload.origin}/content.json`);
 		const { blocks } = await res.json();
-		({ indexes, lookup } = init(blocks));
+		init(blocks);
 
 		postMessage({ type: 'ready' });
 	}
 
 	if (type === 'query') {
 		const query = payload;
-
-		const results = indexes
-			.map((index) => index.search(payload))
-			.flat()
-			.map((href) => lookup.get(href));
+		const results = search(query);
 
 		postMessage({ type: 'results', payload: { results, query } });
 	}
 
 	if (type === 'recents') {
-		const results = payload.map((href) => lookup.get(href)).filter(Boolean);
+		const results = payload.map(lookup).filter(Boolean);
 
 		postMessage({ type: 'recents', payload: results });
 	}
