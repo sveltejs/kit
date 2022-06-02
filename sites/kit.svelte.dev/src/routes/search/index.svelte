@@ -1,6 +1,5 @@
 <script>
 	import SearchResults from '$lib/search/SearchResults.svelte';
-	import icon from '$lib/icons/search.svg';
 
 	/** @type {import('$lib/search/types').Block[]} */
 	export let results;
@@ -9,9 +8,13 @@
 	export let query;
 </script>
 
+<svelte:head>
+	<title>Search • SvelteKit</title>
+</svelte:head>
+
 <main>
 	<form>
-		<input style="background-image: url({icon})" name="q" value={query} placeholder="Search" />
+		<input name="q" value={query} placeholder="Search" spellcheck="false" />
 	</form>
 
 	<SearchResults {results} {query} />
@@ -42,6 +45,6 @@
 		border-radius: var(--border-r);
 		padding-left: var(--size);
 		border-radius: var(--size);
-		background: no-repeat 1rem 50% / 2rem 2rem;
+		background: no-repeat 1rem 50% / 2rem 2rem url($lib/icons/search.svg);
 	}
 </style>
