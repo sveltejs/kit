@@ -15,12 +15,14 @@ addEventListener('message', async (event) => {
 	}
 
 	if (type === 'query') {
+		const query = payload;
+
 		const results = indexes
 			.map((index) => index.search(payload))
 			.flat()
 			.map((href) => lookup.get(href));
 
-		postMessage({ type: 'results', payload: results });
+		postMessage({ type: 'results', payload: { results, query } });
 	}
 
 	if (type === 'recents') {

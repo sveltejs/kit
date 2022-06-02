@@ -1,9 +1,13 @@
 <script>
+	import { createEventDispatcher } from 'svelte';
+
 	/** @type {import('./types').Block[]} */
 	export let results;
 
 	/** @type {string} */
 	export let query;
+
+	const dispatch = createEventDispatcher();
 
 	function escape(text) {
 		return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -33,7 +37,7 @@
 	<ul>
 		{#each results as result, i}
 			<li>
-				<a href={result.href}>
+				<a href={result.href} on:click={() => dispatch('select', { href: result.href })}>
 					<small>{result.breadcrumbs.join('/')}</small>
 					<strong>{@html excerpt(result.title, query)}</strong>
 					<span>{@html excerpt(result.content, query)}</span>
@@ -118,5 +122,15 @@
 		color: white;
 		text-decoration: none;
 		border-radius: 1px;
+	}
+
+	.info {
+		padding: 1rem;
+		font-size: 1.2rem;
+		font-weight: normal;
+		text-transform: uppercase;
+		background-color: white;
+		border-radius: 0 0 var(--border-r) var(--border-r);
+		pointer-events: all;
 	}
 </style>

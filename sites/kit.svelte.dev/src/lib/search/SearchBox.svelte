@@ -9,11 +9,15 @@
 
 	let modal;
 
-	let results = [];
+	let search = null;
 	let recent_searches = [];
 
 	let worker;
 	let ready = false;
+
+	let uid = 1;
+	const pending = new Set();
+	let has_pending = false;
 
 	onMount(async () => {
 		worker = new SearchWorker();
@@ -26,7 +30,7 @@
 			}
 
 			if (type === 'results') {
-				results = payload;
+				search = payload;
 			}
 
 			if (type === 'recents') {
@@ -59,6 +63,8 @@
 			document.body.removeAttribute('tabindex');
 			window.scrollTo(0, scroll);
 		}
+
+		search = null;
 	}
 
 	/** @param {string} href */
@@ -67,8 +73,17 @@
 		close();
 	}
 
-	$: if (ready) worker.postMessage({ type: 'query', payload: $query });
-	$: if (ready) worker.postMessage({ type: 'recents', payload: $recent });
+	$: if (ready) {
+		const id = uid++;
+		pending.add(id);
+		has_pending = true;
+
+		worker.postMessage({ type: 'query', id, payload: $query });
+	}
+
+	$: if (ready) {
+		worker.postMessage({ type: 'recents', payload: $recent });
+	}
 
 	$: if ($searching) {
 		document.body.style.top = `-${window.scrollY}px`;
@@ -124,7 +139,7 @@
 				autofocus
 				on:keydown={(e) => {
 					if (e.key === 'Enter') {
-						if (results.length > 0) {
+						if (search?.results.length > 0) {
 							modal.querySelector('a').click();
 						}
 					}
@@ -144,9 +159,15 @@
 			<span id="search-description" class="visually-hidden">Results will update as you type</span>
 
 			<div class="results">
-				{#if $query}
+				{#if search?.query}
 					<div class="results-container" on:click={() => ($searching = false)}>
-						<SearchResults {results} query={$query} />
+						<SearchResults
+							results={search.results}
+							query={search.query}
+							on:select={(e) => {
+								navigate(e.detail.href);
+							}}
+						/>
 					</div>
 				{:else}
 					<h2 class="info">{recent_searches.length ? 'Recent searches' : 'No recent searches'}</h2>
@@ -183,7 +204,7 @@
 {/if}
 
 <div aria-live="assertive">
-	{#if $searching && $query && results.length === 0}
+	{#if $searching && search?.results.length === 0}
 		<p>No results</p>
 	{/if}
 </div>
@@ -314,8 +335,7 @@
 	}
 
 	a small,
-	a strong,
-	a span {
+	a strong {
 		display: block;
 		white-space: nowrap;
 		overflow: hidden;
@@ -336,26 +356,11 @@
 		margin: 0.4rem 0;
 	}
 
-	a span {
-		font-size: 1.2rem;
-		color: #999;
-	}
-
-	a span :global(mark) {
-		background: none;
-		color: #111;
-	}
-
-	a:focus small,
-	a:focus span {
+	a:focus small {
 		color: rgba(255, 255, 255, 0.6);
 	}
 
 	a:focus strong {
-		color: white;
-	}
-
-	a:focus span :global(mark) {
 		color: white;
 	}
 
@@ -364,6 +369,10 @@
 		color: white;
 		text-decoration: none;
 		border-radius: 1px;
+	}
+
+	li {
+		position: relative;
 	}
 
 	button[aria-label='Delete'] {
