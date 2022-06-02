@@ -22,21 +22,14 @@
 		spellcheck="false"
 	/>
 
-	<label for="#search">
-		{#if browser}<kbd>{navigator.platform === 'MacIntel' ? '⌘' : 'Ctrl'}</kbd> <kbd>K</kbd>{/if}
-	</label>
+	{#if browser}
+		<label for="#search">
+			<kbd>{navigator.platform === 'MacIntel' ? '⌘' : 'Ctrl'}</kbd> <kbd>K</kbd>
+		</label>
+	{/if}
 </form>
 
 <style>
-	.search-container {
-		position: relative;
-		display: flex;
-		align-items: center;
-		animation: fade-in 0.2s;
-		width: 100%;
-		height: 100%;
-	}
-
 	@keyframes fade-in {
 		from {
 			opacity: 0;
@@ -44,6 +37,14 @@
 		to {
 			opacity: 1;
 		}
+	}
+
+	.search-container {
+		position: relative;
+		display: flex;
+		align-items: center;
+		width: 100%;
+		height: 100%;
 	}
 
 	input {
@@ -79,6 +80,7 @@
 		pointer-events: none;
 		font-size: 1.2rem;
 		text-transform: uppercase;
+		animation: fade-in 0.2s;
 	}
 
 	kbd {
