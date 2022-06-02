@@ -116,13 +116,9 @@
 		}
 	}
 
-	/* this is an unfortunate hack, but necessary to temporarily avoid
-	   breaking changes to site-kit */
-	:global(ul.external) {
-		width: 40rem !important;
-	}
-
 	@media (min-width: 960px) {
+		/* this is an unfortunate hack, but necessary to temporarily avoid
+		breaking changes to site-kit */
 		:global(ul.external) {
 			width: 30rem !important;
 		}
