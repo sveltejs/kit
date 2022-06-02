@@ -145,7 +145,7 @@
 
 			<div class="results">
 				{#if $query}
-					<div class="results-container">
+					<div class="results-container" on:click={() => ($searching = false)}>
 						<SearchResults {results} query={$query} />
 					</div>
 				{:else}

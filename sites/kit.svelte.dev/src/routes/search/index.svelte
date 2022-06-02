@@ -1,6 +1,6 @@
 <script>
-	import Search from '$lib/search/Search.svelte';
 	import SearchResults from '$lib/search/SearchResults.svelte';
+	import icon from '$lib/icons/search.svg';
 
 	/** @type {import('$lib/search/types').Block[]} */
 	export let results;
@@ -10,10 +10,9 @@
 </script>
 
 <main>
-	<Search q={query} interactive={false} />
-	<!-- <form>
-		<input name="q" value={query} />
-	</form> -->
+	<form>
+		<input style="background-image: url({icon})" name="q" value={query} placeholder="Search" />
+	</form>
 
 	<SearchResults {results} {query} />
 </main>
@@ -25,17 +24,24 @@
 		padding: 8rem 1rem;
 	}
 
-	h1 {
-		font-size: var(--h1);
+	form {
+		--size: 4rem;
+		position: relative;
+		width: 100%;
+		height: var(--size);
+		margin: 0 0 2em 0;
 	}
 
 	input {
+		display: block;
 		width: 100%;
+		height: 100%;
 		font-family: inherit;
 		font-size: inherit;
 		border: 1px solid #ccc;
 		border-radius: var(--border-r);
-		padding: 0.8rem;
-		margin: 2em 0;
+		padding-left: var(--size);
+		border-radius: var(--size);
+		background: no-repeat 1rem 50% / 2rem 2rem;
 	}
 </style>
