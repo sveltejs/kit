@@ -1,3 +1,7 @@
+<script context="module">
+	export const prerender = false;
+</script>
+
 <script>
 	import SearchResults from '$lib/search/SearchResults.svelte';
 
