@@ -76,8 +76,6 @@
 	a span {
 		display: block;
 		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
 		line-height: 1;
 	}
 
@@ -97,11 +95,15 @@
 	a span {
 		font-size: 1.2rem;
 		color: #999;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	a span :global(mark) {
 		background: none;
 		color: #111;
+		background: rgba(255, 255, 0, 0.2);
+		outline: 1px solid rgba(255, 255, 0, 0.2);
 	}
 
 	a:focus small,
@@ -118,9 +120,9 @@
 	}
 
 	a strong :global(mark) {
-		background: var(--second);
-		color: white;
-		text-decoration: none;
+		color: black;
+		background: rgba(255, 255, 0, 0.2);
+		outline: 1px solid rgba(255, 255, 0, 0.2);
 		border-radius: 1px;
 	}
 
