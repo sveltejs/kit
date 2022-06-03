@@ -5,7 +5,7 @@ import {
 	GetSession,
 	Handle,
 	HandleError,
-	UserConfig,
+	KitConfig,
 	Load,
 	RequestEvent,
 	RequestHandler,
@@ -320,7 +320,7 @@ export type StrictBody = string | Uint8Array;
 
 export type ValidatedConfig = RecursiveRequired<Config>;
 
-export type ValidatedKitConfig = RecursiveRequired<UserConfig>;
+export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export * from './index';
 export * from './private';
