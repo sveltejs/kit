@@ -1,5 +1,5 @@
 ---
-"@sveltejs/kit": patch
+'@sveltejs/kit': patch
 ---
 
-[chore] introduce `KitConfig` type
+[chore] introduce `UserConfig` type

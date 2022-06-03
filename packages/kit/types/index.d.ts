@@ -91,11 +91,11 @@ export interface Builder {
 export interface Config {
 	compilerOptions?: CompileOptions;
 	extensions?: string[];
-	kit?: KitConfig;
+	kit?: UserConfig;
 	preprocess?: any;
 }
 
-export interface KitConfig {
+export interface UserConfig {
 	adapter?: Adapter;
 	alias?: Record<string, string>;
 	appDir?: string;
