@@ -27,7 +27,7 @@ export const sveltekit = function (svelte_config) {
 	const client_out_dir = `${output_dir}/client/${svelte_config.kit.appDir}`;
 	const client_entry_file = path.relative(
 		cwd,
-		`${get_runtime_path(svelte_config)}/client/start.js`
+		`${get_runtime_path(svelte_config.kit)}/client/start.js`
 	);
 
 	/** @type {import('types').ManifestData|undefined} */
@@ -118,13 +118,13 @@ export const sveltekit = function (svelte_config) {
 				configFile: false,
 				root: cwd,
 				resolve: {
-					alias: get_aliases(svelte_config)
+					alias: get_aliases(svelte_config.kit)
 				},
 				build: {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point
 						// eventhough server otherwise works without it
-						input: `${get_runtime_path(svelte_config)}/client/start.js`
+						input: `${get_runtime_path(svelte_config.kit)}/client/start.js`
 					}
 				},
 				base: '/'
@@ -229,7 +229,7 @@ export const sveltekit = function (svelte_config) {
 			log.info('Prerendering');
 
 			const prerendered = await prerender({
-				config: svelte_config,
+				config: svelte_config.kit,
 				entries: manifest_data.routes
 					.map((route) => (route.type === 'page' ? route.path : ''))
 					.filter(Boolean),

@@ -15,6 +15,7 @@ const updated = {
 };
 
 /**
+ * Creates the HTML response.
  * @param {{
  *   branch: Array<import('./types').Loaded>;
  *   options: import('types').SSROptions;

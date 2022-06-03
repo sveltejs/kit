@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.348
+
+### Patch Changes
+
+- Disallow access to `__data.json` for standalone endpoints ([#5149](https://github.com/sveltejs/kit/pull/5149))
+
+* [chore] introduce `KitConfig` type ([#5141](https://github.com/sveltejs/kit/pull/5141))
+
+- Prevent incorrect redirect for `__data.json` request with `trailingSlash: 'always'` ([#5149](https://github.com/sveltejs/kit/pull/5149))
+
 ## 1.0.0-next.347
 
 ### Patch Changes

@@ -29,7 +29,7 @@ export const configure_server = function (svelte_config) {
 
 		sync.init(svelte_config);
 
-		const runtime = get_runtime_path(svelte_config);
+		const runtime = get_runtime_path(svelte_config.kit);
 
 		process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
 

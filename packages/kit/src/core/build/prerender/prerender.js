@@ -40,7 +40,7 @@ const REDIRECT = 3;
 
 /**
  * @param {{
- *   config: import('types').ValidatedConfig;
+ *   config: import('types').ValidatedKitConfig;
  *   entries: string[];
  *   files: Set<string>;
  *   log: Logger;
@@ -55,36 +55,36 @@ export async function prerender({ config, entries, files, log }) {
 		paths: []
 	};
 
-	if (!config.kit.prerender.enabled) {
+	if (!config.prerender.enabled) {
 		return prerendered;
 	}
 
 	installPolyfills();
 
-	const server_root = join(config.kit.outDir, 'output');
+	const server_root = join(config.outDir, 'output');
 
 	/** @type {import('types').ServerModule} */
 	const { Server, override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
 
 	override({
-		paths: config.kit.paths,
+		paths: config.paths,
 		prerendering: true,
-		read: (file) => readFileSync(join(config.kit.files.assets, file))
+		read: (file) => readFileSync(join(config.files.assets, file))
 	});
 
 	const server = new Server(manifest);
 
-	const error = normalise_error_handler(log, config.kit.prerender.onError);
+	const error = normalise_error_handler(log, config.prerender.onError);
 
-	const q = queue(config.kit.prerender.concurrency);
+	const q = queue(config.prerender.concurrency);
 
 	/**
 	 * @param {string} path
 	 * @param {boolean} is_html
 	 */
 	function output_filename(path, is_html) {
-		const file = path.slice(config.kit.paths.base.length + 1);
+		const file = path.slice(config.paths.base.length + 1);
 
 		if (file === '') {
 			return 'index.html';
@@ -109,7 +109,7 @@ export async function prerender({ config, entries, files, log }) {
 		if (seen.has(decoded)) return;
 		seen.add(decoded);
 
-		const file = decoded.slice(config.kit.paths.base.length + 1);
+		const file = decoded.slice(config.paths.base.length + 1);
 		if (files.has(file)) return;
 
 		return q.add(() => visit(decoded, encoded || encodeURI(decoded), referrer));
@@ -121,7 +121,7 @@ export async function prerender({ config, entries, files, log }) {
 	 * @param {string?} referrer
 	 */
 	async function visit(decoded, encoded, referrer) {
-		if (!decoded.startsWith(config.kit.paths.base)) {
+		if (!decoded.startsWith(config.paths.base)) {
 			error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
 			return;
 		}
@@ -158,7 +158,7 @@ export async function prerender({ config, entries, files, log }) {
 			);
 		}
 
-		if (config.kit.prerender.crawl && response.headers.get('content-type') === 'text/html') {
+		if (config.prerender.crawl && response.headers.get('content-type') === 'text/html') {
 			for (const href of crawl(text)) {
 				if (href.startsWith('data:') || href.startsWith('#')) continue;
 
@@ -191,7 +191,7 @@ export async function prerender({ config, entries, files, log }) {
 		const is_html = response_type === REDIRECT || type === 'text/html';
 
 		const file = output_filename(decoded, is_html);
-		const dest = `${config.kit.outDir}/output/prerendered/${category}/${file}`;
+		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
 
 		if (written.has(file)) return;
 
@@ -255,14 +255,14 @@ export async function prerender({ config, entries, files, log }) {
 		}
 	}
 
-	if (config.kit.prerender.enabled) {
-		for (const entry of config.kit.prerender.entries) {
+	if (config.prerender.enabled) {
+		for (const entry of config.prerender.entries) {
 			if (entry === '*') {
 				for (const entry of entries) {
-					enqueue(null, config.kit.paths.base + entry); // TODO can we pre-normalize these?
+					enqueue(null, config.paths.base + entry); // TODO can we pre-normalize these?
 				}
 			} else {
-				enqueue(null, config.kit.paths.base + entry);
+				enqueue(null, config.paths.base + entry);
 			}
 		}
 
@@ -277,7 +277,7 @@ export async function prerender({ config, entries, files, log }) {
 		}
 	});
 
-	const file = `${config.kit.outDir}/output/prerendered/fallback.html`;
+	const file = `${config.outDir}/output/prerendered/fallback.html`;
 	mkdirp(dirname(file));
 	writeFileSync(file, await rendered.text());
 

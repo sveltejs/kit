@@ -18,6 +18,7 @@ const categories = [
 ];
 
 export function get() {
+	/** @type {import('$lib/search/types').Block[]} */
 	const blocks = [];
 
 	for (const category of categories) {
