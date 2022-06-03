@@ -5,7 +5,7 @@ import { logger } from '../utils.js';
 import options from './options.js';
 
 /**
- * Loads the template (app.html by default) and validates that it has the
+ * Loads the template (src/app.html by default) and validates that it has the
  * required content.
  * @param {string} cwd
  * @param {import('types').ValidatedConfig} config
