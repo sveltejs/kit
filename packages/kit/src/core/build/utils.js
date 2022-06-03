@@ -8,7 +8,10 @@ import { get_aliases } from '../utils.js';
  * @typedef {import('rollup').OutputAsset} OutputAsset
  */
 
-/** @param {import('vite').UserConfig} config */
+/**
+ * Invokes Vite.
+ * @param {import('vite').UserConfig} config
+ */
 export async function create_build(config) {
 	const { output } = /** @type {RollupOutput} */ (await vite.build(config));
 
@@ -24,6 +27,7 @@ export async function create_build(config) {
 }
 
 /**
+ * Adds transitive JS and CSS dependencies to the js and css inputs.
  * @param {string} file
  * @param {import('vite').Manifest} manifest
  * @param {Set<string>} css
@@ -45,6 +49,7 @@ export function find_deps(file, manifest, js, css) {
 }
 
 /**
+ * The Vite configuration that we use by default.
  * @param {{
  *   client_out_dir?: string;
  *   config: import('types').ValidatedConfig;

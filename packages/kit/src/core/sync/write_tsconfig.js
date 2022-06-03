@@ -7,7 +7,10 @@ import { write_if_changed } from './utils.js';
 /** @param {string} file */
 const exists = (file) => fs.existsSync(file) && file;
 
-/** @param {import('types').ValidatedKitConfig} config */
+/**
+ * Writes the tsconfig that the user's tsconfig inherits from.
+ * @param {import('types').ValidatedKitConfig} config
+ */
 export function write_tsconfig(config, cwd = process.cwd()) {
 	const out = path.join(config.outDir, 'tsconfig.json');
 	const user_file =
