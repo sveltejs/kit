@@ -111,7 +111,7 @@ export function ensure_plugins(config, add_svelte) {
 		// @ts-expect-error - it doesn't know about the `flat` call we just made
 		if (plugin?.name === 'vite-plugin-svelte-kit') {
 			config.plugins.splice(i, 1);
-		// @ts-expect-error - it doesn't know about the `flat` call we just made
+			// @ts-expect-error - it doesn't know about the `flat` call we just made
 		} else if (plugin?.name === 'vite-plugin-svelte') {
 			has_svelte_plugin = true;
 		}
