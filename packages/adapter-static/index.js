@@ -10,18 +10,23 @@ const pipe = promisify(pipeline);
 const platform = platforms.find((platform) => platform.test());
 
 /** @type {import('.').default} */
-export default function (
-	{ pages = 'build', assets = pages, fallback, precompress = false } = platform?.defaults() ?? {}
-) {
+export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-static',
 
 		async adapt(builder) {
-			if (!fallback && !builder.config.kit.prerender.default) {
+			if (!options.fallback && !builder.config.kit.prerender.default) {
 				builder.log.warn(
 					'You should set `config.kit.prerender.default` to `true` if no fallback is specified'
 				);
 			}
+
+			const {
+				pages = 'build',
+				assets = pages,
+				fallback,
+				precompress
+			} = platform?.defaults(builder.config) ?? options;
 
 			builder.rimraf(assets);
 			builder.rimraf(pages);
