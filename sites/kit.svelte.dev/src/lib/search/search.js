@@ -1,6 +1,6 @@
 import flexsearch from 'flexsearch';
 
-let inited = false;
+export let inited = false;
 
 /** @type {import('flexsearch').Index[]} */
 let indexes;
