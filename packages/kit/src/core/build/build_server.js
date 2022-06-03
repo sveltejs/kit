@@ -3,7 +3,7 @@ import path from 'path';
 import { mkdirp, posixify } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
 import { load_template, print_config_conflicts } from '../config/index.js';
-import { get_runtime_path, remove_plugin, resolve_entry } from '../utils.js';
+import { ensure_plugins, get_runtime_path, resolve_entry } from '../utils.js';
 import { create_build, find_deps, get_default_config } from './utils.js';
 import { s } from '../../utils/misc.js';
 import { get_vite_config, sveltekit_validation } from '../../vite/plugin.js';
@@ -206,7 +206,7 @@ export async function build_server(options, client) {
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
 
-	remove_plugin(merged_config, 'vite-plugin-svelte-kit');
+	ensure_plugins(merged_config, true);
 
 	process.env.VITE_SVELTEKIT_ADAPTER_NAME = config.kit.adapter?.name;
 

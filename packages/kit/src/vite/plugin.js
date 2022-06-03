@@ -355,17 +355,12 @@ export const sveltekit_validation = {
 				svelte_kit_count++;
 			}
 		}
-		if (config.build.ssr) {
-			assert_plugin_count('vite-plugin-svelte', svelte_count, 1);
-			assert_plugin_count('vite-plugin-svelte-kit', svelte_kit_count, 0);
-		} else {
-			assert_plugin_count('vite-plugin-svelte', svelte_count, 1);
-			assert_plugin_count(
-				'vite-plugin-svelte-kit',
-				svelte_kit_count,
-				process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED ? 0 : 1
-			);
-		}
+		assert_plugin_count('vite-plugin-svelte', svelte_count, 1);
+		assert_plugin_count(
+			'vite-plugin-svelte-kit',
+			svelte_kit_count,
+			process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED ? 0 : 1
+		);
 	}
 };
 
