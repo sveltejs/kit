@@ -113,12 +113,17 @@
 		margin: 0.4rem 0 0 0;
 	}
 
+	a :global(mark) {
+		--highlight-color: rgba(255, 255, 0, 0.2);
+	}
+
 	a span :global(mark) {
 		background: none;
 		color: #111;
-		background: rgba(255, 255, 0, 0.2);
-		outline: 2px solid rgba(255, 255, 0, 0.2);
-		border-top: 2px solid rgba(255, 255, 255, 0.2);
+		background: var(--highlight-color);
+		outline: 2px solid var(--highlight-color);
+		border-top: 2px solid var(--highlight-color);
+		mix-blend-mode: darken;
 	}
 
 	a:focus span {
@@ -129,15 +134,18 @@
 		color: white;
 	}
 
-	a:focus span :global(mark) {
+	a:focus span :global(mark),
+	a:focus strong :global(mark) {
+		--highlight-color: hsl(240, 8%, 54%);
+		mix-blend-mode: lighten;
 		color: white;
 	}
 
 	a strong :global(mark) {
 		color: black;
-		background: rgba(255, 255, 0, 0.2);
-		outline: 2px solid rgba(255, 255, 0, 0.2);
-		border-top: 2px solid rgba(255, 255, 255, 0.2);
+		background: var(--highlight-color);
+		outline: 2px solid var(--highlight-color);
+		/* border-top: 2px solid var(--highlight-color); */
 		border-radius: 1px;
 	}
 </style>
