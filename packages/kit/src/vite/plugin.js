@@ -316,7 +316,11 @@ export const plugins = function (raw_svelte_config) {
 	const svelte_config = process_config(raw_svelte_config, { cwd });
 	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
 		? [...svelte({}, !!svelte_config.kit.browser.hydrate), sveltekit_validation]
-		: [...svelte({}, !!svelte_config.kit.browser.hydrate), sveltekit(svelte_config), sveltekit_validation];
+		: [
+				...svelte({}, !!svelte_config.kit.browser.hydrate),
+				sveltekit(svelte_config),
+				sveltekit_validation
+		  ];
 };
 
 /**
@@ -326,7 +330,11 @@ export const plugins = function (raw_svelte_config) {
 const plugins_internal = function (svelte_config) {
 	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
 		? [...svelte(svelte_config, !!svelte_config.kit.browser.hydrate), sveltekit_validation]
-		: [...svelte(svelte_config, !!svelte_config.kit.browser.hydrate), sveltekit(svelte_config), sveltekit_validation];
+		: [
+				...svelte(svelte_config, !!svelte_config.kit.browser.hydrate),
+				sveltekit(svelte_config),
+				sveltekit_validation
+		  ];
 };
 
 /**
@@ -352,7 +360,11 @@ export const sveltekit_validation = {
 			assert_plugin_count('vite-plugin-svelte-kit', svelte_kit_count, 0);
 		} else {
 			assert_plugin_count('vite-plugin-svelte', svelte_count, 1);
-			assert_plugin_count('vite-plugin-svelte-kit', svelte_kit_count, process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED ? 0 : 1);
+			assert_plugin_count(
+				'vite-plugin-svelte-kit',
+				svelte_kit_count,
+				process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED ? 0 : 1
+			);
 		}
 	}
 };
