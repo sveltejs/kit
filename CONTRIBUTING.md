@@ -26,7 +26,8 @@ Entry points to be aware of are:
 - [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) - code that's run when you create a new project with `npm init svelte`
 - [`packages/kit/src/packaging`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/packaging) - for the `svelte-kit package` command
 - [`packages/kit/src/core/dev/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/dev/index.js) - for the dev-mode server
-- [`packages/kit/src/core/build/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/build/index.js) - for the production server
+- [`packages/kit/src/core/build/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/build/index.js) - for the production build
+- [`packages/kit/src/core/sync/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/sync/sync.js) - for `svelte-kit sync`, which regenerates routing info and type definitions
 - [`packages/adapter-[platform]`](https://github.com/sveltejs/kit/tree/master/packages) - for the various SvelteKit-provided adapters
 
 Most code called at build-time or from the CLI entry point lives in [packages/kit/src/core](https://github.com/sveltejs/kit/tree/master/packages/kit/src/core). Code that runs for rendering and routing lives in [packages/kit/src/runtime](https://github.com/sveltejs/kit/tree/master/packages/kit/src/runtime). Most changes to SvelteKit itself would involve code in these two directories.

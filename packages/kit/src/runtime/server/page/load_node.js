@@ -9,6 +9,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
 import { domain_matches, path_matches } from './cookie.js';
 
 /**
+ * Calls the user's `load` function.
  * @param {{
  *   event: import('types').RequestEvent;
  *   options: import('types').SSROptions;
