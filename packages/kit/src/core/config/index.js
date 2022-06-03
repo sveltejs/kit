@@ -39,7 +39,7 @@ export function load_template(cwd, config) {
 }
 
 /**
- * Loads and validates the svelte.config.js
+ * Loads and validates svelte.config.js
  * @param {{ cwd?: string }} options
  * @returns {Promise<import('types').ValidatedConfig>}
  */
