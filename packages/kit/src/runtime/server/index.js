@@ -59,8 +59,9 @@ export async function respond(request, options, state) {
 	const is_data_request = decoded.endsWith(DATA_SUFFIX);
 
 	if (is_data_request) {
-		decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
-		url = new URL(url.origin + url.pathname.slice(0, -DATA_SUFFIX.length) + url.search);
+		const data_suffix_length = DATA_SUFFIX.length - (options.trailing_slash === 'always' ? 1 : 0);
+		decoded = decoded.slice(0, -data_suffix_length) || '/';
+		url = new URL(url.origin + url.pathname.slice(0, -data_suffix_length) + url.search);
 	}
 
 	if (!state.prerendering?.fallback) {
