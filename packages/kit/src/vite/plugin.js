@@ -334,7 +334,7 @@ const plugins_internal = function (svelte_config) {
  * to end up with duplicate plugins, which is hard to debug. Ensure we avoid that.
  * @type {import('vite').Plugin}
  */
-const sveltekit_validation = {
+export const sveltekit_validation = {
 	name: 'vite-plugin-svelte-kit-validation',
 	configResolved(config) {
 		let svelte_count = 0;

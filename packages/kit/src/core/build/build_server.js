@@ -6,7 +6,7 @@ import { load_template, print_config_conflicts } from '../config/index.js';
 import { get_runtime_path, remove_plugin, resolve_entry } from '../utils.js';
 import { create_build, find_deps, get_default_config } from './utils.js';
 import { s } from '../../utils/misc.js';
-import { get_vite_config } from '../../vite/plugin.js';
+import { get_vite_config, sveltekit_validation } from '../../vite/plugin.js';
 
 /**
  * @param {{
@@ -181,6 +181,7 @@ export async function build_server(options, client) {
 		build: {
 			target: 'node14.8'
 		},
+		plugins: [sveltekit_validation],
 		ssr: {
 			// when developing against the Kit src code, we want to ensure that
 			// our dependencies are bundled so that apps don't need to install

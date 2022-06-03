@@ -3,7 +3,7 @@ import * as vite from 'vite';
 import { s } from '../../utils/misc.js';
 import { deep_merge } from '../../utils/object.js';
 import { normalize_path } from '../../utils/url.js';
-import { get_vite_config } from '../../vite/plugin.js';
+import { get_vite_config, sveltekit_validation } from '../../vite/plugin.js';
 import { print_config_conflicts } from '../config/index.js';
 import { remove_plugin } from '../utils.js';
 import { assets_base } from './utils.js';
@@ -87,6 +87,7 @@ export async function build_service_worker(
 			outDir: `${output_dir}/client`,
 			emptyOutDir: false
 		},
+		plugins: [sveltekit_validation],
 		resolve: {
 			alias: {
 				'$service-worker': service_worker,
