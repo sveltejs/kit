@@ -13,7 +13,8 @@ import adapter from '@sveltejs/adapter-static';
 export default {
   kit: {
     adapter: adapter({
-      // default options are shown
+      // default options are shown. On some platforms
+      // these options are set automatically — see below
       pages: 'build',
       assets: 'build',
       fallback: null,
@@ -29,6 +30,27 @@ export default {
 ```
 
 > ⚠️ You must ensure SvelteKit's [`trailingSlash`](https://kit.svelte.dev/docs/configuration#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+
+## Zero-config support
+
+Some platforms have zero-config support (more to come in future):
+
+- [Vercel](https://vercel.com)
+
+On these platforms, you should omit the adapter options so that `adapter-static` can provide the optimal configuration:
+
+```diff
+export default {
+  kit: {
+-    adapter: adapter({...}),
++    adapter: adapter(),
+
+    prerender: {
+      default: true
+    }
+  }
+};
+```
 
 ## Options
 
