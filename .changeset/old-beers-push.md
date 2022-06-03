@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Fixed page-endpoints with trailing slash always #5148
+Prevent incorrect redirect for `__data.json` request with `trailingSlash: 'always'`
