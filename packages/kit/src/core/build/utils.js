@@ -27,7 +27,7 @@ export async function create_build(config) {
 }
 
 /**
- * Adds the transitive JS and CSS to the js and css inputs.
+ * Adds transitive JS and CSS dependencies to the js and css inputs.
  * @param {string} file
  * @param {import('vite').Manifest} manifest
  * @param {Set<string>} css
