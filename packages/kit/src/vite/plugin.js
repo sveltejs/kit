@@ -315,8 +315,8 @@ export const svelte = function (svelte_config, hydratable) {
 export const plugins = function (raw_svelte_config) {
 	const svelte_config = process_config(raw_svelte_config, { cwd });
 	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
-		? [...svelte({}, !!svelte_config.kit.browser.hydrate)]
-		: [...svelte({}, !!svelte_config.kit.browser.hydrate), sveltekit(svelte_config)];
+		? [...svelte({}, !!svelte_config.kit.browser.hydrate), sveltekit_validation]
+		: [...svelte({}, !!svelte_config.kit.browser.hydrate), sveltekit(svelte_config), sveltekit_validation];
 };
 
 /**
@@ -325,8 +325,8 @@ export const plugins = function (raw_svelte_config) {
  */
 const plugins_internal = function (svelte_config) {
 	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
-		? [...svelte(svelte_config, !!svelte_config.kit.browser.hydrate)]
-		: [...svelte(svelte_config, !!svelte_config.kit.browser.hydrate), sveltekit(svelte_config)];
+		? [...svelte(svelte_config, !!svelte_config.kit.browser.hydrate), sveltekit_validation]
+		: [...svelte(svelte_config, !!svelte_config.kit.browser.hydrate), sveltekit(svelte_config), sveltekit_validation];
 };
 
 /**
@@ -336,7 +336,7 @@ const plugins_internal = function (svelte_config) {
  */
 const sveltekit_validation = {
 	name: 'vite-plugin-svelte-kit-validation',
-	async configResolved(config) {
+	configResolved(config) {
 		let svelte_count = 0;
 		let svelte_kit_count = 0;
 		const plugins = config.plugins.flat(Infinity);
@@ -347,13 +347,12 @@ const sveltekit_validation = {
 				svelte_kit_count++;
 			}
 		}
-
 		if (config.build.ssr) {
 			assert_plugin_count('vite-plugin-svelte', svelte_count, 1);
 			assert_plugin_count('vite-plugin-svelte-kit', svelte_kit_count, 0);
 		} else {
 			assert_plugin_count('vite-plugin-svelte', svelte_count, 1);
-			assert_plugin_count('vite-plugin-svelte-kit', svelte_kit_count, 1);
+			assert_plugin_count('vite-plugin-svelte-kit', svelte_kit_count, process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED ? 0 : 1);
 		}
 	}
 };
@@ -365,6 +364,6 @@ const sveltekit_validation = {
  */
 function assert_plugin_count(name, count, expected_count) {
 	if (count !== expected_count) {
-		throw Error(`Expected ${name} to be present ${expected_count} times, but found ${count}`);
+		throw new Error(`Expected ${name} to be present ${expected_count} times, but found ${count}`);
 	}
 }
