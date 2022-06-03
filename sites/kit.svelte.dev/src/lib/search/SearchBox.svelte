@@ -302,7 +302,6 @@
 	}
 
 	.results-container {
-		margin: calc(-1 * var(--border-r)) 0 0 0;
 		background: white;
 		border-radius: 0 0 var(--border-r) var(--border-r);
 		pointer-events: all;

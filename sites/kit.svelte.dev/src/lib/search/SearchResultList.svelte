@@ -7,8 +7,6 @@
 	/** @type {string} */
 	export let query;
 
-	export let depth = 0;
-
 	const dispatch = createEventDispatcher();
 
 	function escape(text) {
@@ -35,7 +33,7 @@
 	}
 </script>
 
-<ul style="--indent: {depth * 1}em;">
+<ul>
 	{#each results as result, i}
 		<li>
 			<a href={result.href} on:click={() => dispatch('select', { href: result.href })}>
@@ -47,7 +45,7 @@
 			</a>
 
 			{#if result.children.length > 0}
-				<svelte:self results={result.children} {query} depth={depth + 1} on:select />
+				<svelte:self results={result.children} {query} on:select />
 			{/if}
 		</li>
 	{/each}
@@ -55,11 +53,27 @@
 
 <style>
 	ul {
+		position: relative;
 		margin: 0;
+	}
+
+	ul :global(ul) {
+		margin-left: 0.8em !important;
+		padding-left: 0em;
+		border-left: 1px solid #eee;
 	}
 
 	li {
 		list-style: none;
+		margin-bottom: 1em;
+	}
+
+	li:last-child {
+		margin-bottom: 0;
+	}
+
+	ul ul li {
+		margin: 0;
 	}
 
 	a {
@@ -67,11 +81,10 @@
 		text-decoration: none;
 		line-height: 1;
 		padding: 1rem;
-		padding-left: calc(1rem + var(--indent));
 	}
 
 	a:hover {
-		background: #eee;
+		background: rgba(0, 0, 0, 0.05);
 	}
 
 	a:focus {
@@ -80,7 +93,6 @@
 		outline: none;
 	}
 
-	a small,
 	a strong,
 	a span {
 		display: block;
@@ -88,17 +100,9 @@
 		line-height: 1;
 	}
 
-	a small {
-		/* font-size: 1rem;
-		text-transform: uppercase; */
-		font-weight: 600;
-		color: #999;
-	}
-
 	a strong {
 		font-size: 1.6rem;
 		color: var(--text);
-		margin: 0.4rem 0;
 	}
 
 	a span {
@@ -106,6 +110,7 @@
 		color: #999;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		margin: 0.4rem 0 0 0;
 	}
 
 	a span :global(mark) {
@@ -116,7 +121,6 @@
 		border-top: 2px solid rgba(255, 255, 255, 0.2);
 	}
 
-	a:focus small,
 	a:focus span {
 		color: rgba(255, 255, 255, 0.6);
 	}
