@@ -760,6 +760,17 @@ test.describe.parallel('Endpoints', () => {
 			'name=SvelteKit; path=/; HttpOnly'
 		]);
 	});
+
+	test('Standalone endpoint is not accessible via /__data.json suffix', async ({ request }) => {
+		const r1 = await request.get('/endpoint-output/simple', {
+			headers: { accept: 'application/json' }
+		});
+
+		expect(await r1.json()).toEqual({ answer: 42 });
+
+		const r2 = await request.get('/endpoint-output/simple/__data.json');
+		expect(r2.status()).toBe(404);
+	});
 });
 
 test.describe.parallel('Encoded paths', () => {
