@@ -43,12 +43,25 @@ export function init(blocks) {
  * @returns {import('./types').Block[]}
  */
 export function search(query) {
+	const regex = new RegExp(`\\b${query}`, 'i');
+
 	const blocks = indexes
 		.map((index) => index.search(query))
 		.flat()
 		.map(lookup)
 		.map((block, rank) => ({ block, rank }))
-		.sort((a, b) => a.block.breadcrumbs.length - b.block.breadcrumbs.length || a.rank - b.rank)
+		.sort((a, b) => {
+			const a_title_matches = regex.test(a.block.title);
+			const b_title_matches = regex.test(b.block.title);
+
+			// massage the order a bit, so that title matches
+			// are given higher priority
+			if (a_title_matches !== b_title_matches) {
+				return a_title_matches ? -1 : 1;
+			}
+
+			return a.block.breadcrumbs.length - b.block.breadcrumbs.length || a.rank - b.rank;
+		})
 		.map(({ block }) => block);
 
 	const results = tree([], blocks).children;

@@ -36,7 +36,11 @@
 <ul>
 	{#each results as result, i}
 		<li>
-			<a href={result.href} on:click={() => dispatch('select', { href: result.href })}>
+			<a
+				href={result.href}
+				on:click={() => dispatch('select', { href: result.href })}
+				data-has-node={result.node ? true : undefined}
+			>
 				<strong>{@html excerpt(result.breadcrumbs.at(-1), query)}</strong>
 
 				{#if result.node?.content}

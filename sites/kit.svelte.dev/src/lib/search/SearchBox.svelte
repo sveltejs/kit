@@ -139,9 +139,7 @@
 				autofocus
 				on:keydown={(e) => {
 					if (e.key === 'Enter') {
-						if (search?.results.length > 0) {
-							modal.querySelector('a').click();
-						}
+						modal.querySelector('a[data-has-node]')?.click();
 					}
 				}}
 				on:input={(e) => {
