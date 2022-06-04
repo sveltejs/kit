@@ -32,6 +32,7 @@ export const sveltekit = function (svelte_config) {
 		name: 'vite-plugin-svelte-kit',
 
 		async config() {
+			const out_dir = posixify(kit_config.outDir);
 			const [vite_config] = deep_merge(
 				{
 					server: {
@@ -53,12 +54,12 @@ export const sveltekit = function (svelte_config) {
 							ignored: (/** @type {string} */ path) => {
 								// Ensure path isn't outDir itself otherwise everything
 								// inside is ignored
-								if (path === kit_config.outDir) return false;
+								if (path === out_dir) return false;
 
 								// Only ignore files in the outDir
-								if (!path.startsWith(kit_config.outDir)) return false;
+								if (!path.startsWith(out_dir)) return false;
 
-								return !path.startsWith(kit_config.outDir + '/generated');
+								return !path.startsWith(out_dir + '/generated');
 							}
 						}
 					}
