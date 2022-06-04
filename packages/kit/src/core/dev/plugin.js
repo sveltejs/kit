@@ -233,10 +233,6 @@ export const sveltekit = function (svelte_config) {
 				});
 			}
 
-			vite.watcher.on('change', (file) => {
-				debugger;
-			});
-
 			const assets = kit_config.paths.assets ? SVELTE_KIT_ASSETS : kit_config.paths.base;
 			const asset_server = sirv(kit_config.files.assets, {
 				dev: true,
