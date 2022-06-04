@@ -50,7 +50,16 @@ export const sveltekit = function (svelte_config) {
 						port: 3000,
 						strictPort: true,
 						watch: {
-							ignored: [`${kit_config.outDir}(!/generated/**)`]
+							ignored: (/** @type {string} */ path) => {
+								return (
+									// Path isn't outDir itself otherwise everything inside is ignored
+									path !== kit_config.outDir &&
+									// Path is inside outDir
+									path.startsWith(kit_config.outDir) &&
+									// Path is not the generated folder itself or inside it
+									!path.startsWith(kit_config.outDir + '/generated')
+								);
+							}
 						}
 					}
 				},
@@ -223,6 +232,10 @@ export const sveltekit = function (svelte_config) {
 					}
 				});
 			}
+
+			vite.watcher.on('change', (file) => {
+				debugger;
+			});
 
 			const assets = kit_config.paths.assets ? SVELTE_KIT_ASSETS : kit_config.paths.base;
 			const asset_server = sirv(kit_config.files.assets, {
