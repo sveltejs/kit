@@ -32,7 +32,7 @@ export const sveltekit = function (svelte_config) {
 		name: 'vite-plugin-svelte-kit',
 
 		async config() {
-			const normalized_outdir = path.posix.normalize(kit_config.outDir);
+			const normalized_outdir = posixify(kit_config.outDir);
 			const [vite_config] = deep_merge(
 				{
 					server: {
