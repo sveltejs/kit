@@ -51,14 +51,14 @@ export const sveltekit = function (svelte_config) {
 						strictPort: true,
 						watch: {
 							ignored: (/** @type {string} */ path) => {
-								return (
-									// Path isn't outDir itself otherwise everything inside is ignored
-									path !== kit_config.outDir &&
-									// Path is inside outDir
-									path.startsWith(kit_config.outDir) &&
-									// Path is not the generated folder itself or inside it
-									!path.startsWith(kit_config.outDir + '/generated')
-								);
+								// Ensure path isn't outDir itself otherwise everything
+								// inside is ignored
+								if (path === kit_config.outDir) return false;
+
+								// Only ignore files in the outDir
+								if (!path.startsWith(kit_config.outDir)) return false;
+
+								return !path.startsWith(kit_config.outDir + '/generated');
 							}
 						}
 					}
