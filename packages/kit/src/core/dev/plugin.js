@@ -32,6 +32,7 @@ export const sveltekit = function (svelte_config) {
 		name: 'vite-plugin-svelte-kit',
 
 		async config() {
+			const normalized_outdir = path.posix.normalize(kit_config.outDir);
 			const [vite_config] = deep_merge(
 				{
 					server: {
@@ -50,7 +51,7 @@ export const sveltekit = function (svelte_config) {
 						port: 3000,
 						strictPort: true,
 						watch: {
-							ignored: [`${path.posix.normalize(kit_config.outDir)}/!({generated,(generated/**)})`]
+							ignored: [`${normalized_outdir}/!({generated,(generated/**)})`]
 						}
 					}
 				},
