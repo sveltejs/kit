@@ -53,13 +53,13 @@ Holds the Svelte, JS/TS, and other source files for your app.
 
 #### app.html
 
-This is the entry point to your application. It contains placeholders like `%svelte.head%`, `%svelte.body%`, and `%svelte.assets%`. These placeholders will be removed and replaced by actual content at build or SSR.
+This is the entry point to your application. It contains placeholders like `%sveltekit.head%`, `%sveltekit.body%`, and `%sveltekit.assets%`. These placeholders will be removed and replaced by actual content at build or SSR.
 
-`%svelte.head%` is replaced with `<link>` and `<script>` tags that power the application as well as content from the [`<svelte:head>`](https://svelte.dev/docs#template-syntax-svelte-head) tags defined in your layouts and pages.
+`%sveltekit.head%` is replaced with `<link>` and `<script>` tags that power the application as well as content from the [`<svelte:head>`](https://svelte.dev/docs#template-syntax-svelte-head) tags defined in your layouts and pages.
 
-`%svelte.body%` is where the HTML for your application is rendered.
+`%sveltekit.body%` is where the HTML for your application is rendered.
 
-`%svelte.assets%` is replaced by the [assets base path](configuration#paths).
+`%sveltekit.assets%` is replaced by the [assets base path](configuration#paths).
 
 #### routes/
 
