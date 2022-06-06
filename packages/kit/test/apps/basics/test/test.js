@@ -2370,7 +2370,7 @@ test.describe.parallel('Routing', () => {
 		server.close();
 	});
 
-	test('watch new route in dev', async ({ page, javaScriptEnabled }) => {
+	test('watch new route in dev', async ({ page }) => {
 		await page.goto('/routing');
 
 		if (!process.env.DEV) {
