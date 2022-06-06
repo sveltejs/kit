@@ -141,3 +141,9 @@ One of the more interesting features of yarn berry is the ability to have a sing
 ```
 
 However please note that this seems to be a bit flakey, it runs the first time you run `yarn dev` but then fails with a `p.replace is not a function` error on the 2nd or follow up attempts to run the site in dev, until you delete the `.svelte-kit` directory
+
+Until the above is fixed I'd instead recommend adding the following to the `.yarnrc.yml` file
+```
+nodeLinker: node-modules
+```
+This will cause packages to be downloaded into a local node_modules directory but avoids the above problem and is you're best bet for using version 3 of yarn at this point in time.
