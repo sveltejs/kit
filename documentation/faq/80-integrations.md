@@ -109,21 +109,19 @@ onMount(() => {
 
 Sort of. The Plug'n'Play feature, aka 'pnp', is broken (it deviates from the Node module resolution algorithm, and [doesn't yet work with native JavaScript modules](https://github.com/yarnpkg/berry/issues/638) which SvelteKit — along with an [increasing number of packages](https://blog.sindresorhus.com/get-ready-for-esm-aa53530b3f77) — uses). You can use `nodeLinker: 'node-modules'` in your [`.yarnrc.yml`](https://yarnpkg.com/configuration/yarnrc#nodeLinker) file to disable pnp, but it's probably easier to just use npm or [pnpm](https://pnpm.io/), which is similarly fast and efficient but without the compatibility headaches.
 
-#### Yarn 3 Berry Example
+#### How do I use with Yarn 3?
 
-Currently ESM Support within the latest yarn (version 3) is considered experimental.  
-
-  * https://github.com/yarnpkg/berry/issues/638
+Currently ESM Support within the latest Yarn (version 3) is considered [experimental](https://github.com/yarnpkg/berry/pull/2161).
 
 The below seems to work although your results may vary.
 
-First create a new application
+First create a new application:
 ```sh
 yarn create svelte myapp
 cd myapp
 ```
 
-To enable yarn berry
+And enable Yarn Berry:
 ```sh
 yarn set version berry
 yarn install
@@ -131,18 +129,7 @@ yarn install
 
 #### Yarn 3 Global Cache
 
-One of the more interesting features of yarn berry is the ability to have a single global cache for packages, instead of having multiple copies for each project on the disk. If you have **enableGlobalCache** set to true then you may need to add this to the `svelte.config.js`
-
-```json
-	kit: {
-		vite: {server: {fs: {allow: ['.yarn']}}},
-                ...
-	}
-```
-
-However please note that this seems to be a bit flakey, it runs the first time you run `yarn dev` but then fails with a `p.replace is not a function` error on the 2nd or follow up attempts to run the site in dev, until you delete the `.svelte-kit` directory
-
-Until the above is fixed I'd instead recommend adding the following to the `.yarnrc.yml` file
+One of the more interesting features of Yarn Berry is the ability to have a single global cache for packages, instead of having multiple copies for each project on the disk. However, setting **enableGlobalCache** to true causes building to fail, so it is recommended to add the following to the `.yarnrc.yml` file:
 ```
 nodeLinker: node-modules
 ```
