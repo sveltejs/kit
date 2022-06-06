@@ -51,9 +51,8 @@ export const sveltekit = function (svelte_config) {
 						strictPort: true,
 						watch: {
 							ignored: [
-								// Ignore everything in config.kit.outDir except outDir
-								// itself, outDir/generated or anything inside there
-								`${posixify(kit_config.outDir)}/!(generated?(/**))`
+								// Ignore all siblings of config.kit.outDir/generated
+								`${posixify(kit_config.outDir)}/!(generated)`
 							]
 						}
 					}
