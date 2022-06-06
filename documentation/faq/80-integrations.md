@@ -112,6 +112,9 @@ Sort of. The Plug'n'Play feature, aka 'pnp', is broken (it deviates from the Nod
 #### Yarn 3 Berry Example
 
 Currently ESM Support within the latest yarn (version 3) is considered experimental.  
+
+  * https://github.com/yarnpkg/berry/issues/638
+
 The below seems to work although your results may vary.
 
 First create a new application
@@ -126,6 +129,8 @@ yarn set version berry
 yarn install
 ```
 
+#### Yarn 3 Global Cache
+
 One of the more interesting features of yarn berry is the ability to have a single global cache for packages, instead of having multiple copies for each project on the disk. If you have **enableGlobalCache** set to true then you may need to add this to the `svelte.config.js`
 
 ```json
@@ -134,3 +139,5 @@ One of the more interesting features of yarn berry is the ability to have a sing
                 ...
 	}
 ```
+
+However please note that this seems to be a bit flakey, it runs the first time you run `yarn dev` but then fails with a `p.replace is not a function` error on the 2nd or follow up attempts to run the site in dev, until you delete the `.svelte-kit` directory
