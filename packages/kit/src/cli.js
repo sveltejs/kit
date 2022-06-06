@@ -187,7 +187,7 @@ prog
 		}
 	});
 
-	prog
+prog
 	.command('preview')
 	.describe('Serve an already-built app')
 	.option('-p, --port', 'Port', 3000)
