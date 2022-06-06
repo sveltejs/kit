@@ -2,7 +2,6 @@ import chokidar from 'chokidar';
 import fs from 'fs';
 import colors from 'kleur';
 import { relative } from 'path';
-import * as ports from 'port-authority';
 import sade from 'sade';
 import * as vite from 'vite';
 import { load_config } from './core/config/index.js';
@@ -188,7 +187,7 @@ prog
 		}
 	});
 
-prog
+	prog
 	.command('preview')
 	.describe('Serve an already-built app')
 	.option('-p, --port', 'Port', 3000)
@@ -200,15 +199,31 @@ prog
 		try {
 			if (H) throw new Error('-H is no longer supported — use --https instead');
 
-			await check_port(port);
-
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
-			const { preview } = await import('./core/preview/index.js');
+			const { sveltekit_plugin } = await import('./core/preview/index.js');
 
-			const { config } = await preview({ port, host, https });
+			/** @type {import('vite').UserConfig} */
+			const config = {
+				plugins: [sveltekit_plugin]
+			};
+			config.preview = config.preview || {};
 
-			welcome({ port, host, https, open, base: config.kit.paths.base });
+			// optional config from command-line flags
+			// these should take precedence, but not print conflict warnings
+			if (host) {
+				config.preview.host = host;
+			}
+			if (https) {
+				config.preview.https = https;
+			}
+			if (port) {
+				config.preview.port = port;
+			}
+
+			const preview_server = await vite.preview(config);
+
+			welcome({ port, host, https, open, base: preview_server.config.base });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -248,27 +263,6 @@ prog
 	});
 
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
-
-/** @param {number} port */
-async function check_port(port) {
-	if (await ports.check(port)) {
-		return;
-	}
-	console.error(colors.bold().red(`Port ${port} is occupied`));
-	const n = await ports.blame(port);
-	if (n) {
-		// prettier-ignore
-		console.error(
-			`Terminate process ${colors.bold(n)} or specify a different port with ${colors.bold('--port')}\n`
-		);
-	} else {
-		// prettier-ignore
-		console.error(
-			`Terminate the process occupying the port or specify a different port with ${colors.bold('--port')}\n`
-		);
-	}
-	process.exit(1);
-}
 
 /**
  * @param {{
