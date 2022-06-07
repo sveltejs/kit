@@ -8,27 +8,25 @@ import * as sync from '../core/sync/sync.js';
 import { build_server } from '../core/build/build_server.js';
 import { build_service_worker } from '../core/build/build_service_worker.js';
 import { prerender } from '../core/build/prerender/prerender.js';
-import { print_config_conflicts, process_config } from '../core/config/index.js';
+import { load_config, print_config_conflicts } from '../core/config/index.js';
 import { configure_server } from '../core/dev/plugin.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_aliases, get_runtime_path, logger, resolve_entry } from '../core/utils.js';
 import { deep_merge } from '../utils/object.js';
 import { find_deps, get_default_config } from '../core/build/utils.js';
+import { configure_preview_server } from '../core/preview/index.js';
 
 const cwd = process.cwd();
 
 /**
- * @param {import('types').ValidatedConfig} svelte_config
  * @return {import('vite').Plugin}
  */
-export const sveltekit = function (svelte_config) {
-	const build_dir = path.join(svelte_config.kit.outDir, 'build');
-	const output_dir = path.join(svelte_config.kit.outDir, 'output');
-	const client_out_dir = `${output_dir}/client/${svelte_config.kit.appDir}`;
-	const client_entry_file = path.relative(
-		cwd,
-		`${get_runtime_path(svelte_config.kit)}/client/start.js`
-	);
+export const sveltekit = function () {
+	/** @type {import('types').ValidatedConfig} */
+	let svelte_config;
+
+	/** @type {import('vite').ResolvedConfig} */
+	let vite_config;
 
 	/** @type {import('types').ManifestData|undefined} */
 	let manifest_data = undefined;
@@ -37,6 +35,16 @@ export const sveltekit = function (svelte_config) {
 		name: 'vite-plugin-svelte-kit',
 
 		async config(_config, env) {
+			svelte_config = await load_config();
+
+			const build_dir = path.join(svelte_config.kit.outDir, 'build');
+			const output_dir = path.join(svelte_config.kit.outDir, 'output');
+			const client_out_dir = `${output_dir}/client/${svelte_config.kit.appDir}`;
+			const client_entry_file = path.relative(
+				cwd,
+				`${get_runtime_path(svelte_config.kit)}/client/start.js`
+			);
+
 			if (env.command === 'build') {
 				rimraf(build_dir);
 				mkdirp(build_dir);
@@ -136,10 +144,22 @@ export const sveltekit = function (svelte_config) {
 			return merged_config;
 		},
 
+		configResolved(config) {
+			vite_config = config;
+		},
+
 		async writeBundle(_options, bundle) {
 			if (!manifest_data) throw Error('manifest_data not populated');
 
 			const log = logger({ verbose: !!process.env.VERBOSE });
+
+			const build_dir = path.join(svelte_config.kit.outDir, 'build');
+			const output_dir = path.join(svelte_config.kit.outDir, 'output');
+			const client_out_dir = `${output_dir}/client/${svelte_config.kit.appDir}`;
+			const client_entry_file = path.relative(
+				cwd,
+				`${get_runtime_path(svelte_config.kit)}/client/start.js`
+			);
 
 			/** @type {import('rollup').OutputChunk[]} */
 			const chunks = [];
@@ -267,9 +287,13 @@ export const sveltekit = function (svelte_config) {
 			);
 		},
 
-		configureServer: configure_server(svelte_config)
+		async configureServer(vite) {
+			return await configure_server(vite, svelte_config);
+		},
 
-		// TODO: implement configurePreviewServer for Vite 3
+		async configurePreviewServer(vite) {
+			return await configure_preview_server(vite, svelte_config, vite_config);
+		}
 	};
 };
 
@@ -287,41 +311,36 @@ export async function get_vite_config(svelte_config, config_file) {
 	// TODO: stop reading Vite config from SvelteKit config or move to CLI
 	const vite_config = await svelte_config.kit.vite();
 	if (config_file !== false) {
-		vite_config.plugins = [...(vite_config.plugins || []), ...plugins_internal(svelte_config)];
+		vite_config.plugins = [...(vite_config.plugins || []), ...plugins_internal()];
 	}
 	return vite_config;
 }
 
 /**
- * @param {import('types').Config} [svelte_config]
  * @return {import('vite').Plugin[]}
  */
-export const svelte = function (svelte_config) {
+export const svelte = function () {
 	return svelte_plugin({
-		...(svelte_config || {}),
 		configFile: false
 	});
 };
 
 /**
- * @param {import('types').Config} raw_svelte_config
  * @return {import('vite').Plugin[]}
  */
-export const plugins = function (raw_svelte_config) {
-	const svelte_config = process_config(raw_svelte_config, { cwd });
+export const plugins = function () {
 	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
 		? [...svelte(), sveltekit_validation]
-		: [...svelte(), sveltekit(svelte_config), sveltekit_validation];
+		: [...svelte(), sveltekit(), sveltekit_validation];
 };
 
 /**
- * @param {import('types').ValidatedConfig} svelte_config
  * @return {import('vite').Plugin[]}
  */
-const plugins_internal = function (svelte_config) {
+const plugins_internal = function () {
 	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
-		? [...svelte(svelte_config), sveltekit_validation]
-		: [...svelte(svelte_config), sveltekit(svelte_config), sveltekit_validation];
+		? [...svelte(), sveltekit_validation]
+		: [...svelte(), sveltekit(), sveltekit_validation];
 };
 
 /**

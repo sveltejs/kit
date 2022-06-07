@@ -175,14 +175,14 @@ prog
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
-			const { sveltekit_plugin } = await import('./core/preview/index.js');
+			const { sveltekit } = await import('./vite/plugin.js');
 			const svelte_config = await load_config();
 			const vite_config = await svelte_config.kit.vite();
 
 			/** @type {import('vite').UserConfig} */
 			const config = {
 				...vite_config,
-				plugins: [...(vite_config.plugins || []), sveltekit_plugin]
+				plugins: [...(vite_config.plugins || []), sveltekit()]
 			};
 			config.preview = config.preview || {};
 
