@@ -293,17 +293,12 @@ export async function get_vite_config(svelte_config, config_file) {
 }
 
 /**
- * @param {import('types').Config} svelte_config
- * @param {boolean} hydratable
+ * @param {import('types').Config} [svelte_config]
  * @return {import('vite').Plugin[]}
  */
-export const svelte = function (svelte_config, hydratable) {
+export const svelte = function (svelte_config) {
 	return svelte_plugin({
-		...svelte_config,
-		compilerOptions: {
-			...(svelte_config?.compilerOptions || {}),
-			hydratable
-		},
+		...(svelte_config || {}),
 		configFile: false
 	});
 };
@@ -315,12 +310,8 @@ export const svelte = function (svelte_config, hydratable) {
 export const plugins = function (raw_svelte_config) {
 	const svelte_config = process_config(raw_svelte_config, { cwd });
 	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
-		? [...svelte({}, !!svelte_config.kit.browser.hydrate), sveltekit_validation]
-		: [
-				...svelte({}, !!svelte_config.kit.browser.hydrate),
-				sveltekit(svelte_config),
-				sveltekit_validation
-		  ];
+		? [...svelte(), sveltekit_validation]
+		: [...svelte(), sveltekit(svelte_config), sveltekit_validation];
 };
 
 /**
@@ -329,12 +320,8 @@ export const plugins = function (raw_svelte_config) {
  */
 const plugins_internal = function (svelte_config) {
 	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
-		? [...svelte(svelte_config, !!svelte_config.kit.browser.hydrate), sveltekit_validation]
-		: [
-				...svelte(svelte_config, !!svelte_config.kit.browser.hydrate),
-				sveltekit(svelte_config),
-				sveltekit_validation
-		  ];
+		? [...svelte(svelte_config), sveltekit_validation]
+		: [...svelte(svelte_config), sveltekit(svelte_config), sveltekit_validation];
 };
 
 /**

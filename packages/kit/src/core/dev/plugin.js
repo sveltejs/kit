@@ -320,7 +320,7 @@ export const configure_server = function (svelte_config) {
 								});
 							},
 							hooks,
-							hydrate: svelte_config.kit.browser.hydrate,
+							hydrate: svelte_config.compilerOptions.hydratable,
 							manifest,
 							method_override: svelte_config.kit.methodOverride,
 							paths: {

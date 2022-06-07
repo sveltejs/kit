@@ -2,10 +2,12 @@ import path from 'path';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
+	compilerOptions: {
+		hydratable: false
+	},
 	kit: {
 		browser: {
-			router: false,
-			hydrate: false
+			router: false
 		},
 
 		inlineStyleThreshold: Infinity,

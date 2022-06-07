@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.141
+
+### Patch Changes
+
+- [fix] use inline element in heading ([#5164](https://github.com/sveltejs/kit/pull/5164))
+
 ## 2.0.0-next.140
 
 ### Patch Changes
