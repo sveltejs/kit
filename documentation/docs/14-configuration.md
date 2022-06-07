@@ -19,6 +19,7 @@ const config = {
 		alias: {},
 		appDir: '_app',
 		browser: {
+			hydrate: true,
 			router: true
 		},
 		csp: {
@@ -120,6 +121,7 @@ The directory relative to `paths.assets` where the built JS and CSS (and importe
 
 An object containing zero or more of the following `boolean` values:
 
+- `hydrate` — whether to [hydrate](/docs/page-options#hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
 - `router` — enables or disables the client-side [router](/docs/page-options#router) app-wide.
 
 ### csp

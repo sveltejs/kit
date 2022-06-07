@@ -375,7 +375,7 @@ export const sveltekit = function (svelte_config) {
 									});
 								},
 								hooks,
-								hydrate: svelte_config.compilerOptions.hydratable,
+								hydrate: svelte_config.kit.browser.hydrate,
 								manifest,
 								method_override: svelte_config.kit.methodOverride,
 								paths: {
@@ -523,6 +523,10 @@ function has_correct_case(file, assets) {
 export const svelte = function (svelte_config) {
 	return svelte_plugin({
 		...svelte_config,
+		compilerOptions: {
+			...svelte_config.compilerOptions,
+			hydratable: !!svelte_config.kit.browser.hydrate
+		},
 		configFile: false
 	});
 };

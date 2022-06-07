@@ -88,13 +88,11 @@ An unfortunate reality of modern web development is that it is sometimes necessa
 /// file: svelte.config.js
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	compilerOptions: {
-		hydratable: false,
-	},
 	kit: {
-		// together with hydratable: false
-		// this disables JavaScript
+		// the combination of these options
+		// disables JavaScript
 		browser: {
+			hydrate: false,
 			router: false
 		},
 
