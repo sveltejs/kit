@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.349
+
+### Patch Changes
+
+- [breaking] remove kit.browser.hydrate config in favor of compilerOptions.hydratable ([#5155](https://github.com/sveltejs/kit/pull/5155))
+
+* [chore] upgrade to Vite 2.9.10 ([#5170](https://github.com/sveltejs/kit/pull/5170))
+
 ## 1.0.0-next.348
 
 ### Patch Changes
