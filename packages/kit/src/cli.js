@@ -62,15 +62,16 @@ prog
 		let close;
 
 		async function start() {
-			const svelte_config = await load_config();
 			const { plugins } = await import('./core/dev/plugin.js');
+			const svelte_config = await load_config();
 			const vite_config = await svelte_config.kit.vite();
 
 			/** @type {import('vite').UserConfig} */
 			const config = {
+				...vite_config,
 				plugins: [...(vite_config.plugins || []), plugins(svelte_config)]
 			};
-			config.server = {};
+			config.server = config.server || {};
 
 			// optional config from command-line flags
 			// these should take precedence, but not print conflict warnings
@@ -202,10 +203,13 @@ prog
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
 			const { sveltekit_plugin } = await import('./core/preview/index.js');
+			const svelte_config = await load_config();
+			const vite_config = await svelte_config.kit.vite();
 
 			/** @type {import('vite').UserConfig} */
 			const config = {
-				plugins: [sveltekit_plugin]
+				...vite_config,
+				plugins: [...(vite_config.plugins || []), sveltekit_plugin]
 			};
 			config.preview = config.preview || {};
 
