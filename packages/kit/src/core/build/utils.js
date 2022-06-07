@@ -82,6 +82,10 @@ export const get_default_config = function ({ client_out_dir, config, input, out
 		plugins: [
 			svelte({
 				...config,
+				compilerOptions: {
+					...config.compilerOptions,
+					hydratable: !!config.kit.browser.hydrate
+				},
 				configFile: false
 			})
 		],

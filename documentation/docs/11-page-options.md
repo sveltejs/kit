@@ -24,7 +24,7 @@ Note that this will disable client-side routing for any navigation from this pag
 
 ### hydrate
 
-Ordinarily, SvelteKit [hydrates](/docs/appendix#hydration) your server-rendered HTML into an interactive page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can skip hydration when the app boots up with the app-wide [`compilerOptions.hydratable` config option](https://svelte.dev/docs#compile-time-svelte-compile) or the page-level `hydrate` export:
+Ordinarily, SvelteKit [hydrates](/docs/appendix#hydration) your server-rendered HTML into an interactive page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can skip hydration when the app boots up with the app-wide [`browser.hydrate` config option](/docs/configuration#browser) or the page-level `hydrate` export:
 
 ```html
 <script context="module">

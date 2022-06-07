@@ -64,7 +64,7 @@ export class Server {
 				error.stack = this.options.get_stack(error);
 			},
 			hooks: null,
-			hydrate: ${s(config.compilerOptions.hydratable)},
+			hydrate: ${s(config.kit.browser.hydrate)},
 			manifest,
 			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
