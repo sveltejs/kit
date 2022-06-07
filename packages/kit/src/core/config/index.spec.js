@@ -9,6 +9,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
 const get_defaults = (prefix = '') => ({
+	compilerOptions: {
+		hydratable: true
+	},
 	extensions: ['.svelte'],
 	kit: {
 		adapter: null,
@@ -16,7 +19,7 @@ const get_defaults = (prefix = '') => ({
 		amp: undefined,
 		appDir: '_app',
 		browser: {
-			hydrate: true,
+			hydrate: undefined,
 			router: true
 		},
 		csp: {

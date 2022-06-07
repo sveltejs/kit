@@ -5,6 +5,10 @@ import { join } from 'path';
 /** @type {Validator} */
 const options = object(
 	{
+		compilerOptions: object({
+			hydratable: boolean(true)
+		}),
+
 		extensions: validate(['.svelte'], (input, keypath) => {
 			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
 				throw new Error(`${keypath} must be an array of strings`);
@@ -74,7 +78,10 @@ const options = object(
 			}),
 
 			browser: object({
-				hydrate: boolean(true),
+				// TODO remove for 1.0
+				hydrate: error(
+					(keypath) => `${keypath} has been moved to config.compilerOptions.hydratable`
+				),
 				router: boolean(true)
 			}),
 
@@ -142,7 +149,7 @@ const options = object(
 			),
 
 			// TODO remove for 1.0
-			hydrate: error((keypath) => `${keypath} has been moved to config.kit.browser.hydrate`),
+			hydrate: error((keypath) => `${keypath} has been moved to config.compilerOptions.hydratable`),
 
 			inlineStyleThreshold: number(0),
 
