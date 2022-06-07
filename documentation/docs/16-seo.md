@@ -90,7 +90,7 @@ An unfortunate reality of modern web development is that it is sometimes necessa
 const config = {
 	compilerOptions: {
 		hydratable: false,
-	}
+	},
 	kit: {
 		// together with hydratable: false
 		// this disables JavaScript
