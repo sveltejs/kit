@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.350
+
+### Patch Changes
+
+- [breaking] revert removal of `kit.browser.hydrate` ([#5178](https://github.com/sveltejs/kit/pull/5178))
+
 ## 1.0.0-next.349
 
 ### Patch Changes

@@ -318,7 +318,7 @@ export const configure_server = async function (vite, svelte_config) {
 							});
 						},
 						hooks,
-						hydrate: svelte_config.compilerOptions.hydratable,
+						hydrate: svelte_config.kit.browser.hydrate,
 						manifest,
 						method_override: svelte_config.kit.methodOverride,
 						paths: {
