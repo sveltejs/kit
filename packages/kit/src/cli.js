@@ -179,10 +179,12 @@ prog
 			const svelte_config = await load_config();
 			const vite_config = await svelte_config.kit.vite();
 
+			const has_vite_config = fs.existsSync('vite.config.js');
+
 			/** @type {import('vite').UserConfig} */
 			const config = {
 				...vite_config,
-				plugins: [...(vite_config.plugins || []), sveltekit()]
+				plugins: [...(vite_config.plugins || []), has_vite_config ? [] : sveltekit()]
 			};
 			config.preview = config.preview || {};
 

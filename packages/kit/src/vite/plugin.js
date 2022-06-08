@@ -338,6 +338,9 @@ export const plugins = function () {
  * @return {import('vite').Plugin[]}
  */
 const plugins_internal = function () {
+	if (process.env.SVELTE_VITE_CONFIG) {
+		return [sveltekit_validation];
+	}
 	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
 		? [...svelte(), sveltekit_validation]
 		: [...svelte(), sveltekit(), sveltekit_validation];
