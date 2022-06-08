@@ -320,9 +320,7 @@ export async function get_vite_config(svelte_config, config_file) {
  * @return {import('vite').Plugin[]}
  */
 export const svelte = function () {
-	return svelte_plugin({
-		configFile: false
-	});
+	return svelte_plugin();
 };
 
 /**
