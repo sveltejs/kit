@@ -1,6 +1,6 @@
 <script context="module">
 	export const load = ({ url }) => {
-		const str = url.toString();
+		url.toString();
 		return {};
 	};
 </script>

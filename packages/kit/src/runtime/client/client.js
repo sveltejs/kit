@@ -536,18 +536,19 @@ export function create_client({ target, session, base, trailing_slash }) {
 				props: props || {},
 				get url() {
 					node.uses.url = true;
+					const load_url = new URL(url);
 
-					return new Proxy(url, {
-						get: (target, property) => {
-							if (property === 'hash') {
-								throw new Error(
-									'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
-								);
-							}
-
-							return Reflect.get(target, property, target);
+					// We could use a Proxy here, but it causes weird effects.
+					// See: https://github.com/sveltejs/kit/issues/5083
+					Object.defineProperty(load_url, 'hash', {
+						get: () => {
+							throw new Error(
+								'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
+							);
 						}
 					});
+
+					return load_url;
 				},
 				get session() {
 					node.uses.session = true;
