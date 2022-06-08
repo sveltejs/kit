@@ -215,6 +215,8 @@ export const sveltekit = function () {
 
 			const server = await build_server(options, client);
 
+			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
+
 			/** @type {import('types').BuildData} */
 			const build_data = {
 				app_dir: svelte_config.kit.appDir,
@@ -359,7 +361,11 @@ export const sveltekit_validation = {
 				svelte_kit_count++;
 			}
 		}
-		assert_plugin_count('vite-plugin-svelte', svelte_count, 1);
+		assert_plugin_count(
+			'vite-plugin-svelte',
+			svelte_count,
+			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED ? 0 : 1
+		);
 		assert_plugin_count(
 			'vite-plugin-svelte-kit',
 			svelte_kit_count,
