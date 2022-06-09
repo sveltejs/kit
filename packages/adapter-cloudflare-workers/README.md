@@ -43,35 +43,32 @@ Generate this file using `wrangler` from your project directory
 wrangler init --site my-site-name
 ```
 
-Now you should get some details from Cloudflare. You should get your:
-
-1. Account ID
-2. And your Zone-ID (Optional)
+Now you should get some details from Cloudflare. You should get your Account ID.
 
 Get them by visiting your [Cloudflare dashboard](https://dash.cloudflare.com) and click on any domain. There, you can scroll down and on the left, you can see your details under **API**.
 
-Then configure your sites build directory and your account-details in the config file:
+Then configure your sites build directory and your account-details in the
+config file:
 
 ```toml
+main = "./worker.mjs"
 account_id = 'YOUR ACCOUNT_ID'
-zone_id    = 'YOUR ZONE_ID' # optional, if you don't specify this a workers.dev subdomain will be used.
 
-type = "javascript"
+# A compatibility_date is required when publishing. Add one to your
+# wrangler.toml file, or pass it in your terminal as --compatibility-date
+compatibility_date = '2022-06-09'
 
 [build]
-# Assume it's already been built. You can make this "npm run build" to ensure a build before publishing
+# Assume it's already been built. You can make this "npm run build" to ensure a
+# build before publishing
 command = ""
-
-[build.upload]
-format = "modules"
-main = "./worker.mjs"
 
 [site]
 bucket = "./.cloudflare/assets"
-entry-point = "./.cloudflare/worker"
 ```
 
-It's recommended that you add the `build` and `workers-site` folders (or whichever other folders you specify) to your `.gitignore`.
+It's recommended that you add the `build` and `workers-site` folders
+(or whichever other folders you specify) to your `.gitignore`.
 
 Now, log in with wrangler:
 
