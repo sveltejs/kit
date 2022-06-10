@@ -2289,7 +2289,7 @@ test.describe.parallel('Routing', () => {
 		await page.goto('/routing/hashes/target#p2');
 
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
-		await page.waitForTimeout(50);
+		await page.waitForTimeout(50); // give browser a bit of time to complete the native behavior of the key press
 		expect(
 			await page.evaluate(
 				() => document.activeElement?.textContent || 'ERROR: document.activeElement not set'
