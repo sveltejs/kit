@@ -33,7 +33,7 @@ export default {
       split: false,
 
       // same as esbuild sourcemap option
-			// https://esbuild.github.io/api/#sourcemap
+      // https://esbuild.github.io/api/#sourcemap
       sourcemap: false
     })
   }
