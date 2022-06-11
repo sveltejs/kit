@@ -4,8 +4,11 @@
 		const res = await fetch('/load/set-cookie-fetch/b.json');
 		const { answer } = await res.json(); // need to read the response so it gets serialized
 
+		const set_cookie = res.headers.get('set-cookie');
+
 		return {
-			props: { answer }
+			props: { answer },
+			set_cookies: set_cookie ? [ set_cookie ] : []
 		};
 	}
 </script>
