@@ -84,19 +84,19 @@ const redirects = {
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('.').default} **/
-export default function ({ external = [], edge, split } = {}) {
+export default function ({ external = [], edge, split, sourcemap = false } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(builder) {
 			if (process.env.ENABLE_VC_BUILD) {
-				await v3(builder, external, edge, split);
+				await v3(builder, external, edge, split, sourcemap);
 			} else {
 				if (edge || split) {
 					throw new Error('`edge` and `split` options can only be used with ENABLE_VC_BUILD');
 				}
 
-				await v1(builder, external);
+				await v1(builder, external, sourcemap);
 			}
 		}
 	};
@@ -105,8 +105,9 @@ export default function ({ external = [], edge, split } = {}) {
 /**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string[]} external
+ * @param {import('esbuild').BuildOptions['sourcemap']} sourcemap
  */
-async function v1(builder, external) {
+async function v1(builder, external, sourcemap) {
 	const node_version = get_node_version();
 
 	const dir = '.vercel_build_output';
@@ -146,7 +147,8 @@ async function v1(builder, external) {
 		bundle: true,
 		platform: 'node',
 		external,
-		format: 'cjs'
+		format: 'cjs',
+		sourcemap
 	});
 
 	fs.writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'commonjs' }));
@@ -202,8 +204,9 @@ async function v1(builder, external) {
  * @param {string[]} external
  * @param {boolean} edge
  * @param {boolean} split
+ * @param {import('esbuild').BuildOptions['sourcemap']} sourcemap
  */
-async function v3(builder, external, edge, split) {
+async function v3(builder, external, edge, split, sourcemap) {
 	const node_version = get_node_version();
 
 	const dir = '.vercel/output';
@@ -302,7 +305,8 @@ async function v3(builder, external, edge, split) {
 			bundle: true,
 			platform: 'node',
 			format: 'esm',
-			external
+			external,
+			sourcemap
 		});
 
 		write(
