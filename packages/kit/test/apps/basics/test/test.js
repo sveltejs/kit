@@ -1863,9 +1863,9 @@ test.describe.parallel('$app/stores', () => {
 		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 
 		if (javaScriptEnabled) {
-			page.click('a[href="/store/navigating/c"]');
+			await page.click('a[href="/store/navigating/c"]');
 			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
-			page.click('a[href="/store/navigating/a"]');
+			await page.click('a[href="/store/navigating/a"]');
 
 			await page.waitForSelector('#not-navigating', { timeout: 500 });
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
