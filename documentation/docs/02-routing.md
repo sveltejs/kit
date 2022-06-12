@@ -100,7 +100,7 @@ The job of a [request handler](/docs/types#sveltejs-kit-requesthandler) is to re
 
 #### Page endpoints
 
-If an endpoint has the same filename as a page (except for the extension), the page gets its props from the endpoint — via `fetch` during client-side navigation, or via direct function call during SSR.
+If an endpoint has the same filename as a page (including named layouts and matchers but not the extension), the page gets its props from the endpoint — via `fetch` during client-side navigation, or via direct function call during SSR.
 
 A page like `src/routes/items/[id].svelte` could get its props from the `body` in the endpoint above:
 
