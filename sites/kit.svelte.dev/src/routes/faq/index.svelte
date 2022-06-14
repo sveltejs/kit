@@ -79,8 +79,8 @@
 	}
 
 	h2 {
-		margin: -4rem 0 1rem 0;
-		padding-top: 10rem;
+		margin: 0rem 0 1rem 0;
+		padding-top: 6rem;
 		padding-bottom: 0.2rem;
 		color: var(--text);
 		/* max-width: 24em; */
