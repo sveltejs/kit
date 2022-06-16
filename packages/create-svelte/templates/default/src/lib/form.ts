@@ -73,7 +73,7 @@ export function enhance(
 		if (pending) pending({ data, form });
 
 		try {
-			const action = form.action || get(page);
+			const action = form.action || get(page).url.pathname;
 			const response = await fetch(action, {
 				method: form.method,
 				headers: {
