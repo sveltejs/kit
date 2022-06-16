@@ -1,4 +1,6 @@
 import { invalidate } from '$app/navigation';
+import { page } from '$app/stores';
+import { get } from 'svelte/store';
 
 // this action (https://svelte.dev/tutorial/actions) allows us to
 // progressively enhance a <form> that already works without JS
@@ -71,7 +73,8 @@ export function enhance(
 		if (pending) pending({ data, form });
 
 		try {
-			const response = await fetch(form.action, {
+			const action = form.action || get(page);
+			const response = await fetch(action, {
 				method: form.method,
 				headers: {
 					accept: 'application/json'
@@ -84,7 +87,7 @@ export function enhance(
 			if (response.ok) {
 				if (result) result({ data, form, response });
 
-				const url = new URL(form.action);
+				const url = new URL(action);
 				url.search = url.hash = '';
 				invalidate(url.href);
 			} else if (error) {
