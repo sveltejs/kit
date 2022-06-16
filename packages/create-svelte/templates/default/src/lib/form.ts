@@ -1,5 +1,5 @@
 import { invalidate } from '$app/navigation';
-import { page } from '$app/stores';
+import { page } from '$app/stores';
 import { get } from 'svelte/store';
 
 // this action (https://svelte.dev/tutorial/actions) allows us to
