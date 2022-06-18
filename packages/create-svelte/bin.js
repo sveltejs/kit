@@ -61,10 +61,11 @@ async function main() {
 					message: 'Which Svelte app template?',
 					choices: fs.readdirSync(dist('templates')).map((dir) => {
 						const meta_file = dist(`templates/${dir}/meta.json`);
-						const meta = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
+						const { title, description } = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
 
 						return {
-							title: meta.description,
+							title,
+							description,
 							value: dir
 						};
 					})
@@ -75,8 +76,16 @@ async function main() {
 					message: 'Add type checking?',
 					initial: false,
 					choices: [
-						{ title: 'Type-checked JavaScript', value: 'checkjs' },
-						{ title: 'TypeScript', value: 'typescript' },
+						{
+							title: 'JavaScript with checkJs',
+							value: 'checkjs',
+							description: 'using JavaScript comments for types.'
+						},
+						{
+							title: 'TypeScript',
+							value: 'typescript',
+							description: 'using TypeScript annotations for types.'
+						},
 						{ title: 'None', value: null }
 					]
 				},

@@ -1,3 +1,4 @@
 {
-	"description": "Skeleton project"
+	"title": "Skeleton project",
+	"description": "A blank slate for your new SvelteKit app."
 }
