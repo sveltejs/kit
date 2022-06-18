@@ -78,11 +78,11 @@ async function main() {
 					choices: [
 						{
 							title: 'With JavaScript comments (JSDoc)',
-							value: 'checkjs',
+							value: 'checkjs'
 						},
 						{
 							title: 'With TypeScript annotations',
-							value: 'typescript',
+							value: 'typescript'
 						},
 						{ title: 'None', value: null }
 					]
