@@ -1,4 +1,6 @@
 <script context="module">
+	import '@sveltejs/site-kit/code.css';
+
 	export function load() {
 		return {
 			cache: { maxage: 60 }
