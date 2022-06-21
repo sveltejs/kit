@@ -15,7 +15,7 @@
 			e.target.value = '';
 		}}
 		on:mousedown|preventDefault={() => ($searching = true)}
-		on:touchstart|preventDefault={() => ($searching = true)}
+		on:touchend|preventDefault={() => ($searching = true)}
 		type="search"
 		name="q"
 		placeholder="Search"
