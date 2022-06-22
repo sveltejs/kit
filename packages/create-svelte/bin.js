@@ -73,7 +73,7 @@ async function main() {
 				{
 					type: 'select',
 					name: 'types',
-					message: 'Add type checking?',
+					message: 'Add type checking with TypeScript?',
 					initial: false,
 					choices: [
 						{
