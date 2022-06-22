@@ -182,7 +182,7 @@ export async function start_server(handler, start = 4000) {
 	const server = http.createServer(handler);
 
 	await new Promise((fulfil) => {
-		server.listen(port, () => fulfil(undefined));
+		server.listen(port, 'localhost', () => fulfil(undefined));
 	});
 
 	return { port, server };
