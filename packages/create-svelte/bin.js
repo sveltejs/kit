@@ -81,7 +81,7 @@ async function main() {
 							value: 'checkjs'
 						},
 						{
-							title: 'With TypeScript annotations',
+							title: 'Yes, using TypeScript syntax',
 							value: 'typescript'
 						},
 						{ title: 'No', value: null }
