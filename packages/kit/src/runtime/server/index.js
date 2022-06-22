@@ -41,7 +41,12 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	let decoded = decodeURI(url.pathname);
+	let decoded;
+	try {
+		decoded = decodeURI(url.pathname);
+	} catch {
+		return new Response(undefined, { status: 400 });
+	}
 
 	/** @type {import('types').SSRRoute | null} */
 	let route = null;

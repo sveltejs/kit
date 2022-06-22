@@ -1134,6 +1134,12 @@ test.describe.parallel('Errors', () => {
 			'500: Cannot prerender pages that have endpoints with mutative methods'
 		);
 	});
+
+	test('returns 400 when accessing a malformed URI', async ({ page }) => {
+		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
+
+		expect(/** @type {Response} */ (response).status()).toBe(400);
+	});
 });
 
 test.describe.parallel('ETags', () => {
