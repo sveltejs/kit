@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.352
+
+### Patch Changes
+
+- fix manifest not updating when adding routes ([#5157](https://github.com/sveltejs/kit/pull/5157))
+
 ## 1.0.0-next.351
 
 ### Patch Changes
