@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.142
+
+### Patch Changes
+
+- Add descriptions to templates, and make TypeScript options more self-explanatory ([#5221](https://github.com/sveltejs/kit/pull/5221))
+
 ## 2.0.0-next.141
 
 ### Patch Changes
