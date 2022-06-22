@@ -84,7 +84,7 @@ async function main() {
 							title: 'With TypeScript annotations',
 							value: 'typescript'
 						},
-						{ title: 'None', value: null }
+						{ title: 'No', value: null }
 					]
 				},
 				{
