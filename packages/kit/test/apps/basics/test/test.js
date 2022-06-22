@@ -1516,6 +1516,13 @@ test.describe.parallel('Load', () => {
 		}
 	});
 
+	test('url instance methods work in load', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/load/url-to-string');
+			expect(await page.textContent('h1')).toBe("I didn't break!");
+		}
+	});
+
 	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
 		if (javaScriptEnabled && process.env.DEV) {
 			const warnings = [];
