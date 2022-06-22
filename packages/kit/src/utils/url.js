@@ -52,3 +52,12 @@ export function normalize_path(path, trailing_slash) {
 
 	return path;
 }
+
+export class LoadURL extends URL {
+	/** @returns {string} */
+	get hash() {
+		throw new Error(
+			'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
+		);
+	}
+}

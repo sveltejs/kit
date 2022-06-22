@@ -2,7 +2,7 @@ import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { normalize } from '../load.js';
-import { normalize_path } from '../../utils/url.js';
+import { LoadURL, normalize_path } from '../../utils/url.js';
 import {
 	create_updated_store,
 	find_anchor,
@@ -527,6 +527,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		const session = $session;
+		const load_url = new LoadURL(url);
 
 		if (module.load) {
 			/** @type {import('types').LoadEvent} */
@@ -536,18 +537,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 				props: props || {},
 				get url() {
 					node.uses.url = true;
-					const load_url = new URL(url);
-
-					// We could use a Proxy here, but it causes weird effects.
-					// See: https://github.com/sveltejs/kit/issues/5083
-					Object.defineProperty(load_url, 'hash', {
-						get: () => {
-							throw new Error(
-								'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
-							);
-						}
-					});
-
 					return load_url;
 				},
 				get session() {
