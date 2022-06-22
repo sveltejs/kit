@@ -84,19 +84,19 @@ const redirects = {
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('.').default} **/
-export default function ({ external = [], edge, split, sourcemap = false } = {}) {
+export default function ({ external = [], edge, split } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(builder) {
 			if (process.env.ENABLE_VC_BUILD) {
-				await v3(builder, external, edge, split, sourcemap);
+				await v3(builder, external, edge, split);
 			} else {
 				if (edge || split) {
 					throw new Error('`edge` and `split` options can only be used with ENABLE_VC_BUILD');
 				}
 
-				await v1(builder, external, sourcemap);
+				await v1(builder, external);
 			}
 		}
 	};
@@ -105,9 +105,8 @@ export default function ({ external = [], edge, split, sourcemap = false } = {})
 /**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string[]} external
- * @param {import('esbuild').BuildOptions['sourcemap']} sourcemap
  */
-async function v1(builder, external, sourcemap) {
+async function v1(builder, external) {
 	const node_version = get_node_version();
 
 	const dir = '.vercel_build_output';
@@ -148,7 +147,7 @@ async function v1(builder, external, sourcemap) {
 		platform: 'node',
 		external,
 		format: 'cjs',
-		sourcemap
+		sourcemap: 'linked'
 	});
 
 	fs.writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'commonjs' }));
@@ -204,9 +203,8 @@ async function v1(builder, external, sourcemap) {
  * @param {string[]} external
  * @param {boolean} edge
  * @param {boolean} split
- * @param {import('esbuild').BuildOptions['sourcemap']} sourcemap
  */
-async function v3(builder, external, edge, split, sourcemap) {
+async function v3(builder, external, edge, split) {
 	const node_version = get_node_version();
 
 	const dir = '.vercel/output';
@@ -306,7 +304,7 @@ async function v3(builder, external, edge, split, sourcemap) {
 			platform: 'node',
 			format: 'esm',
 			external,
-			sourcemap
+			sourcemap: 'linked'
 		});
 
 		write(

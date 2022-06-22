@@ -30,11 +30,7 @@ export default {
 
       // if true, will split your app into multiple functions
       // instead of creating a single one for the entire app
-      split: false,
-
-      // same as esbuild sourcemap option
-      // https://esbuild.github.io/api/#sourcemap
-      sourcemap: false
+      split: false
     })
   }
 };
