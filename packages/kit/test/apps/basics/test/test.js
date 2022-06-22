@@ -2378,16 +2378,16 @@ test.describe.parallel('Routing', () => {
 		server.close();
 	});
 
-	test('watch new route in dev', async ({ page, javaScriptEnabled }) => {
+	test('watch new route in dev', async ({ page }) => {
 		await page.goto('/routing');
 
-		if (!process.env.DEV || javaScriptEnabled) {
+		if (!process.env.DEV) {
 			return;
 		}
 
 		// hash the filename so that it won't conflict with
 		// future test file that has the same name
-		const route = 'bar' + new Date().valueOf();
+		const route = 'zzzz' + Date.now();
 		const content = 'Hello new route';
 		const __dirname = path.dirname(fileURLToPath(import.meta.url));
 		const filePath = path.join(__dirname, `../src/routes/routing/${route}.svelte`);
