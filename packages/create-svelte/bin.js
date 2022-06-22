@@ -77,7 +77,7 @@ async function main() {
 					initial: false,
 					choices: [
 						{
-							title: 'With JavaScript comments (JSDoc)',
+							title: 'Yes, using JavaScript with JSDoc comments',
 							value: 'checkjs'
 						},
 						{
