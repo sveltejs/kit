@@ -30,16 +30,10 @@ export async function build(config, { log }) {
 		cwd,
 		config,
 		build_dir,
-		// TODO this is so that Vite's preloading works. Unfortunately, it fails
-		// during `svelte-kit preview`, because we use a local asset path. If Vite
-		// used relative paths, I _think_ this could get fixed. Issue here:
-		// https://github.com/vitejs/vite/issues/2009
-		assets_base: `${config.kit.paths.assets || config.kit.paths.base}/${config.kit.appDir}/`,
 		manifest_data,
 		output_dir,
-		client_entry_file: path.relative(cwd, `${get_runtime_path(config)}/client/start.js`),
-		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
-		service_worker_register: config.kit.serviceWorker.register
+		client_entry_file: path.relative(cwd, `${get_runtime_path(config.kit)}/client/start.js`),
+		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
 	};
 
 	const client = await build_client(options);
@@ -65,8 +59,8 @@ export async function build(config, { log }) {
 
 	const files = new Set([
 		...static_files,
-		...client.chunks.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`),
-		...client.assets.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`)
+		...client.chunks.map((chunk) => `${config.kit.appDir}/immutable/${chunk.fileName}`),
+		...client.assets.map((chunk) => `${config.kit.appDir}/immutable/${chunk.fileName}`)
 	]);
 
 	// TODO is this right?
@@ -77,7 +71,7 @@ export async function build(config, { log }) {
 	});
 
 	const prerendered = await prerender({
-		config,
+		config: config.kit,
 		entries: options.manifest_data.routes
 			.map((route) => (route.type === 'page' ? route.path : ''))
 			.filter(Boolean),

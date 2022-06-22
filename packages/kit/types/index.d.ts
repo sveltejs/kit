@@ -91,66 +91,68 @@ export interface Builder {
 export interface Config {
 	compilerOptions?: CompileOptions;
 	extensions?: string[];
-	kit?: {
-		adapter?: Adapter;
-		alias?: Record<string, string>;
-		appDir?: string;
-		browser?: {
-			hydrate?: boolean;
-			router?: boolean;
-		};
-		csp?: {
-			mode?: 'hash' | 'nonce' | 'auto';
-			directives?: CspDirectives;
-		};
-		endpointExtensions?: string[];
-		files?: {
-			assets?: string;
-			hooks?: string;
-			lib?: string;
-			params?: string;
-			routes?: string;
-			serviceWorker?: string;
-			template?: string;
-		};
-		floc?: boolean;
-		inlineStyleThreshold?: number;
-		methodOverride?: {
-			parameter?: string;
-			allowed?: string[];
-		};
-		outDir?: string;
-		package?: {
-			dir?: string;
-			emitTypes?: boolean;
-			exports?(filepath: string): boolean;
-			files?(filepath: string): boolean;
-		};
-		paths?: {
-			assets?: string;
-			base?: string;
-		};
-		prerender?: {
-			concurrency?: number;
-			crawl?: boolean;
-			default?: boolean;
-			enabled?: boolean;
-			entries?: Array<'*' | `/${string}`>;
-			onError?: PrerenderOnErrorValue;
-		};
-		routes?: (filepath: string) => boolean;
-		serviceWorker?: {
-			register?: boolean;
-			files?: (filepath: string) => boolean;
-		};
-		trailingSlash?: TrailingSlash;
-		version?: {
-			name?: string;
-			pollInterval?: number;
-		};
-		vite?: import('vite').UserConfig | (() => MaybePromise<import('vite').UserConfig>);
-	};
+	kit?: KitConfig;
 	preprocess?: any;
+}
+
+export interface KitConfig {
+	adapter?: Adapter;
+	alias?: Record<string, string>;
+	appDir?: string;
+	browser?: {
+		hydrate?: boolean;
+		router?: boolean;
+	};
+	csp?: {
+		mode?: 'hash' | 'nonce' | 'auto';
+		directives?: CspDirectives;
+	};
+	endpointExtensions?: string[];
+	files?: {
+		assets?: string;
+		hooks?: string;
+		lib?: string;
+		params?: string;
+		routes?: string;
+		serviceWorker?: string;
+		template?: string;
+	};
+	floc?: boolean;
+	inlineStyleThreshold?: number;
+	methodOverride?: {
+		parameter?: string;
+		allowed?: string[];
+	};
+	outDir?: string;
+	package?: {
+		dir?: string;
+		emitTypes?: boolean;
+		exports?(filepath: string): boolean;
+		files?(filepath: string): boolean;
+	};
+	paths?: {
+		assets?: string;
+		base?: string;
+	};
+	prerender?: {
+		concurrency?: number;
+		crawl?: boolean;
+		default?: boolean;
+		enabled?: boolean;
+		entries?: Array<'*' | `/${string}`>;
+		onError?: PrerenderOnErrorValue;
+	};
+	routes?: (filepath: string) => boolean;
+	serviceWorker?: {
+		register?: boolean;
+		files?: (filepath: string) => boolean;
+	};
+	trailingSlash?: TrailingSlash;
+	version?: {
+		name?: string;
+		pollInterval?: number;
+	};
+	vite?: import('vite').UserConfig | (() => MaybePromise<import('vite').UserConfig>);
 }
 
 export interface ExternalFetch {

@@ -1,9 +1,9 @@
-import sade from 'sade';
-import colors from 'kleur';
-import fs from 'fs';
-import { relative } from 'path';
-import * as ports from 'port-authority';
 import chokidar from 'chokidar';
+import fs from 'fs';
+import colors from 'kleur';
+import { relative } from 'path';
+import sade from 'sade';
+import * as vite from 'vite';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
 import { coalesce_to_error } from './utils/error.js';
@@ -62,28 +62,50 @@ prog
 		let close;
 
 		async function start() {
-			const { dev } = await import('./core/dev/index.js');
+			const { plugins } = await import('./core/dev/plugin.js');
+			const svelte_config = await load_config();
+			const vite_config = await svelte_config.kit.vite();
 
-			const { server, config } = await dev({
-				port,
-				host,
-				https
-			});
+			/** @type {import('vite').UserConfig} */
+			const config = {
+				...vite_config,
+				plugins: [...(vite_config.plugins || []), plugins(svelte_config)]
+			};
+			config.server = config.server || {};
+
+			// optional config from command-line flags
+			// these should take precedence, but not print conflict warnings
+			if (host) {
+				config.server.host = host;
+			}
+
+			// if https is already enabled then do nothing. it could be an object and we
+			// don't want to overwrite with a boolean
+			if (https && !vite_config?.server?.https) {
+				config.server.https = https;
+			}
+
+			if (port) {
+				config.server.port = port;
+			}
+
+			const server = await vite.createServer(config);
+			await server.listen(port);
 
 			const address_info = /** @type {import('net').AddressInfo} */ (
 				/** @type {import('http').Server} */ (server.httpServer).address()
 			);
 
-			const vite_config = server.config;
+			const resolved_config = server.config;
 
 			welcome({
 				port: address_info.port,
 				host: address_info.address,
-				https: !!(https || vite_config.server.https),
-				open: first && (open || !!vite_config.server.open),
-				base: config.kit.paths.base,
-				loose: vite_config.server.fs.strict === false,
-				allow: vite_config.server.fs.allow
+				https: !!(https || resolved_config.server.https),
+				open: first && (open || !!resolved_config.server.open),
+				base: svelte_config.kit.paths.base,
+				loose: resolved_config.server.fs.strict === false,
+				allow: resolved_config.server.fs.allow
 			});
 
 			first = false;
@@ -91,6 +113,7 @@ prog
 			return server.close;
 		}
 
+		// TODO: we should probably replace this with something like vite-plugin-restart
 		async function relaunch() {
 			const id = uid;
 			relaunching = true;
@@ -177,15 +200,34 @@ prog
 		try {
 			if (H) throw new Error('-H is no longer supported — use --https instead');
 
-			await check_port(port);
-
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
-			const { preview } = await import('./core/preview/index.js');
+			const { sveltekit_plugin } = await import('./core/preview/index.js');
+			const svelte_config = await load_config();
+			const vite_config = await svelte_config.kit.vite();
 
-			const { config } = await preview({ port, host, https });
+			/** @type {import('vite').UserConfig} */
+			const config = {
+				...vite_config,
+				plugins: [...(vite_config.plugins || []), sveltekit_plugin]
+			};
+			config.preview = config.preview || {};
 
-			welcome({ port, host, https, open, base: config.kit.paths.base });
+			// optional config from command-line flags
+			// these should take precedence, but not print conflict warnings
+			if (host) {
+				config.preview.host = host;
+			}
+			if (https) {
+				config.preview.https = https;
+			}
+			if (port) {
+				config.preview.port = port;
+			}
+
+			const preview_server = await vite.preview(config);
+
+			welcome({ port, host, https, open, base: preview_server.config.base });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -225,27 +267,6 @@ prog
 	});
 
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
-
-/** @param {number} port */
-async function check_port(port) {
-	if (await ports.check(port)) {
-		return;
-	}
-	console.error(colors.bold().red(`Port ${port} is occupied`));
-	const n = await ports.blame(port);
-	if (n) {
-		// prettier-ignore
-		console.error(
-			`Terminate process ${colors.bold(n)} or specify a different port with ${colors.bold('--port')}\n`
-		);
-	} else {
-		// prettier-ignore
-		console.error(
-			`Terminate the process occupying the port or specify a different port with ${colors.bold('--port')}\n`
-		);
-	}
-	process.exit(1);
-}
 
 /**
  * @param {{

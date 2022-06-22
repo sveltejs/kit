@@ -5,6 +5,8 @@ import { logger } from '../utils.js';
 import options from './options.js';
 
 /**
+ * Loads the template (src/app.html by default) and validates that it has the
+ * required content.
  * @param {string} cwd
  * @param {import('types').ValidatedConfig} config
  */
@@ -36,6 +38,11 @@ export function load_template(cwd, config) {
 	return fs.readFileSync(template, 'utf-8');
 }
 
+/**
+ * Loads and validates svelte.config.js
+ * @param {{ cwd?: string }} options
+ * @returns {Promise<import('types').ValidatedConfig>}
+ */
 export async function load_config({ cwd = process.cwd() } = {}) {
 	const config_file = path.join(cwd, 'svelte.config.js');
 
@@ -74,6 +81,7 @@ export function validate_config(config) {
 }
 
 /**
+ * Ensures the user does not override any config values that SvelteKit must control.
  * @param {string[]} conflicts - array of conflicts in dotted notation
  * @param {string=} pathPrefix - prepended in front of the path
  * @param {string=} scope - used to prefix the whole error message

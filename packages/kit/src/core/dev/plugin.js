@@ -1,17 +1,20 @@
+import { svelte as svelte_plugin } from '@sveltejs/vite-plugin-svelte';
 import fs from 'fs';
-import path from 'path';
-import { URL } from 'url';
 import colors from 'kleur';
+import path from 'path';
 import sirv from 'sirv';
+import { URL } from 'url';
+import { searchForWorkspaceRoot } from 'vite';
 import { installPolyfills } from '../../node/polyfills.js';
 import * as sync from '../sync/sync.js';
 import { getRequest, setResponse } from '../../node/index.js';
 import { SVELTE_KIT_ASSETS } from '../constants.js';
-import { get_mime_lookup, get_runtime_path, resolve_entry } from '../utils.js';
+import { get_aliases, get_mime_lookup, get_runtime_path, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
-import { load_template } from '../config/index.js';
+import { load_template, print_config_conflicts } from '../config/index.js';
 import { posixify } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
+import { deep_merge } from '../../utils/object.js';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
@@ -20,31 +23,85 @@ const style_pattern = /\.(css|less|sass|scss|styl|stylus|pcss|postcss)$/;
 const cwd = process.cwd();
 
 /**
- * @param {import('types').ValidatedConfig} config
- * @returns {Promise<import('vite').Plugin>}
+ * @param {import('types').ValidatedConfig} svelte_config
+ * @return {import('vite').Plugin}
  */
-export async function create_plugin(config) {
-	const runtime = get_runtime_path(config);
-
-	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
-
-	/** @type {import('types').Respond} */
-	const respond = (await import(`${runtime}/server/index.js`)).respond;
-
+export const sveltekit = function (svelte_config) {
+	const kit_config = svelte_config.kit;
 	return {
 		name: 'vite-plugin-svelte-kit',
 
-		configureServer(vite) {
+		async config() {
+			const [vite_config] = deep_merge(
+				{
+					server: {
+						fs: {
+							allow: [
+								...new Set([
+									kit_config.files.lib,
+									kit_config.files.routes,
+									kit_config.outDir,
+									path.resolve(cwd, 'src'),
+									path.resolve(cwd, 'node_modules'),
+									path.resolve(searchForWorkspaceRoot(cwd), 'node_modules')
+								])
+							]
+						},
+						port: 3000,
+						strictPort: true,
+						watch: {
+							ignored: [
+								// Ignore all siblings of config.kit.outDir/generated
+								`${posixify(kit_config.outDir)}/!(generated)`
+							]
+						}
+					}
+				},
+				await kit_config.vite()
+			);
+
+			/** @type {[any, string[]]} */
+			const [merged_config, conflicts] = deep_merge(vite_config, {
+				configFile: false,
+				root: cwd,
+				resolve: {
+					alias: get_aliases(kit_config)
+				},
+				build: {
+					rollupOptions: {
+						// Vite dependency crawler needs an explicit JS entry point
+						// eventhough server otherwise works without it
+						input: `${get_runtime_path(kit_config)}/client/start.js`
+					}
+				},
+				base: '/'
+			});
+
+			print_config_conflicts(conflicts, 'kit.vite.');
+
+			return merged_config;
+		},
+
+		async configureServer(vite) {
 			installPolyfills();
+
+			sync.init(svelte_config);
+
+			const runtime = get_runtime_path(kit_config);
+
+			process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
+
+			/** @type {import('types').Respond} */
+			const respond = (await import(`${runtime}/server/index.js`)).respond;
 
 			/** @type {import('types').SSRManifest} */
 			let manifest;
 
 			function update_manifest() {
-				const { manifest_data } = sync.update(config);
+				const { manifest_data } = sync.update(svelte_config);
 
 				manifest = {
-					appDir: config.kit.appDir,
+					appDir: kit_config.appDir,
 					assets: new Set(manifest_data.assets.map((asset) => asset.file)),
 					mimeTypes: get_mime_lookup(manifest_data),
 					_: {
@@ -53,7 +110,7 @@ export async function create_plugin(config) {
 							css: [],
 							js: []
 						},
-						nodes: manifest_data.components.map((id) => {
+						nodes: manifest_data.components.map((id, index) => {
 							return async () => {
 								const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
@@ -91,6 +148,7 @@ export async function create_plugin(config) {
 
 								return {
 									module,
+									index,
 									entry: url.endsWith('.svelte') ? url : url + '?import',
 									css: [],
 									js: [],
@@ -161,11 +219,16 @@ export async function create_plugin(config) {
 
 			update_manifest();
 
-			vite.watcher.on('add', update_manifest);
-			vite.watcher.on('unlink', update_manifest);
+			for (const event of ['add', 'unlink']) {
+				vite.watcher.on(event, (file) => {
+					if (file.startsWith(kit_config.files.routes + path.sep)) {
+						update_manifest();
+					}
+				});
+			}
 
-			const assets = config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base;
-			const asset_server = sirv(config.kit.files.assets, {
+			const assets = kit_config.paths.assets ? SVELTE_KIT_ASSETS : kit_config.paths.base;
+			const asset_server = sirv(kit_config.files.assets, {
 				dev: true,
 				etag: true,
 				maxAge: 0,
@@ -192,12 +255,10 @@ export async function create_plugin(config) {
 
 						if (decoded.startsWith(assets)) {
 							const pathname = decoded.slice(assets.length);
-							const file = config.kit.files.assets + pathname;
+							const file = svelte_config.kit.files.assets + pathname;
 
 							if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-								const has_correct_case = fs.realpathSync.native(file) === path.resolve(file);
-
-								if (has_correct_case) {
+								if (has_correct_case(file, svelte_config.kit.files.assets)) {
 									req.url = encodeURI(pathname); // don't need query/hash
 									asset_server(req, res);
 									return;
@@ -205,13 +266,18 @@ export async function create_plugin(config) {
 							}
 						}
 
-						if (!decoded.startsWith(config.kit.paths.base)) {
-							return not_found(res, `Not found (did you mean ${config.kit.paths.base + req.url}?)`);
+						if (!decoded.startsWith(svelte_config.kit.paths.base)) {
+							return not_found(
+								res,
+								`Not found (did you mean ${svelte_config.kit.paths.base + req.url}?)`
+							);
 						}
 
 						/** @type {Partial<import('types').Hooks>} */
-						const user_hooks = resolve_entry(config.kit.files.hooks)
-							? await vite.ssrLoadModule(`/${config.kit.files.hooks}`, { fixStacktrace: false })
+						const user_hooks = resolve_entry(svelte_config.kit.files.hooks)
+							? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`, {
+									fixStacktrace: false
+							  })
 							: {};
 
 						const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
@@ -251,19 +317,21 @@ export async function create_plugin(config) {
 						// can get loaded twice via different URLs, which causes failures. Might
 						// require changes to Vite to fix
 						const { default: root } = await vite.ssrLoadModule(
-							`/${posixify(path.relative(cwd, `${config.kit.outDir}/generated/root.svelte`))}`,
+							`/${posixify(
+								path.relative(cwd, `${svelte_config.kit.outDir}/generated/root.svelte`)
+							)}`,
 							{ fixStacktrace: false }
 						);
 
 						const paths = await vite.ssrLoadModule(
 							process.env.BUNDLED
-								? `/${posixify(path.relative(cwd, `${config.kit.outDir}/runtime/paths.js`))}`
+								? `/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/runtime/paths.js`))}`
 								: `/@fs${runtime}/paths.js`,
 							{ fixStacktrace: false }
 						);
 
 						paths.set_paths({
-							base: config.kit.paths.base,
+							base: svelte_config.kit.paths.base,
 							assets
 						});
 
@@ -276,14 +344,14 @@ export async function create_plugin(config) {
 							return res.end(err.reason || 'Invalid request body');
 						}
 
-						const template = load_template(cwd, config);
+						const template = load_template(cwd, svelte_config);
 
 						const rendered = await respond(
 							request,
 							{
-								csp: config.kit.csp,
+								csp: svelte_config.kit.csp,
 								dev: true,
-								floc: config.kit.floc,
+								floc: svelte_config.kit.floc,
 								get_stack: (error) => {
 									return fix_stack_trace(error);
 								},
@@ -310,21 +378,21 @@ export async function create_plugin(config) {
 									});
 								},
 								hooks,
-								hydrate: config.kit.browser.hydrate,
+								hydrate: svelte_config.kit.browser.hydrate,
 								manifest,
-								method_override: config.kit.methodOverride,
+								method_override: svelte_config.kit.methodOverride,
 								paths: {
-									base: config.kit.paths.base,
+									base: svelte_config.kit.paths.base,
 									assets
 								},
 								prefix: '',
 								prerender: {
-									default: config.kit.prerender.default,
-									enabled: config.kit.prerender.enabled
+									default: svelte_config.kit.prerender.default,
+									enabled: svelte_config.kit.prerender.enabled
 								},
-								read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
+								read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 								root,
-								router: config.kit.browser.router,
+								router: svelte_config.kit.browser.router,
 								template: ({ head, body, assets, nonce }) => {
 									return (
 										template
@@ -336,7 +404,7 @@ export async function create_plugin(config) {
 									);
 								},
 								template_contains_nonce: template.includes('%sveltekit.nonce%'),
-								trailing_slash: config.kit.trailingSlash
+								trailing_slash: svelte_config.kit.trailingSlash
 							},
 							{
 								getClientAddress: () => {
@@ -365,7 +433,7 @@ export async function create_plugin(config) {
 			};
 		}
 	};
-}
+};
 
 /** @param {import('http').ServerResponse} res */
 function not_found(res, message = 'Not found') {
@@ -429,3 +497,47 @@ async function find_deps(vite, node, deps) {
 
 	await Promise.all(branches);
 }
+
+/**
+ * Determine if a file is being requested with the correct case,
+ * to ensure consistent behaviour between dev and prod and across
+ * operating systems. Note that we can't use realpath here,
+ * because we don't want to follow symlinks
+ * @param {string} file
+ * @param {string} assets
+ * @returns {boolean}
+ */
+function has_correct_case(file, assets) {
+	if (file === assets) return true;
+
+	const parent = path.dirname(file);
+
+	if (fs.readdirSync(parent).includes(path.basename(file))) {
+		return has_correct_case(parent, assets);
+	}
+
+	return false;
+}
+
+/**
+ * @param {import('types').ValidatedConfig} svelte_config
+ * @return {import('vite').Plugin[]}
+ */
+export const svelte = function (svelte_config) {
+	return svelte_plugin({
+		...svelte_config,
+		compilerOptions: {
+			...svelte_config.compilerOptions,
+			hydratable: !!svelte_config.kit.browser.hydrate
+		},
+		configFile: false
+	});
+};
+
+/**
+ * @param {import('types').ValidatedConfig} svelte_config
+ * @return {import('vite').Plugin[]}
+ */
+export const plugins = function (svelte_config) {
+	return [...svelte(svelte_config), sveltekit(svelte_config)];
+};

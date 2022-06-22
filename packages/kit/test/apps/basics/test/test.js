@@ -347,7 +347,7 @@ test.describe.parallel('Imports', () => {
 			]);
 		} else {
 			expect(sources[0].startsWith('data:image/png;base64,')).toBeTruthy();
-			expect(sources[1]).toBe(`${baseURL}/_app/assets/large-3183867c.jpg`);
+			expect(sources[1]).toBe(`${baseURL}/_app/immutable/assets/large-3183867c.jpg`);
 		}
 	});
 });
@@ -759,6 +759,17 @@ test.describe.parallel('Endpoints', () => {
 			'problem=comma, separated, values; HttpOnly',
 			'name=SvelteKit; path=/; HttpOnly'
 		]);
+	});
+
+	test('Standalone endpoint is not accessible via /__data.json suffix', async ({ request }) => {
+		const r1 = await request.get('/endpoint-output/simple', {
+			headers: { accept: 'application/json' }
+		});
+
+		expect(await r1.json()).toEqual({ answer: 42 });
+
+		const r2 = await request.get('/endpoint-output/simple/__data.json');
+		expect(r2.status()).toBe(404);
 	});
 });
 
@@ -1505,6 +1516,13 @@ test.describe.parallel('Load', () => {
 		}
 	});
 
+	test('url instance methods work in load', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/load/url-to-string');
+			expect(await page.textContent('h1')).toBe("I didn't break!");
+		}
+	});
+
 	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
 		if (javaScriptEnabled && process.env.DEV) {
 			const warnings = [];
@@ -1852,9 +1870,9 @@ test.describe.parallel('$app/stores', () => {
 		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 
 		if (javaScriptEnabled) {
-			page.click('a[href="/store/navigating/c"]');
+			await page.click('a[href="/store/navigating/c"]');
 			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
-			page.click('a[href="/store/navigating/a"]');
+			await page.click('a[href="/store/navigating/a"]');
 
 			await page.waitForSelector('#not-navigating', { timeout: 500 });
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
@@ -2207,6 +2225,7 @@ test.describe.parallel('Routing', () => {
 	test('does not attempt client-side navigation to server routes', async ({ page }) => {
 		await page.goto('/routing');
 		await page.click('[href="/routing/ambiguous/ok.json"]');
+		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
@@ -2359,16 +2378,16 @@ test.describe.parallel('Routing', () => {
 		server.close();
 	});
 
-	test('watch new route in dev', async ({ page, javaScriptEnabled }) => {
+	test('watch new route in dev', async ({ page }) => {
 		await page.goto('/routing');
 
-		if (!process.env.DEV || javaScriptEnabled) {
+		if (!process.env.DEV) {
 			return;
 		}
 
 		// hash the filename so that it won't conflict with
 		// future test file that has the same name
-		const route = 'bar' + new Date().valueOf();
+		const route = 'zzzz' + Date.now();
 		const content = 'Hello new route';
 		const __dirname = path.dirname(fileURLToPath(import.meta.url));
 		const filePath = path.join(__dirname, `../src/routes/routing/${route}.svelte`);
@@ -2583,6 +2602,12 @@ test.describe.parallel('Static files', () => {
 		const response = await request.get('/static.JSON');
 		expect(response.status()).toBe(404);
 	});
+
+	test('Serves symlinked asset', async ({ request }) => {
+		const response = await request.get('/symlink-from/hello.txt');
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('hello');
+	});
 });
 
 test.describe.parallel('Matchers', () => {
@@ -2647,5 +2672,31 @@ test.describe.parallel('XSS', () => {
 		expect(await page.textContent('h1')).toBe(
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
+	});
+});
+
+test.describe.parallel('Miscellaneous', () => {
+	test('Components are not double-mounted', async ({ page, javaScriptEnabled }) => {
+		const file = fileURLToPath(new URL('../src/routes/double-mount/index.svelte', import.meta.url));
+		const contents = fs.readFileSync(file, 'utf-8');
+
+		const mounted = javaScriptEnabled ? 1 : 0;
+
+		// we write to the file, to trigger HMR invalidation
+		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, `PLACEHOLDER:${Date.now()}`));
+		await page.goto('/double-mount');
+		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
+		await page.click('button');
+		await page.waitForTimeout(100);
+		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
+		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, 'PLACEHOLDER:0'));
+	});
+
+	test('does not serve version.json with an immutable cache header', async ({ request }) => {
+		// this isn't actually a great test, because caching behaviour is down to adapters.
+		// but it's better than nothing
+		const response = await request.get('/_app/version.json');
+		const headers = response.headers();
+		expect(headers['cache-control'] || '').not.toContain('immutable');
 	});
 });
