@@ -3,7 +3,6 @@ import * as vite from 'vite';
 import { s } from '../../utils/misc.js';
 import { deep_merge } from '../utils.js';
 import { normalize_path } from '../../utils/url.js';
-import { print_config_conflicts } from '../../core/config/index.js';
 import { assets_base, remove_svelte_kit } from './utils.js';
 
 /**

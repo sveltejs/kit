@@ -85,19 +85,3 @@ export function validate_config(config) {
 
 	return options(config, 'config');
 }
-
-/**
- * Ensures the user does not override any config values that SvelteKit must control.
- * @param {string[]} conflicts - array of conflicts in dotted notation
- * @param {string=} pathPrefix - prepended in front of the path
- * @param {string=} scope - used to prefix the whole error message
- */
-export function print_config_conflicts(conflicts, pathPrefix = '', scope) {
-	const prefix = scope ? scope + ': ' : '';
-	const log = logger({ verbose: false });
-	conflicts.forEach((conflict) => {
-		log.error(
-			`${prefix}The value for ${pathPrefix}${conflict} specified in svelte.config.js has been ignored. This option is controlled by SvelteKit.`
-		);
-	});
-}

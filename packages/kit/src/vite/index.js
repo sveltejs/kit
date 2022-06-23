@@ -8,7 +8,7 @@ import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
 import { prerender } from './build/prerender/prerender.js';
-import { load_config, print_config_conflicts, validate_config } from '../core/config/index.js';
+import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_aliases, get_runtime_path, logger, resolve_entry } from '../core/utils.js';
