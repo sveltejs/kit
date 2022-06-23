@@ -322,18 +322,6 @@ export const plugins = function () {
 };
 
 /**
- * @return {import('vite').Plugin[]}
- */
-const plugins_internal = function () {
-	if (process.env.SVELTE_VITE_CONFIG) {
-		return [sveltekit_validation];
-	}
-	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
-		? [...svelte(), sveltekit_validation]
-		: [...svelte(), sveltekit(), sveltekit_validation];
-};
-
-/**
  * While we're supporting svelte.config.js and vite.config.js it's very easy
  * to end up with duplicate plugins, which is hard to debug. Ensure we avoid that.
  * @type {import('vite').Plugin}
