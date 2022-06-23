@@ -9,7 +9,8 @@
 			"$lib": ["./src/lib"],
 			"$lib/*": ["./src/lib/*"],
 			"types": ["../../../types/internal"]
-		}
+		},
+		"resolveJsonModule": true
 	},
 	"extends": "./.svelte-kit/tsconfig.json"
 }
