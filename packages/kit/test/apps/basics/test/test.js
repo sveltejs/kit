@@ -1,7 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import http from 'http';
-import * as ports from 'port-authority';
 import { expect } from '@playwright/test';
 import { fileURLToPath } from 'url';
 import { start_server, test } from '../../../utils.js';
@@ -1405,12 +1403,11 @@ test.describe.parallel('Load', () => {
 
 	test('handles external api', async ({ page }) => {
 		await page.goto('/load');
-		const port = await ports.find(5000);
 
 		/** @type {string[]} */
 		const requested_urls = [];
 
-		const server = http.createServer(async (req, res) => {
+		const { port, server } = await start_server(async (req, res) => {
 			if (!req.url) throw new Error('Incomplete request');
 			requested_urls.push(req.url);
 
@@ -1425,10 +1422,6 @@ test.describe.parallel('Load', () => {
 				res.statusCode = 404;
 				res.end('not found');
 			}
-		});
-
-		await new Promise((fulfil) => {
-			server.listen(port, () => fulfil(undefined));
 		});
 
 		await page.goto(`/load/server-fetch-request?port=${port}`);
