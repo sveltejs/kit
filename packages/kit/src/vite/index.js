@@ -35,8 +35,8 @@ function kit() {
 	/** @type {import('vite').UserConfig} */
 	let vite_user_config;
 
-	/** @type {import('types').ManifestData|undefined} */
-	let manifest_data = undefined;
+	/** @type {import('types').ManifestData} */
+	let manifest_data;
 
 	return {
 		name: 'vite-plugin-svelte-kit',
@@ -156,8 +156,6 @@ function kit() {
 		},
 
 		async writeBundle(_options, bundle) {
-			if (!manifest_data) throw Error('manifest_data not populated');
-
 			const log = logger({ verbose: !!process.env.VERBOSE });
 
 			const build_dir = path.join(svelte_config.kit.outDir, 'build');
