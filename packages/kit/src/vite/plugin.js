@@ -274,7 +274,7 @@ export const sveltekit = function () {
 			);
 
 			if (svelte_config.kit.adapter) {
-				const { adapt } = await import('../core/adapt/index.js');
+				const { adapt } = await import('./build/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
 
 				// this is necessary to close any open db connections, etc
