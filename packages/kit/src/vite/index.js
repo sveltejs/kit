@@ -14,7 +14,6 @@ import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_aliases, get_runtime_path, logger, resolve_entry } from '../core/utils.js';
 import { find_deps, get_default_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import { merge_vite_configs } from './utils.js';
 
 const cwd = process.cwd();
 
