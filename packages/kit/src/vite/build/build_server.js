@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { mkdirp, posixify } from '../../utils/filesystem.js';
-import { deep_merge } from '../utils.js';
+import { merge_vite_configs } from '../utils.js';
 import { load_template } from '../../core/config/index.js';
 import { get_runtime_path, resolve_entry } from '../../core/utils.js';
 import { create_build, find_deps, get_default_config, remove_svelte_kit } from './utils.js';
@@ -192,12 +192,9 @@ export async function build_server(vite_config, options, client) {
 		}
 	};
 
-	// don't warn on overriding defaults
-	const [modified_vite_config] = deep_merge(default_config, vite_config);
-
-	/** @type {[any, string[]]} */
-	const [merged_config] = deep_merge(
-		modified_vite_config,
+	const merged_config = merge_vite_configs(
+		default_config,
+		vite_config,
 		get_default_config({ config, input, ssr: true, outDir: `${output_dir}/server` })
 	);
 

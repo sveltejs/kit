@@ -1,7 +1,7 @@
 import fs from 'fs';
 import * as vite from 'vite';
 import { s } from '../../utils/misc.js';
-import { deep_merge } from '../utils.js';
+import { merge_vite_configs } from '../utils.js';
 import { normalize_path } from '../../utils/url.js';
 import { assets_base, remove_svelte_kit } from './utils.js';
 
@@ -67,12 +67,11 @@ export async function build_service_worker(
 			.trim()
 	);
 
-	/** @type {[any, string[]]} */
-	const [merged_config] = deep_merge(vite_config, {
+	const merged_config = merge_vite_configs(vite_config, {
 		base: assets_base(config.kit),
 		build: {
 			lib: {
-				entry: service_worker_entry_file,
+				entry: /** @type {string} */ (service_worker_entry_file),
 				name: 'app',
 				formats: ['es']
 			},

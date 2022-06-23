@@ -14,7 +14,7 @@ import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_aliases, get_runtime_path, logger, resolve_entry } from '../core/utils.js';
 import { find_deps, get_default_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import { deep_merge } from './utils.js';
+import { merge_vite_configs } from './utils.js';
 
 const cwd = process.cwd();
 
@@ -133,11 +133,23 @@ function kit() {
 			}
 
 			// dev and preview config can be shared
-			const vite_config = {
+			return {
+				base: '/',
+				build: {
+					rollupOptions: {
+						// Vite dependency crawler needs an explicit JS entry point
+						// eventhough server otherwise works without it
+						input: `${get_runtime_path(svelte_config.kit)}/client/start.js`
+					}
+				},
 				preview: {
 					port: 3000,
 					strictPort: true
 				},
+				resolve: {
+					alias: get_aliases(svelte_config.kit)
+				},
+				root: cwd,
 				server: {
 					fs: {
 						allow: [
@@ -162,24 +174,6 @@ function kit() {
 				},
 				spa: false
 			};
-
-			/** @type {[any, string[]]} */
-			const [merged_config] = deep_merge(vite_config, {
-				base: '/',
-				build: {
-					rollupOptions: {
-						// Vite dependency crawler needs an explicit JS entry point
-						// eventhough server otherwise works without it
-						input: `${get_runtime_path(svelte_config.kit)}/client/start.js`
-					}
-				},
-				resolve: {
-					alias: get_aliases(svelte_config.kit)
-				},
-				root: cwd
-			});
-
-			return merged_config;
 		},
 
 		buildStart() {
