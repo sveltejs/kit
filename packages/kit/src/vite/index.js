@@ -330,7 +330,6 @@ function kit() {
 }
 
 /**
- *
  * @param {Record<string, any>} config
  * @param {Record<string, any>} enforced_config
  * @param {string} path
