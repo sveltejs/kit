@@ -97,26 +97,3 @@ export function get_aliases(config) {
 
 	return alias;
 }
-
-/**
- * @param {import('vite').UserConfig} config
- * @param {boolean} [add_svelte]
- */
-export function ensure_plugins(config, add_svelte) {
-	// @ts-expect-error - it can't handle infinite type expansion
-	config.plugins = (config.plugins || []).flat(Infinity);
-	let has_svelte_plugin = false;
-	for (let i = config.plugins.length - 1; i > 0; i--) {
-		const plugin = config.plugins[i];
-		// @ts-expect-error - it doesn't know about the `flat` call we just made
-		if (plugin?.name === 'vite-plugin-svelte-kit') {
-			config.plugins.splice(i, 1);
-			// @ts-expect-error - it doesn't know about the `flat` call we just made
-		} else if (plugin?.name === 'vite-plugin-svelte') {
-			has_svelte_plugin = true;
-		}
-	}
-	if (add_svelte && !has_svelte_plugin && !process.env.SVELTE_VITE_CONFIG) {
-		config.plugins.push(svelte({}));
-	}
-}

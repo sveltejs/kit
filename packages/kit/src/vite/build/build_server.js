@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import { mkdirp, posixify } from '../../utils/filesystem.js';
-import { deep_merge } from '../../utils/object.js';
+import { deep_merge } from '../utils.js';
 import { load_template, print_config_conflicts } from '../../core/config/index.js';
-import { ensure_plugins, get_runtime_path, resolve_entry } from '../../core/utils.js';
-import { create_build, find_deps, get_default_config } from './utils.js';
+import { get_runtime_path, resolve_entry } from '../../core/utils.js';
+import { create_build, find_deps, get_default_config, ensure_plugins } from './utils.js';
 import { s } from '../../utils/misc.js';
 import { get_vite_config, sveltekit_validation } from '../plugin.js';
 

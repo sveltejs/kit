@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { deep_merge } from './object.js';
+import { deep_merge } from './utils.js';
 
 test('basic test no conflicts', async () => {
 	const [merged, conflicts] = deep_merge(

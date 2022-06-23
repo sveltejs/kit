@@ -1,12 +1,11 @@
 import fs from 'fs';
 import * as vite from 'vite';
 import { s } from '../../utils/misc.js';
-import { deep_merge } from '../../utils/object.js';
+import { deep_merge } from '../utils.js';
 import { normalize_path } from '../../utils/url.js';
 import { get_vite_config, sveltekit_validation } from '../plugin.js';
 import { print_config_conflicts } from '../../core/config/index.js';
-import { ensure_plugins } from '../../core/utils.js';
-import { assets_base } from './utils.js';
+import { assets_base, ensure_plugins } from './utils.js';
 
 /**
  * @param {{
