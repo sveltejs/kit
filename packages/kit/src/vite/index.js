@@ -43,18 +43,17 @@ function kit() {
 
 		async config(config, env) {
 			vite_user_config = config;
-
 			svelte_config = await load_config();
 
-			const build_dir = path.join(svelte_config.kit.outDir, 'build');
-			const output_dir = path.join(svelte_config.kit.outDir, 'output');
-			const client_out_dir = `${output_dir}/client/${svelte_config.kit.appDir}`;
-			const client_entry_file = path.relative(
-				cwd,
-				`${get_runtime_path(svelte_config.kit)}/client/start.js`
-			);
-
 			if (env.command === 'build') {
+				const build_dir = path.join(svelte_config.kit.outDir, 'build');
+				const output_dir = path.join(svelte_config.kit.outDir, 'output');
+				const client_out_dir = `${output_dir}/client/${svelte_config.kit.appDir}`;
+				const client_entry_file = path.relative(
+					cwd,
+					`${get_runtime_path(svelte_config.kit)}/client/start.js`
+				);
+
 				rimraf(build_dir);
 				mkdirp(build_dir);
 
