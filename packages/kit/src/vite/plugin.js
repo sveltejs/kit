@@ -5,16 +5,16 @@ import path from 'path';
 import { searchForWorkspaceRoot } from 'vite';
 import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
-import { build_server } from '../core/build/build_server.js';
-import { build_service_worker } from '../core/build/build_service_worker.js';
-import { prerender } from '../core/build/prerender/prerender.js';
+import { build_server } from './build/build_server.js';
+import { build_service_worker } from './build/build_service_worker.js';
+import { prerender } from './build/prerender/prerender.js';
 import { load_config, print_config_conflicts } from '../core/config/index.js';
-import { configure_server } from '../core/dev/plugin.js';
+import { configure_server } from './dev/plugin.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_aliases, get_runtime_path, logger, resolve_entry } from '../core/utils.js';
 import { deep_merge } from '../utils/object.js';
-import { find_deps, get_default_config } from '../core/build/utils.js';
-import { configure_preview_server } from '../core/preview/index.js';
+import { find_deps, get_default_config } from './build/utils.js';
+import { configure_preview_server } from './preview/index.js';
 
 const cwd = process.cwd();
 
