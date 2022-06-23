@@ -1,4 +1,4 @@
-import { resolve } from 'path';
+import * as path from 'path';
 import adapter from '../../../../adapter-static/index.js';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -18,7 +18,7 @@ const config = {
 			clearScreen: false,
 			server: {
 				fs: {
-					allow: [resolve('../../../src')]
+					allow: [path.resolve('../../../src')]
 				}
 			}
 		}
