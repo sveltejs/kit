@@ -38,37 +38,32 @@ function kit() {
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
 
+	/** @type {{
+	 *   build_dir: string;
+	 *   output_dir: string;
+	 *   client_out_dir: string;
+	 * }} */
+	let paths;
+
 	return {
 		name: 'vite-plugin-svelte-kit',
 
-		async config(config, env) {
+		async config(config, { command }) {
 			vite_user_config = config;
 			svelte_config = await load_config();
 
-			if (env.command === 'build') {
-				const build_dir = path.join(svelte_config.kit.outDir, 'build');
-				const output_dir = path.join(svelte_config.kit.outDir, 'output');
-				const client_out_dir = `${output_dir}/client/${svelte_config.kit.appDir}`;
-				const client_entry_file = path.relative(
-					cwd,
-					`${get_runtime_path(svelte_config.kit)}/client/start.js`
-				);
+			paths = {
+				build_dir: `${svelte_config.kit.outDir}/build`,
+				output_dir: `${svelte_config.kit.outDir}/output`,
+				client_out_dir: `${svelte_config.kit.outDir}/output/client/${svelte_config.kit.appDir}`
+			};
 
-				rimraf(build_dir);
-				mkdirp(build_dir);
-
-				rimraf(output_dir);
-				mkdirp(output_dir);
-
-				process.env.VITE_SVELTEKIT_APP_VERSION = svelte_config.kit.version.name;
-				process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${svelte_config.kit.appDir}/version.json`;
-				process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${svelte_config.kit.version.pollInterval}`;
-
+			if (command === 'build') {
 				manifest_data = sync.all(svelte_config).manifest_data;
 
 				/** @type {Record<string, string>} */
 				const input = {
-					start: path.resolve(cwd, client_entry_file)
+					start: `${get_runtime_path(svelte_config.kit)}/client/start.js`
 				};
 
 				// This step is optional — Vite/Rollup will create the necessary chunks
@@ -91,7 +86,7 @@ function kit() {
 						config: svelte_config,
 						input,
 						ssr: false,
-						outDir: `${client_out_dir}/immutable`
+						outDir: `${paths.client_out_dir}/immutable`
 					})
 				);
 
@@ -154,16 +149,20 @@ function kit() {
 			return merged_config;
 		},
 
+		buildStart() {
+			rimraf(paths.build_dir);
+			mkdirp(paths.build_dir);
+
+			rimraf(paths.output_dir);
+			mkdirp(paths.output_dir);
+
+			process.env.VITE_SVELTEKIT_APP_VERSION = svelte_config.kit.version.name;
+			process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${svelte_config.kit.appDir}/version.json`;
+			process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${svelte_config.kit.version.pollInterval}`;
+		},
+
 		async writeBundle(_options, bundle) {
 			const log = logger({ verbose: !!process.env.VERBOSE });
-
-			const build_dir = path.join(svelte_config.kit.outDir, 'build');
-			const output_dir = path.join(svelte_config.kit.outDir, 'output');
-			const client_out_dir = `${output_dir}/client/${svelte_config.kit.appDir}`;
-			const client_entry_file = path.relative(
-				cwd,
-				`${get_runtime_path(svelte_config.kit)}/client/start.js`
-			);
 
 			/** @type {import('rollup').OutputChunk[]} */
 			const chunks = [];
@@ -180,16 +179,18 @@ function kit() {
 
 			/** @type {import('vite').Manifest} */
 			const vite_manifest = JSON.parse(
-				fs.readFileSync(`${client_out_dir}/immutable/manifest.json`, 'utf-8')
+				fs.readFileSync(`${paths.client_out_dir}/immutable/manifest.json`, 'utf-8')
 			);
 
-			const entry = posixify(client_entry_file);
+			const entry = posixify(
+				path.relative(cwd, `${get_runtime_path(svelte_config.kit)}/client/start.js`)
+			);
 			const entry_js = new Set();
 			const entry_css = new Set();
 			find_deps(entry, vite_manifest, entry_js, entry_css);
 
 			fs.writeFileSync(
-				`${client_out_dir}/version.json`,
+				`${paths.client_out_dir}/version.json`,
 				JSON.stringify({ version: process.env.VITE_SVELTEKIT_APP_VERSION })
 			);
 			const client = {
@@ -207,10 +208,9 @@ function kit() {
 			const options = {
 				cwd,
 				config: svelte_config,
-				build_dir,
+				build_dir: paths.build_dir, // TODO just pass `paths`
 				manifest_data,
-				output_dir,
-				client_entry_file,
+				output_dir: paths.output_dir,
 				service_worker_entry_file: resolve_entry(svelte_config.kit.files.serviceWorker)
 			};
 
@@ -234,7 +234,7 @@ function kit() {
 				relative_path: '.',
 				routes: manifest_data.routes
 			})};\n`;
-			fs.writeFileSync(`${output_dir}/server/manifest.js`, manifest);
+			fs.writeFileSync(`${paths.output_dir}/server/manifest.js`, manifest);
 
 			const static_files = manifest_data.assets.map((asset) => posixify(asset.file));
 
