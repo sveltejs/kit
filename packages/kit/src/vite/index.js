@@ -35,9 +35,6 @@ function kit() {
 	/** @type {import('vite').UserConfig} */
 	let vite_user_config;
 
-	/** @type {import('vite').ResolvedConfig} */
-	let vite_resolved_config;
-
 	/** @type {import('types').ManifestData|undefined} */
 	let manifest_data = undefined;
 
@@ -157,10 +154,6 @@ function kit() {
 			print_config_conflicts(conflicts, 'kit.vite.');
 
 			return merged_config;
-		},
-
-		configResolved(config) {
-			vite_resolved_config = config;
 		},
 
 		async writeBundle(_options, bundle) {
@@ -308,7 +301,8 @@ function kit() {
 		},
 
 		configurePreviewServer(vite) {
-			return preview(vite, svelte_config, vite_resolved_config);
+			const protocol = vite_user_config.preview?.https ? 'https' : 'http';
+			return preview(vite, svelte_config, protocol);
 		}
 	};
 }

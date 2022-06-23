@@ -16,9 +16,9 @@ import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
  *   httpServer: import('http').Server;
  * }} vite
  * @param {import('types').ValidatedConfig} config
- * @param {import('vite').ResolvedConfig} vite_config
+ * @param {'http' | 'https'} protocol
  */
-export async function preview(vite, config, vite_config) {
+export async function preview(vite, config, protocol) {
 	installPolyfills();
 
 	const { paths } = config.kit;
@@ -37,7 +37,7 @@ export async function preview(vite, config, vite_config) {
 	override({
 		paths: { base, assets },
 		prerendering: false,
-		protocol: vite_config.preview?.https ? 'https' : 'http',
+		protocol,
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
 
@@ -123,7 +123,6 @@ export async function preview(vite, config, vite_config) {
 
 		// SSR
 		vite.middlewares.use(async (req, res) => {
-			const protocol = vite_config.preview?.https ? 'https' : 'http';
 			const host = req.headers['host'];
 
 			let request;
