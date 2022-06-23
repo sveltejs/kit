@@ -1,5 +1,4 @@
 import * as vite from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { get_aliases } from '../../core/utils.js';
 
 /**
