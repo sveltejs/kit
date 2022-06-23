@@ -174,32 +174,18 @@ prog
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
-			const { sveltekit } = await import('./vite/index.js');
 			const svelte_config = await load_config();
-			const vite_config = await svelte_config.kit.vite();
+			const vite_config = await get_vite_config(svelte_config);
 
-			const has_vite_config = fs.existsSync('vite.config.js');
-
-			/** @type {import('vite').UserConfig} */
-			const config = {
-				...vite_config,
-				plugins: [...(vite_config.plugins || []), has_vite_config ? [] : sveltekit()]
-			};
-			config.preview = config.preview || {};
+			vite_config.preview = vite_config.preview || {};
 
 			// optional config from command-line flags
 			// these should take precedence, but not print conflict warnings
-			if (host) {
-				config.preview.host = host;
-			}
-			if (https) {
-				config.preview.https = https;
-			}
-			if (port) {
-				config.preview.port = port;
-			}
+			if (host) vite_config.preview.host = host;
+			if (https) vite_config.preview.https = https;
+			if (port) vite_config.preview.port = port;
 
-			const preview_server = await vite.preview(config);
+			const preview_server = await vite.preview(vite_config);
 
 			welcome({ port, host, https, open, base: preview_server.config.base });
 		} catch (error) {
