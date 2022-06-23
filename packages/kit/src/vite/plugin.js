@@ -204,7 +204,6 @@ export const sveltekit = function () {
 				vite_manifest
 			};
 			log.info(`Client build completed. Wrote ${chunks.length} chunks and ${assets.length} assets`);
-			process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED = 'true';
 
 			const options = {
 				cwd,
@@ -316,49 +315,5 @@ export const svelte = function () {
  * @return {import('vite').Plugin[]}
  */
 export const plugins = function () {
-	return process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED
-		? [...svelte(), sveltekit_validation]
-		: [...svelte(), sveltekit(), sveltekit_validation];
+	return [...svelte(), sveltekit()];
 };
-
-/**
- * While we're supporting svelte.config.js and vite.config.js it's very easy
- * to end up with duplicate plugins, which is hard to debug. Ensure we avoid that.
- * @type {import('vite').Plugin}
- */
-export const sveltekit_validation = {
-	name: 'vite-plugin-svelte-kit-validation',
-	configResolved(config) {
-		let svelte_count = 0;
-		let svelte_kit_count = 0;
-		const plugins = config.plugins.flat(Infinity);
-		for (const plugin of plugins) {
-			if (plugin.name === 'vite-plugin-svelte') {
-				svelte_count++;
-			} else if (plugin.name === 'vite-plugin-svelte-kit') {
-				svelte_kit_count++;
-			}
-		}
-		assert_plugin_count(
-			'vite-plugin-svelte',
-			svelte_count,
-			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED ? 0 : 1
-		);
-		assert_plugin_count(
-			'vite-plugin-svelte-kit',
-			svelte_kit_count,
-			process.env.SVELTEKIT_CLIENT_BUILD_COMPLETED ? 0 : 1
-		);
-	}
-};
-
-/**
- * @param {string} name
- * @param {number} count
- * @param {number} expected_count
- */
-function assert_plugin_count(name, count, expected_count) {
-	if (count !== expected_count) {
-		throw new Error(`Expected ${name} to be present ${expected_count} times, but found ${count}`);
-	}
-}
