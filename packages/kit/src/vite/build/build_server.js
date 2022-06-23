@@ -4,7 +4,7 @@ import { mkdirp, posixify } from '../../utils/filesystem.js';
 import { deep_merge } from '../utils.js';
 import { load_template, print_config_conflicts } from '../../core/config/index.js';
 import { get_runtime_path, resolve_entry } from '../../core/utils.js';
-import { create_build, find_deps, get_default_config, ensure_plugins } from './utils.js';
+import { create_build, find_deps, get_default_config, remove_svelte_kit } from './utils.js';
 import { s } from '../../utils/misc.js';
 
 /**
@@ -204,7 +204,7 @@ export async function build_server(vite_config, options, client) {
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
 
-	ensure_plugins(merged_config, true);
+	remove_svelte_kit(merged_config);
 
 	process.env.VITE_SVELTEKIT_ADAPTER_NAME = config.kit.adapter?.name;
 

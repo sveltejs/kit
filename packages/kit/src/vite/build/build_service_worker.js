@@ -4,7 +4,7 @@ import { s } from '../../utils/misc.js';
 import { deep_merge } from '../utils.js';
 import { normalize_path } from '../../utils/url.js';
 import { print_config_conflicts } from '../../core/config/index.js';
-import { assets_base, ensure_plugins } from './utils.js';
+import { assets_base, remove_svelte_kit } from './utils.js';
 
 /**
  * @param {import('vite').UserConfig} vite_config
@@ -95,7 +95,7 @@ export async function build_service_worker(
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_service_worker');
 
-	ensure_plugins(merged_config);
+	remove_svelte_kit(merged_config);
 
 	await vite.build(merged_config);
 }
