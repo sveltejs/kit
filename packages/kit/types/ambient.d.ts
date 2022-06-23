@@ -49,14 +49,22 @@ declare namespace App {
 
 /**
  * ```ts
- * import { browser, dev, mode, prerendering } from '$app/env';
+ * import { server, browser, prod, dev, mode, prerendering } from '$app/env';
  * ```
  */
 declare module '$app/env' {
 	/**
-	 * Whether the app is running in the browser or on the server.
+	 * `true` if the app is running on the server.
+	 */
+	export const server: boolean;
+	/**
+	 * `true` if the app is running in the browser.
 	 */
 	export const browser: boolean;
+	/**
+	 * `true` in production mode, `false` in development.
+	 */
+	export const prod: boolean;
 	/**
 	 * `true` in development mode, `false` in production.
 	 */
