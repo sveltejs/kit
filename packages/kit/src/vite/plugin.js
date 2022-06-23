@@ -25,8 +25,11 @@ export const sveltekit = function () {
 	/** @type {import('types').ValidatedConfig} */
 	let svelte_config;
 
+	/** @type {import('vite').UserConfig} */
+	let vite_user_config;
+
 	/** @type {import('vite').ResolvedConfig} */
-	let vite_config;
+	let vite_resolved_config;
 
 	/** @type {import('types').ManifestData|undefined} */
 	let manifest_data = undefined;
@@ -35,6 +38,8 @@ export const sveltekit = function () {
 		name: 'vite-plugin-svelte-kit',
 
 		async config(_config, env) {
+			vite_user_config = _config;
+
 			svelte_config = await load_config();
 
 			const build_dir = path.join(svelte_config.kit.outDir, 'build');
@@ -145,7 +150,7 @@ export const sveltekit = function () {
 		},
 
 		configResolved(config) {
-			vite_config = config;
+			vite_resolved_config = config;
 		},
 
 		async writeBundle(_options, bundle) {
@@ -213,7 +218,7 @@ export const sveltekit = function () {
 
 			log.info('Building server');
 
-			const server = await build_server(options, client);
+			const server = await build_server(vite_user_config, options, client);
 
 			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 
@@ -266,7 +271,7 @@ export const sveltekit = function () {
 
 				log.info('Building service worker');
 
-				await build_service_worker(options, prerendered, client.vite_manifest);
+				await build_service_worker(vite_user_config, options, prerendered, client.vite_manifest);
 			}
 
 			console.log(
@@ -294,29 +299,10 @@ export const sveltekit = function () {
 		},
 
 		configurePreviewServer(vite) {
-			return preview(vite, svelte_config, vite_config);
+			return preview(vite, svelte_config, vite_resolved_config);
 		}
 	};
 };
-
-/**
- * @param {import('types').ValidatedConfig} svelte_config
- * @param {boolean} [config_file]
- * @return {Promise<import('vite').UserConfig>}
- */
-export async function get_vite_config(svelte_config, config_file) {
-	for (const file of ['vite.config.js', 'vite.config.mjs', 'vite.config.cjs']) {
-		if (fs.existsSync(file)) {
-			return config_file === false ? (await import(path.resolve(cwd, file))).default : {};
-		}
-	}
-	// TODO: stop reading Vite config from SvelteKit config or move to CLI
-	const vite_config = await svelte_config.kit.vite();
-	if (config_file !== false) {
-		vite_config.plugins = [...(vite_config.plugins || []), ...plugins_internal()];
-	}
-	return vite_config;
-}
 
 /**
  * @return {import('vite').Plugin[]}

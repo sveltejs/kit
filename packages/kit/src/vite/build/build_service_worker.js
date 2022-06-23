@@ -3,11 +3,11 @@ import * as vite from 'vite';
 import { s } from '../../utils/misc.js';
 import { deep_merge } from '../utils.js';
 import { normalize_path } from '../../utils/url.js';
-import { get_vite_config, sveltekit_validation } from '../plugin.js';
 import { print_config_conflicts } from '../../core/config/index.js';
 import { assets_base, ensure_plugins } from './utils.js';
 
 /**
+ * @param {import('vite').UserConfig} vite_config
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   manifest_data: import('types').ManifestData;
@@ -18,6 +18,7 @@ import { assets_base, ensure_plugins } from './utils.js';
  * @param {import('vite').Manifest} client_manifest
  */
 export async function build_service_worker(
+	vite_config,
 	{ config, manifest_data, output_dir, service_worker_entry_file },
 	prerendered,
 	client_manifest
@@ -67,8 +68,6 @@ export async function build_service_worker(
 			.trim()
 	);
 
-	const vite_config = await get_vite_config(config, false);
-
 	/** @type {[any, string[]]} */
 	const [merged_config, conflicts] = deep_merge(vite_config, {
 		base: assets_base(config.kit),
@@ -86,7 +85,6 @@ export async function build_service_worker(
 			outDir: `${output_dir}/client`,
 			emptyOutDir: false
 		},
-		plugins: [sveltekit_validation],
 		resolve: {
 			alias: {
 				'$service-worker': service_worker,

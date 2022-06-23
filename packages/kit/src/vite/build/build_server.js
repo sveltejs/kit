@@ -6,7 +6,6 @@ import { load_template, print_config_conflicts } from '../../core/config/index.j
 import { get_runtime_path, resolve_entry } from '../../core/utils.js';
 import { create_build, find_deps, get_default_config, ensure_plugins } from './utils.js';
 import { s } from '../../utils/misc.js';
-import { get_vite_config, sveltekit_validation } from '../plugin.js';
 
 /**
  * @param {{
@@ -105,6 +104,7 @@ export class Server {
 `;
 
 /**
+ * @param {import('vite').UserConfig} vite_config
  * @param {{
  *   cwd: string;
  *   config: import('types').ValidatedConfig
@@ -115,7 +115,7 @@ export class Server {
  * }} options
  * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
  */
-export async function build_server(options, client) {
+export async function build_server(vite_config, options, client) {
 	const { cwd, config, manifest_data, build_dir, output_dir, service_worker_entry_file } = options;
 
 	let hooks_file = resolve_entry(config.kit.files.hooks);
@@ -174,8 +174,6 @@ export async function build_server(options, client) {
 			template: load_template(cwd, config)
 		})
 	);
-
-	const vite_config = await get_vite_config(config, false);
 
 	const default_config = {
 		build: {

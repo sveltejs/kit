@@ -1,13 +1,13 @@
 import chokidar from 'chokidar';
 import fs from 'fs';
+import path from 'path';
 import colors from 'kleur';
-import { relative } from 'path';
 import sade from 'sade';
 import * as vite from 'vite';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
 import { coalesce_to_error } from './utils/error.js';
-import { get_vite_config } from './vite/plugin.js';
+import { sveltekit } from './vite/index.js';
 
 /** @param {unknown} e */
 function handle_error(e) {
@@ -155,7 +155,7 @@ prog
 
 			const svelte_config = await load_config();
 			const vite_config = await get_vite_config(svelte_config);
-			await vite.build(vite_config);
+			await vite.build(vite_config); // TODO when we get rid of config.kit.vite, this can just be vite.build()
 		} catch (error) {
 			handle_error(error);
 		}
@@ -280,7 +280,7 @@ function welcome({ port, host, https, open, base, loose, allow, cwd }) {
 					if (loose) {
 						console.log(`\n  ${colors.yellow('Serving with vite.server.fs.strict: false. Note that all files on your machine will be accessible to anyone on your network.')}`);
 					} else if (allow?.length && cwd) {
-						console.log(`\n  ${colors.yellow('Note that all files in the following directories will be accessible to anyone on your network: ' + allow.map(a => relative(cwd, a)).join(', '))}`);
+						console.log(`\n  ${colors.yellow('Note that all files in the following directories will be accessible to anyone on your network: ' + allow.map(a => path.relative(cwd, a)).join(', '))}`);
 					}
 				} else {
 					console.log(`  ${colors.gray('network: not exposed')}`);
@@ -294,4 +294,26 @@ function welcome({ port, host, https, open, base, loose, allow, cwd }) {
 	}
 
 	console.log('\n');
+}
+
+/**
+ * @param {import('types').ValidatedConfig} svelte_config
+ * @return {Promise<import('vite').UserConfig>}
+ */
+export async function get_vite_config(svelte_config) {
+	for (const file of ['vite.config.js', 'vite.config.mjs', 'vite.config.cjs']) {
+		if (fs.existsSync(file)) {
+			// TODO warn here if config.kit.vite was specified
+			const module = await import(path.resolve(file));
+			return {
+				...module.default,
+				configFile: false
+			};
+		}
+	}
+
+	// TODO: stop reading Vite config from SvelteKit config or move to CLI
+	const vite_config = await svelte_config.kit.vite();
+	vite_config.plugins = [...(vite_config.plugins || []), ...sveltekit()];
+	return vite_config;
 }
