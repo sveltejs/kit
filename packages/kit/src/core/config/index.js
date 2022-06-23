@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import * as url from 'url';
-import { logger } from '../utils.js';
 import options from './options.js';
 
 /**
