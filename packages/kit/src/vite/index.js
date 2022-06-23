@@ -89,11 +89,10 @@ function kit() {
 				const [merged_config, conflicts] = deep_merge(
 					vite_user_config,
 					get_default_config({
-						client_out_dir,
 						config: svelte_config,
 						input,
-						output_dir,
-						ssr: false
+						ssr: false,
+						outDir: `${client_out_dir}/immutable`
 					})
 				);
 

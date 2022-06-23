@@ -52,21 +52,20 @@ export function find_deps(file, manifest, js, css) {
 /**
  * The Vite configuration that we use by default.
  * @param {{
- *   client_out_dir?: string;
  *   config: import('types').ValidatedConfig;
  *   input: Record<string, string>;
- *   output_dir: string;
  *   ssr: boolean;
+ *   outDir: string;
  * }} options
  * @return {import('vite').UserConfig}
  */
-export const get_default_config = function ({ client_out_dir, config, input, output_dir, ssr }) {
+export const get_default_config = function ({ config, input, ssr, outDir }) {
 	return {
 		base: assets_base(config.kit),
 		build: {
 			cssCodeSplit: true,
 			manifest: true,
-			outDir: ssr ? `${output_dir}/server` : `${client_out_dir}/immutable`,
+			outDir,
 			polyfillDynamicImport: false,
 			rollupOptions: {
 				input,
