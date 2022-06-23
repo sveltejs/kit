@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.0.0-next.352
+
+### Patch Changes
+
+- fix manifest not updating when adding routes ([#5157](https://github.com/sveltejs/kit/pull/5157))
+
+## 1.0.0-next.351
+
+### Patch Changes
+
+- [fix] URL instance methods now work in `load` ([#5183](https://github.com/sveltejs/kit/pull/5183))
+
+* Upgrade vite-plugin-svelte ([`4e4625ea`](https://github.com/sveltejs/kit/commit/4e4625ea6d9a084bc767ae216704aacd95fe8730))
+
 ## 1.0.0-next.350
 
 ### Patch Changes

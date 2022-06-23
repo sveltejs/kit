@@ -116,7 +116,6 @@ function validate_config(builder) {
 
 		name = "<your-site-name>"
 		account_id = "<your-account-id>"
-		route = "<your-route>"
 
 		main = "./.cloudflare/worker.js"
 		site.bucket = "./.cloudflare/public"

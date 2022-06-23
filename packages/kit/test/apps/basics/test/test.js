@@ -1516,6 +1516,13 @@ test.describe.parallel('Load', () => {
 		}
 	});
 
+	test('url instance methods work in load', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/load/url-to-string');
+			expect(await page.textContent('h1')).toBe("I didn't break!");
+		}
+	});
+
 	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
 		if (javaScriptEnabled && process.env.DEV) {
 			const warnings = [];
@@ -1863,9 +1870,9 @@ test.describe.parallel('$app/stores', () => {
 		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 
 		if (javaScriptEnabled) {
-			page.click('a[href="/store/navigating/c"]');
+			await page.click('a[href="/store/navigating/c"]');
 			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
-			page.click('a[href="/store/navigating/a"]');
+			await page.click('a[href="/store/navigating/a"]');
 
 			await page.waitForSelector('#not-navigating', { timeout: 500 });
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
@@ -2218,6 +2225,7 @@ test.describe.parallel('Routing', () => {
 	test('does not attempt client-side navigation to server routes', async ({ page }) => {
 		await page.goto('/routing');
 		await page.click('[href="/routing/ambiguous/ok.json"]');
+		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
@@ -2370,16 +2378,16 @@ test.describe.parallel('Routing', () => {
 		server.close();
 	});
 
-	test('watch new route in dev', async ({ page, javaScriptEnabled }) => {
+	test('watch new route in dev', async ({ page }) => {
 		await page.goto('/routing');
 
-		if (!process.env.DEV || javaScriptEnabled) {
+		if (!process.env.DEV) {
 			return;
 		}
 
 		// hash the filename so that it won't conflict with
 		// future test file that has the same name
-		const route = 'bar' + new Date().valueOf();
+		const route = 'zzzz' + Date.now();
 		const content = 'Hello new route';
 		const __dirname = path.dirname(fileURLToPath(import.meta.url));
 		const filePath = path.join(__dirname, `../src/routes/routing/${route}.svelte`);

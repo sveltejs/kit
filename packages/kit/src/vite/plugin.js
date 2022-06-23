@@ -120,7 +120,10 @@ export const sveltekit = function () {
 					port: 3000,
 					strictPort: true,
 					watch: {
-						ignored: [`${svelte_config.kit.outDir}/**`, `!${svelte_config.kit.outDir}/generated/**`]
+						ignored: [
+							// Ignore all siblings of config.kit.outDir/generated
+							`${posixify(svelte_config.kit.outDir)}/!(generated)`
+						]
 					}
 				},
 				spa: false
