@@ -103,6 +103,10 @@ function kit() {
 			};
 
 			if (command === 'build') {
+				process.env.VITE_SVELTEKIT_APP_VERSION = svelte_config.kit.version.name;
+				process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${svelte_config.kit.appDir}/version.json`;
+				process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${svelte_config.kit.version.pollInterval}`;
+
 				manifest_data = sync.all(svelte_config).manifest_data;
 
 				/** @type {Record<string, string>} */
@@ -181,10 +185,6 @@ function kit() {
 
 			rimraf(paths.output_dir);
 			mkdirp(paths.output_dir);
-
-			process.env.VITE_SVELTEKIT_APP_VERSION = svelte_config.kit.version.name;
-			process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${svelte_config.kit.appDir}/version.json`;
-			process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${svelte_config.kit.version.pollInterval}`;
 		},
 
 		async writeBundle(_options, bundle) {
