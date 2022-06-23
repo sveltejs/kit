@@ -196,12 +196,10 @@ export async function build_server(vite_config, options, client) {
 	const [modified_vite_config] = deep_merge(default_config, vite_config);
 
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(
+	const [merged_config] = deep_merge(
 		modified_vite_config,
 		get_default_config({ config, input, ssr: true, outDir: `${output_dir}/server` })
 	);
-
-	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
 
 	remove_svelte_kit(merged_config);
 

@@ -8,7 +8,7 @@ import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
 import { prerender } from './build/prerender/prerender.js';
-import { load_config, print_config_conflicts } from '../core/config/index.js';
+import { load_config, print_config_conflicts, validate_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_aliases, get_runtime_path, logger, resolve_entry } from '../core/utils.js';
@@ -17,6 +17,42 @@ import { preview } from './preview/index.js';
 import { deep_merge } from './utils.js';
 
 const cwd = process.cwd();
+
+const enforced_config = {
+	base: true,
+	build: {
+		cssCodeSplit: true,
+		emptyOutDir: true,
+		lib: {
+			entry: true,
+			name: true,
+			formats: true
+		},
+		manifest: true,
+		outDir: true,
+		polyfillDynamicImport: true,
+		rollupOptions: {
+			input: true,
+			output: {
+				format: true,
+				entryFileNames: true,
+				chunkFileNames: true,
+				assetFileNames: true
+			},
+			preserveEntrySignatures: true
+		},
+		ssr: true
+	},
+	publicDir: true,
+	resolve: {
+		alias: {
+			$app: true,
+			$lib: true,
+			'$service-worker': true
+		}
+	},
+	root: true
+};
 
 /**
  * @return {import('vite').Plugin[]}
@@ -49,6 +85,15 @@ function kit() {
 		name: 'vite-plugin-svelte-kit',
 
 		async config(config, { command }) {
+			const overridden = find_overridden_config(config, enforced_config);
+
+			if (overridden.length > 0) {
+				console.log(
+					colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
+				);
+				console.log(overridden.map((key) => `  - ${key}`).join('\n'));
+			}
+
 			vite_user_config = config;
 			svelte_config = await load_config();
 
@@ -79,20 +124,12 @@ function kit() {
 					input[name] = resolved;
 				});
 
-				/** @type {[any, string[]]} */
-				const [merged_config, conflicts] = deep_merge(
-					vite_user_config,
-					get_default_config({
-						config: svelte_config,
-						input,
-						ssr: false,
-						outDir: `${paths.client_out_dir}/immutable`
-					})
-				);
-
-				print_config_conflicts(conflicts, 'kit.vite.', 'build_client');
-
-				return merged_config;
+				return get_default_config({
+					config: svelte_config,
+					input,
+					ssr: false,
+					outDir: `${paths.client_out_dir}/immutable`
+				});
 			}
 
 			// dev and preview config can be shared
@@ -127,12 +164,8 @@ function kit() {
 			};
 
 			/** @type {[any, string[]]} */
-			const [merged_config, conflicts] = deep_merge(vite_config, {
-				configFile: false,
-				root: cwd,
-				resolve: {
-					alias: get_aliases(svelte_config.kit)
-				},
+			const [merged_config] = deep_merge(vite_config, {
+				base: '/',
 				build: {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point
@@ -140,11 +173,11 @@ function kit() {
 						input: `${get_runtime_path(svelte_config.kit)}/client/start.js`
 					}
 				},
-				base: '/'
+				resolve: {
+					alias: get_aliases(svelte_config.kit)
+				},
+				root: cwd
 			});
-
-			// TODO: compare resolved config to defaults to validate
-			print_config_conflicts(conflicts, 'kit.vite.');
 
 			return merged_config;
 		},
@@ -301,4 +334,25 @@ function kit() {
 			return preview(vite, svelte_config, protocol);
 		}
 	};
+}
+
+/**
+ *
+ * @param {Record<string, any>} config
+ * @param {Record<string, any>} enforced_config
+ * @param {string} path
+ * @param {string[]} out
+ */
+function find_overridden_config(config, enforced_config, path = '', out = []) {
+	for (const key in enforced_config) {
+		if (key in config) {
+			if (enforced_config[key] === true) {
+				out.push(path + key);
+			} else {
+				find_overridden_config(config[key], enforced_config[key], path + key + '.', out);
+			}
+		}
+	}
+
+	return out;
 }

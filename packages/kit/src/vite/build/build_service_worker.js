@@ -69,7 +69,7 @@ export async function build_service_worker(
 	);
 
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(vite_config, {
+	const [merged_config] = deep_merge(vite_config, {
 		base: assets_base(config.kit),
 		build: {
 			lib: {
@@ -92,8 +92,6 @@ export async function build_service_worker(
 			}
 		}
 	});
-
-	print_config_conflicts(conflicts, 'kit.vite.', 'build_service_worker');
 
 	remove_svelte_kit(merged_config);
 
