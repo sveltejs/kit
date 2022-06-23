@@ -44,8 +44,8 @@ function kit() {
 	return {
 		name: 'vite-plugin-svelte-kit',
 
-		async config(_config, env) {
-			vite_user_config = _config;
+		async config(config, env) {
+			vite_user_config = config;
 
 			svelte_config = await load_config();
 
@@ -90,7 +90,7 @@ function kit() {
 
 				/** @type {[any, string[]]} */
 				const [merged_config, conflicts] = deep_merge(
-					{},
+					vite_user_config,
 					get_default_config({
 						client_out_dir,
 						config: svelte_config,
