@@ -18,7 +18,7 @@ import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
  * @param {import('types').ValidatedConfig} config
  * @param {import('vite').ResolvedConfig} vite_config
  */
-export const configure_preview_server = async function (vite, config, vite_config) {
+export async function preview(vite, config, vite_config) {
 	installPolyfills();
 
 	const { paths } = config.kit;
@@ -147,7 +147,7 @@ export const configure_preview_server = async function (vite, config, vite_confi
 			);
 		});
 	};
-};
+}
 
 /**
  * @param {string} dir

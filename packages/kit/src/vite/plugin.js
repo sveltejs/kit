@@ -9,11 +9,11 @@ import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
 import { prerender } from './build/prerender/prerender.js';
 import { load_config, print_config_conflicts } from '../core/config/index.js';
-import { configure_server } from './dev/plugin.js';
+import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_aliases, get_runtime_path, logger, resolve_entry } from '../core/utils.js';
 import { find_deps, get_default_config } from './build/utils.js';
-import { configure_preview_server } from './preview/index.js';
+import { preview } from './preview/index.js';
 import { deep_merge } from './utils.js';
 
 const cwd = process.cwd();
@@ -290,11 +290,11 @@ export const sveltekit = function () {
 		},
 
 		async configureServer(vite) {
-			return await configure_server(vite, svelte_config);
+			return await dev(vite, svelte_config);
 		},
 
-		async configurePreviewServer(vite) {
-			return await configure_preview_server(vite, svelte_config, vite_config);
+		configurePreviewServer(vite) {
+			return preview(vite, svelte_config, vite_config);
 		}
 	};
 };

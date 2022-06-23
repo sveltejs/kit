@@ -24,7 +24,7 @@ const cwd = process.cwd();
  * @param {import('types').ValidatedConfig} svelte_config
  * @return {Promise<Promise<() => void>>}
  */
-export const configure_server = async function (vite, svelte_config) {
+export async function dev(vite, svelte_config) {
 	installPolyfills();
 
 	sync.init(svelte_config);
@@ -371,7 +371,7 @@ export const configure_server = async function (vite, svelte_config) {
 			}
 		});
 	};
-};
+}
 
 /** @param {import('http').ServerResponse} res */
 function not_found(res, message = 'Not found') {
