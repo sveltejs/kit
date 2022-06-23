@@ -7,7 +7,6 @@ import * as vite from 'vite';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
 import { coalesce_to_error } from './utils/error.js';
-import { sveltekit } from './vite/index.js';
 
 /** @param {unknown} e */
 function handle_error(e) {
@@ -175,7 +174,7 @@ prog
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
-			const { sveltekit } = await import('./vite/plugin.js');
+			const { sveltekit } = await import('./vite/index.js');
 			const svelte_config = await load_config();
 			const vite_config = await svelte_config.kit.vite();
 
@@ -311,6 +310,8 @@ export async function get_vite_config(svelte_config) {
 			};
 		}
 	}
+
+	const { sveltekit } = await import('./vite/index.js');
 
 	// TODO: stop reading Vite config from SvelteKit config or move to CLI
 	const vite_config = await svelte_config.kit.vite();
