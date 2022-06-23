@@ -1,4 +1,5 @@
 import * as vite from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { get_aliases } from '../../core/utils.js';
 
 /**
@@ -12,7 +13,9 @@ import { get_aliases } from '../../core/utils.js';
  * @param {import('vite').UserConfig} config
  */
 export async function create_build(config) {
-	const { output } = /** @type {RollupOutput} */ (await vite.build(config));
+	const { output } = /** @type {RollupOutput} */ (
+		await vite.build({ ...config, configFile: false })
+	);
 
 	const chunks = output.filter(
 		/** @returns {output is OutputChunk} */ (output) => output.type === 'chunk'

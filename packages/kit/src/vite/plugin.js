@@ -307,7 +307,7 @@ export const sveltekit = function () {
 export async function get_vite_config(svelte_config, config_file) {
 	for (const file of ['vite.config.js', 'vite.config.mjs', 'vite.config.cjs']) {
 		if (fs.existsSync(file)) {
-			return config_file === false ? await import(path.resolve(cwd, file)) : {};
+			return config_file === false ? (await import(path.resolve(cwd, file))).default : {};
 		}
 	}
 	// TODO: stop reading Vite config from SvelteKit config or move to CLI
@@ -322,6 +322,7 @@ export async function get_vite_config(svelte_config, config_file) {
  * @return {import('vite').Plugin[]}
  */
 export const svelte = function () {
+	// TODO what is the purpose of this function? Why do we not just re-export it?
 	return svelte_plugin();
 };
 

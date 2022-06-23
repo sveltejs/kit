@@ -181,7 +181,7 @@ export async function build_server(options, client) {
 		build: {
 			target: 'node14.8'
 		},
-		plugins: [sveltekit_validation],
+		plugins: [],
 		ssr: {
 			// when developing against the Kit src code, we want to ensure that
 			// our dependencies are bundled so that apps don't need to install
