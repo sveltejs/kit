@@ -1,7 +1,7 @@
-import { svelte as svelte_plugin } from '@sveltejs/vite-plugin-svelte';
 import fs from 'fs';
-import colors from 'kleur';
 import path from 'path';
+import colors from 'kleur';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { searchForWorkspaceRoot } from 'vite';
 import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
@@ -19,9 +19,16 @@ import { deep_merge } from './utils.js';
 const cwd = process.cwd();
 
 /**
+ * @return {import('vite').Plugin[]}
+ */
+export function sveltekit() {
+	return [...svelte(), kit()];
+}
+
+/**
  * @return {import('vite').Plugin}
  */
-export const sveltekit = function () {
+function kit() {
 	/** @type {import('types').ValidatedConfig} */
 	let svelte_config;
 
@@ -304,19 +311,4 @@ export const sveltekit = function () {
 			return preview(vite, svelte_config, vite_resolved_config);
 		}
 	};
-};
-
-/**
- * @return {import('vite').Plugin[]}
- */
-export const svelte = function () {
-	// TODO what is the purpose of this function? Why do we not just re-export it?
-	return svelte_plugin();
-};
-
-/**
- * @return {import('vite').Plugin[]}
- */
-export const plugins = function () {
-	return [...svelte(), sveltekit()];
-};
+}
