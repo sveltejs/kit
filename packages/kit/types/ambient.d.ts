@@ -49,7 +49,7 @@ declare namespace App {
 
 /**
  * ```ts
- * import { browser, server, dev, prod, mode, prerendering } from '$app/env';
+ * import { browser, dev, mode, prerendering, prod, server } from '$app/env';
  * ```
  */
 declare module '$app/env' {
@@ -57,28 +57,33 @@ declare module '$app/env' {
 	 * `true` if the app is running in the browser.
 	 */
 	export const browser: boolean;
+
 	/**
-	 * `true` if the app is running on the server.
-	 */
-	export const server: boolean;
-	/**
-	 * `true` in production mode, `false` in development.
+	 * `true` in development mode, `false` in production.
 	 */
 	export const dev: boolean;
-	/**
-	 * `true` when prerendering, `false` otherwise.
-	 */
-	export const prod: boolean;
+	
 	/**
 	 * The Vite.js mode the app is running in. Configure in `config.kit.vite.mode`.
 	 * Vite.js loads the dotenv file associated with the provided mode, `.env.[mode]` or `.env.[mode].local`.
 	 * By default, `svelte-kit dev` runs with `mode=development` and `svelte-kit build` runs with `mode=production`.
 	 */
 	export const mode: string;
+
 	/**
-	 * `true` in development mode, `false` in production.
+	 * `true` when prerendering, `false` otherwise.
 	 */
 	export const prerendering: boolean;
+	
+	/**
+	 * `true` in production mode, `false` in development.
+	 */
+	export const prod: boolean;
+
+	/**
+	 * `true` if the app is running on the server.
+	 */
+	export const server: boolean;
 }
 
 /**
