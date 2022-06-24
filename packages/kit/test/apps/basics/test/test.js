@@ -1,7 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import http from 'http';
-import * as ports from 'port-authority';
 import { expect } from '@playwright/test';
 import { fileURLToPath } from 'url';
 import { start_server, test } from '../../../utils.js';
@@ -760,6 +758,17 @@ test.describe.parallel('Endpoints', () => {
 			'name=SvelteKit; path=/; HttpOnly'
 		]);
 	});
+
+	test('Standalone endpoint is not accessible via /__data.json suffix', async ({ request }) => {
+		const r1 = await request.get('/endpoint-output/simple', {
+			headers: { accept: 'application/json' }
+		});
+
+		expect(await r1.json()).toEqual({ answer: 42 });
+
+		const r2 = await request.get('/endpoint-output/simple/__data.json');
+		expect(r2.status()).toBe(404);
+	});
 });
 
 test.describe.parallel('Encoded paths', () => {
@@ -1394,12 +1403,11 @@ test.describe.parallel('Load', () => {
 
 	test('handles external api', async ({ page }) => {
 		await page.goto('/load');
-		const port = await ports.find(5000);
 
 		/** @type {string[]} */
 		const requested_urls = [];
 
-		const server = http.createServer(async (req, res) => {
+		const { port, server } = await start_server(async (req, res) => {
 			if (!req.url) throw new Error('Incomplete request');
 			requested_urls.push(req.url);
 
@@ -1414,10 +1422,6 @@ test.describe.parallel('Load', () => {
 				res.statusCode = 404;
 				res.end('not found');
 			}
-		});
-
-		await new Promise((fulfil) => {
-			server.listen(port, 'localhost', () => fulfil(undefined));
 		});
 
 		await page.goto(`/load/server-fetch-request?port=${port}`);
@@ -1502,6 +1506,13 @@ test.describe.parallel('Load', () => {
 			expect(await page.textContent('#message')).toBe(
 				'This is your custom error page saying: "url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component."'
 			);
+		}
+	});
+
+	test('url instance methods work in load', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/load/url-to-string');
+			expect(await page.textContent('h1')).toBe("I didn't break!");
 		}
 	});
 
@@ -1852,9 +1863,9 @@ test.describe.parallel('$app/stores', () => {
 		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 
 		if (javaScriptEnabled) {
-			page.click('a[href="/store/navigating/c"]');
+			await page.click('a[href="/store/navigating/c"]');
 			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
-			page.click('a[href="/store/navigating/a"]');
+			await page.click('a[href="/store/navigating/a"]');
 
 			await page.waitForSelector('#not-navigating', { timeout: 500 });
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
@@ -2207,6 +2218,7 @@ test.describe.parallel('Routing', () => {
 	test('does not attempt client-side navigation to server routes', async ({ page }) => {
 		await page.goto('/routing');
 		await page.click('[href="/routing/ambiguous/ok.json"]');
+		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
@@ -2359,16 +2371,16 @@ test.describe.parallel('Routing', () => {
 		server.close();
 	});
 
-	test('watch new route in dev', async ({ page, javaScriptEnabled }) => {
+	test('watch new route in dev', async ({ page }) => {
 		await page.goto('/routing');
 
-		if (!process.env.DEV || javaScriptEnabled) {
+		if (!process.env.DEV) {
 			return;
 		}
 
 		// hash the filename so that it won't conflict with
 		// future test file that has the same name
-		const route = 'bar' + new Date().valueOf();
+		const route = 'zzzz' + Date.now();
 		const content = 'Hello new route';
 		const __dirname = path.dirname(fileURLToPath(import.meta.url));
 		const filePath = path.join(__dirname, `../src/routes/routing/${route}.svelte`);

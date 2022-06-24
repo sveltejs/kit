@@ -49,28 +49,41 @@ declare namespace App {
 
 /**
  * ```ts
- * import { browser, dev, mode, prerendering } from '$app/env';
+ * import { browser, dev, mode, prerendering, prod, server } from '$app/env';
  * ```
  */
 declare module '$app/env' {
 	/**
-	 * Whether the app is running in the browser or on the server.
+	 * `true` if the app is running in the browser.
 	 */
 	export const browser: boolean;
+
 	/**
 	 * `true` in development mode, `false` in production.
 	 */
 	export const dev: boolean;
-	/**
-	 * `true` when prerendering, `false` otherwise.
-	 */
-	export const prerendering: boolean;
+
 	/**
 	 * The Vite.js mode the app is running in. Configure in `config.kit.vite.mode`.
 	 * Vite.js loads the dotenv file associated with the provided mode, `.env.[mode]` or `.env.[mode].local`.
 	 * By default, `svelte-kit dev` runs with `mode=development` and `svelte-kit build` runs with `mode=production`.
 	 */
 	export const mode: string;
+
+	/**
+	 * `true` when prerendering, `false` otherwise.
+	 */
+	export const prerendering: boolean;
+
+	/**
+	 * `true` in production mode, `false` in development.
+	 */
+	export const prod: boolean;
+
+	/**
+	 * `true` if the app is running on the server.
+	 */
+	export const server: boolean;
 }
 
 /**
@@ -106,7 +119,7 @@ declare module '$app/navigation' {
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<void>;
 	/**
-	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question, or re-fetches data from a page endpoint if the invalidated resource is the page itself. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * @param dependency The invalidated resource
 	 */
 	export function invalidate(dependency: string | ((href: string) => boolean)): Promise<void>;

@@ -1,5 +1,55 @@
 # @sveltejs/kit
 
+## 1.0.0-next.354
+
+### Patch Changes
+
+- Added `server` and `prod` env variables ([#5251](https://github.com/sveltejs/kit/pull/5251))
+
+## 1.0.0-next.353
+
+### Patch Changes
+
+- Expose Vite plugin as @sveltejs/kit/experimental/vite ([#5094](https://github.com/sveltejs/kit/pull/5094))
+
+## 1.0.0-next.352
+
+### Patch Changes
+
+- fix manifest not updating when adding routes ([#5157](https://github.com/sveltejs/kit/pull/5157))
+
+## 1.0.0-next.351
+
+### Patch Changes
+
+- [fix] URL instance methods now work in `load` ([#5183](https://github.com/sveltejs/kit/pull/5183))
+
+* Upgrade vite-plugin-svelte ([`4e4625ea`](https://github.com/sveltejs/kit/commit/4e4625ea6d9a084bc767ae216704aacd95fe8730))
+
+## 1.0.0-next.350
+
+### Patch Changes
+
+- [breaking] revert removal of `kit.browser.hydrate` ([#5178](https://github.com/sveltejs/kit/pull/5178))
+
+## 1.0.0-next.349
+
+### Patch Changes
+
+- [breaking] remove kit.browser.hydrate config in favor of compilerOptions.hydratable ([#5155](https://github.com/sveltejs/kit/pull/5155))
+
+* [chore] upgrade to Vite 2.9.10 ([#5170](https://github.com/sveltejs/kit/pull/5170))
+
+## 1.0.0-next.348
+
+### Patch Changes
+
+- Disallow access to `__data.json` for standalone endpoints ([#5149](https://github.com/sveltejs/kit/pull/5149))
+
+* [chore] introduce `KitConfig` type ([#5141](https://github.com/sveltejs/kit/pull/5141))
+
+- Prevent incorrect redirect for `__data.json` request with `trailingSlash: 'always'` ([#5149](https://github.com/sveltejs/kit/pull/5149))
+
 ## 1.0.0-next.347
 
 ### Patch Changes
