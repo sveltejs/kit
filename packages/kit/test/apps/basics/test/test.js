@@ -1136,13 +1136,16 @@ test.describe.parallel('Errors', () => {
 	});
 
 	test('returns 400 when accessing a malformed URI', async ({ page }) => {
-		if (process.env.DEV) {
-			// Vite will return a 500 error code
-			return;
-		}
+		test.skip(({ javaScriptEnabled }) => javaScriptEnabled);
 
 		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
-		expect(/** @type {Response} */ (response).status()).toBe(400);
+		if (process.env.DEV) {
+			// Vite will return a 500 error code
+			// We mostly want to make sure malformed requests don't bring down the whole server
+			expect(/** @type {Response} */ (response).status()).toBeGreaterThanOrEqual(400);
+		} else {
+			expect(/** @type {Response} */ (response).status()).toBe(400);
+		}
 	});
 });
 
