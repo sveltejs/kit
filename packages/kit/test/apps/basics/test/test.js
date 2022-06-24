@@ -1136,8 +1136,12 @@ test.describe.parallel('Errors', () => {
 	});
 
 	test('returns 400 when accessing a malformed URI', async ({ page }) => {
-		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
+		if (process.env.DEV) {
+			// Vite will return a 500 error code
+			return;
+		}
 
+		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
 		expect(/** @type {Response} */ (response).status()).toBe(400);
 	});
 });
