@@ -88,6 +88,9 @@
 		},
 		"./hooks": {
 			"import": "./dist/hooks.js"
+		},
+		"./experimental/vite": {
+			"import": "./dist/vite.js"
 		}
 	},
 	"types": "types/index.d.ts",

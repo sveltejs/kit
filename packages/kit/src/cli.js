@@ -1,13 +1,12 @@
 import chokidar from 'chokidar';
 import fs from 'fs';
+import path from 'path';
 import colors from 'kleur';
-import { relative } from 'path';
 import sade from 'sade';
 import * as vite from 'vite';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
 import { coalesce_to_error } from './utils/error.js';
-import { logger } from './core/utils.js';
 
 /** @param {unknown} e */
 function handle_error(e) {
@@ -62,15 +61,8 @@ prog
 		let close;
 
 		async function start() {
-			const { plugins } = await import('./core/dev/plugin.js');
 			const svelte_config = await load_config();
-			const vite_config = await svelte_config.kit.vite();
-
-			/** @type {import('vite').UserConfig} */
-			const config = {
-				...vite_config,
-				plugins: [...(vite_config.plugins || []), plugins(svelte_config)]
-			};
+			const config = await get_vite_config(svelte_config);
 			config.server = config.server || {};
 
 			// optional config from command-line flags
@@ -81,7 +73,7 @@ prog
 
 			// if https is already enabled then do nothing. it could be an object and we
 			// don't want to overwrite with a boolean
-			if (https && !vite_config?.server?.https) {
+			if (https && !config?.server?.https) {
 				config.server.https = https;
 			}
 
@@ -158,31 +150,11 @@ prog
 	.action(async ({ verbose }) => {
 		try {
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-			const config = await load_config();
+			process.env.VERBOSE = verbose;
 
-			const log = logger({ verbose });
-
-			const { build } = await import('./core/build/index.js');
-			const { build_data, prerendered } = await build(config, { log });
-
-			console.log(
-				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
-			);
-
-			if (config.kit.adapter) {
-				const { adapt } = await import('./core/adapt/index.js');
-				await adapt(config, build_data, prerendered, { log });
-
-				// this is necessary to close any open db connections, etc
-				process.exit(0);
-			}
-
-			console.log(colors.bold().yellow('\nNo adapter specified'));
-
-			// prettier-ignore
-			console.log(
-				`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
-			);
+			const svelte_config = await load_config();
+			const vite_config = await get_vite_config(svelte_config);
+			await vite.build(vite_config); // TODO when we get rid of config.kit.vite, this can just be vite.build()
 		} catch (error) {
 			handle_error(error);
 		}
@@ -202,30 +174,18 @@ prog
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
-			const { sveltekit_plugin } = await import('./core/preview/index.js');
 			const svelte_config = await load_config();
-			const vite_config = await svelte_config.kit.vite();
+			const vite_config = await get_vite_config(svelte_config);
 
-			/** @type {import('vite').UserConfig} */
-			const config = {
-				...vite_config,
-				plugins: [...(vite_config.plugins || []), sveltekit_plugin]
-			};
-			config.preview = config.preview || {};
+			vite_config.preview = vite_config.preview || {};
 
 			// optional config from command-line flags
 			// these should take precedence, but not print conflict warnings
-			if (host) {
-				config.preview.host = host;
-			}
-			if (https) {
-				config.preview.https = https;
-			}
-			if (port) {
-				config.preview.port = port;
-			}
+			if (host) vite_config.preview.host = host;
+			if (https) vite_config.preview.https = https;
+			if (port) vite_config.preview.port = port;
 
-			const preview_server = await vite.preview(config);
+			const preview_server = await vite.preview(vite_config);
 
 			welcome({ port, host, https, open, base: preview_server.config.base });
 		} catch (error) {
@@ -305,7 +265,7 @@ function welcome({ port, host, https, open, base, loose, allow, cwd }) {
 					if (loose) {
 						console.log(`\n  ${colors.yellow('Serving with vite.server.fs.strict: false. Note that all files on your machine will be accessible to anyone on your network.')}`);
 					} else if (allow?.length && cwd) {
-						console.log(`\n  ${colors.yellow('Note that all files in the following directories will be accessible to anyone on your network: ' + allow.map(a => relative(cwd, a)).join(', '))}`);
+						console.log(`\n  ${colors.yellow('Note that all files in the following directories will be accessible to anyone on your network: ' + allow.map(a => path.relative(cwd, a)).join(', '))}`);
 					}
 				} else {
 					console.log(`  ${colors.gray('network: not exposed')}`);
@@ -319,4 +279,28 @@ function welcome({ port, host, https, open, base, loose, allow, cwd }) {
 	}
 
 	console.log('\n');
+}
+
+/**
+ * @param {import('types').ValidatedConfig} svelte_config
+ * @return {Promise<import('vite').UserConfig>}
+ */
+export async function get_vite_config(svelte_config) {
+	for (const file of ['vite.config.js', 'vite.config.mjs', 'vite.config.cjs']) {
+		if (fs.existsSync(file)) {
+			// TODO warn here if config.kit.vite was specified
+			const module = await import(path.resolve(file));
+			return {
+				...module.default,
+				configFile: false
+			};
+		}
+	}
+
+	const { sveltekit } = await import('./vite/index.js');
+
+	// TODO: stop reading Vite config from SvelteKit config or move to CLI
+	const vite_config = await svelte_config.kit.vite();
+	vite_config.plugins = [...(vite_config.plugins || []), ...sveltekit()];
+	return vite_config;
 }

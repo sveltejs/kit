@@ -1,9 +1,9 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { deep_merge } from './object.js';
+import { deep_merge, merge_vite_configs } from './utils.js';
 
 test('basic test no conflicts', async () => {
-	const [merged, conflicts] = deep_merge(
+	const merged = deep_merge(
 		{
 			version: 1,
 			animalSounds: {
@@ -17,6 +17,7 @@ test('basic test no conflicts', async () => {
 			locale: 'en_US'
 		}
 	);
+
 	assert.equal(merged, {
 		version: 1,
 		locale: 'en_US',
@@ -25,11 +26,10 @@ test('basic test no conflicts', async () => {
 			duck: 'quack'
 		}
 	});
-	assert.equal(conflicts, []);
 });
 
 test('three way merge no conflicts', async () => {
-	const [merged, conflicts] = deep_merge(
+	const merged = deep_merge(
 		{
 			animalSounds: {
 				cow: 'moo'
@@ -59,11 +59,10 @@ test('three way merge no conflicts', async () => {
 			}
 		}
 	});
-	assert.equal(conflicts, []);
 });
 
 test('merge with conflicts', async () => {
-	const [merged, conflicts] = deep_merge(
+	const merged = deep_merge(
 		{
 			person: {
 				firstName: 'John',
@@ -90,11 +89,10 @@ test('merge with conflicts', async () => {
 			address: '123 Main St, Seattle, WA'
 		}
 	});
-	assert.equal(conflicts, ['person.address']);
 });
 
 test('merge with arrays', async () => {
-	const [merged] = deep_merge(
+	const merged = deep_merge(
 		{
 			paths: ['/foo', '/bar']
 		},
@@ -108,7 +106,7 @@ test('merge with arrays', async () => {
 });
 
 test('empty', async () => {
-	const [merged] = deep_merge();
+	const merged = deep_merge();
 	assert.equal(merged, {});
 });
 
@@ -135,7 +133,7 @@ test('mutability safety', () => {
 	const snapshot1 = JSON.stringify(input1);
 	const snapshot2 = JSON.stringify(input2);
 
-	const [merged] = deep_merge(input1, input2);
+	const merged = deep_merge(input1, input2);
 
 	// Mess with the result
 	merged.person.middleInitial = 'Z';
@@ -148,7 +146,7 @@ test('mutability safety', () => {
 });
 
 test('merge buffer', () => {
-	const [merged, conflicts] = deep_merge(
+	const merged = deep_merge(
 		{
 			x: Buffer.from('foo', 'utf-8')
 		},
@@ -157,11 +155,10 @@ test('merge buffer', () => {
 		}
 	);
 	assert.equal(Object.keys(merged), ['x', 'y']);
-	assert.equal(conflicts.length, 0);
 });
 
 test('merge including toString', () => {
-	const [merged, conflicts] = deep_merge(
+	const merged = deep_merge(
 		{
 			toString: () => '',
 			constructor: () => ''
@@ -170,12 +167,11 @@ test('merge including toString', () => {
 			y: 12345
 		}
 	);
-	assert.equal(conflicts.length, 0);
 	assert.equal(Object.keys(merged), ['toString', 'constructor', 'y']);
 });
 
 test('merge resolve.alias', () => {
-	const [merged, conflicts] = deep_merge(
+	const merged = merge_vite_configs(
 		{
 			resolve: {
 				alias: [{ find: /foo/, replacement: 'bar' }]
@@ -189,7 +185,6 @@ test('merge resolve.alias', () => {
 			}
 		}
 	);
-	assert.equal(conflicts.length, 0);
 	assert.equal(merged, {
 		resolve: {
 			alias: [

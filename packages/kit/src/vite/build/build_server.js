@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import { mkdirp, posixify } from '../../utils/filesystem.js';
-import { deep_merge } from '../../utils/object.js';
-import { load_template, print_config_conflicts } from '../config/index.js';
-import { get_runtime_path, resolve_entry } from '../utils.js';
-import { create_build, find_deps, get_default_config } from './utils.js';
+import { merge_vite_configs } from '../utils.js';
+import { load_template } from '../../core/config/index.js';
+import { get_runtime_path, resolve_entry } from '../../core/utils.js';
+import { create_build, find_deps, get_default_config, remove_svelte_kit } from './utils.js';
 import { s } from '../../utils/misc.js';
 
 /**
@@ -104,6 +104,7 @@ export class Server {
 `;
 
 /**
+ * @param {import('vite').UserConfig} vite_config
  * @param {{
  *   cwd: string;
  *   config: import('types').ValidatedConfig
@@ -114,7 +115,7 @@ export class Server {
  * }} options
  * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
  */
-export async function build_server(options, client) {
+export async function build_server(vite_config, options, client) {
 	const { cwd, config, manifest_data, build_dir, output_dir, service_worker_entry_file } = options;
 
 	let hooks_file = resolve_entry(config.kit.files.hooks);
@@ -174,9 +175,6 @@ export async function build_server(options, client) {
 		})
 	);
 
-	/** @type {import('vite').UserConfig} */
-	const vite_config = await config.kit.vite();
-
 	const default_config = {
 		build: {
 			target: 'node14.8'
@@ -194,16 +192,13 @@ export async function build_server(options, client) {
 		}
 	};
 
-	// don't warn on overriding defaults
-	const [modified_vite_config] = deep_merge(default_config, vite_config);
-
-	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(
-		modified_vite_config,
-		get_default_config({ ...options, input, ssr: true })
+	const merged_config = merge_vite_configs(
+		default_config,
+		vite_config,
+		get_default_config({ config, input, ssr: true, outDir: `${output_dir}/server` })
 	);
 
-	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
+	remove_svelte_kit(merged_config);
 
 	process.env.VITE_SVELTEKIT_ADAPTER_NAME = config.kit.adapter?.name;
 

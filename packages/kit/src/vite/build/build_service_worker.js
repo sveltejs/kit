@@ -1,12 +1,12 @@
 import fs from 'fs';
 import * as vite from 'vite';
 import { s } from '../../utils/misc.js';
-import { deep_merge } from '../../utils/object.js';
+import { merge_vite_configs } from '../utils.js';
 import { normalize_path } from '../../utils/url.js';
-import { print_config_conflicts } from '../config/index.js';
-import { assets_base } from './utils.js';
+import { assets_base, remove_svelte_kit } from './utils.js';
 
 /**
+ * @param {import('vite').UserConfig} vite_config
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   manifest_data: import('types').ManifestData;
@@ -17,6 +17,7 @@ import { assets_base } from './utils.js';
  * @param {import('vite').Manifest} client_manifest
  */
 export async function build_service_worker(
+	vite_config,
 	{ config, manifest_data, output_dir, service_worker_entry_file },
 	prerendered,
 	client_manifest
@@ -66,12 +67,11 @@ export async function build_service_worker(
 			.trim()
 	);
 
-	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(await config.kit.vite(), {
+	const merged_config = merge_vite_configs(vite_config, {
 		base: assets_base(config.kit),
 		build: {
 			lib: {
-				entry: service_worker_entry_file,
+				entry: /** @type {string} */ (service_worker_entry_file),
 				name: 'app',
 				formats: ['es']
 			},
@@ -91,7 +91,7 @@ export async function build_service_worker(
 		}
 	});
 
-	print_config_conflicts(conflicts, 'kit.vite.', 'build_service_worker');
+	remove_svelte_kit(merged_config);
 
 	await vite.build(merged_config);
 }

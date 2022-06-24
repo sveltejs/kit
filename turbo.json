@@ -24,7 +24,7 @@
 		},
 		"check": {
 			"dependsOn": ["sync"],
-			"inputs": ["src/**", "types/**", ".svelte-kit/types/**", ".custom-out-dir/types/**"],
+			"inputs": ["src/**", "types/**", ".svelte-kit/types/**", ".custom-out-dir/types/**", ".svelte-kit/tsconfig.json"],
 			"outputs": []
 		},
 		"format": {},
