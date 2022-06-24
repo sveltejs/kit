@@ -4,8 +4,9 @@ import path from 'path';
 import colors from 'kleur';
 import sade from 'sade';
 import * as vite from 'vite';
-import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
+import { pathToFileURL } from 'url';
+import { load_config } from './core/config/index.js';
 import { coalesce_to_error } from './utils/error.js';
 
 /** @param {unknown} e */
@@ -289,7 +290,7 @@ export async function get_vite_config(svelte_config) {
 	for (const file of ['vite.config.js', 'vite.config.mjs', 'vite.config.cjs']) {
 		if (fs.existsSync(file)) {
 			// TODO warn here if config.kit.vite was specified
-			const module = await import(path.resolve(file));
+			const module = await import(pathToFileURL(file).toString());
 			return {
 				...module.default,
 				configFile: false
