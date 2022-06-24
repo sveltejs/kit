@@ -62,7 +62,7 @@ declare module '$app/env' {
 	 * `true` in development mode, `false` in production.
 	 */
 	export const dev: boolean;
-	
+
 	/**
 	 * The Vite.js mode the app is running in. Configure in `config.kit.vite.mode`.
 	 * Vite.js loads the dotenv file associated with the provided mode, `.env.[mode]` or `.env.[mode].local`.
@@ -74,7 +74,7 @@ declare module '$app/env' {
 	 * `true` when prerendering, `false` otherwise.
 	 */
 	export const prerendering: boolean;
-	
+
 	/**
 	 * `true` in production mode, `false` in development.
 	 */
