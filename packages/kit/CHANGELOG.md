@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.354
+
+### Patch Changes
+
+- Added `server` and `prod` env variables ([#5251](https://github.com/sveltejs/kit/pull/5251))
+
 ## 1.0.0-next.353
 
 ### Patch Changes
