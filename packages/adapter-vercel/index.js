@@ -146,7 +146,8 @@ async function v1(builder, external) {
 		bundle: true,
 		platform: 'node',
 		external,
-		format: 'cjs'
+		format: 'cjs',
+		sourcemap: 'linked'
 	});
 
 	fs.writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'commonjs' }));
@@ -302,7 +303,8 @@ async function v3(builder, external, edge, split) {
 			bundle: true,
 			platform: 'node',
 			format: 'esm',
-			external
+			external,
+			sourcemap: 'linked'
 		});
 
 		write(
