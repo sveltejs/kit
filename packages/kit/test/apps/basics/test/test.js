@@ -1135,8 +1135,11 @@ test.describe.parallel('Errors', () => {
 		);
 	});
 
-	test('returns 400 when accessing a malformed URI', async ({ page }) => {
-		test.skip(({ javaScriptEnabled }) => javaScriptEnabled);
+	test('returns 400 when accessing a malformed URI', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			// the JS tests will look for body.started which won't be present
+			return;
+		}
 
 		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
 		if (process.env.DEV) {
