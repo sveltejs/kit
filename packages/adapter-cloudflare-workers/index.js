@@ -55,8 +55,9 @@ export default function (options = {}) {
 			);
 
 			await esbuild.build({
-				target: 'es2020',
 				platform: 'browser',
+				sourcemap: 'linked',
+				target: 'es2020',
 				...options,
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: main,
