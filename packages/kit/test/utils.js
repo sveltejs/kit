@@ -171,10 +171,8 @@ export const config = {
 };
 
 /**
- *
  * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
  * @param {number} [start]
- * @returns
  */
 export async function start_server(handler, start = 4000) {
 	const port = await ports.find(start);
