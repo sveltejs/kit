@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.353
+
+### Patch Changes
+
+- Expose Vite plugin as @sveltejs/kit/experimental/vite ([#5094](https://github.com/sveltejs/kit/pull/5094))
+
 ## 1.0.0-next.352
 
 ### Patch Changes
