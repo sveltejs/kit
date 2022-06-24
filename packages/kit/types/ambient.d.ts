@@ -326,5 +326,4 @@ declare module '@sveltejs/kit/experimental/vite' {
 	 * Returns the SvelteKit Vite plugins.
 	 */
 	export function sveltekit(): Plugin[];
-
 }
