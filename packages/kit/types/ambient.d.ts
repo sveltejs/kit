@@ -318,3 +318,12 @@ declare module '@sveltejs/kit/node' {
 	): Promise<Request>;
 	export function setResponse(res: import('http').ServerResponse, response: Response): void;
 }
+
+declare module '@sveltejs/kit/experimental/vite' {
+	import { Plugin } from 'vite';
+
+	/**
+	 * Returns the SvelteKit Vite plugins.
+	 */
+	export function sveltekit(): Plugin[];
+}
