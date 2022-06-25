@@ -122,7 +122,7 @@ describe('PrerenderingURL', (test) => {
 		props.forEach((prop) => {
 			assert.throws(
 				() => url[prop],
-				`Cannot access url.search on a page with prerendering enabled`
+				'Cannot access url.search on a page with prerendering enabled'
 			);
 		});
 	});
