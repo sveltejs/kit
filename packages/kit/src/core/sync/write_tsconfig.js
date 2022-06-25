@@ -75,7 +75,10 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 					lib: ['esnext', 'DOM'],
 					moduleResolution: 'node',
 					module: 'esnext',
-					target: 'esnext'
+					target: 'esnext',
+
+					// enable lsp support for svelte files for non-vscode lsp clients
+					plugins: [{ name: 'typescript-svelte-plugin' }]
 				},
 				include,
 				exclude: [config_relative('node_modules/**'), './**']
