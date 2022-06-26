@@ -3,9 +3,12 @@
 /assets/*
 /dist
 /docs
-/test/**/.svelte-kit
 /test/**/build
 !/src/vite/build/adapt/fixtures/*/.svelte-kit
 !/test/node_modules
 /test/apps/basics/test/errors.json
 .custom-out-dir
+
+# these are already ignored by the top level .gitignore
+# repeating them here as a faux prettier ignore
+.svelte-kit
