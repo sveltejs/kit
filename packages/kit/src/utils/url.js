@@ -61,3 +61,15 @@ export class LoadURL extends URL {
 		);
 	}
 }
+
+export class PrerenderingURL extends URL {
+	/** @returns {string} */
+	get search() {
+		throw new Error('Cannot access url.search on a page with prerendering enabled');
+	}
+
+	/** @returns {URLSearchParams} */
+	get searchParams() {
+		throw new Error('Cannot access url.searchParams on a page with prerendering enabled');
+	}
+}
