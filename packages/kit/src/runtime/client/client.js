@@ -156,16 +156,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 	let token;
 
 	/**
-	 * @param {string | URL} href
+	 * @param {string | URL} url
 	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
 	 * @param {string[]} redirect_chain
 	 */
 	async function goto(
-		href,
+		url,
 		{ noscroll = false, replaceState = false, keepfocus = false, state = {} },
 		redirect_chain
 	) {
-		const url = new URL(href, get_base_uri(document));
+		if (typeof url === 'string') {
+			url = new URL(url, get_base_uri(document));
+		}
 
 		if (router_enabled) {
 			return navigate({
