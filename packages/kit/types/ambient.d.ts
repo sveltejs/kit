@@ -17,13 +17,29 @@
  *
  * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`.
  *
- * Note that since it's an ambient declaration file, you can't use `import` statements — instead, use the `import(...)` function:
+ * Note that since it's an ambient declaration file, you have to be careful when using `import` statements. Once you add an `import`
+ * at the top level, the declaration file is no longer considered ambient and you lose access to these typings in other files.
+ * To avoid this, either use the `import(...)` function:
  *
  * ```ts
  * interface Locals {
  * 	user: import('$lib/types').User;
  * }
  * ```
+ * Or wrap the namespace with `declare global`:
+ * ```ts
+ * import { User } from '$lib/types';
+ *
+ * declare global {
+ * 	namespace App {
+ * 		interface Locals {
+ * 			user: User;
+ * 		}
+ * 		// ...
+ * 	}
+ * }
+ * ```
+ *
  */
 declare namespace App {
 	/**
