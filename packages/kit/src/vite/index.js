@@ -148,6 +148,7 @@ function kit() {
 					}
 				},
 				preview: {
+					port: config.preview?.port ?? 3000,
 					strictPort: true
 				},
 				resolve: {
