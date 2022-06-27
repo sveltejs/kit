@@ -183,7 +183,12 @@ prog
 			// these should take precedence, but not print conflict warnings
 			if (host) vite_config.preview.host = host;
 			if (https) vite_config.preview.https = https;
-			if (port) vite_config.preview.port = port;
+
+			if (port) {
+				vite_config.preview.port = port;
+			} else {
+				vite_config.preview.port ??= 3000;
+			}
 
 			const preview_server = await vite.preview(vite_config);
 
