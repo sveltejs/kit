@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 1.0.0-next.355
+
+### Patch Changes
+
+- [chore] Prerendering URL is now a subclass instead of a proxy ([#5278](https://github.com/sveltejs/kit/pull/5278))
+
+* [fix] support vite.config.js on Windows ([#5265](https://github.com/sveltejs/kit/pull/5265))
+
+- Allow both string and URL as the first argument of `$app/navigation#goto` ([#5282](https://github.com/sveltejs/kit/pull/5282))
+
+* rename `goto(href)` to `goto(url)` ([#5286](https://github.com/sveltejs/kit/pull/5286))
+
+- Add types for @sveltejs/kit/experimental/vite ([#5266](https://github.com/sveltejs/kit/pull/5266))
+
+* fix: port flag doesn't work in preview ([#5284](https://github.com/sveltejs/kit/pull/5284))
+
 ## 1.0.0-next.354
 
 ### Patch Changes
