@@ -156,7 +156,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	let token;
 
 	/**
-	 * @param {string} href
+	 * @param {string | URL} href
 	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
 	 * @param {string[]} redirect_chain
 	 */
