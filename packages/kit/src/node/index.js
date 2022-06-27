@@ -63,6 +63,7 @@ export async function getRequest(base, req) {
 		delete headers[':authority'];
 		delete headers[':scheme'];
 	}
+
 	return new Request(base + req.url, {
 		method: req.method,
 		headers,
@@ -85,10 +86,19 @@ export async function setResponse(res, response) {
 	res.writeHead(response.status, headers);
 
 	if (response.body) {
+		let cancelled = false;
+
 		const reader = response.body.getReader();
+
+		res.on('close', () => {
+			reader.cancel();
+			cancelled = true;
+		});
 
 		const next = async () => {
 			const { done, value } = await reader.read();
+
+			if (cancelled) return;
 
 			if (done) {
 				res.end();
