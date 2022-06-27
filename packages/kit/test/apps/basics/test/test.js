@@ -1360,45 +1360,8 @@ test.describe.parallel('Load', () => {
 	test('handles large responses', async ({ page }) => {
 		await page.goto('/load');
 
-		const chunk_size = 50000;
-		const chunk_count = 100;
-		const total_size = chunk_size * chunk_count;
-
-		let chunk = '';
-		for (let i = 0; i < chunk_size; i += 1) {
-			chunk += String(i % 10);
-		}
-
-		let times_responded = 0;
-
-		const { port, server } = await start_server(async (req, res) => {
-			if (req.url === '/large-response.json') {
-				times_responded += 1;
-
-				res.writeHead(200, {
-					'Access-Control-Allow-Origin': '*'
-				});
-
-				for (let i = 0; i < chunk_count; i += 1) {
-					if (!res.write(chunk)) {
-						await new Promise((fulfil) => {
-							res.once('drain', () => {
-								fulfil(undefined);
-							});
-						});
-					}
-				}
-
-				res.end();
-			}
-		});
-
-		await page.goto(`/load/large-response?port=${port}`);
-		expect(await page.textContent('h1')).toBe(`text.length is ${total_size}`);
-
-		expect(times_responded).toBe(1);
-
-		server.close();
+		await page.goto('/load/large-response');
+		expect(await page.textContent('h1')).toBe('text.length is 5000000');
 	});
 
 	test('handles external api', async ({ page }) => {

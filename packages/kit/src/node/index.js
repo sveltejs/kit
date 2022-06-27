@@ -95,14 +95,12 @@ export async function setResponse(res, response) {
 				return;
 			}
 
-			const can_continue = res.write(Buffer.from(value), (error) => {
+			res.write(Buffer.from(value), (error) => {
 				if (error) {
 					console.error('Error writing stream', error);
 					res.end();
-				} else if (can_continue) {
-					next();
 				} else {
-					res.once('drain', next);
+					next();
 				}
 			});
 		};
