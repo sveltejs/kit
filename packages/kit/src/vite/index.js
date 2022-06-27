@@ -73,11 +73,13 @@ function kit() {
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
 
-	/** @type {{
+	/**
+	 * @type {{
 	 *   build_dir: string;
 	 *   output_dir: string;
 	 *   client_out_dir: string;
-	 * }} */
+	 * }}
+	 */
 	let paths;
 
 	return {
@@ -146,7 +148,7 @@ function kit() {
 					}
 				},
 				preview: {
-					port: 3000,
+					port: config.preview?.port ?? 3000,
 					strictPort: true
 				},
 				resolve: {

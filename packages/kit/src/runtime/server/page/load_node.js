@@ -2,8 +2,7 @@ import * as cookie from 'cookie';
 import * as set_cookie_parser from 'set-cookie-parser';
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
-import { LoadURL, is_root_relative, resolve } from '../../../utils/url.js';
-import { create_prerendering_url_proxy } from './utils.js';
+import { LoadURL, PrerenderingURL, is_root_relative, resolve } from '../../../utils/url.js';
 import { is_pojo, lowercase_keys, normalize_request_method } from '../utils.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { domain_matches, path_matches } from './cookie.js';
@@ -84,7 +83,7 @@ export async function load_node({
 	} else if (module.load) {
 		/** @type {import('types').LoadEvent} */
 		const load_input = {
-			url: state.prerendering ? create_prerendering_url_proxy(event.url) : new LoadURL(event.url),
+			url: state.prerendering ? new PrerenderingURL(event.url) : new LoadURL(event.url),
 			params: event.params,
 			props: shadow.body || {},
 			routeId: event.routeId,

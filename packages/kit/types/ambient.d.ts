@@ -17,13 +17,29 @@
  *
  * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`.
  *
- * Note that since it's an ambient declaration file, you can't use `import` statements — instead, use the `import(...)` function:
+ * Note that since it's an ambient declaration file, you have to be careful when using `import` statements. Once you add an `import`
+ * at the top level, the declaration file is no longer considered ambient and you lose access to these typings in other files.
+ * To avoid this, either use the `import(...)` function:
  *
  * ```ts
  * interface Locals {
  * 	user: import('$lib/types').User;
  * }
  * ```
+ * Or wrap the namespace with `declare global`:
+ * ```ts
+ * import { User } from '$lib/types';
+ *
+ * declare global {
+ * 	namespace App {
+ * 		interface Locals {
+ * 			user: User;
+ * 		}
+ * 		// ...
+ * 	}
+ * }
+ * ```
+ *
  */
 declare namespace App {
 	/**
@@ -106,16 +122,16 @@ declare module '$app/navigation' {
 	 */
 	export function disableScrollHandling(): void;
 	/**
-	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`.
+	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
 	 *
-	 * @param href Where to navigate to
+	 * @param url Where to navigate to
 	 * @param opts.replaceState If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
 	 * @param opts.noscroll If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
 	 * @param opts.keepfocus If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
 	 * @param opts.state The state of the new/updated history entry
 	 */
 	export function goto(
-		href: string,
+		url: string | URL,
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<void>;
 	/**
@@ -317,4 +333,13 @@ declare module '@sveltejs/kit/node' {
 		request: import('http').IncomingMessage
 	): Promise<Request>;
 	export function setResponse(res: import('http').ServerResponse, response: Response): void;
+}
+
+declare module '@sveltejs/kit/experimental/vite' {
+	import { Plugin } from 'vite';
+
+	/**
+	 * Returns the SvelteKit Vite plugins.
+	 */
+	export function sveltekit(): Plugin[];
 }
