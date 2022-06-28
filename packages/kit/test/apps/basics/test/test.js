@@ -1132,7 +1132,7 @@ test.describe.parallel('Errors', () => {
 			'500: Cannot prerender pages that have endpoints with mutative methods'
 		);
 	});
-	test('Case: a "page endpoint" GET method throws', async ({browser}) => {
+	test('Case: a "page endpoint" GET method throws', async ({ browser }) => {
 		// The case where we're navigating to a page with the client side router.
 		// The GET "page endpoint" throws a userland error.
 		// It should show the __error template with our message.
@@ -1140,38 +1140,32 @@ test.describe.parallel('Errors', () => {
 		await page.goto('/errors/endpoint-throws');
 		await page.click('a');
 		await page.waitForSelector('#message');
-		expect(await page.textContent('#message')).toContain(
-			'Some userland error.'
-		);
+		expect(await page.textContent('#message')).toContain('Some userland error.');
 		// do it all over again just to make sure...
 		await page.goto('/errors/endpoint-throws');
 		await page.click('a');
 		await page.waitForSelector('#message');
-		expect(await page.textContent('#message')).toContain(
-			'Some userland error.'
-		);
+		expect(await page.textContent('#message')).toContain('Some userland error.');
 		await page.close();
 	});
-	test('Case: submitting a form w/o fetch', async ({page}) => {
+	test('Case: submitting a form w/o fetch', async ({ page }) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/endpoint-throws/page-endpoint-http-post-throws');
 		await Promise.all([page.waitForNavigation(), page.click('#submit')]);
-		expect(await page.textContent('#message')).toContain(
-			'Some userland error.'
-		);
+		expect(await page.textContent('#message')).toContain('Some userland error.');
 	});
-	test('Case: client side fetch POST with Accept: application/json', async ({page, javaScriptEnabled}) => {
+	test('Case: client side fetch POST with Accept: application/json', async ({
+		page,
+		javaScriptEnabled
+	}) => {
 		// The case where we're fetching a POST with Accept: application/json from javascript.
 		// It should return JSON with {error: string}, not the __error template HTML.
 		await page.goto('/errors/endpoint-throws/fetch-throws');
 		// this case is only relevant if javascript is enabled...
 		if (javaScriptEnabled) {
-			expect(await page.textContent('#error')).toBe(
-				'Some userland error.'
-			);
+			expect(await page.textContent('#error')).toBe('Some userland error.');
 		}
-		
 	});
 });
 
