@@ -1,0 +1,1 @@
+<a href="/errors/endpoint-throws/page-endpoint-get-throws">Page endpoint get throws</a>
