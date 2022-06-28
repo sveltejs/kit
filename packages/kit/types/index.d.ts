@@ -268,7 +268,7 @@ export interface ResolveOptions {
 	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
 }
 
-export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
+export type ResponseBody = JSONValue | Uint8Array | ReadableStream;
 
 export class Server {
 	constructor(manifest: SSRManifest);

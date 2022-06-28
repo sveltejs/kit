@@ -33,7 +33,6 @@
 		"locate-character": "^2.0.5",
 		"marked": "^4.0.16",
 		"mime": "^3.0.0",
-		"node-fetch": "^3.2.4",
 		"port-authority": "^1.2.0",
 		"rollup": "^2.75.3",
 		"selfsigned": "^2.0.1",
@@ -45,6 +44,7 @@
 		"svelte2tsx": "~0.5.10",
 		"tiny-glob": "^0.2.9",
 		"typescript": "^4.7.2",
+		"undici": "^5.4.0",
 		"uvu": "^0.5.3"
 	},
 	"peerDependencies": {
