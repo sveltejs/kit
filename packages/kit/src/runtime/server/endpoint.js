@@ -21,8 +21,6 @@ const text_types = new Set([
 	'multipart/form-data'
 ]);
 
-const bodyless_status_codes = new Set([101, 204, 205, 304]);
-
 /**
  * Decides how the body should be parsed based on its mime type
  *
@@ -126,11 +124,8 @@ export async function render_endpoint(event, mod) {
 		}
 	}
 
-	return new Response(
-		method !== 'head' && !bodyless_status_codes.has(status) ? normalized_body : undefined,
-		{
-			status,
-			headers
-		}
-	);
+	return new Response(method !== 'head' ? normalized_body : undefined, {
+		status,
+		headers
+	});
 }
