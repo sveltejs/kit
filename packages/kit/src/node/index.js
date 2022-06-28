@@ -1,4 +1,5 @@
 import * as set_cookie_parser from 'set-cookie-parser';
+import { Request as NodeFetchRequest } from 'node-fetch';
 
 /** @param {import('http').IncomingMessage} req */
 function get_raw_body(req) {
@@ -64,11 +65,21 @@ export async function getRequest(base, req) {
 		delete headers[':scheme'];
 	}
 
-	return new Request(base + req.url, {
+	const request = new Request(base + req.url, {
 		method: req.method,
 		headers,
 		body: await get_raw_body(req) // TODO stream rather than buffer
 	});
+
+	request.formData = async () => {
+		return new NodeFetchRequest(request.url, {
+			method: request.method,
+			headers: request.headers,
+			body: Buffer.from(await request.arrayBuffer())
+		}).formData();
+	};
+
+	return request;
 }
 
 /** @type {import('@sveltejs/kit/node').setResponse} */
