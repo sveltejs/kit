@@ -1160,9 +1160,11 @@ test.describe.parallel('Errors', () => {
 			'Some userland error.'
 		);
 	});
-	test('Case: fetch POST with Accept: application/json', async ({page}) => {
+	test('Case: client side fetch POST with Accept: application/json', async ({page}) => {
 		// The case where we're fetching a POST with Accept: application/json from javascript.
 		// It should return JSON with {error: string}, not the __error template HTML.
+		// @TODO Note this test fails for the config [dev-js] (which I think disables javascript.) Figure out how to fix.
+		
 		await page.goto('/errors/endpoint-throws/fetch-throws');
 		expect(await page.textContent('#error')).toBe(
 			'Some userland error.'
