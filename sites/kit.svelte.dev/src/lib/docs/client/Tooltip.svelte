@@ -38,11 +38,10 @@
 	}
 
 	.tooltip {
-		margin: 0 2rem 0 0;
 		background-color: var(--bg);
 		color: #fff;
 		text-align: left;
-		padding: 0.4rem 0.6rem;
+		padding: 0.4rem 1rem;
 		border-radius: var(--border-r);
 		font-family: var(--font-mono);
 		font-size: 1.2rem;
