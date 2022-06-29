@@ -149,12 +149,11 @@ function kit() {
 				},
 				preview: {
 					port: config.preview?.port ?? 3000,
-					strictPort: true
+					strictPort: config.preview?.strictPort ?? true
 				},
 				resolve: {
 					alias: get_aliases(svelte_config.kit)
 				},
-				root: cwd,
 				server: {
 					fs: {
 						allow: [
@@ -168,16 +167,15 @@ function kit() {
 							])
 						]
 					},
-					port: 3000,
-					strictPort: true,
+					port: config.server?.port ?? 3000,
+					strictPort: config.server?.strictPort ?? true,
 					watch: {
 						ignored: [
 							// Ignore all siblings of config.kit.outDir/generated
 							`${posixify(svelte_config.kit.outDir)}/!(generated)`
 						]
 					}
-				},
-				spa: false
+				}
 			};
 		},
 
@@ -334,8 +332,8 @@ function kit() {
 /**
  * @param {Record<string, any>} config
  * @param {Record<string, any>} enforced_config
- * @param {string} path
- * @param {string[]} out
+ * @param {string} [path]
+ * @param {string[]} [out] used locally to compute the return value
  */
 function find_overridden_config(config, enforced_config, path = '', out = []) {
 	for (const key in enforced_config) {

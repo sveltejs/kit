@@ -82,7 +82,7 @@ export default function create_manifest_data({
 	});
 
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
-	const valid_extensions = [...config.extensions, ...config.kit.endpointExtensions];
+	const valid_extensions = [...config.extensions, ...config.kit.moduleExtensions];
 
 	if (fs.existsSync(config.kit.files.routes)) {
 		list_files(config.kit.files.routes).forEach((file) => {
@@ -267,6 +267,7 @@ export default function create_manifest_data({
 	if (fs.existsSync(config.kit.files.params)) {
 		for (const file of fs.readdirSync(config.kit.files.params)) {
 			const ext = path.extname(file);
+			if (!config.kit.moduleExtensions.includes(ext)) continue;
 			const type = file.slice(0, -ext.length);
 
 			if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(type)) {

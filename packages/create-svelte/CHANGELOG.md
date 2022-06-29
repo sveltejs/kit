@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.144
+
+### Patch Changes
+
+- Revert to use ESM eslint config files ([#5293](https://github.com/sveltejs/kit/pull/5293))
+
 ## 2.0.0-next.143
 
 ### Patch Changes
