@@ -103,9 +103,13 @@ export async function read_file(dir, file) {
 
 				// we need to be able to inject the LSP attributes as HTML, not text, so we
 				// turn &lt; into &amp;lt;
-				html = html.replace(/<data-lsp lsp='(.+?)' *>(\w+)<\/data-lsp>/g, (match, lsp, name) => {
-					return `<data-lsp lsp='${lsp.replace(/&/g, '&amp;')}'>${name}</data-lsp>`;
-				});
+				html = html.replace(
+					/<data-lsp lsp='([^']*)'([^>]*)>(\w+)<\/data-lsp>/g,
+					(match, lsp, attrs, name) => {
+						if (!lsp) return name;
+						return `<data-lsp lsp='${lsp.replace(/&/g, '&amp;')}'${attrs}>${name}</data-lsp>`;
+					}
+				);
 
 				// preserve blank lines in output (maybe there's a more correct way to do this?)
 				html = `<div class="code-block">${
