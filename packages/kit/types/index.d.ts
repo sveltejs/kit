@@ -107,7 +107,7 @@ export interface KitConfig {
 		mode?: 'hash' | 'nonce' | 'auto';
 		directives?: CspDirectives;
 	};
-	endpointExtensions?: string[];
+	moduleExtensions?: string[];
 	files?: {
 		assets?: string;
 		hooks?: string;
