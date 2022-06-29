@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.356
+
+### Patch Changes
+
+- Stream request bodies ([#5291](https://github.com/sveltejs/kit/pull/5291))
+
+* Enable multipart formdata parsing with node-fetch ([#5292](https://github.com/sveltejs/kit/pull/5292))
+
+- [fix] allow user to set dev port ([#5303](https://github.com/sveltejs/kit/pull/5303))
+
+* [breaking] use undici instead of node-fetch ([#5117](https://github.com/sveltejs/kit/pull/5117))
+
 ## 1.0.0-next.355
 
 ### Patch Changes
