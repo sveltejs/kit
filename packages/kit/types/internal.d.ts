@@ -5,6 +5,7 @@ import {
 	GetSession,
 	Handle,
 	HandleError,
+	KitConfig,
 	Load,
 	RequestEvent,
 	RequestHandler,
@@ -318,6 +319,8 @@ export interface SSRState {
 export type StrictBody = string | Uint8Array;
 
 export type ValidatedConfig = RecursiveRequired<Config>;
+
+export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export * from './index';
 export * from './private';

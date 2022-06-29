@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.46
+
+### Patch Changes
+
+- Generate sourcemaps for server-side functions when bundling with esbuild ([#5258](https://github.com/sveltejs/kit/pull/5258))
+
+## 1.0.0-next.45
+
+### Patch Changes
+
+- Simplify example wrangler.toml, and fix outdated README ([#5187](https://github.com/sveltejs/kit/pull/5187))
+
 ## 1.0.0-next.44
 
 ### Patch Changes
