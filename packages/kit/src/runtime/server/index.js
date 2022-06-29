@@ -45,7 +45,7 @@ export async function respond(request, options, state) {
 	try {
 		decoded = decodeURI(url.pathname);
 	} catch {
-		return new Response(`Malformed URI '${url}'`, { status: 400 });
+		return new Response('Malformed URI', { status: 400 });
 	}
 
 	/** @type {import('types').SSRRoute | null} */
