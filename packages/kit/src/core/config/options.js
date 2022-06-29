@@ -115,7 +115,9 @@ const options = object(
 				})
 			}),
 
-			moduleExtensions: string_array(['.js', '.ts']),
+			endpointExtensions: error(
+				(keypath) => `${keypath} has been renamed to config.kit.moduleExtensions`
+			),
 
 			files: object({
 				assets: string('static'),
@@ -160,6 +162,8 @@ const options = object(
 					return input;
 				})
 			}),
+
+			moduleExtensions: string_array(['.js', '.ts']),
 
 			outDir: string('.svelte-kit'),
 
