@@ -8,6 +8,9 @@ export function setup() {
 
 		function over(event) {
 			if (event.target.tagName === 'DATA-LSP') {
+				const html = event.target.getAttribute('lsp');
+				if (!html) return;
+
 				clearTimeout(timeout);
 
 				if (!tooltip) {
@@ -27,7 +30,6 @@ export function setup() {
 				}
 
 				const rect = event.target.getBoundingClientRect();
-				const html = event.target.getAttribute('lsp');
 
 				const x = (rect.left + rect.right) / 2 + window.scrollX;
 				const y = rect.top + window.scrollY;
@@ -42,6 +44,7 @@ export function setup() {
 
 		function out(event) {
 			if (event.target.tagName === 'DATA-LSP') {
+				if (!event.target.getAttribute('lsp')) return;
 				timeout = setTimeout(() => {
 					tooltip.$destroy();
 					tooltip = null;
