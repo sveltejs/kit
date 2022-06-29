@@ -236,7 +236,7 @@ export interface SSRNode {
 	/** external JS files */
 	js: string[];
 	/** inlined styles */
-	styles?: () => Promise<Record<string, string>>;
+	styles?: () => MaybePromise<Record<string, string>>;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;

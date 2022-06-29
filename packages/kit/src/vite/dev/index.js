@@ -95,7 +95,7 @@ export async function dev(vite, svelte_config) {
 							css: [],
 							js: [],
 							// in dev we inline all styles to avoid FOUC
-							styles
+							styles: () => styles
 						};
 					};
 				}),
