@@ -112,6 +112,10 @@ export async function render_endpoint(event, mod) {
 	if (is_pojo(body) && (!type || type.startsWith('application/json'))) {
 		headers.set('content-type', 'application/json; charset=utf-8');
 		normalized_body = JSON.stringify(body);
+
+		if (normalized_body === '{}' && body.getReader) {
+			throw new Error('ReadableStream was mistaken for a POJO');
+		}
 	} else {
 		normalized_body = /** @type {import('types').StrictBody} */ (body);
 	}
