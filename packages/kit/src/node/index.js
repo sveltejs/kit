@@ -10,6 +10,7 @@ function get_raw_body(req) {
 
 	const length = Number(h['content-length']);
 
+	// check if no request body
 	// https://github.com/jshttp/type-is/blob/c1f4388c71c8a01f79934e68f630ca4a15fffcd6/index.js#L81-L95
 	if (isNaN(length) && h['transfer-encoding'] == null) {
 		return null;
