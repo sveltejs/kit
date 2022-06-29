@@ -3,20 +3,42 @@ import { pipeline } from 'stream';
 import glob from 'tiny-glob';
 import { promisify } from 'util';
 import zlib from 'zlib';
+import { platforms } from './platforms.js';
 
 const pipe = promisify(pipeline);
 
 /** @type {import('.').default} */
-export default function ({ pages = 'build', assets = pages, fallback, precompress = false } = {}) {
+export default function (options) {
 	return {
 		name: '@sveltejs/adapter-static',
 
 		async adapt(builder) {
-			if (!fallback && !builder.config.kit.prerender.default) {
+			if (!options?.fallback && !builder.config.kit.prerender.default) {
 				builder.log.warn(
 					'You should set `config.kit.prerender.default` to `true` if no fallback is specified'
 				);
 			}
+
+			const platform = platforms.find((platform) => platform.test());
+
+			if (platform) {
+				if (options) {
+					builder.log.warn(
+						`Detected ${platform.name}. Please remove adapter-static options to enable zero-config mode`
+					);
+				} else {
+					builder.log.info(`Detected ${platform.name}, using zero-config mode`);
+				}
+			}
+
+			const {
+				pages = 'build',
+				assets = pages,
+				fallback,
+				precompress
+			} = options ??
+			platform?.defaults(builder.config) ??
+			/** @type {import('./index').AdapterOptions} */ ({});
 
 			builder.rimraf(assets);
 			builder.rimraf(pages);
@@ -43,6 +65,8 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 			} else {
 				builder.log(`Wrote pages to "${pages}" and assets to "${assets}"`);
 			}
+
+			if (!options) platform?.done(builder);
 		}
 	};
 }

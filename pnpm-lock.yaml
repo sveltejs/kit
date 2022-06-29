@@ -271,7 +271,6 @@ importers:
       locate-character: ^2.0.5
       marked: ^4.0.16
       mime: ^3.0.0
-      node-fetch: ^3.2.4
       port-authority: ^1.2.0
       rollup: ^2.75.3
       sade: ^1.8.1
@@ -284,6 +283,7 @@ importers:
       svelte2tsx: ~0.5.10
       tiny-glob: ^0.2.9
       typescript: ^4.7.2
+      undici: ^5.4.0
       uvu: ^0.5.3
       vite: ^2.9.10
     dependencies:
@@ -309,7 +309,6 @@ importers:
       locate-character: 2.0.5
       marked: 4.0.16
       mime: 3.0.0
-      node-fetch: 3.2.4
       port-authority: 1.2.0
       rollup: 2.75.3
       selfsigned: 2.0.1
@@ -321,6 +320,7 @@ importers:
       svelte2tsx: 0.5.10_rxzurg3hjloskwsrdpptpplucy
       tiny-glob: 0.2.9
       typescript: 4.7.2
+      undici: 5.4.0
       uvu: 0.5.3
 
   packages/kit/test/apps/amp:
@@ -5207,6 +5207,11 @@ packages:
       has-bigints: 1.0.2
       has-symbols: 1.0.3
       which-boxed-primitive: 1.0.2
+    dev: true
+
+  /undici/5.4.0:
+    resolution: {integrity: sha512-A1SRXysDg7J+mVP46jF+9cKANw0kptqSFZ8tGyL+HBiv0K1spjxPX8Z4EGu+Eu6pjClJUBdnUPlxrOafR668/g==}
+    engines: {node: '>=12.18'}
     dev: true
 
   /universalify/0.1.2:

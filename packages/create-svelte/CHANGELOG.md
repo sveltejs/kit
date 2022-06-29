@@ -1,5 +1,15 @@
 # create-svelte
 
+## 2.0.0-next.143
+
+### Patch Changes
+
+- Enhance docs on importing types in app.d.ts ([#5280](https://github.com/sveltejs/kit/pull/5280))
+
+* Use ESM eslint config files ([#5263](https://github.com/sveltejs/kit/pull/5263))
+
+- fix formatting for initial package.json ([#5271](https://github.com/sveltejs/kit/pull/5271))
+
 ## 2.0.0-next.142
 
 ### Patch Changes

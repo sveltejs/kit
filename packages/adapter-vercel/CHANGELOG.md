@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.59
+
+### Patch Changes
+
+- Add sourcemap generation for the generated functions ([#5197](https://github.com/sveltejs/kit/pull/5197))
+
 ## 1.0.0-next.58
 
 ### Patch Changes

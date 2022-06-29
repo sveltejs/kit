@@ -1,6 +1,5 @@
-import { svelte } from '@sveltejs/vite-plugin-svelte';
 import * as vite from 'vite';
-import { get_aliases } from '../utils.js';
+import { get_aliases } from '../../core/utils.js';
 
 /**
  * @typedef {import('rollup').RollupOutput} RollupOutput
@@ -13,7 +12,9 @@ import { get_aliases } from '../utils.js';
  * @param {import('vite').UserConfig} config
  */
 export async function create_build(config) {
-	const { output } = /** @type {RollupOutput} */ (await vite.build(config));
+	const { output } = /** @type {RollupOutput} */ (
+		await vite.build({ ...config, configFile: false })
+	);
 
 	const chunks = output.filter(
 		/** @returns {output is OutputChunk} */ (output) => output.type === 'chunk'
@@ -51,21 +52,20 @@ export function find_deps(file, manifest, js, css) {
 /**
  * The Vite configuration that we use by default.
  * @param {{
- *   client_out_dir?: string;
  *   config: import('types').ValidatedConfig;
  *   input: Record<string, string>;
- *   output_dir: string;
  *   ssr: boolean;
+ *   outDir: string;
  * }} options
  * @return {import('vite').UserConfig}
  */
-export const get_default_config = function ({ client_out_dir, config, input, output_dir, ssr }) {
+export const get_default_config = function ({ config, input, ssr, outDir }) {
 	return {
 		base: assets_base(config.kit),
 		build: {
 			cssCodeSplit: true,
 			manifest: true,
-			outDir: ssr ? `${output_dir}/server` : `${client_out_dir}/immutable`,
+			outDir,
 			polyfillDynamicImport: false,
 			rollupOptions: {
 				input,
@@ -79,16 +79,6 @@ export const get_default_config = function ({ client_out_dir, config, input, out
 			},
 			ssr
 		},
-		plugins: [
-			svelte({
-				...config,
-				compilerOptions: {
-					...config.compilerOptions,
-					hydratable: !!config.kit.browser.hydrate
-				},
-				configFile: false
-			})
-		],
 		// prevent Vite copying the contents of `config.kit.files.assets`,
 		// if it happens to be 'public' instead of 'static'
 		publicDir: false,
@@ -108,4 +98,15 @@ export function assets_base(config) {
 	// may be fixed in Vite 3: https://github.com/vitejs/vite/issues/2009
 	const { base, assets } = config.paths;
 	return `${assets || base}/${config.appDir}/immutable/`;
+}
+
+/**
+ * @param {import('vite').UserConfig} config
+ */
+export function remove_svelte_kit(config) {
+	// TODO i feel like there's a more elegant way to do this
+	// @ts-expect-error - it can't handle infinite type expansion
+	config.plugins = (config.plugins || [])
+		.flat(Infinity)
+		.filter((plugin) => plugin.name !== 'vite-plugin-svelte-kit');
 }

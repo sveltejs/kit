@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import adapter from '../../../../adapter-static/index.js';
 
 /** @type {import('@sveltejs/kit').Config} */
