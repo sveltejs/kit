@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.357
+
+### Patch Changes
+
+- [breaking] change endpointExtensions to moduleExtensions, and use to filter param matchers ([#5085](https://github.com/sveltejs/kit/pull/5085))
+
+* fix server crash when accessing a malformed URI ([#5246](https://github.com/sveltejs/kit/pull/5246))
+
 ## 1.0.0-next.356
 
 ### Patch Changes
