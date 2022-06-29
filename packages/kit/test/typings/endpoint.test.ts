@@ -51,14 +51,6 @@ export const readable_stream_body: RequestHandler = () => {
 	};
 };
 
-// valid - body instance of stream.Readable should be allowed
-export const stream_readable_body: RequestHandler = async () => {
-	const { Readable } = await import('stream');
-	return {
-		body: new Readable()
-	};
-};
-
 // valid - different header pairs should be allowed
 export const differential_headers_assignment: RequestHandler = () => {
 	if (Math.random() < 0.5) {
@@ -101,6 +93,23 @@ interface ParentWrapper {
 export const nested_interfaces: RequestHandler<Record<string, string>, ParentWrapper> = () => {
 	return {
 		body: {} as ParentWrapper
+	};
+};
+
+interface NestedLiteral {
+	date: {
+		published: string;
+		updated?: string;
+		time: {
+			hour: number;
+			min: number;
+			sec?: number;
+		};
+	};
+}
+export const nested_literal: RequestHandler<Record<string, string>, NestedLiteral> = () => {
+	return {
+		body: {} as NestedLiteral
 	};
 };
 
@@ -174,5 +183,13 @@ export const error_other_typed_array_instances: RequestHandler = () => {
 export const error_nested_instances: RequestHandler = () => {
 	return {
 		body: { typed: new Uint8Array() }
+	};
+};
+
+// @ts-expect-error - instances cannot be nested
+export const stream_readable_body: RequestHandler = async () => {
+	const { Readable } = await import('stream');
+	return {
+		body: new Readable()
 	};
 };

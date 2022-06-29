@@ -161,6 +161,12 @@ test.describe.parallel('trailingSlash', () => {
 		expect(r2.url()).toBe(`${baseURL}/path-base/endpoint`);
 		expect(await r2.text()).toBe('hi');
 	});
+
+	test('can fetch data from page-endpoint', async ({ request, baseURL }) => {
+		const r = await request.get('/path-base/page-endpoint/__data.json');
+		expect(r.url()).toBe(`${baseURL}/path-base/page-endpoint/__data.json`);
+		expect(await r.json()).toEqual({ data: 'hi' });
+	});
 });
 
 test.describe.parallel('serviceWorker', () => {

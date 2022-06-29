@@ -52,3 +52,24 @@ export function normalize_path(path, trailing_slash) {
 
 	return path;
 }
+
+export class LoadURL extends URL {
+	/** @returns {string} */
+	get hash() {
+		throw new Error(
+			'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
+		);
+	}
+}
+
+export class PrerenderingURL extends URL {
+	/** @returns {string} */
+	get search() {
+		throw new Error('Cannot access url.search on a page with prerendering enabled');
+	}
+
+	/** @returns {URLSearchParams} */
+	get searchParams() {
+		throw new Error('Cannot access url.searchParams on a page with prerendering enabled');
+	}
+}

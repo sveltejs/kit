@@ -33,61 +33,41 @@ export default {
 
 ## Basic Configuration
 
-**You will need [Wrangler](https://developers.cloudflare.com/workers/cli-wrangler/install-update) installed on your system**
-
-This adapter expects to find a [wrangler.toml](https://developers.cloudflare.com/workers/platform/sites/configuration) file in the project root. It will determine where to write static assets and the worker based on the `site.bucket` and `site.entry-point` settings.
-
-Generate this file using `wrangler` from your project directory
-
-```sh
-wrangler init --site my-site-name
-```
-
-Now you should get some details from Cloudflare. You should get your:
-
-1. Account ID
-2. And your Zone-ID (Optional)
-
-Get them by visiting your [Cloudflare dashboard](https://dash.cloudflare.com) and click on any domain. There, you can scroll down and on the left, you can see your details under **API**.
-
-Then configure your sites build directory and your account-details in the config file:
+This adapter expects to find a [wrangler.toml](https://developers.cloudflare.com/workers/platform/sites/configuration) file in the project root. It should look something like this:
 
 ```toml
-account_id = 'YOUR ACCOUNT_ID'
-zone_id    = 'YOUR ZONE_ID' # optional, if you don't specify this a workers.dev subdomain will be used.
+name = "<your-service-name>"
+account_id = "<your-account-id>"
 
-type = "javascript"
+main = "./.cloudflare/worker.js"
+site.bucket = "./.cloudflare/public"
 
-[build]
-# Assume it's already been built. You can make this "npm run build" to ensure a build before publishing
-command = ""
+build.command = "npm run build"
 
-[build.upload]
-format = "modules"
-main = "./worker.mjs"
-
-[site]
-bucket = "./.cloudflare/assets"
-entry-point = "./.cloudflare/worker"
+compatibility_date = "2021-11-12"
+workers_dev = true
 ```
 
-It's recommended that you add the `build` and `workers-site` folders (or whichever other folders you specify) to your `.gitignore`.
+`<your-service-name>` can be anything. `<your-account-id>` can be found by logging into your [Cloudflare dashboard](https://dash.cloudflare.com) and grabbing it from the end of the URL:
 
-Now, log in with wrangler:
+```
+https://dash.cloudflare.com/<your-account-id>
+```
 
-```sh
+> It's recommended that you add the `.cloudflare` directory (or whichever directories you specified for `main` and `site.bucket`) to your `.gitignore`.
+
+You will need to install [wrangler](https://developers.cloudflare.com/workers/wrangler/get-started/) and log in, if you haven't already:
+
+```
+npm i -g wrangler
 wrangler login
 ```
 
-Build your project and publish it:
+Then, you can build your app and deploy it:
 
 ```sh
-npm run build && wrangler publish
+wrangler publish
 ```
-
-**You are done!**
-
-More info on configuring a cloudflare worker site can be found [here](https://developers.cloudflare.com/workers/platform/sites/start-from-existing)
 
 ## Changelog
 

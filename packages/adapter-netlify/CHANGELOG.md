@@ -1,5 +1,29 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.66
+
+### Patch Changes
+
+- Generate sourcemaps for server-side functions when bundling with esbuild ([#5258](https://github.com/sveltejs/kit/pull/5258))
+
+## 1.0.0-next.65
+
+### Patch Changes
+
+- fix: add redirects for routes containing `__data.json` suffix ([#5180](https://github.com/sveltejs/kit/pull/5180))
+
+## 1.0.0-next.64
+
+### Patch Changes
+
+- Update dependencies ([#5121](https://github.com/sveltejs/kit/pull/5121))
+
+## 1.0.0-next.63
+
+### Patch Changes
+
+- Update adapter entrypoint typings to be NodeNext/ESNext-compatible ([#5111](https://github.com/sveltejs/kit/pull/5111))
+
 ## 1.0.0-next.62
 
 ### Patch Changes

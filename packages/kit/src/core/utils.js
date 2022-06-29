@@ -4,8 +4,8 @@ import colors from 'kleur';
 import { fileURLToPath } from 'url';
 
 export const get_runtime_path = process.env.BUNDLED
-	? /** @param {import('types').ValidatedConfig} config */ (config) =>
-			posixify_path(path.join(config.kit.outDir, 'runtime'))
+	? /** @param {import('types').ValidatedKitConfig} config */ (config) =>
+			posixify_path(path.join(config.outDir, 'runtime'))
 	: () => posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
 
 /** @param {string} str */
@@ -78,19 +78,19 @@ export function get_mime_lookup(manifest_data) {
 	return mime;
 }
 
-/** @param {import('types').ValidatedConfig} config */
+/** @param {import('types').ValidatedKitConfig} config */
 export function get_aliases(config) {
 	/** @type {Record<string, string>} */
 	const alias = {
-		__GENERATED__: path.posix.join(config.kit.outDir, 'generated'),
+		__GENERATED__: path.posix.join(config.outDir, 'generated'),
 		$app: `${get_runtime_path(config)}/app`,
 
 		// For now, we handle `$lib` specially here rather than make it a default value for
 		// `config.kit.alias` since it has special meaning for packaging, etc.
-		$lib: config.kit.files.lib
+		$lib: config.files.lib
 	};
 
-	for (const [key, value] of Object.entries(config.kit.alias)) {
+	for (const [key, value] of Object.entries(config.alias)) {
 		alias[key] = path.resolve(value);
 	}
 

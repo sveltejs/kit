@@ -34,8 +34,7 @@ run('spa', (test) => {
 	test('renders error page for missing page', async ({ base, page }) => {
 		await page.goto(`${base}/nosuchpage`);
 		assert.equal(await page.textContent('h1'), '404');
-		assert.equal(await page.textContent('h2'), 'count: 1');
-
 		await page.waitForLoadState('networkidle', { timeout: 1000 });
+		assert.equal(await page.textContent('h2'), 'count: 1');
 	});
 });
