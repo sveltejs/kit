@@ -271,6 +271,7 @@ importers:
       locate-character: ^2.0.5
       marked: ^4.0.16
       mime: ^3.0.0
+      node-fetch: ^3.2.4
       port-authority: ^1.2.0
       rollup: ^2.75.3
       sade: ^1.8.1
@@ -309,6 +310,7 @@ importers:
       locate-character: 2.0.5
       marked: 4.0.16
       mime: 3.0.0
+      node-fetch: 3.2.4
       port-authority: 1.2.0
       rollup: 2.75.3
       selfsigned: 2.0.1

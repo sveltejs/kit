@@ -38,17 +38,13 @@ export function is_pojo(body) {
 
 	if (body) {
 		if (body instanceof Uint8Array) return false;
+		if (body instanceof ReadableStream) return false;
 
 		// if body is a node Readable, throw an error
 		// TODO remove this for 1.0
 		if (body._readableState && typeof body.pipe === 'function') {
 			throw new Error('Node streams are no longer supported — use a ReadableStream instead');
 		}
-
-		if (body instanceof ReadableStream) return false;
-
-		// similarly, it could be a web ReadableStream
-		if (typeof ReadableStream !== 'undefined' && body instanceof ReadableStream) return false;
 	}
 
 	return true;
