@@ -137,8 +137,9 @@ async function generate_edge_functions({ builder }) {
 		outfile: '.netlify/edge-functions/render.js',
 		bundle: true,
 		format: 'esm',
-		target: 'es2020',
-		platform: 'browser'
+		platform: 'browser',
+		sourcemap: 'linked',
+		target: 'es2020'
 	});
 
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
