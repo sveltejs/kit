@@ -2,51 +2,42 @@ import * as set_cookie_parser from 'set-cookie-parser';
 
 /** @param {import('http').IncomingMessage} req */
 function get_raw_body(req) {
-	return new Promise((fulfil, reject) => {
-		const h = req.headers;
+	const h = req.headers;
 
-		if (!h['content-type']) {
-			return fulfil(null);
-		}
+	if (!h['content-type']) {
+		return null;
+	}
 
-		req.on('error', reject);
+	const length = Number(h['content-length']);
 
-		const length = Number(h['content-length']);
+	// check if no request body
+	// https://github.com/jshttp/type-is/blob/c1f4388c71c8a01f79934e68f630ca4a15fffcd6/index.js#L81-L95
+	if (isNaN(length) && h['transfer-encoding'] == null) {
+		return null;
+	}
 
-		// https://github.com/jshttp/type-is/blob/c1f4388c71c8a01f79934e68f630ca4a15fffcd6/index.js#L81-L95
-		if (isNaN(length) && h['transfer-encoding'] == null) {
-			return fulfil(null);
-		}
+	return new ReadableStream({
+		start(controller) {
+			req.on('error', (error) => {
+				controller.error(error);
+			});
 
-		let data = new Uint8Array(length || 0);
+			let size = 0;
 
-		if (length > 0) {
-			let offset = 0;
 			req.on('data', (chunk) => {
-				const new_len = offset + Buffer.byteLength(chunk);
+				size += chunk.length;
 
-				if (new_len > length) {
-					return reject({
-						status: 413,
-						reason: 'Exceeded "Content-Length" limit'
-					});
+				if (size > length) {
+					controller.error(new Error('content-length exceeded'));
 				}
 
-				data.set(chunk, offset);
-				offset = new_len;
+				controller.enqueue(chunk);
 			});
-		} else {
-			req.on('data', (chunk) => {
-				const new_data = new Uint8Array(data.length + chunk.length);
-				new_data.set(data, 0);
-				new_data.set(chunk, data.length);
-				data = new_data;
+
+			req.on('end', () => {
+				controller.close();
 			});
 		}
-
-		req.on('end', () => {
-			fulfil(data);
-		});
 	});
 }
 
@@ -67,7 +58,7 @@ export async function getRequest(base, req) {
 	return new Request(base + req.url, {
 		method: req.method,
 		headers,
-		body: await get_raw_body(req) // TODO stream rather than buffer
+		body: get_raw_body(req)
 	});
 }
 
