@@ -4,4 +4,4 @@
 '@sveltejs/adapter-netlify': patch
 ---
 
-Generate sourcemaps
+Generate sourcemaps for server-side functions when bundling with esbuild
