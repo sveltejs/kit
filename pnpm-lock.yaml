@@ -212,6 +212,7 @@ importers:
       svelte: ^3.48.0
       svelte-preprocess: ^4.10.6
       tiny-glob: ^0.2.9
+      uvu: ^0.5.3
     dependencies:
       kleur: 4.1.4
       prompts: 2.4.2
@@ -228,6 +229,7 @@ importers:
       svelte: 3.48.0
       svelte-preprocess: 4.10.6_svelte@3.48.0
       tiny-glob: 0.2.9
+      uvu: 0.5.3
 
   packages/create-svelte/templates/default:
     specifiers:
