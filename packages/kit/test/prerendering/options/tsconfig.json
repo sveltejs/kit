@@ -4,6 +4,7 @@
 		"checkJs": true,
 		"noEmit": true,
 		"module": "esnext",
+		"moduleResolution": "node",
 		"paths": {
 			"@sveltejs/kit": ["../../../types"],
 			"$lib": ["./src/lib"],
