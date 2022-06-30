@@ -98,7 +98,7 @@ export function get_aliases(config) {
  * @param {string} entry
  * @returns {string|null}
  */
- export function resolve_entry(entry) {
+export function resolve_entry(entry) {
 	if (fs.existsSync(entry)) {
 		const stats = fs.statSync(entry);
 		if (stats.isDirectory()) {
