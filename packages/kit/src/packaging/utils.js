@@ -5,9 +5,9 @@ import { posixify, mkdirp, walk } from '../utils/filesystem.js';
 /**
  * Resolves the `$lib` alias.
  *
- * TODO: make this more generic to also handle other aliases the user could have defined
- * via `kit.vite.resolve.alias`. Also investigate how to do this in a more robust way
- * (right now regex string replacement is used).
+ * TODO: make this more generic to also handle other aliases the user could have defined via
+ * `kit.alias`. Also investigate how to do this in a more robust way (right now regex string
+ * replacement is used).
  * For more discussion see https://github.com/sveltejs/kit/pull/2453
  *
  * @param {string} file Relative to the lib root

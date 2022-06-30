@@ -1,6 +1,6 @@
 import { Adapter } from '@sveltejs/kit';
 
-interface AdapterOptions {
+export interface AdapterOptions {
 	pages?: string;
 	assets?: string;
 	fallback?: string;

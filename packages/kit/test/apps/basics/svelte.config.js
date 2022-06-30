@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -23,6 +23,8 @@ const config = {
 				fs: {
 					allow: [path.resolve('../../../src')]
 				},
+				// TODO: remove on vite 3
+				// https://github.com/vitejs/vite/pull/8778
 				watch: {
 					// perf, do not watch playwright output dir
 					ignored: ['**/test-results/**']

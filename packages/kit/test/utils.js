@@ -177,10 +177,8 @@ export const config = {
 };
 
 /**
- *
  * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
  * @param {number} [start]
- * @returns
  */
 export async function start_server(handler, start = 4000) {
 	const port = await ports.find(start);
@@ -188,7 +186,7 @@ export async function start_server(handler, start = 4000) {
 	const server = http.createServer(handler);
 
 	await new Promise((fulfil) => {
-		server.listen(port, () => fulfil(undefined));
+		server.listen(port, 'localhost', () => fulfil(undefined));
 	});
 
 	return { port, server };

@@ -29,7 +29,7 @@ const config = {
 				// ...
 			}
 		},
-		endpointExtensions: ['.js', '.ts'],
+		moduleExtensions: ['.js', '.ts'],
 		files: {
 			assets: 'static',
 			hooks: 'src/hooks',
@@ -155,9 +155,9 @@ When pages are prerendered, the CSP header is added via a `<meta http-equiv>` ta
 
 > When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
 
-### endpointExtensions
+### moduleExtensions
 
-An array of file extensions that SvelteKit will treat as endpoints. Files with extensions that match neither `config.extensions` nor `config.kit.endpointExtensions` will be ignored by the router.
+An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
 
 ### files
 

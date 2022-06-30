@@ -1,5 +1,67 @@
 # @sveltejs/kit
 
+## 1.0.0-next.357
+
+### Patch Changes
+
+- [breaking] change endpointExtensions to moduleExtensions, and use to filter param matchers ([#5085](https://github.com/sveltejs/kit/pull/5085))
+
+* fix server crash when accessing a malformed URI ([#5246](https://github.com/sveltejs/kit/pull/5246))
+
+## 1.0.0-next.356
+
+### Patch Changes
+
+- Stream request bodies ([#5291](https://github.com/sveltejs/kit/pull/5291))
+
+* Enable multipart formdata parsing with node-fetch ([#5292](https://github.com/sveltejs/kit/pull/5292))
+
+- [fix] allow user to set dev port ([#5303](https://github.com/sveltejs/kit/pull/5303))
+
+* [breaking] use undici instead of node-fetch ([#5117](https://github.com/sveltejs/kit/pull/5117))
+
+## 1.0.0-next.355
+
+### Patch Changes
+
+- [chore] Prerendering URL is now a subclass instead of a proxy ([#5278](https://github.com/sveltejs/kit/pull/5278))
+
+* [fix] support vite.config.js on Windows ([#5265](https://github.com/sveltejs/kit/pull/5265))
+
+- Allow both string and URL as the first argument of `$app/navigation#goto` ([#5282](https://github.com/sveltejs/kit/pull/5282))
+
+* rename `goto(href)` to `goto(url)` ([#5286](https://github.com/sveltejs/kit/pull/5286))
+
+- Add types for @sveltejs/kit/experimental/vite ([#5266](https://github.com/sveltejs/kit/pull/5266))
+
+* fix: port flag doesn't work in preview ([#5284](https://github.com/sveltejs/kit/pull/5284))
+
+## 1.0.0-next.354
+
+### Patch Changes
+
+- Added `server` and `prod` env variables ([#5251](https://github.com/sveltejs/kit/pull/5251))
+
+## 1.0.0-next.353
+
+### Patch Changes
+
+- Expose Vite plugin as @sveltejs/kit/experimental/vite ([#5094](https://github.com/sveltejs/kit/pull/5094))
+
+## 1.0.0-next.352
+
+### Patch Changes
+
+- fix manifest not updating when adding routes ([#5157](https://github.com/sveltejs/kit/pull/5157))
+
+## 1.0.0-next.351
+
+### Patch Changes
+
+- [fix] URL instance methods now work in `load` ([#5183](https://github.com/sveltejs/kit/pull/5183))
+
+* Upgrade vite-plugin-svelte ([`4e4625ea`](https://github.com/sveltejs/kit/commit/4e4625ea6d9a084bc767ae216704aacd95fe8730))
+
 ## 1.0.0-next.350
 
 ### Patch Changes

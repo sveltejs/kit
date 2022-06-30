@@ -1,5 +1,17 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.66
+
+### Patch Changes
+
+- Generate sourcemaps for server-side functions when bundling with esbuild ([#5258](https://github.com/sveltejs/kit/pull/5258))
+
+## 1.0.0-next.65
+
+### Patch Changes
+
+- fix: add redirects for routes containing `__data.json` suffix ([#5180](https://github.com/sveltejs/kit/pull/5180))
+
 ## 1.0.0-next.64
 
 ### Patch Changes

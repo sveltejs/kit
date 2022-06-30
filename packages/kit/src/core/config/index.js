@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import * as url from 'url';
-import { logger } from '../utils.js';
 import options from './options.js';
 
 /**
@@ -47,14 +46,20 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	const config_file = path.join(cwd, 'svelte.config.js');
 
 	if (!fs.existsSync(config_file)) {
-		throw new Error(
-			'You need to create a svelte.config.js file. See https://kit.svelte.dev/docs/configuration'
-		);
+		return process_config({}, { cwd });
 	}
 
 	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
 
-	const validated = validate_config(config.default);
+	return process_config(config.default, { cwd });
+}
+
+/**
+ * @param {import('types').Config} config
+ * @returns {import('types').ValidatedConfig}
+ */
+function process_config(config, { cwd = process.cwd() } = {}) {
+	const validated = validate_config(config);
 
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 
@@ -78,20 +83,4 @@ export function validate_config(config) {
 	}
 
 	return options(config, 'config');
-}
-
-/**
- * Ensures the user does not override any config values that SvelteKit must control.
- * @param {string[]} conflicts - array of conflicts in dotted notation
- * @param {string=} pathPrefix - prepended in front of the path
- * @param {string=} scope - used to prefix the whole error message
- */
-export function print_config_conflicts(conflicts, pathPrefix = '', scope) {
-	const prefix = scope ? scope + ': ' : '';
-	const log = logger({ verbose: false });
-	conflicts.forEach((conflict) => {
-		log.error(
-			`${prefix}The value for ${pathPrefix}${conflict} specified in svelte.config.js has been ignored. This option is controlled by SvelteKit.`
-		);
-	});
 }

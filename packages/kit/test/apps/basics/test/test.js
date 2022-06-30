@@ -1,7 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import http from 'http';
-import * as ports from 'port-authority';
 import { expect } from '@playwright/test';
 import { fileURLToPath } from 'url';
 import { start_server, test } from '../../../utils.js';
@@ -539,7 +537,7 @@ test.describe.parallel('Shadowed pages', () => {
 	test('Merges bodies for 4xx and 5xx responses from non-GET', async ({ page }) => {
 		await page.goto('/shadowed');
 		await Promise.all([page.waitForNavigation(), page.click('#error-post')]);
-		expect(await page.textContent('h1')).toBe('hello from get / hello from post');
+		expect(await page.textContent('h1')).toBe('hello from get / echo: posted data');
 	});
 
 	test('Responds from endpoint if Accept includes application/json but not text/html', async ({
@@ -1128,6 +1126,22 @@ test.describe.parallel('Errors', () => {
 			'500: Cannot prerender pages that have endpoints with mutative methods'
 		);
 	});
+
+	test('returns 400 when accessing a malformed URI', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			// the JS tests will look for body.started which won't be present
+			return;
+		}
+
+		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
+		if (process.env.DEV) {
+			// Vite will return a 500 error code
+			// We mostly want to make sure malformed requests don't bring down the whole server
+			expect(/** @type {Response} */ (response).status()).toBeGreaterThanOrEqual(400);
+		} else {
+			expect(/** @type {Response} */ (response).status()).toBe(400);
+		}
+	});
 });
 
 test.describe.parallel('ETags', () => {
@@ -1356,55 +1370,17 @@ test.describe.parallel('Load', () => {
 	test('handles large responses', async ({ page }) => {
 		await page.goto('/load');
 
-		const chunk_size = 50000;
-		const chunk_count = 100;
-		const total_size = chunk_size * chunk_count;
-
-		let chunk = '';
-		for (let i = 0; i < chunk_size; i += 1) {
-			chunk += String(i % 10);
-		}
-
-		let times_responded = 0;
-
-		const { port, server } = await start_server(async (req, res) => {
-			if (req.url === '/large-response.json') {
-				times_responded += 1;
-
-				res.writeHead(200, {
-					'Access-Control-Allow-Origin': '*'
-				});
-
-				for (let i = 0; i < chunk_count; i += 1) {
-					if (!res.write(chunk)) {
-						await new Promise((fulfil) => {
-							res.once('drain', () => {
-								fulfil(undefined);
-							});
-						});
-					}
-				}
-
-				res.end();
-			}
-		});
-
-		await page.goto(`/load/large-response?port=${port}`);
-		expect(await page.textContent('h1')).toBe(`text.length is ${total_size}`);
-
-		expect(times_responded).toBe(1);
-
-		server.close();
+		await page.goto('/load/large-response');
+		expect(await page.textContent('h1')).toBe('text.length is 5000000');
 	});
 
 	test('handles external api', async ({ page }) => {
 		await page.goto('/load');
-		const port = await ports.find(5000);
 
 		/** @type {string[]} */
 		const requested_urls = [];
 
-		const server = http.createServer(async (req, res) => {
+		const { port, server } = await start_server(async (req, res) => {
 			if (!req.url) throw new Error('Incomplete request');
 			requested_urls.push(req.url);
 
@@ -1419,10 +1395,6 @@ test.describe.parallel('Load', () => {
 				res.statusCode = 404;
 				res.end('not found');
 			}
-		});
-
-		await new Promise((fulfil) => {
-			server.listen(port, () => fulfil(undefined));
 		});
 
 		await page.goto(`/load/server-fetch-request?port=${port}`);
@@ -1507,6 +1479,13 @@ test.describe.parallel('Load', () => {
 			expect(await page.textContent('#message')).toBe(
 				'This is your custom error page saying: "url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component."'
 			);
+		}
+	});
+
+	test('url instance methods work in load', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/load/url-to-string');
+			expect(await page.textContent('h1')).toBe("I didn't break!");
 		}
 	});
 
@@ -1857,9 +1836,9 @@ test.describe.parallel('$app/stores', () => {
 		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 
 		if (javaScriptEnabled) {
-			page.click('a[href="/store/navigating/c"]');
+			await page.click('a[href="/store/navigating/c"]');
 			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
-			page.click('a[href="/store/navigating/a"]');
+			await page.click('a[href="/store/navigating/a"]');
 
 			await page.waitForSelector('#not-navigating', { timeout: 500 });
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
@@ -2212,6 +2191,7 @@ test.describe.parallel('Routing', () => {
 	test('does not attempt client-side navigation to server routes', async ({ page }) => {
 		await page.goto('/routing');
 		await page.click('[href="/routing/ambiguous/ok.json"]');
+		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
@@ -2366,16 +2346,16 @@ test.describe.parallel('Routing', () => {
 		server.close();
 	});
 
-	test('watch new route in dev', async ({ page, javaScriptEnabled }) => {
+	test('watch new route in dev', async ({ page }) => {
 		await page.goto('/routing');
 
-		if (!process.env.DEV || javaScriptEnabled) {
+		if (!process.env.DEV) {
 			return;
 		}
 
 		// hash the filename so that it won't conflict with
 		// future test file that has the same name
-		const route = 'bar' + new Date().valueOf();
+		const route = 'zzzz' + Date.now();
 		const content = 'Hello new route';
 		const __dirname = path.dirname(fileURLToPath(import.meta.url));
 		const filePath = path.join(__dirname, `../src/routes/routing/${route}.svelte`);
