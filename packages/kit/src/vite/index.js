@@ -17,6 +17,7 @@ import { preview } from './preview/index.js';
 
 const cwd = process.cwd();
 
+/** @type {Record<string, any>} */
 const enforced_config = {
 	base: true,
 	build: {
@@ -49,7 +50,8 @@ const enforced_config = {
 			$lib: true,
 			'$service-worker': true
 		}
-	}
+	},
+	root: true
 };
 
 /**
@@ -85,15 +87,6 @@ function kit() {
 		name: 'vite-plugin-svelte-kit',
 
 		async config(config, { command }) {
-			const overridden = find_overridden_config(config, enforced_config);
-
-			if (overridden.length > 0) {
-				console.log(
-					colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
-				);
-				console.log(overridden.map((key) => `  - ${key}`).join('\n'));
-			}
-
 			vite_user_config = config;
 			svelte_config = await load_config();
 
@@ -128,16 +121,19 @@ function kit() {
 					input[name] = resolved;
 				});
 
-				return get_default_config({
+				const result = get_default_config({
 					config: svelte_config,
 					input,
 					ssr: false,
 					outDir: `${paths.client_out_dir}/immutable`
 				});
+
+				warn_overridden_config(config, result);
+				return result;
 			}
 
 			// dev and preview config can be shared
-			return {
+			const result = {
 				base: '/',
 				build: {
 					rollupOptions: {
@@ -153,6 +149,7 @@ function kit() {
 				resolve: {
 					alias: get_aliases(svelte_config.kit)
 				},
+				root: cwd,
 				server: {
 					fs: {
 						allow: [
@@ -176,6 +173,8 @@ function kit() {
 					}
 				}
 			};
+			warn_overridden_config(config, result);
+			return result;
 		},
 
 		buildStart() {
@@ -330,17 +329,33 @@ function kit() {
 
 /**
  * @param {Record<string, any>} config
- * @param {Record<string, any>} enforced_config
+ * @param {Record<string, any>} resolved_config
  * @param {string} [path]
  * @param {string[]} [out] used locally to compute the return value
  */
-function find_overridden_config(config, enforced_config, path = '', out = []) {
+function warn_overridden_config(config, resolved_config, path = '', out = []) {
+	const overridden = find_overridden_config(config, resolved_config, path, out);
+	if (overridden.length > 0) {
+		console.log(
+			colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
+		);
+		console.log(overridden.map((key) => `  - ${key}`).join('\n'));
+	}
+}
+
+/**
+ * @param {Record<string, any>} config
+ * @param {Record<string, any>} resolved_config
+ * @param {string} path
+ * @param {string[]} out used locally to compute the return value
+ */
+function find_overridden_config(config, resolved_config, path, out) {
 	for (const key in enforced_config) {
 		if (key in config) {
-			if (enforced_config[key] === true) {
+			if (enforced_config[key] === true && config[key] !== resolved_config[key]) {
 				out.push(path + key);
 			} else {
-				find_overridden_config(config[key], enforced_config[key], path + key + '.', out);
+				find_overridden_config(config[key], resolved_config[key], path + key + '.', out);
 			}
 		}
 	}
