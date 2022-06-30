@@ -335,7 +335,7 @@ declare module '@sveltejs/kit/node' {
 	export function setResponse(res: import('http').ServerResponse, response: Response): void;
 }
 
-declare module '@sveltejs/kit/experimental/vite' {
+declare module '@sveltejs/kit/vite' {
 	import { Plugin } from 'vite';
 
 	/**

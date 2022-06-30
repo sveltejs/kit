@@ -90,7 +90,7 @@
 		"./hooks": {
 			"import": "./dist/hooks.js"
 		},
-		"./experimental/vite": {
+		"./vite": {
 			"import": "./dist/vite.js"
 		}
 	},
