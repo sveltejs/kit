@@ -52,7 +52,7 @@ export interface BuildData {
 		entry: {
 			file: string;
 			imports: string[];
-			linked_styles: string[];
+			stylesheets: string[];
 		};
 		vite_manifest: import('vite').Manifest;
 	};
@@ -234,7 +234,7 @@ export interface SSRNode {
 	/** external JS files */
 	imports: string[];
 	/** external CSS files */
-	linked_styles: string[];
+	stylesheets: string[];
 	/** inlined styles */
 	inline_styles?: () => MaybePromise<Record<string, string>>;
 }

@@ -51,10 +51,12 @@ export async function render_response({
 		}
 	}
 
-	const linked_styles = new Set(options.manifest._.entry.css);
-	const modulepreloads = new Set(options.manifest._.entry.js);
+	const { entry } = options.manifest._;
+
+	const linked_styles = new Set(entry.stylesheets);
+	const modulepreloads = new Set(entry.imports);
 	/** @type {Map<string, string>} */
-	const inline_styles = new Map();
+	const inline_styles = new Map(); // TODO include inline_styles from entry
 
 	/** @type {Array<import('./types').Fetched>} */
 	const serialized_data = [];
@@ -77,8 +79,8 @@ export async function render_response({
 				node.imports.forEach((url) => modulepreloads.add(url));
 			}
 
-			if (node.linked_styles) {
-				node.linked_styles.forEach((url) => linked_styles.add(url));
+			if (node.stylesheets) {
+				node.stylesheets.forEach((url) => linked_styles.add(url));
 			}
 
 			if (node.inline_styles) {
@@ -165,7 +167,7 @@ export async function render_response({
 
 	// prettier-ignore
 	const init_app = `
-		import { start } from ${s(options.prefix + options.manifest._.entry.file)};
+		import { start } from ${s(options.prefix + entry.file)};
 		start({
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},

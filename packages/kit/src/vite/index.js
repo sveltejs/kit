@@ -223,7 +223,7 @@ function kit() {
 				entry: {
 					file: vite_manifest[entry].file,
 					imports: Array.from(entry_js),
-					linked_styles: Array.from(entry_css)
+					stylesheets: Array.from(entry_css)
 				},
 				vite_manifest
 			};

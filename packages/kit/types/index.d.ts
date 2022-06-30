@@ -284,8 +284,8 @@ export interface SSRManifest {
 	_: {
 		entry: {
 			file: string;
-			js: string[];
-			css: string[];
+			imports: string[];
+			stylesheets: string[];
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
