@@ -1380,26 +1380,29 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('text.length is 5000000');
 	});
 
-	test('handles external api', async ({ page }) => {
+	test('handles external api', async ({ page, javaScriptEnabled }) => {
 		/** @type {string[]} */
 		const requested_urls = [];
 
-		const { port, close } = await start_server(async (req, res) => {
-			if (!req.url) throw new Error('Incomplete request');
-			requested_urls.push(req.url);
+		const { port, close } = await start_server(
+			async (req, res) => {
+				if (!req.url) throw new Error('Incomplete request');
+				requested_urls.push(req.url);
 
-			if (req.url === '/server-fetch-request-modified.json') {
-				res.writeHead(200, {
-					'Access-Control-Allow-Origin': '*',
-					'content-type': 'application/json'
-				});
+				if (req.url === '/server-fetch-request-modified.json') {
+					res.writeHead(200, {
+						'Access-Control-Allow-Origin': '*',
+						'content-type': 'application/json'
+					});
 
-				res.end(JSON.stringify({ answer: 42 }));
-			} else {
-				res.statusCode = 404;
-				res.end('not found');
-			}
-		});
+					res.end(JSON.stringify({ answer: 42 }));
+				} else {
+					res.statusCode = 404;
+					res.end('not found');
+				}
+			},
+			javaScriptEnabled ? 4000 : 4001
+		);
 
 		await page.goto(`/load/server-fetch-request?port=${port}`);
 
