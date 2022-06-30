@@ -49,8 +49,7 @@ const enforced_config = {
 			$lib: true,
 			'$service-worker': true
 		}
-	},
-	root: true
+	}
 };
 
 /**
