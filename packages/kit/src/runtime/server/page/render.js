@@ -156,8 +156,6 @@ export async function render_response({
 
 	let { head, html: body } = rendered;
 
-	const inlined_style = Array.from(inline_styles.values()).join('\n');
-
 	await csp_ready;
 	const csp = new Csp(options.csp, {
 		dev: options.dev,
@@ -197,14 +195,16 @@ export async function render_response({
 		}
 	`;
 
-	if (inlined_style) {
+	if (inline_styles.size > 0) {
+		const content = Array.from(inline_styles.values()).join('\n');
+
 		const attributes = [];
 		if (options.dev) attributes.push(' data-sveltekit');
 		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
-		csp.add_style(inlined_style);
+		csp.add_style(content);
 
-		head += `\n\t<style${attributes.join('')}>${inlined_style}</style>`;
+		head += `\n\t<style${attributes.join('')}>${content}</style>`;
 	}
 
 	// prettier-ignore
