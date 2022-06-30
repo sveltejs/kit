@@ -11,9 +11,10 @@ import { prerender } from './build/prerender/prerender.js';
 import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
-import { get_aliases, get_runtime_path, logger, resolve_entry } from '../core/utils.js';
+import { get_runtime_path, logger } from '../core/utils.js';
 import { find_deps, get_default_config } from './build/utils.js';
 import { preview } from './preview/index.js';
+import { get_aliases, resolve_entry } from './utils.js';
 
 const cwd = process.cwd();
 
