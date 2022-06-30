@@ -3,6 +3,7 @@
 		"allowJs": true,
 		"checkJs": true,
 		"noEmit": true,
+		"module": "esnext",
 		"paths": {
 			"@sveltejs/kit": ["../../../types"],
 			"$lib": ["./src/lib"],
