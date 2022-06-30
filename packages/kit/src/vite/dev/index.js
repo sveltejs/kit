@@ -59,34 +59,6 @@ export async function dev(vite, svelte_config) {
 						const module = /** @type {import('types').SSRComponent} */ (
 							await vite.ssrLoadModule(url, { fixStacktrace: false })
 						);
-						const node = await vite.moduleGraph.getModuleByUrl(url);
-
-						if (!node) throw new Error(`Could not find node for ${url}`);
-
-						const deps = new Set();
-						await find_deps(vite, node, deps);
-
-						/** @type {Record<string, string>} */
-						const styles = {};
-
-						for (const dep of deps) {
-							const parsed = new URL(dep.url, 'http://localhost/');
-							const query = parsed.searchParams;
-
-							if (
-								style_pattern.test(dep.file) ||
-								(query.has('svelte') && query.get('type') === 'style')
-							) {
-								try {
-									const mod = await vite.ssrLoadModule(dep.url, { fixStacktrace: false });
-									styles[dep.url] = mod.default;
-								} catch {
-									// this can happen with dynamically imported modules, I think
-									// because the Vite module graph doesn't distinguish between
-									// static and dynamic imports? TODO investigate, submit fix
-								}
-							}
-						}
 
 						return {
 							module,
@@ -95,7 +67,38 @@ export async function dev(vite, svelte_config) {
 							css: [],
 							js: [],
 							// in dev we inline all styles to avoid FOUC
-							styles: () => styles
+							styles: async () => {
+								const node = await vite.moduleGraph.getModuleByUrl(url);
+
+								if (!node) throw new Error(`Could not find node for ${url}`);
+
+								const deps = new Set();
+								await find_deps(vite, node, deps);
+
+								/** @type {Record<string, string>} */
+								const styles = {};
+
+								for (const dep of deps) {
+									const parsed = new URL(dep.url, 'http://localhost/');
+									const query = parsed.searchParams;
+
+									if (
+										style_pattern.test(dep.file) ||
+										(query.has('svelte') && query.get('type') === 'style')
+									) {
+										try {
+											const mod = await vite.ssrLoadModule(dep.url, { fixStacktrace: false });
+											styles[dep.url] = mod.default;
+										} catch {
+											// this can happen with dynamically imported modules, I think
+											// because the Vite module graph doesn't distinguish between
+											// static and dynamic imports? TODO investigate, submit fix
+										}
+									}
+								}
+
+								return styles;
+							}
 						};
 					};
 				}),
@@ -428,6 +431,10 @@ async function find_deps(vite, node, deps) {
 	if (node.ssrTransformResult) {
 		if (node.ssrTransformResult.deps) {
 			node.ssrTransformResult.deps.forEach((url) => branches.push(add_by_url(url)));
+		}
+
+		if (node.ssrTransformResult.dynamicDeps) {
+			node.ssrTransformResult.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
 		}
 	} else {
 		node.importedModules.forEach((node) => branches.push(add(node)));
