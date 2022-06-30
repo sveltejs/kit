@@ -726,7 +726,7 @@ test.describe.parallel('Endpoints', () => {
 	});
 
 	test('allows return value to be a Response', async ({ request }) => {
-		const { server, port } = await start_server((req, res) => {
+		const { port, close } = await start_server((req, res) => {
 			res.writeHead(200, {
 				'X-Foo': 'bar'
 			});
@@ -740,7 +740,7 @@ test.describe.parallel('Endpoints', () => {
 			expect(await response.text()).toBe('ok');
 			expect(response.headers()['x-foo']).toBe('bar');
 		} finally {
-			server.close();
+			await close();
 		}
 	});
 
@@ -1381,12 +1381,10 @@ test.describe.parallel('Load', () => {
 	});
 
 	test('handles external api', async ({ page }) => {
-		await page.goto('/load');
-
 		/** @type {string[]} */
 		const requested_urls = [];
 
-		const { port, server } = await start_server(async (req, res) => {
+		const { port, close } = await start_server(async (req, res) => {
 			if (!req.url) throw new Error('Incomplete request');
 			requested_urls.push(req.url);
 
@@ -1408,7 +1406,7 @@ test.describe.parallel('Load', () => {
 		expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 
-		server.close();
+		await close();
 	});
 
 	test('makes credentialed fetches to endpoints by default', async ({ page, clicknav }) => {
@@ -2339,7 +2337,7 @@ test.describe.parallel('Routing', () => {
 	});
 
 	test('ignores navigation to URLs the app does not own', async ({ page }) => {
-		const { port, server } = await start_server((req, res) => res.end('ok'));
+		const { port, close } = await start_server((req, res) => res.end('ok'));
 
 		await page.goto(`/routing?port=${port}`);
 		await Promise.all([
@@ -2347,7 +2345,7 @@ test.describe.parallel('Routing', () => {
 			page.waitForURL(`http://localhost:${port}/`)
 		]);
 
-		server.close();
+		await close();
 	});
 
 	test('watch new route in dev', async ({ page }) => {

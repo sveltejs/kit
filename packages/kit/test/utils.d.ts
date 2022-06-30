@@ -33,6 +33,6 @@ export const start_server: (
 	handler: (req: IncomingMessage, res: ServerResponse) => void,
 	start?: number
 ) => Promise<{
-	server: Server;
 	port: number;
+	close: () => Promise<void>;
 }>;

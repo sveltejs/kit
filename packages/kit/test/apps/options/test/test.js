@@ -88,7 +88,7 @@ test.describe.parallel('base path', () => {
 
 test.describe.parallel('CSP', () => {
 	test('blocks script from external site', async ({ page }) => {
-		const { server, port } = await start_server((req, res) => {
+		const { port, close } = await start_server((req, res) => {
 			if (req.url === '/blocked.js') {
 				res.writeHead(200, {
 					'content-type': 'text/javascript'
@@ -104,7 +104,7 @@ test.describe.parallel('CSP', () => {
 
 		expect(await page.evaluate('window.pwned')).toBe(undefined);
 
-		server.close();
+		await close();
 	});
 });
 
