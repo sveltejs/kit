@@ -6,7 +6,7 @@ import {
 	PlaywrightWorkerOptions,
 	TestType
 } from '@playwright/test';
-import { IncomingMessage, Server, ServerResponse } from 'http';
+import { IncomingMessage, ServerResponse } from 'http';
 
 export const test: TestType<
 	PlaywrightTestArgs &
