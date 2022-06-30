@@ -236,9 +236,9 @@ export async function build_server(vite_config, options, client) {
 		const exports = [
 			'export { module };',
 			`export const index = ${i};`,
-			`export const entry = '${client.vite_manifest[component].file}';`,
-			`export const js = ${s(Array.from(js))};`,
-			`export const css = ${s(Array.from(css))};`
+			`export const file = '${client.vite_manifest[component].file}';`,
+			`export const imports = ${s(Array.from(js))};`,
+			`export const linked_styles = ${s(Array.from(css))};`
 		];
 
 		/** @type {string[]} */
@@ -254,7 +254,7 @@ export async function build_server(vite_config, options, client) {
 		});
 
 		if (styles.length > 0) {
-			exports.push(`export const styles = () => ({\n${styles.join(',\n')}\n});`);
+			exports.push(`export const inline_styles = () => ({\n${styles.join(',\n')}\n});`);
 		}
 
 		fs.writeFileSync(file, `${imports.join('\n')}\n\n${exports.join('\n')}\n`);

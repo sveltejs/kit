@@ -63,11 +63,11 @@ export async function dev(vite, svelte_config) {
 						return {
 							module,
 							index,
-							entry: url.endsWith('.svelte') ? url : url + '?import',
-							css: [],
-							js: [],
+							file: url.endsWith('.svelte') ? url : url + '?import',
+							imports: [],
+							linked_styles: [],
 							// in dev we inline all styles to avoid FOUC
-							styles: async () => {
+							inline_styles: async () => {
 								const node = await vite.moduleGraph.getModuleByUrl(url);
 
 								if (!node) throw new Error(`Could not find node for ${url}`);

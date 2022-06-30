@@ -51,10 +51,10 @@ export async function render_response({
 		}
 	}
 
-	const stylesheets = new Set(options.manifest._.entry.css);
+	const linked_styles = new Set(options.manifest._.entry.css);
 	const modulepreloads = new Set(options.manifest._.entry.js);
 	/** @type {Map<string, string>} */
-	const styles = new Map();
+	const inline_styles = new Map();
 
 	/** @type {Array<import('./types').Fetched>} */
 	const serialized_data = [];
@@ -73,9 +73,17 @@ export async function render_response({
 
 	if (resolve_opts.ssr) {
 		for (const { node, props, loaded, fetched, uses_credentials } of branch) {
-			if (node.css) node.css.forEach((url) => stylesheets.add(url));
-			if (node.js) node.js.forEach((url) => modulepreloads.add(url));
-			if (node.styles) Object.entries(await node.styles()).forEach(([k, v]) => styles.set(k, v));
+			if (node.imports) {
+				node.imports.forEach((url) => modulepreloads.add(url));
+			}
+
+			if (node.linked_styles) {
+				node.linked_styles.forEach((url) => linked_styles.add(url));
+			}
+
+			if (node.inline_styles) {
+				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
+			}
 
 			// TODO probably better if `fetched` wasn't populated unless `hydrate`
 			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
@@ -144,7 +152,7 @@ export async function render_response({
 
 	let { head, html: body } = rendered;
 
-	const inlined_style = Array.from(styles.values()).join('\n');
+	const inlined_style = Array.from(inline_styles.values()).join('\n');
 
 	await csp_ready;
 	const csp = new Csp(options.csp, {
@@ -196,7 +204,7 @@ export async function render_response({
 	}
 
 	// prettier-ignore
-	head += Array.from(stylesheets)
+	head += Array.from(linked_styles)
 		.map((dep) => {
 			const attributes = [
 				'rel="stylesheet"',
@@ -207,7 +215,7 @@ export async function render_response({
 				attributes.push(`nonce="${csp.nonce}"`);
 			}
 
-			if (styles.has(dep)) {
+			if (inline_styles.has(dep)) {
 				// don't load stylesheets that are already inlined
 				// include them in disabled state so that Vite can detect them and doesn't try to add them
 				attributes.push('disabled', 'media="(max-width: 0)"');

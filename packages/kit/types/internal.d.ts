@@ -51,8 +51,8 @@ export interface BuildData {
 		chunks: OutputChunk[];
 		entry: {
 			file: string;
-			js: string[];
-			css: string[];
+			imports: string[];
+			linked_styles: string[];
 		};
 		vite_manifest: import('vite').Manifest;
 	};
@@ -230,13 +230,13 @@ export interface SSRNode {
 	/** index into the `components` array in client-manifest.js */
 	index: number;
 	/** client-side module URL for this component */
-	entry: string;
-	/** external CSS files */
-	css: string[];
+	file: string;
 	/** external JS files */
-	js: string[];
+	imports: string[];
+	/** external CSS files */
+	linked_styles: string[];
 	/** inlined styles */
-	styles?: () => MaybePromise<Record<string, string>>;
+	inline_styles?: () => MaybePromise<Record<string, string>>;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;

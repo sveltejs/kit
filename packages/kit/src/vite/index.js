@@ -224,8 +224,8 @@ function kit() {
 				chunks,
 				entry: {
 					file: vite_manifest[entry].file,
-					js: Array.from(entry_js),
-					css: Array.from(entry_css)
+					imports: Array.from(entry_js),
+					linked_styles: Array.from(entry_css)
 				},
 				vite_manifest
 			};
