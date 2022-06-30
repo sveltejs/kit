@@ -227,9 +227,7 @@ export async function build_server(vite_config, options, client) {
 	manifest_data.components.forEach((component, i) => {
 		const file = `${output_dir}/server/nodes/${i}.js`;
 
-		const js = new Set();
-		const css = new Set();
-		find_deps(component, client.vite_manifest, js, css, false);
+		const { js, css } = find_deps(client.vite_manifest, component, true);
 
 		const imports = [`import * as module from '../${vite_manifest[component].file}';`];
 

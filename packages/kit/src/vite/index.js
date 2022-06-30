@@ -211,9 +211,7 @@ function kit() {
 			const entry = posixify(
 				path.relative(cwd, `${get_runtime_path(svelte_config.kit)}/client/start.js`)
 			);
-			const entry_js = new Set();
-			const entry_css = new Set();
-			find_deps(entry, vite_manifest, entry_js, entry_css, false);
+			const { js: entry_js, css: entry_css } = find_deps(vite_manifest, entry, false);
 
 			fs.writeFileSync(
 				`${paths.client_out_dir}/version.json`,

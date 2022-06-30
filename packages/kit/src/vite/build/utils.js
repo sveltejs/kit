@@ -29,29 +29,40 @@ export async function create_build(config) {
 
 /**
  * Adds transitive JS and CSS dependencies to the js and css inputs.
- * @param {string} file
  * @param {import('vite').Manifest} manifest
- * @param {Set<string>} css
- * @param {Set<string>} js
- * @param {boolean} dynamic
+ * @param {string} entry
+ * @param {boolean} add_dynamic_css
  */
-export function find_deps(file, manifest, js, css, dynamic) {
-	const chunk = manifest[file];
+export function find_deps(manifest, entry, add_dynamic_css) {
+	const js = new Set();
+	const css = new Set();
 
-	if (js.has(chunk.file)) return;
-	if (!dynamic) js.add(chunk.file);
+	/**
+	 * @param {string} file
+	 * @param {boolean} add_js
+	 */
+	function traverse(file, add_js) {
+		const chunk = manifest[file];
 
-	if (chunk.css) {
-		chunk.css.forEach((file) => css.add(file));
+		if (js.has(chunk.file)) return;
+		if (add_js) js.add(chunk.file);
+
+		if (chunk.css) {
+			chunk.css.forEach((file) => css.add(file));
+		}
+
+		if (chunk.imports) {
+			chunk.imports.forEach((file) => traverse(file, add_js));
+		}
+
+		if (add_dynamic_css && chunk.dynamicImports) {
+			chunk.dynamicImports.forEach((file) => traverse(file, false));
+		}
 	}
 
-	if (chunk.imports) {
-		chunk.imports.forEach((file) => find_deps(file, manifest, js, css, dynamic));
-	}
+	traverse(entry, true);
 
-	if (chunk.dynamicImports) {
-		chunk.dynamicImports.forEach((file) => find_deps(file, manifest, js, css, true));
-	}
+	return { js, css };
 }
 
 /**
