@@ -6,7 +6,7 @@ import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
-test.describe.parallel('a11y', () => {
+test.describe('a11y', () => {
 	test('resets focus', async ({ page, clicknav, browserName }) => {
 		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
 
@@ -91,7 +91,7 @@ test.describe.parallel('a11y', () => {
 	});
 });
 
-test.describe.parallel('afterNavigate', () => {
+test.describe('afterNavigate', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 	test('calls callback', async ({ page, clicknav }) => {
@@ -103,7 +103,7 @@ test.describe.parallel('afterNavigate', () => {
 	});
 });
 
-test.describe.parallel('beforeNavigate', () => {
+test.describe('beforeNavigate', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
@@ -323,7 +323,7 @@ test.describe('Scrolling', () => {
 	});
 });
 
-test.describe.parallel('Imports', () => {
+test.describe('Imports', () => {
 	test('imports from node_modules', async ({ page, clicknav }) => {
 		await page.goto('/imports');
 		await clicknav('[href="/imports/markdown"]');
@@ -350,7 +350,7 @@ test.describe.parallel('Imports', () => {
 	});
 });
 
-test.describe.parallel('Caching', () => {
+test.describe('Caching', () => {
 	test('caches pages', async ({ request }) => {
 		const response = await request.get('/caching');
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
@@ -425,14 +425,14 @@ test.describe.parallel('Caching', () => {
 	});
 });
 
-test.describe.parallel('Content-Type', () => {
+test.describe('Content-Type', () => {
 	test('sets Content-Type on page', async ({ request }) => {
 		const response = await request.get('/content-type-header');
 		expect(response.headers()['content-type']).toBe('text/html');
 	});
 });
 
-test.describe.parallel('CSS', () => {
+test.describe('CSS', () => {
 	test('applies imported styles', async ({ page }) => {
 		await page.goto('/css');
 
@@ -493,7 +493,7 @@ test.describe.parallel('CSS', () => {
 	});
 });
 
-test.describe.parallel('Shadowed pages', () => {
+test.describe('Shadowed pages', () => {
 	test('Loads props from an endpoint', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/simple"]');
@@ -640,7 +640,7 @@ test.describe.parallel('Shadowed pages', () => {
 	});
 });
 
-test.describe.parallel('Endpoints', () => {
+test.describe('Endpoints', () => {
 	test('calls a delete handler', async ({ page, javaScriptEnabled }) => {
 		if (javaScriptEnabled) {
 			await page.goto('/delete-route');
@@ -771,7 +771,7 @@ test.describe.parallel('Endpoints', () => {
 	});
 });
 
-test.describe.parallel('Encoded paths', () => {
+test.describe('Encoded paths', () => {
 	test('visits a route with non-ASCII character', async ({ page, clicknav }) => {
 		await page.goto('/encoded');
 		await clicknav('[href="/encoded/苗条"]');
@@ -844,7 +844,7 @@ test.describe.parallel('Encoded paths', () => {
 	});
 });
 
-test.describe.parallel('Errors', () => {
+test.describe('Errors', () => {
 	if (process.env.DEV) {
 		// TODO these probably shouldn't have the full render treatment,
 		// given that they will never be user-visible in prod
@@ -1150,7 +1150,7 @@ test.describe.parallel('Errors', () => {
 	});
 });
 
-test.describe.parallel('ETags', () => {
+test.describe('ETags', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 	test('generates etag/304 for text body', async ({ request }) => {
@@ -1211,7 +1211,7 @@ test.describe.parallel('ETags', () => {
 	});
 });
 
-test.describe.parallel('Headers', () => {
+test.describe('Headers', () => {
 	test('disables floc by default', async ({ page }) => {
 		const response = await page.goto('/headers');
 		const headers = /** @type {Response} */ (response).headers();
@@ -1224,7 +1224,7 @@ test.describe.parallel('Headers', () => {
 	});
 });
 
-test.describe.parallel('Load', () => {
+test.describe('Load', () => {
 	test('fetch in root index.svelte works', async ({ page }) => {
 		await page.goto('/');
 		expect(await page.textContent('h1')).toBe('the answer is 42');
@@ -1522,7 +1522,7 @@ test.describe.parallel('Load', () => {
 	});
 });
 
-test.describe.parallel('Method overrides', () => {
+test.describe('Method overrides', () => {
 	test('http method is overridden via URL parameter', async ({ page }) => {
 		await page.goto('/method-override');
 
@@ -1568,7 +1568,7 @@ test.describe.parallel('Method overrides', () => {
 	});
 });
 
-test.describe.parallel('Nested layouts', () => {
+test.describe('Nested layouts', () => {
 	test('renders a nested layout', async ({ page }) => {
 		await page.goto('/nested-layout');
 
@@ -1628,7 +1628,7 @@ test.describe.parallel('Nested layouts', () => {
 	});
 });
 
-test.describe.parallel('Page options', () => {
+test.describe('Page options', () => {
 	test('does not hydrate page with hydrate=false', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/no-hydrate');
 
@@ -1726,7 +1726,7 @@ test.describe.parallel('Page options', () => {
 	});
 });
 
-test.describe.parallel('$app/paths', () => {
+test.describe('$app/paths', () => {
 	test('includes paths', async ({ page }) => {
 		await page.goto('/paths');
 
@@ -1750,7 +1750,7 @@ test.describe.parallel('$app/paths', () => {
 	});
 });
 
-test.describe.parallel('$app/stores', () => {
+test.describe('$app/stores', () => {
 	test('can access page.url', async ({ baseURL, page }) => {
 		await page.goto('/origin');
 		expect(await page.textContent('h1')).toBe(baseURL);
@@ -1850,7 +1850,7 @@ test.describe.parallel('$app/stores', () => {
 	});
 });
 
-test.describe.parallel('searchParams', () => {
+test.describe('searchParams', () => {
 	const tests = [
 		{
 			description: 'exposes query string parameters',
@@ -1897,7 +1897,7 @@ test.describe.parallel('searchParams', () => {
 	});
 });
 
-test.describe.parallel('Redirects', () => {
+test.describe('Redirects', () => {
 	test('redirect', async ({ baseURL, page, clicknav, back }) => {
 		await page.goto('/redirect');
 
@@ -1986,7 +1986,7 @@ test.describe.parallel('Redirects', () => {
 	});
 });
 
-test.describe.parallel('Prefetching', () => {
+test.describe('Prefetching', () => {
 	test('prefetches programmatically', async ({ baseURL, page, app, javaScriptEnabled }) => {
 		if (javaScriptEnabled) {
 			await page.goto('/routing/a');
@@ -2068,7 +2068,7 @@ test.describe.parallel('Prefetching', () => {
 	});
 });
 
-test.describe.parallel('Routing', () => {
+test.describe('Routing', () => {
 	test('redirects from /routing/ to /routing', async ({
 		baseURL,
 		page,
@@ -2501,7 +2501,7 @@ test.describe.parallel('Routing', () => {
 	});
 });
 
-test.describe.parallel('Session', () => {
+test.describe('Session', () => {
 	test('session is available', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/session');
 
@@ -2516,7 +2516,7 @@ test.describe.parallel('Session', () => {
 	});
 });
 
-test.describe.parallel('Shadow DOM', () => {
+test.describe('Shadow DOM', () => {
 	test('client router captures anchors in shadow dom', async ({
 		app,
 		page,
@@ -2543,7 +2543,7 @@ test.describe.parallel('Shadow DOM', () => {
 	});
 });
 
-test.describe.parallel('Static files', () => {
+test.describe('Static files', () => {
 	test('static files', async ({ request }) => {
 		let response = await request.get('/static.json');
 		expect(await response.json()).toBe('static file');
@@ -2580,7 +2580,7 @@ test.describe.parallel('Static files', () => {
 	});
 });
 
-test.describe.parallel('Matchers', () => {
+test.describe('Matchers', () => {
 	test('Matches parameters', async ({ page, clicknav }) => {
 		await page.goto('/routing/matched');
 
@@ -2598,7 +2598,7 @@ test.describe.parallel('Matchers', () => {
 	});
 });
 
-test.describe.parallel('XSS', () => {
+test.describe('XSS', () => {
 	test('replaces %sveltekit.xxx% tags safely', async ({ page }) => {
 		await page.goto('/unsafe-replacement');
 
@@ -2645,7 +2645,7 @@ test.describe.parallel('XSS', () => {
 	});
 });
 
-test.describe.parallel('Miscellaneous', () => {
+test.describe('Miscellaneous', () => {
 	test('Components are not double-mounted', async ({ page, javaScriptEnabled }) => {
 		const file = fileURLToPath(new URL('../src/routes/double-mount/index.svelte', import.meta.url));
 		const contents = fs.readFileSync(file, 'utf-8');

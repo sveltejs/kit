@@ -3,7 +3,7 @@ import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
-test.describe.parallel('paths.base', () => {
+test.describe('paths.base', () => {
 	test('serves /basepath', async ({ page }) => {
 		await page.goto('/basepath');
 		expect(await page.textContent('h1')).toBe('Hello');
@@ -15,7 +15,7 @@ test.describe.parallel('paths.base', () => {
 	});
 });
 
-test.describe.parallel('Service worker', () => {
+test.describe('Service worker', () => {
 	if (!process.env.DEV) {
 		test('build /basepath/service-worker.js', async ({ request }) => {
 			const response = await request.get('/basepath/service-worker.js');
