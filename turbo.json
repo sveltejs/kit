@@ -24,11 +24,18 @@
 		},
 		"check": {
 			"dependsOn": ["sync"],
-			"inputs": ["src/**", "types/**", ".svelte-kit/types/**", ".custom-out-dir/types/**", ".svelte-kit/tsconfig.json"],
+			"inputs": [
+				"src/**",
+				"types/**",
+				".svelte-kit/types/**",
+				".custom-out-dir/types/**",
+				".svelte-kit/tsconfig.json"
+			],
 			"outputs": []
 		},
 		"format": {},
 		"sync": {
+			"inputs": ["src/**", "source/**"],
 			"outputs": [".svelte-kit/types/**", ".custom-out-dir/types/**"]
 		},
 		"test": {
