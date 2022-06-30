@@ -225,24 +225,22 @@ export async function build_server(vite_config, options, client) {
 	});
 
 	manifest_data.components.forEach((component, i) => {
-		const file = `${output_dir}/server/nodes/${i}.js`;
-
-		const { js, css } = find_deps(client.vite_manifest, component, true);
+		const entry = find_deps(client.vite_manifest, component, true);
 
 		const imports = [`import * as module from '../${vite_manifest[component].file}';`];
 
 		const exports = [
 			'export { module };',
 			`export const index = ${i};`,
-			`export const file = '${client.vite_manifest[component].file}';`,
-			`export const imports = ${s(Array.from(js))};`,
-			`export const linked_styles = ${s(Array.from(css))};`
+			`export const file = '${entry.file}';`,
+			`export const imports = ${s(entry.imports)};`,
+			`export const stylesheets = ${s(entry.stylesheets)};`
 		];
 
 		/** @type {string[]} */
 		const styles = [];
 
-		css.forEach((file) => {
+		entry.stylesheets.forEach((file) => {
 			if (stylesheet_lookup.has(file)) {
 				const index = stylesheet_lookup.get(file);
 				const name = `stylesheet_${index}`;
@@ -255,7 +253,8 @@ export async function build_server(vite_config, options, client) {
 			exports.push(`export const inline_styles = () => ({\n${styles.join(',\n')}\n});`);
 		}
 
-		fs.writeFileSync(file, `${imports.join('\n')}\n\n${exports.join('\n')}\n`);
+		const out = `${output_dir}/server/nodes/${i}.js`;
+		fs.writeFileSync(out, `${imports.join('\n')}\n\n${exports.join('\n')}\n`);
 	});
 
 	return {

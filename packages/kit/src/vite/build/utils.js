@@ -34,8 +34,11 @@ export async function create_build(config) {
  * @param {boolean} add_dynamic_css
  */
 export function find_deps(manifest, entry, add_dynamic_css) {
-	const js = new Set();
-	const css = new Set();
+	/** @type {Set<string>} */
+	const imports = new Set();
+
+	/** @type {Set<string>} */
+	const stylesheets = new Set();
 
 	/**
 	 * @param {string} file
@@ -44,11 +47,11 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 	function traverse(file, add_js) {
 		const chunk = manifest[file];
 
-		if (js.has(chunk.file)) return;
-		if (add_js) js.add(chunk.file);
+		if (imports.has(chunk.file)) return;
+		if (add_js) imports.add(chunk.file);
 
 		if (chunk.css) {
-			chunk.css.forEach((file) => css.add(file));
+			chunk.css.forEach((file) => stylesheets.add(file));
 		}
 
 		if (chunk.imports) {
@@ -62,7 +65,11 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 
 	traverse(entry, true);
 
-	return { js, css };
+	return {
+		file: manifest[entry].file,
+		imports: Array.from(imports),
+		stylesheets: Array.from(stylesheets)
+	};
 }
 
 /**

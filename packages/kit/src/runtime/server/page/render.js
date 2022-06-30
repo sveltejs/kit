@@ -53,10 +53,12 @@ export async function render_response({
 
 	const { entry } = options.manifest._;
 
-	const linked_styles = new Set(entry.stylesheets);
+	const stylesheets = new Set(entry.stylesheets);
 	const modulepreloads = new Set(entry.imports);
+
 	/** @type {Map<string, string>} */
-	const inline_styles = new Map(); // TODO include inline_styles from entry
+	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
+	const inline_styles = new Map();
 
 	/** @type {Array<import('./types').Fetched>} */
 	const serialized_data = [];
@@ -80,7 +82,7 @@ export async function render_response({
 			}
 
 			if (node.stylesheets) {
-				node.stylesheets.forEach((url) => linked_styles.add(url));
+				node.stylesheets.forEach((url) => stylesheets.add(url));
 			}
 
 			if (node.inline_styles) {
@@ -206,7 +208,7 @@ export async function render_response({
 	}
 
 	// prettier-ignore
-	head += Array.from(linked_styles)
+	head += Array.from(stylesheets)
 		.map((dep) => {
 			const attributes = [
 				'rel="stylesheet"',

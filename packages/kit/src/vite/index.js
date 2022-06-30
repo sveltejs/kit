@@ -190,6 +190,11 @@ function kit() {
 		async writeBundle(_options, bundle) {
 			const log = logger({ verbose: !!process.env.VERBOSE });
 
+			fs.writeFileSync(
+				`${paths.client_out_dir}/version.json`,
+				JSON.stringify({ version: process.env.VITE_SVELTEKIT_APP_VERSION })
+			);
+
 			/** @type {import('rollup').OutputChunk[]} */
 			const chunks = [];
 			/** @type {import('rollup').OutputAsset[]} */
@@ -208,23 +213,14 @@ function kit() {
 				fs.readFileSync(`${paths.client_out_dir}/immutable/manifest.json`, 'utf-8')
 			);
 
-			const entry = posixify(
+			const entry_id = posixify(
 				path.relative(cwd, `${get_runtime_path(svelte_config.kit)}/client/start.js`)
 			);
-			const { js: entry_js, css: entry_css } = find_deps(vite_manifest, entry, false);
 
-			fs.writeFileSync(
-				`${paths.client_out_dir}/version.json`,
-				JSON.stringify({ version: process.env.VITE_SVELTEKIT_APP_VERSION })
-			);
 			const client = {
 				assets,
 				chunks,
-				entry: {
-					file: vite_manifest[entry].file,
-					imports: Array.from(entry_js),
-					stylesheets: Array.from(entry_css)
-				},
+				entry: find_deps(vite_manifest, entry_id, false),
 				vite_manifest
 			};
 			log.info(`Client build completed. Wrote ${chunks.length} chunks and ${assets.length} assets`);
