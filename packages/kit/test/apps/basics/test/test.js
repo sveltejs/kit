@@ -2364,7 +2364,7 @@ test.describe.parallel('Routing', () => {
 
 		try {
 			fs.writeFileSync(filePath, `<h1>${content}</h1>`);
-			await page.waitForTimeout(250); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
+			await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
 			await page.goto(`/routing/${route}`);
 
 			expect(await page.textContent('h1')).toBe(content);
