@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { get_runtime_path } from '../core/utils';
+import { get_runtime_path } from '../core/utils.js';
 
 /**
  * @param {...import('vite').UserConfig} configs
