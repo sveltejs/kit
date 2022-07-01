@@ -176,12 +176,26 @@ export const config = {
  */
 export async function start_server(handler, start = 4000) {
 	const port = await ports.find(start);
-
 	const server = http.createServer(handler);
 
 	await new Promise((fulfil) => {
-		server.listen(port, 'localhost', () => fulfil(undefined));
+		server.listen(port, 'localhost', () => {
+			fulfil(undefined);
+		});
 	});
 
-	return { port, server };
+	return {
+		port,
+		close: () => {
+			return new Promise((fulfil, reject) => {
+				server.close((err) => {
+					if (err) {
+						reject(err);
+					} else {
+						fulfil(undefined);
+					}
+				});
+			});
+		}
+	};
 }

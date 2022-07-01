@@ -272,7 +272,7 @@ importers:
       marked: ^4.0.16
       mime: ^3.0.0
       node-fetch: ^3.2.4
-      port-authority: ^1.2.0
+      port-authority: ^2.0.1
       rollup: ^2.75.3
       sade: ^1.8.1
       selfsigned: ^2.0.1
@@ -311,7 +311,7 @@ importers:
       marked: 4.0.16
       mime: 3.0.0
       node-fetch: 3.2.4
-      port-authority: 1.2.0
+      port-authority: 2.0.1
       rollup: 2.75.3
       selfsigned: 2.0.1
       set-cookie-parser: 2.4.8
@@ -4029,6 +4029,10 @@ packages:
     resolution: {integrity: sha512-izg9jj10CEbNWBX6B1IJtzs0IcMEIo+2to2IIvq0vvcqLnOi0Fz36LSL4mqp/pJsPDFB5jyrxUEEHRctmPu9Pg==}
     dev: true
 
+  /port-authority/2.0.1:
+    resolution: {integrity: sha512-Hz/WvSNt5+7x+Rq1Cn6DetJOZxKtLDehJ1mLCYge6ju4QvSF/PHvRgy94e1SKJVI96AJTcqEdNwkkaAFad+TXQ==}
+    dev: true
+
   /postcss/8.4.14:
     resolution: {integrity: sha512-E398TUmfAYFPBSdzgeieK2Y1+1cpdxJx8yXbK/m57nRhKSmk1GB2tO4lbLBtlkfPQTDKfe4Xqv1ASWPpayPEig==}
     engines: {node: ^10 || ^12 || >=14}
@@ -4861,6 +4865,7 @@ packages:
   /svelte/3.48.0:
     resolution: {integrity: sha512-fN2YRm/bGumvjUpu6yI3BpvZnpIm9I6A7HR4oUNYd7ggYyIwSA/BX7DJ+UXXffLp6XNcUijyLvttbPVCYa/3xQ==}
     engines: {node: '>= 8'}
+    dev: true
 
   /svelte2tsx/0.5.10_rxzurg3hjloskwsrdpptpplucy:
     resolution: {integrity: sha512-nokQ0HTTWMcNX6tLrDLiOmJCuqjKZU9nCZ6/mVuCL3nusXdbp+9nv69VG2pCy7uQC66kV4Ls+j0WfvvJuGVnkg==}
