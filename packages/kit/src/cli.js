@@ -21,38 +21,6 @@ function handle_error(e) {
 const prog = sade('svelte-kit').version('__VERSION__');
 
 prog
-	.command('dev')
-	.describe('Start a development server')
-	.option('-p, --port', 'Port')
-	.option('-o, --open', 'Open a browser tab')
-	.option('--host', 'Host (only use this on trusted networks)')
-	.option('--https', 'Use self-signed HTTPS certificate')
-	.option('-H', 'no longer supported, use --https instead') // TODO remove for 1.0
-	.action(async () => {
-		console.error('Please use the vite command rather than svelte-kit for dev, build, and preview');
-	});
-
-prog
-	.command('build')
-	.describe('Create a production build of your app')
-	.option('--verbose', 'Log more stuff', false)
-	.action(async () => {
-		console.error('Please use the vite command rather than svelte-kit for dev, build, and preview');
-	});
-
-prog
-	.command('preview')
-	.describe('Serve an already-built app')
-	.option('-p, --port', 'Port', 3000)
-	.option('-o, --open', 'Open a browser tab', false)
-	.option('--host', 'Host (only use this on trusted networks)', 'localhost')
-	.option('--https', 'Use self-signed HTTPS certificate', false)
-	.option('-H', 'no longer supported, use --https instead') // TODO remove for 1.0
-	.action(async () => {
-		console.error('Please use the vite command rather than svelte-kit for dev, build, and preview');
-	});
-
-prog
 	.command('package')
 	.describe('Create a package')
 	.option('-w, --watch', 'Rerun when files change', false)
@@ -85,4 +53,46 @@ prog
 		}
 	});
 
+// TODO remove for 1.0
+replace('dev');
+replace('build');
+replace('preview');
+
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
+
+/** @param {string} command */
+function replace(command) {
+	prog
+		.command(command)
+		.describe(`No longer available — use vite ${command} instead`)
+		.action(async () => {
+			const message = `\n> svelte-kit ${command} is no longer available — use vite ${command} instead`;
+			console.error(colors.bold().red(message));
+
+			const steps = [
+				'Install vite as a devDependency with npm/pnpm/etc',
+				'Create a vite.config.js with the @sveltejs/kit/vite plugin (see below)',
+				`Update your package.json scripts to reference \`vite ${command}\` instead of \`svelte-kit ${command}\``
+			];
+
+			steps.forEach((step, i) => {
+				console.error(`  ${i + 1}. ${colors.cyan(step)}`);
+			});
+
+			console.error(
+				`
+				${colors.grey('// vite.config.js')}
+				import { sveltekit } from '@sveltejs/kit/vite';
+
+				/** @type {import('vite').UserConfig} */
+				const config = {
+					plugins: [sveltekit()]
+				};
+
+				export default config;
+
+				`.replace(/^\t{4}/gm, '')
+			);
+			process.exit(1);
+		});
+}
