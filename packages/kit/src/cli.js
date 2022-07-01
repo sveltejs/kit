@@ -283,10 +283,9 @@ function welcome({ port, host, https, open, base, loose, allow, cwd }) {
 }
 
 /**
- * @param {import('types').ValidatedConfig} svelte_config
  * @return {Promise<import('vite').UserConfig>}
  */
-export async function get_vite_config(svelte_config) {
+export async function get_vite_config() {
 	for (const file of ['vite.config.js', 'vite.config.mjs', 'vite.config.cjs']) {
 		if (fs.existsSync(file)) {
 			// TODO warn here if config.kit.vite was specified
@@ -298,10 +297,5 @@ export async function get_vite_config(svelte_config) {
 		}
 	}
 
-	const { sveltekit } = await import('./vite/index.js');
-
-	// TODO: stop reading Vite config from SvelteKit config or move to CLI
-	const vite_config = await svelte_config.kit.vite();
-	vite_config.plugins = [...(vite_config.plugins || []), ...sveltekit()];
-	return vite_config;
+	throw new Error('vite.config.js is missing. See an example here: https://github.com/sveltejs/kit/blob/master/packages/create-svelte/templates/skeleton/vite.config.js');
 }

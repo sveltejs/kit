@@ -120,7 +120,8 @@ const get_defaults = (prefix = '') => ({
 		version: {
 			name: Date.now().toString(),
 			pollInterval: 0
-		}
+		},
+		vite: undefined
 	}
 });
 
@@ -130,7 +131,7 @@ test('fills in defaults', () => {
 	assert.equal(validated.kit.package.exports(''), true);
 	assert.equal(validated.kit.package.files(''), true);
 	assert.equal(validated.kit.serviceWorker.files(''), true);
-	assert.equal(validated.kit.vite(), {});
+	assert.equal(validated.kit.vite, undefined);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
@@ -196,7 +197,7 @@ test('fills in partial blanks', () => {
 	assert.equal(validated.kit.package.exports(''), true);
 	assert.equal(validated.kit.package.files(''), true);
 	assert.equal(validated.kit.serviceWorker.files(''), true);
-	assert.equal(validated.kit.vite(), {});
+	assert.equal(validated.kit.vite, undefined);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
