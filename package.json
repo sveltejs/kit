@@ -4,7 +4,7 @@
 	"description": "monorepo for @sveltejs/kit and friends",
 	"private": true,
 	"scripts": {
-		"build": "pnpm build --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
+		"build": "pnpm -r build",
 		"test": "pnpm -r test --workspace-concurrency=1",
 		"check": "pnpm -r check",
 		"lint": "pnpm -r lint",
