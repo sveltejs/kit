@@ -90,7 +90,7 @@ export default config;
 
 ### adapter
 
-Required when running `svelte-kit build` and determines how the output is converted for different platforms. See [Adapters](/docs/adapters).
+Run when executing `vite build` and determines how the output is converted for different platforms. See [Adapters](/docs/adapters).
 
 ### alias
 
