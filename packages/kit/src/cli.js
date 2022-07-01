@@ -63,7 +63,7 @@ prog
 
 		async function start() {
 			const svelte_config = await load_config();
-			const config = await get_vite_config(svelte_config);
+			const config = await get_vite_config();
 			config.server = config.server || {};
 
 			// optional config from command-line flags
@@ -153,8 +153,7 @@ prog
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 			process.env.VERBOSE = verbose;
 
-			const svelte_config = await load_config();
-			const vite_config = await get_vite_config(svelte_config);
+			const vite_config = await get_vite_config();
 			await vite.build(vite_config); // TODO when we get rid of config.kit.vite, this can just be vite.build()
 		} catch (error) {
 			handle_error(error);
@@ -175,8 +174,7 @@ prog
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
-			const svelte_config = await load_config();
-			const vite_config = await get_vite_config(svelte_config);
+			const vite_config = await get_vite_config();
 
 			vite_config.preview = vite_config.preview || {};
 
