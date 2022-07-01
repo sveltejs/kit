@@ -295,7 +295,22 @@ export async function get_vite_config() {
 		}
 	}
 
-	throw new Error(
-		'vite.config.js is missing. See an example here: https://github.com/sveltejs/kit/blob/master/packages/create-svelte/templates/skeleton/vite.config.js'
+	console.error(colors.bold().red('> vite.config.js is required'));
+	console.error(
+		`
+		Sample vite.config.js:
+
+		import { sveltekit } from '@sveltejs/kit/vite';
+
+		/** @type {import('vite').UserConfig} */
+		const config = {
+			plugins: [sveltekit()]
+		};
+
+		export default config;
+
+		`.replace(/^\t{2}/gm, '')
 	);
+
+	process.exit(1);
 }
