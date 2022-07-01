@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.355",
+	"version": "1.0.0-next.357",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -33,6 +33,7 @@
 		"locate-character": "^2.0.5",
 		"marked": "^4.0.16",
 		"mime": "^3.0.0",
+		"node-fetch": "^3.2.4",
 		"port-authority": "^1.2.0",
 		"rollup": "^2.75.3",
 		"selfsigned": "^2.0.1",

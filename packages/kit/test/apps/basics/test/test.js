@@ -543,7 +543,7 @@ test.describe.parallel('Shadowed pages', () => {
 	test('Merges bodies for 4xx and 5xx responses from non-GET', async ({ page }) => {
 		await page.goto('/shadowed');
 		await Promise.all([page.waitForNavigation(), page.click('#error-post')]);
-		expect(await page.textContent('h1')).toBe('hello from get / hello from post');
+		expect(await page.textContent('h1')).toBe('hello from get / echo: posted data');
 	});
 
 	test('Responds from endpoint if Accept includes application/json but not text/html', async ({
@@ -1131,6 +1131,22 @@ test.describe.parallel('Errors', () => {
 		expect(await page.textContent('h1')).toBe(
 			'500: Cannot prerender pages that have endpoints with mutative methods'
 		);
+	});
+
+	test('returns 400 when accessing a malformed URI', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			// the JS tests will look for body.started which won't be present
+			return;
+		}
+
+		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
+		if (process.env.DEV) {
+			// Vite will return a 500 error code
+			// We mostly want to make sure malformed requests don't bring down the whole server
+			expect(/** @type {Response} */ (response).status()).toBeGreaterThanOrEqual(400);
+		} else {
+			expect(/** @type {Response} */ (response).status()).toBe(400);
+		}
 	});
 });
 

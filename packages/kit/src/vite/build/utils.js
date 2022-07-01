@@ -1,5 +1,5 @@
 import * as vite from 'vite';
-import { get_aliases } from '../../core/utils.js';
+import { get_aliases } from '../utils.js';
 
 /**
  * @typedef {import('rollup').RollupOutput} RollupOutput
