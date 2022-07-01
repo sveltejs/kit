@@ -66,7 +66,7 @@ function replace(command) {
 		.command(command)
 		.describe(`No longer available — use vite ${command} instead`)
 		.action(async () => {
-			const message = `\n> svelte-kit ${command} is no longer available — use vite ${command} instead`;
+			const message = `\n> svelte-kit ${command} is no longer available — use vite ${command} instead`;
 			console.error(colors.bold().red(message));
 
 			const steps = [
