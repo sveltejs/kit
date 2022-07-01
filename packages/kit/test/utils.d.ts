@@ -6,7 +6,7 @@ import {
 	PlaywrightWorkerOptions,
 	TestType
 } from '@playwright/test';
-import { IncomingMessage, Server, ServerResponse } from 'http';
+import { IncomingMessage, ServerResponse } from 'http';
 
 export const test: TestType<
 	PlaywrightTestArgs &
@@ -32,6 +32,6 @@ export const start_server: (
 	handler: (req: IncomingMessage, res: ServerResponse) => void,
 	start?: number
 ) => Promise<{
-	server: Server;
 	port: number;
+	close: () => Promise<void>;
 }>;
