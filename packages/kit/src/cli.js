@@ -29,7 +29,7 @@ prog
 	.option('--https', 'Use self-signed HTTPS certificate')
 	.option('-H', 'no longer supported, use --https instead') // TODO remove for 1.0
 	.action(async () => {
-		console.error('Please use the vite command rather than the svelte-kit command');
+		console.error('Please use the vite command rather than svelte-kit for dev, build, and preview');
 	});
 
 prog
@@ -37,7 +37,7 @@ prog
 	.describe('Create a production build of your app')
 	.option('--verbose', 'Log more stuff', false)
 	.action(async () => {
-		console.error('Please use the vite command rather than the svelte-kit command');
+		console.error('Please use the vite command rather than svelte-kit for dev, build, and preview');
 	});
 
 prog
@@ -49,7 +49,7 @@ prog
 	.option('--https', 'Use self-signed HTTPS certificate', false)
 	.option('-H', 'no longer supported, use --https instead') // TODO remove for 1.0
 	.action(async () => {
-		console.error('Please use the vite command rather than the svelte-kit command');
+		console.error('Please use the vite command rather than svelte-kit for dev, build, and preview');
 	});
 
 prog
