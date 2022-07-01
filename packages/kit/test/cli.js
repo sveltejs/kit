@@ -1,11 +1,8 @@
 import { spawn } from 'child_process';
-import { fileURLToPath } from 'url';
 
 const [node, , ...args] = process.argv;
-const mode = process.env.CI ? 'dist' : 'src';
-const bin = fileURLToPath(new URL(`../${mode}/cli.js`, import.meta.url));
 
-const child = spawn(node, [bin, ...args], {
+const child = spawn(node, ['node_modules/vite/bin/vite.js', ...args], {
 	stdio: 'inherit'
 });
 

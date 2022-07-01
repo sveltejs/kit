@@ -69,7 +69,7 @@ function kit() {
 	let svelte_config;
 
 	/** @type {import('vite').UserConfig} */
-	let vite_user_config;
+	let vite_config;
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
@@ -96,7 +96,7 @@ function kit() {
 				console.log(overridden.map((key) => `  - ${key}`).join('\n'));
 			}
 
-			vite_user_config = config;
+			vite_config = config;
 			svelte_config = await load_config();
 
 			paths = {
@@ -189,7 +189,8 @@ function kit() {
 		},
 
 		async writeBundle(_options, bundle) {
-			const log = logger({ verbose: !!process.env.VERBOSE });
+			const verbose = vite_config.logLevel === 'info';
+			const log = logger({ verbose });
 
 			/** @type {import('rollup').OutputChunk[]} */
 			const chunks = [];
@@ -243,7 +244,7 @@ function kit() {
 
 			log.info('Building server');
 
-			const server = await build_server(vite_user_config, options, client);
+			const server = await build_server(vite_config, options, client);
 
 			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 
@@ -296,7 +297,7 @@ function kit() {
 
 				log.info('Building service worker');
 
-				await build_service_worker(vite_user_config, options, prerendered, client.vite_manifest);
+				await build_service_worker(vite_config, options, prerendered, client.vite_manifest);
 			}
 
 			console.log(
@@ -324,7 +325,7 @@ function kit() {
 		},
 
 		configurePreviewServer(vite) {
-			const protocol = vite_user_config.preview?.https ? 'https' : 'http';
+			const protocol = vite_config.preview?.https ? 'https' : 'http';
 			return preview(vite, svelte_config, protocol);
 		}
 	};

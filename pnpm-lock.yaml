@@ -239,6 +239,7 @@ importers:
       svelte: ^3.48.0
       svelte-preprocess: ^4.10.6
       typescript: ^4.7.2
+      vite: ^2.9.13
     dependencies:
       '@fontsource/fira-mono': 4.5.8
       '@lukeed/uuid': 2.0.0
@@ -249,6 +250,7 @@ importers:
       svelte: 3.48.0
       svelte-preprocess: 4.10.6_rxzurg3hjloskwsrdpptpplucy
       typescript: 4.7.2
+      vite: 2.9.13
 
   packages/kit:
     specifiers:
@@ -286,12 +288,11 @@ importers:
       typescript: ^4.7.2
       undici: ^5.4.0
       uvu: ^0.5.3
-      vite: ^2.9.10
+      vite: ^2.9.13
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.48_svelte@3.48.0+vite@2.9.10
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.48_svelte@3.48.0+vite@2.9.13
       chokidar: 3.5.3
       sade: 1.8.1
-      vite: 2.9.10
     devDependencies:
       '@playwright/test': 1.22.2
       '@rollup/plugin-replace': 4.0.0_rollup@2.75.3
@@ -324,6 +325,7 @@ importers:
       typescript: 4.7.2
       undici: 5.4.0
       uvu: 0.5.3
+      vite: 2.9.13
 
   packages/kit/test/apps/amp:
     specifiers:
@@ -334,6 +336,7 @@ importers:
       svelte: ^3.48.0
       svelte-check: ^2.7.1
       typescript: ^4.7.2
+      vite: ^2.9.13
     devDependencies:
       '@sveltejs/amp': link:../../../../amp
       '@sveltejs/kit': link:../../..
@@ -342,6 +345,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.7.1_svelte@3.48.0
       typescript: 4.7.2
+      vite: 2.9.13
 
   packages/kit/test/apps/basics:
     specifiers:
@@ -351,6 +355,7 @@ importers:
       svelte: ^3.48.0
       svelte-check: ^2.7.1
       typescript: ^4.7.2
+      vite: ^2.9.13
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
@@ -358,6 +363,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.7.1_svelte@3.48.0
       typescript: 4.7.2
+      vite: 2.9.13
 
   packages/kit/test/apps/options:
     specifiers:
@@ -366,12 +372,14 @@ importers:
       svelte: ^3.48.0
       svelte-check: ^2.7.1
       typescript: ^4.7.2
+      vite: ^2.9.13
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
       svelte: 3.48.0
       svelte-check: 2.7.1_svelte@3.48.0
       typescript: 4.7.2
+      vite: 2.9.13
 
   packages/kit/test/apps/options-2:
     specifiers:
@@ -381,6 +389,7 @@ importers:
       svelte: ^3.48.0
       svelte-check: ^2.7.1
       typescript: ^4.7.2
+      vite: ^2.9.13
     devDependencies:
       '@sveltejs/adapter-node': link:../../../../adapter-node
       '@sveltejs/kit': link:../../..
@@ -388,6 +397,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.7.1_svelte@3.48.0
       typescript: 4.7.2
+      vite: 2.9.13
 
   packages/kit/test/prerendering/basics:
     specifiers:
@@ -951,7 +961,7 @@ packages:
       golden-fleece: 1.0.9
     dev: true
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.48_svelte@3.48.0+vite@2.9.10:
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.48_svelte@3.48.0+vite@2.9.13:
     resolution: {integrity: sha512-hjCEww6FKSuHVMe56vZLClUDuRqK4A/ZC5hPUIx/o2fQ7HmRydp4ztEopjMMnl/YYyEceGBKgY781I9PGEYvAw==}
     engines: {node: ^14.13.1 || >= 16}
     peerDependencies:
@@ -969,7 +979,7 @@ packages:
       magic-string: 0.26.2
       svelte: 3.48.0
       svelte-hmr: 0.14.12_svelte@3.48.0
-      vite: 2.9.10
+      vite: 2.9.13
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -4865,7 +4875,6 @@ packages:
   /svelte/3.48.0:
     resolution: {integrity: sha512-fN2YRm/bGumvjUpu6yI3BpvZnpIm9I6A7HR4oUNYd7ggYyIwSA/BX7DJ+UXXffLp6XNcUijyLvttbPVCYa/3xQ==}
     engines: {node: '>= 8'}
-    dev: true
 
   /svelte2tsx/0.5.10_rxzurg3hjloskwsrdpptpplucy:
     resolution: {integrity: sha512-nokQ0HTTWMcNX6tLrDLiOmJCuqjKZU9nCZ6/mVuCL3nusXdbp+9nv69VG2pCy7uQC66kV4Ls+j0WfvvJuGVnkg==}
@@ -5287,6 +5296,30 @@ packages:
 
   /vite/2.9.10:
     resolution: {integrity: sha512-TwZRuSMYjpTurLqXspct+HZE7ONiW9d+wSWgvADGxhDPPyoIcNywY+RX4ng+QpK30DCa1l/oZgi2PLZDibhzbQ==}
+    engines: {node: '>=12.2.0'}
+    hasBin: true
+    peerDependencies:
+      less: '*'
+      sass: '*'
+      stylus: '*'
+    peerDependenciesMeta:
+      less:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+    dependencies:
+      esbuild: 0.14.42
+      postcss: 8.4.14
+      resolve: 1.22.0
+      rollup: 2.75.3
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
+
+  /vite/2.9.13:
+    resolution: {integrity: sha512-AsOBAaT0AD7Mhe8DuK+/kE4aWYFMx/i0ZNi98hJclxb4e0OhQcZYUrvLjIaQ8e59Ui7txcvKMiJC1yftqpQoDw==}
     engines: {node: '>=12.2.0'}
     hasBin: true
     peerDependencies:
