@@ -7,8 +7,7 @@ on:
   pull_request:
 
 env:
-  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-  TURBO_TEAM: svelte
+  CI: true
 
 jobs:
   Lint:
@@ -22,7 +21,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: cd packages/kit && pnpm build
-      - run: pnpm turbo run lint check --force
+      - run: pnpm build --filter ./packages --filter !./packages/create-svelte/templates
+      - run: pnpm lint
+      - run: pnpm check
   Tests:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
@@ -34,8 +35,6 @@ jobs:
         include:
           - node-version: 18
             os: ubuntu-latest
-    env:
-      TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v3
@@ -45,6 +44,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm build --filter ./packages --filter !./packages/create-svelte/templates
       - run: pnpm test
       - name: archive test results
         if: failure()

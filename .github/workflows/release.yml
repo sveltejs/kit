@@ -5,11 +5,6 @@ on:
     branches:
       - master
 
-env:
-  TURBO_CACHE_KEY: ubuntu-latest-16 # reuse cache key from ci workflow
-  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-  TURBO_TEAM: svelte
-
 jobs:
   release:
     # prevents this action from running on forks
@@ -30,7 +25,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run build
+      - run: pnpm build
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
