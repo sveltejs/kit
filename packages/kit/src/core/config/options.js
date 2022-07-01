@@ -292,10 +292,7 @@ const options = object(
 			}),
 
 			// TODO remove this for 1.0
-			vite: error(
-				(keypath) =>
-					`${keypath} has been removed — use vite.config.js instead`
-			)
+			vite: error((keypath) => `${keypath} has been removed — use vite.config.js instead`)
 		})
 	},
 	true

@@ -297,5 +297,7 @@ export async function get_vite_config() {
 		}
 	}
 
-	throw new Error('vite.config.js is missing. See an example here: https://github.com/sveltejs/kit/blob/master/packages/create-svelte/templates/skeleton/vite.config.js');
+	throw new Error(
+		'vite.config.js is missing. See an example here: https://github.com/sveltejs/kit/blob/master/packages/create-svelte/templates/skeleton/vite.config.js'
+	);
 }
