@@ -3,6 +3,10 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 /** @type {import('vite').UserConfig} */
 const config = {
+	build: {
+		minify: false
+	},
+	clearScreen: false,
 	plugins: [sveltekit()],
 	server: {
 		// TODO: required to support ipv6, remove on vite 3

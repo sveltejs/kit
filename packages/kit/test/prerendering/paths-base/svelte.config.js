@@ -12,18 +12,6 @@ const config = {
 
 		prerender: {
 			default: true
-		},
-
-		vite: {
-			build: {
-				minify: false
-			},
-			clearScreen: false,
-			server: {
-				fs: {
-					allow: [path.resolve('../../../src')]
-				}
-			}
 		}
 	}
 };

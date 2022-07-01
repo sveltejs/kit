@@ -12,19 +12,7 @@ const config = {
 			default: true
 		},
 
-		trailingSlash: 'always',
-
-		vite: {
-			build: {
-				minify: false
-			},
-			clearScreen: false,
-			server: {
-				fs: {
-					allow: [path.resolve('../../../src')]
-				}
-			}
-		}
+		trailingSlash: 'always'
 	}
 };
 
