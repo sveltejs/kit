@@ -406,12 +406,14 @@ importers:
       svelte-check: ^2.7.1
       typescript: ^4.7.2
       uvu: ^0.5.3
+      vite: ^2.9.13
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.48.0
       svelte-check: 2.7.1_svelte@3.48.0
       typescript: 4.7.2
       uvu: 0.5.3
+      vite: 2.9.13
 
   packages/kit/test/prerendering/disabled:
     specifiers:
@@ -420,12 +422,14 @@ importers:
       svelte-check: ^2.7.1
       typescript: ^4.7.2
       uvu: ^0.5.3
+      vite: ^2.9.13
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.48.0
       svelte-check: 2.7.1_svelte@3.48.0
       typescript: 4.7.2
       uvu: 0.5.3
+      vite: 2.9.13
 
   packages/kit/test/prerendering/options:
     specifiers:
@@ -434,12 +438,14 @@ importers:
       svelte-check: ^2.7.1
       typescript: ^4.7.2
       uvu: ^0.5.3
+      vite: ^2.9.13
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.48.0
       svelte-check: 2.7.1_svelte@3.48.0
       typescript: 4.7.2
       uvu: 0.5.3
+      vite: 2.9.13
 
   packages/kit/test/prerendering/paths-base:
     specifiers:
@@ -448,12 +454,14 @@ importers:
       svelte-check: ^2.7.1
       typescript: ^4.7.2
       uvu: ^0.5.3
+      vite: ^2.9.13
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.48.0
       svelte-check: 2.7.1_svelte@3.48.0
       typescript: 4.7.2
       uvu: 0.5.3
+      vite: 2.9.13
 
   packages/kit/test/prerendering/trailing-slash:
     specifiers:
@@ -462,12 +470,14 @@ importers:
       svelte-check: ^2.7.1
       typescript: ^4.7.2
       uvu: ^0.5.3
+      vite: ^2.9.13
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.48.0
       svelte-check: 2.7.1_svelte@3.48.0
       typescript: 4.7.2
       uvu: 0.5.3
+      vite: 2.9.13
 
   sites/kit.svelte.dev:
     specifiers:
