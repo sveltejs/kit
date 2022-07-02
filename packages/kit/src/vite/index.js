@@ -84,6 +84,33 @@ function kit() {
 	 */
 	let paths;
 
+	function create_client_config() {
+		/** @type {Record<string, string>} */
+		const input = {
+			start: `${get_runtime_path(svelte_config.kit)}/client/start.js`
+		};
+
+		// This step is optional — Vite/Rollup will create the necessary chunks
+		// for everything regardless — but it means that entry chunks reflect
+		// their location in the source code, which is helpful for debugging
+		manifest_data.components.forEach((file) => {
+			const resolved = path.resolve(cwd, file);
+			const relative = path.relative(svelte_config.kit.files.routes, resolved);
+
+			const name = relative.startsWith('..')
+				? path.basename(file)
+				: posixify(path.join('pages', relative));
+			input[name] = resolved;
+		});
+
+		return get_default_config({
+			config: svelte_config,
+			input,
+			ssr: false,
+			outDir: `${paths.client_out_dir}/immutable`
+		});
+	}
+
 	return {
 		name: 'vite-plugin-svelte-kit',
 
@@ -104,33 +131,11 @@ function kit() {
 
 				manifest_data = sync.all(svelte_config).manifest_data;
 
-				/** @type {Record<string, string>} */
-				const input = {
-					start: `${get_runtime_path(svelte_config.kit)}/client/start.js`
-				};
+				const new_config = create_client_config();
 
-				// This step is optional — Vite/Rollup will create the necessary chunks
-				// for everything regardless — but it means that entry chunks reflect
-				// their location in the source code, which is helpful for debugging
-				manifest_data.components.forEach((file) => {
-					const resolved = path.resolve(cwd, file);
-					const relative = path.relative(svelte_config.kit.files.routes, resolved);
+				warn_overridden_config(config, new_config);
 
-					const name = relative.startsWith('..')
-						? path.basename(file)
-						: posixify(path.join('pages', relative));
-					input[name] = resolved;
-				});
-
-				const result = get_default_config({
-					config: svelte_config,
-					input,
-					ssr: false,
-					outDir: `${paths.client_out_dir}/immutable`
-				});
-
-				warn_overridden_config(config, result);
-				return result;
+				return new_config;
 			}
 
 			// dev and preview config can be shared
@@ -242,7 +247,7 @@ function kit() {
 
 			log.info('Building server');
 
-			const server = await build_server(vite_config, options, client);
+			const server = await build_server(options, client);
 
 			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 
@@ -255,12 +260,14 @@ function kit() {
 				server
 			};
 
-			const manifest = `export const manifest = ${generate_manifest({
-				build_data,
-				relative_path: '.',
-				routes: manifest_data.routes
-			})};\n`;
-			fs.writeFileSync(`${paths.output_dir}/server/manifest.js`, manifest);
+			fs.writeFileSync(
+				`${paths.output_dir}/server/manifest.js`,
+				`export const manifest = ${generate_manifest({
+					build_data,
+					relative_path: '.',
+					routes: manifest_data.routes
+				})};\n`
+			);
 
 			const static_files = manifest_data.assets.map((asset) => posixify(asset.file));
 
@@ -295,7 +302,7 @@ function kit() {
 
 				log.info('Building service worker');
 
-				await build_service_worker(vite_config, options, prerendered, client.vite_manifest);
+				await build_service_worker(options, prerendered, client.vite_manifest);
 			}
 
 			console.log(

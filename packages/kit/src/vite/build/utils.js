@@ -1,3 +1,4 @@
+import fs from 'fs';
 import * as vite from 'vite';
 import { get_aliases } from '../utils.js';
 
@@ -77,13 +78,26 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 				},
 				preserveEntrySignatures: 'strict'
 			},
-			ssr
+			ssr,
+			target: ssr ? 'node14.8' : undefined
 		},
 		// prevent Vite copying the contents of `config.kit.files.assets`,
 		// if it happens to be 'public' instead of 'static'
 		publicDir: false,
 		resolve: {
 			alias: get_aliases(config.kit)
+		},
+		// @ts-expect-error
+		ssr: {
+			// when developing against the Kit src code, we want to ensure that
+			// our dependencies are bundled so that apps don't need to install
+			// them as peerDependencies
+			noExternal: process.env.BUNDLED
+				? []
+				: Object.keys(
+						JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8'))
+							.devDependencies
+				  )
 		}
 	};
 };

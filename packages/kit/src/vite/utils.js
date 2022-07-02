@@ -1,6 +1,20 @@
 import fs from 'fs';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import { get_runtime_path } from '../core/utils.js';
+
+/**
+ * @return {Promise<import('vite').UserConfig>}
+ */
+export async function get_vite_config() {
+	for (const file of ['vite.config.js', 'vite.config.mjs', 'vite.config.cjs']) {
+		if (fs.existsSync(file)) {
+			const config = await import(pathToFileURL(file).toString());
+			return config.default || config;
+		}
+	}
+	throw new Error('Could not find vite.config.js');
+}
 
 /**
  * @param {...import('vite').UserConfig} configs
