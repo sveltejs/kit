@@ -353,7 +353,7 @@ function warn_overridden_config(config, resolved_config, path = '', out = []) {
  */
 function find_overridden_config(config, resolved_config, path, out) {
 	for (const key in enforced_config) {
-		if (key in config) {
+		if (typeof config === 'object' && config !== null && key in config) {
 			if (enforced_config[key] === true && config[key] !== resolved_config[key]) {
 				out.push(path + key);
 			} else {
