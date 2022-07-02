@@ -266,6 +266,7 @@ importers:
       cookie: ^0.5.0
       cross-env: ^7.0.3
       devalue: ^2.0.1
+      esbuild: ^0.14.42
       eslint: ^8.16.0
       kleur: ^4.1.4
       locate-character: ^2.0.5
@@ -305,6 +306,7 @@ importers:
       cookie: 0.5.0
       cross-env: 7.0.3
       devalue: 2.0.1
+      esbuild: 0.14.42
       eslint: 8.16.0
       kleur: 4.1.4
       locate-character: 2.0.5
@@ -4865,7 +4867,6 @@ packages:
   /svelte/3.48.0:
     resolution: {integrity: sha512-fN2YRm/bGumvjUpu6yI3BpvZnpIm9I6A7HR4oUNYd7ggYyIwSA/BX7DJ+UXXffLp6XNcUijyLvttbPVCYa/3xQ==}
     engines: {node: '>= 8'}
-    dev: true
 
   /svelte2tsx/0.5.10_rxzurg3hjloskwsrdpptpplucy:
     resolution: {integrity: sha512-nokQ0HTTWMcNX6tLrDLiOmJCuqjKZU9nCZ6/mVuCL3nusXdbp+9nv69VG2pCy7uQC66kV4Ls+j0WfvvJuGVnkg==}

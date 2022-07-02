@@ -17,7 +17,6 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.22.2",
-		"@rollup/plugin-replace": "^4.0.0",
 		"@types/connect": "^3.4.35",
 		"@types/cookie": "^0.5.1",
 		"@types/marked": "^4.0.3",
@@ -28,6 +27,7 @@
 		"cookie": "^0.5.0",
 		"cross-env": "^7.0.3",
 		"devalue": "^2.0.1",
+		"esbuild": "^0.14.42",
 		"eslint": "^8.16.0",
 		"kleur": "^4.1.4",
 		"locate-character": "^2.0.5",
@@ -35,7 +35,6 @@
 		"mime": "^3.0.0",
 		"node-fetch": "^3.2.4",
 		"port-authority": "^2.0.1",
-		"rollup": "^2.75.3",
 		"selfsigned": "^2.0.1",
 		"set-cookie-parser": "^2.4.8",
 		"sirv": "^2.0.2",
@@ -61,8 +60,8 @@
 		"svelte-kit.js"
 	],
 	"scripts": {
-		"build": "rollup -c && node scripts/cp.js src/runtime/components assets/components && npm run types",
-		"dev": "rollup -cw",
+		"build": "node esbuild.js -c && node scripts/cp.js src/runtime/components assets/components && npm run types",
+		"dev": "node esbuild.js --watch",
 		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/packaging/test/**\" \"{src,test}/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
