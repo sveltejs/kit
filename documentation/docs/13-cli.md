@@ -8,7 +8,7 @@ SvelteKit projects use Vite as a development server and to build distributables 
 
 > `svelte-kit package` is currently experimental and is not subject to Semantic Versioning rules. Non-backward compatible changes may occur in any future release.
 
-For package authors, see [packaging](/docs/packaging). `svelte-kit package` accepts the following options:
+See [packaging](/docs/packaging). `svelte-kit package` accepts the following options:
 
 - `-w`/`--watch` — watch files in `src/lib` for changes and rebuild the package
 
