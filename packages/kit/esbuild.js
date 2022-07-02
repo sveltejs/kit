@@ -72,6 +72,7 @@ esbuild.build({
 	],
 	format: 'esm',
 	outdir: 'dist',
+	splitting: true,
 	watch: watch && {
 		onRebuild(error) {
 			if (error) console.error(error);
