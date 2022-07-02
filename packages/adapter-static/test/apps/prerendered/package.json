@@ -3,9 +3,9 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"dev": "../../../node_modules/vite/bin/vite.js dev",
-		"build": "../../../node_modules/vite/bin/vite.js build",
-		"start": "../../../node_modules/vite/bin/vite.js start"
+		"dev": "vite dev",
+		"build": "vite build",
+		"start": "vite start"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "next",

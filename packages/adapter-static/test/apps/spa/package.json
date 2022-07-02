@@ -3,8 +3,8 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"dev": "../../../node_modules/vite/bin/vite.js dev",
-		"build": "../../../node_modules/vite/bin/vite.js build",
+		"dev": "vite dev",
+		"build": "vite build",
 		"start": "sirv -s 200.html build"
 	},
 	"devDependencies": {
