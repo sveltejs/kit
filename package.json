@@ -24,7 +24,7 @@
 	"homepage": "https://github.com/sveltejs/kit#readme",
 	"devDependencies": {
 		"@changesets/cli": "^2.22.0",
-		"@rollup/plugin-commonjs": "^21.1.0",
+		"@rollup/plugin-commonjs": "^22.0.1",
 		"@rollup/plugin-json": "^4.1.0",
 		"@rollup/plugin-node-resolve": "^13.3.0",
 		"@sveltejs/eslint-config": "github:sveltejs/eslint-config#v5.8.0",
