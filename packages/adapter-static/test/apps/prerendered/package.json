@@ -5,8 +5,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"start": "vite start",
-		"prepare": "svelte-kit sync"
+		"start": "vite start"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "next",
