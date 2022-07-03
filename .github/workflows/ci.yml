@@ -20,6 +20,7 @@ jobs:
         with:
           node-version: '16.x'
           cache: pnpm
+      - run: echo $OS
       - run: pnpm install --frozen-lockfile
       - run: cd packages/kit && pnpm build
       - run: pnpm turbo run lint check --force
