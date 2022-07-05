@@ -1,10 +1,7 @@
 import { test } from 'uvu';
 import { create } from '../index.js';
 import fs, { rmSync } from 'fs';
-import { build_templates } from '../scripts/build-templates.js';
 import { execSync } from 'child_process';
-
-await build_templates();
 
 const templates = fs.readdirSync('templates');
 const testRootDir = '.test-tmp';

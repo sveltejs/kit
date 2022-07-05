@@ -32,6 +32,7 @@
 	"scripts": {
 		"build": "node scripts/build-templates",
 		"test": "uvu tests",
+		"pretest": "npm run build",
 		"check": "tsc",
 		"lint": "eslint --ignore-path .gitignore --ignore-path ../../.gitignore \"./*.js\" && npm run check-format",
 		"format": "npm run check-format -- --write",

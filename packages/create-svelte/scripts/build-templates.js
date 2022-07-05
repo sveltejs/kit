@@ -232,7 +232,7 @@ async function generate_shared() {
 	return shared;
 }
 
-export async function build_templates() {
+async function main() {
 	rimraf('dist');
 	mkdirp('dist');
 
@@ -240,4 +240,4 @@ export async function build_templates() {
 	await generate_templates(shared);
 }
 
-build_templates();
+main();
