@@ -182,24 +182,24 @@ importers:
 
   packages/adapter-static/test/apps/prerendered:
     specifiers:
-      '@sveltejs/kit': next
+      '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
       vite: ^2.9.13
     devDependencies:
-      '@sveltejs/kit': 1.0.0-next.358_svelte@3.48.0
+      '@sveltejs/kit': link:../../../../kit
       svelte: 3.48.0
       vite: 2.9.13
 
   packages/adapter-static/test/apps/spa:
     specifiers:
-      '@sveltejs/adapter-node': next
-      '@sveltejs/kit': next
+      '@sveltejs/adapter-node': workspace:*
+      '@sveltejs/kit': workspace:*
       sirv-cli: ^2.0.2
       svelte: ^3.48.0
       vite: ^2.9.13
     devDependencies:
       '@sveltejs/adapter-node': link:../../../../adapter-node
-      '@sveltejs/kit': 1.0.0-next.358_svelte@3.48.0
+      '@sveltejs/kit': link:../../../../kit
       sirv-cli: 2.0.2
       svelte: 3.48.0
       vite: 2.9.13
@@ -992,26 +992,6 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.1
 
-  /@sveltejs/kit/1.0.0-next.358_svelte@3.48.0:
-    resolution: {integrity: sha512-GaP7oKS9eawpCy01piJmdDqobFVsFObXSC5sGydyqwqe1RXOR/QoISBys6SZJ+gx+1bp9AOwvIiw7+GrltDN8A==}
-    engines: {node: '>=16.7'}
-    hasBin: true
-    peerDependencies:
-      svelte: ^3.44.0
-    dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.49_svelte@3.48.0+vite@2.9.13
-      chokidar: 3.5.3
-      sade: 1.8.1
-      svelte: 3.48.0
-      vite: 2.9.13
-    transitivePeerDependencies:
-      - diff-match-patch
-      - less
-      - sass
-      - stylus
-      - supports-color
-    dev: true
-
   /@sveltejs/site-kit/2.1.0:
     resolution: {integrity: sha512-nJddyYdBHXmiyhIAq0DQZpEjJ0B2Up4NCg08gVZuUxuOsshjUK8wZ5kuszP3Tl/q176MxFbceJo2Me4fj9bu9w==}
     dependencies:
@@ -1039,6 +1019,7 @@ packages:
       vite: 2.9.13
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /@svitejs/changesets-changelog-github-compact/0.1.1:
     resolution: {integrity: sha512-eBi211CfmKtkxB6tINicaDPBMbolswPbaAy7kCx+uUFL/LxztLm9cB+7jP54TgCrv+mMz8vSJWIs/baH63PjsA==}
@@ -4705,6 +4686,7 @@ packages:
       svelte: '>=3.19.0'
     dependencies:
       svelte: 3.48.0
+    dev: false
 
   /svelte-preprocess/4.10.7_lvfi2wesz6u4l5rfbnetbucfmm:
     resolution: {integrity: sha512-sNPBnqYD6FnmdBrUmBCaqS00RyCsCpj2BG58A1JBswNF7b0OKviwxqVrOL/CKyJrLSClrSeqQv5BXNg2RUbPOw==}
