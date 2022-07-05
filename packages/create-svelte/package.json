@@ -26,10 +26,12 @@
 		"sucrase": "^3.21.0",
 		"svelte": "^3.48.0",
 		"svelte-preprocess": "^4.10.6",
-		"tiny-glob": "^0.2.9"
+		"tiny-glob": "^0.2.9",
+		"uvu": "^0.5.3"
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",
+		"test": "npm run build && uvu test",
 		"check": "tsc",
 		"lint": "eslint --ignore-path .gitignore --ignore-path ../../.gitignore \"./*.js\" && npm run check-format",
 		"format": "npm run check-format -- --write",
