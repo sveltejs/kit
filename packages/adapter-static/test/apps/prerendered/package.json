@@ -8,7 +8,7 @@
 		"start": "vite start"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "next",
+		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.48.0",
 		"vite": "^2.9.13"
 	},
