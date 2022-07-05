@@ -14,7 +14,7 @@ import { fileURLToPath } from 'url';
  * }} WranglerConfig
  */
 
-/** @type {import('.')} */
+/** @type {import('.').default} */
 export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
@@ -55,8 +55,9 @@ export default function (options = {}) {
 			);
 
 			await esbuild.build({
-				target: 'es2020',
 				platform: 'browser',
+				sourcemap: 'linked',
+				target: 'es2020',
 				...options,
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: main,
@@ -116,7 +117,6 @@ function validate_config(builder) {
 
 		name = "<your-site-name>"
 		account_id = "<your-account-id>"
-		route = "<your-route>"
 
 		main = "./.cloudflare/worker.js"
 		site.bucket = "./.cloudflare/public"

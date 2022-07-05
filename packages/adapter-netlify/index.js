@@ -34,7 +34,7 @@ const edge_set_in_env_var =
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === 'true' ||
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === '1';
 
-/** @type {import('.')} */
+/** @type {import('.').default} */
 export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
 		name: '@sveltejs/adapter-netlify',
@@ -137,8 +137,9 @@ async function generate_edge_functions({ builder }) {
 		outfile: '.netlify/edge-functions/render.js',
 		bundle: true,
 		format: 'esm',
-		target: 'es2020',
-		platform: 'browser'
+		platform: 'browser',
+		sourcemap: 'linked',
+		target: 'es2020'
 	});
 
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
@@ -150,7 +151,7 @@ async function generate_edge_functions({ builder }) {
  * @param { boolean } params.split
  * @param { boolean } params.esm
  */
-function generate_lambda_functions({ builder, publish, split, esm }) {
+async function generate_lambda_functions({ builder, publish, split, esm }) {
 	builder.mkdirp('.netlify/functions-internal');
 
 	/** @type {string[]} */
@@ -177,7 +178,7 @@ function generate_lambda_functions({ builder, publish, split, esm }) {
 	if (split) {
 		builder.log.minor('Generating serverless functions...');
 
-		builder.createEntries((route) => {
+		await builder.createEntries((route) => {
 			const parts = [];
 			// Netlify's syntax uses '*' and ':param' as "splats" and "placeholders"
 			// https://docs.netlify.com/routing/redirects/redirect-options/#splats
@@ -211,6 +212,7 @@ function generate_lambda_functions({ builder, publish, split, esm }) {
 					writeFileSync(`.netlify/functions-internal/${name}.js`, fn);
 
 					redirects.push(`${pattern} /.netlify/functions/${name} 200`);
+					redirects.push(`${pattern}/__data.json /.netlify/functions/${name} 200`);
 				}
 			};
 		});

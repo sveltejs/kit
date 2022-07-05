@@ -16,7 +16,7 @@ import { set_paths } from '../paths.js';
  *   hydrate: {
  *     status: number;
  *     error: Error;
- *     nodes: Array<Promise<import('types').CSRComponent>>;
+ *     nodes: number[];
  *     params: Record<string, string>;
  *     routeId: string | null;
  *   };

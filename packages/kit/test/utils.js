@@ -171,19 +171,35 @@ export const config = {
 };
 
 /**
- *
  * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
  * @param {number} [start]
- * @returns
  */
 export async function start_server(handler, start = 4000) {
 	const port = await ports.find(start);
-
 	const server = http.createServer(handler);
 
 	await new Promise((fulfil) => {
-		server.listen(port, () => fulfil(undefined));
+		server.listen(port, 'localhost', () => {
+			fulfil(undefined);
+		});
 	});
 
-	return { port, server };
+	return {
+		port,
+		close: () => {
+			return new Promise((fulfil, reject) => {
+				server.close((err) => {
+					if (err) {
+						reject(err);
+					} else {
+						fulfil(undefined);
+					}
+				});
+			});
+		}
+	};
 }
+
+export const plugin = process.env.CI
+	? (await import('../dist/vite.js')).sveltekit
+	: (await import('../src/vite/index.js')).sveltekit;

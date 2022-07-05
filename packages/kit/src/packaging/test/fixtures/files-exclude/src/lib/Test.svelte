@@ -3,7 +3,7 @@
 	/**
 	 * @type {string}
 	 */
-	export const astring;
+	export const astring = 'potato';
 
 	const dispatch = createEventDispatcher();
 	dispatch('event', true);

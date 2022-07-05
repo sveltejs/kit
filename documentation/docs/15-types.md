@@ -117,7 +117,7 @@ Others are required for SvelteKit to work properly, and should also be left unto
 		// markup, so we need this
 		"preserveValueImports": true,
 
-		// This ensures both `svelte-kit build`
+		// This ensures both `vite build`
 		// and `svelte-kit package` work correctly
 		"lib": ["esnext", "DOM"],
 		"moduleResolution": "node",

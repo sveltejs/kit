@@ -5,13 +5,14 @@ import {
 	GetSession,
 	Handle,
 	HandleError,
+	KitConfig,
 	Load,
 	RequestEvent,
 	RequestHandler,
 	ResolveOptions,
 	Server,
 	SSRManifest
-} from './index';
+} from './index.js';
 import {
 	HttpMethod,
 	JSONObject,
@@ -19,7 +20,7 @@ import {
 	RequestOptions,
 	ResponseHeaders,
 	TrailingSlash
-} from './private';
+} from './private.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -50,8 +51,8 @@ export interface BuildData {
 		chunks: OutputChunk[];
 		entry: {
 			file: string;
-			js: string[];
-			css: string[];
+			imports: string[];
+			stylesheets: string[];
 		};
 		vite_manifest: import('vite').Manifest;
 	};
@@ -226,14 +227,16 @@ export interface SSREndpoint {
 
 export interface SSRNode {
 	module: SSRComponent;
+	/** index into the `components` array in client-manifest.js */
+	index: number;
 	/** client-side module URL for this component */
-	entry: string;
-	/** external CSS files */
-	css: string[];
+	file: string;
 	/** external JS files */
-	js: string[];
+	imports: string[];
+	/** external CSS files */
+	stylesheets: string[];
 	/** inlined styles */
-	styles?: Record<string, string>;
+	inline_styles?: () => MaybePromise<Record<string, string>>;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
@@ -316,6 +319,8 @@ export interface SSRState {
 export type StrictBody = string | Uint8Array;
 
 export type ValidatedConfig = RecursiveRequired<Config>;
+
+export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export * from './index';
 export * from './private';

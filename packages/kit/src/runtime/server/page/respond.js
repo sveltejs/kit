@@ -11,6 +11,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
  */
 
 /**
+ * Gets the nodes, calls `load` for each of them, and then calls render to build the HTML response.
  * @param {{
  *   event: import('types').RequestEvent;
  *   options: SSROptions;

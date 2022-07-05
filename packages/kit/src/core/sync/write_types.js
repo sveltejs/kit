@@ -33,7 +33,7 @@ export function write_types(config, manifest_data) {
 
 		if (file) {
 			const ext = /** @type {string} */ (
-				config.kit.endpointExtensions.find((ext) => file.endsWith(ext))
+				config.kit.moduleExtensions.find((ext) => file.endsWith(ext))
 			);
 			const key = file.slice(0, -ext.length);
 			shadow_types.set(key, {

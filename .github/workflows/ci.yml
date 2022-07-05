@@ -15,13 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2.2.1
+      - uses: pnpm/action-setup@v2.2.2
       - uses: actions/setup-node@v3
         with:
           node-version: '16.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run lint check
+      - run: cd packages/kit && pnpm build
+      - run: pnpm turbo run lint check --force
   Tests:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
@@ -38,7 +39,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2.2.1
+      - uses: pnpm/action-setup@v2.2.2
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
