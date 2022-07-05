@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.146
+
+### Patch Changes
+
+- Add vite.config.js to the create-svelte templates ([#5332](https://github.com/sveltejs/kit/pull/5332))
+
+* [breaking] switch to vite CLI for dev, build, and preview commands ([#5332](https://github.com/sveltejs/kit/pull/5332))
+
 ## 2.0.0-next.145
 
 ### Patch Changes

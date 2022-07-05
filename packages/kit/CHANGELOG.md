@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.359
+
+### Patch Changes
+
+- Adjust type imports to satisfy TS NodeNext moduleResolution ([#5360](https://github.com/sveltejs/kit/pull/5360))
+
+* [breaking] require vite.config.js ([#5332](https://github.com/sveltejs/kit/pull/5332))
+
+- [breaking] graduate @sveltejs/kit/vite from experimental ([#5332](https://github.com/sveltejs/kit/pull/5332))
+
+* [breaking] switch to vite CLI for dev, build, and preview commands ([#5332](https://github.com/sveltejs/kit/pull/5332))
+
 ## 1.0.0-next.358
 
 ### Patch Changes
