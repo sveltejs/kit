@@ -30,7 +30,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run build
+      - run: pnpm turbo run build --filter="./packages/*"
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
