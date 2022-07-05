@@ -26,7 +26,8 @@
     "test-options-2": "0.0.1",
     "prerendering-test-trailing-slash": "0.0.1",
     "prerendering-test-paths-base": "0.0.1",
-    "@sveltejs/amp": "1.0.0-next.0"
+    "@sveltejs/amp": "1.0.0-next.0",
+    "prerendering-test-disabled": "0.0.2-next.0"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -573,6 +574,7 @@
     "olive-vans-talk",
     "orange-boats-love",
     "orange-wolves-fly",
+    "perfect-ears-explain",
     "perfect-experts-hammer",
     "perfect-frogs-decide",
     "perfect-ghosts-shake",
@@ -640,6 +642,7 @@
     "purple-readers-build",
     "purple-windows-wink",
     "quick-balloons-invite",
+    "quick-chicken-hide",
     "quick-maps-remain",
     "quick-pets-turn",
     "quiet-ants-report",
