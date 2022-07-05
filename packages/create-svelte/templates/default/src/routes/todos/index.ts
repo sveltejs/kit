@@ -29,7 +29,7 @@ export const get: RequestHandler = async ({ locals }) => {
 	};
 };
 
-/** @type {import('./index').RequestHandler} */
+/** @type {import('./__types').RequestHandler} */
 export const post: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
@@ -49,7 +49,7 @@ const redirect = {
 	}
 };
 
-/** @type {import('./index').RequestHandler} */
+/** @type {import('./__types').RequestHandler} */
 export const patch: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
@@ -61,7 +61,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 	return redirect;
 };
 
-/** @type {import('./index').RequestHandler} */
+/** @type {import('./__types').RequestHandler} */
 export const del: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
