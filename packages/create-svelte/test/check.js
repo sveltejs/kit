@@ -24,7 +24,7 @@ for (const template of fs.readdirSync('templates')) {
 				playwright: false
 			});
 
-			execSync('pnpm i && pnpm check', { cwd, stdio: 'inherit' });
+			execSync('pnpm i --no-frozen-lockfile && pnpm check', { cwd, stdio: 'inherit' });
 		});
 	}
 }
