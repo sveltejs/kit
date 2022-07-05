@@ -3,18 +3,18 @@ import { create } from '../index.js';
 import fs, { rmSync } from 'fs';
 import { execSync } from 'child_process';
 
-const templates = fs.readdirSync('templates');
-const testRootDir = '.test-tmp';
+const dir = '.test-tmp';
 
 test.after(() => {
-	rmSync(testRootDir, { recursive: true, force: true });
+	rmSync(dir, { recursive: true, force: true });
 });
 
-for (const template of templates) {
+for (const template of fs.readdirSync('templates')) {
 	test(`${template}: JSDoc`, () => {
-		const testDir = `${testRootDir}/${template}-JSDoc`;
-		rmSync(testDir, { recursive: true, force: true });
-		create(testDir, {
+		const cwd = `${dir}/${template}-JSDoc`;
+		rmSync(cwd, { recursive: true, force: true });
+
+		create(cwd, {
 			name: 'test',
 			template,
 			types: 'checkjs',
@@ -22,18 +22,16 @@ for (const template of templates) {
 			eslint: false,
 			playwright: false
 		});
-		execSync('npm i', { cwd: testDir, stdio: 'inherit' });
-		try {
-			execSync('npm run check', { cwd: testDir });
-		} catch (e) {
-			console.error(e.stdout.toString());
-			throw e;
-		}
+
+		execSync('npm i', { cwd, stdio: 'inherit' });
+		execSync('npm run check', { cwd, stdio: 'inherit' });
 	});
+
 	test(`${template}: TS`, () => {
-		const testDir = `${testRootDir}/${template}-TS`;
-		rmSync(testDir, { recursive: true, force: true });
-		create(testDir, {
+		const cwd = `${dir}/${template}-TS`;
+		rmSync(cwd, { recursive: true, force: true });
+
+		create(cwd, {
 			name: 'test',
 			template,
 			types: 'typescript',
@@ -41,13 +39,9 @@ for (const template of templates) {
 			eslint: false,
 			playwright: false
 		});
-		execSync('npm i', { cwd: testDir, stdio: 'inherit' });
-		try {
-			execSync('npm run check', { cwd: testDir });
-		} catch (e) {
-			console.error(e.stdout.toString());
-			throw e;
-		}
+
+		execSync('npm i', { cwd, stdio: 'inherit' });
+		execSync('npm run check', { cwd, stdio: 'inherit' });
 	});
 }
 
