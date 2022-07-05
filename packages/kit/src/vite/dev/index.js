@@ -221,9 +221,7 @@ export async function dev(vite, svelte_config) {
 
 				/** @type {Partial<import('types').Hooks>} */
 				const user_hooks = resolve_entry(svelte_config.kit.files.hooks)
-					? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`, {
-							fixStacktrace: false
-					  })
+					? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
 					: {};
 
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
@@ -263,15 +261,13 @@ export async function dev(vite, svelte_config) {
 				// can get loaded twice via different URLs, which causes failures. Might
 				// require changes to Vite to fix
 				const { default: root } = await vite.ssrLoadModule(
-					`/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/generated/root.svelte`))}`,
-					{ fixStacktrace: false }
+					`/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/generated/root.svelte`))}`
 				);
 
 				const paths = await vite.ssrLoadModule(
 					process.env.BUNDLED
 						? `/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/runtime/paths.js`))}`
-						: `/@fs${runtime}/paths.js`,
-					{ fixStacktrace: false }
+						: `/@fs${runtime}/paths.js`
 				);
 
 				paths.set_paths({
