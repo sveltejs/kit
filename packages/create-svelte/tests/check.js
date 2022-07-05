@@ -22,7 +22,7 @@ for (const template of templates) {
 			eslint: false,
 			playwright: false
 		});
-		execSync('npm i', { cwd: testDir });
+		execSync('npm i', { cwd: testDir, stdio: 'inherit' });
 		try {
 			execSync('npm run check', { cwd: testDir });
 		} catch (e) {
@@ -41,7 +41,7 @@ for (const template of templates) {
 			eslint: false,
 			playwright: false
 		});
-		execSync('npm i', { cwd: testDir });
+		execSync('npm i', { cwd: testDir, stdio: 'inherit' });
 		try {
 			execSync('npm run check', { cwd: testDir });
 		} catch (e) {
