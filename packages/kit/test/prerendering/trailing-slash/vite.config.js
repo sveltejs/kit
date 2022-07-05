@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { sveltekit } from '@sveltejs/kit/vite';
+import { plugin } from '../../utils.js';
 
 /** @type {import('vite').UserConfig} */
 const config = {
@@ -7,7 +7,7 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
-	plugins: [sveltekit()],
+	plugins: [plugin()],
 	server: {
 		// TODO: required to support ipv6, remove on vite 3
 		// https://github.com/vitejs/vite/issues/7075

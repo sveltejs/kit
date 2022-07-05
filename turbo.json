@@ -23,7 +23,7 @@
 			]
 		},
 		"check": {
-			"dependsOn": ["sync"],
+			"dependsOn": ["prepare"],
 			"inputs": [
 				"src/**",
 				"types/**",
@@ -34,7 +34,7 @@
 			"outputs": []
 		},
 		"format": {},
-		"sync": {
+		"prepare": {
 			"outputs": [
 				".svelte-kit/types/**",
 				".svelte-kit/tsconfig.json",
