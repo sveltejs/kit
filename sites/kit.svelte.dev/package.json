@@ -8,7 +8,7 @@
 		"preview": "vite preview"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-vercel": "workspace:*",
+		"@sveltejs/adapter-auto": "workspace:*",
 		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/amp": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
