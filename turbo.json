@@ -23,13 +23,24 @@
 			]
 		},
 		"check": {
-			"dependsOn": ["sync"],
-			"inputs": ["src/**", "types/**", ".svelte-kit/types/**", ".custom-out-dir/types/**", ".svelte-kit/tsconfig.json"],
+			"dependsOn": ["prepare"],
+			"inputs": [
+				"src/**",
+				"types/**",
+				".svelte-kit/types/**",
+				".custom-out-dir/types/**",
+				".svelte-kit/tsconfig.json"
+			],
 			"outputs": []
 		},
 		"format": {},
-		"sync": {
-			"outputs": [".svelte-kit/types/**", ".custom-out-dir/types/**"]
+		"prepare": {
+			"outputs": [
+				".svelte-kit/types/**",
+				".svelte-kit/tsconfig.json",
+				".custom-out-dir/types/**",
+				".custom-out-dir/tsconfig.json"
+			]
 		},
 		"test": {
 			"dependsOn": ["^build", "$CI", "$TURBO_CACHE_KEY"],

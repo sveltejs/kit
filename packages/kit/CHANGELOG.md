@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.358
+
+### Patch Changes
+
+- Only exit process in closeBundle hook if prerender is enabled ([#5356](https://github.com/sveltejs/kit/pull/5356))
+
+* [fix] don't log warning if root is configured ([#5330](https://github.com/sveltejs/kit/pull/5330))
+
 ## 1.0.0-next.357
 
 ### Patch Changes

@@ -1,3 +1,21 @@
+import fs from 'fs';
+import path from 'path';
+import { pathToFileURL } from 'url';
+import { get_runtime_path } from '../core/utils.js';
+
+/**
+ * @return {Promise<import('vite').UserConfig>}
+ */
+export async function get_vite_config() {
+	for (const file of ['vite.config.js', 'vite.config.mjs', 'vite.config.cjs']) {
+		if (fs.existsSync(file)) {
+			const config = await import(pathToFileURL(file).toString());
+			return config.default || config;
+		}
+	}
+	throw new Error('Could not find vite.config.js');
+}
+
 /**
  * @param {...import('vite').UserConfig} configs
  * @returns {import('vite').UserConfig}
@@ -68,4 +86,52 @@ function merge_into(a, b) {
 			a[prop] = b[prop];
 		}
 	}
+}
+
+/** @param {import('types').ValidatedKitConfig} config */
+export function get_aliases(config) {
+	/** @type {Record<string, string>} */
+	const alias = {
+		__GENERATED__: path.posix.join(config.outDir, 'generated'),
+		$app: `${get_runtime_path(config)}/app`,
+
+		// For now, we handle `$lib` specially here rather than make it a default value for
+		// `config.kit.alias` since it has special meaning for packaging, etc.
+		$lib: config.files.lib
+	};
+
+	for (const [key, value] of Object.entries(config.alias)) {
+		alias[key] = path.resolve(value);
+	}
+
+	return alias;
+}
+
+/**
+ * Given an entry point like [cwd]/src/hooks, returns a filename like [cwd]/src/hooks.js or [cwd]/src/hooks/index.js
+ * @param {string} entry
+ * @returns {string|null}
+ */
+export function resolve_entry(entry) {
+	if (fs.existsSync(entry)) {
+		const stats = fs.statSync(entry);
+		if (stats.isDirectory()) {
+			return resolve_entry(path.join(entry, 'index'));
+		}
+
+		return entry;
+	} else {
+		const dir = path.dirname(entry);
+
+		if (fs.existsSync(dir)) {
+			const base = path.basename(entry);
+			const files = fs.readdirSync(dir);
+
+			const found = files.find((file) => file.replace(/\.[^.]+$/, '') === base);
+
+			if (found) return path.join(dir, found);
+		}
+	}
+
+	return null;
 }
