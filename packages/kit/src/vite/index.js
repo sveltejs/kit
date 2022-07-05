@@ -314,8 +314,10 @@ function kit() {
 		},
 
 		closeBundle() {
-			if (svelte_config.kit.adapter) {
-				// this is necessary to close any open db connections, etc
+			if (svelte_config.kit.prerender.enabled) {
+				// this is necessary to close any open db connections, etc.
+				// TODO: prerender in a subprocess so we can exit in isolation
+				// https://github.com/sveltejs/kit/issues/5306
 				process.exit(0);
 			}
 		},
