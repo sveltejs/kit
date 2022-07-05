@@ -35,6 +35,7 @@
 		},
 		"format": {},
 		"prepare": {
+			"inputs": ["src/**", "source/**"],
 			"outputs": [
 				".svelte-kit/types/**",
 				".svelte-kit/tsconfig.json",
