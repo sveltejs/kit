@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { mkdirp, posixify } from '../../utils/filesystem.js';
-import { merge_vite_configs, resolve_entry } from '../utils.js';
+import { get_vite_config, merge_vite_configs, resolve_entry } from '../utils.js';
 import { load_template } from '../../core/config/index.js';
 import { get_runtime_path } from '../../core/utils.js';
 import { create_build, find_deps, get_default_config, remove_svelte_kit } from './utils.js';
@@ -104,7 +104,6 @@ export class Server {
 `;
 
 /**
- * @param {import('vite').UserConfig} vite_config
  * @param {{
  *   cwd: string;
  *   config: import('types').ValidatedConfig
@@ -115,7 +114,7 @@ export class Server {
  * }} options
  * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
  */
-export async function build_server(vite_config, options, client) {
+export async function build_server(options, client) {
 	const { cwd, config, manifest_data, build_dir, output_dir, service_worker_entry_file } = options;
 
 	let hooks_file = resolve_entry(config.kit.files.hooks);
@@ -175,27 +174,11 @@ export async function build_server(vite_config, options, client) {
 		})
 	);
 
-	const default_config = {
-		build: {
-			target: 'node14.8'
-		},
-		ssr: {
-			// when developing against the Kit src code, we want to ensure that
-			// our dependencies are bundled so that apps don't need to install
-			// them as peerDependencies
-			noExternal: process.env.BUNDLED
-				? []
-				: Object.keys(
-						JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8'))
-							.devDependencies
-				  )
-		}
-	};
+	const vite_config = await get_vite_config();
 
 	const merged_config = merge_vite_configs(
-		default_config,
-		vite_config,
-		get_default_config({ config, input, ssr: true, outDir: `${output_dir}/server` })
+		get_default_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
+		vite_config
 	);
 
 	remove_svelte_kit(merged_config);

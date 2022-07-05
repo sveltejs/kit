@@ -3,6 +3,15 @@ import { plugin } from '../../utils.js';
 
 /** @type {import('vite').UserConfig} */
 const config = {
+	build: {
+		minify: false
+	},
+	clearScreen: false,
+	optimizeDeps: {
+		// for CI, we need to explicitly prebundle deps, since
+		// the reload confuses Playwright
+		include: ['cookie', 'marked']
+	},
 	plugins: [plugin()],
 	server: {
 		// TODO: required to support ipv6, remove on vite 3

@@ -3,6 +3,10 @@ import { plugin } from '../../utils.js';
 
 /** @type {import('vite').UserConfig} */
 const config = {
+	build: {
+		minify: false
+	},
+	clearScreen: false,
 	plugins: [plugin()],
 	server: {
 		// TODO: required to support ipv6, remove on vite 3
