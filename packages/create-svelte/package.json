@@ -31,8 +31,7 @@
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",
-		"test": "uvu test",
-		"pretest": "npm run build",
+		"test": "npm run build && uvu test",
 		"check": "tsc",
 		"lint": "eslint --ignore-path .gitignore --ignore-path ../../.gitignore \"./*.js\" && npm run check-format",
 		"format": "npm run check-format -- --write",
