@@ -23,7 +23,7 @@
 			]
 		},
 		"check": {
-			"dependsOn": ["sync"],
+			"dependsOn": ["prepare"],
 			"inputs": [
 				"src/**",
 				"types/**",
@@ -34,9 +34,14 @@
 			"outputs": []
 		},
 		"format": {},
-		"sync": {
+		"prepare": {
 			"inputs": ["src/**", "source/**"],
-			"outputs": [".svelte-kit/types/**", ".custom-out-dir/types/**"]
+			"outputs": [
+				".svelte-kit/types/**",
+				".svelte-kit/tsconfig.json",
+				".custom-out-dir/types/**",
+				".custom-out-dir/tsconfig.json"
+			]
 		},
 		"test": {
 			"dependsOn": ["^build", "$CI", "$TURBO_CACHE_KEY"],

@@ -28,7 +28,7 @@ To create a simple Node server, install the [`@sveltejs/adapter-node`](https://g
 +import adapter from '@sveltejs/adapter-node';
 ```
 
-With this, [svelte-kit build](/docs/cli#svelte-kit-build) will generate a self-contained Node app inside the `build` directory. You can pass options to adapters, such as customising the output directory:
+With this, `vite build` will generate a self-contained Node app inside the `build` directory. You can pass options to adapters, such as customising the output directory:
 
 ```diff
 /// file: svelte.config.js

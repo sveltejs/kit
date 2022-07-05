@@ -11,12 +11,14 @@ import { prerender } from './build/prerender/prerender.js';
 import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
-import { get_aliases, get_runtime_path, logger, resolve_entry } from '../core/utils.js';
+import { get_runtime_path, logger } from '../core/utils.js';
 import { find_deps, get_default_config } from './build/utils.js';
 import { preview } from './preview/index.js';
+import { get_aliases, resolve_entry } from './utils.js';
 
 const cwd = process.cwd();
 
+/** @type {Record<string, any>} */
 const enforced_config = {
 	base: true,
 	build: {
@@ -68,7 +70,7 @@ function kit() {
 	let svelte_config;
 
 	/** @type {import('vite').UserConfig} */
-	let vite_user_config;
+	let vite_config;
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
@@ -82,20 +84,38 @@ function kit() {
 	 */
 	let paths;
 
+	function create_client_config() {
+		/** @type {Record<string, string>} */
+		const input = {
+			start: `${get_runtime_path(svelte_config.kit)}/client/start.js`
+		};
+
+		// This step is optional — Vite/Rollup will create the necessary chunks
+		// for everything regardless — but it means that entry chunks reflect
+		// their location in the source code, which is helpful for debugging
+		manifest_data.components.forEach((file) => {
+			const resolved = path.resolve(cwd, file);
+			const relative = path.relative(svelte_config.kit.files.routes, resolved);
+
+			const name = relative.startsWith('..')
+				? path.basename(file)
+				: posixify(path.join('pages', relative));
+			input[name] = resolved;
+		});
+
+		return get_default_config({
+			config: svelte_config,
+			input,
+			ssr: false,
+			outDir: `${paths.client_out_dir}/immutable`
+		});
+	}
+
 	return {
 		name: 'vite-plugin-svelte-kit',
 
 		async config(config, { command }) {
-			const overridden = find_overridden_config(config, enforced_config);
-
-			if (overridden.length > 0) {
-				console.log(
-					colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
-				);
-				console.log(overridden.map((key) => `  - ${key}`).join('\n'));
-			}
-
-			vite_user_config = config;
+			vite_config = config;
 			svelte_config = await load_config();
 
 			paths = {
@@ -111,34 +131,15 @@ function kit() {
 
 				manifest_data = sync.all(svelte_config).manifest_data;
 
-				/** @type {Record<string, string>} */
-				const input = {
-					start: `${get_runtime_path(svelte_config.kit)}/client/start.js`
-				};
+				const new_config = create_client_config();
 
-				// This step is optional — Vite/Rollup will create the necessary chunks
-				// for everything regardless — but it means that entry chunks reflect
-				// their location in the source code, which is helpful for debugging
-				manifest_data.components.forEach((file) => {
-					const resolved = path.resolve(cwd, file);
-					const relative = path.relative(svelte_config.kit.files.routes, resolved);
+				warn_overridden_config(config, new_config);
 
-					const name = relative.startsWith('..')
-						? path.basename(file)
-						: posixify(path.join('pages', relative));
-					input[name] = resolved;
-				});
-
-				return get_default_config({
-					config: svelte_config,
-					input,
-					ssr: false,
-					outDir: `${paths.client_out_dir}/immutable`
-				});
+				return new_config;
 			}
 
 			// dev and preview config can be shared
-			return {
+			const result = {
 				base: '/',
 				build: {
 					rollupOptions: {
@@ -154,6 +155,7 @@ function kit() {
 				resolve: {
 					alias: get_aliases(svelte_config.kit)
 				},
+				root: cwd,
 				server: {
 					fs: {
 						allow: [
@@ -177,6 +179,8 @@ function kit() {
 					}
 				}
 			};
+			warn_overridden_config(config, result);
+			return result;
 		},
 
 		buildStart() {
@@ -188,7 +192,8 @@ function kit() {
 		},
 
 		async writeBundle(_options, bundle) {
-			const log = logger({ verbose: !!process.env.VERBOSE });
+			const verbose = vite_config.logLevel === 'info';
+			const log = logger({ verbose });
 
 			fs.writeFileSync(
 				`${paths.client_out_dir}/version.json`,
@@ -236,7 +241,7 @@ function kit() {
 
 			log.info('Building server');
 
-			const server = await build_server(vite_user_config, options, client);
+			const server = await build_server(options, client);
 
 			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 
@@ -249,12 +254,14 @@ function kit() {
 				server
 			};
 
-			const manifest = `export const manifest = ${generate_manifest({
-				build_data,
-				relative_path: '.',
-				routes: manifest_data.routes
-			})};\n`;
-			fs.writeFileSync(`${paths.output_dir}/server/manifest.js`, manifest);
+			fs.writeFileSync(
+				`${paths.output_dir}/server/manifest.js`,
+				`export const manifest = ${generate_manifest({
+					build_data,
+					relative_path: '.',
+					routes: manifest_data.routes
+				})};\n`
+			);
 
 			const static_files = manifest_data.assets.map((asset) => posixify(asset.file));
 
@@ -289,7 +296,7 @@ function kit() {
 
 				log.info('Building service worker');
 
-				await build_service_worker(vite_user_config, options, prerendered, client.vite_manifest);
+				await build_service_worker(options, prerendered, client.vite_manifest);
 			}
 
 			console.log(
@@ -299,17 +306,22 @@ function kit() {
 			if (svelte_config.kit.adapter) {
 				const { adapt } = await import('./build/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
+			} else {
+				console.log(colors.bold().yellow('\nNo adapter specified'));
+				// prettier-ignore
+				console.log(
+					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
+				);
+			}
+		},
 
-				// this is necessary to close any open db connections, etc
+		closeBundle() {
+			if (svelte_config.kit.prerender.enabled) {
+				// this is necessary to close any open db connections, etc.
+				// TODO: prerender in a subprocess so we can exit in isolation
+				// https://github.com/sveltejs/kit/issues/5306
 				process.exit(0);
 			}
-
-			console.log(colors.bold().yellow('\nNo adapter specified'));
-
-			// prettier-ignore
-			console.log(
-				`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
-			);
 		},
 
 		async configureServer(vite) {
@@ -317,7 +329,7 @@ function kit() {
 		},
 
 		configurePreviewServer(vite) {
-			const protocol = vite_user_config.preview?.https ? 'https' : 'http';
+			const protocol = vite_config.preview?.https ? 'https' : 'http';
 			return preview(vite, svelte_config, protocol);
 		}
 	};
@@ -325,17 +337,33 @@ function kit() {
 
 /**
  * @param {Record<string, any>} config
- * @param {Record<string, any>} enforced_config
+ * @param {Record<string, any>} resolved_config
  * @param {string} [path]
  * @param {string[]} [out] used locally to compute the return value
  */
-function find_overridden_config(config, enforced_config, path = '', out = []) {
+function warn_overridden_config(config, resolved_config, path = '', out = []) {
+	const overridden = find_overridden_config(config, resolved_config, path, out);
+	if (overridden.length > 0) {
+		console.log(
+			colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
+		);
+		console.log(overridden.map((key) => `  - ${key}`).join('\n'));
+	}
+}
+
+/**
+ * @param {Record<string, any>} config
+ * @param {Record<string, any>} resolved_config
+ * @param {string} path
+ * @param {string[]} out used locally to compute the return value
+ */
+function find_overridden_config(config, resolved_config, path, out) {
 	for (const key in enforced_config) {
-		if (key in config) {
-			if (enforced_config[key] === true) {
+		if (typeof config === 'object' && config !== null && key in config) {
+			if (enforced_config[key] === true && config[key] !== resolved_config[key]) {
 				out.push(path + key);
 			} else {
-				find_overridden_config(config[key], enforced_config[key], path + key + '.', out);
+				find_overridden_config(config[key], resolved_config[key], path + key + '.', out);
 			}
 		}
 	}
