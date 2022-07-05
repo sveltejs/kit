@@ -34,7 +34,7 @@
 		"mime": "^3.0.0",
 		"node-fetch": "^3.2.4",
 		"port-authority": "^2.0.1",
-		"rollup": "^2.75.3",
+		"rollup": "^2.75.6",
 		"selfsigned": "^2.0.1",
 		"set-cookie-parser": "^2.4.8",
 		"sirv": "^2.0.2",
@@ -46,11 +46,11 @@
 		"typescript": "^4.7.2",
 		"undici": "^5.6.0",
 		"uvu": "^0.5.3",
-		"vite": "^2.9.13"
+		"vite": "^3.0.0-beta.6"
 	},
 	"peerDependencies": {
 		"svelte": "^3.44.0",
-		"vite": "^2.9.10"
+		"vite": "^3.0.0-beta.6"
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit.js"

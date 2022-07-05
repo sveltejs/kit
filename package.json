@@ -36,7 +36,7 @@
 		"eslint-plugin-node": "^11.1.0",
 		"eslint-plugin-svelte3": "^4.0.0",
 		"prettier": "^2.6.2",
-		"rollup": "^2.75.3",
+		"rollup": "^2.75.6",
 		"svelte": "^3.48.0",
 		"tiny-glob": "^0.2.9",
 		"turbo": "^1.2.14",

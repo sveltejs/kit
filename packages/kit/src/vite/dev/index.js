@@ -58,7 +58,7 @@ export async function dev(vite, svelte_config) {
 						const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
 						const module = /** @type {import('types').SSRComponent} */ (
-							await vite.ssrLoadModule(url, { fixStacktrace: false })
+							await vite.ssrLoadModule(url)
 						);
 						const node = await vite.moduleGraph.getModuleByUrl(url);
 
@@ -79,7 +79,7 @@ export async function dev(vite, svelte_config) {
 								(query.has('svelte') && query.get('type') === 'style')
 							) {
 								try {
-									const mod = await vite.ssrLoadModule(dep.url, { fixStacktrace: false });
+									const mod = await vite.ssrLoadModule(dep.url);
 									styles[dep.url] = mod.default;
 								} catch {
 									// this can happen with dynamically imported modules, I think
@@ -113,7 +113,7 @@ export async function dev(vite, svelte_config) {
 							shadow: route.shadow
 								? async () => {
 										const url = path.resolve(cwd, /** @type {string} */ (route.shadow));
-										return await vite.ssrLoadModule(url, { fixStacktrace: false });
+										return await vite.ssrLoadModule(url);
 								  }
 								: null,
 							a: route.a.map((id) => (id ? manifest_data.components.indexOf(id) : undefined)),
@@ -129,7 +129,7 @@ export async function dev(vite, svelte_config) {
 						types,
 						load: async () => {
 							const url = path.resolve(cwd, route.file);
-							return await vite.ssrLoadModule(url, { fixStacktrace: false });
+							return await vite.ssrLoadModule(url);
 						}
 					};
 				}),
@@ -140,7 +140,7 @@ export async function dev(vite, svelte_config) {
 					for (const key in manifest_data.matchers) {
 						const file = manifest_data.matchers[key];
 						const url = path.resolve(cwd, file);
-						const module = await vite.ssrLoadModule(url, { fixStacktrace: false });
+						const module = await vite.ssrLoadModule(url);
 
 						if (module.match) {
 							matchers[key] = module.match;
@@ -384,12 +384,7 @@ function not_found(res, message = 'Not found') {
  * @param {import('connect').Server} server
  */
 function remove_html_middlewares(server) {
-	const html_middlewares = [
-		'viteIndexHtmlMiddleware',
-		'vite404Middleware',
-		'viteSpaFallbackMiddleware',
-		'viteServeStaticMiddleware'
-	];
+	const html_middlewares = ['viteServeStaticMiddleware'];
 	for (let i = server.stack.length - 1; i > 0; i--) {
 		// @ts-expect-error using internals until https://github.com/vitejs/vite/pull/4640 is merged
 		if (html_middlewares.includes(server.stack[i].handle.name)) {

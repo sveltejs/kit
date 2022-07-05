@@ -20,6 +20,7 @@ const cwd = process.cwd();
 
 /** @type {Record<string, any>} */
 const enforced_config = {
+	appType: 'custom',
 	base: true,
 	build: {
 		cssCodeSplit: true,
@@ -139,7 +140,9 @@ function kit() {
 			}
 
 			// dev and preview config can be shared
+			/** @type {import('vite').UserConfig} */
 			const result = {
+				appType: 'custom',
 				base: '/',
 				build: {
 					rollupOptions: {

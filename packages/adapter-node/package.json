@@ -45,7 +45,7 @@
 		"node-fetch": "^3.2.4",
 		"polka": "^1.0.0-next.22",
 		"rimraf": "^3.0.2",
-		"rollup": "^2.75.3",
+		"rollup": "^2.75.6",
 		"sirv": "^2.0.2",
 		"typescript": "^4.7.2",
 		"uvu": "^0.5.3"

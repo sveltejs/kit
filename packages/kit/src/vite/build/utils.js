@@ -62,12 +62,13 @@ export function find_deps(file, manifest, js, css) {
  */
 export const get_default_config = function ({ config, input, ssr, outDir }) {
 	return {
+		appType: 'custom',
 		base: assets_base(config.kit),
 		build: {
 			cssCodeSplit: true,
 			manifest: true,
 			outDir,
-			polyfillDynamicImport: false,
+			polyfillModulePreload: false,
 			rollupOptions: {
 				input,
 				output: {
@@ -87,7 +88,6 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 		resolve: {
 			alias: get_aliases(config.kit)
 		},
-		// @ts-expect-error
 		ssr: {
 			// when developing against the Kit src code, we want to ensure that
 			// our dependencies are bundled so that apps don't need to install
