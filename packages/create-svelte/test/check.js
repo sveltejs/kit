@@ -24,7 +24,7 @@ for (const template of fs.readdirSync('templates')) {
 				playwright: false
 			});
 
-			execSync('npm i && npm run check', { cwd, stdio: 'inherit' });
+			execSync('pnpm i && pnpm check', { cwd, stdio: 'inherit' });
 		});
 	}
 }
