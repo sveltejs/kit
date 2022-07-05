@@ -304,17 +304,22 @@ function kit() {
 			if (svelte_config.kit.adapter) {
 				const { adapt } = await import('./build/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
+			} else {
+				console.log(colors.bold().yellow('\nNo adapter specified'));
+				// prettier-ignore
+				console.log(
+					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
+				);
+			}
+		},
 
-				// this is necessary to close any open db connections, etc
+		closeBundle() {
+			if (svelte_config.kit.prerender.enabled) {
+				// this is necessary to close any open db connections, etc.
+				// TODO: prerender in a subprocess so we can exit in isolation
+				// https://github.com/sveltejs/kit/issues/5306
 				process.exit(0);
 			}
-
-			console.log(colors.bold().yellow('\nNo adapter specified'));
-
-			// prettier-ignore
-			console.log(
-				`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
-			);
 		},
 
 		async configureServer(vite) {
