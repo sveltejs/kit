@@ -12,7 +12,7 @@ import {
 	ResolveOptions,
 	Server,
 	SSRManifest
-} from './index';
+} from './index.js';
 import {
 	HttpMethod,
 	JSONObject,
@@ -20,7 +20,7 @@ import {
 	RequestOptions,
 	ResponseHeaders,
 	TrailingSlash
-} from './private';
+} from './private.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
