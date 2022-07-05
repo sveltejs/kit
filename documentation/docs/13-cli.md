@@ -2,7 +2,13 @@
 title: Command Line Interface
 ---
 
-SvelteKit projects use Vite as a development server and to build distributables and so you will mostly use its CLI. However, SvelteKit includes a command line interface for packaging libraries.
+SvelteKit projects use [Vite](https://vitejs.dev), meaning you'll mostly use its CLI (albeit via `npm run dev/build/preview` scripts):
+
+- `vite dev` — start a development server
+- `vite build` — build a production version of your app
+- `vite preview` — run the production version locally
+
+However SvelteKit includes its own CLI for creating distributable packages and initialising your project:
 
 ### svelte-kit package
 
