@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.145
+
+### Patch Changes
+
+- fix todos fail to update in demo app ([#5354](https://github.com/sveltejs/kit/pull/5354))
+
 ## 2.0.0-next.144
 
 ### Patch Changes
