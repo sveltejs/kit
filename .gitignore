@@ -14,3 +14,4 @@ yarn.lock
 .pnpm-debug.log
 .netlify
 .turbo
+.vercel
