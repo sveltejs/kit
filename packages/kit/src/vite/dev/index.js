@@ -190,7 +190,7 @@ export async function dev(vite, svelte_config, allowed) {
 
 		remove_html_middlewares(vite.middlewares);
 
-		vite.middlewares.use(async (req, res, next) => {
+		vite.middlewares.use(async (req, res) => {
 			try {
 				if (!req.url || !req.method) throw new Error('Incomplete request');
 
