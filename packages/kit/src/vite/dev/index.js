@@ -213,7 +213,7 @@ export async function dev(vite, svelte_config, allowed) {
 					}
 				}
 
-				const file = path.resolve(decoded.slice(1));
+				const file = posixify(path.resolve(decoded.slice(1)));
 
 				// temporary — debugging windows via CI
 				if (file.includes('logo.svg')) {
