@@ -340,7 +340,7 @@ function kit() {
 		},
 
 		async configureServer(vite) {
-			return await dev(vite, svelte_config, vite_config.server.fs.allow);
+			return await dev(vite, vite_config, svelte_config);
 		},
 
 		configurePreviewServer(vite) {

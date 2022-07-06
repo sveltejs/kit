@@ -22,11 +22,11 @@ const cwd = process.cwd();
 
 /**
  * @param {import('vite').ViteDevServer} vite
+ * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
- * @param {string[]} allowed
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, svelte_config, allowed) {
+export async function dev(vite, vite_config, svelte_config) {
 	installPolyfills();
 
 	sync.init(svelte_config);
@@ -214,17 +214,12 @@ export async function dev(vite, svelte_config, allowed) {
 				}
 
 				const file = posixify(path.resolve(decoded.slice(1)));
+				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
+				const allowed =
+					!vite_config.server.fs.strict ||
+					vite_config.server.fs.allow.some((dir) => file.startsWith(dir));
 
-				// temporary — debugging windows via CI
-				if (file.includes('logo.svg')) {
-					console.error({ file, allowed });
-				}
-
-				if (
-					fs.existsSync(file) &&
-					!fs.statSync(file).isDirectory() &&
-					allowed.some((dir) => file.startsWith(dir))
-				) {
+				if (is_file && allowed) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res);
 					return;
