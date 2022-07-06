@@ -72,6 +72,9 @@ function kit() {
 	/** @type {import('vite').UserConfig} */
 	let vite_config;
 
+	/** @type {import('vite').ConfigEnv} */
+	let vite_config_env;
+
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
 
@@ -117,10 +120,11 @@ function kit() {
 	return {
 		name: 'vite-plugin-svelte-kit',
 
-		async config(config, { command }) {
+		async config(config, config_env) {
 			vite_config = config;
+			vite_config_env = config_env;
 			svelte_config = await load_config();
-			is_build = command === 'build';
+			is_build = config_env.command === 'build';
 
 			paths = {
 				build_dir: `${svelte_config.kit.outDir}/build`,
@@ -239,6 +243,7 @@ function kit() {
 			const options = {
 				cwd,
 				config: svelte_config,
+				vite_config_env,
 				build_dir: paths.build_dir, // TODO just pass `paths`
 				manifest_data,
 				output_dir: paths.output_dir,

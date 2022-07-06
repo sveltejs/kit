@@ -107,6 +107,7 @@ export class Server {
  * @param {{
  *   cwd: string;
  *   config: import('types').ValidatedConfig
+ *   vite_config_env: import('vite').ConfigEnv
  *   manifest_data: import('types').ManifestData
  *   build_dir: string;
  *   output_dir: string;
@@ -115,7 +116,15 @@ export class Server {
  * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
  */
 export async function build_server(options, client) {
-	const { cwd, config, manifest_data, build_dir, output_dir, service_worker_entry_file } = options;
+	const {
+		cwd,
+		config,
+		vite_config_env,
+		manifest_data,
+		build_dir,
+		output_dir,
+		service_worker_entry_file
+	} = options;
 
 	let hooks_file = resolve_entry(config.kit.files.hooks);
 	if (!hooks_file || !fs.existsSync(hooks_file)) {
@@ -174,7 +183,7 @@ export async function build_server(options, client) {
 		})
 	);
 
-	const vite_config = await get_vite_config();
+	const vite_config = await get_vite_config(vite_config_env);
 
 	const merged_config = merge_vite_configs(
 		get_default_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
