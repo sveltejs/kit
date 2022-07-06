@@ -1133,33 +1133,39 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('page endpoint GET error message is preserved', async ({ page }) => {
-		await page.goto('/errors/endpoint-throws');
-		await page.click('#get');
+	test('page endpoint GET thrown error message is preserved', async ({ page, read_errors }) => {
+		await page.goto('/errors/page-endpoint');
+		await page.click('#get-implicit');
 		await page.waitForSelector('#message');
 		expect(await page.textContent('#message')).toContain('oops');
 
 		if (process.env.DEV) {
 			const lines = (await page.textContent('pre')).split('\n');
-			expect(lines[1]).toContain('get.js:2:8');
+			expect(lines[1]).toContain('get-implicit.js:2:8');
 		}
+
+		const error = read_errors('/errors/page-endpoint/get-implicit');
+		expect(error).toContain('oops');
 	});
 
-	test('page endpoint POST error message is preserved', async ({ page }) => {
+	test('page endpoint POST thrown error message is preserved', async ({ page, read_errors }) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
-		await page.goto('/errors/endpoint-throws');
-		await Promise.all([page.waitForNavigation(), page.click('#post')]);
+		await page.goto('/errors/page-endpoint');
+		await Promise.all([page.waitForNavigation(), page.click('#post-implicit')]);
 		expect(await page.textContent('#message')).toContain('oops');
 
 		if (process.env.DEV) {
 			const lines = (await page.textContent('pre')).split('\n');
-			expect(lines[1]).toContain('post.js:2:8');
+			expect(lines[1]).toContain('post-implicit.js:2:8');
 		}
+
+		const error = read_errors('/errors/page-endpoint/post-implicit');
+		expect(error).toContain('oops');
 	});
 
-	test('page endpoint error respects `accept: application/json`', async ({ request }) => {
-		const response = await request.get('/errors/endpoint-throws/get', {
+	test('page endpoint thrown error respects `accept: application/json`', async ({ request }) => {
+		const response = await request.get('/errors/page-endpoint/get-implicit', {
 			headers: {
 				accept: 'application/json'
 			}
