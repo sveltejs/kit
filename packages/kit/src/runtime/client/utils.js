@@ -1,5 +1,4 @@
 import { writable } from 'svelte/store';
-import { hash } from '../hash.js';
 import { assets } from '../paths.js';
 
 /** @param {HTMLDocument} doc */
@@ -114,26 +113,4 @@ export function create_updated_store() {
 		subscribe,
 		check
 	};
-}
-
-/**
- * @param {RequestInfo} resource
- * @param {RequestInit} [opts]
- */
-export function initial_fetch(resource, opts) {
-	const url = JSON.stringify(typeof resource === 'string' ? resource : resource.url);
-
-	let selector = `script[sveltekit\\:data-type="data"][sveltekit\\:data-url=${url}]`;
-
-	if (opts && typeof opts.body === 'string') {
-		selector += `[sveltekit\\:data-body="${hash(opts.body)}"]`;
-	}
-
-	const script = document.querySelector(selector);
-	if (script && script.textContent) {
-		const { body, ...init } = JSON.parse(script.textContent);
-		return Promise.resolve(new Response(body, init));
-	}
-
-	return fetch(resource, opts);
 }

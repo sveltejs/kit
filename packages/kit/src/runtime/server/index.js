@@ -41,7 +41,12 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	let decoded = decodeURI(url.pathname);
+	let decoded;
+	try {
+		decoded = decodeURI(url.pathname);
+	} catch {
+		return new Response('Malformed URI', { status: 400 });
+	}
 
 	/** @type {import('types').SSRRoute | null} */
 	let route = null;
@@ -49,9 +54,9 @@ export async function respond(request, options, state) {
 	/** @type {Record<string, string>} */
 	let params = {};
 
-	if (options.paths.base && !state.prerender?.fallback) {
+	if (options.paths.base && !state.prerendering?.fallback) {
 		if (!decoded.startsWith(options.paths.base)) {
-			return new Response(undefined, { status: 404 });
+			return new Response('Not found', { status: 404 });
 		}
 		decoded = decoded.slice(options.paths.base.length) || '/';
 	}
@@ -59,11 +64,12 @@ export async function respond(request, options, state) {
 	const is_data_request = decoded.endsWith(DATA_SUFFIX);
 
 	if (is_data_request) {
-		decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
-		url = new URL(url.origin + url.pathname.slice(0, -DATA_SUFFIX.length) + url.search);
+		const data_suffix_length = DATA_SUFFIX.length - (options.trailing_slash === 'always' ? 1 : 0);
+		decoded = decoded.slice(0, -data_suffix_length) || '/';
+		url = new URL(url.origin + url.pathname.slice(0, -data_suffix_length) + url.search);
 	}
 
-	if (!state.prerender || !state.prerender.fallback) {
+	if (!state.prerendering?.fallback) {
 		const matchers = await options.manifest._.matchers();
 
 		for (const candidate of options.manifest._.routes) {
@@ -79,19 +85,26 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	if (route?.type === 'page') {
-		const normalized = normalize_path(url.pathname, options.trailing_slash);
+	if (route) {
+		if (route.type === 'page') {
+			const normalized = normalize_path(url.pathname, options.trailing_slash);
 
-		if (normalized !== url.pathname && !state.prerender?.fallback) {
+			if (normalized !== url.pathname && !state.prerendering?.fallback) {
+				return new Response(undefined, {
+					status: 301,
+					headers: {
+						'x-sveltekit-normalize': '1',
+						location:
+							// ensure paths starting with '//' are not treated as protocol-relative
+							(normalized.startsWith('//') ? url.origin + normalized : normalized) +
+							(url.search === '?' ? '' : url.search)
+					}
+				});
+			}
+		} else if (is_data_request) {
+			// requesting /__data.json should fail for a standalone endpoint
 			return new Response(undefined, {
-				status: 301,
-				headers: {
-					'x-sveltekit-normalize': '1',
-					location:
-						// ensure paths starting with '//' are not treated as protocol-relative
-						(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-						(url.search === '?' ? '' : url.search)
-				}
+				status: 404
 			});
 		}
 	}
@@ -173,7 +186,7 @@ export async function respond(request, options, state) {
 					};
 				}
 
-				if (state.prerender && state.prerender.fallback) {
+				if (state.prerendering?.fallback) {
 					return await render_response({
 						event,
 						options,
@@ -275,7 +288,7 @@ export async function respond(request, options, state) {
 					});
 				}
 
-				if (state.prerender) {
+				if (state.prerendering) {
 					return new Response('not found', { status: 404 });
 				}
 

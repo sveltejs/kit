@@ -22,7 +22,7 @@ jobs:
         with:
           # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
           fetch-depth: 0
-      - uses: pnpm/action-setup@v2.2.1
+      - uses: pnpm/action-setup@v2.2.2
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -30,7 +30,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run build
+      - run: pnpm turbo run build --filter="./packages/*"
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets

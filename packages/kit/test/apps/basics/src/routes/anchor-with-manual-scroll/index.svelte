@@ -1,5 +1,5 @@
 <h1>Welcome to a test project</h1>
-<a href="/anchor-with-manual-scroll/anchor#go-to-element">Anchor demo</a>
+<a href="/anchor-with-manual-scroll/anchor-onmount#go-to-element">Anchor demo</a>
 
 <style>
 	:global(body) {

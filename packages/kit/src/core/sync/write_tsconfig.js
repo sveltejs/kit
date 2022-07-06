@@ -7,9 +7,12 @@ import { write_if_changed } from './utils.js';
 /** @param {string} file */
 const exists = (file) => fs.existsSync(file) && file;
 
-/** @param {import('types').ValidatedConfig} config */
+/**
+ * Writes the tsconfig that the user's tsconfig inherits from.
+ * @param {import('types').ValidatedKitConfig} config
+ */
 export function write_tsconfig(config, cwd = process.cwd()) {
-	const out = path.join(config.kit.outDir, 'tsconfig.json');
+	const out = path.join(config.outDir, 'tsconfig.json');
 	const user_file =
 		exists(path.resolve(cwd, 'tsconfig.json')) || exists(path.resolve(cwd, 'jsconfig.json'));
 
@@ -19,11 +22,11 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 	const project_relative = (file) => posixify(path.relative('.', file));
 
 	/** @param {string} file */
-	const config_relative = (file) => posixify(path.relative(config.kit.outDir, file));
+	const config_relative = (file) => posixify(path.relative(config.outDir, file));
 
 	const dirs = new Set([
-		project_relative(path.dirname(config.kit.files.routes)),
-		project_relative(path.dirname(config.kit.files.lib))
+		project_relative(path.dirname(config.files.routes)),
+		project_relative(path.dirname(config.files.lib))
 	]);
 
 	/** @type {string[]} */
@@ -34,6 +37,19 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 		include.push(config_relative(`${dir}/**/*.svelte`));
 	});
 
+	/** @type {Record<string, string[]>} */
+	const paths = {};
+	const alias = {
+		$lib: project_relative(config.files.lib),
+		...config.alias
+	};
+	for (const [key, value] of Object.entries(alias)) {
+		if (fs.existsSync(project_relative(value))) {
+			paths[key] = [project_relative(value)];
+			paths[key + '/*'] = [project_relative(value) + '/*'];
+		}
+	}
+
 	write_if_changed(
 		out,
 		JSON.stringify(
@@ -41,12 +57,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 				compilerOptions: {
 					// generated options
 					baseUrl: config_relative('.'),
-					paths: fs.existsSync(config.kit.files.lib)
-						? {
-								$lib: [project_relative(config.kit.files.lib)],
-								'$lib/*': [project_relative(config.kit.files.lib + '/*')]
-						  }
-						: {},
+					paths,
 					rootDirs: [config_relative('.'), './types'],
 
 					// essential options
@@ -76,7 +87,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 }
 
 /**
- * @param {import('types').ValidatedConfig} config
+ * @param {import('types').ValidatedKitConfig} config
  * @param {string} cwd
  * @param {string} out
  * @param {string} user_file
@@ -95,17 +106,15 @@ function validate(config, cwd, out, user_file) {
 	if (extends_framework_config) {
 		const { paths: user_paths } = user_tsconfig.compilerOptions || {};
 
-		if (user_paths && fs.existsSync(config.kit.files.lib)) {
+		if (user_paths && fs.existsSync(config.files.lib)) {
 			/** @type {string[]} */
 			const lib = user_paths['$lib'] || [];
 			/** @type {string[]} */
 			const lib_ = user_paths['$lib/*'] || [];
 
 			const missing_lib_paths =
-				!lib.some((relative) => path.resolve(cwd, relative) === config.kit.files.lib) ||
-				!lib_.some(
-					(relative) => path.resolve(cwd, relative) === path.join(config.kit.files.lib, '/*')
-				);
+				!lib.some((relative) => path.resolve(cwd, relative) === config.files.lib) ||
+				!lib_.some((relative) => path.resolve(cwd, relative) === path.join(config.files.lib, '/*'));
 
 			if (missing_lib_paths) {
 				console.warn(
@@ -113,7 +122,7 @@ function validate(config, cwd, out, user_file) {
 						.bold()
 						.yellow(`Your compilerOptions.paths in ${kind} should include the following:`)
 				);
-				const relative = posixify(path.relative('.', config.kit.files.lib));
+				const relative = posixify(path.relative('.', config.files.lib));
 				console.warn(`{\n  "$lib":["${relative}"],\n  "$lib/*":["${relative}/*"]\n}`);
 			}
 		}

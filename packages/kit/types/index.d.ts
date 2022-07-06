@@ -1,7 +1,7 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
-import './ambient';
+import './ambient.js';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
@@ -17,8 +17,8 @@ import {
 	ResponseHeaders,
 	RouteDefinition,
 	TrailingSlash
-} from './private';
-import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal';
+} from './private.js';
+import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 
 export interface Adapter {
 	name: string;
@@ -91,64 +91,67 @@ export interface Builder {
 export interface Config {
 	compilerOptions?: CompileOptions;
 	extensions?: string[];
-	kit?: {
-		adapter?: Adapter;
-		appDir?: string;
-		browser?: {
-			hydrate?: boolean;
-			router?: boolean;
-		};
-		csp?: {
-			mode?: 'hash' | 'nonce' | 'auto';
-			directives?: CspDirectives;
-		};
-		endpointExtensions?: string[];
-		files?: {
-			assets?: string;
-			hooks?: string;
-			lib?: string;
-			params?: string;
-			routes?: string;
-			serviceWorker?: string;
-			template?: string;
-		};
-		inlineStyleThreshold?: number;
-		methodOverride?: {
-			parameter?: string;
-			allowed?: string[];
-		};
-		outDir?: string;
-		package?: {
-			dir?: string;
-			emitTypes?: boolean;
-			exports?(filepath: string): boolean;
-			files?(filepath: string): boolean;
-		};
-		paths?: {
-			assets?: string;
-			base?: string;
-		};
-		prerender?: {
-			concurrency?: number;
-			crawl?: boolean;
-			default?: boolean;
-			enabled?: boolean;
-			entries?: Array<'*' | `/${string}`>;
-			onError?: PrerenderOnErrorValue;
-		};
-		routes?: (filepath: string) => boolean;
-		serviceWorker?: {
-			register?: boolean;
-			files?: (filepath: string) => boolean;
-		};
-		trailingSlash?: TrailingSlash;
-		version?: {
-			name?: string;
-			pollInterval?: number;
-		};
-		vite?: import('vite').UserConfig | (() => MaybePromise<import('vite').UserConfig>);
-	};
+	kit?: KitConfig;
 	preprocess?: any;
+}
+
+export interface KitConfig {
+	adapter?: Adapter;
+	alias?: Record<string, string>;
+	appDir?: string;
+	browser?: {
+		hydrate?: boolean;
+		router?: boolean;
+	};
+	csp?: {
+		mode?: 'hash' | 'nonce' | 'auto';
+		directives?: CspDirectives;
+	};
+	moduleExtensions?: string[];
+	files?: {
+		assets?: string;
+		hooks?: string;
+		lib?: string;
+		params?: string;
+		routes?: string;
+		serviceWorker?: string;
+		template?: string;
+	};
+	inlineStyleThreshold?: number;
+	methodOverride?: {
+		parameter?: string;
+		allowed?: string[];
+	};
+	outDir?: string;
+	package?: {
+		dir?: string;
+		emitTypes?: boolean;
+		exports?(filepath: string): boolean;
+		files?(filepath: string): boolean;
+	};
+	paths?: {
+		assets?: string;
+		base?: string;
+	};
+	prerender?: {
+		concurrency?: number;
+		crawl?: boolean;
+		default?: boolean;
+		enabled?: boolean;
+		entries?: Array<'*' | `/${string}`>;
+		onError?: PrerenderOnErrorValue;
+	};
+	routes?: (filepath: string) => boolean;
+	serviceWorker?: {
+		register?: boolean;
+		files?: (filepath: string) => boolean;
+	};
+	trailingSlash?: TrailingSlash;
+	version?: {
+		name?: string;
+		pollInterval?: number;
+	};
+	vite?: import('vite').UserConfig | (() => MaybePromise<import('vite').UserConfig>);
 }
 
 export interface ExternalFetch {
@@ -171,7 +174,7 @@ export interface HandleError {
 }
 
 /**
- * The `(input: LoadInput) => LoadOutput` `load` function exported from `<script context="module">` in a page or layout.
+ * The `(event: LoadEvent) => LoadOutput` `load` function exported from `<script context="module">` in a page or layout.
  *
  * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the Params generic argument.
  */
@@ -180,10 +183,10 @@ export interface Load<
 	InputProps extends Record<string, any> = Record<string, any>,
 	OutputProps extends Record<string, any> = InputProps
 > {
-	(input: LoadInput<Params, InputProps>): MaybePromise<LoadOutput<OutputProps>>;
+	(event: LoadEvent<Params, InputProps>): MaybePromise<LoadOutput<OutputProps>>;
 }
 
-export interface LoadInput<
+export interface LoadEvent<
 	Params extends Record<string, string> = Record<string, string>,
 	Props extends Record<string, any> = Record<string, any>
 > {
@@ -264,7 +267,7 @@ export interface ResolveOptions {
 	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
 }
 
-export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
+export type ResponseBody = JSONValue | Uint8Array | ReadableStream;
 
 export class Server {
 	constructor(manifest: SSRManifest);
@@ -280,8 +283,8 @@ export interface SSRManifest {
 	_: {
 		entry: {
 			file: string;
-			js: string[];
-			css: string[];
+			imports: string[];
+			stylesheets: string[];
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];

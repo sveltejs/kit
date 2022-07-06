@@ -67,7 +67,7 @@ function format(file, content) {
 		content = JSON.stringify(json);
 	}
 	return prettier.format(content, {
-		parser: file.endsWith('.svelte') ? 'svelte' : file.endsWith('.json') ? 'json' : 'babel-ts',
+		parser: file.endsWith('.svelte') ? 'svelte' : file.endsWith('.json') ? 'json' : 'typescript',
 		plugins: ['prettier-plugin-svelte']
 	});
 }

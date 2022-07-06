@@ -1,4 +1,4 @@
-import fs from 'fs';
+import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
@@ -71,6 +71,12 @@ test('generates __data.json file for shadow endpoints', () => {
 test('does not prerender page with shadow endpoint with non-GET handler', () => {
 	assert.ok(!fs.existsSync(`${build}/shadowed-post.html`));
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
+});
+
+test('does not prerender page accessing session in load', () => {
+	// This should fail to prerender as session can never be populated
+	// for a prerendered page.
+	assert.ok(!fs.existsSync(`${build}/accesses-session.html`));
 });
 
 test('decodes paths when writing files', () => {

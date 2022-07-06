@@ -2,16 +2,16 @@ import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { normalize } from '../load.js';
-import { normalize_path } from '../../utils/url.js';
+import { LoadURL, normalize_path } from '../../utils/url.js';
 import {
 	create_updated_store,
 	find_anchor,
 	get_base_uri,
 	get_href,
-	initial_fetch,
 	notifiable_store,
 	scroll_state
 } from './utils.js';
+import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
@@ -46,33 +46,6 @@ try {
 /** @param {number} index */
 function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
-}
-
-const fetch = window.fetch;
-let loading = 0;
-
-if (import.meta.env.DEV) {
-	let can_inspect_stack_trace = false;
-
-	const check_stack_trace = async () => {
-		const stack = /** @type {string} */ (new Error().stack);
-		can_inspect_stack_trace = stack.includes('check_stack_trace');
-	};
-
-	check_stack_trace();
-
-	window.fetch = (input, init) => {
-		const url = input instanceof Request ? input.url : input.toString();
-		const stack = /** @type {string} */ (new Error().stack);
-
-		const heuristic = can_inspect_stack_trace ? stack.includes('load_node') : loading;
-		if (heuristic) {
-			console.warn(
-				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
-			);
-		}
-		return fetch(input, init);
-	};
 }
 
 /**
@@ -183,16 +156,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 	let token;
 
 	/**
-	 * @param {string} href
+	 * @param {string | URL} url
 	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
 	 * @param {string[]} redirect_chain
 	 */
 	async function goto(
-		href,
+		url,
 		{ noscroll = false, replaceState = false, keepfocus = false, state = {} },
 		redirect_chain
 	) {
-		const url = new URL(href, get_base_uri(document));
+		if (typeof url === 'string') {
+			url = new URL(url, get_base_uri(document));
+		}
 
 		if (router_enabled) {
 			return navigate({
@@ -232,8 +207,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {string[]} redirect_chain
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {() => void} [callback]
 	 */
-	async function update(url, redirect_chain, no_cache, opts) {
+	async function update(url, redirect_chain, no_cache, opts, callback) {
 		const intent = get_navigation_intent(url);
 
 		const current_token = (token = {});
@@ -306,6 +282,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (started) {
 			current = navigation_result.state;
 
+			if (navigation_result.props.page) {
+				navigation_result.props.page.url = url;
+			}
+
 			root.$set(navigation_result.props);
 		} else {
 			initialize(navigation_result);
@@ -360,7 +340,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		load_cache.promise = null;
 		load_cache.id = null;
 		autoscroll = true;
-		updating = false;
 
 		if (navigation_result.props.page) {
 			page = navigation_result.props.page;
@@ -369,7 +348,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		router_enabled = leaf_node?.module.router !== false;
 
-		return true;
+		if (callback) callback();
+
+		updating = false;
 	}
 
 	/** @param {import('./types').NavigationResult} result */
@@ -387,12 +368,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			hydrate: true
 		});
 
-		started = true;
-
 		if (router_enabled) {
 			const navigation = { from: null, to: new URL(location.href) };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
 		}
+
+		started = true;
 	}
 
 	/**
@@ -548,27 +529,17 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		const session = $session;
+		const load_url = new LoadURL(url);
 
 		if (module.load) {
-			/** @type {import('types').LoadInput} */
+			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
 				params: uses_params,
 				props: props || {},
 				get url() {
 					node.uses.url = true;
-
-					return new Proxy(url, {
-						get: (target, property) => {
-							if (property === 'hash') {
-								throw new Error(
-									'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
-								);
-							}
-
-							return Reflect.get(target, property, target);
-						}
-					});
+					return load_url;
 				},
 				get session() {
 					node.uses.session = true;
@@ -578,11 +549,44 @@ export function create_client({ target, session, base, trailing_slash }) {
 					node.uses.stuff = true;
 					return { ...stuff };
 				},
-				fetch(resource, info) {
-					const requested = typeof resource === 'string' ? resource : resource.url;
-					add_dependency(requested);
+				async fetch(resource, init) {
+					let requested;
 
-					return started ? fetch(resource, info) : initial_fetch(resource, info);
+					if (typeof resource === 'string') {
+						requested = resource;
+					} else {
+						requested = resource.url;
+
+						// we're not allowed to modify the received `Request` object, so in order
+						// to fixup relative urls we create a new equivalent `init` object instead
+						init = {
+							// the request body must be consumed in memory until browsers
+							// implement streaming request bodies and/or the body getter
+							body:
+								resource.method === 'GET' || resource.method === 'HEAD'
+									? undefined
+									: await resource.blob(),
+							cache: resource.cache,
+							credentials: resource.credentials,
+							headers: resource.headers,
+							integrity: resource.integrity,
+							keepalive: resource.keepalive,
+							method: resource.method,
+							mode: resource.mode,
+							redirect: resource.redirect,
+							referrer: resource.referrer,
+							referrerPolicy: resource.referrerPolicy,
+							signal: resource.signal,
+							...init
+						};
+					}
+
+					// we must fixup relative urls so they are resolved from the target page
+					const normalized = new URL(requested, url).href;
+					add_dependency(normalized);
+
+					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be normalized
+					return started ? native_fetch(normalized, init) : initial_fetch(requested, init);
 				},
 				status: status ?? null,
 				error: error ?? null
@@ -601,10 +605,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			if (import.meta.env.DEV) {
 				try {
-					loading += 1;
+					lock_fetch();
 					loaded = await module.load.call(null, load_input);
 				} finally {
-					loading -= 1;
+					unlock_fetch();
 				}
 			} else {
 				loaded = await module.load.call(null, load_input);
@@ -692,7 +696,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					const is_shadow_page = has_shadow && i === a.length - 1;
 
 					if (is_shadow_page) {
-						const res = await fetch(
+						const res = await native_fetch(
 							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
 								headers: {
@@ -945,18 +949,22 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		}
 
-		const completed = await update(normalized, redirect_chain, false, {
-			scroll,
-			keepfocus,
-			details
-		});
+		await update(
+			normalized,
+			redirect_chain,
+			false,
+			{
+				scroll,
+				keepfocus,
+				details
+			},
+			() => {
+				const navigation = { from, to: normalized };
+				callbacks.after_navigate.forEach((fn) => fn(navigation));
 
-		if (completed) {
-			const navigation = { from, to: normalized };
-			callbacks.after_navigate.forEach((fn) => fn(navigation));
-
-			stores.navigating.set(null);
-		}
+				stores.navigating.set(null);
+			}
+		);
 	}
 
 	/**
@@ -968,6 +976,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 	function native_navigation(url) {
 		location.href = url.href;
 		return new Promise(() => {});
+	}
+
+	if (import.meta.hot) {
+		import.meta.hot.on('vite:beforeUpdate', () => {
+			if (current.error) location.reload();
+		});
 	}
 
 	return {
@@ -1240,7 +1254,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					}
 
 					const node = await load_node({
-						module: await nodes[i],
+						module: await components[nodes[i]](),
 						url,
 						params,
 						stuff,

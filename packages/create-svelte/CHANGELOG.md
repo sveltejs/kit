@@ -1,5 +1,61 @@
 # create-svelte
 
+## 2.0.0-next.146
+
+### Patch Changes
+
+- Add vite.config.js to the create-svelte templates ([#5332](https://github.com/sveltejs/kit/pull/5332))
+
+* [breaking] switch to vite CLI for dev, build, and preview commands ([#5332](https://github.com/sveltejs/kit/pull/5332))
+
+## 2.0.0-next.145
+
+### Patch Changes
+
+- fix todos fail to update in demo app ([#5354](https://github.com/sveltejs/kit/pull/5354))
+
+## 2.0.0-next.144
+
+### Patch Changes
+
+- Revert to use ESM eslint config files ([#5293](https://github.com/sveltejs/kit/pull/5293))
+
+## 2.0.0-next.143
+
+### Patch Changes
+
+- Enhance docs on importing types in app.d.ts ([#5280](https://github.com/sveltejs/kit/pull/5280))
+
+* Use ESM eslint config files ([#5263](https://github.com/sveltejs/kit/pull/5263))
+
+- fix formatting for initial package.json ([#5271](https://github.com/sveltejs/kit/pull/5271))
+
+## 2.0.0-next.142
+
+### Patch Changes
+
+- Add descriptions to templates, and make TypeScript options more self-explanatory ([#5221](https://github.com/sveltejs/kit/pull/5221))
+
+## 2.0.0-next.141
+
+### Patch Changes
+
+- [fix] use inline element in heading ([#5164](https://github.com/sveltejs/kit/pull/5164))
+
+## 2.0.0-next.140
+
+### Patch Changes
+
+- Use crypto.randomUUID() instead of @lukeed/uuid ([#5042](https://github.com/sveltejs/kit/pull/5042))
+
+## 2.0.0-next.139
+
+### Patch Changes
+
+- correct default package.json format ([#5013](https://github.com/sveltejs/kit/pull/5013))
+
+* [breaking] Replace `%svelte.body%` with `%sveltekit.body%`, etc. ([#5016](https://github.com/sveltejs/kit/pull/5016))
+
 ## 2.0.0-next.138
 
 ### Patch Changes
