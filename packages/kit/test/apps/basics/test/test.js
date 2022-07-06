@@ -1133,32 +1133,31 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('page endpoint GET method throws', async ({ page }) => {
+	test('page endpoint GET error message is preserved', async ({ page }) => {
 		await page.goto('/errors/endpoint-throws');
-		await page.click('a');
+		await page.click('#get');
 		await page.waitForSelector('#message');
-		expect(await page.textContent('#message')).toContain('Some userland error.');
+		expect(await page.textContent('#message')).toContain('oops');
 	});
 
-	test('submitting a form w/o fetch', async ({ page }) => {
+	test('page endpoint POST error message is preserved', async ({ page }) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
-		await page.goto('/errors/endpoint-throws/page-endpoint-http-post-throws');
-		await Promise.all([page.waitForNavigation(), page.click('#submit')]);
-		expect(await page.textContent('#message')).toContain('Some userland error.');
+		await page.goto('/errors/endpoint-throws');
+		await Promise.all([page.waitForNavigation(), page.click('#post')]);
+		expect(await page.textContent('#message')).toContain('oops');
 	});
 
-	test('client side fetch POST with Accept: application/json', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		// The case where we're fetching a POST with Accept: application/json from javascript.
-		// It should return JSON with {error: string}, not the __error template HTML.
-		await page.goto('/errors/endpoint-throws/fetch-throws');
-		// this case is only relevant if javascript is enabled...
-		if (javaScriptEnabled) {
-			expect(await page.textContent('#error')).toBe('Some userland error.');
-		}
+	test('page endpoint error respects `accept: application/json`', async ({ request }) => {
+		const response = await request.get('/errors/endpoint-throws/get', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		expect(await response.json()).toEqual({
+			message: 'oops'
+		});
 	});
 
 	test('returns 400 when accessing a malformed URI', async ({ page, javaScriptEnabled }) => {
