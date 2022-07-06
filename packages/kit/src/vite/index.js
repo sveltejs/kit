@@ -78,6 +78,9 @@ function kit() {
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
 
+	/** @type {boolean} */
+	let is_build;
+
 	/**
 	 * @type {{
 	 *   build_dir: string;
@@ -121,6 +124,7 @@ function kit() {
 			vite_config = config;
 			vite_config_env = config_env;
 			svelte_config = await load_config();
+			is_build = config_env.command === 'build';
 
 			paths = {
 				build_dir: `${svelte_config.kit.outDir}/build`,
@@ -128,7 +132,7 @@ function kit() {
 				client_out_dir: `${svelte_config.kit.outDir}/output/client/${svelte_config.kit.appDir}`
 			};
 
-			if (config_env.command === 'build') {
+			if (is_build) {
 				process.env.VITE_SVELTEKIT_APP_VERSION = svelte_config.kit.version.name;
 				process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${svelte_config.kit.appDir}/version.json`;
 				process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${svelte_config.kit.version.pollInterval}`;
@@ -188,11 +192,13 @@ function kit() {
 		},
 
 		buildStart() {
-			rimraf(paths.build_dir);
-			mkdirp(paths.build_dir);
+			if (is_build) {
+				rimraf(paths.build_dir);
+				mkdirp(paths.build_dir);
 
-			rimraf(paths.output_dir);
-			mkdirp(paths.output_dir);
+				rimraf(paths.output_dir);
+				mkdirp(paths.output_dir);
+			}
 		},
 
 		async writeBundle(_options, bundle) {
@@ -321,7 +327,7 @@ function kit() {
 		},
 
 		closeBundle() {
-			if (svelte_config.kit.prerender.enabled) {
+			if (is_build && svelte_config.kit.prerender.enabled) {
 				// this is necessary to close any open db connections, etc.
 				// TODO: prerender in a subprocess so we can exit in isolation
 				// https://github.com/sveltejs/kit/issues/5306
