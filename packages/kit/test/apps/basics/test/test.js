@@ -1440,7 +1440,8 @@ test.describe('Load', () => {
 			'sec-fetch-dest':
 				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'empty' : 'document',
 			'sec-fetch-mode':
-				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'cors' : 'navigate'
+				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'cors' : 'navigate',
+			connection: javaScriptEnabled ? 'keep-alive' : undefined
 		});
 	});
 
