@@ -29,11 +29,6 @@ export function run(app, callback) {
 	suite.before(async (context) => {
 		try {
 			const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
-			const mode = process.env.CI ? 'dist' : 'src';
-
-			process.env.SVELTEKIT_PLUGIN =
-				mode === 'dist' ? '@sveltejs/kit/vite' : '../../../../kit/src/vite/index.js';
-
 			rimraf(`${cwd}/build`);
 
 			await spawn('npm run build', {
