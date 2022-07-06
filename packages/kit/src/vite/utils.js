@@ -4,13 +4,15 @@ import { pathToFileURL } from 'url';
 import { get_runtime_path } from '../core/utils.js';
 
 /**
+ * @param {import('vite').ConfigEnv} config_env
  * @return {Promise<import('vite').UserConfig>}
  */
-export async function get_vite_config() {
+export async function get_vite_config(config_env) {
 	for (const file of ['vite.config.js', 'vite.config.mjs', 'vite.config.cjs']) {
 		if (fs.existsSync(file)) {
-			const config = await import(pathToFileURL(file).toString());
-			return config.default || config;
+			const m = await import(pathToFileURL(file).toString());
+			const config = m.default || m;
+			return typeof config === 'function' ? config(config_env) : config;
 		}
 	}
 	throw new Error('Could not find vite.config.js');
