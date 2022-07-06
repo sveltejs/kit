@@ -228,6 +228,8 @@ test.describe('Scrolling', () => {
 
 		const y1 = await page.evaluate(() => scrollY);
 
+		console.error({ y1 });
+
 		await page.click('[href="/scroll/cross-document/b"]');
 		expect(await page.textContent('h1')).toBe('b');
 		await page.waitForSelector('body.started');
