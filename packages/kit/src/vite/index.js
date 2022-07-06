@@ -72,11 +72,17 @@ function kit() {
 	/** @type {import('vite').UserConfig} */
 	let vite_config;
 
+	/** @type {import('vite').ConfigEnv} */
+	let vite_config_env;
+
 	/** @type {string[]} */
 	let allowed;
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
+
+	/** @type {boolean} */
+	let is_build;
 
 	/**
 	 * @type {{
@@ -117,9 +123,11 @@ function kit() {
 	return {
 		name: 'vite-plugin-svelte-kit',
 
-		async config(config, { command }) {
+		async config(config, config_env) {
 			vite_config = config;
+			vite_config_env = config_env;
 			svelte_config = await load_config();
+			is_build = config_env.command === 'build';
 
 			paths = {
 				build_dir: `${svelte_config.kit.outDir}/build`,
@@ -127,7 +135,7 @@ function kit() {
 				client_out_dir: `${svelte_config.kit.outDir}/output/client/${svelte_config.kit.appDir}`
 			};
 
-			if (command === 'build') {
+			if (is_build) {
 				process.env.VITE_SVELTEKIT_APP_VERSION = svelte_config.kit.version.name;
 				process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${svelte_config.kit.appDir}/version.json`;
 				process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${svelte_config.kit.version.pollInterval}`;
@@ -191,11 +199,13 @@ function kit() {
 		},
 
 		buildStart() {
-			rimraf(paths.build_dir);
-			mkdirp(paths.build_dir);
+			if (is_build) {
+				rimraf(paths.build_dir);
+				mkdirp(paths.build_dir);
 
-			rimraf(paths.output_dir);
-			mkdirp(paths.output_dir);
+				rimraf(paths.output_dir);
+				mkdirp(paths.output_dir);
+			}
 		},
 
 		async writeBundle(_options, bundle) {
@@ -240,6 +250,7 @@ function kit() {
 			const options = {
 				cwd,
 				config: svelte_config,
+				vite_config_env,
 				build_dir: paths.build_dir, // TODO just pass `paths`
 				manifest_data,
 				output_dir: paths.output_dir,
@@ -323,7 +334,7 @@ function kit() {
 		},
 
 		closeBundle() {
-			if (svelte_config.kit.prerender.enabled) {
+			if (is_build && svelte_config.kit.prerender.enabled) {
 				// this is necessary to close any open db connections, etc.
 				// TODO: prerender in a subprocess so we can exit in isolation
 				// https://github.com/sveltejs/kit/issues/5306

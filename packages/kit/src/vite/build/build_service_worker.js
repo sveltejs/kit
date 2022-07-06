@@ -8,6 +8,7 @@ import { assets_base, remove_svelte_kit } from './utils.js';
 /**
  * @param {{
  *   config: import('types').ValidatedConfig;
+ *   vite_config_env: import('vite').ConfigEnv;
  *   manifest_data: import('types').ManifestData;
  *   output_dir: string;
  *   service_worker_entry_file: string | null;
@@ -16,7 +17,7 @@ import { assets_base, remove_svelte_kit } from './utils.js';
  * @param {import('vite').Manifest} client_manifest
  */
 export async function build_service_worker(
-	{ config, manifest_data, output_dir, service_worker_entry_file },
+	{ config, vite_config_env, manifest_data, output_dir, service_worker_entry_file },
 	prerendered,
 	client_manifest
 ) {
@@ -65,7 +66,7 @@ export async function build_service_worker(
 			.trim()
 	);
 
-	const vite_config = await get_vite_config();
+	const vite_config = await get_vite_config(vite_config_env);
 	const merged_config = merge_vite_configs(vite_config, {
 		base: assets_base(config.kit),
 		build: {
