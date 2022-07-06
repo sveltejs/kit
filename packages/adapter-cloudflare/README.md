@@ -53,7 +53,7 @@ When configuring your project settings, you must use the following settings:
 
 ## Environment variables
 
-The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV namespaces etc, is passed to SvelteKit via the `platform` property along with `context`, meaning you can access it in hooks and endpoints:
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
 
 ```diff
 // src/app.d.ts
@@ -66,7 +66,8 @@ declare namespace App {
 +		};
 +		context: {
 +			waitUntil(promise: Promise<any>): void;
-+		}
++		};
++		caches: CacheStorage & { default: Cache }
 +	}
 
 	interface Session {}

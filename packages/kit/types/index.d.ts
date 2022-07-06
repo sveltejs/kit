@@ -1,7 +1,7 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
-import './ambient';
+import './ambient.js';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
@@ -17,8 +17,8 @@ import {
 	ResponseHeaders,
 	RouteDefinition,
 	TrailingSlash
-} from './private';
-import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal';
+} from './private.js';
+import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 
 export interface Adapter {
 	name: string;
@@ -117,7 +117,6 @@ export interface KitConfig {
 		serviceWorker?: string;
 		template?: string;
 	};
-	floc?: boolean;
 	inlineStyleThreshold?: number;
 	methodOverride?: {
 		parameter?: string;
@@ -284,8 +283,8 @@ export interface SSRManifest {
 	_: {
 		entry: {
 			file: string;
-			js: string[];
-			css: string[];
+			imports: string[];
+			stylesheets: string[];
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];

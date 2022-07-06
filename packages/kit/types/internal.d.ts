@@ -12,7 +12,7 @@ import {
 	ResolveOptions,
 	Server,
 	SSRManifest
-} from './index';
+} from './index.js';
 import {
 	HttpMethod,
 	JSONObject,
@@ -20,7 +20,7 @@ import {
 	RequestOptions,
 	ResponseHeaders,
 	TrailingSlash
-} from './private';
+} from './private.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -51,8 +51,8 @@ export interface BuildData {
 		chunks: OutputChunk[];
 		entry: {
 			file: string;
-			js: string[];
-			css: string[];
+			imports: string[];
+			stylesheets: string[];
 		};
 		vite_manifest: import('vite').Manifest;
 	};
@@ -230,13 +230,13 @@ export interface SSRNode {
 	/** index into the `components` array in client-manifest.js */
 	index: number;
 	/** client-side module URL for this component */
-	entry: string;
-	/** external CSS files */
-	css: string[];
+	file: string;
 	/** external JS files */
-	js: string[];
+	imports: string[];
+	/** external CSS files */
+	stylesheets: string[];
 	/** inlined styles */
-	styles?: Record<string, string>;
+	inline_styles?: () => MaybePromise<Record<string, string>>;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
@@ -244,7 +244,6 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 export interface SSROptions {
 	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
-	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;

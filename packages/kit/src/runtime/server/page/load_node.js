@@ -362,7 +362,7 @@ export async function load_node({
 
 		if (!loaded) {
 			// TODO do we still want to enforce this now that there's no fallthrough?
-			throw new Error(`load function must return a value${options.dev ? ` (${node.entry})` : ''}`);
+			throw new Error(`load function must return a value${options.dev ? ` (${node.file})` : ''}`);
 		}
 	} else if (shadow.body) {
 		loaded = {

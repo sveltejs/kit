@@ -11,7 +11,8 @@ import { parse_route_id } from '../../utils/routing.js';
 import { load_template } from '../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
-import { get_mime_lookup, get_runtime_path, resolve_entry } from '../../core/utils.js';
+import { get_mime_lookup, get_runtime_path } from '../../core/utils.js';
+import { resolve_entry } from '../utils.js';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
@@ -49,8 +50,8 @@ export async function dev(vite, svelte_config) {
 			_: {
 				entry: {
 					file: `/@fs${runtime}/client/start.js`,
-					css: [],
-					js: []
+					imports: [],
+					stylesheets: []
 				},
 				nodes: manifest_data.components.map((id, index) => {
 					return async () => {
@@ -59,43 +60,46 @@ export async function dev(vite, svelte_config) {
 						const module = /** @type {import('types').SSRComponent} */ (
 							await vite.ssrLoadModule(url, { fixStacktrace: false })
 						);
-						const node = await vite.moduleGraph.getModuleByUrl(url);
-
-						if (!node) throw new Error(`Could not find node for ${url}`);
-
-						const deps = new Set();
-						await find_deps(vite, node, deps);
-
-						/** @type {Record<string, string>} */
-						const styles = {};
-
-						for (const dep of deps) {
-							const parsed = new URL(dep.url, 'http://localhost/');
-							const query = parsed.searchParams;
-
-							if (
-								style_pattern.test(dep.file) ||
-								(query.has('svelte') && query.get('type') === 'style')
-							) {
-								try {
-									const mod = await vite.ssrLoadModule(dep.url, { fixStacktrace: false });
-									styles[dep.url] = mod.default;
-								} catch {
-									// this can happen with dynamically imported modules, I think
-									// because the Vite module graph doesn't distinguish between
-									// static and dynamic imports? TODO investigate, submit fix
-								}
-							}
-						}
 
 						return {
 							module,
 							index,
-							entry: url.endsWith('.svelte') ? url : url + '?import',
-							css: [],
-							js: [],
+							file: url.endsWith('.svelte') ? url : url + '?import',
+							imports: [],
+							stylesheets: [],
 							// in dev we inline all styles to avoid FOUC
-							styles
+							inline_styles: async () => {
+								const node = await vite.moduleGraph.getModuleByUrl(url);
+
+								if (!node) throw new Error(`Could not find node for ${url}`);
+
+								const deps = new Set();
+								await find_deps(vite, node, deps);
+
+								/** @type {Record<string, string>} */
+								const styles = {};
+
+								for (const dep of deps) {
+									const parsed = new URL(dep.url, 'http://localhost/');
+									const query = parsed.searchParams;
+
+									if (
+										style_pattern.test(dep.file) ||
+										(query.has('svelte') && query.get('type') === 'style')
+									) {
+										try {
+											const mod = await vite.ssrLoadModule(dep.url, { fixStacktrace: false });
+											styles[dep.url] = mod.default;
+										} catch {
+											// this can happen with dynamically imported modules, I think
+											// because the Vite module graph doesn't distinguish between
+											// static and dynamic imports? TODO investigate, submit fix
+										}
+									}
+								}
+
+								return styles;
+							}
 						};
 					};
 				}),
@@ -291,7 +295,6 @@ export async function dev(vite, svelte_config) {
 					{
 						csp: svelte_config.kit.csp,
 						dev: true,
-						floc: svelte_config.kit.floc,
 						get_stack: (error) => {
 							return fix_stack_trace(error);
 						},
@@ -428,6 +431,10 @@ async function find_deps(vite, node, deps) {
 	if (node.ssrTransformResult) {
 		if (node.ssrTransformResult.deps) {
 			node.ssrTransformResult.deps.forEach((url) => branches.push(add_by_url(url)));
+		}
+
+		if (node.ssrTransformResult.dynamicDeps) {
+			node.ssrTransformResult.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
 		}
 	} else {
 		node.importedModules.forEach((node) => branches.push(add(node)));
