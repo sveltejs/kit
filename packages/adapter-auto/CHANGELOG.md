@@ -1,5 +1,12 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.54
+
+### Patch Changes
+
+- Updated dependencies [[`320777aa`](https://github.com/sveltejs/kit/commit/320777aad1f0d2141e36738fc440589e3232304d)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.25
+
 ## 1.0.0-next.53
 
 ### Patch Changes
