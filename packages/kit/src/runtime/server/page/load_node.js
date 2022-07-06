@@ -129,6 +129,7 @@ export async function load_node({
 				for (const [key, value] of event.request.headers) {
 					if (
 						key !== 'authorization' &&
+						key !== 'connection' &&
 						key !== 'cookie' &&
 						key !== 'host' &&
 						key !== 'if-none-match' &&
