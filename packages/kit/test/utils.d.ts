@@ -7,6 +7,7 @@ import {
 	TestType
 } from '@playwright/test';
 import { IncomingMessage, ServerResponse } from 'http';
+import { Plugin } from 'vite';
 
 export const test: TestType<
 	PlaywrightTestArgs &
@@ -35,3 +36,5 @@ export const start_server: (
 	port: number;
 	close: () => Promise<void>;
 }>;
+
+export const plugin: () => Plugin;

@@ -1,4 +1,3 @@
-import * as path from 'path';
 import adapter from '../../../../adapter-static/index.js';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -12,18 +11,6 @@ const config = {
 
 		prerender: {
 			default: true
-		},
-
-		vite: {
-			build: {
-				minify: false
-			},
-			clearScreen: false,
-			server: {
-				fs: {
-					allow: [path.resolve('../../../src')]
-				}
-			}
 		}
 	}
 };

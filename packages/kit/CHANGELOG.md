@@ -1,5 +1,35 @@
 # @sveltejs/kit
 
+## 1.0.0-next.360
+
+### Patch Changes
+
+- [fix] support conditional Vite configs ([#5376](https://github.com/sveltejs/kit/pull/5376))
+
+* Allow server restart when config changed ([#5379](https://github.com/sveltejs/kit/pull/5379))
+
+- Include dynamically imported styles during SSR ([#5138](https://github.com/sveltejs/kit/pull/5138))
+
+## 1.0.0-next.359
+
+### Patch Changes
+
+- Adjust type imports to satisfy TS NodeNext moduleResolution ([#5360](https://github.com/sveltejs/kit/pull/5360))
+
+* [breaking] require vite.config.js ([#5332](https://github.com/sveltejs/kit/pull/5332))
+
+- [breaking] graduate @sveltejs/kit/vite from experimental ([#5332](https://github.com/sveltejs/kit/pull/5332))
+
+* [breaking] switch to vite CLI for dev, build, and preview commands ([#5332](https://github.com/sveltejs/kit/pull/5332))
+
+## 1.0.0-next.358
+
+### Patch Changes
+
+- Only exit process in closeBundle hook if prerender is enabled ([#5356](https://github.com/sveltejs/kit/pull/5356))
+
+* [fix] don't log warning if root is configured ([#5330](https://github.com/sveltejs/kit/pull/5330))
+
 ## 1.0.0-next.357
 
 ### Patch Changes

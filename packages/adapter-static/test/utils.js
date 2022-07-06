@@ -30,11 +30,13 @@ export function run(app, callback) {
 		try {
 			const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
 			const mode = process.env.CI ? 'dist' : 'src';
-			const cli_path = fileURLToPath(new URL(`../../kit/${mode}/cli.js`, import.meta.url));
+
+			process.env.SVELTEKIT_PLUGIN =
+				mode === 'dist' ? '@sveltejs/kit/vite' : '../../../../kit/src/vite/index.js';
 
 			rimraf(`${cwd}/build`);
 
-			await spawn(`"${process.execPath}" ${cli_path} build`, {
+			await spawn('npm run build', {
 				cwd,
 				stdio: 'inherit',
 				shell: true

@@ -51,10 +51,14 @@ export async function render_response({
 		}
 	}
 
-	const stylesheets = new Set(options.manifest._.entry.css);
-	const modulepreloads = new Set(options.manifest._.entry.js);
+	const { entry } = options.manifest._;
+
+	const stylesheets = new Set(entry.stylesheets);
+	const modulepreloads = new Set(entry.imports);
+
 	/** @type {Map<string, string>} */
-	const styles = new Map();
+	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
+	const inline_styles = new Map();
 
 	/** @type {Array<import('./types').Fetched>} */
 	const serialized_data = [];
@@ -72,10 +76,18 @@ export async function render_response({
 	}
 
 	if (resolve_opts.ssr) {
-		branch.forEach(({ node, props, loaded, fetched, uses_credentials }) => {
-			if (node.css) node.css.forEach((url) => stylesheets.add(url));
-			if (node.js) node.js.forEach((url) => modulepreloads.add(url));
-			if (node.styles) Object.entries(node.styles).forEach(([k, v]) => styles.set(k, v));
+		for (const { node, props, loaded, fetched, uses_credentials } of branch) {
+			if (node.imports) {
+				node.imports.forEach((url) => modulepreloads.add(url));
+			}
+
+			if (node.stylesheets) {
+				node.stylesheets.forEach((url) => stylesheets.add(url));
+			}
+
+			if (node.inline_styles) {
+				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
+			}
 
 			// TODO probably better if `fetched` wasn't populated unless `hydrate`
 			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
@@ -83,7 +95,7 @@ export async function render_response({
 
 			cache = loaded?.cache;
 			is_private = cache?.private ?? uses_credentials;
-		});
+		}
 
 		const session = writable($session);
 
@@ -144,8 +156,6 @@ export async function render_response({
 
 	let { head, html: body } = rendered;
 
-	const inlined_style = Array.from(styles.values()).join('\n');
-
 	await csp_ready;
 	const csp = new Csp(options.csp, {
 		dev: options.dev,
@@ -157,7 +167,7 @@ export async function render_response({
 
 	// prettier-ignore
 	const init_app = `
-		import { start } from ${s(options.prefix + options.manifest._.entry.file)};
+		import { start } from ${s(options.prefix + entry.file)};
 		start({
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
@@ -185,14 +195,16 @@ export async function render_response({
 		}
 	`;
 
-	if (inlined_style) {
+	if (inline_styles.size > 0) {
+		const content = Array.from(inline_styles.values()).join('\n');
+
 		const attributes = [];
 		if (options.dev) attributes.push(' data-sveltekit');
 		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
-		csp.add_style(inlined_style);
+		csp.add_style(content);
 
-		head += `\n\t<style${attributes.join('')}>${inlined_style}</style>`;
+		head += `\n\t<style${attributes.join('')}>${content}</style>`;
 	}
 
 	// prettier-ignore
@@ -207,7 +219,7 @@ export async function render_response({
 				attributes.push(`nonce="${csp.nonce}"`);
 			}
 
-			if (styles.has(dep)) {
+			if (inline_styles.has(dep)) {
 				// don't load stylesheets that are already inlined
 				// include them in disabled state so that Vite can detect them and doesn't try to add them
 				attributes.push('disabled', 'media="(max-width: 0)"');
