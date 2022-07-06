@@ -256,7 +256,7 @@ export async function load_node({
 					opts.headers.delete('connection');
 
 					const external_request = new Request(requested, /** @type {RequestInit} */ (opts));
-					response = await options.hooks.externalFetch.call(null, external_request);
+					response = await options.hooks.externalFetch.call(null, external_request.url, external_request);
 				}
 
 				const set_cookie = response.headers.get('set-cookie');
