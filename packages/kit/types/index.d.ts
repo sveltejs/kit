@@ -117,7 +117,6 @@ export interface KitConfig {
 		serviceWorker?: string;
 		template?: string;
 	};
-	floc?: boolean;
 	inlineStyleThreshold?: number;
 	methodOverride?: {
 		parameter?: string;

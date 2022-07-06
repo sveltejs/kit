@@ -1212,12 +1212,6 @@ test.describe('ETags', () => {
 });
 
 test.describe('Headers', () => {
-	test('disables floc by default', async ({ page }) => {
-		const response = await page.goto('/headers');
-		const headers = /** @type {Response} */ (response).headers();
-		expect(headers['permissions-policy']).toBe('interest-cohort=()');
-	});
-
 	test('allows headers to be sent as a Headers class instead of a POJO', async ({ page }) => {
 		await page.goto('/headers/class');
 		expect(await page.innerHTML('p')).toBe('bar');

@@ -48,7 +48,6 @@ export class Server {
 		this.options = {
 			csp: ${s(config.kit.csp)},
 			dev: false,
-			floc: ${config.kit.floc},
 			get_stack: error => String(error), // for security
 			handle_error: (error, event) => {
 				this.options.hooks.handleError({
