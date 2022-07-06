@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.360
+
+### Patch Changes
+
+- [fix] support conditional Vite configs ([#5376](https://github.com/sveltejs/kit/pull/5376))
+
+* Allow server restart when config changed ([#5379](https://github.com/sveltejs/kit/pull/5379))
+
+- Include dynamically imported styles during SSR ([#5138](https://github.com/sveltejs/kit/pull/5138))
+
 ## 1.0.0-next.359
 
 ### Patch Changes
