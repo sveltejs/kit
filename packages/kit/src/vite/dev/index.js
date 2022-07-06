@@ -371,7 +371,14 @@ export async function dev(vite, svelte_config, allowed) {
 					}
 				);
 
-				setResponse(res, rendered);
+				if (rendered.status === 404) {
+					// @ts-expect-error
+					serve_static_middleware.handle(req, res, () => {
+						setResponse(res, rendered);
+					});
+				} else {
+					setResponse(res, rendered);
+				}
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				vite.ssrFixStacktrace(error);
