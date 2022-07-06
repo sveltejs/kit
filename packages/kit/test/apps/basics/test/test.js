@@ -1133,30 +1133,22 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('Case: a "page endpoint" GET method throws', async ({ browser }) => {
-		// The case where we're navigating to a page with the client side router.
-		// The GET "page endpoint" throws a userland error.
-		// It should show the __error template with our message.
-		const page = await browser.newPage();
+	test('page endpoint GET method throws', async ({ page }) => {
 		await page.goto('/errors/endpoint-throws');
 		await page.click('a');
 		await page.waitForSelector('#message');
 		expect(await page.textContent('#message')).toContain('Some userland error.');
-		// do it all over again just to make sure...
-		await page.goto('/errors/endpoint-throws');
-		await page.click('a');
-		await page.waitForSelector('#message');
-		expect(await page.textContent('#message')).toContain('Some userland error.');
-		await page.close();
 	});
-	test('Case: submitting a form w/o fetch', async ({ page }) => {
+
+	test('submitting a form w/o fetch', async ({ page }) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/endpoint-throws/page-endpoint-http-post-throws');
 		await Promise.all([page.waitForNavigation(), page.click('#submit')]);
 		expect(await page.textContent('#message')).toContain('Some userland error.');
 	});
-	test('Case: client side fetch POST with Accept: application/json', async ({
+
+	test('client side fetch POST with Accept: application/json', async ({
 		page,
 		javaScriptEnabled
 	}) => {
