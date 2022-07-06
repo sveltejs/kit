@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-remove floc
+remove FLoC protection, now that we vanquished Google
