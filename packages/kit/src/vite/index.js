@@ -69,17 +69,11 @@ function kit() {
 	/** @type {import('types').ValidatedConfig} */
 	let svelte_config;
 
+	/** @type {import('vite').ResolvedConfig} */
+	let vite_config;
+
 	/** @type {import('vite').ConfigEnv} */
 	let vite_config_env;
-
-	/** @type {string[]} */
-	let allowed;
-
-	/** @type {'http' | 'https'} */
-	let protocol;
-
-	/** @type {boolean} */
-	let verbose;
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
@@ -197,9 +191,7 @@ function kit() {
 		},
 
 		configResolved(config) {
-			allowed = config.server.fs.allow;
-			protocol = config.preview.https ? 'https' : 'http';
-			verbose = config.logLevel === 'info';
+			vite_config = config;
 		},
 
 		buildStart() {
@@ -213,7 +205,9 @@ function kit() {
 		},
 
 		async writeBundle(_options, bundle) {
-			const log = logger({ verbose });
+			const log = logger({
+				verbose: vite_config.logLevel === 'info'
+			});
 
 			fs.writeFileSync(
 				`${paths.client_out_dir}/version.json`,
@@ -346,11 +340,11 @@ function kit() {
 		},
 
 		async configureServer(vite) {
-			return await dev(vite, svelte_config, allowed);
+			return await dev(vite, svelte_config, vite_config.server.fs.allow);
 		},
 
 		configurePreviewServer(vite) {
-			return preview(vite, svelte_config, protocol);
+			return preview(vite, svelte_config, vite_config.preview.https ? 'https' : 'http');
 		}
 	};
 }
