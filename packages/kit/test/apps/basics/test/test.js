@@ -1141,7 +1141,7 @@ test.describe('Errors', () => {
 
 		if (process.env.DEV) {
 			const lines = (await page.textContent('pre')).split('\n');
-			expect(lines[1]).toContain('src/routes/errors/endpoint-throws/get.js:2:8');
+			expect(lines[1]).toContain('get.js:2:8');
 		}
 	});
 
@@ -1154,7 +1154,7 @@ test.describe('Errors', () => {
 
 		if (process.env.DEV) {
 			const lines = (await page.textContent('pre')).split('\n');
-			expect(lines[1]).toContain('src/routes/errors/endpoint-throws/post.js:2:8');
+			expect(lines[1]).toContain('post.js:2:8');
 		}
 	});
 
