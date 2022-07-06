@@ -11,5 +11,5 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"include": ["index.js", "ambient.d.ts", "src/worker.ts"]
+	"include": ["index.js", "placeholders.ts", "src/worker.ts"]
 }

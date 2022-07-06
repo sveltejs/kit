@@ -32,6 +32,7 @@
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
+		"@cloudflare/workers-types": "^3.14.0",
 		"esbuild": "^0.14.42",
 		"worktop": "0.8.0-next.14"
 	},

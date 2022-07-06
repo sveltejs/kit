@@ -53,32 +53,27 @@ When configuring your project settings, you must use the following settings:
 
 ## Environment variables
 
-The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
-
-```diff
-// src/app.d.ts
-declare namespace App {
-	interface Locals {}
-
-+	interface Platform {
-+		env: {
-+			COUNTER: DurableObjectNamespace;
-+		};
-+		context: {
-+			waitUntil(promise: Promise<any>): void;
-+		};
-+		caches: CacheStorage & { default: Cache }
-+	}
-
-	interface Session {}
-
-	interface Stuff {}
-}
-```
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV/DO namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
 
 ```js
 export async function post({ request, platform }) {
-  const counter = platform.env.COUNTER.idFromName('A');
+  const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
+}
+```
+
+To make these types available to your app, reference them in your `src/app.d.ts`:
+
+```diff
+/// <reference types="@sveltejs/kit" />
++/// <reference types="@sveltejs/adapter-cloudflare" />
+
+declare namespace App {
+	interface Platform {
++		env?: {
++			YOUR_KV_NAMESPACE: KVNamespace;
++			YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
++		};
+	}
 }
 ```
 
