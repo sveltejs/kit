@@ -1138,6 +1138,11 @@ test.describe('Errors', () => {
 		await page.click('#get');
 		await page.waitForSelector('#message');
 		expect(await page.textContent('#message')).toContain('oops');
+
+		if (process.env.DEV) {
+			const lines = (await page.textContent('pre')).split('\n');
+			expect(lines[1]).toContain('src/routes/errors/endpoint-throws/get.js:2:8');
+		}
 	});
 
 	test('page endpoint POST error message is preserved', async ({ page }) => {
@@ -1146,6 +1151,11 @@ test.describe('Errors', () => {
 		await page.goto('/errors/endpoint-throws');
 		await Promise.all([page.waitForNavigation(), page.click('#post')]);
 		expect(await page.textContent('#message')).toContain('oops');
+
+		if (process.env.DEV) {
+			const lines = (await page.textContent('pre')).split('\n');
+			expect(lines[1]).toContain('src/routes/errors/endpoint-throws/post.js:2:8');
+		}
 	});
 
 	test('page endpoint error respects `accept: application/json`', async ({ request }) => {
@@ -1155,9 +1165,15 @@ test.describe('Errors', () => {
 			}
 		});
 
-		expect(await response.json()).toEqual({
-			message: 'oops'
-		});
+		const { message, stack } = await response.json();
+
+		expect(message).toBe('oops');
+
+		if (process.env.DEV) {
+			expect(stack.split('\n').length).toBeGreaterThan(1);
+		} else {
+			expect(stack.split('\n').length).toBe(1);
+		}
 	});
 
 	test('returns 400 when accessing a malformed URI', async ({ page, javaScriptEnabled }) => {

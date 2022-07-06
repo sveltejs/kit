@@ -6,6 +6,7 @@ import { coalesce_to_error } from '../../utils/error.js';
 import { decode_params } from './utils.js';
 import { normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
+import { negotiate } from '../../utils/http.js';
 
 const DATA_SUFFIX = '/__data.json';
 
@@ -314,31 +315,24 @@ export async function respond(request, options, state) {
 		const error = coalesce_to_error(e);
 
 		options.handle_error(error, event);
-		// start change
-		/**
-		 *  Note: error is guaranteed to be an Error at this point, because coalesce_to_error
-		 *
-		 * 	We need to check whether the request is a client side fetch. There are two cases:
-		 * - It's a navigation, in which case the const is_data_request,
-		 *   defined further up in this function, is true
-		 * - It's some other client side fetch initiated from userland (as opposed to SvelteKit) code.
-		 *   In this case we check whether the Accept header starts with application/json.
-		 */
-		if (
-			is_data_request ||
-			(typeof event.request.headers.get('accept') === 'string' &&
-				event.request.headers.get('accept')?.startsWith('application/json'))
-		) {
-			/**
-			 * Return the error as JSON. For simplicity's sake, boil it down to the
-			 * message.
-			 */
-			return new Response(JSON.stringify({ message: error.message }), {
-				status: 500,
-				headers: { 'content-type': 'application/json; charset=utf-8' }
-			});
+
+		const type = negotiate(event.request.headers.get('accept') || 'text/html', [
+			'text/html',
+			'application/json'
+		]);
+
+		if (is_data_request || type === 'application/json') {
+			return new Response(
+				JSON.stringify({
+					message: error.message,
+					stack: options.get_stack(error)
+				}),
+				{
+					status: 500,
+					headers: { 'content-type': 'application/json; charset=utf-8' }
+				}
+			);
 		}
-		// end change
 
 		try {
 			const $session = await options.hooks.getSession(event);
