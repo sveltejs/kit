@@ -72,6 +72,9 @@ function kit() {
 	/** @type {import('vite').UserConfig} */
 	let vite_config;
 
+	/** @type {string[]} */
+	let allowed;
+
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
 
@@ -181,6 +184,10 @@ function kit() {
 			};
 			warn_overridden_config(config, result);
 			return result;
+		},
+
+		configResolved(config) {
+			allowed = config.server.fs.allow;
 		},
 
 		buildStart() {
@@ -325,7 +332,7 @@ function kit() {
 		},
 
 		async configureServer(vite) {
-			return await dev(vite, svelte_config);
+			return await dev(vite, svelte_config, allowed);
 		},
 
 		configurePreviewServer(vite) {

@@ -23,9 +23,10 @@ const cwd = process.cwd();
 /**
  * @param {import('vite').ViteDevServer} vite
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {string[]} allowed
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, svelte_config) {
+export async function dev(vite, svelte_config, allowed) {
 	installPolyfills();
 
 	sync.init(svelte_config);
@@ -189,7 +190,7 @@ export async function dev(vite, svelte_config) {
 
 		remove_html_middlewares(vite.middlewares);
 
-		vite.middlewares.use(async (req, res) => {
+		vite.middlewares.use(async (req, res, next) => {
 			try {
 				if (!req.url || !req.method) throw new Error('Incomplete request');
 
@@ -210,6 +211,17 @@ export async function dev(vite, svelte_config) {
 							return;
 						}
 					}
+				}
+
+				const file = path.resolve(decoded.slice(1));
+				if (
+					fs.existsSync(file) &&
+					!fs.statSync(file).isDirectory() &&
+					allowed.some((dir) => file.startsWith(dir))
+				) {
+					// @ts-expect-error
+					serve_static_middleware.handle(req, res);
+					return;
 				}
 
 				if (!decoded.startsWith(svelte_config.kit.paths.base)) {
@@ -359,14 +371,7 @@ export async function dev(vite, svelte_config) {
 					}
 				);
 
-				if (rendered.status === 404) {
-					// @ts-expect-error
-					serve_static_middleware.handle(req, res, () => {
-						setResponse(res, rendered);
-					});
-				} else {
-					setResponse(res, rendered);
-				}
+				setResponse(res, rendered);
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				vite.ssrFixStacktrace(error);
