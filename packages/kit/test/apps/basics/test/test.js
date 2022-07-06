@@ -1435,7 +1435,7 @@ test.describe('Load', () => {
 				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'empty' : 'document',
 			'sec-fetch-mode':
 				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'cors' : 'navigate',
-			connection: 'keep-alive'
+			connection: javaScriptEnabled ? 'keep-alive' : undefined
 		});
 	});
 
