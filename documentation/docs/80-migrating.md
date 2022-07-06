@@ -26,9 +26,9 @@ Remove `sapper` from your `devDependencies` and replace it with `@sveltejs/kit` 
 
 Any scripts that reference `sapper` should be updated:
 
-- `sapper build` should become [`svelte-kit build`](/docs/cli#svelte-kit-build) using the Node [adapter](/docs/adapters)
-- `sapper export` should become [`svelte-kit build`](/docs/cli#svelte-kit-build) using the static [adapter](/docs/adapters)
-- `sapper dev` should become [`svelte-kit dev`](/docs/cli#svelte-kit-dev)
+- `sapper build` should become `vite build` using the Node [adapter](/docs/adapters)
+- `sapper export` should become `vite build` using the static [adapter](/docs/adapters)
+- `sapper dev` should become `vite dev`
 - `node __sapper__/build` should become `node build`
 
 ### Project files
@@ -191,4 +191,4 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-Note that `prerendering` is `false` when using `svelte-kit preview` to test the production build of the site, so to verify the results of minifying, you'll need to inspect the built HTML files directly.
+Note that `prerendering` is `false` when using `vite preview` to test the production build of the site, so to verify the results of minifying, you'll need to inspect the built HTML files directly.

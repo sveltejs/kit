@@ -1,7 +1,7 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
-import './ambient';
+import './ambient.js';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
@@ -17,8 +17,8 @@ import {
 	ResponseHeaders,
 	RouteDefinition,
 	TrailingSlash
-} from './private';
-import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal';
+} from './private.js';
+import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 
 export interface Adapter {
 	name: string;
@@ -91,66 +91,68 @@ export interface Builder {
 export interface Config {
 	compilerOptions?: CompileOptions;
 	extensions?: string[];
-	kit?: {
-		adapter?: Adapter;
-		alias?: Record<string, string>;
-		appDir?: string;
-		browser?: {
-			hydrate?: boolean;
-			router?: boolean;
-		};
-		csp?: {
-			mode?: 'hash' | 'nonce' | 'auto';
-			directives?: CspDirectives;
-		};
-		endpointExtensions?: string[];
-		files?: {
-			assets?: string;
-			hooks?: string;
-			lib?: string;
-			params?: string;
-			routes?: string;
-			serviceWorker?: string;
-			template?: string;
-		};
-		floc?: boolean;
-		inlineStyleThreshold?: number;
-		methodOverride?: {
-			parameter?: string;
-			allowed?: string[];
-		};
-		outDir?: string;
-		package?: {
-			dir?: string;
-			emitTypes?: boolean;
-			exports?(filepath: string): boolean;
-			files?(filepath: string): boolean;
-		};
-		paths?: {
-			assets?: string;
-			base?: string;
-		};
-		prerender?: {
-			concurrency?: number;
-			crawl?: boolean;
-			default?: boolean;
-			enabled?: boolean;
-			entries?: Array<'*' | `/${string}`>;
-			onError?: PrerenderOnErrorValue;
-		};
-		routes?: (filepath: string) => boolean;
-		serviceWorker?: {
-			register?: boolean;
-			files?: (filepath: string) => boolean;
-		};
-		trailingSlash?: TrailingSlash;
-		version?: {
-			name?: string;
-			pollInterval?: number;
-		};
-		vite?: import('vite').UserConfig | (() => MaybePromise<import('vite').UserConfig>);
-	};
+	kit?: KitConfig;
 	preprocess?: any;
+}
+
+export interface KitConfig {
+	adapter?: Adapter;
+	alias?: Record<string, string>;
+	appDir?: string;
+	browser?: {
+		hydrate?: boolean;
+		router?: boolean;
+	};
+	csp?: {
+		mode?: 'hash' | 'nonce' | 'auto';
+		directives?: CspDirectives;
+	};
+	moduleExtensions?: string[];
+	files?: {
+		assets?: string;
+		hooks?: string;
+		lib?: string;
+		params?: string;
+		routes?: string;
+		serviceWorker?: string;
+		template?: string;
+	};
+	floc?: boolean;
+	inlineStyleThreshold?: number;
+	methodOverride?: {
+		parameter?: string;
+		allowed?: string[];
+	};
+	outDir?: string;
+	package?: {
+		dir?: string;
+		emitTypes?: boolean;
+		exports?(filepath: string): boolean;
+		files?(filepath: string): boolean;
+	};
+	paths?: {
+		assets?: string;
+		base?: string;
+	};
+	prerender?: {
+		concurrency?: number;
+		crawl?: boolean;
+		default?: boolean;
+		enabled?: boolean;
+		entries?: Array<'*' | `/${string}`>;
+		onError?: PrerenderOnErrorValue;
+	};
+	routes?: (filepath: string) => boolean;
+	serviceWorker?: {
+		register?: boolean;
+		files?: (filepath: string) => boolean;
+	};
+	trailingSlash?: TrailingSlash;
+	version?: {
+		name?: string;
+		pollInterval?: number;
+	};
+	vite?: import('vite').UserConfig | (() => MaybePromise<import('vite').UserConfig>);
 }
 
 export interface ExternalFetch {
@@ -266,7 +268,7 @@ export interface ResolveOptions {
 	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
 }
 
-export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
+export type ResponseBody = JSONValue | Uint8Array | ReadableStream;
 
 export class Server {
 	constructor(manifest: SSRManifest);
@@ -282,8 +284,8 @@ export interface SSRManifest {
 	_: {
 		entry: {
 			file: string;
-			js: string[];
-			css: string[];
+			imports: string[];
+			stylesheets: string[];
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];

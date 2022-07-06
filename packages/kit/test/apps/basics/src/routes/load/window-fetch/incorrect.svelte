@@ -1,5 +1,5 @@
 <script context="module">
-	/** @type {import('./index').Load} */
+	/** @type {import('./__types/incorrect').Load} */
 	export async function load({ url }) {
 		const res = await fetch(`${url.origin}/load/window-fetch/data.json`);
 		const { answer } = await res.json();

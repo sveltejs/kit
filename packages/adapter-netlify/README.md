@@ -48,7 +48,7 @@ New projects will use Node 16 by default. However, if you're upgrading a project
 
 ## Netlify Edge Functions (beta)
 
-SvelteKit supports the beta release of Netlify Edge Functions. If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor. If set to `false` (the default), the site will deploy to standard Node-based Netlify Functions.
+SvelteKit supports the beta release of [Netlify Edge Functions](https://docs.netlify.com/netlify-labs/experimental-features/edge-functions/). If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor. If set to `false` (the default), the site will deploy to standard Node-based Netlify Functions.
 
 ## Netlify alternatives to SvelteKit functionality
 

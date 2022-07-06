@@ -3,6 +3,7 @@ declare global {
 		invalidated: boolean;
 		oops: string;
 		pageContext: any;
+		mounted: number;
 		fulfil_navigation: (value: any) => void;
 	}
 }

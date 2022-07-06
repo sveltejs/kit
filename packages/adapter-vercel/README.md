@@ -38,7 +38,15 @@ export default {
 
 ## Notes
 
+### Vercel functions
+
 Vercel functions contained in the `/api` directory at the project's root will _not_ be included in the deployment — these should be implemented as [endpoints](https://kit.svelte.dev/docs/routing#endpoints) in your SvelteKit app.
+
+### Node version
+
+Projects created before a certain date will default to using Node 14, while SvelteKit requires Node 16 or later. You can change that in your project settings:
+
+![Vercel project settings](settings.png)
 
 ## Changelog
 

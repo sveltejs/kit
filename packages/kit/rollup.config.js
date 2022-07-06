@@ -63,7 +63,8 @@ export default [
 			cli: 'src/cli.js',
 			node: 'src/node/index.js',
 			'node/polyfills': 'src/node/polyfills.js',
-			hooks: 'src/hooks.js'
+			hooks: 'src/hooks.js',
+			vite: 'src/vite/index.js'
 		},
 		output: {
 			dir: 'dist',

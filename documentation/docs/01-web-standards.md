@@ -45,6 +45,10 @@ export function get(event) {
 }
 ```
 
+### Stream APIs
+
+Most of the time, your endpoints will return complete data, as in the `userAgent` example above. Sometimes, you may need to return a response that's too large to fit in memory in one go, or is delivered in chunks, and for this the platform provides [streams](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API) — [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream), [WritableStream](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream) and [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream).
+
 ### URL APIs
 
 URLs are represented by the [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) interface, which includes useful properties like `origin` and `pathname` (and, in the browser, `hash`). This interface shows up in various places — `event.url` in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints), [`$page.url`](/docs/modules#$app-stores) in [pages](/docs/routing#pages), `from` and `to` in [`beforeNavigate` and `afterNavigate`](/docs/modules#$app-navigation) and so on.

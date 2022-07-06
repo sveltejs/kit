@@ -1,3 +1,4 @@
 {
-	"description": "SvelteKit demo app"
+	"title": "SvelteKit demo app",
+	"description": "A todo list app showcasing some of the features of SvelteKit"
 }

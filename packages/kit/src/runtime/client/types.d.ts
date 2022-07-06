@@ -22,7 +22,7 @@ export interface Client {
 	_hydrate: (opts: {
 		status: number;
 		error: Error;
-		nodes: Array<Promise<CSRComponent>>;
+		nodes: number[];
 		params: Record<string, string>;
 		routeId: string | null;
 	}) => Promise<void>;

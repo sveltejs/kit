@@ -2,7 +2,7 @@ import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { normalize } from '../load.js';
-import { normalize_path } from '../../utils/url.js';
+import { LoadURL, normalize_path } from '../../utils/url.js';
 import {
 	create_updated_store,
 	find_anchor,
@@ -156,16 +156,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 	let token;
 
 	/**
-	 * @param {string} href
+	 * @param {string | URL} url
 	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
 	 * @param {string[]} redirect_chain
 	 */
 	async function goto(
-		href,
+		url,
 		{ noscroll = false, replaceState = false, keepfocus = false, state = {} },
 		redirect_chain
 	) {
-		const url = new URL(href, get_base_uri(document));
+		if (typeof url === 'string') {
+			url = new URL(url, get_base_uri(document));
+		}
 
 		if (router_enabled) {
 			return navigate({
@@ -527,6 +529,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		const session = $session;
+		const load_url = new LoadURL(url);
 
 		if (module.load) {
 			/** @type {import('types').LoadEvent} */
@@ -536,18 +539,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				props: props || {},
 				get url() {
 					node.uses.url = true;
-
-					return new Proxy(url, {
-						get: (target, property) => {
-							if (property === 'hash') {
-								throw new Error(
-									'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
-								);
-							}
-
-							return Reflect.get(target, property, target);
-						}
-					});
+					return load_url;
 				},
 				get session() {
 					node.uses.session = true;
@@ -986,6 +978,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 		return new Promise(() => {});
 	}
 
+	if (import.meta.hot) {
+		import.meta.hot.on('vite:beforeUpdate', () => {
+			if (current.error) location.reload();
+		});
+	}
+
 	return {
 		after_navigate: (fn) => {
 			onMount(() => {
@@ -1256,7 +1254,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					}
 
 					const node = await load_node({
-						module: await nodes[i],
+						module: await components[nodes[i]](),
 						url,
 						params,
 						stuff,

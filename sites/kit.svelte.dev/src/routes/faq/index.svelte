@@ -2,6 +2,7 @@
 	import { Permalink } from '@sveltejs/site-kit';
 	import '$lib/docs/client/docs.css';
 	import '$lib/docs/client/shiki.css';
+	import '@sveltejs/site-kit/code.css';
 	import * as hovers from '$lib/docs/client/hovers.js';
 
 	export let sections;
@@ -79,8 +80,8 @@
 	}
 
 	h2 {
-		margin: -4rem 0 1rem 0;
-		padding-top: 10rem;
+		margin: 0rem 0 1rem 0;
+		padding-top: 6rem;
 		padding-bottom: 0.2rem;
 		color: var(--text);
 		/* max-width: 24em; */
