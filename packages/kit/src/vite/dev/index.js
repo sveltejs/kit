@@ -295,7 +295,6 @@ export async function dev(vite, svelte_config) {
 					{
 						csp: svelte_config.kit.csp,
 						dev: true,
-						floc: svelte_config.kit.floc,
 						get_stack: (error) => {
 							return fix_stack_trace(error);
 						},
