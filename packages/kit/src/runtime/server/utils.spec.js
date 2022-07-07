@@ -21,7 +21,7 @@ test('serialize_error', () => {
 		 * }} [options]
 		 */
 		constructor(message, options) {
-			// @ts-ignore go home typescript ur drunk
+			// @ts-expect-error go home typescript ur drunk
 			super(message, options);
 		}
 	}
