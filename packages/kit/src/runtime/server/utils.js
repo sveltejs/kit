@@ -58,14 +58,35 @@ export function normalize_request_method(event) {
 
 /**
  * @param {Error} error
- * @param {import('types').SSROptions} options
+ * @param {(error: Error) => string | undefined} get_stack
  */
-export function serialize_error(error, options) {
-	const object = {
-		name: error.name,
-		message: error.message,
-		stack: options.get_stack(error)
-	};
+export function serialize_error(error, get_stack) {
+	return JSON.stringify(clone_error(error, get_stack));
+}
 
-	return JSON.stringify(object);
+/**
+ * @param {Error} error
+ * @param {(error: Error) => string | undefined} get_stack
+ */
+function clone_error(error, get_stack) {
+	const {
+		name,
+		message,
+		stack,
+		// @ts-expect-error i guess typescript doesn't know about error.cause yet
+		cause,
+		...custom
+	} = error;
+
+	/** @type {Record<string, any>} */
+	const object = { name, message, stack: get_stack(error) };
+
+	if (cause) object.cause = clone_error(cause, get_stack);
+
+	for (const key in custom) {
+		// @ts-expect-error
+		object[key] = custom[key];
+	}
+
+	return object;
 }

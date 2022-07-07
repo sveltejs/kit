@@ -330,6 +330,7 @@ function try_serialize(data, fail) {
 
 /** @param {(Error & {frame?: string} & {loc?: object}) | undefined | null} error */
 function serialize_error(error) {
+	// TODO use other serialize_error
 	if (!error) return null;
 	let serialized = try_serialize(error);
 	if (!serialized) {

@@ -112,7 +112,8 @@ export async function render_endpoint(event, mod, options) {
 
 	if (is_pojo(body) && (!type || type.startsWith('application/json'))) {
 		headers.set('content-type', 'application/json; charset=utf-8');
-		normalized_body = body instanceof Error ? serialize_error(body, options) : JSON.stringify(body);
+		normalized_body =
+			body instanceof Error ? serialize_error(body, options.get_stack) : JSON.stringify(body);
 	} else {
 		normalized_body = /** @type {import('types').StrictBody} */ (body);
 	}

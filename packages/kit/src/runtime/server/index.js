@@ -322,7 +322,7 @@ export async function respond(request, options, state) {
 		]);
 
 		if (is_data_request || type === 'application/json') {
-			return new Response(serialize_error(error, options), {
+			return new Response(serialize_error(error, options.get_stack), {
 				status: 500,
 				headers: { 'content-type': 'application/json; charset=utf-8' }
 			});
