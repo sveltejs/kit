@@ -176,13 +176,6 @@ export interface ShadowEndpointOutput<Output extends JSONObject = JSONObject> {
 	body?: Output;
 }
 
-/**
- * The route key of a page with a matching endpoint — used to ensure the
- * client loads data from the right endpoint during client-side navigation
- * rather than a different route that happens to match the path
- */
-type ShadowKey = string;
-
 export interface ShadowRequestHandler<Output extends JSONObject = JSONObject> {
 	(event: RequestEvent): MaybePromise<ShadowEndpointOutput<Output>>;
 }
