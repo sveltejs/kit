@@ -769,6 +769,12 @@ test.describe('Endpoints', () => {
 		const r2 = await request.get('/endpoint-output/simple/__data.json');
 		expect(r2.status()).toBe(404);
 	});
+
+	test('body can be a binary ReadableStream', async ({ request }) => {
+		const response = await request.get('/endpoint-output/stream');
+		const body = await response.body();
+		expect(Array.from(body)).toEqual([1, 2, 3]);
+	});
 });
 
 test.describe('Encoded paths', () => {
