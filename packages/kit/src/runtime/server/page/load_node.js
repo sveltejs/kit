@@ -493,6 +493,17 @@ async function load_shadow_data(route, event, options, prerender) {
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 			data.status = status;
 
+			if (body instanceof Error) {
+				if (status < 400) {
+					data.status = 500;
+					data.error = new Error('A non-error status code was returned with an error body');
+				} else {
+					data.error = body;
+				}
+
+				return data;
+			}
+
 			if (status >= 400) {
 				data.error = new Error('Failed to load data');
 				return data;
