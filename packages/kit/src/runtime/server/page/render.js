@@ -180,7 +180,7 @@ export async function render_response({
 			trailing_slash: ${s(options.trailing_slash)},
 			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
 				status: ${status},
-				error: ${error && serialize_error(error, options.get_stack)},
+				error: ${error && serialize_error(error, e => e.stack)},
 				nodes: [${branch.map(({ node }) => node.index).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)}
