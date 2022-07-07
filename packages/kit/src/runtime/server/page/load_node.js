@@ -436,28 +436,9 @@ async function load_shadow_data(route, event, options, prerender) {
 		};
 
 		if (!is_get) {
-			const result = await handler(event);
-
-			// TODO remove for 1.0
-			// @ts-expect-error
-			if (result.fallthrough) {
-				throw new Error(
-					'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
-				);
-			}
-
-			const { status, headers, body } = validate_shadow_output(result);
-			data.status = status;
-
+			const { status, headers, body } = validate_shadow_output(await handler(event));
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);
-
-			// Redirects are respected...
-			if (status >= 300 && status < 400) {
-				data.redirect = /** @type {string} */ (
-					headers instanceof Headers ? headers.get('location') : headers.location
-				);
-				return data;
-			}
+			data.status = status;
 
 			// explicit errors cause an error page...
 			if (body instanceof Error) {
@@ -471,6 +452,14 @@ async function load_shadow_data(route, event, options, prerender) {
 				return data;
 			}
 
+			// ...redirects are respected...
+			if (status >= 300 && status < 400) {
+				data.redirect = /** @type {string} */ (
+					headers instanceof Headers ? headers.get('location') : headers.location
+				);
+				return data;
+			}
+
 			// ...but 4xx and 5xx status codes _don't_ result in the error page
 			// rendering for non-GET requests — instead, we allow the page
 			// to render with any validation errors etc that were returned
@@ -479,17 +468,7 @@ async function load_shadow_data(route, event, options, prerender) {
 
 		const get = (method === 'head' && mod.head) || mod.get;
 		if (get) {
-			const result = await get(event);
-
-			// TODO remove for 1.0
-			// @ts-expect-error
-			if (result.fallthrough) {
-				throw new Error(
-					'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
-				);
-			}
-
-			const { status, headers, body } = validate_shadow_output(result);
+			const { status, headers, body } = validate_shadow_output(await get(event));
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 			data.status = status;
 
@@ -550,6 +529,14 @@ function add_cookies(target, headers) {
  * @param {import('types').ShadowEndpointOutput} result
  */
 function validate_shadow_output(result) {
+	// TODO remove for 1.0
+	// @ts-expect-error
+	if (result.fallthrough) {
+		throw new Error(
+			'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
+		);
+	}
+
 	const { status = 200, body = {} } = result;
 	let headers = result.headers || {};
 
