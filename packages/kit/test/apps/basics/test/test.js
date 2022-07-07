@@ -1141,15 +1141,16 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await clicknav('#get-implicit');
 		const json = await page.textContent('pre');
-		const { status, name, message, stack } = JSON.parse(json);
+		const { status, name, message, stack, fancy } = JSON.parse(json);
 
 		expect(status).toBe(500);
-		expect(name).toBe('Error');
+		expect(name).toBe('FancyError');
 		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
 
 		if (process.env.DEV) {
 			const lines = stack.split('\n');
-			expect(lines[1]).toContain('get-implicit.js:2:8');
+			expect(lines[1]).toContain('get-implicit.js:4:8');
 		}
 
 		const error = read_errors('/errors/page-endpoint/get-implicit');
@@ -1164,15 +1165,16 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await clicknav('#get-explicit');
 		const json = await page.textContent('pre');
-		const { status, name, message, stack } = JSON.parse(json);
+		const { status, name, message, stack, fancy } = JSON.parse(json);
 
 		expect(status).toBe(400);
-		expect(name).toBe('Error');
+		expect(name).toBe('FancyError');
 		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
 
 		if (process.env.DEV) {
 			const lines = stack.split('\n');
-			expect(lines[1]).toContain('get-explicit.js:3:8');
+			expect(lines[1]).toContain('get-explicit.js:5:8');
 		}
 
 		const error = read_errors('/errors/page-endpoint/get-explicit');
@@ -1188,15 +1190,16 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await Promise.all([page.waitForNavigation(), page.click('#post-implicit')]);
 		const json = await page.textContent('pre');
-		const { status, name, message, stack } = JSON.parse(json);
+		const { status, name, message, stack, fancy } = JSON.parse(json);
 
 		expect(status).toBe(500);
-		expect(name).toBe('Error');
+		expect(name).toBe('FancyError');
 		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
 
 		if (process.env.DEV) {
 			const lines = stack.split('\n');
-			expect(lines[1]).toContain('post-implicit.js:2:8');
+			expect(lines[1]).toContain('post-implicit.js:4:8');
 		}
 
 		const error = read_errors('/errors/page-endpoint/post-implicit');
@@ -1212,15 +1215,16 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await Promise.all([page.waitForNavigation(), page.click('#post-explicit')]);
 		const json = await page.textContent('pre');
-		const { status, name, message, stack } = JSON.parse(json);
+		const { status, name, message, stack, fancy } = JSON.parse(json);
 
 		expect(status).toBe(400);
-		expect(name).toBe('Error');
+		expect(name).toBe('FancyError');
 		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
 
 		if (process.env.DEV) {
 			const lines = stack.split('\n');
-			expect(lines[1]).toContain('post-explicit.js:3:8');
+			expect(lines[1]).toContain('post-explicit.js:5:8');
 		}
 
 		const error = read_errors('/errors/page-endpoint/post-explicit');
@@ -1236,11 +1240,12 @@ test.describe('Errors', () => {
 			}
 		});
 
-		const { message, name, stack } = await response.json();
+		const { message, name, stack, fancy } = await response.json();
 
 		expect(response.status()).toBe(500);
-		expect(name).toBe('Error');
+		expect(name).toBe('FancyError');
 		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
 
 		if (process.env.DEV) {
 			expect(stack.split('\n').length).toBeGreaterThan(1);
@@ -1261,7 +1266,7 @@ test.describe('Errors', () => {
 		const { message, name, stack } = await response.json();
 
 		expect(response.status()).toBe(400);
-		expect(name).toBe('Error');
+		expect(name).toBe('FancyError');
 		expect(message).toBe('oops');
 
 		if (process.env.DEV) {

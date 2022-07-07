@@ -1,4 +1,6 @@
+import { FancyError } from './_shared.js';
+
 export const post = () => ({
 	status: 400,
-	body: new Error('oops')
+	body: new FancyError('oops')
 });
