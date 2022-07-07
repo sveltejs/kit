@@ -46,7 +46,7 @@ Contains [configuration](configuration) for the SvelteKit project.
 
 ### vite.config.js
 
-Contains [configuration](https://vitejs.dev/config/) for the [Vite](https://vitejs.dev/).
+Contains [configuration](https://vitejs.dev/config/) for the [Vite](https://vitejs.dev/). It use [SvelteKit Vite plugins](https://kit.svelte.dev/docs/modules#sveltejs-kit-vite).
 
 ### static/
 
