@@ -57,6 +57,10 @@ export function normalize_request_method(event) {
 }
 
 /**
+ * Serialize an error into a JSON string, by copying its `name`, `message`
+ * and (in dev) `stack`, plus any custom properties, plus recursively
+ * serialized `cause` properties. This is necessary because
+ * `JSON.stringify(error) === '{}'`
  * @param {Error} error
  * @param {(error: Error) => string | undefined} get_stack
  */

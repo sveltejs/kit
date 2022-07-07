@@ -21,6 +21,8 @@ export function to_headers(object) {
 }
 
 /**
+ * Given an Accept header and a list of possible content types, pick
+ * the most suitable one to respond with
  * @param {string} accept
  * @param {string[]} types
  */
