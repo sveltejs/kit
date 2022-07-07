@@ -29,10 +29,6 @@ export function run(app, callback) {
 	suite.before(async (context) => {
 		try {
 			const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
-			const mode = process.env.CI ? 'dist' : 'src';
-
-			process.env.SVELTEKIT_PLUGIN =
-				mode === 'dist' ? '@sveltejs/kit/vite' : '../../../../kit/src/vite/index.js';
 
 			rimraf(`${cwd}/build`);
 
@@ -110,3 +106,7 @@ function create_server(port, handler) {
 function rimraf(path) {
 	(fs.rmSync || fs.rmdirSync)(path, { recursive: true, force: true });
 }
+
+export const plugin = process.env.CI
+	? (await import('../../kit/dist/vite.js')).sveltekit
+	: (await import('../../kit/src/vite/index.js')).sveltekit;

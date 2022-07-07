@@ -300,10 +300,6 @@ export async function render_response({
 		headers.set('cache-control', `${is_private ? 'private' : 'public'}, max-age=${cache.maxage}`);
 	}
 
-	if (!options.floc) {
-		headers.set('permissions-policy', 'interest-cohort=()');
-	}
-
 	if (!state.prerendering) {
 		const csp_header = csp.get_header();
 		if (csp_header) {

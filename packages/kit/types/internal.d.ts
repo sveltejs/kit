@@ -244,7 +244,6 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 export interface SSROptions {
 	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
-	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;
