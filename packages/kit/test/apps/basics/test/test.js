@@ -2580,6 +2580,7 @@ test.describe('Static files', () => {
 		expect(r1.status()).toBe(200);
 		expect(await r1.text()).toContain('http://www.w3.org/2000/svg');
 
+		// check that we can fetch a route which overlaps with the name of a file
 		const r2 = await request.get('/package.json');
 		expect(r2.status()).toBe(200);
 		expect(await r2.json()).toEqual({ works: true });
