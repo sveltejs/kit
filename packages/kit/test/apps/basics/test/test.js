@@ -1133,7 +1133,7 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test.only('page endpoint GET thrown error message is preserved', async ({
+	test('page endpoint GET thrown error message is preserved', async ({
 		page,
 		clicknav,
 		read_errors
@@ -1157,7 +1157,7 @@ test.describe('Errors', () => {
 		expect(error).toContain('oops');
 	});
 
-	test.only('page endpoint GET returned error message is preserved', async ({
+	test('page endpoint GET returned error message is preserved', async ({
 		page,
 		clicknav,
 		read_errors
@@ -1181,10 +1181,7 @@ test.describe('Errors', () => {
 		expect(error).toBe(undefined);
 	});
 
-	test.only('page endpoint POST thrown error message is preserved', async ({
-		page,
-		read_errors
-	}) => {
+	test('page endpoint POST thrown error message is preserved', async ({ page, read_errors }) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
@@ -1206,10 +1203,7 @@ test.describe('Errors', () => {
 		expect(error).toContain('oops');
 	});
 
-	test.only('page endpoint POST returned error message is preserved', async ({
-		page,
-		read_errors
-	}) => {
+	test('page endpoint POST returned error message is preserved', async ({ page, read_errors }) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
@@ -1231,9 +1225,7 @@ test.describe('Errors', () => {
 		expect(error).toBe(undefined);
 	});
 
-	test.only('page endpoint thrown error respects `accept: application/json`', async ({
-		request
-	}) => {
+	test('page endpoint thrown error respects `accept: application/json`', async ({ request }) => {
 		const response = await request.get('/errors/page-endpoint/get-implicit', {
 			headers: {
 				accept: 'application/json'
@@ -1254,9 +1246,7 @@ test.describe('Errors', () => {
 		}
 	});
 
-	test.only('page endpoint returned error respects `accept: application/json`', async ({
-		request
-	}) => {
+	test('page endpoint returned error respects `accept: application/json`', async ({ request }) => {
 		const response = await request.get('/errors/page-endpoint/get-explicit', {
 			headers: {
 				accept: 'application/json'
