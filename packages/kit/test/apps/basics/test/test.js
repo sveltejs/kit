@@ -1133,14 +1133,21 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('page endpoint GET thrown error message is preserved', async ({ page, read_errors }) => {
+	test.only('page endpoint GET thrown error message is preserved', async ({
+		page,
+		clicknav,
+		read_errors
+	}) => {
 		await page.goto('/errors/page-endpoint');
-		await page.click('#get-implicit');
-		await page.waitForSelector('#message');
-		expect(await page.textContent('#message')).toContain('oops');
+		await clicknav('#get-implicit');
+		const json = await page.textContent('pre');
+		const { status, message, stack } = JSON.parse(json);
+
+		expect(status).toBe(500);
+		expect(message).toBe('oops');
 
 		if (process.env.DEV) {
-			const lines = (await page.textContent('pre')).split('\n');
+			const lines = stack.split('\n');
 			expect(lines[1]).toContain('get-implicit.js:2:8');
 		}
 
@@ -1148,15 +1155,44 @@ test.describe('Errors', () => {
 		expect(error).toContain('oops');
 	});
 
-	test('page endpoint POST thrown error message is preserved', async ({ page, read_errors }) => {
+	test.only('page endpoint GET returned error message is preserved', async ({
+		page,
+		clicknav,
+		read_errors
+	}) => {
+		await page.goto('/errors/page-endpoint');
+		await clicknav('#get-explicit');
+		const json = await page.textContent('pre');
+		const { status, message, stack } = JSON.parse(json);
+
+		expect(status).toBe(400);
+		expect(message).toBe('oops');
+
+		if (process.env.DEV) {
+			const lines = stack.split('\n');
+			expect(lines[1]).toContain('get-explicit.js:4:9');
+		}
+
+		const error = read_errors('/errors/page-endpoint/get-explicit');
+		expect(error).toContain('oops');
+	});
+
+	test.only('page endpoint POST thrown error message is preserved', async ({
+		page,
+		read_errors
+	}) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
 		await Promise.all([page.waitForNavigation(), page.click('#post-implicit')]);
-		expect(await page.textContent('#message')).toContain('oops');
+		const json = await page.textContent('pre');
+		const { status, message, stack } = JSON.parse(json);
+
+		expect(status).toBe(500);
+		expect(message).toBe('oops');
 
 		if (process.env.DEV) {
-			const lines = (await page.textContent('pre')).split('\n');
+			const lines = stack.split('\n');
 			expect(lines[1]).toContain('post-implicit.js:2:8');
 		}
 
@@ -1164,7 +1200,32 @@ test.describe('Errors', () => {
 		expect(error).toContain('oops');
 	});
 
-	test('page endpoint thrown error respects `accept: application/json`', async ({ request }) => {
+	test.only('page endpoint POST returned error message is preserved', async ({
+		page,
+		read_errors
+	}) => {
+		// The case where we're submitting a POST request via a form.
+		// It should show the __error template with our message.
+		await page.goto('/errors/page-endpoint');
+		await Promise.all([page.waitForNavigation(), page.click('#post-explicit')]);
+		const json = await page.textContent('pre');
+		const { status, message, stack } = JSON.parse(json);
+
+		expect(status).toBe(400);
+		expect(message).toBe('oops');
+
+		if (process.env.DEV) {
+			const lines = stack.split('\n');
+			expect(lines[1]).toContain('post-explicit.js:4:9');
+		}
+
+		const error = read_errors('/errors/page-endpoint/post-explicit');
+		expect(error).toContain('oops');
+	});
+
+	test.only('page endpoint thrown error respects `accept: application/json`', async ({
+		request
+	}) => {
 		const response = await request.get('/errors/page-endpoint/get-implicit', {
 			headers: {
 				accept: 'application/json'
@@ -1173,6 +1234,28 @@ test.describe('Errors', () => {
 
 		const { message, stack } = await response.json();
 
+		expect(response.status()).toBe(500);
+		expect(message).toBe('oops');
+
+		if (process.env.DEV) {
+			expect(stack.split('\n').length).toBeGreaterThan(1);
+		} else {
+			expect(stack.split('\n').length).toBe(1);
+		}
+	});
+
+	test.only('page endpoint returned error respects `accept: application/json`', async ({
+		request
+	}) => {
+		const response = await request.get('/errors/page-endpoint/get-explicit', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		const { message, stack } = await response.json();
+
+		expect(response.status()).toBe(400);
 		expect(message).toBe('oops');
 
 		if (process.env.DEV) {

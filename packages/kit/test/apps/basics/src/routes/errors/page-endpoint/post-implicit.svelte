@@ -1,3 +1,1 @@
-<form method="post">
-	<button type="submit" id="submit">Submit</button>
-</form>
+<h1>if you see this something went wrong</h1>
