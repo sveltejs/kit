@@ -3,13 +3,14 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"dev": "../../../../kit/svelte-kit.js dev",
-		"build": "../../../../kit/svelte-kit.js build",
-		"start": "../../../../kit/svelte-kit.js start"
+		"dev": "vite dev",
+		"build": "vite build",
+		"start": "vite start"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "next",
-		"svelte": "^3.48.0"
+		"@sveltejs/kit": "workspace:*",
+		"svelte": "^3.48.0",
+		"vite": "^2.9.13"
 	},
 	"type": "module"
 }

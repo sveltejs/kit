@@ -39,7 +39,6 @@ const config = {
 			serviceWorker: 'src/service-worker',
 			template: 'src/app.html'
 		},
-		floc: false,
 		inlineStyleThreshold: 0,
 		methodOverride: {
 			parameter: '_method',
@@ -74,12 +73,8 @@ const config = {
 		version: {
 			name: Date.now().toString(),
 			pollInterval: 0
-		},
-		vite: () => ({})
+		}
 	},
-
-	// SvelteKit uses vite-plugin-svelte. Its options can be provided directly here.
-	// See the available options at https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md
 
 	// options passed to svelte.preprocess (https://svelte.dev/docs#compile-time-svelte-preprocess)
 	preprocess: null
@@ -90,7 +85,7 @@ export default config;
 
 ### adapter
 
-Required when running `svelte-kit build` and determines how the output is converted for different platforms. See [Adapters](/docs/adapters).
+Run when executing `vite build` and determines how the output is converted for different platforms. See [Adapters](/docs/adapters).
 
 ### alias
 
@@ -170,18 +165,6 @@ An object containing zero or more of the following `string` values:
 - `routes` — the files that define the structure of your app (see [Routing](/docs/routing))
 - `serviceWorker` — the location of your service worker's entry point (see [Service workers](/docs/service-workers))
 - `template` — the location of the template for HTML responses
-
-### floc
-
-Google's [FLoC](https://github.com/WICG/floc) is a technology for targeted advertising that the [Electronic Frontier Foundation](https://www.eff.org/) has deemed [harmful](https://www.eff.org/deeplinks/2021/03/googles-floc-terrible-idea) to user privacy. [Browsers other than Chrome](https://www.theverge.com/2021/4/16/22387492/google-floc-ad-tech-privacy-browsers-brave-vivaldi-edge-mozilla-chrome-safari) have declined to implement it.
-
-In common with services like [GitHub Pages](https://github.blog/changelog/2021-04-27-github-pages-permissions-policy-interest-cohort-header-added-to-all-pages-sites/), SvelteKit protects your users by automatically opting out of FLoC. It adds the following header to responses unless `floc` is `true`:
-
-```
-Permissions-Policy: interest-cohort=()
-```
-
-> This only applies to server-rendered responses — headers for prerendered pages (e.g. created with [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static)) are determined by the hosting platform.
 
 ### inlineStyleThreshold
 
@@ -312,7 +295,3 @@ An object containing zero or more of the following values:
 Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists. SvelteKit solves this problem by falling back to traditional full-page navigation if it detects that a new version has been deployed, using the `name` specified here (which defaults to a timestamp of the build).
 
 If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](/docs/modules#$app-stores) store to `true` when it detects one.
-
-### vite
-
-A [Vite config object](https://vitejs.dev/config), or a function that returns one. You can pass [Vite and Rollup plugins](https://github.com/vitejs/awesome-vite#plugins) via [the `plugins` option](https://vitejs.dev/config/#plugins) to customize your build in advanced ways such as supporting image optimization, Tauri, WASM, Workbox, and more. SvelteKit will prevent you from setting certain build-related options since it depends on certain configuration values.

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import * as vite from 'vite';
 import { get_aliases } from '../utils.js';
 
@@ -29,24 +30,47 @@ export async function create_build(config) {
 
 /**
  * Adds transitive JS and CSS dependencies to the js and css inputs.
- * @param {string} file
  * @param {import('vite').Manifest} manifest
- * @param {Set<string>} css
- * @param {Set<string>} js
+ * @param {string} entry
+ * @param {boolean} add_dynamic_css
  */
-export function find_deps(file, manifest, js, css) {
-	const chunk = manifest[file];
+export function find_deps(manifest, entry, add_dynamic_css) {
+	/** @type {Set<string>} */
+	const imports = new Set();
 
-	if (js.has(chunk.file)) return;
-	js.add(chunk.file);
+	/** @type {Set<string>} */
+	const stylesheets = new Set();
 
-	if (chunk.css) {
-		chunk.css.forEach((file) => css.add(file));
+	/**
+	 * @param {string} file
+	 * @param {boolean} add_js
+	 */
+	function traverse(file, add_js) {
+		const chunk = manifest[file];
+
+		if (imports.has(chunk.file)) return;
+		if (add_js) imports.add(chunk.file);
+
+		if (chunk.css) {
+			chunk.css.forEach((file) => stylesheets.add(file));
+		}
+
+		if (chunk.imports) {
+			chunk.imports.forEach((file) => traverse(file, add_js));
+		}
+
+		if (add_dynamic_css && chunk.dynamicImports) {
+			chunk.dynamicImports.forEach((file) => traverse(file, false));
+		}
 	}
 
-	if (chunk.imports) {
-		chunk.imports.forEach((file) => find_deps(file, manifest, js, css));
-	}
+	traverse(entry, true);
+
+	return {
+		file: manifest[entry].file,
+		imports: Array.from(imports),
+		stylesheets: Array.from(stylesheets)
+	};
 }
 
 /**
@@ -77,13 +101,26 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 				},
 				preserveEntrySignatures: 'strict'
 			},
-			ssr
+			ssr,
+			target: ssr ? 'node14.8' : undefined
 		},
 		// prevent Vite copying the contents of `config.kit.files.assets`,
 		// if it happens to be 'public' instead of 'static'
 		publicDir: false,
 		resolve: {
 			alias: get_aliases(config.kit)
+		},
+		// @ts-expect-error
+		ssr: {
+			// when developing against the Kit src code, we want to ensure that
+			// our dependencies are bundled so that apps don't need to install
+			// them as peerDependencies
+			noExternal: process.env.BUNDLED
+				? []
+				: Object.keys(
+						JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8'))
+							.devDependencies
+				  )
 		}
 	};
 };

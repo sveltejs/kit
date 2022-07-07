@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { mkdirp, posixify } from '../../utils/filesystem.js';
-import { merge_vite_configs, resolve_entry } from '../utils.js';
+import { get_vite_config, merge_vite_configs, resolve_entry } from '../utils.js';
 import { load_template } from '../../core/config/index.js';
 import { get_runtime_path } from '../../core/utils.js';
 import { create_build, find_deps, get_default_config, remove_svelte_kit } from './utils.js';
@@ -48,7 +48,6 @@ export class Server {
 		this.options = {
 			csp: ${s(config.kit.csp)},
 			dev: false,
-			floc: ${config.kit.floc},
 			get_stack: error => String(error), // for security
 			handle_error: (error, event) => {
 				this.options.hooks.handleError({
@@ -104,10 +103,10 @@ export class Server {
 `;
 
 /**
- * @param {import('vite').UserConfig} vite_config
  * @param {{
  *   cwd: string;
  *   config: import('types').ValidatedConfig
+ *   vite_config_env: import('vite').ConfigEnv
  *   manifest_data: import('types').ManifestData
  *   build_dir: string;
  *   output_dir: string;
@@ -115,8 +114,16 @@ export class Server {
  * }} options
  * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
  */
-export async function build_server(vite_config, options, client) {
-	const { cwd, config, manifest_data, build_dir, output_dir, service_worker_entry_file } = options;
+export async function build_server(options, client) {
+	const {
+		cwd,
+		config,
+		vite_config_env,
+		manifest_data,
+		build_dir,
+		output_dir,
+		service_worker_entry_file
+	} = options;
 
 	let hooks_file = resolve_entry(config.kit.files.hooks);
 	if (!hooks_file || !fs.existsSync(hooks_file)) {
@@ -175,27 +182,11 @@ export async function build_server(vite_config, options, client) {
 		})
 	);
 
-	const default_config = {
-		build: {
-			target: 'node14.8'
-		},
-		ssr: {
-			// when developing against the Kit src code, we want to ensure that
-			// our dependencies are bundled so that apps don't need to install
-			// them as peerDependencies
-			noExternal: process.env.BUNDLED
-				? []
-				: Object.keys(
-						JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8'))
-							.devDependencies
-				  )
-		}
-	};
+	const vite_config = await get_vite_config(vite_config_env);
 
 	const merged_config = merge_vite_configs(
-		default_config,
-		vite_config,
-		get_default_config({ config, input, ssr: true, outDir: `${output_dir}/server` })
+		get_default_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
+		vite_config
 	);
 
 	remove_svelte_kit(merged_config);
@@ -225,26 +216,22 @@ export async function build_server(vite_config, options, client) {
 	});
 
 	manifest_data.components.forEach((component, i) => {
-		const file = `${output_dir}/server/nodes/${i}.js`;
-
-		const js = new Set();
-		const css = new Set();
-		find_deps(component, client.vite_manifest, js, css);
+		const entry = find_deps(client.vite_manifest, component, true);
 
 		const imports = [`import * as module from '../${vite_manifest[component].file}';`];
 
 		const exports = [
 			'export { module };',
 			`export const index = ${i};`,
-			`export const entry = '${client.vite_manifest[component].file}';`,
-			`export const js = ${s(Array.from(js))};`,
-			`export const css = ${s(Array.from(css))};`
+			`export const file = '${entry.file}';`,
+			`export const imports = ${s(entry.imports)};`,
+			`export const stylesheets = ${s(entry.stylesheets)};`
 		];
 
 		/** @type {string[]} */
 		const styles = [];
 
-		css.forEach((file) => {
+		entry.stylesheets.forEach((file) => {
 			if (stylesheet_lookup.has(file)) {
 				const index = stylesheet_lookup.get(file);
 				const name = `stylesheet_${index}`;
@@ -254,10 +241,11 @@ export async function build_server(vite_config, options, client) {
 		});
 
 		if (styles.length > 0) {
-			exports.push(`export const styles = {\n${styles.join(',\n')}\n};`);
+			exports.push(`export const inline_styles = () => ({\n${styles.join(',\n')}\n});`);
 		}
 
-		fs.writeFileSync(file, `${imports.join('\n')}\n\n${exports.join('\n')}\n`);
+		const out = `${output_dir}/server/nodes/${i}.js`;
+		fs.writeFileSync(out, `${imports.join('\n')}\n\n${exports.join('\n')}\n`);
 	});
 
 	return {

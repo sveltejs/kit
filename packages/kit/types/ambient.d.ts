@@ -82,7 +82,7 @@ declare module '$app/env' {
 	/**
 	 * The Vite.js mode the app is running in. Configure in `config.kit.vite.mode`.
 	 * Vite.js loads the dotenv file associated with the provided mode, `.env.[mode]` or `.env.[mode].local`.
-	 * By default, `svelte-kit dev` runs with `mode=development` and `svelte-kit build` runs with `mode=production`.
+	 * By default, `vite dev` runs with `mode=development` and `vite build` runs with `mode=production`.
 	 */
 	export const mode: string;
 
@@ -190,7 +190,7 @@ declare module '$app/paths' {
 	/**
 	 * An absolute path that matches [`config.kit.paths.assets`](/docs/configuration#paths).
 	 *
-	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during [`svelte-kit dev`](/docs/cli#svelte-kit-dev) or [`svelte-kit preview`](/docs/cli#svelte-kit-preview), since the assets don't yet live at their eventual URL.
+	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
 	 */
 	export const assets: `https://${string}` | `http://${string}`;
 }
@@ -335,7 +335,7 @@ declare module '@sveltejs/kit/node' {
 	export function setResponse(res: import('http').ServerResponse, response: Response): void;
 }
 
-declare module '@sveltejs/kit/experimental/vite' {
+declare module '@sveltejs/kit/vite' {
 	import { Plugin } from 'vite';
 
 	/**
