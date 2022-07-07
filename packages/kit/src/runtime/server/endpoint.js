@@ -101,9 +101,12 @@ export async function render_endpoint(event, mod, options) {
 
 	const type = headers.get('content-type');
 
-	if (!is_text(type) && !(body instanceof Uint8Array || is_string(body))) {
+	if (
+		!is_text(type) &&
+		!(body instanceof Uint8Array || body instanceof ReadableStream || is_string(body))
+	) {
 		return error(
-			`${preface}: body must be an instance of string or Uint8Array if content-type is not a supported textual content-type`
+			`${preface}: body must be an instance of string, Uint8Array or ReadableStream if content-type is not a supported textual content-type`
 		);
 	}
 
