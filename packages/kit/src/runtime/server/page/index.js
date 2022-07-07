@@ -1,3 +1,4 @@
+import { negotiate } from '../../../utils/http.js';
 import { render_endpoint } from '../endpoint.js';
 import { respond } from './respond.js';
 
@@ -24,7 +25,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		]);
 
 		if (type === 'application/json') {
-			return render_endpoint(event, await route.shadow());
+			return render_endpoint(event, await route.shadow(), options);
 		}
 	}
 
@@ -38,56 +39,4 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		resolve_opts,
 		route
 	});
-}
-
-/**
- * @param {string} accept
- * @param {string[]} types
- */
-function negotiate(accept, types) {
-	const parts = accept
-		.split(',')
-		.map((str, i) => {
-			const match = /([^/]+)\/([^;]+)(?:;q=([0-9.]+))?/.exec(str);
-			if (match) {
-				const [, type, subtype, q = '1'] = match;
-				return { type, subtype, q: +q, i };
-			}
-
-			throw new Error(`Invalid Accept header: ${accept}`);
-		})
-		.sort((a, b) => {
-			if (a.q !== b.q) {
-				return b.q - a.q;
-			}
-
-			if ((a.subtype === '*') !== (b.subtype === '*')) {
-				return a.subtype === '*' ? 1 : -1;
-			}
-
-			if ((a.type === '*') !== (b.type === '*')) {
-				return a.type === '*' ? 1 : -1;
-			}
-
-			return a.i - b.i;
-		});
-
-	let accepted;
-	let min_priority = Infinity;
-
-	for (const mimetype of types) {
-		const [type, subtype] = mimetype.split('/');
-		const priority = parts.findIndex(
-			(part) =>
-				(part.type === type || part.type === '*') &&
-				(part.subtype === subtype || part.subtype === '*')
-		);
-
-		if (priority !== -1 && priority < min_priority) {
-			accepted = mimetype;
-			min_priority = priority;
-		}
-	}
-
-	return accepted;
 }

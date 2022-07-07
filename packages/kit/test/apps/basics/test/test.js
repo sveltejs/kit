@@ -1133,6 +1133,139 @@ test.describe('Errors', () => {
 		);
 	});
 
+	test('page endpoint GET thrown error message is preserved', async ({
+		page,
+		clicknav,
+		read_errors
+	}) => {
+		await page.goto('/errors/page-endpoint');
+		await clicknav('#get-implicit');
+		const json = await page.textContent('pre');
+		const { status, name, message, stack, fancy } = JSON.parse(json);
+
+		expect(status).toBe(500);
+		expect(name).toBe('FancyError');
+		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
+
+		if (process.env.DEV) {
+			const lines = stack.split('\n');
+			expect(lines[1]).toContain('get-implicit.js:4:8');
+		}
+
+		const error = read_errors('/errors/page-endpoint/get-implicit');
+		expect(error).toContain('oops');
+	});
+
+	test('page endpoint GET returned error message is preserved', async ({
+		page,
+		clicknav,
+		read_errors
+	}) => {
+		await page.goto('/errors/page-endpoint');
+		await clicknav('#get-explicit');
+		const json = await page.textContent('pre');
+		const { status, name, message, stack, fancy } = JSON.parse(json);
+
+		expect(status).toBe(400);
+		expect(name).toBe('FancyError');
+		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
+
+		if (process.env.DEV) {
+			const lines = stack.split('\n');
+			expect(lines[1]).toContain('get-explicit.js:5:8');
+		}
+
+		const error = read_errors('/errors/page-endpoint/get-explicit');
+		expect(error).toBe(undefined);
+	});
+
+	test('page endpoint POST thrown error message is preserved', async ({ page, read_errors }) => {
+		// The case where we're submitting a POST request via a form.
+		// It should show the __error template with our message.
+		await page.goto('/errors/page-endpoint');
+		await Promise.all([page.waitForNavigation(), page.click('#post-implicit')]);
+		const json = await page.textContent('pre');
+		const { status, name, message, stack, fancy } = JSON.parse(json);
+
+		expect(status).toBe(500);
+		expect(name).toBe('FancyError');
+		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
+
+		if (process.env.DEV) {
+			const lines = stack.split('\n');
+			expect(lines[1]).toContain('post-implicit.js:4:8');
+		}
+
+		const error = read_errors('/errors/page-endpoint/post-implicit');
+		expect(error).toContain('oops');
+	});
+
+	test('page endpoint POST returned error message is preserved', async ({ page, read_errors }) => {
+		// The case where we're submitting a POST request via a form.
+		// It should show the __error template with our message.
+		await page.goto('/errors/page-endpoint');
+		await Promise.all([page.waitForNavigation(), page.click('#post-explicit')]);
+		const json = await page.textContent('pre');
+		const { status, name, message, stack, fancy } = JSON.parse(json);
+
+		expect(status).toBe(400);
+		expect(name).toBe('FancyError');
+		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
+
+		if (process.env.DEV) {
+			const lines = stack.split('\n');
+			expect(lines[1]).toContain('post-explicit.js:5:8');
+		}
+
+		const error = read_errors('/errors/page-endpoint/post-explicit');
+		expect(error).toBe(undefined);
+	});
+
+	test('page endpoint thrown error respects `accept: application/json`', async ({ request }) => {
+		const response = await request.get('/errors/page-endpoint/get-implicit', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		const { message, name, stack, fancy } = await response.json();
+
+		expect(response.status()).toBe(500);
+		expect(name).toBe('FancyError');
+		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
+
+		if (process.env.DEV) {
+			expect(stack.split('\n').length).toBeGreaterThan(1);
+		} else {
+			expect(stack.split('\n').length).toBe(1);
+		}
+	});
+
+	test('page endpoint returned error respects `accept: application/json`', async ({ request }) => {
+		const response = await request.get('/errors/page-endpoint/get-explicit', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		const { message, name, stack } = await response.json();
+
+		expect(response.status()).toBe(400);
+		expect(name).toBe('FancyError');
+		expect(message).toBe('oops');
+
+		if (process.env.DEV) {
+			expect(stack.split('\n').length).toBeGreaterThan(1);
+		} else {
+			expect(stack.split('\n').length).toBe(1);
+		}
+	});
+
 	test('returns 400 when accessing a malformed URI', async ({ page, javaScriptEnabled }) => {
 		if (javaScriptEnabled) {
 			// the JS tests will look for body.started which won't be present

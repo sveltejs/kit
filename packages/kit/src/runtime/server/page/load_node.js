@@ -437,22 +437,23 @@ async function load_shadow_data(route, event, options, prerender) {
 		};
 
 		if (!is_get) {
-			const result = await handler(event);
-
-			// TODO remove for 1.0
-			// @ts-expect-error
-			if (result.fallthrough) {
-				throw new Error(
-					'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
-				);
-			}
-
-			const { status, headers, body } = validate_shadow_output(result);
+			const { status, headers, body } = validate_shadow_output(await handler(event));
+			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 			data.status = status;
 
-			add_cookies(/** @type {string[]} */ (data.cookies), headers);
+			// explicit errors cause an error page...
+			if (body instanceof Error) {
+				if (status < 400) {
+					data.status = 500;
+					data.error = new Error('A non-error status code was returned with an error body');
+				} else {
+					data.error = body;
+				}
 
-			// Redirects are respected...
+				return data;
+			}
+
+			// ...redirects are respected...
 			if (status >= 300 && status < 400) {
 				data.redirect = /** @type {string} */ (
 					headers instanceof Headers ? headers.get('location') : headers.location
@@ -468,19 +469,20 @@ async function load_shadow_data(route, event, options, prerender) {
 
 		const get = (method === 'head' && mod.head) || mod.get;
 		if (get) {
-			const result = await get(event);
-
-			// TODO remove for 1.0
-			// @ts-expect-error
-			if (result.fallthrough) {
-				throw new Error(
-					'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
-				);
-			}
-
-			const { status, headers, body } = validate_shadow_output(result);
+			const { status, headers, body } = validate_shadow_output(await get(event));
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 			data.status = status;
+
+			if (body instanceof Error) {
+				if (status < 400) {
+					data.status = 500;
+					data.error = new Error('A non-error status code was returned with an error body');
+				} else {
+					data.error = body;
+				}
+
+				return data;
+			}
 
 			if (status >= 400) {
 				data.error = new Error('Failed to load data');
@@ -528,6 +530,14 @@ function add_cookies(target, headers) {
  * @param {import('types').ShadowEndpointOutput} result
  */
 function validate_shadow_output(result) {
+	// TODO remove for 1.0
+	// @ts-expect-error
+	if (result.fallthrough) {
+		throw new Error(
+			'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
+		);
+	}
+
 	const { status = 200, body = {} } = result;
 	let headers = result.headers || {};
 
@@ -542,7 +552,9 @@ function validate_shadow_output(result) {
 	}
 
 	if (!is_pojo(body)) {
-		throw new Error('Body returned from endpoint request handler must be a plain object');
+		throw new Error(
+			'Body returned from endpoint request handler must be a plain object or an Error'
+		);
 	}
 
 	return { status, headers, body };
