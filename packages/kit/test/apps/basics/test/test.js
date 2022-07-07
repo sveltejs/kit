@@ -1170,11 +1170,11 @@ test.describe('Errors', () => {
 
 		if (process.env.DEV) {
 			const lines = stack.split('\n');
-			expect(lines[1]).toContain('get-explicit.js:4:9');
+			expect(lines[1]).toContain('get-explicit.js:3:8');
 		}
 
 		const error = read_errors('/errors/page-endpoint/get-explicit');
-		expect(error).toContain('oops');
+		expect(error).toBe(undefined);
 	});
 
 	test.only('page endpoint POST thrown error message is preserved', async ({
@@ -1216,11 +1216,11 @@ test.describe('Errors', () => {
 
 		if (process.env.DEV) {
 			const lines = stack.split('\n');
-			expect(lines[1]).toContain('post-explicit.js:4:9');
+			expect(lines[1]).toContain('post-explicit.js:3:8');
 		}
 
 		const error = read_errors('/errors/page-endpoint/post-explicit');
-		expect(error).toContain('oops');
+		expect(error).toBe(undefined);
 	});
 
 	test.only('page endpoint thrown error respects `accept: application/json`', async ({

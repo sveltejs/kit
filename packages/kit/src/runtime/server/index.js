@@ -210,7 +210,7 @@ export async function respond(request, options, state) {
 					let response;
 
 					if (is_data_request && route.type === 'page' && route.shadow) {
-						response = await render_endpoint(event, await route.shadow());
+						response = await render_endpoint(event, await route.shadow(), options);
 
 						// loading data for a client-side transition is a special case
 						if (request.headers.has('x-sveltekit-load')) {
@@ -232,7 +232,7 @@ export async function respond(request, options, state) {
 					} else {
 						response =
 							route.type === 'endpoint'
-								? await render_endpoint(event, await route.load())
+								? await render_endpoint(event, await route.load(), options)
 								: await render_page(event, route, options, state, resolve_opts);
 					}
 

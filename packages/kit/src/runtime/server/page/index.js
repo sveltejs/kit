@@ -25,7 +25,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		]);
 
 		if (type === 'application/json') {
-			return render_endpoint(event, await route.shadow());
+			return render_endpoint(event, await route.shadow(), options);
 		}
 	}
 
