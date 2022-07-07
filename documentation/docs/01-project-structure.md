@@ -29,6 +29,7 @@ my-app/
  +---- package.json
  +---- playwright.config.js         # (optional)
  +---- svelte.config.js
+ +---- vite.config.js
 ```
 
 If using TypeScript, the scripts files in the `src/` directory will have a `.ts` file extension.
@@ -42,6 +43,10 @@ SvelteKit is [ESM-first](https://developer.mozilla.org/en-US/docs/Web/JavaScript
 ### svelte.config.js
 
 Contains [configuration](configuration) for the SvelteKit project.
+
+### vite.config.js
+
+Contains [configuration](https://vitejs.dev/config/) for the [Vite](https://vitejs.dev/).
 
 ### static/
 
