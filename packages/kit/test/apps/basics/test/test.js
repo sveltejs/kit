@@ -1141,9 +1141,10 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await clicknav('#get-implicit');
 		const json = await page.textContent('pre');
-		const { status, message, stack } = JSON.parse(json);
+		const { status, name, message, stack } = JSON.parse(json);
 
 		expect(status).toBe(500);
+		expect(name).toBe('Error');
 		expect(message).toBe('oops');
 
 		if (process.env.DEV) {
@@ -1163,9 +1164,10 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await clicknav('#get-explicit');
 		const json = await page.textContent('pre');
-		const { status, message, stack } = JSON.parse(json);
+		const { status, name, message, stack } = JSON.parse(json);
 
 		expect(status).toBe(400);
+		expect(name).toBe('Error');
 		expect(message).toBe('oops');
 
 		if (process.env.DEV) {
@@ -1186,9 +1188,10 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await Promise.all([page.waitForNavigation(), page.click('#post-implicit')]);
 		const json = await page.textContent('pre');
-		const { status, message, stack } = JSON.parse(json);
+		const { status, name, message, stack } = JSON.parse(json);
 
 		expect(status).toBe(500);
+		expect(name).toBe('Error');
 		expect(message).toBe('oops');
 
 		if (process.env.DEV) {
@@ -1209,9 +1212,10 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await Promise.all([page.waitForNavigation(), page.click('#post-explicit')]);
 		const json = await page.textContent('pre');
-		const { status, message, stack } = JSON.parse(json);
+		const { status, name, message, stack } = JSON.parse(json);
 
 		expect(status).toBe(400);
+		expect(name).toBe('Error');
 		expect(message).toBe('oops');
 
 		if (process.env.DEV) {
@@ -1232,9 +1236,10 @@ test.describe('Errors', () => {
 			}
 		});
 
-		const { message, stack } = await response.json();
+		const { message, name, stack } = await response.json();
 
 		expect(response.status()).toBe(500);
+		expect(name).toBe('Error');
 		expect(message).toBe('oops');
 
 		if (process.env.DEV) {
@@ -1253,9 +1258,10 @@ test.describe('Errors', () => {
 			}
 		});
 
-		const { message, stack } = await response.json();
+		const { message, name, stack } = await response.json();
 
 		expect(response.status()).toBe(400);
+		expect(name).toBe('Error');
 		expect(message).toBe('oops');
 
 		if (process.env.DEV) {

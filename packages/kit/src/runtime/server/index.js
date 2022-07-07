@@ -3,7 +3,7 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
-import { decode_params } from './utils.js';
+import { decode_params, serialize_error } from './utils.js';
 import { normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
@@ -322,16 +322,10 @@ export async function respond(request, options, state) {
 		]);
 
 		if (is_data_request || type === 'application/json') {
-			return new Response(
-				JSON.stringify({
-					message: error.message,
-					stack: options.get_stack(error)
-				}),
-				{
-					status: 500,
-					headers: { 'content-type': 'application/json; charset=utf-8' }
-				}
-			);
+			return new Response(serialize_error(error, options), {
+				status: 500,
+				headers: { 'content-type': 'application/json; charset=utf-8' }
+			});
 		}
 
 		try {

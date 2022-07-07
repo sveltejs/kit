@@ -55,3 +55,17 @@ export function normalize_request_method(event) {
 	const method = event.request.method.toLowerCase();
 	return method === 'delete' ? 'del' : method; // 'delete' is a reserved word
 }
+
+/**
+ * @param {Error} error
+ * @param {import('types').SSROptions} options
+ */
+export function serialize_error(error, options) {
+	const object = {
+		name: error.name,
+		message: error.message,
+		stack: options.get_stack(error)
+	};
+
+	return JSON.stringify(object);
+}
