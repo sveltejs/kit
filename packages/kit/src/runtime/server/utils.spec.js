@@ -41,6 +41,7 @@ test('serialize_error', () => {
 			cause: {
 				name: 'Error',
 				message: 'sorry',
+				// @ts-expect-error
 				stack: error.cause.stack
 			},
 			fancy: true
