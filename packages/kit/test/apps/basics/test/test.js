@@ -226,6 +226,8 @@ test.describe('Scrolling', () => {
 		await page.goto('/scroll/cross-document/a');
 		await page.locator('[href="/scroll/cross-document/b"]').scrollIntoViewIfNeeded();
 
+		await page.waitForTimeout(50);
+
 		const y1 = await page.evaluate(() => scrollY);
 
 		console.error({ y1 });
