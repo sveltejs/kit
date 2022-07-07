@@ -459,6 +459,18 @@ async function load_shadow_data(route, event, options, prerender) {
 				return data;
 			}
 
+			// explicit errors cause an error page...
+			if (body instanceof Error) {
+				if (status < 400) {
+					data.status = 500;
+					data.error = new Error('A non-error status code was returned with an error body');
+				} else {
+					data.error = body;
+				}
+
+				return data;
+			}
+
 			// ...but 4xx and 5xx status codes _don't_ result in the error page
 			// rendering for non-GET requests — instead, we allow the page
 			// to render with any validation errors etc that were returned
