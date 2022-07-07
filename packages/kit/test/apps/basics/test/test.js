@@ -224,13 +224,12 @@ test.describe('Scrolling', () => {
 		clicknav
 	}) => {
 		await page.goto('/scroll/cross-document/a');
-		await page.locator('[href="/scroll/cross-document/b"]').scrollIntoViewIfNeeded();
 
-		await page.waitForTimeout(50);
+		const rect = await page.locator('[href="/scroll/cross-document/b"]').boundingBox();
+		const height = await page.evaluate(() => innerHeight);
 
-		const y1 = await page.evaluate(() => scrollY);
-
-		console.error({ y1 });
+		const target_scroll_y = rect.y + rect.height - height;
+		await page.evaluate((y) => scrollTo(0, y), target_scroll_y);
 
 		await page.click('[href="/scroll/cross-document/b"]');
 		expect(await page.textContent('h1')).toBe('b');
@@ -246,9 +245,9 @@ test.describe('Scrolling', () => {
 
 		await page.waitForTimeout(250); // needed for the test to fail reliably without the fix
 
-		const y2 = await page.evaluate(() => scrollY);
+		const scroll_y = await page.evaluate(() => scrollY);
 
-		expect(Math.abs(y2 - y1)).toBeLessThan(10); // we need a few pixels wiggle room, because browsers
+		expect(Math.abs(scroll_y - target_scroll_y)).toBeLessThan(10); // we need a few pixels wiggle room, because browsers
 	});
 
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
