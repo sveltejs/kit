@@ -108,5 +108,5 @@ function rimraf(path) {
 }
 
 export const plugin = process.env.CI
-	? (await import('../dist/vite.js')).sveltekit
-	: (await import('../src/vite/index.js')).sveltekit;
+	? (await import('../../kit/dist/vite.js')).sveltekit
+	: (await import('../../kit/src/vite/index.js')).sveltekit;
