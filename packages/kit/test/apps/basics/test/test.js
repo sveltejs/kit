@@ -247,7 +247,7 @@ test.describe('Scrolling', () => {
 
 		const scroll_y = await page.evaluate(() => scrollY);
 
-		expect(Math.abs(scroll_y - target_scroll_y)).toBeLessThan(10); // we need a few pixels wiggle room, because browsers
+		expect(Math.abs(scroll_y - target_scroll_y)).toBeLessThan(50); // we need a few pixels wiggle room, because browsers
 	});
 
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
