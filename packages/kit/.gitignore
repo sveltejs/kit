@@ -4,7 +4,7 @@
 /dist
 /docs
 /test/**/build
-!/src/vite/build/adapt/fixtures/*/.svelte-kit
+!/src/core/adapt/fixtures/*/.svelte-kit
 !/test/node_modules
 /test/apps/basics/test/errors.json
 .custom-out-dir
