@@ -81,6 +81,15 @@ function kit() {
 	/** @type {boolean} */
 	let is_build;
 
+	/** @type {import('types').Logger} */
+	let log;
+
+	/** @type {import('types').Prerendered} */
+	let prerendered;
+
+	/** @type {import('types').BuildData} */
+	let build_data;
+
 	/**
 	 * @type {{
 	 *   build_dir: string;
@@ -201,7 +210,7 @@ function kit() {
 		},
 
 		async writeBundle(_options, bundle) {
-			const log = logger({
+			log = logger({
 				verbose: vite_config.logLevel === 'info'
 			});
 
@@ -257,7 +266,7 @@ function kit() {
 			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 
 			/** @type {import('types').BuildData} */
-			const build_data = {
+			build_data = {
 				app_dir: svelte_config.kit.appDir,
 				manifest_data,
 				service_worker: options.service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
@@ -291,7 +300,7 @@ function kit() {
 
 			log.info('Prerendering');
 
-			const prerendered = await prerender({
+			prerendered = await prerender({
 				config: svelte_config.kit,
 				entries: manifest_data.routes
 					.map((route) => (route.type === 'page' ? route.path : ''))
@@ -313,7 +322,9 @@ function kit() {
 			console.log(
 				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
 			);
+		},
 
+		async closeBundle() {
 			if (svelte_config.kit.adapter) {
 				const { adapt } = await import('./build/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
@@ -324,9 +335,7 @@ function kit() {
 					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
 				);
 			}
-		},
 
-		closeBundle() {
 			if (is_build && svelte_config.kit.prerender.enabled) {
 				// this is necessary to close any open db connections, etc.
 				// TODO: prerender in a subprocess so we can exit in isolation
