@@ -1,5 +1,41 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.35
+
+### Patch Changes
+
+- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+
+## 1.0.0-next.34
+
+### Patch Changes
+
+- Update dependencies ([#5121](https://github.com/sveltejs/kit/pull/5121))
+
+## 1.0.0-next.33
+
+### Patch Changes
+
+- Update adapter entrypoint typings to be NodeNext/ESNext-compatible ([#5111](https://github.com/sveltejs/kit/pull/5111))
+
+## 1.0.0-next.32
+
+### Patch Changes
+
+- Add types to pkg.exports ([#5045](https://github.com/sveltejs/kit/pull/5045))
+
+## 1.0.0-next.31
+
+### Patch Changes
+
+- Tweak fallback page README ([#4954](https://github.com/sveltejs/kit/pull/4954))
+
+## 1.0.0-next.30
+
+### Patch Changes
+
+- Bump version to trigger README update on npm ([#4875](https://github.com/sveltejs/kit/pull/4875))
+
 ## 1.0.0-next.29
 
 ### Patch Changes

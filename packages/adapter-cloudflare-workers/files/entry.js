@@ -23,11 +23,15 @@ export default {
 			const res = await get_asset_from_kv(req, env, context);
 			if (is_error(res.status)) return res;
 
+			const cache_control = url.pathname.startsWith(prefix + 'immutable/')
+				? 'public, immutable, max-age=31536000'
+				: 'no-cache';
+
 			return new Response(res.body, {
 				headers: {
-					// include original cache headers, minus cache-control which
+					// include original headers, minus cache-control which
 					// is overridden, and etag which is no longer useful
-					'cache-control': 'public, immutable, max-age=31536000',
+					'cache-control': cache_control,
 					'content-type': res.headers.get('content-type'),
 					'x-robots-tag': 'noindex'
 				}
@@ -60,16 +64,12 @@ export default {
 		}
 
 		// dynamically-generated pages
-		try {
-			return await server.respond(req, {
-				platform: { env, context },
-				getClientAddress() {
-					return req.headers.get('cf-connecting-ip');
-				}
-			});
-		} catch (e) {
-			return new Response('Error rendering route: ' + (e.message || e.toString()), { status: 500 });
-		}
+		return await server.respond(req, {
+			platform: { env, context },
+			getClientAddress() {
+				return req.headers.get('cf-connecting-ip');
+			}
+		});
 	}
 };
 
@@ -79,24 +79,19 @@ export default {
  * @param {any} context
  */
 async function get_asset_from_kv(req, env, context, map = mapRequestToAsset) {
-	try {
-		return await getAssetFromKV(
-			{
-				request: req,
-				waitUntil(promise) {
-					return context.waitUntil(promise);
-				}
-			},
-			{
-				ASSET_NAMESPACE: env.__STATIC_CONTENT,
-				ASSET_MANIFEST: static_asset_manifest,
-				mapRequestToAsset: map
+	return await getAssetFromKV(
+		{
+			request: req,
+			waitUntil(promise) {
+				return context.waitUntil(promise);
 			}
-		);
-	} catch (e) {
-		const status = is_error(e.status) ? e.status : 500;
-		return new Response(e.message || e.toString(), { status });
-	}
+		},
+		{
+			ASSET_NAMESPACE: env.__STATIC_CONTENT,
+			ASSET_MANIFEST: static_asset_manifest,
+			mapRequestToAsset: map
+		}
+	);
 }
 
 /**

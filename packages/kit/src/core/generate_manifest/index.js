@@ -3,6 +3,8 @@ import { parse_route_id } from '../../utils/routing.js';
 import { get_mime_lookup } from '../utils.js';
 
 /**
+ * Generates the data used to write the server-side manifest.js file. This data is used in the Vite
+ * build process, to power routing, etc.
  * @param {{
  *   build_data: import('types').BuildData;
  *   relative_path: string;

@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import crypto from 'crypto';
+import { webcrypto } from 'crypto';
 import { sha256 } from './crypto.js';
 
 const inputs = [
@@ -12,9 +12,13 @@ const inputs = [
 ].slice(0);
 
 inputs.forEach((input) => {
-	test(input, () => {
-		const expected_bytes = crypto.createHash('sha256').update(input, 'utf-8').digest();
-		const expected = expected_bytes.toString('base64');
+	test(input, async () => {
+		// @ts-expect-error typescript what are you doing you lunatic
+		const expected_bytes = await webcrypto.subtle.digest(
+			'SHA-256',
+			new TextEncoder().encode(input)
+		);
+		const expected = Buffer.from(expected_bytes).toString('base64');
 
 		const actual = sha256(input);
 		assert.equal(actual, expected);

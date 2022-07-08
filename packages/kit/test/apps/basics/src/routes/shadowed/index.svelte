@@ -14,6 +14,7 @@
 	<button type="submit" id="redirect-post-with-cookie">redirect</button>
 </form>
 
-<form action="/shadowed/error-post" method="post">
+<form action="/shadowed/error-post" method="post" enctype="multipart/form-data">
+	<input name="message" value="posted data" />
 	<button type="submit" id="error-post">error</button>
 </form>

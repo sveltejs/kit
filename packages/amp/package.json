@@ -1,0 +1,29 @@
+{
+	"name": "@sveltejs/amp",
+	"version": "1.0.0-next.1",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sveltejs/kit",
+		"directory": "packages/adapter-auto"
+	},
+	"license": "MIT",
+	"homepage": "https://kit.svelte.dev",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"import": "./index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"main": "index.js",
+	"types": "index.d.ts",
+	"files": [
+		"index.js"
+	],
+	"scripts": {
+		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"format": "npm run check-format -- --write",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
+	}
+}

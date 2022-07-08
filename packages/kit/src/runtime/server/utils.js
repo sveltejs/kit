@@ -38,13 +38,13 @@ export function is_pojo(body) {
 
 	if (body) {
 		if (body instanceof Uint8Array) return false;
+		if (body instanceof ReadableStream) return false;
 
-		// body could be a node Readable, but we don't want to import
-		// node built-ins, so we use duck typing
-		if (body._readableState && typeof body.pipe === 'function') return false;
-
-		// similarly, it could be a web ReadableStream
-		if (typeof ReadableStream !== 'undefined' && body instanceof ReadableStream) return false;
+		// if body is a node Readable, throw an error
+		// TODO remove this for 1.0
+		if (body._readableState && typeof body.pipe === 'function') {
+			throw new Error('Node streams are no longer supported — use a ReadableStream instead');
+		}
 	}
 
 	return true;
@@ -54,4 +54,45 @@ export function is_pojo(body) {
 export function normalize_request_method(event) {
 	const method = event.request.method.toLowerCase();
 	return method === 'delete' ? 'del' : method; // 'delete' is a reserved word
+}
+
+/**
+ * Serialize an error into a JSON string, by copying its `name`, `message`
+ * and (in dev) `stack`, plus any custom properties, plus recursively
+ * serialized `cause` properties. This is necessary because
+ * `JSON.stringify(error) === '{}'`
+ * @param {Error} error
+ * @param {(error: Error) => string | undefined} get_stack
+ */
+export function serialize_error(error, get_stack) {
+	return JSON.stringify(clone_error(error, get_stack));
+}
+
+/**
+ * @param {Error} error
+ * @param {(error: Error) => string | undefined} get_stack
+ */
+function clone_error(error, get_stack) {
+	const {
+		name,
+		message,
+		// this should constitute 'using' a var, since it affects `custom`
+		// eslint-disable-next-line
+		stack,
+		// @ts-expect-error i guess typescript doesn't know about error.cause yet
+		cause,
+		...custom
+	} = error;
+
+	/** @type {Record<string, any>} */
+	const object = { name, message, stack: get_stack(error) };
+
+	if (cause) object.cause = clone_error(cause, get_stack);
+
+	for (const key in custom) {
+		// @ts-expect-error
+		object[key] = custom[key];
+	}
+
+	return object;
 }

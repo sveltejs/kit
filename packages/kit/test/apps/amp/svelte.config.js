@@ -1,7 +1,12 @@
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		amp: true
+		browser: {
+			router: false,
+			hydrate: false
+		},
+
+		inlineStyleThreshold: Infinity
 	}
 };
 

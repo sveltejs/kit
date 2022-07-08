@@ -1,7 +1,7 @@
-import '../src/shims.js';
+import './shims.js';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { split_headers } from '../src/headers.js';
+import { split_headers } from './headers.js';
 
 test('empty headers', () => {
 	const headers = new Headers();

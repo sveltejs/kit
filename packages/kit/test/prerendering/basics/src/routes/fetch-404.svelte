@@ -1,5 +1,5 @@
 <script context="module">
-	/** @type {import('./fetch-404').Load} */
+	/** @type {import('./__types/fetch-404').Load} */
 	export async function load({ fetch }) {
 		const { status } = await fetch('/missing.json');
 
