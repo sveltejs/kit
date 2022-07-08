@@ -93,6 +93,8 @@ function kit() {
 	function create_client_config() {
 		/** @type {Record<string, string>} */
 		const input = {
+			// Put unchanging assets in immutable directory. We don't set that in the
+			// outDir so that other plugins can add mutable assets to the bundle
 			'immutable/start': `${get_runtime_path(svelte_config.kit)}/client/start.js`
 		};
 
