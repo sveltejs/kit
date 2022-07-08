@@ -1639,8 +1639,7 @@ test.describe('Load', () => {
 	});
 
 	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
-		const DEV_SERVER_PORT = 3000;
-		const PREVIEW_SERVER_PORT = 4173;
+		const port = process.env.DEV ? 3000 : 4173;
 
 		if (javaScriptEnabled && process.env.DEV) {
 			const warnings = [];
