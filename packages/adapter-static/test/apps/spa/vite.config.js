@@ -1,11 +1,11 @@
-const { sveltekit } = await import(process.env.SVELTEKIT_PLUGIN);
+import { plugin } from '../../utils.js';
 
 /** @type {import('vite').UserConfig} */
 const config = {
 	build: {
 		minify: false
 	},
-	plugins: [sveltekit()]
+	plugins: [plugin()]
 };
 
 export default config;

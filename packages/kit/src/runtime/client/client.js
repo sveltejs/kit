@@ -719,7 +719,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 							props = res.status === 204 ? {} : await res.json();
 						} else {
 							status = res.status;
-							error = new Error('Failed to load data');
+							try {
+								error = await res.json();
+							} catch (e) {
+								error = new Error('Failed to load data');
+							}
 						}
 					}
 

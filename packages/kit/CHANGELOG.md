@@ -1,5 +1,31 @@
 # @sveltejs/kit
 
+## 1.0.0-next.363
+
+### Patch Changes
+
+- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+
+## 1.0.0-next.362
+
+### Patch Changes
+
+- Updated undici to fix #5383 ([#5420](https://github.com/sveltejs/kit/pull/5420))
+
+## 1.0.0-next.361
+
+### Patch Changes
+
+- [breaking] require Node 16.9 ([#5395](https://github.com/sveltejs/kit/pull/5395))
+
+* remove FLoC protection, now that we vanquished Google ([#5018](https://github.com/sveltejs/kit/pull/5018))
+
+- Prevent `Connection` header from being incorrectly inherited by requests made from `load`'s `fetch` during SSR ([#5393](https://github.com/sveltejs/kit/pull/5393))
+
+* Returns errors from page endpoints as JSON where appropriate ([#5314](https://github.com/sveltejs/kit/pull/5314))
+
+- Allow body to be a binary ReadableStream ([#5407](https://github.com/sveltejs/kit/pull/5407))
+
 ## 1.0.0-next.360
 
 ### Patch Changes
