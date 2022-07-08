@@ -280,8 +280,8 @@ function kit() {
 
 			const files = new Set([
 				...static_files,
-				...chunks.map((chunk) => `${svelte_config.kit.appDir}/immutable/${chunk.fileName}`),
-				...assets.map((chunk) => `${svelte_config.kit.appDir}/immutable/${chunk.fileName}`)
+				...chunks.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`),
+				...assets.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`)
 			]);
 
 			// TODO is this right?
