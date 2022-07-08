@@ -21,7 +21,7 @@ importers:
       svelte: ^3.48.0
       tiny-glob: ^0.2.9
       turbo: ^1.2.14
-      typescript: ^4.7.2
+      typescript: ^4.7.4
     devDependencies:
       '@changesets/cli': 2.23.0
       '@rollup/plugin-commonjs': 22.0.1_rollup@2.75.3
@@ -48,7 +48,7 @@ importers:
       '@sveltejs/adapter-netlify': workspace:*
       '@sveltejs/adapter-vercel': workspace:*
       '@types/node': ^16.11.36
-      typescript: ^4.7.2
+      typescript: ^4.7.4
     dependencies:
       '@sveltejs/adapter-cloudflare': link:../adapter-cloudflare
       '@sveltejs/adapter-netlify': link:../adapter-netlify
@@ -62,7 +62,7 @@ importers:
       '@types/node': ^16.11.36
       '@types/ws': ^8.5.3
       esbuild: ^0.14.42
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       worktop: 0.8.0-next.14
     dependencies:
       esbuild: 0.14.42
@@ -78,7 +78,7 @@ importers:
       '@iarna/toml': ^2.2.5
       '@types/node': ^16.11.36
       esbuild: ^0.14.42
-      typescript: ^4.7.2
+      typescript: ^4.7.4
     dependencies:
       '@iarna/toml': 2.2.5
       esbuild: 0.14.42
@@ -102,7 +102,7 @@ importers:
       rollup: ^2.75.3
       set-cookie-parser: ^2.4.8
       tiny-glob: ^0.2.9
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
     dependencies:
       '@iarna/toml': 2.2.5
@@ -136,7 +136,7 @@ importers:
       rollup: ^2.75.3
       sirv: ^2.0.2
       tiny-glob: ^0.2.9
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
     dependencies:
       tiny-glob: 0.2.9
@@ -164,7 +164,7 @@ importers:
       sirv: ^2.0.2
       svelte: ^3.48.0
       tiny-glob: ^0.2.9
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^2.9.13
     dependencies:
@@ -210,7 +210,7 @@ importers:
       '@types/node': ^16.11.36
       '@vercel/nft': ^0.20.0
       esbuild: ^0.14.42
-      typescript: ^4.7.2
+      typescript: ^4.7.4
     dependencies:
       '@vercel/nft': 0.20.1
       esbuild: 0.14.42
@@ -266,7 +266,7 @@ importers:
       cookie: ^0.5.0
       svelte: ^3.48.0
       svelte-preprocess: ^4.10.6
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       vite: ^2.9.13
     dependencies:
       '@fontsource/fira-mono': 4.5.8
@@ -313,7 +313,7 @@ importers:
       svelte-preprocess: ^4.10.6
       svelte2tsx: ~0.5.10
       tiny-glob: ^0.2.9
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       undici: ^5.6.1
       uvu: ^0.5.3
       vite: ^2.9.13
@@ -363,7 +363,7 @@ importers:
       purify-css: ^1.2.5
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       vite: ^2.9.13
     devDependencies:
       '@sveltejs/amp': link:../../../../amp
@@ -382,7 +382,7 @@ importers:
       rimraf: ^3.0.2
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       vite: ^2.9.13
     devDependencies:
       '@sveltejs/kit': link:../../..
@@ -399,7 +399,7 @@ importers:
       cross-env: ^7.0.3
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       vite: ^2.9.13
     devDependencies:
       '@sveltejs/kit': link:../../..
@@ -416,7 +416,7 @@ importers:
       cross-env: ^7.0.3
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       vite: ^2.9.13
     devDependencies:
       '@sveltejs/adapter-node': link:../../../../adapter-node
@@ -432,7 +432,7 @@ importers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^2.9.13
     devDependencies:
@@ -448,7 +448,7 @@ importers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^2.9.13
     devDependencies:
@@ -464,7 +464,7 @@ importers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^2.9.13
     devDependencies:
@@ -480,7 +480,7 @@ importers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^2.9.13
     devDependencies:
@@ -496,7 +496,7 @@ importers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^2.9.13
     devDependencies:
@@ -521,7 +521,7 @@ importers:
       prismjs: ^1.28.0
       shiki-twoslash: ^3.0.2
       svelte: ^3.48.0
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       vite: ^2.9.10
       vite-imagetools: ^4.0.3
     devDependencies:
