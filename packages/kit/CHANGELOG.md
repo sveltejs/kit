@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.362
+
+### Patch Changes
+
+- Updated undici to fix #5383 ([#5420](https://github.com/sveltejs/kit/pull/5420))
+
 ## 1.0.0-next.361
 
 ### Patch Changes
