@@ -69,7 +69,7 @@ function kit() {
 	/** @type {import('types').ValidatedConfig} */
 	let svelte_config;
 
-	/** @type {import('vite').UserConfig} */
+	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
 
 	/** @type {import('vite').ConfigEnv} */
@@ -101,7 +101,7 @@ function kit() {
 		// their location in the source code, which is helpful for debugging
 		manifest_data.components.forEach((file) => {
 			const resolved = path.resolve(cwd, file);
-			const relative = path.relative(svelte_config.kit.files.routes, resolved);
+			const relative = decodeURIComponent(path.relative(svelte_config.kit.files.routes, resolved));
 
 			const name = relative.startsWith('..')
 				? path.basename(file)
@@ -121,7 +121,6 @@ function kit() {
 		name: 'vite-plugin-svelte-kit',
 
 		async config(config, config_env) {
-			vite_config = config;
 			vite_config_env = config_env;
 			svelte_config = await load_config();
 			is_build = config_env.command === 'build';
@@ -156,10 +155,6 @@ function kit() {
 						input: `${get_runtime_path(svelte_config.kit)}/client/start.js`
 					}
 				},
-				preview: {
-					port: config.preview?.port ?? 3000,
-					strictPort: config.preview?.strictPort ?? true
-				},
 				resolve: {
 					alias: get_aliases(svelte_config.kit)
 				},
@@ -177,8 +172,6 @@ function kit() {
 							])
 						]
 					},
-					port: config.server?.port ?? 3000,
-					strictPort: config.server?.strictPort ?? true,
 					watch: {
 						ignored: [
 							// Ignore all siblings of config.kit.outDir/generated
@@ -189,6 +182,10 @@ function kit() {
 			};
 			warn_overridden_config(config, result);
 			return result;
+		},
+
+		configResolved(config) {
+			vite_config = config;
 		},
 
 		buildStart() {
@@ -202,8 +199,9 @@ function kit() {
 		},
 
 		async writeBundle(_options, bundle) {
-			const verbose = vite_config.logLevel === 'info';
-			const log = logger({ verbose });
+			const log = logger({
+				verbose: vite_config.logLevel === 'info'
+			});
 
 			fs.writeFileSync(
 				`${paths.client_out_dir}/version.json`,
@@ -336,12 +334,11 @@ function kit() {
 		},
 
 		async configureServer(vite) {
-			return await dev(vite, svelte_config);
+			return await dev(vite, vite_config, svelte_config);
 		},
 
 		configurePreviewServer(vite) {
-			const protocol = vite_config.preview?.https ? 'https' : 'http';
-			return preview(vite, svelte_config, protocol);
+			return preview(vite, svelte_config, vite_config.preview.https ? 'https' : 'http');
 		}
 	};
 }

@@ -16,12 +16,13 @@ importers:
       eslint-plugin-import: ^2.26.0
       eslint-plugin-node: ^11.1.0
       eslint-plugin-svelte3: ^4.0.0
+      playwright: ^1.22.2
       prettier: ^2.6.2
       rollup: ^2.75.3
       svelte: ^3.48.0
       tiny-glob: ^0.2.9
       turbo: ^1.2.14
-      typescript: ^4.7.2
+      typescript: ^4.7.4
     devDependencies:
       '@changesets/cli': 2.23.0
       '@rollup/plugin-commonjs': 22.0.1_rollup@2.75.3
@@ -35,6 +36,7 @@ importers:
       eslint-plugin-import: 2.26.0_stpfporf4ezjetv6zdnl75453m
       eslint-plugin-node: 11.1.0_eslint@8.18.0
       eslint-plugin-svelte3: 4.0.0_wy4erphnvhealet26qderqv6bu
+      playwright: 1.23.1
       prettier: 2.7.1
       rollup: 2.75.3
       svelte: 3.48.0
@@ -48,7 +50,7 @@ importers:
       '@sveltejs/adapter-netlify': workspace:*
       '@sveltejs/adapter-vercel': workspace:*
       '@types/node': ^16.11.36
-      typescript: ^4.7.2
+      typescript: ^4.7.4
     dependencies:
       '@sveltejs/adapter-cloudflare': link:../adapter-cloudflare
       '@sveltejs/adapter-netlify': link:../adapter-netlify
@@ -62,7 +64,7 @@ importers:
       '@types/node': ^16.11.36
       '@types/ws': ^8.5.3
       esbuild: ^0.14.42
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       worktop: 0.8.0-next.14
     dependencies:
       esbuild: 0.14.42
@@ -78,7 +80,7 @@ importers:
       '@iarna/toml': ^2.2.5
       '@types/node': ^16.11.36
       esbuild: ^0.14.42
-      typescript: ^4.7.2
+      typescript: ^4.7.4
     dependencies:
       '@iarna/toml': 2.2.5
       esbuild: 0.14.42
@@ -102,7 +104,7 @@ importers:
       rollup: ^2.75.3
       set-cookie-parser: ^2.4.8
       tiny-glob: ^0.2.9
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
     dependencies:
       '@iarna/toml': 2.2.5
@@ -136,7 +138,7 @@ importers:
       rollup: ^2.75.3
       sirv: ^2.0.2
       tiny-glob: ^0.2.9
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
     dependencies:
       tiny-glob: 0.2.9
@@ -164,7 +166,7 @@ importers:
       sirv: ^2.0.2
       svelte: ^3.48.0
       tiny-glob: ^0.2.9
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^2.9.13
     dependencies:
@@ -210,7 +212,7 @@ importers:
       '@types/node': ^16.11.36
       '@vercel/nft': ^0.20.0
       esbuild: ^0.14.42
-      typescript: ^4.7.2
+      typescript: ^4.7.4
     dependencies:
       '@vercel/nft': 0.20.1
       esbuild: 0.14.42
@@ -266,7 +268,7 @@ importers:
       cookie: ^0.5.0
       svelte: ^3.48.0
       svelte-preprocess: ^4.10.6
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       vite: ^2.9.13
     dependencies:
       '@fontsource/fira-mono': 4.5.8
@@ -313,8 +315,8 @@ importers:
       svelte-preprocess: ^4.10.6
       svelte2tsx: ~0.5.10
       tiny-glob: ^0.2.9
-      typescript: ^4.7.2
-      undici: ^5.6.0
+      typescript: ^4.7.4
+      undici: ^5.6.1
       uvu: ^0.5.3
       vite: ^2.9.13
     dependencies:
@@ -351,7 +353,7 @@ importers:
       svelte2tsx: 0.5.11_lvfi2wesz6u4l5rfbnetbucfmm
       tiny-glob: 0.2.9
       typescript: 4.7.4
-      undici: 5.6.0
+      undici: 5.6.1
       uvu: 0.5.4
       vite: 2.9.13
 
@@ -363,7 +365,7 @@ importers:
       purify-css: ^1.2.5
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       vite: ^2.9.13
     devDependencies:
       '@sveltejs/amp': link:../../../../amp
@@ -382,7 +384,7 @@ importers:
       rimraf: ^3.0.2
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       vite: ^2.9.13
     devDependencies:
       '@sveltejs/kit': link:../../..
@@ -399,7 +401,7 @@ importers:
       cross-env: ^7.0.3
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       vite: ^2.9.13
     devDependencies:
       '@sveltejs/kit': link:../../..
@@ -416,7 +418,7 @@ importers:
       cross-env: ^7.0.3
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       vite: ^2.9.13
     devDependencies:
       '@sveltejs/adapter-node': link:../../../../adapter-node
@@ -432,7 +434,7 @@ importers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^2.9.13
     devDependencies:
@@ -448,7 +450,7 @@ importers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^2.9.13
     devDependencies:
@@ -464,7 +466,7 @@ importers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^2.9.13
     devDependencies:
@@ -480,7 +482,7 @@ importers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^2.9.13
     devDependencies:
@@ -496,7 +498,7 @@ importers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
       svelte-check: ^2.7.1
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^2.9.13
     devDependencies:
@@ -521,7 +523,7 @@ importers:
       prismjs: ^1.28.0
       shiki-twoslash: ^3.0.2
       svelte: ^3.48.0
-      typescript: ^4.7.2
+      typescript: ^4.7.4
       vite: ^2.9.10
       vite-imagetools: ^4.0.3
     devDependencies:
@@ -3941,6 +3943,15 @@ packages:
     hasBin: true
     dev: true
 
+  /playwright/1.23.1:
+    resolution: {integrity: sha512-+lgiy1JZMNPwpBp5tsUdjTGxuJ+lXZbtSKmMDc0/f1oVsNDXXA+r7zeC9Kzd+4jSHteoJJocargxVx2Mn1o2kw==}
+    engines: {node: '>=14'}
+    hasBin: true
+    requiresBuild: true
+    dependencies:
+      playwright-core: 1.23.1
+    dev: true
+
   /polka/1.0.0-next.22:
     resolution: {integrity: sha512-a7tsZy5gFbJr0aUltZS97xCkbPglXuD67AMvTyZX7BTDBH384FWf0ZQF6rPvdutSxnO1vUlXM2zSLf5tCKk5RA==}
     engines: {node: '>=8'}
@@ -5142,8 +5153,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
-  /undici/5.6.0:
-    resolution: {integrity: sha512-mc+8SY1fXubTrdx4CXDkeFFGV8lI3Tq4I/70U1V8Z6g4iscGII0uLO7CPnDt56bXEbvaKwo2T2+VrteWbZiXiQ==}
+  /undici/5.6.1:
+    resolution: {integrity: sha512-yYVqywdCbNb99f/w045wqmv++WExXDjY0FEvLSB7QUZZH6izxrVkF4dJn1aimcvN0+WAhv75Gg7v6VJoqmRtJQ==}
     engines: {node: '>=12.18'}
     dev: true
 

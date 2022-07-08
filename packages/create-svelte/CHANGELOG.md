@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.147
+
+### Patch Changes
+
+- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+
 ## 2.0.0-next.146
 
 ### Patch Changes

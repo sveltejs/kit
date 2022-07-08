@@ -1,5 +1,16 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.55
+
+### Patch Changes
+
+- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+
+- Updated dependencies [[`3799a89e`](https://github.com/sveltejs/kit/commit/3799a89e7913b71da4dab749ec1423215c4a20a1)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.26
+  - @sveltejs/adapter-netlify@1.0.0-next.67
+  - @sveltejs/adapter-vercel@1.0.0-next.60
+
 ## 1.0.0-next.54
 
 ### Patch Changes

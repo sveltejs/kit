@@ -1,5 +1,39 @@
 # @sveltejs/kit
 
+## 1.0.0-next.366
+
+### Patch Changes
+
+- reset selection in setTimeout after navigating, to ensure correct behaviour in Firefox ([#5058](https://github.com/sveltejs/kit/pull/5058))
+
+## 1.0.0-next.365
+
+### Patch Changes
+
+- Serve static assets before routes in dev, but only if in an allowed directory ([#5070](https://github.com/sveltejs/kit/pull/5070))
+
+* [breaking] Allow %-encoded filenames ([#5056](https://github.com/sveltejs/kit/pull/5056))
+
+## 1.0.0-next.364
+
+### Patch Changes
+
+- [breaking] Use Vite defaults for port and strictPort ([#5392](https://github.com/sveltejs/kit/pull/5392))
+
+* Use anonymous function in service worker init script to support legacy browsers ([#5417](https://github.com/sveltejs/kit/pull/5417))
+
+## 1.0.0-next.363
+
+### Patch Changes
+
+- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+
+## 1.0.0-next.362
+
+### Patch Changes
+
+- Updated undici to fix #5383 ([#5420](https://github.com/sveltejs/kit/pull/5420))
+
 ## 1.0.0-next.361
 
 ### Patch Changes
