@@ -1,7 +1,7 @@
 import fs from 'fs';
 import http from 'http';
 import * as ports from 'port-authority';
-import { test as base } from '@playwright/test';
+import { test as base, devices } from '@playwright/test';
 
 export const test = base.extend({
 	// @ts-expect-error
@@ -55,17 +55,6 @@ export const test = base.extend({
 	},
 
 	// @ts-expect-error
-	back: async ({ page, javaScriptEnabled }, use) => {
-		use(async () => {
-			if (javaScriptEnabled) {
-				await Promise.all([page.goBack(), page.evaluate(() => window.navigated)]);
-			} else {
-				return page.goBack().then(() => void 0);
-			}
-		});
-	},
-
-	// @ts-expect-error
 	clicknav: async ({ page, javaScriptEnabled }, use) => {
 		/**
 		 * @param {string} selector
@@ -105,19 +94,22 @@ export const test = base.extend({
 			});
 		}
 
-		const goto = page.goto;
-		page.goto =
-			/**
-			 * @param {string} url
-			 * @param {object}	opts
-			 */
-			async function (url, opts) {
-				const res = await goto.call(page, url, opts);
+		// automatically wait for kit started event after navigation functions if js is enabled
+		const page_navigation_functions = ['goto', 'goBack', 'reload'];
+		page_navigation_functions.forEach((fn) => {
+			const page_fn = page[fn];
+			if (!page_fn) {
+				throw new Error(`function does not exist on page: ${fn}`);
+			}
+			page[fn] = async function (...args) {
+				const res = await page_fn.call(page, ...args);
 				if (javaScriptEnabled) {
 					await page.waitForSelector('body.started', { timeout: 5000 });
 				}
 				return res;
 			};
+		});
+
 		await use(page);
 	},
 
@@ -135,6 +127,22 @@ export const test = base.extend({
 		use(read_errors);
 	}
 });
+const test_browser = process.env.KIT_E2E_BROWSER ?? 'chromium';
+const known_devices = {
+	chromium: devices['Desktop Chrome'],
+	firefox: devices['Desktop Firefox'],
+	safari: devices['Desktop Safari']
+};
+
+const test_browser_device = known_devices[test_browser];
+
+if (!test_browser_device) {
+	throw new Error(
+		`invalid test browser specified: KIT_E2E_BROWSER=${
+			process.env.KIT_E2E_BROWSER
+		}. Allowed values: ${Object.keys(known_devices).join(', ')}`
+	);
+}
 
 const port = 3000;
 
@@ -152,24 +160,22 @@ export const config = {
 	retries: process.env.CI ? 5 : 0,
 	projects: [
 		{
-			name: `${process.env.DEV ? 'dev' : 'build'}+js`,
+			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}+js`,
 			use: {
 				javaScriptEnabled: true
 			}
 		},
 		{
-			name: `${process.env.DEV ? 'dev' : 'build'}-js`,
+			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}-js`,
 			use: {
 				javaScriptEnabled: false
 			}
 		}
 	],
 	use: {
+		...test_browser_device,
 		screenshot: 'only-on-failure',
-		trace: 'retain-on-failure',
-		// use stable chrome from host OS instead of downloading one
-		// see https://playwright.dev/docs/browsers#google-chrome--microsoft-edge
-		channel: 'chrome'
+		trace: process.env.KIT_E2E_TRACE ? 'retain-on-failure' : 'on-first-retry'
 	},
 	workers: process.env.CI ? 2 : undefined
 };

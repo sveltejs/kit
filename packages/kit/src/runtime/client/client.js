@@ -304,9 +304,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 				const root = document.body;
 				const tabindex = root.getAttribute('tabindex');
 
-				getSelection()?.removeAllRanges();
 				root.tabIndex = -1;
 				root.focus({ preventScroll: true });
+
+				setTimeout(() => {
+					getSelection()?.removeAllRanges();
+				});
 
 				// restore `tabindex` as to prevent `root` from stealing input from elements
 				if (tabindex !== null) {

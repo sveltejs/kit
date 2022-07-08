@@ -16,6 +16,7 @@ importers:
       eslint-plugin-import: ^2.26.0
       eslint-plugin-node: ^11.1.0
       eslint-plugin-svelte3: ^4.0.0
+      playwright: ^1.22.2
       prettier: ^2.6.2
       rollup: ^2.75.3
       svelte: ^3.48.0
@@ -35,6 +36,7 @@ importers:
       eslint-plugin-import: 2.26.0_stpfporf4ezjetv6zdnl75453m
       eslint-plugin-node: 11.1.0_eslint@8.18.0
       eslint-plugin-svelte3: 4.0.0_wy4erphnvhealet26qderqv6bu
+      playwright: 1.23.1
       prettier: 2.7.1
       rollup: 2.75.3
       svelte: 3.48.0
@@ -3939,6 +3941,15 @@ packages:
     resolution: {integrity: sha512-9CXsE0gawph4KXl6oUaa0ehHRySZjHvly4TybcBXDvzK3N3o6L/eZ8Q6iVWUiMn0LLS5bRFxo1qEtOETlYJxjw==}
     engines: {node: '>=14'}
     hasBin: true
+    dev: true
+
+  /playwright/1.23.1:
+    resolution: {integrity: sha512-+lgiy1JZMNPwpBp5tsUdjTGxuJ+lXZbtSKmMDc0/f1oVsNDXXA+r7zeC9Kzd+4jSHteoJJocargxVx2Mn1o2kw==}
+    engines: {node: '>=14'}
+    hasBin: true
+    requiresBuild: true
+    dependencies:
+      playwright-core: 1.23.1
     dev: true
 
   /polka/1.0.0-next.22:

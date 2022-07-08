@@ -74,7 +74,7 @@ test.describe('a11y', () => {
 					selection.addRange(range);
 					return selection.rangeCount;
 				}
-				return 0;
+				return -1;
 			})
 		).toBe(1);
 
@@ -85,7 +85,7 @@ test.describe('a11y', () => {
 				if (selection) {
 					return selection.rangeCount;
 				}
-				return 1;
+				return -1;
 			})
 		).toBe(0);
 	});
@@ -139,7 +139,7 @@ test.describe('beforeNavigate', () => {
 
 	test('prevents unload', async ({ page }) => {
 		await page.goto('/before-navigate/prevent-navigation');
-
+		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 		const type = new Promise((fulfil) => {
 			page.on('dialog', async (dialog) => {
 				fulfil(dialog.type());
@@ -205,17 +205,12 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
 	});
 
-	test('scroll is restored after hitting the back button', async ({
-		back,
-		baseURL,
-		clicknav,
-		page
-	}) => {
+	test('scroll is restored after hitting the back button', async ({ baseURL, clicknav, page }) => {
 		await page.goto('/anchor');
 		await page.click('#scroll-anchor');
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
-		await back();
+		await page.goBack();
 		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
 
@@ -226,13 +221,15 @@ test.describe('Scrolling', () => {
 
 	test('scroll is restored after hitting the back button for an in-app cross-document navigation', async ({
 		page,
-		clicknav,
-		back
+		clicknav
 	}) => {
 		await page.goto('/scroll/cross-document/a');
-		await page.locator('[href="/scroll/cross-document/b"]').scrollIntoViewIfNeeded();
 
-		const y1 = await page.evaluate(() => scrollY);
+		const rect = await page.locator('[href="/scroll/cross-document/b"]').boundingBox();
+		const height = await page.evaluate(() => innerHeight);
+
+		const target_scroll_y = rect.y + rect.height - height;
+		await page.evaluate((y) => scrollTo(0, y), target_scroll_y);
 
 		await page.click('[href="/scroll/cross-document/b"]');
 		expect(await page.textContent('h1')).toBe('b');
@@ -241,16 +238,16 @@ test.describe('Scrolling', () => {
 		await clicknav('[href="/scroll/cross-document/c"]');
 		expect(await page.textContent('h1')).toBe('c');
 
-		await back(); // client-side back
+		await page.goBack(); // client-side back
 		await page.goBack(); // native back
 		expect(await page.textContent('h1')).toBe('a');
 		await page.waitForSelector('body.started');
 
 		await page.waitForTimeout(250); // needed for the test to fail reliably without the fix
 
-		const y2 = await page.evaluate(() => scrollY);
+		const scroll_y = await page.evaluate(() => scrollY);
 
-		expect(Math.abs(y2 - y1)).toBeLessThan(10); // we need a few pixels wiggle room, because browsers
+		expect(Math.abs(scroll_y - target_scroll_y)).toBeLessThan(50); // we need a few pixels wiggle room, because browsers
 	});
 
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
@@ -302,7 +299,7 @@ test.describe('Scrolling', () => {
 		await expect(page.locator('input')).toBeFocused();
 	});
 
-	test('scroll positions are recovered on reloading the page', async ({ page, back, app }) => {
+	test('scroll positions are recovered on reloading the page', async ({ page, app }) => {
 		await page.goto('/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 		await app.goto('/anchor/anchor');
@@ -311,7 +308,7 @@ test.describe('Scrolling', () => {
 		await page.reload();
 		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
 
-		await back();
+		await page.goBack();
 		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
 	});
 
@@ -2055,7 +2052,7 @@ test.describe('searchParams', () => {
 });
 
 test.describe('Redirects', () => {
-	test('redirect', async ({ baseURL, page, clicknav, back }) => {
+	test('redirect', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/a"]');
@@ -2064,7 +2061,7 @@ test.describe('Redirects', () => {
 		expect(await page.textContent('h1')).toBe('c');
 		expect(page.url()).toBe(`${baseURL}/redirect/c`);
 
-		await back();
+		await page.goBack();
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
@@ -2082,10 +2079,10 @@ test.describe('Redirects', () => {
 			);
 		} else {
 			// there's not a lot we can do to handle server-side redirect loops
-			if (browserName === 'webkit') {
-				expect(page.url()).toBe(`${baseURL}/redirect`);
-			} else {
+			if (browserName === 'chromium') {
 				expect(page.url()).toBe('chrome-error://chromewebdata/');
+			} else {
+				expect(page.url()).toBe(`${baseURL}/redirect`);
 			}
 		}
 	});
@@ -2405,17 +2402,16 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('y/1');
 	});
 
-	test('back button returns to initial route', async ({ page, clicknav, back }) => {
+	test('back button returns to initial route', async ({ page, clicknav }) => {
 		await page.goto('/routing');
 		await clicknav('[href="/routing/a"]');
 
-		await back();
+		await page.goBack();
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
 	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
 		page,
-		back,
 		clicknav
 	}) => {
 		await page.goto('/routing/hashes/a');
@@ -2423,7 +2419,7 @@ test.describe('Routing', () => {
 		await page.click('[href="#hash-target"]');
 		await clicknav('[href="/routing/hashes/b"]');
 
-		await back();
+		await page.goBack();
 		expect(await page.textContent('h1')).toBe('a');
 	});
 
@@ -2431,9 +2427,12 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/target#p2');
 
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
-		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe(
-			'next focus element'
-		);
+		await page.waitForTimeout(50); // give browser a bit of time to complete the native behavior of the key press
+		expect(
+			await page.evaluate(
+				() => document.activeElement?.textContent || 'ERROR: document.activeElement not set'
+			)
+		).toBe('next focus element');
 	});
 
 	test('focus works when navigating to a hash on the same page', async ({ page, browserName }) => {
@@ -2559,7 +2558,7 @@ test.describe('Routing', () => {
 		expect(await page.textContent('body')).toBe('xyz/abc/qwe');
 	});
 
-	test('rest parameters do not swallow characters', async ({ page, clicknav, back }) => {
+	test('rest parameters do not swallow characters', async ({ page, clicknav }) => {
 		await page.goto('/routing/rest/non-greedy');
 
 		await clicknav('[href="/routing/rest/non-greedy/foo/one/two"]');
@@ -2569,7 +2568,7 @@ test.describe('Routing', () => {
 		await clicknav('[href="/routing/rest/non-greedy/food/one/two"]');
 		expect(await page.textContent('h1')).not.toBe('non-greedy');
 
-		await back();
+		await page.goBack();
 
 		await clicknav('[href="/routing/rest/non-greedy/one-bar/two/three"]');
 		expect(await page.textContent('h1')).toBe('non-greedy');
