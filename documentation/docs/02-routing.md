@@ -393,3 +393,27 @@ src/routes/[a].js
 src/routes/[b].svelte
 src/routes/[...catchall].svelte
 ```
+
+#### Encoding
+
+Filenames are URI-decoded, meaning that (for example) a filename like `%40[username].svelte` would match characters beginning with `@`:
+
+```js
+// @filename: ambient.d.ts
+declare global {
+	const assert: {
+		equal: (a: any, b: any) => boolean;
+	};
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
+assert.equal(
+	decodeURIComponent('%40[username].svelte'),
+	'@[username].svelte'
+);
+```
+
+To express a `%` character, use `%25`, otherwise the result will be malformed.
