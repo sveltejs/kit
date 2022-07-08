@@ -231,6 +231,7 @@ export async function render_response({
 		.join('');
 
 	if (page_config.router || page_config.hydrate) {
+console.log(`prefix ${options.prefix} and modulepreloads ${JSON.stringify(modulepreloads)}`);
 		head += Array.from(modulepreloads)
 			.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
 			.join('');
