@@ -95,9 +95,9 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 				input,
 				output: {
 					format: 'esm',
-					entryFileNames: ssr ? '[name].js' : '[name]-[hash].js',
-					chunkFileNames: 'chunks/[name]-[hash].js',
-					assetFileNames: 'assets/[name]-[hash][extname]'
+					entryFileNames: ssr ? '[name].js' : 'immutable/[name]-[hash].js',
+					chunkFileNames: 'immutable/chunks/[name]-[hash].js',
+					assetFileNames: 'immutable/assets/[name]-[hash][extname]'
 				},
 				preserveEntrySignatures: 'strict'
 			},
