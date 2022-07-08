@@ -190,7 +190,7 @@ export async function render_response({
 
 	const init_service_worker = `
 		if ('serviceWorker' in navigator) {
-			addEventListener('load', () => {
+			addEventListener('load', function () {
 				navigator.serviceWorker.register('${options.service_worker}');
 			});
 		}
