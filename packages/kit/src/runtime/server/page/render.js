@@ -188,6 +188,8 @@ export async function render_response({
 		});
 	`;
 
+	// we use an anonymous function instead of an arrow function to support
+	// older browsers (https://github.com/sveltejs/kit/pull/5417)
 	const init_service_worker = `
 		if ('serviceWorker' in navigator) {
 			addEventListener('load', function () {
