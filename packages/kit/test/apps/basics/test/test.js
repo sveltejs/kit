@@ -1638,7 +1638,7 @@ test.describe('Load', () => {
 		}
 	});
 
-	test.only('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
+	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
 		const DEV_SERVER_PORT = 3000;
 		const PREVIEW_SERVER_PORT = 4173;
 
