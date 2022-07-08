@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.360",
+	"version": "1.0.0-next.361",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -97,6 +97,6 @@
 	},
 	"types": "types/index.d.ts",
 	"engines": {
-		"node": ">=16.7"
+		"node": ">=16.9"
 	}
 }

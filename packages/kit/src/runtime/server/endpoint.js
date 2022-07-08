@@ -1,6 +1,6 @@
 import { to_headers } from '../../utils/http.js';
 import { hash } from '../hash.js';
-import { is_pojo, normalize_request_method } from './utils.js';
+import { is_pojo, normalize_request_method, serialize_error } from './utils.js';
 
 /** @param {string} body */
 function error(body) {
@@ -39,9 +39,10 @@ export function is_text(content_type) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {{ [method: string]: import('types').RequestHandler }} mod
+ * @param {import('types').SSROptions} options
  * @returns {Promise<Response>}
  */
-export async function render_endpoint(event, mod) {
+export async function render_endpoint(event, mod, options) {
 	const method = normalize_request_method(event);
 
 	/** @type {import('types').RequestHandler} */
@@ -100,9 +101,12 @@ export async function render_endpoint(event, mod) {
 
 	const type = headers.get('content-type');
 
-	if (!is_text(type) && !(body instanceof Uint8Array || is_string(body))) {
+	if (
+		!is_text(type) &&
+		!(body instanceof Uint8Array || body instanceof ReadableStream || is_string(body))
+	) {
 		return error(
-			`${preface}: body must be an instance of string or Uint8Array if content-type is not a supported textual content-type`
+			`${preface}: body must be an instance of string, Uint8Array or ReadableStream if content-type is not a supported textual content-type`
 		);
 	}
 
@@ -111,7 +115,8 @@ export async function render_endpoint(event, mod) {
 
 	if (is_pojo(body) && (!type || type.startsWith('application/json'))) {
 		headers.set('content-type', 'application/json; charset=utf-8');
-		normalized_body = JSON.stringify(body);
+		normalized_body =
+			body instanceof Error ? serialize_error(body, options.get_stack) : JSON.stringify(body);
 	} else {
 		normalized_body = /** @type {import('types').StrictBody} */ (body);
 	}

@@ -6,6 +6,7 @@ import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
 import { Csp, csp_ready } from './csp.js';
 import { PrerenderingURL } from '../../../utils/url.js';
+import { serialize_error } from '../utils.js';
 
 // TODO rename this function/module
 
@@ -179,7 +180,7 @@ export async function render_response({
 			trailing_slash: ${s(options.trailing_slash)},
 			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
 				status: ${status},
-				error: ${serialize_error(error)},
+				error: ${error && serialize_error(error, e => e.stack)},
 				nodes: [${branch.map(({ node }) => node.index).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)}
@@ -324,20 +325,4 @@ function try_serialize(data, fail) {
 		if (fail) fail(coalesce_to_error(err));
 		return null;
 	}
-}
-
-// Ensure we return something truthy so the client will not re-render the page over the error
-
-/** @param {(Error & {frame?: string} & {loc?: object}) | undefined | null} error */
-function serialize_error(error) {
-	if (!error) return null;
-	let serialized = try_serialize(error);
-	if (!serialized) {
-		const { name, message, stack } = error;
-		serialized = try_serialize({ ...error, name, message, stack });
-	}
-	if (!serialized) {
-		serialized = '{}';
-	}
-	return serialized;
 }
