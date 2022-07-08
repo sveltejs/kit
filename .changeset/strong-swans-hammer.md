@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Allow %-encoded filenames
+[breaking] Allow %-encoded filenames
