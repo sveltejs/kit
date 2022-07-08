@@ -1,8 +1,8 @@
 import { test } from 'uvu';
 import { create_kit_middleware } from '../src/handler.js';
-import * as assert from 'uvu/assert';
-import fetch from 'node-fetch';
 import polka from 'polka';
+import * as assert from 'uvu/assert';
+import { fetch } from 'undici';
 
 const { PORT = 3000 } = process.env;
 const DEFAULT_SERVER_OPTS = { render: () => {} };
