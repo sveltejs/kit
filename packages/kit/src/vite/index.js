@@ -98,9 +98,9 @@ function kit() {
 			'immutable/start': `${get_runtime_path(svelte_config.kit)}/client/start.js`
 		};
 
-		// Put unchanging assets in immutable directory. We don't set that in the outDir so that other
-		// plugins can add mutable assets to the bundle. Also have the entry chunks reflect their
-		// location in the source code, which is helpful for debugging
+		// This step is optional — Vite/Rollup will create the necessary chunks other
+		// for everything regardless — but it means that entry chunks reflect
+		// their location in the source code, which is helpful for debugging
 		manifest_data.components.forEach((file) => {
 			const resolved = path.resolve(cwd, file);
 			const relative = path.relative(svelte_config.kit.files.routes, resolved);
