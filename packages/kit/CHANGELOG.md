@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.364
+
+### Patch Changes
+
+- [breaking] Use Vite defaults for port and strictPort ([#5392](https://github.com/sveltejs/kit/pull/5392))
+
+* Use anonymous function in service worker init script to support legacy browsers ([#5417](https://github.com/sveltejs/kit/pull/5417))
+
 ## 1.0.0-next.363
 
 ### Patch Changes
