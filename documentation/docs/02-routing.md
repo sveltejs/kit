@@ -415,3 +415,5 @@ assert.equal(
 	'@[username].svelte'
 );
 ```
+
+To express a `%` character, use `%25`, otherwise the result will be malformed.
