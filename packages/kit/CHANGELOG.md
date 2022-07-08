@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.366
+
+### Patch Changes
+
+- reset selection in setTimeout after navigating, to ensure correct behaviour in Firefox ([#5058](https://github.com/sveltejs/kit/pull/5058))
+
 ## 1.0.0-next.365
 
 ### Patch Changes
