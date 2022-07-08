@@ -144,18 +144,14 @@ if (!test_browser_device) {
 	);
 }
 
-const port = 3000;
-
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
 	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: process.env.DEV
-			? `npm run dev -- --port ${port}`
-			: `npm run build && npm run preview -- --port ${port}`,
-		port
+		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
+		port: process.env.DEV ? 3000 : 4173
 	},
 	retries: process.env.CI ? 5 : 0,
 	projects: [
