@@ -98,7 +98,7 @@ function kit() {
 			start: `${get_runtime_path(svelte_config.kit)}/client/start.js`
 		};
 
-		// This step is optional — Vite/Rollup will create the necessary chunks other
+		// This step is optional — Vite/Rollup will create the necessary chunks
 		// for everything regardless — but it means that entry chunks reflect
 		// their location in the source code, which is helpful for debugging
 		manifest_data.components.forEach((file) => {
