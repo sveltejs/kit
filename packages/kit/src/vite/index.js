@@ -95,7 +95,7 @@ function kit() {
 		const input = {
 			// Put unchanging assets in immutable directory. We don't set that in the
 			// outDir so that other plugins can add mutable assets to the bundle
-			start: `${get_runtime_path(svelte_config.kit)}/client/start.js`
+			'immutable/start': `${get_runtime_path(svelte_config.kit)}/client/start.js`
 		};
 
 		// This step is optional — Vite/Rollup will create the necessary chunks
@@ -108,7 +108,7 @@ function kit() {
 			const name = relative.startsWith('..')
 				? path.basename(file)
 				: posixify(path.join('pages', relative));
-			input[name] = resolved;
+			input[`immutable/${name}`] = resolved;
 		});
 
 		return get_default_config({
