@@ -93,6 +93,8 @@ function kit() {
 	function create_client_config() {
 		/** @type {Record<string, string>} */
 		const input = {
+			// Put unchanging assets in immutable directory. We don't set that in the
+			// outDir so that other plugins can add mutable assets to the bundle
 			start: `${get_runtime_path(svelte_config.kit)}/client/start.js`
 		};
 
@@ -113,7 +115,7 @@ function kit() {
 			config: svelte_config,
 			input,
 			ssr: false,
-			outDir: `${paths.client_out_dir}/immutable`
+			outDir: `${paths.client_out_dir}`
 		});
 	}
 
@@ -223,7 +225,7 @@ function kit() {
 
 			/** @type {import('vite').Manifest} */
 			const vite_manifest = JSON.parse(
-				fs.readFileSync(`${paths.client_out_dir}/immutable/manifest.json`, 'utf-8')
+				fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
 			);
 
 			const entry_id = posixify(
@@ -276,8 +278,8 @@ function kit() {
 
 			const files = new Set([
 				...static_files,
-				...chunks.map((chunk) => `${svelte_config.kit.appDir}/immutable/${chunk.fileName}`),
-				...assets.map((chunk) => `${svelte_config.kit.appDir}/immutable/${chunk.fileName}`)
+				...chunks.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`),
+				...assets.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`)
 			]);
 
 			// TODO is this right?
