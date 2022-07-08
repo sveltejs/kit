@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.365
+
+### Patch Changes
+
+- Serve static assets before routes in dev, but only if in an allowed directory ([#5070](https://github.com/sveltejs/kit/pull/5070))
+
+* [breaking] Allow %-encoded filenames ([#5056](https://github.com/sveltejs/kit/pull/5056))
+
 ## 1.0.0-next.364
 
 ### Patch Changes
