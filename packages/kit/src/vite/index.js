@@ -93,12 +93,12 @@ function kit() {
 	function create_client_config() {
 		/** @type {Record<string, string>} */
 		const input = {
-			start: `${get_runtime_path(svelte_config.kit)}/client/start.js`
+			'immutable/start': `${get_runtime_path(svelte_config.kit)}/client/start.js`
 		};
 
-		// This step is optional — Vite/Rollup will create the necessary chunks
-		// for everything regardless — but it means that entry chunks reflect
-		// their location in the source code, which is helpful for debugging
+		// Put unchanging assets in immutable directory. We don't set that in the outDir so that other
+		// plugins can add mutable assets to the bundle. Also have the entry chunks reflect their
+		// location in the source code, which is helpful for debugging
 		manifest_data.components.forEach((file) => {
 			const resolved = path.resolve(cwd, file);
 			const relative = path.relative(svelte_config.kit.files.routes, resolved);
@@ -106,14 +106,14 @@ function kit() {
 			const name = relative.startsWith('..')
 				? path.basename(file)
 				: posixify(path.join('pages', relative));
-			input[name] = resolved;
+			input[`immutable/${name}`] = resolved;
 		});
 
 		return get_default_config({
 			config: svelte_config,
 			input,
 			ssr: false,
-			outDir: `${paths.client_out_dir}/immutable`
+			outDir: `${paths.client_out_dir}`
 		});
 	}
 
@@ -225,7 +225,7 @@ function kit() {
 
 			/** @type {import('vite').Manifest} */
 			const vite_manifest = JSON.parse(
-				fs.readFileSync(`${paths.client_out_dir}/immutable/manifest.json`, 'utf-8')
+				fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
 			);
 
 			const entry_id = posixify(
