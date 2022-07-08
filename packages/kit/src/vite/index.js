@@ -156,10 +156,6 @@ function kit() {
 						input: `${get_runtime_path(svelte_config.kit)}/client/start.js`
 					}
 				},
-				preview: {
-					port: config.preview?.port ?? 3000,
-					strictPort: config.preview?.strictPort ?? true
-				},
 				resolve: {
 					alias: get_aliases(svelte_config.kit)
 				},
@@ -177,8 +173,6 @@ function kit() {
 							])
 						]
 					},
-					port: config.server?.port ?? 3000,
-					strictPort: config.server?.strictPort ?? true,
 					watch: {
 						ignored: [
 							// Ignore all siblings of config.kit.outDir/generated

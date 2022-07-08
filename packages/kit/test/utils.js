@@ -136,14 +136,18 @@ export const test = base.extend({
 	}
 });
 
+const port = 3000;
+
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
 	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
-		port: 3000
+		command: process.env.DEV
+			? `npm run dev -- --port ${port}`
+			: `npm run build && npm run preview -- --port ${port}`,
+		port
 	},
 	retries: process.env.CI ? 5 : 0,
 	projects: [
