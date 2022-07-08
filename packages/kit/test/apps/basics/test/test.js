@@ -2705,12 +2705,18 @@ test.describe('Static files', () => {
 		expect(response.status()).toBe(process.env.DEV ? 403 : 404);
 	});
 
-	test('Vite serves assets in src directory', async ({ page, request }) => {
+	test('Vite serves assets in allowed directories', async ({ page, request }) => {
 		await page.goto('/assets');
 		const path = await page.textContent('h1');
 
-		const response = await request.get(path);
-		expect(response.status()).toBe(200);
+		const r1 = await request.get(path);
+		expect(r1.status()).toBe(200);
+		expect(await r1.text()).toContain('http://www.w3.org/2000/svg');
+
+		// check that we can fetch a route which overlaps with the name of a file
+		const r2 = await request.get('/package.json');
+		expect(r2.status()).toBe(200);
+		expect(await r2.json()).toEqual({ works: true });
 	});
 
 	test('Filenames are case-sensitive', async ({ request }) => {
