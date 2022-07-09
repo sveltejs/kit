@@ -7,7 +7,11 @@
 		},
 		"kit.svelte.dev#build": {
 			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
-			"outputs": [".vercel_build_output/**", ".vercel/output/**"]
+			"outputs": [
+				".svelte-kit/**",
+				".vercel_build_output/**",
+				".vercel/output/**"
+			]
 		},
 		"build": {
 			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
@@ -34,7 +38,7 @@
 		},
 		"test": {
 			"dependsOn": ["^build", "$CI", "$TURBO_CACHE_KEY"],
-			"outputs": []
+			"outputs": ["coverage/", "test-results/**"]
 		},
 		"lint": {
 			"outputs": []
