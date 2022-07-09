@@ -28,7 +28,9 @@ function get_raw_body(req) {
 			});
 
 			req.on('end', () => {
-				controller.close();
+				if (!cancelled) {
+					controller.close();
+				}
 			});
 		},
 
