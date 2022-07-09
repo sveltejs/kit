@@ -35,7 +35,7 @@ function get_raw_body(req) {
 		},
 
 		pull(controller) {
-			return new Promise((fulfil, reject) => {
+			return new Promise((fulfil) => {
 				req.once('data', (chunk) => {
 					if (cancelled) return;
 
