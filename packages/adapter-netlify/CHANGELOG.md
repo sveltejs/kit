@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.68
+
+### Patch Changes
+
+- [fix] prevent responses from hanging ([`810c52bd`](https://github.com/sveltejs/kit/commit/810c52bd2729e9a0996ce7049826678892b61627))
+
 ## 1.0.0-next.67
 
 ### Patch Changes

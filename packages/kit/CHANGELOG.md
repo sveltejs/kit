@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.368
+
+### Patch Changes
+
+- [fix] adapt in closeBundle ([#5439](https://github.com/sveltejs/kit/pull/5439))
+
+* [fix] prevent responses from hanging ([`810c52bd`](https://github.com/sveltejs/kit/commit/810c52bd2729e9a0996ce7049826678892b61627))
+
 ## 1.0.0-next.367
 
 ### Patch Changes
