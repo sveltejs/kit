@@ -89,12 +89,38 @@ export async function setResponse(res, response) {
 
 	res.writeHead(response.status, headers);
 
-	if (response.body instanceof Readable) {
-		response.body.pipe(res);
+	if (response.body) {
+		let cancelled = false;
+
+		const reader = response.body.getReader();
+
+		res.on('close', () => {
+			reader.cancel();
+			cancelled = true;
+		});
+
+		const next = async () => {
+			const { done, value } = await reader.read();
+
+			if (cancelled) return;
+
+			if (done) {
+				res.end();
+				return;
+			}
+
+			res.write(Buffer.from(value), (error) => {
+				if (error) {
+					console.error('Error writing stream', error);
+					res.end();
+				} else {
+					next();
+				}
+			});
+		};
+
+		next();
 	} else {
-		if (response.body) {
-			res.write(new Uint8Array(await response.arrayBuffer()));
-		}
 		res.end();
 	}
 }
