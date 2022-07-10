@@ -898,14 +898,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 			const params = route.exec(path);
 
 			if (params) {
+				const id = normalize_path(url.pathname, trailing_slash) + url.search;
 				/** @type {import('./types').NavigationIntent} */
-				const intent = {
-					id: url.pathname + url.search,
-					route,
-					params,
-					url
-				};
-
+				const intent = { id, route, params, url };
 				return intent;
 			}
 		}
