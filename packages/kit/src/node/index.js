@@ -37,14 +37,15 @@ function get_raw_body(req) {
 		pull(controller) {
 			return new Promise((fulfil) => {
 				req.once('data', (chunk) => {
-					if (cancelled) return;
+					if (!cancelled) {
+						size += chunk.length;
+						if (size > length) {
+							controller.error(new Error('content-length exceeded'));
+						}
 
-					size += chunk.length;
-					if (size > length) {
-						controller.error(new Error('content-length exceeded'));
+						controller.enqueue(chunk);
 					}
 
-					controller.enqueue(chunk);
 					fulfil();
 				});
 			});
