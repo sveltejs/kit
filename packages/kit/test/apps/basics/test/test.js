@@ -1620,14 +1620,12 @@ test.describe('Load', () => {
 	});
 
 	test('fetching a non-existent resource in root layout fails without hanging', async ({
-		page
+		request
 	}) => {
-		await page.goto('/errors/error-in-layout');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Error"'
-		);
+		const response = await request.get('/errors/error-in-layout');
+		expect(await response.text()).toContain('Error: 500');
 	});
- 
+
 	test('accessing url.hash from load errors and suggests using page store', async ({
 		page,
 		javaScriptEnabled

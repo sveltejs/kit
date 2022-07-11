@@ -293,6 +293,10 @@ export interface SSRPage {
 	b: Array<number | undefined>;
 }
 
+export interface SSRErrorPage {
+	id: '__error';
+}
+
 export interface SSRPagePart {
 	id: string;
 	load: SSRComponentLoader;
@@ -303,7 +307,7 @@ export type SSRRoute = SSREndpoint | SSRPage;
 export interface SSRState {
 	fallback?: string;
 	getClientAddress: () => string;
-	initiator?: SSRPage | null;
+	initiator?: SSRPage | SSRErrorPage | null;
 	platform?: any;
 	prerendering?: PrerenderOptions;
 }

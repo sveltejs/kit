@@ -22,7 +22,10 @@ export function normalize(loaded) {
 		const status = loaded.status;
 
 		if (!loaded.error && has_error_status) {
-			return { status: status || 500, error: new Error() };
+			return {
+				status: status || 500,
+				error: new Error(`${status}`)
+			};
 		}
 
 		const error = typeof loaded.error === 'string' ? new Error(loaded.error) : loaded.error;

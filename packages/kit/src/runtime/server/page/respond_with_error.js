@@ -1,6 +1,7 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
 import { coalesce_to_error } from '../../../utils/error.js';
+import { GENERIC_ERROR } from '../utils.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -41,7 +42,7 @@ export async function respond_with_error({
 					event,
 					options,
 					state,
-					route: null,
+					route: GENERIC_ERROR,
 					node: default_layout,
 					$session,
 					stuff: {},
@@ -50,12 +51,16 @@ export async function respond_with_error({
 				})
 			);
 
+			if (layout_loaded.loaded.error) {
+				throw layout_loaded.loaded.error;
+			}
+
 			const error_loaded = /** @type {Loaded} */ (
 				await load_node({
 					event,
 					options,
 					state,
-					route: null,
+					route: GENERIC_ERROR,
 					node: default_error,
 					$session,
 					stuff: layout_loaded ? layout_loaded.stuff : {},
