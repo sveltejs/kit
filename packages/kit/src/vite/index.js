@@ -7,7 +7,7 @@ import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { prerender } from './build/prerender/prerender.js';
+import { prerender } from '../core/prerender/prerender.js';
 import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
@@ -326,7 +326,7 @@ function kit() {
 
 		async closeBundle() {
 			if (svelte_config.kit.adapter) {
-				const { adapt } = await import('./build/adapt/index.js');
+				const { adapt } = await import('../core/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
