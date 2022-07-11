@@ -325,6 +325,9 @@ function kit() {
 		},
 
 		async closeBundle() {
+			if (!is_build) {
+				return; // vite calls closeBundle when dev-server restarts, ignore that
+			}
 			if (svelte_config.kit.adapter) {
 				const { adapt } = await import('../core/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
@@ -336,7 +339,7 @@ function kit() {
 				);
 			}
 
-			if (is_build && svelte_config.kit.prerender.enabled) {
+			if (svelte_config.kit.prerender.enabled) {
 				// this is necessary to close any open db connections, etc.
 				// TODO: prerender in a subprocess so we can exit in isolation
 				// https://github.com/sveltejs/kit/issues/5306
