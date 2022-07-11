@@ -10,11 +10,7 @@
 		"kit.svelte.dev#build": {
 			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
 			"inputs": ["src/**", "../../packages/kit/docs/**", "../../documentation/**"],
-			"outputs": [
-				".svelte-kit/**",
-				".vercel_build_output/**",
-				".vercel/output/**"
-			],
+			"outputs": [".vercel_build_output/**", ".vercel/output/**" ],
 			"outputMode": "new-only"
 		},
 		"build": {
@@ -77,7 +73,6 @@
 		},
 		"dev": {
 			"cache": false,
-			"outputs": [".svelte-kit"],
 			"outputMode": "new-only"
 		}
 	},
