@@ -27,8 +27,8 @@ export interface AdapterEntry {
 }
 
 export type BodyValidator<T> = {
-	[P in keyof T]: T[P] extends { [k: string]: infer V }
-		? BodyValidator<V> // recurse when T[P] is an object
+	[P in keyof T]: T[P] extends { [k: string]: unknown }
+		? BodyValidator<T[P]> // recurse when T[P] is an object
 		: T[P] extends BigInt | Function | Symbol
 		? never
 		: T[P];
@@ -206,24 +206,9 @@ export interface PrerenderErrorHandler {
 
 export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
-export interface RequestEvent<Params extends Record<string, string> = Record<string, string>> {
-	clientAddress: string;
-	locals: App.Locals;
-	params: Params;
-	platform: Readonly<App.Platform>;
-	request: Request;
-	routeId: string | null;
-	url: URL;
-}
-
 export interface RequestOptions {
 	getClientAddress: () => string;
 	platform?: App.Platform;
-}
-
-export interface ResolveOptions {
-	ssr?: boolean;
-	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
 }
 
 /** `string[]` is only for set-cookie, everything else must be type of `string` */

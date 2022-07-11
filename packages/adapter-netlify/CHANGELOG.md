@@ -1,5 +1,59 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.67
+
+### Patch Changes
+
+- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+
+## 1.0.0-next.66
+
+### Patch Changes
+
+- Generate sourcemaps for server-side functions when bundling with esbuild ([#5258](https://github.com/sveltejs/kit/pull/5258))
+
+## 1.0.0-next.65
+
+### Patch Changes
+
+- fix: add redirects for routes containing `__data.json` suffix ([#5180](https://github.com/sveltejs/kit/pull/5180))
+
+## 1.0.0-next.64
+
+### Patch Changes
+
+- Update dependencies ([#5121](https://github.com/sveltejs/kit/pull/5121))
+
+## 1.0.0-next.63
+
+### Patch Changes
+
+- Update adapter entrypoint typings to be NodeNext/ESNext-compatible ([#5111](https://github.com/sveltejs/kit/pull/5111))
+
+## 1.0.0-next.62
+
+### Patch Changes
+
+- only serve `_app/immutable` with immutable cache header, not `_app/version.json` ([#5051](https://github.com/sveltejs/kit/pull/5051))
+
+## 1.0.0-next.61
+
+### Patch Changes
+
+- Add types to pkg.exports ([#5045](https://github.com/sveltejs/kit/pull/5045))
+
+## 1.0.0-next.60
+
+### Patch Changes
+
+- Encode binary responses as base64 ([#5048](https://github.com/sveltejs/kit/pull/5048))
+
+## 1.0.0-next.59
+
+### Patch Changes
+
+- [breaking] replace @sveltejs/kit/install-fetch with @sveltejs/kit/node/polyfills ([#4934](https://github.com/sveltejs/kit/pull/4934))
+
 ## 1.0.0-next.58
 
 ### Patch Changes

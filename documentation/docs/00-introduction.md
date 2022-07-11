@@ -20,10 +20,10 @@ You don't need to know Svelte to understand the rest of this guide, but it will 
 
 ### Getting started
 
-The easiest way to start building a SvelteKit app is to run `npm init`:
+The easiest way to start building a SvelteKit app is to run `npm create`:
 
 ```bash
-npm init svelte my-app
+npm create svelte my-app
 cd my-app
 npm install
 npm run dev

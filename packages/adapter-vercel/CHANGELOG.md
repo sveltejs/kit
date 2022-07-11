@@ -1,5 +1,55 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.60
+
+### Patch Changes
+
+- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+
+## 1.0.0-next.59
+
+### Patch Changes
+
+- Add sourcemap generation for the generated functions ([#5197](https://github.com/sveltejs/kit/pull/5197))
+
+## 1.0.0-next.58
+
+### Patch Changes
+
+- Update dependencies ([#5121](https://github.com/sveltejs/kit/pull/5121))
+
+## 1.0.0-next.57
+
+### Patch Changes
+
+- Update adapter entrypoint typings to be NodeNext/ESNext-compatible ([#5111](https://github.com/sveltejs/kit/pull/5111))
+
+## 1.0.0-next.56
+
+### Patch Changes
+
+- Use @vercel/nft to include dependencies in lambda without bundling with esbuild, when using v3 build output API ([#4969](https://github.com/sveltejs/kit/pull/4969))
+
+* only serve `_app/immutable` with immutable cache header, not `_app/version.json` ([#5051](https://github.com/sveltejs/kit/pull/5051))
+
+## 1.0.0-next.55
+
+### Patch Changes
+
+- Add types to pkg.exports ([#5045](https://github.com/sveltejs/kit/pull/5045))
+
+## 1.0.0-next.54
+
+### Patch Changes
+
+- [breaking] replace @sveltejs/kit/install-fetch with @sveltejs/kit/node/polyfills ([#4934](https://github.com/sveltejs/kit/pull/4934))
+
+## 1.0.0-next.53
+
+### Patch Changes
+
+- Revert to cjs mode when building for lambda ([#4967](https://github.com/sveltejs/kit/pull/4967))
+
 ## 1.0.0-next.52
 
 ### Patch Changes
