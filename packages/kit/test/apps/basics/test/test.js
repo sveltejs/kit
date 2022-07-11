@@ -1098,7 +1098,7 @@ test.describe('Errors', () => {
 		const response = await page.goto('/errors/load-status-without-error-server');
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+		expect(await page.textContent('#message')).toBe('This is your custom error page saying: "401"');
 		expect(/** @type {Response} */ (response).status()).toBe(401);
 	});
 
@@ -1107,7 +1107,9 @@ test.describe('Errors', () => {
 
 		if (javaScriptEnabled) {
 			expect(await page.textContent('footer')).toBe('Custom layout');
-			expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+			expect(await page.textContent('#message')).toBe(
+				'This is your custom error page saying: "401"'
+			);
 			expect(await page.innerHTML('h1')).toBe('401');
 		}
 	});
