@@ -7,7 +7,7 @@ import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { prerender } from './build/prerender/prerender.js';
+import { prerender } from '../core/prerender/prerender.js';
 import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
@@ -81,6 +81,15 @@ function kit() {
 	/** @type {boolean} */
 	let is_build;
 
+	/** @type {import('types').Logger} */
+	let log;
+
+	/** @type {import('types').Prerendered} */
+	let prerendered;
+
+	/** @type {import('types').BuildData} */
+	let build_data;
+
 	/**
 	 * @type {{
 	 *   build_dir: string;
@@ -93,6 +102,8 @@ function kit() {
 	function create_client_config() {
 		/** @type {Record<string, string>} */
 		const input = {
+			// Put unchanging assets in immutable directory. We don't set that in the
+			// outDir so that other plugins can add mutable assets to the bundle
 			start: `${get_runtime_path(svelte_config.kit)}/client/start.js`
 		};
 
@@ -113,7 +124,7 @@ function kit() {
 			config: svelte_config,
 			input,
 			ssr: false,
-			outDir: `${paths.client_out_dir}/immutable`
+			outDir: `${paths.client_out_dir}`
 		});
 	}
 
@@ -199,7 +210,7 @@ function kit() {
 		},
 
 		async writeBundle(_options, bundle) {
-			const log = logger({
+			log = logger({
 				verbose: vite_config.logLevel === 'info'
 			});
 
@@ -223,7 +234,7 @@ function kit() {
 
 			/** @type {import('vite').Manifest} */
 			const vite_manifest = JSON.parse(
-				fs.readFileSync(`${paths.client_out_dir}/immutable/manifest.json`, 'utf-8')
+				fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
 			);
 
 			const entry_id = posixify(
@@ -255,7 +266,7 @@ function kit() {
 			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 
 			/** @type {import('types').BuildData} */
-			const build_data = {
+			build_data = {
 				app_dir: svelte_config.kit.appDir,
 				manifest_data,
 				service_worker: options.service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
@@ -276,8 +287,8 @@ function kit() {
 
 			const files = new Set([
 				...static_files,
-				...chunks.map((chunk) => `${svelte_config.kit.appDir}/immutable/${chunk.fileName}`),
-				...assets.map((chunk) => `${svelte_config.kit.appDir}/immutable/${chunk.fileName}`)
+				...chunks.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`),
+				...assets.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`)
 			]);
 
 			// TODO is this right?
@@ -289,7 +300,7 @@ function kit() {
 
 			log.info('Prerendering');
 
-			const prerendered = await prerender({
+			prerendered = await prerender({
 				config: svelte_config.kit,
 				entries: manifest_data.routes
 					.map((route) => (route.type === 'page' ? route.path : ''))
@@ -311,9 +322,11 @@ function kit() {
 			console.log(
 				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
 			);
+		},
 
+		async closeBundle() {
 			if (svelte_config.kit.adapter) {
-				const { adapt } = await import('./build/adapt/index.js');
+				const { adapt } = await import('../core/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
@@ -322,9 +335,7 @@ function kit() {
 					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
 				);
 			}
-		},
 
-		closeBundle() {
 			if (is_build && svelte_config.kit.prerender.enabled) {
 				// this is necessary to close any open db connections, etc.
 				// TODO: prerender in a subprocess so we can exit in isolation

@@ -270,11 +270,18 @@ export default function create_manifest_data({
 			if (!config.kit.moduleExtensions.includes(ext)) continue;
 			const type = file.slice(0, -ext.length);
 
-			if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(type)) {
-				matchers[type] = path.join(params_base, file);
+			if (/^\w+$/.test(type)) {
+				const matcher_file = path.join(params_base, file);
+
+				// Disallow same matcher with different extensions
+				if (matchers[type]) {
+					throw new Error(`Duplicate matchers: ${matcher_file} and ${matchers[type]}`);
+				} else {
+					matchers[type] = matcher_file;
+				}
 			} else {
 				throw new Error(
-					`Matcher names must match /^[a-zA-Z_][a-zA-Z0-9_]*$/ — "${file}" is invalid`
+					`Matcher names can only have underscores and alphanumeric characters — "${file}" is invalid`
 				);
 			}
 		}

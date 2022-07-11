@@ -52,7 +52,6 @@ export interface Builder {
 	 */
 	writeClient(dest: string): string[];
 	/**
-	 *
 	 * @param dest
 	 */
 	writePrerendered(

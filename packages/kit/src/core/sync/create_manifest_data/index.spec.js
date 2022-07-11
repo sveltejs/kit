@@ -638,4 +638,28 @@ test('creates param matchers', () => {
 	});
 });
 
+test('errors on param matchers with bad names', () => {
+	const boogaloo = path.resolve(cwd, 'params', 'boo-galoo.js');
+	fs.writeFileSync(boogaloo, '');
+	try {
+		assert.throws(() => create('samples/basic'), /Matcher names can only have/);
+	} finally {
+		fs.unlinkSync(boogaloo);
+	}
+});
+
+test('errors on duplicate matchers', () => {
+	const ts_foo = path.resolve(cwd, 'params', 'foo.ts');
+	fs.writeFileSync(ts_foo, '');
+	try {
+		assert.throws(() => {
+			create('samples/basic', {
+				extensions: ['.js', '.ts']
+			});
+		}, /Duplicate matchers/);
+	} finally {
+		fs.unlinkSync(ts_foo);
+	}
+});
+
 test.run();

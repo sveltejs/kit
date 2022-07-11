@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.368
+
+### Patch Changes
+
+- [fix] adapt in closeBundle ([#5439](https://github.com/sveltejs/kit/pull/5439))
+
+## 1.0.0-next.367
+
+### Patch Changes
+
+- [fix] allow Vite plugins to output mutable assets ([#5416](https://github.com/sveltejs/kit/pull/5416))
+
 ## 1.0.0-next.366
 
 ### Patch Changes
