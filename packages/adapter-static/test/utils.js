@@ -46,11 +46,7 @@ export function run(app, callback) {
 			context.server = await create_server(context.port, handler);
 
 			context.base = `http://localhost:${context.port}`;
-			context.browser = await chromium.launch({
-				// use stable chrome from host OS instead of downloading one
-				// see https://playwright.dev/docs/browsers#google-chrome--microsoft-edge
-				channel: 'chrome'
-			});
+			context.browser = await chromium.launch();
 			context.page = await context.browser.newPage();
 		} catch (e) {
 			// TODO remove unnecessary try-catch https://github.com/lukeed/uvu/pull/61

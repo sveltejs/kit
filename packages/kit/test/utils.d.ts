@@ -20,7 +20,6 @@ export const test: TestType<
 				prefetch: (url: string) => Promise<void>;
 				prefetchRoutes: (urls: string[]) => Promise<void>;
 			};
-			back: () => Promise<void>;
 			clicknav: (selector: string, options?: { timeout?: number }) => Promise<void>;
 			in_view: (selector: string) => Promise<boolean>;
 			read_errors: (href: string) => string;

@@ -7,7 +7,7 @@ import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { prerender } from './build/prerender/prerender.js';
+import { prerender } from '../core/prerender/prerender.js';
 import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
@@ -70,7 +70,7 @@ function kit() {
 	/** @type {import('types').ValidatedConfig} */
 	let svelte_config;
 
-	/** @type {import('vite').UserConfig} */
+	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
 
 	/** @type {import('vite').ConfigEnv} */
@@ -81,6 +81,15 @@ function kit() {
 
 	/** @type {boolean} */
 	let is_build;
+
+	/** @type {import('types').Logger} */
+	let log;
+
+	/** @type {import('types').Prerendered} */
+	let prerendered;
+
+	/** @type {import('types').BuildData} */
+	let build_data;
 
 	/**
 	 * @type {{
@@ -94,6 +103,8 @@ function kit() {
 	function create_client_config() {
 		/** @type {Record<string, string>} */
 		const input = {
+			// Put unchanging assets in immutable directory. We don't set that in the
+			// outDir so that other plugins can add mutable assets to the bundle
 			start: `${get_runtime_path(svelte_config.kit)}/client/start.js`
 		};
 
@@ -102,7 +113,7 @@ function kit() {
 		// their location in the source code, which is helpful for debugging
 		manifest_data.components.forEach((file) => {
 			const resolved = path.resolve(cwd, file);
-			const relative = path.relative(svelte_config.kit.files.routes, resolved);
+			const relative = decodeURIComponent(path.relative(svelte_config.kit.files.routes, resolved));
 
 			const name = relative.startsWith('..')
 				? path.basename(file)
@@ -114,7 +125,7 @@ function kit() {
 			config: svelte_config,
 			input,
 			ssr: false,
-			outDir: `${paths.client_out_dir}/immutable`
+			outDir: `${paths.client_out_dir}`
 		});
 	}
 
@@ -122,7 +133,6 @@ function kit() {
 		name: 'vite-plugin-svelte-kit',
 
 		async config(config, config_env) {
-			vite_config = config;
 			vite_config_env = config_env;
 			svelte_config = await load_config();
 			is_build = config_env.command === 'build';
@@ -159,10 +169,6 @@ function kit() {
 						input: `${get_runtime_path(svelte_config.kit)}/client/start.js`
 					}
 				},
-				preview: {
-					port: config.preview?.port ?? 3000,
-					strictPort: config.preview?.strictPort ?? true
-				},
 				resolve: {
 					alias: get_aliases(svelte_config.kit)
 				},
@@ -180,8 +186,6 @@ function kit() {
 							])
 						]
 					},
-					port: config.server?.port ?? 3000,
-					strictPort: config.server?.strictPort ?? true,
 					watch: {
 						ignored: [
 							// Ignore all siblings of config.kit.outDir/generated
@@ -192,6 +196,10 @@ function kit() {
 			};
 			warn_overridden_config(config, result);
 			return result;
+		},
+
+		configResolved(config) {
+			vite_config = config;
 		},
 
 		buildStart() {
@@ -205,8 +213,9 @@ function kit() {
 		},
 
 		async writeBundle(_options, bundle) {
-			const verbose = vite_config.logLevel === 'info';
-			const log = logger({ verbose });
+			log = logger({
+				verbose: vite_config.logLevel === 'info'
+			});
 
 			fs.writeFileSync(
 				`${paths.client_out_dir}/version.json`,
@@ -228,7 +237,7 @@ function kit() {
 
 			/** @type {import('vite').Manifest} */
 			const vite_manifest = JSON.parse(
-				fs.readFileSync(`${paths.client_out_dir}/immutable/manifest.json`, 'utf-8')
+				fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
 			);
 
 			const entry_id = posixify(
@@ -260,7 +269,7 @@ function kit() {
 			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 
 			/** @type {import('types').BuildData} */
-			const build_data = {
+			build_data = {
 				app_dir: svelte_config.kit.appDir,
 				manifest_data,
 				service_worker: options.service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
@@ -281,8 +290,8 @@ function kit() {
 
 			const files = new Set([
 				...static_files,
-				...chunks.map((chunk) => `${svelte_config.kit.appDir}/immutable/${chunk.fileName}`),
-				...assets.map((chunk) => `${svelte_config.kit.appDir}/immutable/${chunk.fileName}`)
+				...chunks.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`),
+				...assets.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`)
 			]);
 
 			// TODO is this right?
@@ -294,7 +303,7 @@ function kit() {
 
 			log.info('Prerendering');
 
-			const prerendered = await prerender({
+			prerendered = await prerender({
 				config: svelte_config.kit,
 				entries: manifest_data.routes
 					.map((route) => (route.type === 'page' ? route.path : ''))
@@ -316,9 +325,11 @@ function kit() {
 			console.log(
 				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
 			);
+		},
 
+		async closeBundle() {
 			if (svelte_config.kit.adapter) {
-				const { adapt } = await import('./build/adapt/index.js');
+				const { adapt } = await import('../core/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
@@ -327,9 +338,7 @@ function kit() {
 					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
 				);
 			}
-		},
 
-		closeBundle() {
 			if (is_build && svelte_config.kit.prerender.enabled) {
 				// this is necessary to close any open db connections, etc.
 				// TODO: prerender in a subprocess so we can exit in isolation
@@ -339,12 +348,11 @@ function kit() {
 		},
 
 		async configureServer(vite) {
-			return await dev(vite, svelte_config);
+			return await dev(vite, vite_config, svelte_config);
 		},
 
 		configurePreviewServer(vite) {
-			const protocol = vite_config.preview?.https ? 'https' : 'http';
-			return preview(vite, svelte_config, protocol);
+			return preview(vite, svelte_config, vite_config.preview.https ? 'https' : 'http');
 		}
 	};
 }

@@ -88,6 +88,8 @@ export async function post({ request, platform }) {
 
 Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [endpoints](https://kit.svelte.dev/docs/routing#endpoints) in your SvelteKit app.
 
+If you want to use `_headers` or `_redirects` custom [config files](https://developers.cloudflare.com/pages/platform/headers) to modify cloudflare behaviour you should put those configs in the `/static` folder of your SvelteKit project.
+
 ## Changelog
 
 [The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-cloudflare/CHANGELOG.md).

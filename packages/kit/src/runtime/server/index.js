@@ -3,9 +3,10 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
-import { decode_params } from './utils.js';
+import { decode_params, serialize_error } from './utils.js';
 import { normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
+import { negotiate } from '../../utils/http.js';
 
 const DATA_SUFFIX = '/__data.json';
 
@@ -209,7 +210,7 @@ export async function respond(request, options, state) {
 					let response;
 
 					if (is_data_request && route.type === 'page' && route.shadow) {
-						response = await render_endpoint(event, await route.shadow());
+						response = await render_endpoint(event, await route.shadow(), options);
 
 						// loading data for a client-side transition is a special case
 						if (request.headers.has('x-sveltekit-load')) {
@@ -231,7 +232,7 @@ export async function respond(request, options, state) {
 					} else {
 						response =
 							route.type === 'endpoint'
-								? await render_endpoint(event, await route.load())
+								? await render_endpoint(event, await route.load(), options)
 								: await render_page(event, route, options, state, resolve_opts);
 					}
 
@@ -314,6 +315,18 @@ export async function respond(request, options, state) {
 		const error = coalesce_to_error(e);
 
 		options.handle_error(error, event);
+
+		const type = negotiate(event.request.headers.get('accept') || 'text/html', [
+			'text/html',
+			'application/json'
+		]);
+
+		if (is_data_request || type === 'application/json') {
+			return new Response(serialize_error(error, options.get_stack), {
+				status: 500,
+				headers: { 'content-type': 'application/json; charset=utf-8' }
+			});
+		}
 
 		try {
 			const $session = await options.hooks.getSession(event);
