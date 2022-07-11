@@ -52,7 +52,8 @@ export async function dev(vite, vite_config, svelte_config) {
 				entry: {
 					file: `/@fs${runtime}/client/start.js`,
 					imports: [],
-					stylesheets: []
+					stylesheets: [],
+					fonts: []
 				},
 				nodes: manifest_data.components.map((id, index) => {
 					return async () => {
@@ -68,6 +69,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							file: url.endsWith('.svelte') ? url : url + '?import',
 							imports: [],
 							stylesheets: [],
+							fonts: [],
 							// in dev we inline all styles to avoid FOUC
 							inline_styles: async () => {
 								const node = await vite.moduleGraph.getModuleByUrl(url);

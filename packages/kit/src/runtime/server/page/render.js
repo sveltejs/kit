@@ -258,13 +258,14 @@ export async function render_response({
 				return `\n\t<link ${attributes.join(' ')}>`;
 			})
 			.join('');
+	}
 
-		if (page_config.router || page_config.hydrate) {
-			head += Array.from(modulepreloads)
-				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
-				.join('');
+	if (page_config.router || page_config.hydrate) {
+		head += Array.from(modulepreloads)
+			.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
+			.join('');
 
-			const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
+		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
 
 		csp.add_script(init_app);
 
