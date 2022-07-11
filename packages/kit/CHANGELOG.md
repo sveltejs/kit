@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.369
+
+### Patch Changes
+
+- skip closeBundle hook during dev to prevent errors on restart ([#5466](https://github.com/sveltejs/kit/pull/5466))
+
+* Normalize paths on prefetch (fixes [#5457](https://github.com/sveltejs/kit/issues/5457)) ([#5458](https://github.com/sveltejs/kit/pull/5458))
+
+- clearer error on bad matcher names ([#5460](https://github.com/sveltejs/kit/pull/5460))
+
 ## 1.0.0-next.368
 
 ### Patch Changes
