@@ -1,8 +1,10 @@
-/** @typedef {{
+/**
+ * @typedef {{
  *   fn: () => Promise<any>,
  *   fulfil: (value: any) => void,
  *   reject: (error: Error) => void
- * }} Task */
+ * }} Task
+ */
 
 /** @param {number} concurrency */
 export function queue(concurrency) {
