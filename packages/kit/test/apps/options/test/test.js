@@ -182,7 +182,7 @@ test.describe('trailingSlash', () => {
 		if (process.env.DEV) {
 			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(1);
 		}
 
 		expect(requests.includes(`${baseURL}/path-base/prefetching/prefetched/__data.json`)).toBe(true);
