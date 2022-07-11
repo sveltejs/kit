@@ -159,6 +159,38 @@ test.describe('trailingSlash', () => {
 		expect(r.url()).toBe(`${baseURL}/path-base/page-endpoint/__data.json`);
 		expect(await r.json()).toEqual({ data: 'hi' });
 	});
+
+	test('accounts for trailingSlash when prefetching', async ({
+		app,
+		baseURL,
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/path-base/prefetching');
+
+		/** @type {string[]} */
+		let requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		// also wait for network processing to complete, see
+		// https://playwright.dev/docs/network#network-events
+		await app.prefetch('/path-base/prefetching/prefetched');
+
+		// svelte request made is environment dependent
+		if (process.env.DEV) {
+			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
+		} else {
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
+		}
+
+		expect(requests.includes(`${baseURL}/path-base/prefetching/prefetched/__data.json`)).toBe(true);
+
+		requests = [];
+		await app.goto('/path-base/prefetching/prefetched');
+		expect(requests).toEqual([]);
+	});
 });
 
 test.describe('serviceWorker', () => {
