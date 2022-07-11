@@ -55,4 +55,9 @@ for (const [key, expected] of Object.entries(tests)) {
 	});
 }
 
+test('errors on bad param name', () => {
+	assert.throws(() => parse_route_id('abc/[b-c]'), /Invalid param: b-c/);
+	assert.throws(() => parse_route_id('abc/[bc=d-e]'), /Invalid param: bc=d-e/);
+});
+
 test.run();
