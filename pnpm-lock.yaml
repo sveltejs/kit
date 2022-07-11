@@ -77,11 +77,13 @@ importers:
   packages/adapter-cloudflare-workers:
     specifiers:
       '@cloudflare/kv-asset-handler': ^0.2.0
+      '@cloudflare/workers-types': ^3.14.0
       '@iarna/toml': ^2.2.5
       '@types/node': ^16.11.36
       esbuild: ^0.14.42
       typescript: ^4.7.2
     dependencies:
+      '@cloudflare/workers-types': 3.14.0
       '@iarna/toml': 2.2.5
       esbuild: 0.14.42
     devDependencies:
