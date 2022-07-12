@@ -127,16 +127,7 @@ export async function respond(opts) {
 					}
 
 					if (loaded.response) {
-						let { response } = loaded;
-
-						if (!(response instanceof Response)) {
-							response = new Response(response.body, {
-								status: response.status,
-								headers: response.headers
-							});
-						}
-
-						return with_cookies(response, set_cookie_headers);
+						return with_cookies(loaded.response, set_cookie_headers);
 					}
 
 					if (loaded.loaded.error) {

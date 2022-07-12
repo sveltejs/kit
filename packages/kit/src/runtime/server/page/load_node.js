@@ -445,12 +445,12 @@ async function load_shadow_data(route, event, options, prerender) {
 
 		if (!is_get) {
 			const { response, status, headers, body } = validate_shadow_output(await handler(event));
+			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 
 			if (response) {
 				return { response };
 			}
 
-			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 			data.status = status;
 
 			// explicit errors cause an error page...
@@ -482,12 +482,12 @@ async function load_shadow_data(route, event, options, prerender) {
 		const get = (method === 'head' && mod.head) || mod.get;
 		if (get) {
 			const { status, headers, body, response } = validate_shadow_output(await get(event));
+			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 
 			if (response) {
 				return { response };
 			}
 
-			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 			data.status = status;
 
 			if (body instanceof Error) {
@@ -583,7 +583,7 @@ function validate_shadow_output(result) {
 			headers
 		});
 
-		return { response };
+		return { headers, response };
 	}
 
 	if (!is_pojo(body)) {
