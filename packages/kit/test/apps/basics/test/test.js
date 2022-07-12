@@ -635,6 +635,13 @@ test.describe('Shadowed pages', () => {
 			expect(requests).not.toContain(`${baseURL}/shadowed/missing-get`);
 		}
 	});
+
+	test('treats non-JSON responses as literal', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) return;
+
+		await page.goto('/shadowed/non-json');
+		expect(await page.textContent('h1')).toBe('this is some HTML from an endpoint');
+	});
 });
 
 test.describe('Endpoints', () => {

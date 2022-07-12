@@ -52,7 +52,7 @@ test('only includes CSS for rendered components', async ({ page, baseURL }) => {
 	expect(style).not.toContain('#40b3ff'); // unrendered styles
 });
 
-test('http-equiv tags are removed', async ({ page }) => {
+test.only('http-equiv tags are removed', async ({ page }) => {
 	await page.goto('/http-equiv/cache-control');
 
 	expect(await page.textContent('h1')).toBe(
