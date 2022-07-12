@@ -307,7 +307,7 @@ export type SSRRoute = SSREndpoint | SSRPage;
 export interface SSRState {
 	fallback?: string;
 	getClientAddress: () => string;
-	initiator?: SSRPage | SSRErrorPage | null;
+	initiator?: SSRPage | SSRErrorPage;
 	platform?: any;
 	prerendering?: PrerenderOptions;
 }
