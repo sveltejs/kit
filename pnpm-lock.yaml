@@ -61,12 +61,14 @@ importers:
 
   packages/adapter-cloudflare:
     specifiers:
+      '@cloudflare/workers-types': ^3.14.0
       '@types/node': ^16.11.36
       '@types/ws': ^8.5.3
       esbuild: ^0.14.42
       typescript: ^4.7.4
       worktop: 0.8.0-next.14
     dependencies:
+      '@cloudflare/workers-types': 3.14.0
       esbuild: 0.14.42
       worktop: 0.8.0-next.14
     devDependencies:
@@ -77,11 +79,13 @@ importers:
   packages/adapter-cloudflare-workers:
     specifiers:
       '@cloudflare/kv-asset-handler': ^0.2.0
+      '@cloudflare/workers-types': ^3.14.0
       '@iarna/toml': ^2.2.5
       '@types/node': ^16.11.36
       esbuild: ^0.14.42
       typescript: ^4.7.4
     dependencies:
+      '@cloudflare/workers-types': 3.14.0
       '@iarna/toml': 2.2.5
       esbuild: 0.14.42
     devDependencies:
@@ -774,6 +778,10 @@ packages:
     dependencies:
       mime: 3.0.0
     dev: true
+
+  /@cloudflare/workers-types/3.14.0:
+    resolution: {integrity: sha512-F6lZuzu/vNl9AxOq1U3x2UCi68bcE1O59cKGQ5ntRh3lGQfd3vers6NUag02T7P+qFCHaAp78QN6fRmq12Y3iA==}
+    dev: false
 
   /@eslint/eslintrc/1.3.0:
     resolution: {integrity: sha512-UWW0TMTmk2d7hLcWD1/e2g5HDM/HQ3csaLSqXCfqwh4uNDuNqlaKWXmEsL4Cs41Z0KnILNvwbHAah3C2yt06kw==}
