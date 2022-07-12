@@ -30,5 +30,4 @@ export interface CspConfig {
 export interface CspOpts {
 	dev: boolean;
 	prerender: boolean;
-	needs_nonce: boolean;
 }

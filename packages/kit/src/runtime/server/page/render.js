@@ -159,9 +159,8 @@ export async function render_response({
 
 	const csp = new Csp(options.csp, {
 		dev: options.dev,
-		prerender: !!state.prerendering,
-		needs_nonce: options.template_contains_nonce
-  });
+		prerender: !!state.prerendering
+	});
 
 	const target = hash(body);
 

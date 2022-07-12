@@ -15,8 +15,7 @@ test('generates blank CSP header', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
@@ -38,8 +37,7 @@ test('generates CSP header with directive', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
@@ -61,17 +59,17 @@ test('generates CSP header with nonce', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
-  csp.add_script('');
+	csp.add_script('');
 
-	assert.ok(csp.csp_provider.get_header().startsWith("default-src 'self'; script-src 'self' 'nonce-"));
 	assert.ok(
-    csp
-      .report_only_provider
+		csp.csp_provider.get_header().startsWith("default-src 'self'; script-src 'self' 'nonce-")
+	);
+	assert.ok(
+		csp.report_only_provider
 			.get_header()
 			.startsWith("default-src 'self'; report-uri /; script-src 'self' 'nonce-")
 	);
@@ -91,8 +89,7 @@ test('skips nonce with unsafe-inline', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
@@ -116,8 +113,7 @@ test('skips hash with unsafe-inline', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
@@ -141,8 +137,7 @@ test('skips frame-ancestors, report-uri, sandbox from meta tags', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
@@ -171,14 +166,16 @@ test('adds unsafe-inline styles in dev', () => {
 		},
 		{
 			dev: true,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
-  csp.add_style('');
+	csp.add_style('');
 
-	assert.equal(csp.csp_provider.get_header(), "default-src 'self'; style-src 'self' 'unsafe-inline'");
+	assert.equal(
+		csp.csp_provider.get_header(),
+		"default-src 'self'; style-src 'self' 'unsafe-inline'"
+	);
 
 	assert.equal(
 		csp.report_only_provider.get_header(),
@@ -201,8 +198,7 @@ test.skip('removes strict-dynamic in dev', () => {
 			},
 			{
 				dev: true,
-				prerender: false,
-				needs_nonce: false
+				prerender: false
 			}
 		);
 
@@ -227,8 +223,7 @@ test('uses hashes when prerendering', () => {
 		},
 		{
 			dev: false,
-			prerender: true,
-			needs_nonce: false
+			prerender: true
 		}
 	);
 
@@ -254,12 +249,11 @@ test('always creates a nonce when template needs it', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: true
+			prerender: false
 		}
 	);
 
-  assert.ok(csp.nonce);
+	assert.ok(csp.nonce);
 });
 
 test('throws when reportOnly contains directives but no report-uri or report-to', () => {
@@ -274,8 +268,7 @@ test('throws when reportOnly contains directives but no report-uri or report-to'
 			},
 			{
 				dev: false,
-				prerender: false,
-				needs_nonce: true
+				prerender: false
 			}
 		);
 	}, '`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both');

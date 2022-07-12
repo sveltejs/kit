@@ -42,17 +42,17 @@ class BaseProvider {
 	#script_src;
 
 	/** @type {import('types').Csp.Source[]} */
-  #style_src;
-  
-  /** @type {string} */
-  #nonce
+	#style_src;
+
+	/** @type {string} */
+	#nonce;
 
 	/**
 	 * @param {Omit<import('./types').CspConfig, 'reportOnly'>} config
 	 * @param {import('./types').CspOpts} opts
-   * @param {string} nonce
+	 * @param {string} nonce
 	 */
-	constructor({ mode, directives }, { dev, prerender, needs_nonce }, nonce = generate_nonce()) {
+	constructor({ mode, directives }, { dev, prerender }, nonce = generate_nonce()) {
 		this.#use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
 		this.#directives = dev ? { ...directives } : directives; // clone in dev so we can safely mutate
 		this.#dev = dev;
@@ -97,8 +97,7 @@ class BaseProvider {
 
 		this.script_needs_nonce = this.#script_needs_csp && !this.#use_hashes;
 		this.style_needs_nonce = this.#style_needs_csp && !this.#use_hashes;
-    this.#nonce = nonce;
-
+		this.#nonce = nonce;
 	}
 
 	/** @param {string} content */
@@ -180,14 +179,14 @@ class BaseProvider {
 }
 
 class CspProvider extends BaseProvider {
-    /**
-   * @param {Omit<import('./types').CspConfig, 'reportOnly'>} config
-   * @param {import('./types').CspOpts} opts
-   * @param {string} nonce
-   */
-  constructor(config, opts, nonce) {
-    super(config, opts, nonce);
-  }
+	/**
+	 * @param {Omit<import('./types').CspConfig, 'reportOnly'>} config
+	 * @param {import('./types').CspOpts} opts
+	 * @param {string} nonce
+	 */
+	constructor(config, opts, nonce) {
+		super(config, opts, nonce);
+	}
 
 	get_meta() {
 		const content = escape_html_attr(this.get_header(true));
@@ -199,10 +198,10 @@ class CspReportOnlyProvider extends BaseProvider {
 	/**
 	 * @param {Omit<import('./types').CspConfig, 'directives'>} config
 	 * @param {import('./types').CspOpts} opts
-   * @param {string} nonce
+	 * @param {string} nonce
 	 */
-  constructor(config, opts, nonce) {
-    const internal_config = { ...config, directives: config.reportOnly }
+	constructor(config, opts, nonce) {
+		const internal_config = { ...config, directives: config.reportOnly };
 		super(internal_config, opts, nonce);
 
 		if (Object.values(config.reportOnly).filter((v) => !!v).length > 0) {
@@ -221,37 +220,37 @@ class CspReportOnlyProvider extends BaseProvider {
 }
 
 export class Csp {
-  /** @type {string} */
-  #nonce = generate_nonce();
+	/** @type {string} */
+	#nonce = generate_nonce();
 
-  /** @type {CspProvider} */
-  csp_provider;
+	/** @type {CspProvider} */
+	csp_provider;
 
-  /** @type {CspReportOnlyProvider} */
-  report_only_provider;
+	/** @type {CspReportOnlyProvider} */
+	report_only_provider;
 
-  /**
+	/**
 	 * @param {import('./types').CspConfig} config
 	 * @param {import('./types').CspOpts} opts
 	 */
-  constructor(config, opts) {
-    this.csp_provider = new CspProvider(config, opts, this.#nonce);
-    this.report_only_provider = new CspReportOnlyProvider(config, opts, this.#nonce);
-  }
+	constructor(config, opts) {
+		this.csp_provider = new CspProvider(config, opts, this.#nonce);
+		this.report_only_provider = new CspReportOnlyProvider(config, opts, this.#nonce);
+	}
 
-  get script_needs_nonce() {
-    return this.csp_provider.script_needs_nonce || this.report_only_provider.script_needs_nonce;
-  }
+	get script_needs_nonce() {
+		return this.csp_provider.script_needs_nonce || this.report_only_provider.script_needs_nonce;
+	}
 
-  get style_needs_nonce() {
-    return this.csp_provider.style_needs_nonce || this.report_only_provider.style_needs_nonce;
-  }
+	get style_needs_nonce() {
+		return this.csp_provider.style_needs_nonce || this.report_only_provider.style_needs_nonce;
+	}
 
-  get nonce() {
-    return this.#nonce;
-  }
+	get nonce() {
+		return this.#nonce;
+	}
 
-  	/** @param {string} content */
+	/** @param {string} content */
 	add_script(content) {
 		this.csp_provider.add_script(content);
 		this.report_only_provider.add_script(content);
@@ -263,4 +262,3 @@ export class Csp {
 		this.report_only_provider.add_style(content);
 	}
 }
-
