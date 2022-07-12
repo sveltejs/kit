@@ -77,5 +77,5 @@ export function normalize(loaded) {
 		);
 	}
 
-	return loaded;
+	return /** @type {import('types').NormalizedLoadOutput} */ (loaded);
 }

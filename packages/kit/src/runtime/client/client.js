@@ -655,7 +655,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		let stuff = root_stuff;
 		let stuff_changed = false;
 
-		/** @type {number | undefined} */
+		/** @type {number} */
 		let status = 200;
 
 		/** @type {Error | null} */
@@ -741,7 +741,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 						if (node.loaded) {
 							if (node.loaded.error) {
-								status = node.loaded.status;
+								status = node.loaded.status ?? 500;
 								error = node.loaded.error;
 							}
 
@@ -1270,7 +1270,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 						if (node.loaded.error) {
 							if (error) throw node.loaded.error;
 							error_args = {
-								status: node.loaded.status,
+								status: node.loaded.status || 500,
 								error: node.loaded.error,
 								url,
 								routeId

@@ -127,7 +127,8 @@ export async function respond(opts) {
 					}
 
 					if (loaded.loaded.error) {
-						({ status, error } = loaded.loaded);
+						error = loaded.loaded.error;
+						status = loaded.loaded.status ?? 500;
 					}
 				} catch (err) {
 					const e = coalesce_to_error(err);
