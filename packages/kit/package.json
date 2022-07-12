@@ -33,7 +33,6 @@
 		"marked": "^4.0.16",
 		"mime": "^3.0.0",
 		"node-fetch": "^3.2.4",
-		"port-authority": "^2.0.1",
 		"rollup": "^2.75.3",
 		"selfsigned": "^2.0.1",
 		"set-cookie-parser": "^2.4.8",
