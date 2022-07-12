@@ -1,15 +1,20 @@
-import path from 'path';
 import adapter from '../../../../adapter-static/index.js';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: adapter(),
+		adapter: adapter({
+			fallback: '200.html'
+		}),
 
 		csp: {
 			directives: {
 				'script-src': ['self']
 			}
+		},
+
+		files: {
+			assets: 'public'
 		},
 
 		paths: {
@@ -18,20 +23,10 @@ const config = {
 		},
 
 		prerender: {
-			createIndexFiles: false
+			default: true
 		},
 
-		vite: {
-			build: {
-				minify: false
-			},
-			clearScreen: false,
-			server: {
-				fs: {
-					allow: [path.resolve('../../../src')]
-				}
-			}
-		}
+		trailingSlash: 'always'
 	}
 };
 

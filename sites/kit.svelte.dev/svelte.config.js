@@ -1,25 +1,15 @@
-import * as path from 'path';
 import adapter from '@sveltejs/adapter-auto';
-import { imagetools } from 'vite-imagetools';
 
-export default {
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		adapter: adapter(),
 
-		vite: {
-			plugins: [imagetools()],
-
-			resolve: {
-				alias: {
-					$img: path.resolve('src/images')
-				}
-			},
-
-			server: {
-				fs: {
-					strict: false
-				}
-			}
+		prerender: {
+			default: true,
+			entries: ['*', '/content.json']
 		}
 	}
 };
+
+export default config;

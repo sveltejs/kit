@@ -1,15 +1,51 @@
-import { CSRComponent, CSRRoute, NormalizedLoadOutput } from 'types/internal';
+import {
+	afterNavigate,
+	beforeNavigate,
+	goto,
+	invalidate,
+	prefetch,
+	prefetchRoutes
+} from '$app/navigation';
+import { CSRComponent, CSRRoute, NormalizedLoadOutput } from 'types';
 
-export type NavigationInfo = {
+export interface Client {
+	// public API, exposed via $app/navigation
+	after_navigate: typeof afterNavigate;
+	before_navigate: typeof beforeNavigate;
+	disable_scroll_handling: () => void;
+	goto: typeof goto;
+	invalidate: typeof invalidate;
+	prefetch: typeof prefetch;
+	prefetch_routes: typeof prefetchRoutes;
+
+	// private API
+	_hydrate: (opts: {
+		status: number;
+		error: Error;
+		nodes: number[];
+		params: Record<string, string>;
+		routeId: string | null;
+	}) => Promise<void>;
+	_start_router: () => void;
+}
+
+export type NavigationIntent = {
+	/**
+	 * `url.pathname + url.search`
+	 */
 	id: string;
-	routes: CSRRoute[];
-	url: URL;
-	path: string;
-};
-
-export type NavigationCandidate = {
+	/**
+	 * The route parameters
+	 */
+	params: Record<string, string>;
+	/**
+	 * The route that matches `path`
+	 */
 	route: CSRRoute;
-	info: NavigationInfo;
+	/**
+	 * The destination URL
+	 */
+	url: URL;
 };
 
 export type NavigationResult = {
@@ -32,8 +68,10 @@ export type BranchNode = {
 };
 
 export type NavigationState = {
-	url: URL;
-	params: Record<string, string>;
 	branch: Array<BranchNode | undefined>;
+	error: Error | null;
+	params: Record<string, string>;
 	session_id: number;
+	stuff: Record<string, any>;
+	url: URL;
 };

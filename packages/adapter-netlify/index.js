@@ -1,5 +1,5 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
-import { join, resolve } from 'path';
+import { dirname, join, resolve, posix } from 'path';
 import { fileURLToPath } from 'url';
 import glob from 'tiny-glob/sync.js';
 import esbuild from 'esbuild';
@@ -12,10 +12,30 @@ import toml from '@iarna/toml';
  * } & toml.JsonMap} NetlifyConfig
  */
 
-const files = fileURLToPath(new URL('./files', import.meta.url));
+/**
+ * @typedef {{
+ *	 functions: Array<
+ *		 | {
+ *				 function: string;
+ *				 path: string;
+ *		   }
+ *		 | {
+ *				 function: string;
+ *				 pattern: string;
+ *		   }
+ *	 >;
+ *	 version: 1;
+ *	 }} HandlerManifest
+ */
 
-/** @type {import('.')} */
-export default function ({ split = false } = {}) {
+const files = fileURLToPath(new URL('./files', import.meta.url).href);
+
+const edge_set_in_env_var =
+	process.env.NETLIFY_SVELTEKIT_USE_EDGE === 'true' ||
+	process.env.NETLIFY_SVELTEKIT_USE_EDGE === '1';
+
+/** @type {import('.').default} */
+export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
 		name: '@sveltejs/adapter-netlify',
 
@@ -26,122 +46,202 @@ export default function ({ split = false } = {}) {
 			const publish = get_publish_directory(netlify_config, builder) || 'build';
 
 			// empty out existing build directories
-			builder.rimraf(publish);
+			builder.rimraf('.netlify/edge-functions');
 			builder.rimraf('.netlify/functions-internal');
 			builder.rimraf('.netlify/server');
 			builder.rimraf('.netlify/package.json');
-			builder.rimraf('.netlify/handler.js');
-
-			builder.mkdirp('.netlify/functions-internal');
+			builder.rimraf('.netlify/serverless.js');
 
 			builder.log.minor(`Publishing to "${publish}"`);
-
-			builder.log.minor('Prerendering static pages...');
-			await builder.prerender({
-				dest: publish
-			});
-
-			builder.writeServer('.netlify/server');
-
-			// for esbuild, use ESM
-			// for zip-it-and-ship-it, use CJS until https://github.com/netlify/zip-it-and-ship-it/issues/750
-			const esm = netlify_config?.functions?.node_bundler === 'esbuild';
-
-			/** @type {string[]} */
-			const redirects = [];
-
-			const replace = {
-				'0APP': './server/app.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
-			};
-
-			if (esm) {
-				builder.copy(`${files}/esm`, '.netlify', { replace });
-			} else {
-				glob('**/*.js', { cwd: '.netlify/server' }).forEach((file) => {
-					const filepath = `.netlify/server/${file}`;
-					const input = readFileSync(filepath, 'utf8');
-					const output = esbuild.transformSync(input, { format: 'cjs', target: 'node12' }).code;
-					writeFileSync(filepath, output);
-				});
-
-				builder.copy(`${files}/cjs`, '.netlify', { replace });
-				writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
-			}
-
-			if (split) {
-				builder.log.minor('Generating serverless functions...');
-
-				builder.createEntries((route) => {
-					const parts = [];
-
-					for (const segment of route.segments) {
-						if (segment.rest) {
-							parts.push('*');
-							break; // Netlify redirects don't allow anything after a *
-						} else if (segment.dynamic) {
-							parts.push(`:${parts.length}`);
-						} else {
-							parts.push(segment.content);
-						}
-					}
-
-					const pattern = `/${parts.join('/')}`;
-					const name = parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index';
-
-					return {
-						id: pattern,
-						filter: (other) => matches(route.segments, other.segments),
-						complete: (entry) => {
-							const manifest = entry.generateManifest({
-								relativePath: '../server',
-								format: esm ? 'esm' : 'cjs'
-							});
-
-							const fn = esm
-								? `import { init } from '../handler.js';\n\nexport const handler = init(${manifest});\n`
-								: `const { init } = require('../handler.js');\n\nexports.handler = init(${manifest});\n`;
-
-							writeFileSync(`.netlify/functions-internal/${name}.js`, fn);
-
-							redirects.push(`${pattern} /.netlify/functions/${name} 200`);
-						}
-					};
-				});
-			} else {
-				builder.log.minor('Generating serverless functions...');
-
-				const manifest = builder.generateManifest({
-					relativePath: '../server',
-					format: esm ? 'esm' : 'cjs'
-				});
-
-				const fn = esm
-					? `import { init } from '../handler.js';\n\nexport const handler = init(${manifest});\n`
-					: `const { init } = require('../handler.js');\n\nexports.handler = init(${manifest});\n`;
-
-				writeFileSync('.netlify/functions-internal/render.js', fn);
-
-				redirects.push('* /.netlify/functions/render 200');
-			}
 
 			builder.log.minor('Copying assets...');
 			builder.writeStatic(publish);
 			builder.writeClient(publish);
-
-			builder.log.minor('Writing redirects...');
-			const redirect_file = join(publish, '_redirects');
-			builder.copy('_redirects', redirect_file);
-			appendFileSync(redirect_file, `\n\n${redirects.join('\n')}`);
+			builder.writePrerendered(publish);
 
 			builder.log.minor('Writing custom headers...');
 			const headers_file = join(publish, '_headers');
 			builder.copy('_headers', headers_file);
 			appendFileSync(
 				headers_file,
-				`\n\n/${builder.appDir}/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
+				`\n\n/${builder.config.kit.appDir}/immutable/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
 			);
+
+			// for esbuild, use ESM
+			// for zip-it-and-ship-it, use CJS until https://github.com/netlify/zip-it-and-ship-it/issues/750
+			const esm = netlify_config?.functions?.node_bundler === 'esbuild';
+
+			if (edge) {
+				if (split) {
+					throw new Error('Cannot use `split: true` alongside `edge: true`');
+				}
+
+				await generate_edge_functions({ builder });
+			} else {
+				await generate_lambda_functions({ builder, esm, split, publish });
+			}
 		}
 	};
+}
+/**
+ * @param { object } params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ */
+async function generate_edge_functions({ builder }) {
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+	builder.rimraf(tmp);
+	builder.mkdirp(tmp);
+
+	builder.mkdirp('.netlify/edge-functions');
+
+	// Don't match the static directory
+	const pattern = '^/.*$';
+
+	// Go doesn't support lookarounds, so we can't do this
+	// const pattern = appDir ? `^/(?!${escapeStringRegexp(appDir)}).*$` : '^/.*$';
+
+	/** @type {HandlerManifest} */
+	const edge_manifest = {
+		functions: [
+			{
+				function: 'render',
+				pattern
+			}
+		],
+		version: 1
+	};
+
+	builder.log.minor('Generating Edge Function...');
+	const relativePath = posix.relative(tmp, builder.getServerDirectory());
+
+	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
+		replace: {
+			'0SERVER': `${relativePath}/index.js`,
+			MANIFEST: './manifest.js'
+		}
+	});
+
+	const manifest = builder.generateManifest({
+		relativePath
+	});
+
+	writeFileSync(
+		`${tmp}/manifest.js`,
+		`export const manifest = ${manifest};\n\nexport const prerendered = new Set(${JSON.stringify(
+			builder.prerendered.paths
+		)});\n`
+	);
+
+	await esbuild.build({
+		entryPoints: [`${tmp}/entry.js`],
+		outfile: '.netlify/edge-functions/render.js',
+		bundle: true,
+		format: 'esm',
+		platform: 'browser',
+		sourcemap: 'linked',
+		target: 'es2020'
+	});
+
+	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
+}
+/**
+ * @param { object } params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param { string } params.publish
+ * @param { boolean } params.split
+ * @param { boolean } params.esm
+ */
+async function generate_lambda_functions({ builder, publish, split, esm }) {
+	builder.mkdirp('.netlify/functions-internal');
+
+	/** @type {string[]} */
+	const redirects = [];
+	builder.writeServer('.netlify/server');
+
+	const replace = {
+		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
+	};
+	if (esm) {
+		builder.copy(`${files}/esm`, '.netlify', { replace });
+	} else {
+		glob('**/*.js', { cwd: '.netlify/server' }).forEach((file) => {
+			const filepath = `.netlify/server/${file}`;
+			const input = readFileSync(filepath, 'utf8');
+			const output = esbuild.transformSync(input, { format: 'cjs', target: 'node12' }).code;
+			writeFileSync(filepath, output);
+		});
+
+		builder.copy(`${files}/cjs`, '.netlify', { replace });
+		writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
+	}
+
+	if (split) {
+		builder.log.minor('Generating serverless functions...');
+
+		await builder.createEntries((route) => {
+			const parts = [];
+			// Netlify's syntax uses '*' and ':param' as "splats" and "placeholders"
+			// https://docs.netlify.com/routing/redirects/redirect-options/#splats
+			for (const segment of route.segments) {
+				if (segment.rest) {
+					parts.push('*');
+					break; // Netlify redirects don't allow anything after a *
+				} else if (segment.dynamic) {
+					parts.push(`:${parts.length}`);
+				} else {
+					parts.push(segment.content);
+				}
+			}
+
+			const pattern = `/${parts.join('/')}`;
+			const name = parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index';
+
+			return {
+				id: pattern,
+				filter: (other) => matches(route.segments, other.segments),
+				complete: (entry) => {
+					const manifest = entry.generateManifest({
+						relativePath: '../server',
+						format: esm ? 'esm' : 'cjs'
+					});
+
+					const fn = esm
+						? `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`
+						: `const { init } = require('../serverless.js');\n\nexports.handler = init(${manifest});\n`;
+
+					writeFileSync(`.netlify/functions-internal/${name}.js`, fn);
+
+					redirects.push(`${pattern} /.netlify/functions/${name} 200`);
+					redirects.push(`${pattern}/__data.json /.netlify/functions/${name} 200`);
+				}
+			};
+		});
+	} else {
+		builder.log.minor('Generating serverless functions...');
+
+		const manifest = builder.generateManifest({
+			relativePath: '../server',
+			format: esm ? 'esm' : 'cjs'
+		});
+
+		const fn = esm
+			? `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`
+			: `const { init } = require('../serverless.js');\n\nexports.handler = init(${manifest});\n`;
+
+		writeFileSync('.netlify/functions-internal/render.js', fn);
+		redirects.push('* /.netlify/functions/render 200');
+	}
+
+	// this should happen at the end, after builder.writeStatic(...),
+	// so that generated redirects are appended to custom redirects
+	// rather than replaced by them
+	builder.log.minor('Writing redirects...');
+	const redirect_file = join(publish, '_redirects');
+	if (existsSync('_redirects')) {
+		builder.copy('_redirects', redirect_file);
+	}
+	builder.mkdirp(dirname(redirect_file));
+	appendFileSync(redirect_file, `\n\n${redirects.join('\n')}`);
 }
 
 function get_netlify_config() {
@@ -161,8 +261,8 @@ function get_netlify_config() {
  **/
 function get_publish_directory(netlify_config, builder) {
 	if (netlify_config) {
-		if (!netlify_config.build || !netlify_config.build.publish) {
-			builder.log.warn('No publish directory specified in netlify.toml, using default');
+		if (!netlify_config.build?.publish) {
+			builder.log.minor('No publish directory specified in netlify.toml, using default');
 			return;
 		}
 

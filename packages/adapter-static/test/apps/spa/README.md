@@ -8,13 +8,11 @@ If you're seeing this, you've probably already done this step. Congrats!
 
 ```bash
 # create a new project in the current directory
-npm init svelte@next
+npm init svelte
 
 # create a new project in my-app
-npm init svelte@next my-app
+npm init svelte my-app
 ```
-
-> Note: the `@next` is temporary
 
 ## Developing
 
@@ -29,7 +27,7 @@ npm run dev -- --open
 
 ## Building
 
-Before creating a production version of your app, install an [adapter](https://kit.svelte.dev/docs#adapters) for your target environment. Then:
+Before creating a production version of your app, install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment. Then:
 
 ```bash
 npm run build

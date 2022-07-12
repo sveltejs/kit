@@ -25,6 +25,8 @@ export const handleError = ({ event, error }) => {
 
 export const handle = sequence(
 	({ event, resolve }) => {
+		event.locals.key = event.routeId;
+		event.locals.params = event.params;
 		event.locals.answer = 42;
 		return resolve(event);
 	},
@@ -38,7 +40,12 @@ export const handle = sequence(
 			throw new Error('Error in handle');
 		}
 
-		const response = await resolve(event, { ssr: !event.url.pathname.startsWith('/no-ssr') });
+		const response = await resolve(event, {
+			ssr: !event.url.pathname.startsWith('/no-ssr'),
+			transformPage: event.url.pathname.startsWith('/transform-page')
+				? ({ html }) => html.replace('__REPLACEME__', 'Worked!')
+				: undefined
+		});
 		response.headers.append('set-cookie', 'name=SvelteKit; path=/; HttpOnly');
 
 		return response;

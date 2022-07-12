@@ -6,10 +6,8 @@ If you're using [adapter-auto](../adapter-auto), you don't need to install this 
 
 ## Installation
 
-> ⚠️ For the time being, the latest version of adapter-netlify is at the @next tag. If you get the error `config.kit.adapter should be an object with an "adapt" method.`, this is a sign that you are using the wrong version (eg `1.0.0-next.0` instead of `1.0.0-next.9`).
-
 ```bash
-npm i -D @sveltejs/adapter-netlify@next
+npm i -D @sveltejs/adapter-netlify
 ```
 
 You can then configure it inside of `svelte.config.js`:
@@ -18,13 +16,19 @@ You can then configure it inside of `svelte.config.js`:
 import adapter from '@sveltejs/adapter-netlify';
 
 export default {
-	kit: {
-		adapter: adapter({
-			// if true, will split your app into multiple functions
-			// instead of creating a single one for the entire app
-			split: false
-		})
-	}
+  kit: {
+    // default options are shown
+    adapter: adapter({
+      // if true, will create a Netlify Edge Function rather
+      // than using standard Node-based functions
+      edge: false,
+
+      // if true, will split your app into multiple functions
+      // instead of creating a single one for the entire app.
+      // if `edge` is true, this option cannot be used
+      split: false
+    })
+  }
 };
 ```
 
@@ -37,6 +41,14 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
 ```
 
 If the `netlify.toml` file or the `build.publish` value is missing, a default value of `"build"` will be used. Note that if you have set the publish directory in the Netlify UI to something else then you will need to set it in `netlify.toml` too, or use the default value of `"build"`.
+
+### Node version
+
+New projects will use Node 16 by default. However, if you're upgrading a project you created a while ago it may be stuck on an older version. See [the Netlify docs](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript) for details on manually specifying Node 16 or newer.
+
+## Netlify Edge Functions (beta)
+
+SvelteKit supports the beta release of [Netlify Edge Functions](https://docs.netlify.com/netlify-labs/experimental-features/edge-functions/). If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor. If set to `false` (the default), the site will deploy to standard Node-based Netlify Functions.
 
 ## Netlify alternatives to SvelteKit functionality
 
@@ -52,12 +64,14 @@ During compilation, redirect rules are automatically appended to your `_redirect
 ### Using Netlify Forms
 
 1. Create your Netlify HTML form as described [here](https://docs.netlify.com/forms/setup/#html-forms), e.g. as `/routes/contact.svelte`. (Don't forget to add the hidden `form-name` input element!)
-2. Netlify's build bot parses your HTML files at deploy time, which means your form must be [prerendered](https://kit.svelte.dev/docs#page-options-prerender) as HTML. You can either add `export const prerender = true` to your `contact.svelte` to prerender just that page or set the `kit.prerender.force: true` option to prerender all pages.
+2. Netlify's build bot parses your HTML files at deploy time, which means your form must be [prerendered](https://kit.svelte.dev/docs/page-options#prerender) as HTML. You can either add `export const prerender = true` to your `contact.svelte` to prerender just that page or set the `kit.prerender.force: true` option to prerender all pages.
 3. If your Netlify form has a [custom success message](https://docs.netlify.com/forms/setup/#success-messages) like `<form netlify ... action="/success">` then ensure the corresponding `/routes/success.svelte` exists and is prerendered.
 
 ### Using Netlify Functions
 
-[Netlify Functions](https://docs.netlify.com/functions/overview/) can be used alongside your SvelteKit routes. If you would like to add them to your site, you should create a directory for them and add the configuration to your `netlify.toml` file. For example:
+With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https://docs.netlify.com/functions/overview/). Netlify function handlers have additional context, including [Netlify Identity](https://docs.netlify.com/visitor-access/identity/) information. You can access this context via the `event.platform.context` field inside your hooks and endpoints.
+
+Additionally, you can add your own Netlify functions by creating a directory for them and adding the configuration to your `netlify.toml` file. For example:
 
 ```toml
 [build]
@@ -66,7 +80,6 @@ During compilation, redirect rules are automatically appended to your `_redirect
 
 [functions]
   directory = "functions"
-  node_bundler = "esbuild"
 ```
 
 ## Changelog

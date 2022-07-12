@@ -3,6 +3,16 @@
 	import { scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 
+	/**
+	 * @typedef {{
+	 *   uid: string;
+	 *   created_at: Date;
+	 *   text: string;
+	 *   done: boolean;
+	 *   pending_delete: boolean;
+	 * }} Todo
+	 */
+
 	type Todo = {
 		uid: string;
 		created_at: Date;
@@ -11,11 +21,13 @@
 		pending_delete: boolean;
 	};
 
+	/** @type {Todo[]} */
 	export let todos: Todo[];
 </script>
 
 <svelte:head>
 	<title>Todos</title>
+	<meta name="description" content="A todo list app" />
 </svelte:head>
 
 <div class="todos">
@@ -124,7 +136,7 @@
 	.done {
 		transform: none;
 		opacity: 0.4;
-		filter: drop-shadow(0px 0px 1px rgba(0, 0, 0, 0.1));
+		filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.1));
 	}
 
 	form.text {

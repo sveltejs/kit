@@ -3,12 +3,12 @@ import { posix } from 'path';
 import { fileURLToPath } from 'url';
 import * as esbuild from 'esbuild';
 
-/** @type {import('.')} */
+/** @type {import('.').default} */
 export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
-			const files = fileURLToPath(new URL('./files', import.meta.url));
+			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
@@ -18,8 +18,7 @@ export default function (options = {}) {
 
 			builder.writeStatic(dest);
 			builder.writeClient(dest);
-
-			const { paths } = await builder.prerender({ dest });
+			builder.writePrerendered(dest);
 
 			const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
@@ -27,19 +26,20 @@ export default function (options = {}) {
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({
 					relativePath
-				})};\n\nexport const prerendered = new Set(${JSON.stringify(paths)});\n`
+				})};\n\nexport const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n`
 			);
 
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
-					APP: `${relativePath}/app.js`,
+					SERVER: `${relativePath}/index.js`,
 					MANIFEST: './manifest.js'
 				}
 			});
 
 			await esbuild.build({
-				target: 'es2020',
 				platform: 'browser',
+				sourcemap: 'linked',
+				target: 'es2020',
 				...options,
 				entryPoints: [`${tmp}/_worker.js`],
 				outfile: `${dest}/_worker.js`,

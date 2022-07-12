@@ -1,9 +1,10 @@
 import { api } from './_api';
-import type { RequestHandler } from '@sveltejs/kit';
+import type { RequestHandler } from './__types';
 
-export const get: RequestHandler = async ({ request, locals }) => {
+/** @type {import('./__types').RequestHandler} */
+export const get: RequestHandler = async ({ locals }) => {
 	// locals.userid comes from src/hooks.js
-	const response = await api(request, `todos/${locals.userid}`);
+	const response = await api('GET', `todos/${locals.userid}`);
 
 	if (response.status === 404) {
 		// user hasn't created a todo list.
@@ -15,7 +16,7 @@ export const get: RequestHandler = async ({ request, locals }) => {
 		};
 	}
 
-	if (response.ok) {
+	if (response.status === 200) {
 		return {
 			body: {
 				todos: await response.json()
@@ -28,25 +29,43 @@ export const get: RequestHandler = async ({ request, locals }) => {
 	};
 };
 
+/** @type {import('./__types').RequestHandler} */
 export const post: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
-	return api(request, `todos/${locals.userid}`, {
+	await api('POST', `todos/${locals.userid}`, {
 		text: form.get('text')
 	});
+
+	return {};
 };
 
+// If the user has JavaScript disabled, the URL will change to
+// include the method override unless we redirect back to /todos
+const redirect = {
+	status: 303,
+	headers: {
+		location: '/todos'
+	}
+};
+
+/** @type {import('./__types').RequestHandler} */
 export const patch: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
-	return api(request, `todos/${locals.userid}/${form.get('uid')}`, {
+	await api('PATCH', `todos/${locals.userid}/${form.get('uid')}`, {
 		text: form.has('text') ? form.get('text') : undefined,
 		done: form.has('done') ? !!form.get('done') : undefined
 	});
+
+	return redirect;
 };
 
+/** @type {import('./__types').RequestHandler} */
 export const del: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
-	return api(request, `todos/${locals.userid}/${form.get('uid')}`);
+	await api('DELETE', `todos/${locals.userid}/${form.get('uid')}`);
+
+	return redirect;
 };

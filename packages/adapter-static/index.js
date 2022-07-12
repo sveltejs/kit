@@ -3,26 +3,49 @@ import { pipeline } from 'stream';
 import glob from 'tiny-glob';
 import { promisify } from 'util';
 import zlib from 'zlib';
+import { platforms } from './platforms.js';
 
 const pipe = promisify(pipeline);
 
-/** @type {import('.')} */
-export default function ({ pages = 'build', assets = pages, fallback, precompress = false } = {}) {
+/** @type {import('.').default} */
+export default function (options) {
 	return {
 		name: '@sveltejs/adapter-static',
 
 		async adapt(builder) {
+			if (!options?.fallback && !builder.config.kit.prerender.default) {
+				builder.log.warn(
+					'You should set `config.kit.prerender.default` to `true` if no fallback is specified'
+				);
+			}
+
+			const platform = platforms.find((platform) => platform.test());
+
+			if (platform) {
+				if (options) {
+					builder.log.warn(
+						`Detected ${platform.name}. Please remove adapter-static options to enable zero-config mode`
+					);
+				} else {
+					builder.log.info(`Detected ${platform.name}, using zero-config mode`);
+				}
+			}
+
+			const {
+				pages = 'build',
+				assets = pages,
+				fallback,
+				precompress
+			} = options ??
+			platform?.defaults(builder.config) ??
+			/** @type {import('./index').AdapterOptions} */ ({});
+
 			builder.rimraf(assets);
 			builder.rimraf(pages);
 
 			builder.writeStatic(assets);
 			builder.writeClient(assets);
-
-			await builder.prerender({
-				fallback,
-				all: !fallback,
-				dest: pages
-			});
+			builder.writePrerendered(pages, { fallback });
 
 			if (precompress) {
 				if (pages === assets) {
@@ -42,6 +65,8 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 			} else {
 				builder.log(`Wrote pages to "${pages}" and assets to "${assets}"`);
 			}
+
+			if (!options) platform?.done(builder);
 		}
 	};
 }
@@ -50,7 +75,7 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
  * @param {string} directory
  */
 async function compress(directory) {
-	const files = await glob('**/*.{html,js,json,css,svg,xml}', {
+	const files = await glob('**/*.{html,js,json,css,svg,xml,wasm}', {
 		cwd: directory,
 		dot: true,
 		absolute: true,

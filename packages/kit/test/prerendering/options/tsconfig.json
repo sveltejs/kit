@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"noEmit": true,
+		"module": "esnext",
+		"moduleResolution": "node",
+		"paths": {
+			"@sveltejs/kit": ["../../../types"],
+			"$lib": ["./src/lib"],
+			"$lib/*": ["./src/lib/*"],
+			"types": ["../../../types/internal"]
+		}
+	},
+	"extends": "./.svelte-kit/tsconfig.json"
+}

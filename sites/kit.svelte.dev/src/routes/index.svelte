@@ -1,13 +1,13 @@
 <script context="module">
 	export function load() {
 		return {
-			maxage: 60
+			cache: { maxage: 60 }
 		};
 	}
 </script>
 
 <script>
-	import Machine from '$img/svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&meta'
+	import Machine from '$img/svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&meta';
 	import { Hero, Blurb } from '@sveltejs/site-kit';
 </script>
 
@@ -82,12 +82,10 @@
 		</div>
 
 		<div slot="how">
-			<pre><code>
-npm init <span class="orange-highlight">svelte@next</span> my-app
+			<pre><code>npm create <span class="orange-highlight">svelte</span> my-app
 cd my-app
 npm install
-npm run dev -- --open
-</code></pre>
+npm run dev -- --open</code></pre>
 			<a sveltekit:prefetch href="/docs" class="cta">get started</a>
 		</div>
 	</Blurb>
@@ -95,11 +93,11 @@ npm run dev -- --open
 
 <style>
 	:global(.hero-container:dir(rtl)) {
-		max-inline-size: 116rem;
+		max-width: 116rem;
 	}
 
 	pre {
-		block-size: 100%;
+		height: 100%;
 		display: flex;
 		flex-direction: column;
 		color: var(--second-text);
@@ -110,12 +108,12 @@ npm run dev -- --open
 	}
 
 	.blurb-shifter {
-		margin-block-start: calc(-10rem + var(--side-nav));
+		margin-top: calc(-10rem + var(--side-nav));
 	}
 
 	@media (min-width: 900px) {
 		.blurb-shifter {
-			margin-block-start: -12em;
+			margin-top: -12em;
 		}
 	}
 </style>

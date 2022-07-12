@@ -61,21 +61,31 @@ async function main() {
 					message: 'Which Svelte app template?',
 					choices: fs.readdirSync(dist('templates')).map((dir) => {
 						const meta_file = dist(`templates/${dir}/meta.json`);
-						const meta = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
+						const { title, description } = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
 
 						return {
-							title: meta.description,
+							title,
+							description,
 							value: dir
 						};
 					})
 				},
 				{
-					type: 'toggle',
-					name: 'typescript',
-					message: 'Use TypeScript?',
+					type: 'select',
+					name: 'types',
+					message: 'Add type checking with TypeScript?',
 					initial: false,
-					active: 'Yes',
-					inactive: 'No'
+					choices: [
+						{
+							title: 'Yes, using JavaScript with JSDoc comments',
+							value: 'checkjs'
+						},
+						{
+							title: 'Yes, using TypeScript syntax',
+							value: 'typescript'
+						},
+						{ title: 'No', value: null }
+					]
 				},
 				{
 					type: 'toggle',
@@ -89,6 +99,14 @@ async function main() {
 					type: 'toggle',
 					name: 'prettier',
 					message: 'Add Prettier for code formatting?',
+					initial: false,
+					active: 'Yes',
+					inactive: 'No'
+				},
+				{
+					type: 'toggle',
+					name: 'playwright',
+					message: 'Add Playwright for browser testing?',
 					initial: false,
 					active: 'Yes',
 					inactive: 'No'
@@ -108,9 +126,12 @@ async function main() {
 
 	console.log(bold(green('\nYour project is ready!')));
 
-	if (options.typescript) {
+	if (options.types === 'typescript') {
 		console.log(bold('✔ Typescript'));
 		console.log('  Inside Svelte components, use <script lang="ts">');
+	} else if (options.types === 'checkjs') {
+		console.log(bold('✔ Type-checked JavaScript'));
+		console.log('  https://www.typescriptlang.org/tsconfig#checkJs');
 	}
 
 	if (options.eslint) {
@@ -122,6 +143,11 @@ async function main() {
 		console.log(bold('✔ Prettier'));
 		console.log(cyan('  https://prettier.io/docs/en/options.html'));
 		console.log(cyan('  https://github.com/sveltejs/prettier-plugin-svelte#options'));
+	}
+
+	if (options.playwright) {
+		console.log(bold('✔ Playwright'));
+		console.log(cyan('  https://playwright.dev'));
 	}
 
 	console.log('\nInstall community-maintained integrations:');

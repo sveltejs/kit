@@ -5,6 +5,11 @@ on:
     branches:
       - master
 
+env:
+  TURBO_CACHE_KEY: ubuntu-latest-16 # reuse cache key from ci workflow
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: svelte
+
 jobs:
   release:
     # prevents this action from running on forks
@@ -13,21 +18,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
           fetch-depth: 0
-      - uses: pnpm/action-setup@v2.1.0
-        with:
-          version: 6.23.2
+      - uses: pnpm/action-setup@v2.2.2
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 16.x
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      - run: pnpm turbo run build --filter="./packages/*"
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
@@ -39,6 +42,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           UPDATE_TEMPLATE_SSH_KEY: ${{ secrets.UPDATE_TEMPLATE_SSH_KEY }}
+
+      - name: Update latest tag on published packages # only needed until we release 1.0.0 and exit pre-release mode
+        if: steps.changesets.outputs.published == 'true'
+        # wait a bit and then run "npm dist-tag add package@version latest" for all published packages
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          published_packages: ${{steps.changesets.outputs.publishedPackages}}
+        run: |
+          sleep 20
+          cat << EOF > "$HOME/.npmrc"
+            //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          EOF
+          echo $published_packages | jq -r 'map((.name + "@" + .version)) | .[]' | while read pkgver; do npm dist-tag add $pkgver latest || continue;done
 
       # TODO alert discord
       # - name: Send a Slack notification if a publish happens

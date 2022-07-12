@@ -1,23 +1,22 @@
-import { SVELTE_KIT } from '../constants.js';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
-import { prerender } from './prerender/prerender.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 
 /**
+ * Creates the Builder which is passed to adapters for building the application.
  * @param {{
- *   cwd: string;
- *   config: import('types/config').ValidatedConfig;
- *   build_data: import('types/internal').BuildData;
- *   log: import('types/internal').Logger;
+ *   config: import('types').ValidatedConfig;
+ *   build_data: import('types').BuildData;
+ *   prerendered: import('types').Prerendered;
+ *   log: import('types').Logger;
  * }} opts
- * @returns {import('types/config').Builder}
+ * @returns {import('types').Builder}
  */
-export function create_builder({ cwd, config, build_data, log }) {
+export function create_builder({ config, build_data, prerendered, log }) {
 	/** @type {Set<string>} */
-	const prerendered_paths = new Set();
-	let generated_manifest = false;
+	const prerendered_paths = new Set(prerendered.paths);
 
-	/** @param {import('types/internal').RouteData} route */
+	/** @param {import('types').RouteData} route */
+	// TODO routes should come pre-filtered
 	function not_prerendered(route) {
 		if (route.type === 'page' && route.path) {
 			return !prerendered_paths.has(route.path);
@@ -32,17 +31,21 @@ export function create_builder({ cwd, config, build_data, log }) {
 		mkdirp,
 		copy,
 
-		appDir: config.kit.appDir,
+		config,
+		prerendered,
 
-		createEntries(fn) {
-			generated_manifest = true;
-
+		async createEntries(fn) {
 			const { routes } = build_data.manifest_data;
 
-			/** @type {import('types/config').RouteDefinition[]} */
+			/** @type {import('types').RouteDefinition[]} */
 			const facades = routes.map((route) => ({
+				id: route.id,
 				type: route.type,
-				segments: route.segments,
+				segments: route.id.split('/').map((segment) => ({
+					dynamic: segment.includes('['),
+					rest: segment.includes('[...'),
+					content: segment
+				})),
 				pattern: route.pattern,
 				methods: route.type === 'page' ? ['get'] : build_data.server.methods[route.file]
 			}));
@@ -71,22 +74,7 @@ export function create_builder({ cwd, config, build_data, log }) {
 				// also be included, since the page likely needs the endpoint
 				filtered.forEach((route) => {
 					if (route.type === 'page') {
-						const length = route.segments.length;
-
-						const endpoint = routes.find((candidate) => {
-							if (candidate.segments.length !== length) return false;
-
-							for (let i = 0; i < length; i += 1) {
-								const a = route.segments[i];
-								const b = candidate.segments[i];
-
-								if (i === length - 1) {
-									return b.content === `${a.content}.json`;
-								}
-
-								if (a.content !== b.content) return false;
-							}
-						});
+						const endpoint = routes.find((candidate) => candidate.id === route.id + '.json');
 
 						if (endpoint) {
 							filtered.add(endpoint);
@@ -95,34 +83,38 @@ export function create_builder({ cwd, config, build_data, log }) {
 				});
 
 				if (filtered.size > 0) {
-					complete({
+					await complete({
 						generateManifest: ({ relativePath, format }) =>
-							generate_manifest(build_data, relativePath, Array.from(filtered), format)
+							generate_manifest({
+								build_data,
+								relative_path: relativePath,
+								routes: Array.from(filtered),
+								format
+							})
 					});
 				}
 			}
 		},
 
 		generateManifest: ({ relativePath, format }) => {
-			generated_manifest = true;
-			return generate_manifest(
+			return generate_manifest({
 				build_data,
-				relativePath,
-				build_data.manifest_data.routes.filter(not_prerendered),
+				relative_path: relativePath,
+				routes: build_data.manifest_data.routes.filter(not_prerendered),
 				format
-			);
+			});
 		},
 
 		getBuildDirectory(name) {
-			return `${cwd}/${SVELTE_KIT}/${name}`;
+			return `${config.kit.outDir}/${name}`;
 		},
 
 		getClientDirectory() {
-			return `${cwd}/${SVELTE_KIT}/output/client`;
+			return `${config.kit.outDir}/output/client`;
 		},
 
 		getServerDirectory() {
-			return `${cwd}/${SVELTE_KIT}/output/server`;
+			return `${config.kit.outDir}/output/server`;
 		},
 
 		getStaticDirectory() {
@@ -130,44 +122,34 @@ export function create_builder({ cwd, config, build_data, log }) {
 		},
 
 		writeClient(dest) {
-			return copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, {
-				filter: (file) => file[0] !== '.'
-			});
+			return copy(`${config.kit.outDir}/output/client`, dest);
+		},
+
+		writePrerendered(dest, { fallback } = {}) {
+			const source = `${config.kit.outDir}/output/prerendered`;
+			const files = [...copy(`${source}/pages`, dest), ...copy(`${source}/dependencies`, dest)];
+
+			if (fallback) {
+				files.push(fallback);
+				copy(`${source}/fallback.html`, `${dest}/${fallback}`);
+			}
+
+			return files;
 		},
 
 		writeServer(dest) {
-			return copy(`${cwd}/${SVELTE_KIT}/output/server`, dest, {
-				filter: (file) => file[0] !== '.'
-			});
+			return copy(`${config.kit.outDir}/output/server`, dest);
 		},
 
 		writeStatic(dest) {
 			return copy(config.kit.files.assets, dest);
 		},
 
-		async prerender({ all = false, dest, fallback }) {
-			if (generated_manifest) {
-				throw new Error(
-					'Adapters must call prerender(...) before createEntries(...) or generateManifest(...)'
-				);
-			}
-
-			const prerendered = await prerender({
-				out: dest,
-				all,
-				cwd,
-				config,
-				build_data,
-				fallback,
-				log
-			});
-
-			prerendered.paths.forEach((path) => {
-				prerendered_paths.add(path);
-				prerendered_paths.add(path + '/');
-			});
-
-			return prerendered;
+		// @ts-expect-error
+		async prerender() {
+			throw new Error(
+				'builder.prerender() has been removed. Prerendering now takes place in the build phase — see builder.prerender and builder.writePrerendered'
+			);
 		}
 	};
 }

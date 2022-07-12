@@ -5,30 +5,30 @@ import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
- * @typedef {import('types/internal').SSRNode} SSRNode
- * @typedef {import('types/internal').SSROptions} SSROptions
- * @typedef {import('types/internal').SSRState} SSRState
+ * @typedef {import('types').SSRNode} SSRNode
+ * @typedef {import('types').SSROptions} SSROptions
+ * @typedef {import('types').SSRState} SSRState
  */
 
 /**
+ * Gets the nodes, calls `load` for each of them, and then calls render to build the HTML response.
  * @param {{
- *   event: import('types/hooks').RequestEvent;
+ *   event: import('types').RequestEvent;
  *   options: SSROptions;
  *   state: SSRState;
  *   $session: any;
- *   route: import('types/internal').SSRPage;
- *   params: Record<string, string>;
- *   ssr: boolean;
+ *   resolve_opts: import('types').RequiredResolveOptions;
+ *   route: import('types').SSRPage;
  * }} opts
- * @returns {Promise<Response | undefined>}
+ * @returns {Promise<Response>}
  */
 export async function respond(opts) {
-	const { event, options, state, $session, route, ssr } = opts;
+	const { event, options, state, $session, route, resolve_opts } = opts;
 
 	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
 
-	if (!ssr) {
+	if (!resolve_opts.ssr) {
 		return await render_response({
 			...opts,
 			branch: [],
@@ -37,14 +37,16 @@ export async function respond(opts) {
 				router: true
 			},
 			status: 200,
-			url: event.url,
+			error: null,
+			event,
 			stuff: {}
 		});
 	}
 
 	try {
 		nodes = await Promise.all(
-			route.a.map((n) => options.manifest._.nodes[n] && options.manifest._.nodes[n]())
+			// we use == here rather than === because [undefined] serializes as "[null]"
+			route.a.map((n) => (n == undefined ? n : options.manifest._.nodes[n]()))
 		);
 	} catch (err) {
 		const error = coalesce_to_error(err);
@@ -58,7 +60,7 @@ export async function respond(opts) {
 			$session,
 			status: 500,
 			error,
-			ssr
+			resolve_opts
 		});
 	}
 
@@ -67,12 +69,16 @@ export async function respond(opts) {
 
 	let page_config = get_page_config(leaf, options);
 
-	if (!leaf.prerender && state.prerender && !state.prerender.all) {
-		// if the page has `export const prerender = true`, continue,
-		// otherwise bail out at this point
-		return new Response(undefined, {
-			status: 204
-		});
+	if (state.prerendering) {
+		// if the page isn't marked as prerenderable (or is explicitly
+		// marked NOT prerenderable, if `prerender.default` is `true`),
+		// then bail out at this point
+		const should_prerender = leaf.prerender ?? options.prerender.default;
+		if (!should_prerender) {
+			return new Response(undefined, {
+				status: 204
+			});
+		}
 	}
 
 	/** @type {Array<Loaded>} */
@@ -81,15 +87,15 @@ export async function respond(opts) {
 	/** @type {number} */
 	let status = 200;
 
-	/** @type {Error|undefined} */
-	let error;
+	/** @type {Error | null} */
+	let error = null;
 
 	/** @type {string[]} */
 	let set_cookie_headers = [];
 
 	let stuff = {};
 
-	ssr: if (ssr) {
+	ssr: {
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
 
@@ -100,14 +106,11 @@ export async function respond(opts) {
 				try {
 					loaded = await load_node({
 						...opts,
-						url: event.url,
 						node,
 						stuff,
 						is_error: false,
 						is_leaf: i === nodes.length - 1
 					});
-
-					if (!loaded) return;
 
 					set_cookie_headers = set_cookie_headers.concat(loaded.set_cookie_headers);
 
@@ -155,7 +158,8 @@ export async function respond(opts) {
 				if (error) {
 					while (i--) {
 						if (route.b[i]) {
-							const error_node = await options.manifest._.nodes[route.b[i]]();
+							const index = /** @type {number} */ (route.b[i]);
+							const error_node = await options.manifest._.nodes[index]();
 
 							/** @type {Loaded} */
 							let node_loaded;
@@ -168,7 +172,6 @@ export async function respond(opts) {
 								const error_loaded = /** @type {import('./types').Loaded} */ (
 									await load_node({
 										...opts,
-										url: event.url,
 										node: error_node,
 										stuff: node_loaded.stuff,
 										is_error: true,
@@ -207,7 +210,7 @@ export async function respond(opts) {
 							$session,
 							status,
 							error,
-							ssr
+							resolve_opts
 						}),
 						set_cookie_headers
 					);
@@ -228,7 +231,7 @@ export async function respond(opts) {
 			await render_response({
 				...opts,
 				stuff,
-				url: event.url,
+				event,
 				page_config,
 				status,
 				error,
@@ -253,14 +256,14 @@ export async function respond(opts) {
 }
 
 /**
- * @param {import('types/internal').SSRComponent} leaf
+ * @param {import('types').SSRComponent} leaf
  * @param {SSROptions} options
  */
 function get_page_config(leaf, options) {
 	// TODO remove for 1.0
 	if ('ssr' in leaf) {
 		throw new Error(
-			'`export const ssr` has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'
+			'`export const ssr` has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle'
 		);
 	}
 

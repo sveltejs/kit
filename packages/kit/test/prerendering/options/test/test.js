@@ -1,4 +1,4 @@
-import fs from 'fs';
+import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
@@ -11,13 +11,11 @@ const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
 test('prerenders /path-base', () => {
 	const content = read('index.html');
 	assert.ok(content.includes('<h1>hello</h1>'));
-	assert.ok(content.includes('http://sveltekit-prerender/path-base'));
 });
 
 test('prerenders nested /path-base', () => {
-	const content = read('/nested.html');
+	const content = read('nested/index.html');
 	assert.ok(content.includes('<h1>nested hello</h1>'));
-	assert.ok(content.includes('http://sveltekit-prerender/path-base/nested'));
 });
 
 test('adds CSP headers via meta tag', () => {
@@ -27,6 +25,16 @@ test('adds CSP headers via meta tag', () => {
 			'<meta http-equiv="content-security-policy" content="script-src \'self\' \'sha256-'
 		)
 	);
+});
+
+test('does not copy `public` into `_app`', () => {
+	assert.ok(!fs.existsSync(`${build}/_app/robots.txt`));
+});
+
+// https://github.com/sveltejs/kit/issues/4340
+test('populates fallback 200.html file', () => {
+	const content = read('200.html');
+	assert.ok(content !== '');
 });
 
 test.run();

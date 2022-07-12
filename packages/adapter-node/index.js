@@ -7,23 +7,20 @@ import zlib from 'zlib';
 
 const pipe = promisify(pipeline);
 
-const files = fileURLToPath(new URL('./files', import.meta.url));
+const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
-/** @type {import('.')} */
-export default function ({
-	out = 'build',
-	precompress,
-	env: {
-		path: path_env = 'SOCKET_PATH',
-		host: host_env = 'HOST',
-		port: port_env = 'PORT',
-		origin: origin_env = 'ORIGIN',
-		headers: {
-			protocol: protocol_header_env = 'PROTOCOL_HEADER',
-			host: host_header_env = 'HOST_HEADER'
-		} = {}
-	} = {}
-} = {}) {
+/** @type {import('.').default} */
+export default function (opts = {}) {
+	// TODO remove for 1.0
+	// @ts-expect-error
+	if (opts.env) {
+		throw new Error(
+			'options.env has been removed in favour of options.envPrefix. Consult the adapter-node README: https://github.com/sveltejs/kit/tree/master/packages/adapter-node'
+		);
+	}
+
+	const { out = 'build', precompress, envPrefix = '' } = opts;
+
 	return {
 		name: '@sveltejs/adapter-node',
 
@@ -34,11 +31,7 @@ export default function ({
 			builder.writeClient(`${out}/client`);
 			builder.writeServer(`${out}/server`);
 			builder.writeStatic(`${out}/static`);
-
-			builder.log.minor('Prerendering static pages');
-			await builder.prerender({
-				dest: `${out}/prerendered`
-			});
+			builder.writePrerendered(`${out}/prerendered`);
 
 			writeFileSync(
 				`${out}/manifest.js`,
@@ -49,14 +42,9 @@ export default function ({
 
 			builder.copy(files, out, {
 				replace: {
-					APP: './server/app.js',
+					SERVER: './server/index.js',
 					MANIFEST: './manifest.js',
-					PATH_ENV: JSON.stringify(path_env),
-					HOST_ENV: JSON.stringify(host_env),
-					PORT_ENV: JSON.stringify(port_env),
-					ORIGIN: origin_env ? `process.env[${JSON.stringify(origin_env)}]` : 'undefined',
-					PROTOCOL_HEADER: JSON.stringify(protocol_header_env),
-					HOST_HEADER: JSON.stringify(host_header_env)
+					ENV_PREFIX: JSON.stringify(envPrefix)
 				}
 			});
 
@@ -78,7 +66,7 @@ async function compress(directory) {
 		return;
 	}
 
-	const files = await glob('**/*.{html,js,json,css,svg,xml}', {
+	const files = await glob('**/*.{html,js,json,css,svg,xml,wasm}', {
 		cwd: directory,
 		dot: true,
 		absolute: true,

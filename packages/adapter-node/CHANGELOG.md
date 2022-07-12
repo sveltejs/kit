@@ -1,5 +1,79 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.79
+
+### Patch Changes
+
+- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+
+## 1.0.0-next.78
+
+### Patch Changes
+
+- Update dependencies ([#5121](https://github.com/sveltejs/kit/pull/5121))
+
+## 1.0.0-next.77
+
+### Patch Changes
+
+- Update adapter entrypoint typings to be NodeNext/ESNext-compatible ([#5111](https://github.com/sveltejs/kit/pull/5111))
+
+## 1.0.0-next.76
+
+### Patch Changes
+
+- only serve `_app/immutable` with immutable cache header, not `_app/version.json` ([#5051](https://github.com/sveltejs/kit/pull/5051))
+
+## 1.0.0-next.75
+
+### Patch Changes
+
+- Add types to pkg.exports ([#5045](https://github.com/sveltejs/kit/pull/5045))
+
+## 1.0.0-next.74
+
+### Patch Changes
+
+- [breaking] replace @sveltejs/kit/install-fetch with @sveltejs/kit/node/polyfills ([#4934](https://github.com/sveltejs/kit/pull/4934))
+
+## 1.0.0-next.73
+
+### Patch Changes
+
+- [breaking] rename `xForwardedForIndex` to `XFF_DEPTH` and make it an environment variable ([#4332](https://github.com/sveltejs/kit/pull/4332))
+
+* [breaking] Replace `options.env` with `options.envPrefix` ([#4360](https://github.com/sveltejs/kit/pull/4360))
+
+## 1.0.0-next.72
+
+### Patch Changes
+
+- Provide getClientAddress function ([#4289](https://github.com/sveltejs/kit/pull/4289))
+
+## 1.0.0-next.71
+
+### Patch Changes
+
+- [breaking] replace builder.prerender() with builder.writePrerendered() and builder.prerendered ([#4192](https://github.com/sveltejs/kit/pull/4192)) ([#4229](https://github.com/sveltejs/kit/pull/4229))
+
+## 1.0.0-next.70
+
+### Patch Changes
+
+- Rename `__fetch_polyfill` to `installFetch` ([#4111](https://github.com/sveltejs/kit/pull/4111))
+
+## 1.0.0-next.69
+
+### Patch Changes
+
+- [breaking] rename `app.render` to `server.respond` ([#4034](https://github.com/sveltejs/kit/pull/4034))
+
+## 1.0.0-next.68
+
+### Patch Changes
+
+- `precompress` option also compress wasm files ([#3812](https://github.com/sveltejs/kit/pull/3812))
+
 ## 1.0.0-next.67
 
 ### Patch Changes

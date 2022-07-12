@@ -36,3 +36,40 @@ export function resolve(base, path) {
 export function is_root_relative(path) {
 	return path[0] === '/' && path[1] !== '/';
 }
+
+/**
+ * @param {string} path
+ * @param {import('types').TrailingSlash} trailing_slash
+ */
+export function normalize_path(path, trailing_slash) {
+	if (path === '/' || trailing_slash === 'ignore') return path;
+
+	if (trailing_slash === 'never') {
+		return path.endsWith('/') ? path.slice(0, -1) : path;
+	} else if (trailing_slash === 'always' && !path.endsWith('/')) {
+		return path + '/';
+	}
+
+	return path;
+}
+
+export class LoadURL extends URL {
+	/** @returns {string} */
+	get hash() {
+		throw new Error(
+			'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
+		);
+	}
+}
+
+export class PrerenderingURL extends URL {
+	/** @returns {string} */
+	get search() {
+		throw new Error('Cannot access url.search on a page with prerendering enabled');
+	}
+
+	/** @returns {URLSearchParams} */
+	get searchParams() {
+		throw new Error('Cannot access url.searchParams on a page with prerendering enabled');
+	}
+}

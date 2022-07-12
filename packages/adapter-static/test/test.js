@@ -23,7 +23,7 @@ run('spa', (test) => {
 	});
 
 	test('prerenders page with prerender=true', ({ cwd }) => {
-		assert.ok(fs.existsSync(`${cwd}/build/about/index.html`));
+		assert.ok(fs.existsSync(`${cwd}/build/about.html`));
 	});
 
 	test('renders content in fallback page when JS runs', async ({ base, page }) => {
@@ -34,5 +34,7 @@ run('spa', (test) => {
 	test('renders error page for missing page', async ({ base, page }) => {
 		await page.goto(`${base}/nosuchpage`);
 		assert.equal(await page.textContent('h1'), '404');
+		await page.waitForLoadState('networkidle', { timeout: 1000 });
+		assert.equal(await page.textContent('h2'), 'count: 1');
 	});
 });

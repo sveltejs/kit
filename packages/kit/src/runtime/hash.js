@@ -1,6 +1,6 @@
 /**
  * Hash using djb2
- * @param {import('types/hooks').StrictBody} value
+ * @param {import('types').StrictBody} value
  */
 export function hash(value) {
 	let hash = 5381;

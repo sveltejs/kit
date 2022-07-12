@@ -1,6 +1,6 @@
 /*
-	This module is used by the /todos and /todos/[uid]
-	endpoints to make calls to api.svelte.dev, which stores todos
+	This module is used by the /todos endpoint to
+	make calls to api.svelte.dev, which stores todos
 	for each user. The leading underscore indicates that this is
 	a private module, _not_ an endpoint — visiting /todos/_api
 	will net you a 404 response.
@@ -11,9 +11,14 @@
 
 const base = 'https://api.svelte.dev';
 
-export async function api(request: Request, resource: string, data?: Record<string, unknown>) {
+/**
+ * @param {string} method
+ * @param {string} resource
+ * @param {Record<string, unknown>} [data]
+ */
+export function api(method: string, resource: string, data?: Record<string, unknown>) {
 	return fetch(`${base}/${resource}`, {
-		method: request.method,
+		method,
 		headers: {
 			'content-type': 'application/json'
 		},

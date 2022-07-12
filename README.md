@@ -35,7 +35,7 @@ The SvelteKit community also makes additional [SvelteKit adapters available for 
 
 ### Migrating from Sapper
 
-Check out the [Migration Guide](https://kit.svelte.dev/migrating) if you are upgrading from Sapper.
+Check out the [Migration Guide](https://kit.svelte.dev/docs/migrating) if you are upgrading from Sapper.
 
 ## Bug reporting
 

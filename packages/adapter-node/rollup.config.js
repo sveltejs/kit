@@ -14,6 +14,6 @@ export default [
 			format: 'esm'
 		},
 		plugins: [nodeResolve(), commonjs(), json()],
-		external: ['APP', 'MANIFEST', ...require('module').builtinModules]
+		external: ['SERVER', 'MANIFEST', ...require('module').builtinModules]
 	}
 ];

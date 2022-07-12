@@ -5,58 +5,75 @@ on:
     branches:
       - master
   pull_request:
+
 env:
-  CI: true
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: svelte
+
+# cancel in-progress runs on new commits to same PR (gitub.event.number)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.sha }}
+  cancel-in-progress: true
 
 jobs:
   Lint:
     runs-on: ubuntu-latest
+    env:
+      # not needed for linting
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     steps:
-      - uses: actions/checkout@v2
-      - uses: pnpm/action-setup@v2.1.0
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2.2.2
+      - uses: actions/setup-node@v3
         with:
-          version: 6.23.2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '14.x'
+          node-version: '16.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build --filter ./packages --filter !./packages/create-svelte/templates
-      - run: pnpm lint
-      - run: pnpm check
+      - run: cd packages/kit && pnpm build
+      - run: pnpm turbo run lint check
   Tests:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        node-version: [14]
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        node-version: [16]
+        os: [ubuntu-latest , windows-2019]
+        e2e-browser: ['chromium']
         include:
           - node-version: 16
             os: ubuntu-latest
+            e2e-browser: 'firefox'
+          - node-version: 16
+            os: macOS-latest
+            e2e-browser: 'safari'
+          - node-version: 18
+            os: ubuntu-latest
+            e2e-browser: 'chromium'
+    env:
+      TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
+      # Install playwright's binray under node_modules so it will be cached together
+      PLAYWRIGHT_BROWSERS_PATH: "0"
+      KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v2
-      - uses: pnpm/action-setup@v2.1.0
-        with:
-          version: 6.23.2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2.2.2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
-      - name: Get paths for OS
-        uses: ./.github/actions/env
-        id: paths
-      - name: Cache browsers
-        id: browser_cache
-        uses: actions/cache@main
-        with:
-          path: ${{ steps.paths.outputs.browser_cache_path }}
-          key: chromium-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
-        env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: ${{ steps.browser_cache.outputs.cache-hit == 'true' }}
-      - run: pnpm build --filter ./packages --filter !./packages/create-svelte/templates
+      - run: pnpm playwright install
       - run: pnpm test
+      - name: Archive test results
+        if: failure()
+        shell: bash
+        run: find packages -type d -name test-results -not -empty | tar -czf test-results.tar.gz --files-from=-
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          retention-days: 3
+          name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
+          path: test-results.tar.gz

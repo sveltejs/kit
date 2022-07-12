@@ -11,6 +11,8 @@
 </script>
 
 <script>
+	import './index.css';
+
 	/** @type {number} */
 	export let answer;
 </script>

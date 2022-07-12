@@ -1,6 +1,6 @@
 import { to_headers } from '../../utils/http.js';
 import { hash } from '../hash.js';
-import { is_pojo } from './utils.js';
+import { is_pojo, normalize_request_method, serialize_error } from './utils.js';
 
 /** @param {string} body */
 function error(body) {
@@ -21,8 +21,10 @@ const text_types = new Set([
 	'multipart/form-data'
 ]);
 
+const bodyless_status_codes = new Set([101, 204, 205, 304]);
+
 /**
- * Decides how the body should be parsed based on its mime type. Should match what's in parse_body
+ * Decides how the body should be parsed based on its mime type
  *
  * @param {string | undefined | null} content_type The `content-type` header of a request/response.
  * @returns {boolean}
@@ -35,16 +37,45 @@ export function is_text(content_type) {
 }
 
 /**
- * @param {import('types/hooks').RequestEvent} event
- * @param {{ [method: string]: import('types/endpoint').RequestHandler }} mod
- * @returns {Promise<Response | undefined>}
+ * @param {import('types').RequestEvent} event
+ * @param {{ [method: string]: import('types').RequestHandler }} mod
+ * @param {import('types').SSROptions} options
+ * @returns {Promise<Response>}
  */
-export async function render_endpoint(event, mod) {
-	/** @type {import('types/endpoint').RequestHandler} */
-	const handler = mod[event.request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
+export async function render_endpoint(event, mod, options) {
+	const method = normalize_request_method(event);
+
+	/** @type {import('types').RequestHandler} */
+	let handler = mod[method];
+
+	if (!handler && method === 'head') {
+		handler = mod.get;
+	}
 
 	if (!handler) {
-		return;
+		const allowed = [];
+
+		for (const method in ['get', 'post', 'put', 'patch']) {
+			if (mod[method]) allowed.push(method.toUpperCase());
+		}
+
+		if (mod.del) allowed.push('DELETE');
+		if (mod.get || mod.head) allowed.push('HEAD');
+
+		return event.request.headers.get('x-sveltekit-load')
+			? // TODO would be nice to avoid these requests altogether,
+			  // by noting whether or not page endpoints export `get`
+			  new Response(undefined, {
+					status: 204
+			  })
+			: new Response(`${event.request.method} method not allowed`, {
+					status: 405,
+					headers: {
+						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+						// "The server must generate an Allow header field in a 405 status code response"
+						allow: allowed.join(', ')
+					}
+			  });
 	}
 
 	const response = await handler(event);
@@ -54,30 +85,40 @@ export async function render_endpoint(event, mod) {
 		return error(`${preface}: expected an object, got ${typeof response}`);
 	}
 
+	// TODO remove for 1.0
+	// @ts-expect-error
 	if (response.fallthrough) {
-		return;
+		throw new Error(
+			'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
+		);
 	}
 
 	const { status = 200, body = {} } = response;
 	const headers =
-		response.headers instanceof Headers ? response.headers : to_headers(response.headers);
+		response.headers instanceof Headers
+			? new Headers(response.headers)
+			: to_headers(response.headers);
 
 	const type = headers.get('content-type');
 
-	if (!is_text(type) && !(body instanceof Uint8Array || is_string(body))) {
+	if (
+		!is_text(type) &&
+		!(body instanceof Uint8Array || body instanceof ReadableStream || is_string(body))
+	) {
 		return error(
-			`${preface}: body must be an instance of string or Uint8Array if content-type is not a supported textual content-type`
+			`${preface}: body must be an instance of string, Uint8Array or ReadableStream if content-type is not a supported textual content-type`
 		);
 	}
 
-	/** @type {import('types/hooks').StrictBody} */
+	/** @type {import('types').StrictBody} */
 	let normalized_body;
 
 	if (is_pojo(body) && (!type || type.startsWith('application/json'))) {
 		headers.set('content-type', 'application/json; charset=utf-8');
-		normalized_body = JSON.stringify(body);
+		normalized_body =
+			body instanceof Error ? serialize_error(body, options.get_stack) : JSON.stringify(body);
 	} else {
-		normalized_body = /** @type {import('types/hooks').StrictBody} */ (body);
+		normalized_body = /** @type {import('types').StrictBody} */ (body);
 	}
 
 	if (
@@ -90,8 +131,11 @@ export async function render_endpoint(event, mod) {
 		}
 	}
 
-	return new Response(normalized_body, {
-		status,
-		headers
-	});
+	return new Response(
+		method !== 'head' && !bodyless_status_codes.has(status) ? normalized_body : undefined,
+		{
+			status,
+			headers
+		}
+	);
 }

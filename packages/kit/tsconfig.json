@@ -5,17 +5,15 @@
 		"noEmit": true,
 		"strict": true,
 		"target": "es2020",
-		"module": "es2020",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
 			"@sveltejs/kit": ["./types/index"],
-			// paths after this are for internal use only
-			"@sveltejs/kit/types/*": ["./types/*"],
-			"test": ["./test/types"],
-			"types/*": ["./types/*"]
+			// internal use only
+			"types": ["./types/internal"]
 		}
 	},
-	"include": ["src/**/*", "test/**/*", "types/**/*"],
-	"exclude": ["src/packaging/test/fixtures/**/*", "test/prerendering/*/build/**/*"]
+	"include": ["scripts/**/*", "src/**/*", "types/**/*"],
+	"exclude": ["src/packaging/test/fixtures/**/*", "src/packaging/test/watch/**/*"]
 }

@@ -3,17 +3,24 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "node ../../cli.js dev",
-		"build": "node ../../cli.js build",
-		"preview": "node ../../cli.js preview",
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "node ../../cli.js sync",
+		"check": "tsc && svelte-check",
 		"test": "npm run test:dev && npm run test:build",
 		"test:dev": "cross-env DEV=true playwright test",
 		"test:build": "playwright test"
 	},
 	"devDependencies": {
+		"@sveltejs/amp": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"cross-env": "^7.0.3",
-		"svelte": "^3.43.0"
+		"purify-css": "^1.2.5",
+		"svelte": "^3.48.0",
+		"svelte-check": "^2.7.1",
+		"typescript": "^4.7.4",
+		"vite": "^2.9.13"
 	},
 	"type": "module"
 }
