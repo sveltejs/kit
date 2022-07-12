@@ -1,6 +1,5 @@
 import fs from 'fs';
 import http from 'http';
-import * as ports from 'port-authority';
 import { test as base, devices } from '@playwright/test';
 
 export const test = base.extend({
@@ -171,24 +170,27 @@ export const config = {
 	use: {
 		...test_browser_device,
 		screenshot: 'only-on-failure',
-		trace: process.env.KIT_E2E_TRACE ? 'retain-on-failure' : 'on-first-retry'
+		trace: 'retain-on-failure'
 	},
 	workers: process.env.CI ? 2 : undefined
 };
 
 /**
  * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
- * @param {number} [start]
  */
-export async function start_server(handler, start = 4000) {
-	const port = await ports.find(start);
+export async function start_server(handler) {
 	const server = http.createServer(handler);
 
 	await new Promise((fulfil) => {
-		server.listen(port, 'localhost', () => {
+		server.listen(0, 'localhost', () => {
 			fulfil(undefined);
 		});
 	});
+
+	const { port } = /** @type {import('net').AddressInfo} */ (server.address());
+	if (!port) {
+		throw new Error(`Could not find port from server ${JSON.stringify(server.address())}`);
+	}
 
 	return {
 		port,
