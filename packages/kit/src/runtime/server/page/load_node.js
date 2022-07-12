@@ -52,7 +52,7 @@ export async function load_node({
 	/** @type {import('types').LoadOutput} */
 	let loaded;
 
-	/** @type Response | undefined */
+	/** @type {Response | undefined} */
 	let response;
 
 	const should_prerender = node.module.prerender ?? options.prerender.default;
