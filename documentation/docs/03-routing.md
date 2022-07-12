@@ -380,7 +380,7 @@ src/routes/foo-abc.svelte
 
 SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
 
-- Static routes, (with no parameters) are highest priority
+- Static routes, (i.e. ones with no parameters) are highest priority
 - More specific routes are higher priority
 - Standalone endpoints have higher priority than pages with the same specificity
 - Parameters with [matchers](#advanced-routing-matching) (`[name=type]`) are higher priority than those without (`[name]`)
