@@ -1,28 +1,30 @@
 import fs from 'fs';
 import path from 'path';
-import http from 'http';
-import * as ports from 'port-authority';
 import { expect } from '@playwright/test';
 import { fileURLToPath } from 'url';
 import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
-test.describe.parallel('a11y', () => {
-	test('resets focus', async ({ page, clicknav }) => {
+test.describe('a11y', () => {
+	test('resets focus', async ({ page, clicknav, browserName }) => {
+		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+
 		await page.goto('/accessibility/a');
 
 		await clicknav('[href="/accessibility/b"]');
 		expect(await page.innerHTML('h1')).toBe('b');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
-		await page.keyboard.press('Tab');
+		await page.keyboard.press(tab);
+
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
 
 		await clicknav('[href="/accessibility/a"]');
 		expect(await page.innerHTML('h1')).toBe('a');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
-		await page.keyboard.press('Tab');
+
+		await page.keyboard.press(tab);
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
 
@@ -72,7 +74,7 @@ test.describe.parallel('a11y', () => {
 					selection.addRange(range);
 					return selection.rangeCount;
 				}
-				return 0;
+				return -1;
 			})
 		).toBe(1);
 
@@ -83,13 +85,13 @@ test.describe.parallel('a11y', () => {
 				if (selection) {
 					return selection.rangeCount;
 				}
-				return 1;
+				return -1;
 			})
 		).toBe(0);
 	});
 });
 
-test.describe.parallel('afterNavigate', () => {
+test.describe('afterNavigate', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 	test('calls callback', async ({ page, clicknav }) => {
@@ -101,7 +103,7 @@ test.describe.parallel('afterNavigate', () => {
 	});
 });
 
-test.describe.parallel('beforeNavigate', () => {
+test.describe('beforeNavigate', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
@@ -127,16 +129,17 @@ test.describe.parallel('beforeNavigate', () => {
 
 	test('prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
 		await page.goto('/before-navigate/a');
-
 		await app.goto('/before-navigate/prevent-navigation');
+		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
+
 		await page.goBack();
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('true');
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 	});
 
 	test('prevents unload', async ({ page }) => {
 		await page.goto('/before-navigate/prevent-navigation');
-
+		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 		const type = new Promise((fulfil) => {
 			page.on('dialog', async (dialog) => {
 				fulfil(dialog.type());
@@ -202,17 +205,12 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
 	});
 
-	test('scroll is restored after hitting the back button', async ({
-		back,
-		baseURL,
-		clicknav,
-		page
-	}) => {
+	test('scroll is restored after hitting the back button', async ({ baseURL, clicknav, page }) => {
 		await page.goto('/anchor');
 		await page.click('#scroll-anchor');
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
-		await back();
+		await page.goBack();
 		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
 
@@ -221,11 +219,54 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
 
+	test('scroll is restored after hitting the back button for an in-app cross-document navigation', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/scroll/cross-document/a');
+
+		const rect = await page.locator('[href="/scroll/cross-document/b"]').boundingBox();
+		const height = await page.evaluate(() => innerHeight);
+
+		const target_scroll_y = rect.y + rect.height - height;
+		await page.evaluate((y) => scrollTo(0, y), target_scroll_y);
+
+		await page.click('[href="/scroll/cross-document/b"]');
+		expect(await page.textContent('h1')).toBe('b');
+		await page.waitForSelector('body.started');
+
+		await clicknav('[href="/scroll/cross-document/c"]');
+		expect(await page.textContent('h1')).toBe('c');
+
+		await page.goBack(); // client-side back
+		await page.goBack(); // native back
+		expect(await page.textContent('h1')).toBe('a');
+		await page.waitForSelector('body.started');
+
+		await page.waitForTimeout(250); // needed for the test to fail reliably without the fix
+
+		const scroll_y = await page.evaluate(() => scrollY);
+
+		expect(Math.abs(scroll_y - target_scroll_y)).toBeLessThan(50); // we need a few pixels wiggle room, because browsers
+	});
+
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
 		page,
 		in_view
 	}) => {
-		await page.goto('/anchor-with-manual-scroll/anchor#go-to-element');
+		await page.goto('/anchor-with-manual-scroll/anchor-onmount#go-to-element');
+		expect(await in_view('#abcde')).toBe(true);
+	});
+
+	test('url-supplied anchor is ignored with afterNavigate() scrolling on direct page load', async ({
+		page,
+		in_view,
+		clicknav
+	}) => {
+		await page.goto('/anchor-with-manual-scroll/anchor-afternavigate#go-to-element');
+		expect(await in_view('#abcde')).toBe(true);
+
+		await clicknav('[href="/anchor-with-manual-scroll/anchor-afternavigate?x=y#go-to-element"]');
 		expect(await in_view('#abcde')).toBe(true);
 	});
 
@@ -236,7 +277,7 @@ test.describe('Scrolling', () => {
 		in_view
 	}) => {
 		await page.goto('/anchor-with-manual-scroll');
-		await clicknav('[href="/anchor-with-manual-scroll/anchor#go-to-element"]');
+		await clicknav('[href="/anchor-with-manual-scroll/anchor-onmount#go-to-element"]');
 		if (javaScriptEnabled) expect(await in_view('#abcde')).toBe(true);
 		else expect(await in_view('#go-to-element')).toBe(true);
 	});
@@ -258,7 +299,7 @@ test.describe('Scrolling', () => {
 		await expect(page.locator('input')).toBeFocused();
 	});
 
-	test('scroll positions are recovered on reloading the page', async ({ page, back, app }) => {
+	test('scroll positions are recovered on reloading the page', async ({ page, app }) => {
 		await page.goto('/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 		await app.goto('/anchor/anchor');
@@ -267,12 +308,19 @@ test.describe('Scrolling', () => {
 		await page.reload();
 		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
 
-		await back();
+		await page.goBack();
 		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
+	});
+
+	test('scroll position is top of page on ssr:false reload', async ({ page }) => {
+		await page.goto('/no-ssr/margin');
+		expect(await page.evaluate(() => window.scrollY)).toBe(0);
+		await page.reload();
+		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	});
 });
 
-test.describe.parallel('Imports', () => {
+test.describe('Imports', () => {
 	test('imports from node_modules', async ({ page, clicknav }) => {
 		await page.goto('/imports');
 		await clicknav('[href="/imports/markdown"]');
@@ -294,41 +342,94 @@ test.describe.parallel('Imports', () => {
 			]);
 		} else {
 			expect(sources[0].startsWith('data:image/png;base64,')).toBeTruthy();
-			expect(sources[1]).toBe(`${baseURL}/_app/assets/large-3183867c.jpg`);
+			expect(sources[1]).toBe(`${baseURL}/_app/immutable/assets/large-3183867c.jpg`);
 		}
 	});
 });
 
-test.describe.parallel('Caching', () => {
+test.describe('Caching', () => {
 	test('caches pages', async ({ request }) => {
 		const response = await request.get('/caching');
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
 	});
 
-	test('sets cache-control: private if page uses session', async ({ request }) => {
-		const response = await request.get('/caching/private/uses-session');
+	test('sets cache-control: private if page uses session in load and cache.private is unset', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-session-in-load');
 		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 
-	test('sets cache-control: private if page uses fetch', async ({ request }) => {
+	test('sets cache-control: private if page uses session in init and cache.private is unset', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-session-in-init');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
+	});
+
+	test('sets cache-control: private if page uses fetch and cache.private is unset', async ({
+		request
+	}) => {
 		const response = await request.get('/caching/private/uses-fetch?credentials=include');
 		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 
-	test('sets cache-control: public if page uses fetch without credentials', async ({ request }) => {
+	test('sets cache-control: public if page uses fetch without credentials and cache.private is unset', async ({
+		request
+	}) => {
 		const response = await request.get('/caching/private/uses-fetch?credentials=omit');
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
 	});
+
+	test('sets cache-control: private if cache.private is true', async ({ request }) => {
+		const response = await request.get('/caching/private/uses-cache-private?private=true');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
+	});
+
+	test('sets cache-control: public if cache.private is false', async ({ request }) => {
+		const response = await request.get('/caching/private/uses-cache-private?private=false');
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: public if page uses session in load and cache.private is false', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-session-in-load?private=false');
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: public if page uses session in init and cache.private is false', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-session-in-init?private=false');
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: public if page uses fetch and cache.private is false', async ({
+		request
+	}) => {
+		const response = await request.get(
+			'/caching/private/uses-fetch?credentials=include&private=false'
+		);
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: private if page uses fetch without credentials and cache.private is true', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/uses-fetch?credentials=omit&private=true');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
+	});
 });
 
-test.describe.parallel('Content-Type', () => {
+test.describe('Content-Type', () => {
 	test('sets Content-Type on page', async ({ request }) => {
 		const response = await request.get('/content-type-header');
 		expect(response.headers()['content-type']).toBe('text/html');
 	});
 });
 
-test.describe.parallel('CSS', () => {
+test.describe('CSS', () => {
 	test('applies imported styles', async ({ page }) => {
 		await page.goto('/css');
 
@@ -380,9 +481,16 @@ test.describe.parallel('CSS', () => {
 			).toBe('absolute');
 		}
 	});
+
+	test('applies imported styles in the correct order', async ({ page }) => {
+		await page.goto('/css');
+
+		const color = await page.$eval('.overridden', (el) => getComputedStyle(el).color);
+		expect(color).toBe('rgb(0, 128, 0)');
+	});
 });
 
-test.describe.parallel('Shadowed pages', () => {
+test.describe('Shadowed pages', () => {
 	test('Loads props from an endpoint', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/simple"]');
@@ -432,7 +540,7 @@ test.describe.parallel('Shadowed pages', () => {
 	test('Merges bodies for 4xx and 5xx responses from non-GET', async ({ page }) => {
 		await page.goto('/shadowed');
 		const [response] = await Promise.all([page.waitForNavigation(), page.click('#error-post')]);
-		expect(await page.textContent('h1')).toBe('hello from get / hello from post');
+		expect(await page.textContent('h1')).toBe('hello from get / echo: posted data');
 
 		expect(response.status()).toBe(400);
 		expect(await page.textContent('h2')).toBe('status: 400');
@@ -532,7 +640,7 @@ test.describe.parallel('Shadowed pages', () => {
 	});
 });
 
-test.describe.parallel('Endpoints', () => {
+test.describe('Endpoints', () => {
 	test('calls a delete handler', async ({ page, javaScriptEnabled }) => {
 		if (javaScriptEnabled) {
 			await page.goto('/delete-route');
@@ -618,7 +726,7 @@ test.describe.parallel('Endpoints', () => {
 	});
 
 	test('allows return value to be a Response', async ({ request }) => {
-		const { server, port } = await start_server((req, res) => {
+		const { port, close } = await start_server((req, res) => {
 			res.writeHead(200, {
 				'X-Foo': 'bar'
 			});
@@ -632,7 +740,7 @@ test.describe.parallel('Endpoints', () => {
 			expect(await response.text()).toBe('ok');
 			expect(response.headers()['x-foo']).toBe('bar');
 		} finally {
-			server.close();
+			await close();
 		}
 	});
 
@@ -650,9 +758,26 @@ test.describe.parallel('Endpoints', () => {
 			'name=SvelteKit; path=/; HttpOnly'
 		]);
 	});
+
+	test('Standalone endpoint is not accessible via /__data.json suffix', async ({ request }) => {
+		const r1 = await request.get('/endpoint-output/simple', {
+			headers: { accept: 'application/json' }
+		});
+
+		expect(await r1.json()).toEqual({ answer: 42 });
+
+		const r2 = await request.get('/endpoint-output/simple/__data.json');
+		expect(r2.status()).toBe(404);
+	});
+
+	test('body can be a binary ReadableStream', async ({ request }) => {
+		const response = await request.get('/endpoint-output/stream');
+		const body = await response.body();
+		expect(Array.from(body)).toEqual([1, 2, 3]);
+	});
 });
 
-test.describe.parallel('Encoded paths', () => {
+test.describe('Encoded paths', () => {
 	test('visits a route with non-ASCII character', async ({ page, clicknav }) => {
 		await page.goto('/encoded');
 		await clicknav('[href="/encoded/苗条"]');
@@ -723,9 +848,21 @@ test.describe.parallel('Encoded paths', () => {
 		const response = await request.get('/encoded/endpoint');
 		expect(response.headers()['content-type']).toBe('application/json; charset=utf-8');
 	});
+
+	test('allows %-encoded characters in directory names', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/$SVLT"]');
+		expect(await page.textContent('h1')).toBe('$SVLT');
+	});
+
+	test('allows %-encoded characters in filenames', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/@svelte"]');
+		expect(await page.textContent('h1')).toBe('@svelte');
+	});
 });
 
-test.describe.parallel('Errors', () => {
+test.describe('Errors', () => {
 	if (process.env.DEV) {
 		// TODO these probably shouldn't have the full render treatment,
 		// given that they will never be user-visible in prod
@@ -859,7 +996,7 @@ test.describe.parallel('Errors', () => {
 			const body = await page.textContent('body');
 
 			expect(body).toMatch(
-				'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
+				'"error" property returned from load() must be a string or instance of Error, received type "object"'
 			);
 		}
 	});
@@ -874,11 +1011,11 @@ test.describe.parallel('Errors', () => {
 	// TODO before we implemented route fallthroughs, and there was a 1:1
 	// regex:route relationship, it was simple to say 'method not implemented
 	// for this endpoint'. now it's a little tricker. does a 404 suffice?
-	test.skip('unhandled http method', async ({ request }) => {
+	test('unhandled http method', async ({ request }) => {
 		const response = await request.put('/errors/invalid-route-response');
 
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(501);
-		expect(await response.text()).toMatch('PUT is not implemented');
+		expect(response.status()).toBe(405);
+		expect(await response.text()).toMatch('PUT method not allowed');
 	});
 
 	test('error in endpoint', async ({ page, read_errors }) => {
@@ -995,9 +1132,176 @@ test.describe.parallel('Errors', () => {
 		expect(response.status()).toBe(500);
 		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
 	});
+
+	test('prerendering a page whose load accesses session results in a catchable error', async ({
+		page
+	}) => {
+		await page.goto('/prerendering');
+		expect(await page.textContent('h1')).toBe(
+			'500: Attempted to access session from a prerendered page. Session would never be populated.'
+		);
+	});
+
+	test('prerendering a page with a mutative page endpoint results in a catchable error', async ({
+		page
+	}) => {
+		await page.goto('/prerendering/mutative-endpoint');
+		expect(await page.textContent('h1')).toBe(
+			'500: Cannot prerender pages that have endpoints with mutative methods'
+		);
+	});
+
+	test('page endpoint GET thrown error message is preserved', async ({
+		page,
+		clicknav,
+		read_errors
+	}) => {
+		await page.goto('/errors/page-endpoint');
+		await clicknav('#get-implicit');
+		const json = await page.textContent('pre');
+		const { status, name, message, stack, fancy } = JSON.parse(json);
+
+		expect(status).toBe(500);
+		expect(name).toBe('FancyError');
+		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
+
+		if (process.env.DEV) {
+			const lines = stack.split('\n');
+			expect(lines[1]).toContain('get-implicit.js:4:8');
+		}
+
+		const error = read_errors('/errors/page-endpoint/get-implicit');
+		expect(error).toContain('oops');
+	});
+
+	test('page endpoint GET returned error message is preserved', async ({
+		page,
+		clicknav,
+		read_errors
+	}) => {
+		await page.goto('/errors/page-endpoint');
+		await clicknav('#get-explicit');
+		const json = await page.textContent('pre');
+		const { status, name, message, stack, fancy } = JSON.parse(json);
+
+		expect(status).toBe(400);
+		expect(name).toBe('FancyError');
+		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
+
+		if (process.env.DEV) {
+			const lines = stack.split('\n');
+			expect(lines[1]).toContain('get-explicit.js:5:8');
+		}
+
+		const error = read_errors('/errors/page-endpoint/get-explicit');
+		expect(error).toBe(undefined);
+	});
+
+	test('page endpoint POST thrown error message is preserved', async ({ page, read_errors }) => {
+		// The case where we're submitting a POST request via a form.
+		// It should show the __error template with our message.
+		await page.goto('/errors/page-endpoint');
+		await Promise.all([page.waitForNavigation(), page.click('#post-implicit')]);
+		const json = await page.textContent('pre');
+		const { status, name, message, stack, fancy } = JSON.parse(json);
+
+		expect(status).toBe(500);
+		expect(name).toBe('FancyError');
+		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
+
+		if (process.env.DEV) {
+			const lines = stack.split('\n');
+			expect(lines[1]).toContain('post-implicit.js:4:8');
+		}
+
+		const error = read_errors('/errors/page-endpoint/post-implicit');
+		expect(error).toContain('oops');
+	});
+
+	test('page endpoint POST returned error message is preserved', async ({ page, read_errors }) => {
+		// The case where we're submitting a POST request via a form.
+		// It should show the __error template with our message.
+		await page.goto('/errors/page-endpoint');
+		await Promise.all([page.waitForNavigation(), page.click('#post-explicit')]);
+		const json = await page.textContent('pre');
+		const { status, name, message, stack, fancy } = JSON.parse(json);
+
+		expect(status).toBe(400);
+		expect(name).toBe('FancyError');
+		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
+
+		if (process.env.DEV) {
+			const lines = stack.split('\n');
+			expect(lines[1]).toContain('post-explicit.js:5:8');
+		}
+
+		const error = read_errors('/errors/page-endpoint/post-explicit');
+		expect(error).toBe(undefined);
+	});
+
+	test('page endpoint thrown error respects `accept: application/json`', async ({ request }) => {
+		const response = await request.get('/errors/page-endpoint/get-implicit', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		const { message, name, stack, fancy } = await response.json();
+
+		expect(response.status()).toBe(500);
+		expect(name).toBe('FancyError');
+		expect(message).toBe('oops');
+		expect(fancy).toBe(true);
+
+		if (process.env.DEV) {
+			expect(stack.split('\n').length).toBeGreaterThan(1);
+		} else {
+			expect(stack.split('\n').length).toBe(1);
+		}
+	});
+
+	test('page endpoint returned error respects `accept: application/json`', async ({ request }) => {
+		const response = await request.get('/errors/page-endpoint/get-explicit', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		const { message, name, stack } = await response.json();
+
+		expect(response.status()).toBe(400);
+		expect(name).toBe('FancyError');
+		expect(message).toBe('oops');
+
+		if (process.env.DEV) {
+			expect(stack.split('\n').length).toBeGreaterThan(1);
+		} else {
+			expect(stack.split('\n').length).toBe(1);
+		}
+	});
+
+	test('returns 400 when accessing a malformed URI', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			// the JS tests will look for body.started which won't be present
+			return;
+		}
+
+		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
+		if (process.env.DEV) {
+			// Vite will return a 500 error code
+			// We mostly want to make sure malformed requests don't bring down the whole server
+			expect(/** @type {Response} */ (response).status()).toBeGreaterThanOrEqual(400);
+		} else {
+			expect(/** @type {Response} */ (response).status()).toBe(400);
+		}
+	});
 });
 
-test.describe.parallel('ETags', () => {
+test.describe('ETags', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 	test('generates etag/304 for text body', async ({ request }) => {
@@ -1058,20 +1362,14 @@ test.describe.parallel('ETags', () => {
 	});
 });
 
-test.describe.parallel('Headers', () => {
-	test('disables floc by default', async ({ page }) => {
-		const response = await page.goto('/headers');
-		const headers = /** @type {Response} */ (response).headers();
-		expect(headers['permissions-policy']).toBe('interest-cohort=()');
-	});
-
+test.describe('Headers', () => {
 	test('allows headers to be sent as a Headers class instead of a POJO', async ({ page }) => {
 		await page.goto('/headers/class');
 		expect(await page.innerHTML('p')).toBe('bar');
 	});
 });
 
-test.describe.parallel('Load', () => {
+test.describe('Load', () => {
 	test('fetch in root index.svelte works', async ({ page }) => {
 		await page.goto('/');
 		expect(await page.textContent('h1')).toBe('the answer is 42');
@@ -1195,6 +1493,15 @@ test.describe.parallel('Load', () => {
 			await app.invalidate('/load/change-detection/data.json');
 			expect(await page.textContent('h1')).toBe('layout loads: 3');
 			expect(await page.textContent('h2')).toBe('x: b: 2');
+
+			await app.invalidate('custom:change-detection-layout');
+			expect(await page.textContent('h1')).toBe('layout loads: 4');
+			expect(await page.textContent('h2')).toBe('x: b: 2');
+
+			await page.click('button');
+			await page.waitForFunction('window.invalidated');
+			expect(await page.textContent('h1')).toBe('layout loads: 5');
+			expect(await page.textContent('h2')).toBe('x: b: 2');
 		}
 	});
 
@@ -1204,84 +1511,50 @@ test.describe.parallel('Load', () => {
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
+	test('fetch resolves urls relatively to the target page', async ({ page, clicknav }) => {
+		await page.goto('/load');
+		await clicknav('[href="/load/fetch-relative"]');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+		expect(await page.textContent('h2')).toBe('the question was ?');
+	});
+
 	test('handles large responses', async ({ page }) => {
 		await page.goto('/load');
 
-		const chunk_size = 50000;
-		const chunk_count = 100;
-		const total_size = chunk_size * chunk_count;
-
-		let chunk = '';
-		for (let i = 0; i < chunk_size; i += 1) {
-			chunk += String(i % 10);
-		}
-
-		let times_responded = 0;
-
-		const { port, server } = await start_server(async (req, res) => {
-			if (req.url === '/large-response.json') {
-				times_responded += 1;
-
-				res.writeHead(200, {
-					'Access-Control-Allow-Origin': '*'
-				});
-
-				for (let i = 0; i < chunk_count; i += 1) {
-					if (!res.write(chunk)) {
-						await new Promise((fulfil) => {
-							res.once('drain', () => {
-								fulfil(undefined);
-							});
-						});
-					}
-				}
-
-				res.end();
-			}
-		});
-
-		await page.goto(`/load/large-response?port=${port}`);
-		expect(await page.textContent('h1')).toBe(`text.length is ${total_size}`);
-
-		expect(times_responded).toBe(1);
-
-		server.close();
+		await page.goto('/load/large-response');
+		expect(await page.textContent('h1')).toBe('text.length is 5000000');
 	});
 
-	test('handles external api', async ({ page }) => {
-		await page.goto('/load');
-		const port = await ports.find(5000);
-
+	test('handles external api', async ({ page, javaScriptEnabled }) => {
 		/** @type {string[]} */
 		const requested_urls = [];
 
-		const server = http.createServer(async (req, res) => {
-			if (!req.url) throw new Error('Incomplete request');
-			requested_urls.push(req.url);
+		const { port, close } = await start_server(
+			async (req, res) => {
+				if (!req.url) throw new Error('Incomplete request');
+				requested_urls.push(req.url);
 
-			if (req.url === '/server-fetch-request-modified.json') {
-				res.writeHead(200, {
-					'Access-Control-Allow-Origin': '*',
-					'content-type': 'application/json'
-				});
+				if (req.url === '/server-fetch-request-modified.json') {
+					res.writeHead(200, {
+						'Access-Control-Allow-Origin': '*',
+						'content-type': 'application/json'
+					});
 
-				res.end(JSON.stringify({ answer: 42 }));
-			} else {
-				res.statusCode = 404;
-				res.end('not found');
-			}
-		});
-
-		await new Promise((fulfil) => {
-			server.listen(port, () => fulfil(undefined));
-		});
+					res.end(JSON.stringify({ answer: 42 }));
+				} else {
+					res.statusCode = 404;
+					res.end('not found');
+				}
+			},
+			javaScriptEnabled ? 4000 : 4001
+		);
 
 		await page.goto(`/load/server-fetch-request?port=${port}`);
 
 		expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 
-		server.close();
+		await close();
 	});
 
 	test('makes credentialed fetches to endpoints by default', async ({ page, clicknav }) => {
@@ -1294,7 +1567,8 @@ test.describe.parallel('Load', () => {
 		baseURL,
 		page,
 		clicknav,
-		javaScriptEnabled
+		javaScriptEnabled,
+		browserName
 	}) => {
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-headers"]');
@@ -1308,8 +1582,11 @@ test.describe.parallel('Load', () => {
 			referer: `${baseURL}/load`,
 			// these headers aren't particularly useful, but they allow us to verify
 			// that page headers are being forwarded
-			'sec-fetch-dest': javaScriptEnabled ? 'empty' : 'document',
-			'sec-fetch-mode': javaScriptEnabled ? 'cors' : 'navigate'
+			'sec-fetch-dest':
+				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'empty' : 'document',
+			'sec-fetch-mode':
+				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'cors' : 'navigate',
+			connection: javaScriptEnabled ? 'keep-alive' : undefined
 		});
 	});
 
@@ -1329,9 +1606,82 @@ test.describe.parallel('Load', () => {
 		await clicknav('[href="/load/props/about"]');
 		expect(await page.textContent('p')).toBe('Data: undefined');
 	});
+
+	test('server-side fetch respects set-cookie header', async ({ page, context }) => {
+		await context.clearCookies();
+
+		await page.goto('/load/set-cookie-fetch');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+
+		const cookies = {};
+		for (const cookie of await context.cookies()) {
+			cookies[cookie.name] = cookie.value;
+		}
+
+		expect(cookies.answer).toBe('42');
+		expect(cookies.doubled).toBe('84');
+	});
+
+	test('accessing url.hash from load errors and suggests using page store', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/load/url-hash#please-dont-send-me-to-load');
+			expect(await page.textContent('#message')).toBe(
+				'This is your custom error page saying: "url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component."'
+			);
+		}
+	});
+
+	test('url instance methods work in load', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/load/url-to-string');
+			expect(await page.textContent('h1')).toBe("I didn't break!");
+		}
+	});
+
+	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
+		const port = process.env.DEV ? 3000 : 4173;
+
+		if (javaScriptEnabled && process.env.DEV) {
+			const warnings = [];
+
+			page.on('console', (msg) => {
+				if (msg.type() === 'warning') {
+					warnings.push(msg.text());
+				}
+			});
+
+			await page.goto('/load/window-fetch/incorrect');
+			expect(await page.textContent('h1')).toBe('42');
+
+			expect(warnings).toContain(
+				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
+			);
+
+			warnings.length = 0;
+
+			await page.goto('/load/window-fetch/correct');
+			expect(await page.textContent('h1')).toBe('42');
+
+			expect(warnings).not.toContain(
+				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
+			);
+		}
+	});
+
+	test('CSS for dynamically imported components is reflected in server render', async ({
+		page
+	}) => {
+		await page.goto('/load/dynamic-import-styles');
+		expect(
+			await page.evaluate(() => getComputedStyle(document.querySelector('#thing')).color)
+		).toBe('rgb(255, 0, 0)');
+	});
 });
 
-test.describe.parallel('Method overrides', () => {
+test.describe('Method overrides', () => {
 	test('http method is overridden via URL parameter', async ({ page }) => {
 		await page.goto('/method-override');
 
@@ -1377,7 +1727,7 @@ test.describe.parallel('Method overrides', () => {
 	});
 });
 
-test.describe.parallel('Nested layouts', () => {
+test.describe('Nested layouts', () => {
 	test('renders a nested layout', async ({ page }) => {
 		await page.goto('/nested-layout');
 
@@ -1437,7 +1787,7 @@ test.describe.parallel('Nested layouts', () => {
 	});
 });
 
-test.describe.parallel('Page options', () => {
+test.describe('Page options', () => {
 	test('does not hydrate page with hydrate=false', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/no-hydrate');
 
@@ -1506,7 +1856,7 @@ test.describe.parallel('Page options', () => {
 			expect(await page.textContent('h1')).toBe('content was rendered');
 		} else {
 			expect(await page.evaluate(() => document.querySelector('h1'))).toBe(null);
-			expect(await page.evaluate(() => document.querySelector('style[data-svelte]'))).toBe(null);
+			expect(await page.evaluate(() => document.querySelector('style[data-sveltekit]'))).toBe(null);
 		}
 	});
 
@@ -1528,9 +1878,14 @@ test.describe.parallel('Page options', () => {
 			).toBe('absolute');
 		}
 	});
+
+	test('does not SSR error page for 404s with ssr=false', async ({ request }) => {
+		const html = await request.get('/no-ssr/missing');
+		expect(await html.text()).not.toContain('load function was called erroneously');
+	});
 });
 
-test.describe.parallel('$app/paths', () => {
+test.describe('$app/paths', () => {
 	test('includes paths', async ({ page }) => {
 		await page.goto('/paths');
 
@@ -1542,7 +1897,7 @@ test.describe.parallel('$app/paths', () => {
 		);
 	});
 
-	test('replaces %svelte.assets% in template with relative path', async ({ page }) => {
+	test('replaces %sveltekit.assets% in template with relative path', async ({ page }) => {
 		await page.goto('/');
 		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
 
@@ -1554,7 +1909,7 @@ test.describe.parallel('$app/paths', () => {
 	});
 });
 
-test.describe.parallel('$app/stores', () => {
+test.describe('$app/stores', () => {
 	test('can access page.url', async ({ baseURL, page }) => {
 		await page.goto('/origin');
 		expect(await page.textContent('h1')).toBe(baseURL);
@@ -1564,11 +1919,11 @@ test.describe.parallel('$app/stores', () => {
 		await page.goto('/store');
 
 		expect(await page.textContent('h1')).toBe('Test');
-		expect(await page.textContent('h2')).toBe('Calls: 1');
+		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 2' : 'Calls: 1');
 
 		await clicknav('a[href="/store/result"]');
 		expect(await page.textContent('h1')).toBe('Result');
-		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 1' : 'Calls: 0');
+		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 2' : 'Calls: 0');
 
 		const oops = await page.evaluate(() => window.oops);
 		expect(oops).toBeUndefined();
@@ -1597,6 +1952,27 @@ test.describe.parallel('$app/stores', () => {
 		);
 	});
 
+	test('should load stuff after reloading by goto', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/store/stuff/foo?reset=true');
+		const stuff1 = JSON.stringify({ name: 'SvelteKit', value: 789, error: 'uh oh' });
+		const stuff2 = JSON.stringify({ name: 'SvelteKit', value: 123, foo: true });
+		await page.goto('/store/stuff/www');
+
+		await clicknav('a[href="/store/stuff/foo"]');
+		expect(await page.textContent('#store-stuff')).toBe(stuff1);
+
+		await clicknav('#reload-button');
+		expect(await page.textContent('#store-stuff')).toBe(javaScriptEnabled ? stuff2 : stuff1);
+
+		await clicknav('a[href="/store/stuff/zzz"]');
+		await clicknav('a[href="/store/stuff/foo"]');
+		expect(await page.textContent('#store-stuff')).toBe(stuff2);
+	});
+
 	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
 		await page.goto('/store/navigating/a');
 
@@ -1616,9 +1992,24 @@ test.describe.parallel('$app/stores', () => {
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 		}
 	});
+
+	test('navigating store clears after aborted navigation', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/store/navigating/a');
+
+		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+
+		if (javaScriptEnabled) {
+			await page.click('a[href="/store/navigating/c"]');
+			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
+			await page.click('a[href="/store/navigating/a"]');
+
+			await page.waitForSelector('#not-navigating', { timeout: 500 });
+			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+		}
+	});
 });
 
-test.describe.parallel('searchParams', () => {
+test.describe('searchParams', () => {
 	const tests = [
 		{
 			description: 'exposes query string parameters',
@@ -1665,8 +2056,8 @@ test.describe.parallel('searchParams', () => {
 	});
 });
 
-test.describe.parallel('Redirects', () => {
-	test('redirect', async ({ baseURL, page, clicknav, back }) => {
+test.describe('Redirects', () => {
+	test('redirect', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/a"]');
@@ -1675,11 +2066,11 @@ test.describe.parallel('Redirects', () => {
 		expect(await page.textContent('h1')).toBe('c');
 		expect(page.url()).toBe(`${baseURL}/redirect/c`);
 
-		await back();
+		await page.goBack();
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
-	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled }) => {
+	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled, browserName }) => {
 		await page.goto('/redirect');
 
 		await page.click('[href="/redirect/loopy/a"]');
@@ -1693,11 +2084,21 @@ test.describe.parallel('Redirects', () => {
 			);
 		} else {
 			// there's not a lot we can do to handle server-side redirect loops
-			expect(page.url()).toBe('chrome-error://chromewebdata/');
+			if (browserName === 'chromium') {
+				expect(page.url()).toBe('chrome-error://chromewebdata/');
+			} else {
+				expect(page.url()).toBe(`${baseURL}/redirect`);
+			}
 		}
 	});
 
-	test('errors on missing status', async ({ baseURL, page, clicknav }) => {
+	test('errors on missing status', async ({
+		baseURL,
+		page,
+		clicknav,
+		javaScriptEnabled,
+		read_errors
+	}) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/missing-status/a"]');
@@ -1707,6 +2108,14 @@ test.describe.parallel('Redirects', () => {
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: ""redirect" property returned from load() must be accompanied by a 3xx status code"'
 		);
+
+		if (!javaScriptEnabled) {
+			// handleError is not invoked for client-side navigation
+			const lines = read_errors('/redirect/missing-status/a').split('\n');
+			expect(lines[0]).toBe(
+				'Error: "redirect" property returned from load() must be accompanied by a 3xx status code'
+			);
+		}
 	});
 
 	test('errors on invalid status', async ({ baseURL, page, clicknav }) => {
@@ -1736,7 +2145,89 @@ test.describe.parallel('Redirects', () => {
 	});
 });
 
-test.describe.parallel('Routing', () => {
+test.describe('Prefetching', () => {
+	test('prefetches programmatically', async ({ baseURL, page, app, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/a');
+
+			/** @type {string[]} */
+			let requests = [];
+			page.on('request', (r) => requests.push(r.url()));
+
+			// also wait for network processing to complete, see
+			// https://playwright.dev/docs/network#network-events
+			await Promise.all([
+				page.waitForResponse(`${baseURL}/routing/prefetched.json`),
+				app.prefetch('/routing/prefetched')
+			]);
+
+			// svelte request made is environment dependent
+			if (process.env.DEV) {
+				expect(requests.filter((req) => req.endsWith('index.svelte')).length).toBe(1);
+			} else {
+				expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
+			}
+
+			expect(requests.includes(`${baseURL}/routing/prefetched.json`)).toBe(true);
+
+			requests = [];
+			await app.goto('/routing/prefetched');
+			expect(requests).toEqual([]);
+
+			try {
+				await app.prefetch('https://example.com');
+				throw new Error('Error was not thrown');
+			} catch (/** @type {any} */ e) {
+				expect(e.message).toMatch('Attempted to prefetch a URL that does not belong to this app');
+			}
+		}
+	});
+
+	test('chooses correct route when hash route is prefetched but regular route is clicked', async ({
+		app,
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/a');
+			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+			await app.goto('/routing/prefetched/hash-route');
+			await expect(page.locator('h1')).not.toHaveText('Oopsie');
+		}
+	});
+
+	test('does not rerun load on calls to duplicate preload hash route', async ({
+		app,
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/a');
+
+			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+			await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
+			await expect(page.locator('p')).toHaveText('Loaded 1 times.');
+		}
+	});
+
+	test('does not rerun load on calls to different preload hash route', async ({
+		app,
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/a');
+
+			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me-jr');
+			await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
+			await expect(page.locator('p')).toHaveText('Loaded 1 times.');
+		}
+	});
+});
+
+test.describe('Routing', () => {
 	test('redirects from /routing/ to /routing', async ({
 		baseURL,
 		page,
@@ -1860,47 +2351,26 @@ test.describe.parallel('Routing', () => {
 		}
 	});
 
-	test('prefetches programmatically', async ({ baseURL, page, app, javaScriptEnabled }) => {
-		if (javaScriptEnabled) {
-			await page.goto('/routing/a');
-
-			/** @type {string[]} */
-			let requests = [];
-			page.on('request', (r) => requests.push(r.url()));
-
-			// also wait for network processing to complete, see
-			// https://playwright.dev/docs/network#network-events
-			await Promise.all([
-				page.waitForResponse(`${baseURL}/routing/prefetched.json`),
-				app.prefetch('/routing/prefetched')
-			]);
-
-			// svelte request made is environment dependent
-			if (process.env.DEV) {
-				expect(requests.filter((req) => req.endsWith('index.svelte')).length).toBe(1);
-			} else {
-				expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
-			}
-
-			expect(requests.includes(`${baseURL}/routing/prefetched.json`)).toBe(true);
-
-			requests = [];
-			await app.goto('/routing/prefetched');
-			expect(requests).toEqual([]);
-
-			try {
-				await app.prefetch('https://example.com');
-				throw new Error('Error was not thrown');
-			} catch (/** @type {any} */ e) {
-				expect(e.message).toMatch('Attempted to prefetch a URL that does not belong to this app');
-			}
-		}
-	});
-
 	test('does not attempt client-side navigation to server routes', async ({ page }) => {
 		await page.goto('/routing');
 		await page.click('[href="/routing/ambiguous/ok.json"]');
+		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('body')).toBe('ok');
+	});
+
+	test('does not attempt client-side navigation to links with sveltekit:reload', async ({
+		baseURL,
+		page
+	}) => {
+		await page.goto('/routing');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/b"]')]);
+		expect(await page.textContent('h1')).toBe('b');
+		expect(requests).toContain(`${baseURL}/routing/b`);
 	});
 
 	test('allows reserved words as route names', async ({ page }) => {
@@ -1937,17 +2407,16 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('h1')).toBe('y/1');
 	});
 
-	test('back button returns to initial route', async ({ page, clicknav, back }) => {
+	test('back button returns to initial route', async ({ page, clicknav }) => {
 		await page.goto('/routing');
 		await clicknav('[href="/routing/a"]');
 
-		await back();
+		await page.goBack();
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
 	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
 		page,
-		back,
 		clicknav
 	}) => {
 		await page.goto('/routing/hashes/a');
@@ -1955,24 +2424,27 @@ test.describe.parallel('Routing', () => {
 		await page.click('[href="#hash-target"]');
 		await clicknav('[href="/routing/hashes/b"]');
 
-		await back();
+		await page.goBack();
 		expect(await page.textContent('h1')).toBe('a');
 	});
 
-	test('focus works if page load has hash', async ({ page }) => {
+	test('focus works if page load has hash', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target#p2');
 
-		await page.keyboard.press('Tab');
-		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe(
-			'next focus element'
-		);
+		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
+		await page.waitForTimeout(50); // give browser a bit of time to complete the native behavior of the key press
+		expect(
+			await page.evaluate(
+				() => document.activeElement?.textContent || 'ERROR: document.activeElement not set'
+			)
+		).toBe('next focus element');
 	});
 
-	test('focus works when navigating to a hash on the same page', async ({ page }) => {
+	test('focus works when navigating to a hash on the same page', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target');
 
 		await page.click('[href="#p2"]');
-		await page.keyboard.press('Tab');
+		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
 
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe(
 			'next focus element'
@@ -2026,7 +2498,7 @@ test.describe.parallel('Routing', () => {
 	});
 
 	test('ignores navigation to URLs the app does not own', async ({ page }) => {
-		const { port, server } = await start_server((req, res) => res.end('ok'));
+		const { port, close } = await start_server((req, res) => res.end('ok'));
 
 		await page.goto(`/routing?port=${port}`);
 		await Promise.all([
@@ -2034,26 +2506,26 @@ test.describe.parallel('Routing', () => {
 			page.waitForURL(`http://localhost:${port}/`)
 		]);
 
-		server.close();
+		await close();
 	});
 
-	// skipping this test because it causes a bunch of failures locally
-	test.skip('watch new route in dev', async ({ page, javaScriptEnabled }) => {
+	test('watch new route in dev', async ({ page }) => {
 		await page.goto('/routing');
 
-		if (!process.env.DEV || javaScriptEnabled) {
+		if (!process.env.DEV) {
 			return;
 		}
 
 		// hash the filename so that it won't conflict with
 		// future test file that has the same name
-		const route = 'bar' + new Date().valueOf();
+		const route = 'zzzz' + Date.now();
 		const content = 'Hello new route';
 		const __dirname = path.dirname(fileURLToPath(import.meta.url));
-		const filePath = path.join(__dirname, `${route}.svelte`);
+		const filePath = path.join(__dirname, `../src/routes/routing/${route}.svelte`);
 
 		try {
 			fs.writeFileSync(filePath, `<h1>${content}</h1>`);
+			await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
 			await page.goto(`/routing/${route}`);
 
 			expect(await page.textContent('h1')).toBe(content);
@@ -2091,7 +2563,7 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('body')).toBe('xyz/abc/qwe');
 	});
 
-	test('rest parameters do not swallow characters', async ({ page, clicknav, back }) => {
+	test('rest parameters do not swallow characters', async ({ page, clicknav }) => {
 		await page.goto('/routing/rest/non-greedy');
 
 		await clicknav('[href="/routing/rest/non-greedy/foo/one/two"]');
@@ -2101,7 +2573,7 @@ test.describe.parallel('Routing', () => {
 		await clicknav('[href="/routing/rest/non-greedy/food/one/two"]');
 		expect(await page.textContent('h1')).not.toBe('non-greedy');
 
-		await back();
+		await page.goBack();
 
 		await clicknav('[href="/routing/rest/non-greedy/one-bar/two/three"]');
 		expect(await page.textContent('h1')).toBe('non-greedy');
@@ -2175,9 +2647,22 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('h1')).toBe('routeId in load: routing/route-id/[x]');
 		expect(await page.textContent('h2')).toBe('routeId in store: routing/route-id/[x]');
 	});
+
+	test('serves a page that clashes with a root directory', async ({ page }) => {
+		await page.goto('/static');
+		expect(await page.textContent('h1')).toBe('hello');
+	});
+
+	test('/favicon.ico is a valid route', async ({ request }) => {
+		const response = await request.get('/favicon.ico');
+		expect(response.status()).toBe(200);
+
+		const data = await response.json();
+		expect(data).toEqual({ surprise: 'lol' });
+	});
 });
 
-test.describe.parallel('Session', () => {
+test.describe('Session', () => {
 	test('session is available', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/session');
 
@@ -2192,7 +2677,7 @@ test.describe.parallel('Session', () => {
 	});
 });
 
-test.describe.parallel('Shadow DOM', () => {
+test.describe('Shadow DOM', () => {
 	test('client router captures anchors in shadow dom', async ({
 		app,
 		page,
@@ -2219,7 +2704,7 @@ test.describe.parallel('Shadow DOM', () => {
 	});
 });
 
-test.describe.parallel('Static files', () => {
+test.describe('Static files', () => {
 	test('static files', async ({ request }) => {
 		let response = await request.get('/static.json');
 		expect(await response.json()).toBe('static file');
@@ -2230,9 +2715,39 @@ test.describe.parallel('Static files', () => {
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
 	});
+
+	test('does not use Vite to serve contents of static directory', async ({ request }) => {
+		const response = await request.get('/static/static.json');
+		expect(response.status()).toBe(process.env.DEV ? 403 : 404);
+	});
+
+	test('Vite serves assets in allowed directories', async ({ page, request }) => {
+		await page.goto('/assets');
+		const path = await page.textContent('h1');
+
+		const r1 = await request.get(path);
+		expect(r1.status()).toBe(200);
+		expect(await r1.text()).toContain('http://www.w3.org/2000/svg');
+
+		// check that we can fetch a route which overlaps with the name of a file
+		const r2 = await request.get('/package.json');
+		expect(r2.status()).toBe(200);
+		expect(await r2.json()).toEqual({ works: true });
+	});
+
+	test('Filenames are case-sensitive', async ({ request }) => {
+		const response = await request.get('/static.JSON');
+		expect(response.status()).toBe(404);
+	});
+
+	test('Serves symlinked asset', async ({ request }) => {
+		const response = await request.get('/symlink-from/hello.txt');
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('hello');
+	});
 });
 
-test.describe.parallel('Matchers', () => {
+test.describe('Matchers', () => {
 	test('Matches parameters', async ({ page, clicknav }) => {
 		await page.goto('/routing/matched');
 
@@ -2250,8 +2765,8 @@ test.describe.parallel('Matchers', () => {
 	});
 });
 
-test.describe.parallel('XSS', () => {
-	test('replaces %svelte.xxx% tags safely', async ({ page }) => {
+test.describe('XSS', () => {
+	test('replaces %sveltekit.xxx% tags safely', async ({ page }) => {
 		await page.goto('/unsafe-replacement');
 
 		const content = await page.textContent('body');
@@ -2294,5 +2809,31 @@ test.describe.parallel('XSS', () => {
 		expect(await page.textContent('h1')).toBe(
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
+	});
+});
+
+test.describe('Miscellaneous', () => {
+	test('Components are not double-mounted', async ({ page, javaScriptEnabled }) => {
+		const file = fileURLToPath(new URL('../src/routes/double-mount/index.svelte', import.meta.url));
+		const contents = fs.readFileSync(file, 'utf-8');
+
+		const mounted = javaScriptEnabled ? 1 : 0;
+
+		// we write to the file, to trigger HMR invalidation
+		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, `PLACEHOLDER:${Date.now()}`));
+		await page.goto('/double-mount');
+		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
+		await page.click('button');
+		await page.waitForTimeout(100);
+		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
+		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, 'PLACEHOLDER:0'));
+	});
+
+	test('does not serve version.json with an immutable cache header', async ({ request }) => {
+		// this isn't actually a great test, because caching behaviour is down to adapters.
+		// but it's better than nothing
+		const response = await request.get('/_app/version.json');
+		const headers = response.headers();
+		expect(headers['cache-control'] || '').not.toContain('immutable');
 	});
 });

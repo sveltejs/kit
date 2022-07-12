@@ -1,9 +1,12 @@
 {
 	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
 		"noEmit": true,
 		"paths": {
-			"$lib": ["src/lib"],
-			"$lib/*": ["src/lib/*"],
+			"@sveltejs/kit": ["../../../types"],
+			"$lib": ["./src/lib"],
+			"$lib/*": ["./src/lib/*"],
 			"types": ["../../../types/internal"]
 		}
 	},

@@ -3,6 +3,8 @@ import { parse_route_id } from '../../utils/routing.js';
 import { get_mime_lookup } from '../utils.js';
 
 /**
+ * Generates the data used to write the server-side manifest.js file. This data is used in the Vite
+ * build process, to power routing, etc.
  * @param {{
  *   build_data: import('types').BuildData;
  *   relative_path: string;
@@ -55,7 +57,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 		assets.push(build_data.service_worker);
 	}
 
-	/** @param {string} id */
+	/** @param {string | undefined} id */
 	const get_index = (id) => id && /** @type {LookupEntry} */ (bundled_nodes.get(id)).index;
 
 	const matchers = new Set();

@@ -21,6 +21,7 @@
 <h1>bar == {foo}?</h1>
 
 <a href="/load/fetch-request">fetch request</a>
+<a href="/load/fetch-relative">fetch relative</a>
 <a href="/load/fetch-credentialed">fetch credentialed</a>
 <a href="/load/fetch-headers">fetch headers</a>
 <a href="/load/large-response">large response</a>

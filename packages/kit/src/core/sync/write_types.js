@@ -1,4 +1,6 @@
-import { write_if_changed } from './utils.js';
+import { rimraf } from '../../utils/filesystem.js';
+import { parse_route_id } from '../../utils/routing.js';
+import { write } from './utils.js';
 
 /** @param {string} imports */
 const header = (imports) => `
@@ -7,7 +9,7 @@ import type { ${imports} } from '@sveltejs/kit';`;
 
 /** @param {string} arg */
 const endpoint = (arg) => `
-export type RequestHandler<Output extends ResponseBody = ResponseBody> = GenericRequestHandler<${arg}, Output>;`;
+export type RequestHandler<Output = ResponseBody> = GenericRequestHandler<${arg}, Output>;`;
 
 /** @param {string} arg */
 const page = (arg) => `
@@ -21,34 +23,21 @@ export type Load<
  * @param {import('types').ManifestData} manifest_data
  */
 export function write_types(config, manifest_data) {
+	rimraf(`${config.kit.outDir}/types`);
+
 	/** @type {Map<string, { params: string[], type: 'page' | 'endpoint' | 'both' }>} */
 	const shadow_types = new Map();
-
-	/** @param {string} key */
-	function extract_params(key) {
-		/** @type {string[]} */
-		const params = [];
-
-		const pattern = /\[([^\]]+)\]/g;
-		let match;
-
-		while ((match = pattern.exec(key))) {
-			params.push(match[1]);
-		}
-
-		return params;
-	}
 
 	manifest_data.routes.forEach((route) => {
 		const file = route.type === 'endpoint' ? route.file : route.shadow;
 
 		if (file) {
 			const ext = /** @type {string} */ (
-				config.kit.endpointExtensions.find((ext) => file.endsWith(ext))
+				config.kit.moduleExtensions.find((ext) => file.endsWith(ext))
 			);
 			const key = file.slice(0, -ext.length);
 			shadow_types.set(key, {
-				params: extract_params(key),
+				params: parse_route_id(key).names,
 				type: route.type === 'endpoint' ? 'endpoint' : 'both'
 			});
 		}
@@ -61,7 +50,7 @@ export function write_types(config, manifest_data) {
 		const key = component.slice(0, -ext.length);
 
 		if (!shadow_types.has(key)) {
-			shadow_types.set(key, { params: extract_params(key), type: 'page' });
+			shadow_types.set(key, { params: parse_route_id(key).names, type: 'page' });
 		}
 	});
 
@@ -84,9 +73,9 @@ export function write_types(config, manifest_data) {
 
 		content.unshift(header(imports.join(', ')));
 
-		write_if_changed(
-			`${config.kit.outDir}/types/${key || 'index'}.d.ts`,
-			content.join('\n').trim()
-		);
+		const parts = (key || 'index').split('/');
+		parts.push('__types', /** @type {string} */ (parts.pop()));
+
+		write(`${config.kit.outDir}/types/${parts.join('/')}.d.ts`, content.join('\n').trim());
 	});
 }

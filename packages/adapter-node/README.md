@@ -4,16 +4,16 @@
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-node@next`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `svelte.config.js`:
 
 ```js
 // svelte.config.js
 import adapter from '@sveltejs/adapter-node';
 
 export default {
-	kit: {
-		adapter: adapter()
-	}
+  kit: {
+    adapter: adapter()
+  }
 };
 ```
 
@@ -41,7 +41,7 @@ With this, a request for the `/stuff` pathname will correctly resolve to `https:
 PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
 ```
 
-> [`x-forwarded-proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) and [`x-forwarded-host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) are de facto standard headers that forward the original protocol and host if you're using a reverse proxy (think load balancers and CDNs). You should only set these variables if you trust the reverse proxy.
+> [`x-forwarded-proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) and [`x-forwarded-host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) are de facto standard headers that forward the original protocol and host if you're using a reverse proxy (think load balancers and CDNs). You should only set these variables if your server is behind a trusted reverse proxy; otherwise, it'd be possible for clients to spoof these headers.
 
 ### `ADDRESS_HEADER` and `XFF_DEPTH`
 
@@ -78,25 +78,14 @@ The adapter can be configured with various options:
 import adapter from '@sveltejs/adapter-node';
 
 export default {
-	kit: {
-		adapter: adapter({
-			// default options are shown
-			out: 'build',
-			precompress: false,
-			env: {
-				path: 'SOCKET_PATH',
-				host: 'HOST',
-				port: 'PORT',
-				origin: 'ORIGIN',
-				xffDepth: 'XFF_DEPTH',
-				headers: {
-					address: 'ADDRESS_HEADER',
-					protocol: 'PROTOCOL_HEADER',
-					host: 'HOST_HEADER'
-				}
-			}
-		})
-	}
+  kit: {
+    adapter: adapter({
+      // default options are shown
+      out: 'build',
+      precompress: false,
+      envPrefix: ''
+    })
+  }
 };
 ```
 
@@ -108,28 +97,18 @@ The directory to build the server to. It defaults to `build` — i.e. `node buil
 
 Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `false`.
 
-### env
+### envPrefix
 
-If you need to change the name of the environment variables used to configure the deployment (for example, you need to run multiple deployments from a single environment), you can tell the app to expect custom environment variables using the `env` option:
+If you need to change the name of the environment variables used to configure the deployment (for example, to deconflict with environment variables you don't control), you can specify a prefix:
 
 ```js
-env: {
-	host: 'MY_HOST_VARIABLE',
-	port: 'MY_PORT_VARIABLE',
-	origin: 'MY_ORIGINURL',
-	xffDepth: 'MY_XFF_DEPTH',
-	headers: {
-		address: 'MY_ADDRESS_HEADER',
-		protocol: 'MY_PROTOCOL_HEADER',
-		host: 'MY_HOST_HEADER'
-	}
-}
+envPrefix: 'MY_CUSTOM_';
 ```
 
 ```
-MY_HOST_VARIABLE=127.0.0.1 \
-MY_PORT_VARIABLE=4000 \
-MY_ORIGINURL=https://my.site \
+MY_CUSTOM_HOST=127.0.0.1 \
+MY_CUSTOM_PORT=4000 \
+MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
 
@@ -148,14 +127,14 @@ const app = express();
 
 // add a route that lives separately from the SvelteKit app
 app.get('/healthcheck', (req, res) => {
-	res.end('ok');
+  res.end('ok');
 });
 
 // let SvelteKit handle everything else, including serving prerendered pages and static assets
 app.use(handler);
 
 app.listen(3000, () => {
-	console.log('listening on port 3000');
+  console.log('listening on port 3000');
 });
 ```
 

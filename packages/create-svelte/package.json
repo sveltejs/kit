@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-next.125",
+	"version": "2.0.0-next.147",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -15,20 +15,23 @@
 		"prompts": "^2.4.2"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.22.2",
 		"@sveltejs/kit": "workspace:*",
 		"@types/gitignore-parser": "^0.0.0",
-		"@types/prettier": "^2.4.2",
+		"@types/prettier": "^2.6.3",
 		"@types/prompts": "^2.0.14",
 		"gitignore-parser": "^0.0.2",
-		"prettier": "^2.5.0",
-		"prettier-plugin-svelte": "^2.5.0",
-		"sucrase": "^3.20.3",
-		"svelte": "^3.44.2",
-		"svelte-preprocess": "^4.9.8",
-		"tiny-glob": "^0.2.9"
+		"prettier": "^2.6.2",
+		"prettier-plugin-svelte": "^2.7.0",
+		"sucrase": "^3.21.0",
+		"svelte": "^3.48.0",
+		"svelte-preprocess": "^4.10.6",
+		"tiny-glob": "^0.2.9",
+		"uvu": "^0.5.3"
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",
+		"test": "npm run build && uvu test",
 		"check": "tsc",
 		"lint": "eslint --ignore-path .gitignore --ignore-path ../../.gitignore \"./*.js\" && npm run check-format",
 		"format": "npm run check-format -- --write",

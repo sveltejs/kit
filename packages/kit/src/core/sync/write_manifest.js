@@ -3,6 +3,8 @@ import { s } from '../../utils/misc.js';
 import { trim, write_if_changed } from './utils.js';
 
 /**
+ * Writes the client manifest to disk. The manifest is used to power the router. It contains the
+ * list of routes and corresponding Svelte components (i.e. pages and layouts).
  * @param {import('types').ManifestData} manifest_data
  * @param {string} base
  * @param {string} output
@@ -24,7 +26,7 @@ export function write_manifest(manifest_data, base, output) {
 			.join(',\n\t\t\t\t\t')}
 	]`.replace(/^\t/gm, '');
 
-	/** @param {string[]} parts */
+	/** @param {Array<string | undefined>} parts */
 	const get_indices = (parts) =>
 		`[${parts.map((part) => (part ? component_indexes[part] : '')).join(', ')}]`;
 

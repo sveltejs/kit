@@ -22,7 +22,7 @@ export interface Client {
 	_hydrate: (opts: {
 		status: number;
 		error: Error;
-		nodes: Array<Promise<CSRComponent>>;
+		nodes: number[];
 		params: Record<string, string>;
 		routeId: string | null;
 	}) => Promise<void>;
@@ -68,8 +68,10 @@ export type BranchNode = {
 };
 
 export type NavigationState = {
-	url: URL;
-	params: Record<string, string>;
 	branch: Array<BranchNode | undefined>;
+	error: Error | null;
+	params: Record<string, string>;
 	session_id: number;
+	stuff: Record<string, any>;
+	url: URL;
 };

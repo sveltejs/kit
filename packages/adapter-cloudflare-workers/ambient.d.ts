@@ -1,17 +1,10 @@
-declare module 'SERVER' {
-	export { Server } from '@sveltejs/kit';
-}
+/// <reference types="@cloudflare/workers-types" />
 
-declare module 'MANIFEST' {
-	import { SSRManifest } from '@sveltejs/kit';
-
-	export const manifest: SSRManifest;
-	export const prerendered: Set<string>;
-}
-
-declare abstract class FetchEvent extends Event {
-	readonly request: Request;
-	respondWith(promise: Response | Promise<Response>): void;
-	passThroughOnException(): void;
-	waitUntil(promise: Promise<any>): void;
+declare namespace App {
+	export interface Platform {
+		context?: {
+			waitUntil(promise: Promise<any>): void;
+		};
+		caches?: CacheStorage & { default: Cache };
+	}
 }

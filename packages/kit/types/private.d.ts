@@ -2,8 +2,6 @@
 // but which cannot be imported from `@sveltejs/kit`. Care should
 // be taken to avoid breaking changes when editing this file
 
-import { ValidatedConfig } from './internal';
-
 export interface AdapterEntry {
 	/**
 	 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -25,8 +23,16 @@ export interface AdapterEntry {
 	 */
 	complete: (entry: {
 		generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
-	}) => void;
+	}) => MaybePromise<void>;
 }
+
+export type BodyValidator<T> = {
+	[P in keyof T]: T[P] extends { [k: string]: unknown }
+		? BodyValidator<T[P]> // recurse when T[P] is an object
+		: T[P] extends BigInt | Function | Symbol
+		? never
+		: T[P];
+};
 
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
 //
@@ -136,12 +142,6 @@ export interface CspDirectives {
 	>;
 }
 
-export interface ErrorLoadInput<Params extends Record<string, string> = Record<string, string>>
-	extends LoadInput<Params> {
-	status?: number;
-	error?: Error;
-}
-
 export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
 
 export interface JSONObject {
@@ -158,28 +158,6 @@ export type JSONValue =
 	| JSONValue[]
 	| JSONObject;
 
-export interface LoadInput<
-	Params extends Record<string, string> = Record<string, string>,
-	Props extends Record<string, any> = Record<string, any>
-> {
-	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
-	params: Params;
-	props: Props;
-	routeId: string | null;
-	session: App.Session;
-	stuff: Partial<App.Stuff>;
-	url: URL;
-}
-
-export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {
-	status?: number;
-	error?: string | Error;
-	redirect?: string;
-	props?: Props;
-	stuff?: Partial<App.Stuff>;
-	maxage?: number;
-}
-
 export interface Logger {
 	(msg: string): void;
 	success(msg: string): void;
@@ -190,8 +168,6 @@ export interface Logger {
 }
 
 export type MaybePromise<T> = T | Promise<T>;
-
-export type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
 
 export interface Prerendered {
 	pages: Map<
@@ -230,30 +206,16 @@ export interface PrerenderErrorHandler {
 
 export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
-export interface RequestEvent<Params extends Record<string, string> = Record<string, string>> {
-	clientAddress: string;
-	locals: App.Locals;
-	params: Params;
-	platform: Readonly<App.Platform>;
-	request: Request;
-	routeId: string | null;
-	url: URL;
-}
-
 export interface RequestOptions {
 	getClientAddress: () => string;
 	platform?: App.Platform;
-}
-
-export interface ResolveOptions {
-	ssr?: boolean;
-	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
 }
 
 /** `string[]` is only for set-cookie, everything else must be type of `string` */
 export type ResponseHeaders = Record<string, string | number | string[]>;
 
 export interface RouteDefinition {
+	id: string;
 	type: 'page' | 'endpoint';
 	pattern: RegExp;
 	segments: RouteSegment[];
