@@ -604,24 +604,17 @@ export function create_client({ target, session, base, trailing_slash }) {
 				});
 			}
 
-			let loaded;
-
 			if (import.meta.env.DEV) {
 				try {
 					lock_fetch();
-					loaded = await module.load.call(null, load_input);
+					node.loaded = normalize(await module.load.call(null, load_input));
 				} finally {
 					unlock_fetch();
 				}
 			} else {
-				loaded = await module.load.call(null, load_input);
+				node.loaded = normalize(await module.load.call(null, load_input));
 			}
 
-			if (!loaded) {
-				throw new Error('load function must return a value');
-			}
-
-			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
 			if (node.loaded.dependencies) {
 				node.loaded.dependencies.forEach(add_dependency);

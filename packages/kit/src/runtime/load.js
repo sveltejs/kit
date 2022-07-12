@@ -1,8 +1,14 @@
 /**
  * @param {import('types').LoadOutput} loaded
+ * @param {string | false} file
  * @returns {import('types').NormalizedLoadOutput}
  */
-export function normalize(loaded) {
+export function normalize(loaded, file = false) {
+	if (!loaded) {
+		// TODO do we still want to enforce this now that there's no fallthrough?
+		throw new Error(`load function must return a value${file ? ` (${file})` : ''}`);
+	}
+
 	// TODO remove for 1.0
 	// @ts-expect-error
 	if (loaded.fallthrough) {
@@ -73,5 +79,5 @@ export function normalize(loaded) {
 		);
 	}
 
-	return /** @type {import('types').NormalizedLoadOutput} */ (loaded);
+	return loaded;
 }
