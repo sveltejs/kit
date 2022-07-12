@@ -1,7 +1,7 @@
 export type Options = {
 	name: string;
 	template: 'default' | 'skeleton';
-	typescript: boolean;
+	types: 'typescript' | 'checkjs' | null;
 	prettier: boolean;
 	eslint: boolean;
 	playwright: boolean;
@@ -16,6 +16,7 @@ export type Condition =
 	| 'eslint'
 	| 'prettier'
 	| 'typescript'
+	| 'checkjs'
 	| 'playwright'
 	| 'skeleton'
 	| 'default';

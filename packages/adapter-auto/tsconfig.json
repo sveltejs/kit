@@ -4,6 +4,9 @@
 		"checkJs": true,
 		"noEmit": true,
 		"noImplicitAny": true,
+		"module": "esnext",
+		"target": "esnext",
+		"moduleResolution": "node",
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]

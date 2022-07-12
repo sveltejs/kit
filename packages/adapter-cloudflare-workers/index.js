@@ -1,29 +1,32 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { posix } from 'path';
+import { posix, dirname } from 'path';
 import { execSync } from 'child_process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
 
-/** @type {import('.')} */
-export default function () {
+/**
+ * @typedef {{
+ *   main: string;
+ *   site: {
+ *     bucket: string;
+ *   }
+ * }} WranglerConfig
+ */
+
+/** @type {import('.').default} */
+export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
 		async adapt(builder) {
-			const { site } = validate_config(builder);
-
-			// @ts-ignore
-			const { bucket } = site;
-
-			// @ts-ignore
-			const entrypoint = site['entry-point'] || 'workers-site';
+			const { main, site } = validate_config(builder);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
 
-			builder.rimraf(bucket);
-			builder.rimraf(entrypoint);
+			builder.rimraf(site.bucket);
+			builder.rimraf(dirname(main));
 
 			builder.log.info('Installing worker dependencies...');
 			builder.copy(`${files}/_package.json`, `${tmp}/package.json`);
@@ -46,43 +49,58 @@ export default function () {
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({
 					relativePath
-				})};\n\nexport const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n`
+				})};\n\nexport const prerendered = new Map(${JSON.stringify(
+					Array.from(builder.prerendered.pages.entries())
+				)});\n`
 			);
 
 			await esbuild.build({
-				entryPoints: [`${tmp}/entry.js`],
-				outfile: `${entrypoint}/index.js`,
-				bundle: true,
+				platform: 'browser',
+				sourcemap: 'linked',
 				target: 'es2020',
-				platform: 'browser'
+				...options,
+				entryPoints: [`${tmp}/entry.js`],
+				outfile: main,
+				bundle: true,
+				external: ['__STATIC_CONTENT_MANIFEST', ...(options?.external || [])],
+				format: 'esm'
 			});
 
-			writeFileSync(`${entrypoint}/package.json`, JSON.stringify({ main: 'index.js' }));
-
 			builder.log.minor('Copying assets...');
-			builder.writeClient(bucket);
-			builder.writeStatic(bucket);
-			builder.writePrerendered(bucket);
+			builder.writeClient(site.bucket);
+			builder.writeStatic(site.bucket);
+			builder.writePrerendered(site.bucket);
 		}
 	};
 }
 
-/** @param {import('@sveltejs/kit').Builder} builder */
+/**
+ * @param {import('@sveltejs/kit').Builder} builder
+ * @returns {WranglerConfig}
+ */
 function validate_config(builder) {
 	if (existsSync('wrangler.toml')) {
+		/** @type {WranglerConfig} */
 		let wrangler_config;
 
 		try {
-			wrangler_config = toml.parse(readFileSync('wrangler.toml', 'utf-8'));
+			wrangler_config = /** @type {WranglerConfig} */ (
+				toml.parse(readFileSync('wrangler.toml', 'utf-8'))
+			);
 		} catch (err) {
 			err.message = `Error parsing wrangler.toml: ${err.message}`;
 			throw err;
 		}
 
-		// @ts-ignore
-		if (!wrangler_config.site || !wrangler_config.site.bucket) {
+		if (!wrangler_config.site?.bucket) {
 			throw new Error(
 				'You must specify site.bucket in wrangler.toml. Consult https://developers.cloudflare.com/workers/platform/sites/configuration'
+			);
+		}
+
+		if (!wrangler_config.main) {
+			throw new Error(
+				'You must specify main option in wrangler.toml. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers'
 			);
 		}
 
@@ -98,15 +116,15 @@ function validate_config(builder) {
 		Sample wrangler.toml:
 
 		name = "<your-site-name>"
-		type = "javascript"
 		account_id = "<your-account-id>"
-		workers_dev = true
-		route = ""
-		zone_id = ""
 
-		[site]
-		bucket = "./.cloudflare/assets"
-		entry-point = "./.cloudflare/worker"`
+		main = "./.cloudflare/worker.js"
+		site.bucket = "./.cloudflare/public"
+
+		build.command = "npm run build"
+
+		compatibility_date = "2021-11-12"
+		workers_dev = true`
 			.replace(/^\t+/gm, '')
 			.trim()
 	);

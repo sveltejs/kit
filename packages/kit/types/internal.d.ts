@@ -5,24 +5,22 @@ import {
 	GetSession,
 	Handle,
 	HandleError,
+	KitConfig,
 	Load,
+	RequestEvent,
 	RequestHandler,
+	ResolveOptions,
 	Server,
 	SSRManifest
-} from './index';
+} from './index.js';
 import {
-	Either,
-	Fallthrough,
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
-	RequestEvent,
 	RequestOptions,
-	ResolveOptions,
 	ResponseHeaders,
-	RouteSegment,
 	TrailingSlash
-} from './private';
+} from './private.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -53,8 +51,8 @@ export interface BuildData {
 		chunks: OutputChunk[];
 		entry: {
 			file: string;
-			js: string[];
-			css: string[];
+			imports: string[];
+			stylesheets: string[];
 		};
 		vite_manifest: import('vite').Manifest;
 	};
@@ -69,14 +67,18 @@ export type CSRComponent = any; // TODO
 
 export type CSRComponentLoader = () => Promise<CSRComponent>;
 
-export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?, ShadowKey?];
+export type CSRRoute = {
+	id: string;
+	exec: (path: string) => undefined | Record<string, string>;
+	a: CSRComponentLoader[];
+	b: CSRComponentLoader[];
+	has_shadow: boolean;
+};
 
 export interface EndpointData {
 	type: 'endpoint';
-	key: string;
-	segments: RouteSegment[];
+	id: string;
 	pattern: RegExp;
-	params: string[];
 	file: string;
 }
 
@@ -92,18 +94,17 @@ export interface Hooks {
 export class InternalServer extends Server {
 	respond(
 		request: Request,
-		options?: RequestOptions & {
-			prerender?: PrerenderOptions;
+		options: RequestOptions & {
+			prerendering?: PrerenderOptions;
 		}
 	): Promise<Response>;
 }
 
 export interface ManifestData {
 	assets: Asset[];
-	layout: string;
-	error: string;
 	components: string[];
 	routes: RouteData[];
+	matchers: Record<string, string>;
 }
 
 export interface MethodOverride {
@@ -111,28 +112,29 @@ export interface MethodOverride {
 	allowed: string[];
 }
 
-export type NormalizedLoadOutput = Either<
-	{
-		status: number;
-		error?: Error;
-		redirect?: string;
-		props?: Record<string, any> | Promise<Record<string, any>>;
-		stuff?: Record<string, any>;
-		maxage?: number;
-	},
-	Fallthrough
->;
+export type NormalizedLoadOutput = {
+	status: number;
+	error?: Error;
+	redirect?: string;
+	props?: Record<string, any> | Promise<Record<string, any>>;
+	stuff?: Record<string, any>;
+	cache?: NormalizedLoadOutputCache;
+	dependencies?: string[];
+};
+
+export interface NormalizedLoadOutputCache {
+	maxage: number;
+	private?: boolean;
+}
 
 export interface PageData {
 	type: 'page';
-	key: string;
+	id: string;
 	shadow: string | null;
-	segments: RouteSegment[];
 	pattern: RegExp;
-	params: string[];
 	path: string;
-	a: string[];
-	b: string[];
+	a: Array<string | undefined>;
+	b: Array<string | undefined>;
 }
 
 export type PayloadScriptAttributes =
@@ -146,7 +148,6 @@ export interface PrerenderDependency {
 
 export interface PrerenderOptions {
 	fallback?: boolean;
-	default: boolean;
 	dependencies: Map<string, PrerenderDependency>;
 }
 
@@ -164,7 +165,7 @@ export type RecursiveRequired<T> = {
 export type RequiredResolveOptions = Required<ResolveOptions>;
 
 export interface Respond {
-	(request: Request, options: SSROptions, state?: SSRState): Promise<Response>;
+	(request: Request, options: SSROptions, state: SSRState): Promise<Response>;
 }
 
 export type RouteData = PageData | EndpointData;
@@ -175,19 +176,11 @@ export interface ShadowEndpointOutput<Output extends JSONObject = JSONObject> {
 	body?: Output;
 }
 
-/**
- * The route key of a page with a matching endpoint — used to ensure the
- * client loads data from the right endpoint during client-side navigation
- * rather than a different route that happens to match the path
- */
-type ShadowKey = string;
-
 export interface ShadowRequestHandler<Output extends JSONObject = JSONObject> {
-	(event: RequestEvent): MaybePromise<Either<ShadowEndpointOutput<Output>, Fallthrough>>;
+	(event: RequestEvent): MaybePromise<ShadowEndpointOutput<Output>>;
 }
 
 export interface ShadowData {
-	fallthrough?: boolean;
 	status?: number;
 	error?: Error;
 	redirect?: string;
@@ -216,8 +209,10 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface SSREndpoint {
 	type: 'endpoint';
+	id: string;
 	pattern: RegExp;
-	params: GetParams;
+	names: string[];
+	types: string[];
 	load(): Promise<{
 		[method: string]: RequestHandler;
 	}>;
@@ -225,24 +220,24 @@ export interface SSREndpoint {
 
 export interface SSRNode {
 	module: SSRComponent;
+	/** index into the `components` array in client-manifest.js */
+	index: number;
 	/** client-side module URL for this component */
-	entry: string;
-	/** external CSS files */
-	css: string[];
+	file: string;
 	/** external JS files */
-	js: string[];
+	imports: string[];
+	/** external CSS files */
+	stylesheets: string[];
 	/** inlined styles */
-	styles?: Record<string, string>;
+	inline_styles?: () => MaybePromise<Record<string, string>>;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
-	amp: boolean;
 	app_dir: string;
 	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
-	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;
@@ -253,7 +248,10 @@ export interface SSROptions {
 		base: string;
 		assets: string;
 	};
-	prerender: boolean;
+	prerender: {
+		default: boolean;
+		enabled: boolean;
+	};
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
 	router: boolean;
@@ -275,9 +273,10 @@ export interface SSROptions {
 
 export interface SSRPage {
 	type: 'page';
-	key: string;
+	id: string;
 	pattern: RegExp;
-	params: GetParams;
+	names: string[];
+	types: string[];
 	shadow:
 		| null
 		| (() => Promise<{
@@ -286,12 +285,12 @@ export interface SSRPage {
 	/**
 	 * plan a is to render 1 or more layout components followed by a leaf component.
 	 */
-	a: number[];
+	a: Array<number | undefined>;
 	/**
 	 * plan b — if one of them components fails in `load` we backtrack until we find
 	 * the nearest error component.
 	 */
-	b: number[];
+	b: Array<number | undefined>;
 }
 
 export interface SSRPagePart {
@@ -302,16 +301,18 @@ export interface SSRPagePart {
 export type SSRRoute = SSREndpoint | SSRPage;
 
 export interface SSRState {
-	fetched?: string;
+	fallback?: string;
+	getClientAddress: () => string;
 	initiator?: SSRPage | null;
 	platform?: any;
-	prerender?: PrerenderOptions;
-	fallback?: string;
+	prerendering?: PrerenderOptions;
 }
 
 export type StrictBody = string | Uint8Array;
 
 export type ValidatedConfig = RecursiveRequired<Config>;
+
+export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export * from './index';
 export * from './private';

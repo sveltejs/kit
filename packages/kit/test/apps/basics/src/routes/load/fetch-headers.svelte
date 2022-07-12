@@ -16,6 +16,7 @@
 	export let headers;
 
 	const json = JSON.stringify({
+		connection: headers['connection'],
 		'sec-fetch-dest': headers['sec-fetch-dest'],
 		'sec-fetch-mode': headers['sec-fetch-mode'],
 		'if-none-match': headers['if-none-match'],

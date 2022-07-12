@@ -29,45 +29,46 @@ export async function respond_with_error({
 	resolve_opts
 }) {
 	try {
-		const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
-		const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
+		const branch = [];
+		let stuff = {};
 
-		/** @type {Record<string, string>} */
-		const params = {}; // error page has no params
+		if (resolve_opts.ssr) {
+			const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
+			const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
 
-		const layout_loaded = /** @type {Loaded} */ (
-			await load_node({
-				event,
-				options,
-				state,
-				route: null,
-				url: event.url, // TODO this is redundant, no?
-				params,
-				node: default_layout,
-				$session,
-				stuff: {},
-				is_error: false,
-				is_leaf: false
-			})
-		);
+			const layout_loaded = /** @type {Loaded} */ (
+				await load_node({
+					event,
+					options,
+					state,
+					route: null,
+					node: default_layout,
+					$session,
+					stuff: {},
+					is_error: false,
+					is_leaf: false
+				})
+			);
 
-		const error_loaded = /** @type {Loaded} */ (
-			await load_node({
-				event,
-				options,
-				state,
-				route: null,
-				url: event.url,
-				params,
-				node: default_error,
-				$session,
-				stuff: layout_loaded ? layout_loaded.stuff : {},
-				is_error: true,
-				is_leaf: false,
-				status,
-				error
-			})
-		);
+			const error_loaded = /** @type {Loaded} */ (
+				await load_node({
+					event,
+					options,
+					state,
+					route: null,
+					node: default_error,
+					$session,
+					stuff: layout_loaded ? layout_loaded.stuff : {},
+					is_error: true,
+					is_leaf: false,
+					status,
+					error
+				})
+			);
+
+			branch.push(layout_loaded, error_loaded);
+			stuff = error_loaded.stuff;
+		}
 
 		return await render_response({
 			options,
@@ -77,12 +78,11 @@ export async function respond_with_error({
 				hydrate: options.hydrate,
 				router: options.router
 			},
-			stuff: error_loaded.stuff,
+			stuff,
 			status,
 			error,
-			branch: [layout_loaded, error_loaded],
-			url: event.url,
-			params,
+			branch,
+			event,
 			resolve_opts
 		});
 	} catch (err) {

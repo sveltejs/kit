@@ -15,7 +15,31 @@
  * }
  * ```
  *
- * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`:
+ * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`.
+ *
+ * Note that since it's an ambient declaration file, you have to be careful when using `import` statements. Once you add an `import`
+ * at the top level, the declaration file is no longer considered ambient and you lose access to these typings in other files.
+ * To avoid this, either use the `import(...)` function:
+ *
+ * ```ts
+ * interface Locals {
+ * 	user: import('$lib/types').User;
+ * }
+ * ```
+ * Or wrap the namespace with `declare global`:
+ * ```ts
+ * import { User } from '$lib/types';
+ *
+ * declare global {
+ * 	namespace App {
+ * 		interface Locals {
+ * 			user: User;
+ * 		}
+ * 		// ...
+ * 	}
+ * }
+ * ```
+ *
  */
 declare namespace App {
 	/**
@@ -41,32 +65,41 @@ declare namespace App {
 
 /**
  * ```ts
- * import { amp, browser, dev, mode, prerendering } from '$app/env';
+ * import { browser, dev, mode, prerendering, prod, server } from '$app/env';
  * ```
  */
 declare module '$app/env' {
 	/**
-	 * Whether or not the app is running in [AMP mode](/docs/seo#manual-setup-amp).
-	 */
-	export const amp: boolean;
-	/**
-	 * Whether the app is running in the browser or on the server.
+	 * `true` if the app is running in the browser.
 	 */
 	export const browser: boolean;
+
 	/**
 	 * `true` in development mode, `false` in production.
 	 */
 	export const dev: boolean;
+
+	/**
+	 * The Vite.js mode the app is running in. Configure in `config.kit.vite.mode`.
+	 * Vite.js loads the dotenv file associated with the provided mode, `.env.[mode]` or `.env.[mode].local`.
+	 * By default, `vite dev` runs with `mode=development` and `vite build` runs with `mode=production`.
+	 */
+	export const mode: string;
+
 	/**
 	 * `true` when prerendering, `false` otherwise.
 	 */
 	export const prerendering: boolean;
+
 	/**
-	 * The Vite.js mode the app is running in. Configure in `config.kit.vite.mode`.
-	 * Vite.js loads the dotenv file associated with the provided mode, `.env.[mode]` or `.env.[mode].local`.
-	 * By default, `svelte-kit dev` runs with `mode=development` and `svelte-kit build` runs with `mode=production`.
+	 * `true` in production mode, `false` in development.
 	 */
-	export const mode: string;
+	export const prod: boolean;
+
+	/**
+	 * `true` if the app is running on the server.
+	 */
+	export const server: boolean;
 }
 
 /**
@@ -84,28 +117,28 @@ declare module '$app/env' {
  */
 declare module '$app/navigation' {
 	/**
-	 * If called when the page is being updated following a navigation (in `onMount` or an action, for example), this disables SvelteKit's built-in scroll handling.
+	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
 	 */
 	export function disableScrollHandling(): void;
 	/**
-	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`.
+	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
 	 *
-	 * @param href Where to navigate to
+	 * @param url Where to navigate to
 	 * @param opts.replaceState If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
 	 * @param opts.noscroll If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
 	 * @param opts.keepfocus If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
 	 * @param opts.state The state of the new/updated history entry
 	 */
 	export function goto(
-		href: string,
+		url: string | URL,
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<void>;
 	/**
-	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. Returns a `Promise` that resolves when the page is subsequently updated.
-	 * @param href The invalidated resource
+	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question, or re-fetches data from a page endpoint if the invalidated resource is the page itself. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * @param dependency The invalidated resource
 	 */
-	export function invalidate(href: string): Promise<void>;
+	export function invalidate(dependency: string | ((href: string) => boolean)): Promise<void>;
 	/**
 	 * Programmatically prefetches the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
@@ -151,13 +184,13 @@ declare module '$app/navigation' {
  */
 declare module '$app/paths' {
 	/**
-	 * A string that matches [`config.kit.paths.base`](/docs/configuration#paths). It must begin, but not end, with a `/`.
+	 * A string that matches [`config.kit.paths.base`](/docs/configuration#paths). It must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string.
 	 */
 	export const base: `/${string}`;
 	/**
 	 * An absolute path that matches [`config.kit.paths.assets`](/docs/configuration#paths).
 	 *
-	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during [`svelte-kit dev`](/docs/cli#svelte-kit-dev) or [`svelte-kit preview`](/docs/cli#svelte-kit-preview), since the assets don't yet live at their eventual URL.
+	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
 	 */
 	export const assets: `https://${string}` | `http://${string}`;
 }
@@ -279,11 +312,16 @@ declare module '@sveltejs/kit/hooks' {
 /**
  * A polyfill for `fetch` and its related interfaces, used by adapters for environments that don't provide a native implementation.
  */
-declare module '@sveltejs/kit/install-fetch' {
+declare module '@sveltejs/kit/node/polyfills' {
 	/**
-	 * Make `fetch`, `Headers`, `Request` and `Response` available as globals, via `node-fetch`
+	 * Make various web APIs available as globals:
+	 * - `crypto`
+	 * - `fetch`
+	 * - `Headers`
+	 * - `Request`
+	 * - `Response`
 	 */
-	export function installFetch(): void;
+	export function installPolyfills(): void;
 }
 
 /**
@@ -295,4 +333,13 @@ declare module '@sveltejs/kit/node' {
 		request: import('http').IncomingMessage
 	): Promise<Request>;
 	export function setResponse(res: import('http').ServerResponse, response: Response): void;
+}
+
+declare module '@sveltejs/kit/vite' {
+	import { Plugin } from 'vite';
+
+	/**
+	 * Returns the SvelteKit Vite plugins.
+	 */
+	export function sveltekit(): Plugin[];
 }

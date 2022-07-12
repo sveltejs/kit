@@ -39,7 +39,23 @@ const options = object(
 				return input;
 			}),
 
-			amp: boolean(false),
+			alias: validate({}, (input, keypath) => {
+				if (typeof input !== 'object') {
+					throw new Error(`${keypath} should be an object`);
+				}
+
+				for (const key in input) {
+					assert_string(input[key], `${keypath}.${key}`);
+				}
+
+				return input;
+			}),
+
+			// TODO: remove this for the 1.0 release
+			amp: error(
+				(keypath) =>
+					`${keypath} has been removed. See https://kit.svelte.dev/docs/seo#amp for details on how to support AMP`
+			),
 
 			appDir: validate('_app', (input, keypath) => {
 				assert_string(input, keypath);
@@ -99,18 +115,20 @@ const options = object(
 				})
 			}),
 
-			endpointExtensions: string_array(['.js', '.ts']),
+			// TODO: remove this for the 1.0 release
+			endpointExtensions: error(
+				(keypath) => `${keypath} has been renamed to config.kit.moduleExtensions`
+			),
 
 			files: object({
 				assets: string('static'),
 				hooks: string(join('src', 'hooks')),
 				lib: string(join('src', 'lib')),
+				params: string(join('src', 'params')),
 				routes: string(join('src', 'routes')),
 				serviceWorker: string(join('src', 'service-worker')),
 				template: string(join('src', 'app.html'))
 			}),
-
-			floc: boolean(false),
 
 			// TODO: remove this for the 1.0 release
 			headers: error(
@@ -144,6 +162,8 @@ const options = object(
 				})
 			}),
 
+			moduleExtensions: string_array(['.js', '.ts']),
+
 			outDir: string('.svelte-kit'),
 
 			package: object({
@@ -160,7 +180,7 @@ const options = object(
 
 					if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
 						throw new Error(
-							`${keypath} option must be a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
+							`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
 						);
 					}
 
@@ -214,7 +234,7 @@ const options = object(
 
 				// TODO: remove this for the 1.0 release
 				force: validate(undefined, (input, keypath) => {
-					if (typeof input !== undefined) {
+					if (typeof input !== 'undefined') {
 						const newSetting = input ? 'continue' : 'fail';
 						const needsSetting = newSetting === 'continue';
 						throw new Error(
@@ -256,7 +276,7 @@ const options = object(
 			// TODO remove this for 1.0
 			ssr: error(
 				(keypath) =>
-					`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle'`
+					`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle`
 			),
 
 			// TODO remove this for 1.0
@@ -269,23 +289,8 @@ const options = object(
 				pollInterval: number(0)
 			}),
 
-			vite: validate(
-				() => ({}),
-				(input, keypath) => {
-					if (typeof input === 'object') {
-						const config = input;
-						input = () => config;
-					}
-
-					if (typeof input !== 'function') {
-						throw new Error(
-							`${keypath} must be a Vite config object (https://vitejs.dev/config) or a function that returns one`
-						);
-					}
-
-					return input;
-				}
-			)
+			// TODO remove this for 1.0
+			vite: error((keypath) => `${keypath} has been removed — use vite.config.js instead`)
 		})
 	},
 	true

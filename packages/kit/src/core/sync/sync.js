@@ -2,6 +2,7 @@ import path from 'path';
 import create_manifest_data from './create_manifest_data/index.js';
 import { copy_assets } from './copy_assets.js';
 import { write_manifest } from './write_manifest.js';
+import { write_matchers } from './write_matchers.js';
 import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
 import { write_types } from './write_types.js';
@@ -9,7 +10,7 @@ import { write_types } from './write_types.js';
 /** @param {import('types').ValidatedConfig} config */
 export function init(config) {
 	copy_assets(path.join(config.kit.outDir, 'runtime'));
-	write_tsconfig(config);
+	write_tsconfig(config.kit);
 }
 
 /** @param {import('types').ValidatedConfig} config */
@@ -21,6 +22,7 @@ export function update(config) {
 
 	write_manifest(manifest_data, base, output);
 	write_root(manifest_data, output);
+	write_matchers(manifest_data, output);
 	write_types(config, manifest_data);
 
 	return { manifest_data };

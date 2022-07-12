@@ -1,5 +1,6 @@
 ---
 title: Migrating from Sapper
+rank: 1
 ---
 
 SvelteKit is the successor to Sapper and shares many elements of its design.
@@ -25,9 +26,9 @@ Remove `sapper` from your `devDependencies` and replace it with `@sveltejs/kit` 
 
 Any scripts that reference `sapper` should be updated:
 
-- `sapper build` should become [`svelte-kit build`](/docs/cli#svelte-kit-build) using the Node [adapter](/docs/adapters)
-- `sapper export` should become [`svelte-kit build`](/docs/cli#svelte-kit-build) using the static [adapter](/docs/adapters)
-- `sapper dev` should become [`svelte-kit dev`](/docs/cli#svelte-kit-dev)
+- `sapper build` should become `vite build` using the Node [adapter](/docs/adapters)
+- `sapper export` should become `vite build` using the static [adapter](/docs/adapters)
+- `sapper dev` should become `vite dev`
 - `node __sapper__/build` should become `node build`
 
 ### Project files
@@ -48,7 +49,7 @@ This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start
 
 #### src/server.js
 
-This file also has no direct equivalent, since SvelteKit apps can run in serverless environments. You can, however, use the [hooks module](/docs/hooks) to implement session logic.
+When using `adapter-node` the equivalent is a [custom server](https://github.com/sveltejs/kit/tree/master/packages/adapter-node#custom-server). Otherwise, this file has no direct equivalent, since SvelteKit apps can run in serverless environments. You can, however, use the [hooks module](/docs/hooks) to implement session logic.
 
 #### src/service-worker.js
 
@@ -63,7 +64,7 @@ Most imports from `@sapper/service-worker` have equivalents in [`$service-worker
 
 The `src/template.html` file should be renamed `src/app.html`.
 
-Remove `%sapper.base%`, `%sapper.scripts%` and `%sapper.styles%`. Replace `%sapper.head%` with `%svelte.head%` and `%sapper.html%` with `%svelte.body%`. The `<div id="sapper">` is no longer necessary.
+Remove `%sapper.base%`, `%sapper.scripts%` and `%sapper.styles%`. Replace `%sapper.head%` with `%sveltekit.head%` and `%sapper.html%` with `%sveltekit.body%`. The `<div id="sapper">` is no longer necessary.
 
 #### src/node_modules
 
@@ -113,13 +114,17 @@ You access them differently in SvelteKit. `stores` is now `getStores`, but in mo
 
 #### Routing
 
-Regex routes are no longer supported. Instead, use [fallthrough routes](/docs/routing#advanced-routing-fallthrough-routes).
+Regex routes are no longer supported. Instead, use [advanced route matching](/docs/routing#advanced-routing-matching).
+
+#### Segments
+
+Previously, layout components received a `segment` prop indicating the child segment. This has been removed; you should use the more flexible `$page.url.pathname` value to derive the segment you're interested in.
 
 #### URLs
 
 In Sapper, all relative URLs were resolved against the base URL — usually `/`, unless the `basepath` option was used — rather than against the current page.
 
-This caused problems and is no longer the case in SvelteKit. Instead, URLs are resolved against the current page (or the destination page, for `fetch` URLs in `load` functions) instead.
+This caused problems and is no longer the case in SvelteKit. Instead, relative URLs are resolved against the current page (or the destination page, for `fetch` URLs in `load` functions) instead. In most cases, it's easier to use root-relative (i.e. starts with `/`) URLs, since their meaning is not context-dependent.
 
 #### &lt;a&gt; attributes
 
@@ -186,4 +191,4 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-Note that `prerendering` is `false` when using `svelte-kit preview` to test the production build of the site, so to verify the results of minifying, you'll need to inspect the built HTML files directly.
+Note that `prerendering` is `false` when using `vite preview` to test the production build of the site, so to verify the results of minifying, you'll need to inspect the built HTML files directly.

@@ -3,6 +3,8 @@ import { s } from '../../utils/misc.js';
 import { trim, write_if_changed } from './utils.js';
 
 /**
+ * Writes the client manifest to disk. The manifest is used to power the router. It contains the
+ * list of routes and corresponding Svelte components (i.e. pages and layouts).
  * @param {import('types').ManifestData} manifest_data
  * @param {string} base
  * @param {string} output
@@ -24,51 +26,32 @@ export function write_manifest(manifest_data, base, output) {
 			.join(',\n\t\t\t\t\t')}
 	]`.replace(/^\t/gm, '');
 
-	/** @param {string[]} parts */
+	/** @param {Array<string | undefined>} parts */
 	const get_indices = (parts) =>
-		`[${parts.map((part) => (part ? `c[${component_indexes[part]}]` : '')).join(', ')}]`;
+		`[${parts.map((part) => (part ? component_indexes[part] : '')).join(', ')}]`;
 
-	const routes = `[
+	const dictionary = `{
 		${manifest_data.routes
 			.map((route) => {
 				if (route.type === 'page') {
-					const params =
-						route.params.length > 0 &&
-						'(m) => ({ ' +
-							route.params
-								.map((param, i) => {
-									return param.startsWith('...')
-										? `${param.slice(3)}: d(m[${i + 1}] || '')`
-										: `${param}: d(m[${i + 1}])`;
-								})
-								.join(', ') +
-							'})';
+					const tuple = [get_indices(route.a), get_indices(route.b)];
+					if (route.shadow) tuple.push('1');
 
-					const tuple = [route.pattern, get_indices(route.a), get_indices(route.b)];
-
-					// optional items
-					if (params || route.shadow) tuple.push(params || 'null');
-					if (route.shadow) tuple.push(`'${route.key}'`);
-
-					return `// ${route.a[route.a.length - 1]}\n\t\t[${tuple.join(', ')}]`;
+					return `${s(route.id)}: [${tuple.join(', ')}]`;
 				}
 			})
 			.filter(Boolean)
-			.join(',\n\n\t\t')}
-	]`.replace(/^\t/gm, '');
+			.join(',\n\t\t')}
+	}`.replace(/^\t/gm, '');
 
 	write_if_changed(
-		`${output}/manifest.js`,
+		`${output}/client-manifest.js`,
 		trim(`
-			const c = ${components};
+			export { matchers } from './client-matchers.js';
 
-			const d = decodeURIComponent;
+			export const components = ${components};
 
-			export const routes = ${routes};
-
-			// we import the root layout/error components eagerly, so that
-			// connectivity errors after initialisation don't nuke the app
-			export const fallback = [c[0](), c[1]()];
+			export const dictionary = ${dictionary};
 		`)
 	);
 }

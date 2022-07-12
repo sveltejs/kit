@@ -17,7 +17,7 @@ await create(repo, {
 	name: 'kit-template-default',
 	template: 'default',
 	eslint: false,
-	typescript: false,
+	types: 'checkjs',
 	prettier: true,
 	playwright: false
 });

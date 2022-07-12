@@ -1,4 +1,4 @@
 import { Adapter } from '@sveltejs/kit';
+import './ambient.js';
 
-declare function plugin(): Adapter;
-export = plugin;
+export default function plugin(): Adapter;

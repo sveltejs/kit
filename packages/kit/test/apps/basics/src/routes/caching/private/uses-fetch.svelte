@@ -6,7 +6,12 @@
 		});
 
 		return {
-			maxage: 30,
+			cache: {
+				maxage: 30,
+				private: url.searchParams.has('private')
+					? url.searchParams.get('private') === 'true'
+					: undefined
+			},
 			props: await res.json()
 		};
 	}

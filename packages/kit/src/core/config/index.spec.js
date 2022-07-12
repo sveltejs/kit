@@ -2,17 +2,32 @@ import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { remove_keys } from '../../utils/object.js';
 import { validate_config, load_config } from './index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
+/**
+ * mutates and remove keys from an object when check callback returns true
+ * @param {Record<string, any>} o any object
+ * @param {([key, value]: [string, any]) => boolean} check callback with access
+ * 		to the key-value pair and returns a boolean that decides the deletion of key
+ */
+function remove_keys(o, check) {
+	for (const key in o) {
+		if (!Object.hasOwnProperty.call(o, key)) continue;
+		if (check([key, o[key]])) delete o[key];
+		const nested = typeof o[key] === 'object' && !Array.isArray(o[key]);
+		if (nested) remove_keys(o[key], check);
+	}
+}
+
 const get_defaults = (prefix = '') => ({
 	extensions: ['.svelte'],
 	kit: {
 		adapter: null,
-		amp: false,
+		alias: {},
+		amp: undefined,
 		appDir: '_app',
 		browser: {
 			hydrate: true,
@@ -54,16 +69,16 @@ const get_defaults = (prefix = '') => ({
 				referrer: undefined
 			}
 		},
-		endpointExtensions: ['.js', '.ts'],
+		endpointExtensions: undefined,
 		files: {
 			assets: join(prefix, 'static'),
 			hooks: join(prefix, 'src/hooks'),
 			lib: join(prefix, 'src/lib'),
+			params: join(prefix, 'src/params'),
 			routes: join(prefix, 'src/routes'),
 			serviceWorker: join(prefix, 'src/service-worker'),
 			template: join(prefix, 'src/app.html')
 		},
-		floc: false,
 		headers: undefined,
 		host: undefined,
 		hydrate: undefined,
@@ -72,6 +87,7 @@ const get_defaults = (prefix = '') => ({
 			parameter: '_method',
 			allowed: []
 		},
+		moduleExtensions: ['.js', '.ts'],
 		outDir: join(prefix, '.svelte-kit'),
 		package: {
 			dir: 'package',
@@ -103,7 +119,8 @@ const get_defaults = (prefix = '') => ({
 		version: {
 			name: Date.now().toString(),
 			pollInterval: 0
-		}
+		},
+		vite: undefined
 	}
 });
 
@@ -113,7 +130,7 @@ test('fills in defaults', () => {
 	assert.equal(validated.kit.package.exports(''), true);
 	assert.equal(validated.kit.package.files(''), true);
 	assert.equal(validated.kit.serviceWorker.files(''), true);
-	assert.equal(validated.kit.vite(), {});
+	assert.equal(validated.kit.vite, undefined);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
@@ -179,7 +196,7 @@ test('fills in partial blanks', () => {
 	assert.equal(validated.kit.package.exports(''), true);
 	assert.equal(validated.kit.package.files(''), true);
 	assert.equal(validated.kit.serviceWorker.files(''), true);
-	assert.equal(validated.kit.vite(), {});
+	assert.equal(validated.kit.vite, undefined);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
@@ -239,7 +256,7 @@ test('fails if paths.base is not root-relative', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.base option must be a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs\/configuration#paths$/);
+	}, /^config\.kit\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs\/configuration#paths$/);
 });
 
 test("fails if paths.base ends with '/'", () => {
@@ -251,7 +268,7 @@ test("fails if paths.base ends with '/'", () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.base option must be a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs\/configuration#paths$/);
+	}, /^config\.kit\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs\/configuration#paths$/);
 });
 
 test('fails if paths.assets is relative', () => {
@@ -283,6 +300,7 @@ test('fails if prerender.entries are invalid', () => {
 		validate_config({
 			kit: {
 				prerender: {
+					// @ts-expect-error - given value expected to throw
 					entries: ['foo']
 				}
 			}

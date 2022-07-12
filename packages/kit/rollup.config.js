@@ -31,7 +31,12 @@ export default [
 			format: 'esm',
 			chunkFileNames: 'chunks/[name].js'
 		},
-		external: ['svelte', 'svelte/store', '__GENERATED__/root.svelte', '__GENERATED__/manifest.js'],
+		external: [
+			'svelte',
+			'svelte/store',
+			'__GENERATED__/root.svelte',
+			'__GENERATED__/client-manifest.js'
+		],
 		plugins: [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
@@ -48,16 +53,18 @@ export default [
 		plugins: [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
-			})
+			}),
+			commonjs()
 		]
 	},
 
 	{
 		input: {
 			cli: 'src/cli.js',
-			node: 'src/node.js',
+			node: 'src/node/index.js',
+			'node/polyfills': 'src/node/polyfills.js',
 			hooks: 'src/hooks.js',
-			'install-fetch': 'src/install-fetch.js'
+			vite: 'src/vite/index.js'
 		},
 		output: {
 			dir: 'dist',

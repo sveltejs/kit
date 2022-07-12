@@ -1,48 +1,49 @@
 <script>
 	import { onMount } from 'svelte';
 	import { Icon } from '@sveltejs/site-kit';
-	import flexsearch from 'flexsearch';
 	import { afterNavigate } from '$app/navigation';
 	import { searching, query, recent } from './stores.js';
 	import { focusable_children, trap } from '../actions/focus.js';
+	import SearchResults from './SearchResults.svelte';
+	import SearchWorker from '$lib/workers/search.js?worker';
 
 	let modal;
 
-	let results = [];
-	let backspace_pressed;
+	let search = null;
+	let recent_searches = [];
 
-	let index;
-	let lookup;
+	let worker;
+	let ready = false;
+
+	let uid = 1;
+	const pending = new Set();
+	let has_pending = false;
 
 	onMount(async () => {
-		const response = await fetch('/content.json');
-		const { blocks } = await response.json();
+		worker = new SearchWorker();
 
-		index = new flexsearch.Index({
-			tokenize: 'forward'
+		worker.addEventListener('message', (event) => {
+			const { type, payload } = event.data;
+
+			if (type === 'ready') {
+				ready = true;
+			}
+
+			if (type === 'results') {
+				search = payload;
+			}
+
+			if (type === 'recents') {
+				recent_searches = payload;
+			}
 		});
 
-		lookup = new Map();
-
-		let time = Date.now();
-		for (const block of blocks) {
-			const title = block.breadcrumbs[block.breadcrumbs.length - 1];
-			lookup.set(block.href, {
-				title,
-				href: block.href,
-				breadcrumbs: block.breadcrumbs.slice(0, -1),
-				content: block.content
-			});
-			index.add(block.href, `${title} ${block.content}`);
-
-			// poor man's way of preventing blocking
-			if (Date.now() - time > 25) {
-				await new Promise((f) => setTimeout(f, 0));
-				time = Date.now();
+		worker.postMessage({
+			type: 'init',
+			payload: {
+				origin: location.origin
 			}
-		}
-
-		update();
+		});
 	});
 
 	afterNavigate(() => {
@@ -62,33 +63,8 @@
 			document.body.removeAttribute('tabindex');
 			window.scrollTo(0, scroll);
 		}
-	}
 
-	function update() {
-		results = (index ? index.search($query) : []).map((href) => lookup.get(href));
-	}
-
-	function escape(text) {
-		return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-	}
-
-	function excerpt(content, query) {
-		const index = content.toLowerCase().indexOf(query.toLowerCase());
-		if (index === -1) {
-			return content.slice(0, 100);
-		}
-
-		const prefix = index > 20 ? `…${content.slice(index - 15, index)}` : content.slice(0, index);
-		const suffix = content.slice(
-			index + query.length,
-			index + query.length + (80 - (prefix.length + query.length))
-		);
-
-		return (
-			escape(prefix) +
-			`<mark>${escape(content.slice(index, index + query.length))}</mark>` +
-			escape(suffix)
-		);
+		search = null;
 	}
 
 	/** @param {string} href */
@@ -97,13 +73,22 @@
 		close();
 	}
 
+	$: if (ready) {
+		const id = uid++;
+		pending.add(id);
+		has_pending = true;
+
+		worker.postMessage({ type: 'query', id, payload: $query });
+	}
+
+	$: if (ready) {
+		worker.postMessage({ type: 'recents', payload: $recent });
+	}
+
 	$: if ($searching) {
-		update();
 		document.body.style.top = `-${window.scrollY}px`;
 		document.body.style.position = 'fixed';
 	}
-
-	$: recent_searches = lookup ? $recent.map((href) => lookup.get(href)).filter(Boolean) : [];
 </script>
 
 <svelte:window
@@ -111,7 +96,12 @@
 		if (e.key === 'k' && (navigator.platform === 'MacIntel' ? e.metaKey : e.ctrlKey)) {
 			e.preventDefault();
 			$query = '';
-			$searching = !$searching;
+
+			if ($searching) {
+				close();
+			} else {
+				$searching = true;
+			}
 		}
 
 		if (e.code === 'Escape') {
@@ -120,7 +110,7 @@
 	}}
 />
 
-{#if $searching && index}
+{#if $searching && ready}
 	<div class="modal-background" on:click={close} />
 
 	<div
@@ -149,18 +139,16 @@
 				autofocus
 				on:keydown={(e) => {
 					if (e.key === 'Enter') {
-						if (results.length > 0) {
-							modal.querySelector('a').click();
-						}
+						modal.querySelector('a[data-has-node]')?.click();
 					}
 				}}
 				on:input={(e) => {
 					$query = e.target.value;
-					update();
 				}}
 				value={$query}
 				placeholder="Search"
 				aria-describedby="search-description"
+				spellcheck="false"
 			/>
 
 			<button aria-label="Close" on:click={close}>
@@ -170,47 +158,44 @@
 			<span id="search-description" class="visually-hidden">Results will update as you type</span>
 
 			<div class="results">
-				{#if $query}
-					{#if results.length > 0}
-						<ul class="results">
-							{#each results as result, i}
-								<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-								<li>
-									<a on:click={() => navigate(result.href)} href={result.href}>
-										<small>{result.breadcrumbs.join('/')}</small>
-										<strong>{@html excerpt(result.title, $query)}</strong>
-										<span>{@html excerpt(result.content, $query)}</span>
-									</a>
-								</li>
-							{/each}
-						</ul>
-					{:else}
-						<p class="info">No results</p>
-					{/if}
+				{#if search?.query}
+					<div class="results-container" on:click={() => ($searching = false)}>
+						<SearchResults
+							results={search.results}
+							query={search.query}
+							on:select={(e) => {
+								navigate(e.detail.href);
+							}}
+						/>
+					</div>
 				{:else}
 					<h2 class="info">{recent_searches.length ? 'Recent searches' : 'No recent searches'}</h2>
-					<ul>
-						{#each recent_searches as search, i}
-							<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-							<li class="recent">
-								<a on:click={() => navigate(search.href)} href={search.href}>
-									<small>{search.breadcrumbs.join('/')}</small>
-									<strong>{search.title}</strong>
-								</a>
+					{#if recent_searches.length}
+						<div class="results-container">
+							<ul>
+								{#each recent_searches as search, i}
+									<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+									<li class="recent">
+										<a on:click={() => navigate(search.href)} href={search.href}>
+											<small>{search.breadcrumbs.join('/')}</small>
+											<strong>{search.title}</strong>
+										</a>
 
-								<button
-									aria-label="Delete"
-									on:click={(e) => {
-										$recent = $recent.filter((href) => href !== search.href);
-										e.stopPropagation();
-										e.preventDefault();
-									}}
-								>
-									<Icon name="delete" />
-								</button>
-							</li>
-						{/each}
-					</ul>
+										<button
+											aria-label="Delete"
+											on:click={(e) => {
+												$recent = $recent.filter((href) => href !== search.href);
+												e.stopPropagation();
+												e.preventDefault();
+											}}
+										>
+											<Icon name="delete" />
+										</button>
+									</li>
+								{/each}
+							</ul>
+						</div>
+					{/if}
 				{/if}
 			</div>
 		</div>
@@ -218,7 +203,7 @@
 {/if}
 
 <div aria-live="assertive">
-	{#if $searching && $query && results.length === 0}
+	{#if $searching && search?.results.length === 0}
 		<p>No results</p>
 	{/if}
 </div>
@@ -233,6 +218,7 @@
 		border: none;
 		border-bottom: 1px solid #eee;
 		font-weight: 600;
+		flex-shrink: 0;
 	}
 
 	input::selection {
@@ -286,46 +272,47 @@
 
 	.modal {
 		display: flex;
-		align-items: center;
 		justify-content: center;
+		align-items: center;
 		pointer-events: none;
 	}
 
 	.search-box {
 		position: relative;
-		width: calc(100vw - 2rem);
 		height: calc(100% - 2rem);
+		width: calc(100vw - 2rem);
 		max-width: 50rem;
 		max-height: 50rem;
-		background: white;
 		filter: drop-shadow(2px 4px 16px rgba(0, 0, 0, 0.2));
 		border-radius: var(--border-r);
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+	}
+
+	.search-box > * {
 		pointer-events: all;
 	}
 
 	.results {
-		flex: 1;
 		overflow: auto;
+		overscroll-behavior-y: none;
 	}
 
-	ul {
-		margin: 0;
-	}
-
-	li {
-		position: relative;
-		list-style: none;
-		margin: 0;
+	.results-container {
+		background: white;
+		border-radius: 0 0 var(--border-r) var(--border-r);
+		pointer-events: all;
 	}
 
 	.info {
-		padding: 1rem 1rem 0 1rem;
+		padding: 1rem;
 		font-size: 1.2rem;
 		font-weight: normal;
 		text-transform: uppercase;
+		background-color: white;
+		border-radius: 0 0 var(--border-r) var(--border-r);
+		pointer-events: all;
 	}
 
 	a {
@@ -346,8 +333,7 @@
 	}
 
 	a small,
-	a strong,
-	a span {
+	a strong {
 		display: block;
 		white-space: nowrap;
 		overflow: hidden;
@@ -368,26 +354,11 @@
 		margin: 0.4rem 0;
 	}
 
-	a span {
-		font-size: 1.2rem;
-		color: #999;
-	}
-
-	a span :global(mark) {
-		background: none;
-		color: #111;
-	}
-
-	a:focus small,
-	a:focus span {
+	a:focus small {
 		color: rgba(255, 255, 255, 0.6);
 	}
 
 	a:focus strong {
-		color: white;
-	}
-
-	a:focus span :global(mark) {
 		color: white;
 	}
 
@@ -396,6 +367,10 @@
 		color: white;
 		text-decoration: none;
 		border-radius: 1px;
+	}
+
+	li {
+		position: relative;
 	}
 
 	button[aria-label='Delete'] {

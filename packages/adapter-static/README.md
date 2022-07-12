@@ -4,26 +4,53 @@
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-static@next`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `svelte.config.js`:
 
 ```js
 // svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
 export default {
-	kit: {
-		adapter: adapter({
-			// default options are shown
-			pages: 'build',
-			assets: 'build',
-			fallback: null,
-			precompress: false
-		})
-	}
+  kit: {
+    adapter: adapter({
+      // default options are shown. On some platforms
+      // these options are set automatically — see below
+      pages: 'build',
+      assets: 'build',
+      fallback: null,
+      precompress: false
+    }),
+
+    prerender: {
+      // This can be false if you're using a fallback (i.e. SPA mode)
+      default: true
+    }
+  }
 };
 ```
 
-Unless you're in [SPA mode](#spa-mode), the adapter will attempt to prerender every page of your app, regardless of whether the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option is set.
+> ⚠️ You must ensure SvelteKit's [`trailingSlash`](https://kit.svelte.dev/docs/configuration#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+
+## Zero-config support
+
+Some platforms have zero-config support (more to come in future):
+
+- [Vercel](https://vercel.com)
+
+On these platforms, you should omit the adapter options so that `adapter-static` can provide the optimal configuration:
+
+```diff
+export default {
+  kit: {
+-    adapter: adapter({...}),
++    adapter: adapter(),
+
+    prerender: {
+      default: true
+    }
+  }
+};
+```
 
 ## Options
 
@@ -49,22 +76,26 @@ You can use `adapter-static` to create a single-page app or SPA by specifying a 
 
 > In most situations this is not recommended: it harms SEO, tends to slow down perceived performance, and makes your app inaccessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
 
-The fallback page is a blank HTML page that loads your SvelteKit app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't otherwise match. We can create that file like so:
+The fallback page is an HTML page created by SvelteKit that loads your app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't correspond to static assets or prerendered pages. We can create that file like so:
 
 ```js
 // svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
 export default {
-	kit: {
-		adapter: adapter({
-			fallback: '200.html'
-		})
-	}
+  kit: {
+    adapter: adapter({
+      fallback: '200.html'
+    })
+  }
 };
 ```
 
-When operating in SPA mode, only pages that have the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option set will be prerendered.
+When operating in SPA mode, you can omit `config.kit.prerender.default` (or set it to `false`, its default value), and only pages that have the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option set will be prerendered at build time.
+
+SvelteKit will still crawl your app's entry points looking for prerenderable pages. If `svelte-kit build` fails because of pages that can't be loaded outside the browser, you can set `config.kit.prerender.entries` to `[]` to prevent this from happening. (Setting `config.kit.prerender.enabled` also has this effect, but would prevent the fallback page from being generated.)
+
+> ⚠️ During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [call `resolve()` with a parameter of `{ssr: false}` inside the `handle()` hook](https://kit.svelte.dev/docs/hooks#handle).
 
 ## GitHub Pages
 

@@ -1,5 +1,85 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.47
+
+### Patch Changes
+
+- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+
+## 1.0.0-next.46
+
+### Patch Changes
+
+- Generate sourcemaps for server-side functions when bundling with esbuild ([#5258](https://github.com/sveltejs/kit/pull/5258))
+
+## 1.0.0-next.45
+
+### Patch Changes
+
+- Simplify example wrangler.toml, and fix outdated README ([#5187](https://github.com/sveltejs/kit/pull/5187))
+
+## 1.0.0-next.44
+
+### Patch Changes
+
+- Update dependencies ([#5121](https://github.com/sveltejs/kit/pull/5121))
+
+## 1.0.0-next.43
+
+### Patch Changes
+
+- Update adapter entrypoint typings to be NodeNext/ESNext-compatible ([#5111](https://github.com/sveltejs/kit/pull/5111))
+
+## 1.0.0-next.42
+
+### Patch Changes
+
+- only serve `_app/immutable` with immutable cache header, not `_app/version.json` ([#5051](https://github.com/sveltejs/kit/pull/5051))
+
+## 1.0.0-next.41
+
+### Patch Changes
+
+- Add types to pkg.exports ([#5045](https://github.com/sveltejs/kit/pull/5045))
+
+## 1.0.0-next.40
+
+### Patch Changes
+
+- [breaking] support Wrangler 2, drop Wrangler 1 ([#4887](https://github.com/sveltejs/kit/pull/4887))
+
+## 1.0.0-next.39
+
+### Patch Changes
+
+- [breaking] Remove try-catch around server.respond ([#4738](https://github.com/sveltejs/kit/pull/4738))
+
+## 1.0.0-next.38
+
+### Patch Changes
+
+- - Fix an issue related to prerendered pages incorrectly resolving in @sveltejs/adapter-cloudflare-workers ([#4626](https://github.com/sveltejs/kit/pull/4626))
+
+## 1.0.0-next.37
+
+### Patch Changes
+
+- [Breaking] refactor implementation from "Service Worker" pattern to "Module Worker" used in adapter-cloudflare ([#4276](https://github.com/sveltejs/kit/pull/4276))
+
+  #### add the following to your wrangler.toml
+
+  ```toml
+  		[build.upload]
+  		format = "modules"
+  		main = "./worker.mjs"
+  ```
+
+## 1.0.0-next.36
+
+### Patch Changes
+
+- Provide getClientAddress function ([#4289](https://github.com/sveltejs/kit/pull/4289))
+
 ## 1.0.0-next.35
 
 ### Patch Changes

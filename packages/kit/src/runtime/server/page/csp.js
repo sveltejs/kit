@@ -4,33 +4,11 @@ import { sha256, base64 } from './crypto.js';
 /** @type {Promise<void>} */
 export let csp_ready;
 
-/** @type {() => string} */
-let generate_nonce;
+const array = new Uint8Array(16);
 
-/** @type {(input: string) => string} */
-let generate_hash;
-
-if (typeof crypto !== 'undefined') {
-	const array = new Uint8Array(16);
-
-	generate_nonce = () => {
-		crypto.getRandomValues(array);
-		return base64(array);
-	};
-
-	generate_hash = sha256;
-} else {
-	// TODO: remove this in favor of web crypto API once we no longer support Node 14
-	const name = 'crypto'; // store in a variable to fool esbuild when adapters bundle kit
-	csp_ready = import(name).then((crypto) => {
-		generate_nonce = () => {
-			return crypto.randomBytes(16).toString('base64');
-		};
-
-		generate_hash = (input) => {
-			return crypto.createHash('sha256').update(input, 'utf-8').digest().toString('base64');
-		};
-	});
+function generate_nonce() {
+	crypto.getRandomValues(array);
+	return base64(array);
 }
 
 const quoted = new Set([
@@ -133,7 +111,7 @@ export class Csp {
 	add_script(content) {
 		if (this.#script_needs_csp) {
 			if (this.#use_hashes) {
-				this.#script_src.push(`sha256-${generate_hash(content)}`);
+				this.#script_src.push(`sha256-${sha256(content)}`);
 			} else if (this.#script_src.length === 0) {
 				this.#script_src.push(`nonce-${this.nonce}`);
 			}
@@ -144,7 +122,7 @@ export class Csp {
 	add_style(content) {
 		if (this.#style_needs_csp) {
 			if (this.#use_hashes) {
-				this.#style_src.push(`sha256-${generate_hash(content)}`);
+				this.#style_src.push(`sha256-${sha256(content)}`);
 			} else if (this.#style_src.length === 0) {
 				this.#style_src.push(`nonce-${this.nonce}`);
 			}

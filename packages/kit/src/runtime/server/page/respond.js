@@ -11,6 +11,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
  */
 
 /**
+ * Gets the nodes, calls `load` for each of them, and then calls render to build the HTML response.
  * @param {{
  *   event: import('types').RequestEvent;
  *   options: SSROptions;
@@ -18,9 +19,8 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   $session: any;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   route: import('types').SSRPage;
- *   params: Record<string, string>;
  * }} opts
- * @returns {Promise<Response | undefined>}
+ * @returns {Promise<Response>}
  */
 export async function respond(opts) {
 	const { event, options, state, $session, route, resolve_opts } = opts;
@@ -37,14 +37,16 @@ export async function respond(opts) {
 				router: true
 			},
 			status: 200,
-			url: event.url,
+			error: null,
+			event,
 			stuff: {}
 		});
 	}
 
 	try {
 		nodes = await Promise.all(
-			route.a.map((n) => options.manifest._.nodes[n] && options.manifest._.nodes[n]())
+			// we use == here rather than === because [undefined] serializes as "[null]"
+			route.a.map((n) => (n == undefined ? n : options.manifest._.nodes[n]()))
 		);
 	} catch (err) {
 		const error = coalesce_to_error(err);
@@ -67,11 +69,11 @@ export async function respond(opts) {
 
 	let page_config = get_page_config(leaf, options);
 
-	if (state.prerender) {
+	if (state.prerendering) {
 		// if the page isn't marked as prerenderable (or is explicitly
 		// marked NOT prerenderable, if `prerender.default` is `true`),
 		// then bail out at this point
-		const should_prerender = leaf.prerender ?? state.prerender.default;
+		const should_prerender = leaf.prerender ?? options.prerender.default;
 		if (!should_prerender) {
 			return new Response(undefined, {
 				status: 204
@@ -85,15 +87,15 @@ export async function respond(opts) {
 	/** @type {number} */
 	let status = 200;
 
-	/** @type {Error|undefined} */
-	let error;
+	/** @type {Error | null} */
+	let error = null;
 
 	/** @type {string[]} */
 	let set_cookie_headers = [];
 
 	let stuff = {};
 
-	ssr: if (resolve_opts.ssr) {
+	ssr: {
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
 
@@ -104,14 +106,11 @@ export async function respond(opts) {
 				try {
 					loaded = await load_node({
 						...opts,
-						url: event.url,
 						node,
 						stuff,
 						is_error: false,
 						is_leaf: i === nodes.length - 1
 					});
-
-					if (!loaded) return;
 
 					set_cookie_headers = set_cookie_headers.concat(loaded.set_cookie_headers);
 
@@ -146,7 +145,8 @@ export async function respond(opts) {
 				if (error) {
 					while (i--) {
 						if (route.b[i]) {
-							const error_node = await options.manifest._.nodes[route.b[i]]();
+							const index = /** @type {number} */ (route.b[i]);
+							const error_node = await options.manifest._.nodes[index]();
 
 							/** @type {Loaded} */
 							let node_loaded;
@@ -159,7 +159,6 @@ export async function respond(opts) {
 								const error_loaded = /** @type {import('./types').Loaded} */ (
 									await load_node({
 										...opts,
-										url: event.url,
 										node: error_node,
 										stuff: node_loaded.stuff,
 										is_error: true,
@@ -219,7 +218,7 @@ export async function respond(opts) {
 			await render_response({
 				...opts,
 				stuff,
-				url: event.url,
+				event,
 				page_config,
 				status,
 				error,
