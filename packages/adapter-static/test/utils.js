@@ -4,7 +4,7 @@ import http from 'http';
 import { fileURLToPath } from 'url';
 import * as ports from 'port-authority';
 import sirv from 'sirv';
-import { chromium } from '@playwright/test';
+import { chromium } from 'playwright-chromium';
 import * as uvu from 'uvu';
 
 /**
@@ -29,12 +29,10 @@ export function run(app, callback) {
 	suite.before(async (context) => {
 		try {
 			const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
-			const mode = process.env.CI ? 'dist' : 'src';
-			const cli_path = fileURLToPath(new URL(`../../kit/${mode}/cli.js`, import.meta.url));
 
 			rimraf(`${cwd}/build`);
 
-			await spawn(`"${process.execPath}" ${cli_path} build`, {
+			await spawn('npm run build', {
 				cwd,
 				stdio: 'inherit',
 				shell: true
@@ -48,11 +46,7 @@ export function run(app, callback) {
 			context.server = await create_server(context.port, handler);
 
 			context.base = `http://localhost:${context.port}`;
-			context.browser = await chromium.launch({
-				// use stable chrome from host OS instead of downloading one
-				// see https://playwright.dev/docs/browsers#google-chrome--microsoft-edge
-				channel: 'chrome'
-			});
+			context.browser = await chromium.launch();
 			context.page = await context.browser.newPage();
 		} catch (e) {
 			// TODO remove unnecessary try-catch https://github.com/lukeed/uvu/pull/61
@@ -108,3 +102,7 @@ function create_server(port, handler) {
 function rimraf(path) {
 	(fs.rmSync || fs.rmdirSync)(path, { recursive: true, force: true });
 }
+
+export const plugin = process.env.CI
+	? (await import('../../kit/dist/vite.js')).sveltekit
+	: (await import('../../kit/src/vite/index.js')).sveltekit;

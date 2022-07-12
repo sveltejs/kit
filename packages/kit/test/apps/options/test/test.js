@@ -3,7 +3,7 @@ import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
-test.describe.parallel('base path', () => {
+test.describe('base path', () => {
 	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
 		const response = await request.get('/');
 		expect(response.status()).toBe(404);
@@ -86,9 +86,9 @@ test.describe.parallel('base path', () => {
 	});
 });
 
-test.describe.parallel('CSP', () => {
+test.describe('CSP', () => {
 	test('blocks script from external site', async ({ page }) => {
-		const { server, port } = await start_server((req, res) => {
+		const { port, close } = await start_server((req, res) => {
 			if (req.url === '/blocked.js') {
 				res.writeHead(200, {
 					'content-type': 'text/javascript'
@@ -104,11 +104,11 @@ test.describe.parallel('CSP', () => {
 
 		expect(await page.evaluate('window.pwned')).toBe(undefined);
 
-		server.close();
+		await close();
 	});
 });
 
-test.describe.parallel('Custom extensions', () => {
+test.describe('Custom extensions', () => {
 	test('works with arbitrary extensions', async ({ page }) => {
 		await page.goto('/path-base/custom-extensions/');
 		expect(await page.textContent('h2')).toBe('Great success!');
@@ -132,15 +132,7 @@ test.describe.parallel('Custom extensions', () => {
 	});
 });
 
-test.describe.parallel('Headers', () => {
-	test('enables floc', async ({ page }) => {
-		const response = await page.goto('/path-base');
-		const headers = /** @type {Response} */ (response).headers();
-		expect(headers['permissions-policy']).toBeUndefined();
-	});
-});
-
-test.describe.parallel('trailingSlash', () => {
+test.describe('trailingSlash', () => {
 	test('adds trailing slash', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/path-base/slash');
 
@@ -161,9 +153,47 @@ test.describe.parallel('trailingSlash', () => {
 		expect(r2.url()).toBe(`${baseURL}/path-base/endpoint`);
 		expect(await r2.text()).toBe('hi');
 	});
+
+	test('can fetch data from page-endpoint', async ({ request, baseURL }) => {
+		const r = await request.get('/path-base/page-endpoint/__data.json');
+		expect(r.url()).toBe(`${baseURL}/path-base/page-endpoint/__data.json`);
+		expect(await r.json()).toEqual({ data: 'hi' });
+	});
+
+	test('accounts for trailingSlash when prefetching', async ({
+		app,
+		baseURL,
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/path-base/prefetching');
+
+		/** @type {string[]} */
+		let requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		// also wait for network processing to complete, see
+		// https://playwright.dev/docs/network#network-events
+		await app.prefetch('/path-base/prefetching/prefetched');
+
+		// svelte request made is environment dependent
+		if (process.env.DEV) {
+			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
+		} else {
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
+		}
+
+		expect(requests.includes(`${baseURL}/path-base/prefetching/prefetched/__data.json`)).toBe(true);
+
+		requests = [];
+		await app.goto('/path-base/prefetching/prefetched');
+		expect(requests).toEqual([]);
+	});
 });
 
-test.describe.parallel('serviceWorker', () => {
+test.describe('serviceWorker', () => {
 	if (!process.env.DEV) {
 		test('does not register service worker if none created', async ({ page }) => {
 			await page.goto('/path-base/');

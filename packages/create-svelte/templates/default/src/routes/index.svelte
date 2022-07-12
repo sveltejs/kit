@@ -13,12 +13,12 @@
 
 <section>
 	<h1>
-		<div class="welcome">
+		<span class="welcome">
 			<picture>
 				<source srcset="svelte-welcome.webp" type="image/webp" />
 				<img src="svelte-welcome.png" alt="Welcome" />
 			</picture>
-		</div>
+		</span>
 
 		to your new<br />SvelteKit app
 	</h1>
@@ -44,6 +44,7 @@
 	}
 
 	.welcome {
+		display: block;
 		position: relative;
 		width: 100%;
 		height: 0;

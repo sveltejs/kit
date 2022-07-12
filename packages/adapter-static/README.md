@@ -13,7 +13,8 @@ import adapter from '@sveltejs/adapter-static';
 export default {
   kit: {
     adapter: adapter({
-      // default options are shown
+      // default options are shown. On some platforms
+      // these options are set automatically — see below
       pages: 'build',
       assets: 'build',
       fallback: null,
@@ -29,6 +30,27 @@ export default {
 ```
 
 > ⚠️ You must ensure SvelteKit's [`trailingSlash`](https://kit.svelte.dev/docs/configuration#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+
+## Zero-config support
+
+Some platforms have zero-config support (more to come in future):
+
+- [Vercel](https://vercel.com)
+
+On these platforms, you should omit the adapter options so that `adapter-static` can provide the optimal configuration:
+
+```diff
+export default {
+  kit: {
+-    adapter: adapter({...}),
++    adapter: adapter(),
+
+    prerender: {
+      default: true
+    }
+  }
+};
+```
 
 ## Options
 
@@ -54,7 +76,7 @@ You can use `adapter-static` to create a single-page app or SPA by specifying a 
 
 > In most situations this is not recommended: it harms SEO, tends to slow down perceived performance, and makes your app inaccessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
 
-The fallback page is an HTML page created by SvelteKit that loads your app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't otherwise match. We can create that file like so:
+The fallback page is an HTML page created by SvelteKit that loads your app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't correspond to static assets or prerendered pages. We can create that file like so:
 
 ```js
 // svelte.config.js

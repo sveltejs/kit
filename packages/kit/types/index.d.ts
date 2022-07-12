@@ -1,7 +1,7 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
-import './ambient';
+import './ambient.js';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
@@ -17,8 +17,8 @@ import {
 	ResponseHeaders,
 	RouteDefinition,
 	TrailingSlash
-} from './private';
-import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal';
+} from './private.js';
+import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 
 export interface Adapter {
 	name: string;
@@ -52,7 +52,6 @@ export interface Builder {
 	 */
 	writeClient(dest: string): string[];
 	/**
-	 *
 	 * @param dest
 	 */
 	writePrerendered(
@@ -91,67 +90,68 @@ export interface Builder {
 export interface Config {
 	compilerOptions?: CompileOptions;
 	extensions?: string[];
-	kit?: {
-		adapter?: Adapter;
-		alias?: Record<string, string>;
-		appDir?: string;
-		browser?: {
-			hydrate?: boolean;
-			router?: boolean;
-		};
-		csp?: {
-			mode?: 'hash' | 'nonce' | 'auto';
-			directives?: CspDirectives;
-			reportOnly?: CspDirectives;
-		};
-		endpointExtensions?: string[];
-		files?: {
-			assets?: string;
-			hooks?: string;
-			lib?: string;
-			params?: string;
-			routes?: string;
-			serviceWorker?: string;
-			template?: string;
-		};
-		floc?: boolean;
-		inlineStyleThreshold?: number;
-		methodOverride?: {
-			parameter?: string;
-			allowed?: string[];
-		};
-		outDir?: string;
-		package?: {
-			dir?: string;
-			emitTypes?: boolean;
-			exports?(filepath: string): boolean;
-			files?(filepath: string): boolean;
-		};
-		paths?: {
-			assets?: string;
-			base?: string;
-		};
-		prerender?: {
-			concurrency?: number;
-			crawl?: boolean;
-			default?: boolean;
-			enabled?: boolean;
-			entries?: Array<'*' | `/${string}`>;
-			onError?: PrerenderOnErrorValue;
-		};
-		routes?: (filepath: string) => boolean;
-		serviceWorker?: {
-			register?: boolean;
-			files?: (filepath: string) => boolean;
-		};
-		trailingSlash?: TrailingSlash;
-		version?: {
-			name?: string;
-			pollInterval?: number;
-		};
-		vite?: import('vite').UserConfig | (() => MaybePromise<import('vite').UserConfig>);
-	};
+	kit?: KitConfig;
 	preprocess?: any;
+}
+
+export interface KitConfig {
+	adapter?: Adapter;
+	alias?: Record<string, string>;
+	appDir?: string;
+	browser?: {
+		hydrate?: boolean;
+		router?: boolean;
+	};
+	csp?: {
+		mode?: 'hash' | 'nonce' | 'auto';
+		directives?: CspDirectives;
+		reportOnly?: CspDirectives;
+	};
+	moduleExtensions?: string[];
+	files?: {
+		assets?: string;
+		hooks?: string;
+		lib?: string;
+		params?: string;
+		routes?: string;
+		serviceWorker?: string;
+		template?: string;
+	};
+	inlineStyleThreshold?: number;
+	methodOverride?: {
+		parameter?: string;
+		allowed?: string[];
+	};
+	outDir?: string;
+	package?: {
+		dir?: string;
+		emitTypes?: boolean;
+		exports?(filepath: string): boolean;
+		files?(filepath: string): boolean;
+	};
+	paths?: {
+		assets?: string;
+		base?: string;
+	};
+	prerender?: {
+		concurrency?: number;
+		crawl?: boolean;
+		default?: boolean;
+		enabled?: boolean;
+		entries?: Array<'*' | `/${string}`>;
+		onError?: PrerenderOnErrorValue;
+	};
+	routes?: (filepath: string) => boolean;
+	serviceWorker?: {
+		register?: boolean;
+		files?: (filepath: string) => boolean;
+	};
+	trailingSlash?: TrailingSlash;
+	version?: {
+		name?: string;
+		pollInterval?: number;
+	};
+	vite?: import('vite').UserConfig | (() => MaybePromise<import('vite').UserConfig>);
 }
 
 export interface ExternalFetch {
@@ -247,7 +247,9 @@ export interface RequestEvent<Params extends Record<string, string> = Record<str
 /**
  * A `(event: RequestEvent) => RequestHandlerOutput` function exported from an endpoint that corresponds to an HTTP verb (`get`, `put`, `patch`, etc) and handles requests with that method. Note that since 'delete' is a reserved word in JavaScript, delete handles are called `del` instead.
  *
- * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the `Params` generic argument.
+ * It receives `Params` as the first generic argument, which you can skip by using [generated types](/docs/types#generated-types) instead.
+ *
+ * The next generic argument `Output` is used to validate the returned `body` from your functions by passing it through `BodyValidator`, which will make sure the variable in the `body` matches what with you assign here. It defaults to `ResponseBody`, which will error when `body` receives a [custom object type](https://www.typescriptlang.org/docs/handbook/2/objects.html).
  */
 export interface RequestHandler<
 	Params extends Record<string, string> = Record<string, string>,
@@ -267,7 +269,7 @@ export interface ResolveOptions {
 	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
 }
 
-export type ResponseBody = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
+export type ResponseBody = JSONValue | Uint8Array | ReadableStream | Error;
 
 export class Server {
 	constructor(manifest: SSRManifest);
@@ -283,8 +285,8 @@ export interface SSRManifest {
 	_: {
 		entry: {
 			file: string;
-			js: string[];
-			css: string[];
+			imports: string[];
+			stylesheets: string[];
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];

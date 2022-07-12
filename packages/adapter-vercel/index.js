@@ -83,7 +83,7 @@ const redirects = {
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
-/** @type {import('.')} **/
+/** @type {import('.').default} **/
 export default function ({ external = [], edge, split } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
@@ -146,7 +146,8 @@ async function v1(builder, external) {
 		bundle: true,
 		platform: 'node',
 		external,
-		format: 'cjs'
+		format: 'cjs',
+		sourcemap: 'linked'
 	});
 
 	fs.writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'commonjs' }));
@@ -302,7 +303,8 @@ async function v3(builder, external, edge, split) {
 			bundle: true,
 			platform: 'node',
 			format: 'esm',
-			external
+			external,
+			sourcemap: 'linked'
 		});
 
 		write(

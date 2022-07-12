@@ -3,9 +3,10 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
-import { decode_params } from './utils.js';
+import { decode_params, serialize_error } from './utils.js';
 import { normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
+import { negotiate } from '../../utils/http.js';
 
 const DATA_SUFFIX = '/__data.json';
 
@@ -41,7 +42,12 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	let decoded = decodeURI(url.pathname);
+	let decoded;
+	try {
+		decoded = decodeURI(url.pathname);
+	} catch {
+		return new Response('Malformed URI', { status: 400 });
+	}
 
 	/** @type {import('types').SSRRoute | null} */
 	let route = null;
@@ -51,7 +57,7 @@ export async function respond(request, options, state) {
 
 	if (options.paths.base && !state.prerendering?.fallback) {
 		if (!decoded.startsWith(options.paths.base)) {
-			return new Response(undefined, { status: 404 });
+			return new Response('Not found', { status: 404 });
 		}
 		decoded = decoded.slice(options.paths.base.length) || '/';
 	}
@@ -59,8 +65,9 @@ export async function respond(request, options, state) {
 	const is_data_request = decoded.endsWith(DATA_SUFFIX);
 
 	if (is_data_request) {
-		decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
-		url = new URL(url.origin + url.pathname.slice(0, -DATA_SUFFIX.length) + url.search);
+		const data_suffix_length = DATA_SUFFIX.length - (options.trailing_slash === 'always' ? 1 : 0);
+		decoded = decoded.slice(0, -data_suffix_length) || '/';
+		url = new URL(url.origin + url.pathname.slice(0, -data_suffix_length) + url.search);
 	}
 
 	if (!state.prerendering?.fallback) {
@@ -79,19 +86,26 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	if (route?.type === 'page') {
-		const normalized = normalize_path(url.pathname, options.trailing_slash);
+	if (route) {
+		if (route.type === 'page') {
+			const normalized = normalize_path(url.pathname, options.trailing_slash);
 
-		if (normalized !== url.pathname && !state.prerendering?.fallback) {
+			if (normalized !== url.pathname && !state.prerendering?.fallback) {
+				return new Response(undefined, {
+					status: 301,
+					headers: {
+						'x-sveltekit-normalize': '1',
+						location:
+							// ensure paths starting with '//' are not treated as protocol-relative
+							(normalized.startsWith('//') ? url.origin + normalized : normalized) +
+							(url.search === '?' ? '' : url.search)
+					}
+				});
+			}
+		} else if (is_data_request) {
+			// requesting /__data.json should fail for a standalone endpoint
 			return new Response(undefined, {
-				status: 301,
-				headers: {
-					'x-sveltekit-normalize': '1',
-					location:
-						// ensure paths starting with '//' are not treated as protocol-relative
-						(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-						(url.search === '?' ? '' : url.search)
-				}
+				status: 404
 			});
 		}
 	}
@@ -196,7 +210,7 @@ export async function respond(request, options, state) {
 					let response;
 
 					if (is_data_request && route.type === 'page' && route.shadow) {
-						response = await render_endpoint(event, await route.shadow());
+						response = await render_endpoint(event, await route.shadow(), options);
 
 						// loading data for a client-side transition is a special case
 						if (request.headers.has('x-sveltekit-load')) {
@@ -218,7 +232,7 @@ export async function respond(request, options, state) {
 					} else {
 						response =
 							route.type === 'endpoint'
-								? await render_endpoint(event, await route.load())
+								? await render_endpoint(event, await route.load(), options)
 								: await render_page(event, route, options, state, resolve_opts);
 					}
 
@@ -301,6 +315,18 @@ export async function respond(request, options, state) {
 		const error = coalesce_to_error(e);
 
 		options.handle_error(error, event);
+
+		const type = negotiate(event.request.headers.get('accept') || 'text/html', [
+			'text/html',
+			'application/json'
+		]);
+
+		if (is_data_request || type === 'application/json') {
+			return new Response(serialize_error(error, options.get_stack), {
+				status: 500,
+				headers: { 'content-type': 'application/json; charset=utf-8' }
+			});
+		}
 
 		try {
 			const $session = await options.hooks.getSession(event);

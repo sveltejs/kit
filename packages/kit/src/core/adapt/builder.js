@@ -2,6 +2,7 @@ import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 
 /**
+ * Creates the Builder which is passed to adapters for building the application.
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   build_data: import('types').BuildData;

@@ -1,5 +1,29 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.60
+
+### Patch Changes
+
+- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+
+## 1.0.0-next.59
+
+### Patch Changes
+
+- Add sourcemap generation for the generated functions ([#5197](https://github.com/sveltejs/kit/pull/5197))
+
+## 1.0.0-next.58
+
+### Patch Changes
+
+- Update dependencies ([#5121](https://github.com/sveltejs/kit/pull/5121))
+
+## 1.0.0-next.57
+
+### Patch Changes
+
+- Update adapter entrypoint typings to be NodeNext/ESNext-compatible ([#5111](https://github.com/sveltejs/kit/pull/5111))
+
 ## 1.0.0-next.56
 
 ### Patch Changes

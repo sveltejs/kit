@@ -1,5 +1,41 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.27
+
+### Patch Changes
+
+- Expose App interfaces ([#5386](https://github.com/sveltejs/kit/pull/5386))
+
+## 1.0.0-next.26
+
+### Patch Changes
+
+- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+
+## 1.0.0-next.25
+
+### Minor Changes
+
+- Expose Cloudflare Worker Cache API through `caches` in Platform ([#5081](https://github.com/sveltejs/kit/pull/5081))
+
+## 1.0.0-next.24
+
+### Patch Changes
+
+- Generate sourcemaps for server-side functions when bundling with esbuild ([#5258](https://github.com/sveltejs/kit/pull/5258))
+
+## 1.0.0-next.23
+
+### Patch Changes
+
+- Update dependencies ([#5121](https://github.com/sveltejs/kit/pull/5121))
+
+## 1.0.0-next.22
+
+### Patch Changes
+
+- Update adapter entrypoint typings to be NodeNext/ESNext-compatible ([#5111](https://github.com/sveltejs/kit/pull/5111))
+
 ## 1.0.0-next.21
 
 ### Patch Changes

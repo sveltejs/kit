@@ -36,9 +36,14 @@ export function parse_route_id(id) {
 										.split(/\[(.+?)\]/)
 										.map((content, i) => {
 											if (i % 2) {
-												const [, rest, name, type] = /** @type {RegExpMatchArray} */ (
-													param_pattern.exec(content)
-												);
+												const match = param_pattern.exec(content);
+												if (!match) {
+													throw new Error(
+														`Invalid param: ${content}. Params and matcher names can only have underscores and alphanumeric characters.`
+													);
+												}
+
+												const [, rest, name, type] = match;
 												names.push(name);
 												types.push(type);
 												return rest ? '(.*?)' : '([^/]+?)';
