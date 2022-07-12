@@ -306,6 +306,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				const rendered = await respond(
 					request,
 					{
+						app_dir: svelte_config.kit.appDir,
 						csp: svelte_config.kit.csp,
 						dev: true,
 						get_stack: (error) => {
@@ -341,7 +342,6 @@ export async function dev(vite, vite_config, svelte_config) {
 							base: svelte_config.kit.paths.base,
 							assets
 						},
-						prefix: '',
 						prerender: {
 							default: svelte_config.kit.prerender.default,
 							enabled: svelte_config.kit.prerender.enabled
