@@ -636,7 +636,7 @@ test.describe('Shadowed pages', () => {
 		}
 	});
 
-	test.only('treats non-JSON responses as literal', async ({ page, javaScriptEnabled }) => {
+	test('treats non-JSON responses as literal', async ({ page, javaScriptEnabled }) => {
 		if (javaScriptEnabled) return;
 
 		await page.goto('/shadowed/non-json');
