@@ -244,21 +244,15 @@ export async function render_response({
 			.map((dep) => `\n\t<link rel="modulepreload" href="${prefix(dep)}">`)
 			.join('');
 
-		if (page_config.router || page_config.hydrate) {
-			head += Array.from(modulepreloads)
-				.map((dep) => `\n\t<link rel="modulepreload" href="${prefix(dep)}">`)
-				.join('');
+		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
 
-			const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
+		csp.add_script(init_app);
 
-			csp.add_script(init_app);
-
-			if (csp.script_needs_nonce) {
-				attributes.push(`nonce="${csp.nonce}"`);
-			}
-
-			body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
+		if (csp.script_needs_nonce) {
+			attributes.push(`nonce="${csp.nonce}"`);
 		}
+
+		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 
 		body += serialized_data
 			.map(({ url, body, response }) =>
