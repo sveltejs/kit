@@ -246,7 +246,9 @@ export interface RequestEvent<Params extends Record<string, string> = Record<str
 /**
  * A `(event: RequestEvent) => RequestHandlerOutput` function exported from an endpoint that corresponds to an HTTP verb (`get`, `put`, `patch`, etc) and handles requests with that method. Note that since 'delete' is a reserved word in JavaScript, delete handles are called `del` instead.
  *
- * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the `Params` generic argument.
+ * It receives `Params` as the first generic argument, which you can skip by using [generated types](/docs/types#generated-types) instead.
+ *
+ * The next generic argument `Output` is used to validate the returned `body` from your functions by passing it through `BodyValidator`, which will make sure the variable in the `body` matches what with you assign here. It defaults to `ResponseBody`, which will error when `body` receives a [custom object type](https://www.typescriptlang.org/docs/handbook/2/objects.html).
  */
 export interface RequestHandler<
 	Params extends Record<string, string> = Record<string, string>,
