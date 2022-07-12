@@ -3,6 +3,8 @@ import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('paths.base', () => {
 	test('serves /basepath', async ({ page }) => {
 		await page.goto('/basepath');
