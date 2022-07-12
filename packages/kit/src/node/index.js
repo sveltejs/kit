@@ -18,27 +18,41 @@ function get_raw_body(req) {
 		return null;
 	}
 
+	let size = 0;
+	let cancelled = false;
+
 	return new ReadableStream({
 		start(controller) {
 			req.on('error', (error) => {
 				controller.error(error);
 			});
 
-			let size = 0;
-
-			req.on('data', (chunk) => {
-				size += chunk.length;
-
-				if (size > length) {
-					controller.error(new Error('content-length exceeded'));
-				}
-
-				controller.enqueue(chunk);
-			});
-
 			req.on('end', () => {
-				controller.close();
+				if (!cancelled) {
+					controller.close();
+				}
 			});
+		},
+
+		pull(controller) {
+			return new Promise((fulfil) => {
+				req.once('data', (chunk) => {
+					if (!cancelled) {
+						size += chunk.length;
+						if (size > length) {
+							controller.error(new Error('content-length exceeded'));
+						}
+
+						controller.enqueue(chunk);
+					}
+
+					fulfil();
+				});
+			});
+		},
+
+		cancel() {
+			cancelled = true;
 		}
 	});
 }

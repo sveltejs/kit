@@ -19,7 +19,7 @@ export default function handler(request, context) {
 	return server.respond(request, {
 		platform: { context },
 		getClientAddress() {
-			return request.headers.get('x-nf-client-connection-ip');
+			return context.ip;
 		}
 	});
 }

@@ -4,12 +4,14 @@
 		"@sveltejs/kit#build": {
 			"dependsOn": ["^build"],
 			"inputs": ["src/**", "scripts/**", "types/**"],
-			"outputs": ["dist/**", "docs/**", "assets/**"]
+			"outputs": ["dist/**", "docs/**", "assets/**"],
+			"outputMode": "new-only"
 		},
 		"kit.svelte.dev#build": {
 			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
 			"inputs": ["src/**", "../../packages/kit/docs/**", "../../documentation/**"],
-			"outputs": [".vercel_build_output/**", ".vercel/output/**"]
+			"outputs": [".vercel_build_output/**", ".vercel/output/**" ],
+			"outputMode": "new-only"
 		},
 		"build": {
 			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
@@ -20,7 +22,8 @@
 				".svelte-kit/**",
 				".vercel_build_output/**",
 				".vercel/output/**"
-			]
+			],
+			"outputMode": "new-only"
 		},
 		"check": {
 			"dependsOn": ["prepare"],
@@ -31,9 +34,19 @@
 				".custom-out-dir/types/**",
 				".svelte-kit/tsconfig.json"
 			],
-			"outputs": []
+			"outputs": [],
+			"outputMode": "new-only"
 		},
-		"format": {},
+		"format": {
+			"outputs": [
+				"src/**",
+				"scripts/**",
+				"shared/**",
+				"templates/**",
+				"types/**"
+			],
+			"outputMode": "new-only"
+		},
 		"prepare": {
 			"inputs": ["src/**", "source/**"],
 			"outputs": [
@@ -41,21 +54,26 @@
 				".svelte-kit/tsconfig.json",
 				".custom-out-dir/types/**",
 				".custom-out-dir/tsconfig.json"
-			]
+			],
+			"outputMode": "new-only"
 		},
 		"test": {
 			"dependsOn": ["^build", "$CI", "$TURBO_CACHE_KEY"],
-			"outputs": []
+			"outputs": ["coverage/", "test-results/**"],
+			"outputMode": "new-only"
 		},
 		"lint": {
-			"outputs": []
+			"outputs": [],
+			"outputMode": "new-only"
 		},
 		"precommit": {
 			"dependsOn": ["format", "lint"],
-			"outputs": []
+			"outputs": [],
+			"outputMode": "new-only"
 		},
 		"dev": {
-			"cache": false
+			"cache": false,
+			"outputMode": "new-only"
 		}
 	},
 	"globalDependencies": [".eslintrc.json", ".prettierrc", "tsconfig.json"]
