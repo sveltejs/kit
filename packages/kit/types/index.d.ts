@@ -248,7 +248,7 @@ export interface RequestEvent<Params extends Record<string, string> = Record<str
  *
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](/docs/types#generated-types) instead.
  *
- * The next generic argument `Output` is used to validate the returned `body` from your functions by passing it through `BodyValidator`, this will make sure the variable in the `body` matches what with you assign here. It defaults to `ResponseBody`, which will error when `body` receives a [custom object type](https://www.typescriptlang.org/docs/handbook/2/objects.html).
+ * The next generic argument `Output` is used to validate the returned `body` from your functions by passing it through `BodyValidator`, which will make sure the variable in the `body` matches what with you assign here. It defaults to `ResponseBody`, which will error when `body` receives a [custom object type](https://www.typescriptlang.org/docs/handbook/2/objects.html).
  */
 export interface RequestHandler<
 	Params extends Record<string, string> = Record<string, string>,
