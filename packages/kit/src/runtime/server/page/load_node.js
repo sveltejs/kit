@@ -357,7 +357,7 @@ export async function load_node({
 			});
 		}
 
-		loaded = normalize(await module.load.call(null, load_input), options.dev && node.file);
+		loaded = normalize(await module.load.call(null, load_input));
 	} else if (shadow.body) {
 		loaded = {
 			props: shadow.body
