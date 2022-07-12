@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.370
+
+### Patch Changes
+
+- Don't automatically buffer request bodies ([#5442](https://github.com/sveltejs/kit/pull/5442))
+
 ## 1.0.0-next.369
 
 ### Patch Changes
