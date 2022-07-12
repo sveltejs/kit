@@ -1,9 +1,6 @@
 import { escape_html_attr } from '../../../utils/escape.js';
 import { sha256, base64 } from './crypto.js';
 
-/** @type {Promise<void>} */
-export let csp_ready;
-
 const array = new Uint8Array(16);
 
 function generate_nonce() {
@@ -25,7 +22,7 @@ const crypto_pattern = /^(nonce|sha\d\d\d)-/;
 
 // CSP and CSP Report Only are extremely similar with a few caveats
 // the easiest/DRYest way to express this is with some private encapsulation
-class CspProvider {
+class BaseProvider {
 	/** @type {boolean} */
 	#use_hashes;
 
@@ -41,47 +38,26 @@ class CspProvider {
 	/** @type {import('types').CspDirectives} */
 	#directives;
 
-	/** @type {boolean} */
-	#report_only;
-
 	/** @type {import('types').Csp.Source[]} */
 	#script_src;
 
 	/** @type {import('types').Csp.Source[]} */
-	#style_src;
+  #style_src;
+  
+  /** @type {string} */
+  #nonce
 
 	/**
-	 * @param {{
-	 *   mode: string,
-	 *   directives: import('types').CspDirectives,
-	 *   report_only: boolean
-	 * }} config
-	 * @param {{
-	 *   dev: boolean;
-	 *   prerender: boolean;
-	 *   needs_nonce: boolean;
-	 * }} opts
+	 * @param {Omit<import('./types').CspConfig, 'reportOnly'>} config
+	 * @param {import('./types').CspOpts} opts
+   * @param {string} nonce
 	 */
-	constructor({ mode, directives, report_only = false }, { dev, prerender, needs_nonce }) {
+	constructor({ mode, directives }, { dev, prerender, needs_nonce }, nonce = generate_nonce()) {
 		this.#use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
 		this.#directives = dev ? { ...directives } : directives; // clone in dev so we can safely mutate
 		this.#dev = dev;
-		this.#report_only = report_only;
 
 		const d = this.#directives;
-
-		if (this.#report_only && Object.values(d).filter((v) => !!v).length > 0) {
-			// If we're generating content-security-policy-report-only,
-			// if there are any directives, we need a report-uri or report-to (or both)
-			// else it's just an expensive noop.
-			const has_report_to = !!d['report-to'] && d['report-to']?.length > 0;
-			const has_report_uri = !!d['report-uri'] && d['report-uri']?.length > 0;
-			if (!has_report_to && !has_report_uri) {
-				throw Error(
-					'`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both'
-				);
-			}
-		}
 
 		if (this.#dev) {
 			// remove strict-dynamic in dev...
@@ -121,10 +97,8 @@ class CspProvider {
 
 		this.script_needs_nonce = this.#script_needs_csp && !this.#use_hashes;
 		this.style_needs_nonce = this.#style_needs_csp && !this.#use_hashes;
+    this.#nonce = nonce;
 
-		if (this.script_needs_nonce || this.style_needs_nonce || needs_nonce) {
-			this.nonce = generate_nonce();
-		}
 	}
 
 	/** @param {string} content */
@@ -133,7 +107,7 @@ class CspProvider {
 			if (this.#use_hashes) {
 				this.#script_src.push(`sha256-${sha256(content)}`);
 			} else if (this.#script_src.length === 0) {
-				this.#script_src.push(`nonce-${this.nonce}`);
+				this.#script_src.push(`nonce-${this.#nonce}`);
 			}
 		}
 	}
@@ -144,7 +118,7 @@ class CspProvider {
 			if (this.#use_hashes) {
 				this.#style_src.push(`sha256-${sha256(content)}`);
 			} else if (this.#style_src.length === 0) {
-				this.#style_src.push(`nonce-${this.nonce}`);
+				this.#style_src.push(`nonce-${this.#nonce}`);
 			}
 		}
 	}
@@ -203,94 +177,90 @@ class CspProvider {
 
 		return header.join('; ');
 	}
+}
+
+class CspProvider extends BaseProvider {
+    /**
+   * @param {Omit<import('./types').CspConfig, 'reportOnly'>} config
+   * @param {import('./types').CspOpts} opts
+   * @param {string} nonce
+   */
+  constructor(config, opts, nonce) {
+    super(config, opts, nonce);
+  }
 
 	get_meta() {
-		if (this.#report_only) {
-			throw Error('`content-security-policy-report-only` is not valid in the <meta> tag');
-		}
 		const content = escape_html_attr(this.get_header(true));
 		return `<meta http-equiv="content-security-policy" content=${content}>`;
 	}
 }
 
-export class Csp {
-	/** @type {CspProvider} */
-	#csp_provider;
-
-	/** @type {CspProvider} */
-	#report_only_provider;
-
+class CspReportOnlyProvider extends BaseProvider {
 	/**
-	 * @param {{
-	 *   mode: string,
-	 *   directives: import('types').CspDirectives
-	 *   reportOnly: import('types').CspDirectives,
-	 * }} config
-	 * @param {{
-	 *   dev: boolean;
-	 *   prerender: boolean;
-	 *   needs_nonce: boolean;
-	 * }} opts
+	 * @param {Omit<import('./types').CspConfig, 'directives'>} config
+	 * @param {import('./types').CspOpts} opts
+   * @param {string} nonce
 	 */
-	constructor({ mode, directives, reportOnly }, opts) {
-		this.#csp_provider = new CspProvider({ mode, directives, report_only: false }, opts);
-		this.#report_only_provider = new CspProvider(
-			{ mode, directives: reportOnly, report_only: true },
-			opts
-		);
-	}
+  constructor(config, opts, nonce) {
+    const internal_config = { ...config, directives: config.reportOnly }
+		super(internal_config, opts, nonce);
 
-	get nonce() {
-		return this.#csp_provider.nonce;
+		if (Object.values(config.reportOnly).filter((v) => !!v).length > 0) {
+			// If we're generating content-security-policy-report-only,
+			// if there are any directives, we need a report-uri or report-to (or both)
+			// else it's just an expensive noop.
+			const has_report_to = config.reportOnly?.['report-to']?.length ?? 0 > 0;
+			const has_report_uri = config.reportOnly?.['report-uri']?.length ?? 0 > 0;
+			if (!has_report_to && !has_report_uri) {
+				throw Error(
+					'`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both'
+				);
+			}
+		}
 	}
+}
 
-	get report_only_nonce() {
-		return this.#report_only_provider.nonce;
-	}
+export class Csp {
+  /** @type {string} */
+  #nonce = generate_nonce();
 
-	get script_needs_nonce() {
-		return this.#csp_provider.script_needs_nonce;
-	}
+  /** @type {CspProvider} */
+  csp_provider;
 
-	get report_only_script_needs_nonce() {
-		return this.#report_only_provider.script_needs_nonce;
-	}
+  /** @type {CspReportOnlyProvider} */
+  report_only_provider;
 
-	get style_needs_nonce() {
-		return this.#csp_provider.style_needs_nonce;
-	}
+  /**
+	 * @param {import('./types').CspConfig} config
+	 * @param {import('./types').CspOpts} opts
+	 */
+  constructor(config, opts) {
+    this.csp_provider = new CspProvider(config, opts, this.#nonce);
+    this.report_only_provider = new CspReportOnlyProvider(config, opts, this.#nonce);
+  }
 
-	get report_only_style_needs_nonce() {
-		return this.#report_only_provider.style_needs_nonce;
-	}
+  get script_needs_nonce() {
+    return this.csp_provider.script_needs_nonce || this.report_only_provider.script_needs_nonce;
+  }
 
-	/** @param {string} content */
+  get style_needs_nonce() {
+    return this.csp_provider.style_needs_nonce || this.report_only_provider.style_needs_nonce;
+  }
+
+  get nonce() {
+    return this.#nonce;
+  }
+
+  	/** @param {string} content */
 	add_script(content) {
-		this.#csp_provider.add_script(content);
-		this.#report_only_provider.add_script(content);
+		this.csp_provider.add_script(content);
+		this.report_only_provider.add_script(content);
 	}
 
 	/** @param {string} content */
 	add_style(content) {
-		this.#csp_provider.add_style(content);
-		this.#report_only_provider.add_style(content);
-	}
-
-	/**
-	 * @param {boolean} [is_meta]
-	 */
-	get_header(is_meta = false) {
-		return this.#csp_provider.get_header(is_meta);
-	}
-
-	/**
-	 * @param {boolean} [is_meta]
-	 */
-	get_report_only_header(is_meta = false) {
-		return this.#report_only_provider.get_header(is_meta);
-	}
-
-	get_meta() {
-		return this.#csp_provider.get_meta();
+		this.csp_provider.add_style(content);
+		this.report_only_provider.add_style(content);
 	}
 }
+
