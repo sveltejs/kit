@@ -444,16 +444,14 @@ async function load_shadow_data(route, event, options, prerender) {
 		};
 
 		if (!is_get) {
-			const { status, headers, body } = validate_shadow_output(await handler(event));
+			const { response, status, headers, body } = validate_shadow_output(await handler(event));
+
+			if (response) {
+				return { response };
+			}
+
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 			data.status = status;
-
-			const contentType =
-				headers instanceof Headers ? headers.get('content-type') : headers['content-type'];
-
-			if (contentType === 'text/html') {
-				return { response: result };
-			}
 
 			// explicit errors cause an error page...
 			if (body instanceof Error) {
@@ -483,16 +481,14 @@ async function load_shadow_data(route, event, options, prerender) {
 
 		const get = (method === 'head' && mod.head) || mod.get;
 		if (get) {
-			const { status, headers, body } = validate_shadow_output(await get(event));
+			const { status, headers, body, response } = validate_shadow_output(await get(event));
+
+			if (response) {
+				return { response };
+			}
+
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 			data.status = status;
-
-			const contentType =
-				headers instanceof Headers ? headers.get('content-type') : headers['content-type'];
-
-			if (contentType === 'text/html') {
-				return { response: result };
-			}
 
 			if (body instanceof Error) {
 				if (status < 400) {
@@ -562,14 +558,32 @@ function validate_shadow_output(result) {
 	const { status = 200, body = {} } = result;
 	let headers = result.headers || {};
 
+	/** @type {string} */
+	let type = 'application/json';
+
 	if (headers instanceof Headers) {
 		if (headers.has('set-cookie')) {
 			throw new Error(
 				'Endpoint request handler cannot use Headers interface with Set-Cookie headers'
 			);
 		}
+
+		type = headers.get('content-type') || type;
 	} else {
 		headers = lowercase_keys(/** @type {Record<string, string>} */ (headers));
+
+		type = /** @type {string} */ (headers['content-type']) || type;
+	}
+
+	if (!type.startsWith('application/json')) {
+		const normalized_body = is_pojo(body) ? JSON.stringify(body) : /** @type {string} */ (body);
+
+		const response = new Response(normalized_body, {
+			status,
+			headers
+		});
+
+		return { response };
 	}
 
 	if (!is_pojo(body)) {
