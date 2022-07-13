@@ -27,31 +27,34 @@ export function to_headers(object) {
  * @param {string[]} types
  */
 export function negotiate(accept, types) {
-	const parts = accept
-		.split(',')
-		.map((str, i) => {
-			const match = /([^/]+)\/([^;]+)(?:;q=([0-9.]+))?/.exec(str);
-			if (match) {
-				const [, type, subtype, q = '1'] = match;
-				return { type, subtype, q: +q, i };
-			}
-		})
-		.filter(Boolean) // ignore invalid headers
-		.sort((a, b) => {
-			if (a.q !== b.q) {
-				return b.q - a.q;
-			}
+	/** @type {Array<{ type: string, subtype: string, q: number, i: number }>} */
+	const parts = [];
 
-			if ((a.subtype === '*') !== (b.subtype === '*')) {
-				return a.subtype === '*' ? 1 : -1;
-			}
+	accept.split(',').forEach((str, i) => {
+		const match = /([^/]+)\/([^;]+)(?:;q=([0-9.]+))?/.exec(str);
 
-			if ((a.type === '*') !== (b.type === '*')) {
-				return a.type === '*' ? 1 : -1;
-			}
+		// no match equals invalid header — ignore
+		if (match) {
+			const [, type, subtype, q = '1'] = match;
+			parts.push({ type, subtype, q: +q, i });
+		}
+	});
 
-			return a.i - b.i;
-		});
+	parts.sort((a, b) => {
+		if (a.q !== b.q) {
+			return b.q - a.q;
+		}
+
+		if ((a.subtype === '*') !== (b.subtype === '*')) {
+			return a.subtype === '*' ? 1 : -1;
+		}
+
+		if ((a.type === '*') !== (b.type === '*')) {
+			return a.type === '*' ? 1 : -1;
+		}
+
+		return a.i - b.i;
+	});
 
 	let accepted;
 	let min_priority = Infinity;
