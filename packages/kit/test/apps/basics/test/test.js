@@ -6,6 +6,8 @@ import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('a11y', () => {
 	test('resets focus', async ({ page, clicknav, browserName }) => {
 		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
@@ -1522,36 +1524,35 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('text.length is 5000000');
 	});
 
-	test('handles external api', async ({ page, javaScriptEnabled }) => {
+	test('handles external api', async ({ page }) => {
 		/** @type {string[]} */
 		const requested_urls = [];
 
-		const { port, close } = await start_server(
-			async (req, res) => {
-				if (!req.url) throw new Error('Incomplete request');
-				requested_urls.push(req.url);
+		const { port, close } = await start_server(async (req, res) => {
+			if (!req.url) throw new Error('Incomplete request');
+			requested_urls.push(req.url);
 
-				if (req.url === '/server-fetch-request-modified.json') {
-					res.writeHead(200, {
-						'Access-Control-Allow-Origin': '*',
-						'content-type': 'application/json'
-					});
+			if (req.url === '/server-fetch-request-modified.json') {
+				res.writeHead(200, {
+					'Access-Control-Allow-Origin': '*',
+					'content-type': 'application/json'
+				});
 
-					res.end(JSON.stringify({ answer: 42 }));
-				} else {
-					res.statusCode = 404;
-					res.end('not found');
-				}
-			},
-			javaScriptEnabled ? 4000 : 4001
-		);
+				res.end(JSON.stringify({ answer: 42 }));
+			} else {
+				res.statusCode = 404;
+				res.end('not found');
+			}
+		});
 
-		await page.goto(`/load/server-fetch-request?port=${port}`);
+		try {
+			await page.goto(`/load/server-fetch-request?port=${port}`);
 
-		expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
-		expect(await page.textContent('h1')).toBe('the answer is 42');
-
-		await close();
+			expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
+			expect(await page.textContent('h1')).toBe('the answer is 42');
+		} finally {
+			await close();
+		}
 	});
 
 	test('makes credentialed fetches to endpoints by default', async ({ page, clicknav }) => {
@@ -2497,13 +2498,15 @@ test.describe('Routing', () => {
 	test('ignores navigation to URLs the app does not own', async ({ page }) => {
 		const { port, close } = await start_server((req, res) => res.end('ok'));
 
-		await page.goto(`/routing?port=${port}`);
-		await Promise.all([
-			page.click(`[href="http://localhost:${port}"]`),
-			page.waitForURL(`http://localhost:${port}/`)
-		]);
-
-		await close();
+		try {
+			await page.goto(`/routing?port=${port}`);
+			await Promise.all([
+				page.click(`[href="http://localhost:${port}"]`),
+				page.waitForURL(`http://localhost:${port}/`)
+			]);
+		} finally {
+			await close();
+		}
 	});
 
 	test('watch new route in dev', async ({ page }) => {

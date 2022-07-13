@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.27
+
+### Patch Changes
+
+- Expose App interfaces ([#5386](https://github.com/sveltejs/kit/pull/5386))
+
 ## 1.0.0-next.26
 
 ### Patch Changes

@@ -38,13 +38,8 @@
 			"outputMode": "new-only"
 		},
 		"format": {
-			"outputs": [
-				"src/**",
-				"scripts/**",
-				"shared/**",
-				"templates/**",
-				"types/**"
-			],
+			"cache": false,
+			"outputs": [],
 			"outputMode": "new-only"
 		},
 		"prepare": {

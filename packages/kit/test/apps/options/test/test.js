@@ -3,6 +3,8 @@ import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('base path', () => {
 	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
 		const response = await request.get('/');
