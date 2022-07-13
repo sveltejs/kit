@@ -29,16 +29,15 @@ export function to_headers(object) {
 export function negotiate(accept, types) {
 	const parts = accept
 		.split(',')
-		.flatMap((str, i) => {
+		.map((str, i) => {
 			const match = /([^/]+)\/([^;]+)(?:;q=([0-9.]+))?/.exec(str);
 			if (match) {
 				const [, type, subtype, q = '1'] = match;
-				return [{ type, subtype, q: +q, i }];
+				return { type, subtype, q: +q, i };
 			}
 
-			// invalid header
-			return [];
 		})
+		.filter(Boolean) // ignore invalid headers
 		.sort((a, b) => {
 			if (a.q !== b.q) {
 				return b.q - a.q;
