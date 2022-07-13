@@ -10,7 +10,7 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.48",
+		"@sveltejs/vite-plugin-svelte": "1.0.0-next.49",
 		"chokidar": "^3.5.3",
 		"sade": "^1.8.1"
 	},
