@@ -226,8 +226,8 @@ export class Csp {
 	 * @param {import('./types').CspOpts} opts
 	 */
 	constructor({ mode, directives, reportOnly }, opts) {
-		this.csp_provider = new CspProvider(mode, directives, opts, this.nonce);
-		this.report_only_provider = new CspReportOnlyProvider(mode, reportOnly, opts, this.nonce);
+		this.csp_provider = new CspProvider(mode, directives, this.nonce, opts);
+		this.report_only_provider = new CspReportOnlyProvider(mode, reportOnly, this.nonce, opts);
 	}
 
 	get script_needs_nonce() {
