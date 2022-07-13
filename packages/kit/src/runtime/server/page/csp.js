@@ -27,9 +27,6 @@ class BaseProvider {
 	#use_hashes;
 
 	/** @type {boolean} */
-	#dev;
-
-	/** @type {boolean} */
 	#script_needs_csp;
 
 	/** @type {boolean} */
@@ -48,19 +45,18 @@ class BaseProvider {
 	#nonce;
 
 	/**
-	 * @param {import('./types').CspMode} mode
+	 * @param {boolean} use_hashes
 	 * @param {import('types').CspDirectives} directives
 	 * @param {string} nonce
-	 * @param {import('./types').CspOpts} opts
+	 * @param {boolean} dev
 	 */
-	constructor(mode, directives, nonce, { dev, prerender }) {
-		this.#use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
+	constructor(use_hashes, directives, nonce, dev) {
+		this.#use_hashes = use_hashes;
 		this.#directives = dev ? { ...directives } : directives; // clone in dev so we can safely mutate
-		this.#dev = dev;
 
 		const d = this.#directives;
 
-		if (this.#dev) {
+		if (dev) {
 			// remove strict-dynamic in dev...
 			// TODO reinstate this if we can figure out how to make strict-dynamic work
 			// if (d['default-src']) {
@@ -188,13 +184,13 @@ class CspProvider extends BaseProvider {
 
 class CspReportOnlyProvider extends BaseProvider {
 	/**
-	 * @param {import('./types').CspMode} mode
+	 * @param {boolean} use_hashes
 	 * @param {import('types').CspDirectives} directives
 	 * @param {string} nonce
-	 * @param {import('./types').CspOpts} opts
+	 * @param {boolean} dev
 	 */
-	constructor(mode, directives, nonce, opts) {
-		super(mode, directives, nonce, opts);
+	constructor(use_hashes, directives, nonce, dev) {
+		super(use_hashes, directives, nonce, dev);
 
 		if (Object.values(directives).filter((v) => !!v).length > 0) {
 			// If we're generating content-security-policy-report-only,
@@ -225,9 +221,10 @@ export class Csp {
 	 * @param {import('./types').CspConfig} config
 	 * @param {import('./types').CspOpts} opts
 	 */
-	constructor({ mode, directives, reportOnly }, opts) {
-		this.csp_provider = new CspProvider(mode, directives, this.nonce, opts);
-		this.report_only_provider = new CspReportOnlyProvider(mode, reportOnly, this.nonce, opts);
+	constructor({ mode, directives, reportOnly }, { prerender, dev }) {
+		const use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
+		this.csp_provider = new CspProvider(use_hashes, directives, this.nonce, dev);
+		this.report_only_provider = new CspReportOnlyProvider(use_hashes, reportOnly, this.nonce, dev);
 	}
 
 	get script_needs_nonce() {
