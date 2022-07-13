@@ -11,7 +11,7 @@ import { parse_route_id } from '../../utils/routing.js';
 import { load_template } from '../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
-import { get_mime_lookup, get_runtime_path } from '../../core/utils.js';
+import { get_mime_lookup, get_runtime_prefix } from '../../core/utils.js';
 import { resolve_entry } from '../utils.js';
 
 // Vite doesn't expose this so we just copy the list for now
@@ -31,7 +31,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	sync.init(svelte_config);
 
-	const runtime = get_runtime_path(svelte_config.kit);
+	const runtime = get_runtime_prefix(svelte_config.kit);
 
 	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
 

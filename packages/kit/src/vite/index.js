@@ -11,7 +11,7 @@ import { prerender } from '../core/prerender/prerender.js';
 import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
-import { get_runtime_path, logger } from '../core/utils.js';
+import { get_runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry } from './utils.js';
@@ -105,7 +105,7 @@ function kit() {
 		const input = {
 			// Put unchanging assets in immutable directory. We don't set that in the
 			// outDir so that other plugins can add mutable assets to the bundle
-			start: `${get_runtime_path(svelte_config.kit)}/client/start.js`
+			start: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
 		};
 
 		// This step is optional — Vite/Rollup will create the necessary chunks
@@ -166,7 +166,7 @@ function kit() {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point
 						// eventhough server otherwise works without it
-						input: `${get_runtime_path(svelte_config.kit)}/client/start.js`
+						input: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
 					}
 				},
 				resolve: {
@@ -241,7 +241,7 @@ function kit() {
 			);
 
 			const entry_id = posixify(
-				path.relative(cwd, `${get_runtime_path(svelte_config.kit)}/client/start.js`)
+				path.relative(cwd, `${get_runtime_directory(svelte_config.kit)}/client/start.js`)
 			);
 
 			const client = {
