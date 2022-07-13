@@ -18,7 +18,7 @@ importers:
       eslint-plugin-svelte3: ^4.0.0
       playwright: ^1.22.2
       prettier: ^2.6.2
-      rollup: ^2.75.6
+      rollup: ^2.75.7
       svelte: ^3.48.0
       tiny-glob: ^0.2.9
       turbo: ^1.3.1
@@ -105,7 +105,7 @@ importers:
       '@types/set-cookie-parser': ^2.4.2
       esbuild: ^0.14.48
       rimraf: ^3.0.2
-      rollup: ^2.75.6
+      rollup: ^2.75.7
       set-cookie-parser: ^2.4.8
       tiny-glob: ^0.2.9
       typescript: ^4.7.4
@@ -139,7 +139,7 @@ importers:
       node-fetch: ^3.2.4
       polka: ^1.0.0-next.22
       rimraf: ^3.0.2
-      rollup: ^2.75.6
+      rollup: ^2.75.7
       sirv: ^2.0.2
       tiny-glob: ^0.2.9
       typescript: ^4.7.4
@@ -309,7 +309,7 @@ importers:
       mime: ^3.0.0
       node-fetch: ^3.2.4
       port-authority: ^2.0.1
-      rollup: ^2.75.6
+      rollup: ^2.75.7
       sade: ^1.8.1
       selfsigned: ^2.0.1
       set-cookie-parser: ^2.4.8
