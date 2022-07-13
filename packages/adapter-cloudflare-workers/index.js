@@ -16,6 +16,7 @@ import { fileURLToPath } from 'url';
 
 /** @type {import('.').default} */
 export default function () {
+	// TODO remove for 1.0
 	if (arguments.length > 0) {
 		throw new Error(
 			'esbuild options can no longer be passed to adapter-cloudflare-workers — see https://github.com/sveltejs/kit/pull/4639'
