@@ -36,7 +36,7 @@ Ordinarily, SvelteKit [hydrates](/docs/appendix#hydration) your server-rendered 
 
 ### prerender
 
-It's likely that at least some pages of your app can be represented as a simple HTML file generated at build time. These pages can be [_prerendered_](/docs/appendix#prerendering) by your [adapter](/docs/adapters).
+It's likely that at least some pages of your app can be represented as a simple HTML file generated at build time. These pages can be [_prerendered_](/docs/appendix#prerendering).
 
 Prerendering happens automatically for any page with the `prerender` annotation:
 

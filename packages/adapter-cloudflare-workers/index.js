@@ -15,7 +15,14 @@ import { fileURLToPath } from 'url';
  */
 
 /** @type {import('.').default} */
-export default function (options = {}) {
+export default function () {
+	// TODO remove for 1.0
+	if (arguments.length > 0) {
+		throw new Error(
+			'esbuild options can no longer be passed to adapter-cloudflare-workers — see https://github.com/sveltejs/kit/pull/4639'
+		);
+	}
+
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -58,11 +65,10 @@ export default function (options = {}) {
 				platform: 'browser',
 				sourcemap: 'linked',
 				target: 'es2020',
-				...options,
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: main,
 				bundle: true,
-				external: ['__STATIC_CONTENT_MANIFEST', ...(options?.external || [])],
+				external: ['__STATIC_CONTENT_MANIFEST'],
 				format: 'esm'
 			});
 
