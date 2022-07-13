@@ -130,6 +130,7 @@ const test_browser = /** @type {keyof typeof known_devices} */ (
 	process.env.KIT_E2E_BROWSER ?? 'chromium'
 );
 
+// @ts-expect-error indexed access
 const test_browser_device = known_devices[test_browser];
 
 if (!test_browser_device) {
@@ -213,6 +214,11 @@ export async function start_server(handler) {
  * @returns {Promise<void>}
  */
 async function wait_for_vite_connected_message(page, timeout) {
+	// remove once https://github.com/microsoft/playwright/issues/15550 is fixed/released
+	if (process.env.KIT_E2E_BROWSER === 'firefox') {
+		// crude wait instead of checking the console
+		return new Promise((resolve) => setTimeout(resolve, 100));
+	}
 	// @ts-ignore
 	return page.waitForEvent('console', {
 		predicate: async (message) => message?.text()?.includes('[vite] connected.'),
