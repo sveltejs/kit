@@ -18,9 +18,9 @@ import { get_aliases, resolve_entry } from './utils.js';
 
 const cwd = process.cwd();
 
-/** @type {Record<string, any>} */
+/** @type {import('./types').EnforcedConfig} */
 const enforced_config = {
-	appType: 'custom',
+	appType: true,
 	base: true,
 	build: {
 		cssCodeSplit: true,
@@ -32,7 +32,7 @@ const enforced_config = {
 		},
 		manifest: true,
 		outDir: true,
-		polyfillDynamicImport: true,
+		polyfillModulePreload: true,
 		rollupOptions: {
 			input: true,
 			output: {
