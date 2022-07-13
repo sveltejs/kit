@@ -18,7 +18,7 @@ import { get_aliases, resolve_entry } from './utils.js';
 
 const cwd = process.cwd();
 
-/** @type {Record<string, any>} */
+/** @type {import('./types').EnforcedConfig} */
 const enforced_config = {
 	appType: true,
 	base: true,
