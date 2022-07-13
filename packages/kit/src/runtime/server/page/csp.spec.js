@@ -15,13 +15,12 @@ test('generates blank CSP header', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
-	assert.equal(csp.get_header(), '');
-	assert.equal(csp.get_report_only_header(), '');
+	assert.equal(csp.csp_provider.get_header(), '');
+	assert.equal(csp.report_only_provider.get_header(), '');
 });
 
 test('generates CSP header with directive', () => {
@@ -38,13 +37,12 @@ test('generates CSP header with directive', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
-	assert.equal(csp.get_header(), "default-src 'self'");
-	assert.equal(csp.get_report_only_header(), "default-src 'self'; report-uri /");
+	assert.equal(csp.csp_provider.get_header(), "default-src 'self'");
+	assert.equal(csp.report_only_provider.get_header(), "default-src 'self'; report-uri /");
 });
 
 test('generates CSP header with nonce', () => {
@@ -61,17 +59,18 @@ test('generates CSP header with nonce', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
 	csp.add_script('');
 
-	assert.ok(csp.get_header().startsWith("default-src 'self'; script-src 'self' 'nonce-"));
 	assert.ok(
-		csp
-			.get_report_only_header()
+		csp.csp_provider.get_header().startsWith("default-src 'self'; script-src 'self' 'nonce-")
+	);
+	assert.ok(
+		csp.report_only_provider
+			.get_header()
 			.startsWith("default-src 'self'; report-uri /; script-src 'self' 'nonce-")
 	);
 });
@@ -90,16 +89,14 @@ test('skips nonce with unsafe-inline', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
 	csp.add_script('');
-	csp.add_style('');
 
-	assert.equal(csp.get_header(), "default-src 'unsafe-inline'");
-	assert.equal(csp.get_report_only_header(), "default-src 'unsafe-inline'; report-uri /");
+	assert.equal(csp.csp_provider.get_header(), "default-src 'unsafe-inline'");
+	assert.equal(csp.report_only_provider.get_header(), "default-src 'unsafe-inline'; report-uri /");
 });
 
 test('skips hash with unsafe-inline', () => {
@@ -116,16 +113,14 @@ test('skips hash with unsafe-inline', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
 	csp.add_script('');
-	csp.add_style('');
 
-	assert.equal(csp.get_header(), "default-src 'unsafe-inline'");
-	assert.equal(csp.get_report_only_header(), "default-src 'unsafe-inline'; report-uri /");
+	assert.equal(csp.csp_provider.get_header(), "default-src 'unsafe-inline'");
+	assert.equal(csp.report_only_provider.get_header(), "default-src 'unsafe-inline'; report-uri /");
 });
 
 test('skips frame-ancestors, report-uri, sandbox from meta tags', () => {
@@ -142,18 +137,17 @@ test('skips frame-ancestors, report-uri, sandbox from meta tags', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
 	assert.equal(
-		csp.get_header(),
+		csp.csp_provider.get_header(),
 		"default-src 'self'; frame-ancestors 'self'; report-uri /csp-violation-report-endpoint/; sandbox allow-modals"
 	);
 
 	assert.equal(
-		csp.get_meta(),
+		csp.csp_provider.get_meta(),
 		'<meta http-equiv="content-security-policy" content="default-src \'self\'">'
 	);
 });
@@ -172,17 +166,19 @@ test('adds unsafe-inline styles in dev', () => {
 		},
 		{
 			dev: true,
-			prerender: false,
-			needs_nonce: false
+			prerender: false
 		}
 	);
 
 	csp.add_style('');
 
-	assert.equal(csp.get_header(), "default-src 'self'; style-src 'self' 'unsafe-inline'");
+	assert.equal(
+		csp.csp_provider.get_header(),
+		"default-src 'self'; style-src 'self' 'unsafe-inline'"
+	);
 
 	assert.equal(
-		csp.get_report_only_header(),
+		csp.report_only_provider.get_header(),
 		"default-src 'self'; report-uri /; style-src 'self' 'unsafe-inline'"
 	);
 });
@@ -202,15 +198,14 @@ test.skip('removes strict-dynamic in dev', () => {
 			},
 			{
 				dev: true,
-				prerender: false,
-				needs_nonce: false
+				prerender: false
 			}
 		);
 
 		csp.add_script('');
 
-		assert.equal(csp.get_header(), '');
-		assert.equal(csp.get_report_only_header(), '');
+		assert.equal(csp.csp_provider.get_header(), '');
+		assert.equal(csp.report_only_provider.get_header(), '');
 	});
 });
 
@@ -228,20 +223,19 @@ test('uses hashes when prerendering', () => {
 		},
 		{
 			dev: false,
-			prerender: true,
-			needs_nonce: false
+			prerender: true
 		}
 	);
 
 	csp.add_script('');
 
 	assert.equal(
-		csp.get_header(),
+		csp.csp_provider.get_header(),
 		"script-src 'self' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
 	);
 
 	assert.equal(
-		csp.get_report_only_header(),
+		csp.report_only_provider.get_header(),
 		"script-src 'self' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='; report-uri /"
 	);
 });
@@ -255,13 +249,11 @@ test('always creates a nonce when template needs it', () => {
 		},
 		{
 			dev: false,
-			prerender: false,
-			needs_nonce: true
+			prerender: false
 		}
 	);
 
 	assert.ok(csp.nonce);
-	assert.ok(csp.report_only_nonce);
 });
 
 test('throws when reportOnly contains directives but no report-uri or report-to', () => {
@@ -276,8 +268,7 @@ test('throws when reportOnly contains directives but no report-uri or report-to'
 			},
 			{
 				dev: false,
-				prerender: false,
-				needs_nonce: true
+				prerender: false
 			}
 		);
 	}, '`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both');

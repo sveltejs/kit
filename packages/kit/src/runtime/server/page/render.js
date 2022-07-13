@@ -4,7 +4,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
-import { Csp, csp_ready } from './csp.js';
+import { Csp } from './csp.js';
 import { PrerenderingURL } from '../../../utils/url.js';
 import { serialize_error } from '../utils.js';
 
@@ -157,11 +157,9 @@ export async function render_response({
 
 	let { head, html: body } = rendered;
 
-	await csp_ready;
 	const csp = new Csp(options.csp, {
 		dev: options.dev,
-		prerender: !!state.prerendering,
-		needs_nonce: options.template_contains_nonce
+		prerender: !!state.prerendering
 	});
 
 	const target = hash(body);
@@ -204,7 +202,6 @@ export async function render_response({
 		const attributes = [];
 		if (options.dev) attributes.push(' data-sveltekit');
 		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
-		if (csp.report_only_style_needs_nonce) attributes.push(` nonce="${csp.report_only_nonce}"`);
 
 		csp.add_style(content);
 
@@ -222,10 +219,6 @@ export async function render_response({
 			if (csp.style_needs_nonce) {
 				attributes.push(`nonce="${csp.nonce}"`);
       }
-      
-      if (csp.report_only_style_needs_nonce) {
-				attributes.push(`nonce="${csp.report_only_nonce}"`);
-			}
 
 			if (inline_styles.has(dep)) {
 				// don't load stylesheets that are already inlined
@@ -250,10 +243,6 @@ export async function render_response({
 			attributes.push(`nonce="${csp.nonce}"`);
 		}
 
-		if (csp.report_only_script_needs_nonce) {
-			attributes.push(`nonce="${csp.report_only_nonce}"`);
-		}
-
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 
 		body += serialized_data
@@ -275,15 +264,13 @@ export async function render_response({
 		csp.add_script(init_service_worker);
 
 		head += `
-			<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}${
-			csp.report_only_script_needs_nonce ? ` nonce="${csp.report_only_nonce}"` : ''
-		}>${init_service_worker}</script>`;
+			<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
 	}
 
 	if (state.prerendering) {
 		const http_equiv = [];
 
-		const csp_headers = csp.get_meta();
+		const csp_headers = csp.csp_provider.get_meta();
 		if (csp_headers) {
 			http_equiv.push(csp_headers);
 		}
@@ -315,11 +302,11 @@ export async function render_response({
 	}
 
 	if (!state.prerendering) {
-		const csp_header = csp.get_header();
+		const csp_header = csp.csp_provider.get_header();
 		if (csp_header) {
 			headers.set('content-security-policy', csp_header);
 		}
-		const report_only_header = csp.get_report_only_header();
+		const report_only_header = csp.report_only_provider.get_header();
 		if (report_only_header) {
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
