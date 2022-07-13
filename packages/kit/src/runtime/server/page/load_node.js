@@ -414,13 +414,13 @@ async function load_shadow_data(route, event, options, prerender) {
 	try {
 		const mod = await route.shadow();
 
-		if (prerender && (mod.post || mod.put || mod.del || mod.patch)) {
+		if (prerender && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
 			throw new Error('Cannot prerender pages that have endpoints with mutative methods');
 		}
 
 		const method = normalize_request_method(event);
-		const is_get = method === 'head' || method === 'get';
-		const handler = method === 'head' ? mod.head || mod.get : mod[method];
+		const is_get = method === 'HEAD' || method === 'GET';
+		const handler = method === 'HEAD' ? mod.HEAD || mod.GET : mod[method];
 
 		if (!handler && !is_get) {
 			return {
@@ -467,7 +467,7 @@ async function load_shadow_data(route, event, options, prerender) {
 			data.body = body;
 		}
 
-		const get = (method === 'head' && mod.head) || mod.get;
+		const get = (method === 'HEAD' && mod.HEAD) || mod.GET;
 		if (get) {
 			const { status, headers, body } = validate_shadow_output(await get(event));
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);

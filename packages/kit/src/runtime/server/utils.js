@@ -52,8 +52,7 @@ export function is_pojo(body) {
 
 /** @param {import('types').RequestEvent} event */
 export function normalize_request_method(event) {
-	const method = event.request.method.toLowerCase();
-	return method === 'delete' ? 'del' : method; // 'delete' is a reserved word
+	return event.request.method.toUpperCase();
 }
 
 /**
