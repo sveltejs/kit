@@ -33,7 +33,7 @@ test('handle valid accept header value', () => {
 
 test('handle invalid accept header value', () => {
 	const accept = 'text/html,*';
-	assert.equal(negotiate(accept, ['text/html']), 'text / html');
+	assert.equal(negotiate(accept, ['text/html']), 'text/html');
 });
 
 test.run();
