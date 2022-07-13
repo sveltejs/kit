@@ -9,10 +9,10 @@ export function to_headers(object) {
 
 			if (Array.isArray(value)) {
 				value.forEach((value) => {
-					headers.append(key, /** @type {string} */ (value));
+					headers.append(key, /** @type {string} */(value));
 				});
 			} else {
-				headers.set(key, /** @type {string} */ (value));
+				headers.set(key, /** @type {string} */(value));
 			}
 		}
 	}
@@ -29,14 +29,15 @@ export function to_headers(object) {
 export function negotiate(accept, types) {
 	const parts = accept
 		.split(',')
-		.map((str, i) => {
+		.flatMap((str, i) => {
 			const match = /([^/]+)\/([^;]+)(?:;q=([0-9.]+))?/.exec(str);
 			if (match) {
 				const [, type, subtype, q = '1'] = match;
-				return { type, subtype, q: +q, i };
+				return [{ type, subtype, q: +q, i }];
 			}
 
-			throw new Error(`Invalid Accept header: ${accept}`);
+			// invalid header
+			return [];
 		})
 		.sort((a, b) => {
 			if (a.q !== b.q) {
