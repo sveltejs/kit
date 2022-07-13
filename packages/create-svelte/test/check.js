@@ -28,7 +28,7 @@ for (const template of fs.readdirSync('templates')) {
 			const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf-8'));
 			pkg.devDependencies['@sveltejs/kit'] = 'file:../../../packages/kit';
 			if (pkg.devDependencies['@sveltejs/adapter-auto']) {
-				pkg.devDependencies['@sveltejs/adapter-auto'] = 'file:../../../packages/kit';
+				pkg.devDependencies['@sveltejs/adapter-auto'] = 'file:../../../packages/adapter-auto';
 			}
 			fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(pkg, null, '\t'));
 			// explicitly only install in the dir under test to avoid running a pnpm workspace command
