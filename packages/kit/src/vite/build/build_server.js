@@ -173,7 +173,7 @@ export async function build_server(options, client) {
 
 	console.error({
 		build_dir,
-		runtime: path.relative(build_dir, get_runtime_directory(config.kit))
+		runtime: posixify(path.relative(build_dir, get_runtime_directory(config.kit)))
 	});
 
 	fs.writeFileSync(
@@ -182,7 +182,7 @@ export async function build_server(options, client) {
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: config.kit.serviceWorker.register && !!service_worker_entry_file,
-			runtime: path.relative(build_dir, get_runtime_directory(config.kit)),
+			runtime: posixify(path.relative(build_dir, get_runtime_directory(config.kit))),
 			template: load_template(cwd, config)
 		})
 	);
