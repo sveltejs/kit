@@ -2,6 +2,40 @@ import { join } from 'path';
 
 /** @typedef {import('./types').Validator} Validator */
 
+const directives = object({
+	'child-src': string_array(),
+	'default-src': string_array(),
+	'frame-src': string_array(),
+	'worker-src': string_array(),
+	'connect-src': string_array(),
+	'font-src': string_array(),
+	'img-src': string_array(),
+	'manifest-src': string_array(),
+	'media-src': string_array(),
+	'object-src': string_array(),
+	'prefetch-src': string_array(),
+	'script-src': string_array(),
+	'script-src-elem': string_array(),
+	'script-src-attr': string_array(),
+	'style-src': string_array(),
+	'style-src-elem': string_array(),
+	'style-src-attr': string_array(),
+	'base-uri': string_array(),
+	sandbox: string_array(),
+	'form-action': string_array(),
+	'frame-ancestors': string_array(),
+	'navigate-to': string_array(),
+	'report-uri': string_array(),
+	'report-to': string_array(),
+	'require-trusted-types-for': string_array(),
+	'trusted-types': string_array(),
+	'upgrade-insecure-requests': boolean(false),
+	'require-sri-for': string_array(),
+	'block-all-mixed-content': boolean(false),
+	'plugin-types': string_array(),
+	referrer: string_array()
+});
+
 /** @type {Validator} */
 const options = object(
 	{
@@ -80,39 +114,8 @@ const options = object(
 
 			csp: object({
 				mode: list(['auto', 'hash', 'nonce']),
-				directives: object({
-					'child-src': string_array(),
-					'default-src': string_array(),
-					'frame-src': string_array(),
-					'worker-src': string_array(),
-					'connect-src': string_array(),
-					'font-src': string_array(),
-					'img-src': string_array(),
-					'manifest-src': string_array(),
-					'media-src': string_array(),
-					'object-src': string_array(),
-					'prefetch-src': string_array(),
-					'script-src': string_array(),
-					'script-src-elem': string_array(),
-					'script-src-attr': string_array(),
-					'style-src': string_array(),
-					'style-src-elem': string_array(),
-					'style-src-attr': string_array(),
-					'base-uri': string_array(),
-					sandbox: string_array(),
-					'form-action': string_array(),
-					'frame-ancestors': string_array(),
-					'navigate-to': string_array(),
-					'report-uri': string_array(),
-					'report-to': string_array(),
-					'require-trusted-types-for': string_array(),
-					'trusted-types': string_array(),
-					'upgrade-insecure-requests': boolean(false),
-					'require-sri-for': string_array(),
-					'block-all-mixed-content': boolean(false),
-					'plugin-types': string_array(),
-					referrer: string_array()
-				})
+				directives,
+				reportOnly: directives
 			}),
 
 			// TODO: remove this for the 1.0 release
