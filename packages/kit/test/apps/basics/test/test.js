@@ -1545,12 +1545,14 @@ test.describe('Load', () => {
 			}
 		});
 
-		await page.goto(`/load/server-fetch-request?port=${port}`);
+		try {
+			await page.goto(`/load/server-fetch-request?port=${port}`);
 
-		expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
-		expect(await page.textContent('h1')).toBe('the answer is 42');
-
-		await close();
+			expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
+			expect(await page.textContent('h1')).toBe('the answer is 42');
+		} finally {
+			await close();
+		}
 	});
 
 	test('makes credentialed fetches to endpoints by default', async ({ page, clicknav }) => {
@@ -2496,13 +2498,15 @@ test.describe('Routing', () => {
 	test('ignores navigation to URLs the app does not own', async ({ page }) => {
 		const { port, close } = await start_server((req, res) => res.end('ok'));
 
-		await page.goto(`/routing?port=${port}`);
-		await Promise.all([
-			page.click(`[href="http://localhost:${port}"]`),
-			page.waitForURL(`http://localhost:${port}/`)
-		]);
-
-		await close();
+		try {
+			await page.goto(`/routing?port=${port}`);
+			await Promise.all([
+				page.click(`[href="http://localhost:${port}"]`),
+				page.waitForURL(`http://localhost:${port}/`)
+			]);
+		} finally {
+			await close();
+		}
 	});
 
 	test('watch new route in dev', async ({ page }) => {
