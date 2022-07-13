@@ -45,6 +45,14 @@ export function is_text(content_type) {
 export async function render_endpoint(event, mod, options) {
 	const method = normalize_request_method(event);
 
+	// TODO: Remove for 1.0
+	['get', 'post', 'put', 'patch', 'del'].forEach((m) => {
+		if (mod[m] !== undefined) {
+			const replacement = m === 'del' ? 'DELETE' : m.toUpperCase();
+			throw Error(`Endpoint method ${m} has changed to ${replacement}`);
+		}
+	});
+
 	/** @type {import('types').RequestHandler} */
 	let handler = mod[method];
 
