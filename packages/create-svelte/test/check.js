@@ -1,11 +1,13 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
+import path from 'path';
 import { test } from 'uvu';
 import { create } from '../index.js';
 
-const dir = '.test-tmp';
+// use a directory outside of packages to ensure it isn't added to the pnpm workspace
+const dir = '../../.test-tmp/create-svelte/';
 
-test.after(() => {
+test.before(() => {
 	fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -16,15 +18,21 @@ for (const template of fs.readdirSync('templates')) {
 			fs.rmSync(cwd, { recursive: true, force: true });
 
 			create(cwd, {
-				name: 'test',
+				name: `create-svelte-test-${template}-${types}`,
 				template,
 				types,
 				prettier: false,
 				eslint: false,
 				playwright: false
 			});
-
-			execSync('pnpm i --no-frozen-lockfile && pnpm check', { cwd, stdio: 'inherit' });
+			const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf-8'));
+			pkg.devDependencies['@sveltejs/kit'] = 'file:../../../packages/kit';
+			if (pkg.devDependencies['@sveltejs/adapter-auto']) {
+				pkg.devDependencies['@sveltejs/adapter-auto'] = 'file:../../../packages/kit';
+			}
+			fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(pkg, null, '\t'));
+			// explicitly only install in the dir under test to avoid running a pnpm workspace command
+			execSync('pnpm install .', { cwd, stdio: 'inherit' });
 		});
 	}
 }
