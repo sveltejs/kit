@@ -20,7 +20,7 @@ const cwd = process.cwd();
 
 /** @type {Record<string, any>} */
 const enforced_config = {
-	appType: 'custom',
+	appType: true,
 	base: true,
 	build: {
 		cssCodeSplit: true,
@@ -32,7 +32,7 @@ const enforced_config = {
 		},
 		manifest: true,
 		outDir: true,
-		polyfillDynamicImport: true,
+		polyfillModulePreload: true,
 		rollupOptions: {
 			input: true,
 			output: {
