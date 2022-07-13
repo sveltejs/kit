@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.372
+
+### Patch Changes
+
+- ignore invalid accept header values instead of throwing an error ([#5502](https://github.com/sveltejs/kit/pull/5502))
+
+* support CSP report-only mode ([#5496](https://github.com/sveltejs/kit/pull/5496))
+
 ## 1.0.0-next.371
 
 ### Patch Changes
