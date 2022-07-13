@@ -6,7 +6,7 @@
 <p id="p1">paragraph 1</p>
 <p id="p2">paragraph 2</p>
 
-<li><a href="#nowhere">next focus element</a></li>
+<li><button>next focus element</button></li>
 
 <style>
 	p:target {
