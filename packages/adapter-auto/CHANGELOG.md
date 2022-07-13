@@ -1,5 +1,12 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.59
+
+### Patch Changes
+
+- Updated dependencies [[`d090a59b`](https://github.com/sveltejs/kit/commit/d090a59b89114f5f4ec605149f28a1e1748358ea)]:
+  - @sveltejs/adapter-vercel@1.0.0-next.61
+
 ## 1.0.0-next.58
 
 ### Patch Changes

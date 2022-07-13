@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.36
+
+### Patch Changes
+
+- Remove ENABLE_VC_BUILD check, use v3 build output API for all apps deployed to Vercel ([#5514](https://github.com/sveltejs/kit/pull/5514))
+
 ## 1.0.0-next.35
 
 ### Patch Changes
