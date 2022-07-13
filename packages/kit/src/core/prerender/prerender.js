@@ -136,7 +136,7 @@ export async function prerender({ config, entries, files, log }) {
 			}
 		});
 
-		let text = '';
+		let text;
 		if (response.headers.get('Content-Type') && (response.headers.get('Content-Type')).startsWith('image/')) {
 			text = Buffer.from(await response.arrayBuffer());
 		} else {
