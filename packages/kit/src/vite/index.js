@@ -363,11 +363,9 @@ function kit() {
 /**
  * @param {Record<string, any>} config
  * @param {Record<string, any>} resolved_config
- * @param {string} [path]
- * @param {string[]} [out] used locally to compute the return value
  */
-function warn_overridden_config(config, resolved_config, path = '', out = []) {
-	const overridden = find_overridden_config(config, resolved_config, path, out);
+function warn_overridden_config(config, resolved_config) {
+	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
 	if (overridden.length > 0) {
 		console.log(
 			colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
@@ -379,16 +377,21 @@ function warn_overridden_config(config, resolved_config, path = '', out = []) {
 /**
  * @param {Record<string, any>} config
  * @param {Record<string, any>} resolved_config
+ * @param {import('./types').EnforcedConfig} enforced_config
  * @param {string} path
  * @param {string[]} out used locally to compute the return value
  */
-function find_overridden_config(config, resolved_config, path, out) {
+function find_overridden_config(config, resolved_config, enforced_config, path, out) {
 	for (const key in enforced_config) {
 		if (typeof config === 'object' && config !== null && key in config) {
-			if (enforced_config[key] === true && config[key] !== resolved_config[key]) {
-				out.push(path + key);
+			const enforced = enforced_config[key];
+
+			if (enforced === true) {
+				if (config[key] !== resolved_config[key]) {
+					out.push(path + key);
+				}
 			} else {
-				find_overridden_config(config[key], resolved_config[key], path + key + '.', out);
+				find_overridden_config(config[key], resolved_config[key], enforced, path + key + '.', out);
 			}
 		}
 	}
