@@ -9,10 +9,10 @@ export function to_headers(object) {
 
 			if (Array.isArray(value)) {
 				value.forEach((value) => {
-					headers.append(key, /** @type {string} */(value));
+					headers.append(key, /** @type {string} */ (value));
 				});
 			} else {
-				headers.set(key, /** @type {string} */(value));
+				headers.set(key, /** @type {string} */ (value));
 			}
 		}
 	}
