@@ -49,7 +49,7 @@ export async function render_endpoint(event, mod, options) {
 	['get', 'post', 'put', 'patch', 'del'].forEach((m) => {
 		if (mod[m] !== undefined) {
 			const replacement = m === 'del' ? 'DELETE' : m.toUpperCase();
-			throw Error(`Endpoint method ${m} has changed to ${replacement}`);
+			throw Error(`Endpoint method "${m}" has changed to "${replacement}"`);
 		}
 	});
 
@@ -139,7 +139,7 @@ export async function render_endpoint(event, mod, options) {
 	}
 
 	return new Response(
-		method !== 'head' && !bodyless_status_codes.has(status) ? normalized_body : undefined,
+		method !== 'HEAD' && !bodyless_status_codes.has(status) ? normalized_body : undefined,
 		{
 			status,
 			headers
