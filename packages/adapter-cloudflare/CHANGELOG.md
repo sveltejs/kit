@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.28
+
+### Patch Changes
+
+- [breaking] Don't pass arbitrary options to esbuild ([#4639](https://github.com/sveltejs/kit/pull/4639))
+
 ## 1.0.0-next.27
 
 ### Patch Changes

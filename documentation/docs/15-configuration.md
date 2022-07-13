@@ -124,7 +124,8 @@ An object containing zero or more of the following `boolean` values:
 An object containing zero or more of the following values:
 
 - `mode` — 'hash', 'nonce' or 'auto'
-- `directives` — an object of `[directive]: value[]` pairs.
+- `directives` — an object of `[directive]: value[]` pairs
+- `reportOnly` — an object of `[directive]: value[]` pairs for CSP report-only mode
 
 [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) configuration. CSP helps to protect your users against cross-site scripting (XSS) attacks, by limiting the places resources can be loaded from. For example, a configuration like this...
 
@@ -135,6 +136,9 @@ const config = {
 	kit: {
 		csp: {
 			directives: {
+				'script-src': ['self']
+			},
+			reportOnly: {
 				'script-src': ['self']
 			}
 		}

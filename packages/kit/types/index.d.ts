@@ -105,6 +105,7 @@ export interface KitConfig {
 	csp?: {
 		mode?: 'hash' | 'nonce' | 'auto';
 		directives?: CspDirectives;
+		reportOnly?: CspDirectives;
 	};
 	moduleExtensions?: string[];
 	files?: {
