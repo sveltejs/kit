@@ -1,4 +1,4 @@
-export function get() {
+export function GET() {
 	return {
 		body: {
 			answer: 42
@@ -6,7 +6,7 @@ export function get() {
 	};
 }
 
-export function post() {
+export function POST() {
 	return {
 		status: 201
 	};

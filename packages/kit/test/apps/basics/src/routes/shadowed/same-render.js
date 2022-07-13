@@ -1,4 +1,4 @@
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function get({ url }) {
+export function GET({ url }) {
 	return { body: { url: url.toString() } };
 }

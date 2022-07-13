@@ -1,7 +1,7 @@
 // @ts-expect-error
 thisvariableisnotdefined; // eslint-disable-line
 
-export function get() {
+export function GET() {
 	return {
 		body: {
 			answer: 42

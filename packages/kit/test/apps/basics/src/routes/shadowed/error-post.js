@@ -1,4 +1,4 @@
-export function get() {
+export function GET() {
 	return {
 		body: {
 			get_message: 'hello from get'
@@ -6,7 +6,7 @@ export function get() {
 	};
 }
 
-export async function post({ request }) {
+export async function POST({ request }) {
 	const data = await request.formData();
 
 	return {

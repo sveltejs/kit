@@ -1,5 +1,5 @@
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function get() {
+export function GET() {
 	return {
 		headers: {
 			'content-type': 'application/octet-stream'

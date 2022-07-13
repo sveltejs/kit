@@ -1,4 +1,4 @@
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function get(req) {
+export function GET(req) {
 	return { body: req.params.slug };
 }

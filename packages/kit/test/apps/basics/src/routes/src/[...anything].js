@@ -1,5 +1,5 @@
 /** @type {import('./__types/[...anything]').RequestHandler} */
-export function get() {
+export function GET() {
 	return {
 		body: 'dynamically rendered file'
 	};
