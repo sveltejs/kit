@@ -22,7 +22,7 @@ export type Loaded = {
 };
 
 export interface CspConfig {
-	mode: string;
+	mode: 'hash' | 'nonce' | 'auto';
 	directives: CspDirectives;
 	reportOnly: CspDirectives;
 }
