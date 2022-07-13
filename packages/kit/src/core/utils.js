@@ -4,14 +4,8 @@ import { fileURLToPath } from 'url';
 
 export const get_runtime_path = process.env.BUNDLED
 	? /** @param {import('types').ValidatedKitConfig} config */ (config) =>
-			posixify_path(path.join(config.outDir, 'runtime'))
-	: () => posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
-
-/** @param {string} str */
-function posixify_path(str) {
-	const parsed = path.parse(str);
-	return `/${parsed.dir.slice(parsed.root.length).split(path.sep).join('/')}/${parsed.base}`;
-}
+			path.join(config.outDir, 'runtime')
+	: () => fileURLToPath(new URL('../runtime', import.meta.url));
 
 function noop() {}
 
