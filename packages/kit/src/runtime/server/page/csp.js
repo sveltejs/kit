@@ -220,8 +220,8 @@ class CspReportOnlyProvider extends BaseProvider {
 }
 
 export class Csp {
-	/** @type {string} */
-	#nonce = generate_nonce();
+	/** @readonly */
+	nonce = generate_nonce();
 
 	/** @type {CspProvider} */
 	csp_provider;
@@ -234,8 +234,8 @@ export class Csp {
 	 * @param {import('./types').CspOpts} opts
 	 */
 	constructor(config, opts) {
-		this.csp_provider = new CspProvider(config, opts, this.#nonce);
-		this.report_only_provider = new CspReportOnlyProvider(config, opts, this.#nonce);
+		this.csp_provider = new CspProvider(config, opts, this.nonce);
+		this.report_only_provider = new CspReportOnlyProvider(config, opts, this.nonce);
 	}
 
 	get script_needs_nonce() {
@@ -244,10 +244,6 @@ export class Csp {
 
 	get style_needs_nonce() {
 		return this.csp_provider.style_needs_nonce || this.report_only_provider.style_needs_nonce;
-	}
-
-	get nonce() {
-		return this.#nonce;
 	}
 
 	/** @param {string} content */
