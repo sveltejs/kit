@@ -136,7 +136,12 @@ export async function prerender({ config, entries, files, log }) {
 			}
 		});
 
-		const text = await response.text();
+		let text = '';
+		if (response.headers.get('Content-Type') && (response.headers.get('Content-Type')).startsWith('image/')) {
+			text = Buffer.from(await response.arrayBuffer());
+		} else {
+			text = await response.text();
+		}
 
 		save('pages', response, text, decoded, encoded, referrer, 'linked');
 
