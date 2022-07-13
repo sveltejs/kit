@@ -33,6 +33,9 @@ for (const template of fs.readdirSync('templates')) {
 			fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(pkg, null, '\t'));
 			// explicitly only install in the dir under test to avoid running a pnpm workspace command
 			execSync('pnpm install .', { cwd, stdio: 'inherit' });
+
+			// run check command separately
+			execSync('pnpm check', { cwd, stdio: 'inherit' });
 		});
 	}
 }
