@@ -2,6 +2,7 @@ import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 
 /**
+ * Creates the Builder which is passed to adapters for building the application.
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   build_data: import('types').BuildData;
@@ -33,11 +34,12 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		config,
 		prerendered,
 
-		createEntries(fn) {
+		async createEntries(fn) {
 			const { routes } = build_data.manifest_data;
 
 			/** @type {import('types').RouteDefinition[]} */
 			const facades = routes.map((route) => ({
+				id: route.id,
 				type: route.type,
 				segments: route.id.split('/').map((segment) => ({
 					dynamic: segment.includes('['),
@@ -81,7 +83,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 				});
 
 				if (filtered.size > 0) {
-					complete({
+					await complete({
 						generateManifest: ({ relativePath, format }) =>
 							generate_manifest({
 								build_data,
@@ -120,9 +122,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		},
 
 		writeClient(dest) {
-			return copy(`${config.kit.outDir}/output/client`, dest, {
-				filter: (file) => file[0] !== '.'
-			});
+			return copy(`${config.kit.outDir}/output/client`, dest);
 		},
 
 		writePrerendered(dest, { fallback } = {}) {
@@ -138,9 +138,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		},
 
 		writeServer(dest) {
-			return copy(`${config.kit.outDir}/output/server`, dest, {
-				filter: (file) => file[0] !== '.'
-			});
+			return copy(`${config.kit.outDir}/output/server`, dest);
 		},
 
 		writeStatic(dest) {

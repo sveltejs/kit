@@ -9,7 +9,7 @@
 		count += 1;
 
 		return {
-			maxage: 5,
+			cache: { maxage: 5 },
 			props: {
 				type,
 				loads: count
@@ -28,4 +28,4 @@
 </script>
 
 <h1>{type} loads: {loads}</h1>
-<slot></slot>
+<slot />

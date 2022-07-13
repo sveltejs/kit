@@ -3,7 +3,7 @@ import { posix } from 'path';
 import { fileURLToPath } from 'url';
 import * as esbuild from 'esbuild';
 
-/** @type {import('.')} */
+/** @type {import('.').default} */
 export default function () {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
@@ -37,8 +37,9 @@ export default function () {
 			});
 
 			await esbuild.build({
-				target: 'es2020',
 				platform: 'browser',
+				sourcemap: 'linked',
+				target: 'es2020',
 				entryPoints: [`${tmp}/_worker.js`],
 				outfile: `${dest}/_worker.js`,
 				allowOverwrite: true,

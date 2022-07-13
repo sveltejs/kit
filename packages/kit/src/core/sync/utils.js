@@ -11,10 +11,18 @@ const previous_contents = new Map();
  */
 export function write_if_changed(file, code) {
 	if (code !== previous_contents.get(file)) {
-		previous_contents.set(file, code);
-		mkdirp(path.dirname(file));
-		fs.writeFileSync(file, code);
+		write(file, code);
 	}
+}
+
+/**
+ * @param {string} file
+ * @param {string} code
+ */
+export function write(file, code) {
+	previous_contents.set(file, code);
+	mkdirp(path.dirname(file));
+	fs.writeFileSync(file, code);
 }
 
 /** @param {string} str */

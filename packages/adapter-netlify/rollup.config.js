@@ -5,7 +5,7 @@ import json from '@rollup/plugin-json';
 /** @type {import('rollup').RollupOptions} */
 const config = {
 	input: {
-		handler: 'src/handler.js',
+		serverless: 'src/serverless.js',
 		shims: 'src/shims.js'
 	},
 	output: [

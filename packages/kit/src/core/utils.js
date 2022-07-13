@@ -1,11 +1,10 @@
-import fs from 'fs';
 import path from 'path';
 import colors from 'kleur';
 import { fileURLToPath } from 'url';
 
 export const get_runtime_path = process.env.BUNDLED
-	? /** @param {import('types').ValidatedConfig} config */ (config) =>
-			posixify_path(path.join(config.kit.outDir, 'runtime'))
+	? /** @param {import('types').ValidatedKitConfig} config */ (config) =>
+			posixify_path(path.join(config.outDir, 'runtime'))
 	: () => posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
 
 /** @param {string} str */
@@ -34,35 +33,6 @@ export function logger({ verbose }) {
 	return log;
 }
 
-/**
- * Given an entry point like [cwd]/src/hooks, returns a filename like [cwd]/src/hooks.js or [cwd]/src/hooks/index.js
- * @param {string} entry
- * @returns {string|null}
- */
-export function resolve_entry(entry) {
-	if (fs.existsSync(entry)) {
-		const stats = fs.statSync(entry);
-		if (stats.isDirectory()) {
-			return resolve_entry(path.join(entry, 'index'));
-		}
-
-		return entry;
-	} else {
-		const dir = path.dirname(entry);
-
-		if (fs.existsSync(dir)) {
-			const base = path.basename(entry);
-			const files = fs.readdirSync(dir);
-
-			const found = files.find((file) => file.replace(/\.[^.]+$/, '') === base);
-
-			if (found) return path.join(dir, found);
-		}
-	}
-
-	return null;
-}
-
 /** @param {import('types').ManifestData} manifest_data */
 export function get_mime_lookup(manifest_data) {
 	/** @type {Record<string, string>} */
@@ -76,15 +46,4 @@ export function get_mime_lookup(manifest_data) {
 	});
 
 	return mime;
-}
-
-/** @param {import('types').ValidatedConfig} config */
-export function get_aliases(config) {
-	const alias = {
-		__GENERATED__: path.posix.join(config.kit.outDir, 'generated'),
-		$app: `${get_runtime_path(config)}/app`,
-		$lib: config.kit.files.lib
-	};
-
-	return alias;
 }

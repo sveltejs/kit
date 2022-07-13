@@ -2,7 +2,6 @@ import child_process from 'child_process';
 import fs from 'fs';
 import http from 'http';
 import { fileURLToPath } from 'url';
-import * as ports from 'port-authority';
 import sirv from 'sirv';
 import { chromium } from 'playwright-chromium';
 import * as uvu from 'uvu';
@@ -10,7 +9,6 @@ import * as uvu from 'uvu';
 /**
  * @typedef {{
  *   cwd: string;
- *   port: number;
  *   server: import('http').Server;
  *   base: string;
  *   browser: import('playwright-chromium').Browser;
@@ -29,24 +27,29 @@ export function run(app, callback) {
 	suite.before(async (context) => {
 		try {
 			const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
-			const mode = process.env.CI ? 'dist' : 'src';
-			const cli_path = fileURLToPath(new URL(`../../kit/${mode}/cli.js`, import.meta.url));
 
 			rimraf(`${cwd}/build`);
 
-			await spawn(`"${process.execPath}" ${cli_path} build`, {
+			await spawn('npm run build', {
 				cwd,
 				stdio: 'inherit',
 				shell: true
 			});
 
 			context.cwd = cwd;
-			context.port = await ports.find(4000);
 			const handler = sirv(`${cwd}/build`, {
 				single: '200.html'
 			});
 			context.server = await create_server(context.port, handler);
 
+			const { port } = /** @type {import('net').AddressInfo} */ (context.server.address());
+			if (!port) {
+				throw new Error(
+					`Could not find port from server ${JSON.stringify(context.server.address())}`
+				);
+			}
+
+			context.port = port;
 			context.base = `http://localhost:${context.port}`;
 			context.browser = await chromium.launch();
 			context.page = await context.browser.newPage();
@@ -104,3 +107,7 @@ function create_server(port, handler) {
 function rimraf(path) {
 	(fs.rmSync || fs.rmdirSync)(path, { recursive: true, force: true });
 }
+
+export const plugin = process.env.CI
+	? (await import('../../kit/dist/vite.js')).sveltekit
+	: (await import('../../kit/src/vite/index.js')).sveltekit;

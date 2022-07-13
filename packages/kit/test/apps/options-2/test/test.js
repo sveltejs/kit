@@ -3,7 +3,9 @@ import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
-test.describe.parallel('paths.base', () => {
+test.describe.configure({ mode: 'parallel' });
+
+test.describe('paths.base', () => {
 	test('serves /basepath', async ({ page }) => {
 		await page.goto('/basepath');
 		expect(await page.textContent('h1')).toBe('Hello');
@@ -15,13 +17,13 @@ test.describe.parallel('paths.base', () => {
 	});
 });
 
-test.describe.parallel('Service worker', () => {
+test.describe('Service worker', () => {
 	if (!process.env.DEV) {
 		test('build /basepath/service-worker.js', async ({ request }) => {
 			const response = await request.get('/basepath/service-worker.js');
 			const content = await response.text();
 
-			expect(content).toMatch(/\/_app\/start-[a-z0-9]+\.js/);
+			expect(content).toMatch(/\/_app\/immutable\/start-[a-z0-9]+\.js/);
 		});
 
 		test('does not register /basepath/service-worker.js', async ({ page }) => {

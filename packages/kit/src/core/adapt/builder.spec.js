@@ -44,20 +44,27 @@ test('copy files', () => {
 
 	assert.equal(
 		glob('**', {
-			cwd: /** @type {import('types').ValidatedConfig} */ (mocked).kit.files.assets
+			cwd: /** @type {import('types').ValidatedConfig} */ (mocked).kit.files.assets,
+			dot: true
 		}),
-		glob('**', { cwd: dest })
+		glob('**', { cwd: dest, dot: true })
 	);
 
 	rmSync(dest, { recursive: true, force: true });
 	builder.writeClient(dest);
 
-	assert.equal(glob('**', { cwd: `${outDir}/output/client` }), glob('**', { cwd: dest }));
+	assert.equal(
+		glob('**', { cwd: `${outDir}/output/client`, dot: true }),
+		glob('**', { cwd: dest, dot: true })
+	);
 
 	rmSync(dest, { recursive: true, force: true });
 	builder.writeServer(dest);
 
-	assert.equal(glob('**', { cwd: `${outDir}/output/server` }), glob('**', { cwd: dest }));
+	assert.equal(
+		glob('**', { cwd: `${outDir}/output/server`, dot: true }),
+		glob('**', { cwd: dest, dot: true })
+	);
 
 	rmSync(dest, { force: true, recursive: true });
 });

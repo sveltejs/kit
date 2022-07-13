@@ -5,21 +5,22 @@ import {
 	GetSession,
 	Handle,
 	HandleError,
+	KitConfig,
 	Load,
+	RequestEvent,
 	RequestHandler,
+	ResolveOptions,
 	Server,
 	SSRManifest
-} from './index';
+} from './index.js';
 import {
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
-	RequestEvent,
 	RequestOptions,
-	ResolveOptions,
 	ResponseHeaders,
 	TrailingSlash
-} from './private';
+} from './private.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -50,8 +51,8 @@ export interface BuildData {
 		chunks: OutputChunk[];
 		entry: {
 			file: string;
-			js: string[];
-			css: string[];
+			imports: string[];
+			stylesheets: string[];
 		};
 		vite_manifest: import('vite').Manifest;
 	};
@@ -94,7 +95,7 @@ export class InternalServer extends Server {
 	respond(
 		request: Request,
 		options: RequestOptions & {
-			prerender?: PrerenderOptions;
+			prerendering?: PrerenderOptions;
 		}
 	): Promise<Response>;
 }
@@ -117,9 +118,14 @@ export type NormalizedLoadOutput = {
 	redirect?: string;
 	props?: Record<string, any> | Promise<Record<string, any>>;
 	stuff?: Record<string, any>;
-	maxage?: number;
+	cache?: NormalizedLoadOutputCache;
 	dependencies?: string[];
 };
+
+export interface NormalizedLoadOutputCache {
+	maxage: number;
+	private?: boolean;
+}
 
 export interface PageData {
 	type: 'page';
@@ -142,7 +148,6 @@ export interface PrerenderDependency {
 
 export interface PrerenderOptions {
 	fallback?: boolean;
-	default: boolean;
 	dependencies: Map<string, PrerenderDependency>;
 }
 
@@ -170,13 +175,6 @@ export interface ShadowEndpointOutput<Output extends JSONObject = JSONObject> {
 	headers?: Partial<ResponseHeaders>;
 	body?: Output;
 }
-
-/**
- * The route key of a page with a matching endpoint — used to ensure the
- * client loads data from the right endpoint during client-side navigation
- * rather than a different route that happens to match the path
- */
-type ShadowKey = string;
 
 export interface ShadowRequestHandler<Output extends JSONObject = JSONObject> {
 	(event: RequestEvent): MaybePromise<ShadowEndpointOutput<Output>>;
@@ -222,23 +220,23 @@ export interface SSREndpoint {
 
 export interface SSRNode {
 	module: SSRComponent;
+	/** index into the `components` array in client-manifest.js */
+	index: number;
 	/** client-side module URL for this component */
-	entry: string;
-	/** external CSS files */
-	css: string[];
+	file: string;
 	/** external JS files */
-	js: string[];
+	imports: string[];
+	/** external CSS files */
+	stylesheets: string[];
 	/** inlined styles */
-	styles?: Record<string, string>;
+	inline_styles?: () => MaybePromise<Record<string, string>>;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
-	amp: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
-	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;
@@ -250,7 +248,10 @@ export interface SSROptions {
 		assets: string;
 	};
 	prefix: string;
-	prerender: boolean;
+	prerender: {
+		default: boolean;
+		enabled: boolean;
+	};
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
 	router: boolean;
@@ -304,12 +305,14 @@ export interface SSRState {
 	getClientAddress: () => string;
 	initiator?: SSRPage | null;
 	platform?: any;
-	prerender?: PrerenderOptions;
+	prerendering?: PrerenderOptions;
 }
 
 export type StrictBody = string | Uint8Array;
 
 export type ValidatedConfig = RecursiveRequired<Config>;
+
+export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export * from './index';
 export * from './private';

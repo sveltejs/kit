@@ -6,9 +6,9 @@ on:
       - master
 
 env:
-  TURBO_CACHE_KEY: ubuntu-latest-16  # reuse cache key from ci workflow
+  TURBO_CACHE_KEY: ubuntu-latest-16 # reuse cache key from ci workflow
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+  TURBO_TEAM: svelte
 
 jobs:
   release:
@@ -22,9 +22,7 @@ jobs:
         with:
           # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
           fetch-depth: 0
-      - uses: pnpm/action-setup@v2.2.1
-        with:
-          version: 6.23.2
+      - uses: pnpm/action-setup@v2.2.2
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -32,7 +30,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run build
+      - run: pnpm turbo run build --filter="./packages/*"
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets

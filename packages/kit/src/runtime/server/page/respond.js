@@ -11,6 +11,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
  */
 
 /**
+ * Gets the nodes, calls `load` for each of them, and then calls render to build the HTML response.
  * @param {{
  *   event: import('types').RequestEvent;
  *   options: SSROptions;
@@ -68,11 +69,11 @@ export async function respond(opts) {
 
 	let page_config = get_page_config(leaf, options);
 
-	if (state.prerender) {
+	if (state.prerendering) {
 		// if the page isn't marked as prerenderable (or is explicitly
 		// marked NOT prerenderable, if `prerender.default` is `true`),
 		// then bail out at this point
-		const should_prerender = leaf.prerender ?? state.prerender.default;
+		const should_prerender = leaf.prerender ?? options.prerender.default;
 		if (!should_prerender) {
 			return new Response(undefined, {
 				status: 204
@@ -94,7 +95,7 @@ export async function respond(opts) {
 
 	let stuff = {};
 
-	ssr: if (resolve_opts.ssr) {
+	ssr: {
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
 

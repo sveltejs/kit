@@ -1,5 +1,6 @@
+import { rimraf } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
-import { write_if_changed } from './utils.js';
+import { write } from './utils.js';
 
 /** @param {string} imports */
 const header = (imports) => `
@@ -8,7 +9,7 @@ import type { ${imports} } from '@sveltejs/kit';`;
 
 /** @param {string} arg */
 const endpoint = (arg) => `
-export type RequestHandler<Output extends ResponseBody = ResponseBody> = GenericRequestHandler<${arg}, Output>;`;
+export type RequestHandler<Output = ResponseBody> = GenericRequestHandler<${arg}, Output>;`;
 
 /** @param {string} arg */
 const page = (arg) => `
@@ -22,6 +23,8 @@ export type Load<
  * @param {import('types').ManifestData} manifest_data
  */
 export function write_types(config, manifest_data) {
+	rimraf(`${config.kit.outDir}/types`);
+
 	/** @type {Map<string, { params: string[], type: 'page' | 'endpoint' | 'both' }>} */
 	const shadow_types = new Map();
 
@@ -30,7 +33,7 @@ export function write_types(config, manifest_data) {
 
 		if (file) {
 			const ext = /** @type {string} */ (
-				config.kit.endpointExtensions.find((ext) => file.endsWith(ext))
+				config.kit.moduleExtensions.find((ext) => file.endsWith(ext))
 			);
 			const key = file.slice(0, -ext.length);
 			shadow_types.set(key, {
@@ -70,9 +73,9 @@ export function write_types(config, manifest_data) {
 
 		content.unshift(header(imports.join(', ')));
 
-		write_if_changed(
-			`${config.kit.outDir}/types/${key || 'index'}.d.ts`,
-			content.join('\n').trim()
-		);
+		const parts = (key || 'index').split('/');
+		parts.push('__types', /** @type {string} */ (parts.pop()));
+
+		write(`${config.kit.outDir}/types/${parts.join('/')}.d.ts`, content.join('\n').trim());
 	});
 }

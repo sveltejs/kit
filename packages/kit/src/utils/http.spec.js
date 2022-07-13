@@ -1,7 +1,9 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { to_headers } from './http.js';
-import { Headers } from 'node-fetch';
+import { negotiate, to_headers } from './http.js';
+import { Headers } from 'undici';
+
+// @ts-ignore
 globalThis.Headers = Headers;
 
 test('handle header string value', () => {
@@ -22,6 +24,16 @@ test('handle header int value', () => {
 test('handle header decimal value', () => {
 	const headers = to_headers({ name: 123.456 });
 	assert.equal(headers.get('name'), '123.456');
+});
+
+test('handle valid accept header value', () => {
+	const accept = 'text/html';
+	assert.equal(negotiate(accept, ['text/html']), 'text/html');
+});
+
+test('handle invalid accept header value', () => {
+	const accept = 'text/html,*';
+	assert.equal(negotiate(accept, ['text/html']), 'text/html');
 });
 
 test.run();

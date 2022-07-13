@@ -1,5 +1,5 @@
 <script context="module">
-	/** @type {import('@sveltejs/kit').ErrorLoad} */
+	/** @type {import('@sveltejs/kit').Load} */
 	export function load({ status, error, url }) {
 		if (url.pathname === '/no-ssr/missing') {
 			// load functions should not be called on the server if `ssr: false`

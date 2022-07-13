@@ -2,16 +2,16 @@ import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { normalize } from '../load.js';
-import { normalize_path } from '../../utils/url.js';
+import { LoadURL, normalize_path } from '../../utils/url.js';
 import {
 	create_updated_store,
 	find_anchor,
 	get_base_uri,
 	get_href,
-	initial_fetch,
 	notifiable_store,
 	scroll_state
 } from './utils.js';
+import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
@@ -61,8 +61,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 	/** @type {Map<string, import('./types').NavigationResult>} */
 	const cache = new Map();
 
-	/** @type {Set<string>} */
-	const invalidated = new Set();
+	/** @type {Array<((href: string) => boolean)>} */
+	const invalidated = [];
 
 	const stores = {
 		url: notifiable_store({}),
@@ -121,23 +121,31 @@ export function create_client({ target, session, base, trailing_slash }) {
 	});
 	ready = true;
 
-	/** Keeps tracks of multiple navigations caused by redirects during rendering */
-	let navigating = 0;
-
 	let router_enabled = true;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
-	let current_history_index = history.state?.[INDEX_KEY] ?? 0;
+	let current_history_index = history.state?.[INDEX_KEY];
 
-	if (current_history_index === 0) {
+	if (!current_history_index) {
+		// we use Date.now() as an offset so that cross-document navigations
+		// within the app don't result in data loss
+		current_history_index = Date.now();
+
 		// create initial history entry, so we can return here
-		history.replaceState({ ...history.state, [INDEX_KEY]: 0 }, '', location.href);
+		history.replaceState(
+			{ ...history.state, [INDEX_KEY]: current_history_index },
+			'',
+			location.href
+		);
 	}
 
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
 	const scroll = scroll_positions[current_history_index];
-	if (scroll) scrollTo(scroll.x, scroll.y);
+	if (scroll) {
+		history.scrollRestoration = 'manual';
+		scrollTo(scroll.x, scroll.y);
+	}
 
 	let hash_navigating = false;
 
@@ -147,20 +155,19 @@ export function create_client({ target, session, base, trailing_slash }) {
 	/** @type {{}} */
 	let token;
 
-	/** @type {{}} */
-	let navigating_token;
-
 	/**
-	 * @param {string} href
+	 * @param {string | URL} url
 	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
 	 * @param {string[]} redirect_chain
 	 */
 	async function goto(
-		href,
+		url,
 		{ noscroll = false, replaceState = false, keepfocus = false, state = {} },
 		redirect_chain
 	) {
-		const url = new URL(href, get_base_uri(document));
+		if (typeof url === 'string') {
+			url = new URL(url, get_base_uri(document));
+		}
 
 		if (router_enabled) {
 			return navigate({
@@ -195,12 +202,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/**
+	 * Returns `true` if update completes, `false` if it is aborted
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {() => void} [callback]
 	 */
-	async function update(url, redirect_chain, no_cache, opts) {
+	async function update(url, redirect_chain, no_cache, opts, callback) {
 		const intent = get_navigation_intent(url);
 
 		const current_token = (token = {});
@@ -226,13 +235,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		if (!navigation_result) {
 			await native_navigation(url);
-			return; // unnecessary, but TypeScript prefers it this way
+			return false; // unnecessary, but TypeScript prefers it this way
 		}
 
 		// abort if user navigated during update
-		if (token !== current_token) return;
+		if (token !== current_token) return false;
 
-		invalidated.clear();
+		invalidated.length = 0;
 
 		if (navigation_result.redirect) {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
@@ -252,7 +261,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					await native_navigation(new URL(navigation_result.redirect, location.href));
 				}
 
-				return;
+				return false;
 			}
 		} else if (navigation_result.props?.page?.status >= 400) {
 			const updated = await stores.updated.check();
@@ -273,6 +282,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (started) {
 			current = navigation_result.state;
 
+			if (navigation_result.props.page) {
+				navigation_result.props.page.url = url;
+			}
+
 			root.$set(navigation_result.props);
 		} else {
 			initialize(navigation_result);
@@ -291,9 +304,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 				const root = document.body;
 				const tabindex = root.getAttribute('tabindex');
 
-				getSelection()?.removeAllRanges();
 				root.tabIndex = -1;
-				root.focus();
+				root.focus({ preventScroll: true });
+
+				setTimeout(() => {
+					getSelection()?.removeAllRanges();
+				});
 
 				// restore `tabindex` as to prevent `root` from stealing input from elements
 				if (tabindex !== null) {
@@ -327,7 +343,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		load_cache.promise = null;
 		load_cache.id = null;
 		autoscroll = true;
-		updating = false;
 
 		if (navigation_result.props.page) {
 			page = navigation_result.props.page;
@@ -335,13 +350,17 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		router_enabled = leaf_node?.module.router !== false;
+
+		if (callback) callback();
+
+		updating = false;
 	}
 
 	/** @param {import('./types').NavigationResult} result */
 	function initialize(result) {
 		current = result.state;
 
-		const style = document.querySelector('style[data-svelte]');
+		const style = document.querySelector('style[data-sveltekit]');
 		if (style) style.remove();
 
 		page = result.props.page;
@@ -352,12 +371,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			hydrate: true
 		});
 
-		started = true;
-
 		if (router_enabled) {
 			const navigation = { from: null, to: new URL(location.href) };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
 		}
+
+		started = true;
 	}
 
 	/**
@@ -433,9 +452,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		const leaf = filtered[filtered.length - 1];
-		const maxage = leaf.loaded && leaf.loaded.maxage;
+		const load_cache = leaf?.loaded?.cache;
 
-		if (maxage) {
+		if (load_cache) {
 			const key = url.pathname + url.search; // omit hash
 			let ready = false;
 
@@ -448,7 +467,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				clearTimeout(timeout);
 			};
 
-			const timeout = setTimeout(clear, maxage * 1000);
+			const timeout = setTimeout(clear, load_cache.maxage * 1000);
 
 			const unsubscribe = stores.session.subscribe(() => {
 				if (ready) clear();
@@ -513,16 +532,17 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		const session = $session;
+		const load_url = new LoadURL(url);
 
 		if (module.load) {
-			/** @type {import('types').LoadInput} */
+			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
 				params: uses_params,
 				props: props || {},
 				get url() {
 					node.uses.url = true;
-					return url;
+					return load_url;
 				},
 				get session() {
 					node.uses.session = true;
@@ -532,11 +552,44 @@ export function create_client({ target, session, base, trailing_slash }) {
 					node.uses.stuff = true;
 					return { ...stuff };
 				},
-				fetch(resource, info) {
-					const requested = typeof resource === 'string' ? resource : resource.url;
-					add_dependency(requested);
+				async fetch(resource, init) {
+					let requested;
 
-					return started ? fetch(resource, info) : initial_fetch(resource, info);
+					if (typeof resource === 'string') {
+						requested = resource;
+					} else {
+						requested = resource.url;
+
+						// we're not allowed to modify the received `Request` object, so in order
+						// to fixup relative urls we create a new equivalent `init` object instead
+						init = {
+							// the request body must be consumed in memory until browsers
+							// implement streaming request bodies and/or the body getter
+							body:
+								resource.method === 'GET' || resource.method === 'HEAD'
+									? undefined
+									: await resource.blob(),
+							cache: resource.cache,
+							credentials: resource.credentials,
+							headers: resource.headers,
+							integrity: resource.integrity,
+							keepalive: resource.keepalive,
+							method: resource.method,
+							mode: resource.mode,
+							redirect: resource.redirect,
+							referrer: resource.referrer,
+							referrerPolicy: resource.referrerPolicy,
+							signal: resource.signal,
+							...init
+						};
+					}
+
+					// we must fixup relative urls so they are resolved from the target page
+					const normalized = new URL(requested, url).href;
+					add_dependency(normalized);
+
+					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be normalized
+					return started ? native_fetch(normalized, init) : initial_fetch(requested, init);
 				},
 				status: status ?? null,
 				error: error ?? null
@@ -551,7 +604,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 				});
 			}
 
-			const loaded = await module.load.call(null, load_input);
+			let loaded;
+
+			if (import.meta.env.DEV) {
+				try {
+					lock_fetch();
+					loaded = await module.load.call(null, load_input);
+				} finally {
+					unlock_fetch();
+				}
+			} else {
+				loaded = await module.load.call(null, load_input);
+			}
 
 			if (!loaded) {
 				throw new Error('load function must return a value');
@@ -604,8 +668,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 		/** @type {Error | null} */
 		let error = null;
 
-		// preload modules
-		a.forEach((loader) => loader());
+		// preload modules to avoid waterfall, but handle rejections
+		// so they don't get reported to Sentry et al (we don't need
+		// to act on the failures at this point)
+		a.forEach((loader) => loader().catch(() => {}));
 
 		load: for (let i = 0; i < a.length; i += 1) {
 			/** @type {import('./types').BranchNode | undefined} */
@@ -623,7 +689,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					(changed.url && previous.uses.url) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.session && previous.uses.session) ||
-					Array.from(previous.uses.dependencies).some((dep) => invalidated.has(dep)) ||
+					Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep))) ||
 					(stuff_changed && previous.uses.stuff);
 
 				if (changed_since_last_render) {
@@ -633,7 +699,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					const is_shadow_page = has_shadow && i === a.length - 1;
 
 					if (is_shadow_page) {
-						const res = await fetch(
+						const res = await native_fetch(
 							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
 								headers: {
@@ -656,7 +722,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 							props = res.status === 204 ? {} : await res.json();
 						} else {
 							status = res.status;
-							error = new Error('Failed to load data');
+							try {
+								error = await res.json();
+							} catch (e) {
+								error = new Error('Failed to load data');
+							}
 						}
 					}
 
@@ -677,14 +747,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 						}
 
 						if (node.loaded) {
-							// TODO remove for 1.0
-							// @ts-expect-error
-							if (node.loaded.fallthrough) {
-								throw new Error(
-									'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
-								);
-							}
-
 							if (node.loaded.error) {
 								status = node.loaded.status;
 								error = node.loaded.error;
@@ -836,14 +898,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 			const params = route.exec(path);
 
 			if (params) {
+				const id = normalize_path(url.pathname, trailing_slash) + url.search;
 				/** @type {import('./types').NavigationIntent} */
-				const intent = {
-					id: url.pathname + url.search,
-					route,
-					params,
-					url
-				};
-
+				const intent = { id, route, params, url };
 				return intent;
 			}
 		}
@@ -887,10 +944,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		accepted();
 
-		navigating++;
-
-		const current_navigating_token = (navigating_token = {});
-
 		if (started) {
 			stores.navigating.set({
 				from: current.url,
@@ -898,23 +951,22 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		}
 
-		await update(normalized, redirect_chain, false, {
-			scroll,
-			keepfocus,
-			details
-		});
+		await update(
+			normalized,
+			redirect_chain,
+			false,
+			{
+				scroll,
+				keepfocus,
+				details
+			},
+			() => {
+				const navigation = { from, to: normalized };
+				callbacks.after_navigate.forEach((fn) => fn(navigation));
 
-		navigating--;
-
-		// navigation was aborted
-		if (navigating_token !== current_navigating_token) return;
-
-		if (!navigating) {
-			const navigation = { from, to: normalized };
-			callbacks.after_navigate.forEach((fn) => fn(navigation));
-
-			stores.navigating.set(null);
-		}
+				stores.navigating.set(null);
+			}
+		);
 	}
 
 	/**
@@ -926,6 +978,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 	function native_navigation(url) {
 		location.href = url.href;
 		return new Promise(() => {});
+	}
+
+	if (import.meta.hot) {
+		import.meta.hot.on('vite:beforeUpdate', () => {
+			if (current.error) location.reload();
+		});
 	}
 
 	return {
@@ -964,9 +1022,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 		goto: (href, opts = {}) => goto(href, opts, []),
 
 		invalidate: (resource) => {
-			const { href } = new URL(resource, location.href);
-
-			invalidated.add(href);
+			if (typeof resource === 'function') {
+				invalidated.push(resource);
+			} else {
+				const { href } = new URL(resource, location.href);
+				invalidated.push((dep) => dep === href);
+			}
 
 			if (!invalidating) {
 				invalidating = Promise.resolve().then(async () => {
@@ -1099,11 +1160,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 				// Ignore if <a> has a target
 				if (is_svg_a_element ? a.target.baseVal : a.target) return;
 
-				if (url.href === location.href) {
-					if (!location.hash) event.preventDefault();
-					return;
-				}
-
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired
 				// Removing the hash does a full page navigation in the browser, so make sure a hash is present
@@ -1128,7 +1184,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					redirect_chain: [],
 					details: {
 						state: {},
-						replaceState: false
+						replaceState: url.href === location.href
 					},
 					accepted: () => event.preventDefault(),
 					blocked: () => event.preventDefault()
@@ -1200,7 +1256,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					}
 
 					const node = await load_node({
-						module: await nodes[i],
+						module: await components[nodes[i]](),
 						url,
 						params,
 						stuff,

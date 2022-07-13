@@ -10,7 +10,7 @@ import { write_types } from './write_types.js';
 /** @param {import('types').ValidatedConfig} config */
 export function init(config) {
 	copy_assets(path.join(config.kit.outDir, 'runtime'));
-	write_tsconfig(config);
+	write_tsconfig(config.kit);
 }
 
 /** @param {import('types').ValidatedConfig} config */
