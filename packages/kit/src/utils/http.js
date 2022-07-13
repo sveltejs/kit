@@ -35,7 +35,6 @@ export function negotiate(accept, types) {
 				const [, type, subtype, q = '1'] = match;
 				return { type, subtype, q: +q, i };
 			}
-
 		})
 		.filter(Boolean) // ignore invalid headers
 		.sort((a, b) => {
