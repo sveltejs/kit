@@ -218,7 +218,7 @@ export async function render_response({
 
 			if (csp.style_needs_nonce) {
 				attributes.push(`nonce="${csp.nonce}"`);
-      }
+			}
 
 			if (inline_styles.has(dep)) {
 				// don't load stylesheets that are already inlined
