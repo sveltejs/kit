@@ -48,11 +48,12 @@ class BaseProvider {
 	#nonce;
 
 	/**
-	 * @param {Omit<import('./types').CspConfig, 'reportOnly'>} config
-	 * @param {import('./types').CspOpts} opts
+	 * @param {import('./types').CspMode} mode
+	 * @param {import('types').CspDirectives} directives
 	 * @param {string} nonce
+	 * @param {import('./types').CspOpts} opts
 	 */
-	constructor({ mode, directives }, { dev, prerender }, nonce = generate_nonce()) {
+	constructor(mode, directives, nonce, { dev, prerender }) {
 		this.#use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
 		this.#directives = dev ? { ...directives } : directives; // clone in dev so we can safely mutate
 		this.#dev = dev;
@@ -179,15 +180,6 @@ class BaseProvider {
 }
 
 class CspProvider extends BaseProvider {
-	/**
-	 * @param {Omit<import('./types').CspConfig, 'reportOnly'>} config
-	 * @param {import('./types').CspOpts} opts
-	 * @param {string} nonce
-	 */
-	constructor(config, opts, nonce) {
-		super(config, opts, nonce);
-	}
-
 	get_meta() {
 		const content = escape_html_attr(this.get_header(true));
 		return `<meta http-equiv="content-security-policy" content=${content}>`;
@@ -196,20 +188,20 @@ class CspProvider extends BaseProvider {
 
 class CspReportOnlyProvider extends BaseProvider {
 	/**
-	 * @param {Omit<import('./types').CspConfig, 'directives'>} config
-	 * @param {import('./types').CspOpts} opts
+	 * @param {import('./types').CspMode} mode
+	 * @param {import('types').CspDirectives} directives
 	 * @param {string} nonce
+	 * @param {import('./types').CspOpts} opts
 	 */
-	constructor(config, opts, nonce) {
-		const internal_config = { ...config, directives: config.reportOnly };
-		super(internal_config, opts, nonce);
+	constructor(mode, directives, nonce, opts) {
+		super(mode, directives, nonce, opts);
 
-		if (Object.values(config.reportOnly).filter((v) => !!v).length > 0) {
+		if (Object.values(directives).filter((v) => !!v).length > 0) {
 			// If we're generating content-security-policy-report-only,
 			// if there are any directives, we need a report-uri or report-to (or both)
 			// else it's just an expensive noop.
-			const has_report_to = config.reportOnly?.['report-to']?.length ?? 0 > 0;
-			const has_report_uri = config.reportOnly?.['report-uri']?.length ?? 0 > 0;
+			const has_report_to = directives['report-to']?.length ?? 0 > 0;
+			const has_report_uri = directives['report-uri']?.length ?? 0 > 0;
 			if (!has_report_to && !has_report_uri) {
 				throw Error(
 					'`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both'
@@ -233,9 +225,9 @@ export class Csp {
 	 * @param {import('./types').CspConfig} config
 	 * @param {import('./types').CspOpts} opts
 	 */
-	constructor(config, opts) {
-		this.csp_provider = new CspProvider(config, opts, this.nonce);
-		this.report_only_provider = new CspReportOnlyProvider(config, opts, this.nonce);
+	constructor({ mode, directives, reportOnly }, opts) {
+		this.csp_provider = new CspProvider(mode, directives, opts, this.nonce);
+		this.report_only_provider = new CspReportOnlyProvider(mode, reportOnly, opts, this.nonce);
 	}
 
 	get script_needs_nonce() {

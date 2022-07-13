@@ -21,8 +21,10 @@ export type Loaded = {
 	uses_credentials: boolean;
 };
 
+type CspMode = 'hash' | 'nonce' | 'auto';
+
 export interface CspConfig {
-	mode: 'hash' | 'nonce' | 'auto';
+	mode: CspMode;
 	directives: CspDirectives;
 	reportOnly: CspDirectives;
 }
