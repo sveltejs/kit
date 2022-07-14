@@ -264,7 +264,7 @@ test.describe('Endpoints', () => {
 	});
 });
 
-test('page endpoint GET returned error message is preserved', () => {
+test.describe('Errors', () => {
 	test('client-side load errors', async ({ page }) => {
 		await page.goto('/errors/load-client');
 
