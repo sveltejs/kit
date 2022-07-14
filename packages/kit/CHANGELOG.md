@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.375
+
+### Patch Changes
+
+- fix: don't try adapting if build failed ([#5536](https://github.com/sveltejs/kit/pull/5536))
+
+* Render generic error page if `__layout` returns error while rendering full error page ([#4665](https://github.com/sveltejs/kit/pull/4665))
+
 ## 1.0.0-next.374
 
 ### Patch Changes
