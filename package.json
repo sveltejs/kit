@@ -5,7 +5,7 @@
 	"private": true,
 	"scripts": {
 		"build": "turbo run build --filter=./packages/*",
-		"test": "pnpm --filter \"@sveltejs/*\" test",
+		"test": "turbo run test --filter=./packages/* --force",
 		"check": "turbo run check",
 		"lint": "turbo run lint",
 		"format": "turbo run format",
