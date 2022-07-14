@@ -347,6 +347,8 @@ function kit() {
 			console.log(
 				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
 			);
+
+			completed_build = true;
 		},
 
 		/**
