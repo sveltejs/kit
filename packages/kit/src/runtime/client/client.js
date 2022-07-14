@@ -604,24 +604,17 @@ export function create_client({ target, session, base, trailing_slash }) {
 				});
 			}
 
-			let loaded;
-
 			if (import.meta.env.DEV) {
 				try {
 					lock_fetch();
-					loaded = await module.load.call(null, load_input);
+					node.loaded = normalize(await module.load.call(null, load_input));
 				} finally {
 					unlock_fetch();
 				}
 			} else {
-				loaded = await module.load.call(null, load_input);
+				node.loaded = normalize(await module.load.call(null, load_input));
 			}
 
-			if (!loaded) {
-				throw new Error('load function must return a value');
-			}
-
-			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
 			if (node.loaded.dependencies) {
 				node.loaded.dependencies.forEach(add_dependency);
@@ -662,7 +655,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		let stuff = root_stuff;
 		let stuff_changed = false;
 
-		/** @type {number | undefined} */
+		/** @type {number} */
 		let status = 200;
 
 		/** @type {Error | null} */
@@ -748,7 +741,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 						if (node.loaded) {
 							if (node.loaded.error) {
-								status = node.loaded.status;
+								status = node.loaded.status ?? 500;
 								error = node.loaded.error;
 							}
 
@@ -1277,7 +1270,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 						if (node.loaded.error) {
 							if (error) throw node.loaded.error;
 							error_args = {
-								status: node.loaded.status,
+								status: node.loaded.status ?? 500,
 								error: node.loaded.error,
 								url,
 								routeId

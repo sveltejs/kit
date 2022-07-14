@@ -19,16 +19,16 @@ test.describe('a11y', () => {
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
 		await page.keyboard.press(tab);
 
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
-		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BUTTON');
+		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('focus me');
 
 		await clicknav('[href="/accessibility/a"]');
 		expect(await page.innerHTML('h1')).toBe('a');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
 
 		await page.keyboard.press(tab);
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
-		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BUTTON');
+		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('focus me');
 
 		expect(await page.evaluate(() => document.documentElement.getAttribute('tabindex'))).toBe(null);
 	});
@@ -541,8 +541,11 @@ test.describe('Shadowed pages', () => {
 
 	test('Merges bodies for 4xx and 5xx responses from non-GET', async ({ page }) => {
 		await page.goto('/shadowed');
-		await Promise.all([page.waitForNavigation(), page.click('#error-post')]);
+		const [response] = await Promise.all([page.waitForNavigation(), page.click('#error-post')]);
 		expect(await page.textContent('h1')).toBe('hello from get / echo: posted data');
+
+		expect(response.status()).toBe(400);
+		expect(await page.textContent('h2')).toBe('status: 400');
 	});
 
 	test('Responds from endpoint if Accept includes application/json but not text/html', async ({
@@ -1640,7 +1643,7 @@ test.describe('Load', () => {
 	});
 
 	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
-		const port = process.env.DEV ? 3000 : 4173;
+		const port = process.env.DEV ? 5173 : 4173;
 
 		if (javaScriptEnabled && process.env.DEV) {
 			const warnings = [];
@@ -2163,7 +2166,9 @@ test.describe('Prefetching', () => {
 			if (process.env.DEV) {
 				expect(requests.filter((req) => req.endsWith('index.svelte')).length).toBe(1);
 			} else {
-				expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
+				// the preload helper causes an additional request to be made in Firefox,
+				// so we use toBeGreaterThan rather than toBe
+				expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 			}
 
 			expect(requests.includes(`${baseURL}/routing/prefetched.json`)).toBe(true);

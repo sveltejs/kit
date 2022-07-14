@@ -4,7 +4,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
-import { Csp, csp_ready } from './csp.js';
+import { Csp } from './csp.js';
 import { PrerenderingURL } from '../../../utils/url.js';
 import { serialize_error } from '../utils.js';
 
@@ -77,6 +77,14 @@ export async function render_response({
 	}
 
 	if (resolve_opts.ssr) {
+		const leaf = /** @type {import('./types.js').Loaded} */ (branch.at(-1));
+
+		if (leaf.loaded.status) {
+			// explicit status returned from `load` or a page endpoint trumps
+			// initial status
+			status = leaf.loaded.status;
+		}
+
 		for (const { node, props, loaded, fetched, uses_credentials } of branch) {
 			if (node.imports) {
 				node.imports.forEach((url) => modulepreloads.add(url));
@@ -157,11 +165,9 @@ export async function render_response({
 
 	let { head, html: body } = rendered;
 
-	await csp_ready;
 	const csp = new Csp(options.csp, {
 		dev: options.dev,
-		prerender: !!state.prerendering,
-		needs_nonce: options.template_contains_nonce
+		prerender: !!state.prerendering
 	});
 
 	const target = hash(body);
@@ -272,7 +278,7 @@ export async function render_response({
 	if (state.prerendering) {
 		const http_equiv = [];
 
-		const csp_headers = csp.get_meta();
+		const csp_headers = csp.csp_provider.get_meta();
 		if (csp_headers) {
 			http_equiv.push(csp_headers);
 		}
@@ -304,9 +310,13 @@ export async function render_response({
 	}
 
 	if (!state.prerendering) {
-		const csp_header = csp.get_header();
+		const csp_header = csp.csp_provider.get_header();
 		if (csp_header) {
 			headers.set('content-security-policy', csp_header);
+		}
+		const report_only_header = csp.report_only_provider.get_header();
+		if (report_only_header) {
+			headers.set('content-security-policy-report-only', report_only_header);
 		}
 	}
 
