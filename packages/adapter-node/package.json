@@ -38,10 +38,8 @@
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",
 		"@sveltejs/kit": "workspace:*",
-		"@types/compression": "^1.7.2",
 		"@types/node": "^16.11.36",
 		"c8": "^7.11.3",
-		"compression": "^1.7.4",
 		"node-fetch": "^3.2.4",
 		"polka": "^1.0.0-next.22",
 		"rimraf": "^3.0.2",
