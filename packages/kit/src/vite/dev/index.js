@@ -302,7 +302,6 @@ export async function dev(vite, vite_config, svelte_config) {
 				const rendered = await respond(
 					request,
 					{
-						app_dir: svelte_config.kit.appDir,
 						csp: svelte_config.kit.csp,
 						dev: true,
 						get_stack: (error) => {

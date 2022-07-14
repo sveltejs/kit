@@ -232,7 +232,6 @@ export interface SSRNode {
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
-	app_dir: string;
 	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
 	get_stack: (error: Error) => string | undefined;

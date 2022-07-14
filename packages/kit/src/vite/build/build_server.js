@@ -46,7 +46,6 @@ export function override(settings) {
 export class Server {
 	constructor(manifest) {
 		this.options = {
-			app_dir: ${s(config.kit.appDir)},
 			csp: ${s(config.kit.csp)},
 			dev: false,
 			get_stack: error => String(error), // for security
