@@ -356,6 +356,15 @@ test.describe('Errors', () => {
 	});
 });
 
+test.describe('Load', () => {
+	test('fetching a non-existent resource in root layout fails without hanging', async ({
+		request
+	}) => {
+		const response = await request.get('/errors/error-in-layout');
+		expect(await response.text()).toContain('Error: 500');
+	});
+});
+
 test.describe('Routing', () => {
 	test('event.params are available in handle', async ({ request }) => {
 		const response = await request.get('/routing/params-in-handle/banana');

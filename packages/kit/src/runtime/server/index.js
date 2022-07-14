@@ -3,7 +3,7 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
-import { decode_params, serialize_error } from './utils.js';
+import { decode_params, serialize_error, GENERIC_ERROR } from './utils.js';
 import { normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
@@ -274,6 +274,12 @@ export async function respond(request, options, state) {
 					}
 				}
 
+				if (state.initiator === GENERIC_ERROR) {
+					return new Response('Internal Server Error', {
+						status: 500
+					});
+				}
+
 				// if this request came direct from the user, rather than
 				// via a `fetch` in a `load`, render a 404 page
 				if (!state.initiator) {
@@ -328,6 +334,7 @@ export async function respond(request, options, state) {
 			});
 		}
 
+		// TODO is this necessary? should we just return a plain 500 at this point?
 		try {
 			const $session = await options.hooks.getSession(event);
 			return await respond_with_error({

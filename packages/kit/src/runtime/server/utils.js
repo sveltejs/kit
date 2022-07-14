@@ -96,3 +96,8 @@ function clone_error(error, get_stack) {
 
 	return object;
 }
+
+/** @type {import('types').SSRErrorPage} */
+export const GENERIC_ERROR = {
+	id: '__error'
+};
