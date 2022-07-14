@@ -122,7 +122,9 @@ const get_defaults = (prefix = '') => ({
 		version: {
 			name: Date.now().toString(),
 			pollInterval: 0
-		}
+		},
+		// TODO cleanup for 1.0
+		vite: undefined
 	}
 });
 
