@@ -421,6 +421,7 @@ function collect_output(bundle) {
 		} else {
 			chunks.push(value);
 		}
+	}
 	return { assets, chunks };
 }
 
