@@ -160,6 +160,9 @@ function kit() {
 		};
 	}
 
+	// TODO remove this for 1.0
+	check_vite_version();
+
 	return {
 		name: 'vite-plugin-svelte-kit',
 
@@ -386,6 +389,23 @@ function kit() {
 			return preview(vite, svelte_config, vite_config.preview.https ? 'https' : 'http');
 		}
 	};
+}
+
+function check_vite_version() {
+	let vite_major = 3;
+
+	try {
+		const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+		vite_major = +pkg.devDependencies['vite'].replace(/^[~^]/, '')[0];
+	} catch {
+		// do nothing
+	}
+
+	if (vite_major < 3) {
+		throw new Error(
+			`Vite version ${vite_major} is no longer supported. Please upgrade to version 3`
+		);
+	}
 }
 
 /** @param {import('rollup').OutputBundle} bundle */
