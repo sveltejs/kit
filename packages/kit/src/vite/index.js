@@ -109,6 +109,11 @@ function kit() {
 	 */
 	let paths;
 
+	/**
+	 * @type {Error | undefined}
+	 */
+	let build_error;
+
 	function vite_client_config() {
 		/** @type {Record<string, string>} */
 		const input = {
@@ -256,6 +261,10 @@ function kit() {
 			}
 		},
 
+		buildEnd(err) {
+			build_error = err;
+		},
+
 		/**
 		 * Vite builds a single bundle. We need three bundles: client, server, and service worker.
 		 * The user's package.json scripts will invoke the Vite CLI to execute the client build. We
@@ -351,9 +360,13 @@ function kit() {
 		 * Runs the adapter.
 		 */
 		async closeBundle() {
-			if (!is_build) {
-				return; // vite calls closeBundle when dev-server restarts, ignore that
+			if (
+				!is_build || // vite calls closeBundle when dev-server restarts, ignore that
+				build_error // don't try prerendering if build failed
+			) {
+				return;
 			}
+
 			if (svelte_config.kit.adapter) {
 				const { adapt } = await import('../core/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
