@@ -362,7 +362,7 @@ function kit() {
 		async closeBundle() {
 			if (
 				!is_build || // vite calls closeBundle when dev-server restarts, ignore that
-				build_error // don't try prerendering if build failed
+				build_error // don't try adapting if build failed
 			) {
 				return;
 			}
