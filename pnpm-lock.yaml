@@ -310,6 +310,7 @@ importers:
       marked: ^4.0.16
       mime: ^3.0.0
       node-fetch: ^3.2.4
+      prettier: ^2.6.2
       rollup: ^2.75.7
       sade: ^1.8.1
       selfsigned: ^2.0.1
@@ -349,6 +350,7 @@ importers:
       marked: 4.0.17
       mime: 3.0.0
       node-fetch: 3.2.6
+      prettier: 2.7.1
       rollup: 2.75.7
       selfsigned: 2.0.1
       set-cookie-parser: 2.5.0
