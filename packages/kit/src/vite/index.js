@@ -391,14 +391,13 @@ function collect_output(bundle) {
 	const chunks = [];
 	/** @type {import('rollup').OutputAsset[]} */
 	const assets = [];
-	for (const key of Object.keys(bundle)) {
+	for (const value of Object.values(bundle)) {
 		// collect asset and output chunks
-		if (bundle[key].type === 'asset') {
-			assets.push(/** @type {import('rollup').OutputAsset} */ (bundle[key]));
+		if (value.type === 'asset') {
+			assets.push(value);
 		} else {
-			chunks.push(/** @type {import('rollup').OutputChunk} */ (bundle[key]));
+			chunks.push(value);
 		}
-	}
 	return { assets, chunks };
 }
 
