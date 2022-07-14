@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- [breaking] require vite 3 ([#5526](https://github.com/sveltejs/kit/pull/5526))
+- [breaking] require vite 3 ([#5005](https://github.com/sveltejs/kit/pull/5005))
 
 ## 1.0.0-next.372
 
