@@ -1578,8 +1578,12 @@ test.describe('Load', () => {
 		page
 	}) => {
 		await page.goto('/load/dynamic-import-styles');
-		const el = document.querySelector('#thing');
-		expect(await page.evaluate(() => el && getComputedStyle(el).color)).toBe('rgb(255, 0, 0)');
+		expect(
+			await page.evaluate(() => {
+				const el = document.querySelector('#thing');
+				return el && getComputedStyle(el).color;
+			})
+		).toBe('rgb(255, 0, 0)');
 	});
 
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
