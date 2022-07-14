@@ -138,6 +138,9 @@ export function assets_base(config) {
 }
 
 /**
+ * vite.config.js will contain vite-plugin-svelte-kit, which kicks off the server and service
+ * worker builds in a hook. When running the server and service worker builds we must remove
+ * the SvelteKit plugin so that we do not kick off additional instances of these builds.
  * @param {import('vite').UserConfig} config
  */
 export function remove_svelte_kit(config) {
