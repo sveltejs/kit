@@ -3,7 +3,6 @@ import http from 'http';
 import { test as base, devices } from '@playwright/test';
 
 export const test = base.extend({
-	// @ts-expect-error
 	app: async ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
 		use({
@@ -33,7 +32,6 @@ export const test = base.extend({
 				page.evaluate((/** @type {(url: URL) => any} */ fn) => beforeNavigate(fn), fn),
 
 			/**
-			 * @param {() => void} fn
 			 * @returns {Promise<void>}
 			 */
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
@@ -48,12 +46,10 @@ export const test = base.extend({
 			 * @param {string[]} [urls]
 			 * @returns {Promise<void>}
 			 */
-			prefetchRoutes: (urls) =>
-				page.evaluate((/** @type {string[]} */ urls) => prefetchRoutes(urls), urls)
+			prefetchRoutes: (urls) => page.evaluate((urls) => prefetchRoutes(urls), urls)
 		});
 	},
 
-	// @ts-expect-error
 	clicknav: async ({ page, javaScriptEnabled }, use) => {
 		/**
 		 * @param {string} selector
@@ -70,7 +66,6 @@ export const test = base.extend({
 		use(clicknav);
 	},
 
-	// @ts-expect-error
 	in_view: async ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
@@ -96,10 +91,12 @@ export const test = base.extend({
 		// automatically wait for kit started event after navigation functions if js is enabled
 		const page_navigation_functions = ['goto', 'goBack', 'reload'];
 		page_navigation_functions.forEach((fn) => {
+			// @ts-expect-error
 			const page_fn = page[fn];
 			if (!page_fn) {
 				throw new Error(`function does not exist on page: ${fn}`);
 			}
+			// @ts-expect-error
 			page[fn] = async function (...args) {
 				const res = await page_fn.call(page, ...args);
 				if (javaScriptEnabled) {
@@ -112,7 +109,6 @@ export const test = base.extend({
 		await use(page);
 	},
 
-	// @ts-expect-error
 	// eslint-disable-next-line
 	read_errors: ({}, use) => {
 		/** @param {string} path */
@@ -126,12 +122,15 @@ export const test = base.extend({
 		use(read_errors);
 	}
 });
-const test_browser = process.env.KIT_E2E_BROWSER ?? 'chromium';
+
 const known_devices = {
 	chromium: devices['Desktop Chrome'],
 	firefox: devices['Desktop Firefox'],
 	safari: devices['Desktop Safari']
 };
+const test_browser = /** @type {keyof typeof known_devices} */ (
+	process.env.KIT_E2E_BROWSER ?? 'chromium'
+);
 
 const test_browser_device = known_devices[test_browser];
 
