@@ -63,6 +63,15 @@ export function sveltekit() {
 }
 
 /**
+ * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
+ * Background reading is available at:
+ * - https://vitejs.dev/guide/api-plugin.html
+ * - https://rollupjs.org/guide/en/#plugin-development
+ *
+ * You can get an idea of the lifecycle by looking at the flow charts here:
+ * - https://rollupjs.org/guide/en/#build-hooks
+ * - https://rollupjs.org/guide/en/#output-generation-hooks
+ *
  * @return {import('vite').Plugin}
  */
 function kit() {
@@ -99,7 +108,7 @@ function kit() {
 	 */
 	let paths;
 
-	function create_client_config() {
+	function vite_client_config() {
 		/** @type {Record<string, string>} */
 		const input = {
 			// Put unchanging assets in immutable directory. We don't set that in the
@@ -128,9 +137,35 @@ function kit() {
 		});
 	}
 
+	/**
+	 * @param {import('rollup').OutputAsset[]} assets
+	 * @param {import('rollup').OutputChunk[]} chunks
+	 */
+	function client_build_info(assets, chunks) {
+			/** @type {import('vite').Manifest} */
+			const vite_manifest = JSON.parse(
+				fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
+			);
+
+			const entry_id = posixify(
+				path.relative(cwd, `${get_runtime_path(svelte_config.kit)}/client/start.js`)
+			);
+
+			return {
+				assets,
+				chunks,
+				entry: find_deps(vite_manifest, entry_id, false),
+				vite_manifest
+			};
+	}
+
 	return {
 		name: 'vite-plugin-svelte-kit',
 
+		/**
+		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
+		 * @see https://vitejs.dev/guide/api-plugin.html#config
+		 */
 		async config(config, config_env) {
 			vite_config_env = config_env;
 			svelte_config = await load_config();
@@ -149,7 +184,7 @@ function kit() {
 
 				manifest_data = sync.all(svelte_config).manifest_data;
 
-				const new_config = create_client_config();
+				const new_config = vite_client_config();
 
 				warn_overridden_config(config, new_config);
 
@@ -195,11 +230,17 @@ function kit() {
 			return result;
 		},
 
+		/**
+		 * Stores the final config.
+		 */
 		configResolved(config) {
 			vite_config = config;
 		},
 
-		buildStart() {
+		/**
+		 * Clears the output directories.
+		 */
+		 buildStart() {
 			if (is_build) {
 				rimraf(paths.build_dir);
 				mkdirp(paths.build_dir);
@@ -209,6 +250,11 @@ function kit() {
 			}
 		},
 
+		/**
+		 * Vite builds a single bundle. We need three bundles: client, server, and service worker.
+		 * The user's package.json scripts will invoke the Vite CLI to execute the client build. We
+		 * then use this hook to kick off builds for the server and service worker.
+		 */
 		async writeBundle(_options, bundle) {
 			log = logger({
 				verbose: vite_config.logLevel === 'info'
@@ -219,36 +265,10 @@ function kit() {
 				JSON.stringify({ version: process.env.VITE_SVELTEKIT_APP_VERSION })
 			);
 
-			/** @type {import('rollup').OutputChunk[]} */
-			const chunks = [];
-			/** @type {import('rollup').OutputAsset[]} */
-			const assets = [];
-			for (const key of Object.keys(bundle)) {
-				// collect asset and output chunks
-				if (bundle[key].type === 'asset') {
-					assets.push(/** @type {import('rollup').OutputAsset} */ (bundle[key]));
-				} else {
-					chunks.push(/** @type {import('rollup').OutputChunk} */ (bundle[key]));
-				}
-			}
-
-			/** @type {import('vite').Manifest} */
-			const vite_manifest = JSON.parse(
-				fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
-			);
-
-			const entry_id = posixify(
-				path.relative(cwd, `${get_runtime_path(svelte_config.kit)}/client/start.js`)
-			);
-
-			const client = {
-				assets,
-				chunks,
-				entry: find_deps(vite_manifest, entry_id, false),
-				vite_manifest
-			};
+			const { assets, chunks } = collect_output(bundle);
 			log.info(`Client build completed. Wrote ${chunks.length} chunks and ${assets.length} assets`);
 
+			log.info('Building server');
 			const options = {
 				cwd,
 				config: svelte_config,
@@ -258,12 +278,8 @@ function kit() {
 				output_dir: paths.output_dir,
 				service_worker_entry_file: resolve_entry(svelte_config.kit.files.serviceWorker)
 			};
-
-			log.info('Building server');
-
+			const client = client_build_info(assets, chunks);
 			const server = await build_server(options, client);
-
-			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 
 			/** @type {import('types').BuildData} */
 			build_data = {
@@ -283,6 +299,9 @@ function kit() {
 				})};\n`
 			);
 
+			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
+			log.info('Prerendering');
+
 			const static_files = manifest_data.assets.map((asset) => posixify(asset.file));
 
 			const files = new Set([
@@ -297,8 +316,6 @@ function kit() {
 					files.add(file.slice(0, -11));
 				}
 			});
-
-			log.info('Prerendering');
 
 			prerendered = await prerender({
 				config: svelte_config.kit,
@@ -324,6 +341,9 @@ function kit() {
 			);
 		},
 
+		/**
+		 * Runs the adapter.
+		 */
 		async closeBundle() {
 			if (!is_build) {
 				return; // vite calls closeBundle when dev-server restarts, ignore that
@@ -341,20 +361,45 @@ function kit() {
 
 			if (svelte_config.kit.prerender.enabled) {
 				// this is necessary to close any open db connections, etc.
-				// TODO: prerender in a subprocess so we can exit in isolation
+				// TODO: prerender in a subprocess so we can exit in isolation and then remove this
 				// https://github.com/sveltejs/kit/issues/5306
 				process.exit(0);
 			}
 		},
 
+		/**
+		 * Adds the SvelteKit middleware to do SSR in dev mode.
+		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
+		 */
 		async configureServer(vite) {
 			return await dev(vite, vite_config, svelte_config);
 		},
 
+		/**
+		 * Adds the SvelteKit middleware to do SSR in preview mode.
+		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
+		 */
 		configurePreviewServer(vite) {
 			return preview(vite, svelte_config, vite_config.preview.https ? 'https' : 'http');
 		}
 	};
+}
+
+/** @param {import('rollup').OutputBundle} bundle */
+function collect_output(bundle) {
+			/** @type {import('rollup').OutputChunk[]} */
+			const chunks = [];
+			/** @type {import('rollup').OutputAsset[]} */
+			const assets = [];
+			for (const key of Object.keys(bundle)) {
+				// collect asset and output chunks
+				if (bundle[key].type === 'asset') {
+					assets.push(/** @type {import('rollup').OutputAsset} */ (bundle[key]));
+				} else {
+					chunks.push(/** @type {import('rollup').OutputChunk} */ (bundle[key]));
+				}
+			}
+			return {assets, chunks};
 }
 
 /**
