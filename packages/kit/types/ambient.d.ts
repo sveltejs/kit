@@ -80,7 +80,7 @@ declare module '$app/env' {
 	export const dev: boolean;
 
 	/**
-	 * The Vite.js mode the app is running in. Configure in `config.kit.vite.mode`.
+	 * The Vite.js mode the app is running in. Configure in [`vite.config.js`](https://vitejs.dev/config/shared-options.html#mode).
 	 * Vite.js loads the dotenv file associated with the provided mode, `.env.[mode]` or `.env.[mode].local`.
 	 * By default, `vite dev` runs with `mode=development` and `vite build` runs with `mode=production`.
 	 */

@@ -151,7 +151,6 @@ export interface KitConfig {
 		name?: string;
 		pollInterval?: number;
 	};
-	vite?: import('vite').UserConfig | (() => MaybePromise<import('vite').UserConfig>);
 }
 
 export interface ExternalFetch {
