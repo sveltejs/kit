@@ -13,6 +13,13 @@ Put the code to query your database in [endpoints](/docs/routing#endpoints) - do
 `adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
 
 ```js
+// @filename: ambient.d.ts
+declare module '@sveltejs/kit/vite'; // TODO this feels unnecessary, why can't it 'see' the declarations?
+
+// @filename: index.js
+// ---cut---
+import { sveltekit } from '@sveltejs/kit/vite';
+
 /** @type {import('vite').Plugin} */
 const myPlugin = {
 	name: 'log-request-middleware',
@@ -24,13 +31,9 @@ const myPlugin = {
 	}
 };
 
-/** @type {import('@sveltejs/kit').Config} */
+/** @type {import('vite').UserConfig} */
 const config = {
-	kit: {
-		vite: {
-			plugins: [myPlugin]
-		}
-	}
+	plugins: [myPlugin, sveltekit()]
 };
 
 export default config;
@@ -116,12 +119,14 @@ Currently ESM Support within the latest Yarn (version 3) is considered [experime
 The below seems to work although your results may vary.
 
 First create a new application:
+
 ```sh
 yarn create svelte myapp
 cd myapp
 ```
 
 And enable Yarn Berry:
+
 ```sh
 yarn set version berry
 yarn install
@@ -130,7 +135,9 @@ yarn install
 **Yarn 3 global cache**
 
 One of the more interesting features of Yarn Berry is the ability to have a single global cache for packages, instead of having multiple copies for each project on the disk. However, setting `enableGlobalCache` to true causes building to fail, so it is recommended to add the following to the `.yarnrc.yml` file:
+
 ```
 nodeLinker: node-modules
 ```
+
 This will cause packages to be downloaded into a local node_modules directory but avoids the above problem and is your best bet for using version 3 of Yarn at this point in time.
