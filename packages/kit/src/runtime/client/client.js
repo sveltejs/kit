@@ -1270,7 +1270,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 						if (node.loaded.error) {
 							if (error) throw node.loaded.error;
 							error_args = {
-								status: node.loaded.status || 500,
+								status: node.loaded.status ?? 500,
 								error: node.loaded.error,
 								url,
 								routeId
