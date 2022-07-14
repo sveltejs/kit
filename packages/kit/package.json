@@ -16,6 +16,8 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.23.3",
+		"@rollup/plugin-commonjs": "^22.0.1",
+		"@rollup/plugin-node-resolve": "^13.3.0",
 		"@rollup/plugin-replace": "^4.0.0",
 		"@types/connect": "^3.4.35",
 		"@types/cookie": "^0.5.1",
