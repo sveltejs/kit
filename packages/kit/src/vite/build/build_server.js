@@ -171,11 +171,6 @@ export async function build_server(options, client) {
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
-	console.error({
-		build_dir,
-		runtime: posixify(path.relative(build_dir, get_runtime_directory(config.kit)))
-	});
-
 	fs.writeFileSync(
 		input.index,
 		server_template({
