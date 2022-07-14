@@ -1303,6 +1303,13 @@ test.describe('Errors', () => {
 			expect(/** @type {Response} */ (response).status()).toBe(400);
 		}
 	});
+
+	test('status is accessible in __layout, if set', async ({ page }) => {
+		await page.goto('/errors/status-in-layout');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "status is accessible in __layout"'
+		);
+	});
 });
 
 test.describe('ETags', () => {

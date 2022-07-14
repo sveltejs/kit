@@ -17,10 +17,9 @@ import { domain_matches, path_matches } from './cookie.js';
  *   node: import('types').SSRNode;
  *   $session: any;
  *   stuff: Record<string, any>;
- *   is_error: boolean;
  *   is_leaf: boolean;
- *   status?: number;
- *   error?: Error;
+ *   status: number | null;
+ *   error: Error | null;
  * }} opts
  * @returns {Promise<import('./types').Loaded>}
  */
@@ -32,7 +31,6 @@ export async function load_node({
 	node,
 	$session,
 	stuff,
-	is_error,
 	is_leaf,
 	status,
 	error
@@ -344,8 +342,8 @@ export async function load_node({
 				return proxy;
 			},
 			stuff: { ...stuff },
-			status: (is_error ? status : shadow.status) ?? null,
-			error: is_error ? error ?? null : null
+			status: shadow.status ?? status ?? null,
+			error: error ?? null
 		};
 
 		if (options.dev) {

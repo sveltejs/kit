@@ -23,7 +23,7 @@ const updated = {
  *   state: import('types').SSRState;
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean };
- *   status: number;
+ *   status: number | null;
  *   error: Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
@@ -128,7 +128,7 @@ export async function render_response({
 				error,
 				params: event.params,
 				routeId: event.routeId,
-				status,
+				status: status || 200,
 				stuff,
 				url: state.prerendering ? new PrerenderingURL(event.url) : event.url
 			},
@@ -321,7 +321,7 @@ export async function render_response({
 	}
 
 	return new Response(html, {
-		status,
+		status: status || 200,
 		headers
 	});
 }

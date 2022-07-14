@@ -36,7 +36,7 @@ export async function respond(opts) {
 				hydrate: true,
 				router: true
 			},
-			status: 200,
+			status: null,
 			error: null,
 			event,
 			stuff: {}
@@ -84,8 +84,8 @@ export async function respond(opts) {
 	/** @type {Array<Loaded>} */
 	let branch = [];
 
-	/** @type {number} */
-	let status = 200;
+	/** @type {number | null} */
+	let status = null;
 
 	/** @type {Error | null} */
 	let error = null;
@@ -105,10 +105,15 @@ export async function respond(opts) {
 			if (node) {
 				try {
 					loaded = await load_node({
-						...opts,
+						event,
+						options,
+						state,
+						route,
 						node,
+						$session,
 						stuff,
-						is_error: false,
+						status,
+						error,
 						is_leaf: i === nodes.length - 1
 					});
 
@@ -159,10 +164,13 @@ export async function respond(opts) {
 							try {
 								const error_loaded = /** @type {import('./types').Loaded} */ (
 									await load_node({
-										...opts,
+										event,
+										options,
+										state,
+										route,
+										$session,
 										node: error_node,
 										stuff: node_loaded.stuff,
-										is_error: true,
 										is_leaf: false,
 										status,
 										error

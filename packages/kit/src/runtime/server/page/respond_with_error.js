@@ -46,7 +46,8 @@ export async function respond_with_error({
 					node: default_layout,
 					$session,
 					stuff: {},
-					is_error: false,
+					status,
+					error,
 					is_leaf: false
 				})
 			);
@@ -64,7 +65,6 @@ export async function respond_with_error({
 					node: default_error,
 					$session,
 					stuff: layout_loaded ? layout_loaded.stuff : {},
-					is_error: true,
 					is_leaf: false,
 					status,
 					error
