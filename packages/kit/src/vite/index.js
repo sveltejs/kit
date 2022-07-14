@@ -109,11 +109,7 @@ function kit() {
 	 */
 	let paths;
 
-	/** @type {Error | undefined} */
-	let build_error;
-
-	/** @type {Error | undefined} */
-	let write_bundle_error;
+	let completed_build = false;
 
 	function vite_client_config() {
 		/** @type {Record<string, string>} */
@@ -253,9 +249,6 @@ function kit() {
 		 * Clears the output directories.
 		 */
 		buildStart() {
-			// Reset errors in watch mode
-			build_error = write_bundle_error = undefined;
-
 			if (is_build) {
 				rimraf(paths.build_dir);
 				mkdirp(paths.build_dir);
@@ -263,10 +256,6 @@ function kit() {
 				rimraf(paths.output_dir);
 				mkdirp(paths.output_dir);
 			}
-		},
-
-		buildEnd(err) {
-			build_error = err;
 		},
 
 		/**
@@ -279,86 +268,80 @@ function kit() {
 				verbose: vite_config.logLevel === 'info'
 			});
 
-			try {
-				fs.writeFileSync(
-					`${paths.client_out_dir}/version.json`,
-					JSON.stringify({ version: process.env.VITE_SVELTEKIT_APP_VERSION })
-				);
+			fs.writeFileSync(
+				`${paths.client_out_dir}/version.json`,
+				JSON.stringify({ version: process.env.VITE_SVELTEKIT_APP_VERSION })
+			);
 
-				const { assets, chunks } = collect_output(bundle);
-				log.info(
-					`Client build completed. Wrote ${chunks.length} chunks and ${assets.length} assets`
-				);
+			const { assets, chunks } = collect_output(bundle);
+			log.info(`Client build completed. Wrote ${chunks.length} chunks and ${assets.length} assets`);
 
-				log.info('Building server');
-				const options = {
-					cwd,
-					config: svelte_config,
-					vite_config_env,
-					build_dir: paths.build_dir, // TODO just pass `paths`
-					manifest_data,
-					output_dir: paths.output_dir,
-					service_worker_entry_file: resolve_entry(svelte_config.kit.files.serviceWorker)
-				};
-				const client = client_build_info(assets, chunks);
-				const server = await build_server(options, client);
+			log.info('Building server');
+			const options = {
+				cwd,
+				config: svelte_config,
+				vite_config_env,
+				build_dir: paths.build_dir, // TODO just pass `paths`
+				manifest_data,
+				output_dir: paths.output_dir,
+				service_worker_entry_file: resolve_entry(svelte_config.kit.files.serviceWorker)
+			};
+			const client = client_build_info(assets, chunks);
+			const server = await build_server(options, client);
 
-				/** @type {import('types').BuildData} */
-				build_data = {
-					app_dir: svelte_config.kit.appDir,
-					manifest_data,
-					service_worker: options.service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
-					client,
-					server
-				};
+			/** @type {import('types').BuildData} */
+			build_data = {
+				app_dir: svelte_config.kit.appDir,
+				manifest_data,
+				service_worker: options.service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
+				client,
+				server
+			};
 
-				fs.writeFileSync(
-					`${paths.output_dir}/server/manifest.js`,
-					`export const manifest = ${generate_manifest({
-						build_data,
-						relative_path: '.',
-						routes: manifest_data.routes
-					})};\n`
-				);
+			fs.writeFileSync(
+				`${paths.output_dir}/server/manifest.js`,
+				`export const manifest = ${generate_manifest({
+					build_data,
+					relative_path: '.',
+					routes: manifest_data.routes
+				})};\n`
+			);
 
-				process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
-				log.info('Prerendering');
+			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
+			log.info('Prerendering');
 
-				const static_files = manifest_data.assets.map((asset) => posixify(asset.file));
+			const static_files = manifest_data.assets.map((asset) => posixify(asset.file));
 
-				const files = new Set([
-					...static_files,
-					...chunks.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`),
-					...assets.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`)
-				]);
+			const files = new Set([
+				...static_files,
+				...chunks.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`),
+				...assets.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`)
+			]);
 
-				// TODO is this right?
-				static_files.forEach((file) => {
-					if (file.endsWith('/index.html')) {
-						files.add(file.slice(0, -11));
-					}
-				});
-
-				prerendered = await prerender({
-					config: svelte_config.kit,
-					entries: manifest_data.routes
-						.map((route) => (route.type === 'page' ? route.path : ''))
-						.filter(Boolean),
-					files,
-					log
-				});
-
-				if (options.service_worker_entry_file) {
-					if (svelte_config.kit.paths.assets) {
-						throw new Error('Cannot use service worker alongside config.kit.paths.assets');
-					}
-
-					log.info('Building service worker');
-
-					await build_service_worker(options, prerendered, client.vite_manifest);
+			// TODO is this right?
+			static_files.forEach((file) => {
+				if (file.endsWith('/index.html')) {
+					files.add(file.slice(0, -11));
 				}
-			} catch (error) {
-				throw (write_bundle_error = /** @type {Error} */ (error));
+			});
+
+			prerendered = await prerender({
+				config: svelte_config.kit,
+				entries: manifest_data.routes
+					.map((route) => (route.type === 'page' ? route.path : ''))
+					.filter(Boolean),
+				files,
+				log
+			});
+
+			if (options.service_worker_entry_file) {
+				if (svelte_config.kit.paths.assets) {
+					throw new Error('Cannot use service worker alongside config.kit.paths.assets');
+				}
+
+				log.info('Building service worker');
+
+				await build_service_worker(options, prerendered, client.vite_manifest);
 			}
 
 			console.log(
@@ -370,12 +353,10 @@ function kit() {
 		 * Runs the adapter.
 		 */
 		async closeBundle() {
-			if (!is_build) {
-				return; // vite calls closeBundle when dev-server restarts, ignore that
-			}
-
-			if (build_error || write_bundle_error) {
-				return; // Do not try adapting if build failed
+			if (!completed_build) {
+				// vite calls closeBundle when dev-server restarts, ignore that,
+				// and only adapt when build successfully completes.
+				return;
 			}
 
 			if (svelte_config.kit.adapter) {
