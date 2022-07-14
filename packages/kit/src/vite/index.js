@@ -199,7 +199,7 @@ function kit() {
 			/** @type {import('vite').UserConfig} */
 			const result = {
 				appType: 'custom',
-				base: '',
+				base: './',
 				build: {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point

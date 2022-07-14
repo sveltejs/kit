@@ -130,7 +130,7 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
  * @returns {string}
  */
 export function assets_base(config) {
-	return config.paths.assets || './';
+	return config.paths.assets || config.paths.base || './';
 }
 
 /**
