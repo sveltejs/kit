@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.374
+
+### Patch Changes
+
+- removed `vite` key from config definition ([#5530](https://github.com/sveltejs/kit/pull/5530))
+
+* Render page with correct status code when non-get endpoint returns validation error ([#4328](https://github.com/sveltejs/kit/pull/4328))
+
 ## 1.0.0-next.373
 
 ### Patch Changes
