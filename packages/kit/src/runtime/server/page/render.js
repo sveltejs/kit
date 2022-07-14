@@ -172,24 +172,27 @@ export async function render_response({
 
 	const target = hash(body);
 
-	/** @type {string} */
-	let asset_prefix;
+	/**
+	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
+	 * @type {string}
+	 */
+	let assets;
 
 	if (options.paths.assets) {
 		// if an asset path is specified, use it
-		asset_prefix = options.paths.assets;
+		assets = options.paths.assets;
 	} else if (state.prerendering?.fallback) {
 		// if we're creating a fallback page, asset paths need to be root-relative
-		asset_prefix = options.paths.base;
+		assets = options.paths.base;
 	} else {
 		// otherwise we want asset paths to be relative to the page, so that they
 		// will work in odd contexts like IPFS, the internet archive, and so on
 		const segments = event.url.pathname.slice(options.paths.base.length).split('/').slice(2);
-		asset_prefix = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+		assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
 	}
 
 	/** @param {string} path */
-	const prefixed = (path) => (path.startsWith('/') ? path : `${asset_prefix}/${path}`);
+	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
 	// prettier-ignore
 	const init_app = `
