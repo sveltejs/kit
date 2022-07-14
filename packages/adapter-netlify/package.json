@@ -34,7 +34,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.14.42",
+		"esbuild": "^0.14.48",
 		"set-cookie-parser": "^2.4.8",
 		"tiny-glob": "^0.2.9"
 	},
@@ -47,7 +47,7 @@
 		"@types/node": "^16.11.36",
 		"@types/set-cookie-parser": "^2.4.2",
 		"rimraf": "^3.0.2",
-		"rollup": "^2.75.3",
+		"rollup": "^2.75.7",
 		"typescript": "^4.7.4",
 		"uvu": "^0.5.3"
 	}

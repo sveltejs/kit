@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { loadConfigFromFile } from 'vite';
-import { get_runtime_path } from '../core/utils.js';
+import { get_runtime_directory } from '../core/utils.js';
 
 /**
  * @param {import('vite').ConfigEnv} config_env
@@ -92,7 +92,7 @@ export function get_aliases(config) {
 	/** @type {Record<string, string>} */
 	const alias = {
 		__GENERATED__: path.posix.join(config.outDir, 'generated'),
-		$app: `${get_runtime_path(config)}/app`,
+		$app: `${get_runtime_directory(config)}/app`,
 
 		// For now, we handle `$lib` specially here rather than make it a default value for
 		// `config.kit.alias` since it has special meaning for packaging, etc.
