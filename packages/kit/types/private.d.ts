@@ -142,7 +142,7 @@ export interface CspDirectives {
 	>;
 }
 
-export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
+export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
 export interface JSONObject {
 	[key: string]: JSONValue;

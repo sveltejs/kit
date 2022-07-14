@@ -47,7 +47,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 					content: segment
 				})),
 				pattern: route.pattern,
-				methods: route.type === 'page' ? ['get'] : build_data.server.methods[route.file]
+				methods: route.type === 'page' ? ['GET'] : build_data.server.methods[route.file]
 			}));
 
 			const seen = new Set();
