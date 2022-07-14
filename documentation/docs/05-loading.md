@@ -107,7 +107,7 @@ If the page you're loading has an endpoint, the data returned from it is accessi
 
 ### Output
 
-If you return a Promise from `load`, SvelteKit will delay rendering until the promise resolves. The return value has several properties listed below, all of which are optional.
+If you return a Promise from `load`, SvelteKit will delay rendering until the promise resolves. The return value has several properties listed below, all of which are optional (as is the return value itself).
 
 > `status`, `error`, `redirect` and `cache` are ignored when rendering error pages.
 

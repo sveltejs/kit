@@ -196,10 +196,10 @@ test.describe('trailingSlash', () => {
 });
 
 test.describe('serviceWorker', () => {
-	if (!process.env.DEV) {
-		test('does not register service worker if none created', async ({ page }) => {
-			await page.goto('/path-base/');
-			expect(await page.content()).not.toMatch('navigator.serviceWorker');
-		});
-	}
+	if (process.env.DEV) return;
+
+	test('does not register service worker if none created', async ({ page }) => {
+		await page.goto('/path-base/');
+		expect(await page.content()).not.toMatch('navigator.serviceWorker');
+	});
 });
