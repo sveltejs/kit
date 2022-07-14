@@ -178,7 +178,7 @@ function kit() {
 			paths = {
 				build_dir: `${svelte_config.kit.outDir}/build`,
 				output_dir: `${svelte_config.kit.outDir}/output`,
-				client_out_dir: `${svelte_config.kit.outDir}/output/client/${svelte_config.kit.appDir}`
+				client_out_dir: `${svelte_config.kit.outDir}/output/client`
 			};
 
 			if (is_build) {
@@ -199,7 +199,7 @@ function kit() {
 			/** @type {import('vite').UserConfig} */
 			const result = {
 				appType: 'custom',
-				base: '/',
+				base: '',
 				build: {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point
@@ -312,8 +312,8 @@ function kit() {
 
 			const files = new Set([
 				...static_files,
-				...chunks.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`),
-				...assets.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`)
+				...chunks.map((chunk) => chunk.fileName),
+				...assets.map((chunk) => chunk.fileName)
 			]);
 
 			// TODO is this right?

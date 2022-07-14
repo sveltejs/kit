@@ -177,7 +177,7 @@ export async function render_response({
 		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
 	/** @param {string} path */
-	const prefix = (path) => (path.startsWith('/') ? path : `${assets}/${options.app_dir}/${path}`);
+	const prefix = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
 	// prettier-ignore
 	const init_app = `
