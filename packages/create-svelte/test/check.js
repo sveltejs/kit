@@ -39,7 +39,7 @@ test.before(() => {
 		fs.writeFileSync(path.join(test_workspace_dir, 'pnpm-workspace.yaml'), 'packages:\n  - ./*\n');
 
 		// force creation of pnpm-lock.yaml in test workspace
-		execSync('pnpm install', { dir: test_workspace_dir, stdio: 'inherit' });
+		execSync('pnpm install --no-frozen-lockfile', { dir: test_workspace_dir, stdio: 'inherit' });
 	} catch (e) {
 		console.error('failed to setup create-svelte test workspace', e);
 		throw e;
@@ -72,7 +72,7 @@ for (const template of fs.readdirSync('templates')) {
 			fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(pkg, null, '\t'));
 
 			// this pnpm install works in the test workspace, which redirects to our local packages again
-			execSync('pnpm install', { cwd, stdio: 'inherit' });
+			execSync('pnpm install --no-frozen-lockfile', { cwd, stdio: 'inherit' });
 
 			// run check command separately
 			execSync('pnpm check', { cwd, stdio: 'inherit' });
