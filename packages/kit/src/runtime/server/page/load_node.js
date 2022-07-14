@@ -344,7 +344,7 @@ export async function load_node({
 				return proxy;
 			},
 			stuff: { ...stuff },
-			status: is_error ? status ?? null : shadow.status ?? null,
+			status: (is_error ? status : shadow.status) ?? null,
 			error: is_error ? error ?? null : null
 		};
 
