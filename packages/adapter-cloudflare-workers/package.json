@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare-workers",
-	"version": "1.0.0-next.47",
+	"version": "1.0.0-next.50",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -31,7 +31,7 @@
 	"dependencies": {
 		"@cloudflare/workers-types": "^3.14.0",
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.14.42"
+		"esbuild": "^0.14.48"
 	},
 	"devDependencies": {
 		"@cloudflare/kv-asset-handler": "^0.2.0",

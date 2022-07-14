@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.370",
+	"version": "1.0.0-next.373",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -10,12 +10,12 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.48",
+		"@sveltejs/vite-plugin-svelte": "^1.0.1",
 		"chokidar": "^3.5.3",
 		"sade": "^1.8.1"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.22.2",
+		"@playwright/test": "^1.23.3",
 		"@rollup/plugin-replace": "^4.0.0",
 		"@types/connect": "^3.4.35",
 		"@types/cookie": "^0.5.1",
@@ -33,8 +33,7 @@
 		"marked": "^4.0.16",
 		"mime": "^3.0.0",
 		"node-fetch": "^3.2.4",
-		"port-authority": "^2.0.1",
-		"rollup": "^2.75.3",
+		"rollup": "^2.75.7",
 		"selfsigned": "^2.0.1",
 		"set-cookie-parser": "^2.4.8",
 		"sirv": "^2.0.2",
@@ -46,11 +45,11 @@
 		"typescript": "^4.7.4",
 		"undici": "^5.6.1",
 		"uvu": "^0.5.3",
-		"vite": "^2.9.13"
+		"vite": "^3.0.0"
 	},
 	"peerDependencies": {
 		"svelte": "^3.44.0",
-		"vite": "^2.9.10"
+		"vite": "^3.0.0"
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit.js"

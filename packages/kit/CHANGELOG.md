@@ -1,5 +1,25 @@
 # @sveltejs/kit
 
+## 1.0.0-next.373
+
+### Patch Changes
+
+- [breaking] require vite 3 ([#5526](https://github.com/sveltejs/kit/pull/5526))
+
+## 1.0.0-next.372
+
+### Patch Changes
+
+- ignore invalid accept header values instead of throwing an error ([#5502](https://github.com/sveltejs/kit/pull/5502))
+
+* support CSP report-only mode ([#5496](https://github.com/sveltejs/kit/pull/5496))
+
+## 1.0.0-next.371
+
+### Patch Changes
+
+- Pin vite-plugin-svelte to 1.0.0-next.49 ([#5498](https://github.com/sveltejs/kit/pull/5498))
+
 ## 1.0.0-next.370
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.62
+
+### Patch Changes
+
+- Update dependencies ([#5526](https://github.com/sveltejs/kit/pull/5526))
+
+## 1.0.0-next.61
+
+### Patch Changes
+
+- Remove ENABLE_VC_BUILD check, use v3 build output API for all apps deployed to Vercel ([#5514](https://github.com/sveltejs/kit/pull/5514))
+
 ## 1.0.0-next.60
 
 ### Patch Changes

@@ -81,296 +81,183 @@ const redirects = {
 	]
 };
 
-const files = fileURLToPath(new URL('./files', import.meta.url).href);
-
 /** @type {import('.').default} **/
 export default function ({ external = [], edge, split } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(builder) {
-			if (process.env.ENABLE_VC_BUILD) {
-				await v3(builder, external, edge, split);
-			} else {
-				if (edge || split) {
-					throw new Error('`edge` and `split` options can only be used with ENABLE_VC_BUILD');
-				}
+			const node_version = get_node_version();
 
-				await v1(builder, external);
-			}
-		}
-	};
-}
+			const dir = '.vercel/output';
 
-/**
- * @param {import('@sveltejs/kit').Builder} builder
- * @param {string[]} external
- */
-async function v1(builder, external) {
-	const node_version = get_node_version();
+			const tmp = builder.getBuildDirectory('vercel-tmp');
 
-	const dir = '.vercel_build_output';
+			builder.rimraf(dir);
+			builder.rimraf(tmp);
 
-	const tmp = builder.getBuildDirectory('vercel-tmp');
+			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
-	builder.rimraf(dir);
-	builder.rimraf(tmp);
-
-	const dirs = {
-		static: `${dir}/static`,
-		lambda: `${dir}/functions/node/render`
-	};
-
-	builder.log.minor('Generating serverless function...');
-
-	const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
-	builder.copy(`${files}/serverless.js`, `${tmp}/serverless.js`, {
-		replace: {
-			SERVER: `${relativePath}/index.js`,
-			MANIFEST: './manifest.js'
-		}
-	});
-
-	fs.writeFileSync(
-		`${tmp}/manifest.js`,
-		`export const manifest = ${builder.generateManifest({
-			relativePath
-		})};\n`
-	);
-
-	await esbuild.build({
-		entryPoints: [`${tmp}/serverless.js`],
-		outfile: `${dirs.lambda}/index.js`,
-		target: `node${node_version.full}`,
-		bundle: true,
-		platform: 'node',
-		external,
-		format: 'cjs',
-		sourcemap: 'linked'
-	});
-
-	fs.writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'commonjs' }));
-
-	builder.log.minor('Copying assets...');
-
-	builder.writeStatic(dirs.static);
-	builder.writeClient(dirs.static);
-	builder.writePrerendered(dirs.static);
-
-	builder.log.minor('Writing routes...');
-
-	builder.mkdirp(`${dir}/config`);
-
-	const prerendered_pages = Array.from(builder.prerendered.pages, ([src, page]) => ({
-		src,
-		dest: page.file
-	}));
-
-	const prerendered_redirects = Array.from(builder.prerendered.redirects, ([src, redirect]) => ({
-		src,
-		headers: {
-			Location: redirect.location
-		},
-		status: redirect.status
-	}));
-
-	fs.writeFileSync(
-		`${dir}/config/routes.json`,
-		JSON.stringify([
-			...redirects[builder.config.kit.trailingSlash],
-			...prerendered_pages,
-			...prerendered_redirects,
-			{
-				src: `/${builder.config.kit.appDir}/immutable/.+`,
-				headers: {
-					'cache-control': 'public, immutable, max-age=31536000'
-				}
-			},
-			{
-				handle: 'filesystem'
-			},
-			{
-				src: '/.*',
-				dest: '.vercel/functions/render'
-			}
-		])
-	);
-}
-
-/**
- * @param {import('@sveltejs/kit').Builder} builder
- * @param {string[]} external
- * @param {boolean} edge
- * @param {boolean} split
- */
-async function v3(builder, external, edge, split) {
-	const node_version = get_node_version();
-
-	const dir = '.vercel/output';
-
-	const tmp = builder.getBuildDirectory('vercel-tmp');
-
-	builder.rimraf(dir);
-	builder.rimraf(tmp);
-
-	const files = fileURLToPath(new URL('./files', import.meta.url).href);
-
-	const dirs = {
-		static: `${dir}/static`,
-		functions: `${dir}/functions`
-	};
-
-	const prerendered_redirects = Array.from(builder.prerendered.redirects, ([src, redirect]) => ({
-		src,
-		headers: {
-			Location: redirect.location
-		},
-		status: redirect.status
-	}));
-
-	/** @type {any[]} */
-	const routes = [
-		...redirects[builder.config.kit.trailingSlash],
-		...prerendered_redirects,
-		{
-			src: `/${builder.config.kit.appDir}/.+`,
-			headers: {
-				'cache-control': 'public, immutable, max-age=31536000'
-			}
-		},
-		{
-			handle: 'filesystem'
-		}
-	];
-
-	builder.log.minor('Generating serverless function...');
-
-	/**
-	 * @param {string} name
-	 * @param {string} pattern
-	 * @param {(options: { relativePath: string }) => string} generate_manifest
-	 */
-	async function generate_serverless_function(name, pattern, generate_manifest) {
-		const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
-		builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
-			replace: {
-				SERVER: `${relativePath}/index.js`,
-				MANIFEST: './manifest.js'
-			}
-		});
-
-		write(
-			`${tmp}/manifest.js`,
-			`export const manifest = ${generate_manifest({ relativePath })};\n`
-		);
-
-		await create_function_bundle(
-			`${tmp}/index.js`,
-			`${dirs.functions}/${name}.func`,
-			`nodejs${node_version.major}.x`
-		);
-
-		routes.push({ src: pattern, dest: `/${name}` });
-	}
-
-	/**
-	 * @param {string} name
-	 * @param {string} pattern
-	 * @param {(options: { relativePath: string }) => string} generate_manifest
-	 */
-	async function generate_edge_function(name, pattern, generate_manifest) {
-		const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
-		const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
-		builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
-			replace: {
-				SERVER: `${relativePath}/index.js`,
-				MANIFEST: './manifest.js'
-			}
-		});
-
-		write(
-			`${tmp}/manifest.js`,
-			`export const manifest = ${generate_manifest({ relativePath })};\n`
-		);
-
-		await esbuild.build({
-			entryPoints: [`${tmp}/edge.js`],
-			outfile: `${dirs.functions}/${name}.func/index.js`,
-			target: 'es2020', // TODO verify what the edge runtime supports
-			bundle: true,
-			platform: 'node',
-			format: 'esm',
-			external,
-			sourcemap: 'linked'
-		});
-
-		write(
-			`${dirs.functions}/${name}.func/.vc-config.json`,
-			JSON.stringify({
-				runtime: 'edge',
-				entrypoint: 'index.js'
-				// TODO expose envVarsInUse
-			})
-		);
-
-		routes.push({ src: pattern, dest: `/${name}` });
-	}
-
-	const generate_function = edge ? generate_edge_function : generate_serverless_function;
-
-	if (split) {
-		await builder.createEntries((route) => {
-			return {
-				id: route.pattern.toString(), // TODO is `id` necessary?
-				filter: (other) => route.pattern.toString() === other.pattern.toString(),
-				complete: async (entry) => {
-					let sliced_pattern = route.pattern
-						.toString()
-						// remove leading / and trailing $/
-						.slice(1, -2)
-						// replace escaped \/ with /
-						.replace(/\\\//g, '/');
-
-					// replace the root route "^/" with "^/?"
-					if (sliced_pattern === '^/') {
-						sliced_pattern = '^/?';
-					}
-
-					const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
-
-					await generate_function(route.id || 'index', src, entry.generateManifest);
-				}
+			const dirs = {
+				static: `${dir}/static`,
+				functions: `${dir}/functions`
 			};
-		});
-	} else {
-		await generate_function('render', '/.*', builder.generateManifest);
-	}
 
-	builder.log.minor('Copying assets...');
+			const prerendered_redirects = Array.from(
+				builder.prerendered.redirects,
+				([src, redirect]) => ({
+					src,
+					headers: {
+						Location: redirect.location
+					},
+					status: redirect.status
+				})
+			);
 
-	builder.writeStatic(dirs.static);
-	builder.writeClient(dirs.static);
-	builder.writePrerendered(dirs.static);
+			/** @type {any[]} */
+			const routes = [
+				...redirects[builder.config.kit.trailingSlash],
+				...prerendered_redirects,
+				{
+					src: `/${builder.config.kit.appDir}/.+`,
+					headers: {
+						'cache-control': 'public, immutable, max-age=31536000'
+					}
+				},
+				{
+					handle: 'filesystem'
+				}
+			];
 
-	builder.log.minor('Writing routes...');
+			builder.log.minor('Generating serverless function...');
 
-	/** @type {Record<string, { path: string }>} */
-	const overrides = {};
-	builder.prerendered.pages.forEach((page, src) => {
-		overrides[page.file] = { path: src.slice(1) };
-	});
+			/**
+			 * @param {string} name
+			 * @param {string} pattern
+			 * @param {(options: { relativePath: string }) => string} generate_manifest
+			 */
+			async function generate_serverless_function(name, pattern, generate_manifest) {
+				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
-	write(
-		`${dir}/config.json`,
-		JSON.stringify({
-			version: 3,
-			routes,
-			overrides
-		})
-	);
+				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
+					replace: {
+						SERVER: `${relativePath}/index.js`,
+						MANIFEST: './manifest.js'
+					}
+				});
+
+				write(
+					`${tmp}/manifest.js`,
+					`export const manifest = ${generate_manifest({ relativePath })};\n`
+				);
+
+				await create_function_bundle(
+					`${tmp}/index.js`,
+					`${dirs.functions}/${name}.func`,
+					`nodejs${node_version.major}.x`
+				);
+
+				routes.push({ src: pattern, dest: `/${name}` });
+			}
+
+			/**
+			 * @param {string} name
+			 * @param {string} pattern
+			 * @param {(options: { relativePath: string }) => string} generate_manifest
+			 */
+			async function generate_edge_function(name, pattern, generate_manifest) {
+				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
+				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
+
+				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
+					replace: {
+						SERVER: `${relativePath}/index.js`,
+						MANIFEST: './manifest.js'
+					}
+				});
+
+				write(
+					`${tmp}/manifest.js`,
+					`export const manifest = ${generate_manifest({ relativePath })};\n`
+				);
+
+				await esbuild.build({
+					entryPoints: [`${tmp}/edge.js`],
+					outfile: `${dirs.functions}/${name}.func/index.js`,
+					target: 'es2020', // TODO verify what the edge runtime supports
+					bundle: true,
+					platform: 'node',
+					format: 'esm',
+					external,
+					sourcemap: 'linked'
+				});
+
+				write(
+					`${dirs.functions}/${name}.func/.vc-config.json`,
+					JSON.stringify({
+						runtime: 'edge',
+						entrypoint: 'index.js'
+						// TODO expose envVarsInUse
+					})
+				);
+
+				routes.push({ src: pattern, dest: `/${name}` });
+			}
+
+			const generate_function = edge ? generate_edge_function : generate_serverless_function;
+
+			if (split) {
+				await builder.createEntries((route) => {
+					return {
+						id: route.pattern.toString(), // TODO is `id` necessary?
+						filter: (other) => route.pattern.toString() === other.pattern.toString(),
+						complete: async (entry) => {
+							let sliced_pattern = route.pattern
+								.toString()
+								// remove leading / and trailing $/
+								.slice(1, -2)
+								// replace escaped \/ with /
+								.replace(/\\\//g, '/');
+
+							// replace the root route "^/" with "^/?"
+							if (sliced_pattern === '^/') {
+								sliced_pattern = '^/?';
+							}
+
+							const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
+
+							await generate_function(route.id || 'index', src, entry.generateManifest);
+						}
+					};
+				});
+			} else {
+				await generate_function('render', '/.*', builder.generateManifest);
+			}
+
+			builder.log.minor('Copying assets...');
+
+			builder.writeStatic(dirs.static);
+			builder.writeClient(dirs.static);
+			builder.writePrerendered(dirs.static);
+
+			builder.log.minor('Writing routes...');
+
+			/** @type {Record<string, { path: string }>} */
+			const overrides = {};
+			builder.prerendered.pages.forEach((page, src) => {
+				overrides[page.file] = { path: src.slice(1) };
+			});
+
+			write(
+				`${dir}/config.json`,
+				JSON.stringify({
+					version: 3,
+					routes,
+					overrides
+				})
+			);
+		}
+	};
 }
 
 /**

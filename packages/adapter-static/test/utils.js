@@ -2,7 +2,6 @@ import child_process from 'child_process';
 import fs from 'fs';
 import http from 'http';
 import { fileURLToPath } from 'url';
-import * as ports from 'port-authority';
 import sirv from 'sirv';
 import { chromium } from 'playwright-chromium';
 import * as uvu from 'uvu';
@@ -10,7 +9,6 @@ import * as uvu from 'uvu';
 /**
  * @typedef {{
  *   cwd: string;
- *   port: number;
  *   server: import('http').Server;
  *   base: string;
  *   browser: import('playwright-chromium').Browser;
@@ -39,12 +37,19 @@ export function run(app, callback) {
 			});
 
 			context.cwd = cwd;
-			context.port = await ports.find(4000);
 			const handler = sirv(`${cwd}/build`, {
 				single: '200.html'
 			});
 			context.server = await create_server(context.port, handler);
 
+			const { port } = /** @type {import('net').AddressInfo} */ (context.server.address());
+			if (!port) {
+				throw new Error(
+					`Could not find port from server ${JSON.stringify(context.server.address())}`
+				);
+			}
+
+			context.port = port;
 			context.base = `http://localhost:${context.port}`;
 			context.browser = await chromium.launch();
 			context.page = await context.browser.newPage();
