@@ -9,7 +9,7 @@ import {
 	find_deps,
 	get_default_config,
 	remove_svelte_kit,
-	isHttpMethod
+	is_http_method
 } from './utils.js';
 import { s } from '../../utils/misc.js';
 
@@ -281,7 +281,7 @@ function get_methods(cwd, output, manifest_data) {
 		const file = route.type === 'endpoint' ? route.file : route.shadow;
 
 		if (file && lookup[file]) {
-			methods[file] = lookup[file].filter(isHttpMethod);
+			methods[file] = lookup[file].filter(is_http_method);
 		}
 	});
 

@@ -3,7 +3,7 @@ import * as set_cookie_parser from 'set-cookie-parser';
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
 import { LoadURL, PrerenderingURL, is_root_relative, resolve } from '../../../utils/url.js';
-import { is_pojo, lowercase_keys, normalize_request_method } from '../utils.js';
+import { is_pojo, lowercase_keys } from '../utils.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { domain_matches, path_matches } from './cookie.js';
 
@@ -418,7 +418,7 @@ async function load_shadow_data(route, event, options, prerender) {
 			throw new Error('Cannot prerender pages that have endpoints with mutative methods');
 		}
 
-		const method = normalize_request_method(event);
+		const { method } = event.request;
 		const is_get = method === 'HEAD' || method === 'GET';
 		const handler = method === 'HEAD' ? mod.HEAD || mod.GET : mod[method];
 

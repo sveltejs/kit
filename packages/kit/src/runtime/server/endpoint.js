@@ -1,6 +1,6 @@
 import { to_headers } from '../../utils/http.js';
 import { hash } from '../hash.js';
-import { is_pojo, normalize_request_method, serialize_error } from './utils.js';
+import { is_pojo, serialize_error } from './utils.js';
 
 /** @param {string} body */
 function error(body) {
@@ -43,7 +43,7 @@ export function is_text(content_type) {
  * @returns {Promise<Response>}
  */
 export async function render_endpoint(event, mod, options) {
-	const method = normalize_request_method(event);
+	const { method } = event.request;
 
 	// TODO: Remove for 1.0
 	['get', 'post', 'put', 'patch', 'del'].forEach((m) => {
@@ -75,7 +75,7 @@ export async function render_endpoint(event, mod, options) {
 			  new Response(undefined, {
 					status: 204
 			  })
-			: new Response(`${event.request.method} method not allowed`, {
+			: new Response(`${method} method not allowed`, {
 					status: 405,
 					headers: {
 						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405

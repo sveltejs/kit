@@ -148,13 +148,13 @@ export function remove_svelte_kit(config) {
 		.filter((plugin) => plugin.name !== 'vite-plugin-svelte-kit');
 }
 
+const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH']);
+
 // If we'd written this in TypeScript, it could be easy...
 /**
- * @param {string} maybeHttpMethod
- * @returns {maybeHttpMethod is import('types').HttpMethod}
+ * @param {string} str
+ * @returns {str is import('types').HttpMethod}
  */
-export function isHttpMethod(maybeHttpMethod) {
-	const method_names = ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH'];
-
-	return method_names.includes(maybeHttpMethod);
+export function is_http_method(str) {
+	return method_names.has(str);
 }

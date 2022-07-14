@@ -50,11 +50,6 @@ export function is_pojo(body) {
 	return true;
 }
 
-/** @param {import('types').RequestEvent} event */
-export function normalize_request_method(event) {
-	return event.request.method.toUpperCase();
-}
-
 /**
  * Serialize an error into a JSON string, by copying its `name`, `message`
  * and (in dev) `stack`, plus any custom properties, plus recursively
