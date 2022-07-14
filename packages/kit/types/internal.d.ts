@@ -113,7 +113,7 @@ export interface MethodOverride {
 }
 
 export type NormalizedLoadOutput = {
-	status: number;
+	status?: number;
 	error?: Error;
 	redirect?: string;
 	props?: Record<string, any> | Promise<Record<string, any>>;
@@ -153,12 +153,9 @@ export interface PrerenderOptions {
 
 export type RecursiveRequired<T> = {
 	// Recursive implementation of TypeScript's Required utility type.
-	// Will recursively continue until it reaches primitive or union
-	// with a Function in it, except those commented below
+	// Will recursively continue until it reaches a primitive or Function
 	[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
 		? RecursiveRequired<T[K]> // recursively continue through.
-		: K extends 'vite' // If it reaches the 'vite' key
-		? Extract<T[K], Function> // only take the Function type.
 		: T[K]; // Use the exact type for everything else
 };
 

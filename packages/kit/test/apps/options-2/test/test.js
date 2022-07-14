@@ -18,17 +18,17 @@ test.describe('paths.base', () => {
 });
 
 test.describe('Service worker', () => {
-	if (!process.env.DEV) {
-		test('build /basepath/service-worker.js', async ({ request }) => {
-			const response = await request.get('/basepath/service-worker.js');
-			const content = await response.text();
+	if (process.env.DEV) return;
 
-			expect(content).toMatch(/\/_app\/immutable\/start-[a-z0-9]+\.js/);
-		});
+	test('build /basepath/service-worker.js', async ({ request }) => {
+		const response = await request.get('/basepath/service-worker.js');
+		const content = await response.text();
 
-		test('does not register /basepath/service-worker.js', async ({ page }) => {
-			await page.goto('/basepath');
-			expect(await page.content()).not.toMatch(/navigator\.serviceWorker/);
-		});
-	}
+		expect(content).toMatch(/\/_app\/immutable\/start-[a-z0-9]+\.js/);
+	});
+
+	test('does not register /basepath/service-worker.js', async ({ page }) => {
+		await page.goto('/basepath');
+		expect(await page.content()).not.toMatch(/navigator\.serviceWorker/);
+	});
 });

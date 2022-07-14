@@ -23,7 +23,7 @@ my-project/
 └ vite.config.js
 ```
 
-You'll also find common files like `.gitignore` and `.npmrc` (and `.prettierrc` and `.eslintrc.cjs` and so on, if you chose those options when running `npm create svelte`).
+You'll also find common files like `.gitignore` and `.npmrc` (and `.prettierrc` and `.eslintrc.cjs` and so on, if you chose those options when running `npm create svelte@latest`).
 
 ### Project files
 
@@ -52,7 +52,7 @@ Any static assets that should be served as-is, like `robots.txt` or `favicon.png
 
 Your `package.json` file must include `@sveltejs/kit`, `svelte` and `vite` as `devDependencies`.
 
-When you create a project with `npm create svelte`, you'll also notice that `package.json` includes `"type": "module"`. This means that `.js` files are interpreted as native JavaScript modules with `import` and `export` keywords. Legacy CommonJS files need a `.cjs` file extension.
+When you create a project with `npm create svelte@latest`, you'll also notice that `package.json` includes `"type": "module"`. This means that `.js` files are interpreted as native JavaScript modules with `import` and `export` keywords. Legacy CommonJS files need a `.cjs` file extension.
 
 #### svelte.config.js
 
@@ -60,7 +60,7 @@ This file contains your Svelte and SvelteKit [configuration](/docs/configuration
 
 #### tsconfig.json
 
-This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts` files) configures TypeScript, if you added typechecking during `npm create svelte`. Since SvelteKit relies on certain configuration being set a specific way, it generates its own `.svelte-kit/tsconfig.json` file which your own config `extends`.
+This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts` files) configures TypeScript, if you added typechecking during `npm create svelte@latest`. Since SvelteKit relies on certain configuration being set a specific way, it generates its own `.svelte-kit/tsconfig.json` file which your own config `extends`.
 
 #### vite.config.js
 
@@ -70,7 +70,7 @@ A SvelteKit project is really just a [Vite](https://vitejs.dev) project that use
 
 #### test
 
-If you choose to add tests during `npm create svelte`, they will go in a `test` directory.
+If you choose to add tests during `npm create svelte@latest`, they will go in a `test` directory.
 
 #### .svelte-kit
 

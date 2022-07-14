@@ -77,6 +77,14 @@ export async function render_response({
 	}
 
 	if (resolve_opts.ssr) {
+		const leaf = /** @type {import('./types.js').Loaded} */ (branch.at(-1));
+
+		if (leaf.loaded.status) {
+			// explicit status returned from `load` or a page endpoint trumps
+			// initial status
+			status = leaf.loaded.status;
+		}
+
 		for (const { node, props, loaded, fetched, uses_credentials } of branch) {
 			if (node.imports) {
 				node.imports.forEach((url) => modulepreloads.add(url));

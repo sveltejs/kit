@@ -151,7 +151,6 @@ export interface KitConfig {
 		name?: string;
 		pollInterval?: number;
 	};
-	vite?: import('vite').UserConfig | (() => MaybePromise<import('vite').UserConfig>);
 }
 
 export interface ExternalFetch {
@@ -183,7 +182,7 @@ export interface Load<
 	InputProps extends Record<string, any> = Record<string, any>,
 	OutputProps extends Record<string, any> = InputProps
 > {
-	(event: LoadEvent<Params, InputProps>): MaybePromise<LoadOutput<OutputProps>>;
+	(event: LoadEvent<Params, InputProps>): MaybePromise<LoadOutput<OutputProps> | void>;
 }
 
 export interface LoadEvent<
