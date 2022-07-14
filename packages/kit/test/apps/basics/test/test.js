@@ -788,7 +788,8 @@ test.describe('Errors', () => {
 		expect(await page.innerHTML('h1')).toBe('500');
 	});
 
-	test('error evaluating module', async ({ request }) => {
+	// TODO re-enable this if https://github.com/vitejs/vite/issues/7046 is implemented
+	test.skip('error evaluating module', async ({ request }) => {
 		const response = await request.get('/errors/init-error-endpoint');
 
 		expect(response.status()).toBe(500);
