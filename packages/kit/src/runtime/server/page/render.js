@@ -172,16 +172,28 @@ export async function render_response({
 
 	const target = hash(body);
 
-	const segments = event.url.pathname.slice(options.paths.base.length).split('/').slice(2);
-	const assets =
-		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
+	/** @type {string} */
+	let asset_prefix;
+
+	if (options.paths.assets) {
+		// if an asset path is specified, use it
+		asset_prefix = options.paths.assets;
+	} else if (state.prerendering?.fallback) {
+		// if we're creating a fallback page, asset paths need to be root-relative
+		asset_prefix = options.paths.base;
+	} else {
+		// otherwise we want asset paths to be relative to the page, so that they
+		// will work in odd contexts like IPFS, the internet archive, and so on
+		const segments = event.url.pathname.slice(options.paths.base.length).split('/').slice(2);
+		asset_prefix = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+	}
 
 	/** @param {string} path */
-	const prefix = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
+	const prefixed = (path) => (path.startsWith('/') ? path : `${asset_prefix}/${path}`);
 
 	// prettier-ignore
 	const init_app = `
-		import { start } from ${s(prefix(entry.file))};
+		import { start } from ${s(prefixed(entry.file))};
 		start({
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
@@ -228,7 +240,7 @@ export async function render_response({
 		.map((dep) => {
 			const attributes = [
 				'rel="stylesheet"',
-				`href="${prefix(dep)}"`
+				`href="${prefixed(dep)}"`
 			];
 
 			if (csp.style_needs_nonce) {
@@ -247,7 +259,7 @@ export async function render_response({
 
 	if (page_config.router || page_config.hydrate) {
 		head += Array.from(modulepreloads)
-			.map((dep) => `\n\t<link rel="modulepreload" href="${prefix(dep)}">`)
+			.map((dep) => `\n\t<link rel="modulepreload" href="${prefixed(dep)}">`)
 			.join('');
 
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
