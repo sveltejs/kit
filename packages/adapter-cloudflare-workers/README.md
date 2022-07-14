@@ -69,6 +69,34 @@ Then, you can build your app and deploy it:
 wrangler publish
 ```
 
+## Environment variables
+
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV/DO namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
+
+```js
+export async function post({ request, platform }) {
+  const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
+}
+```
+
+To make these types available to your app, reference them in your `src/app.d.ts`:
+
+```diff
+/// <reference types="@sveltejs/kit" />
++/// <reference types="@sveltejs/adapter-cloudflare-workers" />
+
+declare namespace App {
+	interface Platform {
++		env?: {
++			YOUR_KV_NAMESPACE: KVNamespace;
++			YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
++		};
+	}
+}
+```
+
+> `platform.env` is only available in the production build. Use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally
+
 ## Changelog
 
 [The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-cloudflare-workers/CHANGELOG.md).

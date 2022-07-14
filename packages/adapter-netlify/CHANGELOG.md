@@ -1,5 +1,17 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.69
+
+### Patch Changes
+
+- Update dependencies ([#5005](https://github.com/sveltejs/kit/pull/5005))
+
+## 1.0.0-next.68
+
+### Minor Changes
+
+- feat: get client IP from Context object rather than the request header ([#5473](https://github.com/sveltejs/kit/pull/5473))
+
 ## 1.0.0-next.67
 
 ### Patch Changes

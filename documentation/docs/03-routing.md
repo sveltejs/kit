@@ -375,19 +375,21 @@ src/routes/[...catchall].svelte
 src/routes/[a].js
 src/routes/[b].svelte
 src/routes/foo-[c].svelte
+src/routes/foo-abc.svelte
 ```
 
 SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
 
-- More specific routes are higher priority
+- More specific routes are higher priority (e.g. a route with no parameters is more specific than a route with one dynamic parameter, and so on)
 - Standalone endpoints have higher priority than pages with the same specificity
 - Parameters with [matchers](#advanced-routing-matching) (`[name=type]`) are higher priority than those without (`[name]`)
 - Rest parameters have lowest priority
 - Ties are resolved alphabetically
 
-...resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-[bar].svelte` rather than a less specific route:
+...resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-abc.svelte`, and `/foo-def` will invoke `src/routes/foo-[c].svelte` rather than less specific routes:
 
 ```bash
+src/routes/foo-abc.svelte
 src/routes/foo-[c].svelte
 src/routes/[a].js
 src/routes/[b].svelte

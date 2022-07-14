@@ -38,7 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         node-version: [16]
-        os: [ubuntu-latest , windows-2019]
+        os: [ubuntu-latest , windows-latest]
         e2e-browser: ['chromium']
         include:
           - node-version: 16

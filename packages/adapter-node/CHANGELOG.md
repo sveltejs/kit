@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.80
+
+### Patch Changes
+
+- Update dependencies ([#5005](https://github.com/sveltejs/kit/pull/5005))
+
 ## 1.0.0-next.79
 
 ### Patch Changes

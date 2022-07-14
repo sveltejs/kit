@@ -22,6 +22,40 @@ function remove_keys(o, check) {
 	}
 }
 
+const directive_defaults = {
+	'child-src': undefined,
+	'default-src': undefined,
+	'frame-src': undefined,
+	'worker-src': undefined,
+	'connect-src': undefined,
+	'font-src': undefined,
+	'img-src': undefined,
+	'manifest-src': undefined,
+	'media-src': undefined,
+	'object-src': undefined,
+	'prefetch-src': undefined,
+	'script-src': undefined,
+	'script-src-elem': undefined,
+	'script-src-attr': undefined,
+	'style-src': undefined,
+	'style-src-elem': undefined,
+	'style-src-attr': undefined,
+	'base-uri': undefined,
+	sandbox: undefined,
+	'form-action': undefined,
+	'frame-ancestors': undefined,
+	'navigate-to': undefined,
+	'report-uri': undefined,
+	'report-to': undefined,
+	'require-trusted-types-for': undefined,
+	'trusted-types': undefined,
+	'upgrade-insecure-requests': false,
+	'require-sri-for': undefined,
+	'block-all-mixed-content': false,
+	'plugin-types': undefined,
+	referrer: undefined
+};
+
 const get_defaults = (prefix = '') => ({
 	extensions: ['.svelte'],
 	kit: {
@@ -35,39 +69,8 @@ const get_defaults = (prefix = '') => ({
 		},
 		csp: {
 			mode: 'auto',
-			directives: {
-				'child-src': undefined,
-				'default-src': undefined,
-				'frame-src': undefined,
-				'worker-src': undefined,
-				'connect-src': undefined,
-				'font-src': undefined,
-				'img-src': undefined,
-				'manifest-src': undefined,
-				'media-src': undefined,
-				'object-src': undefined,
-				'prefetch-src': undefined,
-				'script-src': undefined,
-				'script-src-elem': undefined,
-				'script-src-attr': undefined,
-				'style-src': undefined,
-				'style-src-elem': undefined,
-				'style-src-attr': undefined,
-				'base-uri': undefined,
-				sandbox: undefined,
-				'form-action': undefined,
-				'frame-ancestors': undefined,
-				'navigate-to': undefined,
-				'report-uri': undefined,
-				'report-to': undefined,
-				'require-trusted-types-for': undefined,
-				'trusted-types': undefined,
-				'upgrade-insecure-requests': false,
-				'require-sri-for': undefined,
-				'block-all-mixed-content': false,
-				'plugin-types': undefined,
-				referrer: undefined
-			}
+			directives: directive_defaults,
+			reportOnly: directive_defaults
 		},
 		endpointExtensions: undefined,
 		files: {

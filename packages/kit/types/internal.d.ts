@@ -113,7 +113,7 @@ export interface MethodOverride {
 }
 
 export type NormalizedLoadOutput = {
-	status: number;
+	status?: number;
 	error?: Error;
 	redirect?: string;
 	props?: Record<string, any> | Promise<Record<string, any>>;

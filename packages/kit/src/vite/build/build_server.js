@@ -3,7 +3,7 @@ import path from 'path';
 import { mkdirp, posixify } from '../../utils/filesystem.js';
 import { get_vite_config, merge_vite_configs, resolve_entry } from '../utils.js';
 import { load_template } from '../../core/config/index.js';
-import { get_runtime_path } from '../../core/utils.js';
+import { get_runtime_directory } from '../../core/utils.js';
 import { create_build, find_deps, get_default_config, remove_svelte_kit } from './utils.js';
 import { s } from '../../utils/misc.js';
 
@@ -177,7 +177,7 @@ export async function build_server(options, client) {
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: config.kit.serviceWorker.register && !!service_worker_entry_file,
-			runtime: get_runtime_path(config.kit),
+			runtime: posixify(path.relative(build_dir, get_runtime_directory(config.kit))),
 			template: load_template(cwd, config)
 		})
 	);

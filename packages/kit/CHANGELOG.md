@@ -1,5 +1,41 @@
 # @sveltejs/kit
 
+## 1.0.0-next.373
+
+### Patch Changes
+
+- [breaking] require vite 3 ([#5005](https://github.com/sveltejs/kit/pull/5005))
+
+## 1.0.0-next.372
+
+### Patch Changes
+
+- ignore invalid accept header values instead of throwing an error ([#5502](https://github.com/sveltejs/kit/pull/5502))
+
+* support CSP report-only mode ([#5496](https://github.com/sveltejs/kit/pull/5496))
+
+## 1.0.0-next.371
+
+### Patch Changes
+
+- Pin vite-plugin-svelte to 1.0.0-next.49 ([#5498](https://github.com/sveltejs/kit/pull/5498))
+
+## 1.0.0-next.370
+
+### Patch Changes
+
+- Don't automatically buffer request bodies ([#5442](https://github.com/sveltejs/kit/pull/5442))
+
+## 1.0.0-next.369
+
+### Patch Changes
+
+- skip closeBundle hook during dev to prevent errors on restart ([#5466](https://github.com/sveltejs/kit/pull/5466))
+
+* Normalize paths on prefetch (fixes [#5457](https://github.com/sveltejs/kit/issues/5457)) ([#5458](https://github.com/sveltejs/kit/pull/5458))
+
+- clearer error on bad matcher names ([#5460](https://github.com/sveltejs/kit/pull/5460))
+
 ## 1.0.0-next.368
 
 ### Patch Changes

@@ -1,8 +1,12 @@
 /**
- * @param {import('types').LoadOutput} loaded
+ * @param {import('types').LoadOutput | void} loaded
  * @returns {import('types').NormalizedLoadOutput}
  */
 export function normalize(loaded) {
+	if (!loaded) {
+		return {};
+	}
+
 	// TODO remove for 1.0
 	// @ts-expect-error
 	if (loaded.fallthrough) {

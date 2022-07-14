@@ -1,6 +1,8 @@
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
+test.describe.configure({ mode: 'parallel' });
+
 test('renders an AMP page', async ({ page, baseURL }) => {
 	await page.goto(`${baseURL}/valid`);
 
