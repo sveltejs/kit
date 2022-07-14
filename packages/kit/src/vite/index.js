@@ -142,21 +142,21 @@ function kit() {
 	 * @param {import('rollup').OutputChunk[]} chunks
 	 */
 	function client_build_info(assets, chunks) {
-			/** @type {import('vite').Manifest} */
-			const vite_manifest = JSON.parse(
-				fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
-			);
+		/** @type {import('vite').Manifest} */
+		const vite_manifest = JSON.parse(
+			fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
+		);
 
-			const entry_id = posixify(
-				path.relative(cwd, `${get_runtime_path(svelte_config.kit)}/client/start.js`)
-			);
+		const entry_id = posixify(
+			path.relative(cwd, `${get_runtime_path(svelte_config.kit)}/client/start.js`)
+		);
 
-			return {
-				assets,
-				chunks,
-				entry: find_deps(vite_manifest, entry_id, false),
-				vite_manifest
-			};
+		return {
+			assets,
+			chunks,
+			entry: find_deps(vite_manifest, entry_id, false),
+			vite_manifest
+		};
 	}
 
 	return {
@@ -240,7 +240,7 @@ function kit() {
 		/**
 		 * Clears the output directories.
 		 */
-		 buildStart() {
+		buildStart() {
 			if (is_build) {
 				rimraf(paths.build_dir);
 				mkdirp(paths.build_dir);
@@ -387,19 +387,19 @@ function kit() {
 
 /** @param {import('rollup').OutputBundle} bundle */
 function collect_output(bundle) {
-			/** @type {import('rollup').OutputChunk[]} */
-			const chunks = [];
-			/** @type {import('rollup').OutputAsset[]} */
-			const assets = [];
-			for (const key of Object.keys(bundle)) {
-				// collect asset and output chunks
-				if (bundle[key].type === 'asset') {
-					assets.push(/** @type {import('rollup').OutputAsset} */ (bundle[key]));
-				} else {
-					chunks.push(/** @type {import('rollup').OutputChunk} */ (bundle[key]));
-				}
-			}
-			return {assets, chunks};
+	/** @type {import('rollup').OutputChunk[]} */
+	const chunks = [];
+	/** @type {import('rollup').OutputAsset[]} */
+	const assets = [];
+	for (const key of Object.keys(bundle)) {
+		// collect asset and output chunks
+		if (bundle[key].type === 'asset') {
+			assets.push(/** @type {import('rollup').OutputAsset} */ (bundle[key]));
+		} else {
+			chunks.push(/** @type {import('rollup').OutputChunk} */ (bundle[key]));
+		}
+	}
+	return { assets, chunks };
 }
 
 /**
