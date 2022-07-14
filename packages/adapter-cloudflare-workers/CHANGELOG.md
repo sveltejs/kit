@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.50
+
+### Patch Changes
+
+- Update dependencies ([#5526](https://github.com/sveltejs/kit/pull/5526))
+
 ## 1.0.0-next.49
 
 ### Patch Changes

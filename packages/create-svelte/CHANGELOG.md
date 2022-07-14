@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.148
+
+### Patch Changes
+
+- Update dependencies ([#5526](https://github.com/sveltejs/kit/pull/5526))
+
 ## 2.0.0-next.147
 
 ### Patch Changes

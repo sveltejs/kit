@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.29
+
+### Patch Changes
+
+- Update dependencies ([#5526](https://github.com/sveltejs/kit/pull/5526))
+
 ## 1.0.0-next.28
 
 ### Patch Changes
