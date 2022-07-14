@@ -8,7 +8,6 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('beforeNavigate', () => {
-
 	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 
