@@ -5,7 +5,7 @@
 	"private": true,
 	"scripts": {
 		"build": "turbo run build --filter=./packages/*",
-		"test": "turbo run test --filter=./packages/*",
+		"test": "turbo run test --filter=./packages/* --force",
 		"check": "turbo run check",
 		"lint": "turbo run lint",
 		"format": "turbo run format",
@@ -37,7 +37,7 @@
 		"eslint-plugin-svelte3": "^4.0.0",
 		"playwright": "^1.23.3",
 		"prettier": "^2.6.2",
-		"rollup": "^2.75.3",
+		"rollup": "^2.75.7",
 		"svelte": "^3.48.0",
 		"tiny-glob": "^0.2.9",
 		"turbo": "^1.3.1",

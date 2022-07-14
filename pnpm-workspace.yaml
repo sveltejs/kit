@@ -5,3 +5,4 @@ packages:
   - 'packages/kit/test/apps/*'
   - 'packages/kit/test/prerendering/*'
   - 'packages/create-svelte/templates/*'
+  - '!.test-tmp/**'

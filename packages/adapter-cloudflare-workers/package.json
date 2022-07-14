@@ -31,7 +31,7 @@
 	"dependencies": {
 		"@cloudflare/workers-types": "^3.14.0",
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.14.42"
+		"esbuild": "^0.14.48"
 	},
 	"devDependencies": {
 		"@cloudflare/kv-asset-handler": "^0.2.0",
