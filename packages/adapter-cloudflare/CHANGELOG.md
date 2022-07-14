@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Update dependencies ([#5526](https://github.com/sveltejs/kit/pull/5526))
+- Update dependencies ([#5005](https://github.com/sveltejs/kit/pull/5005))
 
 ## 1.0.0-next.28
 
