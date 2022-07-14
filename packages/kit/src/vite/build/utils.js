@@ -85,12 +85,13 @@ export function find_deps(manifest, entry, add_dynamic_css) {
  */
 export const get_default_config = function ({ config, input, ssr, outDir }) {
 	return {
+		appType: 'custom',
 		base: assets_base(config.kit),
 		build: {
 			cssCodeSplit: true,
 			manifest: true,
 			outDir,
-			polyfillDynamicImport: false,
+			polyfillModulePreload: false,
 			rollupOptions: {
 				input,
 				output: {
@@ -110,7 +111,6 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 		resolve: {
 			alias: get_aliases(config.kit)
 		},
-		// @ts-expect-error
 		ssr: {
 			// when developing against the Kit src code, we want to ensure that
 			// our dependencies are bundled so that apps don't need to install
@@ -138,6 +138,9 @@ export function assets_base(config) {
 }
 
 /**
+ * vite.config.js will contain vite-plugin-svelte-kit, which kicks off the server and service
+ * worker builds in a hook. When running the server and service worker builds we must remove
+ * the SvelteKit plugin so that we do not kick off additional instances of these builds.
  * @param {import('vite').UserConfig} config
  */
 export function remove_svelte_kit(config) {
