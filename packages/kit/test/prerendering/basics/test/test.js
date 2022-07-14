@@ -131,6 +131,9 @@ test('targets the data-sveltekit-hydrate parent node', () => {
 		/<body>([^]+?)<script type="module" data-sveltekit-hydrate="(\w+)">([^]+?)<\/script>[^]+?<\/body>/;
 
 	const match = pattern.exec(content);
+	if (!match) {
+		throw new Error('Could not find data-sveltekit-hydrate');
+	}
 
 	assert.equal(match[1].trim(), '<h1>hello</h1>');
 

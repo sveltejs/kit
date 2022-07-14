@@ -3,7 +3,6 @@ import http from 'http';
 import { test as base, devices } from '@playwright/test';
 
 export const test = base.extend({
-	// @ts-expect-error
 	app: async ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
 		use({
@@ -33,7 +32,6 @@ export const test = base.extend({
 				page.evaluate((/** @type {(url: URL) => any} */ fn) => beforeNavigate(fn), fn),
 
 			/**
-			 * @param {() => void} fn
 			 * @returns {Promise<void>}
 			 */
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
@@ -49,11 +47,10 @@ export const test = base.extend({
 			 * @returns {Promise<void>}
 			 */
 			prefetchRoutes: (urls) =>
-				page.evaluate((/** @type {string[]} */ urls) => prefetchRoutes(urls), urls)
+				page.evaluate((/** @param {string[]} urls */ urls) => prefetchRoutes(urls), urls)
 		});
 	},
 
-	// @ts-expect-error
 	clicknav: async ({ page, javaScriptEnabled }, use) => {
 		/**
 		 * @param {string} selector
@@ -70,7 +67,6 @@ export const test = base.extend({
 		use(clicknav);
 	},
 
-	// @ts-expect-error
 	in_view: async ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
@@ -112,7 +108,6 @@ export const test = base.extend({
 		await use(page);
 	},
 
-	// @ts-expect-error
 	// eslint-disable-next-line
 	read_errors: ({}, use) => {
 		/** @param {string} path */
@@ -127,6 +122,7 @@ export const test = base.extend({
 	}
 });
 const test_browser = process.env.KIT_E2E_BROWSER ?? 'chromium';
+/** @type {Record<string,any>} */
 const known_devices = {
 	chromium: devices['Desktop Chrome'],
 	firefox: devices['Desktop Firefox'],

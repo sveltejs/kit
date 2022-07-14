@@ -51,18 +51,6 @@ test.describe('a11y', () => {
 		}
 	});
 
-	test('keepfocus works', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/keepfocus');
-
-		if (javaScriptEnabled) {
-			await Promise.all([
-				page.type('#input', 'bar'),
-				page.waitForFunction(() => window.location.search === '?foo=bar')
-			]);
-			await expect(page.locator('#input')).toBeFocused();
-		}
-	});
-
 	test('reset selection', async ({ page, clicknav }) => {
 		await page.goto('/selection/a');
 
@@ -90,6 +78,18 @@ test.describe('a11y', () => {
 				return -1;
 			})
 		).toBe(0);
+	});
+
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('keepfocus works', async ({ page }) => {
+		await page.goto('/keepfocus');
+
+		await Promise.all([
+			page.type('#input', 'bar'),
+			page.waitForFunction(() => window.location.search === '?foo=bar')
+		]);
+		await expect(page.locator('#input')).toBeFocused();
 	});
 });
 
@@ -229,6 +229,7 @@ test.describe('Scrolling', () => {
 
 		const rect = await page.locator('[href="/scroll/cross-document/b"]').boundingBox();
 		const height = await page.evaluate(() => innerHeight);
+		if (!rect) throw new Error('Could not determine bounding box');
 
 		const target_scroll_y = rect.y + rect.height - height;
 		await page.evaluate((y) => scrollTo(0, y), target_scroll_y);
@@ -465,30 +466,25 @@ test.describe('CSS', () => {
 		).toBe('rgb(0, 0, 255)');
 	});
 
-	test('applies generated component styles (hides announcer)', async ({
-		page,
-		clicknav,
-		javaScriptEnabled
-	}) => {
-		await page.goto('/css');
-
-		if (javaScriptEnabled) {
-			await clicknav('[href="/css/other"]');
-
-			expect(
-				await page.evaluate(() => {
-					const el = document.querySelector('#svelte-announcer');
-					return el && getComputedStyle(el).position;
-				})
-			).toBe('absolute');
-		}
-	});
-
 	test('applies imported styles in the correct order', async ({ page }) => {
 		await page.goto('/css');
 
 		const color = await page.$eval('.overridden', (el) => getComputedStyle(el).color);
 		expect(color).toBe('rgb(0, 128, 0)');
+	});
+
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('applies generated component styles (hides announcer)', async ({ page, clicknav }) => {
+		await page.goto('/css');
+		await clicknav('[href="/css/other"]');
+
+		expect(
+			await page.evaluate(() => {
+				const el = document.querySelector('#svelte-announcer');
+				return el && getComputedStyle(el).position;
+			})
+		).toBe('absolute');
 	});
 });
 
@@ -640,14 +636,6 @@ test.describe('Shadowed pages', () => {
 });
 
 test.describe('Endpoints', () => {
-	test('calls a delete handler', async ({ page, javaScriptEnabled }) => {
-		if (javaScriptEnabled) {
-			await page.goto('/delete-route');
-			await page.click('.del');
-			expect(await page.innerHTML('h1')).toBe('deleted 42');
-		}
-	});
-
 	test('200 status on empty endpoint', async ({ request }) => {
 		const response = await request.get('/endpoint-output/empty');
 		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
@@ -774,6 +762,14 @@ test.describe('Endpoints', () => {
 		const body = await response.body();
 		expect(Array.from(body)).toEqual([1, 2, 3]);
 	});
+
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('calls a delete handler', async ({ page }) => {
+		await page.goto('/delete-route');
+		await page.click('.del');
+		expect(await page.innerHTML('h1')).toBe('deleted 42');
+	});
 });
 
 test.describe('Encoded paths', () => {
@@ -886,17 +882,6 @@ test.describe('Errors', () => {
 		});
 	}
 
-	test('client-side load errors', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/errors/load-client');
-
-		if (javaScriptEnabled) {
-			expect(await page.textContent('footer')).toBe('Custom layout');
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Crashing now"'
-			);
-		}
-	});
-
 	test('server-side load errors', async ({ page }) => {
 		await page.goto('/errors/load-server');
 
@@ -911,17 +896,6 @@ test.describe('Errors', () => {
 				return el && getComputedStyle(el).color;
 			})
 		).toBe('rgb(255, 0, 0)');
-	});
-
-	test('client-side module context errors', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/errors/module-scope-client');
-
-		if (javaScriptEnabled) {
-			expect(await page.textContent('footer')).toBe('Custom layout');
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Crashing now"'
-			);
-		}
 	});
 
 	test('404', async ({ page }) => {
@@ -944,18 +918,6 @@ test.describe('Errors', () => {
 		expect(/** @type {Response} */ (response).status()).toBe(555);
 	});
 
-	test('client-side error from load() is a string', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/errors/load-error-string-client');
-
-		if (javaScriptEnabled) {
-			expect(await page.textContent('footer')).toBe('Custom layout');
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Not found"'
-			);
-			expect(await page.innerHTML('h1')).toBe('555');
-		}
-	});
-
 	test('server-side error from load() is an Error', async ({ page }) => {
 		const response = await page.goto('/errors/load-error-server');
 
@@ -966,18 +928,6 @@ test.describe('Errors', () => {
 		expect(/** @type {Response} */ (response).status()).toBe(555);
 	});
 
-	test('client-side error from load() is an Error', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/errors/load-error-client');
-
-		if (javaScriptEnabled) {
-			expect(await page.textContent('footer')).toBe('Custom layout');
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Not found"'
-			);
-			expect(await page.innerHTML('h1')).toBe('555');
-		}
-	});
-
 	test('server-side error from load() is malformed', async ({ page }) => {
 		await page.goto('/errors/load-error-malformed-server');
 
@@ -986,18 +936,6 @@ test.describe('Errors', () => {
 		expect(body).toMatch(
 			'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
 		);
-	});
-
-	test('client-side error from load() is malformed', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/errors/load-error-malformed-client');
-
-		if (javaScriptEnabled) {
-			const body = await page.textContent('body');
-
-			expect(body).toMatch(
-				'"error" property returned from load() must be a string or instance of Error, received type "object"'
-			);
-		}
 	});
 
 	test('invalid route response is handled', async ({ request }) => {
@@ -1104,16 +1042,6 @@ test.describe('Errors', () => {
 		expect(/** @type {Response} */ (response).status()).toBe(401);
 	});
 
-	test('client-side 4xx status without error from load()', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/errors/load-status-without-error-client');
-
-		if (javaScriptEnabled) {
-			expect(await page.textContent('footer')).toBe('Custom layout');
-			expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
-			expect(await page.innerHTML('h1')).toBe('401');
-		}
-	});
-
 	test('error thrown in handle results in a rendered error page', async ({ page }) => {
 		await page.goto('/errors/error-in-handle');
 
@@ -1158,6 +1086,7 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await clicknav('#get-implicit');
 		const json = await page.textContent('pre');
+		if (!json) throw new Error('Could not extract content from element');
 		const { status, name, message, stack, fancy } = JSON.parse(json);
 
 		expect(status).toBe(500);
@@ -1182,6 +1111,7 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await clicknav('#get-explicit');
 		const json = await page.textContent('pre');
+		if (!json) throw new Error('Could not extract content from element');
 		const { status, name, message, stack, fancy } = JSON.parse(json);
 
 		expect(status).toBe(400);
@@ -1204,6 +1134,7 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await Promise.all([page.waitForNavigation(), page.click('#post-implicit')]);
 		const json = await page.textContent('pre');
+		if (!json) throw new Error('Could not extract content from element');
 		const { status, name, message, stack, fancy } = JSON.parse(json);
 
 		expect(status).toBe(500);
@@ -1226,6 +1157,7 @@ test.describe('Errors', () => {
 		await page.goto('/errors/page-endpoint');
 		await Promise.all([page.waitForNavigation(), page.click('#post-explicit')]);
 		const json = await page.textContent('pre');
+		if (!json) throw new Error('Could not extract content from element');
 		const { status, name, message, stack, fancy } = JSON.parse(json);
 
 		expect(status).toBe(400);
@@ -1297,6 +1229,64 @@ test.describe('Errors', () => {
 		} else {
 			expect(/** @type {Response} */ (response).status()).toBe(400);
 		}
+	});
+
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('client-side load errors', async ({ page }) => {
+		await page.goto('/errors/load-client');
+
+		expect(await page.textContent('footer')).toBe('Custom layout');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Crashing now"'
+		);
+	});
+
+	test('client-side module context errors', async ({ page }) => {
+		await page.goto('/errors/module-scope-client');
+
+		expect(await page.textContent('footer')).toBe('Custom layout');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Crashing now"'
+		);
+	});
+
+	test('client-side error from load() is a string', async ({ page }) => {
+		await page.goto('/errors/load-error-string-client');
+
+		expect(await page.textContent('footer')).toBe('Custom layout');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Not found"'
+		);
+		expect(await page.innerHTML('h1')).toBe('555');
+	});
+
+	test('client-side error from load() is an Error', async ({ page }) => {
+		await page.goto('/errors/load-error-client');
+
+		expect(await page.textContent('footer')).toBe('Custom layout');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Not found"'
+		);
+		expect(await page.innerHTML('h1')).toBe('555');
+	});
+
+	test('client-side error from load() is malformed', async ({ page }) => {
+		await page.goto('/errors/load-error-malformed-client');
+
+		const body = await page.textContent('body');
+
+		expect(body).toMatch(
+			'"error" property returned from load() must be a string or instance of Error, received type "object"'
+		);
+	});
+
+	test('client-side 4xx status without error from load()', async ({ page }) => {
+		await page.goto('/errors/load-status-without-error-client');
+
+		expect(await page.textContent('footer')).toBe('Custom layout');
+		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+		expect(await page.innerHTML('h1')).toBe('401');
 	});
 });
 
@@ -1467,43 +1457,6 @@ test.describe('Load', () => {
 		}
 	});
 
-	test('load function is only called when necessary', async ({ app, page, javaScriptEnabled }) => {
-		if (javaScriptEnabled) {
-			await page.goto('/load/change-detection/one/a');
-			expect(await page.textContent('h1')).toBe('layout loads: 1');
-			expect(await page.textContent('h2')).toBe('x: a: 1');
-
-			await app.goto('/load/change-detection/one/a?unused=whatever');
-			expect(await page.textContent('h2')).toBe('x: a: 1');
-
-			await app.goto('/load/change-detection/two/b');
-			expect(await page.textContent('h2')).toBe('y: b: 1');
-
-			await app.goto('/load/change-detection/one/a');
-			expect(await page.textContent('h2')).toBe('x: a: 1');
-
-			await app.goto('/load/change-detection/one/b');
-			expect(await page.textContent('h2')).toBe('x: b: 2');
-
-			await app.invalidate('/load/change-detection/data.json');
-			expect(await page.textContent('h1')).toBe('layout loads: 2');
-			expect(await page.textContent('h2')).toBe('x: b: 2');
-
-			await app.invalidate('/load/change-detection/data.json');
-			expect(await page.textContent('h1')).toBe('layout loads: 3');
-			expect(await page.textContent('h2')).toBe('x: b: 2');
-
-			await app.invalidate('custom:change-detection-layout');
-			expect(await page.textContent('h1')).toBe('layout loads: 4');
-			expect(await page.textContent('h2')).toBe('x: b: 2');
-
-			await page.click('button');
-			await page.waitForFunction('window.invalidated');
-			expect(await page.textContent('h1')).toBe('layout loads: 5');
-			expect(await page.textContent('h2')).toBe('x: b: 2');
-		}
-	});
-
 	test('fetch accepts a Request object', async ({ page, clicknav }) => {
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-request"]');
@@ -1611,6 +1564,7 @@ test.describe('Load', () => {
 		await page.goto('/load/set-cookie-fetch');
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 
+		/** @type {Record<string,string>} */
 		const cookies = {};
 		for (const cookie of await context.cookies()) {
 			cookies[cookie.name] = cookie.value;
@@ -1620,62 +1574,92 @@ test.describe('Load', () => {
 		expect(cookies.doubled).toBe('84');
 	});
 
-	test('accessing url.hash from load errors and suggests using page store', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		if (javaScriptEnabled) {
-			await page.goto('/load/url-hash#please-dont-send-me-to-load');
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component."'
-			);
-		}
-	});
-
-	test('url instance methods work in load', async ({ page, javaScriptEnabled }) => {
-		if (javaScriptEnabled) {
-			await page.goto('/load/url-to-string');
-			expect(await page.textContent('h1')).toBe("I didn't break!");
-		}
-	});
-
-	test('using window.fetch causes a warning', async ({ page, javaScriptEnabled }) => {
-		const port = process.env.DEV ? 3000 : 4173;
-
-		if (javaScriptEnabled && process.env.DEV) {
-			const warnings = [];
-
-			page.on('console', (msg) => {
-				if (msg.type() === 'warning') {
-					warnings.push(msg.text());
-				}
-			});
-
-			await page.goto('/load/window-fetch/incorrect');
-			expect(await page.textContent('h1')).toBe('42');
-
-			expect(warnings).toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
-			);
-
-			warnings.length = 0;
-
-			await page.goto('/load/window-fetch/correct');
-			expect(await page.textContent('h1')).toBe('42');
-
-			expect(warnings).not.toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
-			);
-		}
-	});
-
 	test('CSS for dynamically imported components is reflected in server render', async ({
 		page
 	}) => {
 		await page.goto('/load/dynamic-import-styles');
-		expect(
-			await page.evaluate(() => getComputedStyle(document.querySelector('#thing')).color)
-		).toBe('rgb(255, 0, 0)');
+		const el = document.querySelector('#thing');
+		expect(await page.evaluate(() => el && getComputedStyle(el).color)).toBe('rgb(255, 0, 0)');
+	});
+
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('load function is only called when necessary', async ({ app, page }) => {
+		await page.goto('/load/change-detection/one/a');
+		expect(await page.textContent('h1')).toBe('layout loads: 1');
+		expect(await page.textContent('h2')).toBe('x: a: 1');
+
+		await app.goto('/load/change-detection/one/a?unused=whatever');
+		expect(await page.textContent('h2')).toBe('x: a: 1');
+
+		await app.goto('/load/change-detection/two/b');
+		expect(await page.textContent('h2')).toBe('y: b: 1');
+
+		await app.goto('/load/change-detection/one/a');
+		expect(await page.textContent('h2')).toBe('x: a: 1');
+
+		await app.goto('/load/change-detection/one/b');
+		expect(await page.textContent('h2')).toBe('x: b: 2');
+
+		await app.invalidate('/load/change-detection/data.json');
+		expect(await page.textContent('h1')).toBe('layout loads: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 2');
+
+		await app.invalidate('/load/change-detection/data.json');
+		expect(await page.textContent('h1')).toBe('layout loads: 3');
+		expect(await page.textContent('h2')).toBe('x: b: 2');
+
+		await app.invalidate('custom:change-detection-layout');
+		expect(await page.textContent('h1')).toBe('layout loads: 4');
+		expect(await page.textContent('h2')).toBe('x: b: 2');
+
+		await page.click('button');
+		await page.waitForFunction('window.invalidated');
+		expect(await page.textContent('h1')).toBe('layout loads: 5');
+		expect(await page.textContent('h2')).toBe('x: b: 2');
+	});
+
+	test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
+		await page.goto('/load/url-hash#please-dont-send-me-to-load');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component."'
+		);
+	});
+
+	test('url instance methods work in load', async ({ page }) => {
+		await page.goto('/load/url-to-string');
+		expect(await page.textContent('h1')).toBe("I didn't break!");
+	});
+
+	if (!process.env.DEV) return;
+
+	test('using window.fetch causes a warning', async ({ page }) => {
+		const port = process.env.DEV ? 3000 : 4173;
+
+		/** @type {string[]} */
+		const warnings = [];
+
+		page.on('console', (msg) => {
+			if (msg.type() === 'warning') {
+				warnings.push(msg.text());
+			}
+		});
+
+		await page.goto('/load/window-fetch/incorrect');
+		expect(await page.textContent('h1')).toBe('42');
+
+		expect(warnings).toContain(
+			`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
+		);
+
+		warnings.length = 0;
+
+		await page.goto('/load/window-fetch/correct');
+		expect(await page.textContent('h1')).toBe('42');
+
+		expect(warnings).not.toContain(
+			`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
+		);
 	});
 });
 
@@ -1821,27 +1805,6 @@ test.describe('Page options', () => {
 		}
 	});
 
-	test('disables router if router=false', async ({ page, clicknav, javaScriptEnabled }) => {
-		await page.goto('/no-router/a');
-
-		if (javaScriptEnabled) {
-			await page.click('button');
-			expect(await page.textContent('button')).toBe('clicks: 1');
-
-			await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-			expect(await page.textContent('button')).toBe('clicks: 0');
-
-			await page.click('button');
-			expect(await page.textContent('button')).toBe('clicks: 1');
-
-			await clicknav('[href="/no-router/a"]');
-			expect(await page.textContent('button')).toBe('clicks: 1');
-
-			await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-			expect(await page.textContent('button')).toBe('clicks: 0');
-		}
-	});
-
 	test('transformPage can change the html output', async ({ page }) => {
 		await page.goto('/transform-page');
 		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
@@ -1858,28 +1821,45 @@ test.describe('Page options', () => {
 		}
 	});
 
-	test('applies generated component styles with ssr=false (hides announcer)', async ({
-		page,
-		clicknav,
-		javaScriptEnabled
-	}) => {
-		if (javaScriptEnabled) {
-			await page.goto('/no-ssr');
-
-			await clicknav('[href="/no-ssr/other"]');
-
-			expect(
-				await page.evaluate(() => {
-					const el = document.querySelector('#svelte-announcer');
-					return el && getComputedStyle(el).position;
-				})
-			).toBe('absolute');
-		}
-	});
-
 	test('does not SSR error page for 404s with ssr=false', async ({ request }) => {
 		const html = await request.get('/no-ssr/missing');
 		expect(await html.text()).not.toContain('load function was called erroneously');
+	});
+
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('disables router if router=false', async ({ page, clicknav }) => {
+		await page.goto('/no-router/a');
+
+		await page.click('button');
+		expect(await page.textContent('button')).toBe('clicks: 1');
+
+		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
+		expect(await page.textContent('button')).toBe('clicks: 0');
+
+		await page.click('button');
+		expect(await page.textContent('button')).toBe('clicks: 1');
+
+		await clicknav('[href="/no-router/a"]');
+		expect(await page.textContent('button')).toBe('clicks: 1');
+
+		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
+		expect(await page.textContent('button')).toBe('clicks: 0');
+	});
+
+	test('applies generated component styles with ssr=false (hides announcer)', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/no-ssr');
+		await clicknav('[href="/no-ssr/other"]');
+
+		expect(
+			await page.evaluate(() => {
+				const el = document.querySelector('#svelte-announcer');
+				return el && getComputedStyle(el).position;
+			})
+		).toBe('absolute');
 	});
 });
 
@@ -2144,84 +2124,69 @@ test.describe('Redirects', () => {
 });
 
 test.describe('Prefetching', () => {
-	test('prefetches programmatically', async ({ baseURL, page, app, javaScriptEnabled }) => {
-		if (javaScriptEnabled) {
-			await page.goto('/routing/a');
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
-			/** @type {string[]} */
-			let requests = [];
-			page.on('request', (r) => requests.push(r.url()));
+	test('prefetches programmatically', async ({ baseURL, page, app }) => {
+		await page.goto('/routing/a');
 
-			// also wait for network processing to complete, see
-			// https://playwright.dev/docs/network#network-events
-			await Promise.all([
-				page.waitForResponse(`${baseURL}/routing/prefetched.json`),
-				app.prefetch('/routing/prefetched')
-			]);
+		/** @type {string[]} */
+		let requests = [];
+		page.on('request', (r) => requests.push(r.url()));
 
-			// svelte request made is environment dependent
-			if (process.env.DEV) {
-				expect(requests.filter((req) => req.endsWith('index.svelte')).length).toBe(1);
-			} else {
-				expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
-			}
+		// also wait for network processing to complete, see
+		// https://playwright.dev/docs/network#network-events
+		await Promise.all([
+			page.waitForResponse(`${baseURL}/routing/prefetched.json`),
+			app.prefetch('/routing/prefetched')
+		]);
 
-			expect(requests.includes(`${baseURL}/routing/prefetched.json`)).toBe(true);
+		// svelte request made is environment dependent
+		if (process.env.DEV) {
+			expect(requests.filter((req) => req.endsWith('index.svelte')).length).toBe(1);
+		} else {
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
+		}
 
-			requests = [];
-			await app.goto('/routing/prefetched');
-			expect(requests).toEqual([]);
+		expect(requests.includes(`${baseURL}/routing/prefetched.json`)).toBe(true);
 
-			try {
-				await app.prefetch('https://example.com');
-				throw new Error('Error was not thrown');
-			} catch (/** @type {any} */ e) {
-				expect(e.message).toMatch('Attempted to prefetch a URL that does not belong to this app');
-			}
+		requests = [];
+		await app.goto('/routing/prefetched');
+		expect(requests).toEqual([]);
+
+		try {
+			await app.prefetch('https://example.com');
+			throw new Error('Error was not thrown');
+		} catch (/** @type {any} */ e) {
+			expect(e.message).toMatch('Attempted to prefetch a URL that does not belong to this app');
 		}
 	});
 
 	test('chooses correct route when hash route is prefetched but regular route is clicked', async ({
 		app,
-		page,
-		javaScriptEnabled
+		page
 	}) => {
-		if (javaScriptEnabled) {
-			await page.goto('/routing/a');
-			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-			await app.goto('/routing/prefetched/hash-route');
-			await expect(page.locator('h1')).not.toHaveText('Oopsie');
-		}
+		await page.goto('/routing/a');
+		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+		await app.goto('/routing/prefetched/hash-route');
+		await expect(page.locator('h1')).not.toHaveText('Oopsie');
 	});
 
-	test('does not rerun load on calls to duplicate preload hash route', async ({
-		app,
-		page,
-		javaScriptEnabled
-	}) => {
-		if (javaScriptEnabled) {
-			await page.goto('/routing/a');
+	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
+		await page.goto('/routing/a');
 
-			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-			await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
-			await expect(page.locator('p')).toHaveText('Loaded 1 times.');
-		}
+		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+		await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
+		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
 	});
 
-	test('does not rerun load on calls to different preload hash route', async ({
-		app,
-		page,
-		javaScriptEnabled
-	}) => {
-		if (javaScriptEnabled) {
-			await page.goto('/routing/a');
+	test('does not rerun load on calls to different preload hash route', async ({ app, page }) => {
+		await page.goto('/routing/a');
 
-			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-			await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me-jr');
-			await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
-			await expect(page.locator('p')).toHaveText('Loaded 1 times.');
-		}
+		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
+		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me-jr');
+		await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
+		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
 	});
 });
 
@@ -2314,39 +2279,6 @@ test.describe('Routing', () => {
 	test('serves dynamic route', async ({ page }) => {
 		await page.goto('/routing/test-slug');
 		expect(await page.textContent('h1')).toBe('test-slug');
-	});
-
-	test('navigates to a new page without reloading', async ({
-		app,
-		page,
-		clicknav,
-		javaScriptEnabled
-	}) => {
-		if (javaScriptEnabled) {
-			await page.goto('/routing');
-
-			await app.prefetchRoutes(['/routing/a']).catch((e) => {
-				// from error handler tests; ignore
-				if (!e.message.includes('Crashing now')) throw e;
-			});
-
-			/** @type {string[]} */
-			const requests = [];
-			page.on('request', (r) => requests.push(r.url()));
-
-			await clicknav('a[href="/routing/a"]');
-			expect(await page.textContent('h1')).toBe('a');
-
-			expect(requests).toEqual([]);
-		}
-	});
-
-	test('navigates programmatically', async ({ page, app, javaScriptEnabled }) => {
-		if (javaScriptEnabled) {
-			await page.goto('/routing/a');
-			await app.goto('/routing/b');
-			expect(await page.textContent('h1')).toBe('b');
-		}
 	});
 
 	test('does not attempt client-side navigation to server routes', async ({ page }) => {
@@ -2467,25 +2399,6 @@ test.describe('Routing', () => {
 				return el && getComputedStyle(el).color;
 			})
 		).toBe('rgb(255, 0, 0)');
-	});
-
-	test('$page.url.hash is correctly set on page load', async ({ page, javaScriptEnabled }) => {
-		if (javaScriptEnabled) {
-			await page.goto('/routing/hashes/pagestore#target');
-			expect(await page.textContent('#window-hash')).toBe('#target');
-			expect(await page.textContent('#page-url-hash')).toBe('#target');
-		}
-	});
-
-	test('$page.url.hash is correctly set on navigation', async ({ page, javaScriptEnabled }) => {
-		if (javaScriptEnabled) {
-			await page.goto('/routing/hashes/pagestore');
-			expect(await page.textContent('#window-hash')).toBe('');
-			expect(await page.textContent('#page-url-hash')).toBe('');
-			await page.click('[href="#target"]');
-			expect(await page.textContent('#window-hash')).toBe('#target');
-			expect(await page.textContent('#page-url-hash')).toBe('#target');
-		}
 	});
 
 	test('last parameter in a segment wins in cases of ambiguity', async ({ page, clicknav }) => {
@@ -2660,6 +2573,47 @@ test.describe('Routing', () => {
 		const data = await response.json();
 		expect(data).toEqual({ surprise: 'lol' });
 	});
+
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('navigates to a new page without reloading', async ({ app, page, clicknav }) => {
+		await page.goto('/routing');
+
+		await app.prefetchRoutes(['/routing/a']).catch((e) => {
+			// from error handler tests; ignore
+			if (!e.message.includes('Crashing now')) throw e;
+		});
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await clicknav('a[href="/routing/a"]');
+		expect(await page.textContent('h1')).toBe('a');
+
+		expect(requests).toEqual([]);
+	});
+
+	test('navigates programmatically', async ({ page, app }) => {
+		await page.goto('/routing/a');
+		await app.goto('/routing/b');
+		expect(await page.textContent('h1')).toBe('b');
+	});
+
+	test('$page.url.hash is correctly set on page load', async ({ page }) => {
+		await page.goto('/routing/hashes/pagestore#target');
+		expect(await page.textContent('#window-hash')).toBe('#target');
+		expect(await page.textContent('#page-url-hash')).toBe('#target');
+	});
+
+	test('$page.url.hash is correctly set on navigation', async ({ page }) => {
+		await page.goto('/routing/hashes/pagestore');
+		expect(await page.textContent('#window-hash')).toBe('');
+		expect(await page.textContent('#page-url-hash')).toBe('');
+		await page.click('[href="#target"]');
+		expect(await page.textContent('#window-hash')).toBe('#target');
+		expect(await page.textContent('#page-url-hash')).toBe('#target');
+	});
 });
 
 test.describe('Session', () => {
@@ -2678,29 +2632,24 @@ test.describe('Session', () => {
 });
 
 test.describe('Shadow DOM', () => {
-	test('client router captures anchors in shadow dom', async ({
-		app,
-		page,
-		clicknav,
-		javaScriptEnabled
-	}) => {
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('client router captures anchors in shadow dom', async ({ app, page, clicknav }) => {
 		await page.goto('/routing/shadow-dom');
 
-		if (javaScriptEnabled) {
-			await app.prefetchRoutes(['/routing/a']).catch((e) => {
-				// from error handler tests; ignore
-				if (!e.message.includes('Crashing now')) throw e;
-			});
+		await app.prefetchRoutes(['/routing/a']).catch((e) => {
+			// from error handler tests; ignore
+			if (!e.message.includes('Crashing now')) throw e;
+		});
 
-			/** @type {string[]} */
-			const requests = [];
-			page.on('request', (r) => requests.push(r.url()));
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
 
-			await clicknav('div[id="clickme"]');
-			expect(await page.textContent('h1')).toBe('a');
+		await clicknav('div[id="clickme"]');
+		expect(await page.textContent('h1')).toBe('a');
 
-			expect(requests).toEqual([]);
-		}
+		expect(requests).toEqual([]);
 	});
 });
 
@@ -2724,6 +2673,7 @@ test.describe('Static files', () => {
 	test('Vite serves assets in allowed directories', async ({ page, request }) => {
 		await page.goto('/assets');
 		const path = await page.textContent('h1');
+		if (!path) throw new Error('Could not determine path');
 
 		const r1 = await request.get(path);
 		expect(r1.status()).toBe(200);
