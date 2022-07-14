@@ -109,14 +109,10 @@ function kit() {
 	 */
 	let paths;
 
-	/**
-	 * @type {Error | undefined}
-	 */
+	/** @type {Error | undefined} */
 	let build_error;
 
-	/**
-	 * @type {Error | undefined}
-	 */
+	/** @type {Error | undefined} */
 	let write_bundle_error;
 
 	function vite_client_config() {
