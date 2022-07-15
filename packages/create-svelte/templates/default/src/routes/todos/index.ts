@@ -62,7 +62,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 };
 
 /** @type {import('./__types').RequestHandler} */
-export const DEL: RequestHandler = async ({ request, locals }) => {
+export const DELETE: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
 	await api('DELETE', `todos/${locals.userid}/${form.get('uid')}`);
