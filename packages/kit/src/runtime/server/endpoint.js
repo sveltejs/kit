@@ -1,6 +1,6 @@
 import { to_headers } from '../../utils/http.js';
 import { hash } from '../hash.js';
-import { is_pojo, serialize_error } from './utils.js';
+import { check_method_names, is_pojo, serialize_error } from './utils.js';
 
 /** @param {string} body */
 function error(body) {
@@ -45,13 +45,7 @@ export function is_text(content_type) {
 export async function render_endpoint(event, mod, options) {
 	const { method } = event.request;
 
-	// TODO: Remove for 1.0
-	['get', 'post', 'put', 'patch', 'del'].forEach((m) => {
-		if (mod[m] !== undefined) {
-			const replacement = m === 'del' ? 'DELETE' : m.toUpperCase();
-			throw Error(`Endpoint method "${m}" has changed to "${replacement}"`);
-		}
-	});
+	check_method_names(mod);
 
 	/** @type {import('types').RequestHandler} */
 	let handler = mod[method];

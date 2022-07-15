@@ -90,3 +90,14 @@ function clone_error(error, get_stack) {
 
 	return object;
 }
+
+// TODO: Remove for 1.0
+/** @param {Record<string, any>} mod */
+export function check_method_names(mod) {
+	['get', 'post', 'put', 'patch', 'del'].forEach((m) => {
+		if (m in mod) {
+			const replacement = m === 'del' ? 'DELETE' : m.toUpperCase();
+			throw Error(`Endpoint method "${m}" has changed to "${replacement}"`);
+		}
+	});
+}
