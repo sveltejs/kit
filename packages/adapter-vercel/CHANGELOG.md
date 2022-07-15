@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.63
+
+### Patch Changes
+
+- Print friendlier message if adapter-vercel fails to resolve dependencies ([#5551](https://github.com/sveltejs/kit/pull/5551))
+
 ## 1.0.0-next.62
 
 ### Patch Changes
