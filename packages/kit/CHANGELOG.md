@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.377
+
+### Patch Changes
+
+- [breaking] Endpoint method names uppercased to match HTTP specifications ([#5513](https://github.com/sveltejs/kit/pull/5513))
+
 ## 1.0.0-next.376
 
 ### Patch Changes
