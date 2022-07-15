@@ -19,7 +19,7 @@ const config = {
 		}
 	},
 	vitePlugin: {
- 	   hot: false
+		hot: false
 	}
 };
 
