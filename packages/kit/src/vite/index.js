@@ -249,6 +249,7 @@ function kit() {
 		 * Clears the output directories.
 		 */
 		buildStart() {
+			// Reset for new build. Goes here because `build --watch` calls buildStart but not config
 			completed_build = false;
 
 			if (is_build) {
