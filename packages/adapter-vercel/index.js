@@ -324,7 +324,7 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 	if (resolution_failures.size > 0) {
 		const cwd = process.cwd();
 		builder.log.warn(
-			`The following modules failed to locate dependencies that may (or may not) be required for your app to work:`
+			'The following modules failed to locate dependencies that may (or may not) be required for your app to work:'
 		);
 
 		for (const [importer, modules] of resolution_failures) {
