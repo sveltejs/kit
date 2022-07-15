@@ -1,5 +1,5 @@
 import { FancyError } from './_shared.js';
 
-export const get = () => {
+export const GET = () => {
 	throw new FancyError('oops');
 };

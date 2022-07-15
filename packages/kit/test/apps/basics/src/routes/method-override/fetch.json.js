@@ -6,21 +6,21 @@ const buildResponse = (/** @type {string} */ method) => ({
 });
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export const get = ({ request }) => {
+export const GET = ({ request }) => {
 	return buildResponse(request.method);
 };
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export const post = ({ request }) => {
+export const POST = ({ request }) => {
 	return buildResponse(request.method);
 };
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export const patch = ({ request }) => {
+export const PATCH = ({ request }) => {
 	return buildResponse(request.method);
 };
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export const del = ({ request }) => {
+export const DELETE = ({ request }) => {
 	return buildResponse(request.method);
 };

@@ -1,4 +1,4 @@
-export function post() {
+export function POST() {
 	return {
 		status: 302,
 		headers: {

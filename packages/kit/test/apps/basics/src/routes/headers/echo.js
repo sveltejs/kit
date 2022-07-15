@@ -1,5 +1,5 @@
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function get({ request }) {
+export function GET({ request }) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 	request.headers.forEach((value, key) => {

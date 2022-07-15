@@ -1,4 +1,4 @@
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function get() {
+export function GET() {
 	throw new Error('nope');
 }

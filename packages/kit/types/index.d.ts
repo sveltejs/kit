@@ -244,7 +244,7 @@ export interface RequestEvent<Params extends Record<string, string> = Record<str
 }
 
 /**
- * A `(event: RequestEvent) => RequestHandlerOutput` function exported from an endpoint that corresponds to an HTTP verb (`get`, `put`, `patch`, etc) and handles requests with that method. Note that since 'delete' is a reserved word in JavaScript, delete handles are called `del` instead.
+ * A `(event: RequestEvent) => RequestHandlerOutput` function exported from an endpoint that corresponds to an HTTP verb (`GET`, `PUT`, `PATCH`, etc) and handles requests with that method.
  *
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](/docs/types#generated-types) instead.
  *

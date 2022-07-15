@@ -2,7 +2,7 @@ import { api } from './_api';
 import type { RequestHandler } from './__types';
 
 /** @type {import('./__types').RequestHandler} */
-export const get: RequestHandler = async ({ locals }) => {
+export const GET: RequestHandler = async ({ locals }) => {
 	// locals.userid comes from src/hooks.js
 	const response = await api('GET', `todos/${locals.userid}`);
 
@@ -30,7 +30,7 @@ export const get: RequestHandler = async ({ locals }) => {
 };
 
 /** @type {import('./__types').RequestHandler} */
-export const post: RequestHandler = async ({ request, locals }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
 	await api('POST', `todos/${locals.userid}`, {
@@ -50,7 +50,7 @@ const redirect = {
 };
 
 /** @type {import('./__types').RequestHandler} */
-export const patch: RequestHandler = async ({ request, locals }) => {
+export const PATCH: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
 	await api('PATCH', `todos/${locals.userid}/${form.get('uid')}`, {
@@ -62,7 +62,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 };
 
 /** @type {import('./__types').RequestHandler} */
-export const del: RequestHandler = async ({ request, locals }) => {
+export const DELETE: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
 	await api('DELETE', `todos/${locals.userid}/${form.get('uid')}`);

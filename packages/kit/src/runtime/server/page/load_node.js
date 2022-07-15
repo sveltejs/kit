@@ -3,7 +3,7 @@ import * as set_cookie_parser from 'set-cookie-parser';
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
 import { LoadURL, PrerenderingURL, is_root_relative, resolve } from '../../../utils/url.js';
-import { is_pojo, lowercase_keys, normalize_request_method } from '../utils.js';
+import { check_method_names, is_pojo, lowercase_keys } from '../utils.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { domain_matches, path_matches } from './cookie.js';
 
@@ -409,13 +409,15 @@ async function load_shadow_data(route, event, options, prerender) {
 	try {
 		const mod = await route.shadow();
 
-		if (prerender && (mod.post || mod.put || mod.del || mod.patch)) {
+		check_method_names(mod);
+
+		if (prerender && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
 			throw new Error('Cannot prerender pages that have endpoints with mutative methods');
 		}
 
-		const method = normalize_request_method(event);
-		const is_get = method === 'head' || method === 'get';
-		const handler = method === 'head' ? mod.head || mod.get : mod[method];
+		const { method } = event.request;
+		const is_get = method === 'HEAD' || method === 'GET';
+		const handler = method === 'HEAD' ? mod.HEAD || mod.GET : mod[method];
 
 		if (!handler && !is_get) {
 			return {
@@ -462,7 +464,7 @@ async function load_shadow_data(route, event, options, prerender) {
 			data.body = body;
 		}
 
-		const get = (method === 'head' && mod.head) || mod.get;
+		const get = (method === 'HEAD' && mod.HEAD) || mod.GET;
 		if (get) {
 			const { status, headers, body } = validate_shadow_output(await get(event));
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);

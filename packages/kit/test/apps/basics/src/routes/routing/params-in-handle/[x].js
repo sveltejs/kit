@@ -1,5 +1,5 @@
 /** @type {import('./__types/[x]').RequestHandler} */
-export function get({ locals }) {
+export function GET({ locals }) {
 	return {
 		body: {
 			key: locals.key,

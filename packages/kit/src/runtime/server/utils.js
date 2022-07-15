@@ -50,12 +50,6 @@ export function is_pojo(body) {
 	return true;
 }
 
-/** @param {import('types').RequestEvent} event */
-export function normalize_request_method(event) {
-	const method = event.request.method.toLowerCase();
-	return method === 'delete' ? 'del' : method; // 'delete' is a reserved word
-}
-
 /**
  * Serialize an error into a JSON string, by copying its `name`, `message`
  * and (in dev) `stack`, plus any custom properties, plus recursively
@@ -95,6 +89,17 @@ function clone_error(error, get_stack) {
 	}
 
 	return object;
+}
+
+// TODO: Remove for 1.0
+/** @param {Record<string, any>} mod */
+export function check_method_names(mod) {
+	['get', 'post', 'put', 'patch', 'del'].forEach((m) => {
+		if (m in mod) {
+			const replacement = m === 'del' ? 'DELETE' : m.toUpperCase();
+			throw Error(`Endpoint method "${m}" has changed to "${replacement}"`);
+		}
+	});
 }
 
 /** @type {import('types').SSRErrorPage} */

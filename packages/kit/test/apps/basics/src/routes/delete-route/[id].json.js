@@ -1,5 +1,5 @@
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function del(req) {
+export function DELETE(req) {
 	return {
 		status: 200,
 		body: {

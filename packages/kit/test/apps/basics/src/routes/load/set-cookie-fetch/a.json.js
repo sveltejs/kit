@@ -1,5 +1,5 @@
 /** @type {import('./__types/a.json').RequestHandler} */
-export function get({ url }) {
+export function GET({ url }) {
 	const answer = url.searchParams.get('answer') || '42';
 
 	return {

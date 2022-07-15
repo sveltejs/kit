@@ -4,7 +4,13 @@ import { mkdirp, posixify } from '../../utils/filesystem.js';
 import { get_vite_config, merge_vite_configs, resolve_entry } from '../utils.js';
 import { load_template } from '../../core/config/index.js';
 import { get_runtime_directory } from '../../core/utils.js';
-import { create_build, find_deps, get_default_config, remove_svelte_kit } from './utils.js';
+import {
+	create_build,
+	find_deps,
+	get_default_config,
+	remove_svelte_kit,
+	is_http_method
+} from './utils.js';
 import { s } from '../../utils/misc.js';
 
 /**
@@ -255,16 +261,6 @@ export async function build_server(options, client) {
 	};
 }
 
-/** @type {Record<string, string>} */
-const method_names = {
-	get: 'get',
-	head: 'head',
-	post: 'post',
-	put: 'put',
-	del: 'delete',
-	patch: 'patch'
-};
-
 /**
  * @param {string} cwd
  * @param {import('rollup').OutputChunk[]} output
@@ -285,9 +281,7 @@ function get_methods(cwd, output, manifest_data) {
 		const file = route.type === 'endpoint' ? route.file : route.shadow;
 
 		if (file && lookup[file]) {
-			methods[file] = lookup[file]
-				.map((x) => /** @type {import('types').HttpMethod} */ (method_names[x]))
-				.filter(Boolean);
+			methods[file] = lookup[file].filter(is_http_method);
 		}
 	});
 
