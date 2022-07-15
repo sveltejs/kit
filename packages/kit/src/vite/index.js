@@ -176,6 +176,7 @@ function kit() {
 			vite_config_env = config_env;
 			svelte_config = await load_config();
 			is_build = config_env.command === 'build';
+			completed_build = false;
 
 			paths = {
 				build_dir: `${svelte_config.kit.outDir}/build`,
