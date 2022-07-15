@@ -86,7 +86,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 export const get_default_config = function ({ config, input, ssr, outDir }) {
 	return {
 		appType: 'custom',
-		base: assets_base(config.kit),
+		base: ssr ? assets_base(config.kit) : './',
 		build: {
 			cssCodeSplit: true,
 			manifest: true,
