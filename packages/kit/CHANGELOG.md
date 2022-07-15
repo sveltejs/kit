@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.376
+
+### Patch Changes
+
+- [fix] ensure completed_build is reset ([#5541](https://github.com/sveltejs/kit/pull/5541))
+
 ## 1.0.0-next.375
 
 ### Patch Changes
