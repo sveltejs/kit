@@ -16,10 +16,8 @@ const config = {
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
-		}
-	},
-	vitePlugin: {
-		hot: false
+		},
+		hmr: false
 	}
 };
 
