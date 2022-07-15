@@ -152,6 +152,7 @@ export default function ({ external = [], edge, split } = {}) {
 				);
 
 				await create_function_bundle(
+					builder,
 					`${tmp}/index.js`,
 					`${dirs.functions}/${name}.func`,
 					`nodejs${node_version.major}.x`
@@ -288,21 +289,51 @@ function get_node_version() {
 }
 
 /**
+ * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} entry
  * @param {string} dir
  * @param {string} runtime
  */
-async function create_function_bundle(entry, dir, runtime) {
+async function create_function_bundle(builder, entry, dir, runtime) {
 	let base = entry;
 	while (base !== (base = path.dirname(base)));
 
 	const traced = await nodeFileTrace([entry], { base });
 
+	/** @type {Map<string, string[]>} */
+	const resolution_failures = new Map();
+
 	traced.warnings.forEach((error) => {
 		// pending https://github.com/vercel/nft/issues/284
 		if (error.message.startsWith('Failed to resolve dependency node:')) return;
-		console.error(error);
+
+		if (error.message.startsWith('Failed to resolve dependency')) {
+			const match = /Cannot find module '(.+?)' loaded from (.+)/;
+			const [, module, importer] = match.exec(error.message);
+
+			if (!resolution_failures.has(importer)) {
+				resolution_failures.set(importer, []);
+			}
+
+			resolution_failures.get(importer).push(module);
+		} else {
+			throw error;
+		}
 	});
+
+	if (resolution_failures.size > 0) {
+		const cwd = process.cwd();
+		builder.log.warn(
+			'The following modules failed to locate dependencies that may (or may not) be required for your app to work:'
+		);
+
+		for (const [importer, modules] of resolution_failures) {
+			console.error(`  ${path.relative(cwd, importer)}`);
+			for (const module of modules) {
+				console.error(`    - \u001B[1m\u001B[36m${module}\u001B[39m\u001B[22m`);
+			}
+		}
+	}
 
 	// find common ancestor directory
 	let common_parts;
