@@ -17,6 +17,9 @@ const config = {
 		fs: {
 			allow: [path.resolve('../../../src')]
 		}
+	},
+	vitePlugin: {
+ 	   hot: false
 	}
 };
 
