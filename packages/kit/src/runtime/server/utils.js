@@ -97,7 +97,9 @@ export function check_method_names(mod) {
 	['get', 'post', 'put', 'patch', 'del'].forEach((m) => {
 		if (m in mod) {
 			const replacement = m === 'del' ? 'DELETE' : m.toUpperCase();
-			throw Error(`Endpoint method "${m}" has changed to "${replacement}"`);
+			throw Error(
+				`Endpoint method "${m}" has changed to "${replacement}". See https://github.com/sveltejs/kit/discussions/5359 for more information.`
+			);
 		}
 	});
 }
