@@ -16,7 +16,8 @@ const config = {
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
-		}
+		},
+		hmr: false
 	}
 };
 
