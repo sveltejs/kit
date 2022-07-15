@@ -84,6 +84,8 @@ export function find_deps(manifest, entry, add_dynamic_css) {
  * @return {import('vite').UserConfig}
  */
 export const get_default_config = function ({ config, input, ssr, outDir }) {
+	const prefix = `${config.kit.appDir}/immutable`;
+
 	return {
 		appType: 'custom',
 		base: ssr ? assets_base(config.kit) : './',
@@ -96,9 +98,11 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 				input,
 				output: {
 					format: 'esm',
-					entryFileNames: ssr ? '[name].js' : `${config.kit.appDir}/immutable/[name]-[hash].js`,
-					chunkFileNames: `${config.kit.appDir}/immutable/chunks/[name]-[hash].js`,
-					assetFileNames: `${config.kit.appDir}/immutable/assets/[name]-[hash][extname]`
+					entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
+					chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
+					// assetFileNames is the same for ssr/client/workers because we're not actually
+					// outputting the assets in SSR mode, but they need to point to the same place
+					assetFileNames: `${prefix}/assets/[name]-[hash][extname]`
 				},
 				preserveEntrySignatures: 'strict'
 			},
