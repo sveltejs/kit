@@ -101,3 +101,8 @@ export function check_method_names(mod) {
 		}
 	});
 }
+
+/** @type {import('types').SSRErrorPage} */
+export const GENERIC_ERROR = {
+	id: '__error'
+};

@@ -13,7 +13,7 @@ import { domain_matches, path_matches } from './cookie.js';
  *   event: import('types').RequestEvent;
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
- *   route: import('types').SSRPage | null;
+ *   route: import('types').SSRPage | import('types').SSRErrorPage;
  *   node: import('types').SSRNode;
  *   $session: any;
  *   stuff: Record<string, any>;

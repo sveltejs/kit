@@ -109,6 +109,8 @@ function kit() {
 	 */
 	let paths;
 
+	let completed_build = false;
+
 	function vite_client_config() {
 		/** @type {Record<string, string>} */
 		const input = {
@@ -345,15 +347,20 @@ function kit() {
 			console.log(
 				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
 			);
+
+			completed_build = true;
 		},
 
 		/**
 		 * Runs the adapter.
 		 */
 		async closeBundle() {
-			if (!is_build) {
-				return; // vite calls closeBundle when dev-server restarts, ignore that
+			if (!completed_build) {
+				// vite calls closeBundle when dev-server restarts, ignore that,
+				// and only adapt when build successfully completes.
+				return;
 			}
+
 			if (svelte_config.kit.adapter) {
 				const { adapt } = await import('../core/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
