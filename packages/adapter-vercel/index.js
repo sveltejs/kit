@@ -93,7 +93,6 @@ export default function ({ external = [], edge, split } = {}) {
 
 			const tmp = builder.getBuildDirectory('vercel-tmp');
 
-			builder.rimraf(dir);
 			builder.rimraf(tmp);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
