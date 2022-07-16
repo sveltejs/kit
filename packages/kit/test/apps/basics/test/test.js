@@ -202,7 +202,7 @@ test.describe('Shadowed pages', () => {
 		const [response] = await Promise.all([page.waitForNavigation(), page.click('#error-post')]);
 		expect(await page.textContent('h1')).toBe('hello from get / echo: posted data');
 
-		expect(response.status()).toBe(400);
+		expect(response?.status()).toBe(400);
 		expect(await page.textContent('h2')).toBe('status: 400');
 	});
 
