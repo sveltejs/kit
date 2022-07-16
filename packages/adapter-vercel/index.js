@@ -294,6 +294,8 @@ function get_node_version() {
  * @param {string} runtime
  */
 async function create_function_bundle(builder, entry, dir, runtime) {
+	fs.rmSync(dir, { force: true, recursive: true });
+
 	let base = entry;
 	while (base !== (base = path.dirname(base)));
 
