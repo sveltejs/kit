@@ -32,6 +32,18 @@ test.describe('base path', () => {
 		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets');
 	});
 
+	test('replaces %sveltekit.assets% in template with _svelte_kit_assets', async ({
+		page,
+		request
+	}) => {
+		await page.goto('/path-base/');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe(
+			'/_svelte_kit_assets/favicon.png'
+		);
+		const response = await request.get('/_svelte_kit_assets/answer.html');
+		expect(await response.text()).toContain('42');
+	});
+
 	test.skip('loads javascript', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
 		expect(await page.textContent('button')).toBe('clicks: 0');

@@ -1046,15 +1046,15 @@ test.describe('$app/paths', () => {
 		);
 	});
 
-	test('replaces %sveltekit.assets% in template with relative path', async ({ page }) => {
+	test('replaces %sveltekit.assets% in template with an absolute path', async ({ page }) => {
 		await page.goto('/');
-		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('/favicon.png');
 
 		await page.goto('/routing');
-		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('/favicon.png');
 
 		await page.goto('/routing/rest/foo/bar/baz');
-		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('../../../../favicon.png');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('/favicon.png');
 	});
 });
 

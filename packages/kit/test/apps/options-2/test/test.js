@@ -15,6 +15,11 @@ test.describe('paths.base', () => {
 		const response = await request.get('/basepath/answer.txt');
 		expect(await response.text()).toBe('42');
 	});
+
+	test('replaces %sveltekit.assets% in template with an absolute path', async ({ page }) => {
+		await page.goto('/basepath/');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('/basepath/favicon.png');
+	});
 });
 
 test.describe('Service worker', () => {

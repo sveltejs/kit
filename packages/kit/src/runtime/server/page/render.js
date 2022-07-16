@@ -292,12 +292,13 @@ export async function render_response({
 		}
 	}
 
-	const segments = event.url.pathname.slice(options.paths.base.length).split('/').slice(2);
-	const assets =
-		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
-
 	const html = await resolve_opts.transformPage({
-		html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) })
+		html: options.template({
+			head,
+			body,
+			assets: options.paths.assets,
+			nonce: /** @type {string} */ (csp.nonce)
+		})
 	});
 
 	const headers = new Headers({
