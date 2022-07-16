@@ -76,6 +76,9 @@ export function sveltekit() {
  * @return {import('vite').Plugin}
  */
 function kit() {
+	/** @type {import('vite').UserConfig} */
+	let original_config;
+
 	/** @type {import('types').ValidatedConfig} */
 	let svelte_config;
 
@@ -173,6 +176,7 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
 		async config(config, config_env) {
+			original_config = config;
 			vite_config_env = config_env;
 			svelte_config = await load_config();
 			is_build = config_env.command === 'build';
@@ -191,8 +195,6 @@ function kit() {
 				manifest_data = sync.all(svelte_config).manifest_data;
 
 				const new_config = vite_client_config();
-
-				warn_overridden_config(config, new_config);
 
 				return new_config;
 			}
@@ -234,7 +236,6 @@ function kit() {
 					}
 				}
 			};
-			warn_overridden_config(config, result);
 			return result;
 		},
 
@@ -388,7 +389,12 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config);
+			const withOverriddenListener = add_overridden_config_warning_listener(
+				vite,
+				original_config,
+				vite_config
+			);
+			return await dev(withOverriddenListener, vite_config, svelte_config);
 		},
 
 		/**
@@ -436,17 +442,30 @@ function collect_output(bundle) {
 }
 
 /**
+ * @param {import('vite').ViteDevServer} server
  * @param {Record<string, any>} config
  * @param {Record<string, any>} resolved_config
  */
-function warn_overridden_config(config, resolved_config) {
+function add_overridden_config_warning_listener(server, config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
 	if (overridden.length > 0) {
-		console.log(
-			colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
-		);
-		console.log(overridden.map((key) => `  - ${key}`).join('\n'));
+		const _listen = server.listen;
+		server.listen = function () {
+			server.httpServer?.on('listening', () => {
+				setTimeout(() => {
+					console.log(
+						colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
+					);
+					console.log(overridden.map((key) => `  - ${key}`).join('\n'));
+				}, 0);
+			});
+			// @ts-ignore
+			// eslint-disable-next-line prefer-rest-params
+			return _listen.apply(this, arguments);
+		};
 	}
+
+	return server;
 }
 
 /**
