@@ -389,8 +389,8 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			const configWarning = create_overridden_config_action(original_config, vite_config);
-			add_post_listening_actions(vite, configWarning);
+			const config_warning = create_overridden_config_action(original_config, vite_config);
+			add_post_listening_actions(vite, config_warning);
 			return await dev(vite, vite_config, svelte_config);
 		},
 
