@@ -32,7 +32,7 @@ The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interf
 // @errors: 2461
 /// file: src/routes/what-is-my-user-agent.js
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function get(event) {
+export function GET(event) {
 	// log all headers
 	console.log(...event.request.headers);
 

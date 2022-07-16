@@ -56,7 +56,7 @@ When configuring your project settings, you must use the following settings:
 The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV/DO namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
 
 ```js
-export async function post({ request, platform }) {
+export async function POST({ request, platform }) {
   const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
 }
 ```
