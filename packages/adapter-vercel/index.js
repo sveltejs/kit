@@ -93,7 +93,6 @@ export default function ({ external = [], edge, split } = {}) {
 
 			const tmp = builder.getBuildDirectory('vercel-tmp');
 
-			builder.rimraf(dir);
 			builder.rimraf(tmp);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -295,6 +294,8 @@ function get_node_version() {
  * @param {string} runtime
  */
 async function create_function_bundle(builder, entry, dir, runtime) {
+	fs.rmSync(dir, { force: true, recursive: true });
+
 	let base = entry;
 	while (base !== (base = path.dirname(base)));
 
