@@ -389,12 +389,9 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			const withOverriddenListener = add_overridden_config_warning_listener(
-				vite,
-				original_config,
-				vite_config
-			);
-			return await dev(withOverriddenListener, vite_config, svelte_config);
+			const configWarning = create_overridden_config_action(original_config, vite_config);
+			const withWarning = add_post_listening_actions(vite, configWarning);
+			return await dev(withWarning, vite_config, svelte_config);
 		},
 
 		/**
@@ -442,29 +439,38 @@ function collect_output(bundle) {
 }
 
 /**
- * @param {import('vite').ViteDevServer} server
  * @param {Record<string, any>} config
  * @param {Record<string, any>} resolved_config
  */
-function add_overridden_config_warning_listener(server, config, resolved_config) {
+function create_overridden_config_action(config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
 	if (overridden.length > 0) {
-		const _listen = server.listen;
-		server.listen = function () {
-			server.httpServer?.on('listening', () => {
-				setTimeout(() => {
-					console.log(
-						colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
-					);
-					console.log(overridden.map((key) => `  - ${key}`).join('\n'));
-				}, 0);
-			});
-			// @ts-ignore
-			// eslint-disable-next-line prefer-rest-params
-			return _listen.apply(this, arguments);
+		return () => {
+			console.log(
+				colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
+			);
+			console.log(overridden.map((key) => `  - ${key}`).join('\n'));
 		};
 	}
+	return () => {};
+}
 
+/**
+ * @param {import('vite').ViteDevServer} server
+ * @param {Array<() => void>} actions
+ */
+function add_post_listening_actions(server, ...actions) {
+	const _listen = server.listen;
+	server.listen = function () {
+		server.httpServer?.on('listening', () => {
+			setTimeout(() => {
+				actions.forEach((action) => action());
+			}, 0);
+		});
+		// @ts-ignore
+		// eslint-disable-next-line prefer-rest-params
+		return _listen.apply(this, arguments);
+	};
 	return server;
 }
 
