@@ -390,8 +390,8 @@ function kit() {
 		 */
 		async configureServer(vite) {
 			const configWarning = create_overridden_config_action(original_config, vite_config);
-			const withWarning = add_post_listening_actions(vite, configWarning);
-			return await dev(withWarning, vite_config, svelte_config);
+			add_post_listening_actions(vite, configWarning);
+			return await dev(vite, vite_config, svelte_config);
 		},
 
 		/**
@@ -465,13 +465,12 @@ function add_post_listening_actions(server, ...actions) {
 		server.httpServer?.on('listening', () => {
 			setTimeout(() => {
 				actions.forEach((action) => action());
-			}, 0);
+			}, 100);
 		});
 		// @ts-ignore
 		// eslint-disable-next-line prefer-rest-params
 		return _listen.apply(this, arguments);
 	};
-	return server;
 }
 
 /**
