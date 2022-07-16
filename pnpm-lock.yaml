@@ -441,7 +441,7 @@ importers:
       uvu: 0.5.4
       vite: 3.0.0
 
-  packages/kit/test/prerendering/disabled:
+  packages/kit/test/prerendering/fallback:
     specifiers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
