@@ -107,6 +107,9 @@ export interface KitConfig {
 		directives?: CspDirectives;
 		reportOnly?: CspDirectives;
 	};
+	env?: {
+		publicPrefix: string;
+	};
 	moduleExtensions?: string[];
 	files?: {
 		assets?: string;
