@@ -100,7 +100,7 @@ export function get_aliases(config) {
 	};
 
 	for (const [key, value] of Object.entries(config.alias)) {
-		alias[key] = path.resolve(value);
+		if (!key.endsWith('/*')) alias[key] = path.resolve(value);
 	}
 
 	return alias;

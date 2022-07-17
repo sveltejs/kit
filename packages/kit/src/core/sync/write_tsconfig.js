@@ -7,6 +7,9 @@ import { write_if_changed } from './utils.js';
 /** @param {string} file */
 const exists = (file) => fs.existsSync(file) && file;
 
+/** @param {string} file */
+const project_relative = (file) => posixify(path.relative('.', file));
+
 /**
  * Writes the tsconfig that the user's tsconfig inherits from.
  * @param {import('types').ValidatedKitConfig} config
@@ -17,9 +20,6 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 		exists(path.resolve(cwd, 'tsconfig.json')) || exists(path.resolve(cwd, 'jsconfig.json'));
 
 	if (user_file) validate(config, cwd, out, user_file);
-
-	/** @param {string} file */
-	const project_relative = (file) => posixify(path.relative('.', file));
 
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(config.outDir, file));
@@ -37,19 +37,6 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 		include.push(config_relative(`${dir}/**/*.svelte`));
 	});
 
-	/** @type {Record<string, string[]>} */
-	const paths = {};
-	const alias = {
-		$lib: project_relative(config.files.lib),
-		...config.alias
-	};
-	for (const [key, value] of Object.entries(alias)) {
-		if (fs.existsSync(project_relative(value))) {
-			paths[key] = [project_relative(value)];
-			paths[key + '/*'] = [project_relative(value) + '/*'];
-		}
-	}
-
 	write_if_changed(
 		out,
 		JSON.stringify(
@@ -57,7 +44,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 				compilerOptions: {
 					// generated options
 					baseUrl: config_relative('.'),
-					paths,
+					paths: get_tsconfig_paths(config),
 					rootDirs: [config_relative('.'), './types'],
 
 					// essential options
@@ -135,4 +122,43 @@ function validate(config, cwd, out, user_file) {
 		);
 		console.warn(`{\n  "extends": "${relative}"\n}`);
 	}
+}
+
+// <something><optional slash or slash-star>
+const alias_re = /^([^/]+)((\/)(\*)?)?$/;
+
+/**
+ * @param {import('types').ValidatedKitConfig} config
+ */
+export function get_tsconfig_paths(config) {
+	const lib = project_relative(config.files.lib);
+
+	/** @type {Record<string, string[]>} */
+	const paths = fs.existsSync(lib)
+		? {
+				$lib: [lib],
+				'$lib/*': [lib + '/*']
+		  }
+		: {};
+
+	for (const [key, value] of Object.entries(config.alias)) {
+		const match = alias_re.exec(key);
+		if (!match) throw new Error(`Invalid alias: ${key}`);
+
+		const [, name, , slash, star] = match;
+		const rel_path = project_relative(value);
+
+		if (star) {
+			paths[key] = [rel_path];
+		} else {
+			paths[name] = [rel_path];
+
+			if (slash && !(name + '/*' in config.alias)) {
+				// If it's explicitly marked as a folder and there isn't another /* for it add the /* entry
+				paths[name + '/*'] = [rel_path + '/*'];
+			}
+		}
+	}
+
+	return paths;
 }
