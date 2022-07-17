@@ -460,17 +460,11 @@ function create_overridden_config_action(config, resolved_config) {
  * @param {Array<() => void>} actions
  */
 function add_post_listening_actions(server, ...actions) {
-	const _listen = server.listen;
-	server.listen = function () {
-		server.httpServer?.on('listening', () => {
-			setTimeout(() => {
-				actions.forEach((action) => action());
-			}, 100);
-		});
-		// @ts-ignore
-		// eslint-disable-next-line prefer-rest-params
-		return _listen.apply(this, arguments);
-	};
+	server.httpServer?.on('listening', () => {
+		setTimeout(() => {
+			actions.forEach((action) => action());
+		}, 100);
+	});
 }
 
 /**
