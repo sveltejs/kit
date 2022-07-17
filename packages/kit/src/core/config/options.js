@@ -123,6 +123,10 @@ const options = object(
 				(keypath) => `${keypath} has been renamed to config.kit.moduleExtensions`
 			),
 
+			env: object({
+				publicPrefix: string('PUBLIC_')
+			}),
+
 			files: object({
 				assets: string('static'),
 				hooks: string(join('src', 'hooks')),
