@@ -202,13 +202,6 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				if (!decoded.startsWith(svelte_config.kit.paths.base)) {
-					return not_found(
-						res,
-						`Not found (did you mean ${svelte_config.kit.paths.base + req.url}?)`
-					);
-				}
-
 				/** @type {Partial<import('types').Hooks>} */
 				const user_hooks = resolve_entry(svelte_config.kit.files.hooks)
 					? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
@@ -360,12 +353,6 @@ export async function dev(vite, vite_config, svelte_config) {
 			}
 		});
 	};
-}
-
-/** @param {import('http').ServerResponse} res */
-function not_found(res, message = 'Not found') {
-	res.statusCode = 404;
-	res.end(message);
 }
 
 /**

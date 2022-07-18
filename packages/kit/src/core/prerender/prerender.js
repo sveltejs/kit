@@ -84,7 +84,7 @@ export async function prerender({ config, entries, files, log }) {
 	 * @param {boolean} is_html
 	 */
 	function output_filename(path, is_html) {
-		const file = path.slice(config.paths.base.length + 1);
+		const file = path;
 
 		if (file === '') {
 			return 'index.html';
@@ -109,7 +109,7 @@ export async function prerender({ config, entries, files, log }) {
 		if (seen.has(decoded)) return;
 		seen.add(decoded);
 
-		const file = decoded.slice(config.paths.base.length + 1);
+		const file = decoded;
 		if (files.has(file)) return;
 
 		return q.add(() => visit(decoded, encoded || encodeURI(decoded), referrer));
@@ -121,11 +121,6 @@ export async function prerender({ config, entries, files, log }) {
 	 * @param {string?} referrer
 	 */
 	async function visit(decoded, encoded, referrer) {
-		if (!decoded.startsWith(config.paths.base)) {
-			error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
-			return;
-		}
-
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
@@ -259,10 +254,10 @@ export async function prerender({ config, entries, files, log }) {
 		for (const entry of config.prerender.entries) {
 			if (entry === '*') {
 				for (const entry of entries) {
-					enqueue(null, config.paths.base + entry); // TODO can we pre-normalize these?
+					enqueue(null, entry); // TODO can we pre-normalize these?
 				}
 			} else {
-				enqueue(null, config.paths.base + entry);
+				enqueue(null, entry);
 			}
 		}
 

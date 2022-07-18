@@ -57,13 +57,6 @@ export async function respond(request, options, state) {
 	/** @type {Record<string, string>} */
 	let params = {};
 
-	if (options.paths.base && !state.prerendering?.fallback) {
-		if (!decoded.startsWith(options.paths.base)) {
-			return new Response('Not found', { status: 404 });
-		}
-		decoded = decoded.slice(options.paths.base.length) || '/';
-	}
-
 	const is_data_request = decoded.endsWith(DATA_SUFFIX);
 
 	if (is_data_request) {

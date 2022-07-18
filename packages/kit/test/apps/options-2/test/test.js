@@ -7,7 +7,7 @@ test.describe.configure({ mode: 'parallel' });
 
 test.describe('paths.base', () => {
 	test('serves /basepath', async ({ page }) => {
-		await page.goto('/basepath');
+		await page.goto('/basepath/');
 		expect(await page.textContent('h1')).toBe('Hello');
 	});
 
@@ -28,7 +28,7 @@ test.describe('Service worker', () => {
 	});
 
 	test('does not register /basepath/service-worker.js', async ({ page }) => {
-		await page.goto('/basepath');
+		await page.goto('/basepath/');
 		expect(await page.content()).not.toMatch(/navigator\.serviceWorker/);
 	});
 });

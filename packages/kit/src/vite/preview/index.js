@@ -59,18 +59,6 @@ export async function preview(vite, config, protocol) {
 			)
 		);
 
-		vite.middlewares.use((req, res, next) => {
-			const original_url = /** @type {string} */ (req.url);
-			const { pathname } = new URL(original_url, 'http://dummy');
-
-			if (pathname.startsWith(base)) {
-				next();
-			} else {
-				res.statusCode = 404;
-				res.end(`Not found (did you mean ${base + pathname}?)`);
-			}
-		});
-
 		// prerendered dependencies
 		vite.middlewares.use(
 			scoped(base, mutable(join(config.kit.outDir, 'output/prerendered/dependencies')))
@@ -119,29 +107,31 @@ export async function preview(vite, config, protocol) {
 		);
 
 		// SSR
-		vite.middlewares.use(async (req, res) => {
-			const host = req.headers['host'];
+		vite.middlewares.use(
+			scoped(base, async (req, res) => {
+				const host = req.headers['host'];
 
-			let request;
+				let request;
 
-			try {
-				request = await getRequest(`${protocol}://${host}`, req);
-			} catch (/** @type {any} */ err) {
-				res.statusCode = err.status || 400;
-				return res.end(err.reason || 'Invalid request body');
-			}
+				try {
+					request = await getRequest(`${protocol}://${host}`, req);
+				} catch (/** @type {any} */ err) {
+					res.statusCode = err.status || 400;
+					return res.end(err.reason || 'Invalid request body');
+				}
 
-			setResponse(
-				res,
-				await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					}
-				})
-			);
-		});
+				setResponse(
+					res,
+					await server.respond(request, {
+						getClientAddress: () => {
+							const { remoteAddress } = req.socket;
+							if (remoteAddress) return remoteAddress;
+							throw new Error('Could not determine clientAddress');
+						}
+					})
+				);
+			})
+		);
 	};
 }
 
