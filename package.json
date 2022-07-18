@@ -35,7 +35,7 @@
 		"eslint-plugin-import": "^2.26.0",
 		"eslint-plugin-node": "^11.1.0",
 		"eslint-plugin-svelte3": "^4.0.0",
-		"playwright": "^1.23.3",
+		"playwright": "^1.23.4",
 		"prettier": "^2.6.2",
 		"rollup": "^2.75.7",
 		"svelte": "^3.48.0",
