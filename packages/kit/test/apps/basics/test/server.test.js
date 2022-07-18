@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import { start_server, test } from '../../../utils.js';
+import { createHash, randomBytes } from 'node:crypto';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -273,7 +274,15 @@ test.describe('Endpoints', () => {
 	test('body can be a binary ReadableStream', async ({ request }) => {
 		const response = await request.get('/endpoint-output/stream');
 		const body = await response.body();
-		expect(Array.from(body)).toEqual([1, 2, 3]);
+		const digest = createHash('sha256').update(body).digest('base64url');
+		expect(response.headers()['digest']).toEqual(`sha-256=${digest}`);
+	});
+
+	test('request body can be read slow', async ({ request }) => {
+		const data = randomBytes(1024 * 256);
+		const digest = createHash('sha256').update(data).digest('base64url');
+		const response = await request.put('/endpoint-input/sha256', { data });
+		expect(await response.text()).toEqual(digest);
 	});
 });
 
