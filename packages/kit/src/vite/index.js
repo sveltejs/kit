@@ -206,6 +206,7 @@ function kit() {
 					}
 				},
 				define: {
+					__SVELTEKIT_BUILD__: 'false',
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0'
 				},
 				resolve: {

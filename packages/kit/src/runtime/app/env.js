@@ -11,12 +11,12 @@ export const server = !!import.meta.env.SSR;
 /**
  * @type {import('$app/env').dev}
  */
-export const dev = !!import.meta.env.DEV;
+export const dev = !__SVELTEKIT_BUILD__;
 
 /**
  * @type {import('$app/env').prod}
  */
-export const prod = !import.meta.env.DEV;
+export const prod = __SVELTEKIT_BUILD__;
 
 /**
  * @type {import('$app/env').mode}
