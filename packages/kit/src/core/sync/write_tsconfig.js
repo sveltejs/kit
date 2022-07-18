@@ -36,6 +36,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 		include.push(config_relative(`${dir}/**/*.ts`));
 		include.push(config_relative(`${dir}/**/*.svelte`));
 	});
+	include.push('types/ambient.d.ts');
 
 	/** @type {Record<string, string[]>} */
 	const paths = {};
