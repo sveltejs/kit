@@ -205,13 +205,10 @@ function kit() {
 						input: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
 					}
 				},
-<<<<<<< HEAD
-				publicDir: svelte_config.kit.files.assets,
-=======
 				define: {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0'
 				},
->>>>>>> master
+				publicDir: svelte_config.kit.files.assets,
 				resolve: {
 					alias: get_aliases(svelte_config.kit)
 				},
