@@ -15,7 +15,7 @@
 		"sade": "^1.8.1"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.23.3",
+		"@playwright/test": "^1.23.4",
 		"@rollup/plugin-replace": "^4.0.0",
 		"@types/connect": "^3.4.35",
 		"@types/cookie": "^0.5.1",
