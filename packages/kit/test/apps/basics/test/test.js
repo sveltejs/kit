@@ -1,7 +1,4 @@
-import fs from 'fs';
-import path from 'path';
 import { expect } from '@playwright/test';
-import { fileURLToPath } from 'url';
 import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -1526,31 +1523,6 @@ test.describe('Routing', () => {
 		}
 	});
 
-	test('watch new route in dev', async ({ page }) => {
-		await page.goto('/routing');
-
-		if (!process.env.DEV) {
-			return;
-		}
-
-		// hash the filename so that it won't conflict with
-		// future test file that has the same name
-		const route = 'zzzz' + Date.now();
-		const content = 'Hello new route';
-		const __dirname = path.dirname(fileURLToPath(import.meta.url));
-		const filePath = path.join(__dirname, `../src/routes/routing/${route}.svelte`);
-
-		try {
-			fs.writeFileSync(filePath, `<h1>${content}</h1>`);
-			await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
-			await page.goto(`/routing/${route}`);
-
-			expect(await page.textContent('h1')).toBe(content);
-		} finally {
-			fs.unlinkSync(filePath);
-		}
-	});
-
 	test('navigates to ...rest', async ({ page, clicknav }) => {
 		await page.goto('/routing/rest/abc/xyz');
 
@@ -1740,23 +1712,5 @@ test.describe('XSS', () => {
 		expect(await page.textContent('h1')).toBe(
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
-	});
-});
-
-test.describe('Miscellaneous', () => {
-	test('Components are not double-mounted', async ({ page, javaScriptEnabled }) => {
-		const file = fileURLToPath(new URL('../src/routes/double-mount/index.svelte', import.meta.url));
-		const contents = fs.readFileSync(file, 'utf-8');
-
-		const mounted = javaScriptEnabled ? 1 : 0;
-
-		// we write to the file, to trigger HMR invalidation
-		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, `PLACEHOLDER:${Date.now()}`));
-		await page.goto('/double-mount');
-		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
-		await page.click('button');
-		await page.waitForTimeout(100);
-		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
-		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, 'PLACEHOLDER:0'));
 	});
 });
