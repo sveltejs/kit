@@ -1,3 +1,5 @@
+/* global __SVELTEKIT_BUILD__ */
+
 /**
  * @type {import('$app/env').browser}
  */
