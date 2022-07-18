@@ -273,7 +273,7 @@ function kit() {
 			});
 
 			fs.writeFileSync(
-				`${paths.client_out_dir}/version.json`,
+				`${paths.client_out_dir}/${svelte_config.kit.appDir}/version.json`,
 				JSON.stringify({ version: process.env.VITE_SVELTEKIT_APP_VERSION })
 			);
 
