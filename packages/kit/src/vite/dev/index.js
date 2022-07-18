@@ -1,7 +1,6 @@
 import fs from 'fs';
 import colors from 'kleur';
 import path from 'path';
-import sirv from 'sirv';
 import { URL } from 'url';
 import { getRequest, setResponse } from '../../node/index.js';
 import { installPolyfills } from '../../node/polyfills.js';
@@ -175,12 +174,6 @@ export async function dev(vite, vite_config, svelte_config) {
 	}
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
-	const asset_server = sirv(svelte_config.kit.files.assets, {
-		dev: true,
-		etag: true,
-		maxAge: 0,
-		extensions: []
-	});
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -199,20 +192,6 @@ export async function dev(vite, vite_config, svelte_config) {
 				}`;
 
 				const decoded = decodeURI(new URL(base + req.url).pathname);
-
-				if (decoded.startsWith(assets)) {
-					const pathname = decoded.slice(assets.length);
-					const file = svelte_config.kit.files.assets + pathname;
-
-					if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-						if (has_correct_case(file, svelte_config.kit.files.assets)) {
-							req.url = encodeURI(pathname); // don't need query/hash
-							asset_server(req, res);
-							return;
-						}
-					}
-				}
-
 				const file = posixify(path.resolve(decoded.slice(1)));
 				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
 				const allowed =
@@ -445,25 +424,4 @@ async function find_deps(vite, node, deps) {
 	}
 
 	await Promise.all(branches);
-}
-
-/**
- * Determine if a file is being requested with the correct case,
- * to ensure consistent behaviour between dev and prod and across
- * operating systems. Note that we can't use realpath here,
- * because we don't want to follow symlinks
- * @param {string} file
- * @param {string} assets
- * @returns {boolean}
- */
-function has_correct_case(file, assets) {
-	if (file === assets) return true;
-
-	const parent = path.dirname(file);
-
-	if (fs.readdirSync(parent).includes(path.basename(file))) {
-		return has_correct_case(parent, assets);
-	}
-
-	return false;
 }

@@ -44,9 +44,6 @@ export async function preview(vite, config, protocol) {
 	const server = new Server(manifest);
 
 	return () => {
-		// files in `static`
-		vite.middlewares.use(scoped(assets, mutable(config.kit.files.assets)));
-
 		// immutable generated client assets
 		vite.middlewares.use(
 			scoped(
