@@ -1219,6 +1219,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 					);
 				}
 			});
+
+			// fix link hrefs, because browsers will occasionally try to load relative
+			// URLs after a pushState/replaceState, resulting in a 404 — see
+			// https://github.com/sveltejs/kit/issues/3748
+			for (const link of document.querySelectorAll('link')) {
+				link.href = link.href;
+			}
 		},
 
 		_hydrate: async ({ status, error, nodes, params, routeId }) => {
