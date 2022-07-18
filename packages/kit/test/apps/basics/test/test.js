@@ -1,7 +1,4 @@
-import fs from 'fs';
-import path from 'path';
 import { expect } from '@playwright/test';
-import { fileURLToPath } from 'url';
 import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
