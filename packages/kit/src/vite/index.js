@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { searchForWorkspaceRoot } from 'vite';
+import * as vite from 'vite';
 import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
@@ -222,7 +222,7 @@ function kit() {
 								svelte_config.kit.outDir,
 								path.resolve(cwd, 'src'),
 								path.resolve(cwd, 'node_modules'),
-								path.resolve(searchForWorkspaceRoot(cwd), 'node_modules')
+								path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
 							])
 						]
 					},
@@ -402,18 +402,14 @@ function kit() {
 }
 
 function check_vite_version() {
-	let vite_major = 3;
+	// TODO parse from kit peer deps and maybe do a full semver compare if we ever require feature releases a min
+	const min_required_vite_major = 3;
+	const vite_version = vite.version ?? '2.x'; // vite started exporting it's version in 3.0
+	const current_vite_major = parseInt(vite_version.split('.')[0], 10);
 
-	try {
-		const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
-		vite_major = +pkg.devDependencies['vite'].replace(/^[~^]/, '')[0];
-	} catch {
-		// do nothing
-	}
-
-	if (vite_major < 3) {
+	if (current_vite_major < min_required_vite_major) {
 		throw new Error(
-			`Vite version ${vite_major} is no longer supported. Please upgrade to version 3`
+			`Vite version ${current_vite_major} is no longer supported. Please upgrade to version ${min_required_vite_major}`
 		);
 	}
 }
