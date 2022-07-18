@@ -141,10 +141,6 @@ export function create_builder({ config, build_data, prerendered, log }) {
 			return copy(`${config.kit.outDir}/output/server`, dest);
 		},
 
-		writeStatic(dest) {
-			return copy(config.kit.files.assets, dest);
-		},
-
 		// @ts-expect-error
 		async prerender() {
 			throw new Error(

@@ -66,11 +66,6 @@ export interface Builder {
 	 */
 	writeServer(dest: string): string[];
 	/**
-	 * @param dest the destination folder to which files should be copied
-	 * @returns an array of paths corresponding to the files that have been created by the copy
-	 */
-	writeStatic(dest: string): string[];
-	/**
 	 * @param from the source file or folder
 	 * @param to the destination file or folder
 	 * @param opts.filter a function to determine whether a file or folder should be copied

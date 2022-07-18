@@ -55,7 +55,6 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.log.minor(`Publishing to "${publish}"`);
 
 			builder.log.minor('Copying assets...');
-			builder.writeStatic(publish);
 			builder.writeClient(publish);
 			builder.writePrerendered(publish);
 
@@ -232,7 +231,7 @@ async function generate_lambda_functions({ builder, publish, split, esm }) {
 		redirects.push('* /.netlify/functions/render 200');
 	}
 
-	// this should happen at the end, after builder.writeStatic(...),
+	// this should happen at the end, after builder.writeClient(...),
 	// so that generated redirects are appended to custom redirects
 	// rather than replaced by them
 	builder.log.minor('Writing redirects...');

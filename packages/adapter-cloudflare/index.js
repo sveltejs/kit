@@ -23,7 +23,6 @@ export default function () {
 			builder.rimraf(tmp);
 			builder.mkdirp(tmp);
 
-			builder.writeStatic(dest);
 			builder.writeClient(dest);
 			builder.writePrerendered(dest);
 
