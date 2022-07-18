@@ -27,9 +27,8 @@
 		"build": "rimraf files && rollup -c",
 		"test": "echo \"tests temporarily disabled\" # c8 uvu tests",
 		"check": "tsc",
-		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "npm run check-format -- --write",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {

@@ -70,8 +70,6 @@ function clone_error(error, get_stack) {
 	const {
 		name,
 		message,
-		// this should constitute 'using' a var, since it affects `custom`
-		// eslint-disable-next-line
 		stack,
 		// @ts-expect-error i guess typescript doesn't know about error.cause yet
 		cause,

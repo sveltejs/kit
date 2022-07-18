@@ -21,5 +21,5 @@ export function copy_assets(dest) {
 		}
 
 		prefix = `../${prefix}`;
-	} while (true); // eslint-disable-line
+	} while (true);
 }
