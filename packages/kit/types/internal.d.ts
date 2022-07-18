@@ -317,3 +317,10 @@ export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export * from './index';
 export * from './private';
+
+declare global {
+	const __SVELTEKIT_ADAPTER_NAME__: string;
+	const __SVELTEKIT_APP_VERSION__: string;
+	const __SVELTEKIT_APP_VERSION_FILE__: string;
+	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+}
