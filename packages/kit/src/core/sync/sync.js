@@ -6,6 +6,7 @@ import { write_matchers } from './write_matchers.js';
 import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
 import { write_types } from './write_types.js';
+import { write_env } from './write_env';
 
 /** @param {import('types').ValidatedConfig} config */
 export function init(config) {
@@ -24,6 +25,7 @@ export function update(config) {
 	write_root(manifest_data, output);
 	write_matchers(manifest_data, output);
 	write_types(config, manifest_data);
+	write_env(config.kit);
 
 	return { manifest_data };
 }

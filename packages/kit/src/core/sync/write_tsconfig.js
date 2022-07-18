@@ -79,7 +79,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 					target: 'esnext'
 				},
 				include,
-				exclude: [config_relative('node_modules/**'), './**']
+				exclude: [config_relative('node_modules/**'), './[!types/ambient.d.ts]**']
 			},
 			null,
 			'\t'
