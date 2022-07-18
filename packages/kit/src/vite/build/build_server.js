@@ -197,8 +197,6 @@ export async function build_server(options, client) {
 
 	remove_svelte_kit(merged_config);
 
-	process.env.VITE_SVELTEKIT_ADAPTER_NAME = config.kit.adapter?.name;
-
 	const { chunks } = await create_build(merged_config);
 
 	/** @type {import('vite').Manifest} */
