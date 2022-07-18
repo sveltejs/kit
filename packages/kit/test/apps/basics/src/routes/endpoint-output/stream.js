@@ -12,21 +12,25 @@ export function GET() {
 			'content-type': 'application/octet-stream',
 			digest: `sha-256=${digest}`
 		},
-		body: new ReadableStream({
-			pull(controller) {
-				const offset = data.byteOffset + length;
-				const chunk = data.byteLength - length > controller.desiredSize
-					? new Uint8Array(data.buffer, offset, controller.desiredSize)
-					: new Uint8Array(data.buffer, offset);
+		body: new ReadableStream(
+			{
+				pull(controller) {
+					const offset = data.byteOffset + length;
+					const chunk =
+						data.byteLength - length > controller.desiredSize
+							? new Uint8Array(data.buffer, offset, controller.desiredSize)
+							: new Uint8Array(data.buffer, offset);
 
-				controller.enqueue(chunk);
+					controller.enqueue(chunk);
 
-				length += chunk.byteLength;
+					length += chunk.byteLength;
 
-				if (length >= data.byteLength) {
-					controller.close();
+					if (length >= data.byteLength) {
+						controller.close();
+					}
 				}
-			}
-		}, { highWaterMark: 1024 * 16 })
+			},
+			{ highWaterMark: 1024 * 16 }
+		)
 	};
 }
