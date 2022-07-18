@@ -145,7 +145,7 @@ export async function setResponse(res, response) {
 			const ok = res.write(value);
 
 			if (!ok) {
-				await new Promise((fullfil) => res.once('drain', fullfil));
+				await new Promise((fulfil) => res.once('drain', fulfil));
 			}
 		}
 	} else {
