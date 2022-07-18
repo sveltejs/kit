@@ -4,7 +4,7 @@
 	"version": "0.0.1",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "vite build --mode custom",
 		"preview": "vite preview",
 		"prepare": "node ../../cli.js sync",
 		"check": "tsc && svelte-check",

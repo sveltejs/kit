@@ -12,7 +12,7 @@ export async function get_vite_config(config_env) {
 	if (!config) {
 		throw new Error('Could not load Vite config');
 	}
-	return config;
+	return { ...config, mode: config_env.mode };
 }
 
 /**
