@@ -1,3 +1,3 @@
-export function get() {
+export function GET() {
 	return 'this ought to be an object';
 }

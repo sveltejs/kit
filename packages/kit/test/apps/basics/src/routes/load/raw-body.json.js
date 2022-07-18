@@ -1,5 +1,5 @@
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export async function post({ request }) {
+export async function POST({ request }) {
 	const text = await request.text();
 	const json = JSON.parse(text);
 

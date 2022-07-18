@@ -289,6 +289,10 @@ export interface SSRPage {
 	b: Array<number | undefined>;
 }
 
+export interface SSRErrorPage {
+	id: '__error';
+}
+
 export interface SSRPagePart {
 	id: string;
 	load: SSRComponentLoader;
@@ -299,7 +303,7 @@ export type SSRRoute = SSREndpoint | SSRPage;
 export interface SSRState {
 	fallback?: string;
 	getClientAddress: () => string;
-	initiator?: SSRPage | null;
+	initiator?: SSRPage | SSRErrorPage;
 	platform?: any;
 	prerendering?: PrerenderOptions;
 }
@@ -312,3 +316,10 @@ export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export * from './index';
 export * from './private';
+
+declare global {
+	const __SVELTEKIT_ADAPTER_NAME__: string;
+	const __SVELTEKIT_APP_VERSION__: string;
+	const __SVELTEKIT_APP_VERSION_FILE__: string;
+	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+}

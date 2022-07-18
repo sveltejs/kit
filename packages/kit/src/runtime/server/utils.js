@@ -50,12 +50,6 @@ export function is_pojo(body) {
 	return true;
 }
 
-/** @param {import('types').RequestEvent} event */
-export function normalize_request_method(event) {
-	const method = event.request.method.toLowerCase();
-	return method === 'delete' ? 'del' : method; // 'delete' is a reserved word
-}
-
 /**
  * Serialize an error into a JSON string, by copying its `name`, `message`
  * and (in dev) `stack`, plus any custom properties, plus recursively
@@ -76,8 +70,6 @@ function clone_error(error, get_stack) {
 	const {
 		name,
 		message,
-		// this should constitute 'using' a var, since it affects `custom`
-		// eslint-disable-next-line
 		stack,
 		// @ts-expect-error i guess typescript doesn't know about error.cause yet
 		cause,
@@ -96,3 +88,21 @@ function clone_error(error, get_stack) {
 
 	return object;
 }
+
+// TODO: Remove for 1.0
+/** @param {Record<string, any>} mod */
+export function check_method_names(mod) {
+	['get', 'post', 'put', 'patch', 'del'].forEach((m) => {
+		if (m in mod) {
+			const replacement = m === 'del' ? 'DELETE' : m.toUpperCase();
+			throw Error(
+				`Endpoint method "${m}" has changed to "${replacement}". See https://github.com/sveltejs/kit/discussions/5359 for more information.`
+			);
+		}
+	});
+}
+
+/** @type {import('types').SSRErrorPage} */
+export const GENERIC_ERROR = {
+	id: '__error'
+};

@@ -1,5 +1,5 @@
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function get({ params }) {
+export function GET({ params }) {
 	return {
 		body: {
 			parts: params.parts

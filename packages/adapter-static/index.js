@@ -14,8 +14,8 @@ export default function (options) {
 
 		async adapt(builder) {
 			if (!options?.fallback && !builder.config.kit.prerender.default) {
-				builder.log.warn(
-					'You should set `config.kit.prerender.default` to `true` if no fallback is specified'
+				throw Error(
+					'adapter-static requires `config.kit.prerender.default` to be `true` unless you set the `fallback: true` option to create a single-page app. See https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode for more information'
 				);
 			}
 

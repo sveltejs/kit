@@ -18,6 +18,12 @@ function get_raw_body(req) {
 		return null;
 	}
 
+	if (req.destroyed) {
+		const readable = new ReadableStream();
+		readable.cancel();
+		return readable;
+	}
+
 	let size = 0;
 	let cancelled = false;
 
@@ -28,31 +34,34 @@ function get_raw_body(req) {
 			});
 
 			req.on('end', () => {
-				if (!cancelled) {
-					controller.close();
+				if (cancelled) return;
+				controller.close();
+			});
+
+			req.on('data', (chunk) => {
+				if (cancelled) return;
+
+				size += chunk.length;
+				if (size > length) {
+					controller.error(new Error('content-length exceeded'));
+					return;
+				}
+
+				controller.enqueue(chunk);
+
+				if (controller.desiredSize === null || controller.desiredSize <= 0) {
+					req.pause();
 				}
 			});
 		},
 
-		pull(controller) {
-			return new Promise((fulfil) => {
-				req.once('data', (chunk) => {
-					if (!cancelled) {
-						size += chunk.length;
-						if (size > length) {
-							controller.error(new Error('content-length exceeded'));
-						}
-
-						controller.enqueue(chunk);
-					}
-
-					fulfil();
-				});
-			});
+		pull() {
+			req.resume();
 		},
 
-		cancel() {
+		cancel(reason) {
 			cancelled = true;
+			req.destroy(reason);
 		}
 	});
 }
@@ -104,16 +113,26 @@ export async function setResponse(res, response) {
 	res.writeHead(response.status, headers);
 
 	if (response.body) {
-		let cancelled = false;
-
 		const reader = response.body.getReader();
+
+		if (res.destroyed) {
+			reader.cancel();
+			return;
+		}
+
+		let cancelled = false;
 
 		res.on('close', () => {
 			reader.cancel();
 			cancelled = true;
 		});
 
-		const next = async () => {
+		res.on('error', (error) => {
+			reader.cancel(error);
+			cancelled = true;
+		});
+
+		for (;;) {
 			const { done, value } = await reader.read();
 
 			if (cancelled) return;
@@ -123,17 +142,12 @@ export async function setResponse(res, response) {
 				return;
 			}
 
-			res.write(Buffer.from(value), (error) => {
-				if (error) {
-					console.error('Error writing stream', error);
-					res.end();
-				} else {
-					next();
-				}
-			});
-		};
+			const ok = res.write(value);
 
-		next();
+			if (!ok) {
+				await new Promise((fulfil) => res.once('drain', fulfil));
+			}
+		}
 	} else {
 		res.end();
 	}

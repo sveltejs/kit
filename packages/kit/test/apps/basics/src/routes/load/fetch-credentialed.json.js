@@ -1,5 +1,5 @@
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function get(request) {
+export function GET(request) {
 	return {
 		body: {
 			name: request.locals.name

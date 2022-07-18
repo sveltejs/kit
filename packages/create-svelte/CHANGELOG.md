@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.149
+
+### Patch Changes
+
+- uppercase handlers ([#5513](https://github.com/sveltejs/kit/pull/5513))
+
 ## 2.0.0-next.148
 
 ### Patch Changes

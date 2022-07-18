@@ -1,5 +1,39 @@
 # @sveltejs/kit
 
+## 1.0.0-next.379
+
+### Patch Changes
+
+- Use define instead of import.meta.env.VITE_SVELTEKIT_FOO for internal values ([#5594](https://github.com/sveltejs/kit/pull/5594))
+
+## 1.0.0-next.378
+
+### Patch Changes
+
+- Pause Node streams as necessary when converting to ReadableStream ([#5587](https://github.com/sveltejs/kit/pull/5587))
+
+* improve vite version check to work with custom resolutions, eg. pnpm overrides ([#5586](https://github.com/sveltejs/kit/pull/5586))
+
+## 1.0.0-next.377
+
+### Patch Changes
+
+- [breaking] Endpoint method names uppercased to match HTTP specifications ([#5513](https://github.com/sveltejs/kit/pull/5513))
+
+## 1.0.0-next.376
+
+### Patch Changes
+
+- [fix] ensure completed_build is reset ([#5541](https://github.com/sveltejs/kit/pull/5541))
+
+## 1.0.0-next.375
+
+### Patch Changes
+
+- fix: don't try adapting if build failed ([#5536](https://github.com/sveltejs/kit/pull/5536))
+
+* Render generic error page if `__layout` returns error while rendering full error page ([#4665](https://github.com/sveltejs/kit/pull/4665))
+
 ## 1.0.0-next.374
 
 ### Patch Changes

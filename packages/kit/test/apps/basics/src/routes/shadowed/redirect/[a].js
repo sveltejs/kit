@@ -1,4 +1,4 @@
-export function get() {
+export function GET() {
 	return {
 		status: 302,
 		headers: {

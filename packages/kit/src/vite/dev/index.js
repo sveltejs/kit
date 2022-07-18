@@ -33,8 +33,6 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	const runtime = get_runtime_prefix(svelte_config.kit);
 
-	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
-
 	/** @type {import('types').Respond} */
 	const respond = (await import(`${runtime}/server/index.js`)).respond;
 

@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { searchForWorkspaceRoot } from 'vite';
+import * as vite from 'vite';
 import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
@@ -12,7 +12,7 @@ import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_runtime_directory, logger } from '../core/utils.js';
-import { find_deps, get_default_config } from './build/utils.js';
+import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry } from './utils.js';
 
@@ -109,7 +109,9 @@ function kit() {
 	 */
 	let paths;
 
-	function vite_client_config() {
+	let completed_build = false;
+
+	function vite_client_build_config() {
 		/** @type {Record<string, string>} */
 		const input = {
 			// Put unchanging assets in immutable directory. We don't set that in the
@@ -130,7 +132,7 @@ function kit() {
 			input[name] = resolved;
 		});
 
-		return get_default_config({
+		return get_default_build_config({
 			config: svelte_config,
 			input,
 			ssr: false,
@@ -182,13 +184,9 @@ function kit() {
 			};
 
 			if (is_build) {
-				process.env.VITE_SVELTEKIT_APP_VERSION = svelte_config.kit.version.name;
-				process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${svelte_config.kit.appDir}/version.json`;
-				process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${svelte_config.kit.version.pollInterval}`;
-
 				manifest_data = sync.all(svelte_config).manifest_data;
 
-				const new_config = vite_client_config();
+				const new_config = vite_client_build_config();
 
 				warn_overridden_config(config, new_config);
 
@@ -207,6 +205,9 @@ function kit() {
 						input: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
 					}
 				},
+				define: {
+					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0'
+				},
 				resolve: {
 					alias: get_aliases(svelte_config.kit)
 				},
@@ -220,7 +221,7 @@ function kit() {
 								svelte_config.kit.outDir,
 								path.resolve(cwd, 'src'),
 								path.resolve(cwd, 'node_modules'),
-								path.resolve(searchForWorkspaceRoot(cwd), 'node_modules')
+								path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
 							])
 						]
 					},
@@ -247,6 +248,9 @@ function kit() {
 		 * Clears the output directories.
 		 */
 		buildStart() {
+			// Reset for new build. Goes here because `build --watch` calls buildStart but not config
+			completed_build = false;
+
 			if (is_build) {
 				rimraf(paths.build_dir);
 				mkdirp(paths.build_dir);
@@ -268,7 +272,7 @@ function kit() {
 
 			fs.writeFileSync(
 				`${paths.client_out_dir}/${svelte_config.kit.appDir}/version.json`,
-				JSON.stringify({ version: process.env.VITE_SVELTEKIT_APP_VERSION })
+				JSON.stringify({ version: svelte_config.kit.version.name })
 			);
 
 			const { assets, chunks } = collect_output(bundle);
@@ -345,15 +349,20 @@ function kit() {
 			console.log(
 				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
 			);
+
+			completed_build = true;
 		},
 
 		/**
 		 * Runs the adapter.
 		 */
 		async closeBundle() {
-			if (!is_build) {
-				return; // vite calls closeBundle when dev-server restarts, ignore that
+			if (!completed_build) {
+				// vite calls closeBundle when dev-server restarts, ignore that,
+				// and only adapt when build successfully completes.
+				return;
 			}
+
 			if (svelte_config.kit.adapter) {
 				const { adapt } = await import('../core/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
@@ -392,18 +401,14 @@ function kit() {
 }
 
 function check_vite_version() {
-	let vite_major = 3;
+	// TODO parse from kit peer deps and maybe do a full semver compare if we ever require feature releases a min
+	const min_required_vite_major = 3;
+	const vite_version = vite.version ?? '2.x'; // vite started exporting it's version in 3.0
+	const current_vite_major = parseInt(vite_version.split('.')[0], 10);
 
-	try {
-		const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
-		vite_major = +pkg.devDependencies['vite'].replace(/^[~^]/, '')[0];
-	} catch {
-		// do nothing
-	}
-
-	if (vite_major < 3) {
+	if (current_vite_major < min_required_vite_major) {
 		throw new Error(
-			`Vite version ${vite_major} is no longer supported. Please upgrade to version 3`
+			`Vite version ${current_vite_major} is no longer supported. Please upgrade to version ${min_required_vite_major}`
 		);
 	}
 }

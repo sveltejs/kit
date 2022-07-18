@@ -23,7 +23,7 @@ You can now run SvelteKit by linking it into your project with [pnpm `overrides`
 
 Entry points to be aware of are:
 
-- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) - code that's run when you create a new project with `npm init svelte`
+- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) - code that's run when you create a new project with `npm create svelte@latest`
 - [`packages/kit/src/packaging`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/packaging) - for the `svelte-kit package` command
 - [`packages/kit/src/vite/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/vite/index.js) - for the Vite plugin
 - [`packages/kit/src/core/sync/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/sync/sync.js) - for `svelte-kit sync`, which regenerates routing info and type definitions

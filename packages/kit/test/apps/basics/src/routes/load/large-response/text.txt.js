@@ -6,7 +6,7 @@ for (let i = 0; i < chunk_size; i += 1) {
 	chunk += String(i % 10);
 }
 
-export function get() {
+export function GET() {
 	let i = 0;
 
 	return {

@@ -1,5 +1,5 @@
 /** @type {import('./__types/b.json').RequestHandler} */
-export function get({ request }) {
+export function GET({ request }) {
 	const cookie = request.headers.get('cookie');
 
 	const match = /answer=([^;]+)/.exec(cookie);

@@ -109,6 +109,12 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 			ssr,
 			target: ssr ? 'node14.8' : undefined
 		},
+		define: {
+			__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(config.kit.adapter?.name),
+			__SVELTEKIT_APP_VERSION__: JSON.stringify(config.kit.version.name),
+			__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${config.kit.appDir}/version.json`),
+			__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(config.kit.version.pollInterval)
+		},
 		// prevent Vite copying the contents of `config.kit.files.assets`,
 		// if it happens to be 'public' instead of 'static'
 		publicDir: false,
@@ -149,4 +155,15 @@ export function remove_svelte_kit(config) {
 	config.plugins = (config.plugins || [])
 		.flat(Infinity)
 		.filter((plugin) => plugin.name !== 'vite-plugin-svelte-kit');
+}
+
+const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH']);
+
+// If we'd written this in TypeScript, it could be easy...
+/**
+ * @param {string} str
+ * @returns {str is import('types').HttpMethod}
+ */
+export function is_http_method(str) {
+	return method_names.has(str);
 }

@@ -2,6 +2,7 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 import path from 'path';
 import { test } from 'uvu';
+import * as assert from 'uvu/assert';
 import { create } from '../index.js';
 import { fileURLToPath } from 'url';
 // use a directory outside of packages to ensure it isn't added to the pnpm workspace
@@ -56,8 +57,8 @@ for (const template of fs.readdirSync('templates')) {
 				name: `create-svelte-test-${template}-${types}`,
 				template,
 				types,
-				prettier: false,
-				eslint: false,
+				prettier: true,
+				eslint: true,
 				playwright: false
 			});
 			const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf-8'));
@@ -69,13 +70,32 @@ for (const template of fs.readdirSync('templates')) {
 					pkg.dependencies[key] = value;
 				}
 			});
-			fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(pkg, null, '\t'));
+			pkg.private = true;
+			fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(pkg, null, '\t') + '\n');
 
 			// this pnpm install works in the test workspace, which redirects to our local packages again
 			execSync('pnpm install --no-frozen-lockfile', { cwd, stdio: 'inherit' });
 
-			// run check command separately
-			execSync('pnpm check', { cwd, stdio: 'inherit' });
+			// run provided scripts that are non-blocking. All of them should exit with 0
+			const scripts_to_test = ['prepare', 'check', 'lint', 'build', 'sync'];
+
+			// package script requires lib dir
+			if (fs.existsSync(path.join(cwd, 'src', 'lib'))) {
+				scripts_to_test.push('package');
+			}
+
+			// not all templates have all scripts
+			for (const script of Object.keys(pkg.scripts).filter((s) => scripts_to_test.includes(s))) {
+				const command = `pnpm run ${script}`;
+				try {
+					console.log(`executing ${command} in ${cwd}`);
+					execSync(command, { cwd, stdio: 'inherit' });
+				} catch (e) {
+					const msg = `${command} failed in ${cwd}`;
+					console.error(msg, e);
+					assert.unreachable(msg);
+				}
+			}
 		});
 	}
 }

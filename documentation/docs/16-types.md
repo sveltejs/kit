@@ -16,7 +16,7 @@ The `RequestHandler` and `Load` types both accept a `Params` argument allowing y
  *   bar: string;
  *   baz: string
  * }>} */
-export async function get({ params }) {
+export async function GET({ params }) {
 	// ...
 }
 ```
@@ -57,7 +57,7 @@ export type RequestHandler<Body = any> = GenericRequestHandler<
 // @errors: 2355
 // ---cut---
 /** @type {import('./__types/[baz]').RequestHandler} */
-export async function get({ params }) {
+export async function GET({ params }) {
 	// ...
 }
 ```
