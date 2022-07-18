@@ -68,10 +68,7 @@ export function notifiable_store(value) {
 export function create_updated_store() {
 	const { set, subscribe } = writable(false);
 
-	const interval = +(
-		/** @type {string} */ (import.meta.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL)
-	);
-	const initial = import.meta.env.VITE_SVELTEKIT_APP_VERSION;
+	const interval = __SVELTEKIT_APP_VERSION_POLL_INTERVAL__;
 
 	/** @type {NodeJS.Timeout} */
 	let timeout;
@@ -83,9 +80,7 @@ export function create_updated_store() {
 
 		if (interval) timeout = setTimeout(check, interval);
 
-		const file = import.meta.env.VITE_SVELTEKIT_APP_VERSION_FILE;
-
-		const res = await fetch(`${assets}/${file}`, {
+		const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
 			headers: {
 				pragma: 'no-cache',
 				'cache-control': 'no-cache'
@@ -94,7 +89,7 @@ export function create_updated_store() {
 
 		if (res.ok) {
 			const { version } = await res.json();
-			const updated = version !== initial;
+			const updated = version !== __SVELTEKIT_APP_VERSION__;
 
 			if (updated) {
 				set(true);
