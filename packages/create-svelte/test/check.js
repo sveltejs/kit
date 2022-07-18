@@ -59,7 +59,7 @@ for (const template of fs.readdirSync('templates')) {
 				types,
 				prettier: true,
 				eslint: true,
-				playwright: true
+				playwright: false
 			});
 			const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf-8'));
 			Object.entries(overrides).forEach(([key, value]) => {
@@ -77,7 +77,7 @@ for (const template of fs.readdirSync('templates')) {
 			execSync('pnpm install --no-frozen-lockfile', { cwd, stdio: 'inherit' });
 
 			// run provided scripts that are non-blocking. All of them should exit with 0
-			const scripts_to_test = ['prepare', 'check', 'lint', 'format', 'test', 'build', 'sync'];
+			const scripts_to_test = ['prepare', 'check', 'lint', 'build', 'sync'];
 
 			// package script requires lib dir
 			if (fs.existsSync(path.join(cwd, 'src', 'lib'))) {
