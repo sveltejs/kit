@@ -1,6 +1,8 @@
 import { writable } from 'svelte/store';
 import { assets } from '../paths.js';
 
+/* global __SVELTEKIT_APP_VERSION__, __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
+
 /** @param {HTMLDocument} doc */
 export function get_base_uri(doc) {
 	let baseURI = doc.baseURI;

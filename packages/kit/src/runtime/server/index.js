@@ -8,6 +8,8 @@ import { normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
 
+/* global __SVELTEKIT_ADAPTER_NAME__ */
+
 const DATA_SUFFIX = '/__data.json';
 
 /** @param {{ html: string }} opts */
