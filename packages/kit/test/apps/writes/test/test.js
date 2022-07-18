@@ -38,13 +38,16 @@ test.describe('Filesystem updates', () => {
 
 		const mounted = javaScriptEnabled ? 1 : 0;
 
-		// we write to the file, to trigger HMR invalidation
-		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, `PLACEHOLDER:${Date.now()}`));
-		await page.goto('/double-mount');
-		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
-		await page.click('button');
-		await page.waitForTimeout(100);
-		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
-		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, 'PLACEHOLDER:0'));
+		try {
+			// we write to the file, to trigger HMR invalidation
+			fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, `PLACEHOLDER:${Date.now()}`));
+			await page.goto('/double-mount');
+			expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
+			await page.click('button');
+			await page.waitForTimeout(100);
+			expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
+		} finally {
+			fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, 'PLACEHOLDER:0'));
+		}
 	});
 });
