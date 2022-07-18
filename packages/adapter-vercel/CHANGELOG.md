@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.64
+
+### Patch Changes
+
+- Don't remove .vercel/output directory ([#5555](https://github.com/sveltejs/kit/pull/5555))
+
 ## 1.0.0-next.63
 
 ### Patch Changes
