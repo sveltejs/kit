@@ -16,7 +16,7 @@ importers:
       eslint-plugin-import: ^2.26.0
       eslint-plugin-node: ^11.1.0
       eslint-plugin-svelte3: ^4.0.0
-      playwright: ^1.23.3
+      playwright: ^1.23.4
       prettier: ^2.6.2
       rollup: ^2.75.7
       svelte: ^3.48.0
@@ -36,7 +36,7 @@ importers:
       eslint-plugin-import: 2.26.0_stpfporf4ezjetv6zdnl75453m
       eslint-plugin-node: 11.1.0_eslint@8.18.0
       eslint-plugin-svelte3: 4.0.0_wy4erphnvhealet26qderqv6bu
-      playwright: 1.23.3
+      playwright: 1.23.4
       prettier: 2.7.1
       rollup: 2.75.7
       svelte: 3.48.0
@@ -161,7 +161,7 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:*
       '@types/node': ^16.11.36
-      playwright-chromium: ^1.23.3
+      playwright-chromium: ^1.23.4
       sirv: ^2.0.2
       svelte: ^3.48.0
       tiny-glob: ^0.2.9
@@ -173,7 +173,7 @@ importers:
     devDependencies:
       '@sveltejs/kit': link:../kit
       '@types/node': 16.11.42
-      playwright-chromium: 1.23.3
+      playwright-chromium: 1.23.4
       sirv: 2.0.2
       svelte: 3.48.0
       typescript: 4.7.4
@@ -224,7 +224,7 @@ importers:
 
   packages/create-svelte:
     specifiers:
-      '@playwright/test': ^1.23.3
+      '@playwright/test': ^1.23.4
       '@sveltejs/kit': workspace:*
       '@types/gitignore-parser': ^0.0.0
       '@types/prettier': ^2.6.3
@@ -243,7 +243,7 @@ importers:
       kleur: 4.1.5
       prompts: 2.4.2
     devDependencies:
-      '@playwright/test': 1.23.3
+      '@playwright/test': 1.23.4
       '@sveltejs/kit': link:../kit
       '@types/gitignore-parser': 0.0.0
       '@types/prettier': 2.6.3
@@ -282,7 +282,7 @@ importers:
 
   packages/kit:
     specifiers:
-      '@playwright/test': ^1.23.3
+      '@playwright/test': ^1.23.4
       '@rollup/plugin-replace': ^4.0.0
       '@sveltejs/vite-plugin-svelte': ^1.0.1
       '@types/connect': ^3.4.35
@@ -321,7 +321,7 @@ importers:
       chokidar: 3.5.3
       sade: 1.8.1
     devDependencies:
-      '@playwright/test': 1.23.3
+      '@playwright/test': 1.23.4
       '@rollup/plugin-replace': 4.0.0_rollup@2.75.7
       '@types/connect': 3.4.35
       '@types/cookie': 0.5.1
@@ -914,13 +914,13 @@ packages:
       fastq: 1.13.0
     dev: true
 
-  /@playwright/test/1.23.3:
-    resolution: {integrity: sha512-kR4vo2UGHC84DGqE6EwvAeaehj3xCAK6LoC1P1eu6ZGdC79rlqRKf8cFDx6q6c9T8MQSL1O9eOlup0BpwqNF0w==}
+  /@playwright/test/1.23.4:
+    resolution: {integrity: sha512-iIsoMJDS/lyuhw82FtcV/B3PXikgVD3hNe5hyvOpRM0uRr1OIpN3LgPeRbBjhzBWmyf6RgRg5fqK5sVcpA03yA==}
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
       '@types/node': 18.0.0
-      playwright-core: 1.23.3
+      playwright-core: 1.23.4
     dev: true
 
   /@polka/url/1.0.0-next.21:
@@ -3822,28 +3822,28 @@ packages:
       find-up: 4.1.0
     dev: true
 
-  /playwright-chromium/1.23.3:
-    resolution: {integrity: sha512-3T6RzNAxdZI7uvpoo53Q9pRPyBu2IvOVpmmyy6Toe77WN9e2ITyYoanbEkH+g0NL0pNKETffxF5rrTD79UOIEw==}
+  /playwright-chromium/1.23.4:
+    resolution: {integrity: sha512-aqiOpX76107knxZqydyd0snNHiU6wgGwmQUFA8MEbG6sVjvjF8fS8Uy6n39z9U52pSpRFGPBP8dfkTkXBokkqQ==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.23.3
+      playwright-core: 1.23.4
     dev: true
 
-  /playwright-core/1.23.3:
-    resolution: {integrity: sha512-x35yzsXDyo0BIXYimLnUFNyb42c//NadUNH6IPGOteZm96oTGA1kn4Hq6qJTI1/f9wEc1F9O1DsznXIgXMil7A==}
+  /playwright-core/1.23.4:
+    resolution: {integrity: sha512-h5V2yw7d8xIwotjyNrkLF13nV9RiiZLHdXeHo+nVJIYGVlZ8U2qV0pMxNJKNTvfQVT0N8/A4CW6/4EW2cOcTiA==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
 
-  /playwright/1.23.3:
-    resolution: {integrity: sha512-4uPqXU1PBTBnNhqIyuz+WmvjlMNrt+Rje8lwBf3RpUP9UCjP8G41qrr/vDUbMoHhQaUfdWeDuZAkPUxAv5Ag8g==}
+  /playwright/1.23.4:
+    resolution: {integrity: sha512-NUPOLMpd8WydmwZFllST/YZ7cImgDDDrvcaq7Gj2vAjNg0jYCndFJt6HHtbkOPSIlRo4BaQYlbFx6meq1r1FXQ==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.23.3
+      playwright-core: 1.23.4
     dev: true
 
   /polka/1.0.0-next.22:
