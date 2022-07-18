@@ -3,8 +3,6 @@
 
 	/** @type {string} */
 	export let mode_from_endpoint;
-
-	console.error({ dev, mode_from_import, mode_from_endpoint, DEV: import.meta.env.DEV });
 </script>
 
 <h2>
