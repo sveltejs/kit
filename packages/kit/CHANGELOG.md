@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.378
+
+### Patch Changes
+
+- Pause Node streams as necessary when converting to ReadableStream ([#5587](https://github.com/sveltejs/kit/pull/5587))
+
+* improve vite version check to work with custom resolutions, eg. pnpm overrides ([#5586](https://github.com/sveltejs/kit/pull/5586))
+
 ## 1.0.0-next.377
 
 ### Patch Changes
