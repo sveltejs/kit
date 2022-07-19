@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.81",
+	"version": "1.0.0-next.82",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -28,7 +28,7 @@
 		"test": "echo \"tests temporarily disabled\" # c8 uvu tests",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"format": "npm run check-format -- --write",
+		"format": "npm run lint -- --write",
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {

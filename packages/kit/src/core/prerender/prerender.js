@@ -136,9 +136,9 @@ export async function prerender({ config, entries, files, log }) {
 			}
 		});
 
-		const text = await response.text();
+		const body = Buffer.from(await response.arrayBuffer());
 
-		save('pages', response, text, decoded, encoded, referrer, 'linked');
+		save('pages', response, body, decoded, encoded, referrer, 'linked');
 
 		for (const [dependency_path, result] of dependencies) {
 			// this seems circuitous, but using new URL allows us to not care
@@ -159,7 +159,7 @@ export async function prerender({ config, entries, files, log }) {
 		}
 
 		if (config.prerender.crawl && response.headers.get('content-type') === 'text/html') {
-			for (const href of crawl(text)) {
+			for (const href of crawl(body.toString())) {
 				if (href.startsWith('data:') || href.startsWith('#')) continue;
 
 				const resolved = resolve(encoded, href);

@@ -36,6 +36,9 @@ export async function create_build(config) {
  */
 export function find_deps(manifest, entry, add_dynamic_css) {
 	/** @type {Set<string>} */
+	const seen = new Set();
+
+	/** @type {Set<string>} */
 	const imports = new Set();
 
 	/** @type {Set<string>} */
@@ -46,9 +49,11 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 	 * @param {boolean} add_js
 	 */
 	function traverse(file, add_js) {
+		if (seen.has(file)) return;
+		seen.add(file);
+
 		const chunk = manifest[file];
 
-		if (imports.has(chunk.file)) return;
 		if (add_js) imports.add(chunk.file);
 
 		if (chunk.css) {

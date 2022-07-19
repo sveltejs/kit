@@ -6,7 +6,7 @@ import * as assert from 'uvu/assert';
 const build = fileURLToPath(new URL('../build', import.meta.url));
 
 /** @param {string} file */
-const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
+const read = (file, encoding = 'utf-8') => fs.readFileSync(`${build}/${file}`, encoding);
 
 test('prerenders /', () => {
 	const content = read('index.html');
@@ -142,6 +142,11 @@ test('targets the data-sveltekit-hydrate parent node', () => {
 			`target: document.querySelector('[data-sveltekit-hydrate="${match[2]}"]').parentNode`
 		)
 	);
+});
+
+test('prerenders binary data', async () => {
+	assert.equal(Buffer.compare(read('fetch-image/image.jpg', null), read('image.jpg', null)), 0);
+	assert.equal(Buffer.compare(read('fetch-image/image.png', null), read('image.png', null)), 0);
 });
 
 test.run();
