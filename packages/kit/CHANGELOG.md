@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.380
+
+### Patch Changes
+
+- Handle circular dependencies in dynamic imports ([#5619](https://github.com/sveltejs/kit/pull/5619))
+
+* [fix] handle binary data when prerendering ([#5497](https://github.com/sveltejs/kit/pull/5497))
+
+- [breaking] remove writeStatic to align with Vite ([#5618](https://github.com/sveltejs/kit/pull/5618))
+
+* Reset navigating store upon return to site with a bfcache hit ([#5613](https://github.com/sveltejs/kit/pull/5613))
+
 ## 1.0.0-next.379
 
 ### Patch Changes
