@@ -1226,6 +1226,16 @@ export function create_client({ target, session, base, trailing_slash }) {
 			for (const link of document.querySelectorAll('link')) {
 				link.href = link.href; // eslint-disable-line
 			}
+
+			addEventListener('pageshow', (event) => {
+				// If the user navigates to another site and then uses the back button and
+				// bfcache hits, we need to set navigating to null, the site doesn't know
+				// the navigation away from it was successful.
+				// Info about bfcache here: https://web.dev/bfcache
+				if (event.persisted) {
+					stores.navigating.set(null);
+				}
+			});
 		},
 
 		_hydrate: async ({ status, error, nodes, params, routeId }) => {

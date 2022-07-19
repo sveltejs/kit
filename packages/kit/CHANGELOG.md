@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.379
+
+### Patch Changes
+
+- Use define instead of import.meta.env.VITE_SVELTEKIT_FOO for internal values ([#5594](https://github.com/sveltejs/kit/pull/5594))
+
 ## 1.0.0-next.378
 
 ### Patch Changes

@@ -27,7 +27,8 @@
     "prerendering-test-trailing-slash": "0.0.1",
     "prerendering-test-paths-base": "0.0.1",
     "@sveltejs/amp": "1.0.0-next.0",
-    "prerendering-test-disabled": "0.0.2-next.0"
+    "prerendering-test-disabled": "0.0.2-next.0",
+    "test-writes": "0.0.2-next.0"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -995,6 +996,7 @@
     "twelve-comics-enjoy",
     "twelve-feet-deny",
     "twelve-goats-knock",
+    "twelve-olives-confess",
     "twelve-onions-burn",
     "twelve-snakes-tan",
     "twenty-ads-turn",
