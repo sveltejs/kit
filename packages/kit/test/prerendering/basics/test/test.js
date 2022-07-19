@@ -144,20 +144,9 @@ test('targets the data-sveltekit-hydrate parent node', () => {
 	);
 });
 
-test('check binary data not corrupted - jpg', async () => {
-	const newFile = readNoUtf('fetch-image/image.jpg');
-	const orgFile = readNoUtf('image.jpg');
-	const compare = Buffer.compare(newFile, orgFile);
-
-	assert.ok(compare === 0);
-});
-
-test('check binary files not corrupted - png', async () => {
-	const newFile = readNoUtf('fetch-image/image.png');
-	const orgFile = readNoUtf('image.png');
-	const compare = Buffer.compare(newFile, orgFile);
-
-	assert.ok(compare === 0);
+test('prerenders binary data', async () => {
+	assert.equal(Buffer.compare(read('fetch-image/image.jpg', null), read('image.jpg', null)), 0);
+	assert.equal(Buffer.compare(read('fetch-image/image.png', null), read('image.png', null)), 0);
 });
 
 test.run();
