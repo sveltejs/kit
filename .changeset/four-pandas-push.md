@@ -3,4 +3,4 @@
 '@sveltejs/adapter-node': patch
 ---
 
-[breaking] set Vite's `publicDir` option and change Vite's output dir
+[breaking] set Vite's `publicDir` and `base` options
