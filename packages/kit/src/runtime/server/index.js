@@ -86,13 +86,14 @@ export async function respond(request, options, state) {
 			const normalized = normalize_path(url.pathname, options.trailing_slash);
 
 			if (normalized !== url.pathname && !state.prerendering?.fallback) {
+				const path = options.paths.base + normalized;
 				return new Response(undefined, {
 					status: 301,
 					headers: {
 						'x-sveltekit-normalize': '1',
 						location:
 							// ensure paths starting with '//' are not treated as protocol-relative
-							(normalized.startsWith('//') ? url.origin + normalized : normalized) +
+							(normalized.startsWith('//') ? url.origin + path : path) +
 							(url.search === '?' ? '' : url.search)
 					}
 				});
