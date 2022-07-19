@@ -34,7 +34,7 @@
 		"test": "npm run build && uvu test",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path ../../.gitignore --ignore-path .gitignore --plugin prettier-plugin-svelte --plugin-search-dir=.",
-		"format": "npm run check-format -- --write",
+		"format": "npm run lint -- --write",
 		"prepublishOnly": "npm run build",
 		"postpublish": "echo \"Updating template repo\" && bash ./scripts/update-template-repo.sh"
 	},

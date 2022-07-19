@@ -65,7 +65,7 @@
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
-		"format": "npm run check-format -- --write",
+		"format": "npm run lint -- --write",
 		"prepublishOnly": "npm run build",
 		"test": "npm run test:unit && npm run test:typings && npm run test:packaging && npm run test:integration",
 		"test:integration": "pnpm run -r --workspace-concurrency 1 --filter=\"./test/**\" test",
