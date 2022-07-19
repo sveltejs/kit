@@ -84,7 +84,7 @@ export async function prerender({ config, entries, files, log }) {
 	 * @param {boolean} is_html
 	 */
 	function output_filename(path, is_html) {
-		const file = path.slice(1);
+		const file = path.slice(config.paths.base.length + 1);
 
 		if (file === '') {
 			return 'index.html';
@@ -103,28 +103,32 @@ export async function prerender({ config, entries, files, log }) {
 	/**
 	 * @param {string | null} referrer
 	 * @param {string} decoded
-	 * @param {string} [encoded]
 	 */
-	function enqueue(referrer, decoded, encoded) {
+	function enqueue(referrer, decoded) {
 		if (seen.has(decoded)) return;
 		seen.add(decoded);
 
-		const file = decoded.slice(1);
+		const file = decoded.slice(config.paths.base.length + 1);
 		if (files.has(file)) return;
 
-		return q.add(() => visit(decoded, encoded || encodeURI(decoded), referrer));
+		return q.add(() => visit(decoded, referrer));
 	}
 
 	/**
 	 * @param {string} decoded
-	 * @param {string} encoded
 	 * @param {string?} referrer
 	 */
-	async function visit(decoded, encoded, referrer) {
+	async function visit(decoded, referrer) {
+		if (!decoded.startsWith(config.paths.base)) {
+			error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
+			return;
+		}
+
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await server.respond(new Request(`http://sveltekit-prerender${encoded}`), {
+		const path = encodeURI(decoded.slice(config.paths.base.length));
+		const response = await server.respond(new Request(`http://sveltekit-prerender${path}`), {
 			getClientAddress,
 			prerendering: {
 				dependencies
@@ -132,6 +136,8 @@ export async function prerender({ config, entries, files, log }) {
 		});
 
 		const body = Buffer.from(await response.arrayBuffer());
+
+		const encoded = encodeURI(decoded);
 
 		save('pages', response, body, decoded, encoded, referrer, 'linked');
 
@@ -166,7 +172,7 @@ export async function prerender({ config, entries, files, log }) {
 					// TODO warn that query strings have no effect on statically-exported pages
 				}
 
-				enqueue(decoded, decodeURI(pathname), pathname);
+				enqueue(decoded, decodeURI(pathname));
 			}
 		}
 	}
@@ -196,7 +202,7 @@ export async function prerender({ config, entries, files, log }) {
 			if (location) {
 				const resolved = resolve(encoded, location);
 				if (is_root_relative(resolved)) {
-					enqueue(decoded, decodeURI(resolved), resolved);
+					enqueue(decoded, decodeURI(resolved));
 				}
 
 				if (!response.headers.get('x-sveltekit-normalize')) {
@@ -254,10 +260,10 @@ export async function prerender({ config, entries, files, log }) {
 		for (const entry of config.prerender.entries) {
 			if (entry === '*') {
 				for (const entry of entries) {
-					enqueue(null, entry); // TODO can we pre-normalize these?
+					enqueue(null, config.paths.base + entry); // TODO can we pre-normalize these?
 				}
 			} else {
-				enqueue(null, entry);
+				enqueue(null, config.paths.base + entry);
 			}
 		}
 
