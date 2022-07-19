@@ -72,7 +72,7 @@ export function crawl(html) {
 
 				const tag = html.slice(start, i).toUpperCase();
 
-				if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'LINK') {
+				if (tag === 'SCRIPT' || tag === 'STYLE') {
 					while (i < html.length) {
 						if (
 							html[i] === '<' &&
