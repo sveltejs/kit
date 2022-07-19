@@ -28,7 +28,7 @@
 		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"format": "npm run check-format -- --write",
+		"format": "npm run lint -- --write",
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {

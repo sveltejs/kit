@@ -26,7 +26,7 @@
 	"scripts": {
 		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --format=esm",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"format": "npm run check-format -- --write",
+		"format": "npm run lint -- --write",
 		"check": "tsc --skipLibCheck",
 		"prepublishOnly": "npm run build"
 	},
