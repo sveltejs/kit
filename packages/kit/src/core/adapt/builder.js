@@ -122,7 +122,10 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		},
 
 		writeClient(dest) {
-			return copy(`${config.kit.outDir}/output/client`, dest);
+			return [
+				...copy(`${config.kit.outDir}/output/client`, dest),
+				...copy(config.kit.files.assets, dest)
+			];
 		},
 
 		writePrerendered(dest, { fallback } = {}) {
@@ -141,8 +144,13 @@ export function create_builder({ config, build_data, prerendered, log }) {
 			return copy(`${config.kit.outDir}/output/server`, dest);
 		},
 
+		// TODO remove these methods for 1.0
 		writeStatic(dest) {
-			return copy(config.kit.files.assets, dest);
+			throw new Error(
+				`writeStatic has been removed. Please ensure you are using the latest version of ${
+					config.kit.adapter.name || 'your adapter'
+				}`
+			);
 		},
 
 		// @ts-expect-error
