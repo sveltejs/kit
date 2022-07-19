@@ -64,6 +64,22 @@ export async function preview(vite, config, protocol) {
 			scoped(base, mutable(join(config.kit.outDir, 'output/prerendered/dependencies')))
 		);
 
+		vite.middlewares.use((req, res, next) => {
+			const original_url = /** @type {string} */ (req.url);
+			const { pathname } = new URL(original_url, 'http://dummy');
+
+			if (pathname.startsWith(base)) {
+				next();
+			} else {
+				res.statusCode = 404;
+				res.end(
+					`The server is configured with a public base URL of ${base}/ - did you mean to visit <a href="${
+						base + pathname
+					}">${base + pathname}</a> instead?`
+				);
+			}
+		});
+
 		// prerendered pages (we can't just use sirv because we need to
 		// preserve the correct trailingSlash behaviour)
 		vite.middlewares.use(
