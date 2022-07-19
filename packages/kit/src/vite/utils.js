@@ -89,6 +89,7 @@ function merge_into(a, b) {
 
 /** @param {import('types').ValidatedKitConfig} config */
 export function get_aliases(config) {
+	// TODO use {find: .., replacement: ..} syntax instead to deal with key/* and value/* aliases
 	/** @type {Record<string, string>} */
 	const alias = {
 		__GENERATED__: path.posix.join(config.outDir, 'generated'),

@@ -4,11 +4,32 @@ import colors from 'kleur';
 import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
 
-/** @param {string} file */
-const exists = (file) => fs.existsSync(file) && file;
+/**
+ * @param {string} cwd
+ * @param {string} file
+ */
+function maybe_file(cwd, file) {
+	const resolved = path.resolve(cwd, file);
+	return fs.existsSync(resolved) && resolved;
+}
 
-/** @param {string} file */
-const project_relative = (file) => posixify(path.relative('.', file));
+/**
+ * @param {string} file
+ */
+function project_relative(file) {
+	return posixify(path.relative('.', file));
+}
+
+/**
+ * @param {string} file
+ */
+function remove_trailing_slashstar(file) {
+	if (file.endsWith('/*')) {
+		return file.slice(0, -2);
+	} else {
+		return file;
+	}
+}
 
 /**
  * Writes the tsconfig that the user's tsconfig inherits from.
@@ -16,8 +37,7 @@ const project_relative = (file) => posixify(path.relative('.', file));
  */
 export function write_tsconfig(config, cwd = process.cwd()) {
 	const out = path.join(config.outDir, 'tsconfig.json');
-	const user_file =
-		exists(path.resolve(cwd, 'tsconfig.json')) || exists(path.resolve(cwd, 'jsconfig.json'));
+	const user_file = maybe_file(cwd, 'tsconfig.json') || maybe_file(cwd, 'jsconfig.json');
 
 	if (user_file) validate(config, cwd, out, user_file);
 
@@ -124,38 +144,46 @@ function validate(config, cwd, out, user_file) {
 	}
 }
 
-// <something><optional slash or slash-star>
-const alias_re = /^([^/]+)((\/)(\*)?)?$/;
+// <something><optional /*>
+const alias_regex = /^([^/]+)(\/\*)?$/;
+// <path><optional /* or .fileending>
+const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
 
 /**
+ * Generates tsconfig path aliases from kit's aliases
+ *
  * @param {import('types').ValidatedKitConfig} config
  */
 export function get_tsconfig_paths(config) {
-	const lib = project_relative(config.files.lib);
+	const alias = {
+		$lib: project_relative(config.files.lib),
+		...config.alias
+	};
 
 	/** @type {Record<string, string[]>} */
-	const paths = fs.existsSync(lib)
-		? {
-				$lib: [lib],
-				'$lib/*': [lib + '/*']
-		  }
-		: {};
+	const paths = {};
 
-	for (const [key, value] of Object.entries(config.alias)) {
-		const match = alias_re.exec(key);
-		if (!match) throw new Error(`Invalid alias: ${key}`);
+	for (const [key, value] of Object.entries(alias)) {
+		const key_match = alias_regex.exec(key);
+		if (!key_match) throw new Error(`Invalid alias key: ${key}`);
 
-		const [, name, , slash, star] = match;
-		const rel_path = project_relative(value);
+		const value_match = value_regex.exec(value);
+		if (!value_match) throw new Error(`Invalid alias value: ${value}`);
 
-		if (star) {
-			paths[key] = [rel_path];
-		} else {
-			paths[name] = [rel_path];
+		const rel_path = project_relative(remove_trailing_slashstar(value));
 
-			if (slash && !(name + '/*' in config.alias)) {
-				// If it's explicitly marked as a folder and there isn't another /* for it add the /* entry
-				paths[name + '/*'] = [rel_path + '/*'];
+		if (fs.existsSync(rel_path)) {
+			const slashstar = key_match[2];
+
+			if (slashstar) {
+				paths[key] = [rel_path + '/*'];
+			} else {
+				paths[key] = [rel_path];
+				const fileending = value_match[4];
+
+				if (!fileending && !(key + '/*' in alias)) {
+					paths[key + '/*'] = [rel_path + '/*'];
+				}
 			}
 		}
 	}
