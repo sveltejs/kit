@@ -1,7 +1,6 @@
-export async function get({ params }) {
+export async function GET({ params }) {
 	const slug = params.slug.split('/');
 	const extension = slug[0].split('.').pop();
-	console.log(extension);
 	const examples = {
 		png: 'https://repository-images.githubusercontent.com/354583933/72c58c80-9727-11eb-98b2-f352fded32b9',
 		jpg: 'https://upload.wikimedia.org/wikipedia/commons/b/b2/JPEG_compression_Example.jpg'
