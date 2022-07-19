@@ -25,6 +25,7 @@
 	"scripts": {
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "npm run check-format -- --write",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc"
 	},
 	"dependencies": {

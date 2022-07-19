@@ -22,6 +22,7 @@
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
 		"format": "npm run check-format -- --write",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"test": "uvu test test.js"
 	},
 	"dependencies": {

@@ -35,6 +35,7 @@
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path ../../.gitignore --ignore-path .gitignore --plugin prettier-plugin-svelte --plugin-search-dir=.",
 		"format": "npm run check-format -- --write",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path ../../.gitignore --ignore-path .gitignore --plugin prettier-plugin-svelte --plugin-search-dir=.",
 		"prepublishOnly": "npm run build",
 		"postpublish": "echo \"Updating template repo\" && bash ./scripts/update-template-repo.sh"
 	},

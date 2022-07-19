@@ -28,6 +28,7 @@
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "npm run check-format -- --write",
 		"check": "tsc --skipLibCheck",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
