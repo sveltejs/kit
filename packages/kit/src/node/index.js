@@ -112,26 +112,35 @@ export async function setResponse(res, response) {
 
 	res.writeHead(response.status, headers);
 
-	if (response.body) {
-		const reader = response.body.getReader();
+	if (!response.body) {
+		res.end();
+		return;
+	}
 
-		if (res.destroyed) {
-			reader.cancel();
-			return;
-		}
+	const reader = response.body.getReader();
 
-		let cancelled = false;
+	if (res.destroyed) {
+		reader.cancel();
+		return;
+	}
 
-		res.on('close', () => {
-			reader.cancel();
-			cancelled = true;
-		});
+	let cancelled = false;
 
-		res.on('error', (error) => {
-			reader.cancel(error);
-			cancelled = true;
-		});
+	res.on('close', () => {
+		if (cancelled) return;
+		cancelled = true;
+		reader.cancel();
+		res.emit('drain');
+	});
 
+	res.on('error', (error) => {
+		if (cancelled) return;
+		cancelled = true;
+		reader.cancel(error);
+		res.emit('drain');
+	});
+
+	try {
 		for (;;) {
 			const { done, value } = await reader.read();
 
@@ -148,7 +157,8 @@ export async function setResponse(res, response) {
 				await new Promise((fulfil) => res.once('drain', fulfil));
 			}
 		}
-	} else {
-		res.end();
+	} catch (error) {
+		cancelled = true;
+		res.destroy(error instanceof Error ? error : undefined);
 	}
 }

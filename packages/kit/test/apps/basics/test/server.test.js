@@ -272,6 +272,9 @@ test.describe('Endpoints', () => {
 	});
 
 	test('body can be a binary ReadableStream', async ({ request }) => {
+		const interruptedResponse = request.get('/endpoint-output/stream-throw-error');
+		await expect(interruptedResponse).rejects.toThrow('socket hang up');
+
 		const response = await request.get('/endpoint-output/stream');
 		const body = await response.body();
 		const digest = createHash('sha256').update(body).digest('base64url');
