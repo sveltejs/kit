@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.381
+
+### Patch Changes
+
+- Handle errors in Node streams ([#5616](https://github.com/sveltejs/kit/pull/5616))
+
 ## 1.0.0-next.380
 
 ### Patch Changes
