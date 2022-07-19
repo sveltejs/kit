@@ -151,7 +151,6 @@ export function create_builder({ config, build_data, prerendered, log }) {
 			);
 		},
 
-		// @ts-expect-error
 		async prerender() {
 			throw new Error(
 				'builder.prerender() has been removed. Prerendering now takes place in the build phase — see builder.prerender and builder.writePrerendered'
