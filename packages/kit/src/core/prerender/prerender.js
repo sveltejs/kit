@@ -14,25 +14,17 @@ import { escape_html_attr } from '../../utils/escape.js';
  * @typedef {import('types').Logger} Logger
  */
 
-/** @type {(details: Parameters<PrerenderErrorHandler>[0] ) => string} */
-function format_error({ status, path, referrer, referenceType }) {
-	return `${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
-}
+/**
+ * @param {Parameters<PrerenderErrorHandler>[0]} details
+ * @param {import('types').ValidatedKitConfig} config
+ */
+function format_error({ status, path, referrer, referenceType }, config) {
+	const message =
+		status === 404 && !path.startsWith(config.paths.base)
+			? `${path} does not begin with \`paths.base\``
+			: path;
 
-/** @type {(log: Logger, onError: OnError) => PrerenderErrorHandler} */
-function normalise_error_handler(log, onError) {
-	switch (onError) {
-		case 'continue':
-			return (details) => {
-				log.error(format_error(details));
-			};
-		case 'fail':
-			return (details) => {
-				throw new Error(format_error(details));
-			};
-		default:
-			return onError;
-	}
+	return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
 }
 
 const OK = 2;
@@ -75,7 +67,20 @@ export async function prerender({ config, entries, files, log }) {
 
 	const server = new Server(manifest);
 
-	const error = normalise_error_handler(log, config.prerender.onError);
+	/** @type {PrerenderErrorHandler} */
+	let error;
+
+	if (config.prerender.onError === 'continue') {
+		error = (details) => {
+			log.error(format_error(details, config));
+		};
+	} else if (config.prerender.onError === 'fail') {
+		error = (details) => {
+			throw new Error(format_error(details, config));
+		};
+	} else {
+		error = config.prerender.onError;
+	}
 
 	const q = queue(config.prerender.concurrency);
 
