@@ -20,6 +20,7 @@ export function installPolyfills() {
 		Object.defineProperty(globalThis, name, {
 			enumerable: true,
 			configurable: true,
+			writable: true,
 			value: globals[name]
 		});
 	}

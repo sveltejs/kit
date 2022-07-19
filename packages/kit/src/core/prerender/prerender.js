@@ -60,6 +60,44 @@ export async function prerender({ config, entries, files, log }) {
 	}
 
 	installPolyfills();
+	const { fetch } = globalThis;
+	globalThis.fetch = (info, init) => {
+		/** @type {string} */
+		let url;
+
+		/** @type {RequestInit} */
+		let opts = {};
+
+		if (info instanceof Request) {
+			url = info.url;
+
+			opts = {
+				method: info.method,
+				headers: info.headers,
+				body: info.body,
+				mode: info.mode,
+				credentials: info.credentials,
+				cache: info.cache,
+				redirect: info.redirect,
+				referrer: info.referrer,
+				integrity: info.integrity
+			};
+		} else {
+			url = info.toString();
+		}
+
+		if (url.startsWith('http://sveltekit-prerender/')) {
+			const request = new Request(url, opts);
+			return server.respond(request, {
+				getClientAddress,
+				prerendering: {
+					dependencies: new Map()
+				}
+			});
+		}
+
+		return fetch(info, init);
+	};
 
 	const server_root = join(config.outDir, 'output');
 
