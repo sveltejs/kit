@@ -84,7 +84,7 @@ export async function prerender({ config, entries, files, log }) {
 	 * @param {boolean} is_html
 	 */
 	function output_filename(path, is_html) {
-		const file = path;
+		const file = path.slice(1);
 
 		if (file === '') {
 			return 'index.html';
@@ -109,7 +109,7 @@ export async function prerender({ config, entries, files, log }) {
 		if (seen.has(decoded)) return;
 		seen.add(decoded);
 
-		const file = decoded;
+		const file = decoded.slice(1);
 		if (files.has(file)) return;
 
 		return q.add(() => visit(decoded, encoded || encodeURI(decoded), referrer));
