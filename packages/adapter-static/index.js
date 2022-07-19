@@ -43,7 +43,6 @@ export default function (options) {
 			builder.rimraf(assets);
 			builder.rimraf(pages);
 
-			builder.writeStatic(assets);
 			builder.writeClient(assets);
 			builder.writePrerendered(pages, { fallback });
 

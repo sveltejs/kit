@@ -30,7 +30,6 @@ export default function (opts = {}) {
 			builder.log.minor('Copying assets');
 			builder.writeClient(`${out}/client`);
 			builder.writeServer(`${out}/server`);
-			builder.writeStatic(`${out}/static`);
 			builder.writePrerendered(`${out}/prerendered`);
 
 			writeFileSync(
