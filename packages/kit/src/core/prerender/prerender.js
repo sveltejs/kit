@@ -254,7 +254,7 @@ export async function prerender({ config, entries, files, log }) {
 		for (const entry of config.prerender.entries) {
 			if (entry === '*') {
 				for (const entry of entries) {
-					enqueue(null, entry); // TODO can we pre-normalize these?
+					enqueue(null, entry);
 				}
 			} else {
 				enqueue(null, entry);
