@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.382
+
+### Patch Changes
+
+- [fix] change Vite's output directory from `_app` to client ([#5620](https://github.com/sveltejs/kit/pull/5620))
+
 ## 1.0.0-next.381
 
 ### Patch Changes
