@@ -6,10 +6,7 @@ import * as assert from 'uvu/assert';
 const build = fileURLToPath(new URL('../build', import.meta.url));
 
 /** @param {string} file */
-const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
-
-/** @param {string} file */
-const readNoUtf = (file) => fs.readFileSync(`${build}/${file}`);
+const read = (file, encoding = 'utf-8') => fs.readFileSync(`${build}/${file}`, encoding);
 
 test('prerenders /', () => {
 	const content = read('index.html');
