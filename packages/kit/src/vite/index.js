@@ -180,7 +180,7 @@ function kit() {
 			paths = {
 				build_dir: `${svelte_config.kit.outDir}/build`,
 				output_dir: `${svelte_config.kit.outDir}/output`,
-				client_out_dir: `${svelte_config.kit.outDir}/output/client/${svelte_config.kit.appDir}`
+				client_out_dir: `${svelte_config.kit.outDir}/output/client/`
 			};
 
 			if (is_build) {
@@ -271,7 +271,7 @@ function kit() {
 			});
 
 			fs.writeFileSync(
-				`${paths.client_out_dir}/version.json`,
+				`${paths.client_out_dir}/${svelte_config.kit.appDir}/version.json`,
 				JSON.stringify({ version: svelte_config.kit.version.name })
 			);
 
@@ -316,8 +316,8 @@ function kit() {
 
 			const files = new Set([
 				...static_files,
-				...chunks.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`),
-				...assets.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`)
+				...chunks.map((chunk) => chunk.fileName),
+				...assets.map((chunk) => chunk.fileName)
 			]);
 
 			// TODO is this right?

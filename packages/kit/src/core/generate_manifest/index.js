@@ -64,7 +64,6 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 
 	// prettier-ignore
 	return `{
-		appDir: ${s(build_data.app_dir)},
 		assets: new Set(${s(assets)}),
 		mimeTypes: ${s(get_mime_lookup(build_data.manifest_data))},
 		_: {
