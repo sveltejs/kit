@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Add config.kit.prerender.hostname
+Add config.kit.prerender.origin
