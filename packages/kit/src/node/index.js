@@ -1,6 +1,4 @@
 import * as set_cookie_parser from 'set-cookie-parser';
-import { Request as NodeFetchRequest } from 'node-fetch';
-import { Readable } from 'stream';
 
 /** @param {import('http').IncomingMessage} req */
 function get_raw_body(req) {
@@ -80,22 +78,11 @@ export async function getRequest(base, req) {
 		delete headers[':scheme'];
 	}
 
-	const request = new Request(base + req.url, {
+	return new Request(base + req.url, {
 		method: req.method,
 		headers,
 		body: get_raw_body(req)
 	});
-
-	request.formData = async () => {
-		return new NodeFetchRequest(request.url, {
-			method: request.method,
-			headers: request.headers,
-			// @ts-expect-error TypeScript doesn't understand that ReadableStream implements Symbol.asyncIterator
-			body: request.body && Readable.from(request.body)
-		}).formData();
-	};
-
-	return request;
 }
 
 /** @type {import('@sveltejs/kit/node').setResponse} */
