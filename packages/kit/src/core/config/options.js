@@ -256,6 +256,24 @@ const options = object(
 					);
 				}),
 
+				origin: validate('http://sveltekit-prerender', (input, keypath) => {
+					assert_string(input, keypath);
+
+					let origin;
+
+					try {
+						origin = new URL(input).origin;
+					} catch (e) {
+						throw new Error(`${keypath} must be a valid origin`);
+					}
+
+					if (input !== origin) {
+						throw new Error(`${keypath} must be a valid origin (${origin} rather than ${input})`);
+					}
+
+					return origin;
+				}),
+
 				// TODO: remove this for the 1.0 release
 				pages: error((keypath) => `${keypath} has been renamed to \`entries\`.`)
 			}),
