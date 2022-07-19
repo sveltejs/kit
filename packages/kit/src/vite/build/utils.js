@@ -101,9 +101,9 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 				input,
 				output: {
 					format: 'esm',
-					entryFileNames: ssr ? '[name].js' : 'immutable/[name]-[hash].js',
-					chunkFileNames: 'immutable/chunks/[name]-[hash].js',
-					assetFileNames: 'immutable/assets/[name]-[hash][extname]'
+					entryFileNames: ssr ? '[name].js' : `${config.kit.appDir}/immutable/[name]-[hash].js`,
+					chunkFileNames: `${config.kit.appDir}/immutable/chunks/[name]-[hash].js`,
+					assetFileNames: `${config.kit.appDir}/immutable/assets/[name]-[hash][extname]`
 				},
 				preserveEntrySignatures: 'strict'
 			},
@@ -145,7 +145,7 @@ export function assets_base(config) {
 	// during `svelte-kit preview`, because we use a local asset path. This
 	// may be fixed in Vite 3: https://github.com/vitejs/vite/issues/2009
 	const { base, assets } = config.paths;
-	return `${assets || base}/${config.appDir}/`;
+	return `${assets || base}/`;
 }
 
 /**
