@@ -1043,7 +1043,9 @@ test.describe('$app/paths', () => {
 		);
 	});
 
-	test('replaces %sveltekit.assets% in template with relative path', async ({
+	// some browsers will re-request assets after a `pushState`
+	// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
+	test('replaces %sveltekit.assets% in template with relative path, and makes it absolute in the client', async ({
 		baseURL,
 		page,
 		javaScriptEnabled
