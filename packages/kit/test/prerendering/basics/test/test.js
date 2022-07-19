@@ -8,6 +8,15 @@ const build = fileURLToPath(new URL('../build', import.meta.url));
 /** @param {string} file */
 const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
 
+/** @param {string} file */
+const readNoUtf = (file) => fs.readFileSync(`${build}/${file}`);
+
+async function bufferFromUrl(url) {
+	const response = await fetch(url);
+	const blob = await response.blob();
+	return Buffer.from(await blob.arrayBuffer());
+}
+
 test('prerenders /', () => {
 	const content = read('index.html');
 	assert.ok(content.includes('<h1>hello</h1>'));
@@ -139,6 +148,32 @@ test('targets the data-sveltekit-hydrate parent node', () => {
 			`target: document.querySelector('[data-sveltekit-hydrate="${match[2]}"]').parentNode`
 		)
 	);
+});
+
+test('check binary data not corrupted - jpg', async () => {
+	const url = 'https://upload.wikimedia.org/wikipedia/commons/b/b2/JPEG_compression_Example.jpg';
+
+	const originalBuffer = await bufferFromUrl(url);
+
+	const content = readNoUtf('fetch-image/image.jpg');
+	const newBuffer = Buffer.from(content, 'binary');
+
+	const compare = Buffer.compare(originalBuffer, newBuffer);
+
+	assert.ok(compare === 0);
+});
+
+test('check binary files not corrupted - png', async () => {
+	const url = 'https://repository-images.githubusercontent.com/354583933/72c58c80-9727-11eb-98b2-f352fded32b9';
+
+	const originalBuffer = await bufferFromUrl(url);
+
+	const content = readNoUtf('fetch-image/image.png');
+	const newBuffer = Buffer.from(content, 'binary');
+
+	const compare = Buffer.compare(originalBuffer, newBuffer);
+
+	assert.ok(compare === 0);
 });
 
 test.run();
