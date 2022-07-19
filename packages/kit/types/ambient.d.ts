@@ -65,7 +65,7 @@ declare namespace App {
 
 /**
  * ```ts
- * import { browser, dev, mode, prerendering, prod, server } from '$app/env';
+ * import { browser, dev, prerendering } from '$app/env';
  * ```
  */
 declare module '$app/env' {
@@ -80,26 +80,9 @@ declare module '$app/env' {
 	export const dev: boolean;
 
 	/**
-	 * The Vite.js mode the app is running in. Configure in [`vite.config.js`](https://vitejs.dev/config/shared-options.html#mode).
-	 * Vite.js loads the dotenv file associated with the provided mode, `.env.[mode]` or `.env.[mode].local`.
-	 * By default, `vite dev` runs with `mode=development` and `vite build` runs with `mode=production`.
-	 */
-	export const mode: string;
-
-	/**
 	 * `true` when prerendering, `false` otherwise.
 	 */
 	export const prerendering: boolean;
-
-	/**
-	 * `true` in production mode, `false` in development.
-	 */
-	export const prod: boolean;
-
-	/**
-	 * `true` if the app is running on the server.
-	 */
-	export const server: boolean;
 }
 
 /**

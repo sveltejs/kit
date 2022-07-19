@@ -209,6 +209,6 @@ test.describe('Vite options', () => {
 		await page.goto('/path-base/mode');
 
 		const mode = process.env.DEV ? 'development' : 'custom';
-		expect(await page.textContent('h2')).toBe(`${mode} === ${mode} === ${mode} === ${mode}`);
+		expect(await page.textContent('h2')).toBe(`${mode} === ${mode} === ${mode}`);
 	});
 });
