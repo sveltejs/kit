@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import fetch from 'node-fetch';
 
 const build = fileURLToPath(new URL('../build', import.meta.url));
 
@@ -164,7 +165,8 @@ test('check binary data not corrupted - jpg', async () => {
 });
 
 test('check binary files not corrupted - png', async () => {
-	const url = 'https://repository-images.githubusercontent.com/354583933/72c58c80-9727-11eb-98b2-f352fded32b9';
+	const url =
+		'https://repository-images.githubusercontent.com/354583933/72c58c80-9727-11eb-98b2-f352fded32b9';
 
 	const originalBuffer = await bufferFromUrl(url);
 
