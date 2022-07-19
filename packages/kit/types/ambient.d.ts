@@ -75,7 +75,7 @@ declare module '$app/env' {
 	export const browser: boolean;
 
 	/**
-	 * Whether the dev server is running. This is not guaranteed to correspond to `process.env.NODE_ENV` or `import.meta.env.MODE`.
+	 * Whether the dev server is running. This is not guaranteed to correspond to `NODE_ENV` or `MODE`.
 	 */
 	export const dev: boolean;
 
