@@ -386,6 +386,8 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
+			// This method is called by Vite after clearing the screen.
+			// This patch ensures we can log any important messages afterwards for the user to see.
 			const print_urls = vite.printUrls;
 			vite.printUrls = function () {
 				print_urls.apply(this);
