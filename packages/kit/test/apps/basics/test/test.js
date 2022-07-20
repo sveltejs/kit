@@ -1043,15 +1043,29 @@ test.describe('$app/paths', () => {
 		);
 	});
 
-	test('replaces %sveltekit.assets% in template with relative path', async ({ page }) => {
+	// some browsers will re-request assets after a `pushState`
+	// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
+	test('replaces %sveltekit.assets% in template with relative path, and makes it absolute in the client', async ({
+		baseURL,
+		page,
+		javaScriptEnabled
+	}) => {
+		const absolute = `${baseURL}/favicon.png`;
+
 		await page.goto('/');
-		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe(
+			javaScriptEnabled ? absolute : './favicon.png'
+		);
 
 		await page.goto('/routing');
-		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe(
+			javaScriptEnabled ? absolute : './favicon.png'
+		);
 
 		await page.goto('/routing/rest/foo/bar/baz');
-		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('../../../../favicon.png');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe(
+			javaScriptEnabled ? absolute : '../../../../favicon.png'
+		);
 	});
 });
 
