@@ -115,13 +115,7 @@ export async function render_response({
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				/** @type {import('svelte/store').Writable<App.Session>} */
-				session: {
-					...session,
-					subscribe: (fn) => {
-						return session.subscribe(fn);
-					}
-				},
+				session,
 				updated
 			},
 			/** @type {import('types').Page} */
