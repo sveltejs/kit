@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.383
+
+### Patch Changes
+
+- Add formData method in superclass rather than monkey-patch ([#5629](https://github.com/sveltejs/kit/pull/5629))
+
 ## 1.0.0-next.382
 
 ### Patch Changes
