@@ -262,28 +262,28 @@ test.describe('Encoded paths', () => {
 		expect(decodeURI(await page.innerHTML('h3'))).toBe('/encoded/苗条');
 	});
 
-	test('visits a route with a doubly encoded space', async ({ page }) => {
-		await page.goto('/encoded/test%2520me');
+	test('visits a route with a doubly encoded space', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/test%2520me"]');
+		expect(await page.innerHTML('h1')).toBe('dynamic');
 		expect(await page.innerHTML('h2')).toBe('/encoded/test%2520me: test%20me');
 		expect(await page.innerHTML('h3')).toBe('/encoded/test%2520me: test%20me');
 	});
 
-	test('visits a route with an encoded slash', async ({ page }) => {
-		await page.goto('/encoded/AC%2fDC');
+	test('visits a route with an encoded slash', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/AC%2fDC"]');
+		expect(await page.innerHTML('h1')).toBe('dynamic');
 		expect(await page.innerHTML('h2')).toBe('/encoded/AC%2fDC: AC/DC');
 		expect(await page.innerHTML('h3')).toBe('/encoded/AC%2fDC: AC/DC');
 	});
 
-	test('visits a route with an encoded bracket', async ({ page }) => {
-		await page.goto('/encoded/%5b');
+	test('visits a route with an encoded bracket', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/%5b"]');
+		expect(await page.innerHTML('h1')).toBe('dynamic');
 		expect(await page.innerHTML('h2')).toBe('/encoded/%5b: [');
 		expect(await page.innerHTML('h3')).toBe('/encoded/%5b: [');
-	});
-
-	test('visits a route with an encoded question mark', async ({ page }) => {
-		await page.goto('/encoded/%3f');
-		expect(await page.innerHTML('h2')).toBe('/encoded/%3f: ?');
-		expect(await page.innerHTML('h3')).toBe('/encoded/%3f: ?');
 	});
 
 	test('visits a dynamic route with non-ASCII character', async ({ page, clicknav }) => {

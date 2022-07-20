@@ -2,7 +2,7 @@ import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { normalize } from '../load.js';
-import { LoadURL, normalize_path } from '../../utils/url.js';
+import { LoadURL, decode_params, normalize_path } from '../../utils/url.js';
 import {
 	create_updated_store,
 	find_anchor,
@@ -893,7 +893,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (params) {
 				const id = normalize_path(url.pathname, trailing_slash) + url.search;
 				/** @type {import('./types').NavigationIntent} */
-				const intent = { id, route, params, url };
+				const intent = { id, route, params: decode_params(params), url };
 				return intent;
 			}
 		}
