@@ -1,5 +1,17 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.38
+
+### Patch Changes
+
+- [breaking] remove writeStatic to align with Vite ([#5618](https://github.com/sveltejs/kit/pull/5618))
+
+## 1.0.0-next.37
+
+### Patch Changes
+
+- [breaking] Throws when correctly configured to run as a static site of a SPA ([#5562](https://github.com/sveltejs/kit/pull/5562))
+
 ## 1.0.0-next.36
 
 ### Patch Changes

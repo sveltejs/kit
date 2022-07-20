@@ -203,3 +203,12 @@ test.describe('serviceWorker', () => {
 		expect(await page.content()).not.toMatch('navigator.serviceWorker');
 	});
 });
+
+test.describe('Vite options', () => {
+	test('Respects --mode', async ({ page }) => {
+		await page.goto('/path-base/mode');
+
+		const mode = process.env.DEV ? 'development' : 'custom';
+		expect(await page.textContent('h2')).toBe(`${mode} === ${mode} === ${mode}`);
+	});
+});

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.81",
+	"version": "1.0.0-next.82",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -27,9 +27,8 @@
 		"build": "rimraf files && rollup -c",
 		"test": "echo \"tests temporarily disabled\" # c8 uvu tests",
 		"check": "tsc",
-		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
-		"format": "npm run check-format -- --write",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"format": "npm run lint -- --write",
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {

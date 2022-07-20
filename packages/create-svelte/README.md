@@ -3,7 +3,7 @@
 A CLI for creating new [SvelteKit](https://kit.svelte.dev) projects. Just run...
 
 ```bash
-npm init svelte
+npm create svelte@latest
 ```
 
 ...and follow the prompts.

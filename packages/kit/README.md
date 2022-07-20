@@ -5,7 +5,7 @@ This is the [SvelteKit](https://kit.svelte.dev) framework and CLI.
 The quickest way to get started is via the [create-svelte](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) package:
 
 ```bash
-npm init svelte my-app
+npm create svelte@latest my-app
 cd my-app
 npm install
 npm run dev

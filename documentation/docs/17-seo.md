@@ -58,7 +58,7 @@ export default config;
 
 ```js
 /// file: src/routes/sitemap.xml.js
-export async function get() {
+export async function GET() {
 	return {
 		headers: {
 			'Content-Type': 'application/xml'

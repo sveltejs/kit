@@ -1,6 +1,4 @@
 import * as set_cookie_parser from 'set-cookie-parser';
-import { Request as NodeFetchRequest } from 'node-fetch';
-import { Readable } from 'stream';
 
 /** @param {import('http').IncomingMessage} req */
 function get_raw_body(req) {
@@ -18,6 +16,12 @@ function get_raw_body(req) {
 		return null;
 	}
 
+	if (req.destroyed) {
+		const readable = new ReadableStream();
+		readable.cancel();
+		return readable;
+	}
+
 	let size = 0;
 	let cancelled = false;
 
@@ -28,31 +32,34 @@ function get_raw_body(req) {
 			});
 
 			req.on('end', () => {
-				if (!cancelled) {
-					controller.close();
+				if (cancelled) return;
+				controller.close();
+			});
+
+			req.on('data', (chunk) => {
+				if (cancelled) return;
+
+				size += chunk.length;
+				if (size > length) {
+					controller.error(new Error('content-length exceeded'));
+					return;
+				}
+
+				controller.enqueue(chunk);
+
+				if (controller.desiredSize === null || controller.desiredSize <= 0) {
+					req.pause();
 				}
 			});
 		},
 
-		pull(controller) {
-			return new Promise((fulfil) => {
-				req.once('data', (chunk) => {
-					if (!cancelled) {
-						size += chunk.length;
-						if (size > length) {
-							controller.error(new Error('content-length exceeded'));
-						}
-
-						controller.enqueue(chunk);
-					}
-
-					fulfil();
-				});
-			});
+		pull() {
+			req.resume();
 		},
 
-		cancel() {
+		cancel(reason) {
 			cancelled = true;
+			req.destroy(reason);
 		}
 	});
 }
@@ -71,22 +78,11 @@ export async function getRequest(base, req) {
 		delete headers[':scheme'];
 	}
 
-	const request = new Request(base + req.url, {
+	return new Request(base + req.url, {
 		method: req.method,
 		headers,
 		body: get_raw_body(req)
 	});
-
-	request.formData = async () => {
-		return new NodeFetchRequest(request.url, {
-			method: request.method,
-			headers: request.headers,
-			// @ts-expect-error TypeScript doesn't understand that ReadableStream implements Symbol.asyncIterator
-			body: request.body && Readable.from(request.body)
-		}).formData();
-	};
-
-	return request;
 }
 
 /** @type {import('@sveltejs/kit/node').setResponse} */
@@ -103,17 +99,36 @@ export async function setResponse(res, response) {
 
 	res.writeHead(response.status, headers);
 
-	if (response.body) {
-		let cancelled = false;
+	if (!response.body) {
+		res.end();
+		return;
+	}
 
-		const reader = response.body.getReader();
+	const reader = response.body.getReader();
 
-		res.on('close', () => {
-			reader.cancel();
-			cancelled = true;
-		});
+	if (res.destroyed) {
+		reader.cancel();
+		return;
+	}
 
-		const next = async () => {
+	let cancelled = false;
+
+	res.on('close', () => {
+		if (cancelled) return;
+		cancelled = true;
+		reader.cancel();
+		res.emit('drain');
+	});
+
+	res.on('error', (error) => {
+		if (cancelled) return;
+		cancelled = true;
+		reader.cancel(error);
+		res.emit('drain');
+	});
+
+	try {
+		for (;;) {
 			const { done, value } = await reader.read();
 
 			if (cancelled) return;
@@ -123,18 +138,14 @@ export async function setResponse(res, response) {
 				return;
 			}
 
-			res.write(Buffer.from(value), (error) => {
-				if (error) {
-					console.error('Error writing stream', error);
-					res.end();
-				} else {
-					next();
-				}
-			});
-		};
+			const ok = res.write(value);
 
-		next();
-	} else {
-		res.end();
+			if (!ok) {
+				await new Promise((fulfil) => res.once('drain', fulfil));
+			}
+		}
+	} catch (error) {
+		cancelled = true;
+		res.destroy(error instanceof Error ? error : undefined);
 	}
 }
