@@ -302,9 +302,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					{
 						csp: svelte_config.kit.csp,
 						dev: true,
-						get_stack: (error) => {
-							return fix_stack_trace(error);
-						},
+						get_stack: (error) => fix_stack_trace(error),
 						handle_error: (error, event) => {
 							hooks.handleError({
 								error: new Proxy(error, {
@@ -375,9 +373,8 @@ export async function dev(vite, vite_config, svelte_config) {
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);
-				vite.ssrFixStacktrace(error);
 				res.statusCode = 500;
-				res.end(error.stack);
+				res.end(fix_stack_trace(error));
 			}
 		});
 	};
