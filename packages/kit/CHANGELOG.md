@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.385
+
+### Patch Changes
+
+- Make 404 error more helpful if paths.base is missing ([#5622](https://github.com/sveltejs/kit/pull/5622))
+
+* [fix] decode parameters on client ([`d02f1f25`](https://github.com/sveltejs/kit/commit/d02f1f25ac8acb29e21a06b94418c333928fb9bb))
+
+- Add config.kit.prerender.origin ([#5627](https://github.com/sveltejs/kit/pull/5627))
+
 ## 1.0.0-next.384
 
 ### Patch Changes
