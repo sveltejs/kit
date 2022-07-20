@@ -111,9 +111,9 @@ export class Server {
 /**
  * @param {{
  *   cwd: string;
- *   config: import('types').ValidatedConfig
- *   vite_config_env: import('vite').ConfigEnv
- *   manifest_data: import('types').ManifestData
+ *   config: import('types').ValidatedConfig;
+ *   vite_config_env: import('vite').ConfigEnv;
+ *   manifest_data: import('types').ManifestData;
  *   build_dir: string;
  *   output_dir: string;
  *   service_worker_entry_file: string | null;
