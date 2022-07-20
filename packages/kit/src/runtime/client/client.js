@@ -1224,7 +1224,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			// URLs after a pushState/replaceState, resulting in a 404 — see
 			// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
 			for (const link of document.querySelectorAll('link')) {
-				link.href = link.href; // eslint-disable-line
+				if (link.rel === 'icon') link.href = link.href;
 			}
 
 			addEventListener('pageshow', (event) => {
