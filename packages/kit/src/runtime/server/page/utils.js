@@ -16,7 +16,7 @@ export function is_serializable_primitive(v) {
 		v == null ||
 		typeof v === 'boolean' ||
 		typeof v === 'string' ||
-		(typeof v === 'number' && !isNaN(v)) // JSON.stringify(NaN) === null
+		(typeof v === 'number' && !isNaN(v) && isFinite(v)) // NaN or Infinity turns into null when stringified
 	);
 }
 
