@@ -150,15 +150,18 @@ const alias_regex = /^([^/]+)(\/\*)?$/;
 const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
 
 /**
- * Generates tsconfig path aliases from kit's aliases
+ * Generates tsconfig path aliases from kit's aliases.
+ * Related to vite alias creation.
  *
  * @param {import('types').ValidatedKitConfig} config
  */
 export function get_tsconfig_paths(config) {
 	const alias = {
-		$lib: project_relative(config.files.lib),
 		...config.alias
 	};
+	if (fs.existsSync(project_relative(config.files.lib))) {
+		alias['$lib'] = project_relative(config.files.lib);
+	}
 
 	/** @type {Record<string, string[]>} */
 	const paths = {};
@@ -171,19 +174,16 @@ export function get_tsconfig_paths(config) {
 		if (!value_match) throw new Error(`Invalid alias value: ${value}`);
 
 		const rel_path = project_relative(remove_trailing_slashstar(value));
+		const slashstar = key_match[2];
 
-		if (fs.existsSync(rel_path)) {
-			const slashstar = key_match[2];
+		if (slashstar) {
+			paths[key] = [rel_path + '/*'];
+		} else {
+			paths[key] = [rel_path];
+			const fileending = value_match[4];
 
-			if (slashstar) {
-				paths[key] = [rel_path + '/*'];
-			} else {
-				paths[key] = [rel_path];
-				const fileending = value_match[4];
-
-				if (!fileending && !(key + '/*' in alias)) {
-					paths[key + '/*'] = [rel_path + '/*'];
-				}
+			if (!fileending && !(key + '/*' in alias)) {
+				paths[key + '/*'] = [rel_path + '/*'];
 			}
 		}
 	}
