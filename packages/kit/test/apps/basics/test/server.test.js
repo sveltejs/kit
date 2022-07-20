@@ -28,6 +28,13 @@ test.describe('Caching', () => {
 		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 
+	test('sets cache-control: private even if page doesnt use session but one exists and cache.private is unset', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/has-session');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
+	});
+
 	test('sets cache-control: private if page uses fetch and cache.private is unset', async ({
 		request
 	}) => {
@@ -63,6 +70,13 @@ test.describe('Caching', () => {
 		request
 	}) => {
 		const response = await request.get('/caching/private/uses-session-in-init?private=false');
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: public if page has session and cache.private is false', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/has-session?private=false');
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
 	});
 
