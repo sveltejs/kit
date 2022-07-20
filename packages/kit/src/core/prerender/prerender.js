@@ -27,6 +27,26 @@ function format_error({ status, path, referrer, referenceType }, config) {
 	return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
 }
 
+/**
+ * @param {Logger} log;
+ * @param {import('types').ValidatedKitConfig} config;
+ * @returns {PrerenderErrorHandler}
+ */
+function normalise_error_handler(log, config) {
+	switch (config.prerender.onError) {
+		case 'continue':
+			return (details) => {
+				log.error(format_error(details, config));
+			};
+		case 'fail':
+			return (details) => {
+				throw new Error(format_error(details, config));
+			};
+		default:
+			return config.prerender.onError;
+	}
+}
+
 const OK = 2;
 const REDIRECT = 3;
 
@@ -67,20 +87,7 @@ export async function prerender({ config, entries, files, log }) {
 
 	const server = new Server(manifest);
 
-	/** @type {PrerenderErrorHandler} */
-	let error;
-
-	if (config.prerender.onError === 'continue') {
-		error = (details) => {
-			log.error(format_error(details, config));
-		};
-	} else if (config.prerender.onError === 'fail') {
-		error = (details) => {
-			throw new Error(format_error(details, config));
-		};
-	} else {
-		error = config.prerender.onError;
-	}
+	const error = normalise_error_handler(log, config);
 
 	const q = queue(config.prerender.concurrency);
 
