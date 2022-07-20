@@ -1,7 +1,7 @@
 import { Response } from 'undici';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { is_pojo, is_serializable_primitive, warn_if_not_serdeable } from './utils.js';
+import { is_pojo, is_serializable_primitive, warn_if_not_json_safe } from './utils.js';
 
 test('is_pojo', () => {
 	assert.ok(is_pojo({}));
@@ -30,14 +30,14 @@ test('logs warning for non-serializable bodies', () => {
 	console.warn = () => count++;
 
 	try {
-		warn_if_not_serdeable(new Map());
-		warn_if_not_serdeable({ foo: new Map() });
-		warn_if_not_serdeable({
+		warn_if_not_json_safe(new Map());
+		warn_if_not_json_safe({ foo: new Map() });
+		warn_if_not_json_safe({
 			foo: {
 				bar: [new Map()]
 			}
 		});
-		warn_if_not_serdeable({
+		warn_if_not_json_safe({
 			foo: {
 				bar: [
 					{

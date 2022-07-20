@@ -6,7 +6,7 @@ import { LoadURL, PrerenderingURL, is_root_relative, resolve } from '../../../ut
 import { check_method_names, lowercase_keys } from '../utils.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { domain_matches, path_matches } from './cookie.js';
-import { is_pojo, warn_if_not_serdeable } from './utils.js';
+import { is_pojo, warn_if_not_json_safe } from './utils.js';
 
 /**
  * Calls the user's `load` function.
@@ -553,7 +553,7 @@ function validate_shadow_output(result) {
 
 	if (!(body instanceof Error)) {
 		if (is_pojo(body)) {
-			if (__SVELTEKIT_DEV__) warn_if_not_serdeable(body, ['body']);
+			if (__SVELTEKIT_DEV__) warn_if_not_json_safe(body, ['body']);
 		} else {
 			throw new Error(
 				'Body returned from endpoint request handler must be a plain object or an Error'
