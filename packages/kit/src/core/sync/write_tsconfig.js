@@ -10,7 +10,9 @@ import { write_if_changed } from './utils.js';
  */
 function maybe_file(cwd, file) {
 	const resolved = path.resolve(cwd, file);
-	return fs.existsSync(resolved) && resolved;
+	if (fs.existsSync(resolved)) {
+		return resolved;
+	}
 }
 
 /**
