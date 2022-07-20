@@ -59,11 +59,6 @@ export async function preview(vite, config, protocol) {
 			)
 		);
 
-		// prerendered dependencies
-		vite.middlewares.use(
-			scoped(base, mutable(join(config.kit.outDir, 'output/prerendered/dependencies')))
-		);
-
 		vite.middlewares.use((req, res, next) => {
 			const original_url = /** @type {string} */ (req.url);
 			const { pathname } = new URL(original_url, 'http://dummy');
@@ -79,6 +74,11 @@ export async function preview(vite, config, protocol) {
 				);
 			}
 		});
+
+		// prerendered dependencies
+		vite.middlewares.use(
+			scoped(base, mutable(join(config.kit.outDir, 'output/prerendered/dependencies')))
+		);
 
 		// prerendered pages (we can't just use sirv because we need to
 		// preserve the correct trailingSlash behaviour)
