@@ -29,24 +29,27 @@ test('logs warning for non-serializable bodies', () => {
 	const original = console.warn;
 	console.warn = () => count++;
 
-	warn_if_not_serdeable(new Map());
-	warn_if_not_serdeable({ foo: new Map() });
-	warn_if_not_serdeable({
-		foo: {
-			bar: [new Map()]
-		}
-	});
-	warn_if_not_serdeable({
-		foo: {
-			bar: [
-				{
-					baz: 'quox'
-				}
-			]
-		}
-	});
+	try {
+		warn_if_not_serdeable(new Map());
+		warn_if_not_serdeable({ foo: new Map() });
+		warn_if_not_serdeable({
+			foo: {
+				bar: [new Map()]
+			}
+		});
+		warn_if_not_serdeable({
+			foo: {
+				bar: [
+					{
+						baz: 'quox'
+					}
+				]
+			}
+		});
+	} finally {
+		console.warn = original;
+	}
 
-	console.warn = original;
 	assert.equal(count, 3);
 });
 
