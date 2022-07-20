@@ -147,7 +147,7 @@ function validate(config, cwd, out, user_file) {
 }
 
 // <something><optional /*>
-const alias_regex = /^([^/]+)(\/\*)?$/;
+const alias_regex = /^(.+?)(\/\*)?$/;
 // <path><optional /* or .fileending>
 const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
 
