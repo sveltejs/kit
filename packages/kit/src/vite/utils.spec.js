@@ -1,6 +1,8 @@
+import path from 'path';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { deep_merge, merge_vite_configs } from './utils.js';
+import { validate_config } from '../core/config/index.js';
+import { deep_merge, get_aliases, merge_vite_configs } from './utils.js';
 
 test('basic test no conflicts', async () => {
 	const merged = deep_merge(
@@ -193,6 +195,31 @@ test('merge resolve.alias', () => {
 			]
 		}
 	});
+});
+
+test('transform kit.alias to resolve.alias', () => {
+	const config = validate_config({
+		kit: { alias: { simpleKey: 'simple/value', key: 'value', 'key/*': 'value/*' } }
+	}).kit;
+	const prefix = path.resolve('.');
+	const transformed = get_aliases(config)
+		.map((entry) => ({
+			find: entry.find instanceof RegExp ? entry.find.toString() : entry.find, // else assertion fails
+			replacement: (entry.replacement.startsWith(prefix)
+				? entry.replacement.slice(prefix.length + 1)
+				: entry.replacement
+			).replace(/\\/g, '/') // windows/linux compatibility
+		}))
+		.filter(
+			(entry) => entry.find !== '$app' // testing this would mean to reimplement the logic in the test
+		);
+	assert.equal(transformed, [
+		{ find: '__GENERATED__', replacement: '.svelte-kit/generated' },
+		{ find: '$lib', replacement: 'src/lib' },
+		{ find: 'simpleKey', replacement: 'simple/value' },
+		{ find: /^key$/.toString(), replacement: 'value' },
+		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' }
+	]);
 });
 
 test.run();
