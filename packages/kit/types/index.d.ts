@@ -135,6 +135,7 @@ export interface KitConfig {
 		enabled?: boolean;
 		entries?: Array<'*' | `/${string}`>;
 		onError?: PrerenderOnErrorValue;
+		origin?: string;
 	};
 	routes?: (filepath: string) => boolean;
 	serviceWorker?: {

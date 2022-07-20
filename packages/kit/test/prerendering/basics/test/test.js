@@ -149,4 +149,14 @@ test('prerenders binary data', async () => {
 	assert.equal(Buffer.compare(read('fetch-image/image.png', null), read('image.png', null)), 0);
 });
 
+test('fetches data from local endpoint', () => {
+	assert.equal(read('origin/__data.json'), JSON.stringify({ message: 'hello' }));
+	assert.equal(read('origin/message.json'), JSON.stringify({ message: 'hello' }));
+});
+
+test('respects config.prerender.origin', () => {
+	const content = read('origin.html');
+	assert.ok(content.includes('<h2>http://example.com</h2>'));
+});
+
 test.run();

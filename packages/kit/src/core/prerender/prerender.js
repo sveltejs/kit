@@ -60,6 +60,58 @@ export async function prerender({ config, entries, files, log }) {
 	}
 
 	installPolyfills();
+	const { fetch } = globalThis;
+	globalThis.fetch = async (info, init) => {
+		/** @type {string} */
+		let url;
+
+		/** @type {RequestInit} */
+		let opts = {};
+
+		if (info instanceof Request) {
+			url = info.url;
+
+			opts = {
+				method: info.method,
+				headers: info.headers,
+				body: info.body,
+				mode: info.mode,
+				credentials: info.credentials,
+				cache: info.cache,
+				redirect: info.redirect,
+				referrer: info.referrer,
+				integrity: info.integrity
+			};
+		} else {
+			url = info.toString();
+		}
+
+		if (url.startsWith(config.prerender.origin + '/')) {
+			const request = new Request(url, opts);
+			const response = await server.respond(request, {
+				getClientAddress,
+				prerendering: {
+					dependencies: new Map()
+				}
+			});
+
+			const decoded = new URL(url).pathname;
+
+			save(
+				'dependencies',
+				response,
+				Buffer.from(await response.clone().arrayBuffer()),
+				decoded,
+				encodeURI(decoded),
+				null,
+				'fetched'
+			);
+
+			return response;
+		}
+
+		return fetch(info, init);
+	};
 
 	const server_root = join(config.outDir, 'output');
 
@@ -129,7 +181,7 @@ export async function prerender({ config, entries, files, log }) {
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await server.respond(new Request(`http://sveltekit-prerender${encoded}`), {
+		const response = await server.respond(new Request(config.prerender.origin + encoded), {
 			getClientAddress,
 			prerendering: {
 				dependencies
@@ -269,7 +321,7 @@ export async function prerender({ config, entries, files, log }) {
 		await q.done();
 	}
 
-	const rendered = await server.respond(new Request('http://sveltekit-prerender/[fallback]'), {
+	const rendered = await server.respond(new Request(config.prerender.origin + '/[fallback]'), {
 		getClientAddress,
 		prerendering: {
 			fallback: true,
