@@ -3,9 +3,10 @@ import * as set_cookie_parser from 'set-cookie-parser';
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
 import { LoadURL, PrerenderingURL, is_root_relative, resolve } from '../../../utils/url.js';
-import { check_method_names, is_pojo, lowercase_keys } from '../utils.js';
+import { check_method_names, lowercase_keys } from '../utils.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { domain_matches, path_matches } from './cookie.js';
+import { is_pojo, warn_if_not_serdeable } from './utils.js';
 
 /**
  * Calls the user's `load` function.
@@ -550,10 +551,14 @@ function validate_shadow_output(result) {
 		headers = lowercase_keys(/** @type {Record<string, string>} */ (headers));
 	}
 
-	if (!is_pojo(body)) {
-		throw new Error(
-			'Body returned from endpoint request handler must be a plain object or an Error'
-		);
+	if (!(body instanceof Error)) {
+		if (is_pojo(body)) {
+			if (__SVELTEKIT_DEV__) warn_if_not_serdeable(body, ['body']);
+		} else {
+			throw new Error(
+				'Body returned from endpoint request handler must be a plain object or an Error'
+			);
+		}
 	}
 
 	return { status, headers, body };
