@@ -8,7 +8,8 @@ const config = {
 		}),
 
 		prerender: {
-			default: true
+			default: true,
+			entries: ['*', '/standalone-endpoint.json']
 		},
 
 		trailingSlash: 'always'

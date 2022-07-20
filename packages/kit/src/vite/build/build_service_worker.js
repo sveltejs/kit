@@ -55,9 +55,7 @@ export async function build_service_worker(
 			];
 
 			export const prerendered = [
-				${prerendered.paths
-					.map((path) => s(normalize_path(path, config.kit.trailingSlash)))
-					.join(',\n\t\t\t\t')}
+				${prerendered.paths.map((path) => s(path)).join(',\n\t\t\t\t')}
 			];
 
 			export const version = ${s(config.kit.version.name)};

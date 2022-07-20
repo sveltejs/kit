@@ -285,7 +285,9 @@ export async function prerender({ config, entries, files, log }) {
 							location: resolved
 						});
 
-						prerendered.paths.push(normalize_path(decoded, 'never'));
+						prerendered.paths.push(
+							normalize_path(decoded, file.endsWith('/index.html') ? 'always' : 'never')
+						);
 					}
 				}
 			} else {
@@ -312,7 +314,9 @@ export async function prerender({ config, entries, files, log }) {
 				});
 			}
 
-			prerendered.paths.push(normalize_path(decoded, 'never'));
+			prerendered.paths.push(
+				normalize_path(decoded, file.endsWith('/index.html') ? 'always' : 'never')
+			);
 		} else if (response_type !== OK) {
 			error({ status: response.status, path: decoded, referrer, referenceType });
 		}
