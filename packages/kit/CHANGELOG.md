@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.386
+
+### Patch Changes
+
+- Ensure private cache when something is returned from getSession hook ([#5640](https://github.com/sveltejs/kit/pull/5640))
+
+* [fix] transform link[rel=icon] to be absolute to avoid console error when navigating ([#5583](https://github.com/sveltejs/kit/pull/5583))
+
 ## 1.0.0-next.385
 
 ### Patch Changes
