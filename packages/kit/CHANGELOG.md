@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.384
+
+### Patch Changes
+
+- Respect custom Vite mode in SSR build ([#5602](https://github.com/sveltejs/kit/pull/5602))
+
+* [breaking] remove mode, prod and server from \$app/env ([#5602](https://github.com/sveltejs/kit/pull/5602))
+
 ## 1.0.0-next.383
 
 ### Patch Changes
