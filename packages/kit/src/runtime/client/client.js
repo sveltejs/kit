@@ -1223,8 +1223,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 			// fix link[rel=icon], because browsers will occasionally try to load relative
 			// URLs after a pushState/replaceState, resulting in a 404 — see
 			// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
-			for (const link of document.querySelectorAll('link[rel=icon]')) {
-				link.href = link.href;
+			for (const link of document.querySelectorAll('link')) {
+				if (link.rel === 'icon') link.href = link.href;
 			}
 
 			addEventListener('pageshow', (event) => {
