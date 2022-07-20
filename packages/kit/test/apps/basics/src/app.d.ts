@@ -9,8 +9,8 @@ declare namespace App {
 	interface Platform {}
 
 	interface Session {
-		answer: number;
-		calls: number;
+		answer?: number;
+		calls?: number;
 	}
 
 	interface Stuff {

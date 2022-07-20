@@ -107,6 +107,8 @@ export async function render_response({
 		}
 
 		const session = writable($session);
+		// Even if $session isn't accessed, it still ends up serialized in the rendered HTML
+		is_private = is_private || (cache?.private ?? (!!$session && Object.keys($session).length > 0));
 
 		/** @type {Record<string, any>} */
 		const props = {
@@ -117,7 +119,6 @@ export async function render_response({
 				session: {
 					...session,
 					subscribe: (fn) => {
-						is_private = cache?.private ?? true;
 						return session.subscribe(fn);
 					}
 				},
