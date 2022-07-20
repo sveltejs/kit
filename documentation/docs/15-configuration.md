@@ -269,7 +269,7 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
     export default config;
     ```
 
-- `origin` — the value of `url.origin` during prerendering
+- `origin` — the value of `url.origin` during prerendering; useful if it is included in rendered content
 
 ### routes
 
