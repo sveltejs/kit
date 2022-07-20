@@ -10,7 +10,6 @@ import { escape_html_attr } from '../../utils/escape.js';
 
 /**
  * @typedef {import('types').PrerenderErrorHandler} PrerenderErrorHandler
- * @typedef {import('types').PrerenderOnErrorValue} OnError
  * @typedef {import('types').Logger} Logger
  */
 
@@ -28,8 +27,8 @@ function format_error({ status, path, referrer, referenceType }, config) {
 }
 
 /**
- * @param {Logger} log;
- * @param {import('types').ValidatedKitConfig} config;
+ * @param {Logger} log
+ * @param {import('types').ValidatedKitConfig} config
  * @returns {PrerenderErrorHandler}
  */
 function normalise_error_handler(log, config) {
