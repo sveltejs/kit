@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { dirname, join, relative } from 'path';
 import { pathToFileURL, URL } from 'url';
-import { mkdirp } from '../../utils/filesystem.js';
+import { mkdirp, walk } from '../../utils/filesystem.js';
 import { installPolyfills } from '../../node/polyfills.js';
 import { is_root_relative, normalize_path, resolve } from '../../utils/url.js';
 import { queue } from './queue.js';
