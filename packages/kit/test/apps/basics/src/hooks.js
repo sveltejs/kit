@@ -47,7 +47,7 @@ export const handle = sequence(
 
 		const response = await resolve(event, {
 			ssr: !event.url.pathname.startsWith('/no-ssr'),
-			transformPage: event.url.pathname.startsWith('/transform-page')
+			transformPageChunk: event.url.pathname.startsWith('/transform-page-chunk')
 				? ({ html }) => html.replace('__REPLACEME__', 'Worked!')
 				: undefined
 		});

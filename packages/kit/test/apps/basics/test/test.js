@@ -1009,8 +1009,8 @@ test.describe('Page options', () => {
 		}
 	});
 
-	test('transformPage can change the html output', async ({ page }) => {
-		await page.goto('/transform-page');
+	test('transformPageChunk can change the html output', async ({ page }) => {
+		await page.goto('/transform-page-chunk');
 		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
 
