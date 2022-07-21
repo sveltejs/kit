@@ -50,6 +50,7 @@ export default function (opts = {}) {
 			if (precompress) {
 				builder.log.minor('Compressing assets');
 				await compress(`${out}/client`);
+				await compress(`${out}/static`);
 				await compress(`${out}/prerendered`);
 			}
 		}

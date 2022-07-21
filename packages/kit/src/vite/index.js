@@ -209,7 +209,6 @@ function kit() {
 					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0'
 				},
-				publicDir: svelte_config.kit.files.assets,
 				resolve: {
 					alias: get_aliases(svelte_config.kit)
 				},
