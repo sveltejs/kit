@@ -43,13 +43,7 @@ test('copy files', () => {
 	builder.writeClient(dest);
 
 	assert.equal(
-		[
-			...glob('**', {
-				cwd: /** @type {import('types').ValidatedConfig} */ (mocked).kit.files.assets,
-				dot: true
-			}),
-			...glob('**', { cwd: `${outDir}/output/client`, dot: true })
-		],
+		glob('**', { cwd: `${outDir}/output/client`, dot: true }),
 		glob('**', { cwd: dest, dot: true })
 	);
 
