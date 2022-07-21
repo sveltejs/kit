@@ -62,7 +62,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 						const node = await vite.moduleGraph.getModuleByUrl(url);
 						if (!node) throw new Error(`Could not find node for ${url}`);
-						throw_if_illegal_private_import(node);
+						throw_if_illegal_private_import(vite.ws, node);
 
 						return {
 							module,
@@ -474,33 +474,63 @@ const illegal_import_names /** @type {Array<string>} */ = [
  * Mmmm, spicy recursion.
  * Using a depth-first search rather than a breadth-first search because it makes
  * making a pretty error easier
+ *
+ * It uses a set to prevent import cycles and a list to keep track of the current import
+ * "stack". This (roughly) doubles the memory footprint, but it's unlikely to be large,
+ * and it prevents the O(n) operation of having to check Array.prototype.includes.
+ * @param {import('vite').WebSocketServer} ws
  * @param {import('vite').ModuleNode} node
  * @param {Array<string>} illegal_module_stack
+ * @param {Set<string>} illegal_module_set
  */
-function throw_if_illegal_private_import_recursive(node, illegal_module_stack = []) {
-	if (node.importedModules.size === 0) {
+function throw_if_illegal_private_import_recursive(
+	ws,
+	node,
+	illegal_module_stack = [],
+	illegal_module_set = new Set()
+) {
+	const file = node.file ?? 'unknown';
+	// This prevents cyclical imports creating a stack overflow
+	if (illegal_module_set.has(file) || node.importedModules.size === 0) {
 		return;
 	}
-	illegal_module_stack.push(node.file ?? 'unknown');
+	illegal_module_set.add(file);
+	illegal_module_stack.push(file);
 	node.importedModules.forEach((childNode) => {
 		if (illegal_import_names.some((name) => childNode.file?.endsWith(name))) {
 			illegal_module_stack.push((childNode?.file ?? 'unknown') + ' (server-side only module)');
 			const stringified_stack = illegal_module_stack
 				.map((mod, i) => `  ${i}: ${mod}`)
 				.join(', which imports:\n');
-			throw new Error(
+			const err = new Error(
 				`Found an illegal import originating from: ${illegal_module_stack[0]}. It imports:\n${stringified_stack}`
 			);
+			ws.send({
+				type: 'error',
+				err: {
+					message: err.message,
+					stack: err.stack ?? '',
+					plugin: 'vite-plugin-svelte',
+					id: file
+				}
+			});
 		}
-		throw_if_illegal_private_import_recursive(childNode, illegal_module_stack);
+		throw_if_illegal_private_import_recursive(
+			ws,
+			childNode,
+			illegal_module_stack,
+			illegal_module_set
+		);
 	});
+	illegal_module_set.delete(file);
 	illegal_module_stack.pop();
 }
 
 /**
  * Throw an error if a private module is imported from a client-side node.
+ * @param {import('vite').WebSocketServer} ws
  * @param {import('vite').ModuleNode} node
  */
-function throw_if_illegal_private_import(node) {
-	throw_if_illegal_private_import_recursive(node);
+function throw_if_illegal_private_import(ws, node) {
+	throw_if_illegal_private_import_recursive(ws, node);
 }
