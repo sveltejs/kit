@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.387
+
+### Patch Changes
+
+- set Vite's `publicDir` option ([#5648](https://github.com/sveltejs/kit/pull/5648))
+
+* Normalize paths inside prerenderer, so they are correct inside \$service-worker ([#5641](https://github.com/sveltejs/kit/pull/5641))
+
 ## 1.0.0-next.386
 
 ### Patch Changes
