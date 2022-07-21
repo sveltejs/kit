@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
+import { dirname, join, relative } from 'path';
 import { pathToFileURL, URL } from 'url';
 import { mkdirp } from '../../utils/filesystem.js';
 import { installPolyfills } from '../../node/polyfills.js';
@@ -52,12 +52,12 @@ const REDIRECT = 3;
 /**
  * @param {{
  *   config: import('types').ValidatedKitConfig;
- *   entries: string[];
- *   files: Set<string>;
+ *   client_out_dir: string;
+ *   manifest_path: string;
  *   log: Logger;
  * }} opts
  */
-export async function prerender({ config, entries, files, log }) {
+export async function prerender({ config, client_out_dir, manifest_path, log }) {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -160,6 +160,7 @@ export async function prerender({ config, entries, files, log }) {
 		return file;
 	}
 
+	const files = get_files(client_out_dir);
 	const seen = new Set();
 	const written = new Set();
 
@@ -321,6 +322,12 @@ export async function prerender({ config, entries, files, log }) {
 	if (config.prerender.enabled) {
 		for (const entry of config.prerender.entries) {
 			if (entry === '*') {
+				/** @type {import('types').ManifestData} */
+				const { routes } = (await import(manifest_path)).manifest._;
+				const entries = routes
+					.map((route) => (route.type === 'page' ? route.path : ''))
+					.filter(Boolean);
+
 				for (const entry of entries) {
 					enqueue(null, config.paths.base + entry); // TODO can we pre-normalize these?
 				}
@@ -350,4 +357,22 @@ export async function prerender({ config, entries, files, log }) {
 /** @return {string} */
 function getClientAddress() {
 	throw new Error('Cannot read clientAddress during prerendering');
+}
+
+/**
+ * @param {string} dir
+ * @param {string} [curr_dir]
+ */
+function get_files(dir, curr_dir = dir) {
+	const result = new Set();
+	const files = readdirSync(curr_dir);
+	for (const file of files) {
+		const name = join(curr_dir, file);
+		if (statSync(name).isDirectory()) {
+			get_files(dir, name).forEach((f) => result.add(f));
+		} else {
+			result.add(relative(dir, name));
+		}
+	}
+	return result;
 }

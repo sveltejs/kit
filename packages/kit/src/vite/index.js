@@ -302,8 +302,9 @@ function kit() {
 				server
 			};
 
+			const manifest_path = `${paths.output_dir}/server/manifest.js`;
 			fs.writeFileSync(
-				`${paths.output_dir}/server/manifest.js`,
+				manifest_path,
 				`export const manifest = ${generate_manifest({
 					build_data,
 					relative_path: '.',
@@ -314,27 +315,10 @@ function kit() {
 			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 			log.info('Prerendering');
 
-			const static_files = manifest_data.assets.map((asset) => posixify(asset.file));
-
-			const files = new Set([
-				...static_files,
-				...chunks.map((chunk) => chunk.fileName),
-				...assets.map((chunk) => chunk.fileName)
-			]);
-
-			// TODO is this right?
-			static_files.forEach((file) => {
-				if (file.endsWith('/index.html')) {
-					files.add(file.slice(0, -11));
-				}
-			});
-
 			prerendered = await prerender({
 				config: svelte_config.kit,
-				entries: manifest_data.routes
-					.map((route) => (route.type === 'page' ? route.path : ''))
-					.filter(Boolean),
-				files,
+				client_out_dir: vite_config.build.outDir,
+				manifest_path,
 				log
 			});
 
