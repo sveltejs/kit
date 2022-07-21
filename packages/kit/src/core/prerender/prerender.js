@@ -3,7 +3,7 @@ import { dirname, join } from 'path';
 import { pathToFileURL, URL } from 'url';
 import { mkdirp } from '../../utils/filesystem.js';
 import { installPolyfills } from '../../node/polyfills.js';
-import { is_root_relative, normalize_path, resolve } from '../../utils/url.js';
+import { is_root_relative, resolve } from '../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../utils/escape.js';
@@ -128,7 +128,9 @@ export async function prerender({ config, entries, files, log }) {
 
 	/** @type {import('types').ServerModule} */
 	const { Server, override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
-	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
+
+	/** @type {import('types').SSRManifest} */
+	const manifest = (await import(pathToFileURL(`${server_root}/server/manifest.js`).href)).manifest;
 
 	override({
 		paths: config.paths,
@@ -147,11 +149,7 @@ export async function prerender({ config, entries, files, log }) {
 	 * @param {boolean} is_html
 	 */
 	function output_filename(path, is_html) {
-		const file = path.slice(config.paths.base.length + 1);
-
-		if (file === '') {
-			return 'index.html';
-		}
+		const file = path.slice(config.paths.base.length + 1) || 'index.html';
 
 		if (is_html && !file.endsWith('.html')) {
 			return file + (file.endsWith('/') ? 'index.html' : '.html');
@@ -285,7 +283,7 @@ export async function prerender({ config, entries, files, log }) {
 							location: resolved
 						});
 
-						prerendered.paths.push(normalize_path(decoded, 'never'));
+						prerendered.paths.push(decoded);
 					}
 				}
 			} else {
@@ -312,7 +310,7 @@ export async function prerender({ config, entries, files, log }) {
 				});
 			}
 
-			prerendered.paths.push(normalize_path(decoded, 'never'));
+			prerendered.paths.push(decoded);
 		} else if (response_type !== OK) {
 			error({ status: response.status, path: decoded, referrer, referenceType });
 		}

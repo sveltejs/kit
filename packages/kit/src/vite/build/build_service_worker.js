@@ -2,7 +2,6 @@ import fs from 'fs';
 import * as vite from 'vite';
 import { s } from '../../utils/misc.js';
 import { get_vite_config, merge_vite_configs } from '../utils.js';
-import { normalize_path } from '../../utils/url.js';
 import { assets_base, remove_svelte_kit } from './utils.js';
 
 /**
@@ -55,9 +54,7 @@ export async function build_service_worker(
 			];
 
 			export const prerendered = [
-				${prerendered.paths
-					.map((path) => s(normalize_path(path, config.kit.trailingSlash)))
-					.join(',\n\t\t\t\t')}
+				${prerendered.paths.map((path) => s(path)).join(',\n\t\t\t\t')}
 			];
 
 			export const version = ${s(config.kit.version.name)};
