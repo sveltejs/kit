@@ -60,6 +60,10 @@ export async function dev(vite, vite_config, svelte_config) {
 							await vite.ssrLoadModule(url)
 						);
 
+						const node = await vite.moduleGraph.getModuleByUrl(url);
+						if (!node) throw new Error(`Could not find node for ${url}`);
+						throw_if_illegal_private_import(node);
+
 						return {
 							module,
 							index,
@@ -68,10 +72,6 @@ export async function dev(vite, vite_config, svelte_config) {
 							stylesheets: [],
 							// in dev we inline all styles to avoid FOUC
 							inline_styles: async () => {
-								const node = await vite.moduleGraph.getModuleByUrl(url);
-
-								if (!node) throw new Error(`Could not find node for ${url}`);
-
 								const deps = new Set();
 								await find_deps(vite, node, deps);
 
@@ -464,4 +464,43 @@ function has_correct_case(file, assets) {
 	}
 
 	return false;
+}
+
+const illegal_import_names /** @type {Array<string>} */ = [
+	'.svelte-kit/runtime/app/env/private.js'
+];
+
+/**
+ * Mmmm, spicy recursion.
+ * Using a depth-first search rather than a breadth-first search because it makes
+ * making a pretty error easier
+ * @param {import('vite').ModuleNode} node
+ * @param {Array<string>} illegal_module_stack
+ */
+function throw_if_illegal_private_import_recursive(node, illegal_module_stack = []) {
+	if (node.importedModules.size === 0) {
+		return;
+	}
+	illegal_module_stack.push(node.file ?? 'unknown');
+	node.importedModules.forEach((childNode) => {
+		if (illegal_import_names.some((name) => childNode.file?.endsWith(name))) {
+			illegal_module_stack.push((childNode?.file ?? 'unknown') + ' (server-side only module)');
+			const stringified_stack = illegal_module_stack
+				.map((mod, i) => `  ${i}: ${mod}`)
+				.join(', which imports:\n');
+			throw new Error(
+				`Found an illegal import originating from: ${illegal_module_stack[0]}. It imports:\n${stringified_stack}`
+			);
+		}
+		throw_if_illegal_private_import_recursive(childNode, illegal_module_stack);
+	});
+	illegal_module_stack.pop();
+}
+
+/**
+ * Throw an error if a private module is imported from a client-side node.
+ * @param {import('vite').ModuleNode} node
+ */
+function throw_if_illegal_private_import(node) {
+	throw_if_illegal_private_import_recursive(node);
 }
