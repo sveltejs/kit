@@ -47,7 +47,7 @@ export async function preview(vite, config, protocol) {
 		// files in `static`
 		vite.middlewares.use(scoped(assets, mutable(config.kit.files.assets)));
 
-		// generated client assets
+		// generated client assets and the contents of `static`
 		vite.middlewares.use(
 			scoped(
 				assets,
