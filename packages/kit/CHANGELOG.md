@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.388
+
+### Patch Changes
+
+- Reset stack traces to avoid double-fix ([#5644](https://github.com/sveltejs/kit/pull/5644))
+
 ## 1.0.0-next.387
 
 ### Patch Changes
