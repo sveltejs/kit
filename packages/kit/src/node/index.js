@@ -118,7 +118,7 @@ export async function setResponse(res, response) {
 		// If the reader has already been interrupted with an error earlier,
 		// then it will appear here, it is useless, but it needs to be catch.
 		reader.cancel(error).catch(() => {});
-		res.destroy(error);
+		if (error) res.destroy(error);
 	};
 
 	res.on('close', cancel);
