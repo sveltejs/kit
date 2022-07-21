@@ -191,7 +191,7 @@ function kit() {
 
 				const new_config = vite_client_build_config();
 
-				const warning = warn_overridden_config(config, new_config, true);
+				const warning = warn_overridden_config(config, new_config);
 				if (warning) console.error(warning + '\n');
 
 				return new_config;
