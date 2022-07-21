@@ -149,11 +149,7 @@ export async function prerender({ config, entries, files, log }) {
 	 * @param {boolean} is_html
 	 */
 	function output_filename(path, is_html) {
-		const file = path.slice(config.paths.base.length + 1);
-
-		if (file === '') {
-			return 'index.html';
-		}
+		const file = path.slice(config.paths.base.length + 1) || 'index.html';
 
 		if (is_html && !file.endsWith('.html')) {
 			return file + (file.endsWith('/') ? 'index.html' : '.html');
@@ -287,9 +283,7 @@ export async function prerender({ config, entries, files, log }) {
 							location: resolved
 						});
 
-						prerendered.paths.push(
-							normalize_path(decoded, file.endsWith('/index.html') ? 'always' : 'never')
-						);
+						prerendered.paths.push(decoded);
 					}
 				}
 			} else {
@@ -316,9 +310,7 @@ export async function prerender({ config, entries, files, log }) {
 				});
 			}
 
-			prerendered.paths.push(
-				normalize_path(decoded, file.endsWith('/index.html') ? 'always' : 'never')
-			);
+			prerendered.paths.push(decoded);
 		} else if (response_type !== OK) {
 			error({ status: response.status, path: decoded, referrer, referenceType });
 		}
