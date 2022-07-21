@@ -1,8 +1,10 @@
 import fs from 'fs';
+import path from 'path';
 import colors from 'kleur';
 import sade from 'sade';
 import { load_config } from './core/config/index.js';
 import { coalesce_to_error } from './utils/error.js';
+
 
 /** @param {unknown} e */
 function handle_error(e) {
@@ -39,13 +41,32 @@ prog
 	.command('sync')
 	.describe('Synchronise generated files')
 	.action(async () => {
-		if (!fs.existsSync('svelte.config.js')) {
-			console.warn('Missing svelte.config.js — skipping');
+		const is_postinstall = process.env.npm_lifecycle_event === 'postinstall';
+		const cwd = is_postinstall ? (process.env.INIT_CWD || '') : process.cwd();
+		const config_file = path.join(cwd,'svelte.config.js');
+    const pkg_file = path.join(cwd,'package.json');
+		let is_self = false;
+		if(fs.existsSync(pkg_file)) {
+			try {
+				const pkg =  JSON.parse(fs.readFileSync(pkg_file,'utf-8'));
+				is_self = pkg.name === '@sveltejs/kit';
+				if (pkg.scripts?.prepare === 'svelte-kit sync') {
+					const message =`script "prepare": "svelte-kit sync" in ${pkg_file} is no longer needed. Remove it.`;
+					console.error(colors.bold().red(message));
+				}
+			}	catch (e) {
+				// ignore, we can be sure that our own package.json exists and can be parsed, so it is not self
+			}
+		}
+		if (is_self || !fs.existsSync(config_file)) {
+			if (!is_postinstall) {
+				console.warn(`Your project at ${cwd} does not have a svelte.config.js  — skipping svelte-kit sync`);
+			}
 			return;
 		}
 
 		try {
-			const config = await load_config();
+			const config = await load_config({cwd});
 			const sync = await import('./core/sync/sync.js');
 			sync.all(config);
 		} catch (error) {
