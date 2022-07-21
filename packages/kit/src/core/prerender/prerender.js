@@ -160,7 +160,7 @@ export async function prerender({ config, client_out_dir, manifest_path, log }) 
 		return file;
 	}
 
-	const files = get_files(client_out_dir);
+	const files = new Set(walk(client_out_dir));
 	const seen = new Set();
 	const written = new Set();
 
