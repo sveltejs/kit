@@ -1,6 +1,6 @@
-import { write_if_changed } from './utils';
+import { write_if_changed } from './utils.js';
 import path from 'path';
-import { escape } from './utils';
+import { escape } from './utils.js';
 import fs from 'fs';
 
 const autogen_comment = '// this section is auto-generated';
@@ -59,12 +59,14 @@ export function write_env(config) {
 	// already-existing file
 	const pub = resolve_public_env(config.env.publicPrefix);
 	let pub_content = const_declaration_template(true, pub);
-	const old_pub_content = fs.readFileSync(pub_out).toString();
-	const autogen_content_start = old_pub_content.indexOf(autogen_comment);
-	if (autogen_content_start === -1) {
-		pub_content = old_pub_content + '\n' + pub_content;
-	} else {
-		pub_content = old_pub_content.slice(0, autogen_content_start) + '\n' + pub_content;
+	if (fs.existsSync(pub_out)) {
+		const old_pub_content = fs.readFileSync(pub_out).toString();
+		const autogen_content_start = old_pub_content.indexOf(autogen_comment);
+		if (autogen_content_start === -1) {
+			pub_content = old_pub_content + '\n' + pub_content;
+		} else {
+			pub_content = old_pub_content.slice(0, autogen_content_start) + '\n' + pub_content;
+		}
 	}
 	write_if_changed(pub_out, pub_content);
 
