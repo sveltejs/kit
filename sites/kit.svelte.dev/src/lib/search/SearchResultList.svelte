@@ -112,7 +112,7 @@
 
 	a span {
 		font-size: 1.2rem;
-		color: #999;
+		color: #737373;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		margin: 0.4rem 0 0 0;
