@@ -111,41 +111,35 @@ export async function setResponse(res, response) {
 		return;
 	}
 
-	let cancelled = false;
+	const cancel = (/** @type {Error|undefined} */ error) => {
+		res.off('close', cancel);
+		res.off('error', cancel);
 
-	res.on('close', () => {
-		if (cancelled) return;
-		cancelled = true;
-		reader.cancel();
-		res.emit('drain');
-	});
+		// If the reader has already been interrupted with an error earlier,
+		// then it will appear here, it is useless, but it needs to be catch.
+		reader.cancel(error).catch(() => {});
+		if (error) res.destroy(error);
+	};
 
-	res.on('error', (error) => {
-		if (cancelled) return;
-		cancelled = true;
-		reader.cancel(error);
-		res.emit('drain');
-	});
+	res.on('close', cancel);
+	res.on('error', cancel);
 
-	try {
-		for (;;) {
-			const { done, value } = await reader.read();
+	next();
+	async function next() {
+		try {
+			for (;;) {
+				const { done, value } = await reader.read();
 
-			if (cancelled) return;
+				if (done) break;
 
-			if (done) {
-				res.end();
-				return;
+				if (!res.write(value)) {
+					res.once('drain', next);
+					return;
+				}
 			}
-
-			const ok = res.write(value);
-
-			if (!ok) {
-				await new Promise((fulfil) => res.once('drain', fulfil));
-			}
+			res.end();
+		} catch (error) {
+			cancel(error instanceof Error ? error : new Error(String(error)));
 		}
-	} catch (error) {
-		cancelled = true;
-		res.destroy(error instanceof Error ? error : undefined);
 	}
 }
