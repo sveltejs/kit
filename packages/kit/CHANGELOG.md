@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.390
+
+### Patch Changes
+
+- [fix] vite dev no longer covers errors ([#5563](https://github.com/sveltejs/kit/pull/5563))
+
 ## 1.0.0-next.389
 
 ### Patch Changes
