@@ -12,7 +12,11 @@ import { load_template } from '../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_prefix } from '../../core/utils.js';
-import { resolve_entry } from '../utils.js';
+import {
+	resolve_entry,
+	web_socket_server_to_error_handler,
+	throw_if_illegal_private_import_vite
+} from '../utils.js';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
@@ -62,7 +66,8 @@ export async function dev(vite, vite_config, svelte_config) {
 
 						const node = await vite.moduleGraph.getModuleByUrl(url);
 						if (!node) throw new Error(`Could not find node for ${url}`);
-						throw_if_illegal_private_import(vite.ws, node);
+						const error_handler = web_socket_server_to_error_handler(vite.ws);
+						throw_if_illegal_private_import_vite(error_handler, node);
 
 						return {
 							module,
@@ -464,73 +469,4 @@ function has_correct_case(file, assets) {
 	}
 
 	return false;
-}
-
-const illegal_import_names /** @type {Array<string>} */ = [
-	'.svelte-kit/runtime/app/env/private.js'
-];
-
-/**
- * Mmmm, spicy recursion.
- * Using a depth-first search rather than a breadth-first search because it makes
- * making a pretty error easier
- *
- * It uses a set to prevent import cycles and a list to keep track of the current import
- * "stack". This (roughly) doubles the memory footprint, but it's unlikely to be large,
- * and it prevents the O(n) operation of having to check Array.prototype.includes.
- * @param {import('vite').WebSocketServer} ws
- * @param {import('vite').ModuleNode} node
- * @param {Array<string>} illegal_module_stack
- * @param {Set<string>} illegal_module_set
- */
-function throw_if_illegal_private_import_recursive(
-	ws,
-	node,
-	illegal_module_stack = [],
-	illegal_module_set = new Set()
-) {
-	const file = node.file ?? 'unknown';
-	// This prevents cyclical imports creating a stack overflow
-	if (illegal_module_set.has(file) || node.importedModules.size === 0) {
-		return;
-	}
-	illegal_module_set.add(file);
-	illegal_module_stack.push(file);
-	node.importedModules.forEach((childNode) => {
-		if (illegal_import_names.some((name) => childNode.file?.endsWith(name))) {
-			illegal_module_stack.push((childNode?.file ?? 'unknown') + ' (server-side only module)');
-			const stringified_stack = illegal_module_stack
-				.map((mod, i) => `  ${i}: ${mod}`)
-				.join(', which imports:\n');
-			const err = new Error(
-				`Found an illegal import originating from: ${illegal_module_stack[0]}. It imports:\n${stringified_stack}`
-			);
-			ws.send({
-				type: 'error',
-				err: {
-					message: err.message,
-					stack: err.stack ?? '',
-					plugin: 'vite-plugin-svelte',
-					id: file
-				}
-			});
-		}
-		throw_if_illegal_private_import_recursive(
-			ws,
-			childNode,
-			illegal_module_stack,
-			illegal_module_set
-		);
-	});
-	illegal_module_set.delete(file);
-	illegal_module_stack.pop();
-}
-
-/**
- * Throw an error if a private module is imported from a client-side node.
- * @param {import('vite').WebSocketServer} ws
- * @param {import('vite').ModuleNode} node
- */
-function throw_if_illegal_private_import(ws, node) {
-	throw_if_illegal_private_import_recursive(ws, node);
 }
