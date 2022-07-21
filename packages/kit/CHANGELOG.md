@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.389
+
+### Patch Changes
+
+- Only normalise internal URLs ([#5645](https://github.com/sveltejs/kit/pull/5645))
+
 ## 1.0.0-next.388
 
 ### Patch Changes
