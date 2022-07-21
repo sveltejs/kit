@@ -12,14 +12,7 @@ const autogen_comment = '// this section is auto-generated';
  */
 function const_declaration_template(pub, env) {
 	return `${autogen_comment}
-${
-	pub
-		? ''
-		: `if (!import.meta.env.SSR) {
-  throw new Error('Cannot import $app/env/private into client-side code');
-}
-`
-}
+
 ${Object.entries(env)
 	.map(
 		([k, v]) => `/**
