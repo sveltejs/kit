@@ -447,9 +447,8 @@ function collect_output(bundle) {
 /**
  * @param {Record<string, any>} config
  * @param {Record<string, any>} resolved_config
- * @param {boolean} immediate
  */
-function warn_overridden_config(config, resolved_config, immediate = false) {
+function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
 
 	if (overridden.length > 0) {
