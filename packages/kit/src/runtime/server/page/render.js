@@ -74,7 +74,7 @@ export async function render_response({
 
 	const stack = error?.stack;
 
-	if (__SVELTEKIT_DEV__ && error) {
+	if (options.dev && error) {
 		error.stack = options.get_stack(error);
 	}
 
@@ -317,7 +317,7 @@ export async function render_response({
 		}
 	}
 
-	if (__SVELTEKIT_DEV__ && error) {
+	if (options.dev && error) {
 		// reset stack, otherwise it may be 'fixed' a second time
 		error.stack = stack;
 	}
