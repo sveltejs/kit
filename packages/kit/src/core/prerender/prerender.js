@@ -160,7 +160,7 @@ export async function prerender({ config, client_out_dir, manifest_path, log }) 
 		return file;
 	}
 
-	const files = new Set(walk(client_out_dir).map((f) => pathToFileURL(f).href));
+	const files = new Set(walk(client_out_dir));
 	const seen = new Set();
 	const written = new Set();
 
@@ -323,7 +323,7 @@ export async function prerender({ config, client_out_dir, manifest_path, log }) 
 		for (const entry of config.prerender.entries) {
 			if (entry === '*') {
 				/** @type {import('types').ManifestData} */
-				const { routes } = (await import(manifest_path)).manifest._;
+				const { routes } = (await import(pathToFileURL(manifest_path).href)).manifest._;
 				const entries = routes
 					.map((route) => (route.type === 'page' ? route.path : ''))
 					.filter(Boolean);
