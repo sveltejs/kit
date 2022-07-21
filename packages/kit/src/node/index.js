@@ -111,7 +111,7 @@ export async function setResponse(res, response) {
 		return;
 	}
 
-	const cancel = (/** @type {any} */ error) => {
+	const cancel = (/** @type {Error|undefined} */ error) => {
 		res.off('close', cancel);
 		res.off('error', cancel);
 
@@ -139,7 +139,7 @@ export async function setResponse(res, response) {
 			}
 			res.end();
 		} catch (error) {
-			cancel(error);
+			cancel(error instanceof Error ? error : new Error(String(error)));
 		}
 	}
 }
