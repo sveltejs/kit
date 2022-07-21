@@ -415,6 +415,9 @@ test.describe('Page options', () => {
 		await page.click('button');
 		expect(await page.textContent('button')).toBe('clicks: 1');
 
+		// wait until router has started before attempting backwards client-side navigation
+		await page.waitForSelector('body.started');
+
 		await clicknav('[href="/no-router/a"]');
 		expect(await page.textContent('button')).toBe('clicks: 1');
 
