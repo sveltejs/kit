@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { pathToFileURL, URL } from 'url';
-import { mkdirp } from '../../utils/filesystem.js';
+import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { installPolyfills } from '../../node/polyfills.js';
 import { is_root_relative, resolve } from '../../utils/url.js';
 import { queue } from './queue.js';
@@ -52,12 +52,12 @@ const REDIRECT = 3;
 /**
  * @param {{
  *   config: import('types').ValidatedKitConfig;
- *   entries: string[];
- *   files: Set<string>;
+ *   client_out_dir: string;
+ *   manifest_path: string;
  *   log: Logger;
  * }} opts
  */
-export async function prerender({ config, entries, files, log }) {
+export async function prerender({ config, client_out_dir, manifest_path, log }) {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -158,6 +158,7 @@ export async function prerender({ config, entries, files, log }) {
 		return file;
 	}
 
+	const files = new Set(walk(client_out_dir).map(posixify));
 	const seen = new Set();
 	const written = new Set();
 
@@ -319,6 +320,12 @@ export async function prerender({ config, entries, files, log }) {
 	if (config.prerender.enabled) {
 		for (const entry of config.prerender.entries) {
 			if (entry === '*') {
+				/** @type {import('types').ManifestData} */
+				const { routes } = (await import(pathToFileURL(manifest_path).href)).manifest._;
+				const entries = routes
+					.map((route) => (route.type === 'page' ? route.path : ''))
+					.filter(Boolean);
+
 				for (const entry of entries) {
 					enqueue(null, config.paths.base + entry); // TODO can we pre-normalize these?
 				}
