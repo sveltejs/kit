@@ -650,6 +650,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		/** @type {Array<import('./types').BranchNode | undefined>} */
 		let branch = [];
+		let is_previous_branch = true;
 
 		/** @type {Record<string, any>} */
 		let stuff = root_stuff;
@@ -686,6 +687,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					(stuff_changed && previous.uses.stuff);
 
 				if (changed_since_last_render) {
+					is_previous_branch = false;
 					/** @type {Record<string, any>} */
 					let props = {};
 
@@ -824,6 +826,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 				branch.push(node);
 			}
+		}
+
+		if (is_previous_branch) {
+			// Nothing changed, don't rerender
+			// We can end up in here when $session is updated but not used in load
+			return;
 		}
 
 		return await get_navigation_result_from_branch({
