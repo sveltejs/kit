@@ -160,7 +160,7 @@ export async function prerender({ config, client_out_dir, manifest_path, log }) 
 		return file;
 	}
 
-	const files = new Set(walk(client_out_dir).map((f) => posixify(f)));
+	const files = new Set(walk(client_out_dir).map(posixify));
 	const seen = new Set();
 	const written = new Set();
 
