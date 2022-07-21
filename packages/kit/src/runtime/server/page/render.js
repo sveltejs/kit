@@ -72,7 +72,9 @@ export async function render_response({
 	/** @type {import('types').NormalizedLoadOutputCache | undefined} */
 	let cache;
 
-	if (error) {
+	const stack = error?.stack;
+
+	if (options.dev && error) {
 		error.stack = options.get_stack(error);
 	}
 
@@ -313,6 +315,11 @@ export async function render_response({
 		if (report_only_header) {
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
+	}
+
+	if (options.dev && error) {
+		// reset stack, otherwise it may be 'fixed' a second time
+		error.stack = stack;
 	}
 
 	return new Response(html, {
