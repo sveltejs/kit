@@ -128,7 +128,9 @@ export async function prerender({ config, entries, files, log }) {
 
 	/** @type {import('types').ServerModule} */
 	const { Server, override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
-	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
+
+	/** @type {import('types').SSRManifest} */
+	const manifest = (await import(pathToFileURL(`${server_root}/server/manifest.js`).href)).manifest;
 
 	override({
 		paths: config.paths,
