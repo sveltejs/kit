@@ -41,28 +41,10 @@ prog
 	.describe('Synchronise generated files')
 	.action(async () => {
 		const is_postinstall = process.env.npm_lifecycle_event === 'postinstall';
-		const cwd = is_postinstall ? process.env.INIT_CWD || '' : process.cwd();
-		const config_file = path.join(cwd, 'svelte.config.js');
-		const pkg_file = path.join(cwd, 'package.json');
-		let is_self = false;
-		if (fs.existsSync(pkg_file)) {
-			try {
-				const pkg = JSON.parse(fs.readFileSync(pkg_file, 'utf-8'));
-				is_self = pkg.name === '@sveltejs/kit';
-				if (pkg.scripts?.prepare === 'svelte-kit sync') {
-					const message = `script "prepare": "svelte-kit sync" in ${pkg_file} is no longer needed. Remove it.`;
-					console.error(colors.bold().red(message));
-				}
-			} catch (e) {
-				// ignore, we can be sure that our own package.json exists and can be parsed, so it is not self
-			}
-		}
-		if (is_self || !fs.existsSync(config_file)) {
-			if (!is_postinstall) {
-				console.warn(
-					`Your project at ${cwd} does not have a svelte.config.js  — skipping svelte-kit sync`
-				);
-			}
+		const cwd = is_postinstall ? process.env.INIT_CWD ?? '' : process.cwd();
+		const svelte_config_file = path.join(cwd, 'svelte.config.js');
+		if (!fs.existsSync(svelte_config_file)) {
+			console.warn(`Missing ${svelte_config_file} — skipping`);
 			return;
 		}
 
