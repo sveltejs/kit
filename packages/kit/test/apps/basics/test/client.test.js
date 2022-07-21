@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -543,6 +543,22 @@ test.describe('Routing', () => {
 		await page.click('[href="#target"]');
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
+	});
+
+	test('does not normalize external path', async ({ page }) => {
+		const urls = [];
+
+		const { port, close } = await start_server((req, res) => {
+			urls.push(req.url);
+			res.end('ok');
+		});
+
+		await page.goto(`/routing/slashes?port=${port}`);
+		await page.click(`a[href="http://localhost:${port}/with-slash/"]`);
+
+		expect(urls).toEqual(['/with-slash/']);
+
+		await close();
 	});
 });
 
