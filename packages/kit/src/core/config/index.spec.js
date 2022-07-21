@@ -73,6 +73,9 @@ const get_defaults = (prefix = '') => ({
 			reportOnly: directive_defaults
 		},
 		endpointExtensions: undefined,
+		env: {
+			publicPrefix: 'PUBLIC_'
+		},
 		files: {
 			assets: join(prefix, 'static'),
 			hooks: join(prefix, 'src/hooks'),
