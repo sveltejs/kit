@@ -238,8 +238,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 			return false; // unnecessary, but TypeScript prefers it this way
 		}
 
-		// use the normalized URL from here on out
-		url = /** @type {import('./types').NavigationIntent} */ (intent).url;
+		// if this is an internal navigation intent, use the normalized
+		// URL for the rest of the function
+		url = intent?.url || url;
 
 		// abort if user navigated during update
 		if (token !== current_token) return false;
