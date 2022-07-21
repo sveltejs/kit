@@ -4,6 +4,11 @@ import { sequence } from '../../../../src/hooks';
 
 /** @type {import('@sveltejs/kit').GetSession} */
 export function getSession(request) {
+	if (request.url.href.includes('caching') && !request.url.href.includes('session')) {
+		// necessary, else some caching tests fail
+		return {};
+	}
+
 	return {
 		answer: request.locals.answer,
 		calls: 0

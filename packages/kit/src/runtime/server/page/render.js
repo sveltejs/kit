@@ -107,20 +107,15 @@ export async function render_response({
 		}
 
 		const session = writable($session);
+		// Even if $session isn't accessed, it still ends up serialized in the rendered HTML
+		is_private = is_private || (cache?.private ?? (!!$session && Object.keys($session).length > 0));
 
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				/** @type {import('svelte/store').Writable<App.Session>} */
-				session: {
-					...session,
-					subscribe: (fn) => {
-						is_private = cache?.private ?? true;
-						return session.subscribe(fn);
-					}
-				},
+				session,
 				updated
 			},
 			/** @type {import('types').Page} */

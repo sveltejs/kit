@@ -236,7 +236,6 @@ export default function ({ external = [], edge, split } = {}) {
 
 			builder.log.minor('Copying assets...');
 
-			builder.writeStatic(dirs.static);
 			builder.writeClient(dirs.static);
 			builder.writePrerendered(dirs.static);
 

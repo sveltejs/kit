@@ -62,7 +62,8 @@ const config = {
 			default: false,
 			enabled: true,
 			entries: ['*'],
-			onError: 'fail'
+			onError: 'fail',
+			origin: 'http://sveltekit-prerender'
 		},
 		routes: (filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath),
 		serviceWorker: {
@@ -267,6 +268,8 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
 
     export default config;
     ```
+
+- `origin` — the value of `url.origin` during prerendering; useful if it is included in rendered content
 
 ### routes
 

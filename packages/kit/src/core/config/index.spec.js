@@ -112,6 +112,7 @@ const get_defaults = (prefix = '') => ({
 			entries: ['*'],
 			force: undefined,
 			onError: 'fail',
+			origin: 'http://sveltekit-prerender',
 			pages: undefined
 		},
 		protocol: undefined,

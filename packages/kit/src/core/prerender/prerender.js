@@ -10,28 +10,39 @@ import { escape_html_attr } from '../../utils/escape.js';
 
 /**
  * @typedef {import('types').PrerenderErrorHandler} PrerenderErrorHandler
- * @typedef {import('types').PrerenderOnErrorValue} OnError
  * @typedef {import('types').Logger} Logger
  */
 
-/** @type {(details: Parameters<PrerenderErrorHandler>[0] ) => string} */
-function format_error({ status, path, referrer, referenceType }) {
-	return `${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
+/**
+ * @param {Parameters<PrerenderErrorHandler>[0]} details
+ * @param {import('types').ValidatedKitConfig} config
+ */
+function format_error({ status, path, referrer, referenceType }, config) {
+	const message =
+		status === 404 && !path.startsWith(config.paths.base)
+			? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\``
+			: path;
+
+	return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
 }
 
-/** @type {(log: Logger, onError: OnError) => PrerenderErrorHandler} */
-function normalise_error_handler(log, onError) {
-	switch (onError) {
+/**
+ * @param {Logger} log
+ * @param {import('types').ValidatedKitConfig} config
+ * @returns {PrerenderErrorHandler}
+ */
+function normalise_error_handler(log, config) {
+	switch (config.prerender.onError) {
 		case 'continue':
 			return (details) => {
-				log.error(format_error(details));
+				log.error(format_error(details, config));
 			};
 		case 'fail':
 			return (details) => {
-				throw new Error(format_error(details));
+				throw new Error(format_error(details, config));
 			};
 		default:
-			return onError;
+			return config.prerender.onError;
 	}
 }
 
@@ -60,6 +71,58 @@ export async function prerender({ config, entries, files, log }) {
 	}
 
 	installPolyfills();
+	const { fetch } = globalThis;
+	globalThis.fetch = async (info, init) => {
+		/** @type {string} */
+		let url;
+
+		/** @type {RequestInit} */
+		let opts = {};
+
+		if (info instanceof Request) {
+			url = info.url;
+
+			opts = {
+				method: info.method,
+				headers: info.headers,
+				body: info.body,
+				mode: info.mode,
+				credentials: info.credentials,
+				cache: info.cache,
+				redirect: info.redirect,
+				referrer: info.referrer,
+				integrity: info.integrity
+			};
+		} else {
+			url = info.toString();
+		}
+
+		if (url.startsWith(config.prerender.origin + '/')) {
+			const request = new Request(url, opts);
+			const response = await server.respond(request, {
+				getClientAddress,
+				prerendering: {
+					dependencies: new Map()
+				}
+			});
+
+			const decoded = new URL(url).pathname;
+
+			save(
+				'dependencies',
+				response,
+				Buffer.from(await response.clone().arrayBuffer()),
+				decoded,
+				encodeURI(decoded),
+				null,
+				'fetched'
+			);
+
+			return response;
+		}
+
+		return fetch(info, init);
+	};
 
 	const server_root = join(config.outDir, 'output');
 
@@ -75,7 +138,7 @@ export async function prerender({ config, entries, files, log }) {
 
 	const server = new Server(manifest);
 
-	const error = normalise_error_handler(log, config.prerender.onError);
+	const error = normalise_error_handler(log, config);
 
 	const q = queue(config.prerender.concurrency);
 
@@ -129,16 +192,16 @@ export async function prerender({ config, entries, files, log }) {
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await server.respond(new Request(`http://sveltekit-prerender${encoded}`), {
+		const response = await server.respond(new Request(config.prerender.origin + encoded), {
 			getClientAddress,
 			prerendering: {
 				dependencies
 			}
 		});
 
-		const text = await response.text();
+		const body = Buffer.from(await response.arrayBuffer());
 
-		save('pages', response, text, decoded, encoded, referrer, 'linked');
+		save('pages', response, body, decoded, encoded, referrer, 'linked');
 
 		for (const [dependency_path, result] of dependencies) {
 			// this seems circuitous, but using new URL allows us to not care
@@ -159,7 +222,7 @@ export async function prerender({ config, entries, files, log }) {
 		}
 
 		if (config.prerender.crawl && response.headers.get('content-type') === 'text/html') {
-			for (const href of crawl(text)) {
+			for (const href of crawl(body.toString())) {
 				if (href.startsWith('data:') || href.startsWith('#')) continue;
 
 				const resolved = resolve(encoded, href);
@@ -269,7 +332,7 @@ export async function prerender({ config, entries, files, log }) {
 		await q.done();
 	}
 
-	const rendered = await server.respond(new Request('http://sveltekit-prerender/[fallback]'), {
+	const rendered = await server.respond(new Request(config.prerender.origin + '/[fallback]'), {
 		getClientAddress,
 		prerendering: {
 			fallback: true,

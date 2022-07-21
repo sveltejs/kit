@@ -51,7 +51,7 @@ function get_types(code, statements) {
 
 			const snippet = prettier.format(code.slice(start, statement.end).trim(), {
 				parser: 'typescript',
-				printWidth: 60,
+				printWidth: 80,
 				useTabs: true,
 				singleQuote: true,
 				trailingComma: 'none'

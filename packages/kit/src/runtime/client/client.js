@@ -2,7 +2,7 @@ import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { normalize } from '../load.js';
-import { LoadURL, normalize_path } from '../../utils/url.js';
+import { LoadURL, decode_params, normalize_path } from '../../utils/url.js';
 import {
 	create_updated_store,
 	find_anchor,
@@ -893,7 +893,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (params) {
 				const id = normalize_path(url.pathname, trailing_slash) + url.search;
 				/** @type {import('./types').NavigationIntent} */
-				const intent = { id, route, params, url };
+				const intent = { id, route, params: decode_params(params), url };
 				return intent;
 			}
 		}
@@ -1217,6 +1217,23 @@ export function create_client({ target, session, base, trailing_slash }) {
 						'',
 						location.href
 					);
+				}
+			});
+
+			// fix link[rel=icon], because browsers will occasionally try to load relative
+			// URLs after a pushState/replaceState, resulting in a 404 — see
+			// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
+			for (const link of document.querySelectorAll('link')) {
+				if (link.rel === 'icon') link.href = link.href;
+			}
+
+			addEventListener('pageshow', (event) => {
+				// If the user navigates to another site and then uses the back button and
+				// bfcache hits, we need to set navigating to null, the site doesn't know
+				// the navigation away from it was successful.
+				// Info about bfcache here: https://web.dev/bfcache
+				if (event.persisted) {
+					stores.navigating.set(null);
 				}
 			});
 		},

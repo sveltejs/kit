@@ -39,10 +39,7 @@ Check out the [Migration Guide](https://kit.svelte.dev/docs/migrating) if you ar
 
 ## Bug reporting
 
-Please make sure the issue you're reporting involves SvelteKit. Many issues related to how a project builds originate from [Vite](https://vitejs.dev/), which is used to build a SvelteKit project. It's important to note that new Vite projects don't use SSR by default, and so if you create a new Vite project from scratch, many issues won't reproduce. You should thus start with a project that utilizes SSR, such as:
-
-- https://github.com/GrygrFlzr/vite-ssr-d3
-- https://github.com/sveltejs/vite-plugin-svelte/tree/main/packages/e2e-tests/vite-ssr
+Please make sure the issue you're reporting involves SvelteKit. Many issues related to how a project builds originate from [Vite](https://vitejs.dev/), which is used to build a SvelteKit project. It's important to note that new Vite projects don't use SSR by default, and so if you create a new Vite project from scratch, many issues won't reproduce. You should thus start with a project that utilizes SSR, such as [`vite-plugin-svelte`'s SSR example](https://github.com/sveltejs/vite-plugin-svelte/tree/main/packages/e2e-tests/vite-ssr-esm).
 
 If an issue originates from Vite, please report in the [Vite issue tracker](https://github.com/vitejs/vite/issues).
 

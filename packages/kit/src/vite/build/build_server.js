@@ -73,7 +73,7 @@ export class Server {
 			manifest,
 			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
-			prefix: assets + '/${config.kit.appDir}/',
+			prefix: assets + '/',
 			prerender: {
 				default: ${config.kit.prerender.default},
 				enabled: ${config.kit.prerender.enabled}
@@ -111,9 +111,9 @@ export class Server {
 /**
  * @param {{
  *   cwd: string;
- *   config: import('types').ValidatedConfig
- *   vite_config_env: import('vite').ConfigEnv
- *   manifest_data: import('types').ManifestData
+ *   config: import('types').ValidatedConfig;
+ *   vite_config_env: import('vite').ConfigEnv;
+ *   manifest_data: import('types').ManifestData;
  *   build_dir: string;
  *   output_dir: string;
  *   service_worker_entry_file: string | null;
@@ -196,8 +196,6 @@ export async function build_server(options, client) {
 	);
 
 	remove_svelte_kit(merged_config);
-
-	process.env.VITE_SVELTEKIT_ADAPTER_NAME = config.kit.adapter?.name;
 
 	const { chunks } = await create_build(merged_config);
 

@@ -3,10 +3,12 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
-import { decode_params, serialize_error, GENERIC_ERROR } from './utils.js';
-import { normalize_path } from '../../utils/url.js';
+import { serialize_error, GENERIC_ERROR } from './utils.js';
+import { decode_params, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
+
+/* global __SVELTEKIT_ADAPTER_NAME__ */
 
 const DATA_SUFFIX = '/__data.json';
 
@@ -115,9 +117,7 @@ export async function respond(request, options, state) {
 		get clientAddress() {
 			if (!state.getClientAddress) {
 				throw new Error(
-					`${
-						import.meta.env.VITE_SVELTEKIT_ADAPTER_NAME
-					} does not specify getClientAddress. Please raise an issue`
+					`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
 				);
 			}
 

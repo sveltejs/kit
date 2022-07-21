@@ -1,5 +1,75 @@
 # @sveltejs/kit
 
+## 1.0.0-next.386
+
+### Patch Changes
+
+- Ensure private cache when something is returned from getSession hook ([#5640](https://github.com/sveltejs/kit/pull/5640))
+
+* [fix] transform link[rel=icon] to be absolute to avoid console error when navigating ([#5583](https://github.com/sveltejs/kit/pull/5583))
+
+## 1.0.0-next.385
+
+### Patch Changes
+
+- Make 404 error more helpful if paths.base is missing ([#5622](https://github.com/sveltejs/kit/pull/5622))
+
+* [fix] decode parameters on client ([`d02f1f25`](https://github.com/sveltejs/kit/commit/d02f1f25ac8acb29e21a06b94418c333928fb9bb))
+
+- Add config.kit.prerender.origin ([#5627](https://github.com/sveltejs/kit/pull/5627))
+
+## 1.0.0-next.384
+
+### Patch Changes
+
+- Respect custom Vite mode in SSR build ([#5602](https://github.com/sveltejs/kit/pull/5602))
+
+* [breaking] remove mode, prod and server from \$app/env ([#5602](https://github.com/sveltejs/kit/pull/5602))
+
+## 1.0.0-next.383
+
+### Patch Changes
+
+- Add formData method in superclass rather than monkey-patch ([#5629](https://github.com/sveltejs/kit/pull/5629))
+
+## 1.0.0-next.382
+
+### Patch Changes
+
+- [fix] change Vite's output directory from `_app` to client ([#5620](https://github.com/sveltejs/kit/pull/5620))
+
+## 1.0.0-next.381
+
+### Patch Changes
+
+- Handle errors in Node streams ([#5616](https://github.com/sveltejs/kit/pull/5616))
+
+## 1.0.0-next.380
+
+### Patch Changes
+
+- Handle circular dependencies in dynamic imports ([#5619](https://github.com/sveltejs/kit/pull/5619))
+
+* [fix] handle binary data when prerendering ([#5497](https://github.com/sveltejs/kit/pull/5497))
+
+- [breaking] remove writeStatic to align with Vite ([#5618](https://github.com/sveltejs/kit/pull/5618))
+
+* Reset navigating store upon return to site with a bfcache hit ([#5613](https://github.com/sveltejs/kit/pull/5613))
+
+## 1.0.0-next.379
+
+### Patch Changes
+
+- Use define instead of import.meta.env.VITE_SVELTEKIT_FOO for internal values ([#5594](https://github.com/sveltejs/kit/pull/5594))
+
+## 1.0.0-next.378
+
+### Patch Changes
+
+- Pause Node streams as necessary when converting to ReadableStream ([#5587](https://github.com/sveltejs/kit/pull/5587))
+
+* improve vite version check to work with custom resolutions, eg. pnpm overrides ([#5586](https://github.com/sveltejs/kit/pull/5586))
+
 ## 1.0.0-next.377
 
 ### Patch Changes

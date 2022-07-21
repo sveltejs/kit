@@ -4,3 +4,6 @@
 <a href="/encoded/redirect">Redirect</a>
 <a href="/encoded/@svelte">@svelte</a>
 <a href="/encoded/$SVLT">$SVLT</a>
+<a href="/encoded/test%2520me">test%20me</a>
+<a href="/encoded/AC%2fDC">AC/DC</a>
+<a href="/encoded/%5b">[</a>
