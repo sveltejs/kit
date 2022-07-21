@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { dirname, join, relative } from 'path';
 import { pathToFileURL, URL } from 'url';
-import { mkdirp, walk } from '../../utils/filesystem.js';
+import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { installPolyfills } from '../../node/polyfills.js';
 import { is_root_relative, normalize_path, resolve } from '../../utils/url.js';
 import { queue } from './queue.js';
@@ -160,7 +160,7 @@ export async function prerender({ config, client_out_dir, manifest_path, log }) 
 		return file;
 	}
 
-	const files = new Set(walk(client_out_dir));
+	const files = new Set(walk(client_out_dir).map(f => posixify(f)));
 	const seen = new Set();
 	const written = new Set();
 
