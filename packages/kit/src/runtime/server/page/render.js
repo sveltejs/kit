@@ -292,10 +292,11 @@ export async function render_response({
 		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
 	// TODO flush chunks as early as we can
-	const html = await resolve_opts.transformPageChunk({
-		html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
-		done: true
-	});
+	const html =
+		(await resolve_opts.transformPageChunk({
+			html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
+			done: true
+		})) || '';
 
 	const headers = new Headers({
 		'content-type': 'text/html',
