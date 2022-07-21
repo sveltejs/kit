@@ -412,10 +412,13 @@ test.describe('Page options', () => {
 		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
 		expect(await page.textContent('button')).toBe('clicks: 0');
 
+		// wait until hydration before interacting with button
+		await page.waitForSelector('body.started');
+
 		await page.click('button');
 		expect(await page.textContent('button')).toBe('clicks: 1');
 
-		// wait until router has started before attempting backwards client-side navigation
+		// wait until hydration before attempting backwards client-side navigation
 		await page.waitForSelector('body.started');
 
 		await clicknav('[href="/no-router/a"]');
