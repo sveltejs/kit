@@ -185,7 +185,7 @@ export async function respond(request, options, state) {
 					// @ts-expect-error
 					if (opts.transformPage) {
 						throw new Error(
-							'transformPage has been replaced by transformPageChunk — see https://github.com/sveltejs/kit/issues/4910 for more information'
+							'transformPage has been replaced by transformPageChunk — see https://github.com/sveltejs/kit/pull/5657 for more information'
 						);
 					}
 
