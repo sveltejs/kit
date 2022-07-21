@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.387
+
+### Patch Changes
+
+- set Vite's `publicDir` option ([`14c18e3c`](https://github.com/sveltejs/kit/commit/14c18e3cdf023b587e1946e1b012f33cadb8d82a))
+
 ## 1.0.0-next.386
 
 ### Patch Changes
