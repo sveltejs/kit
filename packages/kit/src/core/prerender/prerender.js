@@ -358,21 +358,3 @@ export async function prerender({ config, client_out_dir, manifest_path, log }) 
 function getClientAddress() {
 	throw new Error('Cannot read clientAddress during prerendering');
 }
-
-/**
- * @param {string} dir
- * @param {string} [curr_dir]
- */
-function get_files(dir, curr_dir = dir) {
-	const result = new Set();
-	const files = readdirSync(curr_dir);
-	for (const file of files) {
-		const name = join(curr_dir, file);
-		if (statSync(name).isDirectory()) {
-			get_files(dir, name).forEach((f) => result.add(f));
-		} else {
-			result.add(relative(dir, name));
-		}
-	}
-	return result;
-}
