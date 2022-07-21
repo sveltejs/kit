@@ -100,6 +100,9 @@ function kit() {
 	/** @type {import('types').BuildData} */
 	let build_data;
 
+	/** @type {string | undefined} */
+	let deferred_warning;
+
 	/**
 	 * @type {{
 	 *   build_dir: string;
@@ -188,7 +191,8 @@ function kit() {
 
 				const new_config = vite_client_build_config();
 
-				warn_overridden_config(config, new_config);
+				const warning = warn_overridden_config(config, new_config);
+				if (warning) console.error(warning + '\n');
 
 				return new_config;
 			}
@@ -235,7 +239,8 @@ function kit() {
 					}
 				}
 			};
-			warn_overridden_config(config, result);
+
+			deferred_warning = warn_overridden_config(config, result);
 			return result;
 		},
 
@@ -373,6 +378,14 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
+			// This method is called by Vite after clearing the screen.
+			// This patch ensures we can log any important messages afterwards for the user to see.
+			const print_urls = vite.printUrls;
+			vite.printUrls = function () {
+				print_urls.apply(this);
+				if (deferred_warning) console.error('\n' + deferred_warning);
+			};
+
 			return await dev(vite, vite_config, svelte_config);
 		},
 
@@ -422,11 +435,12 @@ function collect_output(bundle) {
  */
 function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
+
 	if (overridden.length > 0) {
-		console.log(
-			colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
+		return (
+			colors.bold().red('The following Vite config options will be overridden by SvelteKit:') +
+			overridden.map((key) => `\n  - ${key}`).join('')
 		);
-		console.log(overridden.map((key) => `  - ${key}`).join('\n'));
 	}
 }
 
