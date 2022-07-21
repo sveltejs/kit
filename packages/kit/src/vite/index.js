@@ -100,6 +100,9 @@ function kit() {
 	/** @type {import('types').BuildData} */
 	let build_data;
 
+	/** @type {string | undefined} */
+	let deferred_warning;
+
 	/**
 	 * @type {{
 	 *   build_dir: string;
@@ -187,7 +190,10 @@ function kit() {
 				manifest_data = sync.all(svelte_config).manifest_data;
 
 				const new_config = vite_client_build_config();
-				warn_overridden_config(config, new_config, true);
+
+				const warning = warn_overridden_config(config, new_config, true);
+				if (warning) console.error(warning + '\n');
+
 				return new_config;
 			}
 
@@ -232,7 +238,8 @@ function kit() {
 					}
 				}
 			};
-			warn_overridden_config(config, result);
+
+			deferred_warning = warn_overridden_config(config, result);
 			return result;
 		},
 
@@ -391,9 +398,9 @@ function kit() {
 			const print_urls = vite.printUrls;
 			vite.printUrls = function () {
 				print_urls.apply(this);
-				console.log('');
-				log_deferred_messages();
+				if (deferred_warning) console.error('\n' + deferred_warning);
 			};
+
 			return await dev(vite, vite_config, svelte_config);
 		},
 
@@ -437,13 +444,6 @@ function collect_output(bundle) {
 	return { assets, chunks };
 }
 
-/** @type {Array<() => void>} */
-const deferred_logs = [];
-
-function log_deferred_messages() {
-	deferred_logs.forEach((log) => log());
-}
-
 /**
  * @param {Record<string, any>} config
  * @param {Record<string, any>} resolved_config
@@ -451,21 +451,13 @@ function log_deferred_messages() {
  */
 function warn_overridden_config(config, resolved_config, immediate = false) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
-	if (overridden.length > 0) {
-		const log_warning = () => {
-			console.log(
-				colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
-			);
-			console.log(overridden.map((key) => `  - ${key}`).join('\n'));
-		};
-		if (immediate) {
-			log_warning();
-			return;
-		}
 
-		deferred_logs.push(log_warning);
+	if (overridden.length > 0) {
+		return (
+			colors.bold().red('The following Vite config options will be overridden by SvelteKit:') +
+			overridden.map((key) => `\n  - ${key}`).join('')
+		);
 	}
-	return () => {};
 }
 
 /**
