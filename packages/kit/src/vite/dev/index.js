@@ -198,6 +198,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				const decoded = decodeURI(new URL(base + req.url).pathname);
 
+				let wrong_case = false;
 				if (decoded.startsWith(assets)) {
 					const pathname = decoded.slice(assets.length);
 					const file = svelte_config.kit.files.assets + pathname;
@@ -207,6 +208,8 @@ export async function dev(vite, vite_config, svelte_config) {
 							req.url = encodeURI(pathname); // don't need query/hash
 							asset_server(req, res);
 							return;
+						} else {
+							wrong_case = true;
 						}
 					}
 				}
@@ -217,7 +220,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					!vite_config.server.fs.strict ||
 					vite_config.server.fs.allow.some((dir) => file.startsWith(dir));
 
-				if (is_file && allowed) {
+				if (is_file && allowed && !wrong_case) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res);
 					return;
