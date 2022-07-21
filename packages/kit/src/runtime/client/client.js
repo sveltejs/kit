@@ -238,6 +238,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 			return false; // unnecessary, but TypeScript prefers it this way
 		}
 
+		// if this is an internal navigation intent, use the normalized
+		// URL for the rest of the function
+		url = intent?.url || url;
+
 		// abort if user navigated during update
 		if (token !== current_token) return false;
 
@@ -891,9 +895,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			const params = route.exec(path);
 
 			if (params) {
-				const id = normalize_path(url.pathname, trailing_slash) + url.search;
+				const normalized = new URL(
+					url.origin + normalize_path(url.pathname, trailing_slash) + url.search + url.hash
+				);
+				const id = normalized.pathname + normalized.search;
 				/** @type {import('./types').NavigationIntent} */
-				const intent = { id, route, params: decode_params(params), url };
+				const intent = { id, route, params: decode_params(params), url: normalized };
 				return intent;
 			}
 		}
@@ -930,9 +937,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 			return;
 		}
 
-		const pathname = normalize_path(url.pathname, trailing_slash);
-		const normalized = new URL(url.origin + pathname + url.search + url.hash);
-
 		update_scroll_positions(current_history_index);
 
 		accepted();
@@ -940,12 +944,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (started) {
 			stores.navigating.set({
 				from: current.url,
-				to: normalized
+				to: url
 			});
 		}
 
 		await update(
-			normalized,
+			url,
 			redirect_chain,
 			false,
 			{
@@ -954,7 +958,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				details
 			},
 			() => {
-				const navigation = { from, to: normalized };
+				const navigation = { from, to: url };
 				callbacks.after_navigate.forEach((fn) => fn(navigation));
 
 				stores.navigating.set(null);
