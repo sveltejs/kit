@@ -553,12 +553,14 @@ test.describe('Routing', () => {
 			res.end('ok');
 		});
 
-		await page.goto(`/routing/slashes?port=${port}`);
-		await page.click(`a[href="http://localhost:${port}/with-slash/"]`);
+		try {
+			await page.goto(`/routing/slashes?port=${port}`);
+			await page.click(`a[href="http://localhost:${port}/with-slash/"]`);
 
-		expect(urls).toEqual(['/with-slash/']);
-
-		await close();
+			expect(urls).toEqual(['/with-slash/']);
+		} finally {
+			await close();
+		}
 	});
 });
 
