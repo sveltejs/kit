@@ -2,7 +2,6 @@ import fs from 'fs';
 import * as vite from 'vite';
 import { s } from '../../utils/misc.js';
 import { get_vite_config, merge_vite_configs } from '../utils.js';
-import { normalize_path } from '../../utils/url.js';
 import { assets_base, remove_svelte_kit } from './utils.js';
 
 /**
