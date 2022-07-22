@@ -40,8 +40,8 @@ prog
 	.describe('Synchronise generated files')
 	.option(
 		'--mode',
-		'Specify a mode for loading environment variables (default: "development")',
-		undefined
+		'Specify a mode for loading environment variables',
+		'development'
 	)
 	.action(async ({ mode }) => {
 		if (!fs.existsSync('svelte.config.js')) {
