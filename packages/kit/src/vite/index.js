@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
+import fs, { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import colors from 'kleur';
@@ -16,6 +16,7 @@ import { get_runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry } from './utils.js';
+import { fileURLToPath } from 'node:url';
 
 const cwd = process.cwd();
 
@@ -323,18 +324,15 @@ function kit() {
 			const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
 
 			// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-			const kit_dir = createRequire(import.meta.url)
-				.resolve('@sveltejs/kit/package.json')
-				.slice(0, -'package.json'.length);
+			const file = fileURLToPath(import.meta.url);
+			const dir = file.substring(0, file.lastIndexOf(path.sep));
+			const dist_script = path.join(dir, 'prerender.js');
+			const script = existsSync(dist_script)
+				? dist_script
+				: path.join(dir, '../core/prerender/prerender.js');
 			const { status } = spawnSync(
 				'node',
-				[
-					kit_dir + 'dist/prerender.js',
-					vite_config.build.outDir,
-					results_path,
-					manifest_path,
-					'' + verbose
-				],
+				[script, vite_config.build.outDir, results_path, manifest_path, '' + verbose],
 				{ stdio: 'inherit' }
 			);
 			if (status !== 0) {
