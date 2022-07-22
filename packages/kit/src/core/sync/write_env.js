@@ -19,12 +19,12 @@ export function write_env(config, mode) {
 	// TODO when testing src, `$app` points at `src/runtime/app`... will
 	// probably need to fiddle with aliases
 	write_if_changed(
-		path.join(config.outDir, 'runtime/app/env/public/index.js'),
+		path.join(config.outDir, 'runtime/app/env/public.js'),
 		create_module('$app/env/public', pub)
 	);
 
 	write_if_changed(
-		path.join(config.outDir, 'runtime/app/env/private/index.js'),
+		path.join(config.outDir, 'runtime/app/env/private.js'),
 		create_module('$app/env/private', prv)
 	);
 
