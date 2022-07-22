@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
+import sade from 'sade';
 import { pathToFileURL, URL } from 'url';
 import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { installPolyfills } from '../../node/polyfills.js';
@@ -7,11 +8,26 @@ import { is_root_relative, resolve } from '../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../utils/escape.js';
+import { logger } from '../utils.js';
+import { load_config } from '../config/index.js';
 
 /**
  * @typedef {import('types').PrerenderErrorHandler} PrerenderErrorHandler
  * @typedef {import('types').Logger} Logger
  */
+
+const prog = sade('prerender');
+prog
+	.command('run', '', { default: true })
+	.describe('Runs prerendering. Only for internal use')
+	.option('--client_out_dir', "Vite's output directory", '')
+	.option('--results_path', 'Where to put the results', '')
+	.option('--manifest_path', "SvelteKit's manifest file", '')
+	.option('--verbose', 'Whether logging should be verbose', false)
+	.action(async (opts) => {
+		prerender(opts);
+	});
+prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
 
 /**
  * @param {Parameters<PrerenderErrorHandler>[0]} details
@@ -50,14 +66,23 @@ const OK = 2;
 const REDIRECT = 3;
 
 /**
+ * @param {string} path
+ * @param {import('types').Prerendered} prerendered
+ */
+const output_and_exit = (path, prerendered) => {
+	writeFileSync(path, JSON.stringify(prerendered));
+	process.exit(0);
+};
+
+/**
  * @param {{
- *   config: import('types').ValidatedKitConfig;
  *   client_out_dir: string;
+ *   results_path: string;
  *   manifest_path: string;
- *   log: Logger;
+ *   verbose: boolean;
  * }} opts
  */
-export async function prerender({ config, client_out_dir, manifest_path, log }) {
+export async function prerender({ client_out_dir, results_path, manifest_path, verbose }) {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -66,9 +91,16 @@ export async function prerender({ config, client_out_dir, manifest_path, log }) 
 		paths: []
 	};
 
+	/** @type {import('types').ValidatedKitConfig} */
+	const config = (await load_config()).kit;
+
 	if (!config.prerender.enabled) {
-		return prerendered;
+		output_and_exit(results_path, prerendered);
+		return;
 	}
+
+	/** @type {import('types').Logger} */
+	const log = logger({ verbose });
 
 	installPolyfills();
 	const { fetch } = globalThis;
@@ -349,7 +381,7 @@ export async function prerender({ config, client_out_dir, manifest_path, log }) 
 	mkdirp(dirname(file));
 	writeFileSync(file, await rendered.text());
 
-	return prerendered;
+	output_and_exit(results_path, prerendered);
 }
 
 /** @return {string} */

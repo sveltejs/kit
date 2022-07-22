@@ -1,3 +1,4 @@
+import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import colors from 'kleur';
@@ -7,7 +8,6 @@ import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { prerender } from '../core/prerender/prerender.js';
 import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
@@ -273,9 +273,8 @@ function kit() {
 		 * then use this hook to kick off builds for the server and service worker.
 		 */
 		async writeBundle(_options, bundle) {
-			log = logger({
-				verbose: vite_config.logLevel === 'info'
-			});
+			const verbose = vite_config.logLevel === 'info';
+			log = logger({ verbose });
 
 			fs.writeFileSync(
 				`${paths.client_out_dir}/${svelte_config.kit.appDir}/version.json`,
@@ -320,12 +319,26 @@ function kit() {
 			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 			log.info('Prerendering');
 
-			prerendered = await prerender({
-				config: svelte_config.kit,
-				client_out_dir: vite_config.build.outDir,
-				manifest_path,
-				log
-			});
+			const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
+
+			// do prerendering in a subprocess so any dangling stuff gets killed upon completion
+			spawnSync(
+				'node',
+				[
+					'./node_modules/@sveltejs/kit/dist/prerender.js',
+					'--client_out_dir',
+					vite_config.build.outDir,
+					'--results_path',
+					results_path,
+					'--manifest_path',
+					manifest_path,
+					'--verbose',
+					'' + verbose
+				],
+				{ stdio: 'inherit' }
+			);
+
+			prerendered = JSON.parse(fs.readFileSync(results_path, 'utf8'));
 
 			if (options.service_worker_entry_file) {
 				if (svelte_config.kit.paths.assets) {
@@ -363,13 +376,6 @@ function kit() {
 				console.log(
 					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
 				);
-			}
-
-			if (svelte_config.kit.prerender.enabled) {
-				// this is necessary to close any open db connections, etc.
-				// TODO: prerender in a subprocess so we can exit in isolation and then remove this
-				// https://github.com/sveltejs/kit/issues/5306
-				process.exit(0);
 			}
 		},
 
