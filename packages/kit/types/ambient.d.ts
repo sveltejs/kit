@@ -65,7 +65,7 @@ declare namespace App {
 	/**
 	 * The interface that defines the dynamic environment variables exported from '$app/env/platform'.
 	 */
-	export interface RuntimeEnv extends Record<string, string> {}
+	export interface Env extends Record<string, string> {}
 }
 
 /**
@@ -103,7 +103,7 @@ declare module '$app/env' {
  * ```
  */
 declare module '$app/env/platform' {
-	export let env: App.RuntimeEnv;
+	export let env: App.Env;
 }
 
 /**

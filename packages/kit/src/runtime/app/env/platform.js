@@ -1,4 +1,4 @@
-/** @type {App.RuntimeEnv} */
+/** @type {App.Env} */
 export let env = {};
 
 /** @type {(environment: Record<string, string>) => void} */
