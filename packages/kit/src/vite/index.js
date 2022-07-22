@@ -322,7 +322,7 @@ function kit() {
 			const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
 
 			// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-			spawnSync(
+			const { status } = spawnSync(
 				'node',
 				[
 					'./node_modules/@sveltejs/kit/dist/prerender.js',
@@ -337,6 +337,9 @@ function kit() {
 				],
 				{ stdio: 'inherit' }
 			);
+			if (status !== 0) {
+				throw new Error('prerendering failed');
+			}
 
 			prerendered = JSON.parse(fs.readFileSync(results_path, 'utf8'));
 
