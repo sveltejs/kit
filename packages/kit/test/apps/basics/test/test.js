@@ -338,6 +338,18 @@ test.describe('Encoded paths', () => {
 	});
 });
 
+test.describe('Env', () => {
+	test('includes environment variables', async ({ page }) => {
+		await page.goto('/env');
+		expect(await page.textContent('#private')).toBe(
+			'SECRET: this is directly accessible to server-side code'
+		);
+		expect(await page.textContent('#public')).toBe(
+			'PUBLIC_VAR: this is directly accessible anywhere'
+		);
+	});
+});
+
 test.describe('Errors', () => {
 	if (process.env.DEV) {
 		// TODO these probably shouldn't have the full render treatment,
