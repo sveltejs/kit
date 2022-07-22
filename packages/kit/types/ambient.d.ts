@@ -61,6 +61,11 @@ declare namespace App {
 	 * The interface that defines `stuff`, as input or output to [`load`](/docs/loading) or as the value of the `stuff` property of the [page store](/docs/modules#$app-stores).
 	 */
 	export interface Stuff {}
+
+	/**
+	 * The interface that defines the runtime environment variables exported from '$app/env/runtime'.
+	 */
+	export interface RuntimeEnv extends Record<string, string> {}
 }
 
 /**
@@ -83,6 +88,13 @@ declare module '$app/env' {
 	 * `true` when prerendering, `false` otherwise.
 	 */
 	export const prerendering: boolean;
+}
+
+declare module '$app/env/runtime' {
+	/**
+	 * The runtime environment variables, as defined by the adapter.
+	 */
+	export let env: App.RuntimeEnv;
 }
 
 /**

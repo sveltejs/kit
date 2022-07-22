@@ -27,6 +27,7 @@ import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';
+import { set_env } from '${runtime}/app/env/runtime.js';
 
 const template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace('%sveltekit.head%', '" + head + "')
@@ -87,6 +88,11 @@ export class Server {
 			trailing_slash: ${s(config.kit.trailingSlash)}
 		};
 	}
+
+  init(options = { env: {} }) {
+    set_env(options.env);
+    return Promise.resolve();
+  }
 
 	async respond(request, options = {}) {
 		if (!(request instanceof Request)) {
