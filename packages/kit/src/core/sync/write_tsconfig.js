@@ -24,19 +24,13 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(config.outDir, file));
 
-	const dirs = new Set([
-		project_relative(path.dirname(config.files.routes)),
-		project_relative(path.dirname(config.files.lib))
-	]);
-
-	/** @type {string[]} */
-	const include = [];
-	dirs.forEach((dir) => {
-		include.push(config_relative(`${dir}/**/*.js`));
-		include.push(config_relative(`${dir}/**/*.ts`));
-		include.push(config_relative(`${dir}/**/*.svelte`));
-	});
-	include.push('types/ambient.d.ts');
+	const include = ['types/ambient.d.ts'];
+	for (const dir of [config.files.routes, config.files.lib]) {
+		const relative = project_relative(path.dirname(dir));
+		include.push(config_relative(`${relative}/**/*.js`));
+		include.push(config_relative(`${relative}/**/*.ts`));
+		include.push(config_relative(`${relative}/**/*.svelte`));
+	}
 
 	/** @type {Record<string, string[]>} */
 	const paths = {};
