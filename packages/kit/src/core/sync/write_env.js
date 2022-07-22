@@ -1,6 +1,5 @@
 import { write_if_changed } from './utils.js';
 import path from 'path';
-import { escape } from './utils.js';
 import fs from 'fs';
 
 const autogen_comment = '// this section is auto-generated';
@@ -18,7 +17,7 @@ ${Object.entries(env)
 		([k, v]) => `/**
  * @type {import('$app/env${pub ? '' : '/private'}').${k}}
  */
-export const ${k} = "${escape(v)}";
+export const ${k} = "${JSON.stringify(v)}";
 `
 	)
 	.join('\n')}
@@ -32,8 +31,8 @@ export const ${k} = "${escape(v)}";
  */
 function type_declaration_template(pub, env) {
 	return `declare module '$app/env${pub ? '' : '/private'}' {
-  ${Object.entries(env)
-		.map(([k]) => `export const ${k}: string;`)
+  ${Object.keys(env)
+		.map((k) => `export const ${k}: string;`)
 		.join('\n  ')}
 }`;
 }
