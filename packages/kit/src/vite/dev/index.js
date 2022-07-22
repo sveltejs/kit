@@ -240,6 +240,16 @@ export async function dev(vite, vite_config, svelte_config) {
 					? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
 					: {};
 
+				/** @type {(env: Record<string, string>) => void} */
+				const set_env = (await import(`${runtime}/app/env/runtime.js`)).set_env;
+
+				set_env(
+					// This just makes sure no values are undefined
+					Object.entries(process.env).reduce((prev, [k, v]) => {
+						return { ...prev, [k]: v ?? '' };
+					}, {})
+				);
+
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
 
 				/** @type {import('types').Hooks} */
