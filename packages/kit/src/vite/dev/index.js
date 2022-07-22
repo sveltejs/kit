@@ -12,11 +12,7 @@ import { load_template } from '../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_prefix } from '../../core/utils.js';
-import {
-	resolve_entry,
-	web_socket_server_to_error_handler,
-	throw_if_illegal_private_import_vite
-} from '../utils.js';
+import { resolve_entry, throw_if_illegal_private_import_vite } from '../utils.js';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
@@ -66,8 +62,9 @@ export async function dev(vite, vite_config, svelte_config) {
 
 						const node = await vite.moduleGraph.getModuleByUrl(url);
 						if (!node) throw new Error(`Could not find node for ${url}`);
-						const error_handler = web_socket_server_to_error_handler(vite.ws);
-						throw_if_illegal_private_import_vite(error_handler, node);
+						throw_if_illegal_private_import_vite((err) => {
+							throw err;
+						}, node);
 
 						return {
 							module,

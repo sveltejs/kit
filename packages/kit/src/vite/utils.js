@@ -135,24 +135,6 @@ export function resolve_entry(entry) {
 	return null;
 }
 
-/**
- * Derive an error handler from a web socket server.
- * @param {import('vite').WebSocketServer} ws
- */
-export function web_socket_server_to_error_handler(ws) {
-	/** @type {(id: string, err: Error) => void} */
-	return (id, err) =>
-		ws.send({
-			type: 'error',
-			err: {
-				message: err.message,
-				stack: err.stack ?? '',
-				plugin: 'vite-plugin-svelte',
-				id
-			}
-		});
-}
-
 const illegal_import_names /** @type {Array<string>} */ = [
 	'.svelte-kit/runtime/app/env/private.js'
 ];
