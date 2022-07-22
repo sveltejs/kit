@@ -74,7 +74,7 @@ function write_public_env(config, mode = undefined) {
 
 	// public is a little difficult since we append to an
 	// already-existing file
-	const pub = resolve_public_env(config.env.publicPrefix, mode);
+	const pub = loadEnv(mode, process.cwd(), config.env.publicPrefix);
 	let pub_content = const_declaration_template(true, pub);
 	if (fs.existsSync(pub_out)) {
 		const old_pub_content = fs.readFileSync(pub_out).toString();
