@@ -63,7 +63,7 @@ declare namespace App {
 	export interface Stuff {}
 
 	/**
-	 * The interface that defines the runtime environment variables exported from '$app/env/runtime'.
+	 * The interface that defines the dynamic environment variables exported from '$app/env/platform'.
 	 */
 	export interface RuntimeEnv extends Record<string, string> {}
 }
@@ -90,7 +90,7 @@ declare module '$app/env' {
 	export const prerendering: boolean;
 }
 
-declare module '$app/env/runtime' {
+declare module '$app/env/platform' {
 	/**
 	 * The runtime environment variables, as defined by the adapter.
 	 */

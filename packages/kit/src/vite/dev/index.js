@@ -237,9 +237,15 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
 					: {};
 
-				/** @type {(env: Record<string, string>) => void} */
-				const set_env = (await import(`${runtime}/app/env/runtime.js`)).set_env;
-				set_env(/** @type {Record<string, string>} */ (process.env));
+				const { set_env } = await vite.ssrLoadModule(
+					process.env.BUNDLED
+						? `/${posixify(
+								path.relative(cwd, `${svelte_config.kit.outDir}/runtime/app/env/platform.js`)
+						  )}`
+						: `/@fs${runtime}/app/env/platform.js`
+				);
+
+				set_env(process.env);
 
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
 

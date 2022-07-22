@@ -27,7 +27,7 @@ import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';
-import { set_env } from '${runtime}/app/env/runtime.js';
+import { set_env } from '${runtime}/app/env/platform.js';
 
 const template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace('%sveltekit.head%', '" + head + "')
