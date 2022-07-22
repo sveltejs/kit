@@ -375,6 +375,8 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('1');
 		await clicknav('[href="/load/layout-props/b"]');
 		expect(await page.textContent('h1')).toBe('1');
+		await page.click('button');
+		expect(await page.textContent('h1')).toBe('2');
 	});
 
 	if (process.env.DEV) {
