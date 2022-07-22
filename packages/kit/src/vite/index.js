@@ -273,9 +273,8 @@ function kit() {
 		 * then use this hook to kick off builds for the server and service worker.
 		 */
 		async writeBundle(_options, bundle) {
-			log = logger({
-				verbose: vite_config.logLevel === 'info'
-			});
+			const verbose = vite_config.logLevel === 'info';
+			log = logger({ verbose });
 
 			fs.writeFileSync(
 				`${paths.client_out_dir}/${svelte_config.kit.appDir}/version.json`,
@@ -321,10 +320,9 @@ function kit() {
 			log.info('Prerendering');
 
 			prerendered = await prerender({
-				config: svelte_config.kit,
 				client_out_dir: vite_config.build.outDir,
 				manifest_path,
-				log
+				verbose
 			});
 
 			if (options.service_worker_entry_file) {

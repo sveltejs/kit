@@ -177,13 +177,6 @@ export interface Prerendered {
 			file: string;
 		}
 	>;
-	assets: Map<
-		string,
-		{
-			/** The MIME type of the asset */
-			type: string;
-		}
-	>;
 	redirects: Map<
 		string,
 		{

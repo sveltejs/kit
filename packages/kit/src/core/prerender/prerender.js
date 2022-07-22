@@ -7,6 +7,8 @@ import { is_root_relative, resolve } from '../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../utils/escape.js';
+import { logger } from '../utils.js';
+import { load_config } from '../config/index.js';
 
 /**
  * @typedef {import('types').PrerenderErrorHandler} PrerenderErrorHandler
@@ -51,24 +53,28 @@ const REDIRECT = 3;
 
 /**
  * @param {{
- *   config: import('types').ValidatedKitConfig;
  *   client_out_dir: string;
  *   manifest_path: string;
- *   log: Logger;
+ *   verbose: boolean;
  * }} opts
  */
-export async function prerender({ config, client_out_dir, manifest_path, log }) {
+export async function prerender({ client_out_dir, manifest_path, verbose }) {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
-		assets: new Map(),
 		redirects: new Map(),
 		paths: []
 	};
 
+	/** @type {import('types').ValidatedKitConfig} */
+	const config = (await load_config()).kit;
+
 	if (!config.prerender.enabled) {
 		return prerendered;
 	}
+
+	/** @type {import('types').Logger} */
+	const log = logger({ verbose });
 
 	installPolyfills();
 	const { fetch } = globalThis;
@@ -304,10 +310,6 @@ export async function prerender({ config, client_out_dir, manifest_path, log }) 
 			if (is_html) {
 				prerendered.pages.set(decoded, {
 					file
-				});
-			} else {
-				prerendered.assets.set(decoded, {
-					type
 				});
 			}
 
