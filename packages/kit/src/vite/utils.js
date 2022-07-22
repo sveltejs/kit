@@ -147,11 +147,15 @@ function repeat(str, times) {
 /**
  * Create a formatted error for an illegal import.
  * @param {Array<string>} stack
+ * @param {import('types').ValidatedKitConfig} config
  */
-export function format_illegal_import_chain(stack) {
-	stack = stack.map((file) =>
-		path.relative(process.cwd(), file).replace('.svelte-kit/runtime/app', '$app')
-	);
+export function format_illegal_import_chain(stack, config) {
+	const app = path.join(config.outDir, 'runtime/app');
+
+	stack = stack.map((file) => {
+		if (file.startsWith(app)) return file.replace(app, '$app');
+		return path.relative(process.cwd(), file);
+	});
 
 	const pyramid = stack.map((file, i) => `${repeat(' ', i * 2)}- ${file}`).join('\n');
 

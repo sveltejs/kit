@@ -64,7 +64,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						const node = await vite.moduleGraph.getModuleByUrl(url);
 						if (!node) throw new Error(`Could not find node for ${url}`);
 
-						prevent_illegal_imports(node, illegal_imports);
+						prevent_illegal_imports(node, svelte_config.kit, illegal_imports);
 
 						return {
 							module,
@@ -455,9 +455,10 @@ async function find_deps(vite, node, deps) {
 /**
  * Throw an error if a private module is imported from a client-side node.
  * @param {import('vite').ModuleNode} node
+ * @param {import('types').ValidatedKitConfig} config
  * @param {Set<string>} illegal_imports
  */
-export function prevent_illegal_imports(node, illegal_imports) {
+export function prevent_illegal_imports(node, config, illegal_imports) {
 	const seen = new Set();
 
 	/**
@@ -485,7 +486,7 @@ export function prevent_illegal_imports(node, illegal_imports) {
 	const chain = find(node);
 
 	if (chain) {
-		throw new Error(format_illegal_import_chain(chain));
+		throw new Error(format_illegal_import_chain(chain, config));
 	}
 }
 

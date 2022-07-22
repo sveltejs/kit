@@ -305,7 +305,7 @@ function kit() {
 
 				if (node) {
 					const chain = find_illegal_imports(node);
-					if (chain) throw new Error(format_illegal_import_chain(chain));
+					if (chain) throw new Error(format_illegal_import_chain(chain, svelte_config.kit));
 				}
 			}
 
