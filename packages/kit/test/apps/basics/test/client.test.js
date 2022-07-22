@@ -358,6 +358,18 @@ test.describe('Load', () => {
 		expect(await page.textContent('h2')).toBe('x: b: 2');
 	});
 
+	test('load function is only called on session change when used in load', async ({ page }) => {
+		await page.goto('/load/change-detection/session/used');
+		expect(await page.textContent('h2')).toBe('1');
+		await page.click('button');
+		expect(await page.textContent('h2')).toBe('2');
+
+		await page.goto('/load/change-detection/session/unused');
+		expect(await page.textContent('h2')).toBe('1');
+		await page.click('button');
+		expect(await page.textContent('h2')).toBe('1');
+	});
+
 	test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
 		await page.goto('/load/url-hash#please-dont-send-me-to-load');
 		expect(await page.textContent('#message')).toBe(
