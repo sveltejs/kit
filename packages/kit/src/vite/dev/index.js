@@ -12,7 +12,7 @@ import { load_template } from '../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_prefix } from '../../core/utils.js';
-import { resolve_entry, throw_if_illegal_private_import_vite } from '../utils.js';
+import { format_illegal_import_chain, resolve_entry } from '../utils.js';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
@@ -64,7 +64,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						const node = await vite.moduleGraph.getModuleByUrl(url);
 						if (!node) throw new Error(`Could not find node for ${url}`);
 
-						throw_if_illegal_private_import_vite(node, illegal_imports);
+						prevent_illegal_imports(node, illegal_imports);
 
 						return {
 							module,
@@ -455,6 +455,43 @@ async function find_deps(vite, node, deps) {
 	}
 
 	await Promise.all(branches);
+}
+
+/**
+ * Throw an error if a private module is imported from a client-side node.
+ * @param {import('vite').ModuleNode} node
+ * @param {Set<string>} illegal_imports
+ */
+export function prevent_illegal_imports(node, illegal_imports) {
+	const seen = new Set();
+
+	/**
+	 * @param {import('vite').ModuleNode} node
+	 * @returns {string[] | null}
+	 */
+	function find(node) {
+		if (!node.id) return null; // TODO when does this happen?
+
+		if (seen.has(node.id)) return null;
+		seen.add(node.id);
+
+		if (node.id && illegal_imports.has(node.id)) {
+			return [node.id];
+		}
+
+		for (const child of node.importedModules) {
+			const chain = child && find(child);
+			if (chain) return [node.id, ...chain];
+		}
+
+		return null;
+	}
+
+	const chain = find(node);
+
+	if (chain) {
+		throw new Error(format_illegal_import_chain(chain));
+	}
 }
 
 /**
