@@ -1,42 +1,8 @@
-import { write_if_changed } from './utils.js';
 import path from 'path';
-import fs from 'fs';
 import { loadEnv } from 'vite';
+import { write_if_changed } from './utils.js';
 
-const autogen_comment = '// this section is auto-generated';
-
-/**
- * @param {boolean} pub
- * @param {Record<string, string>} env
- * @returns {string}
- */
-function const_declaration_template(pub, env) {
-	return `${autogen_comment}
-
-${Object.entries(env)
-	.map(
-		([k, v]) => `/**
- * @type {import('$app/env${pub ? '' : '/private'}').${k}}
- */
-export const ${k} = ${JSON.stringify(v)};
-`
-	)
-	.join('\n')}
-`;
-}
-
-/**
- * @param {boolean} pub
- * @param {Record<string, string>} env
- * @returns {string}
- */
-function type_declaration_template(pub, env) {
-	return `declare module '$app/env${pub ? '' : '/private'}' {
-  ${Object.keys(env)
-		.map((k) => `export const ${k}: string;`)
-		.join('\n  ')}
-}`;
-}
+const autogen_comment = '// this file is generated — do not edit it\n';
 
 /**
  * Writes the existing environment variables in process.env to
@@ -46,65 +12,55 @@ function type_declaration_template(pub, env) {
  * The Vite mode.
  */
 export function write_env(config, mode) {
-	const pub = write_public_env(config, mode);
-	const priv = write_private_env(config, mode);
-	write_typedef(config, pub, priv);
+	const entries = Object.entries(loadEnv(mode, process.cwd(), ''));
+	const pub = Object.fromEntries(entries.filter(([k]) => k.startsWith(config.env.publicPrefix)));
+	const prv = Object.fromEntries(entries.filter(([k]) => !k.startsWith(config.env.publicPrefix)));
+
+	// TODO when testing src, `$app` points at `src/runtime/app`... will
+	// probably need to fiddle with aliases
+	write_if_changed(
+		path.join(config.outDir, 'runtime/app/env/public/index.js'),
+		create_module('$app/env/public', pub)
+	);
+
+	write_if_changed(
+		path.join(config.outDir, 'runtime/app/env/private/index.js'),
+		create_module('$app/env/private', prv)
+	);
+
+	write_if_changed(
+		path.join(config.outDir, 'types/ambient.d.ts'),
+		autogen_comment +
+			create_types('$app/env/public', pub) +
+			'\n\n' +
+			create_types('$app/env/private', prv)
+	);
 }
 
 /**
- * Writes the existing environment variables prefixed with config.kit.env.publicPrefix
- * in process.env to $app/env
- * @param {import('types').ValidatedKitConfig} config
- * @param {string} mode
- * The Vite mode.
+ * @param {string} id
+ * @param {Record<string, string>} env
+ * @returns {string}
  */
-function write_public_env(config, mode) {
-	const pub_out = path.join(config.outDir, 'runtime/app/env.js');
+function create_module(id, env) {
+	const declarations = Object.entries(env)
+		.map(
+			([k, v]) => `/** @type {import('${id}'}').${k}} */\nexport const ${k} = ${JSON.stringify(v)};`
+		)
+		.join('\n\n');
 
-	// public is a little difficult since we append to an
-	// already-existing file
-	const pub = loadEnv(mode, process.cwd(), config.env.publicPrefix);
-	let pub_content = const_declaration_template(true, pub);
-	if (fs.existsSync(pub_out)) {
-		const old_pub_content = fs.readFileSync(pub_out).toString();
-		const autogen_content_start = old_pub_content.indexOf(autogen_comment);
-		if (autogen_content_start === -1) {
-			pub_content = old_pub_content + '\n' + pub_content;
-		} else {
-			pub_content = old_pub_content.slice(0, autogen_content_start) + '\n' + pub_content;
-		}
-	}
-	write_if_changed(pub_out, pub_content);
-	return pub;
+	return autogen_comment + declarations;
 }
 
 /**
- * Writes the existing environment variables not prefixed with config.kit.env.publicPrefix
- * in process.env to $app/env/private
- * @param {import('types').ValidatedKitConfig} config
- * @param {string} mode
- * The Vite mode.
+ * @param {string} id
+ * @param {Record<string, string>} env
+ * @returns {string}
  */
-function write_private_env(config, mode) {
-	const priv_out = path.join(config.outDir, 'runtime/app/env/private.js');
+function create_types(id, env) {
+	const declarations = Object.keys(env)
+		.map((k) => `\texport const ${k}: string;`)
+		.join('\n');
 
-	// private is easy since it has its own file: just write if changed
-	const priv = loadEnv(mode, process.cwd(), '');
-	const priv_content = const_declaration_template(false, priv);
-	write_if_changed(priv_out, priv_content);
-	return priv;
-}
-
-/**
- * Writes the type definitions for the environment variable files
- * to types/ambient.d.ts
- * @param {import('types').ValidatedKitConfig} config
- * @param {Record<string, string>} pub
- * @param {Record<string, string>} priv
- */
-function write_typedef(config, pub, priv) {
-	const type_declaration_out = path.join(config.outDir, 'types/ambient.d.ts');
-	const pub_declaration = type_declaration_template(true, pub);
-	const priv_declaration = type_declaration_template(false, priv);
-	write_if_changed(type_declaration_out, `${priv_declaration}\n${pub_declaration}`);
+	return `declare module '${id}' {\n${declarations}\n}`;
 }
