@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.391
+
+### Patch Changes
+
+- [breaking] replace transformPage with transformPageChunk ([#5657](https://github.com/sveltejs/kit/pull/5657))
+
 ## 1.0.0-next.390
 
 ### Patch Changes
