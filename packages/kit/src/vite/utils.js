@@ -135,10 +135,6 @@ export function resolve_entry(entry) {
 	return null;
 }
 
-// TODO remove hardcoded path
-// TODO are module IDs absolute paths on Windows as well?
-const illegal_import_names = new Set([path.resolve('.svelte-kit/runtime/app/env/private.js')]);
-
 /**
  *
  * @param {string} str
@@ -152,21 +148,22 @@ function repeat(str, times) {
  * Create a formatted error for an illegal import.
  * @param {Array<string>} stack
  */
-function handle_illegal_import_error(stack) {
+export function format_illegal_import_chain(stack) {
 	stack = stack.map((file) =>
 		path.relative(process.cwd(), file).replace('.svelte-kit/runtime/app', '$app')
 	);
 
 	const pyramid = stack.map((file, i) => `${repeat(' ', i * 2)}- ${file}`).join('\n');
 
-	return new Error(`Cannot import ${stack.at(-1)} into client-side code:\n${pyramid}`);
+	return `Cannot import ${stack.at(-1)} into client-side code:\n${pyramid}`;
 }
 
 /**
  * Throw an error if a private module is imported from a client-side node.
  * @param {import('vite').ModuleNode} node
+ * @param {Set<string>} illegal_imports
  */
-export function throw_if_illegal_private_import_vite(node) {
+export function throw_if_illegal_private_import_vite(node, illegal_imports) {
 	const seen = new Set();
 
 	/**
@@ -179,7 +176,7 @@ export function throw_if_illegal_private_import_vite(node) {
 		if (seen.has(node.id)) return null;
 		seen.add(node.id);
 
-		if (node.id && illegal_import_names.has(node.id)) {
+		if (node.id && illegal_imports.has(node.id)) {
 			return [node.id];
 		}
 
@@ -194,42 +191,6 @@ export function throw_if_illegal_private_import_vite(node) {
 	const chain = find(node);
 
 	if (chain) {
-		throw handle_illegal_import_error(chain);
-	}
-}
-
-/**
- * Throw an error if a private module is imported from a client-side node.
- * @param {import('rollup').GetModuleInfo} node_getter
- * @param {import('rollup').ModuleInfo} node
- */
-export function throw_if_illegal_private_import_rollup(node_getter, node) {
-	const seen = new Set();
-
-	/**
-	 * @param {import('rollup').ModuleInfo} node
-	 * @returns {string[] | null}
-	 */
-	function find(node) {
-		if (seen.has(node.id)) return null;
-		seen.add(node.id);
-
-		if (illegal_import_names.has(node.id)) {
-			return [node.id];
-		}
-
-		for (const id of [...node.importedIds, ...node.dynamicallyImportedIds]) {
-			const child = node_getter(id);
-			const chain = child && find(child);
-			if (chain) return [node.id, ...chain];
-		}
-
-		return null;
-	}
-
-	const chain = find(node);
-
-	if (chain) {
-		throw handle_illegal_import_error(chain);
+		throw new Error(format_illegal_import_chain(chain));
 	}
 }

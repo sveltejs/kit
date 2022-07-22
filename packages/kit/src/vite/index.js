@@ -14,7 +14,7 @@ import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import { get_aliases, resolve_entry, throw_if_illegal_private_import_rollup } from './utils.js';
+import { get_aliases, resolve_entry, format_illegal_import_chain } from './utils.js';
 
 const cwd = process.cwd();
 
@@ -100,6 +100,9 @@ function kit() {
 	/** @type {import('types').BuildData} */
 	let build_data;
 
+	/** @type {Set<string>} */
+	let illegal_imports;
+
 	/**
 	 * @type {{
 	 *   build_dir: string;
@@ -182,6 +185,8 @@ function kit() {
 				output_dir: `${svelte_config.kit.outDir}/output`,
 				client_out_dir: `${svelte_config.kit.outDir}/output/client/`
 			};
+
+			illegal_imports = new Set([`${svelte_config.kit.outDir}/runtime/app/env/private.js`]);
 
 			if (is_build) {
 				manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
@@ -267,14 +272,34 @@ function kit() {
 		 * then use this hook to kick off builds for the server and service worker.
 		 */
 		async writeBundle(_options, bundle) {
-			for (const id of this.getModuleIds()) {
-				const found = manifest_data.components.find((comp) => id.endsWith(comp));
-				if (found) {
-					const module_info = this.getModuleInfo(id);
-					if (module_info === null) {
-						throw new Error(`Failed to locate module info for ${module_info}`);
-					}
-					throw_if_illegal_private_import_rollup(this.getModuleInfo.bind(this), module_info);
+			const seen = new Set();
+
+			/**
+			 * @param {import('rollup').ModuleInfo} node
+			 * @returns {string[] | undefined}
+			 */
+			const find_illegal_imports = (node) => {
+				if (seen.has(node.id)) return;
+				seen.add(node.id);
+
+				if (illegal_imports.has(node.id)) {
+					return [node.id];
+				}
+
+				for (const id of [...node.importedIds, ...node.dynamicallyImportedIds]) {
+					const child = this.getModuleInfo(id);
+					const chain = child && find_illegal_imports(child);
+					if (chain) return [node.id, ...chain];
+				}
+			};
+
+			for (const file of manifest_data.components) {
+				const id = path.resolve(file);
+				const node = this.getModuleInfo(id);
+
+				if (node) {
+					const chain = find_illegal_imports(node);
+					if (chain) throw new Error(format_illegal_import_chain(chain));
 				}
 			}
 
@@ -399,7 +424,7 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config);
+			return await dev(vite, vite_config, svelte_config, illegal_imports);
 		},
 
 		/**

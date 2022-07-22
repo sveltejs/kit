@@ -24,9 +24,10 @@ const cwd = process.cwd();
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {Set<string>} illegal_imports
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config) {
+export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 	installPolyfills();
 
 	sync.init(svelte_config, vite_config.mode);
@@ -63,7 +64,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						const node = await vite.moduleGraph.getModuleByUrl(url);
 						if (!node) throw new Error(`Could not find node for ${url}`);
 
-						throw_if_illegal_private_import_vite(node);
+						throw_if_illegal_private_import_vite(node, illegal_imports);
 
 						return {
 							module,
