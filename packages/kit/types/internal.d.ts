@@ -11,6 +11,7 @@ import {
 	RequestHandler,
 	ResolveOptions,
 	Server,
+	ServerInitOptions,
 	SSRManifest
 } from './index.js';
 import {
@@ -92,6 +93,7 @@ export interface Hooks {
 }
 
 export class InternalServer extends Server {
+	init(options: ServerInitOptions): Promise<void>;
 	respond(
 		request: Request,
 		options: RequestOptions & {
