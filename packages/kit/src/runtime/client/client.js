@@ -424,8 +424,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 		};
 
 		for (let i = 0; i < filtered.length; i += 1) {
-			const loaded = filtered[i].loaded;
-			result.props[`props_${i}`] = loaded ? await loaded.props : null;
+			// Only set props if the node actually updated. This prevents needless rerenders.
+			if (!current.branch.some((node) => node === filtered[i])) {
+				const loaded = filtered[i].loaded;
+				result.props[`props_${i}`] = loaded ? await loaded.props : null;
+			}
 		}
 
 		const page_changed =
