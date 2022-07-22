@@ -90,12 +90,12 @@ export class Server {
 		};
 	}
 
-  init(options = { env: {} }) {
-    if (!initialized) {
-      set_env(options.env);
-      initialized = true;
-    }
-  }
+	init(options = { env: {} }) {
+		if (!initialized) {
+			set_env(options.env);
+			initialized = true;
+		}
+	}
 
 	async respond(request, options = {}) {
 		if (!(request instanceof Request)) {
