@@ -43,7 +43,6 @@ export async function preview(vite, config, protocol) {
 
 	const server = new Server(manifest);
 	server.init({
-		// This just makes sure no values are undefined
 		env: /** @type {Record<string, string>} */ (process.env)
 	});
 
