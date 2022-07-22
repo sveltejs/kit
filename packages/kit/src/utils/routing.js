@@ -67,6 +67,8 @@ export function parse_route_id(id) {
 													.replace(/\?/g, '%3F')
 													// escape characters that have special meaning in regex
 													.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+													// replace '--' to '/' for flat file system
+													.replace(/--/g, '/')
 											); // TODO handle encoding
 										})
 										.join('')
