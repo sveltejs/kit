@@ -21,10 +21,9 @@ export function init(config, mode = undefined) {
 /**
  * Update SvelteKit's generated files.
  * @param {import('types').ValidatedConfig} config
- * @param {string | undefined} mode
- * The Vite mode
+ * @param {string} mode The Vite mode
  */
-export function update(config, mode = undefined) {
+export function update(config, mode) {
 	const manifest_data = create_manifest_data({ config });
 
 	const output = path.join(config.kit.outDir, 'generated');
@@ -43,10 +42,9 @@ export function update(config, mode = undefined) {
  * Run sync.init and sync.update in series, returning the result from
  * sync.update.
  * @param {import('types').ValidatedConfig} config
- * @param {string | undefined} mode
- * The Vite mode
+ * @param {string} mode The Vite mode
  */
-export function all(config, mode = undefined) {
+export function all(config, mode) {
 	init(config, mode);
 	return update(config, mode);
 }

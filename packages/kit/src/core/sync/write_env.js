@@ -52,10 +52,10 @@ export function set_env(environment) {
  * Writes the existing environment variables in process.env to
  * $app/env and $app/env/private
  * @param {import('types').ValidatedKitConfig} config
- * @param {string | undefined} mode
+ * @param {string} mode
  * The Vite mode.
  */
-export function write_env(config, mode = undefined) {
+export function write_env(config, mode) {
 	const pub = write_public_env(config, mode);
 	const priv = write_private_env(config, mode);
 	write_runtime_env(config);
@@ -66,10 +66,10 @@ export function write_env(config, mode = undefined) {
  * Writes the existing environment variables prefixed with config.kit.env.publicPrefix
  * in process.env to $app/env
  * @param {import('types').ValidatedKitConfig} config
- * @param {string | undefined} mode
+ * @param {string} mode
  * The Vite mode.
  */
-function write_public_env(config, mode = undefined) {
+function write_public_env(config, mode) {
 	const pub_out = path.join(config.outDir, 'runtime/app/env.js');
 
 	// public is a little difficult since we append to an
@@ -93,10 +93,10 @@ function write_public_env(config, mode = undefined) {
  * Writes the existing environment variables not prefixed with config.kit.env.publicPrefix
  * in process.env to $app/env/private
  * @param {import('types').ValidatedKitConfig} config
- * @param {string | undefined} mode
+ * @param {string} mode
  * The Vite mode.
  */
-function write_private_env(config, mode = undefined) {
+function write_private_env(config, mode) {
 	const priv_out = path.join(config.outDir, 'runtime/app/env/private.js');
 
 	// private is easy since it has its own file: just write if changed
