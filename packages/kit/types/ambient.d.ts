@@ -5,6 +5,8 @@
  * /// <reference types="@sveltejs/kit" />
  *
  * declare namespace App {
+ * 	interface Env {}
+ *
  * 	interface Locals {}
  *
  * 	interface Platform {}
@@ -15,7 +17,7 @@
  * }
  * ```
  *
- * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`.
+ * By populating these interfaces, you will gain type safety when using `env`, `event.locals`, `event.platform`, `session` and `stuff`.
  *
  * Note that since it's an ambient declaration file, you have to be careful when using `import` statements. Once you add an `import`
  * at the top level, the declaration file is no longer considered ambient and you lose access to these typings in other files.
@@ -43,6 +45,11 @@
  */
 declare namespace App {
 	/**
+	 * The interface that defines the dynamic environment variables exported from '$app/env/platform'.
+	 */
+	export interface Env extends Record<string, string> {}
+
+	/**
 	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://kit.svelte.dev/docs/hooks) (`handle`, `handleError` and `getSession`) and [endpoints](https://kit.svelte.dev/docs/routing#endpoints).
 	 */
 	export interface Locals {}
@@ -61,11 +68,6 @@ declare namespace App {
 	 * The interface that defines `stuff`, as input or output to [`load`](https://kit.svelte.dev/docs/loading) or as the value of the `stuff` property of the [page store](https://kit.svelte.dev/docs/modules#$app-stores).
 	 */
 	export interface Stuff {}
-
-	/**
-	 * The interface that defines the dynamic environment variables exported from '$app/env/platform'.
-	 */
-	export interface Env extends Record<string, string> {}
 }
 
 /**
