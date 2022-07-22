@@ -104,7 +104,10 @@ const dir = fileURLToPath(new URL('./special-types', import.meta.url).href);
 for (const file of fs.readdirSync(dir)) {
 	if (!file.endsWith('.md')) continue;
 
-	const comment = fs.readFileSync(`${dir}/${file}`, 'utf-8');
+	const comment = fs
+		.readFileSync(`${dir}/${file}`, 'utf-8')
+		.replace(/https:\/\/kit\.svelte\.dev/g, '');
+
 	modules.push({
 		name: file.replace(/\+/g, '/').slice(0, -3),
 		comment,
