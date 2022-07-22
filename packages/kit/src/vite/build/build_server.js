@@ -95,7 +95,6 @@ export class Server {
       set_env(options.env);
       initialized = true;
     }
-    return Promise.resolve();
   }
 
 	async respond(request, options = {}) {
