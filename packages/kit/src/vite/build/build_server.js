@@ -36,6 +36,7 @@ const template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace(/%sveltekit\.nonce%/g, '" + nonce + "')};
 
 let read = null;
+let initialized = false;
 
 set_paths(${s(config.kit.paths)});
 
@@ -90,7 +91,10 @@ export class Server {
 	}
 
   init(options = { env: {} }) {
-    set_env(options.env);
+    if (!initialized) {
+      set_env(options.env);
+      initialized = true;
+    }
     return Promise.resolve();
   }
 
