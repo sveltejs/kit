@@ -44,9 +44,7 @@ export async function preview(vite, config, protocol) {
 	const server = new Server(manifest);
 	server.init({
 		// This just makes sure no values are undefined
-		env: Object.entries(process.env).reduce((prev, [k, v]) => {
-			return { ...prev, [k]: v ?? '' };
-		}, {})
+		env: process.env
 	});
 
 	return () => {
