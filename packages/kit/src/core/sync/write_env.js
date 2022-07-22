@@ -38,16 +38,6 @@ function type_declaration_template(pub, env) {
 }`;
 }
 
-function runtime_env_template() {
-	return `/** @type {App.RuntimeEnv} */
-export let env = {};
-
-/** @type {(environment: Record<string, string>) => void} */
-export function set_env(environment) {
-  env = environment;
-}`;
-}
-
 /**
  * Writes the existing environment variables in process.env to
  * $app/env and $app/env/private
@@ -58,7 +48,6 @@ export function set_env(environment) {
 export function write_env(config, mode) {
 	const pub = write_public_env(config, mode);
 	const priv = write_private_env(config, mode);
-	write_runtime_env(config);
 	write_typedef(config, pub, priv);
 }
 
@@ -104,17 +93,6 @@ function write_private_env(config, mode) {
 	const priv_content = const_declaration_template(false, priv);
 	write_if_changed(priv_out, priv_content);
 	return priv;
-}
-
-/**
- * Writes a blank export to $app/env/runtime. This should be populated by
- * Server.init whenever an adapter calls it
- * @param {import('types').ValidatedKitConfig} config
- */
-function write_runtime_env(config) {
-	const runtime_out = path.join(config.outDir, 'runtime/app/env/runtime.js');
-
-	write_if_changed(runtime_out, runtime_env_template());
 }
 
 /**
