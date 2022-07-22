@@ -341,7 +341,12 @@ function kit() {
 				throw new Error('prerendering failed');
 			}
 
-			prerendered = JSON.parse(fs.readFileSync(results_path, 'utf8'));
+			prerendered = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
+				if (key === 'pages' || key === 'assets' || key === 'redirects') {
+					return new Map(value);
+				}
+				return value;
+			});
 
 			if (options.service_worker_entry_file) {
 				if (svelte_config.kit.paths.assets) {

@@ -60,7 +60,12 @@ const REDIRECT = 3;
  * @param {import('types').Prerendered} prerendered
  */
 const output_and_exit = (path, prerendered) => {
-	writeFileSync(path, JSON.stringify(prerendered));
+	writeFileSync(
+		path,
+		JSON.stringify(prerendered, (_key, value) =>
+			value instanceof Map ? Array.from(value.entries()) : value
+		)
+	);
 	process.exit(0);
 };
 
