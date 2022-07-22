@@ -274,13 +274,7 @@ function kit() {
 					if (module_info === null) {
 						throw new Error(`Failed to locate module info for ${module_info}`);
 					}
-					throw_if_illegal_private_import_rollup(
-						this.getModuleInfo.bind(this),
-						(id, err) => {
-							throw err;
-						},
-						module_info
-					);
+					throw_if_illegal_private_import_rollup(this.getModuleInfo.bind(this), module_info);
 				}
 			}
 

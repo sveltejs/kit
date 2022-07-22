@@ -143,31 +143,25 @@ const illegal_import_names /** @type {Array<string>} */ = [
  * Create a formatted error for an illegal import.
  * @param {string} error_module_id
  * @param {Array<string>} stack
- * @param {(id: string, err: Error) => void} error_handler
  */
-function handle_illegal_import_error(error_module_id, stack, error_handler) {
+function handle_illegal_import_error(error_module_id, stack) {
 	stack.push(error_module_id + ' (server-side only module)');
 	const stringified_stack = stack.map((mod, i) => `  ${i}: ${mod}`).join(', which imports:\n');
-	const err = new Error(
+
+	return new Error(
 		`Found an illegal import originating from: ${stack[0]}. It imports:\n${stringified_stack}`
 	);
-	error_handler(error_module_id, err);
-	return;
 }
 
 /**
  * Recurse through the ModuleNode graph, throwing if the module
  * imports a private module.
- * @param {(id: string, err: Error) => void} error_handler
  * @param {import('vite').ModuleNode} node
  * @param {Array<string>} illegal_module_stack
  * @param {Set<string>} illegal_module_set
  */
 function throw_if_illegal_private_import_recursive_vite(
 	node,
-	error_handler = (id, err) => {
-		throw err;
-	},
 	illegal_module_stack = [],
 	illegal_module_set = new Set()
 ) {
@@ -180,16 +174,10 @@ function throw_if_illegal_private_import_recursive_vite(
 	illegal_module_stack.push(file);
 	node.importedModules.forEach((childNode) => {
 		if (illegal_import_names.some((name) => childNode.file?.endsWith(name))) {
-			handle_illegal_import_error(
-				childNode?.file ?? 'unknown',
-				illegal_module_stack,
-				error_handler
-			);
-			return;
+			throw handle_illegal_import_error(childNode?.file ?? 'unknown', illegal_module_stack);
 		}
 		throw_if_illegal_private_import_recursive_vite(
 			childNode,
-			error_handler,
 			illegal_module_stack,
 			illegal_module_set
 		);
@@ -200,11 +188,10 @@ function throw_if_illegal_private_import_recursive_vite(
 
 /**
  * Throw an error if a private module is imported from a client-side node.
- * @param {(id: string, err: Error) => void} error_handler
  * @param {import('vite').ModuleNode} node
  */
-export function throw_if_illegal_private_import_vite(error_handler, node) {
-	throw_if_illegal_private_import_recursive_vite(node, error_handler);
+export function throw_if_illegal_private_import_vite(node) {
+	throw_if_illegal_private_import_recursive_vite(node);
 }
 
 /**
@@ -212,16 +199,12 @@ export function throw_if_illegal_private_import_vite(error_handler, node) {
  * imports a private module.
  * @param {import('rollup').GetModuleInfo} node_getter
  * @param {import('rollup').ModuleInfo} node
- * @param {(id: string, err: Error) => void} error_handler
  * @param {Array<string>} illegal_module_stack
  * @param {Set<string>} illegal_module_set
  */
 function throw_if_illegal_private_import_recursive_rollup(
 	node_getter,
 	node,
-	error_handler = (id, err) => {
-		throw err;
-	},
 	illegal_module_stack = [],
 	illegal_module_set = new Set()
 ) {
@@ -239,18 +222,16 @@ function throw_if_illegal_private_import_recursive_rollup(
 	const recursiveChildNodeHandler = (childId) => {
 		const childNode = node_getter(childId);
 		if (childNode === null) {
-			const err = new Error(`Failed to find module info for ${childId}`);
-			error_handler(childId, err);
-			return;
+			throw new Error(`Failed to find module info for ${childId}`);
 		}
+
 		if (illegal_import_names.some((name) => childId.endsWith(name))) {
-			handle_illegal_import_error(childId, illegal_module_stack, error_handler);
-			return;
+			throw handle_illegal_import_error(childId, illegal_module_stack);
 		}
+
 		throw_if_illegal_private_import_recursive_rollup(
 			node_getter,
 			childNode,
-			error_handler,
 			illegal_module_stack,
 			illegal_module_set
 		);
@@ -264,9 +245,8 @@ function throw_if_illegal_private_import_recursive_rollup(
 /**
  * Throw an error if a private module is imported from a client-side node.
  * @param {import('rollup').GetModuleInfo} node_getter
- * @param {(id: string, err: Error) => void} error_handler
  * @param {import('rollup').ModuleInfo} module_info
  */
-export function throw_if_illegal_private_import_rollup(node_getter, error_handler, module_info) {
-	throw_if_illegal_private_import_recursive_rollup(node_getter, module_info, error_handler);
+export function throw_if_illegal_private_import_rollup(node_getter, module_info) {
+	throw_if_illegal_private_import_recursive_rollup(node_getter, module_info);
 }

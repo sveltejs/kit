@@ -62,9 +62,8 @@ export async function dev(vite, vite_config, svelte_config) {
 
 						const node = await vite.moduleGraph.getModuleByUrl(url);
 						if (!node) throw new Error(`Could not find node for ${url}`);
-						throw_if_illegal_private_import_vite((err) => {
-							throw err;
-						}, node);
+
+						throw_if_illegal_private_import_vite(node);
 
 						return {
 							module,
