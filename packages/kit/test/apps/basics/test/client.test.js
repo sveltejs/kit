@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -412,8 +412,14 @@ test.describe('Page options', () => {
 		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
 		expect(await page.textContent('button')).toBe('clicks: 0');
 
+		// wait until hydration before interacting with button
+		await page.waitForSelector('body.started');
+
 		await page.click('button');
 		expect(await page.textContent('button')).toBe('clicks: 1');
+
+		// wait until hydration before attempting backwards client-side navigation
+		await page.waitForSelector('body.started');
 
 		await clicknav('[href="/no-router/a"]');
 		expect(await page.textContent('button')).toBe('clicks: 1');
@@ -543,6 +549,24 @@ test.describe('Routing', () => {
 		await page.click('[href="#target"]');
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
+	});
+
+	test('does not normalize external path', async ({ page }) => {
+		const urls = [];
+
+		const { port, close } = await start_server((req, res) => {
+			urls.push(req.url);
+			res.end('ok');
+		});
+
+		try {
+			await page.goto(`/routing/slashes?port=${port}`);
+			await page.click(`a[href="http://localhost:${port}/with-slash/"]`);
+
+			expect(urls).toEqual(['/with-slash/']);
+		} finally {
+			await close();
+		}
 	});
 });
 

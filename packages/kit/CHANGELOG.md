@@ -1,5 +1,37 @@
 # @sveltejs/kit
 
+## 1.0.0-next.391
+
+### Patch Changes
+
+- [breaking] replace transformPage with transformPageChunk ([#5657](https://github.com/sveltejs/kit/pull/5657))
+
+## 1.0.0-next.390
+
+### Patch Changes
+
+- [fix] vite dev no longer covers errors ([#5563](https://github.com/sveltejs/kit/pull/5563))
+
+## 1.0.0-next.389
+
+### Patch Changes
+
+- Only normalise internal URLs ([#5645](https://github.com/sveltejs/kit/pull/5645))
+
+## 1.0.0-next.388
+
+### Patch Changes
+
+- Reset stack traces to avoid double-fix ([#5644](https://github.com/sveltejs/kit/pull/5644))
+
+## 1.0.0-next.387
+
+### Patch Changes
+
+- set Vite's `publicDir` option ([#5648](https://github.com/sveltejs/kit/pull/5648))
+
+* Normalize paths inside prerenderer, so they are correct inside \$service-worker ([#5641](https://github.com/sveltejs/kit/pull/5641))
+
 ## 1.0.0-next.386
 
 ### Patch Changes

@@ -103,6 +103,9 @@ function kit() {
 	/** @type {Set<string>} */
 	let illegal_imports;
 
+	/** @type {string | undefined} */
+	let deferred_warning;
+
 	/**
 	 * @type {{
 	 *   build_dir: string;
@@ -193,7 +196,8 @@ function kit() {
 
 				const new_config = vite_client_build_config();
 
-				warn_overridden_config(config, new_config);
+				const warning = warn_overridden_config(config, new_config);
+				if (warning) console.error(warning + '\n');
 
 				return new_config;
 			}
@@ -214,6 +218,7 @@ function kit() {
 					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0'
 				},
+				publicDir: svelte_config.kit.files.assets,
 				resolve: {
 					alias: get_aliases(svelte_config.kit)
 				},
@@ -239,7 +244,8 @@ function kit() {
 					}
 				}
 			};
-			warn_overridden_config(config, result);
+
+			deferred_warning = warn_overridden_config(config, result);
 			return result;
 		},
 
@@ -337,8 +343,9 @@ function kit() {
 				server
 			};
 
+			const manifest_path = `${paths.output_dir}/server/manifest.js`;
 			fs.writeFileSync(
-				`${paths.output_dir}/server/manifest.js`,
+				manifest_path,
 				`export const manifest = ${generate_manifest({
 					build_data,
 					relative_path: '.',
@@ -349,27 +356,10 @@ function kit() {
 			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 			log.info('Prerendering');
 
-			const static_files = manifest_data.assets.map((asset) => posixify(asset.file));
-
-			const files = new Set([
-				...static_files,
-				...chunks.map((chunk) => chunk.fileName),
-				...assets.map((chunk) => chunk.fileName)
-			]);
-
-			// TODO is this right?
-			static_files.forEach((file) => {
-				if (file.endsWith('/index.html')) {
-					files.add(file.slice(0, -11));
-				}
-			});
-
 			prerendered = await prerender({
 				config: svelte_config.kit,
-				entries: manifest_data.routes
-					.map((route) => (route.type === 'page' ? route.path : ''))
-					.filter(Boolean),
-				files,
+				client_out_dir: vite_config.build.outDir,
+				manifest_path,
 				log
 			});
 
@@ -424,6 +414,14 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
+			// This method is called by Vite after clearing the screen.
+			// This patch ensures we can log any important messages afterwards for the user to see.
+			const print_urls = vite.printUrls;
+			vite.printUrls = function () {
+				print_urls.apply(this);
+				if (deferred_warning) console.error('\n' + deferred_warning);
+			};
+
 			return await dev(vite, vite_config, svelte_config, illegal_imports);
 		},
 
@@ -473,11 +471,12 @@ function collect_output(bundle) {
  */
 function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
+
 	if (overridden.length > 0) {
-		console.log(
-			colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
+		return (
+			colors.bold().red('The following Vite config options will be overridden by SvelteKit:') +
+			overridden.map((key) => `\n  - ${key}`).join('')
 		);
-		console.log(overridden.map((key) => `  - ${key}`).join('\n'));
 	}
 }
 

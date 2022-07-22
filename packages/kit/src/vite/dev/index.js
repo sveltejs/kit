@@ -188,7 +188,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 				/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
 		);
 
-		remove_html_middlewares(vite.middlewares);
+		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res) => {
 			try {
@@ -314,9 +314,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					{
 						csp: svelte_config.kit.csp,
 						dev: true,
-						get_stack: (error) => {
-							return fix_stack_trace(error);
-						},
+						get_stack: (error) => fix_stack_trace(error),
 						handle_error: (error, event) => {
 							hooks.handleError({
 								error: new Proxy(error, {
@@ -387,9 +385,8 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);
-				vite.ssrFixStacktrace(error);
 				res.statusCode = 500;
-				res.end(error.stack);
+				res.end(fix_stack_trace(error));
 			}
 		});
 	};
@@ -404,11 +401,15 @@ function not_found(res, message = 'Not found') {
 /**
  * @param {import('connect').Server} server
  */
-function remove_html_middlewares(server) {
-	const html_middlewares = ['viteServeStaticMiddleware'];
+function remove_static_middlewares(server) {
+	// We don't use viteServePublicMiddleware because of the following issues:
+	// https://github.com/vitejs/vite/issues/9260
+	// https://github.com/vitejs/vite/issues/9236
+	// https://github.com/vitejs/vite/issues/9234
+	const static_middlewares = ['viteServePublicMiddleware', 'viteServeStaticMiddleware'];
 	for (let i = server.stack.length - 1; i > 0; i--) {
-		// @ts-expect-error using internals until https://github.com/vitejs/vite/pull/4640 is merged
-		if (html_middlewares.includes(server.stack[i].handle.name)) {
+		// @ts-expect-error using internals
+		if (static_middlewares.includes(server.stack[i].handle.name)) {
 			server.stack.splice(i, 1);
 		}
 	}

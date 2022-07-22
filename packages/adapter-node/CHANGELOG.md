@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.83
+
+### Patch Changes
+
+- set Vite's `publicDir` option ([#5648](https://github.com/sveltejs/kit/pull/5648))
+
 ## 1.0.0-next.82
 
 ### Patch Changes
