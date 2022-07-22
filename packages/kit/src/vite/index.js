@@ -330,13 +330,9 @@ function kit() {
 				'node',
 				[
 					kit_dir + 'dist/prerender.js',
-					'--client_out_dir',
 					vite_config.build.outDir,
-					'--results_path',
 					results_path,
-					'--manifest_path',
 					manifest_path,
-					'--verbose',
 					'' + verbose
 				],
 				{ stdio: 'inherit' }

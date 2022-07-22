@@ -1,6 +1,5 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import sade from 'sade';
 import { pathToFileURL, URL } from 'url';
 import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { installPolyfills } from '../../node/polyfills.js';
@@ -16,18 +15,9 @@ import { load_config } from '../config/index.js';
  * @typedef {import('types').Logger} Logger
  */
 
-const prog = sade('prerender');
-prog
-	.command('run', '', { default: true })
-	.describe('Runs prerendering. Only for internal use')
-	.option('--client_out_dir', "Vite's output directory", '')
-	.option('--results_path', 'Where to put the results', '')
-	.option('--manifest_path', "SvelteKit's manifest file", '')
-	.option('--verbose', 'Whether logging should be verbose', false)
-	.action(async (opts) => {
-		prerender(opts);
-	});
-prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
+const [, , client_out_dir, results_path, manifest_path, verbose] = process.argv;
+
+prerender({ client_out_dir, results_path, manifest_path, verbose: verbose === 'true' });
 
 /**
  * @param {Parameters<PrerenderErrorHandler>[0]} details
