@@ -100,7 +100,7 @@ function write_private_env(config, mode = undefined) {
 	const priv_out = path.join(config.outDir, 'runtime/app/env/private.js');
 
 	// private is easy since it has its own file: just write if changed
-	const priv = resolve_private_env(config.env.publicPrefix, mode);
+	const priv = loadEnv(mode, process.cwd(), '');
 	const priv_content = const_declaration_template(false, priv);
 	write_if_changed(priv_out, priv_content);
 	return priv;
