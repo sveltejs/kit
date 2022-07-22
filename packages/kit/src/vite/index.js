@@ -1,6 +1,7 @@
-import { spawnSync } from 'child_process';
-import fs from 'fs';
-import path from 'path';
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
+import path from 'node:path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import * as vite from 'vite';
@@ -322,10 +323,13 @@ function kit() {
 			const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
 
 			// do prerendering in a subprocess so any dangling stuff gets killed upon completion
+			const kit_dir = createRequire(import.meta.url)
+				.resolve('@sveltejs/kit/package.json')
+				.slice(0, -'package.json'.length);
 			const { status } = spawnSync(
 				'node',
 				[
-					'./node_modules/@sveltejs/kit/dist/prerender.js',
+					kit_dir + 'dist/prerender.js',
 					'--client_out_dir',
 					vite_config.build.outDir,
 					'--results_path',
