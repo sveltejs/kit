@@ -93,7 +93,7 @@ export interface Hooks {
 }
 
 export class InternalServer extends Server {
-	init(options: ServerInitOptions): Promise<void>;
+	init(options: ServerInitOptions): void;
 	respond(
 		request: Request,
 		options: RequestOptions & {

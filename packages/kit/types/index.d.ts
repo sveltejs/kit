@@ -271,7 +271,7 @@ export type ResponseBody = JSONValue | Uint8Array | ReadableStream | Error;
 
 export class Server {
 	constructor(manifest: SSRManifest);
-	init(options: ServerInitOptions): Promise<void>;
+	init(options: ServerInitOptions): void;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
 }
 

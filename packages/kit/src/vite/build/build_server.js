@@ -90,9 +90,9 @@ export class Server {
 		};
 	}
 
-	init(options = { env: {} }) {
+	init({ env }) {
 		if (!initialized) {
-			set_env(options.env);
+			set_env(env);
 			initialized = true;
 		}
 	}
