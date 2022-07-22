@@ -8,14 +8,23 @@ import { write_tsconfig } from './write_tsconfig.js';
 import { write_types } from './write_types.js';
 import { write_env } from './write_env.js';
 
-/** @param {import('types').ValidatedConfig} config */
-export function init(config) {
+/**
+ * Initialize SvelteKit's generated files.
+ * @param {import('types').ValidatedConfig} config
+ * @param {string | undefined} mode
+ */
+export function init(config, mode = undefined) {
 	copy_assets(path.join(config.kit.outDir, 'runtime'));
 	write_tsconfig(config.kit);
 }
 
-/** @param {import('types').ValidatedConfig} config */
-export function update(config) {
+/**
+ * Update SvelteKit's generated files.
+ * @param {import('types').ValidatedConfig} config
+ * @param {string | undefined} mode
+ * The Vite mode
+ */
+export function update(config, mode = undefined) {
 	const manifest_data = create_manifest_data({ config });
 
 	const output = path.join(config.kit.outDir, 'generated');
@@ -25,13 +34,19 @@ export function update(config) {
 	write_root(manifest_data, output);
 	write_matchers(manifest_data, output);
 	write_types(config, manifest_data);
-	write_env(config.kit);
+	write_env(config.kit, mode);
 
 	return { manifest_data };
 }
 
-/** @param {import('types').ValidatedConfig} config */
-export function all(config) {
-	init(config);
-	return update(config);
+/**
+ * Run sync.init and sync.update in series, returning the result from
+ * sync.update.
+ * @param {import('types').ValidatedConfig} config
+ * @param {string | undefined} mode
+ * The Vite mode
+ */
+export function all(config, mode = undefined) {
+	init(config, mode);
+	return update(config, mode);
 }

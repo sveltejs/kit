@@ -33,7 +33,7 @@ const cwd = process.cwd();
 export async function dev(vite, vite_config, svelte_config) {
 	installPolyfills();
 
-	sync.init(svelte_config);
+	sync.init(svelte_config, vite_config.mode);
 
 	const runtime = get_runtime_prefix(svelte_config.kit);
 
@@ -44,7 +44,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	let manifest;
 
 	function update_manifest() {
-		const { manifest_data } = sync.update(svelte_config);
+		const { manifest_data } = sync.update(svelte_config, vite_config.mode);
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
