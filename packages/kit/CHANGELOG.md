@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.392
+
+### Patch Changes
+
+- Revert publicDir change from 1.0.0-next.387 ([#5684](https://github.com/sveltejs/kit/pull/5684))
+
 ## 1.0.0-next.391
 
 ### Patch Changes
