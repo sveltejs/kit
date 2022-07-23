@@ -122,7 +122,10 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		},
 
 		writeClient(dest) {
-			return [...copy(`${config.kit.outDir}/output/client`, dest)];
+			return [
+				...copy(`${config.kit.outDir}/output/client`, dest),
+				...copy(config.kit.files.assets, dest)
+			];
 		},
 
 		writePrerendered(dest, { fallback } = {}) {
