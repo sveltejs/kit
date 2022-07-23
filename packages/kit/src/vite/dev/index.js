@@ -181,8 +181,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	});
 
 	const serve_static_middleware = vite.middlewares.stack.find(
-		(middleware) =>
-			/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
+		(middleware) => /** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
 	);
 
 	remove_static_middlewares(vite.middlewares);
@@ -213,7 +212,6 @@ export async function dev(vite, vite_config, svelte_config) {
 	});
 
 	return () => {
-
 		vite.middlewares.use(async (req, res) => {
 			try {
 				if (!req.url || !req.method) throw new Error('Incomplete request');
