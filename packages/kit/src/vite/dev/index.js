@@ -180,38 +180,44 @@ export async function dev(vite, vite_config, svelte_config) {
 		extensions: []
 	});
 
-	const serve_static_middleware = vite.middlewares.stack.find(
-		(middleware) => /** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
-	);
-
-	remove_static_middlewares(vite.middlewares);
-
 	vite.middlewares.use(async (req, res, next) => {
-		if (!req.url || !req.method) throw new Error('Incomplete request');
+		try {
+			if (!req.url || !req.method) throw new Error('Incomplete request');
 
-		const base = `${vite.config.server.https ? 'https' : 'http'}://${
-			req.headers[':authority'] || req.headers.host
-		}`;
+			const base = `${vite.config.server.https ? 'https' : 'http'}://${
+				req.headers[':authority'] || req.headers.host
+			}`;
 
-		const decoded = decodeURI(new URL(base + req.url).pathname);
+			const decoded = decodeURI(new URL(base + req.url).pathname);
 
-		if (decoded.startsWith(assets)) {
-			const pathname = decoded.slice(assets.length);
-			const file = svelte_config.kit.files.assets + pathname;
+			if (decoded.startsWith(assets)) {
+				const pathname = decoded.slice(assets.length);
+				const file = svelte_config.kit.files.assets + pathname;
 
-			if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-				if (has_correct_case(file, svelte_config.kit.files.assets)) {
-					req.url = encodeURI(pathname); // don't need query/hash
-					asset_server(req, res);
-					return;
+				if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
+					if (has_correct_case(file, svelte_config.kit.files.assets)) {
+						req.url = encodeURI(pathname); // don't need query/hash
+						asset_server(req, res);
+						return;
+					}
 				}
 			}
-		}
 
-		next();
+			next();
+		} catch (e) {
+			const error = coalesce_to_error(e);
+			res.statusCode = 500;
+			res.end(fix_stack_trace(error));
+		}
 	});
 
 	return () => {
+		const serve_static_middleware = vite.middlewares.stack.find(
+			(middleware) => /** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
+		);
+
+		remove_static_middlewares(vite.middlewares);
+
 		vite.middlewares.use(async (req, res) => {
 			try {
 				if (!req.url || !req.method) throw new Error('Incomplete request');
