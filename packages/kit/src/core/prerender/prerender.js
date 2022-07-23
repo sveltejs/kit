@@ -158,7 +158,10 @@ export async function prerender({ config, client_out_dir, manifest_path, log }) 
 		return file;
 	}
 
-	const files = new Set(walk(client_out_dir).map(posixify));
+	const files = new Set([
+		...walk(client_out_dir).map(posixify),
+		...walk(config.files.assets).map(posixify) // TODO remove this if we use Vite publicDir option
+	]);
 	const seen = new Set();
 	const written = new Set();
 
