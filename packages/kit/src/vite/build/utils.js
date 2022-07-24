@@ -157,7 +157,7 @@ export function assets_base(config) {
  */
 export function remove_svelte_kit(config) {
 	// TODO i feel like there's a more elegant way to do this
-	// @ts-ignore TypeScript doesn't handle flattening Vite's plugin type properly
+	// @ts-ignore - it can't handle infinite type expansion
 	config.plugins = (config.plugins || [])
 		.flat(Infinity)
 		.filter((plugin) => plugin.name !== 'vite-plugin-svelte-kit');

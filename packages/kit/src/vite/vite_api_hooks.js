@@ -1,4 +1,4 @@
-import { resolve_vite_plugins } from './utils.js';
+import { lookup_vite_plugins, resolve_vite_plugins } from './utils.js';
 
 /**
  * @param {import('vite').UserConfig} config
@@ -10,6 +10,7 @@ export async function call_vite_config_api(config, options, svelte_config) {
 	const plugins = (await resolve_vite_plugins(options, config)).filter(
 		(p) => p && 'name' in p && typeof p.api.onKitConfig === 'function'
 	);
+
 	if (!plugins) return;
 
 	await Promise.all(
@@ -25,24 +26,33 @@ export async function call_vite_config_api(config, options, svelte_config) {
 
 /**
  * @param {import('vite').ResolvedConfig} config
+ * @param {import('types').ViteKitOptions} options
  * @param {import('types').Prerendered} prerendered
  * @returns {Promise<void>}
  */
-export async function call_vite_prerendered_api(config, prerendered) {
-	const plugins = config.plugins.filter(
-		(p) => p && 'name' in p && p.api && typeof p.api.onKitPrerendered === 'function'
+export async function call_vite_prerendered_api(config, options, prerendered) {
+	const plugins = lookup_vite_plugins(options, config).filter(
+		(p) => typeof p.api.onKitPrerendered === 'function'
 	);
+
 	if (!plugins) return;
 
-	await Promise.all(
-		plugins.map(
-			(p) =>
-				p &&
-				'name' in p &&
-				typeof p.api.onKitPrerendered === 'function' &&
-				p.api.onKitPrerendered(prerendered)
-		)
+	await Promise.all(plugins.map((p) => p.api.onKitPrerendered(prerendered)));
+}
+
+/**
+ * @param {import('vite').ResolvedConfig} config
+ * @param {import('types').ViteKitOptions} options
+ * @returns {Promise<void>}
+ */
+export async function call_vite_adapter_api(config, options) {
+	const plugins = lookup_vite_plugins(options, config).filter(
+		(p) => typeof p.api.onKitAdapter === 'function'
 	);
+
+	if (!plugins) return;
+
+	await Promise.all(plugins.map((p) => p.api.onKitAdapter()));
 }
 
 // export function create_vite_hooks_api() {

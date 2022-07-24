@@ -15,7 +15,11 @@ import { get_runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry } from './utils.js';
-import { call_vite_config_api, call_vite_prerendered_api } from './api.js';
+import {
+	call_vite_adapter_api,
+	call_vite_config_api,
+	call_vite_prerendered_api
+} from './vite_api_hooks.js';
 
 const cwd = process.cwd();
 
@@ -58,11 +62,11 @@ const enforced_config = {
 };
 
 /**
- * @param {import('types').ViteKitOptions} options
+ * @param {import('types').ViteKitOptions?} kitPluginOptions
  * @return {import('vite').Plugin[]}
  */
-export function sveltekit(options) {
-	return [...svelte(), kit(options ?? {})];
+export function sveltekit(kitPluginOptions) {
+	return [...svelte(), kit(kitPluginOptions ?? {})];
 }
 
 /**
@@ -75,10 +79,10 @@ export function sveltekit(options) {
  * - https://rollupjs.org/guide/en/#build-hooks
  * - https://rollupjs.org/guide/en/#output-generation-hooks
  *
- * @param {import('types').ViteKitOptions} options
+ * @param {import('types').ViteKitOptions} kitPluginOptions
  * @return {import('vite').Plugin}
  */
-function kit(options) {
+function kit(kitPluginOptions) {
 	/** @type {import('types').ValidatedConfig} */
 	let svelte_config;
 
@@ -199,7 +203,7 @@ function kit(options) {
 				const warning = warn_overridden_config(config, new_config);
 				if (warning) console.error(warning + '\n');
 
-				await call_vite_config_api(config, options, svelte_config);
+				await call_vite_config_api(config, kitPluginOptions, svelte_config);
 
 				return new_config;
 			}
@@ -248,7 +252,7 @@ function kit(options) {
 
 			deferred_warning = warn_overridden_config(config, result);
 
-			await call_vite_config_api(config, options, svelte_config);
+			await call_vite_config_api(config, kitPluginOptions, svelte_config);
 
 			return result;
 		},
@@ -346,7 +350,7 @@ function kit(options) {
 				await build_service_worker(options, prerendered, client.vite_manifest);
 			}
 
-			await call_vite_prerendered_api(vite_config, prerendered);
+			await call_vite_prerendered_api(vite_config, kitPluginOptions, prerendered);
 
 			console.log(
 				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
@@ -368,6 +372,7 @@ function kit(options) {
 			if (svelte_config.kit.adapter) {
 				const { adapt } = await import('../core/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
+				await call_vite_adapter_api(vite_config, kitPluginOptions);
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
 				// prettier-ignore

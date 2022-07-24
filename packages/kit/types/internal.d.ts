@@ -321,6 +321,7 @@ export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 export interface VitePluginApi {
 	onKitConfig?: (validatedConfig: ValidatedConfig) => void | Promise<void>;
 	onKitPrerendered?: (prerendered: Prerendered) => void | Promise<void>;
+	onKitAdapter?: () => void | Promise<void>;
 }
 
 // export type KitConfigHook = (validatedConfig: ValidatedConfig) => void | Promise<void>;

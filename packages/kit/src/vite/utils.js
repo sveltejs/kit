@@ -149,6 +149,22 @@ export async function resolve_vite_plugins(options, config) {
 		(p) => p && 'name' in p && registeredPlugins.includes(p.name) && p.api
 	);
 }
+
+/**
+ * @param {import('types').ViteKitOptions} options
+ * @param {import('vite').ResolvedConfig} config
+ * @returns {import('vite').Plugin[]}
+ */
+export function lookup_vite_plugins(options, config) {
+	const registeredPlugins = options.viteHooks;
+	if (!registeredPlugins) return [];
+
+	// resolve plugins
+	return config.plugins.filter(
+		(p) => p && 'name' in p && registeredPlugins.includes(p.name) && p.api
+	);
+}
+
 /**
  * @param {import('vite').UserConfig} config
  * @returns {Promise<import('vite').PluginOption[]>}
