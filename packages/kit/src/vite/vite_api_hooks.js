@@ -21,7 +21,7 @@ export async function call_vite_config_api(options, svelte_config, config, confi
 				p &&
 				'name' in p &&
 				typeof p.api.onKitConfig === 'function' &&
-				p.api.onKitConfig(options, svelte_config, config, configEnv)
+				p.api.onKitConfig(svelte_config, config, configEnv)
 		)
 	);
 }
