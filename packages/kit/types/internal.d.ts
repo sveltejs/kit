@@ -17,6 +17,7 @@ import {
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
+	Prerendered,
 	RequestOptions,
 	ResponseHeaders,
 	TrailingSlash
@@ -314,6 +315,13 @@ export type StrictBody = string | Uint8Array;
 export type ValidatedConfig = RecursiveRequired<Config>;
 
 export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
+
+export type KitConfigHook = (validatedConfig: ValidatedConfig) => void | Promise<void>;
+export type PrerenderedHook = (prerendered: Prerendered) => void | Promise<void>;
+export interface VitePluginApi {
+	onConfig: (hook: KitConfigHook) => void;
+	onPrerendered: (hook: Prerendered) => void;
+}
 
 export * from './index';
 export * from './private';

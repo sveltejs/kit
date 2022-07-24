@@ -15,6 +15,7 @@ import { get_runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry } from './utils.js';
+import { create_vite_hooks_api } from './api.js';
 
 const cwd = process.cwd();
 
@@ -114,6 +115,8 @@ function kit() {
 
 	let completed_build = false;
 
+	const { call_config_hooks, call_prerendered_hooks, api } = create_vite_hooks_api();
+
 	function vite_client_build_config() {
 		/** @type {Record<string, string>} */
 		const input = {
@@ -193,6 +196,8 @@ function kit() {
 
 				const warning = warn_overridden_config(config, new_config);
 				if (warning) console.error(warning + '\n');
+
+				await call_config_hooks(svelte_config);
 
 				return new_config;
 			}
@@ -336,6 +341,8 @@ function kit() {
 				await build_service_worker(options, prerendered, client.vite_manifest);
 			}
 
+			await call_prerendered_hooks(prerendered);
+
 			console.log(
 				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
 			);
@@ -394,7 +401,12 @@ function kit() {
 		 */
 		configurePreviewServer(vite) {
 			return preview(vite, svelte_config, vite_config.preview.https ? 'https' : 'http');
-		}
+		},
+
+		/**
+		 * Rollup intercommunication plugin api.
+		 */
+		api
 	};
 }
 

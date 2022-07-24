@@ -18,7 +18,9 @@ import {
 	RouteDefinition,
 	TrailingSlash
 } from './private.js';
-import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
+import { SSRNodeLoader, SSRRoute, ValidatedConfig, VitePluginApi } from './internal.js';
+
+export type { VitePluginApi };
 
 export interface Adapter {
 	name: string;
