@@ -22,6 +22,7 @@ import {
 	ResponseHeaders,
 	TrailingSlash
 } from './private.js';
+import { ConfigEnv, ResolvedConfig, UserConfig } from 'vite';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -316,21 +317,23 @@ export type ValidatedConfig = RecursiveRequired<Config>;
 
 export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
-// export type KitConfigHook = (validatedConfig: ValidatedConfig) => void | Promise<void>;
-// export type PrerenderedHook = (prerendered: Prerendered) => void | Promise<void>;
 export interface VitePluginApi {
-	onKitConfig?: (validatedConfig: ValidatedConfig) => void | Promise<void>;
-	onKitPrerendered?: (prerendered: Prerendered) => void | Promise<void>;
-	onKitAdapter?: () => void | Promise<void>;
+	onKitConfig?: (
+		validatedConfig: ValidatedConfig,
+		userConfig: UserConfig,
+		configEnv: ConfigEnv
+	) => void | Promise<void>;
+	onKitPrerendered?: (
+		validatedConfig: ValidatedConfig,
+		prerendered: Prerendered,
+		viteConfig: ResolvedConfig
+	) => void | Promise<void>;
+	onKitAdapter?: (
+		validatedConfig: ValidatedConfig,
+		viteConfig: ResolvedConfig
+	) => void | Promise<void>;
 }
 
-// export type KitConfigHook = (validatedConfig: ValidatedConfig) => void | Promise<void>;
-// export type PrerenderedHook = (prerendered: Prerendered) => void | Promise<void>;
-// export interface VitePluginApi {
-// 	onConfig: (hook: KitConfigHook) => void;
-// 	onPrerendered: (hook: Prerendered) => void;
-// }
-//
 export * from './index';
 export * from './private';
 
