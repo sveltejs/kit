@@ -1,6 +1,7 @@
 import { lookup_vite_plugins, resolve_vite_plugins } from './utils.js';
 
 /**
+ * Notifies any Vite plugin with the `onKitConfig` api hook.
  * @param {import('types').ViteKitOptions} options
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {import('vite').UserConfig} config
@@ -26,6 +27,7 @@ export async function call_vite_config_api(options, svelte_config, config, confi
 }
 
 /**
+ * Notifies any Vite plugin with the `onKitPrerendered` api hook.
  * @param {import('types').ViteKitOptions} options
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {import('types').Prerendered} prerendered
@@ -43,6 +45,7 @@ export async function call_vite_prerendered_api(options, svelte_config, prerende
 }
 
 /**
+ * Notifies any Vite plugin with the `onKitAdapter` api hook.
  * @param {import('types').ViteKitOptions} options
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {import('vite').ResolvedConfig} config

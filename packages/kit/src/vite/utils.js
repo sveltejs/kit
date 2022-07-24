@@ -136,6 +136,7 @@ export function resolve_entry(entry) {
 }
 
 /**
+ * Collects plugins array from Vite raw config.
  * @param {import('types').ViteKitOptions} options
  * @param {import('vite').UserConfig} config
  * @returns {Promise<import('vite').PluginOption[]>}
@@ -151,6 +152,7 @@ export async function resolve_vite_plugins(options, config) {
 }
 
 /**
+ * Collects plugins array from Vite resolved config.
  * @param {import('types').ViteKitOptions} options
  * @param {import('vite').ResolvedConfig} config
  * @returns {import('vite').Plugin[]}
@@ -166,6 +168,8 @@ export function lookup_vite_plugins(options, config) {
 }
 
 /**
+ * Flatten plugins array, checking for async plugins:
+ * https://github.com/vitejs/vite/blob/main/packages/vite/src/node/utils.ts#L1121
  * @param {import('vite').UserConfig} config
  * @returns {Promise<import('vite').PluginOption[]>}
  */
@@ -174,7 +178,7 @@ async function flatten_vite_plugins(config) {
 	do {
 		// @ts-ignore TypeScript doesn't handle flattening Vite's plugin type properly
 		arr = (await Promise.all(arr)).flat(Infinity);
-		// @ts-ignore remove this comment when update to Vite 3.0.2+
+		// @ts-ignore can be a Promise
 	} while (arr.some((v) => v?.then));
 
 	return arr;
