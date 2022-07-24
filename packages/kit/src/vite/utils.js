@@ -134,3 +134,32 @@ export function resolve_entry(entry) {
 
 	return null;
 }
+
+/**
+ * @param {import('types').ViteKitOptions} options
+ * @param {import('vite').UserConfig} config
+ * @returns {Promise<import('vite').PluginOption[]>}
+ */
+export async function resolve_vite_plugins(options, config) {
+	const registeredPlugins = options.viteHooks;
+	if (!registeredPlugins) return [];
+
+	// resolve plugins
+	return (await flatten_vite_plugins(config)).filter(
+		(p) => p && 'name' in p && registeredPlugins.includes(p.name) && p.api
+	);
+}
+/**
+ * @param {import('vite').UserConfig} config
+ * @returns {Promise<import('vite').PluginOption[]>}
+ */
+async function flatten_vite_plugins(config) {
+	let arr = config.plugins ?? [];
+	do {
+		// @ts-ignore TypeScript doesn't handle flattening Vite's plugin type properly
+		arr = (await Promise.all(arr)).flat(Infinity);
+		// @ts-ignore remove this comment when update to Vite 3.0.2+
+	} while (arr.some((v) => v?.then));
+
+	return arr;
+}

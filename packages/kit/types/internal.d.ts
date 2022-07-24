@@ -316,13 +316,20 @@ export type ValidatedConfig = RecursiveRequired<Config>;
 
 export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
-export type KitConfigHook = (validatedConfig: ValidatedConfig) => void | Promise<void>;
-export type PrerenderedHook = (prerendered: Prerendered) => void | Promise<void>;
+// export type KitConfigHook = (validatedConfig: ValidatedConfig) => void | Promise<void>;
+// export type PrerenderedHook = (prerendered: Prerendered) => void | Promise<void>;
 export interface VitePluginApi {
-	onConfig: (hook: KitConfigHook) => void;
-	onPrerendered: (hook: Prerendered) => void;
+	onKitConfig?: (validatedConfig: ValidatedConfig) => void | Promise<void>;
+	onKitPrerendered?: (prerendered: Prerendered) => void | Promise<void>;
 }
 
+// export type KitConfigHook = (validatedConfig: ValidatedConfig) => void | Promise<void>;
+// export type PrerenderedHook = (prerendered: Prerendered) => void | Promise<void>;
+// export interface VitePluginApi {
+// 	onConfig: (hook: KitConfigHook) => void;
+// 	onPrerendered: (hook: Prerendered) => void;
+// }
+//
 export * from './index';
 export * from './private';
 

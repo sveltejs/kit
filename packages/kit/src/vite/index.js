@@ -15,7 +15,7 @@ import { get_runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry } from './utils.js';
-import { create_vite_hooks_api } from './api.js';
+import { call_vite_config_api, call_vite_prerendered_api } from './api.js';
 
 const cwd = process.cwd();
 
@@ -58,10 +58,11 @@ const enforced_config = {
 };
 
 /**
+ * @param {import('types').ViteKitOptions} options
  * @return {import('vite').Plugin[]}
  */
-export function sveltekit() {
-	return [...svelte(), kit()];
+export function sveltekit(options) {
+	return [...svelte(), kit(options ?? {})];
 }
 
 /**
@@ -74,9 +75,10 @@ export function sveltekit() {
  * - https://rollupjs.org/guide/en/#build-hooks
  * - https://rollupjs.org/guide/en/#output-generation-hooks
  *
+ * @param {import('types').ViteKitOptions} options
  * @return {import('vite').Plugin}
  */
-function kit() {
+function kit(options) {
 	/** @type {import('types').ValidatedConfig} */
 	let svelte_config;
 
@@ -115,7 +117,7 @@ function kit() {
 
 	let completed_build = false;
 
-	const { call_config_hooks, call_prerendered_hooks, api } = create_vite_hooks_api();
+	// const { call_config_hooks, call_prerendered_hooks, api } = create_vite_hooks_api();
 
 	function vite_client_build_config() {
 		/** @type {Record<string, string>} */
@@ -197,7 +199,7 @@ function kit() {
 				const warning = warn_overridden_config(config, new_config);
 				if (warning) console.error(warning + '\n');
 
-				await call_config_hooks(svelte_config);
+				await call_vite_config_api(config, options, svelte_config);
 
 				return new_config;
 			}
@@ -245,6 +247,9 @@ function kit() {
 			};
 
 			deferred_warning = warn_overridden_config(config, result);
+
+			await call_vite_config_api(config, options, svelte_config);
+
 			return result;
 		},
 
@@ -341,7 +346,7 @@ function kit() {
 				await build_service_worker(options, prerendered, client.vite_manifest);
 			}
 
-			await call_prerendered_hooks(prerendered);
+			await call_vite_prerendered_api(vite_config, prerendered);
 
 			console.log(
 				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
@@ -401,12 +406,12 @@ function kit() {
 		 */
 		configurePreviewServer(vite) {
 			return preview(vite, svelte_config, vite_config.preview.https ? 'https' : 'http');
-		},
+		}
 
-		/**
+		/*
 		 * Rollup intercommunication plugin api.
 		 */
-		api
+		//api
 	};
 }
 

@@ -22,6 +22,10 @@ import { SSRNodeLoader, SSRRoute, ValidatedConfig, VitePluginApi } from './inter
 
 export type { VitePluginApi };
 
+export interface ViteKitOptions {
+	viteHooks?: string[];
+}
+
 export interface Adapter {
 	name: string;
 	adapt(builder: Builder): MaybePromise<void>;
