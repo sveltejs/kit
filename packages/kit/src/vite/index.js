@@ -121,8 +121,6 @@ function kit(kitPluginOptions) {
 
 	let completed_build = false;
 
-	// const { call_config_hooks, call_prerendered_hooks, api } = create_vite_hooks_api();
-
 	function vite_client_build_config() {
 		/** @type {Record<string, string>} */
 		const input = {
@@ -412,11 +410,6 @@ function kit(kitPluginOptions) {
 		configurePreviewServer(vite) {
 			return preview(vite, svelte_config, vite_config.preview.https ? 'https' : 'http');
 		}
-
-		/*
-		 * Rollup intercommunication plugin api.
-		 */
-		//api
 	};
 }
 
