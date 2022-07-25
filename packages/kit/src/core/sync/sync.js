@@ -39,8 +39,7 @@ export function update(config, mode) {
 }
 
 /**
- * Run sync.init and sync.update in series, returning the result from
- * sync.update.
+ * Run sync.init and sync.update in series, returning the result from sync.update.
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode The Vite mode
  */
