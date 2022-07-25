@@ -1,6 +1,6 @@
 import path from 'path';
 import { loadEnv } from 'vite';
-import { write_if_changed } from './utils.js';
+import { write_if_changed, is_valid_js_identifier } from './utils.js';
 
 const autogen_comment = '// this file is generated — do not edit it\n';
 
@@ -44,6 +44,7 @@ export function write_env(config, mode) {
  */
 function create_module(id, env) {
 	const declarations = Object.entries(env)
+		.filter(([k]) => is_valid_js_identifier(k))
 		.map(
 			([k, v]) => `/** @type {import('${id}'}').${k}} */\nexport const ${k} = ${JSON.stringify(v)};`
 		)
@@ -59,6 +60,7 @@ function create_module(id, env) {
  */
 function create_types(id, env) {
 	const declarations = Object.keys(env)
+		.filter((k) => is_valid_js_identifier(k))
 		.map((k) => `\texport const ${k}: string;`)
 		.join('\n');
 
