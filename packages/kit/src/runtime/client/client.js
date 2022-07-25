@@ -117,6 +117,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (!ready) return;
 		session_id += 1;
 
+		const current_load_uses_session = current.branch.some((node) => node?.uses.session);
+		if (!current_load_uses_session) return;
+
 		update(new URL(location.href), [], true);
 	});
 	ready = true;
