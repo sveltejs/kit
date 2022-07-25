@@ -151,10 +151,8 @@ export function resolve_entry(entry) {
 }
 
 /**
- *
  * @param {string} str
  * @param {number} times
- * @returns
  */
 function repeat(str, times) {
 	return new Array(times + 1).join(str);
