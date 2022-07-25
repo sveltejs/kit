@@ -351,7 +351,6 @@ function kit() {
 							}
 							return value;
 						});
-						console.log(prerendered);
 						fulfil(undefined);
 					}
 				});
