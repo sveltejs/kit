@@ -61,9 +61,10 @@ export default [
 	{
 		input: {
 			cli: 'src/cli.js',
+			hooks: 'src/hooks.js',
 			node: 'src/node/index.js',
 			'node/polyfills': 'src/node/polyfills.js',
-			hooks: 'src/hooks.js',
+			prerender: 'src/core/prerender/prerender.js',
 			vite: 'src/vite/index.js'
 		},
 		output: {

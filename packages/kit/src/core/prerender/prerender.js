@@ -7,11 +7,17 @@ import { is_root_relative, resolve } from '../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../utils/escape.js';
+import { logger } from '../utils.js';
+import { load_config } from '../config/index.js';
 
 /**
  * @typedef {import('types').PrerenderErrorHandler} PrerenderErrorHandler
  * @typedef {import('types').Logger} Logger
  */
+
+const [, , client_out_dir, results_path, manifest_path, verbose] = process.argv;
+
+prerender();
 
 /**
  * @param {Parameters<PrerenderErrorHandler>[0]} details
@@ -50,14 +56,19 @@ const OK = 2;
 const REDIRECT = 3;
 
 /**
- * @param {{
- *   config: import('types').ValidatedKitConfig;
- *   client_out_dir: string;
- *   manifest_path: string;
- *   log: Logger;
- * }} opts
+ * @param {import('types').Prerendered} prerendered
  */
-export async function prerender({ config, client_out_dir, manifest_path, log }) {
+const output_and_exit = (prerendered) => {
+	writeFileSync(
+		results_path,
+		JSON.stringify(prerendered, (_key, value) =>
+			value instanceof Map ? Array.from(value.entries()) : value
+		)
+	);
+	process.exit(0);
+};
+
+export async function prerender() {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -66,9 +77,18 @@ export async function prerender({ config, client_out_dir, manifest_path, log }) 
 		paths: []
 	};
 
+	/** @type {import('types').ValidatedKitConfig} */
+	const config = (await load_config()).kit;
+
 	if (!config.prerender.enabled) {
-		return prerendered;
+		output_and_exit(prerendered);
+		return;
 	}
+
+	/** @type {import('types').Logger} */
+	const log = logger({
+		verbose: verbose === 'true'
+	});
 
 	installPolyfills();
 	const { fetch } = globalThis;
@@ -349,7 +369,7 @@ export async function prerender({ config, client_out_dir, manifest_path, log }) 
 	mkdirp(dirname(file));
 	writeFileSync(file, await rendered.text());
 
-	return prerendered;
+	output_and_exit(prerendered);
 }
 
 /** @return {string} */
