@@ -11,19 +11,20 @@ import { write_env } from './write_env.js';
 /**
  * Initialize SvelteKit's generated files.
  * @param {import('types').ValidatedConfig} config
- * @param {string | undefined} mode
+ * @param {string} mode
  */
-export function init(config, mode = undefined) {
+export function init(config, mode) {
 	copy_assets(path.join(config.kit.outDir, 'runtime'));
+
 	write_tsconfig(config.kit);
+	write_env(config.kit, mode);
 }
 
 /**
  * Update SvelteKit's generated files.
  * @param {import('types').ValidatedConfig} config
- * @param {string} mode The Vite mode
  */
-export function update(config, mode) {
+export function update(config) {
 	const manifest_data = create_manifest_data({ config });
 
 	const output = path.join(config.kit.outDir, 'generated');
@@ -33,7 +34,6 @@ export function update(config, mode) {
 	write_root(manifest_data, output);
 	write_matchers(manifest_data, output);
 	write_types(config, manifest_data);
-	write_env(config.kit, mode);
 
 	return { manifest_data };
 }
@@ -45,5 +45,5 @@ export function update(config, mode) {
  */
 export function all(config, mode) {
 	init(config, mode);
-	return update(config, mode);
+	return update(config);
 }
