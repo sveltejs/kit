@@ -3,8 +3,8 @@
 	"private": true,
 	"version": "0.0.2-next.0",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
+		"dev": "PRIVATE_DYNAMIC=\"private var set in npm run dev\" PUBLIC_DYNAMIC=\"public var set in npm run dev\" vite dev",
+		"build": "PRIVATE_DYNAMIC=\"private var set in npm run build\" PUBLIC_DYNAMIC=\"public var set in npm run build\" vite build",
 		"preview": "vite preview",
 		"prepare": "node ../../cli.js sync",
 		"check": "tsc && svelte-check",

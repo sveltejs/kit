@@ -346,13 +346,13 @@ test.describe('Env', () => {
 			'PRIVATE_STATIC: accessible to server-side code/replaced at build-time'
 		);
 		expect(await page.textContent('#dynamic-private')).toBe(
-			'PRIVATE_DYNAMIC: accessible to server-side code/evaluated at run-time'
+			'PRIVATE_DYNAMIC: private var set in npm run dev'
 		);
 
 		expect(await page.textContent('#static-public')).toBe(
 			'PUBLIC_STATIC: accessible anywhere/replaced at build-time'
 		);
-		expect(await page.textContent('#static-public')).toBe(
+		expect(await page.textContent('#dynamic-public')).toBe(
 			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run-time'
 		);
 	});
