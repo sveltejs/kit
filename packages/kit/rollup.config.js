@@ -25,6 +25,8 @@ export default [
 			'app/env': 'src/runtime/app/env.js',
 			'env/dynamic/private': 'src/runtime/env/dynamic/private.js',
 			'env/dynamic/public': 'src/runtime/env/dynamic/public.js',
+			'env-private': 'src/runtime/env-private.js',
+			'env-public': 'src/runtime/env-public.js',
 			paths: 'src/runtime/paths.js',
 			env: 'src/runtime/env.js'
 		},
