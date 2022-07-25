@@ -117,7 +117,9 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 			__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(config.kit.version.pollInterval),
 			__SVELTEKIT_DEV__: 'false'
 		},
-		publicDir: ssr ? false : config.kit.files.assets,
+		// prevent Vite copying the contents of `config.kit.files.assets`,
+		// if it happens to be 'public' instead of 'static'
+		publicDir: false,
 		resolve: {
 			alias: get_aliases(config.kit)
 		},
