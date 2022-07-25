@@ -1,7 +1,8 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ session }) {
-        session;
+		session; // not necessary, but prevents the argument from being marked as unused
+
 		return {
 			props: {
 				// Needs to be an object, else Svelte will do by-value-comparison and skip rerender
@@ -21,5 +22,5 @@
 </script>
 
 <h1>{count}</h1>
-<button on:click={() => $session.calls = 123}>Rerun Layout Load Function</button>
+<button on:click={() => ($session.calls = 123)}>Rerun Layout Load Function</button>
 <slot />
