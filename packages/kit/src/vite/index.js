@@ -326,12 +326,12 @@ function kit() {
 				const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
 
 				// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-				const file = fileURLToPath(import.meta.url);
-				const dir = file.substring(0, file.lastIndexOf(path.sep));
-				const dist_script = path.join(dir, 'prerender.js');
-				const script = existsSync(dist_script)
-					? dist_script
-					: path.join(dir, '../core/prerender/prerender.js');
+				const script = fileURLToPath(
+					new URL(
+						process.env.BUNDLED ? './prerender.js' : '../core/prerender/prerender.js',
+						import.meta.url
+					)
+				);
 
 				const child = fork(
 					script,
