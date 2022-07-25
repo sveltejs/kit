@@ -112,6 +112,7 @@ export class Server {
  * @param {{
  *   cwd: string;
  *   config: import('types').ValidatedConfig;
+ *   vite_config: import('vite').ResolvedConfig;
  *   vite_config_env: import('vite').ConfigEnv;
  *   manifest_data: import('types').ManifestData;
  *   build_dir: string;
@@ -124,6 +125,7 @@ export async function build_server(options, client) {
 	const {
 		cwd,
 		config,
+		vite_config,
 		vite_config_env,
 		manifest_data,
 		build_dir,
@@ -188,11 +190,9 @@ export async function build_server(options, client) {
 		})
 	);
 
-	const vite_config = await get_vite_config(vite_config_env);
-
 	const merged_config = merge_vite_configs(
 		get_default_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
-		vite_config
+		await get_vite_config(vite_config, vite_config_env)
 	);
 
 	remove_svelte_kit(merged_config);
