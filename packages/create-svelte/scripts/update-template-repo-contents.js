@@ -19,5 +19,6 @@ await create(repo, {
 	eslint: false,
 	types: 'checkjs',
 	prettier: true,
-	playwright: false
+	playwright: false,
+	vitest: false
 });
