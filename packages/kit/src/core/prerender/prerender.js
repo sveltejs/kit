@@ -17,7 +17,7 @@ import { load_config } from '../config/index.js';
 
 const [, , client_out_dir, results_path, manifest_path, verbose] = process.argv;
 
-prerender({ client_out_dir, results_path, manifest_path, verbose: verbose === 'true' });
+prerender();
 
 /**
  * @param {Parameters<PrerenderErrorHandler>[0]} details
@@ -56,12 +56,11 @@ const OK = 2;
 const REDIRECT = 3;
 
 /**
- * @param {string} path
  * @param {import('types').Prerendered} prerendered
  */
-const output_and_exit = (path, prerendered) => {
+const output_and_exit = (prerendered) => {
 	writeFileSync(
-		path,
+		results_path,
 		JSON.stringify(prerendered, (_key, value) =>
 			value instanceof Map ? Array.from(value.entries()) : value
 		)
@@ -69,15 +68,7 @@ const output_and_exit = (path, prerendered) => {
 	process.exit(0);
 };
 
-/**
- * @param {{
- *   client_out_dir: string;
- *   results_path: string;
- *   manifest_path: string;
- *   verbose: boolean;
- * }} opts
- */
-export async function prerender({ client_out_dir, results_path, manifest_path, verbose }) {
+export async function prerender() {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -90,12 +81,14 @@ export async function prerender({ client_out_dir, results_path, manifest_path, v
 	const config = (await load_config()).kit;
 
 	if (!config.prerender.enabled) {
-		output_and_exit(results_path, prerendered);
+		output_and_exit(prerendered);
 		return;
 	}
 
 	/** @type {import('types').Logger} */
-	const log = logger({ verbose });
+	const log = logger({
+		verbose: verbose === 'true'
+	});
 
 	installPolyfills();
 	const { fetch } = globalThis;
@@ -376,7 +369,7 @@ export async function prerender({ client_out_dir, results_path, manifest_path, v
 	mkdirp(dirname(file));
 	writeFileSync(file, await rendered.text());
 
-	output_and_exit(results_path, prerendered);
+	output_and_exit(prerendered);
 }
 
 /** @return {string} */
