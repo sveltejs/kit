@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[breaking] remove Prerendered.assets
+prerender in a subprocess
