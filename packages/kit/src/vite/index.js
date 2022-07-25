@@ -318,9 +318,6 @@ function kit() {
 				})};\n`
 			);
 
-			// TODO where is this used?
-			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
-
 			log.info('Prerendering');
 			await new Promise((fulfil, reject) => {
 				const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
