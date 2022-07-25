@@ -182,8 +182,6 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	vite.middlewares.use(async (req, res, next) => {
 		try {
-			if (!req.url || !req.method) throw new Error('Incomplete request');
-
 			const base = `${vite.config.server.https ? 'https' : 'http'}://${
 				req.headers[':authority'] || req.headers.host
 			}`;
@@ -221,8 +219,6 @@ export async function dev(vite, vite_config, svelte_config) {
 
 		vite.middlewares.use(async (req, res) => {
 			try {
-				if (!req.url || !req.method) throw new Error('Incomplete request');
-
 				const base = `${vite.config.server.https ? 'https' : 'http'}://${
 					req.headers[':authority'] || req.headers.host
 				}`;
