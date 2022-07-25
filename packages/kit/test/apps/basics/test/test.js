@@ -342,8 +342,6 @@ test.describe('Env', () => {
 	test('includes environment variables', async ({ page }) => {
 		await page.goto('/env');
 
-		const command = process.env.DEV ? 'dev' : 'preview';
-
 		expect(await page.textContent('#static-private')).toBe(
 			'PRIVATE_STATIC: accessible to server-side code/replaced at build time'
 		);
