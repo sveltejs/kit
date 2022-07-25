@@ -5,11 +5,13 @@
  * /// <reference types="@sveltejs/kit" />
  *
  * declare namespace App {
- * 	interface Env {}
- *
  * 	interface Locals {}
  *
  * 	interface Platform {}
+ *
+ * 	interface PrivateEnv {}
+ *
+ * 	interface PublicEnv {}
  *
  * 	interface Session {}
  *
@@ -45,12 +47,6 @@
  */
 declare namespace App {
 	/**
-	 * TODO need separate PrivateEnv and PublicEnv?
-	 * The interface that defines the dynamic environment variables exported from '$env/dynamic/private'.
-	 */
-	export interface Env extends Record<string, string> {}
-
-	/**
 	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://kit.svelte.dev/docs/hooks) (`handle`, `handleError` and `getSession`) and [endpoints](https://kit.svelte.dev/docs/routing#endpoints).
 	 */
 	export interface Locals {}
@@ -59,6 +55,16 @@ declare namespace App {
 	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
 	 */
 	export interface Platform {}
+
+	/**
+	 * The interface that defines the dynamic environment variables exported from '$env/dynamic/private'.
+	 */
+	export interface PrivateEnv extends Record<string, string> {}
+
+	/**
+	 * The interface that defines the dynamic environment variables exported from '$env/dynamic/public'.
+	 */
+	export interface PublicEnv extends Record<string, string> {}
 
 	/**
 	 * The interface that defines `session`, both as an argument to [`load`](https://kit.svelte.dev/docs/loading) functions and the value of the [session store](https://kit.svelte.dev/docs/modules#$app-stores).
@@ -102,11 +108,25 @@ declare module '$app/env' {
  *
  * ```ts
  * import { env } from '$env/dynamic/private';
- * console.log(env.MY_DEPLOYMENT_SPECIFIC_VARIABLE);
+ * console.log(env.DEPLOYMENT_SPECIFIC_VARIABLE);
  * ```
  */
 declare module '$env/dynamic/private' {
-	export let env: App.Env;
+	export let env: App.PrivateEnv;
+}
+
+/**
+ * Similar to [`$env/dynamic/private`](https://kit.svelte.dev/docs/modules#$env-dynamic-private), but only includes
+ * variables that begin with [`config.kit.env.publicPrefix`](https://kit.svelte.dev/docs/configuration#kit-env-publicprefix)
+ * (which defaults to `PUBLIC_`), and can therefore safely be exposed to client-side code
+ *
+ * ```ts
+ * import { env } from '$env/dynamic/private';
+ * console.log(env.PUBLIC_DEPLOYMENT_SPECIFIC_VARIABLE);
+ * ```
+ */
+declare module '$env/dynamic/public' {
+	export let env: App.PublicEnv;
 }
 
 /**
