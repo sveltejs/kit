@@ -1,5 +1,6 @@
-import fs from 'fs';
-import path from 'path';
+import { fork } from 'node:child_process';
+import fs, { existsSync } from 'node:fs';
+import path from 'node:path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import * as vite from 'vite';
@@ -7,7 +8,6 @@ import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { prerender } from '../core/prerender/prerender.js';
 import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
@@ -15,6 +15,7 @@ import { get_runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry, format_illegal_import_chain } from './utils.js';
+import { fileURLToPath } from 'node:url';
 
 const cwd = process.cwd();
 
@@ -221,6 +222,7 @@ function kit() {
 					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0'
 				},
+				publicDir: svelte_config.kit.files.assets,
 				resolve: {
 					alias: get_aliases(svelte_config.kit)
 				},
@@ -311,8 +313,9 @@ function kit() {
 				}
 			}
 
+			const verbose = vite_config.logLevel === 'info';
 			log = logger({
-				verbose: vite_config.logLevel === 'info'
+				verbose
 			});
 
 			fs.writeFileSync(
@@ -327,6 +330,7 @@ function kit() {
 			const options = {
 				cwd,
 				config: svelte_config,
+				vite_config,
 				vite_config_env,
 				build_dir: paths.build_dir, // TODO just pass `paths`
 				manifest_data,
@@ -355,14 +359,39 @@ function kit() {
 				})};\n`
 			);
 
-			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 			log.info('Prerendering');
+			await new Promise((fulfil, reject) => {
+				const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
 
-			prerendered = await prerender({
-				config: svelte_config.kit,
-				client_out_dir: vite_config.build.outDir,
-				manifest_path,
-				log
+				// do prerendering in a subprocess so any dangling stuff gets killed upon completion
+				const script = fileURLToPath(
+					new URL(
+						process.env.BUNDLED ? './prerender.js' : '../core/prerender/prerender.js',
+						import.meta.url
+					)
+				);
+
+				const child = fork(
+					script,
+					[vite_config.build.outDir, results_path, manifest_path, '' + verbose],
+					{
+						stdio: 'inherit'
+					}
+				);
+
+				child.on('exit', (code) => {
+					if (code) {
+						reject(new Error(`Prerendering failed with code ${code}`));
+					} else {
+						prerendered = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
+							if (key === 'pages' || key === 'assets' || key === 'redirects') {
+								return new Map(value);
+							}
+							return value;
+						});
+						fulfil(undefined);
+					}
+				});
 			});
 
 			if (options.service_worker_entry_file) {
@@ -401,13 +430,6 @@ function kit() {
 				console.log(
 					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
 				);
-			}
-
-			if (svelte_config.kit.prerender.enabled) {
-				// this is necessary to close any open db connections, etc.
-				// TODO: prerender in a subprocess so we can exit in isolation and then remove this
-				// https://github.com/sveltejs/kit/issues/5306
-				process.exit(0);
 			}
 		},
 

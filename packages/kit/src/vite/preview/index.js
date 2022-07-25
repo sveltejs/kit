@@ -50,16 +50,13 @@ export async function preview(vite, vite_config, svelte_config) {
 	});
 
 	return () => {
-		// files in `static`
-		vite.middlewares.use(scoped(assets, mutable(svelte_config.kit.files.assets)));
-
-		// immutable generated client assets
+		// generated client assets and the contents of `static`
 		vite.middlewares.use(
 			scoped(
 				assets,
 				sirv(join(svelte_config.kit.outDir, 'output/client'), {
 					setHeaders: (res, pathname) => {
-						// only apply to build directory, not e.g. version.json
+						// only apply to immutable directory, not e.g. version.json
 						if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
 							res.setHeader('cache-control', 'public,max-age=31536000,immutable');
 						}
