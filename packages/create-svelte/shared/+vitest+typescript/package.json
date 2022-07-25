@@ -1,5 +1,0 @@
-{
-	"devDependencies": {
-		"@types/testing-library__jest-dom": "^5.14.5"
-	}
-}
