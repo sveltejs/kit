@@ -1,4 +1,3 @@
-// TODO need separate public/private types
 /** @type {App.PrivateEnv} */
 export let env = {};
 
