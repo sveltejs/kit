@@ -40,7 +40,7 @@ export async function call_vite_prerendered_api_hooks(options, svelte_config, pr
 	);
 
 	await execute_hooks(options, 'prerendered', plugins, (p) =>
-		p.api.onKitPrerendered(svelte_config, prerendered, config)
+		p.api?.onKitPrerendered?.(svelte_config, prerendered, config)
 	);
 }
 
@@ -57,7 +57,7 @@ export async function call_vite_adapter_api_hooks(options, svelte_config, config
 	);
 
 	await execute_hooks(options, 'adapter', plugins, (p) =>
-		p.api.onKitAdapter(svelte_config, config)
+		p.api?.onKitAdapter?.(svelte_config, config)
 	);
 }
 
@@ -83,7 +83,7 @@ function resolve_hooks_execution(options, hook, plugins) {
  * @param {import('types').ViteKitOptions} options
  * @param {import('types').KitPluginHookName} hook
  * @param {import('vite').Plugin[]} plugins
- * @param {(plugin: import('vite').Plugin) => Promise<void>} callback
+ * @param {(plugin: import('vite').Plugin) => void | Promise<void>} callback
  * @return {Promise<void>}
  */
 async function execute_hooks(options, hook, plugins, callback) {
