@@ -176,7 +176,7 @@ export function format_illegal_import_chain(stack, config) {
 }
 
 /**
- * Load envinronment variables from process.env and .env files
+ * Load environment variables from process.env and .env files
  * @param {string} mode
  * @param {string} prefix
  */
