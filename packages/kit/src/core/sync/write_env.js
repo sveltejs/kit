@@ -27,7 +27,7 @@ export function write_env(config, mode) {
 	);
 
 	write_if_changed(
-		path.join(config.outDir, 'types/ambient.d.ts'),
+		path.join(config.outDir, 'ambient.d.ts'),
 		autogen_comment +
 			create_types('$env/static/public', env.public) +
 			'\n\n' +

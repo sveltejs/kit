@@ -24,7 +24,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(config.outDir, file));
 
-	const include = ['types/ambient.d.ts'];
+	const include = ['ambient.d.ts'];
 	for (const dir of [config.files.routes, config.files.lib]) {
 		const relative = project_relative(path.dirname(dir));
 		include.push(config_relative(`${relative}/**/*.js`));
@@ -73,7 +73,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 					target: 'esnext'
 				},
 				include,
-				exclude: [config_relative('node_modules/**'), './[!types/ambient.d.ts]**']
+				exclude: [config_relative('node_modules/**'), './[!ambient.d.ts]**']
 			},
 			null,
 			'\t'
