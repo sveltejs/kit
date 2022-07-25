@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.394
+
+### Patch Changes
+
+- Set Vite's publicDir and correctly serve public assets earlier in pipeline ([#5686](https://github.com/sveltejs/kit/pull/5686))
+
+* prerender in a subprocess ([#5678](https://github.com/sveltejs/kit/pull/5678))
+
 ## 1.0.0-next.393
 
 ### Patch Changes
