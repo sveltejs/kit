@@ -1,4 +1,4 @@
-import { SECRET } from '$app/env/private';
+import { SECRET } from '$env/static/private';
 
 export function GET() {
 	return {

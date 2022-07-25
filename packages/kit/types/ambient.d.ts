@@ -45,7 +45,8 @@
  */
 declare namespace App {
 	/**
-	 * The interface that defines the dynamic environment variables exported from '$app/env/platform'.
+	 * TODO need separate PrivateEnv and PublicEnv?
+	 * The interface that defines the dynamic environment variables exported from '$env/dynamic/private'.
 	 */
 	export interface Env extends Record<string, string> {}
 
@@ -100,11 +101,11 @@ declare module '$app/env' {
  * This module cannot be imported into client-side code.
  *
  * ```ts
- * import { env } from '$app/env/platform';
+ * import { env } from '$env/dynamic/private';
  * console.log(env.MY_DEPLOYMENT_SPECIFIC_VARIABLE);
  * ```
  */
-declare module '$app/env/platform' {
+declare module '$env/dynamic/platform' {
 	export let env: App.Env;
 }
 

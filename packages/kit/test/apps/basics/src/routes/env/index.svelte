@@ -1,5 +1,5 @@
 <script>
-	import { PUBLIC_VAR } from '$app/env/public';
+	import { PUBLIC_VAR } from '$env/static/public';
 
 	/** @type {string} */
 	export let SECRET;

@@ -1,14 +1,12 @@
 import { modules } from '../../../../../../packages/kit/docs/types.js';
 
-const exempt = new Set(['$lib', '$app/env/public', '$app/env/private']);
-
 /** @param {'types' | 'exports'} kind */
 export function render_modules(kind) {
 	return modules
 		.map((module) => {
 			// special case — we want to include $lib etc in the modules page
-			const is_lib_exports = kind === 'exports' && exempt.has(module.name);
-			const skip = module[kind].length === 0 && !is_lib_exports;
+			const is_exempt = kind === 'exports' && module.exempt;
+			const skip = module[kind].length === 0 && !is_exempt;
 
 			if (skip) return '';
 

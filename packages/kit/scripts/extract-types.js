@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 
 /** @typedef {{ name: string, comment: string, snippet: string }} Extracted */
 
-/** @type {Array<{ name: string, comment: string, exports: Extracted[], types: Extracted[] }>} */
+/** @type {Array<{ name: string, comment: string, exports: Extracted[], types: Extracted[], exempt?: boolean }>} */
 const modules = [];
 
 /**
@@ -112,7 +112,8 @@ for (const file of fs.readdirSync(dir)) {
 		name: file.replace(/\+/g, '/').slice(0, -3),
 		comment,
 		exports: [],
-		types: []
+		types: [],
+		exempt: true
 	});
 }
 

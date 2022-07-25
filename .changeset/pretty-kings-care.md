@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Add `$app/env/public`, `$app/env/private` and `$app/env/platform` modules
+Add `$env/static/private`, `$env/static/public`, `$env/dynamic/private` and `$env/dynamic/public` modules

@@ -93,18 +93,17 @@ export function get_aliases(config) {
 	const alias = {
 		__GENERATED__: path.posix.join(config.outDir, 'generated'),
 
+		$app: `${get_runtime_directory(config)}/app`,
+
 		// For now, we handle `$lib` specially here rather than make it a default value for
 		// `config.kit.alias` since it has special meaning for packaging, etc.
 		$lib: config.files.lib
 	};
 
 	if (!process.env.BUNDLED) {
-		alias['$app/env/public'] = path.posix.join(config.outDir, 'runtime/app/env/public.js');
-		alias['$app/env/private'] = path.posix.join(config.outDir, 'runtime/app/env/private.js');
+		alias['$env/static/public'] = path.posix.join(config.outDir, 'runtime/env/static/public.js');
+		alias['$env/static/private'] = path.posix.join(config.outDir, 'runtime/env/static/private.js');
 	}
-
-	// we set $app after $app/env/* so that the more specific aliases resolve first
-	alias['$app'] = `${get_runtime_directory(config)}/app`;
 
 	for (const [key, value] of Object.entries(config.alias)) {
 		alias[key] = path.resolve(value);

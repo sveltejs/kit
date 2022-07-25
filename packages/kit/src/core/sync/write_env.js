@@ -6,7 +6,7 @@ const autogen_comment = '// this file is generated — do not edit it\n';
 
 /**
  * Writes the existing environment variables in process.env to
- * $app/env and $app/env/private
+ * $env/static/private and $env/static/public
  * @param {import('types').ValidatedKitConfig} config
  * @param {string} mode
  * The Vite mode.
@@ -19,21 +19,21 @@ export function write_env(config, mode) {
 	// TODO when testing src, `$app` points at `src/runtime/app`... will
 	// probably need to fiddle with aliases
 	write_if_changed(
-		path.join(config.outDir, 'runtime/app/env/public.js'),
-		create_module('$app/env/public', pub)
+		path.join(config.outDir, 'runtime/env/static/public.js'),
+		create_module('$env/static/public', pub)
 	);
 
 	write_if_changed(
-		path.join(config.outDir, 'runtime/app/env/private.js'),
-		create_module('$app/env/private', prv)
+		path.join(config.outDir, 'runtime/env/static/private.js'),
+		create_module('$env/static/private', prv)
 	);
 
 	write_if_changed(
 		path.join(config.outDir, 'types/ambient.d.ts'),
 		autogen_comment +
-			create_types('$app/env/public', pub) +
+			create_types('$env/static/public', pub) +
 			'\n\n' +
-			create_types('$app/env/private', prv)
+			create_types('$env/static/private', prv)
 	);
 }
 

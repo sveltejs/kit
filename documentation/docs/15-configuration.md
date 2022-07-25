@@ -164,7 +164,7 @@ When pages are prerendered, the CSP header is added via a `<meta http-equiv>` ta
 
 Environment variable configuration:
 
-- `publicPrefix` — a prefix that signals that an environment variable is safe to expose to client-side code. See [`$app/env/public`](/docs/modules#$app-env-public)
+- `publicPrefix` — a prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](/docs/modules#$env-static-public) and [`$env/dynamic/public`](/docs/modules#$env-dynamic-public)
 
 ### files
 

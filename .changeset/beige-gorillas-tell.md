@@ -6,4 +6,4 @@
 '@sveltejs/adapter-vercel': patch
 ---
 
-Initialise `$app/env/platform`
+Initialise `$env/dynamic/private`
