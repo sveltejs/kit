@@ -105,7 +105,7 @@ declare module '$app/env' {
  * console.log(env.MY_DEPLOYMENT_SPECIFIC_VARIABLE);
  * ```
  */
-declare module '$env/dynamic/platform' {
+declare module '$env/dynamic/private' {
 	export let env: App.Env;
 }
 

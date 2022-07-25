@@ -190,8 +190,8 @@ function kit() {
 			};
 
 			illegal_imports = new Set([
-				`${svelte_config.kit.outDir}/runtime/app/env/platform.js`,
-				`${svelte_config.kit.outDir}/runtime/app/env/private.js`
+				`${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`,
+				`${svelte_config.kit.outDir}/runtime/env/static/private.js`
 			]);
 
 			if (is_build) {

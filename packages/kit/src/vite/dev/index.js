@@ -240,9 +240,9 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 				const { set_env } = await vite.ssrLoadModule(
 					process.env.BUNDLED
 						? `/${posixify(
-								path.relative(cwd, `${svelte_config.kit.outDir}/runtime/app/env/platform.js`)
+								path.relative(cwd, `${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`)
 						  )}`
-						: `/@fs${runtime}/app/env/platform.js`
+						: `/@fs${runtime}/env/dynamic/private.js`
 				);
 
 				set_env(process.env);

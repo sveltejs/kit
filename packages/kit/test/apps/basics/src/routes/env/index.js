@@ -1,9 +1,11 @@
-import { SECRET } from '$env/static/private';
+import { PRIVATE_STATIC } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 export function GET() {
 	return {
 		body: {
-			SECRET
+			PRIVATE_STATIC,
+			PRIVATE_DYNAMIC: env.PRIVATE_DYNAMIC
 		}
 	};
 }

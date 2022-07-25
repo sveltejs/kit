@@ -105,6 +105,8 @@ export function get_aliases(config) {
 		alias['$env/static/private'] = path.posix.join(config.outDir, 'runtime/env/static/private.js');
 	}
 
+	alias['$env'] = `${get_runtime_directory(config)}/env`;
+
 	for (const [key, value] of Object.entries(config.alias)) {
 		alias[key] = path.resolve(value);
 	}

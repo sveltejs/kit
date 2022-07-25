@@ -339,13 +339,21 @@ test.describe('Encoded paths', () => {
 });
 
 test.describe('Env', () => {
-	test('includes environment variables', async ({ page }) => {
+	test.only('includes environment variables', async ({ page }) => {
 		await page.goto('/env');
-		expect(await page.textContent('#private')).toBe(
-			'SECRET: this is directly accessible to server-side code'
+
+		expect(await page.textContent('#static-private')).toBe(
+			'PRIVATE_STATIC: accessible to server-side code/replaced at build-time'
 		);
-		expect(await page.textContent('#public')).toBe(
-			'PUBLIC_VAR: this is directly accessible anywhere'
+		expect(await page.textContent('#dynamic-private')).toBe(
+			'PRIVATE_DYNAMIC: accessible to server-side code/evaluated at run-time'
+		);
+
+		expect(await page.textContent('#static-public')).toBe(
+			'PUBLIC_STATIC: accessible anywhere/replaced at build-time'
+		);
+		expect(await page.textContent('#static-public')).toBe(
+			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run-time'
 		);
 	});
 });
