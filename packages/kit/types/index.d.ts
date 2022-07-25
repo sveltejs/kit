@@ -261,7 +261,7 @@ export interface RequestHandlerOutput<Output = ResponseBody> {
 
 export interface ResolveOptions {
 	ssr?: boolean;
-	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
+	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 }
 
 export type ResponseBody = JSONValue | Uint8Array | ReadableStream | Error;

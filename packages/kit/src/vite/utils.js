@@ -4,15 +4,22 @@ import { loadConfigFromFile } from 'vite';
 import { get_runtime_directory } from '../core/utils.js';
 
 /**
+ * @param {import('vite').ResolvedConfig} config
  * @param {import('vite').ConfigEnv} config_env
  * @return {Promise<import('vite').UserConfig>}
  */
-export async function get_vite_config(config_env) {
-	const config = (await loadConfigFromFile(config_env))?.config;
-	if (!config) {
+export async function get_vite_config(config, config_env) {
+	const loaded = await loadConfigFromFile(
+		config_env,
+		config.configFile,
+		undefined,
+		config.logLevel
+	);
+
+	if (!loaded) {
 		throw new Error('Could not load Vite config');
 	}
-	return { ...config, mode: config_env.mode };
+	return { ...loaded.config, mode: config_env.mode };
 }
 
 /**

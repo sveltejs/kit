@@ -1,5 +1,33 @@
 # @sveltejs/kit
 
+## 1.0.0-next.393
+
+### Patch Changes
+
+- Prevent needless prop updates causing rerenders ([#5671](https://github.com/sveltejs/kit/pull/5671))
+
+* Support custom Vite config locations ([#5705](https://github.com/sveltejs/kit/pull/5705))
+
+- Prevent rerender when route state did not change ([#5654](https://github.com/sveltejs/kit/pull/5654))
+
+## 1.0.0-next.392
+
+### Patch Changes
+
+- Revert publicDir change from 1.0.0-next.387 ([#5683](https://github.com/sveltejs/kit/pull/5683))
+
+## 1.0.0-next.391
+
+### Patch Changes
+
+- [breaking] replace transformPage with transformPageChunk ([#5657](https://github.com/sveltejs/kit/pull/5657))
+
+## 1.0.0-next.390
+
+### Patch Changes
+
+- [fix] vite dev no longer covers errors ([#5563](https://github.com/sveltejs/kit/pull/5563))
+
 ## 1.0.0-next.389
 
 ### Patch Changes
