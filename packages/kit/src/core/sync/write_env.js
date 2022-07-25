@@ -1,6 +1,6 @@
 import path from 'path';
 import { get_env } from '../../vite/utils.js';
-import { write_if_changed, is_valid_js_identifier } from './utils.js';
+import { write_if_changed, reserved, valid_identifier } from './utils.js';
 
 const autogen_comment = '// this file is generated — do not edit it\n';
 
@@ -42,10 +42,20 @@ export function write_env(config, mode) {
  */
 function create_module(id, env) {
 	const declarations = Object.entries(env)
-		.filter(([k]) => is_valid_js_identifier(k))
-		.map(
-			([k, v]) => `/** @type {import('${id}'}').${k}} */\nexport const ${k} = ${JSON.stringify(v)};`
-		)
+		.filter(([k]) => valid_identifier.test(k))
+		.map(([k, v]) => {
+			const comment = `/** @type {import('${id}'}').${k}} */`;
+
+			if (reserved.has(k)) {
+				let i = 1;
+				while (k + i in env) i++;
+				const name = k + 1;
+
+				return `${comment}\nconst ${name} = ${JSON.stringify(v)}; export { ${name} as ${k} }`;
+			}
+
+			return `${comment}\nexport const ${k} = ${JSON.stringify(v)};`;
+		})
 		.join('\n\n');
 
 	return autogen_comment + declarations;
@@ -58,7 +68,7 @@ function create_module(id, env) {
  */
 function create_types(id, env) {
 	const declarations = Object.keys(env)
-		.filter((k) => is_valid_js_identifier(k))
+		.filter((k) => valid_identifier.test(k))
 		.map((k) => `\texport const ${k}: string;`)
 		.join('\n');
 
