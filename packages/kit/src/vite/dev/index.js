@@ -41,7 +41,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 	let manifest;
 
 	function update_manifest() {
-		const { manifest_data } = sync.update(svelte_config, vite_config.mode);
+		const { manifest_data } = sync.update(svelte_config);
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
