@@ -1,5 +1,5 @@
 // TODO need separate public/private types
-/** @type {App.Env} */
+/** @type {App.PublicEnv} */
 export let env = {};
 
 // TODO put this in a separate module, so it's not user-accessible
