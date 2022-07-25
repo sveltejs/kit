@@ -288,6 +288,7 @@ function kit() {
 			const options = {
 				cwd,
 				config: svelte_config,
+				vite_config,
 				vite_config_env,
 				build_dir: paths.build_dir, // TODO just pass `paths`
 				manifest_data,
