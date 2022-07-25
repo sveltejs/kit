@@ -12,7 +12,7 @@ import { load_template } from '../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_prefix } from '../../core/utils.js';
-import { format_illegal_import_chain, resolve_entry } from '../utils.js';
+import { format_illegal_import_chain, get_env, resolve_entry } from '../utils.js';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
@@ -237,15 +237,21 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
 					: {};
 
-				const { set_env } = await vite.ssrLoadModule(
-					process.env.BUNDLED
-						? `/${posixify(
-								path.relative(cwd, `${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`)
-						  )}`
-						: `/@fs${runtime}/env/dynamic/private.js`
+				const runtime_base = process.env.BUNDLED
+					? `/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/runtime`))}`
+					: `/@fs${runtime}`;
+
+				const { set_private_env } = await vite.ssrLoadModule(
+					`${runtime_base}/env/dynamic/private.js`
 				);
 
-				set_env(process.env);
+				const { set_public_env } = await vite.ssrLoadModule(
+					`${runtime_base}/env/dynamic/public.js`
+				);
+
+				const env = get_env(vite_config.mode, svelte_config.kit.env.publicPrefix);
+				set_private_env(env.private);
+				set_public_env(env.public);
 
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
 
@@ -287,11 +293,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					`/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/generated/root.svelte`))}`
 				);
 
-				const paths = await vite.ssrLoadModule(
-					process.env.BUNDLED
-						? `/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/runtime/paths.js`))}`
-						: `/@fs${runtime}/paths.js`
-				);
+				const paths = await vite.ssrLoadModule(`${runtime_base}/paths.js`);
 
 				paths.set_paths({
 					base: svelte_config.kit.paths.base,
@@ -350,6 +352,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							default: svelte_config.kit.prerender.default,
 							enabled: svelte_config.kit.prerender.enabled
 						},
+						public_env: env.public,
 						read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 						root,
 						router: svelte_config.kit.browser.router,

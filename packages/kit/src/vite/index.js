@@ -432,7 +432,7 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
-			return preview(vite, svelte_config, vite_config.preview.https ? 'https' : 'http');
+			return preview(vite, vite_config, svelte_config);
 		}
 	};
 }

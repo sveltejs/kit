@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { loadConfigFromFile } from 'vite';
+import { loadConfigFromFile, loadEnv } from 'vite';
 import { get_runtime_directory } from '../core/utils.js';
 
 /**
@@ -168,4 +168,18 @@ export function format_illegal_import_chain(stack, config) {
 	const pyramid = stack.map((file, i) => `${repeat(' ', i * 2)}- ${file}`).join('\n');
 
 	return `Cannot import ${stack.at(-1)} into client-side code:\n${pyramid}`;
+}
+
+/**
+ * Load envinronment variables from process.env and .env files
+ * @param {string} mode
+ * @param {string} prefix
+ */
+export function get_env(mode, prefix) {
+	const entries = Object.entries(loadEnv(mode, process.cwd(), ''));
+
+	return {
+		public: Object.fromEntries(entries.filter(([k]) => k.startsWith(prefix))),
+		private: Object.fromEntries(entries.filter(([k]) => !k.startsWith(prefix)))
+	};
 }

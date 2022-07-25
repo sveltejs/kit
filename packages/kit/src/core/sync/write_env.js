@@ -1,5 +1,5 @@
 import path from 'path';
-import { loadEnv } from 'vite';
+import { get_env } from '../../vite/utils.js';
 import { write_if_changed, is_valid_js_identifier } from './utils.js';
 
 const autogen_comment = '// this file is generated — do not edit it\n';
@@ -12,28 +12,26 @@ const autogen_comment = '// this file is generated — do not edit it\n';
  * The Vite mode.
  */
 export function write_env(config, mode) {
-	const entries = Object.entries(loadEnv(mode, process.cwd(), ''));
-	const pub = Object.fromEntries(entries.filter(([k]) => k.startsWith(config.env.publicPrefix)));
-	const prv = Object.fromEntries(entries.filter(([k]) => !k.startsWith(config.env.publicPrefix)));
+	const env = get_env(mode, config.env.publicPrefix);
 
 	// TODO when testing src, `$app` points at `src/runtime/app`... will
 	// probably need to fiddle with aliases
 	write_if_changed(
 		path.join(config.outDir, 'runtime/env/static/public.js'),
-		create_module('$env/static/public', pub)
+		create_module('$env/static/public', env.public)
 	);
 
 	write_if_changed(
 		path.join(config.outDir, 'runtime/env/static/private.js'),
-		create_module('$env/static/private', prv)
+		create_module('$env/static/private', env.private)
 	);
 
 	write_if_changed(
 		path.join(config.outDir, 'types/ambient.d.ts'),
 		autogen_comment +
-			create_types('$env/static/public', pub) +
+			create_types('$env/static/public', env.public) +
 			'\n\n' +
-			create_types('$env/static/private', prv)
+			create_types('$env/static/private', env.private)
 	);
 }
 

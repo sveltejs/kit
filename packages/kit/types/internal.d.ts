@@ -251,6 +251,7 @@ export interface SSROptions {
 		default: boolean;
 		enabled: boolean;
 	};
+	public_env: Record<string, string>;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
 	router: boolean;

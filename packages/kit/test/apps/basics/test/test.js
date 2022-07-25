@@ -342,18 +342,20 @@ test.describe('Env', () => {
 	test.only('includes environment variables', async ({ page }) => {
 		await page.goto('/env');
 
+		const command = process.env.DEV ? 'dev' : 'preview';
+
 		expect(await page.textContent('#static-private')).toBe(
-			'PRIVATE_STATIC: accessible to server-side code/replaced at build-time'
+			'PRIVATE_STATIC: accessible to server-side code/replaced at build time'
 		);
 		expect(await page.textContent('#dynamic-private')).toBe(
-			'PRIVATE_DYNAMIC: private var set in npm run dev'
+			'PRIVATE_DYNAMIC: accessible to server-side code/evaluated at run time'
 		);
 
 		expect(await page.textContent('#static-public')).toBe(
-			'PUBLIC_STATIC: accessible anywhere/replaced at build-time'
+			'PUBLIC_STATIC: accessible anywhere/replaced at build time'
 		);
 		expect(await page.textContent('#dynamic-public')).toBe(
-			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run-time'
+			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run time'
 		);
 	});
 });
