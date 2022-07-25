@@ -16,9 +16,9 @@ import { find_deps, get_default_config as get_default_build_config } from './bui
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry } from './utils.js';
 import {
-	call_vite_adapter_api,
-	call_vite_config_api,
-	call_vite_prerendered_api
+	call_vite_adapter_api_hooks,
+	call_vite_config_api_hooks,
+	call_vite_prerendered_api_hooks
 } from './vite_api_hooks.js';
 
 const cwd = process.cwd();
@@ -201,7 +201,7 @@ function kit(kitPluginOptions) {
 				const warning = warn_overridden_config(config, new_config);
 				if (warning) console.error(warning + '\n');
 
-				await call_vite_config_api(kitPluginOptions, svelte_config, config, config_env);
+				await call_vite_config_api_hooks(kitPluginOptions, svelte_config, config, config_env);
 
 				return new_config;
 			}
@@ -250,7 +250,7 @@ function kit(kitPluginOptions) {
 
 			deferred_warning = warn_overridden_config(config, result);
 
-			await call_vite_config_api(kitPluginOptions, svelte_config, config, config_env);
+			await call_vite_config_api_hooks(kitPluginOptions, svelte_config, config, config_env);
 
 			return result;
 		},
@@ -348,7 +348,12 @@ function kit(kitPluginOptions) {
 				await build_service_worker(options, prerendered, client.vite_manifest);
 			}
 
-			await call_vite_prerendered_api(kitPluginOptions, svelte_config, prerendered, vite_config);
+			await call_vite_prerendered_api_hooks(
+				kitPluginOptions,
+				svelte_config,
+				prerendered,
+				vite_config
+			);
 
 			console.log(
 				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
@@ -370,7 +375,7 @@ function kit(kitPluginOptions) {
 			if (svelte_config.kit.adapter) {
 				const { adapt } = await import('../core/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
-				await call_vite_adapter_api(kitPluginOptions, svelte_config, vite_config);
+				await call_vite_adapter_api_hooks(kitPluginOptions, svelte_config, vite_config);
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
 				// prettier-ignore

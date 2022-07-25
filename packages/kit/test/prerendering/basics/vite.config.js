@@ -4,14 +4,12 @@ import { plugin } from '../../utils.js';
 /** @type {import('vite').Plugin} */
 const hookPlugin = {
 	name: 'test-hooks-api',
-	/** @property {import('types').VitePluginApi} */
+	/** @property {import('types').ViteKitPluginHookApi} */
 	api: {
-		/** @param {import('types').ValidatedConfig} validatedConfig */
-		onKitConfig(validatedConfig) {
+		onKitConfig() {
 			console.log('onKitConfig called');
 		},
-		/** @param {import('types').Prerendered} prerendered */
-		onKitPrerendered(prerendered) {
+		onKitPrerendered() {
 			console.log('onKitPrerendered called');
 		},
 		onKitAdapter() {
@@ -26,7 +24,7 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
-	plugins: [plugin({ viteHooks: [hookPlugin.name] }), hookPlugin],
+	plugins: [plugin({ viteHooks: { pluginNames: [hookPlugin.name] } }), hookPlugin],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

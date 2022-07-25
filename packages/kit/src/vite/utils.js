@@ -141,8 +141,8 @@ export function resolve_entry(entry) {
  * @param {import('vite').UserConfig} config
  * @returns {Promise<import('vite').PluginOption[]>}
  */
-export async function resolve_vite_plugins(options, config) {
-	const registeredPlugins = options.viteHooks;
+export async function resolve_vite_plugins_api_hooks(options, config) {
+	const registeredPlugins = options.viteHooks?.pluginNames;
 	if (!registeredPlugins) return [];
 
 	// resolve plugins
@@ -157,8 +157,8 @@ export async function resolve_vite_plugins(options, config) {
  * @param {import('vite').ResolvedConfig} config
  * @returns {import('vite').Plugin[]}
  */
-export function lookup_vite_plugins(options, config) {
-	const registeredPlugins = options.viteHooks;
+export function lookup_vite_plugins_api_hooks(options, config) {
+	const registeredPlugins = options.viteHooks?.pluginNames;
 	if (!registeredPlugins) return [];
 
 	// resolve plugins

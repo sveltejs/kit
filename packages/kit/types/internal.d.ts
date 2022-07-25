@@ -22,7 +22,7 @@ import {
 	ResponseHeaders,
 	TrailingSlash
 } from './private.js';
-import { ConfigEnv, ResolvedConfig, UserConfig } from 'vite';
+import { ConfigEnv, Plugin, ResolvedConfig, UserConfig } from 'vite';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -317,7 +317,20 @@ export type ValidatedConfig = RecursiveRequired<Config>;
 
 export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
-export interface VitePluginApi {
+export type KitPluginHookName = 'prerendered' | 'adapter';
+export type KitPluginHookControl = 'parallel' | 'sequential';
+export type KitPluginHookControlCallbackResult = [control: KitPluginHookControl, plugins: Plugin[]];
+export type KitPluginHookControlCallback = (
+	hook: KitPluginHookName,
+	plugins: Plugin[]
+) => KitPluginHookControlCallbackResult;
+
+export type KitPluginHooksExecution = KitPluginHookControl | KitPluginHookControlCallback;
+export type KitPluginHooksExecutionResult =
+	| KitPluginHookControl
+	| KitPluginHookControlCallbackResult;
+
+export interface ViteKitPluginHookApi {
 	onKitConfig?: (
 		validatedConfig: ValidatedConfig,
 		userConfig: UserConfig,
@@ -332,6 +345,28 @@ export interface VitePluginApi {
 		validatedConfig: ValidatedConfig,
 		viteConfig: ResolvedConfig
 	) => void | Promise<void>;
+}
+
+export interface ViteKitOptions {
+	/**
+	 * Vite's plugins hooks controlled by Kit internally.
+	 *
+	 * Any hook will be called in the corresponding Vite Kit plugin hook:
+	 * - `onKitConfig`: called on Vite `config` hook after Kit configuration resolved (will run in parallel).
+	 * - `onKitPrerendered`: called on Vite `writeBundle` hook after Kit prerender process finished.
+	 * - `onKitAdapter`: called on Vite `closeBundle` hook after Kit `adapter` process finished (if no adapter, it will not be called).
+	 */
+	viteHooks?: {
+		pluginNames?: string[];
+		/**
+		 * @default 'parallel'
+		 */
+		runPrerendered?: KitPluginHooksExecution;
+		/**
+		 * @default 'parallel'
+		 */
+		runAdapter?: KitPluginHooksExecution;
+	};
 }
 
 export * from './index';

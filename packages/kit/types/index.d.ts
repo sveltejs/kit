@@ -18,13 +18,15 @@ import {
 	RouteDefinition,
 	TrailingSlash
 } from './private.js';
-import { SSRNodeLoader, SSRRoute, ValidatedConfig, VitePluginApi } from './internal.js';
+import {
+	SSRNodeLoader,
+	SSRRoute,
+	ValidatedConfig,
+	ViteKitOptions,
+	ViteKitPluginHookApi
+} from './internal.js';
 
-export type { VitePluginApi };
-
-export interface ViteKitOptions {
-	viteHooks?: string[];
-}
+export type { ViteKitOptions, ViteKitPluginHookApi };
 
 export interface Adapter {
 	name: string;
