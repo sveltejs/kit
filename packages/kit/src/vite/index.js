@@ -1,6 +1,5 @@
-import { spawnSync } from 'node:child_process';
+import { fork } from 'node:child_process';
 import fs, { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
@@ -319,32 +318,43 @@ function kit() {
 				})};\n`
 			);
 
+			// TODO where is this used?
 			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
+
 			log.info('Prerendering');
+			await new Promise((fulfil, reject) => {
+				const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
 
-			const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
+				// do prerendering in a subprocess so any dangling stuff gets killed upon completion
+				const file = fileURLToPath(import.meta.url);
+				const dir = file.substring(0, file.lastIndexOf(path.sep));
+				const dist_script = path.join(dir, 'prerender.js');
+				const script = existsSync(dist_script)
+					? dist_script
+					: path.join(dir, '../core/prerender/prerender.js');
 
-			// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-			const file = fileURLToPath(import.meta.url);
-			const dir = file.substring(0, file.lastIndexOf(path.sep));
-			const dist_script = path.join(dir, 'prerender.js');
-			const script = existsSync(dist_script)
-				? dist_script
-				: path.join(dir, '../core/prerender/prerender.js');
-			const { status } = spawnSync(
-				'node',
-				[script, vite_config.build.outDir, results_path, manifest_path, '' + verbose],
-				{ stdio: 'inherit' }
-			);
-			if (status !== 0) {
-				throw new Error('prerendering failed');
-			}
+				const child = fork(
+					script,
+					[vite_config.build.outDir, results_path, manifest_path, '' + verbose],
+					{
+						stdio: 'inherit'
+					}
+				);
 
-			prerendered = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
-				if (key === 'pages' || key === 'assets' || key === 'redirects') {
-					return new Map(value);
-				}
-				return value;
+				child.on('exit', (code) => {
+					if (code) {
+						reject(new Error(`Prerendering failed with code ${code}`));
+					} else {
+						prerendered = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
+							if (key === 'pages' || key === 'assets' || key === 'redirects') {
+								return new Map(value);
+							}
+							return value;
+						});
+						console.log(prerendered);
+						fulfil(undefined);
+					}
+				});
 			});
 
 			if (options.service_worker_entry_file) {
