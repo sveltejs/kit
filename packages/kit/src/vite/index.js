@@ -14,7 +14,12 @@ import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import { get_aliases, resolve_entry, format_illegal_import_chain } from './utils.js';
+import {
+	get_aliases,
+	resolve_entry,
+	format_illegal_import_chain,
+	prevent_illegal_rollup_imports
+} from './utils.js';
 import { fileURLToPath } from 'node:url';
 
 const cwd = process.cwd();
@@ -282,34 +287,17 @@ function kit() {
 		 * then use this hook to kick off builds for the server and service worker.
 		 */
 		async writeBundle(_options, bundle) {
-			const seen = new Set();
-
-			/**
-			 * @param {import('rollup').ModuleInfo} node
-			 * @returns {string[] | undefined}
-			 */
-			const find_illegal_imports = (node) => {
-				if (seen.has(node.id)) return;
-				seen.add(node.id);
-
-				if (illegal_imports.has(node.id)) {
-					return [node.id];
-				}
-
-				for (const id of [...node.importedIds, ...node.dynamicallyImportedIds]) {
-					const child = this.getModuleInfo(id);
-					const chain = child && find_illegal_imports(child);
-					if (chain) return [node.id, ...chain];
-				}
-			};
-
 			for (const file of manifest_data.components) {
 				const id = path.resolve(file);
 				const node = this.getModuleInfo(id);
 
 				if (node) {
-					const chain = find_illegal_imports(node);
-					if (chain) throw new Error(format_illegal_import_chain(chain, svelte_config.kit));
+					prevent_illegal_rollup_imports(
+						this.getModuleInfo.bind(this),
+						node,
+						illegal_imports,
+						svelte_config.kit.outDir
+					);
 				}
 			}
 

@@ -92,6 +92,11 @@ export interface Hooks {
 	handleError: HandleError;
 }
 
+export interface ImportNode {
+	name: string;
+	dynamic: boolean;
+}
+
 export class InternalServer extends Server {
 	init(options: ServerInitOptions): void;
 	respond(
