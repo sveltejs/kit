@@ -42,17 +42,35 @@ export async function dev(vite, vite_config, svelte_config) {
 	function update_manifest() {
 		const { manifest_data } = sync.update(svelte_config);
 
+		const client_entry_file = `/@fs${runtime}/client/start.js`;
+
+		/** @type {(filename: string) => string} */
+		const make_legacy_file_name = (file) => {
+			const f = file.split('.');
+			return `${f.slice(0, f.length - 1).join('.')}-legacy.${f.slice(f.length - 1)}`;
+		};
+
+		const legacy_entry_file = make_legacy_file_name(client_entry_file);
+
 		manifest = {
 			appDir: svelte_config.kit.appDir,
 			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {
 				entry: {
-					file: `/@fs${runtime}/client/start.js`,
+					file: client_entry_file,
 					imports: [],
 					stylesheets: []
 				},
-				nodes: manifest_data.components.map((id, index) => {
+				entry_legacy: svelte_config.kit.legacy ? {
+					file: legacy_entry_file,
+					polyfills: `/@fs${runtime}/client/vite/legacy-polyfills`// a guess instead of `assets + s(prefix + client_manifest['vite/legacy-polyfills'].file)`
+				} : undefined,
+				nodes: [
+						...manifest_data.components,
+						'vite/legacy-polyfills',
+						...manifest_data.components.map(make_legacy_file_name)
+					].map((id, index) => {
 					return async () => {
 						const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
@@ -354,15 +372,22 @@ export async function dev(vite, vite_config, svelte_config) {
 						read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 						root,
 						router: svelte_config.kit.browser.router,
-						template: ({ head, body, assets, nonce }) => {
-							return (
-								template
-									.replace(/%sveltekit\.assets%/g, assets)
-									.replace(/%sveltekit\.nonce%/g, nonce)
-									// head and body must be replaced last, in case someone tries to sneak in %sveltekit.assets% etc
-									.replace('%sveltekit.head%', () => head)
-									.replace('%sveltekit.body%', () => body)
-							);
+						template: ({ head, body, legacy_scripts, assets, nonce }) => {
+							var result = template
+								.replace(/%sveltekit\.assets%/g, assets)
+								.replace(/%sveltekit\.nonce%/g, nonce)
+							;
+
+							if (legacy_scripts != null) {
+								result = result.replace('%sveltekit.legacy_scripts%', legacy_scripts)
+							}
+
+							// head and body must be replaced last, in case someone tries to sneak in %sveltekit.assets% etc
+							var result = result
+								.replace('%sveltekit.head%', () => head)
+								.replace('%sveltekit.body%', () => body)
+
+							return result;
 						},
 						template_contains_nonce: template.includes('%sveltekit.nonce%'),
 						trailing_slash: svelte_config.kit.trailingSlash

@@ -120,6 +120,7 @@ const get_defaults = (prefix = '') => ({
 		ssr: undefined,
 		target: undefined,
 		trailingSlash: 'never',
+		legacy: null,
 		version: {
 			name: Date.now().toString(),
 			pollInterval: 0

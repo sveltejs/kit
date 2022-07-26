@@ -52,7 +52,7 @@ export async function render_response({
 		}
 	}
 
-	const { entry } = options.manifest._;
+	const { entry, entry_legacy } = options.manifest._;
 
 	const stylesheets = new Set(entry.stylesheets);
 	const modulepreloads = new Set(entry.imports);
@@ -185,11 +185,31 @@ export async function render_response({
 				status: ${status},
 				error: ${error && serialize_error(error, e => e.stack)},
 				nodes: [${branch.map(({ node }) => node.index).join(', ')}],
+				legacy_nodes: [${branch.map(({ node }) => node.legacy).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)}
 			}` : 'null'}
 		});
 	`;
+
+	let legacy_scripts = '';
+
+	if (entry_legacy) {
+		head += `<script type="module">!function(){try{new Function("m","return import(m)")}catch(o){console.warn("vite: loading legacy build because dynamic import is unsupported, syntax error above should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src=e.src,n.onload=function(){System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))},document.body.appendChild(n)}}();</script>`;
+
+		legacy_scripts = [
+			'<script nomodule>!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();</script>',
+			`<script nomodule id="vite-legacy-polyfill" src=${s(
+				entry_legacy.polyfills
+			)}></script>`,
+			`<script nomodule id="vite-legacy-entry" data-src="${s(
+				entry_legacy.file
+			)}">System.import(${s(
+				entry_legacy.file
+			)}).then(function (m){m.start(window.__KIT_DATA__);});
+		</script>`
+		].join('\n\t\t');
+	}
 
 	// we use an anonymous function instead of an arrow function to support
 	// older browsers (https://github.com/sveltejs/kit/pull/5417)
@@ -220,6 +240,10 @@ export async function render_response({
 				'rel="stylesheet"',
 				`href="${options.prefix + dep}"`
 			];
+
+			if (csp.style_needs_nonce) {
+				attributes.push(`nonce="${csp.nonce}"`);
+			}
 
 			if (csp.style_needs_nonce) {
 				attributes.push(`nonce="${csp.nonce}"`);
@@ -296,7 +320,7 @@ export async function render_response({
 	// TODO flush chunks as early as we can
 	const html =
 		(await resolve_opts.transformPageChunk({
-			html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
+			html: options.template({ head, body, legacy_scripts, assets, nonce: /** @type {string} */ (csp.nonce) }),
 			done: true
 		})) || '';
 

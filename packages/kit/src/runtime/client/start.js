@@ -17,6 +17,7 @@ import { set_paths } from '../paths.js';
  *     status: number;
  *     error: Error;
  *     nodes: number[];
+ *     legacy_nodes: number[];
  *     params: Record<string, string>;
  *     routeId: string | null;
  *   };
@@ -34,6 +35,10 @@ export async function start({ paths, target, session, route, spa, trailing_slash
 	set_paths(paths);
 
 	if (hydrate) {
+		if (import.meta.env.LEGACY) {
+			hydrate.nodes = hydrate.legacy_nodes;
+		}
+		
 		await client._hydrate(hydrate);
 	}
 

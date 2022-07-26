@@ -28,9 +28,10 @@ import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';
 
-const template = ({ head, body, assets, nonce }) => ${s(template)
+const template = ({ head, body, legacy_scripts, assets, nonce }) => ${s(template)
 	.replace('%sveltekit.head%', '" + head + "')
 	.replace('%sveltekit.body%', '" + body + "')
+	.replace('%sveltekit.legacy_scripts%', '" + legacy_scripts + "')
 	.replace(/%sveltekit\.assets%/g, '" + assets + "')
 	.replace(/%sveltekit\.nonce%/g, '" + nonce + "')};
 

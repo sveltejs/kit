@@ -11,8 +11,10 @@
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^1.0.1",
+		"@vitejs/plugin-legacy": "2.0.0",
 		"chokidar": "^3.5.3",
-		"sade": "^1.8.1"
+		"sade": "^1.8.1",
+		"terser": ">=5.4.0 <6.0.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.23.4",

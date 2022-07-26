@@ -4,6 +4,7 @@ import path from 'node:path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import * as vite from 'vite';
+import legacy from '@vitejs/plugin-legacy';
 import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
@@ -240,6 +241,10 @@ function kit() {
 					}
 				}
 			};
+
+			if (svelte_config.kit.legacy) {
+				result.plugins = [legacy(svelte_config.kit.legacy)];
+			}
 
 			deferred_warning = warn_overridden_config(config, result);
 			return result;
