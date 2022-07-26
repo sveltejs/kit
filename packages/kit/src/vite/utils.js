@@ -160,8 +160,7 @@ function repeat(str, times) {
 /**
  * Create a formatted error for an illegal import.
  * @param {Array<{name: string, dynamic: boolean}>} stack
- * @param {string} out_dir
- * The directory specified by config.kit.outDir.
+ * @param {string} out_dir The directory specified by config.kit.outDir
  */
 function format_illegal_import_chain(stack, out_dir) {
 	const app = path.join(out_dir, 'runtime/env');
