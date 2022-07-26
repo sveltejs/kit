@@ -249,8 +249,7 @@ const find_illegal_rollup_imports = (
  * Throw an error if a private module is imported from a client-side node.
  * @param {import('vite').ModuleNode} node
  * @param {Set<string>} illegal_imports
- * @param {string} out_dir
- * The directory specified by config.kit.outDir.
+ * @param {string} out_dir The directory specified by config.kit.outDir
  */
 export function prevent_illegal_vite_imports(node, illegal_imports, out_dir) {
 	const chain = find_illegal_vite_imports(node, illegal_imports);
