@@ -75,6 +75,17 @@ function get_types(code, statements) {
 	return { types, exports };
 }
 
+/**
+ * Type declarations include fully qualified URLs so that they become links when
+ * you hover over names in an editor with TypeScript enabled. We need to remove
+ * the origin so that they become root-relative, so that they work in preview
+ * deployments and when developing locally
+ * @param {string} str
+ */
+function strip_origin(str) {
+	return str.replace(/https:\/\/kit\.svelte\.dev/g, '');
+}
+
 {
 	const code = fs.readFileSync('types/index.d.ts', 'utf-8');
 	const node = ts.createSourceFile('index.d.ts', code, ts.ScriptTarget.Latest);
@@ -102,9 +113,7 @@ const dir = fileURLToPath(new URL('./special-types', import.meta.url).href);
 for (const file of fs.readdirSync(dir)) {
 	if (!file.endsWith('.md')) continue;
 
-	const comment = fs
-		.readFileSync(`${dir}/${file}`, 'utf-8')
-		.replace(/https:\/\/kit\.svelte\.dev/g, '');
+	const comment = strip_origin(fs.readFileSync(`${dir}/${file}`, 'utf-8'));
 
 	modules.push({
 		name: file.replace(/\+/g, '/').slice(0, -3),
@@ -125,11 +134,11 @@ for (const file of fs.readdirSync(dir)) {
 			const name = statement.name.text || statement.name.escapedText;
 
 			// @ts-ignore
-			const comment = statement.jsDoc?.[0].comment ?? '';
+			const comment = strip_origin(statement.jsDoc?.[0].comment ?? '');
 
 			modules.push({
 				name,
-				comment: comment.replace(/https:\/\/kit\.svelte\.dev/g, ''),
+				comment,
 				// @ts-ignore
 				...get_types(code, statement.body?.statements)
 			});
