@@ -67,7 +67,7 @@ function create_module(id, env) {
 		declarations.push(`${comment}\n${declaration}`);
 	}
 
-	return autogen_comment + declarations;
+	return autogen_comment + declarations.join('\n\n');
 }
 
 /**
