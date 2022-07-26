@@ -157,6 +157,7 @@ export function resolve_entry(entry) {
 function repeat(str, times) {
 	return new Array(times + 1).join(str);
 }
+
 /**
  * Create a formatted error for an illegal import.
  * @param {Array<{name: string, dynamic: boolean}>} stack
