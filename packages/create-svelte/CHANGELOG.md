@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Remove initial-scale=1 from meta tags ([#5711](https://github.com/sveltejs/kit/pull/5711))
+- Remove initial-scale=1 from meta tags ([#5706](https://github.com/sveltejs/kit/pull/5706))
 
 ## 2.0.0-next.149
 
