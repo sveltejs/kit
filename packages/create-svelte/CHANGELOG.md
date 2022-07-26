@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.150
+
+### Patch Changes
+
+- Remove initial-scale=1 from meta tags ([#5711](https://github.com/sveltejs/kit/pull/5711))
+
 ## 2.0.0-next.149
 
 ### Patch Changes
