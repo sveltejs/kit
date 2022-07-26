@@ -201,8 +201,7 @@ export function get_env(mode, prefix) {
  * @param {(id: string) => import('rollup').ModuleInfo | null} node_getter
  * @param {import('rollup').ModuleInfo} node
  * @param {Set<string>} illegal_imports
- * @param {string} out_dir
- * The directory specified by config.kit.outDir.
+ * @param {string} out_dir The directory specified by config.kit.outDir
  */
 export function prevent_illegal_rollup_imports(node_getter, node, illegal_imports, out_dir) {
 	const chain = find_illegal_rollup_imports(node_getter, node, false, illegal_imports);
