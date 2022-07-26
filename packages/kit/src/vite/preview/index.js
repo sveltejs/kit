@@ -5,6 +5,7 @@ import { pathToFileURL } from 'url';
 import { getRequest, setResponse } from '../../node/index.js';
 import { installPolyfills } from '../../node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
+import { loadEnv } from 'vite';
 
 /** @typedef {import('http').IncomingMessage} Req */
 /** @typedef {import('http').ServerResponse} Res */
@@ -15,20 +16,22 @@ import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
  *   middlewares: import('connect').Server;
  *   httpServer: import('http').Server;
  * }} vite
- * @param {import('types').ValidatedConfig} config
- * @param {'http' | 'https'} protocol
+ * @param {import('vite').ResolvedConfig} vite_config
+ * @param {import('types').ValidatedConfig} svelte_config
  */
-export async function preview(vite, config, protocol) {
+export async function preview(vite, vite_config, svelte_config) {
 	installPolyfills();
 
-	const { paths } = config.kit;
+	const { paths } = svelte_config.kit;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
 
+	const protocol = vite_config.preview.https ? 'https' : 'http';
+
 	const etag = `"${Date.now()}"`;
 
-	const index_file = join(config.kit.outDir, 'output/server/index.js');
-	const manifest_file = join(config.kit.outDir, 'output/server/manifest.js');
+	const index_file = join(svelte_config.kit.outDir, 'output/server/index.js');
+	const manifest_file = join(svelte_config.kit.outDir, 'output/server/manifest.js');
 
 	/** @type {import('types').ServerModule} */
 	const { Server, override } = await import(pathToFileURL(index_file).href);
@@ -38,20 +41,23 @@ export async function preview(vite, config, protocol) {
 		paths: { base, assets },
 		prerendering: false,
 		protocol,
-		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
+		read: (file) => fs.readFileSync(join(svelte_config.kit.files.assets, file))
 	});
 
 	const server = new Server(manifest);
+	server.init({
+		env: loadEnv(vite_config.mode, process.cwd(), '')
+	});
 
 	return () => {
 		// generated client assets and the contents of `static`
 		vite.middlewares.use(
 			scoped(
 				assets,
-				sirv(join(config.kit.outDir, 'output/client'), {
+				sirv(join(svelte_config.kit.outDir, 'output/client'), {
 					setHeaders: (res, pathname) => {
 						// only apply to immutable directory, not e.g. version.json
-						if (pathname.startsWith(`/${config.kit.appDir}/immutable`)) {
+						if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
 							res.setHeader('cache-control', 'public,max-age=31536000,immutable');
 						}
 					}
@@ -73,7 +79,7 @@ export async function preview(vite, config, protocol) {
 
 		// prerendered dependencies
 		vite.middlewares.use(
-			scoped(base, mutable(join(config.kit.outDir, 'output/prerendered/dependencies')))
+			scoped(base, mutable(join(svelte_config.kit.outDir, 'output/prerendered/dependencies')))
 		);
 
 		// prerendered pages (we can't just use sirv because we need to
@@ -97,7 +103,7 @@ export async function preview(vite, config, protocol) {
 				// only treat this as a page if it doesn't include an extension
 				if (pathname === '/' || /\/[^./]+\/?$/.test(pathname)) {
 					const file = join(
-						config.kit.outDir,
+						svelte_config.kit.outDir,
 						'output/prerendered/pages' +
 							pathname +
 							(pathname.endsWith('/') ? 'index.html' : '.html')

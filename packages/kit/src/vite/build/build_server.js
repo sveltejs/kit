@@ -27,6 +27,8 @@ import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';
+import { set_private_env } from '${runtime}/env-private.js';
+import { set_public_env } from '${runtime}/env-public.js';
 
 const template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace('%sveltekit.head%', '" + head + "')
@@ -78,6 +80,7 @@ export class Server {
 				default: ${config.kit.prerender.default},
 				enabled: ${config.kit.prerender.enabled}
 			},
+			public_env: {},
 			read,
 			root,
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
@@ -86,6 +89,23 @@ export class Server {
 			template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			trailing_slash: ${s(config.kit.trailingSlash)}
 		};
+	}
+
+	init({ env }) {
+		const entries = Object.entries(env);
+
+		const prv = Object.fromEntries(Object.entries(env).filter(([k]) => !k.startsWith('${
+			config.kit.env.publicPrefix
+		}')));
+
+		const pub = Object.fromEntries(Object.entries(env).filter(([k]) => k.startsWith('${
+			config.kit.env.publicPrefix
+		}')));
+
+		set_private_env(prv);
+		set_public_env(pub);
+
+		this.options.public_env = pub;
 	}
 
 	async respond(request, options = {}) {
