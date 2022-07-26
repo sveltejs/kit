@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.396
+
+### Patch Changes
+
+- [fix] Environment variable generated types ([#5719](https://github.com/sveltejs/kit/pull/5719))
+
 ## 1.0.0-next.395
 
 ### Patch Changes
