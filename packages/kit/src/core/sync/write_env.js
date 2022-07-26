@@ -9,8 +9,7 @@ const autogen_comment = '// this file is generated — do not edit it\n';
  * Writes the existing environment variables in process.env to
  * $env/static/private and $env/static/public
  * @param {import('types').ValidatedKitConfig} config
- * @param {string} mode
- * The Vite mode.
+ * @param {string} mode The Vite mode
  */
 export function write_env(config, mode) {
 	const env = get_env(mode, config.env.publicPrefix);
