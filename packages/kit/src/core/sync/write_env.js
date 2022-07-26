@@ -60,7 +60,7 @@ function create_module(id, env) {
 			continue;
 		}
 
-		const comment = `/** @type {import('${id}'}').${key}} */`;
+		const comment = `/** @type {import('${id}').${key}} */`;
 		const declaration = `export const ${key} = ${JSON.stringify(env[key])};`;
 
 		declarations.push(`${comment}\n${declaration}`);
