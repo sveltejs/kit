@@ -9,6 +9,10 @@ import { split_headers } from './headers';
 export function init(manifest) {
 	const server = new Server(manifest);
 
+	server.init({
+		env: process.env
+	});
+
 	return async (event, context) => {
 		const response = await server.respond(to_request(event), {
 			platform: { context },

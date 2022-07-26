@@ -6,14 +6,24 @@ import { write_matchers } from './write_matchers.js';
 import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
 import { write_types } from './write_types.js';
+import { write_env } from './write_env.js';
 
-/** @param {import('types').ValidatedConfig} config */
-export function init(config) {
+/**
+ * Initialize SvelteKit's generated files.
+ * @param {import('types').ValidatedConfig} config
+ * @param {string} mode
+ */
+export function init(config, mode) {
 	copy_assets(path.join(config.kit.outDir, 'runtime'));
+
 	write_tsconfig(config.kit);
+	write_env(config.kit, mode);
 }
 
-/** @param {import('types').ValidatedConfig} config */
+/**
+ * Update SvelteKit's generated files.
+ * @param {import('types').ValidatedConfig} config
+ */
 export function update(config) {
 	const manifest_data = create_manifest_data({ config });
 
@@ -28,8 +38,12 @@ export function update(config) {
 	return { manifest_data };
 }
 
-/** @param {import('types').ValidatedConfig} config */
-export function all(config) {
-	init(config);
+/**
+ * Run sync.init and sync.update in series, returning the result from sync.update.
+ * @param {import('types').ValidatedConfig} config
+ * @param {string} mode The Vite mode
+ */
+export function all(config, mode) {
+	init(config, mode);
 	return update(config);
 }

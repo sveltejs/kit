@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.395
+
+### Patch Changes
+
+- Add `$env/static/private`, `$env/static/public`, `$env/dynamic/private` and `$env/dynamic/public` modules ([#5663](https://github.com/sveltejs/kit/pull/5663))
+
 ## 1.0.0-next.394
 
 ### Patch Changes
