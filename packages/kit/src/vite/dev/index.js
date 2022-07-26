@@ -12,7 +12,7 @@ import { load_template } from '../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_prefix } from '../../core/utils.js';
-import { resolve_entry } from '../utils.js';
+import { get_env, prevent_illegal_vite_imports, resolve_entry } from '../utils.js';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
@@ -24,12 +24,13 @@ const cwd = process.cwd();
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {Set<string>} illegal_imports
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config) {
+export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 	installPolyfills();
 
-	sync.init(svelte_config);
+	sync.init(svelte_config, vite_config.mode);
 
 	const runtime = get_runtime_prefix(svelte_config.kit);
 
@@ -60,6 +61,11 @@ export async function dev(vite, vite_config, svelte_config) {
 							await vite.ssrLoadModule(url)
 						);
 
+						const node = await vite.moduleGraph.getModuleByUrl(url);
+						if (!node) throw new Error(`Could not find node for ${url}`);
+
+						prevent_illegal_vite_imports(node, illegal_imports, svelte_config.kit.outDir);
+
 						return {
 							module,
 							index,
@@ -68,10 +74,6 @@ export async function dev(vite, vite_config, svelte_config) {
 							stylesheets: [],
 							// in dev we inline all styles to avoid FOUC
 							inline_styles: async () => {
-								const node = await vite.moduleGraph.getModuleByUrl(url);
-
-								if (!node) throw new Error(`Could not find node for ${url}`);
-
 								const deps = new Set();
 								await find_deps(vite, node, deps);
 
@@ -248,6 +250,17 @@ export async function dev(vite, vite_config, svelte_config) {
 					? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
 					: {};
 
+				const runtime_base = process.env.BUNDLED
+					? `/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/runtime`))}`
+					: `/@fs${runtime}`;
+
+				const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
+				const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);
+
+				const env = get_env(vite_config.mode, svelte_config.kit.env.publicPrefix);
+				set_private_env(env.private);
+				set_public_env(env.public);
+
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
 
 				/** @type {import('types').Hooks} */
@@ -288,11 +301,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					`/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/generated/root.svelte`))}`
 				);
 
-				const paths = await vite.ssrLoadModule(
-					process.env.BUNDLED
-						? `/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/runtime/paths.js`))}`
-						: `/@fs${runtime}/paths.js`
-				);
+				const paths = await vite.ssrLoadModule(`${runtime_base}/paths.js`);
 
 				paths.set_paths({
 					base: svelte_config.kit.paths.base,
@@ -351,6 +360,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							default: svelte_config.kit.prerender.default,
 							enabled: svelte_config.kit.prerender.enabled
 						},
+						public_env: env.public,
 						read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 						root,
 						router: svelte_config.kit.browser.router,

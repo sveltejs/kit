@@ -11,6 +11,7 @@ import { env } from './env.js';
 /* global ENV_PREFIX */
 
 const server = new Server(manifest);
+server.init({ env: process.env });
 const origin = env('ORIGIN', undefined);
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 

@@ -171,7 +171,10 @@ export async function render_response({
 
 	// prettier-ignore
 	const init_app = `
-		import { start } from ${s(options.prefix + entry.file)};
+		import { set_public_env, start } from ${s(options.prefix + entry.file)};
+
+		set_public_env(${s(options.public_env)});
+
 		start({
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
