@@ -123,7 +123,7 @@ declare module '$env/dynamic/private' {
  * Note that public dynamic environment variables must all be sent from the server to the client, causing larger network requests — when possible, use `$env/static/public` instead.
  *
  * ```ts
- * import { env } from '$env/dynamic/private';
+ * import { env } from '$env/dynamic/public';
  * console.log(env.PUBLIC_DEPLOYMENT_SPECIFIC_VARIABLE);
  * ```
  */
