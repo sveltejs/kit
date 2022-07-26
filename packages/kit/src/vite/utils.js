@@ -159,20 +159,28 @@ function repeat(str, times) {
 }
 /**
  * Create a formatted error for an illegal import.
- * @param {Array<string>} stack
- * @param {import('types').ValidatedKitConfig} config
+ * @param {Array<{name: string, dynamic: boolean}>} stack
+ * @param {string} out_dir
+ * The directory specified by config.kit.outDir.
  */
-export function format_illegal_import_chain(stack, config) {
-	const app = path.join(config.outDir, 'runtime/app');
+export function format_illegal_import_chain(stack, out_dir) {
+	const app = path.join(out_dir, 'runtime/env');
 
 	stack = stack.map((file) => {
-		if (file.startsWith(app)) return file.replace(app, '$app');
-		return path.relative(process.cwd(), file);
+		if (file.name.startsWith(app)) return { ...file, name: file.name.replace(app, '$env') };
+		return { ...file, name: path.relative(process.cwd(), file.name) };
 	});
 
-	const pyramid = stack.map((file, i) => `${repeat(' ', i * 2)}- ${file}`).join('\n');
+	const pyramid = stack
+		.map(
+			(file, i) =>
+				`${repeat(' ', i * 2)}- ${file.name} ${
+					file.dynamic ? '(imported by parent dynamically)' : ''
+				}`
+		)
+		.join('\n');
 
-	return `Cannot import ${stack.at(-1)} into client-side code:\n${pyramid}`;
+	return `Cannot import ${stack.at(-1)?.name} into client-side code:\n${pyramid}`;
 }
 
 /**
@@ -187,4 +195,89 @@ export function get_env(mode, prefix) {
 		public: Object.fromEntries(entries.filter(([k]) => k.startsWith(prefix))),
 		private: Object.fromEntries(entries.filter(([k]) => !k.startsWith(prefix)))
 	};
+}
+
+/**
+ * @param {(id: string) => import('rollup').ModuleInfo | null} node_getter
+ * @param {import('rollup').ModuleInfo} node
+ * @param {Set<string>} illegal_imports
+ * @param {string} out_dir
+ * The directory specified by config.kit.outDir.
+ */
+export function prevent_illegal_rollup_imports(node_getter, node, illegal_imports, out_dir) {
+	const chain = find_illegal_rollup_imports(node_getter, node, false, illegal_imports);
+	if (chain) throw new Error(format_illegal_import_chain(chain, out_dir));
+}
+
+/**
+ * @param {(id: string) => import('rollup').ModuleInfo | null} node_getter
+ * @param {import('rollup').ModuleInfo} node
+ * @param {boolean} dynamic
+ * @param {Set<string>} illegal_imports
+ * @param {Set<string>} seen
+ * @returns {Array<import('types').ImportNode> | undefined}
+ */
+const find_illegal_rollup_imports = (
+	node_getter,
+	node,
+	dynamic,
+	illegal_imports,
+	seen = new Set()
+) => {
+	if (seen.has(node.id)) return;
+	seen.add(node.id);
+
+	if (illegal_imports.has(node.id)) {
+		return [{ name: node.id, dynamic }];
+	}
+
+	for (const id of node.importedIds) {
+		const child = node_getter(id);
+		const chain =
+			child && find_illegal_rollup_imports(node_getter, child, false, illegal_imports, seen);
+		if (chain) return [{ name: node.id, dynamic }, ...chain];
+	}
+
+	for (const id of node.dynamicallyImportedIds) {
+		const child = node_getter(id);
+		const chain =
+			child && find_illegal_rollup_imports(node_getter, child, true, illegal_imports, seen);
+		if (chain) return [{ name: node.id, dynamic }, ...chain];
+	}
+};
+
+/**
+ * Throw an error if a private module is imported from a client-side node.
+ * @param {import('vite').ModuleNode} node
+ * @param {Set<string>} illegal_imports
+ * @param {string} out_dir
+ * The directory specified by config.kit.outDir.
+ */
+export function prevent_illegal_vite_imports(node, illegal_imports, out_dir) {
+	const chain = find_illegal_vite_imports(node, illegal_imports);
+	if (chain) throw new Error(format_illegal_import_chain(chain, out_dir));
+}
+
+/**
+ * @param {import('vite').ModuleNode} node
+ * @param {Set<string>} illegal_imports
+ * @param {Set<string>} seen
+ * @returns {Array<import('types').ImportNode> | null}
+ */
+function find_illegal_vite_imports(node, illegal_imports, seen = new Set()) {
+	if (!node.id) return null; // TODO when does this happen?
+
+	if (seen.has(node.id)) return null;
+	seen.add(node.id);
+
+	if (node.id && illegal_imports.has(node.id)) {
+		return [{ name: node.id, dynamic: false }];
+	}
+
+	for (const child of node.importedModules) {
+		const chain = child && find_illegal_vite_imports(child, illegal_imports, seen);
+		if (chain) return [{ name: node.id, dynamic: false }, ...chain];
+	}
+
+	return null;
 }
