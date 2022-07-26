@@ -65,8 +65,6 @@ function get_types(code, statements) {
 						: types;
 
 				collection.push({ name, comment, snippet });
-			} else {
-				// console.log(statement.kind);
 			}
 		}
 
