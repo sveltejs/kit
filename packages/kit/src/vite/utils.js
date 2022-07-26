@@ -163,7 +163,7 @@ function repeat(str, times) {
  * @param {string} out_dir
  * The directory specified by config.kit.outDir.
  */
-export function format_illegal_import_chain(stack, out_dir) {
+function format_illegal_import_chain(stack, out_dir) {
 	const app = path.join(out_dir, 'runtime/env');
 
 	stack = stack.map((file) => {

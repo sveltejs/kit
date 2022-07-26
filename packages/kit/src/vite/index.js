@@ -14,12 +14,7 @@ import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import {
-	get_aliases,
-	resolve_entry,
-	format_illegal_import_chain,
-	prevent_illegal_rollup_imports
-} from './utils.js';
+import { get_aliases, resolve_entry, prevent_illegal_rollup_imports } from './utils.js';
 import { fileURLToPath } from 'node:url';
 
 const cwd = process.cwd();
