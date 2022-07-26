@@ -1,5 +1,5 @@
 import { fork } from 'node:child_process';
-import fs, { existsSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
@@ -151,7 +151,7 @@ function kit() {
 	function client_build_info(assets, chunks) {
 		/** @type {import('vite').Manifest} */
 		const vite_manifest = JSON.parse(
-			fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
+			readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
 		);
 
 		const entry_id = posixify(
@@ -277,7 +277,7 @@ function kit() {
 			const verbose = vite_config.logLevel === 'info';
 			log = logger({ verbose });
 
-			fs.writeFileSync(
+			writeFileSync(
 				`${paths.client_out_dir}/${svelte_config.kit.appDir}/version.json`,
 				JSON.stringify({ version: svelte_config.kit.version.name })
 			);
@@ -309,7 +309,7 @@ function kit() {
 			};
 
 			const manifest_path = `${paths.output_dir}/server/manifest.js`;
-			fs.writeFileSync(
+			writeFileSync(
 				manifest_path,
 				`export const manifest = ${generate_manifest({
 					build_data,
@@ -342,7 +342,7 @@ function kit() {
 					if (code) {
 						reject(new Error(`Prerendering failed with code ${code}`));
 					} else {
-						prerendered = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
+						prerendered = JSON.parse(readFileSync(results_path, 'utf8'), (key, value) => {
 							if (key === 'pages' || key === 'assets' || key === 'redirects') {
 								return new Map(value);
 							}

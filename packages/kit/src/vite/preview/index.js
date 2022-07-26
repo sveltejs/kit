@@ -155,7 +155,7 @@ const mutable = (dir) =>
 				etag: true,
 				maxAge: 0
 		  })
-		: (req, res, next) => next();
+		: (_req, _res, next) => next();
 
 /**
  * @param {string} scope
