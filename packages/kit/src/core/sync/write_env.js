@@ -1,4 +1,5 @@
 import path from 'path';
+import colors from 'kleur';
 import { get_env } from '../../vite/utils.js';
 import { write_if_changed, reserved, valid_identifier } from './utils.js';
 
@@ -41,22 +42,30 @@ export function write_env(config, mode) {
  * @returns {string}
  */
 function create_module(id, env) {
-	const declarations = Object.entries(env)
-		.filter(([k]) => valid_identifier.test(k))
-		.map(([k, v]) => {
-			const comment = `/** @type {import('${id}'}').${k}} */`;
+	/** @type {string[]} */
+	const declarations = [];
 
-			if (reserved.has(k)) {
-				let i = 1;
-				while (k + i in env) i++;
-				const name = k + 1;
+	for (const key in env) {
+		const warning = !valid_identifier.test(key)
+			? 'not a valid identifier'
+			: reserved.has(key)
+			? 'a reserved word'
+			: null;
 
-				return `${comment}\nconst ${name} = ${JSON.stringify(v)}; export { ${name} as ${k} }`;
-			}
+		if (warning) {
+			console.error(
+				colors
+					.bold()
+					.yellow(`Omitting environment variable "${key}" from ${id} as it is ${warning}`)
+			);
+			continue;
+		}
 
-			return `${comment}\nexport const ${k} = ${JSON.stringify(v)};`;
-		})
-		.join('\n\n');
+		const comment = `/** @type {import('${id}'}').${key}} */`;
+		const declaration = `export const ${key} = ${JSON.stringify(env[key])};`;
+
+		declarations.push(`${comment}\n${declaration}`);
+	}
 
 	return autogen_comment + declarations;
 }
