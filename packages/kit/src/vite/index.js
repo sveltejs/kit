@@ -1,5 +1,5 @@
 import { fork } from 'node:child_process';
-import fs, { existsSync } from 'node:fs';
+import fs from 'node:fs';
 import path from 'node:path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
