@@ -120,6 +120,8 @@ declare module '$env/dynamic/private' {
  * variables that begin with [`config.kit.env.publicPrefix`](https://kit.svelte.dev/docs/configuration#kit-env-publicprefix)
  * (which defaults to `PUBLIC_`), and can therefore safely be exposed to client-side code
  *
+ * Note that public dynamic environment variables must all be sent from the server to the client, causing larger network requests — when possible, use `$env/static/public` instead.
+ *
  * ```ts
  * import { env } from '$env/dynamic/private';
  * console.log(env.PUBLIC_DEPLOYMENT_SPECIFIC_VARIABLE);
