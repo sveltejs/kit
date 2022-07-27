@@ -1,0 +1,6 @@
+{
+	"name": "error-duplicate-export",
+	"private": true,
+	"version": "1.0.0",
+	"description": "validate duplicate export error output"
+}

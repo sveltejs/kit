@@ -87,6 +87,8 @@ export interface Config {
 	extensions?: string[];
 	kit?: KitConfig;
 	preprocess?: any;
+	// @ts-ignore
+	package?: import('@sveltejs/package').PackageConfig;
 }
 
 export interface KitConfig {

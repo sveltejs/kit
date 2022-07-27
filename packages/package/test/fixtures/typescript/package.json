@@ -1,0 +1,7 @@
+{
+	"name": "typescript",
+	"private": true,
+	"version": "1.0.0",
+	"description": "standard typescript package",
+	"type": "module"
+}
