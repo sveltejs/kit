@@ -221,9 +221,7 @@ export async function render_response({
 
 	for (const dep of stylesheets) {
 		const path = options.prefix + dep;
-		const attributes = [
-			'rel="stylesheet"'
-		];
+		const attributes = ['rel="stylesheet"'];
 
 		if (csp.style_needs_nonce) {
 			attributes.push(`nonce="${csp.nonce}"`);
