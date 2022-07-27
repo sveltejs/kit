@@ -1,9 +1,0 @@
-{
-  "type": "module",
-  "exports": {
-    "./package.json": "./package.json",
-    "./Test.svelte": "./Test.svelte",
-    ".": "./index.js"
-  },
-  "svelte": "./index.js"
-}

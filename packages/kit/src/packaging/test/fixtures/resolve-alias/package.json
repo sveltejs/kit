@@ -1,7 +1,0 @@
-{
-	"name": "resolve-alias",
-	"private": true,
-	"version": "1.0.0",
-	"description": "package using $lib alias",
-	"type": "module"
-}

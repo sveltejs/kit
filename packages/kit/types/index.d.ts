@@ -120,12 +120,6 @@ export interface KitConfig {
 		allowed?: string[];
 	};
 	outDir?: string;
-	package?: {
-		dir?: string;
-		emitTypes?: boolean;
-		exports?(filepath: string): boolean;
-		files?(filepath: string): boolean;
-	};
 	paths?: {
 		assets?: string;
 		base?: string;

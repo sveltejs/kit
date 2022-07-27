@@ -10,8 +10,7 @@ const external = [].concat(
 	Object.keys(pkg.dependencies || {}),
 	Object.keys(pkg.peerDependencies || {}),
 	Object.keys(process.binding('natives')),
-	'typescript',
-	'svelte2tsx'
+	'typescript'
 );
 
 export default [

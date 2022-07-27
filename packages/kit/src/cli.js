@@ -21,21 +21,6 @@ function handle_error(e) {
 const prog = sade('svelte-kit').version('__VERSION__');
 
 prog
-	.command('package')
-	.describe('Create a package')
-	.option('-w, --watch', 'Rerun when files change', false)
-	.action(async ({ watch }) => {
-		try {
-			const config = await load_config();
-			const packaging = await import('./packaging/index.js');
-
-			await (watch ? packaging.watch(config) : packaging.build(config));
-		} catch (error) {
-			handle_error(error);
-		}
-	});
-
-prog
 	.command('sync')
 	.describe('Synchronise generated files')
 	.action(async () => {
@@ -57,6 +42,14 @@ prog
 replace('dev');
 replace('build');
 replace('preview');
+prog
+	.command('package')
+	.describe('No longer available - use @sveltejs/package instead')
+	.action(() => {
+		console.error(
+			'svelte-kit package has been removed. It now lives in its own npm package. See the PR on how to migrate: https://github.com/sveltejs/kit/pull/5730'
+		);
+	});
 
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
 

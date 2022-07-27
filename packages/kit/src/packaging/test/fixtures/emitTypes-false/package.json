@@ -1,7 +1,0 @@
-{
-	"name": "emit-types",
-	"private": true,
-	"version": "1.0.0",
-	"description": "emitTypes settings disabled",
-	"type": "module"
-}
