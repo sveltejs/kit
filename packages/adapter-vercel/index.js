@@ -82,7 +82,12 @@ const redirects = {
 };
 
 /** @type {import('.').default} **/
-export default function ({ external = [], edge, split } = {}) {
+export default function ({
+	external = [],
+	edge,
+	split,
+	source_routes = []
+} = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
@@ -117,6 +122,7 @@ export default function ({ external = [], edge, split } = {}) {
 			const routes = [
 				...redirects[builder.config.kit.trailingSlash],
 				...prerendered_redirects,
+				...source_routes,
 				{
 					src: `/${builder.config.kit.appDir}/.+`,
 					headers: {

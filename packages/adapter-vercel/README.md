@@ -28,7 +28,12 @@ export default {
 
       // if true, will split your app into multiple functions
       // instead of creating a single one for the entire app
-      split: false
+      split: false,
+
+      // a set of source routes which comply with the rules
+      // set out in the vercel build output v3 api
+      // (https://vercel.com/docs/build-output-api/v3#build-output-configuration/supported-properties/routes)
+      source_routes: []
     })
   }
 };
