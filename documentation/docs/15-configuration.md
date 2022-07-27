@@ -45,13 +45,6 @@ const config = {
 			allowed: []
 		},
 		outDir: '.svelte-kit',
-		package: {
-			dir: 'package',
-			emitTypes: true,
-			// excludes all .d.ts and files starting with _ as the name
-			exports: (filepath) => !/^_|\/_|\.d\.ts$/.test(filepath),
-			files: () => true
-		},
 		paths: {
 			assets: '',
 			base: ''
@@ -78,7 +71,17 @@ const config = {
 	},
 
 	// options passed to svelte.preprocess (https://svelte.dev/docs#compile-time-svelte-preprocess)
-	preprocess: null
+	preprocess: null,
+
+	// options passed to @sveltejs/package
+	package: {
+		source: 'value of kit.files.lib, if available, else src/lib',
+		dir: 'package',
+		emitTypes: true,
+		// excludes all .d.ts and files starting with _ as the name
+		exports: (filepath) => !/^_|\/_|\.d\.ts$/.test(filepath),
+		files: () => true
+	}
 };
 
 export default config;
@@ -194,8 +197,9 @@ The directory that SvelteKit writes files to during `dev` and `build`. You shoul
 
 Options related to [creating a package](/docs/packaging).
 
+- `source` - library directory
 - `dir` - output directory
-- `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `.d.ts` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead)
+- `emitTypes` - by default, `svelte-package` will automatically generate types for your package in the form of `.d.ts` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead)
 - `exports` - a function with the type of `(filepath: string) => boolean`. When `true`, the filepath will be included in the `exports` field of the `package.json`. Any existing values in the `package.json` source will be merged with values from the original `exports` field taking precedence
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the file will be processed and copied over to the final output folder, specified in `dir`
 
@@ -212,14 +216,12 @@ import mm from 'micromatch';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	kit: {
-		package: {
-			exports: (filepath) => {
-				if (filepath.endsWith('.d.ts')) return false;
-				return mm.isMatch(filepath, ['!**/_*', '!**/internal/**']);
-			},
-			files: mm.matcher('!**/build.*')
-		}
+	package: {
+		exports: (filepath) => {
+			if (filepath.endsWith('.d.ts')) return false;
+			return mm.isMatch(filepath, ['!**/_*', '!**/internal/**']);
+		},
+		files: mm.matcher('!**/build.*')
 	}
 };
 
