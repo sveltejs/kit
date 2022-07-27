@@ -82,12 +82,7 @@ const redirects = {
 };
 
 /** @type {import('.').default} **/
-export default function ({
-	external = [],
-	edge,
-	split,
-	source_routes = []
-} = {}) {
+export default function ({ external = [], edge, split, source_routes = [] } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
