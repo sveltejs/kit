@@ -30,10 +30,9 @@ export default {
       // instead of creating a single one for the entire app
       split: false,
 
-      // a set of source routes which comply with the rules
-      // set out in the vercel build output v3 api
-      // (https://vercel.com/docs/build-output-api/v3#build-output-configuration/supported-properties/routes)
-      source_routes: []
+      // path to your vercel config, defaults to vercel.json
+      // currently only used to configure rewrites and redirects
+      local_config_filename: string
     })
   }
 };

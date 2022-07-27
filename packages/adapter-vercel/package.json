@@ -29,6 +29,7 @@
 	},
 	"dependencies": {
 		"@vercel/nft": "^0.21.0",
+		"@vercel/routing-utils": "^2.0.0",
 		"esbuild": "^0.14.48"
 	},
 	"devDependencies": {
