@@ -67,7 +67,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 
 					// This is required for svelte-kit package to work as expected
 					// Can be overwritten
-					lib: ['esnext', 'DOM'],
+					lib: ['esnext', 'DOM', 'DOM.Iterable'],
 					moduleResolution: 'node',
 					module: 'esnext',
 					target: 'esnext'
