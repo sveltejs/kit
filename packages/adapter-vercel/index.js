@@ -3,7 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
-import { getTransformedRoutes } from '@vercel/routing-utils'
+import { getTransformedRoutes } from '@vercel/routing-utils';
 
 // rules for clean URLs and trailing slash handling,
 // generated with @vercel/routing-utils
@@ -83,7 +83,12 @@ const platform_redirects = {
 };
 
 /** @type {import('.').default} **/
-export default function ({ external = [], edge, split, local_config_filename = 'vercel.json' } = {}) {
+export default function ({
+	external = [],
+	edge,
+	split,
+	local_config_filename = 'vercel.json'
+} = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
@@ -264,17 +269,17 @@ export default function ({ external = [], edge, split, local_config_filename = '
 }
 
 /**
- * @param {string} local_config_filename 
+ * @param {string} local_config_filename
  */
 function parse_routing_config(local_config_filename) {
 	const config_path = path.resolve(process.cwd(), local_config_filename);
 	if (!fs.existsSync(config_path)) {
-		return []
+		return [];
 	}
 	const vercel_config = fs.readFileSync(config_path, 'utf8');
 	const { redirects = [], rewrites = [] } = JSON.parse(vercel_config);
-	const { routes } = getTransformedRoutes({ redirects, rewrites});
-	return routes.filter(route => route.handle !== 'filesystem');
+	const { routes } = getTransformedRoutes({ redirects, rewrites });
+	return routes.filter((route) => route.handle !== 'filesystem');
 }
 
 /**
