@@ -91,27 +91,6 @@ export default config;
 
 Run when executing `vite build` and determines how the output is converted for different platforms. See [Adapters](/docs/adapters).
 
-### alias
-
-An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
-
-For example, you can add aliases to a `components` and `utils` folder:
-
-```js
-/// file: svelte.config.js
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		alias: {
-			$components: 'src/components',
-			$utils: 'src/utils'
-		}
-	}
-};
-```
-
-> The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
-
 ### appDir
 
 The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
