@@ -1,7 +1,7 @@
 import colors from 'kleur';
 import sade from 'sade';
 import { load_config } from './config.js';
-import { coalesce_to_error } from './utils/error.js';
+import { coalesce_to_error } from '@internal/shared/utils/error.js';
 
 /** @param {unknown} e */
 function handle_error(e) {

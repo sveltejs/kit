@@ -1,6 +1,6 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
-import { coalesce_to_error } from '../../../utils/error.js';
+import { coalesce_to_error } from '@internal/shared/utils/error.js';
 import { GENERIC_ERROR } from '../utils.js';
 
 /**

@@ -16,6 +16,7 @@
 		"svelte2tsx": "~0.5.10"
 	},
 	"devDependencies": {
+		"@internal/shared": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@rollup/plugin-replace": "^4.0.0",
 		"@types/node": "^16.11.36",

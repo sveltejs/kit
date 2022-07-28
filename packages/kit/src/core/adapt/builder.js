@@ -1,4 +1,4 @@
-import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
+import { copy, rimraf, mkdirp } from '@internal/shared/utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 
 /**

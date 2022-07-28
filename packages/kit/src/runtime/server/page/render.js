@@ -1,6 +1,6 @@
 import devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
-import { coalesce_to_error } from '../../../utils/error.js';
+import { coalesce_to_error } from '@internal/shared/utils/error.js';
 import { hash } from '../../hash.js';
 import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';

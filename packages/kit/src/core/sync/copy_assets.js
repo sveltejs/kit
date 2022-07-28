@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { copy } from '../../utils/filesystem.js';
+import { copy } from '@internal/shared/utils/filesystem.js';
 import { fileURLToPath } from 'url';
 
 const filename = fileURLToPath(import.meta.url);

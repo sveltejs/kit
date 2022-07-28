@@ -1,6 +1,16 @@
 import { join } from 'path';
-
-/** @typedef {import('./types').Validator} Validator */
+import {
+	assert_string,
+	boolean,
+	error,
+	fun,
+	list,
+	number,
+	object,
+	string,
+	string_array,
+	validate
+} from '@internal/shared/config/index.js';
 
 const directives = object({
 	'child-src': string_array(),
@@ -36,7 +46,7 @@ const directives = object({
 	referrer: string_array()
 });
 
-/** @type {Validator} */
+/** @type {import('@internal/shared/config').Validator} */
 const options = object(
 	{
 		extensions: validate(['.svelte'], (input, keypath) => {
@@ -57,421 +67,269 @@ const options = object(
 			return input;
 		}),
 
-		kit: object({
-			adapter: validate(null, (input, keypath) => {
-				if (typeof input !== 'object' || !input.adapt) {
-					let message = `${keypath} should be an object with an "adapt" method`;
+		kit: object(
+			{
+				adapter: validate(null, (input, keypath) => {
+					if (typeof input !== 'object' || !input.adapt) {
+						let message = `${keypath} should be an object with an "adapt" method`;
 
-					if (Array.isArray(input) || typeof input === 'string') {
-						// for the early adapter adopters
-						message += ', rather than the name of an adapter';
-					}
+						if (Array.isArray(input) || typeof input === 'string') {
+							// for the early adapter adopters
+							message += ', rather than the name of an adapter';
+						}
 
-					throw new Error(`${message}. See https://kit.svelte.dev/docs/adapters`);
-				}
-
-				return input;
-			}),
-
-			alias: validate({}, (input, keypath) => {
-				if (typeof input !== 'object') {
-					throw new Error(`${keypath} should be an object`);
-				}
-
-				for (const key in input) {
-					assert_string(input[key], `${keypath}.${key}`);
-				}
-
-				return input;
-			}),
-
-			// TODO: remove this for the 1.0 release
-			amp: error(
-				(keypath) =>
-					`${keypath} has been removed. See https://kit.svelte.dev/docs/seo#amp for details on how to support AMP`
-			),
-
-			appDir: validate('_app', (input, keypath) => {
-				assert_string(input, keypath);
-
-				if (input) {
-					if (input.startsWith('/') || input.endsWith('/')) {
-						throw new Error(
-							"config.kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs/configuration"
-						);
-					}
-				} else {
-					throw new Error(`${keypath} cannot be empty`);
-				}
-
-				return input;
-			}),
-
-			browser: object({
-				hydrate: boolean(true),
-				router: boolean(true)
-			}),
-
-			csp: object({
-				mode: list(['auto', 'hash', 'nonce']),
-				directives,
-				reportOnly: directives
-			}),
-
-			// TODO: remove this for the 1.0 release
-			endpointExtensions: error(
-				(keypath) => `${keypath} has been renamed to config.kit.moduleExtensions`
-			),
-
-			files: object({
-				assets: string('static'),
-				hooks: string(join('src', 'hooks')),
-				lib: string(join('src', 'lib')),
-				params: string(join('src', 'params')),
-				routes: string(join('src', 'routes')),
-				serviceWorker: string(join('src', 'service-worker')),
-				template: string(join('src', 'app.html'))
-			}),
-
-			// TODO: remove this for the 1.0 release
-			headers: error(
-				(keypath) =>
-					`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
-			),
-
-			// TODO: remove this for the 1.0 release
-			host: error(
-				(keypath) =>
-					`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
-			),
-
-			// TODO remove for 1.0
-			hydrate: error((keypath) => `${keypath} has been moved to config.kit.browser.hydrate`),
-
-			inlineStyleThreshold: number(0),
-
-			methodOverride: object({
-				parameter: string('_method'),
-				allowed: validate([], (input, keypath) => {
-					if (!Array.isArray(input) || !input.every((method) => typeof method === 'string')) {
-						throw new Error(`${keypath} must be an array of strings`);
-					}
-
-					if (input.map((i) => i.toUpperCase()).includes('GET')) {
-						throw new Error(`${keypath} cannot contain "GET"`);
-					}
-
-					return input;
-				})
-			}),
-
-			moduleExtensions: string_array(['.js', '.ts']),
-
-			outDir: string('.svelte-kit'),
-
-			package: error(
-				(keypath) =>
-					`${keypath} has been removed. It now lives in its own npm package. See the PR on how to migrate: https://github.com/sveltejs/kit/pull/5730`
-			),
-
-			paths: object({
-				base: validate('', (input, keypath) => {
-					assert_string(input, keypath);
-
-					if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
-						throw new Error(
-							`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
-						);
+						throw new Error(`${message}. See https://kit.svelte.dev/docs/adapters`);
 					}
 
 					return input;
 				}),
-				assets: validate('', (input, keypath) => {
+
+				alias: validate({}, (input, keypath) => {
+					if (typeof input !== 'object') {
+						throw new Error(`${keypath} should be an object`);
+					}
+
+					for (const key in input) {
+						assert_string(input[key], `${keypath}.${key}`);
+					}
+
+					return input;
+				}),
+
+				// TODO: remove this for the 1.0 release
+				amp: error(
+					(keypath) =>
+						`${keypath} has been removed. See https://kit.svelte.dev/docs/seo#amp for details on how to support AMP`
+				),
+
+				appDir: validate('_app', (input, keypath) => {
 					assert_string(input, keypath);
 
 					if (input) {
-						if (!/^[a-z]+:\/\//.test(input)) {
+						if (input.startsWith('/') || input.endsWith('/')) {
 							throw new Error(
-								`${keypath} option must be an absolute path, if specified. See https://kit.svelte.dev/docs/configuration#paths`
+								"config.kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs/configuration"
 							);
 						}
-
-						if (input.endsWith('/')) {
-							throw new Error(
-								`${keypath} option must not end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
-							);
-						}
+					} else {
+						throw new Error(`${keypath} cannot be empty`);
 					}
 
 					return input;
-				})
-			}),
+				}),
 
-			prerender: object({
-				concurrency: number(1),
-				crawl: boolean(true),
-				createIndexFiles: error(
-					(keypath) =>
-						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/configuration#trailingslash`
+				browser: object({
+					hydrate: boolean(true),
+					router: boolean(true)
+				}),
+
+				csp: object({
+					mode: list(['auto', 'hash', 'nonce']),
+					directives,
+					reportOnly: directives
+				}),
+
+				// TODO: remove this for the 1.0 release
+				endpointExtensions: error(
+					(keypath) => `${keypath} has been renamed to config.kit.moduleExtensions`
 				),
-				default: boolean(false),
-				enabled: boolean(true),
-				entries: validate(['*'], (input, keypath) => {
-					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
-						throw new Error(`${keypath} must be an array of strings`);
-					}
 
-					input.forEach((page) => {
-						if (page !== '*' && page[0] !== '/') {
+				files: object({
+					assets: string('static'),
+					hooks: string(join('src', 'hooks')),
+					lib: string(join('src', 'lib')),
+					params: string(join('src', 'params')),
+					routes: string(join('src', 'routes')),
+					serviceWorker: string(join('src', 'service-worker')),
+					template: string(join('src', 'app.html'))
+				}),
+
+				// TODO: remove this for the 1.0 release
+				headers: error(
+					(keypath) =>
+						`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
+				),
+
+				// TODO: remove this for the 1.0 release
+				host: error(
+					(keypath) =>
+						`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
+				),
+
+				// TODO remove for 1.0
+				hydrate: error((keypath) => `${keypath} has been moved to config.kit.browser.hydrate`),
+
+				inlineStyleThreshold: number(0),
+
+				methodOverride: object({
+					parameter: string('_method'),
+					allowed: validate([], (input, keypath) => {
+						if (!Array.isArray(input) || !input.every((method) => typeof method === 'string')) {
+							throw new Error(`${keypath} must be an array of strings`);
+						}
+
+						if (input.map((i) => i.toUpperCase()).includes('GET')) {
+							throw new Error(`${keypath} cannot contain "GET"`);
+						}
+
+						return input;
+					})
+				}),
+
+				moduleExtensions: string_array(['.js', '.ts']),
+
+				outDir: string('.svelte-kit'),
+
+				package: error(
+					(keypath) =>
+						`${keypath} has been removed. It now lives in its own npm package. See the PR on how to migrate: https://github.com/sveltejs/kit/pull/5730`
+				),
+
+				paths: object({
+					base: validate('', (input, keypath) => {
+						assert_string(input, keypath);
+
+						if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
 							throw new Error(
-								`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
+								`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
 							);
 						}
-					});
 
-					return input;
+						return input;
+					}),
+					assets: validate('', (input, keypath) => {
+						assert_string(input, keypath);
+
+						if (input) {
+							if (!/^[a-z]+:\/\//.test(input)) {
+								throw new Error(
+									`${keypath} option must be an absolute path, if specified. See https://kit.svelte.dev/docs/configuration#paths`
+								);
+							}
+
+							if (input.endsWith('/')) {
+								throw new Error(
+									`${keypath} option must not end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
+								);
+							}
+						}
+
+						return input;
+					})
 				}),
 
-				// TODO: remove this for the 1.0 release
-				force: validate(undefined, (input, keypath) => {
-					if (typeof input !== 'undefined') {
-						const newSetting = input ? 'continue' : 'fail';
-						const needsSetting = newSetting === 'continue';
+				prerender: object({
+					concurrency: number(1),
+					crawl: boolean(true),
+					createIndexFiles: error(
+						(keypath) =>
+							`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/configuration#trailingslash`
+					),
+					default: boolean(false),
+					enabled: boolean(true),
+					entries: validate(['*'], (input, keypath) => {
+						if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
+							throw new Error(`${keypath} must be an array of strings`);
+						}
+
+						input.forEach((page) => {
+							if (page !== '*' && page[0] !== '/') {
+								throw new Error(
+									`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
+								);
+							}
+						});
+
+						return input;
+					}),
+
+					// TODO: remove this for the 1.0 release
+					force: validate(undefined, (input, keypath) => {
+						if (typeof input !== 'undefined') {
+							const newSetting = input ? 'continue' : 'fail';
+							const needsSetting = newSetting === 'continue';
+							throw new Error(
+								`${keypath} has been removed in favor of \`onError\`. In your case, set \`onError\` to "${newSetting}"${
+									needsSetting ? '' : ' (or leave it undefined)'
+								} to get the same behavior as you would with \`force: ${JSON.stringify(input)}\``
+							);
+						}
+					}),
+
+					onError: validate('fail', (input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['continue', 'fail'].includes(input)) return input;
 						throw new Error(
-							`${keypath} has been removed in favor of \`onError\`. In your case, set \`onError\` to "${newSetting}"${
-								needsSetting ? '' : ' (or leave it undefined)'
-							} to get the same behavior as you would with \`force: ${JSON.stringify(input)}\``
+							`${keypath} should be either a custom function or one of "continue" or "fail"`
 						);
-					}
-				}),
+					}),
 
-				onError: validate('fail', (input, keypath) => {
-					if (typeof input === 'function') return input;
-					if (['continue', 'fail'].includes(input)) return input;
-					throw new Error(
-						`${keypath} should be either a custom function or one of "continue" or "fail"`
-					);
-				}),
+					origin: validate('http://sveltekit-prerender', (input, keypath) => {
+						assert_string(input, keypath);
 
-				origin: validate('http://sveltekit-prerender', (input, keypath) => {
-					assert_string(input, keypath);
+						let origin;
 
-					let origin;
+						try {
+							origin = new URL(input).origin;
+						} catch (e) {
+							throw new Error(`${keypath} must be a valid origin`);
+						}
 
-					try {
-						origin = new URL(input).origin;
-					} catch (e) {
-						throw new Error(`${keypath} must be a valid origin`);
-					}
+						if (input !== origin) {
+							throw new Error(`${keypath} must be a valid origin (${origin} rather than ${input})`);
+						}
 
-					if (input !== origin) {
-						throw new Error(`${keypath} must be a valid origin (${origin} rather than ${input})`);
-					}
+						return origin;
+					}),
 
-					return origin;
+					// TODO: remove this for the 1.0 release
+					pages: error((keypath) => `${keypath} has been renamed to \`entries\`.`)
 				}),
 
 				// TODO: remove this for the 1.0 release
-				pages: error((keypath) => `${keypath} has been renamed to \`entries\`.`)
-			}),
+				protocol: error(
+					(keypath) =>
+						`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
+				),
 
-			// TODO: remove this for the 1.0 release
-			protocol: error(
-				(keypath) =>
-					`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
-			),
+				// TODO remove for 1.0
+				router: error((keypath) => `${keypath} has been moved to config.kit.browser.router`),
 
-			// TODO remove for 1.0
-			router: error((keypath) => `${keypath} has been moved to config.kit.browser.router`),
+				routes: fun((filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath)),
 
-			routes: fun((filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath)),
+				serviceWorker: object({
+					register: boolean(true),
+					files: fun((filename) => !/\.DS_Store/.test(filename))
+				}),
 
-			serviceWorker: object({
-				register: boolean(true),
-				files: fun((filename) => !/\.DS_Store/.test(filename))
-			}),
+				// TODO remove this for 1.0
+				ssr: error(
+					(keypath) =>
+						`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle`
+				),
 
-			// TODO remove this for 1.0
-			ssr: error(
-				(keypath) =>
-					`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle`
-			),
+				// TODO remove this for 1.0
+				target: error((keypath) => `${keypath} is no longer required, and should be removed`),
 
-			// TODO remove this for 1.0
-			target: error((keypath) => `${keypath} is no longer required, and should be removed`),
+				trailingSlash: list(['never', 'always', 'ignore']),
 
-			trailingSlash: list(['never', 'always', 'ignore']),
+				version: object({
+					name: string(Date.now().toString()),
+					pollInterval: number(0)
+				}),
 
-			version: object({
-				name: string(Date.now().toString()),
-				pollInterval: number(0)
-			}),
-
-			// TODO remove this for 1.0
-			vite: error((keypath) => `${keypath} has been removed — use vite.config.js instead`)
-		})
+				// TODO remove this for 1.0
+				vite: error((keypath) => `${keypath} has been removed — use vite.config.js instead`)
+			},
+			(keypath, key) => {
+				if (keypath === 'config.kit' && key in options) {
+					return ` (did you mean config.${key}?)`;
+				}
+				return '';
+			}
+		)
 	},
 	true
 );
-
-/**
- * @param {Record<string, Validator>} children
- * @param {boolean} [allow_unknown]
- * @returns {Validator}
- */
-function object(children, allow_unknown = false) {
-	return (input, keypath) => {
-		/** @type {Record<string, any>} */
-		const output = {};
-
-		if ((input && typeof input !== 'object') || Array.isArray(input)) {
-			throw new Error(`${keypath} should be an object`);
-		}
-
-		for (const key in input) {
-			if (!(key in children)) {
-				if (allow_unknown) {
-					output[key] = input[key];
-				} else {
-					let message = `Unexpected option ${keypath}.${key}`;
-
-					// special case
-					if (keypath === 'config.kit' && key in options) {
-						message += ` (did you mean config.${key}?)`;
-					}
-
-					throw new Error(message);
-				}
-			}
-		}
-
-		for (const key in children) {
-			const validator = children[key];
-			output[key] = validator(input && input[key], `${keypath}.${key}`);
-		}
-
-		return output;
-	};
-}
-
-/**
- * @param {any} fallback
- * @param {(value: any, keypath: string) => any} fn
- * @returns {Validator}
- */
-function validate(fallback, fn) {
-	return (input, keypath) => {
-		return input === undefined ? fallback : fn(input, keypath);
-	};
-}
-
-/**
- * @param {string | null} fallback
- * @param {boolean} allow_empty
- * @returns {Validator}
- */
-function string(fallback, allow_empty = true) {
-	return validate(fallback, (input, keypath) => {
-		assert_string(input, keypath);
-
-		if (!allow_empty && input === '') {
-			throw new Error(`${keypath} cannot be empty`);
-		}
-
-		return input;
-	});
-}
-
-/**
- * @param {string[] | undefined} [fallback]
- * @returns {Validator}
- */
-function string_array(fallback) {
-	return validate(fallback, (input, keypath) => {
-		if (input === undefined) return input;
-
-		if (!Array.isArray(input) || input.some((value) => typeof value !== 'string')) {
-			throw new Error(`${keypath} must be an array of strings, if specified`);
-		}
-
-		return input;
-	});
-}
-
-/**
- * @param {number} fallback
- * @returns {Validator}
- */
-function number(fallback) {
-	return validate(fallback, (input, keypath) => {
-		if (typeof input !== 'number') {
-			throw new Error(`${keypath} should be a number, if specified`);
-		}
-		return input;
-	});
-}
-
-/**
- * @param {boolean} fallback
- * @returns {Validator}
- */
-function boolean(fallback) {
-	return validate(fallback, (input, keypath) => {
-		if (typeof input !== 'boolean') {
-			throw new Error(`${keypath} should be true or false, if specified`);
-		}
-		return input;
-	});
-}
-
-/**
- * @param {string[]} options
- * @returns {Validator}
- */
-function list(options, fallback = options[0]) {
-	return validate(fallback, (input, keypath) => {
-		if (!options.includes(input)) {
-			// prettier-ignore
-			const msg = options.length > 2
-				? `${keypath} should be one of ${options.slice(0, -1).map(input => `"${input}"`).join(', ')} or "${options[options.length - 1]}"`
-				: `${keypath} should be either "${options[0]}" or "${options[1]}"`;
-
-			throw new Error(msg);
-		}
-		return input;
-	});
-}
-
-/**
- * @param {(filename: string) => boolean} fallback
- * @returns {Validator}
- */
-function fun(fallback) {
-	return validate(fallback, (input, keypath) => {
-		if (typeof input !== 'function') {
-			throw new Error(`${keypath} should be a function, if specified`);
-		}
-		return input;
-	});
-}
-
-/**
- * @param {string} input
- * @param {string} keypath
- */
-function assert_string(input, keypath) {
-	if (typeof input !== 'string') {
-		throw new Error(`${keypath} should be a string, if specified`);
-	}
-}
-
-/** @param {(keypath?: string) => string} fn */
-function error(fn) {
-	return validate(undefined, (input, keypath) => {
-		if (input !== undefined) {
-			throw new Error(fn(keypath));
-		}
-	});
-}
 
 export default options;

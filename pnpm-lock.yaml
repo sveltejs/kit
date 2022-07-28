@@ -268,6 +268,7 @@ importers:
 
   packages/kit:
     specifiers:
+      '@internal/shared': workspace:*
       '@playwright/test': ^1.23.4
       '@rollup/plugin-replace': ^4.0.0
       '@sveltejs/vite-plugin-svelte': ^1.0.1
@@ -295,7 +296,6 @@ importers:
       svelte: ^3.48.0
       svelte-check: ^2.7.1
       svelte-preprocess: ^4.10.6
-      svelte2tsx: ~0.5.10
       tiny-glob: ^0.2.9
       typescript: ^4.7.4
       undici: ^5.6.1
@@ -306,6 +306,7 @@ importers:
       chokidar: 3.5.3
       sade: 1.8.1
     devDependencies:
+      '@internal/shared': link:../shared
       '@playwright/test': 1.23.4
       '@rollup/plugin-replace': 4.0.0_rollup@2.75.7
       '@types/connect': 3.4.35
@@ -330,7 +331,6 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       svelte-preprocess: 4.10.7_lvfi2wesz6u4l5rfbnetbucfmm
-      svelte2tsx: 0.5.11_lvfi2wesz6u4l5rfbnetbucfmm
       tiny-glob: 0.2.9
       typescript: 4.7.4
       undici: 5.6.1
@@ -509,6 +509,7 @@ importers:
 
   packages/package:
     specifiers:
+      '@internal/shared': workspace:*
       '@rollup/plugin-replace': ^4.0.0
       '@sveltejs/kit': workspace:*
       '@sveltejs/vite-plugin-svelte': ^1.0.1
@@ -529,6 +530,7 @@ importers:
       sade: 1.8.1
       svelte2tsx: 0.5.11_lvfi2wesz6u4l5rfbnetbucfmm
     devDependencies:
+      '@internal/shared': link:../shared
       '@rollup/plugin-replace': 4.0.0_rollup@2.75.7
       '@sveltejs/kit': link:../kit
       '@types/node': 16.11.42
@@ -539,6 +541,16 @@ importers:
       typescript: 4.7.4
       uvu: 0.5.4
       vite: 3.0.0
+
+  packages/shared:
+    specifiers:
+      '@types/node': ^16.11.36
+      typescript: ^4.7.4
+      uvu: ^0.5.3
+    devDependencies:
+      '@types/node': 16.11.42
+      typescript: 4.7.4
+      uvu: 0.5.4
 
   sites/kit.svelte.dev:
     specifiers:
@@ -1691,6 +1703,7 @@ packages:
 
   /dedent-js/1.0.1:
     resolution: {integrity: sha512-OUepMozQULMLUmhxS95Vudo0jb0UchLimi3+pQ2plj61Fcy8axbP9hbiD4Sz6DPqn6XG3kfmziVfQ1rSys5AJQ==}
+    dev: false
 
   /deep-extend/0.6.0:
     resolution: {integrity: sha512-LOHxIOaPYdHlJRtCQfDIVZtfw/ufM8+rVj649RIHzcm/vGwQRXFt6OPqIFWsm2XEMrNIEtWR64sY1LEKD2vAOA==}
@@ -2763,6 +2776,7 @@ packages:
     resolution: {integrity: sha512-7fm3l3NAF9WfN6W3JOmf5drwpVqX78JtoGJ3A6W0a6ZnldM41w2fV5D490psKFTpMds8TJse/eHLFFsNHHjHgg==}
     dependencies:
       tslib: 2.4.0
+    dev: false
 
   /lru-cache/4.1.5:
     resolution: {integrity: sha512-sWZlbEP2OsHNkXrMl5GYk/jKk70MBng6UU4YI/qGDYbgf6YbP4EvmqISbXCoJiRKs+1bSpFHVgQxvJ17F2li5g==}
@@ -2961,6 +2975,7 @@ packages:
     dependencies:
       lower-case: 2.0.2
       tslib: 2.4.0
+    dev: false
 
   /node-abi/3.22.0:
     resolution: {integrity: sha512-u4uAs/4Zzmp/jjsD9cyFYDXeISfUWaAVWshPmDZOFOv4Xl4SbzTXm53I04C2uRueYJ+0t5PEtLH/owbn2Npf/w==}
@@ -3194,6 +3209,7 @@ packages:
     dependencies:
       no-case: 3.0.4
       tslib: 2.4.0
+    dev: false
 
   /path-exists/3.0.0:
     resolution: {integrity: sha512-bpC7GYwiDYQ4wYLe+FA8lhRjhQCMcQGuSgGGqDkg/QerRWw9CmGRT0iSOVRSZJ29NMLZgIzqaljJ63oaL4NIJQ==}
@@ -4132,6 +4148,7 @@ packages:
       pascal-case: 3.1.2
       svelte: 3.48.0
       typescript: 4.7.4
+    dev: false
 
   /tar-fs/2.1.1:
     resolution: {integrity: sha512-V0r2Y9scmbDRLCNex/+hYzvp/zyYjvFbHPNgVTKfQvVrb6guiE/fxP+XblDNR011utopbkex2nM4dHNV6GDsng==}
@@ -4242,6 +4259,7 @@ packages:
 
   /tslib/2.4.0:
     resolution: {integrity: sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==}
+    dev: false
 
   /tty-table/4.1.6:
     resolution: {integrity: sha512-kRj5CBzOrakV4VRRY5kUWbNYvo/FpOsz65DzI5op9P+cHov3+IqPbo1JE1ZnQGkHdZgNFDsrEjrfqqy/Ply9fw==}

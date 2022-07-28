@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import url from 'url';
+import { boolean, fun, object, string, validate } from '@internal/shared/config/index.js';
 
 /**
  * Loads and validates svelte.config.js
@@ -84,107 +85,3 @@ const options = object(
 	},
 	true
 );
-
-/**
- * @param {Record<string, Validator>} children
- * @param {boolean} [allow_unknown]
- * @returns {Validator}
- */
-function object(children, allow_unknown = false) {
-	return (input, keypath) => {
-		/** @type {Record<string, any>} */
-		const output = {};
-
-		if ((input && typeof input !== 'object') || Array.isArray(input)) {
-			throw new Error(`${keypath} should be an object`);
-		}
-
-		for (const key in input) {
-			if (!(key in children)) {
-				if (allow_unknown) {
-					output[key] = input[key];
-				} else {
-					let message = `Unexpected option ${keypath}.${key}`;
-
-					// special case
-					if (keypath === 'config.kit' && key in options) {
-						message += ` (did you mean config.${key}?)`;
-					}
-
-					throw new Error(message);
-				}
-			}
-		}
-
-		for (const key in children) {
-			const validator = children[key];
-			output[key] = validator(input && input[key], `${keypath}.${key}`);
-		}
-
-		return output;
-	};
-}
-
-/**
- * @param {any} fallback
- * @param {(value: any, keypath: string) => any} fn
- * @returns {Validator}
- */
-function validate(fallback, fn) {
-	return (input, keypath) => {
-		return input === undefined ? fallback : fn(input, keypath);
-	};
-}
-
-/**
- * @param {string | null} fallback
- * @param {boolean} allow_empty
- * @returns {Validator}
- */
-function string(fallback, allow_empty = true) {
-	return validate(fallback, (input, keypath) => {
-		assert_string(input, keypath);
-
-		if (!allow_empty && input === '') {
-			throw new Error(`${keypath} cannot be empty`);
-		}
-
-		return input;
-	});
-}
-
-/**
- * @param {boolean} fallback
- * @returns {Validator}
- */
-function boolean(fallback) {
-	return validate(fallback, (input, keypath) => {
-		if (typeof input !== 'boolean') {
-			throw new Error(`${keypath} should be true or false, if specified`);
-		}
-		return input;
-	});
-}
-
-/**
- * @param {(filename: string) => boolean} fallback
- * @returns {Validator}
- */
-function fun(fallback) {
-	return validate(fallback, (input, keypath) => {
-		if (typeof input !== 'function') {
-			throw new Error(`${keypath} should be a function, if specified`);
-		}
-		return input;
-	});
-}
-
-/**
- * @param {string} input
- * @param {string} keypath
- */
-function assert_string(input, keypath) {
-	if (typeof input !== 'string') {
-		throw new Error(`${keypath} should be a string, if specified`);
-	}
-}

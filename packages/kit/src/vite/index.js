@@ -3,7 +3,7 @@ import path from 'path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import * as vite from 'vite';
-import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
+import { mkdirp, posixify, rimraf } from '@internal/shared/utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';

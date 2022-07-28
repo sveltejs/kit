@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { posixify, mkdirp, walk } from './utils/filesystem.js';
+import { posixify, mkdirp, walk } from '@internal/shared/utils/filesystem.js';
 
 /**
  * Resolves the `$lib` alias.

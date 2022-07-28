@@ -1,4 +1,4 @@
-import { rimraf } from '../../utils/filesystem.js';
+import { rimraf } from '@internal/shared/utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
 import { write } from './utils.js';
 

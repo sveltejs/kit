@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { createRequire } from 'module';
-import { posixify, mkdirp, rimraf, walk } from './utils/filesystem.js';
+import { posixify, mkdirp, rimraf, walk } from '@internal/shared/utils/filesystem.js';
 import { resolve_lib_alias, write } from './utils.js';
 import { emitDts } from 'svelte2tsx';
 

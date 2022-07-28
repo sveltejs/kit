@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import colors from 'kleur';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '@internal/shared/utils/filesystem.js';
 import { write_if_changed } from './utils.js';
 
 /** @param {string} file */

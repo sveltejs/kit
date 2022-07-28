@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { pathToFileURL, URL } from 'url';
-import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
+import { mkdirp, posixify, walk } from '@internal/shared/utils/filesystem.js';
 import { installPolyfills } from '../../node/polyfills.js';
 import { is_root_relative, resolve } from '../../utils/url.js';
 import { queue } from './queue.js';

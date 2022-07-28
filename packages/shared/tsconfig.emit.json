@@ -1,0 +1,10 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"noEmit": false,
+		"declaration": true,
+		"outDir": "."
+	},
+	"include": ["src/**/*"],
+	"exclude": ["src/**/*.spec.js"]
+}
