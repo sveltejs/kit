@@ -28,8 +28,7 @@ export interface PackageConfig {
 export interface Config {
 	compilerOptions?: CompileOptions;
 	extensions?: string[];
-	// @ts-ignore
-	kit?: import('@sveltejs/kit').KitConfig;
+	kit?: any;
 	preprocess?: any;
 	package?: PackageConfig;
 }
