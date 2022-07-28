@@ -10,17 +10,22 @@ const test_workspace_dir = fileURLToPath(
 	new URL('../../../.test-tmp/create-svelte/', import.meta.url)
 );
 const overrides = {};
-['kit', 'adapter-auto', 'adapter-cloudflare', 'adapter-netlify', 'adapter-vercel'].forEach(
-	(pkg) => {
-		overrides[`@sveltejs/${pkg}`] = `${path.resolve(
-			test_workspace_dir,
-			'..',
-			'..',
-			'packages',
-			pkg
-		)}`; //'workspace:*';
-	}
-);
+[
+	'kit',
+	'adapter-auto',
+	'adapter-cloudflare',
+	'adapter-netlify',
+	'adapter-vercel',
+	'package'
+].forEach((pkg) => {
+	overrides[`@sveltejs/${pkg}`] = `${path.resolve(
+		test_workspace_dir,
+		'..',
+		'..',
+		'packages',
+		pkg
+	)}`; //'workspace:*';
+});
 test.before(() => {
 	try {
 		// prepare test pnpm workspace
