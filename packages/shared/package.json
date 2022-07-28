@@ -10,7 +10,7 @@
 		"uvu": "^0.5.3"
 	},
 	"scripts": {
-		"build": "tsc  --project tsconfig.emit.json",
+		"build": "tsc  --project tsconfig.emit.json && node ./copy-files.js",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc --project tsconfig.json",
 		"format": "npm run lint -- --write",

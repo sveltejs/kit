@@ -124,7 +124,8 @@ const get_defaults = (prefix = '') => ({
 			pollInterval: 0
 		},
 		// TODO cleanup for 1.0
-		vite: undefined
+		vite: undefined,
+		package: undefined
 	}
 });
 
