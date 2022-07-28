@@ -191,8 +191,8 @@ function kit() {
 			};
 
 			illegal_imports = new Set([
-				path.normalize(`${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`),
-				path.normalize(`${svelte_config.kit.outDir}/runtime/env/static/private.js`)
+				vite.normalizePath(`${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`),
+				vite.normalizePath(`${svelte_config.kit.outDir}/runtime/env/static/private.js`)
 			]);
 
 			if (is_build) {
@@ -283,9 +283,8 @@ function kit() {
 		 */
 		async writeBundle(_options, bundle) {
 			for (const file of manifest_data.components) {
-				const id = path.resolve(file);
-				// Rollup stores module IDs with forward slashes, even on Windows
-				const node = this.getModuleInfo(id.replace(/\\/g, '/'));
+				const id = vite.normalizePath(path.resolve(file));
+				const node = this.getModuleInfo(id);
 
 				if (node) {
 					prevent_illegal_rollup_imports(

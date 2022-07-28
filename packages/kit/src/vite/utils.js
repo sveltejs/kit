@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { loadConfigFromFile, loadEnv } from 'vite';
+import { loadConfigFromFile, loadEnv, normalizePath } from 'vite';
 import { get_runtime_directory } from '../core/utils.js';
 
 /**
@@ -200,7 +200,7 @@ export function get_env(mode, prefix) {
 /**
  * @param {(id: string) => import('rollup').ModuleInfo | null} node_getter
  * @param {import('rollup').ModuleInfo} node
- * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call path.normalize!
+ * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call vite.normalizePath!
  * @param {string} out_dir The directory specified by config.kit.outDir
  */
 export function prevent_illegal_rollup_imports(node_getter, node, illegal_imports, out_dir) {
@@ -212,7 +212,7 @@ export function prevent_illegal_rollup_imports(node_getter, node, illegal_import
  * @param {(id: string) => import('rollup').ModuleInfo | null} node_getter
  * @param {import('rollup').ModuleInfo} node
  * @param {boolean} dynamic
- * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call path.normalize!
+ * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call vite.normalizePath!
  * @param {Set<string>} seen
  * @returns {Array<import('types').ImportNode> | undefined}
  */
@@ -223,7 +223,7 @@ const find_illegal_rollup_imports = (
 	illegal_imports,
 	seen = new Set()
 ) => {
-	const nodeId = path.normalize(node.id);
+	const nodeId = normalizePath(node.id);
 	if (seen.has(nodeId)) return;
 	seen.add(nodeId);
 
@@ -249,7 +249,7 @@ const find_illegal_rollup_imports = (
 /**
  * Throw an error if a private module is imported from a client-side node.
  * @param {import('vite').ModuleNode} node
- * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call path.normalize!
+ * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call vite.normalizePath!
  * @param {string} out_dir The directory specified by config.kit.outDir
  */
 export function prevent_illegal_vite_imports(node, illegal_imports, out_dir) {
@@ -259,13 +259,13 @@ export function prevent_illegal_vite_imports(node, illegal_imports, out_dir) {
 
 /**
  * @param {import('vite').ModuleNode} node
- * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call path.normalize!
+ * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call vite.normalizePath!
  * @param {Set<string>} seen
  * @returns {Array<import('types').ImportNode> | null}
  */
 function find_illegal_vite_imports(node, illegal_imports, seen = new Set()) {
 	if (!node.id) return null; // TODO when does this happen?
-	const nodeId = path.normalize(node.id);
+	const nodeId = normalizePath(node.id);
 	if (seen.has(nodeId)) return null;
 	seen.add(nodeId);
 
