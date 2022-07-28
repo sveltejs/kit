@@ -1142,7 +1142,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				const is_svg_a_element = a instanceof SVGAElement;
 				const url = get_href(a);
 
-				// Ignore if SvelteKit should not navigate the url protocal (e.g. `mailto:`, `tel:` and `myapp:`.)
+				// Ignore non-HTTP URL protocols (e.g. `mailto:`, `tel:`, `myapp:`, etc.)
 				// MEMO: Without this condition, firefox will open mailer twice.
 				// See:
 				// - https://github.com/sveltejs/kit/issues/4045
