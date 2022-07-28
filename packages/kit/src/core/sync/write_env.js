@@ -4,6 +4,7 @@ import { get_env } from '../../vite/utils.js';
 import { write_if_changed, reserved, valid_identifier } from './utils.js';
 
 const autogen_comment = '// this file is generated — do not edit it\n';
+const types_reference = '/// <reference types="@sveltejs/kit" />\n\n';
 
 /**
  * Writes the existing environment variables in process.env to
@@ -29,6 +30,7 @@ export function write_env(config, mode) {
 	write_if_changed(
 		path.join(config.outDir, 'ambient.d.ts'),
 		autogen_comment +
+			types_reference +
 			create_types('$env/static/public', env.public) +
 			'\n\n' +
 			create_types('$env/static/private', env.private)
