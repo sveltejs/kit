@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.85
+
+### Patch Changes
+
+- Initialise `env` ([#5663](https://github.com/sveltejs/kit/pull/5663))
+
+## 1.0.0-next.84
+
+### Patch Changes
+
+- Set Vite's publicDir and correctly serve public assets earlier in pipeline ([#5686](https://github.com/sveltejs/kit/pull/5686))
+
 ## 1.0.0-next.83
 
 ### Patch Changes

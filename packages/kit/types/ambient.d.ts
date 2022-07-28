@@ -9,13 +9,17 @@
  *
  * 	interface Platform {}
  *
+ * 	interface PrivateEnv {}
+ *
+ * 	interface PublicEnv {}
+ *
  * 	interface Session {}
  *
  * 	interface Stuff {}
  * }
  * ```
  *
- * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, `session` and `stuff`.
+ * By populating these interfaces, you will gain type safety when using `env`, `event.locals`, `event.platform`, `session` and `stuff`.
  *
  * Note that since it's an ambient declaration file, you have to be careful when using `import` statements. Once you add an `import`
  * at the top level, the declaration file is no longer considered ambient and you lose access to these typings in other files.
@@ -43,22 +47,32 @@
  */
 declare namespace App {
 	/**
-	 * The interface that defines `event.locals`, which can be accessed in [hooks](/docs/hooks) (`handle`, `handleError` and `getSession`) and [endpoints](/docs/routing#endpoints).
+	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://kit.svelte.dev/docs/hooks) (`handle`, `handleError` and `getSession`) and [endpoints](https://kit.svelte.dev/docs/routing#endpoints).
 	 */
 	export interface Locals {}
 
 	/**
-	 * If your adapter provides [platform-specific context](/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
+	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
 	 */
 	export interface Platform {}
 
 	/**
-	 * The interface that defines `session`, both as an argument to [`load`](/docs/loading) functions and the value of the [session store](/docs/modules#$app-stores).
+	 * The interface that defines the dynamic environment variables exported from '$env/dynamic/private'.
+	 */
+	export interface PrivateEnv extends Record<string, string> {}
+
+	/**
+	 * The interface that defines the dynamic environment variables exported from '$env/dynamic/public'.
+	 */
+	export interface PublicEnv extends Record<string, string> {}
+
+	/**
+	 * The interface that defines `session`, both as an argument to [`load`](https://kit.svelte.dev/docs/loading) functions and the value of the [session store](https://kit.svelte.dev/docs/modules#$app-stores).
 	 */
 	export interface Session {}
 
 	/**
-	 * The interface that defines `stuff`, as input or output to [`load`](/docs/loading) or as the value of the `stuff` property of the [page store](/docs/modules#$app-stores).
+	 * The interface that defines `stuff`, as input or output to [`load`](https://kit.svelte.dev/docs/loading) or as the value of the `stuff` property of the [page store](https://kit.svelte.dev/docs/modules#$app-stores).
 	 */
 	export interface Stuff {}
 }
@@ -83,6 +97,39 @@ declare module '$app/env' {
 	 * `true` when prerendering, `false` otherwise.
 	 */
 	export const prerendering: boolean;
+}
+
+/**
+ * This module provides access to runtime environment variables, as defined by the platform you're running on. For example
+ * if you're using [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) (or running
+ * [`vite preview`](https://kit.svelte.dev/docs/cli)), this is equivalent to `process.env`. This module only includes
+ * variables that _do not_ begin with [`config.kit.env.publicPrefix`](https://kit.svelte.dev/docs/configuration#kit-env-publicprefix).
+ *
+ * This module cannot be imported into client-side code.
+ *
+ * ```ts
+ * import { env } from '$env/dynamic/private';
+ * console.log(env.DEPLOYMENT_SPECIFIC_VARIABLE);
+ * ```
+ */
+declare module '$env/dynamic/private' {
+	export let env: App.PrivateEnv;
+}
+
+/**
+ * Similar to [`$env/dynamic/private`](https://kit.svelte.dev/docs/modules#$env-dynamic-private), but only includes
+ * variables that begin with [`config.kit.env.publicPrefix`](https://kit.svelte.dev/docs/configuration#kit-env-publicprefix)
+ * (which defaults to `PUBLIC_`), and can therefore safely be exposed to client-side code
+ *
+ * Note that public dynamic environment variables must all be sent from the server to the client, causing larger network requests — when possible, use `$env/static/public` instead.
+ *
+ * ```ts
+ * import { env } from '$env/dynamic/public';
+ * console.log(env.PUBLIC_DEPLOYMENT_SPECIFIC_VARIABLE);
+ * ```
+ */
+declare module '$env/dynamic/public' {
+	export let env: App.PublicEnv;
 }
 
 /**
@@ -167,11 +214,11 @@ declare module '$app/navigation' {
  */
 declare module '$app/paths' {
 	/**
-	 * A string that matches [`config.kit.paths.base`](/docs/configuration#paths). It must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string.
+	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths). It must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string.
 	 */
 	export const base: `/${string}`;
 	/**
-	 * An absolute path that matches [`config.kit.paths.assets`](/docs/configuration#paths).
+	 * An absolute path that matches [`config.kit.paths.assets`](https://kit.svelte.dev/docs/configuration#paths).
 	 *
 	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
 	 */
@@ -213,12 +260,12 @@ declare module '$app/stores' {
 	 */
 	export const navigating: Readable<Navigation | null>;
 	/**
-	 * A writable store whose initial value is whatever was returned from [`getSession`](/docs/hooks#getsession).
+	 * A writable store whose initial value is whatever was returned from [`getSession`](https://kit.svelte.dev/docs/hooks#getsession).
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
 	 */
 	export const session: Writable<App.Session>;
 	/**
-	 *  A readable store whose initial value is `false`. If [`version.pollInterval`](/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
+	 *  A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 */
 	export const updated: Readable<boolean> & { check: () => boolean };
 }
@@ -228,7 +275,7 @@ declare module '$app/stores' {
  * import { build, files, prerendered, version } from '$service-worker';
  * ```
  *
- * This module is only available to [service workers](/docs/service-workers).
+ * This module is only available to [service workers](https://kit.svelte.dev/docs/service-workers).
  */
 declare module '$service-worker' {
 	/**
@@ -236,7 +283,7 @@ declare module '$service-worker' {
 	 */
 	export const build: string[];
 	/**
-	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.kit.files.assets`. You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](/docs/configuration)
+	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.kit.files.assets`. You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](https://kit.svelte.dev/docs/configuration)
 	 */
 	export const files: string[];
 	/**
@@ -244,7 +291,7 @@ declare module '$service-worker' {
 	 */
 	export const prerendered: string[];
 	/**
-	 * See [`config.kit.version`](/docs/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
+	 * See [`config.kit.version`](https://kit.svelte.dev/docs/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
 	 */
 	export const version: string;
 }

@@ -38,9 +38,6 @@ declare namespace App {
 	interface Locals {
 		user: User;
 	}
-	interface Platform {}
-	interface Session {}
-	interface Stuff {}
 }
 
 const getUserInformation: (cookie: string | null) => Promise<User>;

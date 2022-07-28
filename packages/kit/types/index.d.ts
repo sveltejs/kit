@@ -104,6 +104,9 @@ export interface KitConfig {
 		directives?: CspDirectives;
 		reportOnly?: CspDirectives;
 	};
+	env?: {
+		publicPrefix: string;
+	};
 	moduleExtensions?: string[];
 	files?: {
 		assets?: string;
@@ -264,7 +267,12 @@ export type ResponseBody = JSONValue | Uint8Array | ReadableStream | Error;
 
 export class Server {
 	constructor(manifest: SSRManifest);
+	init(options: ServerInitOptions): void;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
+}
+
+export interface ServerInitOptions {
+	env: Record<string, string>;
 }
 
 export interface SSRManifest {

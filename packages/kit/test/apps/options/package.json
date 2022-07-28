@@ -3,9 +3,9 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build --mode custom",
-		"preview": "vite preview",
+		"dev": "vite dev -c vite.custom.config.js",
+		"build": "vite build -c vite.custom.config.js --mode custom",
+		"preview": "vite preview -c vite.custom.config.js",
 		"prepare": "node ../../cli.js sync",
 		"check": "tsc && svelte-check",
 		"test": "npm run test:dev && npm run test:build",

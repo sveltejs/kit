@@ -1,10 +1,40 @@
 # @sveltejs/kit
 
+## 1.0.0-next.396
+
+### Patch Changes
+
+- [fix] Environment variable generated types ([#5719](https://github.com/sveltejs/kit/pull/5719))
+
+## 1.0.0-next.395
+
+### Patch Changes
+
+- Add `$env/static/private`, `$env/static/public`, `$env/dynamic/private` and `$env/dynamic/public` modules ([#5663](https://github.com/sveltejs/kit/pull/5663))
+
+## 1.0.0-next.394
+
+### Patch Changes
+
+- Set Vite's publicDir and correctly serve public assets earlier in pipeline ([#5686](https://github.com/sveltejs/kit/pull/5686))
+
+* prerender in a subprocess ([#5678](https://github.com/sveltejs/kit/pull/5678))
+
+## 1.0.0-next.393
+
+### Patch Changes
+
+- Prevent needless prop updates causing rerenders ([#5671](https://github.com/sveltejs/kit/pull/5671))
+
+* Support custom Vite config locations ([#5705](https://github.com/sveltejs/kit/pull/5705))
+
+- Prevent rerender when route state did not change ([#5654](https://github.com/sveltejs/kit/pull/5654))
+
 ## 1.0.0-next.392
 
 ### Patch Changes
 
-- Revert publicDir change from 1.0.0-next.387 ([#5684](https://github.com/sveltejs/kit/pull/5684))
+- Revert publicDir change from 1.0.0-next.387 ([#5683](https://github.com/sveltejs/kit/pull/5683))
 
 ## 1.0.0-next.391
 
