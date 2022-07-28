@@ -200,7 +200,7 @@ export function get_env(mode, prefix) {
 /**
  * @param {(id: string) => import('rollup').ModuleInfo | null} node_getter
  * @param {import('rollup').ModuleInfo} node
- * @param {Set<string>} illegal_imports
+ * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call path.normalize!
  * @param {string} out_dir The directory specified by config.kit.outDir
  */
 export function prevent_illegal_rollup_imports(node_getter, node, illegal_imports, out_dir) {
@@ -212,7 +212,7 @@ export function prevent_illegal_rollup_imports(node_getter, node, illegal_import
  * @param {(id: string) => import('rollup').ModuleInfo | null} node_getter
  * @param {import('rollup').ModuleInfo} node
  * @param {boolean} dynamic
- * @param {Set<string>} illegal_imports
+ * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call path.normalize!
  * @param {Set<string>} seen
  * @returns {Array<import('types').ImportNode> | undefined}
  */
@@ -223,32 +223,33 @@ const find_illegal_rollup_imports = (
 	illegal_imports,
 	seen = new Set()
 ) => {
-	if (seen.has(node.id)) return;
-	seen.add(node.id);
+	const nodeId = path.normalize(node.id);
+	if (seen.has(nodeId)) return;
+	seen.add(nodeId);
 
-	if (illegal_imports.has(node.id)) {
-		return [{ name: node.id, dynamic }];
+	if (illegal_imports.has(nodeId)) {
+		return [{ name: nodeId, dynamic }];
 	}
 
 	for (const id of node.importedIds) {
 		const child = node_getter(id);
 		const chain =
 			child && find_illegal_rollup_imports(node_getter, child, false, illegal_imports, seen);
-		if (chain) return [{ name: node.id, dynamic }, ...chain];
+		if (chain) return [{ name: nodeId, dynamic }, ...chain];
 	}
 
 	for (const id of node.dynamicallyImportedIds) {
 		const child = node_getter(id);
 		const chain =
 			child && find_illegal_rollup_imports(node_getter, child, true, illegal_imports, seen);
-		if (chain) return [{ name: node.id, dynamic }, ...chain];
+		if (chain) return [{ name: nodeId, dynamic }, ...chain];
 	}
 };
 
 /**
  * Throw an error if a private module is imported from a client-side node.
  * @param {import('vite').ModuleNode} node
- * @param {Set<string>} illegal_imports
+ * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call path.normalize!
  * @param {string} out_dir The directory specified by config.kit.outDir
  */
 export function prevent_illegal_vite_imports(node, illegal_imports, out_dir) {
@@ -258,23 +259,23 @@ export function prevent_illegal_vite_imports(node, illegal_imports, out_dir) {
 
 /**
  * @param {import('vite').ModuleNode} node
- * @param {Set<string>} illegal_imports
+ * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call path.normalize!
  * @param {Set<string>} seen
  * @returns {Array<import('types').ImportNode> | null}
  */
 function find_illegal_vite_imports(node, illegal_imports, seen = new Set()) {
 	if (!node.id) return null; // TODO when does this happen?
+	const nodeId = path.normalize(node.id);
+	if (seen.has(nodeId)) return null;
+	seen.add(nodeId);
 
-	if (seen.has(node.id)) return null;
-	seen.add(node.id);
-
-	if (node.id && illegal_imports.has(node.id)) {
-		return [{ name: node.id, dynamic: false }];
+	if (nodeId && illegal_imports.has(nodeId)) {
+		return [{ name: nodeId, dynamic: false }];
 	}
 
 	for (const child of node.importedModules) {
 		const chain = child && find_illegal_vite_imports(child, illegal_imports, seen);
-		if (chain) return [{ name: node.id, dynamic: false }, ...chain];
+		if (chain) return [{ name: nodeId, dynamic: false }, ...chain];
 	}
 
 	return null;
