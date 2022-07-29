@@ -1,5 +1,16 @@
 # @sveltejs/kit
 
+## 1.0.0-next.398
+
+### Patch Changes
+
+- Check url protocol to avoid mailto links navigated by kit in mobile devices ([#5726](https://github.com/sveltejs/kit/pull/5726))
+
+* [fix] Windows correctly errors on `$env/*/private` imports ([#5739](https://github.com/sveltejs/kit/pull/5739))
+  [fix] Illegal module analysis in dev ignores non-js|ts|svelte files
+
+- [feat] include reference to `@sveltejs/kit` types in ambient file ([#5745](https://github.com/sveltejs/kit/pull/5745))
+
 ## 1.0.0-next.397
 
 ### Patch Changes
