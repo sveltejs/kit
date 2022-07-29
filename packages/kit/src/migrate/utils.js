@@ -15,10 +15,10 @@ export function forEachFile(branch_hierarchy, file_matcher, fun) {
 
 	/** @type {RegExpMatchArray|null} */
 	let match = null;
-	const file = branch_hierarchy.files.find((file) => (match = file_matcher.exec(file)));
+	const file = branch_hierarchy.files.find((file) => (match = file_matcher.exec(file.name)));
 	if (file && match) {
-		const { content, todo, file: new_file } = fun(fs.readFileSync(file, 'utf-8'), match);
-		fs.writeFileSync(file, content);
+		const { content, todo, file: new_file } = fun(fs.readFileSync(file.name, 'utf-8'), match);
+		fs.writeFileSync(file.name, content);
 		if (todo) {
 			todos.push(`- [ ] ${todo} (at ${file})`);
 		}

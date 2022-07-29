@@ -39,8 +39,9 @@ function check_if_already_migrated() {
 
 /**
  * @param {string} root
+ * @param {string[]} moved_files
  */
-function walk_hierarchical(root) {
+function walk_hierarchical(root, moved_files = []) {
 	const files = walk(root);
 	/** @type {import('./types').BranchHierarchy} */
 	const hierarchy = { path: root, files: [], folders: [] };
