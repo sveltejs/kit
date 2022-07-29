@@ -250,42 +250,48 @@ const find_illegal_rollup_imports = (
 };
 
 /**
- * Throw an error if a private module is imported from a client-side node.
- * @param {import('vite').ModuleNode} node
- * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call vite.normalizePath!
- * @param {string} out_dir The directory specified by config.kit.outDir
- */
-export function prevent_illegal_vite_imports(node, illegal_imports, out_dir) {
-	const chain = find_illegal_vite_imports(node, illegal_imports);
-	if (chain) throw new Error(format_illegal_import_chain(chain, out_dir));
-}
-
-/*
  * Vite does some weird things with import trees in dev
  * for example, a Tailwind app.css will appear to import
  * every file in the project. This isn't a problem for
  * Rollup during build.
+ * @param {Iterable<string>} config_module_types
  */
-const module_types = new Set([
-	'.ts',
-	'.js',
-	'.svelte',
-	'.mts',
-	'.mjs',
-	'.cts',
-	'.cjs',
-	'.svelte.md',
-	'.svx',
-	'.md'
-]);
+const get_module_types = (config_module_types) => {
+	return new Set([
+		'.ts',
+		'.js',
+		'.svelte',
+		'.mts',
+		'.mjs',
+		'.cts',
+		'.cjs',
+		'.svelte.md',
+		'.svx',
+		'.md',
+		...config_module_types
+	]);
+};
+
+/**
+ * Throw an error if a private module is imported from a client-side node.
+ * @param {import('vite').ModuleNode} node
+ * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call vite.normalizePath!
+ * @param {Iterable<string>} module_types File extensions to analyze in addition to the defaults: `.ts`, `.js`, etc.
+ * @param {string} out_dir The directory specified by config.kit.outDir
+ */
+export function prevent_illegal_vite_imports(node, illegal_imports, module_types, out_dir) {
+	const chain = find_illegal_vite_imports(node, illegal_imports, get_module_types(module_types));
+	if (chain) throw new Error(format_illegal_import_chain(chain, out_dir));
+}
 
 /**
  * @param {import('vite').ModuleNode} node
  * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call vite.normalizePath!
+ * @param {Set<string>} module_types File extensions to analyze: `.ts`, `.js`, etc.
  * @param {Set<string>} seen
  * @returns {Array<import('types').ImportNode> | null}
  */
-function find_illegal_vite_imports(node, illegal_imports, seen = new Set()) {
+function find_illegal_vite_imports(node, illegal_imports, module_types, seen = new Set()) {
 	if (!node.id) return null; // TODO when does this happen?
 	const name = normalizePath(node.id);
 
@@ -297,7 +303,7 @@ function find_illegal_vite_imports(node, illegal_imports, seen = new Set()) {
 	}
 
 	for (const child of node.importedModules) {
-		const chain = child && find_illegal_vite_imports(child, illegal_imports, seen);
+		const chain = child && find_illegal_vite_imports(child, illegal_imports, module_types, seen);
 		if (chain) return [{ name, dynamic: false }, ...chain];
 	}
 
