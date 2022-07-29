@@ -6,7 +6,7 @@ import { write_matchers } from './write_matchers.js';
 import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
 import { write_types } from './write_types.js';
-import { write_env } from './write_env.js';
+import { write_ambient } from './write_ambient.js';
 
 /**
  * Initialize SvelteKit's generated files.
@@ -17,7 +17,7 @@ export function init(config, mode) {
 	copy_assets(path.join(config.kit.outDir, 'runtime'));
 
 	write_tsconfig(config.kit);
-	write_env(config.kit, mode);
+	write_ambient(config.kit, mode);
 }
 
 /**
