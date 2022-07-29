@@ -274,7 +274,7 @@ importers:
       '@types/connect': ^3.4.35
       '@types/cookie': ^0.5.1
       '@types/marked': ^4.0.3
-      '@types/mime': ^2.0.3
+      '@types/mime': ^3.0.0
       '@types/node': ^16.11.36
       '@types/sade': ^1.7.4
       '@types/set-cookie-parser': ^2.4.2
@@ -311,7 +311,7 @@ importers:
       '@types/connect': 3.4.35
       '@types/cookie': 0.5.1
       '@types/marked': 4.0.3
-      '@types/mime': 2.0.3
+      '@types/mime': 3.0.0
       '@types/node': 16.11.42
       '@types/sade': 1.7.4
       '@types/set-cookie-parser': 2.4.2
@@ -1041,8 +1041,8 @@ packages:
     resolution: {integrity: sha512-HnMWQkLJEf/PnxZIfbm0yGJRRZYYMhb++O9M36UCTA9z53uPvVoSlAwJr3XOpDEryb7Hwl1qAx/MV6YIW1RXxg==}
     dev: true
 
-  /@types/mime/2.0.3:
-    resolution: {integrity: sha512-Jus9s4CDbqwocc5pOAnh8ShfrnMcPHuJYzVcSUU7lrh8Ni5HuIqX3oilL86p3dlTrk0LzHRCgA/GQ7uNCw6l2Q==}
+  /@types/mime/3.0.0:
+    resolution: {integrity: sha512-fccbsHKqFDXClBZTDLA43zl0+TbxyIwyzIzwwhvoJvhNjOErCdeX2xJbURimv2EbSVUGav001PaCJg4mZxMl4w==}
     dev: true
 
   /@types/minimist/1.2.2:
