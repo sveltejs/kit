@@ -58,6 +58,23 @@ prog
 replace('dev');
 replace('build');
 replace('preview');
+prog
+	.command('migrate')
+	.describe('Migration script for https://TODO')
+	.action(async () => {
+		if (!fs.existsSync('svelte.config.js')) {
+			console.warn('Missing svelte.config.js — skipping');
+			return;
+		}
+
+		try {
+			const config = await load_config();
+			const migrate = await import('./migrate/index.js');
+			migrate.migrate(config);
+		} catch (error) {
+			handle_error(error);
+		}
+	});
 
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
 
