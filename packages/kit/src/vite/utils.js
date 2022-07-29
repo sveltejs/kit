@@ -214,7 +214,7 @@ export function prevent_illegal_rollup_imports(node_getter, node, illegal_import
  * @param {boolean} dynamic
  * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call vite.normalizePath!
  * @param {Set<string>} seen
- * @returns {Array<import('types').ImportNode> | undefined}
+ * @returns {Array<import('types').ImportNode> | null}
  */
 const find_illegal_rollup_imports = (
 	node_getter,
@@ -224,7 +224,7 @@ const find_illegal_rollup_imports = (
 	seen = new Set()
 ) => {
 	const nodeId = normalizePath(node.id);
-	if (seen.has(nodeId)) return;
+	if (seen.has(nodeId)) return null;
 	seen.add(nodeId);
 
 	if (illegal_imports.has(nodeId)) {
@@ -244,6 +244,9 @@ const find_illegal_rollup_imports = (
 			child && find_illegal_rollup_imports(node_getter, child, true, illegal_imports, seen);
 		if (chain) return [{ name: nodeId, dynamic }, ...chain];
 	}
+
+	seen.delete(nodeId);
+	return null;
 };
 
 /**
@@ -257,6 +260,14 @@ export function prevent_illegal_vite_imports(node, illegal_imports, out_dir) {
 	if (chain) throw new Error(format_illegal_import_chain(chain, out_dir));
 }
 
+/*
+ * Vite does some weird things with import trees in dev
+ * for example, a Tailwind app.css will appear to import
+ * every file in the project. This isn't a problem for
+ * Rollup during build.
+ */
+const module_types = new Set(['.js', '.ts', '.svelte']);
+
 /**
  * @param {import('vite').ModuleNode} node
  * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call vite.normalizePath!
@@ -266,7 +277,8 @@ export function prevent_illegal_vite_imports(node, illegal_imports, out_dir) {
 function find_illegal_vite_imports(node, illegal_imports, seen = new Set()) {
 	if (!node.id) return null; // TODO when does this happen?
 	const nodeId = normalizePath(node.id);
-	if (seen.has(nodeId)) return null;
+
+	if (seen.has(nodeId) || !module_types.has(path.extname(nodeId))) return null;
 	seen.add(nodeId);
 
 	if (nodeId && illegal_imports.has(nodeId)) {
@@ -278,5 +290,6 @@ function find_illegal_vite_imports(node, illegal_imports, seen = new Set()) {
 		if (chain) return [{ name: nodeId, dynamic: false }, ...chain];
 	}
 
+	seen.delete(nodeId);
 	return null;
 }
