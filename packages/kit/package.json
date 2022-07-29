@@ -20,7 +20,7 @@
 		"@types/connect": "^3.4.35",
 		"@types/cookie": "^0.5.1",
 		"@types/marked": "^4.0.3",
-		"@types/mime": "^2.0.3",
+		"@types/mime": "^3.0.0",
 		"@types/node": "^16.11.36",
 		"@types/sade": "^1.7.4",
 		"@types/set-cookie-parser": "^2.4.2",
