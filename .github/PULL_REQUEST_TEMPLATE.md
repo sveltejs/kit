@@ -1,6 +1,6 @@
 # HEADS UP!
 
-We're about to embark on a significant redesign that will touch many parts of the codebase. Until that work is finished, PRs are very likely to result in merge conflicts, and will likely be ignored until the redesign work is complete (by which time they will likely be stale). Please consider delaying your PR until then.
+We're about to embark on a [significant redesign](https://github.com/sveltejs/kit/discussions/5748) that will touch many parts of the codebase. Until that work is finished, PRs are very likely to result in merge conflicts, and will likely be ignored until the redesign work is complete (by which time they will likely be stale). Please consider delaying your PR until then.
 
 Thank you for understanding!
 
