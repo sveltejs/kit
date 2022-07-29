@@ -1,17 +1,23 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { pathToFileURL, URL } from 'url';
-import { mkdirp } from '../../utils/filesystem.js';
+import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { installPolyfills } from '../../node/polyfills.js';
-import { is_root_relative, normalize_path, resolve } from '../../utils/url.js';
+import { is_root_relative, resolve } from '../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../utils/escape.js';
+import { logger } from '../utils.js';
+import { load_config } from '../config/index.js';
 
 /**
  * @typedef {import('types').PrerenderErrorHandler} PrerenderErrorHandler
  * @typedef {import('types').Logger} Logger
  */
+
+const [, , client_out_dir, results_path, manifest_path, verbose] = process.argv;
+
+prerender();
 
 /**
  * @param {Parameters<PrerenderErrorHandler>[0]} details
@@ -50,14 +56,19 @@ const OK = 2;
 const REDIRECT = 3;
 
 /**
- * @param {{
- *   config: import('types').ValidatedKitConfig;
- *   entries: string[];
- *   files: Set<string>;
- *   log: Logger;
- * }} opts
+ * @param {import('types').Prerendered} prerendered
  */
-export async function prerender({ config, entries, files, log }) {
+const output_and_exit = (prerendered) => {
+	writeFileSync(
+		results_path,
+		JSON.stringify(prerendered, (_key, value) =>
+			value instanceof Map ? Array.from(value.entries()) : value
+		)
+	);
+	process.exit(0);
+};
+
+export async function prerender() {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -66,9 +77,18 @@ export async function prerender({ config, entries, files, log }) {
 		paths: []
 	};
 
+	/** @type {import('types').ValidatedKitConfig} */
+	const config = (await load_config()).kit;
+
 	if (!config.prerender.enabled) {
-		return prerendered;
+		output_and_exit(prerendered);
+		return;
 	}
+
+	/** @type {import('types').Logger} */
+	const log = logger({
+		verbose: verbose === 'true'
+	});
 
 	installPolyfills();
 	const { fetch } = globalThis;
@@ -128,7 +148,9 @@ export async function prerender({ config, entries, files, log }) {
 
 	/** @type {import('types').ServerModule} */
 	const { Server, override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
-	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
+
+	/** @type {import('types').SSRManifest} */
+	const manifest = (await import(pathToFileURL(`${server_root}/server/manifest.js`).href)).manifest;
 
 	override({
 		paths: config.paths,
@@ -147,11 +169,7 @@ export async function prerender({ config, entries, files, log }) {
 	 * @param {boolean} is_html
 	 */
 	function output_filename(path, is_html) {
-		const file = path.slice(config.paths.base.length + 1);
-
-		if (file === '') {
-			return 'index.html';
-		}
+		const file = path.slice(config.paths.base.length + 1) || 'index.html';
 
 		if (is_html && !file.endsWith('.html')) {
 			return file + (file.endsWith('/') ? 'index.html' : '.html');
@@ -160,6 +178,7 @@ export async function prerender({ config, entries, files, log }) {
 		return file;
 	}
 
+	const files = new Set(walk(client_out_dir).map(posixify));
 	const seen = new Set();
 	const written = new Set();
 
@@ -285,7 +304,7 @@ export async function prerender({ config, entries, files, log }) {
 							location: resolved
 						});
 
-						prerendered.paths.push(normalize_path(decoded, 'never'));
+						prerendered.paths.push(decoded);
 					}
 				}
 			} else {
@@ -312,7 +331,7 @@ export async function prerender({ config, entries, files, log }) {
 				});
 			}
 
-			prerendered.paths.push(normalize_path(decoded, 'never'));
+			prerendered.paths.push(decoded);
 		} else if (response_type !== OK) {
 			error({ status: response.status, path: decoded, referrer, referenceType });
 		}
@@ -321,6 +340,12 @@ export async function prerender({ config, entries, files, log }) {
 	if (config.prerender.enabled) {
 		for (const entry of config.prerender.entries) {
 			if (entry === '*') {
+				/** @type {import('types').ManifestData} */
+				const { routes } = (await import(pathToFileURL(manifest_path).href)).manifest._;
+				const entries = routes
+					.map((route) => (route.type === 'page' ? route.path : ''))
+					.filter(Boolean);
+
 				for (const entry of entries) {
 					enqueue(null, config.paths.base + entry); // TODO can we pre-normalize these?
 				}
@@ -344,7 +369,7 @@ export async function prerender({ config, entries, files, log }) {
 	mkdirp(dirname(file));
 	writeFileSync(file, await rendered.text());
 
-	return prerendered;
+	output_and_exit(prerendered);
 }
 
 /** @return {string} */

@@ -39,7 +39,8 @@ prog
 prog
 	.command('sync')
 	.describe('Synchronise generated files')
-	.action(async () => {
+	.option('--mode', 'Specify a mode for loading environment variables', 'development')
+	.action(async ({ mode }) => {
 		const is_postinstall = process.env.npm_lifecycle_event === 'postinstall';
 		const cwd = is_postinstall ? process.env.INIT_CWD ?? '' : process.cwd();
 		const svelte_config_file = path.join(cwd, 'svelte.config.js');
@@ -51,7 +52,7 @@ prog
 		try {
 			const config = await load_config({ cwd });
 			const sync = await import('./core/sync/sync.js');
-			sync.all(config);
+			sync.all(config, mode);
 		} catch (error) {
 			handle_error(error);
 		}

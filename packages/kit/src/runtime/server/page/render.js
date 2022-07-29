@@ -72,7 +72,9 @@ export async function render_response({
 	/** @type {import('types').NormalizedLoadOutputCache | undefined} */
 	let cache;
 
-	if (error) {
+	const stack = error?.stack;
+
+	if (options.dev && error) {
 		error.stack = options.get_stack(error);
 	}
 
@@ -169,7 +171,10 @@ export async function render_response({
 
 	// prettier-ignore
 	const init_app = `
-		import { start } from ${s(options.prefix + entry.file)};
+		import { set_public_env, start } from ${s(options.prefix + entry.file)};
+
+		set_public_env(${s(options.public_env)});
+
 		start({
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
@@ -291,9 +296,12 @@ export async function render_response({
 	const assets =
 		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
-	const html = await resolve_opts.transformPage({
-		html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) })
-	});
+	// TODO flush chunks as early as we can
+	const html =
+		(await resolve_opts.transformPageChunk({
+			html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
+			done: true
+		})) || '';
 
 	const headers = new Headers({
 		'content-type': 'text/html',
@@ -313,6 +321,11 @@ export async function render_response({
 		if (report_only_header) {
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
+	}
+
+	if (options.dev && error) {
+		// reset stack, otherwise it may be 'fixed' a second time
+		error.stack = stack;
 	}
 
 	return new Response(html, {

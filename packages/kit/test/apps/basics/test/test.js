@@ -338,6 +338,26 @@ test.describe('Encoded paths', () => {
 	});
 });
 
+test.describe('Env', () => {
+	test('includes environment variables', async ({ page }) => {
+		await page.goto('/env');
+
+		expect(await page.textContent('#static-private')).toBe(
+			'PRIVATE_STATIC: accessible to server-side code/replaced at build time'
+		);
+		expect(await page.textContent('#dynamic-private')).toBe(
+			'PRIVATE_DYNAMIC: accessible to server-side code/evaluated at run time'
+		);
+
+		expect(await page.textContent('#static-public')).toBe(
+			'PUBLIC_STATIC: accessible anywhere/replaced at build time'
+		);
+		expect(await page.textContent('#dynamic-public')).toBe(
+			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run time'
+		);
+	});
+});
+
 test.describe('Errors', () => {
 	if (process.env.DEV) {
 		// TODO these probably shouldn't have the full render treatment,
@@ -1009,8 +1029,8 @@ test.describe('Page options', () => {
 		}
 	});
 
-	test('transformPage can change the html output', async ({ page }) => {
-		await page.goto('/transform-page');
+	test('transformPageChunk can change the html output', async ({ page }) => {
+		await page.goto('/transform-page-chunk');
 		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
 
@@ -1079,11 +1099,11 @@ test.describe('$app/stores', () => {
 		await page.goto('/store');
 
 		expect(await page.textContent('h1')).toBe('Test');
-		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 2' : 'Calls: 1');
+		expect(await page.textContent('h2')).toBe('Calls: 1');
 
 		await clicknav('a[href="/store/result"]');
 		expect(await page.textContent('h1')).toBe('Result');
-		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 2' : 'Calls: 0');
+		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 1' : 'Calls: 0');
 
 		const oops = await page.evaluate(() => window.oops);
 		expect(oops).toBeUndefined();

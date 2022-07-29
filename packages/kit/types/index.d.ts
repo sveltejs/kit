@@ -102,6 +102,9 @@ export interface KitConfig {
 		directives?: CspDirectives;
 		reportOnly?: CspDirectives;
 	};
+	env?: {
+		publicPrefix: string;
+	};
 	moduleExtensions?: string[];
 	files?: {
 		assets?: string;
@@ -261,14 +264,19 @@ export interface RequestHandlerOutput<Output = ResponseBody> {
 
 export interface ResolveOptions {
 	ssr?: boolean;
-	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
+	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 }
 
 export type ResponseBody = JSONValue | Uint8Array | ReadableStream | Error;
 
 export class Server {
 	constructor(manifest: SSRManifest);
+	init(options: ServerInitOptions): void;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
+}
+
+export interface ServerInitOptions {
+	env: Record<string, string>;
 }
 
 export interface SSRManifest {

@@ -7,6 +7,10 @@ installPolyfills();
 
 const server = new Server(manifest);
 
+server.init({
+	env: process.env
+});
+
 /**
  * @param {import('http').IncomingMessage} req
  * @param {import('http').ServerResponse} res

@@ -29,4 +29,4 @@ export default {
 
 ### Optimization
 
-You may wish to utilize compressed image formats such as `.webp` or `.avif` or responsive images that serve a different size based on your device's screen. For images that are included statically in your project you may use a preprocessor like [svelte-image](https://github.com/matyunya/svelte-image) or a Vite plugin such as [vite-imagetools](https://github.com/JonasKruckenberg/imagetools).
+You may wish to utilize compressed image formats such as `.webp` or `.avif` or responsive images that serve a different size based on your device's screen. For images that are included statically in your project you may use a preprocessor like [svimg](https://github.com/xiphux/svimg) or a Vite plugin such as [vite-imagetools](https://github.com/JonasKruckenberg/imagetools).

@@ -23,6 +23,10 @@ export default [
 			'app/stores': 'src/runtime/app/stores.js',
 			'app/paths': 'src/runtime/app/paths.js',
 			'app/env': 'src/runtime/app/env.js',
+			'env/dynamic/private': 'src/runtime/env/dynamic/private.js',
+			'env/dynamic/public': 'src/runtime/env/dynamic/public.js',
+			'env-private': 'src/runtime/env-private.js',
+			'env-public': 'src/runtime/env-public.js',
 			paths: 'src/runtime/paths.js',
 			env: 'src/runtime/env.js'
 		},
@@ -61,9 +65,10 @@ export default [
 	{
 		input: {
 			cli: 'src/cli.js',
+			hooks: 'src/hooks.js',
 			node: 'src/node/index.js',
 			'node/polyfills': 'src/node/polyfills.js',
-			hooks: 'src/hooks.js',
+			prerender: 'src/core/prerender/prerender.js',
 			vite: 'src/vite/index.js'
 		},
 		output: {

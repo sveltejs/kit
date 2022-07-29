@@ -171,7 +171,7 @@ export async function respond(request, options, state) {
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
 		ssr: true,
-		transformPage: default_transform
+		transformPageChunk: default_transform
 	};
 
 	// TODO match route before calling handle?
@@ -181,9 +181,17 @@ export async function respond(request, options, state) {
 			event,
 			resolve: async (event, opts) => {
 				if (opts) {
+					// TODO remove for 1.0
+					// @ts-expect-error
+					if (opts.transformPage) {
+						throw new Error(
+							'transformPage has been replaced by transformPageChunk — see https://github.com/sveltejs/kit/pull/5657 for more information'
+						);
+					}
+
 					resolve_opts = {
 						ssr: opts.ssr !== false,
-						transformPage: opts.transformPage || default_transform
+						transformPageChunk: opts.transformPageChunk || default_transform
 					};
 				}
 
