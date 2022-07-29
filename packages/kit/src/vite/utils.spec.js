@@ -1,5 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import { normalizePath } from 'vite';
 import {
 	deep_merge,
 	merge_vite_configs,
@@ -260,7 +261,7 @@ const rollup_node_getter = (id) => {
 	return nodes[id] ?? null;
 };
 
-const illegal_imports = new Set(['/illegal/boom.js']);
+const illegal_imports = new Set([normalizePath('/illegal/boom.js')]);
 const ok_rollup_node = rollup_node_getter('/test/path1.js');
 const bad_rollup_node_static = rollup_node_getter('/bad/static.js');
 const bad_rollup_node_dynamic = rollup_node_getter('/bad/dynamic.js');
