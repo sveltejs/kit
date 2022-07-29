@@ -12,3 +12,24 @@ export interface BranchHierarchy {
 	 */
 	folders: BranchHierarchy[];
 }
+
+export interface Node {
+	start: number;
+	end: number;
+	[propName: string]: any;
+}
+
+export interface Attribute {
+	name: string;
+	value: string;
+}
+
+export interface VerbatimElement extends Node {
+	name: string;
+	attributes: Attribute[];
+	content: {
+		start: number;
+		end: number;
+		value: string;
+	};
+}
