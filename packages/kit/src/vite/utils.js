@@ -266,7 +266,18 @@ export function prevent_illegal_vite_imports(node, illegal_imports, out_dir) {
  * every file in the project. This isn't a problem for
  * Rollup during build.
  */
-const module_types = new Set(['.js', '.ts', '.svelte']);
+const module_types = new Set([
+	'.ts',
+	'.js',
+	'.svelte',
+	'.mts',
+	'.mjs',
+	'.cts',
+	'.cjs',
+	'.svelte.md',
+	'.svx',
+	'.md'
+]);
 
 /**
  * @param {import('vite').ModuleNode} node
