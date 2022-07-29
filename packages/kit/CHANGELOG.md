@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.397
+
+### Patch Changes
+
+- load env before importing hooks during dev ([#5728](https://github.com/sveltejs/kit/pull/5728))
+
+* Add DOM.Iterable to default tsconfig ([#5734](https://github.com/sveltejs/kit/pull/5734))
+
 ## 1.0.0-next.396
 
 ### Patch Changes
