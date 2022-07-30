@@ -123,6 +123,10 @@ const options = object(
 				(keypath) => `${keypath} has been renamed to config.kit.moduleExtensions`
 			),
 
+			env: object({
+				publicPrefix: string('PUBLIC_')
+			}),
+
 			files: object({
 				assets: string('static'),
 				hooks: string(join('src', 'hooks')),
@@ -254,6 +258,24 @@ const options = object(
 					throw new Error(
 						`${keypath} should be either a custom function or one of "continue" or "fail"`
 					);
+				}),
+
+				origin: validate('http://sveltekit-prerender', (input, keypath) => {
+					assert_string(input, keypath);
+
+					let origin;
+
+					try {
+						origin = new URL(input).origin;
+					} catch (e) {
+						throw new Error(`${keypath} must be a valid origin`);
+					}
+
+					if (input !== origin) {
+						throw new Error(`${keypath} must be a valid origin (${origin} rather than ${input})`);
+					}
+
+					return origin;
 				}),
 
 				// TODO: remove this for the 1.0 release

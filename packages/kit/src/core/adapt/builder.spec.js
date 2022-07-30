@@ -40,17 +40,6 @@ test('copy files', () => {
 	const dest = join(__dirname, 'output');
 
 	rmSync(dest, { recursive: true, force: true });
-	builder.writeStatic(dest);
-
-	assert.equal(
-		glob('**', {
-			cwd: /** @type {import('types').ValidatedConfig} */ (mocked).kit.files.assets,
-			dot: true
-		}),
-		glob('**', { cwd: dest, dot: true })
-	);
-
-	rmSync(dest, { recursive: true, force: true });
 	builder.writeClient(dest);
 
 	assert.equal(

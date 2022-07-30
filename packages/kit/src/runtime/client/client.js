@@ -2,7 +2,7 @@ import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { normalize } from '../load.js';
-import { LoadURL, normalize_path } from '../../utils/url.js';
+import { LoadURL, decode_params, normalize_path } from '../../utils/url.js';
 import {
 	create_updated_store,
 	find_anchor,
@@ -116,6 +116,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		if (!ready) return;
 		session_id += 1;
+
+		const current_load_uses_session = current.branch.some((node) => node?.uses.session);
+		if (!current_load_uses_session) return;
 
 		update(new URL(location.href), [], true);
 	});
@@ -237,6 +240,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 			await native_navigation(url);
 			return false; // unnecessary, but TypeScript prefers it this way
 		}
+
+		// if this is an internal navigation intent, use the normalized
+		// URL for the rest of the function
+		url = intent?.url || url;
 
 		// abort if user navigated during update
 		if (token !== current_token) return false;
@@ -420,8 +427,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 		};
 
 		for (let i = 0; i < filtered.length; i += 1) {
-			const loaded = filtered[i].loaded;
-			result.props[`props_${i}`] = loaded ? await loaded.props : null;
+			// Only set props if the node actually updated. This prevents needless rerenders.
+			if (!current.branch.some((node) => node === filtered[i])) {
+				const loaded = filtered[i].loaded;
+				result.props[`props_${i}`] = loaded ? await loaded.props : null;
+			}
 		}
 
 		const page_changed =
@@ -891,9 +901,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			const params = route.exec(path);
 
 			if (params) {
-				const id = normalize_path(url.pathname, trailing_slash) + url.search;
+				const normalized = new URL(
+					url.origin + normalize_path(url.pathname, trailing_slash) + url.search + url.hash
+				);
+				const id = normalized.pathname + normalized.search;
 				/** @type {import('./types').NavigationIntent} */
-				const intent = { id, route, params, url };
+				const intent = { id, route, params: decode_params(params), url: normalized };
 				return intent;
 			}
 		}
@@ -930,9 +943,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 			return;
 		}
 
-		const pathname = normalize_path(url.pathname, trailing_slash);
-		const normalized = new URL(url.origin + pathname + url.search + url.hash);
-
 		update_scroll_positions(current_history_index);
 
 		accepted();
@@ -940,12 +950,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (started) {
 			stores.navigating.set({
 				from: current.url,
-				to: normalized
+				to: url
 			});
 		}
 
 		await update(
-			normalized,
+			url,
 			redirect_chain,
 			false,
 			{
@@ -954,7 +964,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				details
 			},
 			() => {
-				const navigation = { from, to: normalized };
+				const navigation = { from, to: url };
 				callbacks.after_navigate.forEach((fn) => fn(navigation));
 
 				stores.navigating.set(null);
@@ -1132,10 +1142,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 				const is_svg_a_element = a instanceof SVGAElement;
 				const url = get_href(a);
 
-				// Ignore if url does not have origin (e.g. `mailto:`, `tel:`.)
+				// Ignore non-HTTP URL protocols (e.g. `mailto:`, `tel:`, `myapp:`, etc.)
 				// MEMO: Without this condition, firefox will open mailer twice.
-				// See: https://github.com/sveltejs/kit/issues/4045
-				if (!is_svg_a_element && url.origin === 'null') return;
+				// See:
+				// - https://github.com/sveltejs/kit/issues/4045
+				// - https://github.com/sveltejs/kit/issues/5725
+				if (!is_svg_a_element && !(url.protocol === 'https:' || url.protocol === 'http:')) return;
 
 				// Ignore if tag has
 				// 1. 'download' attribute
@@ -1217,6 +1229,23 @@ export function create_client({ target, session, base, trailing_slash }) {
 						'',
 						location.href
 					);
+				}
+			});
+
+			// fix link[rel=icon], because browsers will occasionally try to load relative
+			// URLs after a pushState/replaceState, resulting in a 404 — see
+			// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
+			for (const link of document.querySelectorAll('link')) {
+				if (link.rel === 'icon') link.href = link.href;
+			}
+
+			addEventListener('pageshow', (event) => {
+				// If the user navigates to another site and then uses the back button and
+				// bfcache hits, we need to set navigating to null, the site doesn't know
+				// the navigation away from it was successful.
+				// Info about bfcache here: https://web.dev/bfcache
+				if (event.persisted) {
+					stores.navigating.set(null);
 				}
 			});
 		},

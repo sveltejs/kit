@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "1.0.0-next.63",
+	"version": "1.0.0-next.66",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -23,13 +23,12 @@
 		"index.d.ts"
 	],
 	"scripts": {
-		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
-		"format": "npm run check-format -- --write",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"format": "npm run lint -- --write",
 		"check": "tsc"
 	},
 	"dependencies": {
-		"@vercel/nft": "^0.20.0",
+		"@vercel/nft": "^0.21.0",
 		"esbuild": "^0.14.48"
 	},
 	"devDependencies": {

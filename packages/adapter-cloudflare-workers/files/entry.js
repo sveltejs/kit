@@ -15,6 +15,8 @@ export default {
 	 * @param {any} context
 	 */
 	async fetch(req, env, context) {
+		server.init({ env });
+
 		const url = new URL(req.url);
 
 		// static assets

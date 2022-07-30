@@ -36,6 +36,9 @@ export async function create_build(config) {
  */
 export function find_deps(manifest, entry, add_dynamic_css) {
 	/** @type {Set<string>} */
+	const seen = new Set();
+
+	/** @type {Set<string>} */
 	const imports = new Set();
 
 	/** @type {Set<string>} */
@@ -46,9 +49,11 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 	 * @param {boolean} add_js
 	 */
 	function traverse(file, add_js) {
+		if (seen.has(file)) return;
+		seen.add(file);
+
 		const chunk = manifest[file];
 
-		if (imports.has(chunk.file)) return;
 		if (add_js) imports.add(chunk.file);
 
 		if (chunk.css) {
@@ -96,18 +101,23 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 				input,
 				output: {
 					format: 'esm',
-					entryFileNames: ssr ? '[name].js' : 'immutable/[name]-[hash].js',
-					chunkFileNames: 'immutable/chunks/[name]-[hash].js',
-					assetFileNames: 'immutable/assets/[name]-[hash][extname]'
+					entryFileNames: ssr ? '[name].js' : `${config.kit.appDir}/immutable/[name]-[hash].js`,
+					chunkFileNames: `${config.kit.appDir}/immutable/chunks/[name]-[hash].js`,
+					assetFileNames: `${config.kit.appDir}/immutable/assets/[name]-[hash][extname]`
 				},
 				preserveEntrySignatures: 'strict'
 			},
 			ssr,
 			target: ssr ? 'node14.8' : undefined
 		},
-		// prevent Vite copying the contents of `config.kit.files.assets`,
-		// if it happens to be 'public' instead of 'static'
-		publicDir: false,
+		define: {
+			__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(config.kit.adapter?.name),
+			__SVELTEKIT_APP_VERSION__: JSON.stringify(config.kit.version.name),
+			__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${config.kit.appDir}/version.json`),
+			__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(config.kit.version.pollInterval),
+			__SVELTEKIT_DEV__: 'false'
+		},
+		publicDir: ssr ? false : config.kit.files.assets,
 		resolve: {
 			alias: get_aliases(config.kit)
 		},
@@ -134,7 +144,7 @@ export function assets_base(config) {
 	// during `svelte-kit preview`, because we use a local asset path. This
 	// may be fixed in Vite 3: https://github.com/vitejs/vite/issues/2009
 	const { base, assets } = config.paths;
-	return `${assets || base}/${config.appDir}/`;
+	return `${assets || base}/`;
 }
 
 /**

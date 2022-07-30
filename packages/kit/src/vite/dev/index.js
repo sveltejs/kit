@@ -12,7 +12,7 @@ import { load_template } from '../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_prefix } from '../../core/utils.js';
-import { resolve_entry } from '../utils.js';
+import { get_env, prevent_illegal_vite_imports, resolve_entry } from '../utils.js';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
@@ -24,16 +24,15 @@ const cwd = process.cwd();
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {Set<string>} illegal_imports
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config) {
+export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 	installPolyfills();
 
-	sync.init(svelte_config);
+	sync.init(svelte_config, vite_config.mode);
 
 	const runtime = get_runtime_prefix(svelte_config.kit);
-
-	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
 
 	/** @type {import('types').Respond} */
 	const respond = (await import(`${runtime}/server/index.js`)).respond;
@@ -62,6 +61,16 @@ export async function dev(vite, vite_config, svelte_config) {
 							await vite.ssrLoadModule(url)
 						);
 
+						const node = await vite.moduleGraph.getModuleByUrl(url);
+						if (!node) throw new Error(`Could not find node for ${url}`);
+
+						prevent_illegal_vite_imports(
+							node,
+							illegal_imports,
+							[...svelte_config.extensions, ...svelte_config.kit.moduleExtensions],
+							svelte_config.kit.outDir
+						);
+
 						return {
 							module,
 							index,
@@ -70,10 +79,6 @@ export async function dev(vite, vite_config, svelte_config) {
 							stylesheets: [],
 							// in dev we inline all styles to avoid FOUC
 							inline_styles: async () => {
-								const node = await vite.moduleGraph.getModuleByUrl(url);
-
-								if (!node) throw new Error(`Could not find node for ${url}`);
-
 								const deps = new Set();
 								await find_deps(vite, node, deps);
 
@@ -182,37 +187,50 @@ export async function dev(vite, vite_config, svelte_config) {
 		extensions: []
 	});
 
+	vite.middlewares.use(async (req, res, next) => {
+		try {
+			const base = `${vite.config.server.https ? 'https' : 'http'}://${
+				req.headers[':authority'] || req.headers.host
+			}`;
+
+			const decoded = decodeURI(new URL(base + req.url).pathname);
+
+			if (decoded.startsWith(assets)) {
+				const pathname = decoded.slice(assets.length);
+				const file = svelte_config.kit.files.assets + pathname;
+
+				if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
+					if (has_correct_case(file, svelte_config.kit.files.assets)) {
+						req.url = encodeURI(pathname); // don't need query/hash
+						asset_server(req, res);
+						return;
+					}
+				}
+			}
+
+			next();
+		} catch (e) {
+			const error = coalesce_to_error(e);
+			res.statusCode = 500;
+			res.end(fix_stack_trace(error));
+		}
+	});
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
 				/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
 		);
 
-		remove_html_middlewares(vite.middlewares);
+		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res) => {
 			try {
-				if (!req.url || !req.method) throw new Error('Incomplete request');
-
 				const base = `${vite.config.server.https ? 'https' : 'http'}://${
 					req.headers[':authority'] || req.headers.host
 				}`;
 
 				const decoded = decodeURI(new URL(base + req.url).pathname);
-
-				if (decoded.startsWith(assets)) {
-					const pathname = decoded.slice(assets.length);
-					const file = svelte_config.kit.files.assets + pathname;
-
-					if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-						if (has_correct_case(file, svelte_config.kit.files.assets)) {
-							req.url = encodeURI(pathname); // don't need query/hash
-							asset_server(req, res);
-							return;
-						}
-					}
-				}
-
 				const file = posixify(path.resolve(decoded.slice(1)));
 				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
 				const allowed =
@@ -231,6 +249,17 @@ export async function dev(vite, vite_config, svelte_config) {
 						`Not found (did you mean ${svelte_config.kit.paths.base + req.url}?)`
 					);
 				}
+
+				const runtime_base = process.env.BUNDLED
+					? `/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/runtime`))}`
+					: `/@fs${runtime}`;
+
+				const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
+				const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);
+
+				const env = get_env(vite_config.mode, svelte_config.kit.env.publicPrefix);
+				set_private_env(env.private);
+				set_public_env(env.public);
 
 				/** @type {Partial<import('types').Hooks>} */
 				const user_hooks = resolve_entry(svelte_config.kit.files.hooks)
@@ -277,11 +306,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					`/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/generated/root.svelte`))}`
 				);
 
-				const paths = await vite.ssrLoadModule(
-					process.env.BUNDLED
-						? `/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/runtime/paths.js`))}`
-						: `/@fs${runtime}/paths.js`
-				);
+				const paths = await vite.ssrLoadModule(`${runtime_base}/paths.js`);
 
 				paths.set_paths({
 					base: svelte_config.kit.paths.base,
@@ -304,9 +329,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					{
 						csp: svelte_config.kit.csp,
 						dev: true,
-						get_stack: (error) => {
-							return fix_stack_trace(error);
-						},
+						get_stack: (error) => fix_stack_trace(error),
 						handle_error: (error, event) => {
 							hooks.handleError({
 								error: new Proxy(error, {
@@ -342,6 +365,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							default: svelte_config.kit.prerender.default,
 							enabled: svelte_config.kit.prerender.enabled
 						},
+						public_env: env.public,
 						read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 						root,
 						router: svelte_config.kit.browser.router,
@@ -377,9 +401,8 @@ export async function dev(vite, vite_config, svelte_config) {
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);
-				vite.ssrFixStacktrace(error);
 				res.statusCode = 500;
-				res.end(error.stack);
+				res.end(fix_stack_trace(error));
 			}
 		});
 	};
@@ -394,11 +417,15 @@ function not_found(res, message = 'Not found') {
 /**
  * @param {import('connect').Server} server
  */
-function remove_html_middlewares(server) {
-	const html_middlewares = ['viteServeStaticMiddleware'];
+function remove_static_middlewares(server) {
+	// We don't use viteServePublicMiddleware because of the following issues:
+	// https://github.com/vitejs/vite/issues/9260
+	// https://github.com/vitejs/vite/issues/9236
+	// https://github.com/vitejs/vite/issues/9234
+	const static_middlewares = ['viteServePublicMiddleware', 'viteServeStaticMiddleware'];
 	for (let i = server.stack.length - 1; i > 0; i--) {
-		// @ts-expect-error using internals until https://github.com/vitejs/vite/pull/4640 is merged
-		if (html_middlewares.includes(server.stack[i].handle.name)) {
+		// @ts-expect-error using internals
+		if (static_middlewares.includes(server.stack[i].handle.name)) {
 			server.stack.splice(i, 1);
 		}
 	}

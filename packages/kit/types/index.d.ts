@@ -66,11 +66,6 @@ export interface Builder {
 	 */
 	writeServer(dest: string): string[];
 	/**
-	 * @param dest the destination folder to which files should be copied
-	 * @returns an array of paths corresponding to the files that have been created by the copy
-	 */
-	writeStatic(dest: string): string[];
-	/**
 	 * @param from the source file or folder
 	 * @param to the destination file or folder
 	 * @param opts.filter a function to determine whether a file or folder should be copied
@@ -107,6 +102,9 @@ export interface KitConfig {
 		directives?: CspDirectives;
 		reportOnly?: CspDirectives;
 	};
+	env?: {
+		publicPrefix: string;
+	};
 	moduleExtensions?: string[];
 	files?: {
 		assets?: string;
@@ -140,6 +138,7 @@ export interface KitConfig {
 		enabled?: boolean;
 		entries?: Array<'*' | `/${string}`>;
 		onError?: PrerenderOnErrorValue;
+		origin?: string;
 	};
 	routes?: (filepath: string) => boolean;
 	serviceWorker?: {
@@ -265,14 +264,19 @@ export interface RequestHandlerOutput<Output = ResponseBody> {
 
 export interface ResolveOptions {
 	ssr?: boolean;
-	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
+	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 }
 
 export type ResponseBody = JSONValue | Uint8Array | ReadableStream | Error;
 
 export class Server {
 	constructor(manifest: SSRManifest);
+	init(options: ServerInitOptions): void;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
+}
+
+export interface ServerInitOptions {
+	env: Record<string, string>;
 }
 
 export interface SSRManifest {

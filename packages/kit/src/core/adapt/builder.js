@@ -19,7 +19,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 	// TODO routes should come pre-filtered
 	function not_prerendered(route) {
 		if (route.type === 'page' && route.path) {
-			return !prerendered_paths.has(route.path);
+			return !prerendered_paths.has(route.path) && !prerendered_paths.has(route.path + '/');
 		}
 
 		return true;
@@ -122,7 +122,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		},
 
 		writeClient(dest) {
-			return copy(`${config.kit.outDir}/output/client`, dest);
+			return [...copy(`${config.kit.outDir}/output/client`, dest)];
 		},
 
 		writePrerendered(dest, { fallback } = {}) {
@@ -141,11 +141,16 @@ export function create_builder({ config, build_data, prerendered, log }) {
 			return copy(`${config.kit.outDir}/output/server`, dest);
 		},
 
-		writeStatic(dest) {
-			return copy(config.kit.files.assets, dest);
+		// TODO remove these methods for 1.0
+		// @ts-expect-error
+		writeStatic() {
+			throw new Error(
+				`writeStatic has been removed. Please ensure you are using the latest version of ${
+					config.kit.adapter.name || 'your adapter'
+				}`
+			);
 		},
 
-		// @ts-expect-error
 		async prerender() {
 			throw new Error(
 				'builder.prerender() has been removed. Prerendering now takes place in the build phase — see builder.prerender and builder.writePrerendered'

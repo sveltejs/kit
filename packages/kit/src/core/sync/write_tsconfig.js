@@ -46,18 +46,13 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(config.outDir, file));
 
-	const dirs = new Set([
-		project_relative(path.dirname(config.files.routes)),
-		project_relative(path.dirname(config.files.lib))
-	]);
-
-	/** @type {string[]} */
-	const include = [];
-	dirs.forEach((dir) => {
-		include.push(config_relative(`${dir}/**/*.js`));
-		include.push(config_relative(`${dir}/**/*.ts`));
-		include.push(config_relative(`${dir}/**/*.svelte`));
-	});
+	const include = ['ambient.d.ts'];
+	for (const dir of [config.files.routes, config.files.lib]) {
+		const relative = project_relative(path.dirname(dir));
+		include.push(config_relative(`${relative}/**/*.js`));
+		include.push(config_relative(`${relative}/**/*.ts`));
+		include.push(config_relative(`${relative}/**/*.svelte`));
+	}
 
 	write_if_changed(
 		out,
@@ -81,13 +76,13 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 
 					// This is required for svelte-kit package to work as expected
 					// Can be overwritten
-					lib: ['esnext', 'DOM'],
+					lib: ['esnext', 'DOM', 'DOM.Iterable'],
 					moduleResolution: 'node',
 					module: 'esnext',
 					target: 'esnext'
 				},
 				include,
-				exclude: [config_relative('node_modules/**'), './**']
+				exclude: [config_relative('node_modules/**'), './[!ambient.d.ts]**']
 			},
 			null,
 			'\t'

@@ -30,7 +30,6 @@ export default function (opts = {}) {
 			builder.log.minor('Copying assets');
 			builder.writeClient(`${out}/client`);
 			builder.writeServer(`${out}/server`);
-			builder.writeStatic(`${out}/static`);
 			builder.writePrerendered(`${out}/prerendered`);
 
 			writeFileSync(
@@ -51,7 +50,6 @@ export default function (opts = {}) {
 			if (precompress) {
 				builder.log.minor('Compressing assets');
 				await compress(`${out}/client`);
-				await compress(`${out}/static`);
 				await compress(`${out}/prerendered`);
 			}
 		}

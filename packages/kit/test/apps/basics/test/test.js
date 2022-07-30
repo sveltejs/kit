@@ -1,7 +1,4 @@
-import fs from 'fs';
-import path from 'path';
 import { expect } from '@playwright/test';
-import { fileURLToPath } from 'url';
 import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -265,28 +262,28 @@ test.describe('Encoded paths', () => {
 		expect(decodeURI(await page.innerHTML('h3'))).toBe('/encoded/苗条');
 	});
 
-	test('visits a route with a doubly encoded space', async ({ page }) => {
-		await page.goto('/encoded/test%2520me');
+	test('visits a route with a doubly encoded space', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/test%2520me"]');
+		expect(await page.innerHTML('h1')).toBe('dynamic');
 		expect(await page.innerHTML('h2')).toBe('/encoded/test%2520me: test%20me');
 		expect(await page.innerHTML('h3')).toBe('/encoded/test%2520me: test%20me');
 	});
 
-	test('visits a route with an encoded slash', async ({ page }) => {
-		await page.goto('/encoded/AC%2fDC');
+	test('visits a route with an encoded slash', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/AC%2fDC"]');
+		expect(await page.innerHTML('h1')).toBe('dynamic');
 		expect(await page.innerHTML('h2')).toBe('/encoded/AC%2fDC: AC/DC');
 		expect(await page.innerHTML('h3')).toBe('/encoded/AC%2fDC: AC/DC');
 	});
 
-	test('visits a route with an encoded bracket', async ({ page }) => {
-		await page.goto('/encoded/%5b');
+	test('visits a route with an encoded bracket', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/%5b"]');
+		expect(await page.innerHTML('h1')).toBe('dynamic');
 		expect(await page.innerHTML('h2')).toBe('/encoded/%5b: [');
 		expect(await page.innerHTML('h3')).toBe('/encoded/%5b: [');
-	});
-
-	test('visits a route with an encoded question mark', async ({ page }) => {
-		await page.goto('/encoded/%3f');
-		expect(await page.innerHTML('h2')).toBe('/encoded/%3f: ?');
-		expect(await page.innerHTML('h3')).toBe('/encoded/%3f: ?');
 	});
 
 	test('visits a dynamic route with non-ASCII character', async ({ page, clicknav }) => {
@@ -338,6 +335,26 @@ test.describe('Encoded paths', () => {
 		await page.goto('/encoded');
 		await clicknav('[href="/encoded/@svelte"]');
 		expect(await page.textContent('h1')).toBe('@svelte');
+	});
+});
+
+test.describe('Env', () => {
+	test('includes environment variables', async ({ page }) => {
+		await page.goto('/env');
+
+		expect(await page.textContent('#static-private')).toBe(
+			'PRIVATE_STATIC: accessible to server-side code/replaced at build time'
+		);
+		expect(await page.textContent('#dynamic-private')).toBe(
+			'PRIVATE_DYNAMIC: accessible to server-side code/evaluated at run time'
+		);
+
+		expect(await page.textContent('#static-public')).toBe(
+			'PUBLIC_STATIC: accessible anywhere/replaced at build time'
+		);
+		expect(await page.textContent('#dynamic-public')).toBe(
+			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run time'
+		);
 	});
 });
 
@@ -1012,8 +1029,8 @@ test.describe('Page options', () => {
 		}
 	});
 
-	test('transformPage can change the html output', async ({ page }) => {
-		await page.goto('/transform-page');
+	test('transformPageChunk can change the html output', async ({ page }) => {
+		await page.goto('/transform-page-chunk');
 		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
 
@@ -1046,15 +1063,29 @@ test.describe('$app/paths', () => {
 		);
 	});
 
-	test('replaces %sveltekit.assets% in template with relative path', async ({ page }) => {
+	// some browsers will re-request assets after a `pushState`
+	// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
+	test('replaces %sveltekit.assets% in template with relative path, and makes it absolute in the client', async ({
+		baseURL,
+		page,
+		javaScriptEnabled
+	}) => {
+		const absolute = `${baseURL}/favicon.png`;
+
 		await page.goto('/');
-		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe(
+			javaScriptEnabled ? absolute : './favicon.png'
+		);
 
 		await page.goto('/routing');
-		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe(
+			javaScriptEnabled ? absolute : './favicon.png'
+		);
 
 		await page.goto('/routing/rest/foo/bar/baz');
-		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('../../../../favicon.png');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe(
+			javaScriptEnabled ? absolute : '../../../../favicon.png'
+		);
 	});
 });
 
@@ -1068,11 +1099,11 @@ test.describe('$app/stores', () => {
 		await page.goto('/store');
 
 		expect(await page.textContent('h1')).toBe('Test');
-		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 2' : 'Calls: 1');
+		expect(await page.textContent('h2')).toBe('Calls: 1');
 
 		await clicknav('a[href="/store/result"]');
 		expect(await page.textContent('h1')).toBe('Result');
-		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 2' : 'Calls: 0');
+		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 1' : 'Calls: 0');
 
 		const oops = await page.evaluate(() => window.oops);
 		expect(oops).toBeUndefined();
@@ -1526,31 +1557,6 @@ test.describe('Routing', () => {
 		}
 	});
 
-	test('watch new route in dev', async ({ page }) => {
-		await page.goto('/routing');
-
-		if (!process.env.DEV) {
-			return;
-		}
-
-		// hash the filename so that it won't conflict with
-		// future test file that has the same name
-		const route = 'zzzz' + Date.now();
-		const content = 'Hello new route';
-		const __dirname = path.dirname(fileURLToPath(import.meta.url));
-		const filePath = path.join(__dirname, `../src/routes/routing/${route}.svelte`);
-
-		try {
-			fs.writeFileSync(filePath, `<h1>${content}</h1>`);
-			await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
-			await page.goto(`/routing/${route}`);
-
-			expect(await page.textContent('h1')).toBe(content);
-		} finally {
-			fs.unlinkSync(filePath);
-		}
-	});
-
 	test('navigates to ...rest', async ({ page, clicknav }) => {
 		await page.goto('/routing/rest/abc/xyz');
 
@@ -1740,23 +1746,5 @@ test.describe('XSS', () => {
 		expect(await page.textContent('h1')).toBe(
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
-	});
-});
-
-test.describe('Miscellaneous', () => {
-	test('Components are not double-mounted', async ({ page, javaScriptEnabled }) => {
-		const file = fileURLToPath(new URL('../src/routes/double-mount/index.svelte', import.meta.url));
-		const contents = fs.readFileSync(file, 'utf-8');
-
-		const mounted = javaScriptEnabled ? 1 : 0;
-
-		// we write to the file, to trigger HMR invalidation
-		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, `PLACEHOLDER:${Date.now()}`));
-		await page.goto('/double-mount');
-		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
-		await page.click('button');
-		await page.waitForTimeout(100);
-		expect(await page.textContent('h1')).toBe(`mounted: ${mounted}`);
-		fs.writeFileSync(file, contents.replace(/PLACEHOLDER:\d+/, 'PLACEHOLDER:0'));
 	});
 });

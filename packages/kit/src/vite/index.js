@@ -1,20 +1,21 @@
-import fs from 'fs';
-import path from 'path';
+import { fork } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { searchForWorkspaceRoot } from 'vite';
+import * as vite from 'vite';
 import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { prerender } from '../core/prerender/prerender.js';
 import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_runtime_directory, logger } from '../core/utils.js';
-import { find_deps, get_default_config } from './build/utils.js';
+import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import { get_aliases, resolve_entry } from './utils.js';
+import { get_aliases, resolve_entry, prevent_illegal_rollup_imports } from './utils.js';
+import { fileURLToPath } from 'node:url';
 
 const cwd = process.cwd();
 
@@ -100,6 +101,12 @@ function kit() {
 	/** @type {import('types').BuildData} */
 	let build_data;
 
+	/** @type {Set<string>} */
+	let illegal_imports;
+
+	/** @type {string | undefined} */
+	let deferred_warning;
+
 	/**
 	 * @type {{
 	 *   build_dir: string;
@@ -111,7 +118,7 @@ function kit() {
 
 	let completed_build = false;
 
-	function vite_client_config() {
+	function vite_client_build_config() {
 		/** @type {Record<string, string>} */
 		const input = {
 			// Put unchanging assets in immutable directory. We don't set that in the
@@ -132,7 +139,7 @@ function kit() {
 			input[name] = resolved;
 		});
 
-		return get_default_config({
+		return get_default_build_config({
 			config: svelte_config,
 			input,
 			ssr: false,
@@ -180,19 +187,21 @@ function kit() {
 			paths = {
 				build_dir: `${svelte_config.kit.outDir}/build`,
 				output_dir: `${svelte_config.kit.outDir}/output`,
-				client_out_dir: `${svelte_config.kit.outDir}/output/client/${svelte_config.kit.appDir}`
+				client_out_dir: `${svelte_config.kit.outDir}/output/client/`
 			};
 
+			illegal_imports = new Set([
+				vite.normalizePath(`${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`),
+				vite.normalizePath(`${svelte_config.kit.outDir}/runtime/env/static/private.js`)
+			]);
+
 			if (is_build) {
-				process.env.VITE_SVELTEKIT_APP_VERSION = svelte_config.kit.version.name;
-				process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${svelte_config.kit.appDir}/version.json`;
-				process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${svelte_config.kit.version.pollInterval}`;
+				manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
 
-				manifest_data = sync.all(svelte_config).manifest_data;
+				const new_config = vite_client_build_config();
 
-				const new_config = vite_client_config();
-
-				warn_overridden_config(config, new_config);
+				const warning = warn_overridden_config(config, new_config);
+				if (warning) console.error(warning + '\n');
 
 				return new_config;
 			}
@@ -209,6 +218,11 @@ function kit() {
 						input: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
 					}
 				},
+				define: {
+					__SVELTEKIT_DEV__: 'true',
+					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0'
+				},
+				publicDir: svelte_config.kit.files.assets,
 				resolve: {
 					alias: get_aliases(svelte_config.kit)
 				},
@@ -222,7 +236,7 @@ function kit() {
 								svelte_config.kit.outDir,
 								path.resolve(cwd, 'src'),
 								path.resolve(cwd, 'node_modules'),
-								path.resolve(searchForWorkspaceRoot(cwd), 'node_modules')
+								path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
 							])
 						]
 					},
@@ -234,7 +248,8 @@ function kit() {
 					}
 				}
 			};
-			warn_overridden_config(config, result);
+
+			deferred_warning = warn_overridden_config(config, result);
 			return result;
 		},
 
@@ -267,13 +282,28 @@ function kit() {
 		 * then use this hook to kick off builds for the server and service worker.
 		 */
 		async writeBundle(_options, bundle) {
+			for (const file of manifest_data.components) {
+				const id = vite.normalizePath(path.resolve(file));
+				const node = this.getModuleInfo(id);
+
+				if (node) {
+					prevent_illegal_rollup_imports(
+						this.getModuleInfo.bind(this),
+						node,
+						illegal_imports,
+						svelte_config.kit.outDir
+					);
+				}
+			}
+
+			const verbose = vite_config.logLevel === 'info';
 			log = logger({
-				verbose: vite_config.logLevel === 'info'
+				verbose
 			});
 
 			fs.writeFileSync(
-				`${paths.client_out_dir}/version.json`,
-				JSON.stringify({ version: process.env.VITE_SVELTEKIT_APP_VERSION })
+				`${paths.client_out_dir}/${svelte_config.kit.appDir}/version.json`,
+				JSON.stringify({ version: svelte_config.kit.version.name })
 			);
 
 			const { assets, chunks } = collect_output(bundle);
@@ -283,6 +313,7 @@ function kit() {
 			const options = {
 				cwd,
 				config: svelte_config,
+				vite_config,
 				vite_config_env,
 				build_dir: paths.build_dir, // TODO just pass `paths`
 				manifest_data,
@@ -301,8 +332,9 @@ function kit() {
 				server
 			};
 
+			const manifest_path = `${paths.output_dir}/server/manifest.js`;
 			fs.writeFileSync(
-				`${paths.output_dir}/server/manifest.js`,
+				manifest_path,
 				`export const manifest = ${generate_manifest({
 					build_data,
 					relative_path: '.',
@@ -310,31 +342,39 @@ function kit() {
 				})};\n`
 			);
 
-			process.env.SVELTEKIT_SERVER_BUILD_COMPLETED = 'true';
 			log.info('Prerendering');
+			await new Promise((fulfil, reject) => {
+				const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
 
-			const static_files = manifest_data.assets.map((asset) => posixify(asset.file));
+				// do prerendering in a subprocess so any dangling stuff gets killed upon completion
+				const script = fileURLToPath(
+					new URL(
+						process.env.BUNDLED ? './prerender.js' : '../core/prerender/prerender.js',
+						import.meta.url
+					)
+				);
 
-			const files = new Set([
-				...static_files,
-				...chunks.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`),
-				...assets.map((chunk) => `${svelte_config.kit.appDir}/${chunk.fileName}`)
-			]);
+				const child = fork(
+					script,
+					[vite_config.build.outDir, results_path, manifest_path, '' + verbose],
+					{
+						stdio: 'inherit'
+					}
+				);
 
-			// TODO is this right?
-			static_files.forEach((file) => {
-				if (file.endsWith('/index.html')) {
-					files.add(file.slice(0, -11));
-				}
-			});
-
-			prerendered = await prerender({
-				config: svelte_config.kit,
-				entries: manifest_data.routes
-					.map((route) => (route.type === 'page' ? route.path : ''))
-					.filter(Boolean),
-				files,
-				log
+				child.on('exit', (code) => {
+					if (code) {
+						reject(new Error(`Prerendering failed with code ${code}`));
+					} else {
+						prerendered = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
+							if (key === 'pages' || key === 'assets' || key === 'redirects') {
+								return new Map(value);
+							}
+							return value;
+						});
+						fulfil(undefined);
+					}
+				});
 			});
 
 			if (options.service_worker_entry_file) {
@@ -374,13 +414,6 @@ function kit() {
 					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
 				);
 			}
-
-			if (svelte_config.kit.prerender.enabled) {
-				// this is necessary to close any open db connections, etc.
-				// TODO: prerender in a subprocess so we can exit in isolation and then remove this
-				// https://github.com/sveltejs/kit/issues/5306
-				process.exit(0);
-			}
 		},
 
 		/**
@@ -388,7 +421,15 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config);
+			// This method is called by Vite after clearing the screen.
+			// This patch ensures we can log any important messages afterwards for the user to see.
+			const print_urls = vite.printUrls;
+			vite.printUrls = function () {
+				print_urls.apply(this);
+				if (deferred_warning) console.error('\n' + deferred_warning);
+			};
+
+			return await dev(vite, vite_config, svelte_config, illegal_imports);
 		},
 
 		/**
@@ -396,24 +437,20 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
-			return preview(vite, svelte_config, vite_config.preview.https ? 'https' : 'http');
+			return preview(vite, vite_config, svelte_config);
 		}
 	};
 }
 
 function check_vite_version() {
-	let vite_major = 3;
+	// TODO parse from kit peer deps and maybe do a full semver compare if we ever require feature releases a min
+	const min_required_vite_major = 3;
+	const vite_version = vite.version ?? '2.x'; // vite started exporting it's version in 3.0
+	const current_vite_major = parseInt(vite_version.split('.')[0], 10);
 
-	try {
-		const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
-		vite_major = +pkg.devDependencies['vite'].replace(/^[~^]/, '')[0];
-	} catch {
-		// do nothing
-	}
-
-	if (vite_major < 3) {
+	if (current_vite_major < min_required_vite_major) {
 		throw new Error(
-			`Vite version ${vite_major} is no longer supported. Please upgrade to version 3`
+			`Vite version ${current_vite_major} is no longer supported. Please upgrade to version ${min_required_vite_major}`
 		);
 	}
 }
@@ -441,11 +478,12 @@ function collect_output(bundle) {
  */
 function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
+
 	if (overridden.length > 0) {
-		console.log(
-			colors.bold().red('The following Vite config options will be overridden by SvelteKit:')
+		return (
+			colors.bold().red('The following Vite config options will be overridden by SvelteKit:') +
+			overridden.map((key) => `\n  - ${key}`).join('')
 		);
-		console.log(overridden.map((key) => `  - ${key}`).join('\n'));
 	}
 }
 

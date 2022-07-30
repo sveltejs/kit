@@ -74,7 +74,6 @@ export default function () {
 
 			builder.log.minor('Copying assets...');
 			builder.writeClient(site.bucket);
-			builder.writeStatic(site.bucket);
 			builder.writePrerendered(site.bucket);
 		}
 	};

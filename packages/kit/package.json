@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.377",
+	"version": "1.0.0-next.398",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -15,19 +15,18 @@
 		"sade": "^1.8.1"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.23.3",
+		"@playwright/test": "^1.23.4",
 		"@rollup/plugin-replace": "^4.0.0",
 		"@types/connect": "^3.4.35",
 		"@types/cookie": "^0.5.1",
 		"@types/marked": "^4.0.3",
-		"@types/mime": "^2.0.3",
+		"@types/mime": "^3.0.0",
 		"@types/node": "^16.11.36",
 		"@types/sade": "^1.7.4",
 		"@types/set-cookie-parser": "^2.4.2",
 		"cookie": "^0.5.0",
 		"cross-env": "^7.0.3",
 		"devalue": "^2.0.1",
-		"eslint": "^8.16.0",
 		"kleur": "^4.1.4",
 		"locate-character": "^2.0.5",
 		"marked": "^4.0.16",
@@ -63,11 +62,10 @@
 	"scripts": {
 		"build": "rollup -c && node scripts/cp.js src/runtime/components assets/components && npm run types",
 		"dev": "rollup -cw",
-		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/packaging/test/**\" \"{src,test}/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
-		"format": "npm run check-format -- --write",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"format": "npm run lint -- --write",
 		"prepublishOnly": "npm run build",
 		"test": "npm run test:unit && npm run test:typings && npm run test:packaging && npm run test:integration",
 		"test:integration": "pnpm run -r --workspace-concurrency 1 --filter=\"./test/**\" test",
