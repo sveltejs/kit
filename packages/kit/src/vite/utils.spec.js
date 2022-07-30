@@ -3,6 +3,7 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { normalizePath } from 'vite';
 import { validate_config } from '../core/config/index.js';
+import { posixify } from '../utils/filesystem.js';
 import {
 	deep_merge,
 	get_aliases,
@@ -207,25 +208,45 @@ test('merge resolve.alias', () => {
 test('transform kit.alias to resolve.alias', () => {
 	const config = validate_config({
 		kit: { alias: { simpleKey: 'simple/value', key: 'value', 'key/*': 'value/*' } }
-	}).kit;
+	});
+
 	const prefix = path.resolve('.');
-	const transformed = get_aliases(config)
-		.map((entry) => ({
-			find: entry.find instanceof RegExp ? entry.find.toString() : entry.find, // else assertion fails
-			replacement: (entry.replacement.startsWith(prefix)
-				? entry.replacement.slice(prefix.length + 1)
-				: entry.replacement
-			).replace(/\\/g, '/') // windows/linux compatibility
-		}))
+
+	const transformed = get_aliases(config.kit)
+		.map((entry) => {
+			const replacement = posixify(
+				entry.replacement.startsWith(prefix)
+					? entry.replacement.slice(prefix.length + 1)
+					: entry.replacement
+			);
+
+			return {
+				find: entry.find.toString(), // else assertion fails
+				replacement
+			};
+		})
 		.filter(
 			(entry) => entry.find !== '$app' // testing this would mean to reimplement the logic in the test
 		);
+
 	assert.equal(transformed, [
 		{ find: '__GENERATED__', replacement: '.svelte-kit/generated' },
 		{ find: '$lib', replacement: 'src/lib' },
 		{ find: 'simpleKey', replacement: 'simple/value' },
 		{ find: /^key$/.toString(), replacement: 'value' },
-		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' }
+		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' },
+		{
+			find: '$env/static/public',
+			replacement: '.svelte-kit/runtime/env/static/public.js'
+		},
+		{
+			find: '$env/static/private',
+			replacement: '.svelte-kit/runtime/env/static/private.js'
+		},
+		{
+			find: '$env',
+			replacement: 'src/runtime/env'
+		}
 	]);
 });
 
