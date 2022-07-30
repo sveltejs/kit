@@ -28,7 +28,7 @@ jobs:
         with:
           node-version: '16.x'
           cache: pnpm
-      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm install --frozen-lockfile
       - run: cd packages/kit && pnpm build
       - run: pnpm turbo run lint check
   Tests:
@@ -63,7 +63,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
-      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install
       - run: pnpm test
       - name: Archive test results
