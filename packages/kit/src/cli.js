@@ -41,8 +41,17 @@ prog
 	.describe('Synchronise generated files')
 	.option('--mode', 'Specify a mode for loading environment variables', 'development')
 	.action(async ({ mode }) => {
-		const is_postinstall = process.env.npm_lifecycle_event === 'postinstall';
-		const cwd = is_postinstall ? process.env.INIT_CWD ?? '' : process.cwd();
+		const event = process.env.npm_lifecycle_event;
+
+		// TODO remove for 1.0
+		if (event === 'prepare') {
+			const message = `\`svelte-kit sync\` now runs on "postinstall" — please remove the "prepare" script from your package.json\n`;
+			console.error(colors.bold().red(message));
+			return;
+		}
+
+		const cwd = event === 'postinstall' ? process.env.INIT_CWD ?? '' : process.cwd();
+
 		const svelte_config_file = path.join(cwd, 'svelte.config.js');
 		if (!fs.existsSync(svelte_config_file)) {
 			console.warn(`Missing ${svelte_config_file} — skipping`);
