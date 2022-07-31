@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.401
+
+### Patch Changes
+
+- [fix] chdir to user's application directory before running postinstall sync ([#5771](https://github.com/sveltejs/kit/pull/5771))
+
 ## 1.0.0-next.400
 
 ### Patch Changes
