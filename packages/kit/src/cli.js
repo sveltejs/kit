@@ -45,7 +45,12 @@ prog
 
 		// TODO remove for 1.0
 		if (event === 'prepare') {
-			const message = `\`svelte-kit sync\` now runs on "postinstall" — please remove the "prepare" script from your package.json\n`;
+			const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+			const message =
+				pkg.scripts.prepare === 'svelte-kit sync'
+					? `\`svelte-kit sync\` now runs on "postinstall" — please remove the "prepare" script from your package.json\n`
+					: `\`svelte-kit sync\` now runs on "postinstall" — please remove it from your "prepare" script\n`;
+
 			console.error(colors.bold().red(message));
 			return;
 		}
