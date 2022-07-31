@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import colors from 'kleur';
 import sade from 'sade';
 import { load_config } from './core/config/index.js';
@@ -59,7 +60,7 @@ prog
 		}
 
 		if (!fs.existsSync('svelte.config.js')) {
-			console.warn('Missing svelte.config.js — skipping');
+			console.warn(`Missing ${path.resolve('svelte.config.js')} — skipping`);
 			return;
 		}
 
