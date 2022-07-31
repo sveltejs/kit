@@ -171,16 +171,16 @@ export async function migrate() {
 				file.slice(0, -basename.length) +
 				(move_to_directory ? `${name}/${type}${module_ext}` : `${type}${module_ext}`);
 
-			fs.unlinkSync(file);
+			const injected = error(`Update ${type}.js`, is_page_endpoint ? '3292699' : '3292701');
+			const edited = `${injected}\n\n${move_to_directory ? adjust_imports(content) : content}`;
 
 			if (move_to_directory) {
 				const dir = path.dirname(renamed);
 				if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-
-				fs.writeFileSync(renamed, adjust_imports(content));
-			} else {
-				fs.writeFileSync(renamed, content);
 			}
+
+			fs.unlinkSync(file);
+			fs.writeFileSync(renamed, edited);
 		}
 	}
 }
@@ -203,49 +203,55 @@ function extract_load(content) {
 
 /** @param {string} content */
 function adjust_imports(content) {
-	const ast = ts.createSourceFile(
-		'filename.ts',
-		content,
-		ts.ScriptTarget.Latest,
-		true,
-		ts.ScriptKind.TS
-	);
+	try {
+		const ast = ts.createSourceFile(
+			'filename.ts',
+			content,
+			ts.ScriptTarget.Latest,
+			true,
+			ts.ScriptKind.TS
+		);
 
-	const code = new MagicString(content);
+		const code = new MagicString(content);
 
-	/** @param {number} pos */
-	function adjust(pos) {
-		// TypeScript AST is a clusterfuck, we need to step forward to find
-		// where the node _actually_ starts
-		while (content[pos] !== '.') pos += 1;
+		/** @param {number} pos */
+		function adjust(pos) {
+			// TypeScript AST is a clusterfuck, we need to step forward to find
+			// where the node _actually_ starts
+			while (content[pos] !== '.') pos += 1;
 
-		// replace ../ with ../../ and ./ with ../
-		code.prependLeft(pos, content[pos + 1] === '.' ? '../' : '.');
-	}
-
-	/** @param {ts.Node} node */
-	function walk(node) {
-		if (ts.isImportDeclaration(node)) {
-			const text = /** @type {ts.StringLiteral} */ (node.moduleSpecifier).text;
-			if (text[0] === '.') adjust(node.moduleSpecifier.pos);
+			// replace ../ with ../../ and ./ with ../
+			code.prependLeft(pos, content[pos + 1] === '.' ? '../' : '.');
 		}
 
-		if (ts.isCallExpression(node) && node.expression.getText() === 'import') {
-			const arg = node.arguments[0];
-
-			if (ts.isStringLiteral(arg)) {
-				if (arg.text[0] === '.') adjust(arg.pos);
-			} else if (ts.isTemplateLiteral(arg) && !ts.isNoSubstitutionTemplateLiteral(arg)) {
-				if (arg.head.text[0] === '.') adjust(arg.head.pos);
+		/** @param {ts.Node} node */
+		function walk(node) {
+			if (ts.isImportDeclaration(node)) {
+				const text = /** @type {ts.StringLiteral} */ (node.moduleSpecifier).text;
+				if (text[0] === '.') adjust(node.moduleSpecifier.pos);
 			}
+
+			if (ts.isCallExpression(node) && node.expression.getText() === 'import') {
+				const arg = node.arguments[0];
+
+				if (ts.isStringLiteral(arg)) {
+					if (arg.text[0] === '.') adjust(arg.pos);
+				} else if (ts.isTemplateLiteral(arg) && !ts.isNoSubstitutionTemplateLiteral(arg)) {
+					if (arg.head.text[0] === '.') adjust(arg.head.pos);
+				}
+			}
+
+			node.forEachChild(walk);
 		}
 
-		node.forEachChild(walk);
+		ast.forEachChild(walk);
+
+		return code.toString();
+	} catch {
+		// this is enough of an edge case that it's probably fine to
+		// just leave the code as we found it
+		return content;
 	}
-
-	ast.forEachChild(walk);
-
-	return code.toString();
 }
 
 /** @param {string} content */
@@ -256,35 +262,40 @@ function dedent(content) {
 	/** @type {string[]} */
 	const substitutions = [];
 
-	const ast = ts.createSourceFile(
-		'filename.ts',
-		content,
-		ts.ScriptTarget.Latest,
-		true,
-		ts.ScriptKind.TS
-	);
+	try {
+		const ast = ts.createSourceFile(
+			'filename.ts',
+			content,
+			ts.ScriptTarget.Latest,
+			true,
+			ts.ScriptKind.TS
+		);
 
-	const code = new MagicString(content);
+		const code = new MagicString(content);
 
-	/** @param {ts.Node} node */
-	function walk(node) {
-		if (ts.isTemplateLiteral(node)) {
-			let pos = node.pos;
-			while (/\s/.test(content[pos])) pos += 1;
+		/** @param {ts.Node} node */
+		function walk(node) {
+			if (ts.isTemplateLiteral(node)) {
+				let pos = node.pos;
+				while (/\s/.test(content[pos])) pos += 1;
 
-			code.overwrite(pos, node.end, `____SUBSTITUTION_${substitutions.length}____`);
-			substitutions.push(node.getText());
+				code.overwrite(pos, node.end, `____SUBSTITUTION_${substitutions.length}____`);
+				substitutions.push(node.getText());
+			}
+
+			node.forEachChild(walk);
 		}
 
-		node.forEachChild(walk);
+		ast.forEachChild(walk);
+
+		return code
+			.toString()
+			.replace(new RegExp(`^${indent}`, 'gm'), '')
+			.replace(/____SUBSTITUTION_(\d+)____/g, (match, index) => substitutions[index]);
+	} catch {
+		// as above — ignore this edge case
+		return content;
 	}
-
-	ast.forEachChild(walk);
-
-	return code
-		.toString()
-		.replace(new RegExp(`^${indent}`, 'gm'), '')
-		.replace(/____SUBSTITUTION_(\d+)____/g, (match, index) => substitutions[index]);
 }
 
 /** @param {string} content */
