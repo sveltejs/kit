@@ -149,7 +149,7 @@ export async function migrate() {
 			if (module) {
 				const ext = /<script[^>]+lang=['"](ts|typescript)['"][^]*>/.test(module) ? '.js' : '.ts';
 				const injected = /load/.test(module)
-					? `${error('update load function', '3292693')}\n\n`
+					? `${error('Update load function', '3292693')}\n\n`
 					: '';
 
 				const content = dedent(move_to_directory ? adjust_imports(module) : module);
