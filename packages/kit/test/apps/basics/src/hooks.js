@@ -4,6 +4,11 @@ import { sequence } from '../../../../src/hooks';
 
 /** @type {import('@sveltejs/kit').GetSession} */
 export function getSession(request) {
+	if (request.url.href.includes('caching') && !request.url.href.includes('session')) {
+		// necessary, else some caching tests fail
+		return {};
+	}
+
 	return {
 		answer: request.locals.answer,
 		calls: 0
@@ -42,7 +47,7 @@ export const handle = sequence(
 
 		const response = await resolve(event, {
 			ssr: !event.url.pathname.startsWith('/no-ssr'),
-			transformPage: event.url.pathname.startsWith('/transform-page')
+			transformPageChunk: event.url.pathname.startsWith('/transform-page-chunk')
 				? ({ html }) => html.replace('__REPLACEME__', 'Worked!')
 				: undefined
 		});

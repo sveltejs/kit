@@ -3,8 +3,8 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
-import { decode_params, serialize_error, GENERIC_ERROR } from './utils.js';
-import { normalize_path } from '../../utils/url.js';
+import { serialize_error, GENERIC_ERROR } from './utils.js';
+import { decode_params, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
 
@@ -171,7 +171,7 @@ export async function respond(request, options, state) {
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
 		ssr: true,
-		transformPage: default_transform
+		transformPageChunk: default_transform
 	};
 
 	// TODO match route before calling handle?
@@ -181,9 +181,17 @@ export async function respond(request, options, state) {
 			event,
 			resolve: async (event, opts) => {
 				if (opts) {
+					// TODO remove for 1.0
+					// @ts-expect-error
+					if (opts.transformPage) {
+						throw new Error(
+							'transformPage has been replaced by transformPageChunk — see https://github.com/sveltejs/kit/pull/5657 for more information'
+						);
+					}
+
 					resolve_opts = {
 						ssr: opts.ssr !== false,
-						transformPage: opts.transformPage || default_transform
+						transformPageChunk: opts.transformPageChunk || default_transform
 					};
 				}
 

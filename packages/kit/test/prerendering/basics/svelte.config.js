@@ -7,7 +7,8 @@ const config = {
 
 		prerender: {
 			default: true,
-			onError: 'continue'
+			onError: 'continue',
+			origin: 'http://example.com'
 		}
 	}
 };

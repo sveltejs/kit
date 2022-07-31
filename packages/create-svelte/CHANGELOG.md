@@ -1,5 +1,23 @@
 # create-svelte
 
+## 2.0.0-next.152
+
+### Patch Changes
+
+- Use @sveltejs/kit postinstall lifecycle hook to invoke 'svelte-kit sync' instead of prepare in projects created by create-svelte ([#5760](https://github.com/sveltejs/kit/pull/5760))
+
+## 2.0.0-next.151
+
+### Patch Changes
+
+- [feat] include reference to `@sveltejs/kit` types in ambient file ([#5745](https://github.com/sveltejs/kit/pull/5745))
+
+## 2.0.0-next.150
+
+### Patch Changes
+
+- Remove initial-scale=1 from meta tags ([#5706](https://github.com/sveltejs/kit/pull/5706))
+
 ## 2.0.0-next.149
 
 ### Patch Changes

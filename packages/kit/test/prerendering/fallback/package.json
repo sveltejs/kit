@@ -6,8 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"prepare": "node ../../cli.js sync",
-		"check": "tsc && svelte-check",
+		"check": "node ../../cli.js && tsc && svelte-check",
 		"test": "npm run build"
 	},
 	"devDependencies": {

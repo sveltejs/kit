@@ -3,11 +3,10 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
-		"preview": "vite preview",
-		"prepare": "node ../../cli.js sync",
-		"check": "tsc && svelte-check",
+		"dev": "vite dev -c vite.custom.config.js",
+		"build": "vite build -c vite.custom.config.js --mode custom",
+		"preview": "vite preview -c vite.custom.config.js",
+		"check": "node ../../cli.js && tsc && svelte-check",
 		"test": "npm run test:dev && npm run test:build",
 		"test:dev": "cross-env DEV=true playwright test",
 		"test:build": "playwright test"

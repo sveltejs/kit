@@ -11,6 +11,7 @@ import {
 	RequestHandler,
 	ResolveOptions,
 	Server,
+	ServerInitOptions,
 	SSRManifest
 } from './index.js';
 import {
@@ -91,7 +92,13 @@ export interface Hooks {
 	handleError: HandleError;
 }
 
+export interface ImportNode {
+	name: string;
+	dynamic: boolean;
+}
+
 export class InternalServer extends Server {
+	init(options: ServerInitOptions): void;
 	respond(
 		request: Request,
 		options: RequestOptions & {
@@ -248,6 +255,7 @@ export interface SSROptions {
 		default: boolean;
 		enabled: boolean;
 	};
+	public_env: Record<string, string>;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
 	router: boolean;
@@ -322,4 +330,5 @@ declare global {
 	const __SVELTEKIT_APP_VERSION__: string;
 	const __SVELTEKIT_APP_VERSION_FILE__: string;
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+	const __SVELTEKIT_DEV__: boolean;
 }

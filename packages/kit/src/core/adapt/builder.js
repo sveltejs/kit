@@ -19,7 +19,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 	// TODO routes should come pre-filtered
 	function not_prerendered(route) {
 		if (route.type === 'page' && route.path) {
-			return !prerendered_paths.has(route.path);
+			return !prerendered_paths.has(route.path) && !prerendered_paths.has(route.path + '/');
 		}
 
 		return true;
@@ -122,10 +122,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		},
 
 		writeClient(dest) {
-			return [
-				...copy(`${config.kit.outDir}/output/client`, dest),
-				...copy(config.kit.files.assets, dest)
-			];
+			return [...copy(`${config.kit.outDir}/output/client`, dest)];
 		},
 
 		writePrerendered(dest, { fallback } = {}) {

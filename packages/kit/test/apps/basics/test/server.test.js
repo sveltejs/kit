@@ -28,6 +28,13 @@ test.describe('Caching', () => {
 		expect(response.headers()['cache-control']).toBe('private, max-age=30');
 	});
 
+	test('sets cache-control: private even if page doesnt use session but one exists and cache.private is unset', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/has-session');
+		expect(response.headers()['cache-control']).toBe('private, max-age=30');
+	});
+
 	test('sets cache-control: private if page uses fetch and cache.private is unset', async ({
 		request
 	}) => {
@@ -63,6 +70,13 @@ test.describe('Caching', () => {
 		request
 	}) => {
 		const response = await request.get('/caching/private/uses-session-in-init?private=false');
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+
+	test('sets cache-control: public if page has session and cache.private is false', async ({
+		request
+	}) => {
+		const response = await request.get('/caching/private/has-session?private=false');
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
 	});
 
@@ -281,6 +295,17 @@ test.describe('Endpoints', () => {
 		expect(response.headers()['digest']).toEqual(`sha-256=${digest}`);
 	});
 
+	test('stream can be canceled with TypeError', async ({ request }) => {
+		const responseBefore = await request.get('/endpoint-output/stream-typeerror?what');
+		expect(await responseBefore.text()).toEqual('null');
+
+		const interruptedResponse = request.get('/endpoint-output/stream-typeerror');
+		await expect(interruptedResponse).rejects.toThrow('socket hang up');
+
+		const responseAfter = await request.get('/endpoint-output/stream-typeerror?what');
+		expect(await responseAfter.text()).toEqual('TypeError');
+	});
+
 	test('request body can be read slow', async ({ request }) => {
 		const data = randomBytes(1024 * 256);
 		const digest = createHash('sha256').update(data).digest('base64url');
@@ -365,6 +390,19 @@ test.describe('Errors', () => {
 		} else {
 			expect(/** @type {Response} */ (response).status()).toBe(400);
 		}
+	});
+
+	test('stack traces are not fixed twice', async ({ page }) => {
+		await page.goto('/errors/stack-trace');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
+		);
+
+		// check the stack wasn't mutated
+		await page.goto('/errors/stack-trace');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
+		);
 	});
 });
 

@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.31
+
+### Patch Changes
+
+- Initialise `env` ([#5663](https://github.com/sveltejs/kit/pull/5663))
+
 ## 1.0.0-next.30
 
 ### Patch Changes

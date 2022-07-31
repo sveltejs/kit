@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -358,6 +358,18 @@ test.describe('Load', () => {
 		expect(await page.textContent('h2')).toBe('x: b: 2');
 	});
 
+	test('load function is only called on session change when used in load', async ({ page }) => {
+		await page.goto('/load/change-detection/session/used');
+		expect(await page.textContent('h2')).toBe('1');
+		await page.click('button');
+		expect(await page.textContent('h2')).toBe('2');
+
+		await page.goto('/load/change-detection/session/unused');
+		expect(await page.textContent('h2')).toBe('1');
+		await page.click('button');
+		expect(await page.textContent('h2')).toBe('1');
+	});
+
 	test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
 		await page.goto('/load/url-hash#please-dont-send-me-to-load');
 		expect(await page.textContent('#message')).toBe(
@@ -368,6 +380,15 @@ test.describe('Load', () => {
 	test('url instance methods work in load', async ({ page }) => {
 		await page.goto('/load/url-to-string');
 		expect(await page.textContent('h1')).toBe("I didn't break!");
+	});
+
+	test("layout props don't cause rerender when unchanged", async ({ page, clicknav }) => {
+		await page.goto('/load/layout-props/a');
+		expect(await page.textContent('h1')).toBe('1');
+		await clicknav('[href="/load/layout-props/b"]');
+		expect(await page.textContent('h1')).toBe('1');
+		await page.click('button');
+		expect(await page.textContent('h1')).toBe('2');
 	});
 
 	if (process.env.DEV) {
@@ -412,8 +433,14 @@ test.describe('Page options', () => {
 		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
 		expect(await page.textContent('button')).toBe('clicks: 0');
 
+		// wait until hydration before interacting with button
+		await page.waitForSelector('body.started');
+
 		await page.click('button');
 		expect(await page.textContent('button')).toBe('clicks: 1');
+
+		// wait until hydration before attempting backwards client-side navigation
+		await page.waitForSelector('body.started');
 
 		await clicknav('[href="/no-router/a"]');
 		expect(await page.textContent('button')).toBe('clicks: 1');
@@ -543,6 +570,24 @@ test.describe('Routing', () => {
 		await page.click('[href="#target"]');
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
+	});
+
+	test('does not normalize external path', async ({ page }) => {
+		const urls = [];
+
+		const { port, close } = await start_server((req, res) => {
+			urls.push(req.url);
+			res.end('ok');
+		});
+
+		try {
+			await page.goto(`/routing/slashes?port=${port}`);
+			await page.click(`a[href="http://localhost:${port}/with-slash/"]`);
+
+			expect(urls).toEqual(['/with-slash/']);
+		} finally {
+			await close();
+		}
 	});
 });
 

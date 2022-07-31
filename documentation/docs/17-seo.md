@@ -105,15 +105,19 @@ const config = {
 export default config;
 ```
 
-...and transforming the HTML using `transformPage` along with `transform` imported from `@sveltejs/amp`:
+...and transforming the HTML using `transformPageChunk` along with `transform` imported from `@sveltejs/amp`:
 
 ```js
 import * as amp from '@sveltejs/amp';
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
+	let buffer = '';
 	return resolve(event, {
-		transformPage: ({ html }) => amp.transform(html)
+		transformPageChunk: ({ html, done }) => {
+			buffer += html;
+			if (done) return amp.transform(html);
+		}
 	});
 }
 ```

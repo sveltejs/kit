@@ -3,14 +3,14 @@
 	"pipeline": {
 		"@sveltejs/kit#build": {
 			"dependsOn": ["^build"],
-			"inputs": ["src/**", "scripts/**", "types/**"],
+			"inputs": ["rollup.config.js", "src/**", "scripts/**", "types/**"],
 			"outputs": ["dist/**", "docs/**", "assets/**"],
 			"outputMode": "new-only"
 		},
 		"kit.svelte.dev#build": {
 			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
 			"inputs": ["src/**", "../../packages/kit/docs/**", "../../documentation/**"],
-			"outputs": [".vercel_build_output/**", ".vercel/output/**" ],
+			"outputs": [".vercel_build_output/**", ".vercel/output/**"],
 			"outputMode": "new-only"
 		},
 		"build": {

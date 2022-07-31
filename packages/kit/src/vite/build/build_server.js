@@ -27,6 +27,8 @@ import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';
+import { set_private_env } from '${runtime}/env-private.js';
+import { set_public_env } from '${runtime}/env-public.js';
 
 const template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace('%sveltekit.head%', '" + head + "')
@@ -77,6 +79,7 @@ export class Server {
 				default: ${config.kit.prerender.default},
 				enabled: ${config.kit.prerender.enabled}
 			},
+			public_env: {},
 			read,
 			root,
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
@@ -85,6 +88,23 @@ export class Server {
 			template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			trailing_slash: ${s(config.kit.trailingSlash)}
 		};
+	}
+
+	init({ env }) {
+		const entries = Object.entries(env);
+
+		const prv = Object.fromEntries(Object.entries(env).filter(([k]) => !k.startsWith('${
+			config.kit.env.publicPrefix
+		}')));
+
+		const pub = Object.fromEntries(Object.entries(env).filter(([k]) => k.startsWith('${
+			config.kit.env.publicPrefix
+		}')));
+
+		set_private_env(prv);
+		set_public_env(pub);
+
+		this.options.public_env = pub;
 	}
 
 	async respond(request, options = {}) {
@@ -110,9 +130,10 @@ export class Server {
 /**
  * @param {{
  *   cwd: string;
- *   config: import('types').ValidatedConfig
- *   vite_config_env: import('vite').ConfigEnv
- *   manifest_data: import('types').ManifestData
+ *   config: import('types').ValidatedConfig;
+ *   vite_config: import('vite').ResolvedConfig;
+ *   vite_config_env: import('vite').ConfigEnv;
+ *   manifest_data: import('types').ManifestData;
  *   build_dir: string;
  *   output_dir: string;
  *   service_worker_entry_file: string | null;
@@ -123,6 +144,7 @@ export async function build_server(options, client) {
 	const {
 		cwd,
 		config,
+		vite_config,
 		vite_config_env,
 		manifest_data,
 		build_dir,
@@ -187,11 +209,9 @@ export async function build_server(options, client) {
 		})
 	);
 
-	const vite_config = await get_vite_config(vite_config_env);
-
 	const merged_config = merge_vite_configs(
 		get_default_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
-		vite_config
+		await get_vite_config(vite_config, vite_config_env)
 	);
 
 	remove_svelte_kit(merged_config);

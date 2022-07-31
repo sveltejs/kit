@@ -1,5 +1,130 @@
 # @sveltejs/kit
 
+## 1.0.0-next.399
+
+### Patch Changes
+
+- Use @sveltejs/kit postinstall lifecycle hook to invoke 'svelte-kit sync' instead of prepare in projects created by create-svelte ([#5760](https://github.com/sveltejs/kit/pull/5760))
+
+## 1.0.0-next.398
+
+### Patch Changes
+
+- Check url protocol to avoid mailto links navigated by kit in mobile devices ([#5726](https://github.com/sveltejs/kit/pull/5726))
+
+* [fix] Windows correctly errors on `$env/*/private` imports ([#5739](https://github.com/sveltejs/kit/pull/5739))
+  [fix] Illegal module analysis in dev ignores non-js|ts|svelte files
+
+- [feat] include reference to `@sveltejs/kit` types in ambient file ([#5745](https://github.com/sveltejs/kit/pull/5745))
+
+## 1.0.0-next.397
+
+### Patch Changes
+
+- load env before importing hooks during dev ([#5728](https://github.com/sveltejs/kit/pull/5728))
+
+* Add DOM.Iterable to default tsconfig ([#5734](https://github.com/sveltejs/kit/pull/5734))
+
+## 1.0.0-next.396
+
+### Patch Changes
+
+- [fix] Environment variable generated types ([#5719](https://github.com/sveltejs/kit/pull/5719))
+
+## 1.0.0-next.395
+
+### Patch Changes
+
+- Add `$env/static/private`, `$env/static/public`, `$env/dynamic/private` and `$env/dynamic/public` modules ([#5663](https://github.com/sveltejs/kit/pull/5663))
+
+## 1.0.0-next.394
+
+### Patch Changes
+
+- Set Vite's publicDir and correctly serve public assets earlier in pipeline ([#5686](https://github.com/sveltejs/kit/pull/5686))
+
+* prerender in a subprocess ([#5678](https://github.com/sveltejs/kit/pull/5678))
+
+## 1.0.0-next.393
+
+### Patch Changes
+
+- Prevent needless prop updates causing rerenders ([#5671](https://github.com/sveltejs/kit/pull/5671))
+
+* Support custom Vite config locations ([#5705](https://github.com/sveltejs/kit/pull/5705))
+
+- Prevent rerender when route state did not change ([#5654](https://github.com/sveltejs/kit/pull/5654))
+
+## 1.0.0-next.392
+
+### Patch Changes
+
+- Revert publicDir change from 1.0.0-next.387 ([#5683](https://github.com/sveltejs/kit/pull/5683))
+
+## 1.0.0-next.391
+
+### Patch Changes
+
+- [breaking] replace transformPage with transformPageChunk ([#5657](https://github.com/sveltejs/kit/pull/5657))
+
+## 1.0.0-next.390
+
+### Patch Changes
+
+- [fix] vite dev no longer covers errors ([#5563](https://github.com/sveltejs/kit/pull/5563))
+
+## 1.0.0-next.389
+
+### Patch Changes
+
+- Only normalise internal URLs ([#5645](https://github.com/sveltejs/kit/pull/5645))
+
+## 1.0.0-next.388
+
+### Patch Changes
+
+- Reset stack traces to avoid double-fix ([#5644](https://github.com/sveltejs/kit/pull/5644))
+
+## 1.0.0-next.387
+
+### Patch Changes
+
+- set Vite's `publicDir` option ([#5648](https://github.com/sveltejs/kit/pull/5648))
+
+* Normalize paths inside prerenderer, so they are correct inside \$service-worker ([#5641](https://github.com/sveltejs/kit/pull/5641))
+
+## 1.0.0-next.386
+
+### Patch Changes
+
+- Ensure private cache when something is returned from getSession hook ([#5640](https://github.com/sveltejs/kit/pull/5640))
+
+* [fix] transform link[rel=icon] to be absolute to avoid console error when navigating ([#5583](https://github.com/sveltejs/kit/pull/5583))
+
+## 1.0.0-next.385
+
+### Patch Changes
+
+- Make 404 error more helpful if paths.base is missing ([#5622](https://github.com/sveltejs/kit/pull/5622))
+
+* [fix] decode parameters on client ([`d02f1f25`](https://github.com/sveltejs/kit/commit/d02f1f25ac8acb29e21a06b94418c333928fb9bb))
+
+- Add config.kit.prerender.origin ([#5627](https://github.com/sveltejs/kit/pull/5627))
+
+## 1.0.0-next.384
+
+### Patch Changes
+
+- Respect custom Vite mode in SSR build ([#5602](https://github.com/sveltejs/kit/pull/5602))
+
+* [breaking] remove mode, prod and server from \$app/env ([#5602](https://github.com/sveltejs/kit/pull/5602))
+
+## 1.0.0-next.383
+
+### Patch Changes
+
+- Add formData method in superclass rather than monkey-patch ([#5629](https://github.com/sveltejs/kit/pull/5629))
+
 ## 1.0.0-next.382
 
 ### Patch Changes
