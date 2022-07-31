@@ -509,6 +509,12 @@ importers:
       uvu: 0.5.4
       vite: 3.0.0
 
+  packages/migrate:
+    specifiers:
+      kleur: ^4.1.4
+    dependencies:
+      kleur: 4.1.5
+
   sites/kit.svelte.dev:
     specifiers:
       '@sveltejs/adapter-auto': workspace:*
