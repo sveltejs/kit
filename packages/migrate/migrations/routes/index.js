@@ -124,7 +124,29 @@ export async function migrate() {
 			}
 		} else if (module_ext) {
 			const bare = basename.slice(0, -module_ext.length);
-			// TODO +page.server.js, +layout.server.js, +server.js
+			const [name] = bare.split('@');
+
+			const is_page_endpoint = extensions.some((ext) =>
+				files.includes(`${file.slice(0, -module_ext.length)}${ext}`)
+			);
+
+			const type = is_page_endpoint ? '+page.server' : '+server';
+
+			const move_to_directory = name !== 'index';
+			const renamed =
+				file.slice(0, -basename.length) +
+				(move_to_directory ? `${name}/${type}${module_ext}` : `${type}${module_ext}`);
+
+			fs.unlinkSync(file);
+
+			if (move_to_directory) {
+				const dir = path.dirname(renamed);
+				if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+
+				fs.writeFileSync(renamed, adjust_imports(content));
+			} else {
+				fs.writeFileSync(renamed, content);
+			}
 		}
 	}
 }
