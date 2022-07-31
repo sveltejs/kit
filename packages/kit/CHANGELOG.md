@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.399
+
+### Patch Changes
+
+- Use @sveltejs/kit postinstall lifecycle hook to invoke 'svelte-kit sync' instead of prepare in projects created by create-svelte ([#5760](https://github.com/sveltejs/kit/pull/5760))
+
 ## 1.0.0-next.398
 
 ### Patch Changes
