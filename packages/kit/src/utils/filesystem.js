@@ -101,11 +101,6 @@ export function walk(cwd, dirs = false) {
 
 	return walk_dir(''), all_files;
 }
-// foo
-// foo/bar
-// foo/bar/baz.ts
-// foo/barr.ts
-// foo
 
 /** @param {string} str */
 export function posixify(str) {
