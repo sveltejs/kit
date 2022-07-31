@@ -94,29 +94,57 @@ function merge_into(a, b) {
 	}
 }
 
-/** @param {import('types').ValidatedKitConfig} config */
+/**
+ * Transforms kit.alias to a valid vite.resolve.alias array.
+ * Related to tsconfig path alias creation.
+ *
+ * @param {import('types').ValidatedKitConfig} config
+ * */
 export function get_aliases(config) {
-	/** @type {Record<string, string>} */
-	const alias = {
-		__GENERATED__: path.posix.join(config.outDir, 'generated'),
-
-		$app: `${get_runtime_directory(config)}/app`,
-
+	/** @type {import('vite').Alias[]} */
+	const alias = [
+		{ find: '__GENERATED__', replacement: path.posix.join(config.outDir, 'generated') },
+		{ find: '$app', replacement: `${get_runtime_directory(config)}/app` },
 		// For now, we handle `$lib` specially here rather than make it a default value for
 		// `config.kit.alias` since it has special meaning for packaging, etc.
-		$lib: config.files.lib
-	};
+		{ find: '$lib', replacement: config.files.lib }
+	];
+
+	for (let [key, value] of Object.entries(config.alias)) {
+		if (value.endsWith('/*')) {
+			value = value.slice(0, -2);
+		}
+		if (key.endsWith('/*')) {
+			// Doing just `{ find: key.slice(0, -2) ,..}` would mean `import .. from "key"` would also be matched, which we don't want
+			alias.push({
+				find: new RegExp(`^${key.slice(0, -2)}\\/(.+)$`),
+				replacement: `${path.resolve(value)}/$1`
+			});
+		} else if (key + '/*' in config.alias) {
+			// key and key/* both exist -> the replacement for key needs to happen _only_ on import .. from "key"
+			alias.push({ find: new RegExp(`^${key}$`), replacement: path.resolve(value) });
+		} else {
+			alias.push({ find: key, replacement: path.resolve(value) });
+		}
+	}
 
 	if (!process.env.BUNDLED) {
-		alias['$env/static/public'] = path.posix.join(config.outDir, 'runtime/env/static/public.js');
-		alias['$env/static/private'] = path.posix.join(config.outDir, 'runtime/env/static/private.js');
+		alias.push(
+			{
+				find: '$env/static/public',
+				replacement: path.posix.join(config.outDir, 'runtime/env/static/public.js')
+			},
+			{
+				find: '$env/static/private',
+				replacement: path.posix.join(config.outDir, 'runtime/env/static/private.js')
+			}
+		);
 	}
 
-	alias['$env'] = `${get_runtime_directory(config)}/env`;
-
-	for (const [key, value] of Object.entries(config.alias)) {
-		alias[key] = path.resolve(value);
-	}
+	alias.push({
+		find: '$env',
+		replacement: `${get_runtime_directory(config)}/env`
+	});
 
 	return alias;
 }
