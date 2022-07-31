@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.400
+
+### Patch Changes
+
+- More robust path aliasing ([#5582](https://github.com/sveltejs/kit/pull/5582))
+
 ## 1.0.0-next.399
 
 ### Patch Changes
