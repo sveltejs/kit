@@ -135,6 +135,14 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 						JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8'))
 							.devDependencies
 				  )
+		},
+		worker: {
+			rollupOptions: {
+				output: {
+					entryFileNames: `${prefix}/workers/[name]-[hash].js`,
+					chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`
+				}
+			}
 		}
 	};
 };
