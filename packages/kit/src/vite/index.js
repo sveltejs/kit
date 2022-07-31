@@ -191,8 +191,8 @@ function kit() {
 			};
 
 			illegal_imports = new Set([
-				`${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`,
-				`${svelte_config.kit.outDir}/runtime/env/static/private.js`
+				vite.normalizePath(`${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`),
+				vite.normalizePath(`${svelte_config.kit.outDir}/runtime/env/static/private.js`)
 			]);
 
 			if (is_build) {
@@ -283,7 +283,7 @@ function kit() {
 		 */
 		async writeBundle(_options, bundle) {
 			for (const file of manifest_data.components) {
-				const id = path.resolve(file);
+				const id = vite.normalizePath(path.resolve(file));
 				const node = this.getModuleInfo(id);
 
 				if (node) {

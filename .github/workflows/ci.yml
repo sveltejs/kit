@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # not needed for linting
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
     steps:
       - uses: actions/checkout@v3
       - uses: pnpm/action-setup@v2.2.2
@@ -38,7 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         node-version: [16]
-        os: [ubuntu-latest , windows-latest]
+        os: [ubuntu-latest, windows-latest]
         e2e-browser: ['chromium']
         include:
           - node-version: 16
@@ -53,7 +53,7 @@ jobs:
     env:
       TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
       # Install playwright's binray under node_modules so it will be cached together
-      PLAYWRIGHT_BROWSERS_PATH: "0"
+      PLAYWRIGHT_BROWSERS_PATH: '0'
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false

@@ -5,8 +5,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"package": "svelte-kit package",
-		"preview": "vite preview",
-		"prepare": "svelte-kit sync"
+		"preview": "vite preview"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",

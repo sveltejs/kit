@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import colors from 'kleur';
 import sade from 'sade';
 import { load_config } from './core/config/index.js';
@@ -40,13 +41,30 @@ prog
 	.describe('Synchronise generated files')
 	.option('--mode', 'Specify a mode for loading environment variables', 'development')
 	.action(async ({ mode }) => {
-		if (!fs.existsSync('svelte.config.js')) {
-			console.warn('Missing svelte.config.js — skipping');
+		const event = process.env.npm_lifecycle_event;
+
+		// TODO remove for 1.0
+		if (event === 'prepare') {
+			const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+			const message =
+				pkg.scripts.prepare === 'svelte-kit sync'
+					? `\`svelte-kit sync\` now runs on "postinstall" — please remove the "prepare" script from your package.json\n`
+					: `\`svelte-kit sync\` now runs on "postinstall" — please remove it from your "prepare" script\n`;
+
+			console.error(colors.bold().red(message));
+			return;
+		}
+
+		const cwd = event === 'postinstall' ? process.env.INIT_CWD ?? '' : process.cwd();
+
+		const svelte_config_file = path.join(cwd, 'svelte.config.js');
+		if (!fs.existsSync(svelte_config_file)) {
+			console.warn(`Missing ${svelte_config_file} — skipping`);
 			return;
 		}
 
 		try {
-			const config = await load_config();
+			const config = await load_config({ cwd });
 			const sync = await import('./core/sync/sync.js');
 			sync.all(config, mode);
 		} catch (error) {
