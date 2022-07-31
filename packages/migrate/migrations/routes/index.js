@@ -58,8 +58,13 @@ export async function migrate() {
 	// validate before proceeding
 	for (const file of files) {
 		const basename = path.basename(file);
-		if (basename.startsWith('+page.')) {
-			bail(`It looks like this migration has already run (found ${relative(file)}). Aborting`);
+		if (
+			basename.startsWith('+page.') ||
+			basename.startsWith('+layout.') ||
+			basename.startsWith('+server.') ||
+			basename.startsWith('+error.')
+		) {
+			bail(`It looks like this migration has already been run (found ${relative(file)}). Aborting`);
 		}
 
 		if (basename.startsWith('+')) {
