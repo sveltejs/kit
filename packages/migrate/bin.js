@@ -11,7 +11,8 @@ const migrations = fs
 	.filter((migration) => fs.existsSync(`${dir}/migrations/${migration}/index.js`));
 
 if (migrations.includes(migration)) {
-	import(`./migrations/${migration}/index.js`);
+	const { migrate } = await import(`./migrations/${migration}/index.js`);
+	migrate();
 } else {
 	console.error(
 		colors.bold().red(`You must specify one of the following migrations: ${migrations.join(', ')}`)

@@ -1,7 +1,7 @@
 import { parse } from 'svelte/compiler';
-import { forEachFile } from './utils';
 import MagicString from 'magic-string';
 import ts from 'typescript';
+import { forEachFile } from './utils.js';
 
 /**
  * Move load function in out of module context of Svelte files into own file and adjust code
@@ -190,7 +190,7 @@ export function extract_load(branch_hierarchy, ext) {
 
 	return `## Pages
 ${page_todos.join('\n')}
-    
+
 ## Layouts
 ${layout_todos.join('\n')}`;
 }

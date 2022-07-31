@@ -509,9 +509,24 @@ importers:
 
   packages/migrate:
     specifiers:
+      '@types/prompts': ^2.0.14
       kleur: ^4.1.4
+      magic-string: ^0.26.2
+      prettier: ^2.6.2
+      prompts: ^2.4.2
+      tiny-glob: ^0.2.9
+      tippex: ^3.0.0
+      typescript: ^4.7.4
     dependencies:
       kleur: 4.1.5
+      magic-string: 0.26.2
+      prompts: 2.4.2
+      tiny-glob: 0.2.9
+      tippex: 3.0.0
+      typescript: 4.7.4
+    devDependencies:
+      '@types/prompts': 2.0.14
+      prettier: 2.7.1
 
   sites/kit.svelte.dev:
     specifiers:
@@ -4181,6 +4196,10 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
+  /tippex/3.0.0:
+    resolution: {integrity: sha512-64i7qAmJgPzsIOa3LbH6zeZ29qHD4UCD9kx8s2F2USDJ1abRE8eG7G6RRAOhJvQxOqnAmAQaREvFa5LUwf048Q==}
+    dev: false
+
   /tmp/0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
     engines: {node: '>=0.6.0'}
@@ -4394,7 +4413,6 @@ packages:
     resolution: {integrity: sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==}
     engines: {node: '>=4.2.0'}
     hasBin: true
-    dev: true
 
   /uglify-js/3.16.1:
     resolution: {integrity: sha512-X5BGTIDH8U6IQ1TIRP62YC36k+ULAa1d59BxlWvPUJ1NkW5L3FwcGfEzuVvGmhJFBu0YJ5Ge25tmRISqCmLiRQ==}
