@@ -7,17 +7,35 @@ import ts from 'typescript';
 import MagicString from 'magic-string';
 
 /** @param {string} message */
-const error = (message) => {
+function bail(message) {
 	console.error(colors.bold().red(message));
 	process.exit(1);
-};
+}
 
 /** @param {string} file */
-const relative = (file) => path.relative('.', file);
+function relative(file) {
+	return path.relative('.', file);
+}
+
+/**
+ * @param {string} description
+ * @param {string} comment_id
+ */
+function task(description, comment_id) {
+	return `@migration task: ${description} (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-${comment_id})`;
+}
+
+/**
+ * @param {string} description
+ * @param {string} comment_id
+ */
+function error(description, comment_id) {
+	return `throw new Error(${JSON.stringify(task(description, comment_id))});`;
+}
 
 export async function migrate() {
 	if (!fs.existsSync('svelte.config.js')) {
-		error('Please re-run this script in a directory with a svelte.config.js');
+		bail('Please re-run this script in a directory with a svelte.config.js');
 	}
 
 	const { default: config } = await import(path.resolve('svelte.config.js'));
@@ -41,12 +59,12 @@ export async function migrate() {
 	for (const file of files) {
 		const basename = path.basename(file);
 		if (basename.startsWith('+page.')) {
-			error(`It looks like this migration has already run (found ${relative(file)}). Aborting`);
+			bail(`It looks like this migration has already run (found ${relative(file)}). Aborting`);
 		}
 
 		if (basename.startsWith('+')) {
 			// prettier-ignore
-			error(
+			bail(
 				`Please rename any files in ${relative(routes)} with a leading + character before running this migration (found ${relative(file)}). Aborting`
 			);
 		}
@@ -100,26 +118,38 @@ export async function migrate() {
 
 			renamed += svelte_ext;
 
-			fs.unlinkSync(file);
+			const edited = main.replace(/<script([^]*)>([^]+)<\/script>/, (match, attrs, content) => {
+				const indent = guess_indent(content) ?? '';
+
+				if (move_to_directory) {
+					content = adjust_imports(content);
+				}
+
+				if (/export/.test(content)) {
+					content = `\n${indent}${error('Add data prop', '3292707')}\n${content}`;
+				}
+
+				return `<script${attrs}>${content}</script>`;
+			});
 
 			if (move_to_directory) {
 				const dir = path.dirname(renamed);
 				if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-
-				fs.writeFileSync(renamed, adjust_imports(main));
-			} else {
-				fs.writeFileSync(renamed, main);
 			}
 
+			fs.unlinkSync(file);
+			fs.writeFileSync(renamed, edited);
+
+			// if component has a <script context="module">, move it to a sibling .js file
 			if (module) {
 				const ext = /<script[^>]+lang=['"](ts|typescript)['"][^]*>/.test(module) ? '.js' : '.ts';
-				const error = /load/.test(module)
-					? `throw new Error('@migration task: update load function (TODO documentation)');\n\n`
+				const injected = /load/.test(module)
+					? `${error('update load function', '3292693')}\n\n`
 					: '';
 
 				const content = dedent(move_to_directory ? adjust_imports(module) : module);
 
-				fs.writeFileSync(sibling + ext, error + content);
+				fs.writeFileSync(sibling + ext, injected + content);
 			}
 		} else if (module_ext) {
 			const bare = basename.slice(0, -module_ext.length);
@@ -159,7 +189,7 @@ function extract_load(content) {
 		/<script[^>]+context=(['"])module\1[^>]*>([^]*?)<\/script>/,
 		(match, quote, contents) => {
 			module = contents.replace(/^\n/, '');
-			return '<!-- @migration task: verify that removal of <script context="module"> did not break this component -->';
+			return `<!-- ${task('Check for missing imports', '3292722')} -->`;
 		}
 	);
 
