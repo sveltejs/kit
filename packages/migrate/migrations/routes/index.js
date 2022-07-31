@@ -52,17 +52,16 @@ export async function migrate() {
 		}
 	}
 
-	// TODO uncomment this
-	// const response = await prompts({
-	// 	type: 'confirm',
-	// 	name: 'value',
-	// 	message: 'This will overwrite files in the current directory. Continue?',
-	// 	initial: false
-	// });
+	const response = await prompts({
+		type: 'confirm',
+		name: 'value',
+		message: 'This will overwrite files in the current directory. Continue?',
+		initial: false
+	});
 
-	// if (!response.value) {
-	// 	process.exit(1);
-	// }
+	if (!response.value) {
+		process.exit(1);
+	}
 
 	for (const file of files) {
 		const basename = path.basename(file);
