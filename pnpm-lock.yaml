@@ -284,7 +284,6 @@ importers:
       devalue: ^2.0.1
       kleur: ^4.1.4
       locate-character: ^2.0.5
-      magic-string: ~0.26.2
       marked: ^4.0.16
       mime: ^3.0.0
       node-fetch: ^3.2.4
@@ -321,7 +320,6 @@ importers:
       devalue: 2.0.1
       kleur: 4.1.5
       locate-character: 2.0.5
-      magic-string: 0.26.2
       marked: 4.0.17
       mime: 3.0.0
       node-fetch: 3.2.6
