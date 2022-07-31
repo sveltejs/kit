@@ -72,7 +72,8 @@
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\" -i packaging",
 		"test:typings": "tsc --project test/typings",
 		"test:packaging": "uvu src/packaging \"(spec\\.js|test[\\\\/]index\\.js)\"",
-		"types": "node scripts/extract-types.js"
+		"types": "node scripts/extract-types.js",
+		"postinstall": "node svelte-kit.js sync"
 	},
 	"exports": {
 		"./package.json": "./package.json",
