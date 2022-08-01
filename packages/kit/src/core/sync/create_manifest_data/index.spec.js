@@ -26,72 +26,86 @@ const create = (dir, config = {}) => {
 	});
 };
 
-const default_layout = 'layout.svelte';
+const default_layout = {
+	component: 'layout.svelte'
+};
+
 const default_error = 'error.svelte';
 
 test('creates routes', () => {
 	const { components, routes } = create('samples/basic');
 
-	const index = 'samples/basic/index.svelte';
-	const about = 'samples/basic/about.svelte';
-	const blog = 'samples/basic/blog/index.svelte';
-	const blog_$slug = 'samples/basic/blog/[slug].svelte';
+	const index = 'samples/basic/+page.svelte';
+	const about = 'samples/basic/about/+page.svelte';
+	const blog = 'samples/basic/blog/+page.svelte';
+	const blog_$slug = 'samples/basic/blog/[slug]/+page.svelte';
 
-	assert.equal(components, [default_layout, default_error, about, blog_$slug, blog, index]);
+	assert.equal(components, [
+		default_layout.component,
+		default_error,
+		index,
+		about,
+		blog,
+		blog_$slug
+	]);
 
 	assert.equal(routes, [
 		{
 			type: 'page',
 			id: '',
 			pattern: /^\/$/,
-			path: '/',
-			shadow: null,
-			a: [default_layout, index],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			page: {
+				component: index
+			}
 		},
 
 		{
 			type: 'endpoint',
 			id: 'blog.json',
 			pattern: /^\/blog\.json$/,
-			file: 'samples/basic/blog/index.json.js'
+			file: 'samples/basic/blog.json/+server.js'
 		},
 
 		{
 			type: 'page',
 			id: 'about',
 			pattern: /^\/about\/?$/,
-			path: '/about',
-			shadow: null,
-			a: [default_layout, about],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			page: {
+				component: about
+			}
 		},
 
 		{
 			type: 'page',
 			id: 'blog',
 			pattern: /^\/blog\/?$/,
-			path: '/blog',
-			shadow: null,
-			a: [default_layout, blog],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			page: {
+				component: blog
+			}
 		},
 
 		{
 			type: 'endpoint',
 			id: 'blog/[slug].json',
 			pattern: /^\/blog\/([^/]+?)\.json$/,
-			file: 'samples/basic/blog/[slug].json.ts'
+			file: 'samples/basic/blog/[slug].json/+server.ts'
 		},
 
 		{
 			type: 'page',
 			id: 'blog/[slug]',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
-			path: '',
-			shadow: null,
-			a: [default_layout, blog_$slug],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			page: {
+				component: blog_$slug
+			}
 		}
 	]);
 });

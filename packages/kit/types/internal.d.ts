@@ -134,14 +134,20 @@ export interface NormalizedLoadOutputCache {
 	private?: boolean;
 }
 
+export interface PageNode {
+	component?: string;
+	module?: string;
+	server?: string;
+	layout?: string;
+}
+
 export interface PageData {
 	type: 'page';
 	id: string;
-	shadow: string | null;
 	pattern: RegExp;
-	path: string;
-	a: Array<string | undefined>;
-	b: Array<string | undefined>;
+	errors: Array<string | undefined>;
+	layouts: Array<PageNode | undefined>;
+	page: PageNode;
 }
 
 export type PayloadScriptAttributes =
