@@ -2,27 +2,10 @@
 	import { enhance } from '$lib/form';
 	import { scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
+	import type { Data } from './$types';
 
-	/**
-	 * @typedef {{
-	 *   uid: string;
-	 *   created_at: Date;
-	 *   text: string;
-	 *   done: boolean;
-	 *   pending_delete: boolean;
-	 * }} Todo
-	 */
-
-	type Todo = {
-		uid: string;
-		created_at: Date;
-		text: string;
-		done: boolean;
-		pending_delete: boolean;
-	};
-
-	/** @type {Todo[]} */
-	export let todos: Todo[];
+	/** @type {import('./$types').Data} */
+	export let data: Data;
 </script>
 
 <svelte:head>
@@ -46,7 +29,7 @@
 		<input name="text" aria-label="Add todo" placeholder="+ tap to add a todo" />
 	</form>
 
-	{#each todos as todo (todo.uid)}
+	{#each data.todos as todo (todo.uid)}
 		<div
 			class="todo"
 			class:done={todo.done}
