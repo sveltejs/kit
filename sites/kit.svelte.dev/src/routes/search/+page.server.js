@@ -1,6 +1,6 @@
 import { init, inited, search } from '$lib/search/search';
 
-/** @type {import('./__types/index').RequestHandler} */
+/** @type {import('./$types').GET} */
 export async function GET({ url }) {
 	if (!inited) {
 		// TODO this feels a bit hacky, not sure if there's a better approach
@@ -14,9 +14,7 @@ export async function GET({ url }) {
 	const results = search(query);
 
 	return {
-		body: {
-			query,
-			results
-		}
+		query,
+		results
 	};
 }

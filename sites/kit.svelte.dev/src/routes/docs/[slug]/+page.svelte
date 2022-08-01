@@ -1,20 +1,3 @@
-<script context="module">
-	// TODO should use a shadow endpoint instead, need to fix a bug first
-	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ fetch, params }) {
-		const res = await fetch(`/docs/${params.slug}.json`);
-		const { prev, next, section } = await res.json();
-
-		return {
-			props: {
-				prev,
-				next,
-				section
-			}
-		};
-	}
-</script>
-
 <script>
 	import { Icon } from '@sveltejs/site-kit';
 	import '@sveltejs/site-kit/code.css';
@@ -22,44 +5,43 @@
 	import '$lib/docs/client/shiki.css';
 	import * as hovers from '$lib/docs/client/hovers.js';
 
-	export let prev;
-	export let next;
-	export let section;
+	/** @type {import('./$types').Data} */
+	export let data;
 
 	hovers.setup();
 </script>
 
 <svelte:head>
-	<title>{section.title} • Docs • SvelteKit</title>
+	<title>{data.section.title} • Docs • SvelteKit</title>
 
 	<meta name="twitter:title" content="SvelteKit docs" />
-	<meta name="twitter:description" content="{section.title} • SvelteKit documentation" />
-	<meta name="Description" content="{section.title} • SvelteKit documentation" />
+	<meta name="twitter:description" content="{data.section.title} • SvelteKit documentation" />
+	<meta name="Description" content="{data.section.title} • SvelteKit documentation" />
 </svelte:head>
 
 <div class="content listify">
-	<h1>{section.title}</h1>
+	<h1>{data.section.title}</h1>
 
 	<a class="edit" href="https://github.com/sveltejs/kit/edit/master/documentation/{section.file}">
 		<Icon size={50} name="edit" /> Edit this page on GitHub
 	</a>
 
 	<section>
-		{@html section.content}
+		{@html data.section.content}
 	</section>
 
 	<div class="controls">
 		<div>
-			<span class:faded={!prev}>previous</span>
-			{#if prev}
-				<a href="/docs/{prev.slug}">{prev.title}</a>
+			<span class:faded={!data.prev}>previous</span>
+			{#if data.prev}
+				<a href="/docs/{data.prev.slug}">{data.prev.title}</a>
 			{/if}
 		</div>
 
 		<div>
-			<span class:faded={!next}>next</span>
-			{#if next}
-				<a href="/docs/{next.slug}">{next.title}</a>
+			<span class:faded={!data.next}>next</span>
+			{#if data.next}
+				<a href="/docs/{data.next.slug}">{data.next.title}</a>
 			{/if}
 		</div>
 	</div>

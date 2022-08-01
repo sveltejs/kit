@@ -5,7 +5,8 @@
 	import '@sveltejs/site-kit/code.css';
 	import * as hovers from '$lib/docs/client/hovers.js';
 
-	export let sections;
+	/** @type {import('./$types').Data} */
+	export let data;
 
 	hovers.setup();
 </script>
@@ -20,7 +21,7 @@
 
 <div class="faqs stretch">
 	<h1>Frequently Asked Questions</h1>
-	{#each sections as faq}
+	{#each data.sections as faq}
 		<article class="faq">
 			<h2 id={faq.slug}>
 				{faq.title}

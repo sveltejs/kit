@@ -1,11 +1,3 @@
-<script context="module">
-	export function load() {
-		return {
-			cache: { maxage: 60 }
-		};
-	}
-</script>
-
 <script>
 	import Machine from '$img/svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&meta';
 	import { Hero, Blurb } from '@sveltejs/site-kit';
@@ -82,10 +74,12 @@
 		</div>
 
 		<div slot="how">
-			<pre><code>npm create <span class="orange-highlight">svelte</span>@latest my-app
+			<pre><code
+					>npm create <span class="orange-highlight">svelte</span>@latest my-app
 cd my-app
 npm install
-npm run dev -- --open</code></pre>
+npm run dev -- --open</code
+				></pre>
 			<a sveltekit:prefetch href="/docs" class="cta">get started</a>
 		</div>
 	</Blurb>

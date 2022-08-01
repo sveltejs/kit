@@ -1,15 +1,8 @@
-<script context="module">
-	export const prerender = false;
-</script>
-
 <script>
 	import SearchResults from '$lib/search/SearchResults.svelte';
 
-	/** @type {import('$lib/search/types').Block[]} */
-	export let results;
-
-	/** @type {string} */
-	export let query;
+	/** @type {import('./$types').Data} */
+	export let data;
 </script>
 
 <svelte:head>
@@ -18,10 +11,10 @@
 
 <main>
 	<form>
-		<input name="q" value={query} placeholder="Search" spellcheck="false" />
+		<input name="q" value={data.query} placeholder="Search" spellcheck="false" />
 	</form>
 
-	<SearchResults {results} {query} />
+	<SearchResults results={data.results} query={data.query} />
 </main>
 
 <style>

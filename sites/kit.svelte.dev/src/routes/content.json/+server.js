@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { extract_frontmatter, transform } from '$lib/docs/server/markdown';
 import { render_modules } from '$lib/docs/server/modules';
-import { slugify } from '../lib/docs/server';
+import { slugify } from '../../lib/docs/server';
 
 const categories = [
 	{
@@ -81,9 +81,7 @@ export function GET() {
 	}
 
 	return {
-		body: {
-			blocks
-		}
+		blocks
 	};
 }
 

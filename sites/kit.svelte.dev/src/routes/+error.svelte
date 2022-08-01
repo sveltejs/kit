@@ -1,16 +1,6 @@
-<script context="module">
-	export function load({ status, error }) {
-		return {
-			props: { status, error }
-		};
-	}
-</script>
-
 <script>
 	import { dev } from '$app/env';
-
-	export let status;
-	export let error;
+	import { page } from '$app/stores';
 
 	// we don't want to use <svelte:window bind:online> here, because we only care about the online
 	// state when the page first loads
@@ -18,27 +8,29 @@
 </script>
 
 <svelte:head>
-	<title>{status}</title>
+	<title>{$page.status}</title>
 </svelte:head>
 
 <div class="container">
 	{#if online}
 		<h1>Yikes!</h1>
 
-		{#if error.message}
-			<p class="error">{status}: {error.message}</p>
+		{#if $page.error.message}
+			<p class="error">{$page.status}: {$page.error.message}</p>
 		{:else}
-			<p class="error">Encountered a {status} error</p>
+			<p class="error">Encountered a {$page.status} error</p>
 		{/if}
 
-		{#if status >= 500}
-			{#if dev && error.stack}
-				<pre>{error.stack}</pre>
+		{#if $page.status >= 500}
+			{#if dev && $page.error.stack}
+				<pre>{$page.error.stack}</pre>
 			{:else}
 				<p>Please try reloading the page.</p>
 
 				<p>
-					If the error persists, please drop by <a href="https://svelte.dev/chat">Discord chatroom</a>
+					If the error persists, please drop by <a href="https://svelte.dev/chat"
+						>Discord chatroom</a
+					>
 					and let us know, or raise an issue on
 					<a href="https://github.com/sveltejs/svelte">GitHub</a>. Thanks!
 				</p>
@@ -79,8 +71,4 @@
 		font: 600 16px/1.7 var(--font);
 		border-radius: 2px;
 	}
-
-	/* @media (min-width: 480px) {
-		h1 { font-size: 4em }
-	} */
 </style>
