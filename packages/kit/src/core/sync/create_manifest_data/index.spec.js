@@ -314,7 +314,7 @@ test('ignores files and directories with leading underscores', () => {
 	const { routes } = create('samples/hidden-underscore');
 
 	assert.equal(routes.map((r) => r.type === 'endpoint' && r.file).filter(Boolean), [
-		'samples/hidden-underscore/e/f/g/h.js'
+		'samples/hidden-underscore/e/f/g/h/+server.js'
 	]);
 });
 
@@ -322,7 +322,7 @@ test('ignores files and directories with leading dots except .well-known', () =>
 	const { routes } = create('samples/hidden-dot');
 
 	assert.equal(routes.map((r) => r.type === 'endpoint' && r.file).filter(Boolean), [
-		'samples/hidden-dot/.well-known/dnt-policy.txt.js'
+		'samples/hidden-dot/.well-known/dnt-policy.txt/+server.js'
 	]);
 });
 
@@ -336,7 +336,7 @@ test('allows multiple slugs', () => {
 				type: 'endpoint',
 				id: '[file].[ext]',
 				pattern: /^\/([^/]+?)\.([^/]+?)$/,
-				file: 'samples/multiple-slugs/[file].[ext].js'
+				file: 'samples/multiple-slugs/[file].[ext]/+server.js'
 			}
 		]
 	);
@@ -345,7 +345,7 @@ test('allows multiple slugs', () => {
 test('fails if dynamic params are not separated', () => {
 	assert.throws(() => {
 		create('samples/invalid-params');
-	}, /Invalid route samples\/invalid-params\/\[foo\]\[bar\]\.js — parameters must be separated/);
+	}, /Invalid route samples\/invalid-params\/\[foo\]\[bar\]\/\+server\.js — parameters must be separated/);
 });
 
 test('ignores things that look like lockfiles', () => {
@@ -355,7 +355,7 @@ test('ignores things that look like lockfiles', () => {
 		{
 			type: 'endpoint',
 			id: 'foo',
-			file: 'samples/lockfiles/foo.js',
+			file: 'samples/lockfiles/foo/+server.js',
 			pattern: /^\/foo\/?$/
 		}
 	]);
@@ -366,66 +366,77 @@ test('works with custom extensions', () => {
 		extensions: ['.jazz', '.beebop', '.funk', '.svelte']
 	});
 
-	const index = 'samples/custom-extension/index.funk';
-	const about = 'samples/custom-extension/about.jazz';
-	const blog = 'samples/custom-extension/blog/index.svelte';
-	const blog_$slug = 'samples/custom-extension/blog/[slug].beebop';
+	const index = 'samples/custom-extension/+page.funk';
+	const about = 'samples/custom-extension/about/+page.jazz';
+	const blog = 'samples/custom-extension/blog/+page.svelte';
+	const blog_$slug = 'samples/custom-extension/blog/[slug]/+page.beebop';
 
-	assert.equal(components, [default_layout, default_error, about, blog_$slug, blog, index]);
+	assert.equal(components, [
+		default_layout.component,
+		default_error,
+		index,
+		about,
+		blog,
+		blog_$slug
+	]);
 
 	assert.equal(routes, [
 		{
 			type: 'page',
 			id: '',
 			pattern: /^\/$/,
-			path: '/',
-			shadow: null,
-			a: [default_layout, index],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			page: {
+				component: index
+			}
 		},
 
 		{
 			type: 'endpoint',
 			id: 'blog.json',
 			pattern: /^\/blog\.json$/,
-			file: 'samples/custom-extension/blog/index.json.js'
+			file: 'samples/custom-extension/blog.json/+server.js'
 		},
 
 		{
 			type: 'page',
 			id: 'about',
 			pattern: /^\/about\/?$/,
-			path: '/about',
-			shadow: null,
-			a: [default_layout, about],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			page: {
+				component: about
+			}
 		},
 
 		{
 			type: 'page',
 			id: 'blog',
 			pattern: /^\/blog\/?$/,
-			path: '/blog',
-			shadow: null,
-			a: [default_layout, blog],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			page: {
+				component: blog
+			}
 		},
 
 		{
 			type: 'endpoint',
 			id: 'blog/[slug].json',
 			pattern: /^\/blog\/([^/]+?)\.json$/,
-			file: 'samples/custom-extension/blog/[slug].json.js'
+			file: 'samples/custom-extension/blog/[slug].json/+server.js'
 		},
 
 		{
 			type: 'page',
 			id: 'blog/[slug]',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
-			path: '',
-			shadow: null,
-			a: [default_layout, blog_$slug],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			page: {
+				component: blog_$slug
+			}
 		}
 	]);
 });
