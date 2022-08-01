@@ -468,13 +468,6 @@ test('includes nested error components', () => {
 	]);
 });
 
-test('errors on encountering an illegal __file', () => {
-	assert.throws(
-		() => create('samples/illegal-dunder'),
-		/Files and directories prefixed with __ are reserved \(saw samples\/illegal-dunder\/__foo.svelte\)/
-	);
-});
-
 test('creates routes with named layouts', () => {
 	const { components, routes } = create('samples/named-layouts');
 
