@@ -192,11 +192,16 @@ export default function create_manifest_data({
 	/** @type {string[]} */
 	const components = [];
 
+	/** @type {string[]} */
+	const modules = [];
+
 	tree.forEach(({ layouts, error }) => {
 		// we do [default, error, ...other_layouts] so that components[0] and [1]
 		// are the root layout/error. kinda janky, there's probably a nicer way
-		if (layouts[DEFAULT]?.component) {
-			components.push(layouts[DEFAULT].component);
+		if (layouts[DEFAULT]) {
+			const { component, module } = layouts[DEFAULT];
+			if (component) components.push(component);
+			if (module) modules.push(module);
 		}
 
 		if (error) {
@@ -204,15 +209,18 @@ export default function create_manifest_data({
 		}
 
 		for (const id in layouts) {
-			if (id !== DEFAULT && layouts[id].component) {
-				components.push(layouts[id].component);
+			if (id !== DEFAULT) {
+				const { component, module } = layouts[id];
+				if (component) components.push(component);
+				if (module) modules.push(module);
 			}
 		}
 	});
 
 	route_map.forEach((route) => {
-		if (route.type === 'page' && route.page.component) {
-			components.push(route.page.component);
+		if (route.type === 'page') {
+			if (route.page.component) components.push(route.page.component);
+			if (route.page.module) modules.push(route.page.module);
 		}
 	});
 
@@ -257,6 +265,7 @@ export default function create_manifest_data({
 	return {
 		assets,
 		components,
+		modules,
 		routes,
 		matchers
 	};

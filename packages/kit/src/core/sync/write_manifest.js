@@ -13,31 +13,54 @@ export function write_manifest(manifest_data, base, output) {
 	/** @type {Record<string, number>} */
 	const component_indexes = {};
 
+	/** @type {Record<string, number>} */
+	const module_indexes = {};
+
 	/** @param {string} c */
 	const get_path = (c) => path.relative(base, c);
 
-	const components = `[
-		${manifest_data.components
-			.map((component, i) => {
-				component_indexes[component] = i;
+	const components = `[\n\t${manifest_data.components
+		.map((component, i) => {
+			component_indexes[component] = i;
+			return `() => import(${s(get_path(component))})`;
+		})
+		.join(',\n\t')}\n]`;
 
-				return `() => import(${s(get_path(component))})`;
-			})
-			.join(',\n\t\t\t\t\t')}
-	]`.replace(/^\t/gm, '');
+	const modules = `[\n\t${manifest_data.modules
+		.map((module, i) => {
+			module_indexes[module] = i;
+			return `() => import(${s(get_path(module))})`;
+		})
+		.join(',\n\t')}\n]`;
 
-	/** @param {Array<string | undefined>} parts */
-	const get_indices = (parts) =>
-		`[${parts.map((part) => (part ? component_indexes[part] : '')).join(', ')}]`;
+	/**
+	 * Serialize a page node as a pair of indices into the
+	 * `components` and `modules` arrays
+	 * @param {import('types').PageNode | undefined} node
+	 */
+	function serialize_node(node) {
+		if (!node) return ',';
+
+		const indices = [node.component ? component_indexes[node.component] : ''];
+		if (node.module) indices.push(module_indexes[node.module]);
+		return `[${indices.join(',')}]`;
+	}
 
 	const dictionary = `{
 		${manifest_data.routes
 			.map((route) => {
 				if (route.type === 'page') {
-					const tuple = [get_indices(route.a), get_indices(route.b)];
-					if (route.shadow) tuple.push('1');
+					const errors = `[${route.errors
+						.map((file) => file && component_indexes[file])
+						.join(', ')}]`;
 
-					return `${s(route.id)}: [${tuple.join(', ')}]`;
+					const layouts = `[${route.layouts.map(serialize_node).join(', ')}]`;
+
+					const page = serialize_node(route.page);
+
+					const value = [errors, layouts, page].join(',');
+
+					return `${s(route.id)}: [${value}]`;
 				}
 			})
 			.filter(Boolean)
@@ -50,6 +73,8 @@ export function write_manifest(manifest_data, base, output) {
 			export { matchers } from './client-matchers.js';
 
 			export const components = ${components};
+
+			export const modules = ${modules};
 
 			export const dictionary = ${dictionary};
 		`)

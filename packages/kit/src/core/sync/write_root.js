@@ -9,7 +9,7 @@ export function write_root(manifest_data, output) {
 
 	const max_depth = Math.max(
 		...manifest_data.routes.map((route) =>
-			route.type === 'page' ? route.a.filter(Boolean).length : 0
+			route.type === 'page' ? route.layouts.filter(Boolean).length + 1 : 0
 		),
 		1
 	);
