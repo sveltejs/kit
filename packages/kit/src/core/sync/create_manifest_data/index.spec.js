@@ -292,34 +292,6 @@ test('ignores files and directories with leading dots except .well-known', () =>
 	]);
 });
 
-test('ignores files by `kit.excludes` config w/RegExp', () => {
-	const { routes } = create('samples/hidden-by-excludes-config', {
-		kit: {
-			routes: (filepath) =>
-				!filepath.endsWith('.test.js') &&
-				!filepath.endsWith('.spec.js') &&
-				!filepath.endsWith('.md')
-		}
-	});
-
-	assert.equal(
-		routes
-			.map((r) => r.type === 'endpoint' && r.file)
-			.filter(Boolean)
-			.sort(),
-		[
-			'samples/hidden-by-excludes-config/.a.js',
-			'samples/hidden-by-excludes-config/.well-known/dnt-policy.txt.js',
-			'samples/hidden-by-excludes-config/_a.js',
-			'samples/hidden-by-excludes-config/a.js',
-			'samples/hidden-by-excludes-config/subdir/.a.js',
-			'samples/hidden-by-excludes-config/subdir/_a.js',
-			'samples/hidden-by-excludes-config/subdir/.well-known/dnt-policy.txt.js',
-			'samples/hidden-by-excludes-config/subdir/a.js'
-		].sort()
-	);
-});
-
 test('allows multiple slugs', () => {
 	const { routes } = create('samples/multiple-slugs');
 
@@ -628,12 +600,6 @@ test('errors on layout in directory', () => {
 		() => create('samples/named-layout-on-directory-2'),
 		/Invalid route samples\/named-layout-on-directory-2\/foo@a\/bar.svelte - named layouts are not allowed in directories/
 	);
-});
-
-test('allows for __tests__ directories', () => {
-	const { routes } = create('samples/legal-dunder');
-
-	assert.equal(routes, []);
 });
 
 test('creates param matchers', () => {
