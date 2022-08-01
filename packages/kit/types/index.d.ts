@@ -242,23 +242,12 @@ export interface RequestEvent<Params extends Record<string, string> = Record<str
 }
 
 /**
- * A `(event: RequestEvent) => RequestHandlerOutput` function exported from an endpoint that corresponds to an HTTP verb (`GET`, `PUT`, `PATCH`, etc) and handles requests with that method.
+ * A `(event: RequestEvent) => Response` function exported from a +server.js file that corresponds to an HTTP verb (`GET`, `PUT`, `PATCH`, etc) and handles requests with that method.
  *
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](/docs/types#generated-types) instead.
- *
- * The next generic argument `Output` is used to validate the returned `body` from your functions by passing it through `BodyValidator`, which will make sure the variable in the `body` matches what with you assign here. It defaults to `ResponseBody`, which will error when `body` receives a [custom object type](https://www.typescriptlang.org/docs/handbook/2/objects.html).
  */
-export interface RequestHandler<
-	Params extends Record<string, string> = Record<string, string>,
-	Output = ResponseBody
-> {
-	(event: RequestEvent<Params>): MaybePromise<RequestHandlerOutput<Output>>;
-}
-
-export interface RequestHandlerOutput<Output = ResponseBody> {
-	status?: number;
-	headers?: Headers | Partial<ResponseHeaders>;
-	body?: Output extends ResponseBody ? Output : BodyValidator<Output>;
+export interface RequestHandler<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<Response>;
 }
 
 export interface ResolveOptions {
