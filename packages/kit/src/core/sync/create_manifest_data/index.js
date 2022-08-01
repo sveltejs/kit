@@ -102,13 +102,9 @@ export default function create_manifest_data({
 
 				const group = tree_node(id);
 
-				const defined =
-					group.layouts[layout_id] ||
-					(group.layouts[layout_id] = {
-						layout: DEFAULT
-					});
+				const defined = group.layouts[layout_id] || (group.layouts[layout_id] = {});
 
-				if (defined[item.kind]) {
+				if (defined[item.kind] && id !== '' && layout_id !== DEFAULT) {
 					// edge case
 					throw new Error(
 						`Duplicate layout ${project_relative} already defined at ${defined[item.kind]}`
@@ -281,7 +277,7 @@ function analyze(file, component_extensions, module_extensions) {
 	if (component_extension) {
 		const name = file.slice(0, -component_extension.length);
 		const pattern =
-			/^\+(?:(page(@([a-zA-Z0-9_-]+))?)|(layout(-([a-zA-Z0-9_-]+))?(@([a-zA-Z0-9_-]+))?)|error)$/;
+			/^\+(?:(page(?:@([a-zA-Z0-9_-]+))?)|(layout(-([a-zA-Z0-9_-]+))?(@([a-zA-Z0-9_-]+))?)|error)$/;
 		const match = pattern.exec(name);
 		if (!match) return null;
 
@@ -327,9 +323,7 @@ function trace(tree, id, layout_id = DEFAULT, project_relative) {
 	/** @type {Array<string | undefined>} */
 	const errors = [];
 
-	const parts = id.split('/');
-
-	if (parts[0] !== '') parts.unshift(''); // TODO this is so that every path ends at '' (the root), but it's a little ugly
+	const parts = id.split('/').filter(Boolean);
 
 	// walk up the tree, find which +layout and +error components
 	// apply to this page
@@ -359,9 +353,8 @@ function trace(tree, id, layout_id = DEFAULT, project_relative) {
 			layout_id = layout.layout;
 		} else {
 			if (layout) layout_id = DEFAULT;
-			parts.pop();
-
 			if (parts.length === 0) break;
+			parts.pop();
 		}
 	}
 

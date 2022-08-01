@@ -150,34 +150,50 @@ test_symlinks('creates symlinked routes', () => {
 test('creates routes with layout', () => {
 	const { components, routes } = create('samples/basic-layout');
 
-	const layout = 'samples/basic-layout/__layout.svelte';
-	const index = 'samples/basic-layout/index.svelte';
-	const foo___layout = 'samples/basic-layout/foo/__layout.svelte';
-	const foo = 'samples/basic-layout/foo/index.svelte';
+	const layout = 'samples/basic-layout/+layout.svelte';
+	const index = 'samples/basic-layout/+page.svelte';
+	const foo___layout = 'samples/basic-layout/foo/+layout.svelte';
+	const foo = 'samples/basic-layout/foo/+page.svelte';
 
-	assert.equal(components, [layout, default_error, foo___layout, foo, index]);
+	assert.equal(components, [layout, default_error, foo___layout, index, foo]);
 
-	assert.equal(routes, [
-		{
-			type: 'page',
-			id: '',
-			pattern: /^\/$/,
-			path: '/',
-			shadow: null,
-			a: [layout, index],
-			b: [default_error]
-		},
+	assert.equal(
+		routes.slice(1, 2),
+		[
+			{
+				type: 'page',
+				id: '',
+				pattern: /^\/$/,
+				errors: [default_error],
+				layouts: [
+					{
+						component: layout
+					}
+				],
+				page: {
+					component: index
+				}
+			},
 
-		{
-			type: 'page',
-			id: 'foo',
-			pattern: /^\/foo\/?$/,
-			path: '/foo',
-			shadow: null,
-			a: [layout, foo___layout, foo],
-			b: [default_error]
-		}
-	]);
+			{
+				type: 'page',
+				id: 'foo',
+				pattern: /^\/foo\/?$/,
+				errors: [default_error],
+				layouts: [
+					{
+						component: layout
+					},
+					{
+						component: foo___layout
+					}
+				],
+				page: {
+					component: foo
+				}
+			}
+		].slice(1, 2)
+	);
 });
 
 test('succeeds when routes does not exist', () => {
@@ -193,11 +209,11 @@ test('encodes invalid characters', () => {
 	// had to remove ? and " because windows
 
 	// const quote = 'samples/encoding/".svelte';
-	const hash = 'samples/encoding/%23.svelte';
+	const hash = 'samples/encoding/%23/+page.svelte';
 	// const question_mark = 'samples/encoding/?.svelte';
 
 	assert.equal(components, [
-		default_layout,
+		default_layout.component,
 		default_error,
 		// quote,
 		hash
@@ -245,13 +261,30 @@ test('sorts routes correctly', () => {
 test('sorts routes with rest correctly', () => {
 	const { routes } = create('samples/rest');
 
-	assert.equal(
-		routes.map((p) => (p.type === 'page' ? p.a : p.file)),
-		[
-			[default_layout, 'samples/rest/a/[...rest].svelte'],
-			[default_layout, 'samples/rest/b/[...rest].svelte']
-		]
-	);
+	assert.equal(routes, [
+		{
+			type: 'page',
+			id: 'a/[...rest]',
+			pattern: /^\/a(?:\/(.*))?\/?$/,
+			errors: [default_error],
+			layouts: [default_layout],
+			page: {
+				component: 'samples/rest/a/[...rest]/+page.svelte',
+				server: 'samples/rest/a/[...rest]/+page.server.js'
+			}
+		},
+		{
+			type: 'page',
+			id: 'b/[...rest]',
+			pattern: /^\/b(?:\/(.*))?\/?$/,
+			errors: [default_error],
+			layouts: [default_layout],
+			page: {
+				component: 'samples/rest/b/[...rest]/+page.svelte',
+				server: 'samples/rest/b/[...rest]/+page.server.ts'
+			}
+		}
+	]);
 });
 
 test('allows rest parameters inside segments', () => {
@@ -262,16 +295,17 @@ test('allows rest parameters inside segments', () => {
 			type: 'page',
 			id: 'prefix-[...rest]',
 			pattern: /^\/prefix-(.*?)\/?$/,
-			path: '',
-			shadow: null,
-			a: [default_layout, 'samples/rest-prefix-suffix/prefix-[...rest].svelte'],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			page: {
+				component: 'samples/rest-prefix-suffix/prefix-[...rest]/+page.svelte'
+			}
 		},
 		{
 			type: 'endpoint',
 			id: '[...rest].json',
 			pattern: /^\/(.*?)\.json$/,
-			file: 'samples/rest-prefix-suffix/[...rest].json.js'
+			file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
 		}
 	]);
 });
@@ -425,9 +459,9 @@ test('includes nested error components', () => {
 			shadow: null,
 			a: [
 				default_layout,
-				'samples/nested-errors/foo/__layout.svelte',
+				'samples/nested-errors/foo/+layout.svelte',
 				undefined,
-				'samples/nested-errors/foo/bar/baz/__layout.svelte',
+				'samples/nested-errors/foo/bar/baz/+layout.svelte',
 				'samples/nested-errors/foo/bar/baz/index.svelte'
 			],
 			b: [
@@ -444,15 +478,15 @@ test('creates routes with named layouts', () => {
 	const { components, routes } = create('samples/named-layouts');
 
 	assert.equal(components, [
-		'samples/named-layouts/__layout.svelte',
+		'samples/named-layouts/+layout.svelte',
 		default_error,
-		'samples/named-layouts/__layout-home@default.svelte',
-		'samples/named-layouts/__layout-special.svelte',
-		'samples/named-layouts/a/__layout.svelte',
-		'samples/named-layouts/b/__layout-alsospecial@special.svelte',
-		'samples/named-layouts/b/c/__layout.svelte',
-		'samples/named-layouts/b/d/__layout-extraspecial@special.svelte',
-		'samples/named-layouts/b/d/__layout-special.svelte',
+		'samples/named-layouts/+layout-home@default.svelte',
+		'samples/named-layouts/+layout-special.svelte',
+		'samples/named-layouts/a/+layout.svelte',
+		'samples/named-layouts/b/+layout-alsospecial@special.svelte',
+		'samples/named-layouts/b/c/+layout.svelte',
+		'samples/named-layouts/b/d/+layout-extraspecial@special.svelte',
+		'samples/named-layouts/b/d/+layout-special.svelte',
 		'samples/named-layouts/a/a1.svelte',
 		'samples/named-layouts/a/a2@special.svelte',
 		'samples/named-layouts/b/c/c1@alsospecial.svelte',
@@ -470,8 +504,8 @@ test('creates routes with named layouts', () => {
 			path: '/a/a1',
 			shadow: null,
 			a: [
-				'samples/named-layouts/__layout.svelte',
-				'samples/named-layouts/a/__layout.svelte',
+				'samples/named-layouts/+layout.svelte',
+				'samples/named-layouts/a/+layout.svelte',
 				'samples/named-layouts/a/a1.svelte'
 			],
 			b: [default_error]
@@ -483,7 +517,7 @@ test('creates routes with named layouts', () => {
 			path: '/a/a2',
 			shadow: null,
 			a: [
-				'samples/named-layouts/__layout-special.svelte',
+				'samples/named-layouts/+layout-special.svelte',
 				'samples/named-layouts/a/a2@special.svelte'
 			],
 			b: [default_error]
@@ -495,8 +529,8 @@ test('creates routes with named layouts', () => {
 			path: '/b/d',
 			shadow: null,
 			a: [
-				'samples/named-layouts/__layout.svelte',
-				'samples/named-layouts/b/d/__layout-special.svelte',
+				'samples/named-layouts/+layout.svelte',
+				'samples/named-layouts/b/d/+layout-special.svelte',
 				'samples/named-layouts/b/d/index@special.svelte'
 			],
 			b: [default_error]
@@ -508,8 +542,8 @@ test('creates routes with named layouts', () => {
 			path: '/b/c/c1',
 			shadow: null,
 			a: [
-				'samples/named-layouts/__layout-special.svelte',
-				'samples/named-layouts/b/__layout-alsospecial@special.svelte',
+				'samples/named-layouts/+layout-special.svelte',
+				'samples/named-layouts/b/+layout-alsospecial@special.svelte',
 				'samples/named-layouts/b/c/c1@alsospecial.svelte'
 			],
 			b: [default_error]
@@ -521,8 +555,8 @@ test('creates routes with named layouts', () => {
 			path: '/b/c/c2',
 			shadow: null,
 			a: [
-				'samples/named-layouts/__layout.svelte',
-				'samples/named-layouts/__layout-home@default.svelte',
+				'samples/named-layouts/+layout.svelte',
+				'samples/named-layouts/+layout-home@default.svelte',
 				'samples/named-layouts/b/c/c2@home.svelte'
 			],
 			b: [default_error, default_error]
@@ -533,7 +567,7 @@ test('creates routes with named layouts', () => {
 			pattern: /^\/b\/d\/d1\/?$/,
 			path: '/b/d/d1',
 			shadow: null,
-			a: ['samples/named-layouts/__layout.svelte', 'samples/named-layouts/b/d/d1.svelte'],
+			a: ['samples/named-layouts/+layout.svelte', 'samples/named-layouts/b/d/d1.svelte'],
 			b: [default_error]
 		},
 		{
@@ -543,9 +577,9 @@ test('creates routes with named layouts', () => {
 			path: '/b/d/d2',
 			shadow: null,
 			a: [
-				'samples/named-layouts/__layout.svelte',
-				'samples/named-layouts/b/d/__layout-special.svelte',
-				'samples/named-layouts/b/d/__layout-extraspecial@special.svelte',
+				'samples/named-layouts/+layout.svelte',
+				'samples/named-layouts/b/d/+layout-special.svelte',
+				'samples/named-layouts/b/d/+layout-extraspecial@special.svelte',
 				'samples/named-layouts/b/d/d2@extraspecial.svelte'
 			],
 			b: [default_error]
@@ -563,30 +597,30 @@ test('errors on missing layout', () => {
 test('errors on layout named default', () => {
 	assert.throws(
 		() => create('samples/named-layout-default'),
-		/samples\/named-layout-default\/__layout-default.svelte cannot use reserved "default" name/
+		/samples\/named-layout-default\/+layout-default.svelte cannot use reserved "default" name/
 	);
 });
 
 test('errors on duplicate layout definition', () => {
 	assert.throws(
 		() => create('samples/duplicate-layout'),
-		/Duplicate layout samples\/duplicate-layout\/__layout-a@x.svelte already defined at samples\/duplicate-layout\/__layout-a.svelte/
+		/Duplicate layout samples\/duplicate-layout\/+layout-a@x.svelte already defined at samples\/duplicate-layout\/+layout-a.svelte/
 	);
 });
 
 test('errors on recursive name layout', () => {
 	assert.throws(
 		() => create('samples/named-layout-recursive-1'),
-		/Recursive layout detected: samples\/named-layout-recursive-1\/__layout-a@b\.svelte -> samples\/named-layout-recursive-1\/__layout-b@a\.svelte -> samples\/named-layout-recursive-1\/__layout-a@b\.svelte/
+		/Recursive layout detected: samples\/named-layout-recursive-1\/+layout-a@b\.svelte -> samples\/named-layout-recursive-1\/+layout-b@a\.svelte -> samples\/named-layout-recursive-1\/+layout-a@b\.svelte/
 	);
 	assert.throws(
 		() => create('samples/named-layout-recursive-2'),
-		/Recursive layout detected: samples\/named-layout-recursive-2\/__layout-a@a\.svelte -> samples\/named-layout-recursive-2\/__layout-a@a\.svelte/
+		/Recursive layout detected: samples\/named-layout-recursive-2\/+layout-a@a\.svelte -> samples\/named-layout-recursive-2\/+layout-a@a\.svelte/
 	);
 
 	assert.throws(
 		() => create('samples/named-layout-recursive-3'),
-		/Recursive layout detected: samples\/named-layout-recursive-3\/__layout@a\.svelte -> samples\/named-layout-recursive-3\/__layout-a@default\.svelte -> samples\/named-layout-recursive-3\/__layout@a\.svelte/
+		/Recursive layout detected: samples\/named-layout-recursive-3\/+layout@a\.svelte -> samples\/named-layout-recursive-3\/+layout-a@default\.svelte -> samples\/named-layout-recursive-3\/+layout@a\.svelte/
 	);
 });
 
