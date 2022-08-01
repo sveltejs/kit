@@ -202,7 +202,6 @@ export async function respond(request, options, state) {
 						state,
 						$session: await options.hooks.getSession(event),
 						page_config: { router: true, hydrate: true },
-						stuff: {},
 						status: 200,
 						error: null,
 						branch: [],

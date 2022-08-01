@@ -27,7 +27,6 @@ const updated = {
  *   error: Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   stuff: Record<string, any>;
  * }} opts
  */
 export async function render_response({
@@ -39,8 +38,7 @@ export async function render_response({
 	status,
 	error = null,
 	event,
-	resolve_opts,
-	stuff
+	resolve_opts
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -126,7 +124,6 @@ export async function render_response({
 				params: event.params,
 				routeId: event.routeId,
 				status,
-				stuff,
 				url: state.prerendering ? new PrerenderingURL(event.url) : event.url
 			},
 			components: branch.map(({ node }) => node.module.default)

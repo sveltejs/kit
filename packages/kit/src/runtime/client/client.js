@@ -91,7 +91,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		branch: [],
 		error: null,
 		session_id: 0,
-		stuff: root_stuff,
 		// @ts-ignore - we need the initial value to be null
 		url: null
 	};
@@ -391,7 +390,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {{
 	 *   url: URL;
 	 *   params: Record<string, string>;
-	 *   stuff: Record<string, any>;
 	 *   branch: Array<import('./types').BranchNode | undefined>;
 	 *   status: number;
 	 *   error: Error | null;
@@ -401,7 +399,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 	async function get_navigation_result_from_branch({
 		url,
 		params,
-		stuff,
 		branch,
 		status,
 		error,
@@ -418,7 +415,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 				params,
 				branch,
 				error,
-				stuff,
 				session_id
 			},
 			props: {
@@ -434,14 +430,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 			}
 		}
 
-		const page_changed =
-			!current.url ||
-			url.href !== current.url.href ||
-			current.error !== error ||
-			current.stuff !== stuff;
+		const page_changed = !current.url || url.href !== current.url.href || current.error !== error;
 
 		if (page_changed) {
-			result.props.page = { error, params, routeId, status, stuff, url };
+			result.props.page = { error, params, routeId, status, url };
 
 			// TODO remove this for 1.0
 			/**
@@ -498,12 +490,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   module: import('types').CSRComponent;
 	 *   url: URL;
 	 *   params: Record<string, string>;
-	 *   stuff: Record<string, any>;
 	 *   props?: Record<string, any>;
 	 *   routeId: string | null;
 	 * }} options
 	 */
-	async function load_node({ status, error, module, url, params, stuff, props, routeId }) {
+	async function load_node({ status, error, module, url, params, props, routeId }) {
 		/** @type {import('./types').BranchNode} */
 		const node = {
 			module,
@@ -511,11 +502,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 				params: new Set(),
 				url: false,
 				session: false,
-				stuff: false,
 				dependencies: new Set()
 			},
-			loaded: null,
-			stuff
+			loaded: null
 		};
 
 		/** @param dep {string} */
@@ -549,7 +538,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			const load_input = {
 				routeId,
 				params: uses_params,
-				props: props || {},
+				data: data || {},
 				get url() {
 					node.uses.url = true;
 					return load_url;
@@ -558,9 +547,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 					node.uses.session = true;
 					return session;
 				},
+				// @ts-expect-error
 				get stuff() {
-					node.uses.stuff = true;
-					return { ...stuff };
+					throw new Error('@migration task: Remove stuff (TODO link)');
 				},
 				async fetch(resource, init) {
 					let requested;
@@ -625,7 +614,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 				node.loaded = normalize(await module.load.call(null, load_input));
 			}
 
-			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
 			if (node.loaded.dependencies) {
 				node.loaded.dependencies.forEach(add_dependency);
 			}
@@ -661,10 +649,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		/** @type {Array<import('./types').BranchNode | undefined>} */
 		let branch = [];
 
-		/** @type {Record<string, any>} */
-		let stuff = root_stuff;
-		let stuff_changed = false;
-
 		/** @type {number} */
 		let status = 200;
 
@@ -692,8 +676,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					(changed.url && previous.uses.url) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.session && previous.uses.session) ||
-					Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep))) ||
-					(stuff_changed && previous.uses.stuff);
+					Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep)));
 
 				if (changed_since_last_render) {
 					/** @type {Record<string, any>} */
@@ -739,7 +722,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 							url,
 							params,
 							props,
-							stuff,
 							routeId: route.id
 						});
 					}
@@ -761,10 +743,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 									props: {},
 									state: current
 								};
-							}
-
-							if (node.loaded.stuff) {
-								stuff_changed = true;
 							}
 						}
 					}
@@ -795,19 +773,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 								module: await b[i](),
 								url,
 								params,
-								stuff: node_loaded.stuff,
 								routeId: route.id
 							});
 
 							if (error_loaded?.loaded?.error) {
 								continue;
-							}
-
-							if (error_loaded?.loaded?.stuff) {
-								stuff = {
-									...stuff,
-									...error_loaded.loaded.stuff
-								};
 							}
 
 							branch = branch.slice(0, j + 1).concat(error_loaded);
@@ -825,13 +795,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 					routeId: route.id
 				});
 			} else {
-				if (node?.loaded?.stuff) {
-					stuff = {
-						...stuff,
-						...node.loaded.stuff
-					};
-				}
-
 				branch.push(node);
 			}
 		}
@@ -839,7 +802,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		return await get_navigation_result_from_branch({
 			url,
 			params,
-			stuff,
 			branch,
 			status,
 			error,
@@ -863,7 +825,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 			module: await default_layout,
 			url,
 			params,
-			stuff: {},
 			routeId
 		});
 
@@ -873,17 +834,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			module: await default_error,
 			url,
 			params,
-			stuff: (root_layout && root_layout.loaded && root_layout.loaded.stuff) || {},
 			routeId
 		});
 
 		return await get_navigation_result_from_branch({
 			url,
 			params,
-			stuff: {
-				...root_layout?.loaded?.stuff,
-				...root_error?.loaded?.stuff
-			},
 			branch: [root_layout, root_error],
 			status,
 			error,
@@ -1256,9 +1212,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 			/** @type {Array<import('./types').BranchNode | undefined>} */
 			const branch = [];
 
-			/** @type {Record<string, any>} */
-			let stuff = {};
-
 			/** @type {import('./types').NavigationResult | undefined} */
 			let result;
 
@@ -1281,7 +1234,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 						module: await components[nodes[i]](),
 						url,
 						params,
-						stuff,
 						status: is_leaf ? status : undefined,
 						error: is_leaf ? error : undefined,
 						props,
@@ -1304,11 +1256,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 								url,
 								routeId
 							};
-						} else if (node.loaded.stuff) {
-							stuff = {
-								...stuff,
-								...node.loaded.stuff
-							};
 						}
 					}
 				}
@@ -1318,7 +1265,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 					: await get_navigation_result_from_branch({
 							url,
 							params,
-							stuff,
 							branch,
 							status,
 							error,

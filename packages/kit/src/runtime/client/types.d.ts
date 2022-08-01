@@ -61,10 +61,8 @@ export type BranchNode = {
 		params: Set<string>;
 		url: boolean; // TODO make more granular?
 		session: boolean;
-		stuff: boolean;
 		dependencies: Set<string>;
 	};
-	stuff: Record<string, any>;
 };
 
 export type NavigationState = {
@@ -72,6 +70,5 @@ export type NavigationState = {
 	error: Error | null;
 	params: Record<string, string>;
 	session_id: number;
-	stuff: Record<string, any>;
 	url: URL;
 };

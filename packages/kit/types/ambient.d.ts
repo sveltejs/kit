@@ -14,8 +14,6 @@
  * 	interface PublicEnv {}
  *
  * 	interface Session {}
- *
- * 	interface Stuff {}
  * }
  * ```
  *
@@ -70,11 +68,6 @@ declare namespace App {
 	 * The interface that defines `session`, both as an argument to [`load`](https://kit.svelte.dev/docs/loading) functions and the value of the [session store](https://kit.svelte.dev/docs/modules#$app-stores).
 	 */
 	export interface Session {}
-
-	/**
-	 * The interface that defines `stuff`, as input or output to [`load`](https://kit.svelte.dev/docs/loading) or as the value of the `stuff` property of the [page store](https://kit.svelte.dev/docs/modules#$app-stores).
-	 */
-	export interface Stuff {}
 }
 
 /**

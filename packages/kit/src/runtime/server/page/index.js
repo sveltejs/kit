@@ -51,7 +51,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			status: 200,
 			error: null,
 			event,
-			stuff: {},
 			options,
 			state,
 			$session,
@@ -109,8 +108,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 	/** @type {string[]} */
 	let set_cookie_headers = [];
 
-	let stuff = {};
-
 	ssr: {
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
@@ -127,7 +124,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 						route,
 						$session,
 						node,
-						stuff,
 						is_error: false,
 						is_leaf: i === nodes.length - 1
 					});
@@ -185,7 +181,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 										route,
 										$session,
 										node: error_node,
-										stuff: node_loaded.stuff,
 										is_error: true,
 										is_leaf: false,
 										status,
@@ -199,7 +194,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 
 								page_config = get_page_config(error_node.module, options);
 								branch = branch.slice(0, j + 1).concat(error_loaded);
-								stuff = { ...node_loaded.stuff, ...error_loaded.stuff };
 								break ssr;
 							} catch (err) {
 								const e = coalesce_to_error(err);
@@ -228,13 +222,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					);
 				}
 			}
-
-			if (loaded && loaded.loaded.stuff) {
-				stuff = {
-					...stuff,
-					...loaded.loaded.stuff
-				};
-			}
 		}
 	}
 
@@ -246,7 +233,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 				state,
 				$session,
 				resolve_opts,
-				stuff,
 				page_config,
 				status,
 				error,

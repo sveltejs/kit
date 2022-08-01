@@ -16,7 +16,6 @@ import { domain_matches, path_matches } from './cookie.js';
  *   route: import('types').SSRPage | import('types').SSRErrorPage;
  *   node: import('types').SSRNode;
  *   $session: any;
- *   stuff: Record<string, any>;
  *   is_error: boolean;
  *   is_leaf: boolean;
  *   status?: number;
@@ -31,7 +30,6 @@ export async function load_node({
 	route,
 	node,
 	$session,
-	stuff,
 	is_error,
 	is_leaf,
 	status,
@@ -343,7 +341,6 @@ export async function load_node({
 
 				return proxy;
 			},
-			stuff: { ...stuff },
 			status: (is_error ? status : shadow.status) ?? null,
 			error: is_error ? error ?? null : null
 		};
@@ -384,7 +381,6 @@ export async function load_node({
 		node,
 		props: shadow.body,
 		loaded,
-		stuff: loaded.stuff || stuff,
 		fetched,
 		set_cookie_headers: new_cookies.map((new_cookie) => {
 			const { name, value, ...options } = new_cookie;

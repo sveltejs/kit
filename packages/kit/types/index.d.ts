@@ -177,35 +177,24 @@ export interface HandleError {
  */
 export interface Load<
 	Params extends Record<string, string> = Record<string, string>,
-	InputProps extends Record<string, any> = Record<string, any>,
-	OutputProps extends Record<string, any> = InputProps
+	InputData extends Record<string, any> = Record<string, any>,
+	OutputData extends Record<string, any> = Record<string, any>
 > {
-	(event: LoadEvent<Params, InputProps>): MaybePromise<LoadOutput<OutputProps> | void>;
+	(event: LoadEvent<Params, InputData>): MaybePromise<OutputData>;
 }
 
 export interface LoadEvent<
 	Params extends Record<string, string> = Record<string, string>,
-	Props extends Record<string, any> = Record<string, any>
+	Data extends Record<string, any> = Record<string, any>
 > {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
-	props: Props;
+	data: Data;
 	routeId: string | null;
 	session: App.Session;
-	stuff: Partial<App.Stuff>;
 	url: URL;
 	status: number | null;
 	error: Error | null;
-}
-
-export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {
-	status?: number;
-	error?: string | Error;
-	redirect?: string;
-	props?: Props;
-	stuff?: Partial<App.Stuff>;
-	cache?: LoadOutputCache;
-	dependencies?: string[];
 }
 
 export interface LoadOutputCache {
@@ -222,7 +211,6 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	url: URL;
 	params: Params;
 	routeId: string | null;
-	stuff: App.Stuff;
 	status: number;
 	error: Error | null;
 }

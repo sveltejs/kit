@@ -31,7 +31,6 @@ export async function respond_with_error({
 }) {
 	try {
 		const branch = [];
-		let stuff = {};
 
 		if (resolve_opts.ssr) {
 			const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
@@ -45,7 +44,6 @@ export async function respond_with_error({
 					route: GENERIC_ERROR,
 					node: default_layout,
 					$session,
-					stuff: {},
 					is_error: false,
 					is_leaf: false
 				})
@@ -63,7 +61,6 @@ export async function respond_with_error({
 					route: GENERIC_ERROR,
 					node: default_error,
 					$session,
-					stuff: layout_loaded ? layout_loaded.stuff : {},
 					is_error: true,
 					is_leaf: false,
 					status,
@@ -72,7 +69,6 @@ export async function respond_with_error({
 			);
 
 			branch.push(layout_loaded, error_loaded);
-			stuff = error_loaded.stuff;
 		}
 
 		return await render_response({
@@ -83,7 +79,6 @@ export async function respond_with_error({
 				hydrate: options.hydrate,
 				router: options.router
 			},
-			stuff,
 			status,
 			error,
 			branch,
