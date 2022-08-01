@@ -99,7 +99,7 @@ export async function migrate() {
 			const bare = basename.slice(0, -svelte_ext.length);
 			const [name, layout] = bare.split('@');
 
-			const { module, main } = extract_load(content);
+			const { module, main } = extract_load(content, bare === '__error');
 
 			let move_to_directory = false;
 			let renamed = file.slice(0, -basename.length);
@@ -185,14 +185,27 @@ export async function migrate() {
 	}
 }
 
-/** @param {string} content */
-function extract_load(content) {
+/**
+ * @param {string} content
+ * @param {boolean} is_error
+ */
+function extract_load(content, is_error) {
 	/** @type {string | null} */
 	let module = null;
 
 	const main = content.replace(
-		/<script[^>]+context=(['"])module\1[^>]*>([^]*?)<\/script>/,
-		(match, quote, contents) => {
+		/<script([^>]+context=(['"])module\1[^>]*)>([^]*?)<\/script>/,
+		(match, attrs, quote, contents) => {
+			if (is_error) {
+				// special case — load is no longer supported in load
+				const indent = guess_indent(contents) ?? '';
+
+				contents = contents.replace(/^(.+)/gm, '// $1');
+				const body = `\n${indent}${error('Replace error load function', '3293209')}\n${contents}`;
+
+				return `<script${attrs}>${body}</script>`;
+			}
+
 			module = contents.replace(/^\n/, '');
 			return `<!-- ${task('Check for missing imports', '3292722')} -->`;
 		}
