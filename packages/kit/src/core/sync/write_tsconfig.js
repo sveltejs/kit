@@ -108,9 +108,9 @@ function validate(config, cwd, out, user_file) {
 	const kind = path.basename(user_file);
 
 	if (extends_framework_config) {
-		const { paths: user_paths } = user_tsconfig.compilerOptions || {};
+		const { paths: user_paths = {} } = user_tsconfig.compilerOptions || {};
 
-		if (user_paths && fs.existsSync(config.files.lib)) {
+		if (Object.keys(user_paths).length === 0 && fs.existsSync(config.files.lib)) {
 			/** @type {string[]} */
 			const lib = user_paths['$lib'] || [];
 			/** @type {string[]} */
