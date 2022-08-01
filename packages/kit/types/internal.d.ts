@@ -138,7 +138,6 @@ export interface PageNode {
 	component?: string;
 	module?: string;
 	server?: string;
-	layout?: string;
 }
 
 export interface PageData {

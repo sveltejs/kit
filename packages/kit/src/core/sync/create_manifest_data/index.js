@@ -104,7 +104,7 @@ export default function create_manifest_data({
 
 				const defined = group.layouts[layout_id] || (group.layouts[layout_id] = {});
 
-				if (defined[item.kind] && id !== '' && layout_id !== DEFAULT) {
+				if (defined[item.kind] && layout_id !== DEFAULT) {
 					// edge case
 					throw new Error(
 						`Duplicate layout ${project_relative} already defined at ${defined[item.kind]}`
@@ -112,10 +112,6 @@ export default function create_manifest_data({
 				}
 
 				defined[item.kind] = project_relative;
-
-				if (item.kind === 'component' && item.uses_layout) {
-					defined.layout = item.uses_layout;
-				}
 
 				return;
 			}
@@ -277,7 +273,7 @@ function analyze(file, component_extensions, module_extensions) {
 	if (component_extension) {
 		const name = file.slice(0, -component_extension.length);
 		const pattern =
-			/^\+(?:(page(?:@([a-zA-Z0-9_-]+))?)|(layout(-([a-zA-Z0-9_-]+))?(@([a-zA-Z0-9_-]+))?)|error)$/;
+			/^\+(?:(page(?:@([a-zA-Z0-9_-]+))?)|(layout(?:-([a-zA-Z0-9_-]+))?(?:@([a-zA-Z0-9_-]+))?)|(error))$/;
 		const match = pattern.exec(name);
 		if (!match) return null;
 
@@ -349,8 +345,10 @@ function trace(tree, id, layout_id = DEFAULT, project_relative) {
 			layouts.unshift(layout);
 		}
 
-		if (layout?.layout) {
-			layout_id = layout.layout;
+		const parent_layout_id = layout?.component?.split('@')[1]?.split('.')[0];
+
+		if (parent_layout_id) {
+			layout_id = parent_layout_id;
 		} else {
 			if (layout) layout_id = DEFAULT;
 			if (parts.length === 0) break;
