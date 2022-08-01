@@ -252,12 +252,10 @@ function extract_load(content, is_error, moved) {
 			}
 
 			module = contents.replace(/^\n/, '');
-			return imports.length
-				? `<!-- ${task(
-						'Check for missing imports',
-						'3292722'
-				  )}\n\nThe following imports were found:\n${imports.join('\n')}\n-->`
-				: '';
+			return `<!-- ${task(
+				'Check for missing imports',
+				'3292722'
+			)}\n\nThe following imports were found:\n${imports.length ? imports.join('\n') : '-'}\n-->`;
 		}
 	);
 
@@ -328,20 +326,8 @@ function extract_static_imports(content) {
 			ts.ScriptKind.TS
 		);
 
-		const code = new MagicString(content);
-
 		/** @type {string[]} */
 		let imports = [];
-
-		/** @param {number} pos */
-		function adjust(pos) {
-			// TypeScript AST is a clusterfuck, we need to step forward to find
-			// where the node _actually_ starts
-			while (content[pos] !== '.') pos += 1;
-
-			// replace ../ with ../../ and ./ with ../
-			code.prependLeft(pos, content[pos + 1] === '.' ? '../' : '.');
-		}
 
 		/** @param {ts.Node} node */
 		function walk(node) {
