@@ -1,5 +1,4 @@
 import { negotiate } from '../../../utils/http.js';
-import { render_endpoint } from '../endpoint.js';
 import { respond } from './respond.js';
 
 /**
@@ -25,7 +24,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		]);
 
 		if (type === 'application/json') {
-			return render_endpoint(event, await route.shadow(), options);
+			throw new Error('TODO return JSON');
 		}
 	}
 

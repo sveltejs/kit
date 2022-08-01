@@ -2,12 +2,15 @@ import { check_method_names } from './utils.js';
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {{ [method: string]: import('types').RequestHandler }} mod
+ * @param {import('types').SSREndpoint} route
  * @returns {Promise<Response>}
  */
-export async function render_endpoint(event, mod) {
+export async function render_endpoint(event, route) {
 	const { method } = event.request;
 
+	const mod = await route.load();
+
+	// TODO: Remove for 1.0
 	check_method_names(mod);
 
 	/** @type {import('types').RequestHandler} */
