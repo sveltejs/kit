@@ -59,7 +59,7 @@ export async function migrate() {
 		config.kit?.routes ??
 		((filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath));
 
-	const files = glob(`${routes}/**`, { filesOnly: true });
+	const files = glob(`${routes}/**`, { filesOnly: true }).map((file) => file.replace(/\\/g, '/'));
 
 	// validate before proceeding
 	for (const file of files) {
