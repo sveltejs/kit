@@ -90,19 +90,34 @@ export async function migrate() {
 		const basename = path.basename(file);
 		if (!filter(file) && !basename.startsWith('__')) continue;
 
-		const content = fs.readFileSync(file, 'utf8');
+		// replace `./__types` or `./__types/foo` with `./$types`
+		const content = fs.readFileSync(file, 'utf8').replace(/\.\/__types(?:\/[^'"]+)?/g, './$types');
 
 		const svelte_ext = extensions.find((ext) => file.endsWith(ext));
 		const module_ext = module_extensions.find((ext) => file.endsWith(ext));
 
 		if (svelte_ext) {
+			// file is a component
 			const bare = basename.slice(0, -svelte_ext.length);
 			const [name, layout] = bare.split('@');
 
 			const { module, main } = extract_load(content, bare === '__error');
 
+			/**
+			 * Whether file should be moved to a subdirectory — e.g. `src/routes/about.svelte`
+			 * should become `src/routes/about/+page.svelte`
+			 */
 			let move_to_directory = false;
+
+			/**
+			 * The new name of the file
+			 */
 			let renamed = file.slice(0, -basename.length);
+
+			/**
+			 * If a component has `<script context="module">`, the contents are moved
+			 * into a sibling module with the same name
+			 */
 			let sibling;
 
 			if (bare.startsWith('__layout')) {
@@ -110,7 +125,7 @@ export async function migrate() {
 				renamed += '+' + bare.slice(2); // account for __layout-foo etc
 			} else if (bare === '__error') {
 				renamed += '+error';
-				// TODO error files can no longer have load
+				// no sibling, because error files can no longer have load
 			} else if (name === 'index') {
 				sibling = renamed + '+page';
 				renamed += '+page' + (layout ? '@' + layout : '');
@@ -157,9 +172,15 @@ export async function migrate() {
 				fs.writeFileSync(sibling + ext, injected + content);
 			}
 		} else if (module_ext) {
+			// file is a module
 			const bare = basename.slice(0, -module_ext.length);
 			const [name] = bare.split('@');
 
+			/**
+			 * Whether the file is paired with a page component, and should
+			 * therefore become `+page.server.js`, or not in which case
+			 * it should become `+server.js`
+			 */
 			const is_page_endpoint = extensions.some((ext) =>
 				files.includes(`${file.slice(0, -module_ext.length)}${ext}`)
 			);
