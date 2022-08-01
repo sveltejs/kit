@@ -329,7 +329,11 @@ function trace(tree, id, layout_id = DEFAULT, project_relative) {
 
 		if (layout && layouts.indexOf(layout) > -1) {
 			// TODO this needs to be fixed for #5748
-			throw new Error(`Recursive layout detected: ${layout.component} -> ${layouts.join(' -> ')}`);
+			throw new Error(
+				`Recursive layout detected: ${layout.component} -> ${layouts
+					.map((l) => l?.component)
+					.join(' -> ')}`
+			);
 		}
 
 		// any segment that has neither a +layout nor an +error can be discarded.
