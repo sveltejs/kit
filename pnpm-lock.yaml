@@ -266,6 +266,12 @@ importers:
       typescript: 4.7.4
       vite: 3.0.0
 
+  packages/create-svelte/templates/skeleton:
+    specifiers:
+      '@sveltejs/adapter-auto': workspace:1.0.0-next.64
+    devDependencies:
+      '@sveltejs/adapter-auto': link:../../../adapter-auto
+
   packages/kit:
     specifiers:
       '@playwright/test': ^1.23.4
