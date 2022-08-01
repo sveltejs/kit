@@ -1,6 +1,4 @@
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export function GET({ url }) {
-	return {
-		body: { origin: url.origin }
-	};
+	return new Response(JSON.stringify({ origin: url.origin }));
 }
