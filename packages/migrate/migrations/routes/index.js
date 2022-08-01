@@ -5,6 +5,7 @@ import glob from 'tiny-glob/sync.js';
 import prompts from 'prompts';
 import ts from 'typescript';
 import MagicString from 'magic-string';
+import { pathToFileURL } from 'url';
 
 /** @param {string} message */
 function bail(message) {
@@ -38,7 +39,7 @@ export async function migrate() {
 		bail('Please re-run this script in a directory with a svelte.config.js');
 	}
 
-	const { default: config } = await import(path.resolve('svelte.config.js'));
+	const { default: config } = await import(pathToFileURL(path.resolve('svelte.config.js')).href);
 
 	const routes = path.resolve(config.kit?.files?.routes ?? 'src/routes');
 
@@ -78,7 +79,8 @@ export async function migrate() {
 	const response = await prompts({
 		type: 'confirm',
 		name: 'value',
-		message: 'This will overwrite files in the current directory. Continue?',
+		message:
+			'This will overwrite files in the current directory. We advise you to use Git and commit any pending changes. Continue?',
 		initial: false
 	});
 
@@ -162,7 +164,7 @@ export async function migrate() {
 
 			// if component has a <script context="module">, move it to a sibling .js file
 			if (module) {
-				const ext = /<script[^>]+lang=['"](ts|typescript)['"][^]*>/.test(module) ? '.js' : '.ts';
+				const ext = /<script[^>]+lang=['"](ts|typescript)['"][^]*>/.test(module) ? '.ts' : '.js';
 				const injected = /load/.test(module)
 					? `${error('Update load function', '3292693')}\n\n`
 					: '';
@@ -188,9 +190,19 @@ export async function migrate() {
 			const type = is_page_endpoint ? '+page.server' : '+server';
 
 			const move_to_directory = name !== 'index';
-			const renamed =
-				file.slice(0, -basename.length) +
-				(move_to_directory ? `${name}/${type}${module_ext}` : `${type}${module_ext}`);
+
+			let renamed = '';
+			if (!is_page_endpoint && name.startsWith('index.')) {
+				// handle <folder>/index.json.js -> <folder>.json/+server.js
+				const dir = path.dirname(file);
+				renamed =
+					// prettier-ignore
+					`${file.slice(0, -(basename.length + dir.length + 1))}${dir + name.slice('index'.length)}/+server${module_ext}`;
+			} else if (move_to_directory) {
+				renamed = `${file.slice(0, -basename.length)}${name}/${type}${module_ext}`;
+			} else {
+				renamed = `${file.slice(0, -basename.length)}${type}${module_ext}`;
+			}
 
 			const injected = error(`Update ${type}.js`, is_page_endpoint ? '3292699' : '3292701');
 			const edited = `${injected}\n\n${move_to_directory ? adjust_imports(content) : content}`;
