@@ -20,10 +20,15 @@ function relative(file) {
 
 /**
  * @param {string} description
- * @param {string} comment_id
+ * @param {string} [comment_id]
  */
 function task(description, comment_id) {
-	return `@migration task: ${description} (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-${comment_id})`;
+	return (
+		`@migration task: ${description}` +
+		(comment_id
+			? ` (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-${comment_id})`
+			: '')
+	);
 }
 
 /**
@@ -103,8 +108,6 @@ export async function migrate() {
 			const bare = basename.slice(0, -svelte_ext.length);
 			const [name, layout] = bare.split('@');
 
-			const { module, main } = extract_load(content, bare === '__error');
-
 			/**
 			 * Whether file should be moved to a subdirectory — e.g. `src/routes/about.svelte`
 			 * should become `src/routes/about/+page.svelte`
@@ -139,6 +142,8 @@ export async function migrate() {
 			}
 
 			renamed += svelte_ext;
+
+			const { module, main } = extract_load(content, bare === '__error', move_to_directory);
 
 			const edited = main.replace(/<script([^]*)>([^]+)<\/script>/, (match, attrs, content) => {
 				const indent = guess_indent(content) ?? '';
@@ -190,9 +195,10 @@ export async function migrate() {
 			const type = is_page_endpoint ? '+page.server' : '+server';
 
 			const move_to_directory = name !== 'index';
+			const is_standalone_index = !is_page_endpoint && name.startsWith('index.');
 
 			let renamed = '';
-			if (!is_page_endpoint && name.startsWith('index.')) {
+			if (is_standalone_index) {
 				// handle <folder>/index.json.js -> <folder>.json/+server.js
 				const dir = path.dirname(file);
 				renamed =
@@ -205,7 +211,10 @@ export async function migrate() {
 			}
 
 			const injected = error(`Update ${type}.js`, is_page_endpoint ? '3292699' : '3292701');
-			const edited = `${injected}\n\n${move_to_directory ? adjust_imports(content) : content}`;
+			// Standalone index endpoints are edge case enough that we don't spend time on trying to update all the imports correctly
+			const edited = `${injected}${is_standalone_index ? `\n// ${task('Check imports')}` : ''}\n\n${
+				!is_standalone_index && move_to_directory ? adjust_imports(content) : content
+			}`;
 
 			if (move_to_directory) {
 				const dir = path.dirname(renamed);
@@ -221,14 +230,17 @@ export async function migrate() {
 /**
  * @param {string} content
  * @param {boolean} is_error
+ * @param {boolean} moved
  */
-function extract_load(content, is_error) {
+function extract_load(content, is_error, moved) {
 	/** @type {string | null} */
 	let module = null;
 
 	const main = content.replace(
 		/<script([^>]+context=(['"])module\1[^>]*)>([^]*?)<\/script>/,
 		(match, attrs, quote, contents) => {
+			const imports = extract_static_imports(moved ? adjust_imports(contents) : contents);
+
 			if (is_error) {
 				// special case — load is no longer supported in load
 				const indent = guess_indent(contents) ?? '';
@@ -240,7 +252,12 @@ function extract_load(content, is_error) {
 			}
 
 			module = contents.replace(/^\n/, '');
-			return `<!-- ${task('Check for missing imports', '3292722')} -->`;
+			return imports.length
+				? `<!-- ${task(
+						'Check for missing imports',
+						'3292722'
+				  )}\n\nThe following imports were found:\n${imports.join('\n')}\n-->`
+				: '';
 		}
 	);
 
@@ -297,6 +314,49 @@ function adjust_imports(content) {
 		// this is enough of an edge case that it's probably fine to
 		// just leave the code as we found it
 		return content;
+	}
+}
+
+/** @param {string} content */
+function extract_static_imports(content) {
+	try {
+		const ast = ts.createSourceFile(
+			'filename.ts',
+			content,
+			ts.ScriptTarget.Latest,
+			true,
+			ts.ScriptKind.TS
+		);
+
+		const code = new MagicString(content);
+
+		/** @type {string[]} */
+		let imports = [];
+
+		/** @param {number} pos */
+		function adjust(pos) {
+			// TypeScript AST is a clusterfuck, we need to step forward to find
+			// where the node _actually_ starts
+			while (content[pos] !== '.') pos += 1;
+
+			// replace ../ with ../../ and ./ with ../
+			code.prependLeft(pos, content[pos + 1] === '.' ? '../' : '.');
+		}
+
+		/** @param {ts.Node} node */
+		function walk(node) {
+			if (ts.isImportDeclaration(node)) {
+				imports.push(node.getText());
+			}
+
+			node.forEachChild(walk);
+		}
+
+		ast.forEachChild(walk);
+
+		return imports;
+	} catch {
+		return [];
 	}
 }
 
