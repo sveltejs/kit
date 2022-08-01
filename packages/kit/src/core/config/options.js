@@ -291,7 +291,11 @@ const options = object(
 			// TODO remove for 1.0
 			router: error((keypath) => `${keypath} has been moved to config.kit.browser.router`),
 
-			routes: fun((filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath)),
+			// TODO remove for 1.0
+			routes: error(
+				(keypath) =>
+					`${keypath} has been removed. See https://github.com/sveltejs/kit/discussions/5774 for details`
+			),
 
 			serviceWorker: object({
 				register: boolean(true),

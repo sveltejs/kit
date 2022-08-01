@@ -140,7 +140,6 @@ export interface KitConfig {
 		onError?: PrerenderOnErrorValue;
 		origin?: string;
 	};
-	routes?: (filepath: string) => boolean;
 	serviceWorker?: {
 		register?: boolean;
 		files?: (filepath: string) => boolean;
