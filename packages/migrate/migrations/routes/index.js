@@ -174,7 +174,7 @@ export async function migrate() {
 					? `${error('Update load function', '3292693')}\n\n`
 					: '';
 
-				const content = dedent(move_to_directory ? adjust_imports(module) : module);
+				const content = migrate_load(dedent(move_to_directory ? adjust_imports(module) : module));
 
 				fs.writeFileSync(sibling + ext, injected + content);
 			}
@@ -222,7 +222,10 @@ export async function migrate() {
 			}
 
 			fs.unlinkSync(file);
-			fs.writeFileSync(renamed, edited);
+			fs.writeFileSync(
+				renamed,
+				is_page_endpoint ? migrate_page_endpoint(edited) : migrate_standalone(edited)
+			);
 		}
 	}
 }
@@ -415,4 +418,313 @@ function guess_indent(content) {
 	}, Infinity);
 
 	return new Array(min + 1).join(' ');
+}
+
+/**
+ * @param {string} content
+ *  */
+function migrate_load(content) {
+	let imports = new Set();
+	try {
+		const ast = ts.createSourceFile(
+			'filename.ts',
+			content,
+			ts.ScriptTarget.Latest,
+			true,
+			ts.ScriptKind.TS
+		);
+		const str = new MagicString(content);
+
+		/** @param {ts.Node} node */
+		function walk(node) {
+			if (
+				ts.isReturnStatement(node) &&
+				is_directly_in_exported_fn(node, ['load']) &&
+				node.expression &&
+				ts.isObjectLiteralExpression(node.expression)
+			) {
+				if (contains_only(node.expression, ['props'])) {
+					str.overwrite(
+						node.getStart(),
+						node.getEnd(),
+						automigration_comment(node) +
+							'return ' +
+							get_prop_initializer_text(node.expression.properties, 'props')
+					);
+				} else if (contains_only(node.expression, ['redirect', 'status'])) {
+					str.overwrite(
+						node.getStart(),
+						node.getEnd(),
+						automigration_comment(node) +
+							'throw redirect(' +
+							get_prop_initializer_text(node.expression.properties, 'status') +
+							', ' +
+							get_prop_initializer_text(node.expression.properties, 'redirect') +
+							');'
+					);
+					imports.add('redirect');
+				} else if (contains_only(node.expression, ['error', 'status'])) {
+					str.overwrite(
+						node.getStart(),
+						node.getEnd(),
+						automigration_comment(node) +
+							'throw error(' +
+							get_prop_initializer_text(node.expression.properties, 'status') +
+							', ' +
+							get_prop_initializer_text(node.expression.properties, 'error') +
+							');'
+					);
+					imports.add('error');
+				}
+			}
+
+			node.forEachChild(walk);
+		}
+
+		ast.forEachChild(walk);
+
+		const import_str =
+			imports.size > 0
+				? `import { ${[...imports.keys()].join(', ')} } from '@sveltejs/kit/data';`
+				: '';
+
+		return import_str + '\n' + str.toString();
+	} catch {
+		return content;
+	}
+}
+
+/**
+ * @param {string} content
+ *  */
+function migrate_page_endpoint(content) {
+	try {
+		const ast = ts.createSourceFile(
+			'filename.ts',
+			content,
+			ts.ScriptTarget.Latest,
+			true,
+			ts.ScriptKind.TS
+		);
+		const str = new MagicString(content);
+
+		/** @param {ts.Node} node */
+		function walk(node) {
+			if (
+				ts.isReturnStatement(node) &&
+				is_directly_in_exported_fn(node, ['GET']) &&
+				node.expression &&
+				ts.isObjectLiteralExpression(node.expression) &&
+				contains_only(node.expression, ['body'])
+			) {
+				str.overwrite(
+					node.getStart(),
+					node.getEnd(),
+					automigration_comment(node) +
+						'return ' +
+						get_prop_initializer_text(node.expression.properties, 'body')
+				);
+			}
+
+			node.forEachChild(walk);
+		}
+
+		ast.forEachChild(walk);
+
+		return str.toString();
+	} catch {
+		return content;
+	}
+}
+
+/**
+ * @param {string} content
+ *  */
+function migrate_standalone(content) {
+	try {
+		const ast = ts.createSourceFile(
+			'filename.ts',
+			content,
+			ts.ScriptTarget.Latest,
+			true,
+			ts.ScriptKind.TS
+		);
+		const str = new MagicString(content);
+
+		/** @param {ts.Node} node */
+		function walk(node) {
+			if (
+				ts.isReturnStatement(node) &&
+				is_directly_in_exported_fn(node, ['GET', 'PUT', 'POST', 'DELETE']) &&
+				node.expression &&
+				ts.isObjectLiteralExpression(node.expression) &&
+				contains_only(node.expression, ['body', 'status', 'headers'], true)
+			) {
+				const body = get_prop(node.expression.properties, 'body');
+				const headers = get_prop(node.expression.properties, 'headers');
+				const status = get_prop(node.expression.properties, 'status');
+				const headers_str =
+					body &&
+					(!ts.isPropertyAssignment(body) ||
+						!(
+							ts.isStringLiteral(body.initializer) ||
+							ts.isTemplateExpression(body.initializer) ||
+							ts.isNoSubstitutionTemplateLiteral(body.initializer)
+						)) &&
+					(!headers || !headers.getText().includes('content-type'))
+						? `headers: { 'content-type': 'application/json; charset=utf-8'${
+								headers
+									? ', ' +
+									  (ts.isPropertyAssignment(headers)
+											? remove_outer_braces(
+													get_prop_initializer_text(node.expression.properties, 'headers')
+											  )
+											: '...headers')
+									: ''
+						  } }`
+						: headers
+						? headers.getText()
+						: undefined;
+
+				str.overwrite(
+					node.getStart(),
+					node.getEnd(),
+					automigration_comment(node) +
+						`\nreturn new Response(${
+							body
+								? (!ts.isPropertyAssignment(body) ||
+										!(
+											ts.isStringLiteral(body.initializer) ||
+											ts.isTemplateExpression(body.initializer) ||
+											ts.isNoSubstitutionTemplateLiteral(body.initializer)
+										)) &&
+								  (!headers ||
+										!headers.getText().includes('content-type') ||
+										headers.getText().includes('application/json'))
+									? // prettier-ignore
+									  `/* double-check if value is a POJO, else remove outer JSON.stringify and the content-type header */ JSON.stringify(${get_prop_initializer_text(node.expression.properties,'body')})`
+									: get_prop_initializer_text(node.expression.properties, 'body')
+								: 'undefined'
+						}${
+							headers_str || status
+								? // prettier-ignore
+								  `, { ${headers_str ? `${headers_str}${status ? ', ' : ''}` : ''}${status ? status.getText() : ''} }`
+								: ''
+						});`
+				);
+			}
+
+			node.forEachChild(walk);
+		}
+
+		ast.forEachChild(walk);
+
+		return str.toString();
+	} catch {
+		return content;
+	}
+}
+
+/**
+ *
+ * @param {ts.ObjectLiteralExpression} node
+ * @param {string[]} valid_keys
+ * @param {boolean} [allow_empty]
+ */
+function contains_only(node, valid_keys, allow_empty = false) {
+	return (
+		(allow_empty || node.properties.length > 0) &&
+		node.properties.every(
+			(prop) =>
+				(ts.isPropertyAssignment(prop) || ts.isShorthandPropertyAssignment(prop)) &&
+				ts.isIdentifier(prop.name) &&
+				valid_keys.includes(prop.name.text)
+		)
+	);
+}
+
+/**
+ * @param {ts.Node} node
+ */
+function automigration_comment(node) {
+	return '// @migrate automigrated. Original:\n//' + node.getText().split('\n').join('\n//') + '\n';
+}
+
+/**
+ * @param {ts.NodeArray<ts.ObjectLiteralElementLike>} node
+ * @param {string} name
+ * @returns {undefined | ts.ShorthandPropertyAssignment | ts.PropertyAssignment}
+ */
+function get_prop(node, name) {
+	return /** @type {any} */ (
+		node.find(
+			(prop) =>
+				(ts.isPropertyAssignment(prop) || ts.isShorthandPropertyAssignment(prop)) &&
+				ts.isIdentifier(prop.name) &&
+				prop.name.text === name
+		)
+	);
+}
+
+/**
+ * @param {ts.NodeArray<ts.ObjectLiteralElementLike>} node
+ * @param {string} name
+ */
+function get_prop_initializer_text(node, name) {
+	const prop = get_prop(node, name);
+	return prop
+		? ts.isShorthandPropertyAssignment(prop)
+			? name
+			: prop.initializer.getText()
+		: 'undefined';
+}
+
+/**
+ * @param {string} str
+ */
+function remove_outer_braces(str) {
+	return str.substring(str.indexOf('{') + 1, str.lastIndexOf('}'));
+}
+
+/**
+ * True if this node is inside the given function that is `export`ed.
+ *
+ * @param {ts.Node} node
+ * @param {string[]} fn_name
+ * @returns {boolean}
+ */
+function is_directly_in_exported_fn(node, fn_name) {
+	if (node.parent === node || !node.parent) {
+		return false;
+	} else if (is_exported_fn(node, fn_name)) {
+		return true;
+	} else if (
+		ts.isFunctionDeclaration(node) ||
+		ts.isVariableStatement(node) ||
+		(ts.isArrowFunction(node) && !is_exported_fn(node.parent.parent.parent, fn_name))
+	) {
+		return false;
+	}
+	return is_directly_in_exported_fn(node.parent, fn_name);
+}
+
+/**
+ * True if node is `export function <fn_name>` or `export let/const <fn_name> = ..`
+ *
+ * @param {ts.Node} node
+ * @param {string[]} fn_name
+ */
+function is_exported_fn(node, fn_name) {
+	// export function X
+	return (
+		(ts.isFunctionDeclaration(node) &&
+			node.modifiers?.[0]?.kind === ts.SyntaxKind.ExportKeyword &&
+			fn_name.includes(node.name.text)) ||
+		// export const/let X
+		(ts.isVariableStatement(node) &&
+			node.modifiers?.[0]?.kind === ts.SyntaxKind.ExportKeyword &&
+			node.declarationList.declarations.length === 1 &&
+			ts.isIdentifier(node.declarationList.declarations[0].name) &&
+			fn_name.includes(node.declarationList.declarations[0].name.text))
+	);
 }
