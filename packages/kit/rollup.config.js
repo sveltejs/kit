@@ -11,87 +11,59 @@ const external = [].concat(
 	Object.keys(pkg.peerDependencies || {}),
 	Object.keys(process.binding('natives')),
 	'typescript',
-	'svelte2tsx'
+	'svelte2tsx',
+	'svelte',
+	'svelte/store',
+	'__GENERATED__/root.svelte',
+	'__GENERATED__/client-manifest.js'
 );
 
-export default [
-	{
-		input: {
-			'client/start': 'src/runtime/client/start.js',
-			'client/singletons': 'src/runtime/client/singletons.js',
-			'app/navigation': 'src/runtime/app/navigation.js',
-			'app/stores': 'src/runtime/app/stores.js',
-			'app/paths': 'src/runtime/app/paths.js',
-			'app/env': 'src/runtime/app/env.js',
-			'env/dynamic/private': 'src/runtime/env/dynamic/private.js',
-			'env/dynamic/public': 'src/runtime/env/dynamic/public.js',
-			'env-private': 'src/runtime/env-private.js',
-			'env-public': 'src/runtime/env-public.js',
-			paths: 'src/runtime/paths.js',
-			env: 'src/runtime/env.js'
-		},
-		output: {
-			dir: 'assets',
-			format: 'esm',
-			chunkFileNames: 'chunks/[name].js'
-		},
-		external: [
-			'svelte',
-			'svelte/store',
-			'__GENERATED__/root.svelte',
-			'__GENERATED__/client-manifest.js'
-		],
-		plugins: [
-			resolve({
-				extensions: ['.mjs', '.js', '.ts']
-			})
-		]
-	},
+export default {
+	input: {
+		// TODO move assets to dist/assets
+		'assets/client/start': 'src/runtime/client/start.js',
+		'assets/client/singletons': 'src/runtime/client/singletons.js',
+		'assets/app/navigation': 'src/runtime/app/navigation.js',
+		'assets/app/stores': 'src/runtime/app/stores.js',
+		'assets/app/paths': 'src/runtime/app/paths.js',
+		'assets/app/env': 'src/runtime/app/env.js',
+		'assets/env/dynamic/private': 'src/runtime/env/dynamic/private.js',
+		'assets/env/dynamic/public': 'src/runtime/env/dynamic/public.js',
+		'assets/env-private': 'src/runtime/env-private.js',
+		'assets/env-public': 'src/runtime/env-public.js',
+		'assets/paths': 'src/runtime/paths.js',
+		'assets/env': 'src/runtime/env.js',
+		'assets/server/index': 'src/runtime/server/index.js',
 
-	{
-		input: 'src/runtime/server/index.js',
-		output: {
-			format: 'esm',
-			file: 'assets/server/index.js'
-		},
-		plugins: [
-			resolve({
-				extensions: ['.mjs', '.js', '.ts']
-			}),
-			commonjs()
-		]
+		// TODO move dist to dist/exports
+		'dist/cli': 'src/cli.js',
+		'dist/index': 'src/index/index.js',
+		'dist/hooks': 'src/hooks.js',
+		'dist/node': 'src/node/index.js',
+		'dist/node/polyfills': 'src/node/polyfills.js',
+		'dist/prerender': 'src/core/prerender/prerender.js',
+		'dist/vite': 'src/vite/index.js'
 	},
-
-	{
-		input: {
-			cli: 'src/cli.js',
-			hooks: 'src/hooks.js',
-			node: 'src/node/index.js',
-			'node/polyfills': 'src/node/polyfills.js',
-			prerender: 'src/core/prerender/prerender.js',
-			vite: 'src/vite/index.js'
-		},
-		output: {
-			dir: 'dist',
-			format: 'esm',
-			chunkFileNames: 'chunks/[name].js'
-		},
-		external: (id) => {
-			return id.startsWith('node:') || external.includes(id);
-		},
-		plugins: [
-			replace({
-				preventAssignment: true,
-				values: {
-					__VERSION__: pkg.version,
-					'process.env.BUNDLED': 'true'
-				}
-			}),
-			resolve({
-				extensions: ['.mjs', '.js', '.ts']
-			}),
-			commonjs()
-		],
-		preserveEntrySignatures: true
-	}
-];
+	output: {
+		dir: '.',
+		format: 'esm',
+		chunkFileNames: 'dist/chunks/[name].js'
+	},
+	external: (id) => {
+		return id.startsWith('node:') || external.includes(id);
+	},
+	plugins: [
+		replace({
+			preventAssignment: true,
+			values: {
+				__VERSION__: pkg.version,
+				'process.env.BUNDLED': 'true'
+			}
+		}),
+		resolve({
+			extensions: ['.mjs', '.js', '.ts']
+		}),
+		commonjs()
+	],
+	preserveEntrySignatures: true
+};

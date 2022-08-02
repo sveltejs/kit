@@ -78,6 +78,7 @@
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
+			"import": "./dist/index.js",
 			"types": "./types/index.d.ts"
 		},
 		"./node": {
