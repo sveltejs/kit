@@ -16,7 +16,6 @@ export type Loaded = {
 	props: JSONValue | undefined;
 	loaded: NormalizedLoadOutput;
 	fetched: Fetched[];
-	set_cookie_headers: string[];
 	uses_credentials: boolean;
 };
 

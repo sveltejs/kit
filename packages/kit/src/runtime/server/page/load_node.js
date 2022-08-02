@@ -382,11 +382,6 @@ export async function load_node({
 		props: shadow.body,
 		loaded,
 		fetched,
-		set_cookie_headers: new_cookies.map((new_cookie) => {
-			const { name, value, ...options } = new_cookie;
-			// @ts-expect-error
-			return cookie.serialize(name, value, options);
-		}),
 		uses_credentials
 	};
 }
