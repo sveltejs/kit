@@ -304,7 +304,8 @@ export async function load_node({ event, options, state, route, node, $session }
 				});
 
 				return proxy;
-			}
+			},
+			setHeaders: event.setHeaders
 		};
 
 		if (options.dev) {

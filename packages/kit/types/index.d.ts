@@ -192,8 +192,9 @@ export interface LoadEvent<
 	data: Data;
 	routeId: string | null;
 	session: App.Session;
+	setHeaders: (headers: ResponseHeaders) => void;
 	url: URL;
-	// TODO parent, setHeaders, depends
+	// TODO parent, depends
 }
 
 export interface LoadOutputCache {
@@ -225,6 +226,7 @@ export interface RequestEvent<Params extends Record<string, string> = Record<str
 	platform: Readonly<App.Platform>;
 	request: Request;
 	routeId: string | null;
+	setHeaders: (headers: ResponseHeaders) => void;
 	url: URL;
 }
 

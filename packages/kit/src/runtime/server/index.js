@@ -112,6 +112,9 @@ export async function respond(request, options, state) {
 		}
 	}
 
+	/** @type {import('types').ResponseHeaders} */
+	const headers = {};
+
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		get clientAddress() {
@@ -132,6 +135,16 @@ export async function respond(request, options, state) {
 		platform: state.platform,
 		request,
 		routeId: route && route.id,
+		setHeaders: (new_headers) => {
+			for (const key in new_headers) {
+				if (key in headers) {
+					throw new Error(`"${key}" header is already set`);
+				}
+
+				// TODO apply these headers to the response
+				headers[key] = new_headers[key];
+			}
+		},
 		url
 	};
 
