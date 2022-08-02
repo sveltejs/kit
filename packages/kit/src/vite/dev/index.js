@@ -53,60 +53,85 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					imports: [],
 					stylesheets: []
 				},
-				nodes: manifest_data.components.map((id, index) => {
+				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
-						const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
+						/** @type {import('types').SSRNode} */
+						const result = {};
 
-						const module = /** @type {import('types').SSRComponent} */ (
-							await vite.ssrLoadModule(url)
-						);
+						if (node.component) {
+							const url = node.component.startsWith('..')
+								? `/@fs${path.posix.resolve(node.component)}`
+								: `/${node.component}`;
 
-						const node = await vite.moduleGraph.getModuleByUrl(url);
-						if (!node) throw new Error(`Could not find node for ${url}`);
+							const { default: component } = /** @type {import('types').SSRComponent} */ (
+								await vite.ssrLoadModule(url)
+							);
 
-						prevent_illegal_vite_imports(
-							node,
-							illegal_imports,
-							[...svelte_config.extensions, ...svelte_config.kit.moduleExtensions],
-							svelte_config.kit.outDir
-						);
+							const module_node = await vite.moduleGraph.getModuleByUrl(url);
+							if (!module_node) throw new Error(`Could not find node for ${url}`);
 
-						return {
-							module,
-							index,
-							file: url.endsWith('.svelte') ? url : url + '?import',
-							imports: [],
-							stylesheets: [],
-							// in dev we inline all styles to avoid FOUC
-							inline_styles: async () => {
-								const deps = new Set();
-								await find_deps(vite, node, deps);
+							prevent_illegal_vite_imports(
+								module_node,
+								illegal_imports,
+								[...svelte_config.extensions, ...svelte_config.kit.moduleExtensions],
+								svelte_config.kit.outDir
+							);
 
-								/** @type {Record<string, string>} */
-								const styles = {};
+							Object.assign(result, {
+								component,
+								index,
+								file: url.endsWith('.svelte') ? url : url + '?import',
+								imports: [],
+								stylesheets: [],
+								// in dev we inline all styles to avoid FOUC
+								inline_styles: async () => {
+									const deps = new Set();
+									await find_deps(vite, module_node, deps);
 
-								for (const dep of deps) {
-									const parsed = new URL(dep.url, 'http://localhost/');
-									const query = parsed.searchParams;
+									/** @type {Record<string, string>} */
+									const styles = {};
 
-									if (
-										style_pattern.test(dep.file) ||
-										(query.has('svelte') && query.get('type') === 'style')
-									) {
-										try {
-											const mod = await vite.ssrLoadModule(dep.url);
-											styles[dep.url] = mod.default;
-										} catch {
-											// this can happen with dynamically imported modules, I think
-											// because the Vite module graph doesn't distinguish between
-											// static and dynamic imports? TODO investigate, submit fix
+									for (const dep of deps) {
+										const parsed = new URL(dep.url, 'http://localhost/');
+										const query = parsed.searchParams;
+
+										if (
+											style_pattern.test(dep.file) ||
+											(query.has('svelte') && query.get('type') === 'style')
+										) {
+											try {
+												const mod = await vite.ssrLoadModule(dep.url);
+												styles[dep.url] = mod.default;
+											} catch {
+												// this can happen with dynamically imported modules, I think
+												// because the Vite module graph doesn't distinguish between
+												// static and dynamic imports? TODO investigate, submit fix
+											}
 										}
 									}
-								}
 
-								return styles;
-							}
-						};
+									return styles;
+								}
+							});
+						}
+
+						if (node.module) {
+							const url = node.module.startsWith('..')
+								? `/@fs${path.posix.resolve(node.module)}`
+								: `/${node.module}`;
+
+							const module = /** @type {import('types').SSRComponent} */ (
+								await vite.ssrLoadModule(url)
+							);
+
+							Object.assign(result, module);
+						}
+
+						if (node.server) {
+							result.server = true;
+						}
+
+						return result;
 					};
 				}),
 				routes: manifest_data.routes.map((route) => {
@@ -119,14 +144,11 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							pattern,
 							names,
 							types,
-							shadow: route.shadow
-								? async () => {
-										const url = path.resolve(cwd, /** @type {string} */ (route.shadow));
-										return await vite.ssrLoadModule(url);
-								  }
-								: null,
-							a: route.a.map((id) => (id ? manifest_data.components.indexOf(id) : undefined)),
-							b: route.b.map((id) => (id ? manifest_data.components.indexOf(id) : undefined))
+							errors: route.errors.map((id) => (id ? manifest_data.nodes.indexOf(id) : undefined)),
+							layouts: route.layouts.map((id) =>
+								id ? manifest_data.nodes.indexOf(id) : undefined
+							),
+							page: manifest_data.nodes.indexOf(route.page)
 						};
 					}
 

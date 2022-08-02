@@ -253,7 +253,7 @@ export async function build_server(options, client) {
 				`export { default as module } from '../${vite_manifest[node.component].file}';`,
 				`export const index = ${i};`,
 				`export const file = '${entry.file}';`,
-				`export const imports = ${s(entry.imports)};`,
+				`export const imports = ${s(entry.imports)};`, // TODO do we need to get imports from +page.js/+layout.js as well?
 				`export const stylesheets = ${s(entry.stylesheets)};`
 			);
 
