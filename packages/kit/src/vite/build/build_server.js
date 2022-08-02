@@ -252,7 +252,7 @@ export async function build_server(options, client) {
 			const entry = find_deps(client.vite_manifest, node.component, true);
 
 			exports.push(
-				`export { default as module } from '../${vite_manifest[node.component].file}';`,
+				`export { default as component } from '../${vite_manifest[node.component].file}';`,
 				`export const index = ${i};`,
 				`export const file = '${entry.file}';`,
 				`export const imports = ${s(entry.imports)};`, // TODO do we need to get imports from +page.js/+layout.js as well?
@@ -277,11 +277,13 @@ export async function build_server(options, client) {
 		}
 
 		if (node.module) {
-			exports.push(`export * from '../${vite_manifest[node.module].file}';`);
+			imports.push(`import * as module from '../${vite_manifest[node.module].file}';`);
+			exports.push(`export { module };`);
 		}
 
 		if (node.server) {
-			exports.push(`export * from '../${vite_manifest[node.server].file}';`);
+			imports.push(`import * as server from '../${vite_manifest[node.server].file}';`);
+			exports.push(`export { server };`);
 		}
 
 		const out = `${output_dir}/server/nodes/${i}.js`;

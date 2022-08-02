@@ -1,3 +1,7 @@
 export function GET() {
-	return new Response(JSON.stringify({ answer: 42 }));
+	return new Response(JSON.stringify({ answer: 42 }), {
+		headers: {
+			'content-type': 'application/json'
+		}
+	});
 }

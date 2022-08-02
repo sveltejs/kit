@@ -102,7 +102,9 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 				output: {
 					format: 'esm',
 					entryFileNames: ssr ? '[name].js' : `${config.kit.appDir}/immutable/[name]-[hash].js`,
-					chunkFileNames: `${config.kit.appDir}/immutable/chunks/[name]-[hash].js`,
+					chunkFileNames: ssr
+						? 'chunks/[name].js'
+						: `${config.kit.appDir}/immutable/chunks/[name]-[hash].js`,
 					assetFileNames: `${config.kit.appDir}/immutable/assets/[name]-[hash][extname]`
 				},
 				preserveEntrySignatures: 'strict'

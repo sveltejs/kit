@@ -19,7 +19,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 
 	build_data.manifest_data.nodes.forEach((node, i) => {
 		bundled_nodes.set(node, {
-			path: `${relative_path}/nodes/0.js`,
+			path: `${relative_path}/nodes/${i}.js`,
 			index: i
 		});
 	});
