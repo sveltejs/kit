@@ -120,15 +120,15 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 								? `/@fs${path.posix.resolve(node.module)}`
 								: `/${node.module}`;
 
-							const module = /** @type {import('types').SSRComponent} */ (
-								await vite.ssrLoadModule(url)
-							);
-
-							Object.assign(result, module);
+							result.module = await vite.ssrLoadModule(url);
 						}
 
 						if (node.server) {
-							result.server = true;
+							const url = node.server.startsWith('..')
+								? `/@fs${path.posix.resolve(node.server)}`
+								: `/${node.server}`;
+
+							result.server = await vite.ssrLoadModule(url);
 						}
 
 						return result;

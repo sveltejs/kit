@@ -295,7 +295,7 @@ function analyze(file, component_extensions, module_extensions) {
 	const module_extension = module_extensions.find((ext) => file.endsWith(ext));
 	if (module_extension) {
 		const name = file.slice(0, -module_extension.length);
-		const pattern = /^\+(server|(page(\.server)?)|(layout(-([a-zA-Z0-9_-]+))?(\.server)?))$/;
+		const pattern = /^\+(?:(server)|(page(\.server)?)|(layout(-([a-zA-Z0-9_-]+))?(\.server)?))$/;
 		const match = pattern.exec(name);
 		if (!match) return null;
 

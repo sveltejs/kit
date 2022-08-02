@@ -279,7 +279,7 @@ export async function build_server(options, client) {
 		}
 
 		if (node.server) {
-			exports.push('export const server = true;');
+			exports.push(`export * from '../${vite_manifest[node.server].file}';`);
 		}
 
 		const out = `${output_dir}/server/nodes/${i}.js`;

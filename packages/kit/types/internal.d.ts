@@ -198,10 +198,6 @@ export interface ShadowData {
 }
 
 export interface SSRComponent {
-	router?: boolean;
-	hydrate?: boolean;
-	prerender?: boolean;
-	load: Load;
 	default: {
 		render(props: Record<string, any>): {
 			html: string;
@@ -240,11 +236,22 @@ export interface SSRNode {
 	/** inlined styles */
 	inline_styles?: () => MaybePromise<Record<string, string>>;
 
-	load?: Load;
-	hydrate?: boolean;
-	prerender?: boolean;
-	router?: boolean;
-	ssr?: boolean;
+	module: {
+		load?: Load;
+		hydrate?: boolean;
+		prerender?: boolean;
+		router?: boolean;
+		ssr?: boolean;
+	};
+
+	server: {
+		// TODO create types for these
+		GET?: TODO;
+		POST?: TODO;
+		PATCH?: TODO;
+		PUT?: TODO;
+		DELETE?: TODO;
+	};
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;

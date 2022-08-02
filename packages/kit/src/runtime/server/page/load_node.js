@@ -35,8 +35,6 @@ export async function load_node({
 	status,
 	error
 }) {
-	const { component } = node;
-
 	let uses_credentials = false;
 
 	/** @type {Array<import('./types').Fetched>} */

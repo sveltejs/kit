@@ -126,7 +126,7 @@ export async function render_response({
 				status,
 				url: state.prerendering ? new PrerenderingURL(event.url) : event.url
 			},
-			components: branch.map(({ node }) => node.component.default)
+			components: branch.map(({ node }) => node.component)
 		};
 
 		// TODO remove this for 1.0
