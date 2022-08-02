@@ -121,8 +121,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 
 					if (error) {
 						while (i--) {
-							if (route.b[i]) {
-								const index = /** @type {number} */ (route.b[i]);
+							if (route.errors[i]) {
+								const index = /** @type {number} */ (route.errors[i]);
 								const error_node = await options.manifest._.nodes[index]();
 
 								/** @type {Loaded} */
@@ -133,22 +133,14 @@ export async function render_page(event, route, options, state, resolve_opts) {
 								}
 
 								try {
-									const error_loaded = /** @type {import('./types').Loaded} */ (
-										await load_node({
-											event,
-											options,
-											state,
-											route,
-											$session,
-											node: error_node
-										})
-									);
+									const error_loaded = /** @type {import('./types').Loaded} */ ({
+										node: error_node,
+										data: {},
+										server_data: {},
+										fetched: []
+									});
 
-									if (error_loaded.loaded.error) {
-										continue;
-									}
-
-									page_config = get_page_config(error_node.module, options);
+									page_config = get_page_config(error_node, options);
 									branch = branch.slice(0, j + 1).concat(error_loaded);
 									break ssr;
 								} catch (err) {
