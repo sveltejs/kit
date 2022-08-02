@@ -40,9 +40,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 
 	// TODO for non-GET requests, first call handler in +page.server.js
 
-	/** @type {Array<SSRNode | undefined>} */
-	let nodes;
-
 	if (!resolve_opts.ssr) {
 		return await render_response({
 			branch: [],
@@ -61,9 +58,9 @@ export async function render_page(event, route, options, state, resolve_opts) {
 	}
 
 	try {
-		nodes = await Promise.all(
+		const layout_nodes = await Promise.all(
 			// we use == here rather than === because [undefined] serializes as "[null]"
-			route.a.map((n) => (n == undefined ? n : options.manifest._.nodes[n]()))
+			route.layout.map((n) => (n == undefined ? n : options.manifest._.nodes[n]()))
 		);
 
 		// the leaf node will be present. only layouts may be undefined

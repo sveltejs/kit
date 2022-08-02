@@ -15,7 +15,7 @@ import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { components, dictionary, matchers } from '__GENERATED__/client-manifest.js';
+import { error_components, nodes, dictionary, matchers } from '__GENERATED__/client-manifest.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';

@@ -109,7 +109,7 @@ export class InternalServer extends Server {
 
 export interface ManifestData {
 	assets: Asset[];
-	components: string[];
+	nodes: PageNode[];
 	routes: RouteData[];
 	matchers: Record<string, string>;
 }
@@ -144,7 +144,7 @@ export interface PageData {
 	type: 'page';
 	id: string;
 	pattern: RegExp;
-	errors: Array<string | undefined>;
+	errors: Array<PageNode | undefined>;
 	layouts: Array<PageNode | undefined>;
 	page: PageNode;
 }
@@ -287,11 +287,7 @@ export interface SSRPage {
 	pattern: RegExp;
 	names: string[];
 	types: string[];
-	shadow:
-		| null
-		| (() => Promise<{
-				[method: string]: ShadowRequestHandler;
-		  }>);
+
 	/**
 	 * plan a is to render 1 or more layout components followed by a leaf component.
 	 */

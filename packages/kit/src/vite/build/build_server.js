@@ -166,10 +166,8 @@ export async function build_server(options, client) {
 
 	// add entry points for every endpoint...
 	manifest_data.routes.forEach((route) => {
-		const file = route.type === 'endpoint' ? route.file : route.shadow;
-
-		if (file) {
-			const resolved = path.resolve(cwd, file);
+		if (route.type === 'endpoint') {
+			const resolved = path.resolve(cwd, route.file);
 			const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
 			const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
 			input[name] = resolved;
@@ -177,14 +175,16 @@ export async function build_server(options, client) {
 	});
 
 	// ...and every component used by pages...
-	manifest_data.components.forEach((file) => {
-		const resolved = path.resolve(cwd, file);
-		const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
+	manifest_data.nodes.forEach((node, i) => {
+		if (node.component) {
+			const resolved = path.resolve(cwd, node.component);
+			const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
 
-		const name = relative.startsWith('..')
-			? posixify(path.join('entries/fallbacks', path.basename(file)))
-			: posixify(path.join('entries/pages', relative));
-		input[name] = resolved;
+			const name = relative.startsWith('..')
+				? posixify(path.join('entries/fallbacks', path.basename(node.component)))
+				: posixify(path.join('entries/pages', relative));
+			input[name] = resolved;
+		}
 	});
 
 	// ...and every matcher
@@ -239,33 +239,47 @@ export async function build_server(options, client) {
 		}
 	});
 
-	manifest_data.components.forEach((component, i) => {
-		const entry = find_deps(client.vite_manifest, component, true);
-
-		const imports = [`import * as module from '../${vite_manifest[component].file}';`];
-
-		const exports = [
-			'export { module };',
-			`export const index = ${i};`,
-			`export const file = '${entry.file}';`,
-			`export const imports = ${s(entry.imports)};`,
-			`export const stylesheets = ${s(entry.stylesheets)};`
-		];
+	manifest_data.nodes.forEach((node, i) => {
+		/** @type {string[]} */
+		const imports = [];
 
 		/** @type {string[]} */
-		const styles = [];
+		const exports = [];
 
-		entry.stylesheets.forEach((file) => {
-			if (stylesheet_lookup.has(file)) {
-				const index = stylesheet_lookup.get(file);
-				const name = `stylesheet_${index}`;
-				imports.push(`import ${name} from '../stylesheets/${index}.js';`);
-				styles.push(`\t${s(file)}: ${name}`);
+		if (node.component) {
+			const entry = find_deps(client.vite_manifest, node.component, true);
+
+			exports.push(
+				`export { default as module } from '../${vite_manifest[node.component].file}';`,
+				`export const index = ${i};`,
+				`export const file = '${entry.file}';`,
+				`export const imports = ${s(entry.imports)};`,
+				`export const stylesheets = ${s(entry.stylesheets)};`
+			);
+
+			/** @type {string[]} */
+			const styles = [];
+
+			entry.stylesheets.forEach((file) => {
+				if (stylesheet_lookup.has(file)) {
+					const index = stylesheet_lookup.get(file);
+					const name = `stylesheet_${index}`;
+					imports.push(`import ${name} from '../stylesheets/${index}.js';`);
+					styles.push(`\t${s(file)}: ${name}`);
+				}
+			});
+
+			if (styles.length > 0) {
+				exports.push(`export const inline_styles = () => ({\n${styles.join(',\n')}\n});`);
 			}
-		});
+		}
 
-		if (styles.length > 0) {
-			exports.push(`export const inline_styles = () => ({\n${styles.join(',\n')}\n});`);
+		if (node.module) {
+			exports.push(`export * from '../${vite_manifest[node.module].file}';`);
+		}
+
+		if (node.server) {
+			exports.push('export const server = true;');
 		}
 
 		const out = `${output_dir}/server/nodes/${i}.js`;

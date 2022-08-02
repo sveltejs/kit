@@ -8,7 +8,7 @@ interface Part {
 }
 
 interface RouteTreeNode {
-	error: string | undefined;
+	error: PageNode | undefined;
 	layouts: Record<string, PageNode>;
 }
 

@@ -35,7 +35,9 @@ export default function create_manifest_data({
 
 	// set default root layout/error
 	tree.set('', {
-		error: posixify(path.relative(cwd, `${fallback}/error.svelte`)),
+		error: {
+			component: posixify(path.relative(cwd, `${fallback}/error.svelte`))
+		},
 		layouts: { [DEFAULT]: default_layout }
 	});
 
@@ -89,7 +91,10 @@ export default function create_manifest_data({
 			// +page files alphabetically, and will therefore be processes
 			// before we reach the page
 			if (item.kind === 'component' && item.is_error) {
-				tree_node(id).error = project_relative;
+				tree_node(id).error = {
+					component: project_relative
+				};
+
 				return;
 			}
 
@@ -189,38 +194,30 @@ export default function create_manifest_data({
 		});
 	}
 
-	/** @type {string[]} */
-	const components = [];
-
-	/** @type {string[]} */
-	const modules = [];
+	/** @type {import('types').PageNode[]} */
+	const nodes = [];
 
 	tree.forEach(({ layouts, error }) => {
 		// we do [default, error, ...other_layouts] so that components[0] and [1]
 		// are the root layout/error. kinda janky, there's probably a nicer way
 		if (layouts[DEFAULT]) {
-			const { component, module } = layouts[DEFAULT];
-			if (component) components.push(component);
-			if (module) modules.push(module);
+			nodes.push(layouts[DEFAULT]);
 		}
 
 		if (error) {
-			components.push(error);
+			nodes.push(error);
 		}
 
 		for (const id in layouts) {
 			if (id !== DEFAULT) {
-				const { component, module } = layouts[id];
-				if (component) components.push(component);
-				if (module) modules.push(module);
+				nodes.push(layouts[id]);
 			}
 		}
 	});
 
 	route_map.forEach((route) => {
 		if (route.type === 'page') {
-			if (route.page.component) components.push(route.page.component);
-			if (route.page.module) modules.push(route.page.module);
+			nodes.push(route.page);
 		}
 	});
 
@@ -264,8 +261,7 @@ export default function create_manifest_data({
 
 	return {
 		assets,
-		components,
-		modules,
+		nodes,
 		routes,
 		matchers
 	};
@@ -325,7 +321,7 @@ function trace(tree, id, layout_id = DEFAULT, project_relative) {
 	/** @type {Array<import('types').PageNode | undefined>} */
 	const layouts = [];
 
-	/** @type {Array<string | undefined>} */
+	/** @type {Array<import('types').PageNode | undefined>} */
 	const errors = [];
 
 	const parts = id.split('/').filter(Boolean);

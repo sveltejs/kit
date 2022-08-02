@@ -126,17 +126,18 @@ function kit() {
 			start: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
 		};
 
-		// This step is optional — Vite/Rollup will create the necessary chunks
-		// for everything regardless — but it means that entry chunks reflect
-		// their location in the source code, which is helpful for debugging
-		manifest_data.components.forEach((file) => {
-			const resolved = path.resolve(cwd, file);
-			const relative = decodeURIComponent(path.relative(svelte_config.kit.files.routes, resolved));
+		manifest_data.nodes.forEach((node) => {
+			if (node.component) {
+				const resolved = path.resolve(cwd, node.component);
+				const relative = decodeURIComponent(
+					path.relative(svelte_config.kit.files.routes, resolved)
+				);
 
-			const name = relative.startsWith('..')
-				? path.basename(file)
-				: posixify(path.join('pages', relative));
-			input[name] = resolved;
+				const name = relative.startsWith('..')
+					? path.basename(node.component)
+					: posixify(path.join('pages', relative));
+				input[name] = resolved;
+			}
 		});
 
 		return get_default_build_config({
@@ -282,19 +283,22 @@ function kit() {
 		 * then use this hook to kick off builds for the server and service worker.
 		 */
 		async writeBundle(_options, bundle) {
-			for (const file of manifest_data.components) {
-				const id = vite.normalizePath(path.resolve(file));
-				const node = this.getModuleInfo(id);
+			manifest_data.nodes.forEach((node, i) => {
+				const id = vite.normalizePath(
+					path.resolve(svelte_config.kit.outDir, `generated/nodes/${i}.js`)
+				);
 
-				if (node) {
+				const module_node = this.getModuleInfo(id);
+
+				if (module_node) {
 					prevent_illegal_rollup_imports(
 						this.getModuleInfo.bind(this),
-						node,
+						module_node,
 						illegal_imports,
 						svelte_config.kit.outDir
 					);
 				}
-			}
+			});
 
 			const verbose = vite_config.logLevel === 'info';
 			log = logger({
