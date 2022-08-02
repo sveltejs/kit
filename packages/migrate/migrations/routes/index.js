@@ -495,9 +495,7 @@ function migrate_load(content) {
 		ast.forEachChild(walk);
 
 		const import_str =
-			imports.size > 0
-				? `import { ${[...imports.keys()].join(', ')} } from '@sveltejs/kit/data';`
-				: '';
+			imports.size > 0 ? `import { ${[...imports.keys()].join(', ')} } from '@sveltejs/kit';` : '';
 
 		return import_str + '\n' + str.toString();
 	} catch {
