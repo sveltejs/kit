@@ -354,7 +354,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		const leaf_node = navigation_result.state.branch.at(-1);
-		router_enabled = leaf_node?.node.module.router !== false;
+		router_enabled = leaf_node?.node.module?.router !== false;
 
 		if (callback) callback();
 
@@ -626,7 +626,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		// preload modules to avoid waterfall, but handle rejections
 		// so they don't get reported to Sentry et al (we don't need
 		// to act on the failures at this point)
-		[...errors, ...layouts, page].forEach((loader) => loader().catch(() => {}));
+		[...errors, ...layouts, page].forEach((loader) => loader?.().catch(() => {}));
 
 		const nodes = [...layouts, page];
 

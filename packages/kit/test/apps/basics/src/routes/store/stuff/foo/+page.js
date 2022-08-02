@@ -12,7 +12,7 @@ export function load({ url }) {
 	}
 
 	return {
-			foo: true
-			number: 2
+		foo: true,
+		number: 2
 	};
 }

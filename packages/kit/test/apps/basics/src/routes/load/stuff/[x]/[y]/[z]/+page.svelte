@@ -4,4 +4,4 @@
 </script>
 
 <h1>message: {data.message}</h1>
-<pre>{JSON.stringify({ data.x, data.y, data.z })}</pre>
+<pre>{JSON.stringify(data)}</pre>

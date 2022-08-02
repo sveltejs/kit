@@ -200,14 +200,14 @@ export async function render_page(event, route, options, state, resolve_opts) {
  */
 function get_page_config(leaf, options) {
 	// TODO we can reinstate this now that it's in the module
-	if ('ssr' in leaf.module) {
+	if (leaf.module && 'ssr' in leaf.module) {
 		throw new Error(
 			'`export const ssr` has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle'
 		);
 	}
 
 	return {
-		router: 'router' in leaf.module ? !!leaf.module.router : options.router,
-		hydrate: 'hydrate' in leaf.module ? !!leaf.module.hydrate : options.hydrate
+		router: leaf.module?.router ?? options.router,
+		hydrate: leaf.module?.hydrate ?? options.hydrate
 	};
 }
