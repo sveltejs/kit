@@ -23,7 +23,7 @@ export default function create_manifest_data({
 	/** @type {Map<string, import('types').RouteData>} */
 	const route_map = new Map();
 
-	/** @type {Map<string, import('./types').Part[][]} */
+	/** @type {Map<string, import('./types').Part[][]>} */
 	const segment_map = new Map();
 
 	/** @type {import('./types').RouteTree} */
