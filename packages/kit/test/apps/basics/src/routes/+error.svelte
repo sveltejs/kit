@@ -6,7 +6,7 @@
 	<title>Custom error page: {$page.error.message}</title>
 </svelte:head>
 
-<h1>{status}</h1>
+<h1>{$page.status}</h1>
 
 <p id="message">This is your custom error page saying: "<b>{$page.error.message}</b>"</p>
 

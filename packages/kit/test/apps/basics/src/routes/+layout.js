@@ -4,7 +4,7 @@ import { error } from '@sveltejs/kit';
 export async function load({ fetch, url }) {
 	if (url.pathname.startsWith('/errors/error-in-layout')) {
 		const res = await fetch('/errors/error-in-layout/non-existent');
-		throw error(res.status, undefined);
+		throw error(res.status);
 	}
 
 	return {

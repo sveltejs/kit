@@ -304,7 +304,7 @@ function analyze(file, component_extensions, module_extensions) {
 			is_page: !!match[2],
 			is_layout: !!match[4],
 			is_server: !!(match[1] || match[3] || match[6]),
-			declares_layout: match[4]
+			declares_layout: match[5]
 		};
 	}
 
