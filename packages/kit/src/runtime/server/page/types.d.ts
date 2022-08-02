@@ -1,4 +1,4 @@
-import { JSONValue, NormalizedLoadOutput, ResponseHeaders, SSRNode, CspDirectives } from 'types';
+import { JSONValue, ResponseHeaders, SSRNode, CspDirectives } from 'types';
 
 export type Fetched = {
 	url: string;

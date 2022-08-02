@@ -64,10 +64,6 @@ export async function render_response({
 
 	let rendered;
 
-	let is_private = false;
-	/** @type {import('types').NormalizedLoadOutputCache | undefined} */
-	let cache;
-
 	const stack = error?.stack;
 
 	if (options.dev && error) {
@@ -75,9 +71,7 @@ export async function render_response({
 	}
 
 	if (resolve_opts.ssr) {
-		const leaf = /** @type {import('./types.js').Loaded} */ (branch.at(-1));
-
-		for (const { node, data, fetched } of branch) {
+		for (const { node, fetched } of branch) {
 			if (node.imports) {
 				node.imports.forEach((url) => modulepreloads.add(url));
 			}
@@ -95,8 +89,6 @@ export async function render_response({
 		}
 
 		const session = writable($session);
-		// Even if $session isn't accessed, it still ends up serialized in the rendered HTML
-		is_private = is_private || (cache?.private ?? (!!$session && Object.keys($session).length > 0));
 
 		/** @type {Record<string, any>} */
 		const props = {
@@ -172,7 +164,7 @@ export async function render_response({
 			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
 				status: ${status},
 				error: ${error && serialize_error(error, e => e.stack)},
-				nodes: [${branch.map(({ node }) => node.index).join(', ')}],
+				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)}
 			}` : 'null'}
@@ -257,15 +249,12 @@ export async function render_response({
 	}
 
 	if (state.prerendering) {
+		// TODO read headers set with setHeaders and convert into http-equiv where possible
 		const http_equiv = [];
 
 		const csp_headers = csp.csp_provider.get_meta();
 		if (csp_headers) {
 			http_equiv.push(csp_headers);
-		}
-
-		if (cache) {
-			http_equiv.push(`<meta http-equiv="cache-control" content="max-age=${cache.maxage}">`);
 		}
 
 		if (http_equiv.length > 0) {
@@ -288,10 +277,6 @@ export async function render_response({
 		'content-type': 'text/html',
 		etag: `"${hash(html)}"`
 	});
-
-	if (cache) {
-		headers.set('cache-control', `${is_private ? 'private' : 'public'}, max-age=${cache.maxage}`);
-	}
 
 	if (!state.prerendering) {
 		const csp_header = csp.csp_provider.get_header();

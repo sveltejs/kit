@@ -67,6 +67,12 @@ export interface BuildData {
 
 export interface CSRPageNode {
 	component: typeof SvelteComponent;
+	module: {
+		load: Load;
+		hydrate: boolean;
+		router: boolean;
+	};
+	server: boolean;
 }
 
 export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
@@ -74,9 +80,9 @@ export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
 export type CSRRoute = {
 	id: string;
 	exec: (path: string) => undefined | Record<string, string>;
-	a: CSRComponentLoader[];
-	b: CSRComponentLoader[];
-	has_shadow: boolean;
+	errors: CSRPageNodeLoader[];
+	layouts: CSRPageNodeLoader[];
+	page: CSRPageNodeLoader;
 };
 
 export interface EndpointData {
@@ -122,23 +128,8 @@ export interface MethodOverride {
 	allowed: string[];
 }
 
-export type NormalizedLoadOutput = {
-	status?: number;
-	error?: Error;
-	redirect?: string;
-	props?: Record<string, any> | Promise<Record<string, any>>;
-	stuff?: Record<string, any>;
-	cache?: NormalizedLoadOutputCache;
-	dependencies?: string[];
-};
-
-export interface NormalizedLoadOutputCache {
-	maxage: number;
-	private?: boolean;
-}
-
 export interface PageNode {
-	component: string; // TODO supply default component if it's missing (bit of an edge case)
+	component?: string; // TODO supply default component if it's missing (bit of an edge case)
 	module?: string;
 	server?: string;
 }

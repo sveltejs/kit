@@ -72,7 +72,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			// if the page isn't marked as prerenderable (or is explicitly
 			// marked NOT prerenderable, if `prerender.default` is `true`),
 			// then bail out at this point
-			const should_prerender = leaf_node.prerender ?? options.prerender.default;
+			const should_prerender = leaf_node.module.prerender ?? options.prerender.default;
 			if (!should_prerender) {
 				return new Response(undefined, {
 					status: 204
@@ -125,12 +125,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 								const index = /** @type {number} */ (route.errors[i]);
 								const error_node = await options.manifest._.nodes[index]();
 
-								/** @type {Loaded} */
-								let node_loaded;
 								let j = i;
-								while (!(node_loaded = branch[j])) {
-									j -= 1;
-								}
+								while (!branch[j]) j -= 1;
 
 								try {
 									const error_loaded = /** @type {import('./types').Loaded} */ ({
@@ -203,15 +199,15 @@ export async function render_page(event, route, options, state, resolve_opts) {
  * @param {SSROptions} options
  */
 function get_page_config(leaf, options) {
-	// TODO remove for 1.0
-	if ('ssr' in leaf) {
+	// TODO we can reinstate this now that it's in the module
+	if ('ssr' in leaf.module) {
 		throw new Error(
 			'`export const ssr` has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle'
 		);
 	}
 
 	return {
-		router: 'router' in leaf ? !!leaf.router : options.router,
-		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
+		router: 'router' in leaf.module ? !!leaf.module.router : options.router,
+		hydrate: 'hydrate' in leaf.module ? !!leaf.module.hydrate : options.hydrate
 	};
 }

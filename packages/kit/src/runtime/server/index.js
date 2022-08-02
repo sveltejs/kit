@@ -233,22 +233,22 @@ export async function respond(request, options, state) {
 						throw new Error('TODO return JSON');
 
 						// loading data for a client-side transition is a special case
-						if (request.headers.has('x-sveltekit-load')) {
-							// since redirects are opaque to the browser, we need to repackage
-							// 3xx responses as 200s with a custom header
-							if (response.status >= 300 && response.status < 400) {
-								const location = response.headers.get('location');
+						// if (request.headers.has('x-sveltekit-load')) {
+						// 	// since redirects are opaque to the browser, we need to repackage
+						// 	// 3xx responses as 200s with a custom header
+						// 	if (response.status >= 300 && response.status < 400) {
+						// 		const location = response.headers.get('location');
 
-								if (location) {
-									const headers = new Headers(response.headers);
-									headers.set('x-sveltekit-location', location);
-									response = new Response(undefined, {
-										status: 204,
-										headers
-									});
-								}
-							}
-						}
+						// 		if (location) {
+						// 			const headers = new Headers(response.headers);
+						// 			headers.set('x-sveltekit-location', location);
+						// 			response = new Response(undefined, {
+						// 				status: 204,
+						// 				headers
+						// 			});
+						// 		}
+						// 	}
+						// }
 					} else {
 						response =
 							route.type === 'endpoint'

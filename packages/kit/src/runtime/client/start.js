@@ -18,7 +18,7 @@ export { set_public_env } from '../env-public.js';
  *   hydrate: {
  *     status: number;
  *     error: Error;
- *     nodes: number[];
+ *     node_ids: number[];
  *     params: Record<string, string>;
  *     routeId: string | null;
  *   };

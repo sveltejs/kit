@@ -28,9 +28,8 @@ export function update(config) {
 	const manifest_data = create_manifest_data({ config });
 
 	const output = path.join(config.kit.outDir, 'generated');
-	const base = path.relative('.', output);
 
-	write_client_manifest(manifest_data, base, output);
+	write_client_manifest(manifest_data, output);
 	write_root(manifest_data, output);
 	write_matchers(manifest_data, output);
 	write_types(config, manifest_data);

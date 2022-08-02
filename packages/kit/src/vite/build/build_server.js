@@ -175,7 +175,7 @@ export async function build_server(options, client) {
 	});
 
 	// ...and every component used by pages...
-	manifest_data.nodes.forEach((node, i) => {
+	manifest_data.nodes.forEach((node) => {
 		for (const file of [node.component, node.module, node.server]) {
 			if (file) {
 				const resolved = path.resolve(cwd, file);
@@ -314,7 +314,7 @@ function get_methods(cwd, output, manifest_data) {
 	/** @type {Record<string, import('types').HttpMethod[]>} */
 	const methods = {};
 	manifest_data.routes.forEach((route) => {
-		const file = route.type === 'endpoint' ? route.file : route.shadow;
+		const file = route.type === 'endpoint' ? route.file : route.page.server;
 
 		if (file && lookup[file]) {
 			methods[file] = lookup[file].filter(is_http_method);

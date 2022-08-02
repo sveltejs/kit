@@ -283,7 +283,7 @@ function kit() {
 		 * then use this hook to kick off builds for the server and service worker.
 		 */
 		async writeBundle(_options, bundle) {
-			manifest_data.nodes.forEach((node, i) => {
+			manifest_data.nodes.forEach((_node, i) => {
 				const id = vite.normalizePath(
 					path.resolve(svelte_config.kit.outDir, `generated/nodes/${i}.js`)
 				);

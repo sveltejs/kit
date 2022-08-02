@@ -6,7 +6,7 @@ import {
 	prefetch,
 	prefetchRoutes
 } from '$app/navigation';
-import { CSRComponent, CSRRoute, NormalizedLoadOutput } from 'types';
+import { CSRPageNode, CSRRoute } from 'types';
 
 export interface Client {
 	// public API, exposed via $app/navigation
@@ -22,7 +22,7 @@ export interface Client {
 	_hydrate: (opts: {
 		status: number;
 		error: Error;
-		nodes: number[];
+		node_ids: number[];
 		params: Record<string, string>;
 		routeId: string | null;
 	}) => Promise<void>;
@@ -55,14 +55,15 @@ export type NavigationResult = {
 };
 
 export type BranchNode = {
-	module: CSRComponent;
-	loaded: NormalizedLoadOutput | null;
+	node: CSRPageNode;
+	data: Record<string, any>;
 	uses: {
 		params: Set<string>;
 		url: boolean; // TODO make more granular?
 		session: boolean;
 		dependencies: Set<string>;
 	};
+	redirect: string | undefined;
 };
 
 export type NavigationState = {
