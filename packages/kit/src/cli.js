@@ -4,6 +4,7 @@ import colors from 'kleur';
 import sade from 'sade';
 import { load_config } from './core/config/index.js';
 import { coalesce_to_error } from './utils/error.js';
+import { mkdirp } from './utils/filesystem.js';
 
 /** @param {unknown} e */
 function handle_error(e) {
@@ -34,6 +35,37 @@ prog
 		} catch (error) {
 			handle_error(error);
 		}
+	});
+
+prog
+	.command('add route')
+	.describe('Add route in src directory')
+	.option('--name', 'Specify a name for your new route', '')
+	.action(async ({ name }) => {
+		const route_directory = path.resolve(`src/routes/${name}`);
+
+		if (fs.existsSync(route_directory)) {
+			const message =
+				name === ''
+					? `Add a name for route\nExample: svelte-kit add route --name svelte`
+					: fs.existsSync(route_directory)
+					? 'This route already exist.\nProvide a unique route.'
+					: 'Use `svelte-kit --help`';
+			console.error(colors.bold().red(message));
+			return;
+		}
+		const route_files = [
+			{ file_name: '+page.svelte', content: `<p>${name} route works</p>` },
+			{ file_name: '+page.js', content: `//Load function logic` },
+			{ file_name: '+page.server.js', content: `//Server side logic` }
+		];
+		mkdirp(route_directory);
+		route_files.forEach((file) => {
+			fs.writeFile(`${route_directory}/${file.file_name}`, `${file.content}`, function (err) {
+				if (err) handle_error(err);
+			});
+		});
+		console.error(colors.green(`New route has been added '${name}'`));
 	});
 
 prog
