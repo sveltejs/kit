@@ -193,8 +193,7 @@ export interface LoadEvent<
 	routeId: string | null;
 	session: App.Session;
 	url: URL;
-	status: number | null;
-	error: Error | null;
+	// TODO parent, setHeaders, depends
 }
 
 export interface LoadOutputCache {

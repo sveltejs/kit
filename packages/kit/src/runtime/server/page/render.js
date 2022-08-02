@@ -62,8 +62,6 @@ export async function render_response({
 	/** @type {Array<import('./types').Fetched>} */
 	const serialized_data = [];
 
-	let shadow_props;
-
 	let rendered;
 
 	let is_private = false;
@@ -79,13 +77,7 @@ export async function render_response({
 	if (resolve_opts.ssr) {
 		const leaf = /** @type {import('./types.js').Loaded} */ (branch.at(-1));
 
-		if (leaf.loaded.status) {
-			// explicit status returned from `load` or a page endpoint trumps
-			// initial status
-			status = leaf.loaded.status;
-		}
-
-		for (const { node, props, loaded, fetched, uses_credentials } of branch) {
+		for (const { node, data, fetched } of branch) {
 			if (node.imports) {
 				node.imports.forEach((url) => modulepreloads.add(url));
 			}
@@ -100,10 +92,6 @@ export async function render_response({
 
 			// TODO probably better if `fetched` wasn't populated unless `hydrate`
 			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
-			if (props) shadow_props = props;
-
-			cache = loaded?.cache;
-			is_private = cache?.private ?? uses_credentials;
 		}
 
 		const session = writable($session);
@@ -149,7 +137,7 @@ export async function render_response({
 		// props_n (instead of props[n]) makes it easy to avoid
 		// unnecessary updates for layout components
 		for (let i = 0; i < branch.length; i += 1) {
-			props[`props_${i}`] = await branch[i].loaded.props;
+			props[`props_${i}`] = { data: branch[i].data };
 		}
 
 		rendered = options.root.render(props);
@@ -258,10 +246,6 @@ export async function render_response({
 				)
 			)
 			.join('\n\t');
-
-		if (shadow_props) {
-			body += render_json_payload_script({ type: 'props' }, shadow_props);
-		}
 	}
 
 	if (options.service_worker) {

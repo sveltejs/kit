@@ -13,10 +13,9 @@ export type Fetched = {
 
 export type Loaded = {
 	node: SSRNode;
-	props: JSONValue | undefined;
-	loaded: NormalizedLoadOutput;
+	data: Record<string, any>;
+	server_data: JSONValue;
 	fetched: Fetched[];
-	uses_credentials: boolean;
 };
 
 type CspMode = 'hash' | 'nonce' | 'auto';

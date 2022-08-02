@@ -104,24 +104,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 							state,
 							route,
 							$session,
-							node,
-							is_error: false,
-							is_leaf: i === nodes.length - 1
+							node
 						});
-
-						if (loaded.loaded.redirect) {
-							return new Response(undefined, {
-								status: loaded.loaded.status,
-								headers: {
-									location: loaded.loaded.redirect
-								}
-							});
-						}
-
-						if (loaded.loaded.error) {
-							error = loaded.loaded.error;
-							status = loaded.loaded.status ?? 500;
-						}
 					} catch (err) {
 						const e = coalesce_to_error(err);
 
@@ -156,11 +140,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 											state,
 											route,
 											$session,
-											node: error_node,
-											is_error: true,
-											is_leaf: false,
-											status,
-											error
+											node: error_node
 										})
 									);
 

@@ -1,6 +1,5 @@
 import * as cookie from 'cookie';
 import * as set_cookie_parser from 'set-cookie-parser';
-import { normalize } from '../../load.js';
 import { respond } from '../index.js';
 import { LoadURL, PrerenderingURL, is_root_relative, resolve } from '../../../utils/url.js';
 import { check_method_names, is_pojo, lowercase_keys } from '../utils.js';
@@ -16,27 +15,10 @@ import { domain_matches, path_matches } from './cookie.js';
  *   route: import('types').SSRPage | import('types').SSRErrorPage;
  *   node: import('types').SSRNode;
  *   $session: any;
- *   is_error: boolean;
- *   is_leaf: boolean;
- *   status?: number;
- *   error?: Error;
  * }} opts
  * @returns {Promise<import('./types').Loaded>}
  */
-export async function load_node({
-	event,
-	options,
-	state,
-	route,
-	node,
-	$session,
-	is_error,
-	is_leaf,
-	status,
-	error
-}) {
-	let uses_credentials = false;
-
+export async function load_node({ event, options, state, route, node, $session }) {
 	/** @type {Array<import('./types').Fetched>} */
 	const fetched = [];
 
@@ -45,49 +27,39 @@ export async function load_node({
 	/** @type {import('set-cookie-parser').Cookie[]} */
 	const new_cookies = [];
 
-	/** @type {import('types').NormalizedLoadOutput} */
-	let loaded;
+	/** @type {Record<string, any>} */
+	let server_data;
 
-	const should_prerender = node.prerender ?? options.prerender.default;
+	/** @type {Record<string, any>} */
+	let data;
 
-	/** @type {import('types').ShadowData} */
-	const shadow = is_leaf
-		? await load_shadow_data(
-				/** @type {import('types').SSRPage} */ (route),
-				event,
-				options,
-				should_prerender
-		  )
-		: {};
+	if (node.server) {
+		const should_prerender = node.module?.prerender ?? options.prerender.default;
+		const mod = node.server;
 
-	if (shadow.cookies) {
-		shadow.cookies.forEach((header) => {
-			new_cookies.push(set_cookie_parser.parseString(header));
-		});
+		if (should_prerender && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
+			throw new Error('Cannot prerender pages that have endpoints with mutative methods');
+		}
+
+		// TODO unwrap top-level promises
+		server_data = await mod.GET.call(null, event);
+	} else {
+		server_data = {};
 	}
 
-	if (shadow.error) {
-		loaded = {
-			error: shadow.error
-		};
-	} else if (shadow.redirect) {
-		loaded = {
-			redirect: shadow.redirect
-		};
-	} else if (node.load) {
+	if (node.module?.load) {
 		/** @type {import('types').LoadEvent} */
-		const load_input = {
+		const load_event = {
 			url: state.prerendering ? new PrerenderingURL(event.url) : new LoadURL(event.url),
 			params: event.params,
-			data: {}, // TODO load from +page.server.js/+layout.server.js
+			data: server_data,
 			routeId: event.routeId,
 			get session() {
-				if (node.prerender ?? options.prerender.default) {
+				if (node.module.prerender ?? options.prerender.default) {
 					throw Error(
 						'Attempted to access session from a prerendered page. Session would never be populated.'
 					);
 				}
-				uses_credentials = true;
 				return $session;
 			},
 			/**
@@ -171,8 +143,6 @@ export async function load_node({
 					}
 				} else if (is_root_relative(resolved)) {
 					if (opts.credentials !== 'omit') {
-						uses_credentials = true;
-
 						const authorization = event.request.headers.get('authorization');
 
 						// combine cookies from the initiating request with any that were
@@ -239,8 +209,6 @@ export async function load_node({
 						`.${new URL(requested).hostname}`.endsWith(`.${event.url.hostname}`) &&
 						opts.credentials !== 'omit'
 					) {
-						uses_credentials = true;
-
 						const cookie = event.request.headers.get('cookie');
 						if (cookie) opts.headers.set('cookie', cookie);
 					}
@@ -338,212 +306,28 @@ export async function load_node({
 				});
 
 				return proxy;
-			},
-			status: (is_error ? status : shadow.status) ?? null,
-			error: is_error ? error ?? null : null
+			}
 		};
 
 		if (options.dev) {
 			// TODO remove this for 1.0
-			Object.defineProperty(load_input, 'page', {
+			Object.defineProperty(load_event, 'page', {
 				get: () => {
 					throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
 				}
 			});
 		}
 
-		loaded = normalize(await node.load.call(null, load_input));
-	} else if (shadow.body) {
-		loaded = {
-			props: shadow.body
-		};
+		// TODO unwrap top-level promises
+		data = await node.module.load.call(null, load_event);
 	} else {
-		loaded = {};
-	}
-
-	loaded.status = loaded.status ?? shadow.status;
-
-	// generate __data.json files when prerendering
-	if (shadow.body && state.prerendering) {
-		const pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
-
-		const dependency = {
-			response: new Response(undefined),
-			body: JSON.stringify(shadow.body)
-		};
-
-		state.prerendering.dependencies.set(pathname, dependency);
+		data = {};
 	}
 
 	return {
 		node,
-		props: shadow.body,
-		loaded,
-		fetched,
-		uses_credentials
+		data,
+		server_data, // we return this separately so it can be serialized into the page
+		fetched
 	};
-}
-
-/**
- *
- * @param {import('types').SSRPage} route
- * @param {import('types').RequestEvent} event
- * @param {import('types').SSROptions} options
- * @param {boolean} prerender
- * @returns {Promise<import('types').ShadowData>}
- */
-async function load_shadow_data(route, event, options, prerender) {
-	if (!route.shadow) return {};
-
-	try {
-		const mod = await route.shadow();
-
-		check_method_names(mod);
-
-		if (prerender && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
-			throw new Error('Cannot prerender pages that have endpoints with mutative methods');
-		}
-
-		const { method } = event.request;
-		const is_get = method === 'HEAD' || method === 'GET';
-		const handler = method === 'HEAD' ? mod.HEAD || mod.GET : mod[method];
-
-		if (!handler && !is_get) {
-			return {
-				status: 405,
-				error: new Error(`${method} method not allowed`)
-			};
-		}
-
-		/** @type {import('types').ShadowData} */
-		const data = {
-			status: undefined,
-			cookies: [],
-			body: {}
-		};
-
-		if (!is_get) {
-			const { status, headers, body } = validate_shadow_output(await handler(event));
-			add_cookies(/** @type {string[]} */ (data.cookies), headers);
-			data.status = status;
-
-			// explicit errors cause an error page...
-			if (body instanceof Error) {
-				if (status < 400) {
-					data.status = 500;
-					data.error = new Error('A non-error status code was returned with an error body');
-				} else {
-					data.error = body;
-				}
-
-				return data;
-			}
-
-			// ...redirects are respected...
-			if (status >= 300 && status < 400) {
-				data.redirect = /** @type {string} */ (
-					headers instanceof Headers ? headers.get('location') : headers.location
-				);
-				return data;
-			}
-
-			// ...but 4xx and 5xx status codes _don't_ result in the error page
-			// rendering for non-GET requests — instead, we allow the page
-			// to render with any validation errors etc that were returned
-			data.body = body;
-		}
-
-		const get = (method === 'HEAD' && mod.HEAD) || mod.GET;
-		if (get) {
-			const { status, headers, body } = validate_shadow_output(await get(event));
-			add_cookies(/** @type {string[]} */ (data.cookies), headers);
-
-			if (body instanceof Error) {
-				if (status < 400) {
-					data.status = 500;
-					data.error = new Error('A non-error status code was returned with an error body');
-				} else {
-					data.status = status;
-					data.error = body;
-				}
-
-				return data;
-			}
-
-			if (status >= 400) {
-				data.status = status;
-				data.error = new Error('Failed to load data');
-				return data;
-			}
-
-			if (status >= 300) {
-				data.status = status;
-				data.redirect = /** @type {string} */ (
-					headers instanceof Headers ? headers.get('location') : headers.location
-				);
-				return data;
-			}
-
-			data.body = { ...body, ...data.body };
-		}
-
-		return data;
-	} catch (e) {
-		const error = coalesce_to_error(e);
-		options.handle_error(error, event);
-
-		return {
-			status: 500,
-			error
-		};
-	}
-}
-
-/**
- * @param {string[]} target
- * @param {Partial<import('types').ResponseHeaders>} headers
- */
-function add_cookies(target, headers) {
-	const cookies = headers['set-cookie'];
-	if (cookies) {
-		if (Array.isArray(cookies)) {
-			target.push(...cookies);
-		} else {
-			target.push(/** @type {string} */ (cookies));
-		}
-	}
-}
-
-/**
- * @param {import('types').ShadowEndpointOutput} result
- */
-function validate_shadow_output(result) {
-	// TODO remove for 1.0
-	// @ts-expect-error
-	if (result.fallthrough) {
-		throw new Error(
-			'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
-		);
-	}
-
-	const { status = 200, body = {} } = result;
-	let headers = result.headers || {};
-
-	if (headers instanceof Headers) {
-		if (headers.has('set-cookie')) {
-			throw new Error(
-				'Endpoint request handler cannot use Headers interface with Set-Cookie headers'
-			);
-		}
-	} else {
-		headers = lowercase_keys(/** @type {Record<string, string>} */ (headers));
-	}
-
-	if (!is_pojo(body)) {
-		throw new Error(
-			'Body returned from endpoint request handler must be a plain object or an Error'
-		);
-	}
-
-	return { status, headers, body };
 }
