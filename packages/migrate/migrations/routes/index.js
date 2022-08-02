@@ -7,6 +7,12 @@ import ts from 'typescript';
 import MagicString from 'magic-string';
 import { pathToFileURL } from 'url';
 
+const TASK_STANDALONE_ENDPOINT = '3292701';
+const TASK_PAGE_ENDPOINT = '3292699';
+const TASK_PAGE_LOAD = '3292693';
+const TASK_PAGE_MODULE_CTX = '3292722';
+const TASK_PAGE_DATA_PROP = '3292707';
+
 /** @param {string} message */
 function bail(message) {
 	console.error(colors.bold().red(message));
@@ -154,7 +160,7 @@ export async function migrate() {
 				}
 
 				if (!is_error_page && /export/.test(content)) {
-					content = `\n${indent}${error('Add data prop', '3292707')}\n${content}`;
+					content = `\n${indent}${error('Add data prop', TASK_PAGE_DATA_PROP)}\n${content}`;
 				}
 
 				return `<script${attrs}>${content}</script>`;
@@ -172,7 +178,7 @@ export async function migrate() {
 			if (module) {
 				const ext = /<script[^>]+?lang=['"](ts|typescript)['"][^]*?>/.test(module) ? '.ts' : '.js';
 				const injected = /load/.test(module)
-					? `${error('Update load function', '3292693')}\n\n`
+					? `${error('Update load function', TASK_PAGE_LOAD)}\n\n`
 					: '';
 
 				const content = migrate_load(dedent(move_to_directory ? adjust_imports(module) : module));
@@ -211,7 +217,10 @@ export async function migrate() {
 				renamed = `${file.slice(0, -basename.length)}${type}${module_ext}`;
 			}
 
-			const injected = error(`Update ${type}.js`, is_page_endpoint ? '3292699' : '3292701');
+			const injected = error(
+				`Update ${type}.js`,
+				is_page_endpoint ? TASK_PAGE_ENDPOINT : TASK_STANDALONE_ENDPOINT
+			);
 			// Standalone index endpoints are edge case enough that we don't spend time on trying to update all the imports correctly
 			const edited =
 				injected +
@@ -250,7 +259,7 @@ function extract_load(content, is_error, moved) {
 				// special case — load is no longer supported in load
 				const indent = guess_indent(contents) ?? '';
 
-				contents = contents.replace(/^(.+)/gm, '// $1');
+				contents = comment(contents);
 				const body = `\n${indent}${error('Replace error load function', '3293209')}\n${contents}`;
 
 				return `<script${attrs}>${body}</script>`;
@@ -258,13 +267,20 @@ function extract_load(content, is_error, moved) {
 
 			module = contents.replace(/^\n/, '');
 			return `<!-- ${task(
-				'Check for missing imports',
-				'3292722'
+				'Check for missing imports and code that should be moved back to the module context',
+				TASK_PAGE_MODULE_CTX
 			)}\n\nThe following imports were found:\n${imports.length ? imports.join('\n') : '-'}\n-->`;
 		}
 	);
 
 	return { module, main };
+}
+
+/**
+ * @param {string} contents
+ */
+function comment(contents) {
+	return contents.replace(/^(.+)/gm, '// $1');
 }
 
 /** @param {string} content */
@@ -424,6 +440,23 @@ function guess_indent(content) {
 
 /**
  * @param {string} content
+ * @param {string} indent
+ */
+function indent_with(content, indent) {
+	return indent + content.split('\n').join('\n' + indent);
+}
+
+/**
+ * @param {string} content
+ * @param {number} offset
+ */
+function indent_at_line(content, offset) {
+	const substr = content.substring(content.lastIndexOf('\n', offset) + 1, offset);
+	return /\s*/.exec(substr)[0];
+}
+
+/**
+ * @param {string} content
  *  */
 function migrate_load(content) {
 	let imports = new Set();
@@ -439,53 +472,48 @@ function migrate_load(content) {
 
 		/** @param {ts.Node} node */
 		function walk(node) {
-			if (
-				ts.isReturnStatement(node) &&
-				is_directly_in_exported_fn(node, ['load']) &&
-				node.expression &&
-				ts.isObjectLiteralExpression(node.expression)
-			) {
-				if (contains_only(node.expression, ['props'])) {
-					str.overwrite(
-						node.getStart(),
-						node.getEnd(),
-						automigration_comment(node) +
-							'return ' +
-							get_prop_initializer_text(node.expression.properties, 'props')
-					);
-				} else if (
-					contains_only(node.expression, ['redirect', 'status']) &&
-					((Number(get_prop_initializer_text(node.expression.properties, 'status')) > 300 &&
-						Number(get_prop_initializer_text(node.expression.properties, 'status')) < 310) ||
-						contains_only(node.expression, ['redirect']))
-				) {
-					str.overwrite(
-						node.getStart(),
-						node.getEnd(),
-						automigration_comment(node) +
+			if (ts.isReturnStatement(node) && is_directly_in_exported_fn(node, ['load'])) {
+				if (node.expression && ts.isObjectLiteralExpression(node.expression)) {
+					if (contains_only(node.expression, ['props'])) {
+						automigration(
+							node,
+							str,
+							'return ' + dedent(get_prop_initializer_text(node.expression.properties, 'props'))
+						);
+					} else if (
+						contains_only(node.expression, ['redirect', 'status']) &&
+						((Number(get_prop_initializer_text(node.expression.properties, 'status')) > 300 &&
+							Number(get_prop_initializer_text(node.expression.properties, 'status')) < 310) ||
+							contains_only(node.expression, ['redirect']))
+					) {
+						automigration(
+							node,
+							str,
 							'throw redirect(' +
-							get_prop_initializer_text(node.expression.properties, 'status') +
-							', ' +
-							get_prop_initializer_text(node.expression.properties, 'redirect') +
-							');'
-					);
-					imports.add('redirect');
-				} else if (
-					contains_only(node.expression, ['error', 'status']) &&
-					(Number(get_prop_initializer_text(node.expression.properties, 'status')) > 399 ||
-						contains_only(node.expression, ['error']))
-				) {
-					str.overwrite(
-						node.getStart(),
-						node.getEnd(),
-						automigration_comment(node) +
+								get_prop_initializer_text(node.expression.properties, 'status') +
+								', ' +
+								get_prop_initializer_text(node.expression.properties, 'redirect') +
+								');'
+						);
+						imports.add('redirect');
+					} else if (
+						contains_only(node.expression, ['error', 'status']) &&
+						(Number(get_prop_initializer_text(node.expression.properties, 'status')) > 399 ||
+							contains_only(node.expression, ['error']))
+					) {
+						automigration(
+							node,
+							str,
 							'throw error(' +
-							get_prop_initializer_text(node.expression.properties, 'status') +
-							', ' +
-							get_prop_initializer_text(node.expression.properties, 'error') +
-							');'
-					);
-					imports.add('error');
+								get_prop_initializer_text(node.expression.properties, 'status') +
+								', ' +
+								get_prop_initializer_text(node.expression.properties, 'error') +
+								');'
+						);
+						imports.add('error');
+					}
+				} else {
+					manual_return_migration(node, str, TASK_PAGE_LOAD);
 				}
 			}
 
@@ -519,20 +547,25 @@ function migrate_page_endpoint(content) {
 
 		/** @param {ts.Node} node */
 		function walk(node) {
-			if (
+			if (ts.isReturnStatement(node) && is_directly_in_exported_fn(node, ['GET'])) {
+				if (
+					node.expression &&
+					ts.isObjectLiteralExpression(node.expression) &&
+					contains_only(node.expression, ['body'])
+				) {
+					automigration(
+						node,
+						str,
+						'return ' + dedent(get_prop_initializer_text(node.expression.properties, 'body'))
+					);
+				} else {
+					manual_return_migration(node, str, TASK_PAGE_ENDPOINT);
+				}
+			} else if (
 				ts.isReturnStatement(node) &&
-				is_directly_in_exported_fn(node, ['GET']) &&
-				node.expression &&
-				ts.isObjectLiteralExpression(node.expression) &&
-				contains_only(node.expression, ['body'])
+				is_directly_in_exported_fn(node, ['PUT', 'POST', 'PATCH', 'DELETE'])
 			) {
-				str.overwrite(
-					node.getStart(),
-					node.getEnd(),
-					automigration_comment(node) +
-						'return ' +
-						get_prop_initializer_text(node.expression.properties, 'body')
-				);
+				manual_return_migration(node, str, TASK_PAGE_ENDPOINT);
 			}
 
 			node.forEachChild(walk);
@@ -564,59 +597,81 @@ function migrate_standalone(content) {
 		function walk(node) {
 			if (
 				ts.isReturnStatement(node) &&
-				is_directly_in_exported_fn(node, ['GET', 'PUT', 'POST', 'DELETE']) &&
-				node.expression &&
-				ts.isObjectLiteralExpression(node.expression) &&
-				contains_only(node.expression, ['body', 'status', 'headers'], true)
+				is_directly_in_exported_fn(node, ['GET', 'PUT', 'POST', 'PATH', 'DELETE'])
 			) {
-				const body = get_prop(node.expression.properties, 'body');
-				const headers = get_prop(node.expression.properties, 'headers');
-				const status = get_prop(node.expression.properties, 'status');
-				const headers_str =
-					body &&
-					(!ts.isPropertyAssignment(body) || !is_string_like(body.initializer)) &&
-					(!headers || !headers.getText().includes('content-type'))
-						? `headers: { 'content-type': 'application/json; charset=utf-8'${
-								headers
-									? ', ' +
-									  (ts.isPropertyAssignment(headers)
-											? remove_outer_braces(
-													get_prop_initializer_text(node.expression.properties, 'headers')
-											  )
-											: '...headers')
-									: ''
-						  } }`
-						: headers
-						? headers.getText()
-						: undefined;
+				if (
+					node.expression &&
+					ts.isObjectLiteralExpression(node.expression) &&
+					contains_only(node.expression, ['body', 'status', 'headers'], true)
+				) {
+					const body = get_prop(node.expression.properties, 'body');
+					const headers = get_prop(node.expression.properties, 'headers');
+					const status = get_prop(node.expression.properties, 'status');
 
-				const body_str = get_prop_initializer_text(node.expression.properties, 'body');
-				const response_body = body
-					? (!ts.isPropertyAssignment(body) ||
-							!is_string_like(body.initializer) ||
-							(headers && headers.getText().includes('application/json'))) &&
-					  (!headers ||
-							!headers.getText().includes('content-type') ||
-							headers.getText().includes('application/json')) &&
-					  !body_str.startsWith('JSON.stringify')
-						? // prettier-ignore
-						  `/* double-check if value is a POJO, else remove outer JSON.stringify and the content-type header */ JSON.stringify(${body_str})`
-						: body_str
-					: 'undefined';
+					const headers_has_multiple_cookies = /['"]set-cookie['"]:\s*\[/.test(
+						headers?.getText()?.toLowerCase()
+					);
+					const is_safe_transformation =
+						(!body ||
+							(!ts.isShorthandPropertyAssignment(body) &&
+								ts.isObjectLiteralExpression(body.initializer))) &&
+						(!headers ||
+							((!headers.getText().toLowerCase().includes('content-type') ||
+								headers.getText().includes('application/json')) &&
+								!headers_has_multiple_cookies));
 
-				const response_init =
-					headers_str || status
-						? // prettier-ignore
-						  ', ' +
-						(/['"]set-cookie['"]:\s*\[/.test(headers_str) ? '\n// set-cookie with multiple values needs a different conversion, see the link at the top for more info\n' : '') +
+					const headers_str =
+						body &&
+						(!ts.isPropertyAssignment(body) || !is_string_like(body.initializer)) &&
+						(!headers || !headers.getText().toLowerCase().includes('content-type'))
+							? `headers: { 'content-type': 'application/json; charset=utf-8'${
+									headers
+										? ', ' +
+										  (ts.isPropertyAssignment(headers)
+												? remove_outer_braces(
+														get_prop_initializer_text(node.expression.properties, 'headers')
+												  )
+												: '...headers')
+										: ''
+							  } }`
+							: headers
+							? headers.getText()
+							: undefined;
+
+					const body_str = get_prop_initializer_text(node.expression.properties, 'body');
+					const response_body = body
+						? (!ts.isPropertyAssignment(body) ||
+								!is_string_like(body.initializer) ||
+								(headers && headers.getText().includes('application/json'))) &&
+						  (!headers ||
+								!headers.getText().toLowerCase().includes('content-type') ||
+								headers.getText().includes('application/json')) &&
+						  !body_str.startsWith('JSON.stringify')
+							? `JSON.stringify(${body_str})`
+							: body_str
+						: 'undefined';
+
+					const response_init =
+						headers_str || status
+							? // prettier-ignore
+							  ', ' +
+						(headers_has_multiple_cookies ? '\n// set-cookie with multiple values needs a different conversion, see the link at the top for more info\n' : '') +
 						`{ ${headers_str ? `${headers_str}${status ? ', ' : ''}` : ''}${status ? status.getText() : ''} }`
-						: '';
+							: '';
 
-				str.overwrite(
-					node.getStart(),
-					node.getEnd(),
-					automigration_comment(node) + `\nreturn new Response(${response_body}${response_init});`
-				);
+					if (is_safe_transformation) {
+						automigration(node, str, `return new Response(${response_body}${response_init});`);
+					} else {
+						manual_return_migration(
+							node,
+							str,
+							TASK_STANDALONE_ENDPOINT,
+							`return new Response(${response_body}${response_init});`
+						);
+					}
+				} else {
+					manual_return_migration(node, str, TASK_STANDALONE_ENDPOINT);
+				}
 			}
 
 			node.forEachChild(walk);
@@ -649,13 +704,37 @@ function contains_only(node, valid_keys, allow_empty = false) {
 }
 
 /**
+ *
  * @param {ts.Node} node
+ * @param {MagicString} str
+ * @param {string} comment_nr
+ * @param {string} [suggestion]
  */
-function automigration_comment(node) {
-	return (
-		'// @migration automigrated, check for correctness. Original:\n//' +
-		node.getText().split('\n').join('\n//') +
-		'\n'
+function manual_return_migration(node, str, comment_nr, suggestion) {
+	str.prependLeft(
+		node.getStart(),
+		error('Migrate this return statement', comment_nr) +
+			'\n' +
+			(suggestion
+				? indent_with(
+						comment(`Suggestion (check for correctness before using):\n${suggestion}`) + '\n',
+						indent_at_line(str.original, node.getStart())
+				  )
+				: indent_at_line(str.original, node.getStart()))
+	);
+}
+
+/**
+ *
+ * @param {ts.Node} node
+ * @param {MagicString} str
+ * @param {string} migration
+ */
+function automigration(node, str, migration) {
+	str.overwrite(
+		node.getStart(),
+		node.getEnd(),
+		'// @migration automigrated\n' + indent_at_line(str.original, node.getStart()) + migration
 	);
 }
 
@@ -721,7 +800,8 @@ function is_directly_in_exported_fn(node, fn_name) {
 	} else if (
 		ts.isFunctionDeclaration(node) ||
 		ts.isVariableStatement(node) ||
-		(ts.isArrowFunction(node) && !is_exported_fn(node.parent.parent.parent, fn_name))
+		((ts.isArrowFunction(node) || ts.isFunctionExpression(node)) &&
+			!is_exported_fn(node.parent.parent.parent, fn_name))
 	) {
 		return false;
 	}
@@ -745,6 +825,22 @@ function is_exported_fn(node, fn_name) {
 			node.modifiers?.[0]?.kind === ts.SyntaxKind.ExportKeyword &&
 			node.declarationList.declarations.length === 1 &&
 			ts.isIdentifier(node.declarationList.declarations[0].name) &&
-			fn_name.includes(node.declarationList.declarations[0].name.text))
+			fn_name.includes(node.declarationList.declarations[0].name.text)) ||
+		// export { X }
+		((ts.isVariableStatement(node) || ts.isFunctionDeclaration(node)) &&
+			ts.isSourceFile(node.parent) &&
+			node.parent.statements.some(
+				(statement) =>
+					ts.isExportDeclaration(statement) &&
+					// prettier-ignore
+					// @ts-ignore
+					statement.exportClause?.elements
+						?.some(
+							// @ts-ignore
+							(child) =>
+								ts.isExportSpecifier(child) &&
+								((!child.propertyName && fn_name.includes(child.name.text)) || fn_name.includes(child.propertyName.text))
+						)
+			))
 	);
 }
