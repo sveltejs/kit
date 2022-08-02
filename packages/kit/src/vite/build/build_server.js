@@ -176,14 +176,16 @@ export async function build_server(options, client) {
 
 	// ...and every component used by pages...
 	manifest_data.nodes.forEach((node, i) => {
-		if (node.component) {
-			const resolved = path.resolve(cwd, node.component);
-			const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
+		for (const file of [node.component, node.module, node.server]) {
+			if (file) {
+				const resolved = path.resolve(cwd, file);
+				const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
 
-			const name = relative.startsWith('..')
-				? posixify(path.join('entries/fallbacks', path.basename(node.component)))
-				: posixify(path.join('entries/components', relative));
-			input[name] = resolved;
+				const name = relative.startsWith('..')
+					? posixify(path.join('entries/fallbacks', path.basename(file)))
+					: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
+				input[name] = resolved;
+			}
 		}
 	});
 
