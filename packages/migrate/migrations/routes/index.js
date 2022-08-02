@@ -107,6 +107,7 @@ export async function migrate() {
 			// file is a component
 			const bare = basename.slice(0, -svelte_ext.length);
 			const [name, layout] = bare.split('@');
+			const is_error_page = bare === '__error';
 
 			/**
 			 * Whether file should be moved to a subdirectory — e.g. `src/routes/about.svelte`
@@ -128,7 +129,7 @@ export async function migrate() {
 			if (bare.startsWith('__layout')) {
 				sibling = renamed + '+layout';
 				renamed += '+' + bare.slice(2); // account for __layout-foo etc
-			} else if (bare === '__error') {
+			} else if (is_error_page) {
 				renamed += '+error';
 				// no sibling, because error files can no longer have load
 			} else if (name === 'index') {
@@ -143,16 +144,16 @@ export async function migrate() {
 
 			renamed += svelte_ext;
 
-			const { module, main } = extract_load(content, bare === '__error', move_to_directory);
+			const { module, main } = extract_load(content, is_error_page, move_to_directory);
 
-			const edited = main.replace(/<script([^]*)>([^]+)<\/script>/, (match, attrs, content) => {
+			const edited = main.replace(/<script([^]*?)>([^]+?)<\/script>/, (match, attrs, content) => {
 				const indent = guess_indent(content) ?? '';
 
 				if (move_to_directory) {
 					content = adjust_imports(content);
 				}
 
-				if (/export/.test(content)) {
+				if (!is_error_page && /export/.test(content)) {
 					content = `\n${indent}${error('Add data prop', '3292707')}\n${content}`;
 				}
 
@@ -169,7 +170,7 @@ export async function migrate() {
 
 			// if component has a <script context="module">, move it to a sibling .js file
 			if (module) {
-				const ext = /<script[^>]+lang=['"](ts|typescript)['"][^]*>/.test(module) ? '.ts' : '.js';
+				const ext = /<script[^>]+?lang=['"](ts|typescript)['"][^]*?>/.test(module) ? '.ts' : '.js';
 				const injected = /load/.test(module)
 					? `${error('Update load function', '3292693')}\n\n`
 					: '';
@@ -212,10 +213,11 @@ export async function migrate() {
 
 			const injected = error(`Update ${type}.js`, is_page_endpoint ? '3292699' : '3292701');
 			// Standalone index endpoints are edge case enough that we don't spend time on trying to update all the imports correctly
-			const edited = `${injected}${is_standalone_index ? `\n// ${task('Check imports')}` : ''}\n\n${
-				!is_standalone_index && move_to_directory ? adjust_imports(content) : content
-			}`;
-
+			const edited =
+				injected +
+				(is_standalone_index && /import/.test(content) ? `\n// ${task('Check imports')}` : '') +
+				'\n\n' +
+				(!is_standalone_index && move_to_directory ? adjust_imports(content) : content);
 			if (move_to_directory) {
 				const dir = path.dirname(renamed);
 				if (!fs.existsSync(dir)) fs.mkdirSync(dir);
@@ -240,7 +242,7 @@ function extract_load(content, is_error, moved) {
 	let module = null;
 
 	const main = content.replace(
-		/<script([^>]+context=(['"])module\1[^>]*)>([^]*?)<\/script>/,
+		/<script([^>]+?context=(['"])module\1[^>]*)>([^]*?)<\/script>/,
 		(match, attrs, quote, contents) => {
 			const imports = extract_static_imports(moved ? adjust_imports(contents) : contents);
 
@@ -451,7 +453,12 @@ function migrate_load(content) {
 							'return ' +
 							get_prop_initializer_text(node.expression.properties, 'props')
 					);
-				} else if (contains_only(node.expression, ['redirect', 'status'])) {
+				} else if (
+					contains_only(node.expression, ['redirect', 'status']) &&
+					((Number(get_prop_initializer_text(node.expression.properties, 'status')) > 300 &&
+						Number(get_prop_initializer_text(node.expression.properties, 'status')) < 310) ||
+						contains_only(node.expression, ['redirect']))
+				) {
 					str.overwrite(
 						node.getStart(),
 						node.getEnd(),
@@ -463,7 +470,11 @@ function migrate_load(content) {
 							');'
 					);
 					imports.add('redirect');
-				} else if (contains_only(node.expression, ['error', 'status'])) {
+				} else if (
+					contains_only(node.expression, ['error', 'status']) &&
+					(Number(get_prop_initializer_text(node.expression.properties, 'status')) > 399 ||
+						contains_only(node.expression, ['error']))
+				) {
 					str.overwrite(
 						node.getStart(),
 						node.getEnd(),
@@ -565,12 +576,7 @@ function migrate_standalone(content) {
 				const status = get_prop(node.expression.properties, 'status');
 				const headers_str =
 					body &&
-					(!ts.isPropertyAssignment(body) ||
-						!(
-							ts.isStringLiteral(body.initializer) ||
-							ts.isTemplateExpression(body.initializer) ||
-							ts.isNoSubstitutionTemplateLiteral(body.initializer)
-						)) &&
+					(!ts.isPropertyAssignment(body) || !is_string_like(body.initializer)) &&
 					(!headers || !headers.getText().includes('content-type'))
 						? `headers: { 'content-type': 'application/json; charset=utf-8'${
 								headers
@@ -593,14 +599,14 @@ function migrate_standalone(content) {
 						`\nreturn new Response(${
 							body
 								? (!ts.isPropertyAssignment(body) ||
-										!(
-											ts.isStringLiteral(body.initializer) ||
-											ts.isTemplateExpression(body.initializer) ||
-											ts.isNoSubstitutionTemplateLiteral(body.initializer)
-										)) &&
+										!is_string_like(body.initializer) ||
+										(headers && headers.getText().includes('application/json'))) &&
 								  (!headers ||
 										!headers.getText().includes('content-type') ||
-										headers.getText().includes('application/json'))
+										headers.getText().includes('application/json')) &&
+								  !get_prop_initializer_text(node.expression.properties, 'body').startsWith(
+										'JSON.stringify'
+								  )
 									? // prettier-ignore
 									  `/* double-check if value is a POJO, else remove outer JSON.stringify and the content-type header */ JSON.stringify(${get_prop_initializer_text(node.expression.properties,'body')})`
 									: get_prop_initializer_text(node.expression.properties, 'body')
@@ -608,7 +614,9 @@ function migrate_standalone(content) {
 						}${
 							headers_str || status
 								? // prettier-ignore
-								  `, { ${headers_str ? `${headers_str}${status ? ', ' : ''}` : ''}${status ? status.getText() : ''} }`
+								  ', ' +
+								  (/['"]set-cookie['"]:\s*\[/.test(headers_str) ? '\n// set-cookie with multiple values needs a different conversion, see the link at the top for more info\n' : '') +
+								  `{ ${headers_str ? `${headers_str}${status ? ', ' : ''}` : ''}${status ? status.getText() : ''} }`
 								: ''
 						});`
 				);
@@ -647,7 +655,11 @@ function contains_only(node, valid_keys, allow_empty = false) {
  * @param {ts.Node} node
  */
 function automigration_comment(node) {
-	return '// @migrate automigrated. Original:\n//' + node.getText().split('\n').join('\n//') + '\n';
+	return (
+		'// @migration automigrated, check for correctness. Original:\n//' +
+		node.getText().split('\n').join('\n//') +
+		'\n'
+	);
 }
 
 /**
@@ -684,6 +696,17 @@ function get_prop_initializer_text(node, name) {
  */
 function remove_outer_braces(str) {
 	return str.substring(str.indexOf('{') + 1, str.lastIndexOf('}'));
+}
+
+/**
+ * @param {ts.Node} node
+ */
+function is_string_like(node) {
+	return (
+		ts.isStringLiteral(node) ||
+		ts.isTemplateExpression(node) ||
+		ts.isNoSubstitutionTemplateLiteral(node)
+	);
 }
 
 /**
