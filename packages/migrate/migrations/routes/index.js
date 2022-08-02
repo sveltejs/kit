@@ -491,8 +491,9 @@ function migrate_load(content) {
 							str,
 							'throw redirect(' +
 								get_prop_initializer_text(node.expression.properties, 'status') +
-								', ' +
-								get_prop_initializer_text(node.expression.properties, 'redirect') +
+								(get_prop_initializer_text(node.expression.properties, 'redirect') === 'undefined'
+									? ''
+									: ', ' + get_prop_initializer_text(node.expression.properties, 'redirect')) +
 								');'
 						);
 						imports.add('redirect');
@@ -506,8 +507,9 @@ function migrate_load(content) {
 							str,
 							'throw error(' +
 								get_prop_initializer_text(node.expression.properties, 'status') +
-								', ' +
-								get_prop_initializer_text(node.expression.properties, 'error') +
+								(get_prop_initializer_text(node.expression.properties, 'error') === 'undefined'
+									? ''
+									: ', ' + get_prop_initializer_text(node.expression.properties, 'error')) +
 								');'
 						);
 						imports.add('error');
