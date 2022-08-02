@@ -2,8 +2,6 @@ import * as cookie from 'cookie';
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from '../index.js';
 import { LoadURL, PrerenderingURL, is_root_relative, resolve } from '../../../utils/url.js';
-import { check_method_names, is_pojo, lowercase_keys } from '../utils.js';
-import { coalesce_to_error } from '../../../utils/error.js';
 import { domain_matches, path_matches } from './cookie.js';
 
 /**

@@ -43,30 +43,16 @@ export async function respond_with_error({
 					state,
 					route: GENERIC_ERROR,
 					node: default_layout,
-					$session,
-					is_error: false,
-					is_leaf: false
+					$session
 				})
 			);
 
-			if (layout_loaded.loaded.error) {
-				throw layout_loaded.loaded.error;
-			}
-
-			const error_loaded = /** @type {Loaded} */ (
-				await load_node({
-					event,
-					options,
-					state,
-					route: GENERIC_ERROR,
-					node: default_error,
-					$session,
-					is_error: true,
-					is_leaf: false,
-					status,
-					error
-				})
-			);
+			const error_loaded = /** @type {Loaded} */ ({
+				node: default_error,
+				data: {},
+				server_data: {},
+				fetched: []
+			});
 
 			branch.push(layout_loaded, error_loaded);
 		}
