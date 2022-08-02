@@ -19,6 +19,7 @@ import {
 	TrailingSlash
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
+import { HttpError, Redirect } from '../src/index/private.js';
 
 export interface Adapter {
 	name: string;
@@ -273,3 +274,6 @@ export interface SSRManifest {
 		matchers: () => Promise<Record<string, ParamMatcher>>;
 	};
 }
+
+export function error(status: number, message?: string): HttpError;
+export function redirect(status: number, location?: string): Redirect;
