@@ -35,7 +35,7 @@ export async function load_node({
 	status,
 	error
 }) {
-	const { module } = node;
+	const { component } = node;
 
 	let uses_credentials = false;
 
@@ -50,7 +50,7 @@ export async function load_node({
 	/** @type {import('types').NormalizedLoadOutput} */
 	let loaded;
 
-	const should_prerender = node.module.prerender ?? options.prerender.default;
+	const should_prerender = node.prerender ?? options.prerender.default;
 
 	/** @type {import('types').ShadowData} */
 	const shadow = is_leaf
@@ -76,15 +76,15 @@ export async function load_node({
 		loaded = {
 			redirect: shadow.redirect
 		};
-	} else if (module.load) {
+	} else if (node.load) {
 		/** @type {import('types').LoadEvent} */
 		const load_input = {
 			url: state.prerendering ? new PrerenderingURL(event.url) : new LoadURL(event.url),
 			params: event.params,
-			props: shadow.body || {},
+			data: {}, // TODO load from +page.server.js/+layout.server.js
 			routeId: event.routeId,
 			get session() {
-				if (node.module.prerender ?? options.prerender.default) {
+				if (node.prerender ?? options.prerender.default) {
 					throw Error(
 						'Attempted to access session from a prerendered page. Session would never be populated.'
 					);
@@ -354,7 +354,7 @@ export async function load_node({
 			});
 		}
 
-		loaded = normalize(await module.load.call(null, load_input));
+		loaded = normalize(await node.load.call(null, load_input));
 	} else if (shadow.body) {
 		loaded = {
 			props: shadow.body

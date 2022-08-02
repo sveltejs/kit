@@ -58,21 +58,21 @@ export async function render_page(event, route, options, state, resolve_opts) {
 	}
 
 	try {
-		const layout_nodes = await Promise.all(
+		const nodes = await Promise.all([
 			// we use == here rather than === because [undefined] serializes as "[null]"
-			route.layout.map((n) => (n == undefined ? n : options.manifest._.nodes[n]()))
-		);
+			...route.layouts.map((n) => (n == undefined ? n : options.manifest._.nodes[n]())),
+			options.manifest._.nodes[route.page]()
+		]);
 
-		// the leaf node will be present. only layouts may be undefined
-		const leaf = /** @type {SSRNode} */ (nodes[nodes.length - 1]).module;
+		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
 
-		let page_config = get_page_config(leaf, options);
+		let page_config = get_page_config(leaf_node, options);
 
 		if (state.prerendering) {
 			// if the page isn't marked as prerenderable (or is explicitly
 			// marked NOT prerenderable, if `prerender.default` is `true`),
 			// then bail out at this point
-			const should_prerender = leaf.prerender ?? options.prerender.default;
+			const should_prerender = leaf_node.prerender ?? options.prerender.default;
 			if (!should_prerender) {
 				return new Response(undefined, {
 					status: 204
@@ -227,7 +227,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 }
 
 /**
- * @param {import('types').SSRComponent} leaf
+ * @param {import('types').SSRNode} leaf
  * @param {SSROptions} options
  */
 function get_page_config(leaf, options) {

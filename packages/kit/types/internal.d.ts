@@ -135,7 +135,7 @@ export interface NormalizedLoadOutputCache {
 }
 
 export interface PageNode {
-	component?: string;
+	component: string; // TODO supply default component if it's missing (bit of an edge case)
 	module?: string;
 	server?: string;
 }
@@ -228,7 +228,7 @@ export interface SSREndpoint {
 }
 
 export interface SSRNode {
-	module: SSRComponent;
+	component: SSRComponent;
 	/** index into the `components` array in client-manifest.js */
 	index: number;
 	/** client-side module URL for this component */
@@ -239,6 +239,12 @@ export interface SSRNode {
 	stylesheets: string[];
 	/** inlined styles */
 	inline_styles?: () => MaybePromise<Record<string, string>>;
+
+	load?: Load;
+	hydrate?: boolean;
+	prerender?: boolean;
+	router?: boolean;
+	ssr?: boolean;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
@@ -287,16 +293,9 @@ export interface SSRPage {
 	pattern: RegExp;
 	names: string[];
 	types: string[];
-
-	/**
-	 * plan a is to render 1 or more layout components followed by a leaf component.
-	 */
-	a: Array<number | undefined>;
-	/**
-	 * plan b — if one of them components fails in `load` we backtrack until we find
-	 * the nearest error component.
-	 */
-	b: Array<number | undefined>;
+	errors: Array<number | undefined>;
+	layouts: Array<number | undefined>;
+	page: number;
 }
 
 export interface SSRErrorPage {
