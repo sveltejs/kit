@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit/data';
+import { error } from '@sveltejs/kit';
 import { api } from './api';
 import type { GET, POST, PATCH, DELETE } from './$types';
 import type { Todo } from './types';

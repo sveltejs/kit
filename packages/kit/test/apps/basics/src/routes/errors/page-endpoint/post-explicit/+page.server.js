@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit/data';
+import { error } from '@sveltejs/kit';
 import { FancyError } from '../_shared.js';
 
 export const POST = () => {
