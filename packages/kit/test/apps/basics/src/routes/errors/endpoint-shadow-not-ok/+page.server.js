@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit/data';
+import { error } from '@sveltejs/kit';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export function GET() {

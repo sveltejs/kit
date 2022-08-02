@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit/data';
+import { redirect } from '@sveltejs/kit';
 
 export function POST({ setHeaders }) {
 	setHeaders({ 'set-cookie': 'shadow-redirect=happy' });

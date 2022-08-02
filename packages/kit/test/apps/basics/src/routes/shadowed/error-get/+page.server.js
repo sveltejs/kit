@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit/data';
+import { error } from '@sveltejs/kit';
 
 export function GET() {
 	throw error(404, undefined);

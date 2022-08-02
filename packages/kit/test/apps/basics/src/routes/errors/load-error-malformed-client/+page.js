@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit/data';
+import { error } from '@sveltejs/kit';
 import { browser } from '$app/env';
 
 /** @type {import('@sveltejs/kit').Load} */

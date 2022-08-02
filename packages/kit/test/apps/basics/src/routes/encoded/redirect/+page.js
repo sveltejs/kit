@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit/data';
+import { redirect } from '@sveltejs/kit';
 
 /** @type {import('@sveltejs/kit').Load} */
 export function load() {
