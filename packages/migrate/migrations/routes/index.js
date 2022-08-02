@@ -6,6 +6,7 @@ import prompts from 'prompts';
 import ts from 'typescript';
 import MagicString from 'magic-string';
 import { pathToFileURL } from 'url';
+import { execSync } from 'child_process';
 
 const TASK_STANDALONE_ENDPOINT = '3292701';
 const TASK_PAGE_ENDPOINT = '3292699';
@@ -171,8 +172,7 @@ export async function migrate() {
 				if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 			}
 
-			fs.unlinkSync(file);
-			fs.writeFileSync(renamed, edited);
+			move_file(file, renamed, edited);
 
 			// if component has a <script context="module">, move it to a sibling .js file
 			if (module) {
@@ -232,13 +232,44 @@ export async function migrate() {
 				if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 			}
 
-			fs.unlinkSync(file);
-			fs.writeFileSync(
+			move_file(
+				file,
 				renamed,
 				is_page_endpoint ? migrate_page_endpoint(edited) : migrate_standalone(edited)
 			);
 		}
 	}
+}
+
+let git_fails = 0;
+let git_info_shown = false;
+
+/**
+ *
+ * @param {string} file
+ * @param {string} renamed
+ * @param {string} content
+ */
+function move_file(file, renamed, content) {
+	if (git_fails > 10) {
+		fs.unlinkSync(file);
+	} else {
+		try {
+			execSync(`git mv ${file} ${renamed}`);
+			if (!git_info_shown) {
+				git_info_shown = true;
+				console.log(
+					'Git detected - this might take a little longer but the file history will be preserved.\n' +
+						'For that, make sure to do two commits: One with the auto-staged changes, another with the updates to the files.' +
+						' If you do both in one, file renames may not be tracked correctly by Git.'
+				);
+			}
+		} catch {
+			git_fails++;
+			fs.unlinkSync(file);
+		}
+	}
+	fs.writeFileSync(renamed, content);
 }
 
 /**
