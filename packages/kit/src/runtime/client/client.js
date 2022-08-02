@@ -15,19 +15,17 @@ import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { error_components, nodes, dictionary, matchers } from '__GENERATED__/client-manifest.js';
+import { nodes, dictionary, matchers } from '__GENERATED__/client-manifest.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
 
-const routes = parse(components, dictionary, matchers);
+const routes = parse(nodes, dictionary, matchers);
 
-// we import the root layout/error components eagerly, so that
+// we import the root layout/error nodes eagerly, so that
 // connectivity errors after initialisation don't nuke the app
-const default_layout = components[0]();
-const default_error = components[1]();
-
-const root_stuff = {};
+const default_layout = nodes[0]();
+const default_error = nodes[1]();
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -487,7 +485,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {{
 	 *   status?: number;
 	 *   error?: Error;
-	 *   module: import('types').CSRComponent;
+	 *   node: import('types').CSRPageNode;
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   props?: Record<string, any>;

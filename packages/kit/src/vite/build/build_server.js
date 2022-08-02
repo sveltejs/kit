@@ -182,7 +182,7 @@ export async function build_server(options, client) {
 
 			const name = relative.startsWith('..')
 				? posixify(path.join('entries/fallbacks', path.basename(node.component)))
-				: posixify(path.join('entries/pages', relative));
+				: posixify(path.join('entries/components', relative));
 			input[name] = resolved;
 		}
 	});

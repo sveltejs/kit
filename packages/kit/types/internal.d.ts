@@ -1,4 +1,5 @@
 import { OutputAsset, OutputChunk } from 'rollup';
+import { SvelteComponent } from 'svelte/internal';
 import {
 	Config,
 	ExternalFetch,
@@ -64,9 +65,11 @@ export interface BuildData {
 	};
 }
 
-export type CSRComponent = any; // TODO
+export interface CSRPageNode {
+	component: typeof SvelteComponent;
+}
 
-export type CSRComponentLoader = () => Promise<CSRComponent>;
+export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
 
 export type CSRRoute = {
 	id: string;
