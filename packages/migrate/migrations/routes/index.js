@@ -592,33 +592,32 @@ function migrate_standalone(content) {
 						? headers.getText()
 						: undefined;
 
+				const body_str = get_prop_initializer_text(node.expression.properties, 'body');
+				const response_body = body
+					? (!ts.isPropertyAssignment(body) ||
+							!is_string_like(body.initializer) ||
+							(headers && headers.getText().includes('application/json'))) &&
+					  (!headers ||
+							!headers.getText().includes('content-type') ||
+							headers.getText().includes('application/json')) &&
+					  !body_str.startsWith('JSON.stringify')
+						? // prettier-ignore
+						  `/* double-check if value is a POJO, else remove outer JSON.stringify and the content-type header */ JSON.stringify(${body_str})`
+						: body_str
+					: 'undefined';
+
+				const response_init =
+					headers_str || status
+						? // prettier-ignore
+						  ', ' +
+						(/['"]set-cookie['"]:\s*\[/.test(headers_str) ? '\n// set-cookie with multiple values needs a different conversion, see the link at the top for more info\n' : '') +
+						`{ ${headers_str ? `${headers_str}${status ? ', ' : ''}` : ''}${status ? status.getText() : ''} }`
+						: '';
+
 				str.overwrite(
 					node.getStart(),
 					node.getEnd(),
-					automigration_comment(node) +
-						`\nreturn new Response(${
-							body
-								? (!ts.isPropertyAssignment(body) ||
-										!is_string_like(body.initializer) ||
-										(headers && headers.getText().includes('application/json'))) &&
-								  (!headers ||
-										!headers.getText().includes('content-type') ||
-										headers.getText().includes('application/json')) &&
-								  !get_prop_initializer_text(node.expression.properties, 'body').startsWith(
-										'JSON.stringify'
-								  )
-									? // prettier-ignore
-									  `/* double-check if value is a POJO, else remove outer JSON.stringify and the content-type header */ JSON.stringify(${get_prop_initializer_text(node.expression.properties,'body')})`
-									: get_prop_initializer_text(node.expression.properties, 'body')
-								: 'undefined'
-						}${
-							headers_str || status
-								? // prettier-ignore
-								  ', ' +
-								  (/['"]set-cookie['"]:\s*\[/.test(headers_str) ? '\n// set-cookie with multiple values needs a different conversion, see the link at the top for more info\n' : '') +
-								  `{ ${headers_str ? `${headers_str}${status ? ', ' : ''}` : ''}${status ? status.getText() : ''} }`
-								: ''
-						});`
+					automigration_comment(node) + `\nreturn new Response(${response_body}${response_init});`
 				);
 			}
 
