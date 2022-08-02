@@ -1,3 +1,4 @@
+import path from 'path';
 import { rimraf } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
 import { write } from './utils.js';
@@ -25,8 +26,13 @@ export type Load<
 export function write_types(config, manifest_data) {
 	rimraf(`${config.kit.outDir}/types`);
 
+	const dir = path.relative('.', config.kit.files.routes);
+
 	manifest_data.routes.forEach((route) => {
+		const imports = [];
 		const declarations = [];
+		const exports = [];
+
 		const params = parse_route_id(route.id).names;
 
 		declarations.push(
@@ -37,11 +43,16 @@ export function write_types(config, manifest_data) {
 
 		if (route.type === 'page') {
 			// TODO write Load, GET, etc
+			imports.push(`import type { Load, GET as GenericGET } from '@sveltejs/kit';`);
+			exports.push(`export type GET = GenericGET<Params>;`);
 		} else {
-			// TODO write RequestHandler
+			imports.push(`import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';`);
+			exports.push(`export type RequestHandler = GenericRequestHandler<Params>;`);
 		}
 
+		const output = `${imports.join('\n')}\n\n${declarations.join('\n')}\n\n${exports.join('\n')}`;
+
 		// TODO src/routes needs to be in this path somehow
-		write(`${config.kit.outDir}/types/${route.id}/$types.d.ts`, declarations.join('\n').trim());
+		write(`${config.kit.outDir}/types/${dir}/${route.id}/$types.d.ts`, output);
 	});
 }
