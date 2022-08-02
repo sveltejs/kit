@@ -1,6 +1,6 @@
 <script>
 	/** @type {import('./$types').Data} */
-	export let embedded;
+	export let data;
 </script>
 
 <pre>{data.embedded}</pre>

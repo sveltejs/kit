@@ -1,5 +1,6 @@
 <script>
 	import { page } from '$app/stores';
+	import { to_pojo } from './utils.js';
 
 	/** @type {import('./$types').Data}*/
 	export let data;
