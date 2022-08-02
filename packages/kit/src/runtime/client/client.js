@@ -460,12 +460,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   node: import('types').CSRPageNode;
 	 *   url: URL;
 	 *   params: Record<string, string>;
-	 *   data: Record<string, any> | null;
 	 *   routeId: string | null;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
-	async function load_node({ node, url, params, data, routeId }) {
+	async function load_node({ node, url, params, routeId }) {
+		// TODO loading from node.server belongs in here, not in load_route etc
+
 		const uses = {
 			params: new Set(),
 			url: false,
@@ -479,9 +480,16 @@ export function create_client({ target, session, base, trailing_slash }) {
 			uses.dependencies.add(href);
 		}
 
-		if (data) {
-			// +page.server.js data means we need to mark this URL as a dependency of itself
+		/** @type {Record<string, any> | null} */
+		let data = null;
+
+		if (node.server) {
+			// +page.server.js data means we need to mark this URL as a dependency of itself,
+			// unless we want to get clever with usage detection on the server, which could
+			// be returned to the client either as payload or custom headers
 			uses.dependencies.add(url.href);
+
+			throw new Error('TODO load data from server');
 		}
 
 		/** @type {Record<string, string>} */
@@ -499,12 +507,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const session = $session;
 		const load_url = new LoadURL(url);
 
-		if (node.module.load) {
+		if (node.module?.load) {
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
 				params: uses_params,
-				data: data || {},
+				data,
 				get url() {
 					uses.url = true;
 					return load_url;
@@ -641,55 +649,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 					Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep)));
 
 				if (changed_since_last_render) {
-					/** @type {Record<string, any> | null} */
-					let data = null;
-
-					if (node.server) {
-						const url = TODO;
-						const res = await native_fetch(
-							url,
-							// `${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
-							{
-								headers: {
-									'x-sveltekit-load': 'true'
-								}
-							}
-						);
-
-						if (res.ok) {
-							const location = /** @type {string} */ (res.headers.get('x-sveltekit-location'));
-							const status = /** @type {string} */ (res.headers.get('x-sveltekit-status'));
-
-							if (location) {
-								throw redirect(+status, location);
-							}
-
-							// TODO detect absence of `GET` earlier, so `node.server === false` and
-							// we don't need to much around with 204s
-							data = res.status === 204 ? {} : await res.json();
-						} else {
-							try {
-								// TODO differentiate between intentional errors (thrown with `error(404)` on the server)
-								// and unexpected ones
-								const error_object = await res.json();
-								throw error(res.status, error_object.message);
-							} catch (e) {
-								throw new Error('Failed to load data');
-							}
-						}
-					}
-
 					branch_node = await load_node({
 						node,
 						url,
 						params,
-						data,
 						routeId: route.id
 					});
-
-					if (node.server) {
-						branch_node.uses.url = true;
-					}
 				} else {
 					branch_node = previous;
 				}
@@ -770,7 +735,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const params = {}; // error page does not have params
 
 		const root_layout = await load_node({
-			data: null,
 			node: await default_layout,
 			url,
 			params,
@@ -778,7 +742,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		});
 
 		const root_error = await load_node({
-			data: null,
 			node: await default_error,
 			url,
 			params,
@@ -1166,30 +1129,15 @@ export function create_client({ target, session, base, trailing_slash }) {
 			let result;
 
 			try {
-				for (let i = 0; i < nodes.length; i += 1) {
-					const is_leaf = i === nodes.length - 1;
-
-					let data;
-
-					if (is_leaf) {
-						const serialized = document.querySelector('script[sveltekit\\:data-type="props"]');
-						if (serialized) {
-							data = JSON.parse(/** @type {string} */ (serialized.textContent));
-						}
-					}
+				for (let i = 0; i < node_ids.length; i += 1) {
+					const node_id = node_ids[i];
 
 					const branch_node = await load_node({
-						node: await nodes[node_ids[i]](),
+						node: await nodes[node_id](),
 						url,
 						params,
-						data,
 						routeId
 					});
-
-					if (data) {
-						branch_node.uses.dependencies.add(url.href);
-						branch_node.uses.url = true;
-					}
 
 					branch.push(branch_node);
 				}

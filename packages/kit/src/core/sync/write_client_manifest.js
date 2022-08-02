@@ -12,18 +12,28 @@ export function write_client_manifest(manifest_data, output) {
 	/** @type {Map<import('types').PageNode, number>} */
 	const node_indexes = new Map();
 
-	/** @param {import('types').PageNode} node */
+	/**
+	 * Creates a module that exports a `CSRPageNode`
+	 * @param {import('types').PageNode} node
+	 */
 	function generate_node(node) {
 		const declarations = [];
 
 		if (node.module) {
-			declarations.push(`export * from ${s(relative(`${output}/nodes`, node.module))};`);
+			declarations.push(
+				`import * as module from ${s(relative(`${output}/nodes`, node.module))};`,
+				`export { module };`
+			);
 		}
 
 		if (node.component) {
 			declarations.push(
 				`export { default as component } from ${s(relative(`${output}/nodes`, node.component))};`
 			);
+		}
+
+		if (node.server) {
+			declarations.push(`export const server = true;`);
 		}
 
 		return declarations.join('\n');
