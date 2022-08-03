@@ -3,7 +3,7 @@
 <script>
 	import { page } from '$app/stores';
 
-	/** @type {import('./$types/').Data} */
+	/** @type {import('./$types').Data} */
 	export let data;
 </script>
 
