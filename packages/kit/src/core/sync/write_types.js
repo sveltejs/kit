@@ -122,8 +122,7 @@ function tweak_types(content, names) {
 				});
 			}
 
-			// 93 because there's no ts.isExportKeyword function for some reason
-			if (node.modifiers?.some(modifier => modifier.kind === 93)) {
+			if (node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)) {
 				if (ts.isFunctionDeclaration(node) && node.name?.text && names.has(node.name?.text)) {
 					exports.set(node.name.text, node.name.text);
 				}
