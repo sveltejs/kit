@@ -221,7 +221,7 @@ export async function render_response({
 
 	for (const dep of stylesheets) {
 		const path = options.prefix + dep;
-		const attributes = ['rel="stylesheet"'];
+		const attributes = [];
 
 		if (csp.style_needs_nonce) {
 			attributes.push(`nonce="${csp.nonce}"`);
@@ -232,9 +232,11 @@ export async function render_response({
 			// include them in disabled state so that Vite can detect them and doesn't try to add them
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
-			link_header_preloads.add(`<${encodeURI(path)}>; ${attributes.join(';')}; nopush`);
+			const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
+			link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
 		}
 
+		attributes.unshift('rel="stylesheet"');
 		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
