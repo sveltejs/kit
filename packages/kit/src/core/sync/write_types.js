@@ -70,14 +70,18 @@ export function write_types(config, manifest_data) {
 				const content = fs.readFileSync(route.page.server, 'utf8');
 				const proxy = tweak_types(content, server_names);
 
-				if (proxy && proxy.exports.includes('GET')) {
-					// TODO handle validation errors from POST/PUT/PATCH
-					const basename = path.basename(route.page.server);
-					write(`${outdir}/proxy${basename}`, proxy.code);
-					imports.push(`import { GET } from './proxy${basename}';`);
-					declarations.push(`type ServerData = Awaited<ReturnType<typeof GET>>;`);
+				if (proxy) {
+					if (proxy.exports.includes('GET')) {
+						// TODO handle validation errors from POST/PUT/PATCH
+						const basename = path.basename(route.page.server);
+						write(`${outdir}/proxy${basename}`, proxy.code);
+						imports.push(`import { GET } from './proxy${basename}';`);
+						declarations.push(`type ServerData = Awaited<ReturnType<typeof GET>>;`);
+					} else {
+						declarations.push(`type ServerData = null;`);
+					}
 				} else {
-					declarations.push(`type ServerData = any;`);
+					declarations.push(`type ServerData = unknown;`);
 				}
 			} else {
 				declarations.push(`type ServerData = null;`);
