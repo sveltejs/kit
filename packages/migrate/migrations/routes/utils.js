@@ -428,7 +428,7 @@ export function is_exported_fn(node, fn_name) {
 export function read_samples(test_file) {
 	const markdown = fs.readFileSync(new URL('./samples.md', test_file), 'utf8');
 	const samples = markdown
-		.split(/^##/)
+		.split(/^##/gm)
 		.slice(1)
 		.map((block) => {
 			const description = block.split('\n')[0];

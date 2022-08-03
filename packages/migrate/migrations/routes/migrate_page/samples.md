@@ -17,3 +17,13 @@ export function load() {
 	};
 }
 ```
+
+## A file without a load function
+
+```js before
+export const prerender = true;
+```
+
+```js after
+export const prerender = true;
+```
