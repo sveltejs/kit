@@ -805,11 +805,7 @@ function manual_return_migration(node, str, comment_nr, suggestion) {
  * @param {string} migration
  */
 function automigration(node, str, migration) {
-	str.overwrite(
-		node.getStart(),
-		node.getEnd(),
-		'// @migration automigrated\n' + indent_at_line(str.original, node.getStart()) + migration
-	);
+	str.overwrite(node.getStart(), node.getEnd(), migration);
 }
 
 /**
