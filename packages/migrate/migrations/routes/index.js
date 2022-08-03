@@ -102,12 +102,11 @@ export async function migrate() {
 
 	if (use_git) {
 		try {
-			const status = execSync('git status --porcelain', {
-				stdio: 'pipe'
-			});
+			const status = execSync('git status --porcelain', { stdio: 'pipe' }).toString();
+
 			if (status) {
 				const message =
-					'Your working directory is dirty — we recommend committing your changes before running this migration.\n';
+					'Your git working directory is dirty — we recommend committing your changes before running this migration.\n';
 				console.log(colors.bold().red(message));
 			}
 		} catch {
@@ -274,16 +273,27 @@ export async function migrate() {
 
 	console.log(colors.bold().green('✔ Your project has been migrated'));
 
-	console.log('\nRecommended next steps:');
+	console.log('\nRecommended next steps:\n');
 
 	const cyan = colors.bold().cyan;
-	let i = 1;
 
-	console.log(`  ${i++}: ${cyan('git commit -m "svelte-migrate: renamed files"')}`);
-	console.log(`  ${i++}: Search codebase for "@migration" and manually complete migration tasks`);
-	console.log(`  ${i++}: ${cyan('git add -A')}`);
-	console.log(`  ${i++}: ${cyan('git commit -m "svelte-migrate: updated files"')}`);
+	const tasks = [
+		use_git && cyan('git commit -m "svelte-migrate: renamed files"'),
+		`Review the migration guide at https://github.com/sveltejs/kit/discussions/5774`,
+		`Search codebase for ${cyan('"@migration"')} and manually complete migration tasks`,
+		use_git && cyan('git add -A'),
+		use_git && cyan('git commit -m "svelte-migrate: updated files"')
+	].filter(Boolean);
+
+	tasks.forEach((task, i) => {
+		console.log(`  ${i + 1}: ${task}`);
+	});
+
 	console.log('');
+
+	if (use_git) {
+		console.log(`Run ${cyan('git diff')} to review changes.\n`);
+	}
 }
 
 /**
