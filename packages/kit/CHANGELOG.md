@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.403
+
+### Patch Changes
+
+- [chore] upgrade to Undici 5.8.1 ([#5804](https://github.com/sveltejs/kit/pull/5804))
+
 ## 1.0.0-next.402
 
 ### Patch Changes
