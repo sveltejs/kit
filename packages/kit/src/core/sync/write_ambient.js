@@ -4,34 +4,37 @@ import { get_env } from '../../vite/utils.js';
 import { write_if_changed, reserved, valid_identifier } from './utils.js';
 
 const autogen_comment = '// this file is generated — do not edit it\n';
+const types_reference = '/// <reference types="@sveltejs/kit" />\n\n';
 
 /**
- * Writes the existing environment variables in process.env to
+ * Writes ambient declarations including types reference to @sveltejs/kit,
+ * and the existing environment variables in process.env to
  * $env/static/private and $env/static/public
  * @param {import('types').ValidatedKitConfig} config
  * @param {string} mode The Vite mode
  */
-export function write_env(config, mode) {
+export function write_ambient(config, mode) {
 	const env = get_env(mode, config.env.publicPrefix);
 
 	// TODO when testing src, `$app` points at `src/runtime/app`... will
 	// probably need to fiddle with aliases
 	write_if_changed(
 		path.join(config.outDir, 'runtime/env/static/public.js'),
-		create_module('$env/static/public', env.public)
+		create_env_module('$env/static/public', env.public)
 	);
 
 	write_if_changed(
 		path.join(config.outDir, 'runtime/env/static/private.js'),
-		create_module('$env/static/private', env.private)
+		create_env_module('$env/static/private', env.private)
 	);
 
 	write_if_changed(
 		path.join(config.outDir, 'ambient.d.ts'),
 		autogen_comment +
-			create_types('$env/static/public', env.public) +
+			types_reference +
+			create_env_types('$env/static/public', env.public) +
 			'\n\n' +
-			create_types('$env/static/private', env.private)
+			create_env_types('$env/static/private', env.private)
 	);
 }
 
@@ -40,7 +43,7 @@ export function write_env(config, mode) {
  * @param {Record<string, string>} env
  * @returns {string}
  */
-function create_module(id, env) {
+function create_env_module(id, env) {
 	/** @type {string[]} */
 	const declarations = [];
 
@@ -74,7 +77,7 @@ function create_module(id, env) {
  * @param {Record<string, string>} env
  * @returns {string}
  */
-function create_types(id, env) {
+function create_env_types(id, env) {
 	const declarations = Object.keys(env)
 		.filter((k) => valid_identifier.test(k))
 		.map((k) => `\texport const ${k}: string;`)
