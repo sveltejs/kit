@@ -298,7 +298,7 @@ importers:
       svelte2tsx: ~0.5.10
       tiny-glob: ^0.2.9
       typescript: ^4.7.4
-      undici: ^5.6.1
+      undici: ^5.8.1
       uvu: ^0.5.3
       vite: ^3.0.0
     dependencies:
@@ -333,7 +333,7 @@ importers:
       svelte2tsx: 0.5.11_lvfi2wesz6u4l5rfbnetbucfmm
       tiny-glob: 0.2.9
       typescript: 4.7.4
-      undici: 5.6.1
+      undici: 5.8.1
       uvu: 0.5.4
       vite: 3.0.0
 
@@ -4405,8 +4405,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
-  /undici/5.6.1:
-    resolution: {integrity: sha512-yYVqywdCbNb99f/w045wqmv++WExXDjY0FEvLSB7QUZZH6izxrVkF4dJn1aimcvN0+WAhv75Gg7v6VJoqmRtJQ==}
+  /undici/5.8.1:
+    resolution: {integrity: sha512-iDRmWX4Zar/4A/t+1LrKQRm102zw2l9Wgat3LtTlTn8ykvMZmAmpq9tjyHEigx18FsY7IfATvyN3xSw9BDz0eA==}
     engines: {node: '>=12.18'}
     dev: true
 
