@@ -515,14 +515,12 @@ importers:
       prettier: ^2.6.2
       prompts: ^2.4.2
       tiny-glob: ^0.2.9
-      tippex: ^3.0.0
       typescript: ^4.7.4
     dependencies:
       kleur: 4.1.5
       magic-string: 0.26.2
       prompts: 2.4.2
       tiny-glob: 0.2.9
-      tippex: 3.0.0
       typescript: 4.7.4
     devDependencies:
       '@types/prompts': 2.0.14
@@ -4195,10 +4193,6 @@ packages:
     resolution: {integrity: sha512-7cR8rLy2QhYHpsBDBVYnnWXm8uRTr38RoZakFSW7Bs7PzfMPNZthuMLkwqZv7MTu8lhQ91cOFYS5a7iFj2oR3w==}
     engines: {node: '>=4'}
     dev: true
-
-  /tippex/3.0.0:
-    resolution: {integrity: sha512-64i7qAmJgPzsIOa3LbH6zeZ29qHD4UCD9kx8s2F2USDJ1abRE8eG7G6RRAOhJvQxOqnAmAQaREvFa5LUwf048Q==}
-    dev: false
 
   /tmp/0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
