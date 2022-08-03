@@ -74,6 +74,10 @@ export function write_types(config, manifest_data) {
 				declarations.push(`type ServerData = null;`);
 			}
 
+			if (route.page.server && !route.page.module) {
+				exports.push(`export type Data = ServerData;`)
+			}
+
 			exports.push(
 				`export type Load = GenericLoad<Params, ServerData>;`,
 				...methods.map(name => `export type ${name} = Generic${name}<Params>;`)
