@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.402
+
+### Patch Changes
+
+- [fix] Import analysis doesn't get stuck in an infinite loop when encountering cyclical imports ([#5794](https://github.com/sveltejs/kit/pull/5794))
+
 ## 1.0.0-next.401
 
 ### Patch Changes
