@@ -64,7 +64,12 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						const node = await vite.moduleGraph.getModuleByUrl(url);
 						if (!node) throw new Error(`Could not find node for ${url}`);
 
-						prevent_illegal_vite_imports(node, illegal_imports, svelte_config.kit.outDir);
+						prevent_illegal_vite_imports(
+							node,
+							illegal_imports,
+							[...svelte_config.extensions, ...svelte_config.kit.moduleExtensions],
+							svelte_config.kit.outDir
+						);
 
 						return {
 							module,
@@ -245,11 +250,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					);
 				}
 
-				/** @type {Partial<import('types').Hooks>} */
-				const user_hooks = resolve_entry(svelte_config.kit.files.hooks)
-					? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
-					: {};
-
 				const runtime_base = process.env.BUNDLED
 					? `/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/runtime`))}`
 					: `/@fs${runtime}`;
@@ -260,6 +260,11 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 				const env = get_env(vite_config.mode, svelte_config.kit.env.publicPrefix);
 				set_private_env(env.private);
 				set_public_env(env.public);
+
+				/** @type {Partial<import('types').Hooks>} */
+				const user_hooks = resolve_entry(svelte_config.kit.files.hooks)
+					? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
+					: {};
 
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
 

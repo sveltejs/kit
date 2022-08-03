@@ -95,16 +95,22 @@ Run when executing `vite build` and determines how the output is converted for d
 
 An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
 
-For example, you can add aliases to a `components` and `utils` folder:
-
 ```js
 /// file: svelte.config.js
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
 		alias: {
-			$components: 'src/components',
-			$utils: 'src/utils'
+			// this will match a file
+			'my-file': 'path/to/my-file.js',
+
+			// this will match a directory and its contents
+			// (`my-directory/x` resolves to `path/to/my-directory/x`)
+			'my-directory': 'path/to/my-directory',
+
+			// an alias ending /* will only match
+			// the contents of a directory, not the directory itself
+			'my-directory/*': 'path/to/my-directory/*'
 		}
 	}
 };
