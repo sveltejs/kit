@@ -271,6 +271,19 @@ export async function migrate() {
 			);
 		}
 	}
+
+	console.log(colors.bold().green('✔ Your project has been migrated'));
+
+	console.log('\nRecommended next steps:');
+
+	const cyan = colors.bold().cyan;
+	let i = 1;
+
+	console.log(`  ${i++}: ${cyan('git commit -m "svelte-migrate: renamed files"')}`);
+	console.log(`  ${i++}: Search codebase for "@migration" and manually complete migration tasks`);
+	console.log(`  ${i++}: ${cyan('git add -A')}`);
+	console.log(`  ${i++}: ${cyan('git commit -m "svelte-migrate: updated files"')}`);
+	console.log('');
 }
 
 /**
