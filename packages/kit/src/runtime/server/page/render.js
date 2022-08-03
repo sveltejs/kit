@@ -232,7 +232,7 @@ export async function render_response({
 			// include them in disabled state so that Vite can detect them and doesn't try to add them
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
-			link_header_preloads.add(`<${path}>; ${attributes.join(';')}; nopush`);
+			link_header_preloads.add(`<${encodeURI(path)}>; ${attributes.join(';')}; nopush`);
 		}
 
 		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
@@ -241,7 +241,7 @@ export async function render_response({
 	if (page_config.router || page_config.hydrate) {
 		for (const dep of modulepreloads) {
 			const path = options.prefix + dep;
-			link_header_preloads.add(`<${path}>; rel="modulepreload"; nopush`);
+			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
 			if (state.prerendering) {
 				head += `\n\t<link rel="modulepreload" href="${path}">`;
 			}
@@ -313,7 +313,7 @@ export async function render_response({
 	});
 
 	if (link_header_preloads.size) {
-		headers.set('link', Array.from(link_header_preloads).join(','));
+		headers.set('link', Array.from(link_header_preloads).join(', '));
 	}
 
 	if (cache) {
