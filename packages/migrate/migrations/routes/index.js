@@ -88,11 +88,42 @@ export async function migrate() {
 		}
 	}
 
+	console.log(colors.bold().yellow('\nThis will overwrite files in the current directory!\n'));
+
+	let use_git = false;
+
+	let dir = process.cwd();
+	do {
+		if (fs.existsSync(path.join(dir, '.git'))) {
+			use_git = true;
+			break;
+		}
+	} while (dir !== (dir = path.dirname(dir)));
+
+	if (use_git) {
+		try {
+			const status = execSync('git status --porcelain', {
+				stdio: 'pipe'
+			});
+			if (status) {
+				const message =
+					'Your working directory is dirty — we recommend committing your changes before running this migration.\n';
+				console.log(colors.bold().red(message));
+			}
+		} catch {
+			// would be weird to have a .git folder if git is not installed,
+			// but always expect the unexpected
+			const message =
+				'Could not detect a git installation. If this is unexpected, please raise an issue: https://github.com/sveltejs/kit.\n';
+			console.log(colors.bold().red(message));
+			use_git = false;
+		}
+	}
+
 	const response = await prompts({
 		type: 'confirm',
 		name: 'value',
-		message:
-			'This will overwrite files in the current directory. We advise you to use Git and commit any pending changes. Continue?',
+		message: 'Continue?',
 		initial: false
 	});
 
@@ -172,7 +203,7 @@ export async function migrate() {
 				if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 			}
 
-			move_file(file, renamed, edited);
+			move_file(file, renamed, edited, use_git);
 
 			// if component has a <script context="module">, move it to a sibling .js file
 			if (module) {
@@ -235,40 +266,27 @@ export async function migrate() {
 			move_file(
 				file,
 				renamed,
-				is_page_endpoint ? migrate_page_endpoint(edited) : migrate_standalone(edited)
+				is_page_endpoint ? migrate_page_endpoint(edited) : migrate_standalone(edited),
+				use_git
 			);
 		}
 	}
 }
-
-let git_fails = 0;
-let git_info_shown = false;
 
 /**
  *
  * @param {string} file
  * @param {string} renamed
  * @param {string} content
+ * @param {boolean} use_git
  */
-function move_file(file, renamed, content) {
-	if (git_fails > 10) {
-		fs.unlinkSync(file);
+function move_file(file, renamed, content, use_git) {
+	if (use_git) {
+		execSync(`git mv ${file} ${renamed}`);
 	} else {
-		try {
-			execSync(`git mv ${file} ${renamed}`);
-			if (!git_info_shown) {
-				git_info_shown = true;
-				console.log(
-					'Git detected - this might take a little longer but the file history will be preserved.\n' +
-						'For that, make sure to do two commits: One with the auto-staged changes, another with the updates to the files.' +
-						' If you do both in one, file renames may not be tracked correctly by Git.'
-				);
-			}
-		} catch {
-			git_fails++;
-			fs.unlinkSync(file);
-		}
+		fs.unlinkSync(file);
 	}
+
 	fs.writeFileSync(renamed, content);
 }
 
