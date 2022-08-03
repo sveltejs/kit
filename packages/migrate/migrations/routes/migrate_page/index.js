@@ -4,15 +4,14 @@ import {
 	automigration,
 	contains_only,
 	dedent,
+	error,
 	get_prop_initializer_text,
 	is_directly_in_exported_fn,
 	manual_return_migration
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
 
-/**
- * @param {string} content
- *  */
+/** @param {string} content */
 export function migrate_page(content) {
 	let imports = new Set();
 	try {
@@ -84,6 +83,6 @@ export function migrate_page(content) {
 
 		return import_str + '\n' + str.toString();
 	} catch {
-		return content;
+		return `${error('Update load function', TASKS.PAGE_LOAD)}\n\n${content}`;
 	}
 }
