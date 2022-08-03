@@ -38,7 +38,11 @@ export function write_types(config, manifest_data) {
 		);
 
 		if (route.type === 'page') {
-			imports.push(`import type {\n\t${['Load', ...methods].map(name => `${name} as Generic${name}`).join(',\n\t')}\n} from '@sveltejs/kit';`);
+			imports.push(
+				`import type {\n\t${['Load', ...methods]
+					.map((name) => `${name} as Generic${name}`)
+					.join(',\n\t')}\n} from '@sveltejs/kit';`
+			);
 
 			for (const node of route.layouts) {
 				// TODO handle edge case where a layout doesn't have a sibling +page
@@ -48,13 +52,17 @@ export function write_types(config, manifest_data) {
 				const content = fs.readFileSync(route.page.module, 'utf8');
 				const proxy = tweak_types(content, module_names);
 
-				if (proxy && proxy.exports.includes('load')) {
-					const basename = path.basename(route.page.module);
-					write(`${outdir}/proxy${basename}`, proxy.code);
-					imports.push(`import { load } from './proxy${basename}';`);
-					exports.push(`export type Data = Awaited<ReturnType<typeof load>>;`);
+				if (proxy) {
+					if (proxy.exports.includes('load')) {
+						const basename = path.basename(route.page.module);
+						write(`${outdir}/proxy${basename}`, proxy.code);
+						imports.push(`import { load } from './proxy${basename}';`);
+						exports.push(`export type Data = Awaited<ReturnType<typeof load>>;`);
+					} else {
+						exports.push(`export type Data = ServerData;`);
+					}
 				} else {
-					exports.push(`export type Data = any;`);
+					exports.push(`export type Data = unknown;`);
 				}
 			}
 
@@ -62,7 +70,8 @@ export function write_types(config, manifest_data) {
 				const content = fs.readFileSync(route.page.server, 'utf8');
 				const proxy = tweak_types(content, server_names);
 
-				if (proxy && proxy.exports.includes('GET')) { // TODO handle validation errors from POST/PUT/PATCH
+				if (proxy && proxy.exports.includes('GET')) {
+					// TODO handle validation errors from POST/PUT/PATCH
 					const basename = path.basename(route.page.server);
 					write(`${outdir}/proxy${basename}`, proxy.code);
 					imports.push(`import { GET } from './proxy${basename}';`);
@@ -75,12 +84,12 @@ export function write_types(config, manifest_data) {
 			}
 
 			if (route.page.server && !route.page.module) {
-				exports.push(`export type Data = ServerData;`)
+				exports.push(`export type Data = ServerData;`);
 			}
 
 			exports.push(
 				`export type Load = GenericLoad<Params, ServerData>;`,
-				...methods.map(name => `export type ${name} = Generic${name}<Params>;`)
+				...methods.map((name) => `export type ${name} = Generic${name}<Params>;`)
 			);
 		} else {
 			imports.push(`import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';`);
@@ -111,9 +120,9 @@ function tweak_types(content, names) {
 
 		const exports = new Map();
 
-		ast.forEachChild(node => {
+		ast.forEachChild((node) => {
 			if (ts.isExportDeclaration(node) && ts.isNamedExports(node.exportClause)) {
-				node.exportClause.elements.forEach(element => {
+				node.exportClause.elements.forEach((element) => {
 					const exported = element.name;
 					if (names.has(element.name.text)) {
 						const local = element.propertyName || element.name;
@@ -122,13 +131,13 @@ function tweak_types(content, names) {
 				});
 			}
 
-			if (node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)) {
+			if (node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) {
 				if (ts.isFunctionDeclaration(node) && node.name?.text && names.has(node.name?.text)) {
 					exports.set(node.name.text, node.name.text);
 				}
 
 				if (ts.isVariableStatement(node)) {
-					node.declarationList.declarations.forEach(declaration => {
+					node.declarationList.declarations.forEach((declaration) => {
 						if (ts.isIdentifier(declaration.name) && names.has(declaration.name.text)) {
 							exports.set(declaration.name.text, declaration.name.text);
 						}
@@ -188,7 +197,10 @@ function tweak_types(content, names) {
 								if (add_parens) code.prependRight(arg.pos, '(');
 
 								if (arg && !arg.type) {
-									code.appendLeft(arg.name.end, `: Parameters<${type}>[0]` + (add_parens ? ')' : ''));
+									code.appendLeft(
+										arg.name.end,
+										`: Parameters<${type}>[0]` + (add_parens ? ')' : '')
+									);
 								}
 							}
 						}
