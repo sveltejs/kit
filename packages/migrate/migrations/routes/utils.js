@@ -424,3 +424,23 @@ export function is_exported_fn(node, fn_name) {
 			))
 	);
 }
+
+export function read_samples(test_file) {
+	const markdown = fs.readFileSync(new URL('./samples.md', test_file), 'utf8');
+	const samples = markdown
+		.split(/^##/)
+		.slice(1)
+		.map((block) => {
+			const description = block.split('\n')[0];
+			const before = /```js before\n([^]*?)\n```/.exec(block);
+			const after = /```js after\n([^]*?)\n```/.exec(block);
+
+			return {
+				description,
+				before: before ? before[1] : '',
+				after: after ? after[1] : ''
+			};
+		});
+
+	return samples;
+}

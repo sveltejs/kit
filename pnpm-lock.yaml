@@ -516,6 +516,7 @@ importers:
       prompts: ^2.4.2
       tiny-glob: ^0.2.9
       typescript: ^4.7.4
+      uvu: ^0.5.6
     dependencies:
       kleur: 4.1.5
       magic-string: 0.26.2
@@ -525,6 +526,7 @@ importers:
     devDependencies:
       '@types/prompts': 2.0.14
       prettier: 2.7.1
+      uvu: 0.5.6
 
   sites/kit.svelte.dev:
     specifiers:
@@ -4443,6 +4445,17 @@ packages:
 
   /uvu/0.5.4:
     resolution: {integrity: sha512-x1CyUjcP9VKaNPhjeB3FIc/jqgLsz2Q9LFhRzUTu/jnaaHILEGNuE0XckQonl8ISLcwyk9I2EZvWlYsQnwxqvQ==}
+    engines: {node: '>=8'}
+    hasBin: true
+    dependencies:
+      dequal: 2.0.2
+      diff: 5.1.0
+      kleur: 4.1.5
+      sade: 1.8.1
+    dev: true
+
+  /uvu/0.5.6:
+    resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}
     engines: {node: '>=8'}
     hasBin: true
     dependencies:
