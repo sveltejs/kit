@@ -6,8 +6,12 @@ import { rimraf } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
 import { write } from './utils.js';
 
+const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
 const module_names = new Set(['load']);
-const server_names = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+const server_names = new Set(methods);
+
+const page_exports = ['Load', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -28,12 +32,14 @@ export function write_types(config, manifest_data) {
 		const params = parse_route_id(route.id).names;
 
 		declarations.push(
-			`interface Params ${
+			`interface Params extends Record<string, string> ${
 				params.length > 0 ? `{ ${params.map((param) => `${param}: string`).join('; ')} }` : '{}'
 			}`
 		);
 
 		if (route.type === 'page') {
+			imports.push(`import type {\n\t${['Load', ...methods].map(name => `${name} as Generic${name}`).join(',\n\t')}\n} from '@sveltejs/kit';`);
+
 			for (const node of route.layouts) {
 				// TODO handle edge case where a layout doesn't have a sibling +page
 			}
@@ -42,24 +48,36 @@ export function write_types(config, manifest_data) {
 				const content = fs.readFileSync(route.page.module, 'utf8');
 				const proxy = tweak_types(content, module_names);
 
-				if (proxy) {
-					// TODO only do this if the module does in fact export `load`
-					write(`${outdir}/proxy${path.basename(route.page.module)}`, proxy);
-					imports.push(`import { load } from './proxy+page.js';`);
+				if (proxy && proxy.exports.includes('load')) {
+					const basename = path.basename(route.page.module);
+					write(`${outdir}/proxy${basename}`, proxy.code);
+					imports.push(`import { load } from './proxy${basename}';`);
 					exports.push(`export type Data = Awaited<ReturnType<typeof load>>;`);
 				} else {
-					// TODO bail out write file with `any` types
+					exports.push(`export type Data = any;`);
 				}
 			}
 
 			if (route.page.server) {
-				// TODO
+				const content = fs.readFileSync(route.page.server, 'utf8');
+				const proxy = tweak_types(content, server_names);
+
+				if (proxy && proxy.exports.includes('GET')) { // TODO handle validation errors from POST/PUT/PATCH
+					const basename = path.basename(route.page.server);
+					write(`${outdir}/proxy${basename}`, proxy.code);
+					imports.push(`import { GET } from './proxy${basename}';`);
+					declarations.push(`type ServerData = Awaited<ReturnType<typeof GET>>;`);
+				} else {
+					declarations.push(`type ServerData = any;`);
+				}
+			} else {
+				declarations.push(`type ServerData = null;`);
 			}
 
-			// TODO write Load, GET, etc
-			imports.push(`import type { Load as GenericLoad, GET as GenericGET } from '@sveltejs/kit';`);
-			exports.push(`export type Load = GenericLoad<Params>;`);
-			exports.push(`export type GET = GenericGET<Params>;`);
+			exports.push(
+				`export type Load = GenericLoad<Params, ServerData>;`,
+				...methods.map(name => `export type ${name} = Generic${name}<Params>;`)
+			);
 		} else {
 			imports.push(`import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';`);
 			exports.push(`export type RequestHandler = GenericRequestHandler<Params>;`);
@@ -86,6 +104,35 @@ function tweak_types(content, names) {
 		);
 
 		const code = new MagicString(content);
+
+		const exports = new Map();
+
+		ast.forEachChild(node => {
+			if (ts.isExportDeclaration(node) && ts.isNamedExports(node.exportClause)) {
+				node.exportClause.elements.forEach(element => {
+					const exported = element.name;
+					if (names.has(element.name.text)) {
+						const local = element.propertyName || element.name;
+						exports.set(exported.text, local.text);
+					}
+				});
+			}
+
+			// 93 because there's no ts.isExportKeyword function for some reason
+			if (node.modifiers?.some(modifier => modifier.kind === 93)) {
+				if (ts.isFunctionDeclaration(node) && node.name?.text && names.has(node.name?.text)) {
+					exports.set(node.name.text, node.name.text);
+				}
+
+				if (ts.isVariableStatement(node)) {
+					node.declarationList.declarations.forEach(declaration => {
+						if (ts.isIdentifier(declaration.name) && names.has(declaration.name.text)) {
+							exports.set(declaration.name.text, declaration.name.text);
+						}
+					});
+				}
+			}
+		});
 
 		/** @param {import('typescript').Node} node */
 		function replace_jsdoc_type_tags(node) {
@@ -147,7 +194,10 @@ function tweak_types(content, names) {
 			}
 		});
 
-		return code.toString();
+		return {
+			code: code.toString(),
+			exports: Array.from(exports.keys())
+		};
 	} catch {
 		return null;
 	}

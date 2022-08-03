@@ -8,6 +8,7 @@ import {
 	AdapterEntry,
 	BodyValidator,
 	CspDirectives,
+	JSONObject,
 	JSONValue,
 	Logger,
 	MaybePromise,
@@ -273,6 +274,26 @@ export interface SSRManifest {
 		routes: SSRRoute[];
 		matchers: () => Promise<Record<string, ParamMatcher>>;
 	};
+}
+
+export interface GET<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<JSONObject>
+}
+
+export interface POST<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<{ status?: number, errors: Record<string, string>, location?: never } | { status?: never, errors?: never, location: string } | void>
+}
+
+export interface PUT<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<{ status?: number, errors: Record<string, string> } | void>
+}
+
+export interface PATCH<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<{ status?: number, errors: Record<string, string> } | void>
+}
+
+export interface DELETE<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<void>
 }
 
 export function error(status: number, message?: string): HttpError;
