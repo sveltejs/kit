@@ -80,7 +80,7 @@ export function extract_load(content, is_error, moved) {
 			}
 
 			module = contents.replace(/^\n/, '');
-			return `<!-- ${task(
+			return `<!--\n${task(
 				'Check for missing imports and code that should be moved back to the module context',
 				TASKS.PAGE_MODULE_CTX
 			)}\n\nThe following imports were found:\n${imports.length ? imports.join('\n') : '-'}\n-->`;
