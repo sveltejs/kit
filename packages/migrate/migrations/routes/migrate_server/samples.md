@@ -14,6 +14,6 @@ export function GET() {
 export function GET() {
 	return new Response(JSON.stringify({
 		a: 1
-	}), { headers: { 'content-type': 'application/json;·charset=utf-8' } });
+	}), { headers: { 'content-type': 'application/json; charset=utf-8' } });
 }
 ```

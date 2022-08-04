@@ -2,8 +2,10 @@ import ts from 'typescript';
 import {
 	automigration,
 	contains_only,
+	dedent,
 	error,
 	get_function_node,
+	get_object_nodes,
 	get_prop,
 	get_prop_initializer_text,
 	is_string_like,
@@ -32,11 +34,9 @@ export function migrate_server(content) {
 			const fn = get_function_node(statement, file.exports.map.get(method));
 			if (fn) {
 				rewrite_returns(fn.body, (expr, node) => {
-					if (
-						expr &&
-						ts.isObjectLiteralExpression(expr) &&
-						contains_only(expr, ['body', 'status', 'headers'], true)
-					) {
+					const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
+
+					if (nodes) {
 						const props = expr.properties;
 
 						const body = get_prop(props, 'body');
@@ -80,7 +80,7 @@ export function migrate_server(content) {
 									!headers.getText().toLowerCase().includes('content-type') ||
 									headers.getText().includes('application/json')) &&
 							  !body_str.startsWith('JSON.stringify')
-								? `JSON.stringify(${body_str})`
+								? `JSON.stringify(${dedent(body_str)})`
 								: body_str
 							: 'undefined';
 
@@ -106,9 +106,11 @@ export function migrate_server(content) {
 								`return new Response(${response_body}${response_init});`
 							);
 						}
-					} else {
-						manual_return_migration(node, file.code, TASKS.STANDALONE_ENDPOINT);
+
+						return;
 					}
+
+					manual_return_migration(node || fn, file.code, TASKS.STANDALONE_ENDPOINT);
 				});
 
 				unmigrated.delete(method);
