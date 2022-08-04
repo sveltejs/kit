@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 1.0.0-next.403
+
+### Patch Changes
+
+- [chore] upgrade to Undici 5.8.1 ([#5804](https://github.com/sveltejs/kit/pull/5804))
+
+## 1.0.0-next.402
+
+### Patch Changes
+
+- [fix] Import analysis doesn't get stuck in an infinite loop when encountering cyclical imports ([#5794](https://github.com/sveltejs/kit/pull/5794))
+
+## 1.0.0-next.401
+
+### Patch Changes
+
+- [fix] chdir to user's application directory before running postinstall sync ([#5771](https://github.com/sveltejs/kit/pull/5771))
+
+## 1.0.0-next.400
+
+### Patch Changes
+
+- More robust path aliasing ([#5582](https://github.com/sveltejs/kit/pull/5582))
+
 ## 1.0.0-next.399
 
 ### Patch Changes
