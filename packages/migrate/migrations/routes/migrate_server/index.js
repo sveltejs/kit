@@ -42,7 +42,7 @@ export function migrate_server(content) {
 					const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
 
 					if (nodes) {
-						const body_is_object_literal = ts.isObjectLiteralExpression(nodes.body);
+						const body_is_object_literal = nodes.body && ts.isObjectLiteralExpression(nodes.body);
 
 						let safe_headers = !nodes.headers;
 						if (nodes.headers) {
@@ -82,7 +82,7 @@ export function migrate_server(content) {
 
 							const multiline = /\n/.test(headers);
 
-							if (body_is_object_literal || ts.isIdentifier(nodes.body)) {
+							if (body_is_object_literal || (nodes.body && ts.isIdentifier(nodes.body))) {
 								// `return { body: {...} }` is safe to convert to a JSON response,
 								// but we probably need to add a `content-type` header
 								body = `JSON.stringify(${body})`;
