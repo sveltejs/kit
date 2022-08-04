@@ -159,9 +159,7 @@ export async function migrate() {
 			if (module) {
 				const ext = /<script[^>]+?lang=['"](ts|typescript)['"][^]*?>/.test(module) ? '.ts' : '.js';
 
-				const content = migrate_page(dedent(move_to_directory ? adjust_imports(module) : module));
-
-				fs.writeFileSync(sibling + ext, content);
+				fs.writeFileSync(sibling + ext, migrate_page(module));
 			}
 		} else if (module_ext) {
 			// file is a module

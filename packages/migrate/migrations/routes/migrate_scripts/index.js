@@ -4,7 +4,8 @@ import {
 	guess_indent,
 	comment,
 	error,
-	task
+	task,
+	dedent
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
 
@@ -21,21 +22,23 @@ export function migrate_scripts(content, is_error, moved) {
 	let main = content.replace(
 		/<script([^>]+?context=(['"])module\1[^>]*)>([^]*?)<\/script>/,
 		(match, attrs, quote, contents) => {
-			const imports = extract_static_imports(moved ? adjust_imports(contents) : contents);
+			const adjusted = moved ? adjust_imports(contents) : contents;
+
+			const imports = extract_static_imports(adjusted);
 
 			if (is_error) {
 				// special case — load is no longer supported in error
-				const indent = guess_indent(contents) ?? '';
+				const indent = guess_indent(adjusted) ?? '';
 
 				const body = `\n${indent}${error('Replace error load function', '3293209')}\n${comment(
-					contents,
+					adjusted,
 					indent
 				)}`;
 
 				return `<script${attrs}>${body}</script>`;
 			}
 
-			module = contents.replace(/^\n/, '');
+			module = dedent(adjusted.replace(/^\n/, ''));
 			return `<!--\n${task(
 				'Check for missing imports and code that should be moved back to the module context',
 				TASKS.PAGE_MODULE_CTX
