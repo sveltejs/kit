@@ -116,37 +116,6 @@ export function adjust_imports(content) {
 }
 
 /** @param {string} content */
-export function extract_static_imports(content) {
-	try {
-		const ast = ts.createSourceFile(
-			'filename.ts',
-			content,
-			ts.ScriptTarget.Latest,
-			true,
-			ts.ScriptKind.TS
-		);
-
-		/** @type {string[]} */
-		let imports = [];
-
-		/** @param {ts.Node} node */
-		function walk(node) {
-			if (ts.isImportDeclaration(node)) {
-				imports.push(node.getText());
-			}
-
-			node.forEachChild(walk);
-		}
-
-		ast.forEachChild(walk);
-
-		return imports;
-	} catch {
-		return [];
-	}
-}
-
-/** @param {string} content */
 export function dedent(content) {
 	const indent = guess_indent(content);
 	if (!indent) return content;
@@ -219,37 +188,11 @@ export function guess_indent(content) {
 
 /**
  * @param {string} content
- * @param {string} indent
- */
-export function indent_with(content, indent) {
-	return indent + content.split('\n').join('\n' + indent);
-}
-
-/**
- * @param {string} content
  * @param {number} offset
  */
 export function indent_at_line(content, offset) {
 	const substr = content.substring(content.lastIndexOf('\n', offset) + 1, offset);
 	return /\s*/.exec(substr)[0];
-}
-
-/**
- *
- * @param {ts.ObjectLiteralExpression} node
- * @param {string[]} valid_keys
- * @param {boolean} [allow_empty]
- */
-export function contains_only(node, valid_keys, allow_empty = false) {
-	return (
-		(allow_empty || node.properties.length > 0) &&
-		node.properties.every(
-			(prop) =>
-				(ts.isPropertyAssignment(prop) || ts.isShorthandPropertyAssignment(prop)) &&
-				ts.isIdentifier(prop.name) &&
-				valid_keys.includes(prop.name.text)
-		)
-	);
 }
 
 /**
@@ -293,22 +236,6 @@ export function automigration(node, str, migration) {
 }
 
 /**
- * @param {ts.NodeArray<ts.ObjectLiteralElementLike>} node
- * @param {string} name
- * @returns {undefined | ts.ShorthandPropertyAssignment | ts.PropertyAssignment}
- */
-export function get_prop(node, name) {
-	return /** @type {any} */ (
-		node.find(
-			(prop) =>
-				(ts.isPropertyAssignment(prop) || ts.isShorthandPropertyAssignment(prop)) &&
-				ts.isIdentifier(prop.name) &&
-				prop.name.text === name
-		)
-	);
-}
-
-/**
  * @param {ts.ObjectLiteralExpression} node
  */
 export function get_object_nodes(node) {
@@ -326,26 +253,6 @@ export function get_object_nodes(node) {
 	}
 
 	return obj;
-}
-
-/**
- * @param {ts.NodeArray<ts.ObjectLiteralElementLike>} node
- * @param {string} name
- */
-export function get_prop_initializer_text(node, name) {
-	const prop = get_prop(node, name);
-	return prop
-		? ts.isShorthandPropertyAssignment(prop)
-			? name
-			: prop.initializer.getText()
-		: 'undefined';
-}
-
-/**
- * @param {string} str
- */
-export function remove_outer_braces(str) {
-	return str.substring(str.indexOf('{') + 1, str.lastIndexOf('}'));
 }
 
 /**

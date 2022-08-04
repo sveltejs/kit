@@ -1,14 +1,5 @@
 import ts from 'typescript';
-import {
-	extract_static_imports,
-	adjust_imports,
-	guess_indent,
-	comment,
-	error,
-	task,
-	dedent,
-	parse
-} from '../utils.js';
+import { adjust_imports, guess_indent, comment, error, dedent, parse } from '../utils.js';
 import * as TASKS from '../tasks.js';
 
 /**

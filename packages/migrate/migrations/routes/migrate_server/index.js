@@ -5,15 +5,12 @@ import {
 	error,
 	get_function_node,
 	get_object_nodes,
-	get_prop,
-	get_prop_initializer_text,
 	guess_indent,
 	indent_at_line,
 	is_new,
 	is_string_like,
 	manual_return_migration,
 	parse,
-	remove_outer_braces,
 	rewrite_returns
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
