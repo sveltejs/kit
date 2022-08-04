@@ -4,4 +4,4 @@
 
 ### Patch Changes
 
-- Add a README' ([#5817](https://github.com/sveltejs/kit/pull/5817))
+- Add a README ([#5817](https://github.com/sveltejs/kit/pull/5817))
