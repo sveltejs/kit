@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { start_server, test } from '../../../utils.js';
+import { test } from '../../../utils.js';
 import { createHash, randomBytes } from 'node:crypto';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -23,18 +23,6 @@ test.describe('Content-Type', () => {
 });
 
 test.describe('Endpoints', () => {
-	test('200 status on empty endpoint', async ({ request }) => {
-		const response = await request.get('/endpoint-output/empty');
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
-		expect(await response.json()).toEqual({});
-	});
-
-	test('set-cookie without body', async ({ request }) => {
-		const response = await request.get('/endpoint-output/headers');
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
-		expect(response.headers()['set-cookie']).toBeDefined();
-	});
-
 	test('HEAD with matching headers but without body', async ({ request }) => {
 		const url = '/endpoint-output/body';
 
@@ -61,63 +49,9 @@ test.describe('Endpoints', () => {
 		expect(headers.head).toEqual(headers.get);
 	});
 
-	test('200 status by default', async ({ request }) => {
-		const response = await request.get('/endpoint-output/body');
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
-		expect(await response.text()).toBe('{}');
-	});
-
-	// TODO are these tests useful?
-	test('always returns a body', async ({ request }) => {
-		const response = await request.get('/endpoint-output/empty');
-		expect(typeof (await response.body())).toEqual('object');
-	});
-
-	test('null body returns null json value', async ({ request }) => {
-		const response = await request.get('/endpoint-output/null');
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
-		expect(await response.json()).toBe(null);
-	});
-
-	test('gets string response with XML Content-Type', async ({ request }) => {
-		const response = await request.get('/endpoint-output/xml-text');
-
-		expect(response.headers()['content-type']).toBe('application/xml');
-		expect(await response.text()).toBe('<foo />');
-	});
-
-	test('gets binary response with XML Content-Type', async ({ request }) => {
-		const response = await request.get('/endpoint-output/xml-bytes');
-
-		expect(response.headers()['content-type']).toBe('application/xml');
-		expect(await response.text()).toBe('<foo />');
-	});
-
-	test('allows headers to be a Headers object', async ({ request }) => {
-		const response = await request.get('/endpoint-output/headers-object');
-
-		expect(response.headers()['x-foo']).toBe('bar');
-	});
-
-	test('allows return value to be a Response', async ({ request }) => {
-		const { port, close } = await start_server((req, res) => {
-			res.writeHead(200, {
-				'X-Foo': 'bar'
-			});
-
-			res.end('ok');
-		});
-
-		try {
-			const response = await request.get(`/endpoint-output/proxy?port=${port}`);
-
-			expect(await response.text()).toBe('ok');
-			expect(response.headers()['x-foo']).toBe('bar');
-		} finally {
-			await close();
-		}
-	});
-
+	// TODO all the remaining tests in this section are really only testing
+	// setResponse, since we're not otherwise changing anything on the response.
+	// might be worth making these unit tests instead
 	test('multiple set-cookie on endpoints using GET', async ({ request }) => {
 		const response = await request.get('/set-cookie');
 
@@ -133,17 +67,7 @@ test.describe('Endpoints', () => {
 		]);
 	});
 
-	test('Standalone endpoint is not accessible via /__data.json suffix', async ({ request }) => {
-		const r1 = await request.get('/endpoint-output/simple', {
-			headers: { accept: 'application/json' }
-		});
-
-		expect(await r1.json()).toEqual({ answer: 42 });
-
-		const r2 = await request.get('/endpoint-output/simple/__data.json');
-		expect(r2.status()).toBe(404);
-	});
-
+	// TODO see above
 	test('body can be a binary ReadableStream', async ({ request }) => {
 		const interruptedResponse = request.get('/endpoint-output/stream-throw-error');
 		await expect(interruptedResponse).rejects.toThrow('socket hang up');
@@ -154,6 +78,7 @@ test.describe('Endpoints', () => {
 		expect(response.headers()['digest']).toEqual(`sha-256=${digest}`);
 	});
 
+	// TODO see above
 	test('stream can be canceled with TypeError', async ({ request }) => {
 		const responseBefore = await request.get('/endpoint-output/stream-typeerror?what');
 		expect(await responseBefore.text()).toEqual('null');
@@ -165,6 +90,7 @@ test.describe('Endpoints', () => {
 		expect(await responseAfter.text()).toEqual('TypeError');
 	});
 
+	// TODO see above
 	test('request body can be read slow', async ({ request }) => {
 		const data = randomBytes(1024 * 256);
 		const digest = createHash('sha256').update(data).digest('base64url');
