@@ -1,11 +1,10 @@
 import ts from 'typescript';
 import {
 	automigration,
-	contains_only,
 	dedent,
 	error,
 	get_function_node,
-	get_prop_initializer_text,
+	get_object_nodes,
 	manual_return_migration,
 	parse,
 	rewrite_returns
@@ -33,15 +32,14 @@ export function migrate_page_server(content) {
 			if (GET) {
 				// possible TODOs — handle errors and redirects
 				rewrite_returns(GET.body, (expr, node) => {
-					if (expr && ts.isObjectLiteralExpression(expr) && contains_only(expr, ['body'])) {
-						automigration(
-							expr,
-							file.code,
-							dedent(get_prop_initializer_text(expr.properties, 'body'))
-						);
-					} else {
+					const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
+
+					if (!nodes || nodes.headers || (nodes.status && nodes.status.getText() !== '200')) {
 						manual_return_migration(node || GET, file.code, TASKS.PAGE_ENDPOINT);
+						return;
 					}
+
+					automigration(expr, file.code, dedent(nodes.body.getText()));
 				});
 
 				unmigrated.delete('GET');

@@ -18,6 +18,27 @@ export function GET() {
 }
 ```
 
+## 200 status
+
+```js before
+export function GET() {
+	return {
+		status: 200,
+		body: {
+			a: 1
+		}
+	};
+}
+```
+
+```js after
+export function GET() {
+	return {
+		a: 1
+	};
+}
+```
+
 ## Arrow function GET
 
 ```js before
