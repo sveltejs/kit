@@ -34,36 +34,32 @@ export function migrate_page_server(content) {
 		);
 
 		for (const statement of ast.statements) {
-			const GET = get_function_node(statement, exports.map.get('GET'));
-			if (GET) {
-				// possible TODOs — handle errors and redirects
-				rewrite_returns(GET.body, (node) => {
-					if (
-						node.expression &&
-						ts.isObjectLiteralExpression(node.expression) &&
-						contains_only(node.expression, ['body'])
-					) {
-						automigration(
-							node.expression,
-							str,
-							dedent(get_prop_initializer_text(node.expression.properties, 'body'))
-						);
-					} else {
-						manual_return_migration(node, str, TASKS.PAGE_ENDPOINT);
-					}
-				});
+			if (exports.map.has('GET')) {
+				const GET = get_function_node(statement, exports.map.get('GET'));
+				if (GET) {
+					// possible TODOs — handle errors and redirects
+					rewrite_returns(GET.body, (expr, node) => {
+						if (expr && ts.isObjectLiteralExpression(expr) && contains_only(expr, ['body'])) {
+							automigration(expr, str, dedent(get_prop_initializer_text(expr.properties, 'body')));
+						} else {
+							manual_return_migration(node || GET, str, TASKS.PAGE_ENDPOINT);
+						}
+					});
 
-				unmigrated.delete('GET');
+					unmigrated.delete('GET');
+				}
 			}
 
 			for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
-				const fn = get_function_node(statement, exports.map.get(method));
-				if (fn) {
-					rewrite_returns(fn.body, (node) => {
-						manual_return_migration(node, str, TASKS.PAGE_ENDPOINT);
-					});
+				if (exports.map.has(method)) {
+					const fn = get_function_node(statement, exports.map.get(method));
+					if (fn) {
+						rewrite_returns(fn.body, (expr, node) => {
+							manual_return_migration(node || fn, str, TASKS.PAGE_ENDPOINT);
+						});
 
-					unmigrated.delete(method);
+						unmigrated.delete(method);
+					}
 				}
 			}
 		}

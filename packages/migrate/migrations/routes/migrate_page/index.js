@@ -46,50 +46,52 @@ export function migrate_page(content) {
 				/** @type {Set<string>} */
 				const imports = new Set();
 
-				rewrite_returns(fn.body, (node) => {
-					if (node.expression && ts.isObjectLiteralExpression(node.expression)) {
-						if (contains_only(node.expression, ['props'])) {
-							automigration(
-								node.expression,
-								str,
-								dedent(get_prop_initializer_text(node.expression.properties, 'props'))
-							);
-						} else if (
-							contains_only(node.expression, ['redirect', 'status']) &&
-							((Number(get_prop_initializer_text(node.expression.properties, 'status')) > 300 &&
-								Number(get_prop_initializer_text(node.expression.properties, 'status')) < 310) ||
-								contains_only(node.expression, ['redirect']))
-						) {
-							automigration(
-								node,
-								str,
-								'throw redirect(' +
-									get_prop_initializer_text(node.expression.properties, 'status') +
-									(get_prop_initializer_text(node.expression.properties, 'redirect') === 'undefined'
-										? ''
-										: ', ' + get_prop_initializer_text(node.expression.properties, 'redirect')) +
-									');'
-							);
-							imports.add('redirect');
-						} else if (
-							contains_only(node.expression, ['error', 'status']) &&
-							(Number(get_prop_initializer_text(node.expression.properties, 'status')) > 399 ||
-								contains_only(node.expression, ['error']))
-						) {
-							automigration(
-								node,
-								str,
-								'throw error(' +
-									get_prop_initializer_text(node.expression.properties, 'status') +
-									(get_prop_initializer_text(node.expression.properties, 'error') === 'undefined'
-										? ''
-										: ', ' + get_prop_initializer_text(node.expression.properties, 'error')) +
-									');'
-							);
-							imports.add('error');
+				rewrite_returns(fn.body, (expr, node) => {
+					if (ts.isObjectLiteralExpression(expr)) {
+						const props = expr.properties;
+
+						if (contains_only(expr, ['props'])) {
+							automigration(expr, str, dedent(get_prop_initializer_text(props, 'props')));
+						} else if (node) {
+							if (
+								contains_only(expr, ['redirect', 'status']) &&
+								((Number(get_prop_initializer_text(props, 'status')) > 300 &&
+									Number(get_prop_initializer_text(props, 'status')) < 310) ||
+									contains_only(expr, ['redirect']))
+							) {
+								automigration(
+									node,
+									str,
+									'throw redirect(' +
+										get_prop_initializer_text(props, 'status') +
+										(get_prop_initializer_text(props, 'redirect') === 'undefined'
+											? ''
+											: ', ' + get_prop_initializer_text(props, 'redirect')) +
+										');'
+								);
+								imports.add('redirect');
+							} else if (
+								contains_only(expr, ['error', 'status']) &&
+								(Number(get_prop_initializer_text(props, 'status')) > 399 ||
+									contains_only(expr, ['error']))
+							) {
+								automigration(
+									node,
+									str,
+									'throw error(' +
+										get_prop_initializer_text(props, 'status') +
+										(get_prop_initializer_text(props, 'error') === 'undefined'
+											? ''
+											: ', ' + get_prop_initializer_text(props, 'error')) +
+										');'
+								);
+								imports.add('error');
+							}
+						} else {
+							manual_return_migration(fn, str, TASKS.PAGE_LOAD);
 						}
 					} else {
-						manual_return_migration(node, str, TASKS.PAGE_LOAD);
+						manual_return_migration(fn, str, TASKS.PAGE_LOAD);
 					}
 				});
 

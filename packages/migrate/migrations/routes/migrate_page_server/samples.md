@@ -21,15 +21,15 @@ export function GET() {
 ## Arrow function GET
 
 ```js before
-export const load = () => ({
-	props: {
+export const GET = () => ({
+	body: {
 		a: 1
 	}
 });
 ```
 
 ```js after
-export const load = () => ({
+export const GET = () => ({
 	a: 1
 });
 ```

@@ -476,7 +476,7 @@ export function get_function_node(statement, ...names) {
 	}
 
 	if (ts.isVariableStatement(statement)) {
-		statement.declarationList.declarations.forEach((declaration) => {
+		for (const declaration of statement.declarationList.declarations) {
 			if (
 				ts.isIdentifier(declaration.name) &&
 				names.includes(declaration.name.text) &&
@@ -486,35 +486,45 @@ export function get_function_node(statement, ...names) {
 				// export const x = ...
 				return declaration.initializer;
 			}
-		});
+		}
 	}
 }
 
 /**
- * @param {ts.Block} block
- * @param {(node: ts.ReturnStatement) => void} callback
+ * Utility for rewriting return statements. If `node` is `undefined`,
+ * it means it's a concise arrow function body (`() => ({}))`
+ * @param {ts.Block | ts.ConciseBody} block
+ * @param {(expression: ts.Expression, node: ts.ReturnStatement | void) => void} callback
  */
 export function rewrite_returns(block, callback) {
-	/** @param {ts.Node} node */
-	function walk(node) {
-		if (
-			ts.isArrowFunction(node) ||
-			ts.isFunctionExpression(node) ||
-			ts.isFunctionDeclaration(node)
-		) {
-			// don't cross this boundary
-			return;
+	if (ts.isBlock(block)) {
+		/** @param {ts.Node} node */
+		function walk(node) {
+			if (
+				ts.isArrowFunction(node) ||
+				ts.isFunctionExpression(node) ||
+				ts.isFunctionDeclaration(node)
+			) {
+				// don't cross this boundary
+				return;
+			}
+
+			if (ts.isReturnStatement(node)) {
+				callback(node.expression, node);
+				return;
+			}
+
+			node.forEachChild(walk);
 		}
 
-		if (ts.isReturnStatement(node)) {
-			callback(node);
-			return;
+		block.forEachChild(walk);
+	} else {
+		while (ts.isParenthesizedExpression(block)) {
+			block = block.expression;
 		}
 
-		node.forEachChild(walk);
+		callback(block, null);
 	}
-
-	block.forEachChild(walk);
 }
 
 /** @param {string} test_file */
@@ -531,9 +541,14 @@ export function read_samples(test_file) {
 			return {
 				description,
 				before: before ? before[1] : '',
-				after: after ? after[1] : ''
+				after: after ? after[1] : '',
+				solo: block.includes('> solo')
 			};
 		});
+
+	if (samples.some((sample) => sample.solo)) {
+		return samples.filter((sample) => sample.solo);
+	}
 
 	return samples;
 }
