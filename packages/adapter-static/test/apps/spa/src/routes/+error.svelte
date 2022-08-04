@@ -1,10 +1,12 @@
 <script context="module">
-	/** @type {import('@sveltejs/kit').Load} */
-	export function load({ session }) {
-		return {
-			props: session
-		};
-	}
+	throw new Error("@migration task: Replace error load function (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3293209)");
+
+	// /** @type {import('@sveltejs/kit').Load} */
+	// export function load({ session }) {
+	// 	return {
+	// 		props: session
+	// 	};
+	// }
 </script>
 
 <script>
