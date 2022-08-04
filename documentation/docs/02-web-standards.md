@@ -22,7 +22,7 @@ An instance of [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Requ
 
 #### Response
 
-An instance of [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) is returned from `await fetch(...)`. Fundamentally, a SvelteKit app is a machine for turning a `Request` into a `Response`.
+An instance of [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) is returned from `await fetch(...)` and handlers in `+server.js` files. Fundamentally, a SvelteKit app is a machine for turning a `Request` into a `Response`.
 
 #### Headers
 
@@ -30,18 +30,19 @@ The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interf
 
 ```js
 // @errors: 2461
-/// file: src/routes/what-is-my-user-agent.js
+/// file: src/routes/what-is-my-user-agent/+server.js
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export function GET(event) {
 	// log all headers
 	console.log(...event.request.headers);
 
-	return {
-		body: {
+	return new Response(
+		{
 			// retrieve a specific header
 			userAgent: event.request.headers.get('user-agent')
-		}
-	};
+		},
+		{ headers: { 'content-type': 'application/json; charset=utf-8' } }
+	);
 }
 ```
 

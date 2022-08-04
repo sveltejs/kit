@@ -57,13 +57,9 @@ export default config;
 [Sitemaps](https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap) help search engines prioritize pages within your site, particularly when you have a large amount of content. You can create a sitemap dynamically using an endpoint:
 
 ```js
-/// file: src/routes/sitemap.xml.js
+/// file: src/routes/sitemap.xml/+server.js
 export async function GET() {
-	return {
-		headers: {
-			'Content-Type': 'application/xml'
-		},
-		body: `
+	return new Response(`
 			<?xml version="1.0" encoding="UTF-8" ?>
 			<urlset
 				xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
@@ -75,9 +71,11 @@ export async function GET() {
 			>
 				<!-- <url> elements go here -->
 			</urlset>
-		`.trim()
+		`.trim(),
+		headers: {
+			'Content-Type': 'application/xml'
+		})
 	};
-}
 ```
 
 #### AMP
