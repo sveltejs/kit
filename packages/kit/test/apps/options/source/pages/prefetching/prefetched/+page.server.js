@@ -1,7 +1,5 @@
 export function GET() {
 	return {
-		body: {
-			data: 'hi'
-		}
+		message: 'prefetched'
 	};
 }

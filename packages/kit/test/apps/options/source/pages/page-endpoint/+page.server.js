@@ -1,5 +1,5 @@
 export function GET() {
 	return {
-		body: 'hi'
+		message: 'hi'
 	};
 }
