@@ -142,7 +142,7 @@ export async function respond(request, options, state) {
 				}
 
 				// TODO apply these headers to the response
-				headers[key] = new_headers[key];
+				headers[key.toLowerCase()] = new_headers[key];
 			}
 		},
 		url
@@ -257,6 +257,17 @@ export async function respond(request, options, state) {
 					}
 
 					if (response) {
+						for (const key in headers) {
+							const value = headers[key];
+							if (key === 'set-cookie') {
+								for (const cookie in Array.isArray(value) ? value : [value]) {
+									response.headers.append(key, cookie);
+								}
+							} else {
+								response.headers.set(key, /** @type {string} */ (value));
+							}
+						}
+
 						// respond with 304 if etag matches
 						if (response.status === 200 && response.headers.has('etag')) {
 							let if_none_match_value = request.headers.get('if-none-match');
