@@ -1,14 +1,13 @@
 import ts from 'typescript';
-import MagicString from 'magic-string';
 import {
 	automigration,
 	contains_only,
 	dedent,
 	error,
-	get_exports,
 	get_function_node,
 	get_prop_initializer_text,
 	manual_return_migration,
+	parse,
 	rewrite_returns
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
@@ -21,95 +20,85 @@ export function migrate_page(content) {
 	// without parsing the file
 	if (!/load/.test(content)) return content;
 
-	try {
-		const ast = ts.createSourceFile(
-			'filename.ts',
-			content,
-			ts.ScriptTarget.Latest,
-			true,
-			ts.ScriptKind.TS
-		);
-		const str = new MagicString(content);
+	const file = parse(content);
+	if (!file) return give_up + content;
 
-		const exports = get_exports(ast);
+	if (!file.exports.map.has('load') && !file.exports.complex) {
+		// there's no load function here, so there's nothing to do
+		return content;
+	}
 
-		if (!exports.map.has('load') && !exports.complex) {
-			// there's no load function here, so there's nothing to do
-			return content;
-		}
+	const name = file.exports.map.get('load');
 
-		const name = exports.map.get('load');
+	for (const statement of file.ast.statements) {
+		const fn = get_function_node(statement, name);
+		if (fn) {
+			/** @type {Set<string>} */
+			const imports = new Set();
 
-		for (const statement of ast.statements) {
-			const fn = get_function_node(statement, name);
-			if (fn) {
-				/** @type {Set<string>} */
-				const imports = new Set();
+			rewrite_returns(fn.body, (expr, node) => {
+				if (ts.isObjectLiteralExpression(expr)) {
+					const props = expr.properties;
 
-				rewrite_returns(fn.body, (expr, node) => {
-					if (ts.isObjectLiteralExpression(expr)) {
-						const props = expr.properties;
-
-						if (contains_only(expr, ['props'])) {
-							automigration(expr, str, dedent(get_prop_initializer_text(props, 'props')));
-						} else if (node) {
-							if (
-								contains_only(expr, ['redirect', 'status']) &&
-								((Number(get_prop_initializer_text(props, 'status')) > 300 &&
-									Number(get_prop_initializer_text(props, 'status')) < 310) ||
-									contains_only(expr, ['redirect']))
-							) {
-								automigration(
-									node,
-									str,
-									'throw redirect(' +
-										get_prop_initializer_text(props, 'status') +
-										(get_prop_initializer_text(props, 'redirect') === 'undefined'
-											? ''
-											: ', ' + get_prop_initializer_text(props, 'redirect')) +
-										');'
-								);
-								imports.add('redirect');
-							} else if (
-								contains_only(expr, ['error', 'status']) &&
-								(Number(get_prop_initializer_text(props, 'status')) > 399 ||
-									contains_only(expr, ['error']))
-							) {
-								automigration(
-									node,
-									str,
-									'throw error(' +
-										get_prop_initializer_text(props, 'status') +
-										(get_prop_initializer_text(props, 'error') === 'undefined'
-											? ''
-											: ', ' + get_prop_initializer_text(props, 'error')) +
-										');'
-								);
-								imports.add('error');
-							}
-						} else {
-							manual_return_migration(fn, str, TASKS.PAGE_LOAD);
+					if (contains_only(expr, ['props'])) {
+						automigration(expr, file.code, dedent(get_prop_initializer_text(props, 'props')));
+					} else if (node) {
+						if (
+							contains_only(expr, ['redirect', 'status']) &&
+							((Number(get_prop_initializer_text(props, 'status')) > 300 &&
+								Number(get_prop_initializer_text(props, 'status')) < 310) ||
+								contains_only(expr, ['redirect']))
+						) {
+							automigration(
+								node,
+								file.code,
+								'throw redirect(' +
+									get_prop_initializer_text(props, 'status') +
+									(get_prop_initializer_text(props, 'redirect') === 'undefined'
+										? ''
+										: ', ' + get_prop_initializer_text(props, 'redirect')) +
+									');'
+							);
+							imports.add('redirect');
+						} else if (
+							contains_only(expr, ['error', 'status']) &&
+							(Number(get_prop_initializer_text(props, 'status')) > 399 ||
+								contains_only(expr, ['error']))
+						) {
+							automigration(
+								node,
+								file.code,
+								'throw error(' +
+									get_prop_initializer_text(props, 'status') +
+									(get_prop_initializer_text(props, 'error') === 'undefined'
+										? ''
+										: ', ' + get_prop_initializer_text(props, 'error')) +
+									');'
+							);
+							imports.add('error');
 						}
 					} else {
-						manual_return_migration(fn, str, TASKS.PAGE_LOAD);
+						manual_return_migration(fn, file.code, TASKS.PAGE_LOAD);
 					}
-				});
-
-				if (imports.size) {
-					const has_imports = ast.statements.some((statement) => ts.isImportDeclaration(statement));
-					const declaration = `import { ${[...imports.keys()].join(', ')} } from '@sveltejs/kit';`;
-
-					return declaration + (has_imports ? '\n' : '\n\n') + str.toString();
+				} else {
+					manual_return_migration(fn, file.code, TASKS.PAGE_LOAD);
 				}
+			});
 
-				return str.toString();
+			if (imports.size) {
+				const has_imports = file.ast.statements.some((statement) =>
+					ts.isImportDeclaration(statement)
+				);
+				const declaration = `import { ${[...imports.keys()].join(', ')} } from '@sveltejs/kit';`;
+
+				return declaration + (has_imports ? '\n' : '\n\n') + file.code.toString();
 			}
-		}
 
-		// we failed to rewrite the load function, so we inject
-		// an error at the top of the file
-		return give_up + content;
-	} catch {
-		return give_up + content;
+			return file.code.toString();
+		}
 	}
+
+	// we failed to rewrite the load function, so we inject
+	// an error at the top of the file
+	return give_up + content;
 }

@@ -467,6 +467,29 @@ export function rewrite_returns(block, callback) {
 	}
 }
 
+/** @param {string} content */
+export function parse(content) {
+	try {
+		const ast = ts.createSourceFile(
+			'filename.ts',
+			content,
+			ts.ScriptTarget.Latest,
+			true,
+			ts.ScriptKind.TS
+		);
+
+		const code = new MagicString(content);
+
+		return {
+			ast,
+			code,
+			exports: get_exports(ast)
+		};
+	} catch {
+		return null;
+	}
+}
+
 /** @param {string} test_file */
 export function read_samples(test_file) {
 	const markdown = fs.readFileSync(new URL('./samples.md', test_file), 'utf8');
