@@ -7,6 +7,7 @@ import {
 	get_object_nodes,
 	get_prop,
 	get_prop_initializer_text,
+	is_new,
 	is_string_like,
 	manual_return_migration,
 	parse,
@@ -33,6 +34,9 @@ export function migrate_server(content) {
 			const fn = get_function_node(statement, file.exports.map.get(method));
 			if (fn) {
 				rewrite_returns(fn.body, (expr, node) => {
+					// leave `() => new Response(...)` alone
+					if (is_new(expr, 'Response')) return;
+
 					const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
 
 					if (nodes) {

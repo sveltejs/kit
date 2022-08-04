@@ -83,13 +83,23 @@ export function GET() {
 }
 ```
 
-## A GET arrow function we can't migrate
+## A function that returns a Response
 
 ```js before
 export const GET = () => new Response('text');
 ```
 
 ```js after
-throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292701)");
 export const GET = () => new Response('text');
+```
+
+## A function that returns an unknown value
+
+```js before
+export const GET = () => createResponse('text');
+```
+
+```js after
+throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292701)");
+export const GET = () => createResponse('text');
 ```
