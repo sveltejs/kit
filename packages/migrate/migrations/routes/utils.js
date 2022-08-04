@@ -365,66 +365,6 @@ export function is_string_like(node) {
 	);
 }
 
-/**
- * True if this node is inside the given function that is `export`ed.
- *
- * @param {ts.Node} node
- * @param {string[]} fn_name
- * @returns {boolean}
- */
-export function is_directly_in_exported_fn(node, fn_name) {
-	if (node.parent === node || !node.parent) {
-		return false;
-	} else if (is_exported_fn(node, fn_name)) {
-		return true;
-	} else if (
-		ts.isFunctionDeclaration(node) ||
-		ts.isVariableStatement(node) ||
-		((ts.isArrowFunction(node) || ts.isFunctionExpression(node)) &&
-			!is_exported_fn(node.parent.parent.parent, fn_name))
-	) {
-		return false;
-	}
-	return is_directly_in_exported_fn(node.parent, fn_name);
-}
-
-/**
- * True if node is `export function <fn_name>` or `export let/const <fn_name> = ..`
- *
- * @param {ts.Node} node
- * @param {string[]} fn_name
- */
-export function is_exported_fn(node, fn_name) {
-	// export function X
-	return (
-		(ts.isFunctionDeclaration(node) &&
-			node.modifiers?.[0]?.kind === ts.SyntaxKind.ExportKeyword &&
-			fn_name.includes(node.name.text)) ||
-		// export const/let X
-		(ts.isVariableStatement(node) &&
-			node.modifiers?.[0]?.kind === ts.SyntaxKind.ExportKeyword &&
-			node.declarationList.declarations.length === 1 &&
-			ts.isIdentifier(node.declarationList.declarations[0].name) &&
-			fn_name.includes(node.declarationList.declarations[0].name.text)) ||
-		// export { X }
-		((ts.isVariableStatement(node) || ts.isFunctionDeclaration(node)) &&
-			ts.isSourceFile(node.parent) &&
-			node.parent.statements.some(
-				(statement) =>
-					ts.isExportDeclaration(statement) &&
-					// prettier-ignore
-					// @ts-ignore
-					statement.exportClause?.elements
-						?.some(
-							// @ts-ignore
-							(child) =>
-								ts.isExportSpecifier(child) &&
-								((!child.propertyName && fn_name.includes(child.name.text)) || fn_name.includes(child.propertyName.text))
-						)
-			))
-	);
-}
-
 /** @param {ts.SourceFile} node */
 export function get_exports(node) {
 	/** @type {Map<string, string>} */
