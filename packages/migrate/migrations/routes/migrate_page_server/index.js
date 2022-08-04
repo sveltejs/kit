@@ -4,6 +4,7 @@ import {
 	automigration,
 	contains_only,
 	dedent,
+	get_exports,
 	get_prop_initializer_text,
 	is_directly_in_exported_fn,
 	manual_return_migration
@@ -33,9 +34,9 @@ export function migrate_page_server(content) {
 					contains_only(node.expression, ['body'])
 				) {
 					automigration(
-						node,
+						node.expression,
 						str,
-						'return ' + dedent(get_prop_initializer_text(node.expression.properties, 'body'))
+						dedent(get_prop_initializer_text(node.expression.properties, 'body'))
 					);
 				} else {
 					manual_return_migration(node, str, TASKS.PAGE_ENDPOINT);
