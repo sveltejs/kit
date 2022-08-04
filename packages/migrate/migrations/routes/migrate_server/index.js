@@ -43,7 +43,7 @@ export function migrate_server(content) {
 						const headers = get_prop(props, 'headers');
 						const status = get_prop(props, 'status');
 
-						const headers_has_multiple_cookies = /['"]set-cookie['"]:\s*\[/.test(
+						const headers_has_multiple_cookies = /['"]set-cookie['"]:\s*\[/i.test(
 							headers?.getText()?.toLowerCase()
 						);
 						const is_safe_transformation =
