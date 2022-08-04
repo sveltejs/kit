@@ -56,6 +56,32 @@
 <p>{sry}</p>
 ```
 
+## Module context that can be removed
+
+```svelte before
+<script context="module">
+	export function load() {
+		return {
+			props: {
+				a: 1
+			}
+		}
+	}
+</script>
+
+<script>
+	export let a;
+</script>
+```
+
+```svelte after
+<script>
+	throw new Error("@migration task: Add data prop (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292707)");
+
+	export let a;
+</script>
+```
+
 ## Module context with moved imports
 
 ```svelte before
@@ -78,12 +104,18 @@
 ```
 
 ```svelte after
-<!--
-@migration task: Check for missing imports and code that should be moved back to the module context (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292722)
+<script context="module">
+	throw new Error("@migration task: Check code was safely removed (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292722)");
 
-The following imports were found:
-import Foo from '../Foo.svelte';
--->
+	// import Foo from '../Foo.svelte';
+	// export function load() {
+	// 	return {
+	// 		props: {
+	// 			sry: 'not anymore'
+	// 		}
+	// 	}
+	// }
+</script>
 
 <script>
 	throw new Error("@migration task: Add data prop (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292707)");

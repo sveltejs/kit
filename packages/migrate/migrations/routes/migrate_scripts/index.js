@@ -1,3 +1,4 @@
+import ts from 'typescript';
 import {
 	extract_static_imports,
 	adjust_imports,
@@ -5,7 +6,8 @@ import {
 	comment,
 	error,
 	task,
-	dedent
+	dedent,
+	parse
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
 
@@ -18,49 +20,98 @@ export function migrate_scripts(content, is_error, moved) {
 	/** @type {string | null} */
 	let module = null;
 
-	// module script
-	let main = content.replace(
-		/<script([^>]+?context=(['"])module\1[^>]*)>([^]*?)<\/script>/,
-		(match, attrs, quote, contents) => {
-			const adjusted = moved ? adjust_imports(contents) : contents;
+	// instance script
+	const main = content.replace(
+		/<script([^]*?)>([^]+?)<\/script>(\n*)/g,
+		(match, attrs, content, whitespace) => {
+			const indent = guess_indent(content) ?? '';
 
-			const imports = extract_static_imports(adjusted);
-
-			if (is_error) {
-				// special case — load is no longer supported in error
-				const indent = guess_indent(adjusted) ?? '';
-
-				const body = `\n${indent}${error('Replace error load function', '3293209')}\n${comment(
-					adjusted,
-					indent
-				)}`;
-
-				return `<script${attrs}>${body}</script>`;
+			if (moved) {
+				content = adjust_imports(content);
 			}
 
-			module = dedent(adjusted.replace(/^\n/, ''));
-			return `<!--\n${task(
-				'Check for missing imports and code that should be moved back to the module context',
-				TASKS.PAGE_MODULE_CTX
-			)}\n\nThe following imports were found:\n${imports.length ? imports.join('\n') : '-'}\n-->`;
+			if (/context=(['"])module\1/.test(attrs)) {
+				// special case — load is no longer supported in error
+				if (is_error) {
+					const body = `\n${indent}${error('Replace error load function', '3293209')}\n${comment(
+						content,
+						indent
+					)}`;
+
+					return `<script${attrs}>${body}</script>${whitespace}`;
+				}
+
+				module = dedent(content.replace(/^\n/, ''));
+
+				const declared = find_declarations(content);
+				declared.delete('load');
+				declared.delete('router');
+				declared.delete('hydrate');
+				declared.delete('prerender');
+
+				if (declared.size > 0) {
+					const body = `\n${indent}${error(
+						'Check code was safely removed',
+						TASKS.PAGE_MODULE_CTX
+					)}\n${comment(content, indent)}`;
+
+					return `<script${attrs}>${body}</script>${whitespace}`;
+				}
+
+				// nothing was declared here, we can safely remove the script
+				return '';
+			}
+
+			if (!is_error && /export/.test(content)) {
+				content = `\n${indent}${error('Add data prop', TASKS.PAGE_DATA_PROP)}\n${content}`;
+				// Possible TODO: migrate props to data.prop, or suggest $: ({propX, propY, ...} = data);
+			}
+
+			return `<script${attrs}>${content}</script>${whitespace}`;
 		}
 	);
 
-	// instance script
-	const edited = main.replace(/<script([^]*?)>([^]+?)<\/script>/, (match, attrs, content) => {
-		const indent = guess_indent(content) ?? '';
+	return { module, main };
+}
 
-		if (moved) {
-			content = adjust_imports(content);
+/** @param {string} content */
+function find_declarations(content) {
+	const file = parse(content);
+	if (!file) return;
+
+	const declared = new Set();
+
+	for (const statement of file.ast.statements) {
+		if (ts.isImportDeclaration(statement)) {
+			if (ts.isIdentifier(statement.importClause.name)) {
+				declared.add(statement.importClause.name.text);
+			}
+
+			const bindings = statement.importClause.namedBindings;
+
+			if (bindings) {
+				if (ts.isNamespaceImport(bindings)) {
+					declared.add(bindings.name.text);
+				} else {
+					for (const binding of bindings.elements) {
+						declared.add(binding.name.text);
+					}
+				}
+			}
+		} else if (ts.isVariableStatement(statement)) {
+			for (const declaration of statement.declarationList.declarations) {
+				if (ts.isIdentifier(declaration.name)) {
+					declared.add(declaration.name.text);
+				} else {
+					return; // bail out if it's not a simple variable
+				}
+			}
+		} else if (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) {
+			if (ts.isIdentifier(statement.name)) {
+				declared.add(statement.name.text);
+			}
 		}
+	}
 
-		if (!is_error && /export/.test(content)) {
-			content = `\n${indent}${error('Add data prop', TASKS.PAGE_DATA_PROP)}\n${content}`;
-			// Possible TODO: migrate props to data.prop, or suggest $: ({propX, propY, ...} = data);
-		}
-
-		return `<script${attrs}>${content}</script>`;
-	});
-
-	return { module, main: edited };
+	return declared;
 }
