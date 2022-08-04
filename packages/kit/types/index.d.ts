@@ -80,6 +80,11 @@ export interface Builder {
 			replace?: Record<string, string>;
 		}
 	): string[];
+
+	/**
+	 * @param {string} directory A path to file that would be compress.
+	 */
+	compress(directory: string): void;
 }
 
 export interface Config {
