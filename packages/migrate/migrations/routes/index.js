@@ -15,7 +15,7 @@ import {
 	move_file,
 	relative,
 	task
-} from './utils';
+} from './utils.js';
 import * as TASKS from './tasks.js';
 import { migrate_page } from './migrate_page/index.js';
 import { migrate_page_server } from './migrate_page_server/index.js';
