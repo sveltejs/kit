@@ -101,6 +101,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		serviceWorker: {
 			register: true,
+			files: undefined,
 			filters: {}
 		},
 		paths: {
