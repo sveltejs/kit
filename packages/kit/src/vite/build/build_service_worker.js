@@ -43,19 +43,23 @@ export async function build_service_worker(
 
 			export const build = [
 				${Array.from(build)
-					.map((file) => `${s(`${config.kit.paths.base}/${file}`)}`)
+					.filter((file) => config.kit.serviceWorker.filters.build(file))
+					.map((file) => s(`${config.kit.paths.base}/${file}`))
 					.join(',\n\t\t\t\t')}
 			];
 
 			export const files = [
 				${manifest_data.assets
-					.filter((asset) => config.kit.serviceWorker.files(asset.file))
+					.filter((asset) => config.kit.serviceWorker.filters.files(asset.file))
 					.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
 
 			export const prerendered = [
-				${prerendered.paths.map((path) => s(path)).join(',\n\t\t\t\t')}
+				${prerendered.paths
+					.filter((path) => config.kit.serviceWorker.filters.prerendered(path))
+					.map((path) => s(path))
+					.join(',\n\t\t\t\t')}
 			];
 
 			export const version = ${s(config.kit.version.name)};

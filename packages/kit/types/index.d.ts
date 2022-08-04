@@ -143,7 +143,11 @@ export interface KitConfig {
 	routes?: (filepath: string) => boolean;
 	serviceWorker?: {
 		register?: boolean;
-		files?: (filepath: string) => boolean;
+		filters?: {
+			build?: (filepath: string) => boolean;
+			files?: (filepath: string) => boolean;
+			prerendered?: (filepath: string) => boolean;
+		};
 	};
 	trailingSlash?: TrailingSlash;
 	version?: {

@@ -71,7 +71,11 @@ const config = {
 		routes: (filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath),
 		serviceWorker: {
 			register: true,
-			files: (filepath) => !/\.DS_Store/.test(filepath)
+			filters: {
+				build: () => true,
+				files: (filepath) => !/\.DS_Store/.test(filepath),
+				prerendered: () => true
+			}
 		},
 		trailingSlash: 'never',
 		version: {
@@ -295,7 +299,7 @@ A `(filepath: string) => boolean` function that determines which files create ro
 An object containing zero or more of the following values:
 
 - `register` - if set to `false`, will disable automatic service worker registration
-- `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
+- `filters` - a object for specifying filter functions with the type of `(filepath: string) => boolean` for the arrays exported by `$service-worker` (currently `build`, `files` and `prerendered`)
 
 ### trailingSlash
 

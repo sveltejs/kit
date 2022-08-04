@@ -295,7 +295,11 @@ const options = object(
 
 			serviceWorker: object({
 				register: boolean(true),
-				files: fun((filename) => !/\.DS_Store/.test(filename))
+				filters: object({
+					build: fun(() => true),
+					files: fun((filename) => !/\.DS_Store/.test(filename)),
+					prerendered: fun(() => true)
+				})
 			}),
 
 			// TODO remove this for 1.0

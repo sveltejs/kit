@@ -100,7 +100,8 @@ const get_defaults = (prefix = '') => ({
 			emitTypes: true
 		},
 		serviceWorker: {
-			register: true
+			register: true,
+			filters: {}
 		},
 		paths: {
 			base: '',
@@ -137,7 +138,9 @@ test('fills in defaults', () => {
 
 	assert.equal(validated.kit.package.exports(''), true);
 	assert.equal(validated.kit.package.files(''), true);
-	assert.equal(validated.kit.serviceWorker.files(''), true);
+	assert.equal(validated.kit.serviceWorker.filters.build(''), true);
+	assert.equal(validated.kit.serviceWorker.filters.files(''), true);
+	assert.equal(validated.kit.serviceWorker.filters.prerendered(''), true);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
@@ -202,7 +205,9 @@ test('fills in partial blanks', () => {
 
 	assert.equal(validated.kit.package.exports(''), true);
 	assert.equal(validated.kit.package.files(''), true);
-	assert.equal(validated.kit.serviceWorker.files(''), true);
+	assert.equal(validated.kit.serviceWorker.filters.build(''), true);
+	assert.equal(validated.kit.serviceWorker.filters.files(''), true);
+	assert.equal(validated.kit.serviceWorker.filters.prerendered(''), true);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
