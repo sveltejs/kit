@@ -64,12 +64,14 @@ export function migrate_page(content) {
 						}
 
 						if (status > 400 || nodes.error) {
-							const message = is_string_like(nodes.error)
-								? nodes.error.getText()
-								: ts.isNewExpression(nodes.error) &&
-								  ts.isIdentifier(nodes.error.expression) &&
-								  nodes.error.expression.getText() === 'Error' &&
-								  nodes.error.arguments[0].getText();
+							const message =
+								nodes.error &&
+								(is_string_like(nodes.error)
+									? nodes.error.getText()
+									: ts.isNewExpression(nodes.error) &&
+									  ts.isIdentifier(nodes.error.expression) &&
+									  nodes.error.expression.getText() === 'Error' &&
+									  nodes.error.arguments[0].getText());
 
 							if (message) {
 								automigration(node, file.code, `throw error(${status || 500}, ${message});`);
