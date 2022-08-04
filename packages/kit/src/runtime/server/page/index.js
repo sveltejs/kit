@@ -3,6 +3,8 @@ import { render_response } from './render.js';
 import { load_node } from './load_node.js';
 import { respond_with_error } from './respond_with_error.js';
 import { coalesce_to_error } from '../../../utils/error.js';
+import { method_not_allowed } from '../utils.js';
+import { HttpError, Redirect } from '../../../index/private.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -33,7 +35,10 @@ export async function render_page(event, route, options, state, resolve_opts) {
 	]);
 
 	if (accept === 'application/json') {
-		throw new Error('TODO return JSON');
+		const node = await options.manifest._.nodes[route.page]();
+		if (node.server) {
+			return handle_json_request(event, node.server);
+		}
 	}
 
 	const $session = await options.hooks.getSession(event);
@@ -210,4 +215,62 @@ function get_page_config(leaf, options) {
 		router: leaf.module?.router ?? options.router,
 		hydrate: leaf.module?.hydrate ?? options.hydrate
 	};
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSRNode['server']} mod
+ */
+async function handle_json_request(event, mod) {
+	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
+	const handler = mod[method === 'HEAD' ? 'GET' : method];
+
+	if (!handler) {
+		return method_not_allowed(mod, method);
+	}
+
+	try {
+		const result = await handler.call(null, event);
+
+		if (method === 'HEAD') {
+			return new Response();
+		}
+
+		if (method === 'GET') {
+			return json_response(result, 200);
+		}
+
+		if (method === 'POST') {
+			if (result.errors) {
+				return json_response({ errors: result.errors }, result.status || 400);
+			}
+
+			return new Response(undefined, {
+				status: 201,
+				headers: result.location ? { location: result.location } : undefined
+			});
+		}
+
+		return new Response(undefined, { status: 204 });
+	} catch (error) {
+		if (error instanceof Redirect) {
+			return Response.redirect(error.location, error.status);
+		}
+
+		return json_response({ message: error.message }, error.status || 500);
+	}
+}
+
+/**
+ * @param {any} data
+ * @param {number} status
+ */
+function json_response(data, status) {
+	// TODO replace with Response.json one day
+	return new Response(JSON.stringify(data), {
+		status,
+		headers: {
+			'content-type': 'application/json; charset=utf-8'
+		}
+	});
 }

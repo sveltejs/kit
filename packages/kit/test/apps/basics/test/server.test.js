@@ -104,7 +104,9 @@ test.describe('Errors', () => {
 		const response = await request.get('/errors/invalid-route-response');
 
 		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(500);
-		expect(await response.text()).toMatch('expected an object');
+		expect(await response.text()).toMatch(
+			'Invalid response from route /errors/invalid-route-response: handler should return a Response object'
+		);
 	});
 
 	// TODO before we implemented route fallthroughs, and there was a 1:1
@@ -156,7 +158,7 @@ test.describe('Errors', () => {
 		const { message, name, stack } = await response.json();
 
 		expect(response.status()).toBe(400);
-		expect(name).toBe('FancyError');
+		expect(name).toBe('Error');
 		expect(message).toBe('oops');
 
 		if (process.env.DEV) {

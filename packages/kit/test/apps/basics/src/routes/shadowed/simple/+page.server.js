@@ -1,4 +1,4 @@
-/** @type {import('@sveltejs/kit').RequestHandler} */
+/** @type {import('./$types').GET} */
 export function GET({ locals }) {
 	return {
 		answer: locals.answer

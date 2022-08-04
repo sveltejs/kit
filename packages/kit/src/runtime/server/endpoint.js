@@ -1,4 +1,4 @@
-import { check_method_names } from './utils.js';
+import { check_method_names, method_not_allowed } from './utils.js';
 
 /**
  * @param {import('types').RequestEvent} event
@@ -21,28 +21,13 @@ export async function render_endpoint(event, route) {
 	}
 
 	if (!handler) {
-		const allowed = [];
-
-		for (const method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
-			if (mod[method]) allowed.push(method);
+		if (event.request.headers.get('x-sveltekit-load')) {
+			// TODO would be nice to avoid these requests altogether,
+			// by noting whether or not page endpoints export `get`
+			return new Response(undefined, { status: 204 });
 		}
 
-		if (mod.GET || mod.HEAD) allowed.push('HEAD');
-
-		return event.request.headers.get('x-sveltekit-load')
-			? // TODO would be nice to avoid these requests altogether,
-			  // by noting whether or not page endpoints export `get`
-			  new Response(undefined, {
-					status: 204
-			  })
-			: new Response(`${method} method not allowed`, {
-					status: 405,
-					headers: {
-						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-						// "The server must generate an Allow header field in a 405 status code response"
-						allow: allowed.join(', ')
-					}
-			  });
+		return method_not_allowed(mod, method);
 	}
 
 	const response = await handler(event);
