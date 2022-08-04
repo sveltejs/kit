@@ -73,8 +73,8 @@ function find_declarations(content) {
 	const declared = new Set();
 
 	for (const statement of file.ast.statements) {
-		if (ts.isImportDeclaration(statement)) {
-			if (ts.isIdentifier(statement.importClause.name)) {
+		if (ts.isImportDeclaration(statement) && statement.importClause) {
+			if (statement.importClause.name) {
 				declared.add(statement.importClause.name.text);
 			}
 
