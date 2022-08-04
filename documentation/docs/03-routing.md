@@ -6,20 +6,32 @@ At the heart of SvelteKit is a _filesystem-based router_. This means that the st
 
 > You can change this to a different directory by editing the [project config](/docs/configuration).
 
-There are two types of route — **pages** and **endpoints**.
+Inside the routes folder, files with a `+` prefix have special meaning to SvelteKit.
 
-Pages typically generate HTML to display to the user (as well as any CSS and JavaScript needed for the page). By default, pages are rendered on both the client and server, though this behaviour is configurable.
+> The `+` prefix was chosen for several reasons:
+>
+> - It's distinctive and easy to spot — as a newcomer it immediately cues into that _something_ is going on, after that, you immediately _know_ what's going on.
+> - It nicely groups all special files. You are encouraged to colocate other files related only to that part of your app in the same folder without having to think about any prefixes for them.
+> - It's easy to search for, both in the docs and your editor's file search.
 
-Endpoints run only on the server (or when you build your site, if [prerendering](/docs/page-options#prerender)). This means it's the place to do things like access databases or APIs that require private credentials or return data that lives on a machine in your production network. Pages can request data from endpoints. Endpoints return JSON by default, though may also return data in other formats.
+The first type of files are those related to routes, or pages. A route is defined by a directory in your routes folder with a `+page.svelte` file. By default, pages are rendered on both the client and server, though this behaviour is configurable. A corresponding `+page.server.js` file is able to provide data to the page and receive data from it in the case of form POSTs. It only runs on the server. Additionally, a `+page.js` file is able to provide data to the page - if a `+page.server.js` is present, `+page.js` runs afterwards, receives the data from `+page.server.js` and can transform it - and can contain meta information relevant to the router.
+
+Related to pages are [layouts](/docs/layouts), named `+layout.svelte`. They contain common UI (like a header) or logic (like authentication) and wrap every page below it. Similar to pages a `+layout.server.js` and/or `+layout.js` file can be added. They function the same as their corresponding page files, except they can't receive data from layouts - they are read-only.
+
+In case of unexpected exceptions, you can fall back to a more gracious page using [`+error.svelte`](/docs/layouts#error-pages). If something goes wrong, the next `+error.svelte` file up the tree is used to display your fallback UI.
+
+Lastly, if you want to create endpoints, you create a `+server.js` file.
+
+Each of these special files is discussed in more detail in their respective sections.
 
 ### Pages
 
-Pages are Svelte components written in `.svelte` files (or any file with an extension listed in [`config.extensions`](/docs/configuration)). By default, when a user first visits the application, they will be served a server-rendered version of the page in question, plus some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for a fast, app-like feel where the common portions in the layout do not need to be rerendered.
+Pages are Svelte components written in `+page.svelte` files (or any `+page` file with an extension listed in [`config.extensions`](/docs/configuration)). By default, when a user first visits the application, they will be served a server-rendered version of the page in question, plus some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for a fast, app-like feel where the common portions in the layout do not need to be rerendered.
 
-The filename determines the route. For example, `src/routes/index.svelte` is the root of your site:
+The foldername determines the route. For example, `src/routes/+page.svelte` is the root of your site:
 
 ```html
-/// file: src/routes/index.svelte
+/// file: src/routes/+page.svelte
 <svelte:head>
 	<title>Welcome</title>
 </svelte:head>
@@ -29,10 +41,10 @@ The filename determines the route. For example, `src/routes/index.svelte` is the
 <a href="/about">About my site</a>
 ```
 
-A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte` would correspond to the `/about` route:
+A file called `src/routes/about/+page.svelte` would correspond to the `/about` route:
 
 ```html
-/// file: src/routes/about.svelte
+/// file: src/routes/about/+page.svelte
 <svelte:head>
 	<title>About</title>
 </svelte:head>
@@ -45,62 +57,31 @@ A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte
 
 > Note that SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
-Dynamic parameters are encoded using `[brackets]`. For example, a blog post might be defined by `src/routes/blog/[slug].svelte`. These parameters can be accessed in a [`load`](/docs/loading#input-params) function or via the [`page`](/docs/modules#$app-stores) store.
+Dynamic parameters are encoded using `[brackets]`. For example, a blog post might be defined by `src/routes/blog/[slug]/+page.svelte`. These parameters can be accessed in a [`load`](/docs/loading#input-params) function or via the [`page`](/docs/modules#$app-stores) store.
 
-A route can have multiple dynamic parameters, for example `src/routes/[category]/[item].svelte` or even `src/routes/[category]-[item].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `x-y-z`, `category` would be `x` and `item` would be `y-z`.)
+A route can have multiple dynamic parameters, for example `src/routes/[category]/[item]/+page.svelte` or even `src/routes/[category]-[item]/+page.svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `x-y-z`, `category` would be `x` and `item` would be `y-z`.)
 
-### Endpoints
+### Page Endpoints
 
-Endpoints are modules written in `.js` (or `.ts`) files that export [request handler](/docs/types#sveltejs-kit-requesthandler) functions corresponding to HTTP methods. Request handlers make it possible to read and write data that is only available on the server (for example in a database, or on the filesystem).
+Page endpoints are modules written in `+page.server.js` (or `+page.server.ts`) files that export [request handler](/docs/types#sveltejs-kit-requesthandler) functions corresponding to HTTP methods. Request handlers make it possible to read and write data that is only available on the server (for example in a database, or on the filesystem). `+page.server.js` files can only exist next to a `+page.svelte` file; the page gets its data from the endpoint — via `fetch` during client-side navigation, or via direct function call during SSR.
 
-Their job is to return a `{ status, headers, body }` object representing the response.
-
-```js
-/// file: src/routes/random.js
-/** @type {import('@sveltejs/kit').RequestHandler} */
-export async function GET() {
-	return {
-		status: 200,
-		headers: {
-			'access-control-allow-origin': '*'
-		},
-		body: {
-			number: Math.random()
-		}
-	};
-}
-```
-
-- `status` is an [HTTP status code](https://httpstatusdogs.com):
-  - `2xx` — successful response (default is `200`)
-  - `3xx` — redirection (should be accompanied by a `location` header)
-  - `4xx` — client error
-  - `5xx` — server error
-- `headers` can either be a plain object, as above, or an instance of the [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) class
-- `body` can be a plain object or, if something goes wrong, an [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error). It will be serialized as JSON
-
-A `GET` or `HEAD` response must include a `body`, but beyond that restriction all three properties are optional.
-
-#### Page endpoints
-
-If an endpoint has the same filename as a page (except for the extension), the page gets its props from the endpoint — via `fetch` during client-side navigation, or via direct function call during SSR. (If a page uses syntax for [named layouts](/docs/layouts#named-layouts) or [matchers](/docs/routing#advanced-routing-matching) in its filename then the corresponding page endpoint's filename must also include them.)
-
-For example, you might have a `src/routes/items/[id].svelte` page...
+For example, you might have a `src/routes/items/[id]/+page.svelte` page...
 
 ```svelte
-/// file: src/routes/items/[id].svelte
+/// file: src/routes/items/[id]/+page.svelte
 <script>
-	// populated with data from the endpoint
-	export let item;
+	// populated with data from the endpoint and correctly typed
+	/** @type{import('$./types').Data} */
+	export let data;
 </script>
 
-<h1>{item.title}</h1>
+<h1>{data.item.title}</h1>
 ```
 
-...paired with a `src/routes/items/[id].js` endpoint (don't worry about the `$lib` import, we'll get to that [later](/docs/modules#$lib)):
+...paired with a `src/routes/items/[id]/+page.js` endpoint (don't worry about the `$lib` import, we'll get to that [later](/docs/modules#$lib)):
 
 ```js
-/// file: src/routes/items/[id].js
+/// file: src/routes/items/[id]/+page.server.js
 // @filename: ambient.d.ts
 type Item = {};
 
@@ -108,7 +89,7 @@ declare module '$lib/database' {
 	export const get: (id: string) => Promise<Item>;
 }
 
-// @filename: __types/[id].d.ts
+// @filename: $types.d.ts
 import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
 export type RequestHandler<Body = any> = GenericRequestHandler<{ id: string }, Body>;
 
@@ -116,134 +97,129 @@ export type RequestHandler<Body = any> = GenericRequestHandler<{ id: string }, B
 // ---cut---
 import db from '$lib/database';
 
-/** @type {import('./__types/[id]').RequestHandler} */
+/** @type {import('./$types').RequestHandler} */
 export async function GET({ params }) {
-	// `params.id` comes from [id].js
+	// `params.id` comes from [id] in the folder
 	const item = await db.get(params.id);
-
-	if (item) {
-		return {
-			status: 200,
-			headers: {},
-			body: { item }
-		};
-	}
-
-	return {
-		status: 404
-	};
+	return item;
 }
 ```
 
-> The type of the `GET` function above comes from `./__types/[id].d.ts`, which is a file generated by SvelteKit (inside your [`outDir`](/docs/configuration#outdir), using the [`rootDirs`](https://www.typescriptlang.org/tsconfig#rootDirs) option) that provides type safety when accessing `params`. See the section on [generated types](/docs/types#generated-types) for more detail.
+> The type of the `GET` function above comes from `./$types.d.ts`, which is a file generated by SvelteKit (inside your [`outDir`](/docs/configuration#outdir), using the [`rootDirs`](https://www.typescriptlang.org/tsconfig#rootDirs) option) that provides type safety when accessing `params` in the `+page.server.js` and `data` in `+page.svelte`. See the section on [generated types](/docs/types#generated-types) for more detail.
 
 To get the raw data instead of the page, you can include an `accept: application/json` header in the request, or — for convenience — append `/__data.json` to the URL, e.g. `/items/[id]/__data.json`.
 
-#### Standalone endpoints
+The different types of request handlers and their capabilities are explained in more detail in the following sections.
 
-Most commonly, endpoints exist to provide data to the page with which they're paired. They can, however, exist separately from pages. Standalone endpoints have slightly more flexibility over the returned `body` type — in addition to objects and [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) instances, they can return a [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) or a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream).
+#### GET
 
-Standalone endpoints can be given a file extension if desired, or accessed directly if not:
-
-| filename                      | endpoint   |
-| ----------------------------- | ---------- |
-| src/routes/data/index.json.js | /data.json |
-| src/routes/data.json.js       | /data.json |
-| src/routes/data/index.js      | /data      |
-| src/routes/data.js            | /data      |
-
-#### POST, PUT, PATCH, DELETE
-
-Endpoints can handle any HTTP method — not just `GET` — by exporting the corresponding function:
+`GET` handlers return an object representing the response, which must be a plain object that is JSON-serializable. You can optionally set headers using the `setHeaders` method:
 
 ```js
-// @noErrors
-export function POST(event) {...}
-export function PUT(event) {...}
-export function PATCH(event) {...}
-export function DELETE(event) {...}
-```
-
-These functions can, like `GET`, return a `body` that will be passed to the page as props. Whereas 4xx/5xx responses from `GET` will result in an error page rendering, similar responses to non-GET requests do not, allowing you to do things like render form validation errors:
-
-```js
-/// file: src/routes/items.js
-// @filename: ambient.d.ts
-type Item = {
-	id: string;
-};
-type ValidationError = {};
-
-declare module '$lib/database' {
-	export const list: () => Promise<Item[]>;
-	export const create: (request: Request) => Promise<[Record<string, ValidationError>, Item]>;
-}
-
-// @filename: __types/items.d.ts
-import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
-export type RequestHandler<Body = any> = GenericRequestHandler<{}, Body>;
-
-// @filename: index.js
-// ---cut---
-import * as db from '$lib/database';
-
-/** @type {import('./__types/items').RequestHandler} */
-export async function GET() {
-	const items = await db.list();
+/// file: src/routes/random/+page.server.js
+/** @type {import('@sveltejs/kit').RequestHandler} */
+export async function GET({ setHeaders }) {
+	setHeaders({
+		'access-control-allow-origin': '*'
+	});
 
 	return {
-		body: { items }
+		number: Math.random()
 	};
 }
+```
 
-/** @type {import('./__types/items').RequestHandler} */
-export async function POST({ request }) {
-	const [errors, item] = await db.create(request);
+If something unexpected happens, you `throw` using the `error` helper:
 
-	if (errors) {
-		// return validation errors
-		return {
-			status: 400,
-			body: { errors }
-		};
+```js
+/// file: src/routes/dan/+page.server.js
+import { error } from '@sveltejs/kit/data';
+
+/** @type {import('./$types').GET} */
+export function GET({ session }) {
+	if (session.user?.name !== 'Dan') {
+		throw error(403, `If your name's not Dan, you're not coming in`);
 	}
 
-	// redirect to the newly created item
 	return {
-		status: 303,
-		headers: {
-			location: `/items/${item.id}`
-		}
+		answer: 42
 	};
 }
 ```
 
-```svelte
-/// file: src/routes/items.svelte
-<script>
-	// The page always has access to props from `GET`...
-	export let items;
+The first argument to `error` is an [HTTP status code](https://httpstatusdogs.com) (you'll most likely reach for `4xx` — client error, or `5xx` — server error), the second is an explanatory message. You can access both using the [page store](/docs/modules#$app-stores-page).
 
-	// ...plus props from `POST` when the page is rendered
-	// in response to a POST request, for example after
-	// submitting the form below
+#### POST
+
+In the case of `POST`, there are basically three possible outcomes — success, failure due to input validation errors, and failure due to something unexpected that requires showing an error page.
+
+In the success case, nothing or a redirect is returned. The latter is often used to redirect to the newly created resource. We can achieve this by returning a `location` property that indicates where the created resource lives:
+
+```js
+/// file: src/routes/todos/+page.server.js
+
+/** @type {import('./$types').POST} */
+export function POST({ request }) {
+  const data = await request.formData();
+  await create_todo(data);
+  const id = await create_todo(data);
+
+  return {
+    location: `/todos/${id}`
+  };
+}
+```
+
+After the `POST` handler returns, the `GET` handler (on the current site or the one that is redirected to) is invoked again, being able to provide the new data.
+
+Unexpected failures are easy to deal with, as it's the same as `GET` — `throw error(status)`.
+
+Validation errors cause the page to be re-rendered with the errors, so they can be used for UI that guides the user towards valid inputs:
+
+```js
+/// file: src/routes/todos/+page.server.js
+/** @type {import('./$types').POST} */
+export function POST({ request }) {
+  const data = await request.formData();
+
+  if (!data.get('description').includes('potato')) {
+    return {
+      errors: {
+        description: 'Must include the word "potato"'
+      }
+    };
+  }
+
+  await create_todo(data);
+}
+```
+
+```html
+/// file: src/routes/todos/+page.svelte
+<script>
+	/** @type {import('./$types').Data} */
+	export let data;
+
+	/** @type {import('./$types').Errors} */
 	export let errors;
 </script>
 
-{#each items as item}
-	<Preview item={item}/>
-{/each}
-
 <form method="post">
-	<input name="title">
-
-	{#if errors?.title}
-		<p class="error">{errors.title}</p>
+	{#if errors?.description}
+	<p class="error">{errors.description}</p>
 	{/if}
-
-	<button type="submit">Create item</button>
+	<input name="description" />
+	<button type="submit">Create new TODO</button>
 </form>
 ```
+
+#### PUT and PATCH
+
+These methods are basically the same as `POST`, except that since no new resource is being created, there's no need to return a location property.
+
+#### DELETE
+
+`DELETE` is simpler still; no data is being submitted, so there's no room for errors. If the function succeeds, SvelteKit responds with a 204.
 
 #### Body parsing
 
@@ -257,20 +233,18 @@ declare global {
 
 export {};
 
-// @filename: index.js
+// @filename: +page.server.js
 // ---cut---
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export async function POST({ request }) {
 	const data = await request.formData(); // or .json(), or .text(), etc
-
 	await create(data);
-	return { status: 201 };
 }
 ```
 
 #### Setting cookies
 
-Endpoints can set cookies by returning a `headers` object with `set-cookie`. To set multiple cookies simultaneously, return an array:
+Endpoints can set cookies by invoking the `setHeaders` helper method with `set-cookie`. To set multiple cookies simultaneously, return an array:
 
 ```js
 // @filename: ambient.d.ts
@@ -280,12 +254,10 @@ const cookie2: string;
 // @filename: index.js
 // ---cut---
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function GET() {
-	return {
-		headers: {
-			'set-cookie': [cookie1, cookie2]
-		}
-	};
+export function GET({ setHeaders }) {
+	setHeaders({
+		'set-cookie': [cookie1, cookie2]
+	});
 }
 ```
 
@@ -314,6 +286,66 @@ export default config;
 ```
 
 > Using native `<form>` behaviour ensures your app continues to work when JavaScript fails or is disabled.
+
+### Standalone endpoints
+
+Most commonly, endpoints exist to provide data to the page with which they're paired. They can, however, exist separately from pages. Standalone endpoints have more flexibility — they return [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects. This means you have more possibilities for your response `body` type besides JSON, for example [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) or a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream).
+
+Standalone endpoints reside in a `+server.js` (or `.ts`) file, the folder describes the URL where the endpoint is available - just like for pages:
+
+| filename                              | endpoint   |
+| ------------------------------------- | ---------- |
+| src/routes/data/index.json/+server.js | /data.json |
+| src/routes/data/+server.js            | /data      |
+
+Because the foldername describes the endpoint URL, you can't have a `+server.js` file next to a `+page.svelte` file — when hitting the URL, SvelteKit wouldn't know if you want to render the page or return data from the endpoint.
+
+#### GET, POST, PUT, PATCH, DELETE
+
+Endpoints can handle any HTTP method — not just `GET` — by exporting the corresponding function:
+
+```js
+// @noErrors
+export function GET(event) {...}
+export function POST(event) {...}
+export function PUT(event) {...}
+export function PATCH(event) {...}
+export function DELETE(event) {...}
+```
+
+All methods need to return [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects. For convenience you can also use the `setHeaders` method and the `error` and `redirect` imports, though strictly speaking they're not necessary since you could construct your own error/redirect `Response` objects with whatever headers you like.
+
+```js
+/// file: src/routes/items.json/+server.js
+// @filename: ambient.d.ts
+type Item = {
+	id: string;
+};
+type ValidationError = {};
+
+declare module '$lib/database' {
+	export const list: () => Promise<Item[]>;
+	export const create: (request: Request) => Promise<[Record<string, ValidationError>, Item]>;
+}
+
+// @filename: $types.d.ts
+import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
+export type RequestHandler<Body = any> = GenericRequestHandler<{}, Body>;
+
+// @filename: +server.js
+// ---cut---
+import * as db from '$lib/database';
+
+/** @type {import('./$types').RequestHandler} */
+export async function GET() {
+	const items = await db.list();
+
+	return new Response(
+		JSON.stringify(items),
+		{ headers: { 'content-type': 'application/json; charset=utf-8' }}
+	);
+}
+```
 
 ### Private modules
 
