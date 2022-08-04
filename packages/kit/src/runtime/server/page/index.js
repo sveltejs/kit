@@ -141,7 +141,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 										fetched: []
 									});
 
-									page_config = get_page_config(error_node, options);
+									page_config = { router: true, hydrate: true };
 									branch = branch.slice(0, j + 1).concat(error_loaded);
 									break ssr;
 								} catch (err) {

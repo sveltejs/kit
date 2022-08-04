@@ -84,7 +84,6 @@ export async function render_response({
 				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
 			}
 
-			// TODO probably better if `fetched` wasn't populated unless `hydrate`
 			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
 		}
 
