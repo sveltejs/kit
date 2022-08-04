@@ -507,6 +507,27 @@ importers:
       uvu: 0.5.4
       vite: 3.0.0
 
+  packages/migrate:
+    specifiers:
+      '@types/prompts': ^2.0.14
+      kleur: ^4.1.4
+      magic-string: ^0.26.2
+      prettier: ^2.6.2
+      prompts: ^2.4.2
+      tiny-glob: ^0.2.9
+      typescript: ^4.7.4
+      uvu: ^0.5.6
+    dependencies:
+      kleur: 4.1.5
+      magic-string: 0.26.2
+      prompts: 2.4.2
+      tiny-glob: 0.2.9
+      typescript: 4.7.4
+    devDependencies:
+      '@types/prompts': 2.0.14
+      prettier: 2.7.1
+      uvu: 0.5.6
+
   sites/kit.svelte.dev:
     specifiers:
       '@sveltejs/adapter-auto': workspace:*
@@ -4388,7 +4409,6 @@ packages:
     resolution: {integrity: sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==}
     engines: {node: '>=4.2.0'}
     hasBin: true
-    dev: true
 
   /uglify-js/3.16.1:
     resolution: {integrity: sha512-X5BGTIDH8U6IQ1TIRP62YC36k+ULAa1d59BxlWvPUJ1NkW5L3FwcGfEzuVvGmhJFBu0YJ5Ge25tmRISqCmLiRQ==}
@@ -4425,6 +4445,17 @@ packages:
 
   /uvu/0.5.4:
     resolution: {integrity: sha512-x1CyUjcP9VKaNPhjeB3FIc/jqgLsz2Q9LFhRzUTu/jnaaHILEGNuE0XckQonl8ISLcwyk9I2EZvWlYsQnwxqvQ==}
+    engines: {node: '>=8'}
+    hasBin: true
+    dependencies:
+      dequal: 2.0.2
+      diff: 5.1.0
+      kleur: 4.1.5
+      sade: 1.8.1
+    dev: true
+
+  /uvu/0.5.6:
+    resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}
     engines: {node: '>=8'}
     hasBin: true
     dependencies:
