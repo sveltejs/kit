@@ -4,7 +4,7 @@ import { load_node } from './load_node.js';
 import { respond_with_error } from './respond_with_error.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { method_not_allowed } from '../utils.js';
-import { HttpError, Redirect } from '../../../index/private.js';
+import { Redirect } from '../../../index/private.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -154,9 +154,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 							}
 						}
 
-						// TODO backtrack until we find an __error.svelte component
-						// that we can use as the leaf node
-						// for now just return regular error page
 						return await respond_with_error({
 							event,
 							options,
