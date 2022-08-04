@@ -28,7 +28,8 @@
     "prerendering-test-paths-base": "0.0.1",
     "@sveltejs/amp": "1.0.0-next.0",
     "prerendering-test-disabled": "0.0.2-next.0",
-    "test-writes": "0.0.2-next.0"
+    "test-writes": "0.0.2-next.0",
+    "svelte-migrate": "1.0.0-next.0"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -479,6 +480,7 @@
     "long-turkeys-boil",
     "loud-dancers-cough",
     "loud-fishes-drum",
+    "loud-parrots-sell",
     "loud-seals-remember",
     "loud-shirts-relax",
     "loud-shrimps-drive",
