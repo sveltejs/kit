@@ -100,3 +100,43 @@ export const load = () => ({
 	a: 1
 });
 ```
+
+## Returns cache
+
+```js before
+export function load() {
+	return {
+		cache: {
+			maxage: 300
+		}
+	};
+}
+```
+
+```js after
+export function load() {
+	throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292699)")
+	return {
+		cache: {
+			maxage: 300
+		}
+	};
+}
+```
+
+## Returns non-object-literal
+
+```js before
+export async function load({ fetch }) {
+	const res = await fetch('/x.json');
+	return await res.json();
+}
+```
+
+```js after
+export async function load({ fetch }) {
+	const res = await fetch('/x.json');
+	throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292699)")
+	return await res.json();
+}
+```
