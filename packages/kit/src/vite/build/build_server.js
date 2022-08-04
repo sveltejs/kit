@@ -94,11 +94,11 @@ export class Server {
 	init({ env }) {
 		const entries = Object.entries(env);
 
-		const prv = Object.fromEntries(Object.entries(env).filter(([k]) => !k.startsWith('${
+		const prv = Object.fromEntries(entries.filter(([k]) => !k.startsWith('${
 			config.kit.env.publicPrefix
 		}')));
 
-		const pub = Object.fromEntries(Object.entries(env).filter(([k]) => k.startsWith('${
+		const pub = Object.fromEntries(entries.filter(([k]) => k.startsWith('${
 			config.kit.env.publicPrefix
 		}')));
 
