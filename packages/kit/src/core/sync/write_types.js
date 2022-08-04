@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import ts from 'typescript';
+import ts from 'typescript'; // TODO only do this transformation if there's a jsconfig/tsconfig and typescript is installed in the app?
 import MagicString from 'magic-string';
 import { rimraf } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
@@ -10,8 +10,6 @@ const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
 const module_names = new Set(['load']);
 const server_names = new Set(methods);
-
-const page_exports = ['Load', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
 /**
  * @param {import('types').ValidatedConfig} config
