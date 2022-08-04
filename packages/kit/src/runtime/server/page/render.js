@@ -130,7 +130,7 @@ export async function render_response({
 		// props_n (instead of props[n]) makes it easy to avoid
 		// unnecessary updates for layout components
 		for (let i = 0; i < branch.length; i += 1) {
-			props[`props_${i}`] = { data: branch[i].data };
+			props[`data_${i}`] = branch[i].data;
 		}
 
 		rendered = options.root.render(props);
