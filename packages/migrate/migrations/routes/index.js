@@ -1,25 +1,15 @@
-import fs from 'fs';
-import path from 'path';
-import colors from 'kleur';
-import glob from 'tiny-glob/sync.js';
-import prompts from 'prompts';
-import { pathToFileURL } from 'url';
 import { execSync } from 'child_process';
-import {
-	adjust_imports,
-	bail,
-	dedent,
-	error,
-	extract_load,
-	guess_indent,
-	move_file,
-	relative,
-	task
-} from './utils.js';
-import * as TASKS from './tasks.js';
-import { migrate_page } from './migrate_page/index.js';
+import fs from 'fs';
+import colors from 'kleur';
+import path from 'path';
+import prompts from 'prompts';
+import glob from 'tiny-glob/sync.js';
+import { pathToFileURL } from 'url';
+import { migrate_scripts } from './migrate_scripts/index.js';
+import { migrate_page } from './migrate_page_js/index.js';
 import { migrate_page_server } from './migrate_page_server/index.js';
 import { migrate_server } from './migrate_server/index.js';
+import { adjust_imports, bail, dedent, move_file, relative, task } from './utils.js';
 
 export async function migrate() {
 	if (!fs.existsSync('svelte.config.js')) {
@@ -156,28 +146,14 @@ export async function migrate() {
 
 			renamed += svelte_ext;
 
-			const { module, main } = extract_load(content, is_error_page, move_to_directory);
-
-			const edited = main.replace(/<script([^]*?)>([^]+?)<\/script>/, (match, attrs, content) => {
-				const indent = guess_indent(content) ?? '';
-
-				if (move_to_directory) {
-					content = adjust_imports(content);
-				}
-
-				if (!is_error_page && /export/.test(content)) {
-					content = `\n${indent}${error('Add data prop', TASKS.PAGE_DATA_PROP)}\n${content}`;
-				}
-
-				return `<script${attrs}>${content}</script>`;
-			});
+			const { module, main } = migrate_scripts(content, is_error_page, move_to_directory);
 
 			if (move_to_directory) {
 				const dir = path.dirname(renamed);
 				if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 			}
 
-			move_file(file, renamed, edited, use_git);
+			move_file(file, renamed, main, use_git);
 
 			// if component has a <script context="module">, move it to a sibling .js file
 			if (module) {
@@ -221,7 +197,7 @@ export async function migrate() {
 
 			// Standalone index endpoints are edge case enough that we don't spend time on trying to update all the imports correctly
 			const edited =
-				(is_standalone_index && /import/.test(content) ? `\n// ${task('Check imports')}` : '') +
+				(is_standalone_index && /import/.test(content) ? `\n// ${task('Check imports')}\n` : '') +
 				(!is_standalone_index && move_to_directory ? adjust_imports(content) : content);
 			if (move_to_directory) {
 				const dir = path.dirname(renamed);

@@ -4,7 +4,6 @@ import colors from 'kleur';
 import ts from 'typescript';
 import MagicString from 'magic-string';
 import { execSync } from 'child_process';
-import * as TASKS from './tasks.js';
 
 /** @param {string} message */
 export function bail(message) {
@@ -53,41 +52,6 @@ export function move_file(file, renamed, content, use_git) {
 	}
 
 	fs.writeFileSync(renamed, content);
-}
-
-/**
- * @param {string} content
- * @param {boolean} is_error
- * @param {boolean} moved
- */
-export function extract_load(content, is_error, moved) {
-	/** @type {string | null} */
-	let module = null;
-
-	const main = content.replace(
-		/<script([^>]+?context=(['"])module\1[^>]*)>([^]*?)<\/script>/,
-		(match, attrs, quote, contents) => {
-			const imports = extract_static_imports(moved ? adjust_imports(contents) : contents);
-
-			if (is_error) {
-				// special case — load is no longer supported in load
-				const indent = guess_indent(contents) ?? '';
-
-				contents = comment(contents);
-				const body = `\n${indent}${error('Replace error load function', '3293209')}\n${contents}`;
-
-				return `<script${attrs}>${body}</script>`;
-			}
-
-			module = contents.replace(/^\n/, '');
-			return `<!--\n${task(
-				'Check for missing imports and code that should be moved back to the module context',
-				TASKS.PAGE_MODULE_CTX
-			)}\n\nThe following imports were found:\n${imports.length ? imports.join('\n') : '-'}\n-->`;
-		}
-	);
-
-	return { module, main };
 }
 
 /**
@@ -295,6 +259,11 @@ export function contains_only(node, valid_keys, allow_empty = false) {
  * @param {string} [suggestion]
  */
 export function manual_return_migration(node, str, comment_nr, suggestion) {
+	// handle case where this is called on a (arrow) function
+	if (ts.isFunctionExpression(node) || ts.isArrowFunction(node)) {
+		node = node.parent.parent.parent;
+	}
+
 	str.prependLeft(
 		node.getStart(),
 		error('Migrate this return statement', comment_nr) +
@@ -518,13 +487,13 @@ export function read_samples(test_file) {
 		.slice(1)
 		.map((block) => {
 			const description = block.split('\n')[0];
-			const before = /```js before\n([^]*?)\n```/.exec(block);
-			const after = /```js after\n([^]*?)\n```/.exec(block);
+			const before = /```(js|svelte) before\n([^]*?)\n```/.exec(block);
+			const after = /```(js|svelte) after\n([^]*?)\n```/.exec(block);
 
 			return {
 				description,
-				before: before ? before[1] : '',
-				after: after ? after[1] : '',
+				before: before ? before[2] : '',
+				after: after ? after[2] : '',
 				solo: block.includes('> solo')
 			};
 		});

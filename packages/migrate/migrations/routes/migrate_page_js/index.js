@@ -63,7 +63,7 @@ export function migrate_page(content) {
 							return;
 						}
 
-						if (status > 400 || nodes.error) {
+						if (status >= 400 || nodes.error) {
 							const message =
 								nodes.error &&
 								(is_string_like(nodes.error)

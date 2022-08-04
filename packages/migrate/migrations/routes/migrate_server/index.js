@@ -91,18 +91,16 @@ export function migrate_server(content) {
 									`{ ${headers_str ? `${headers_str}${status ? ', ' : ''}` : ''}${status ? status.getText() : ''} }`
 								: '';
 
+						// prettier-ignore
+						const migration_str = `${node ? 'return ' : ''}new Response(${response_body}${response_init})${node ? ';' : ''}`;
 						if (is_safe_transformation) {
-							automigration(
-								node,
-								file.code,
-								`return new Response(${response_body}${response_init});`
-							);
+							automigration(node || expr, file.code, migration_str);
 						} else {
 							manual_return_migration(
-								node,
+								node || expr,
 								file.code,
 								TASKS.STANDALONE_ENDPOINT,
-								`return new Response(${response_body}${response_init});`
+								migration_str
 							);
 						}
 
