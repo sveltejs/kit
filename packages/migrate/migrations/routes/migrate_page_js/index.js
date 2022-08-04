@@ -5,6 +5,7 @@ import {
 	error,
 	get_function_node,
 	get_object_nodes,
+	is_new,
 	is_string_like,
 	manual_return_migration,
 	parse,
@@ -63,21 +64,20 @@ export function migrate_page(content) {
 							return;
 						}
 
-						if (status >= 400 || nodes.error) {
-							const message =
-								nodes.error &&
-								(is_string_like(nodes.error)
-									? nodes.error.getText()
-									: ts.isNewExpression(nodes.error) &&
-									  ts.isIdentifier(nodes.error.expression) &&
-									  nodes.error.expression.getText() === 'Error' &&
-									  nodes.error.arguments[0].getText());
+						if (nodes.error) {
+							const message = is_string_like(nodes.error)
+								? nodes.error.getText()
+								: is_new(nodes.error, 'Error') && nodes.error.arguments[0].getText();
 
 							if (message) {
 								automigration(node, file.code, `throw error(${status || 500}, ${message});`);
 								imports.add('error');
 								return;
 							}
+						} else if (status >= 400) {
+							automigration(node, file.code, `throw error(${status});`);
+							imports.add('error');
+							return;
 						}
 					}
 				}

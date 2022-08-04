@@ -456,6 +456,17 @@ export function rewrite_returns(block, callback) {
 	}
 }
 
+/**
+ * @param {ts.Node} node
+ * @param {string} name
+ * @returns {node is ts.isNewExpression}
+ */
+export function is_new(node, name) {
+	return (
+		ts.isNewExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === name
+	);
+}
+
 /** @param {string} content */
 export function parse(content) {
 	try {
