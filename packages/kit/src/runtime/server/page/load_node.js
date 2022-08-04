@@ -28,9 +28,6 @@ export async function load_node({ event, options, state, route, node, $session }
 	/** @type {Record<string, any>} */
 	let server_data;
 
-	/** @type {Record<string, any>} */
-	let data;
-
 	if (node.server) {
 		const should_prerender = node.module?.prerender ?? options.prerender.default;
 		const mod = node.server;
@@ -44,6 +41,8 @@ export async function load_node({ event, options, state, route, node, $session }
 	} else {
 		server_data = {};
 	}
+
+	let data = server_data;
 
 	if (node.module?.load) {
 		/** @type {import('types').LoadEvent} */
@@ -319,8 +318,6 @@ export async function load_node({ event, options, state, route, node, $session }
 
 		// TODO unwrap top-level promises
 		data = await node.module.load.call(null, load_event);
-	} else {
-		data = {};
 	}
 
 	return {
