@@ -188,7 +188,7 @@ src/routes/
 ```js
 /// file: src/routes/marx-brothers/[...path]/+page.js
 import { error } from '@sveltejs/kit';
-/** @type {import('./__types/[...path]').Load} */
+/** @type {import('./$types').Load} */
 export function load({ params }) {
 	throw error(404, `Not found: /marx-brothers/${params.path}`);
 }
