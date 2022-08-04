@@ -222,13 +222,12 @@ export async function migrate() {
 			// TODO remove this once +server.js is updated
 			const injected = is_page_endpoint
 				? ''
-				: error(`Update ${type}.js`, TASKS.STANDALONE_ENDPOINT);
+				: `${error(`Update ${type}.js`, TASKS.STANDALONE_ENDPOINT)}\n\n`;
 
 			// Standalone index endpoints are edge case enough that we don't spend time on trying to update all the imports correctly
 			const edited =
 				injected +
 				(is_standalone_index && /import/.test(content) ? `\n// ${task('Check imports')}` : '') +
-				'\n\n' +
 				(!is_standalone_index && move_to_directory ? adjust_imports(content) : content);
 			if (move_to_directory) {
 				const dir = path.dirname(renamed);
