@@ -42,12 +42,18 @@ export function migrate_page(content) {
 
 					if (contains_only(expr, ['props'])) {
 						automigration(expr, file.code, dedent(get_prop_initializer_text(props, 'props')));
-					} else if (node) {
+						return;
+					}
+
+					// check for existence of `node`, otherwise it's an arrow function
+					// with an implicit body, which we bail out on
+					if (node) {
+						const status_str = get_prop_initializer_text(props, 'status');
+						const status = Number(status_str);
+
 						if (
 							contains_only(expr, ['redirect', 'status']) &&
-							((Number(get_prop_initializer_text(props, 'status')) > 300 &&
-								Number(get_prop_initializer_text(props, 'status')) < 310) ||
-								contains_only(expr, ['redirect']))
+							((status > 300 && status < 310) || contains_only(expr, ['redirect']))
 						) {
 							automigration(
 								node,
@@ -62,8 +68,7 @@ export function migrate_page(content) {
 							imports.add('redirect');
 						} else if (
 							contains_only(expr, ['error', 'status']) &&
-							(Number(get_prop_initializer_text(props, 'status')) > 399 ||
-								contains_only(expr, ['error']))
+							(status >= 400 || contains_only(expr, ['error']))
 						) {
 							automigration(
 								node,
@@ -76,13 +81,13 @@ export function migrate_page(content) {
 									');'
 							);
 							imports.add('error');
+						} else {
+							manual_return_migration(node, file.code, TASKS.PAGE_LOAD);
 						}
-					} else {
-						manual_return_migration(fn, file.code, TASKS.PAGE_LOAD);
 					}
-				} else {
-					manual_return_migration(fn, file.code, TASKS.PAGE_LOAD);
 				}
+
+				manual_return_migration(fn, file.code, TASKS.PAGE_LOAD);
 			});
 
 			if (imports.size) {
