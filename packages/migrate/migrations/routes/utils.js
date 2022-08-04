@@ -425,6 +425,46 @@ export function is_exported_fn(node, fn_name) {
 	);
 }
 
+/** @param {ts.SourceFile} node */
+export function get_exports(node) {
+	/** @type {Map<string, string>} */
+	const map = new Map();
+
+	let complex = false;
+
+	for (const statement of node.statements) {
+		if (ts.isExportDeclaration(statement) && ts.isNamedExports(statement.exportClause)) {
+			// export { x }, export { x as y }
+			for (const specifier of statement.exportClause.elements) {
+				map.set(specifier.name.text, specifier.propertyName?.text || specifier.name.text);
+			}
+		} else if (
+			ts.isFunctionDeclaration(statement) &&
+			statement.modifiers?.[0]?.kind === ts.SyntaxKind.ExportKeyword
+		) {
+			// export function x ...
+			map.set(statement.name.text, statement.name.text);
+		} else if (
+			ts.isVariableStatement(statement) &&
+			statement.modifiers?.[0]?.kind === ts.SyntaxKind.ExportKeyword
+		) {
+			// export const x = ..., y = ...
+			for (const declaration of statement.declarationList.declarations) {
+				if (ts.isIdentifier(declaration.name)) {
+					map.set(declaration.name.text, declaration.name.text);
+				} else {
+					// might need to bail out on encountering this edge case,
+					// because this stuff can get pretty intense
+					complex = true;
+				}
+			}
+		}
+	}
+
+	return { map, complex };
+}
+
+/** @param {string} test_file */
 export function read_samples(test_file) {
 	const markdown = fs.readFileSync(new URL('./samples.md', test_file), 'utf8');
 	const samples = markdown
