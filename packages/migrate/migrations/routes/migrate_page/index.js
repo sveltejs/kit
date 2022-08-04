@@ -1,7 +1,6 @@
 import ts from 'typescript';
 import {
 	automigration,
-	contains_only,
 	dedent,
 	error,
 	get_function_node,
@@ -54,7 +53,7 @@ export function migrate_page(content) {
 						const status = nodes.status && Number(nodes.status.getText());
 
 						// logic based on https://github.com/sveltejs/kit/blob/67e2342149847d267eb0c50809a1f93f41fa529b/packages/kit/src/runtime/load.js
-						if (contains_only(expr, ['redirect', 'status']) && status > 300 && status < 400) {
+						if (keys === 'redirect status' && status > 300 && status < 400) {
 							automigration(
 								node,
 								file.code,

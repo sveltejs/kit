@@ -1,7 +1,6 @@
 import ts from 'typescript';
 import {
 	automigration,
-	contains_only,
 	dedent,
 	error,
 	get_function_node,
