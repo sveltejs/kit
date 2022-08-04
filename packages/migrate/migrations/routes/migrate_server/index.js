@@ -7,6 +7,7 @@ import {
 	get_object_nodes,
 	get_prop,
 	get_prop_initializer_text,
+	indent_at_line,
 	is_new,
 	is_string_like,
 	manual_return_migration,
@@ -40,75 +41,86 @@ export function migrate_server(content) {
 					const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
 
 					if (nodes) {
-						const props = expr.properties;
+						const body_is_object_literal = ts.isObjectLiteralExpression(nodes.body);
 
-						const body = get_prop(props, 'body');
-						const headers = get_prop(props, 'headers');
-						const status = get_prop(props, 'status');
+						let safe_headers = !nodes.headers;
+						if (nodes.headers) {
+							if (ts.isObjectLiteralExpression(nodes.headers)) {
+								// if `headers` is an object literal, and it either doesn't contain
+								// `set-cookie` or `set-cookie` is a string, then the headers
+								// are safe to use in a `Response`
+								const set_cookie_value = nodes.headers.properties.find((prop) => {
+									return (
+										ts.isPropertyAssignment(prop) &&
+										ts.isStringLiteral(prop.name) &&
+										/set-cookie/i.test(prop.name.text)
+									);
+								});
 
-						const headers_has_multiple_cookies = /['"]set-cookie['"]:\s*\[/i.test(
-							headers?.getText()?.toLowerCase()
-						);
-						const is_safe_transformation =
-							(!body ||
-								(!ts.isShorthandPropertyAssignment(body) &&
-									ts.isObjectLiteralExpression(body.initializer))) &&
-							(!headers ||
-								((!headers.getText().toLowerCase().includes('content-type') ||
-									headers.getText().includes('application/json')) &&
-									!headers_has_multiple_cookies));
-
-						const headers_str =
-							body &&
-							(!ts.isPropertyAssignment(body) || !is_string_like(body.initializer)) &&
-							(!headers || !headers.getText().toLowerCase().includes('content-type'))
-								? `headers: { 'content-type': 'application/json; charset=utf-8'${
-										headers
-											? ', ' +
-											  (ts.isPropertyAssignment(headers)
-													? remove_outer_braces(get_prop_initializer_text(props, 'headers'))
-													: '...headers')
-											: ''
-								  } }`
-								: headers
-								? headers.getText()
-								: undefined;
-
-						const body_str = get_prop_initializer_text(props, 'body');
-						const response_body = body
-							? (!ts.isPropertyAssignment(body) ||
-									!is_string_like(body.initializer) ||
-									(headers && headers.getText().includes('application/json'))) &&
-							  (!headers ||
-									!headers.getText().toLowerCase().includes('content-type') ||
-									headers.getText().includes('application/json')) &&
-							  !body_str.startsWith('JSON.stringify')
-								? `JSON.stringify(${dedent(body_str)})`
-								: body_str
-							: 'undefined';
-
-						const response_init =
-							headers_str || status
-								? // prettier-ignore
-								  ', ' +
-									(headers_has_multiple_cookies ? '\n// set-cookie with multiple values needs a different conversion, see the link at the top for more info\n' : '') +
-									`{ ${headers_str ? `${headers_str}${status ? ', ' : ''}` : ''}${status ? status.getText() : ''} }`
-								: '';
-
-						// prettier-ignore
-						const migration_str = `${node ? 'return ' : ''}new Response(${response_body}${response_init})${node ? ';' : ''}`;
-						if (is_safe_transformation) {
-							automigration(node || expr, file.code, migration_str);
-						} else {
-							manual_return_migration(
-								node || expr,
-								file.code,
-								TASKS.STANDALONE_ENDPOINT,
-								migration_str
-							);
+								if (!set_cookie_value || is_string_like(set_cookie_value)) {
+									safe_headers = true;
+								}
+							} else {
+								// `headers: new Headers(...)` is also safe, as long as we
+								// don't need to augment it with `content-type`
+								safe_headers = is_new(nodes.headers, 'Headers') && !body_is_object_literal;
+							}
 						}
 
-						return;
+						const safe_body =
+							!nodes.body ||
+							is_string_like(nodes.body) ||
+							body_is_object_literal ||
+							(ts.isCallExpression(nodes.body) &&
+								nodes.body.expression.getText() === 'JSON.stringify');
+
+						if (safe_headers) {
+							let status = nodes.status ? nodes.status.getText() : '200';
+							let headers = nodes.headers?.getText();
+							let body = dedent(nodes.body?.getText() || 'undefined');
+
+							if (body_is_object_literal || ts.isIdentifier(nodes.body)) {
+								// `return { body: {...} }` is safe to convert to a JSON response,
+								// but we probably need to add a `content-type` header
+								body = `JSON.stringify(${body})`;
+								const header = `'content-type': 'application/json; charset=utf-8'`;
+								if (
+									nodes.headers &&
+									ts.isObjectLiteralExpression(nodes.headers) &&
+									nodes.headers.properties.length > 0
+								) {
+									const join = /\n/.test(header)
+										? `,\n${indent_at_line(content, nodes.headers.properties[0].getStart())}`
+										: `, `;
+									headers = headers.replace(/[{\s]/, header + join);
+								} else {
+									headers = `{ ${header} }`;
+								}
+							}
+
+							const init = [
+								status !== '200' && `status: ${status}`,
+								headers && `headers: ${headers}`
+							].filter(Boolean);
+
+							const response =
+								init.length > 0
+									? `new Response(${body}, { ${init.join(', ')} })`
+									: `new Response(${body})`;
+
+							if (safe_body) {
+								automigration(expr, file.code, response);
+							} else {
+								manual_return_migration(
+									node || fn,
+									file.code,
+									TASKS.STANDALONE_ENDPOINT,
+									`return ${response};`
+								);
+							}
+
+							return;
+						}
 					}
 
 					manual_return_migration(node || fn, file.code, TASKS.STANDALONE_ENDPOINT);
