@@ -4,16 +4,18 @@ import {
 	automigration,
 	contains_only,
 	dedent,
+	error,
 	get_exports,
+	get_function_node,
 	get_prop_initializer_text,
-	is_directly_in_exported_fn,
-	manual_return_migration
+	manual_return_migration,
+	rewrite_returns
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
 
-/**
- * @param {string} content
- */
+const give_up = `${error('Update +page.server.js', TASKS.PAGE_ENDPOINT)}\n\n`;
+
+/** @param {string} content */
 export function migrate_page_server(content) {
 	try {
 		const ast = ts.createSourceFile(
@@ -25,36 +27,53 @@ export function migrate_page_server(content) {
 		);
 		const str = new MagicString(content);
 
-		/** @param {ts.Node} node */
-		function walk(node) {
-			if (ts.isReturnStatement(node) && is_directly_in_exported_fn(node, ['GET'])) {
-				if (
-					node.expression &&
-					ts.isObjectLiteralExpression(node.expression) &&
-					contains_only(node.expression, ['body'])
-				) {
-					automigration(
-						node.expression,
-						str,
-						dedent(get_prop_initializer_text(node.expression.properties, 'body'))
-					);
-				} else {
-					manual_return_migration(node, str, TASKS.PAGE_ENDPOINT);
-				}
-			} else if (
-				ts.isReturnStatement(node) &&
-				is_directly_in_exported_fn(node, ['PUT', 'POST', 'PATCH', 'DELETE'])
-			) {
-				manual_return_migration(node, str, TASKS.PAGE_ENDPOINT);
+		const exports = get_exports(ast);
+
+		const unmigrated = new Set(
+			['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].filter((name) => exports.map.has(name))
+		);
+
+		for (const statement of ast.statements) {
+			const GET = get_function_node(statement, exports.map.get('GET'));
+			if (GET) {
+				// possible TODOs — handle errors and redirects
+				rewrite_returns(GET.body, (node) => {
+					if (
+						node.expression &&
+						ts.isObjectLiteralExpression(node.expression) &&
+						contains_only(node.expression, ['body'])
+					) {
+						automigration(
+							node.expression,
+							str,
+							dedent(get_prop_initializer_text(node.expression.properties, 'body'))
+						);
+					} else {
+						manual_return_migration(node, str, TASKS.PAGE_ENDPOINT);
+					}
+				});
+
+				unmigrated.delete('GET');
 			}
 
-			node.forEachChild(walk);
+			for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
+				const fn = get_function_node(statement, exports.map.get(method));
+				if (fn) {
+					rewrite_returns(fn.body, (node) => {
+						manual_return_migration(node, str, TASKS.PAGE_ENDPOINT);
+					});
+
+					unmigrated.delete(method);
+				}
+			}
 		}
 
-		ast.forEachChild(walk);
+		if (unmigrated.size) {
+			return give_up + str.toString();
+		}
 
 		return str.toString();
 	} catch {
-		return content;
+		return give_up + content;
 	}
 }

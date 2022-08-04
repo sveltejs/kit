@@ -17,3 +17,34 @@ export function GET() {
 	};
 }
 ```
+
+## Arrow function GET
+
+```js before
+export const load = () => ({
+	props: {
+		a: 1
+	}
+});
+```
+
+```js after
+export const load = () => ({
+	a: 1
+});
+```
+
+## POST
+
+```js before
+export function POST() {
+	return {};
+}
+```
+
+```js after
+export function POST() {
+	throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292699)");
+	return {};
+}
+```

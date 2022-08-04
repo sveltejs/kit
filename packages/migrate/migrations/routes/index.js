@@ -219,10 +219,11 @@ export async function migrate() {
 				renamed = `${file.slice(0, -basename.length)}${type}${module_ext}`;
 			}
 
-			const injected = error(
-				`Update ${type}.js`,
-				is_page_endpoint ? TASKS.PAGE_ENDPOINT : TASKS.STANDALONE_ENDPOINT
-			);
+			// TODO remove this once +server.js is updated
+			const injected = is_page_endpoint
+				? ''
+				: error(`Update ${type}.js`, TASKS.STANDALONE_ENDPOINT);
+
 			// Standalone index endpoints are edge case enough that we don't spend time on trying to update all the imports correctly
 			const edited =
 				injected +

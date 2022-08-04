@@ -84,3 +84,19 @@ export function load({ session }) {
 	}
 }
 ```
+
+## Arrow function load
+
+```js before
+export const load = () => ({
+	props: {
+		a: 1
+	}
+});
+```
+
+```js after
+export const load = () => ({
+	a: 1
+});
+```

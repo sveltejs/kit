@@ -464,6 +464,59 @@ export function get_exports(node) {
 	return { map, complex };
 }
 
+/**
+ * @param {ts.Node} statement
+ * @param {string[]} names
+ * @returns {ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction | void}
+ */
+export function get_function_node(statement, ...names) {
+	if (ts.isFunctionDeclaration(statement) && names.includes(statement.name.text)) {
+		// export function x ...
+		return statement;
+	}
+
+	if (ts.isVariableStatement(statement)) {
+		statement.declarationList.declarations.forEach((declaration) => {
+			if (
+				ts.isIdentifier(declaration.name) &&
+				names.includes(declaration.name.text) &&
+				(ts.isArrowFunction(declaration.initializer) ||
+					ts.isFunctionExpression(declaration.initializer))
+			) {
+				// export const x = ...
+				return declaration.initializer;
+			}
+		});
+	}
+}
+
+/**
+ * @param {ts.Block} block
+ * @param {(node: ts.ReturnStatement) => void} callback
+ */
+export function rewrite_returns(block, callback) {
+	/** @param {ts.Node} node */
+	function walk(node) {
+		if (
+			ts.isArrowFunction(node) ||
+			ts.isFunctionExpression(node) ||
+			ts.isFunctionDeclaration(node)
+		) {
+			// don't cross this boundary
+			return;
+		}
+
+		if (ts.isReturnStatement(node)) {
+			callback(node);
+			return;
+		}
+
+		node.forEachChild(walk);
+	}
+
+	block.forEachChild(walk);
+}
+
 /** @param {string} test_file */
 export function read_samples(test_file) {
 	const markdown = fs.readFileSync(new URL('./samples.md', test_file), 'utf8');
