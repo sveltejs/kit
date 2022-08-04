@@ -56,9 +56,10 @@ export function move_file(file, renamed, content, use_git) {
 
 /**
  * @param {string} contents
+ * @param {string} indent
  */
-export function comment(contents) {
-	return contents.replace(/^(.+)/gm, '// $1');
+export function comment(contents, indent) {
+	return contents.replace(new RegExp(`^${indent}`, 'gm'), `${indent}// `);
 }
 
 /** @param {string} content */
@@ -264,16 +265,20 @@ export function manual_return_migration(node, str, comment_nr, suggestion) {
 		node = node.parent.parent.parent;
 	}
 
+	const indent = indent_at_line(str.original, node.getStart());
+
+	let appended = '';
+
+	if (suggestion) {
+		appended = `\n${indent}// Suggestion (check for correctness before using):\n${indent}// ${comment(
+			suggestion,
+			indent
+		)}`;
+	}
+
 	str.prependLeft(
 		node.getStart(),
-		error('Migrate this return statement', comment_nr) +
-			'\n' +
-			(suggestion
-				? indent_with(
-						comment(`Suggestion (check for correctness before using):\n${suggestion}`) + '\n',
-						indent_at_line(str.original, node.getStart())
-				  )
-				: indent_at_line(str.original, node.getStart()))
+		error('Migrate this return statement', comment_nr) + appended + `\n${indent}`
 	);
 }
 

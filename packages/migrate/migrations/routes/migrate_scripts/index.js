@@ -24,11 +24,13 @@ export function migrate_scripts(content, is_error, moved) {
 			const imports = extract_static_imports(moved ? adjust_imports(contents) : contents);
 
 			if (is_error) {
-				// special case — load is no longer supported in load
+				// special case — load is no longer supported in error
 				const indent = guess_indent(contents) ?? '';
 
-				contents = comment(contents);
-				const body = `\n${indent}${error('Replace error load function', '3293209')}\n${contents}`;
+				const body = `\n${indent}${error('Replace error load function', '3293209')}\n${comment(
+					contents,
+					indent
+				)}`;
 
 				return `<script${attrs}>${body}</script>`;
 			}

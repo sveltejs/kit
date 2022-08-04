@@ -7,6 +7,7 @@ import {
 	get_object_nodes,
 	get_prop,
 	get_prop_initializer_text,
+	guess_indent,
 	indent_at_line,
 	is_new,
 	is_string_like,
@@ -79,6 +80,8 @@ export function migrate_server(content) {
 							let headers = nodes.headers?.getText();
 							let body = dedent(nodes.body?.getText() || 'undefined');
 
+							const multiline = /\n/.test(headers);
+
 							if (body_is_object_literal || ts.isIdentifier(nodes.body)) {
 								// `return { body: {...} }` is safe to convert to a JSON response,
 								// but we probably need to add a `content-type` header
@@ -89,7 +92,7 @@ export function migrate_server(content) {
 									ts.isObjectLiteralExpression(nodes.headers) &&
 									nodes.headers.properties.length > 0
 								) {
-									const join = /\n/.test(header)
+									const join = multiline
 										? `,\n${indent_at_line(content, nodes.headers.properties[0].getStart())}`
 										: `, `;
 									headers = headers.replace(/[{\s]/, header + join);
@@ -103,9 +106,15 @@ export function migrate_server(content) {
 								headers && `headers: ${headers}`
 							].filter(Boolean);
 
+							const indent = indent_at_line(content, expr.getStart());
+							const end_whitespace = multiline ? `\n${indent}` : ' ';
+							const join_whitespace = multiline ? end_whitespace + guess_indent(content) : ' ';
+
 							const response =
 								init.length > 0
-									? `new Response(${body}, { ${init.join(', ')} })`
+									? `new Response(${body}, {${join_whitespace}${init.join(
+											`,${join_whitespace}`
+									  )}${end_whitespace}})`
 									: `new Response(${body})`;
 
 							if (safe_body) {

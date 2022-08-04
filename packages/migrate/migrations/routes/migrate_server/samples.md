@@ -45,11 +45,16 @@ export function GET() {
 	} else if (b) {
 		return {
 			body: new ReadableStream(),
-			headers: { 'content-type': 'octasomething' }
+			headers: {
+				'content-type': 'octasomething'
+			}
 		}
 	} else if (c) {
 		return {
-			body: 'string'
+			body: 'string',
+			headers: {
+				'x-foo': 'bar'
+			}
 		}
 	}
 }
@@ -67,13 +72,23 @@ export function GET() {
 	} else if (b) {
 		throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292701)");
 		// Suggestion (check for correctness before using):
-		// return new Response(new ReadableStream(), { headers: { 'content-type': 'octasomething' } });
+		// return new Response(new ReadableStream(), {
+		// 	headers: {
+		// 		'content-type': 'octasomething'
+		// 	}
+		// });
 		return {
 			body: new ReadableStream(),
-			headers: { 'content-type': 'octasomething' }
+			headers: {
+				'content-type': 'octasomething'
+			}
 		}
 	} else if (c) {
-		return new Response('string')
+		return new Response('string', {
+			headers: {
+				'x-foo': 'bar'
+			}
+		})
 	}
 }
 ```
