@@ -55,16 +55,17 @@ prog
 			return;
 		}
 
-		const cwd = event === 'postinstall' ? process.env.INIT_CWD ?? '' : process.cwd();
+		if (event === 'postinstall' && process.env.INIT_CWD) {
+			process.chdir(process.env.INIT_CWD);
+		}
 
-		const svelte_config_file = path.join(cwd, 'svelte.config.js');
-		if (!fs.existsSync(svelte_config_file)) {
-			console.warn(`Missing ${svelte_config_file} — skipping`);
+		if (!fs.existsSync('svelte.config.js')) {
+			console.warn(`Missing ${path.resolve('svelte.config.js')} — skipping`);
 			return;
 		}
 
 		try {
-			const config = await load_config({ cwd });
+			const config = await load_config();
 			const sync = await import('./core/sync/sync.js');
 			sync.all(config, mode);
 		} catch (error) {

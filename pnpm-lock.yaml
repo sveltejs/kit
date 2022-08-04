@@ -304,7 +304,7 @@ importers:
       svelte2tsx: ~0.5.10
       tiny-glob: ^0.2.9
       typescript: ^4.7.4
-      undici: ^5.6.1
+      undici: ^5.8.1
       uvu: ^0.5.3
       vite: ^3.0.0
     dependencies:
@@ -339,7 +339,7 @@ importers:
       svelte2tsx: 0.5.11_lvfi2wesz6u4l5rfbnetbucfmm
       tiny-glob: 0.2.9
       typescript: 4.7.4
-      undici: 5.6.1
+      undici: 5.8.1
       uvu: 0.5.4
       vite: 3.0.0
 
@@ -521,18 +521,18 @@ importers:
       prettier: ^2.6.2
       prompts: ^2.4.2
       tiny-glob: ^0.2.9
-      tippex: ^3.0.0
       typescript: ^4.7.4
+      uvu: ^0.5.6
     dependencies:
       kleur: 4.1.5
       magic-string: 0.26.2
       prompts: 2.4.2
       tiny-glob: 0.2.9
-      tippex: 3.0.0
       typescript: 4.7.4
     devDependencies:
       '@types/prompts': 2.0.14
       prettier: 2.7.1
+      uvu: 0.5.6
 
   sites/kit.svelte.dev:
     specifiers:
@@ -4202,10 +4202,6 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /tippex/3.0.0:
-    resolution: {integrity: sha512-64i7qAmJgPzsIOa3LbH6zeZ29qHD4UCD9kx8s2F2USDJ1abRE8eG7G6RRAOhJvQxOqnAmAQaREvFa5LUwf048Q==}
-    dev: false
-
   /tmp/0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
     engines: {node: '>=0.6.0'}
@@ -4435,8 +4431,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
-  /undici/5.6.1:
-    resolution: {integrity: sha512-yYVqywdCbNb99f/w045wqmv++WExXDjY0FEvLSB7QUZZH6izxrVkF4dJn1aimcvN0+WAhv75Gg7v6VJoqmRtJQ==}
+  /undici/5.8.1:
+    resolution: {integrity: sha512-iDRmWX4Zar/4A/t+1LrKQRm102zw2l9Wgat3LtTlTn8ykvMZmAmpq9tjyHEigx18FsY7IfATvyN3xSw9BDz0eA==}
     engines: {node: '>=12.18'}
     dev: true
 
@@ -4455,6 +4451,17 @@ packages:
 
   /uvu/0.5.4:
     resolution: {integrity: sha512-x1CyUjcP9VKaNPhjeB3FIc/jqgLsz2Q9LFhRzUTu/jnaaHILEGNuE0XckQonl8ISLcwyk9I2EZvWlYsQnwxqvQ==}
+    engines: {node: '>=8'}
+    hasBin: true
+    dependencies:
+      dequal: 2.0.2
+      diff: 5.1.0
+      kleur: 4.1.5
+      sade: 1.8.1
+    dev: true
+
+  /uvu/0.5.6:
+    resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}
     engines: {node: '>=8'}
     hasBin: true
     dependencies:
