@@ -373,7 +373,7 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 }
 ```
 
-> `src/routes/a/[...rest]/z.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#advanced-routing-matching).
+> `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#advanced-routing-matching).
 
 #### Matching
 
@@ -403,11 +403,11 @@ If the pathname doesn't match, SvelteKit will try to match other routes (using t
 It's possible for multiple routes to match a given path. For example each of these routes would match `/foo-abc`:
 
 ```bash
-src/routes/[...catchall].svelte
-src/routes/[a].js
-src/routes/[b].svelte
-src/routes/foo-[c].svelte
-src/routes/foo-abc.svelte
+src/routes/[...catchall]/+page.svelte
+src/routes/[a]/+server.js
+src/routes/[b]/+page.svelte
+src/routes/foo-[c]/+page.svelte
+src/routes/foo-abc/+page.svelte
 ```
 
 SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
@@ -418,14 +418,14 @@ SvelteKit needs to know which route is being requested. To do so, it sorts them 
 - Rest parameters have lowest priority
 - Ties are resolved alphabetically
 
-...resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-abc.svelte`, and `/foo-def` will invoke `src/routes/foo-[c].svelte` rather than less specific routes:
+...resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-abc/+page.svelte`, and `/foo-def` will invoke `src/routes/foo-[c]/+page.svelte` rather than less specific routes:
 
 ```bash
-src/routes/foo-abc.svelte
-src/routes/foo-[c].svelte
-src/routes/[a].js
-src/routes/[b].svelte
-src/routes/[...catchall].svelte
+src/routes/foo-abc/+page.svelte
+src/routes/foo-[c]/+page.svelte
+src/routes/[a]/+server.js
+src/routes/[b]/+page.svelte
+src/routes/[...catchall]/+page.svelte
 ```
 
 #### Encoding
