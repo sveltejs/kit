@@ -5,6 +5,7 @@ import { respond_with_error } from './respond_with_error.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { method_not_allowed } from '../utils.js';
 import { Redirect } from '../../../index/private.js';
+import { create_fetch } from './fetch.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -43,12 +44,15 @@ export async function render_page(event, route, options, state, resolve_opts) {
 
 	const $session = await options.hooks.getSession(event);
 
+	const { fetcher, fetched } = create_fetch({ event, options, state, route });
+
 	// TODO for non-GET requests, first call handler in +page.server.js
 	// (this also determines status code)
 
 	if (!resolve_opts.ssr) {
 		return await render_response({
 			branch: [],
+			fetched,
 			page_config: {
 				hydrate: true,
 				router: true
@@ -95,18 +99,15 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
 
-			/** @type {Loaded | undefined} */
-			let loaded;
-
 			if (node) {
 				try {
-					loaded = await load_node({
+					const loaded = await load_node({
 						event,
 						options,
 						state,
-						route,
 						$session,
-						node
+						node,
+						fetcher
 					});
 
 					branch.push(loaded);
@@ -128,8 +129,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 							const error_loaded = /** @type {import('./types').Loaded} */ ({
 								node: error_node,
 								data: {},
-								server_data: {},
-								fetched: []
+								server_data: {}
 							});
 
 							return await render_response({
@@ -144,7 +144,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 								branch: branch
 									.slice(0, j + 1)
 									.filter(Boolean)
-									.concat(error_loaded)
+									.concat(error_loaded),
+								fetched
 							});
 						}
 					}
@@ -165,7 +166,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			page_config,
 			status,
 			error: null,
-			branch: branch.filter(Boolean)
+			branch: branch.filter(Boolean),
+			fetched
 		});
 	} catch (err) {
 		const error = coalesce_to_error(err);

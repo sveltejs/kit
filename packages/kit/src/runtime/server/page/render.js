@@ -19,6 +19,7 @@ const updated = {
  * Creates the HTML response.
  * @param {{
  *   branch: Array<import('./types').Loaded>;
+ *   fetched: Array<import('./types').Fetched>;
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   $session: any;
@@ -31,6 +32,7 @@ const updated = {
  */
 export async function render_response({
 	branch,
+	fetched,
 	options,
 	state,
 	$session,
@@ -71,7 +73,7 @@ export async function render_response({
 	}
 
 	if (resolve_opts.ssr) {
-		for (const { node, fetched } of branch) {
+		for (const { node } of branch) {
 			if (node.imports) {
 				node.imports.forEach((url) => modulepreloads.add(url));
 			}
@@ -83,9 +85,9 @@ export async function render_response({
 			if (node.inline_styles) {
 				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
 			}
-
-			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
 		}
+
+		if (fetched && page_config.hydrate) serialized_data.push(...fetched);
 
 		const session = writable($session);
 

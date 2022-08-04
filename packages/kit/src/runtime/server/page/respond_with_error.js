@@ -2,6 +2,7 @@ import { render_response } from './render.js';
 import { load_node } from './load_node.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { GENERIC_ERROR } from '../utils.js';
+import { create_fetch } from './fetch.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -29,6 +30,8 @@ export async function respond_with_error({
 	error,
 	resolve_opts
 }) {
+	const { fetcher, fetched } = create_fetch({ event, options, state, route: GENERIC_ERROR });
+
 	try {
 		const branch = [];
 
@@ -41,17 +44,16 @@ export async function respond_with_error({
 					event,
 					options,
 					state,
-					route: GENERIC_ERROR,
 					node: default_layout,
-					$session
+					$session,
+					fetcher
 				})
 			);
 
 			const error_loaded = /** @type {Loaded} */ ({
 				node: default_error,
 				data: {},
-				server_data: {},
-				fetched: []
+				server_data: {}
 			});
 
 			branch.push(layout_loaded, error_loaded);
@@ -68,6 +70,7 @@ export async function respond_with_error({
 			status,
 			error,
 			branch,
+			fetched,
 			event,
 			resolve_opts
 		});
