@@ -182,13 +182,10 @@ export async function migrate() {
 			// if component has a <script context="module">, move it to a sibling .js file
 			if (module) {
 				const ext = /<script[^>]+?lang=['"](ts|typescript)['"][^]*?>/.test(module) ? '.ts' : '.js';
-				const injected = /load/.test(module)
-					? `${error('Update load function', TASKS.PAGE_LOAD)}\n\n`
-					: '';
 
 				const content = migrate_page(dedent(move_to_directory ? adjust_imports(module) : module));
 
-				fs.writeFileSync(sibling + ext, injected + content);
+				fs.writeFileSync(sibling + ext, content);
 			}
 		} else if (module_ext) {
 			// file is a module
