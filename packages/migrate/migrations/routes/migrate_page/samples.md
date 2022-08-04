@@ -85,6 +85,52 @@ export function load({ session }) {
 }
 ```
 
+## String error
+
+```js before
+export function load({ session }) {
+	if (!session.user?.admin) {
+		return {
+			status: 403,
+			error: 'unauthorized'
+		};
+	}
+}
+```
+
+```js after
+import { error } from '@sveltejs/kit';
+
+export function load({ session }) {
+	if (!session.user?.admin) {
+		throw error(403, 'unauthorized');
+	}
+}
+```
+
+## Error constructor
+
+```js before
+export function load({ session }) {
+	if (!session.user?.admin) {
+		return {
+			status: 403,
+			error: new Error('unauthorized')
+		};
+	}
+}
+```
+
+```js after
+import { error } from '@sveltejs/kit';
+
+export function load({ session }) {
+	if (!session.user?.admin) {
+		throw error(403, 'unauthorized');
+	}
+}
+```
+
 ## Arrow function load
 
 ```js before
@@ -102,8 +148,6 @@ export const load = () => ({
 ```
 
 ## Returns cache
-
-> solo
 
 ```js before
 export function load() {

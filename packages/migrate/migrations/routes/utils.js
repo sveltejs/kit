@@ -335,6 +335,26 @@ export function get_prop(node, name) {
 }
 
 /**
+ * @param {ts.ObjectLiteralExpression} node
+ */
+export function get_object_nodes(node) {
+	/** @type {Record<string, ts.Node>} */
+	const obj = {};
+
+	for (const property of node.properties) {
+		if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name)) {
+			obj[property.name.text] = property.initializer;
+		} else if (ts.isShorthandPropertyAssignment(property)) {
+			obj[property.name.text] = property.name;
+		} else {
+			return null; // object contains funky stuff like computed properties/accessors — bail
+		}
+	}
+
+	return obj;
+}
+
+/**
  * @param {ts.NodeArray<ts.ObjectLiteralElementLike>} node
  * @param {string} name
  */

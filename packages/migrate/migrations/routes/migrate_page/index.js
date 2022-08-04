@@ -5,7 +5,8 @@ import {
 	dedent,
 	error,
 	get_function_node,
-	get_prop_initializer_text,
+	get_object_nodes,
+	is_string_like,
 	manual_return_migration,
 	parse,
 	rewrite_returns
@@ -37,53 +38,49 @@ export function migrate_page(content) {
 			const imports = new Set();
 
 			rewrite_returns(fn.body, (expr, node) => {
-				if (ts.isObjectLiteralExpression(expr)) {
-					const props = expr.properties;
+				const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
 
-					if (contains_only(expr, ['props'])) {
-						automigration(expr, file.code, dedent(get_prop_initializer_text(props, 'props')));
+				if (nodes) {
+					const keys = Object.keys(nodes).sort().join(' ');
+
+					if (keys === 'props') {
+						automigration(expr, file.code, dedent(nodes.props.getText()));
 						return;
 					}
 
 					// check for existence of `node`, otherwise it's an arrow function
 					// with an implicit body, which we bail out on
 					if (node) {
-						const status_str = get_prop_initializer_text(props, 'status');
-						const status = Number(status_str);
+						const status = nodes.status && Number(nodes.status.getText());
 
-						if (
-							contains_only(expr, ['redirect', 'status']) &&
-							((status > 300 && status < 310) || contains_only(expr, ['redirect']))
-						) {
+						// logic based on https://github.com/sveltejs/kit/blob/67e2342149847d267eb0c50809a1f93f41fa529b/packages/kit/src/runtime/load.js
+						if (contains_only(expr, ['redirect', 'status']) && status > 300 && status < 400) {
 							automigration(
 								node,
 								file.code,
-								'throw redirect(' +
-									get_prop_initializer_text(props, 'status') +
-									(get_prop_initializer_text(props, 'redirect') === 'undefined'
-										? ''
-										: ', ' + get_prop_initializer_text(props, 'redirect')) +
-									');'
+								`throw redirect(${status}, ${nodes.redirect.getText()});`
 							);
 							imports.add('redirect');
-						} else if (
-							contains_only(expr, ['error', 'status']) &&
-							(status >= 400 || contains_only(expr, ['error']))
-						) {
-							automigration(
-								node,
-								file.code,
-								'throw error(' +
-									get_prop_initializer_text(props, 'status') +
-									(get_prop_initializer_text(props, 'error') === 'undefined'
-										? ''
-										: ', ' + get_prop_initializer_text(props, 'error')) +
-									');'
-							);
-							imports.add('error');
-						} else {
-							manual_return_migration(node, file.code, TASKS.PAGE_LOAD);
+							return;
 						}
+
+						if (status > 400 || nodes.error) {
+							const message = is_string_like(nodes.error)
+								? nodes.error.getText()
+								: ts.isNewExpression(nodes.error) &&
+								  ts.isIdentifier(nodes.error.expression) &&
+								  nodes.error.expression.getText() === 'Error' &&
+								  nodes.error.arguments[0].getText();
+
+							if (message) {
+								automigration(node, file.code, `throw error(${status || 500}, ${message});`);
+								imports.add('error');
+								return;
+							}
+						}
+
+						manual_return_migration(node, file.code, TASKS.PAGE_LOAD);
+						return;
 					}
 				}
 
