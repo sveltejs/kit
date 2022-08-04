@@ -250,7 +250,10 @@ test.describe('Shadowed pages', () => {
 			delete headers.get[name];
 		});
 
-		expect(headers.head).toEqual(headers.get);
+		expect(headers.get).toEqual({
+			...headers.head,
+			'content-type': 'application/json; charset=utf-8'
+		});
 	});
 
 	test('Responds from endpoint if Accept includes application/json but not text/html', async ({
