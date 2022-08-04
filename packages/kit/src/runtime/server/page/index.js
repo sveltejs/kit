@@ -44,6 +44,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 	const $session = await options.hooks.getSession(event);
 
 	// TODO for non-GET requests, first call handler in +page.server.js
+	// (this also determines status code)
 
 	if (!resolve_opts.ssr) {
 		return await render_response({
@@ -85,86 +86,73 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			}
 		}
 
-		/** @type {Array<Loaded>} */
+		/** @type {Array<Loaded | null>} */
 		let branch = [];
 
 		/** @type {number} */
 		let status = 200;
 
-		/** @type {Error | null} */
-		let error = null;
+		for (let i = 0; i < nodes.length; i += 1) {
+			const node = nodes[i];
 
-		ssr: {
-			for (let i = 0; i < nodes.length; i += 1) {
-				const node = nodes[i];
+			/** @type {Loaded | undefined} */
+			let loaded;
 
-				/** @type {Loaded | undefined} */
-				let loaded;
+			if (node) {
+				try {
+					loaded = await load_node({
+						event,
+						options,
+						state,
+						route,
+						$session,
+						node
+					});
 
-				if (node) {
-					try {
-						loaded = await load_node({
-							event,
-							options,
-							state,
-							route,
-							$session,
-							node
-						});
-					} catch (err) {
-						const e = coalesce_to_error(err);
+					branch.push(loaded);
+				} catch (err) {
+					const error = coalesce_to_error(err);
 
-						options.handle_error(e, event);
+					options.handle_error(error, event);
 
-						status = 500;
-						error = e;
-					}
+					status = 500;
 
-					if (loaded && !error) {
-						branch.push(loaded);
-					}
+					while (i--) {
+						if (route.errors[i]) {
+							const index = /** @type {number} */ (route.errors[i]);
+							const error_node = await options.manifest._.nodes[index]();
 
-					if (error) {
-						while (i--) {
-							if (route.errors[i]) {
-								const index = /** @type {number} */ (route.errors[i]);
-								const error_node = await options.manifest._.nodes[index]();
+							let j = i;
+							while (!branch[j]) j -= 1;
 
-								let j = i;
-								while (!branch[j]) j -= 1;
+							const error_loaded = /** @type {import('./types').Loaded} */ ({
+								node: error_node,
+								data: {},
+								server_data: {},
+								fetched: []
+							});
 
-								try {
-									const error_loaded = /** @type {import('./types').Loaded} */ ({
-										node: error_node,
-										data: {},
-										server_data: {},
-										fetched: []
-									});
-
-									page_config = { router: true, hydrate: true };
-									branch = branch.slice(0, j + 1).concat(error_loaded);
-									break ssr;
-								} catch (err) {
-									const e = coalesce_to_error(err);
-
-									options.handle_error(e, event);
-
-									continue;
-								}
-							}
+							return await render_response({
+								event,
+								options,
+								state,
+								$session,
+								resolve_opts,
+								page_config: { router: true, hydrate: true },
+								status,
+								error,
+								branch: branch
+									.slice(0, j + 1)
+									.filter(Boolean)
+									.concat(error_loaded)
+							});
 						}
-
-						return await respond_with_error({
-							event,
-							options,
-							state,
-							$session,
-							status,
-							error,
-							resolve_opts
-						});
 					}
 				}
+			} else {
+				// push an empty slot so we can rewind past gaps to the
+				// layout that corresponds with an +error.svelte page
+				branch.push(null);
 			}
 		}
 
@@ -176,7 +164,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			resolve_opts,
 			page_config,
 			status,
-			error,
+			error: null,
 			branch: branch.filter(Boolean)
 		});
 	} catch (err) {
