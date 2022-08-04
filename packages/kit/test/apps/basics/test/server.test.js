@@ -22,65 +22,6 @@ test.describe('Content-Type', () => {
 	});
 });
 
-test.describe('ETags', () => {
-	test('generates etag/304 for text body', async ({ request }) => {
-		const r1 = await request.get('/etag/text');
-		const etag = r1.headers()['etag'];
-		expect(etag).toBeTruthy();
-
-		const r2 = await request.get('/etag/text', {
-			headers: {
-				'if-none-match': etag
-			}
-		});
-
-		expect(r2.status()).toBe(304);
-		expect(r2.headers()['expires']).toBe('yesterday');
-	});
-
-	test('generates etag/304 for binary body', async ({ request }) => {
-		const r1 = await request.get('/etag/binary');
-		const etag = r1.headers()['etag'];
-		expect(etag).toBeTruthy();
-
-		const r2 = await request.get('/etag/binary', {
-			headers: {
-				'if-none-match': etag
-			}
-		});
-
-		expect(r2.status()).toBe(304);
-	});
-
-	test('support W/ etag prefix', async ({ request }) => {
-		const r1 = await request.get('/etag/text');
-		const etag = r1.headers()['etag'];
-		expect(etag).toBeTruthy();
-
-		const r2 = await request.get('/etag/text', {
-			headers: {
-				'if-none-match': `W/${etag}`
-			}
-		});
-
-		expect(r2.status()).toBe(304);
-	});
-
-	test('custom etag', async ({ request }) => {
-		const r1 = await request.get('/etag/custom');
-		const etag = r1.headers()['etag'];
-		expect(etag).toBe('@1234@');
-
-		const r2 = await request.get('/etag/custom', {
-			headers: {
-				'if-none-match': '@1234@'
-			}
-		});
-
-		expect(r2.status()).toBe(304);
-	});
-});
-
 test.describe('Endpoints', () => {
 	test('200 status on empty endpoint', async ({ request }) => {
 		const response = await request.get('/endpoint-output/empty');
