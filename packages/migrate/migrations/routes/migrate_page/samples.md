@@ -182,7 +182,7 @@ export async function load({ fetch }) {
 ```js after
 export async function load({ fetch }) {
 	const res = await fetch('/x.json');
-	throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292699)")
+	throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693)");
 	return await res.json();
 }
 ```

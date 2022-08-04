@@ -78,13 +78,10 @@ export function migrate_page(content) {
 								return;
 							}
 						}
-
-						manual_return_migration(node, file.code, TASKS.PAGE_LOAD);
-						return;
 					}
 				}
 
-				manual_return_migration(fn, file.code, TASKS.PAGE_LOAD);
+				manual_return_migration(node || fn, file.code, TASKS.PAGE_LOAD);
 			});
 
 			if (imports.size) {
