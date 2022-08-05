@@ -27,12 +27,13 @@ export function migrate_page_server(content) {
 	const unmigrated = new Set(methods);
 
 	for (const statement of file.ast.statements) {
-		if (file.exports.map.has('GET')) {
-			const GET = get_function_node(statement, file.exports.map.get('GET'));
-			if (GET) {
+		const GET_id = file.exports.map.get('GET');
+		if (GET_id) {
+			const GET = get_function_node(statement, GET_id);
+			if (GET?.body) {
 				// possible TODOs — handle errors and redirects
 				rewrite_returns(GET.body, (expr, node) => {
-					const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
+					const nodes = expr && ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
 
 					if (!nodes || nodes.headers || (nodes.status && nodes.status.getText() !== '200')) {
 						manual_return_migration(node || GET, file.code, TASKS.PAGE_ENDPOINT);
@@ -47,8 +48,8 @@ export function migrate_page_server(content) {
 		}
 
 		for (const method of non_get_methods) {
-			const fn = get_function_node(statement, file.exports.map.get(method));
-			if (fn) {
+			const fn = get_function_node(statement, /** @type{string} */ (file.exports.map.get(method)));
+			if (fn?.body) {
 				rewrite_returns(fn.body, (expr, node) => {
 					manual_return_migration(node || fn, file.code, TASKS.PAGE_ENDPOINT);
 				});

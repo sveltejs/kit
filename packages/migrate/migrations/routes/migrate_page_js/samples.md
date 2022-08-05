@@ -236,3 +236,18 @@ export async function load({ fetch }) {
 	return await res.json();
 }
 ```
+
+## A load function that returns nothing
+
+```js before
+export function load() {
+	return;
+}
+```
+
+```js after
+export function load() {
+	throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693)");
+	return;
+}
+```

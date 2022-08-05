@@ -24,21 +24,21 @@ export function migrate_page(content) {
 	const file = parse(content);
 	if (!file) return give_up + content;
 
-	if (!file.exports.map.has('load') && !file.exports.complex) {
+	const name = file.exports.map.get('load');
+
+	if (!name && !file.exports.complex) {
 		// there's no load function here, so there's nothing to do
 		return content;
 	}
 
-	const name = file.exports.map.get('load');
-
 	for (const statement of file.ast.statements) {
-		const fn = get_function_node(statement, name);
-		if (fn) {
+		const fn = name ? get_function_node(statement, name) : undefined;
+		if (fn?.body) {
 			/** @type {Set<string>} */
 			const imports = new Set();
 
 			rewrite_returns(fn.body, (expr, node) => {
-				const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
+				const nodes = expr && ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
 
 				if (nodes) {
 					const keys = Object.keys(nodes).sort().join(' ');
