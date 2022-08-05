@@ -3,9 +3,9 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { method_not_allowed, clone_error } from '../utils.js';
-import { HttpError, Redirect } from '../../../index/private.js';
 import { create_fetch } from './fetch.js';
 import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
+import { Redirect } from '../../../index/private.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -95,9 +95,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		/** @type {Array<Loaded | null>} */
 		let branch = [];
 
-		/** @type {number} */
-		let status = 200;
-
 		/** @type {Error | null} */
 		let error = null;
 
@@ -183,12 +180,16 @@ export async function render_page(event, route, options, state, resolve_opts) {
 						server_data: await server_promises[i],
 						data: await load_promises[i]
 					});
-				} catch (err) {
-					const error = coalesce_to_error(err);
+				} catch (error) {
+					if (/** @type {Redirect} */ (error).__is_redirect) {
+						return Response.redirect(error.location, error.status);
+					}
 
-					options.handle_error(error, event);
+					if (!error.__is_http_error) {
+						options.handle_error(error, event);
+					}
 
-					status = 500;
+					const status = error.__is_http_error ? error.status : 500;
 
 					while (i--) {
 						if (route.errors[i]) {
@@ -215,6 +216,12 @@ export async function render_page(event, route, options, state, resolve_opts) {
 							});
 						}
 					}
+
+					// if we're still here, it means the error happened in the root layout,
+					// which means we have to fall back to a plain text response
+					// TODO since the requester is expecting HTML, maybe it makes sense to
+					// doll this up a bit
+					return new Response(options.get_stack(error) || error.message, { status });
 				}
 			} else {
 				// push an empty slot so we can rewind past gaps to the
@@ -230,14 +237,14 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			$session,
 			resolve_opts,
 			page_config: get_page_config(leaf_node, options),
-			status,
+			status: 200, // TODO unless POST/PUT/PATCH/DELETE thinks otherwise
 			error: null,
 			branch: branch.filter(Boolean),
 			fetched
 		});
-	} catch (err) {
-		const error = coalesce_to_error(err);
-
+	} catch (error) {
+		// if we end up here, it means the data loaded successfull
+		// but the page failed to render
 		options.handle_error(error, event);
 
 		return await respond_with_error({

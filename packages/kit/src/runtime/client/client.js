@@ -660,11 +660,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 				branch.push(branch_node);
 			} catch (e) {
-				if (e instanceof Redirect) {
+				if (e?.__is_redirect instanceof Redirect) {
 					// TODO handle redirect
 				}
 
-				const status = e instanceof HttpError ? e.status : 500;
+				const status = e?.__is_http_error ? e.status : 500;
 				const error = coalesce_to_error(e);
 
 				while (i--) {

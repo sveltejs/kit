@@ -5,11 +5,15 @@ export class HttpError {
 	 */
 	constructor(status, message) {
 		this.status = status;
-		this.message = message;
+		this.message = message || `Error: ${status}`;
 
 		// this is a hack to workaround failed instanceof checks
 		// TODO figure out a better way to do this
 		this.__is_http_error = true;
+	}
+
+	toString() {
+		return this.message;
 	}
 }
 
