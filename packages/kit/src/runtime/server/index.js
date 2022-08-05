@@ -261,7 +261,7 @@ export async function respond(request, options, state) {
 						for (const key in headers) {
 							const value = headers[key];
 							if (key === 'set-cookie') {
-								for (const cookie in Array.isArray(value) ? value : [value]) {
+								for (const cookie of Array.isArray(value) ? value : [value]) {
 									response.headers.append(key, cookie);
 								}
 							} else {
