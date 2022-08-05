@@ -82,7 +82,7 @@ export interface Builder {
 	): string[];
 
 	/**
-	 * @param {string} directory A path to file that would be compress.
+	 * @param {string} directory Path to the directory containing the files to be compressed
 	 */
 	compress(directory: string): void;
 }
