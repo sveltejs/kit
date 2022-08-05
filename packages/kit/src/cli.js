@@ -39,9 +39,14 @@ prog
 
 prog
 	.command('add route')
-	.describe('Add route in src directory')
-	.option('--name', 'Specify a name for your new route', '')
-	.action(async ({ name }) => {
+	.alias('new route')
+	.describe('Add new route in project.')
+	.option('-n --name', 'Specify a name for your new route', '')
+	.option('-t --typescript', 'Use typescript in routes')
+	.example('svelte-kit add route -n svelte')
+	.example('svelte-kit add route -n svelte -t')
+	.example(`svelte-kit add route -n 'svelte/[slug]'`)
+	.action(async ({ name, typescript }) => {
 		const route_directory = path.resolve(`src/routes/${name}`);
 
 		if (fs.existsSync(route_directory)) {
@@ -50,22 +55,28 @@ prog
 					? `Add a name for route\nExample: svelte-kit add route --name svelte`
 					: fs.existsSync(route_directory)
 					? 'This route already exist.\nProvide a unique route.'
-					: 'Use `svelte-kit --help`';
+					: 'Check if you are in right directory or Use `svelte-kit add route --help`';
 			console.error(colors.bold().red(message));
 			return;
 		}
+
+		let file_ext = 'js';
+		if (typescript) file_ext = 'ts';
+
 		const route_files = [
 			{ file_name: '+page.svelte', content: `<p>${name} route works</p>` },
-			{ file_name: '+page.js', content: `//Load function logic` },
-			{ file_name: '+page.server.js', content: `//Server side logic` }
+			{ file_name: `+page.${file_ext}`, content: `//Load function logic` },
+			{ file_name: `+page.server.${file_ext}`, content: `//Server side logic` }
 		];
+
 		mkdirp(route_directory);
+
 		route_files.forEach((file) => {
 			fs.writeFile(`${route_directory}/${file.file_name}`, `${file.content}`, function (err) {
 				if (err) handle_error(err);
 			});
 		});
-		console.error(colors.green(`New route has been added '${name}'`));
+		console.error(colors.bold().gray(`New route has been added ${colors.green(name)}`));
 	});
 
 prog
