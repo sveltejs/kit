@@ -1,5 +1,5 @@
 import { render_response } from './render.js';
-import { load_node } from './load_node.js';
+import { load_data } from './load_data.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { GENERIC_ERROR } from '../utils.js';
 import { create_fetch } from './fetch.js';
@@ -40,7 +40,7 @@ export async function respond_with_error({
 			const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
 
 			const layout_loaded = /** @type {Loaded} */ (
-				await load_node({
+				await load_data({
 					event,
 					options,
 					state,

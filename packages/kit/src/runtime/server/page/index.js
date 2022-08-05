@@ -1,6 +1,6 @@
 import { negotiate } from '../../../utils/http.js';
 import { render_response } from './render.js';
-import { load_node } from './load_node.js';
+import { load_data } from './load_data.js';
 import { respond_with_error } from './respond_with_error.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { method_not_allowed } from '../utils.js';
@@ -101,7 +101,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 
 			if (node) {
 				try {
-					const loaded = await load_node({
+					const loaded = await load_data({
 						event,
 						options,
 						state,

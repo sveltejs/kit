@@ -12,7 +12,7 @@ import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
  * }} opts
  * @returns {Promise<import('./types').Loaded>}
  */
-export async function load_node({ event, options, state, node, fetcher, $session }) {
+export async function load_data({ event, options, state, node, fetcher, $session }) {
 	/** @type {Record<string, any>} */
 	let server_data;
 
@@ -50,15 +50,6 @@ export async function load_node({ event, options, state, node, fetcher, $session
 			fetch: fetcher,
 			setHeaders: event.setHeaders
 		};
-
-		if (options.dev) {
-			// TODO remove this for 1.0
-			Object.defineProperty(load_event, 'page', {
-				get: () => {
-					throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
-				}
-			});
-		}
 
 		// TODO unwrap top-level promises
 		data = await node.module.load.call(null, load_event);

@@ -218,6 +218,7 @@ export async function respond(request, options, state) {
 						status: 200,
 						error: null,
 						branch: [],
+						fetched: [],
 						resolve_opts: {
 							...resolve_opts,
 							ssr: false
