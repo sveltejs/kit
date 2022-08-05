@@ -182,7 +182,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					});
 				} catch (error) {
 					if (/** @type {Redirect} */ (error).__is_redirect) {
-						return Response.redirect(error.location, error.status);
+						return Response.redirect(new URL(error.location, event.url), error.status);
 					}
 
 					if (!error.__is_http_error) {
@@ -315,7 +315,7 @@ async function handle_json_request(event, options, mod) {
 		return new Response(undefined, { status: 204 });
 	} catch (error) {
 		if (error?.__is_redirect) {
-			return Response.redirect(error.location, error.status);
+			return Response.redirect(new URL(error.location, event.url), error.status);
 		}
 
 		if (error?.__is_http_error) {
