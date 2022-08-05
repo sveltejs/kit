@@ -16,11 +16,6 @@ export function write_ambient(config, mode) {
 	const env = get_env(mode, config.env.publicPrefix);
 
 	write_if_changed(
-		path.join(config.outDir, 'runtime/env/static/public.js'),
-		create_env_module('$env/static/public', env.public)
-	);
-
-	write_if_changed(
 		path.join(config.outDir, 'ambient.d.ts'),
 		autogen_comment +
 			types_reference +
