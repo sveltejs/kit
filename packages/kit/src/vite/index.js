@@ -68,7 +68,6 @@ export function sveltekit() {
 /**
  * Returns the SvelteKit environment plugin. Replaces `$env/static/*` imports
  * with the actual environment variables.
- *
  * @return {import('vite').Plugin}
  */
 function env() {
