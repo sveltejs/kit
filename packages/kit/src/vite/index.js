@@ -62,7 +62,54 @@ const enforced_config = {
  * @return {import('vite').Plugin[]}
  */
 export function sveltekit() {
-	return [...svelte(), kit()];
+	return [...svelte(), env(), kit()];
+}
+
+/**
+ * Returns the SvelteKit environment plugin. Replaces `$env/static/*` imports
+ * with the actual environment variables.
+ *
+ * @return {import('vite').Plugin}
+ */
+function env() {
+	/** @type {import('types').ValidatedConfig} */
+	let svelte_config;
+
+	/** @type {import('vite').ConfigEnv} */
+	let vite_config_env;
+
+	return {
+		name: 'vite-plugin-env',
+
+		async config(_, config_env) {
+			vite_config_env = config_env;
+			svelte_config = await load_config();
+		},
+
+		async resolveId(id) {
+			switch (id) {
+				case '$env/static/private':
+					return '\0$env/static/private';
+				case '$env/static/public':
+					return '\0$env/static/public';
+			}
+		},
+
+		async load(id) {
+			switch (id) {
+				case '\0$env/static/private':
+					return create_env_module(
+						'$env/static/private',
+						get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix).private
+					);
+				case '\0$env/static/public':
+					return create_env_module(
+						'$env/static/private',
+						get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix).public
+					);
+			}
+		}
+	};
 }
 
 /**
@@ -412,8 +459,8 @@ function kit() {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
 				// prettier-ignore
 				console.log(
-					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
-				);
+          `See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
+        );
 			}
 		},
 
@@ -439,30 +486,6 @@ function kit() {
 		 */
 		configurePreviewServer(vite) {
 			return preview(vite, vite_config, svelte_config);
-		},
-
-		async resolveId(id) {
-			switch (id) {
-				case '$env/static/private':
-					return '\0$env/static/private';
-				case '$env/static/public':
-					return '\0$env/static/public';
-			}
-		},
-
-		async load(id) {
-			switch (id) {
-				case '\0$env/static/private':
-					return create_env_module(
-						'$env/static/private',
-						get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix).private
-					);
-				case '\0$env/static/public':
-					return create_env_module(
-						'$env/static/private',
-						get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix).public
-					);
-			}
 		}
 	};
 }
