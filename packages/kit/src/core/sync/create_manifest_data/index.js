@@ -192,6 +192,13 @@ export default function create_manifest_data({
 				}
 			}
 		});
+
+		// TODO remove for 1.0
+		if (route_map.size === 0) {
+			throw new Error(
+				'The filesystem router API has changed, see https://github.com/sveltejs/kit/discussions/5774 for details'
+			);
+		}
 	}
 
 	/** @type {import('types').PageNode[]} */
