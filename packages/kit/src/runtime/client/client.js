@@ -258,12 +258,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 				});
 			} else {
 				if (router_enabled) {
-					goto(new URL(navigation_result.redirect, url).href, {}, [
+					goto(new URL(navigation_result.location, url).href, {}, [
 						...redirect_chain,
 						url.pathname
 					]);
 				} else {
-					await native_navigation(new URL(navigation_result.redirect, location.href));
+					await native_navigation(new URL(navigation_result.location, location.href));
 				}
 
 				return false;
@@ -361,7 +361,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		updating = false;
 	}
 
-	/** @param {import('./types').NavigationResult} result */
+	/** @param {import('./types').NavigationFinishedResult} result */
 	function initialize(result) {
 		current = result.state;
 
@@ -404,11 +404,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 		routeId
 	}) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
-		const redirect = filtered.find((f) => f.redirect);
 
-		/** @type {import('./types').NavigationResult} */
+		/** @type {import('./types').NavigationFinishedResult} */
 		const result = {
-			redirect: redirect?.redirect,
 			state: {
 				url,
 				params,
@@ -597,14 +595,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 		return {
 			node,
 			data: data || {},
-			uses,
-			redirect: undefined
+			uses
 		};
 	}
 
 	/**
 	 * @param {import('./types').NavigationIntent} intent
 	 * @param {boolean} no_cache
+	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
 	async function load_route({ id, url, params, route }, no_cache) {
 		if (load_cache.id === id && load_cache.promise) {
@@ -689,7 +687,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 					branch.push(await branch_promises[i]);
 				} catch (e) {
 					if (e instanceof Redirect) {
-						// TODO handle redirect
+						return {
+							redirect: true,
+							location: e.location
+						};
 					}
 
 					const status = e instanceof HttpError ? e.status : 500;
@@ -713,8 +714,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 										session: false,
 										dependencies: new Set(),
 										parent: false
-									},
-									redirect: undefined
+									}
 								};
 
 								return await get_navigation_result_from_branch({
@@ -1160,7 +1160,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			/** @type {Array<Promise<import('./types').BranchNode>>} */
 			const branch = [];
 
-			/** @type {import('./types').NavigationResult | undefined} */
+			/** @type {import('./types').NavigationFinishedResult | undefined} */
 			let result;
 
 			try {
@@ -1197,8 +1197,15 @@ export function create_client({ target, session, base, trailing_slash }) {
 					routeId
 				});
 			} catch (e) {
-				// TODO handle HttpError and Redirect cases
-				if (error) throw e;
+				// TODO handle HttpError cases
+				// TODO order of these ifs sensible?
+				if (e instanceof Redirect) {
+					// this is a real edge case — `load` would need to return
+					// a redirect but only in the browser
+					await native_navigation(new URL(e.location, location.href));
+				} else if (error) {
+					throw e;
+				}
 
 				result = await load_root_error_page({
 					status: 500,
@@ -1206,12 +1213,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 					url,
 					routeId
 				});
-			}
-
-			if (result.redirect) {
-				// this is a real edge case — `load` would need to return
-				// a redirect but only in the browser
-				await native_navigation(new URL(result.redirect, location.href));
 			}
 
 			initialize(result);
