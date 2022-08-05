@@ -402,6 +402,16 @@ export function parse(content) {
 	}
 }
 
+/**
+ * @param {string} content
+ * @param {string} except
+ */
+export function except_str(content, except) {
+	const start = content.indexOf(except);
+	const end = start + except.length;
+	return content.substring(0, start) + content.substring(end);
+}
+
 /** @param {string} test_file */
 export function read_samples(test_file) {
 	const markdown = fs.readFileSync(new URL('./samples.md', test_file), 'utf8');
