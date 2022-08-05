@@ -39,16 +39,14 @@ export async function respond_with_error({
 			const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
 			const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
 
-			const layout_loaded = /** @type {Loaded} */ (
-				await load_data({
-					event,
-					options,
-					state,
-					node: default_layout,
-					$session,
-					fetcher
-				})
-			);
+			const layout_loaded = await load_data({
+				event,
+				options,
+				state,
+				node: default_layout,
+				$session,
+				fetcher
+			});
 
 			const error_loaded = /** @type {Loaded} */ ({
 				node: default_error,
