@@ -1,5 +1,13 @@
 import ts from 'typescript';
-import { adjust_imports, guess_indent, comment, error, dedent, parse } from '../utils.js';
+import {
+	adjust_imports,
+	guess_indent,
+	comment,
+	error,
+	dedent,
+	parse,
+	except_str
+} from '../utils.js';
 import * as TASKS from '../tasks.js';
 
 /**
@@ -14,37 +22,57 @@ export function migrate_scripts(content, is_error, moved) {
 	// instance script
 	const main = content.replace(
 		/<script([^]*?)>([^]+?)<\/script>(\n*)/g,
-		(match, attrs, content, whitespace) => {
-			const indent = guess_indent(content) ?? '';
+		(match, attrs, contents, whitespace) => {
+			const indent = guess_indent(contents) ?? '';
 
 			if (moved) {
-				content = adjust_imports(content);
+				contents = adjust_imports(contents);
 			}
 
 			if (/context=(['"])module\1/.test(attrs)) {
 				// special case — load is no longer supported in error
 				if (is_error) {
 					const body = `\n${indent}${error('Replace error load function', '3293209')}\n${comment(
-						content,
+						contents,
 						indent
 					)}`;
 
 					return `<script${attrs}>${body}</script>${whitespace}`;
 				}
 
-				module = dedent(content.replace(/^\n/, ''));
+				module = dedent(contents.replace(/^\n/, ''));
 
-				const declared = find_declarations(content);
-				declared.delete('load');
-				declared.delete('router');
-				declared.delete('hydrate');
-				declared.delete('prerender');
+				const declared = find_declarations(contents);
+				const delete_var = (/** @type {string } */ key) => {
+					const declaration = declared?.get(key);
+					if (declaration && !declaration.import) {
+						declared.delete(key);
+					}
+				};
+				delete_var('load');
+				delete_var('router');
+				delete_var('hydrate');
+				delete_var('prerender');
+				const delete_kit_type = (/** @type {string } */ key) => {
+					const declaration = declared?.get(key);
+					if (
+						declaration &&
+						declaration.import?.type_only &&
+						declaration.import.from === '@sveltejs/kit' &&
+						!new RegExp(`\\W${key}\\W`).test(except_str(content, match))
+					) {
+						declared.delete(key);
+					}
+				};
+				delete_kit_type('Load');
+				delete_kit_type('LoadEvent');
+				delete_kit_type('LoadOutput');
 
-				if (declared.size > 0) {
+				if (!declared || declared.size > 0) {
 					const body = `\n${indent}${error(
 						'Check code was safely removed',
 						TASKS.PAGE_MODULE_CTX
-					)}\n${comment(content, indent)}`;
+					)}\n${comment(contents, indent)}`;
 
 					return `<script${attrs}>${body}</script>${whitespace}`;
 				}
@@ -53,12 +81,12 @@ export function migrate_scripts(content, is_error, moved) {
 				return '';
 			}
 
-			if (!is_error && /export/.test(content)) {
-				content = `\n${indent}${error('Add data prop', TASKS.PAGE_DATA_PROP)}\n${content}`;
+			if (!is_error && /export/.test(contents)) {
+				contents = `\n${indent}${error('Add data prop', TASKS.PAGE_DATA_PROP)}\n${contents}`;
 				// Possible TODO: migrate props to data.prop, or suggest $: ({propX, propY, ...} = data);
 			}
 
-			return `<script${attrs}>${content}</script>${whitespace}`;
+			return `<script${attrs}>${contents}</script>${whitespace}`;
 		}
 	);
 
@@ -70,37 +98,50 @@ function find_declarations(content) {
 	const file = parse(content);
 	if (!file) return;
 
-	const declared = new Set();
+	/** @type {Map<string, {name: string, import: {from: string, type_only: boolean}}>} */
+	const declared = new Map();
+	/**
+	 * @param {string} name
+	 * @param {{from: string, type_only: boolean}} [import_def]
+	 */
+	function add(name, import_def) {
+		declared.set(name, { name, import: import_def });
+	}
 
 	for (const statement of file.ast.statements) {
 		if (ts.isImportDeclaration(statement) && statement.importClause) {
+			let type_only = statement.importClause.isTypeOnly;
+			const from = ts.isStringLiteral(statement.moduleSpecifier) && statement.moduleSpecifier.text;
+
 			if (statement.importClause.name) {
-				declared.add(statement.importClause.name.text);
+				add(statement.importClause.name.text, { from, type_only });
 			}
 
 			const bindings = statement.importClause.namedBindings;
 
 			if (bindings) {
 				if (ts.isNamespaceImport(bindings)) {
-					declared.add(bindings.name.text);
+					add(bindings.name.text, { from, type_only });
 				} else {
 					for (const binding of bindings.elements) {
-						declared.add(binding.name.text);
+						add(binding.name.text, { from, type_only: type_only || binding.isTypeOnly });
 					}
 				}
 			}
 		} else if (ts.isVariableStatement(statement)) {
 			for (const declaration of statement.declarationList.declarations) {
 				if (ts.isIdentifier(declaration.name)) {
-					declared.add(declaration.name.text);
+					add(declaration.name.text);
 				} else {
 					return; // bail out if it's not a simple variable
 				}
 			}
 		} else if (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) {
 			if (ts.isIdentifier(statement.name)) {
-				declared.add(statement.name.text);
+				add(statement.name.text);
 			}
+		} else if (ts.isExportDeclaration(statement) && !statement.exportClause) {
+			return; // export * from '..' -> bail
 		}
 	}
 
