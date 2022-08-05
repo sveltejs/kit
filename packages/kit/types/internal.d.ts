@@ -242,7 +242,7 @@ export interface SSROptions {
 	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
 	get_stack: (error: Error) => string | undefined;
-	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
+	handle_error(error: Error & { frame?: string }, event: RequestEvent): Promise<void>;
 	hooks: Hooks;
 	hydrate: boolean;
 	manifest: SSRManifest;

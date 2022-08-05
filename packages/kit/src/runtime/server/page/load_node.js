@@ -501,7 +501,7 @@ async function load_shadow_data(route, event, options, prerender) {
 		return data;
 	} catch (e) {
 		const error = coalesce_to_error(e);
-		options.handle_error(error, event);
+		await options.handle_error(error, event);
 
 		return {
 			status: 500,

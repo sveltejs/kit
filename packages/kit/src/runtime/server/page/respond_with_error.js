@@ -93,7 +93,7 @@ export async function respond_with_error({
 	} catch (err) {
 		const error = coalesce_to_error(err);
 
-		options.handle_error(error, event);
+		await options.handle_error(error, event);
 
 		return new Response(error.stack, {
 			status: 500

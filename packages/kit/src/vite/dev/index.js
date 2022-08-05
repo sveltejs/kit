@@ -330,8 +330,8 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						csp: svelte_config.kit.csp,
 						dev: true,
 						get_stack: (error) => fix_stack_trace(error),
-						handle_error: (error, event) => {
-							hooks.handleError({
+						handle_error: async (error, event) => {
+							await hooks.handleError({
 								error: new Proxy(error, {
 									get: (target, property) => {
 										if (property === 'stack') {

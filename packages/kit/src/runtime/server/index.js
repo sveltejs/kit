@@ -328,7 +328,7 @@ export async function respond(request, options, state) {
 	} catch (/** @type {unknown} */ e) {
 		const error = coalesce_to_error(e);
 
-		options.handle_error(error, event);
+		await options.handle_error(error, event);
 
 		const type = negotiate(event.request.headers.get('accept') || 'text/html', [
 			'text/html',

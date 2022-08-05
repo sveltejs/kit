@@ -57,8 +57,8 @@ export class Server {
 			csp: ${s(config.kit.csp)},
 			dev: false,
 			get_stack: error => String(error), // for security
-			handle_error: (error, event) => {
-				this.options.hooks.handleError({
+			handle_error: async (error, event) => {
+				await this.options.hooks.handleError({
 					error,
 					event,
 

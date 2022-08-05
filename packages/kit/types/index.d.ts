@@ -168,7 +168,7 @@ export interface Handle {
 }
 
 export interface HandleError {
-	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
+	(input: { error: Error & { frame?: string }; event: RequestEvent }): MaybePromise<void>;
 }
 
 /**

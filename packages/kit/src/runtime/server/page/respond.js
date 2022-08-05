@@ -51,7 +51,7 @@ export async function respond(opts) {
 	} catch (err) {
 		const error = coalesce_to_error(err);
 
-		options.handle_error(error, event);
+		await options.handle_error(error, event);
 
 		return await respond_with_error({
 			event,
@@ -133,7 +133,7 @@ export async function respond(opts) {
 				} catch (err) {
 					const e = coalesce_to_error(err);
 
-					options.handle_error(e, event);
+					await options.handle_error(e, event);
 
 					status = 500;
 					error = e;
@@ -180,7 +180,7 @@ export async function respond(opts) {
 							} catch (err) {
 								const e = coalesce_to_error(err);
 
-								options.handle_error(e, event);
+								await options.handle_error(e, event);
 
 								continue;
 							}
@@ -230,7 +230,7 @@ export async function respond(opts) {
 	} catch (err) {
 		const error = coalesce_to_error(err);
 
-		options.handle_error(error, event);
+		await options.handle_error(error, event);
 
 		return with_cookies(
 			await respond_with_error({
