@@ -457,20 +457,22 @@ export function create_client({ target, session, base, trailing_slash }) {
 	/**
 	 * @param {{
 	 *   node: import('types').CSRPageNode;
+	 * 	 parent: () => Promise<Record<string, any>>;
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   routeId: string | null;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
-	async function load_node({ node, url, params, routeId }) {
+	async function load_node({ node, parent, url, params, routeId }) {
 		// TODO loading from node.server belongs in here, not in load_route etc
 
 		const uses = {
 			params: new Set(),
 			url: false,
 			session: false,
-			dependencies: new Set()
+			dependencies: new Set(),
+			parent: false
 		};
 
 		/** @param dep {string} */
@@ -564,8 +566,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 					return started ? native_fetch(normalized, init) : initial_fetch(requested, init);
 				},
 				setHeaders: () => {}, // noop
-				depends
-				// TODO parent
+				depends,
+				parent: () => {
+					uses.parent = true;
+					return parent();
+				}
 			};
 
 			if (import.meta.env.DEV) {
@@ -619,95 +624,124 @@ export function create_client({ target, session, base, trailing_slash }) {
 			session: session_id !== current.session_id
 		};
 
-		/** @type {Array<import('./types').BranchNode | undefined>} */
-		const branch = [];
-
 		// preload modules to avoid waterfall, but handle rejections
 		// so they don't get reported to Sentry et al (we don't need
 		// to act on the failures at this point)
 		[...errors, ...layouts, page].forEach((loader) => loader?.().catch(() => {}));
 
 		const nodes = [...layouts, page];
+		let parent_changed_since_last_render = false;
+
+		const branch_promises = nodes.map(async (loader, i) => {
+			return Promise.resolve().then(async () => {
+				if (!loader) return;
+				try {
+					const node = await loader();
+					/** @type {import('./types').BranchNode | undefined} */
+					const previous = current.branch[i];
+
+					let changed_since_last_render =
+						!previous ||
+						node !== previous.node ||
+						(changed.url && previous.uses.url) ||
+						changed.params.some((param) => previous.uses.params.has(param)) ||
+						(changed.session && previous.uses.session) ||
+						Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep)));
+					const parent = async () => {
+						const data = {};
+						for (let j = 0; j < i - 1; j += 1) {
+							Object.assign(data, await branch_promises[j]);
+						}
+						return data;
+					};
+					if (previous?.uses.parent) {
+						// Unfortunate: This reintroduces a potential waterfall if people don't have `await parent()`
+						// as their first await call in their load function.
+						await parent();
+						changed_since_last_render = parent_changed_since_last_render;
+					}
+					parent_changed_since_last_render ||= changed_since_last_render;
+
+					if (changed_since_last_render) {
+						return await load_node({
+							node,
+							url,
+							params,
+							routeId: route.id,
+							parent
+						});
+					} else {
+						return previous;
+					}
+				} catch (e) {}
+			});
+		});
+
+		// if we don't do this, rejections will be unhandled
+		for (const p of branch_promises) p.catch(() => {});
+
+		/** @type {Array<import('./types').BranchNode | undefined>} */
+		const branch = [];
 
 		for (let i = 0; i < nodes.length; i += 1) {
-			/** @type {import('./types').BranchNode | undefined} */
-			let branch_node;
+			if (nodes[i]) {
+				try {
+					branch.push(await branch_promises[i]);
+				} catch (e) {
+					if (e instanceof Redirect) {
+						// TODO handle redirect
+					}
 
-			try {
-				if (!nodes[i]) continue;
+					const status = e instanceof HttpError ? e.status : 500;
+					const error = coalesce_to_error(e);
 
-				const node = await nodes[i]();
-				const previous = current.branch[i];
+					while (i--) {
+						if (errors[i]) {
+							/** @type {import('./types').BranchNode | undefined} */
+							let error_loaded;
 
-				const changed_since_last_render =
-					!previous ||
-					node !== previous.node ||
-					(changed.url && previous.uses.url) ||
-					changed.params.some((param) => previous.uses.params.has(param)) ||
-					(changed.session && previous.uses.session) ||
-					Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep)));
+							let j = i;
+							while (!branch[j]) j -= 1;
 
-				if (changed_since_last_render) {
-					branch_node = await load_node({
-						node,
-						url,
-						params,
-						routeId: route.id
-					});
-				} else {
-					branch_node = previous;
-				}
+							try {
+								error_loaded = {
+									node: await errors[i](),
+									data: {},
+									uses: {
+										params: new Set(),
+										url: false,
+										session: false,
+										dependencies: new Set(),
+										parent: false
+									},
+									redirect: undefined
+								};
 
-				branch.push(branch_node);
-			} catch (e) {
-				if (e instanceof Redirect) {
-					// TODO handle redirect
-				}
-
-				const status = e instanceof HttpError ? e.status : 500;
-				const error = coalesce_to_error(e);
-
-				while (i--) {
-					if (errors[i]) {
-						/** @type {import('./types').BranchNode | undefined} */
-						let error_loaded;
-
-						let j = i;
-						while (!branch[j]) j -= 1;
-
-						try {
-							error_loaded = {
-								node: await errors[i](),
-								data: {},
-								uses: {
-									params: new Set(),
-									url: false,
-									session: false,
-									dependencies: new Set()
-								},
-								redirect: undefined
-							};
-
-							return await get_navigation_result_from_branch({
-								url,
-								params,
-								branch: branch.slice(0, j + 1).concat(error_loaded),
-								status,
-								error,
-								routeId: route.id
-							});
-						} catch (e) {
-							continue;
+								return await get_navigation_result_from_branch({
+									url,
+									params,
+									branch: branch.slice(0, j + 1).concat(error_loaded),
+									status,
+									error,
+									routeId: route.id
+								});
+							} catch (e) {
+								continue;
+							}
 						}
 					}
-				}
 
-				return await load_root_error_page({
-					status,
-					error,
-					url,
-					routeId: route.id
-				});
+					return await load_root_error_page({
+						status,
+						error,
+						url,
+						routeId: route.id
+					});
+				}
+			} else {
+				// push an empty slot so we can rewind past gaps to the
+				// layout that corresponds with an +error.svelte page
+				branch.push(undefined);
 			}
 		}
 
@@ -737,14 +771,16 @@ export function create_client({ target, session, base, trailing_slash }) {
 			node: await default_layout,
 			url,
 			params,
-			routeId
+			routeId,
+			parent: () => Promise.resolve({})
 		});
 
 		const root_error = await load_node({
 			node: await default_error,
 			url,
 			params,
-			routeId
+			routeId,
+			parent: () => Promise.resolve({})
 		});
 
 		return await get_navigation_result_from_branch({
@@ -1121,7 +1157,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		_hydrate: async ({ status, error, node_ids, params, routeId }) => {
 			const url = new URL(location.href);
 
-			/** @type {Array<import('./types').BranchNode | undefined>} */
+			/** @type {Array<Promise<import('./types').BranchNode>>} */
 			const branch = [];
 
 			/** @type {import('./types').NavigationResult | undefined} */
@@ -1131,11 +1167,22 @@ export function create_client({ target, session, base, trailing_slash }) {
 				for (let i = 0; i < node_ids.length; i += 1) {
 					const node_id = node_ids[i];
 
-					const branch_node = await load_node({
-						node: await nodes[node_id](),
-						url,
-						params,
-						routeId
+					const branch_node = Promise.resolve().then(async () => {
+						return load_node({
+							node: await nodes[node_id](),
+							url,
+							params,
+							routeId,
+							parent: async () => {
+								const data = {};
+								for (let j = 0; j < i - 1; j += 1) {
+									Object.assign(data, await branch[j]);
+								}
+								return data;
+							}
+							// TODO pass deserialized server data
+							// TODO ..but in a way that each node only gets its own data? was that the case before?
+						});
 					});
 
 					branch.push(branch_node);
@@ -1144,7 +1191,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				result = await get_navigation_result_from_branch({
 					url,
 					params,
-					branch,
+					branch: await Promise.all(branch),
 					status,
 					error,
 					routeId

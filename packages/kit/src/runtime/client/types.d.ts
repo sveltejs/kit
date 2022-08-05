@@ -62,6 +62,7 @@ export type BranchNode = {
 		url: boolean; // TODO make more granular?
 		session: boolean;
 		dependencies: Set<string>;
+		parent: boolean;
 	};
 	redirect: string | undefined;
 };
