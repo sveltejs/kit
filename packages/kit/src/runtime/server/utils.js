@@ -74,12 +74,22 @@ export const GENERIC_ERROR = {
 };
 
 /**
- *
  * @param {Record<import('types').HttpMethod, any>} mod
  * @param {import('types').HttpMethod} method
- * @returns
  */
 export function method_not_allowed(mod, method) {
+	return new Response(`${method} method not allowed`, {
+		status: 405,
+		headers: {
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+			// "The server must generate an Allow header field in a 405 status code response"
+			allow: allowed_methods(mod).join(', ')
+		}
+	});
+}
+
+/** @param {Record<import('types').HttpMethod, any>} mod */
+export function allowed_methods(mod) {
 	const allowed = [];
 
 	for (const method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
@@ -88,12 +98,5 @@ export function method_not_allowed(mod, method) {
 
 	if (mod.GET || mod.HEAD) allowed.push('HEAD');
 
-	return new Response(`${method} method not allowed`, {
-		status: 405,
-		headers: {
-			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-			// "The server must generate an Allow header field in a 405 status code response"
-			allow: allowed.join(', ')
-		}
-	});
+	return allowed;
 }

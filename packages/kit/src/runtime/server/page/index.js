@@ -1,11 +1,11 @@
 import { negotiate } from '../../../utils/http.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
-import { coalesce_to_error } from '../../../utils/error.js';
-import { method_not_allowed, clone_error } from '../utils.js';
+import { method_not_allowed, clone_error, allowed_methods } from '../utils.js';
 import { create_fetch } from './fetch.js';
 import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
 import { Redirect } from '../../../index/private.js';
+import { error } from '../../../index/index.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -53,9 +53,47 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			options.manifest._.nodes[route.page]()
 		]);
 
-		// TODO for non-GET requests, first call handler in +page.server.js
-		// (this also determines status code)
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
+
+		let status = 200;
+
+		/** @type {HttpError | Error} */
+		let mutation_error;
+
+		/** @type {Record<string, string>} */
+		let mutation_validation_errors;
+
+		if (leaf_node.server && event.request.method !== 'GET' && event.request.method !== 'HEAD') {
+			// for non-GET requests, first call handler in +page.server.js
+			// (this also determines status code)
+			try {
+				const handler = leaf_node.server[event.request.method];
+				if (handler) {
+					const result = await handler.call(null, event);
+
+					if (result?.errors) {
+						mutation_validation_errors = result.errors;
+						status = result.status ?? 400;
+					}
+
+					if (event.request.method === 'POST' && result?.location) {
+						return redirect_response(status, result.location);
+					}
+				} else {
+					event.setHeaders({
+						allow: allowed_methods(leaf_node.server).join(', ')
+					});
+
+					mutation_error = error(405, 'Method not allowed');
+				}
+			} catch (e) {
+				if (e.__is_redirect) {
+					return redirect_response(e.status, e.location);
+				}
+
+				mutation_error = e;
+			}
+		}
 
 		if (!resolve_opts.ssr) {
 			return await render_response({
@@ -96,11 +134,21 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		let branch = [];
 
 		/** @type {Error | null} */
-		let error = null;
+		let load_error = null;
 
 		/** @type {Array<Promise<import('types').JSONObject | null>>} */
 		const server_promises = nodes.map((node, i) => {
-			if (error) throw error; // if an error happens immediately, don't bother with the rest of the nodes
+			if (load_error) {
+				// if an error happens immediately, don't bother with the rest of the nodes
+				throw load_error;
+			}
+
+			if (node === leaf_node && mutation_error) {
+				// we wait until here to throw the error so that we can use
+				// any nested +error.svelte components that were defined
+				throw mutation_error;
+			}
+
 			return Promise.resolve().then(async () => {
 				try {
 					const server_data = node?.server?.GET?.call(null, {
@@ -116,15 +164,15 @@ export async function render_page(event, route, options, state, resolve_opts) {
 
 					return server_data ? unwrap_promises(server_data) : null;
 				} catch (e) {
-					error = /** @type {Error} */ (e);
-					throw error;
+					load_error = /** @type {Error} */ (e);
+					throw load_error;
 				}
 			});
 		});
 
 		/** @type {Array<Promise<Record<string, any> | null>>} */
 		const load_promises = nodes.map((node, i) => {
-			if (error) throw error;
+			if (load_error) throw load_error;
 			return Promise.resolve().then(async () => {
 				try {
 					const server_data = await server_promises[i];
@@ -160,8 +208,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 
 					return server_data;
 				} catch (e) {
-					error = /** @type {Error} */ (e);
-					throw error;
+					load_error = /** @type {Error} */ (e);
+					throw load_error;
 				}
 			});
 		});
@@ -229,6 +277,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 				branch.push(null);
 			}
 		}
+
+		// TODO use mutation_validation_errors
 
 		return await render_response({
 			event,
