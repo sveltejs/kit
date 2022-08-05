@@ -78,7 +78,7 @@ function env() {
 	let vite_config_env;
 
 	return {
-		name: 'vite-plugin-env',
+		name: 'vite-plugin-svelte-kit:env',
 
 		async config(_, config_env) {
 			vite_config_env = config_env;
