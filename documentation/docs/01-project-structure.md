@@ -13,6 +13,8 @@ my-project/
 │ │ └ [your param matchers]
 │ ├ routes/
 │ │ └ [your routes]
+| ├ test/
+│ │ └ [your test files]
 │ ├ app.html
 │ └ hooks.js
 ├ static/
