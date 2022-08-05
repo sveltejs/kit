@@ -19,7 +19,7 @@ const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
 const host_header = env('HOST_HEADER', 'host').toLowerCase();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = __dirname || path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * @param {string} path
