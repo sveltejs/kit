@@ -565,9 +565,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 				},
 				setHeaders: () => {}, // noop
 				depends,
-				parent: () => {
+				get parent() {
+					// uses.parent assignment here, not on method inokation, else we wouldn't notice when someone
+					// does await parent() inside an if branch which wasn't executed yet.
 					uses.parent = true;
-					return parent();
+					return parent;
 				}
 			};
 
@@ -628,50 +630,52 @@ export function create_client({ target, session, base, trailing_slash }) {
 		[...errors, ...layouts, page].forEach((loader) => loader?.().catch(() => {}));
 
 		const nodes = [...layouts, page];
-		let parent_changed_since_last_render = false;
+
+		// To avoid waterfalls when someone awaits a parent, compute as much as possible here already
+		/** @type{boolean[]} */
+		const nodes_changed_since_last_render = [];
+		for (let i = 0; i < nodes.length; i++) {
+			if (!nodes[i]) {
+				nodes_changed_since_last_render.push(false);
+			} else {
+				const previous = current.branch[i];
+				const changed_since_last_render =
+					!previous ||
+					(changed.url && previous.uses.url) ||
+					changed.params.some((param) => previous.uses.params.has(param)) ||
+					(changed.session && previous.uses.session) ||
+					Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep))) ||
+					(previous.uses.parent && nodes_changed_since_last_render.includes(true));
+				nodes_changed_since_last_render.push(changed_since_last_render);
+			}
+		}
 
 		const branch_promises = nodes.map(async (loader, i) => {
 			return Promise.resolve().then(async () => {
 				if (!loader) return;
-				try {
-					const node = await loader();
-					/** @type {import('./types').BranchNode | undefined} */
-					const previous = current.branch[i];
+				const node = await loader();
+				/** @type {import('./types').BranchNode | undefined} */
+				const previous = current.branch[i];
+				const changed_since_last_render =
+					nodes_changed_since_last_render[i] || !previous || node !== previous.node;
 
-					let changed_since_last_render =
-						!previous ||
-						node !== previous.node ||
-						(changed.url && previous.uses.url) ||
-						changed.params.some((param) => previous.uses.params.has(param)) ||
-						(changed.session && previous.uses.session) ||
-						Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep)));
-					const parent = async () => {
-						const data = {};
-						for (let j = 0; j < i - 1; j += 1) {
-							Object.assign(data, await branch_promises[j]);
+				if (changed_since_last_render) {
+					return await load_node({
+						node,
+						url,
+						params,
+						routeId: route.id,
+						parent: async () => {
+							const data = {};
+							for (let j = 0; j < i - 1; j += 1) {
+								Object.assign(data, await branch_promises[j]);
+							}
+							return data;
 						}
-						return data;
-					};
-					if (previous?.uses.parent) {
-						// Unfortunate: This reintroduces a potential waterfall if people don't have `await parent()`
-						// as their first await call in their load function.
-						await parent();
-						changed_since_last_render = parent_changed_since_last_render;
-					}
-					parent_changed_since_last_render ||= changed_since_last_render;
-
-					if (changed_since_last_render) {
-						return await load_node({
-							node,
-							url,
-							params,
-							routeId: route.id,
-							parent
-						});
-					} else {
-						return previous;
-					}
-				} catch (e) {}
+					});
+				} else {
+					return previous;
+				}
 			});
 		});
 
