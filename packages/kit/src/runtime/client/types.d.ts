@@ -48,8 +48,13 @@ export type NavigationIntent = {
 	url: URL;
 };
 
-export type NavigationResult = {
-	redirect?: string;
+export type NavigationResult = NavigationRedirectResult | NavigationFinishedResult;
+export type NavigationRedirectResult = {
+	redirect: true;
+	location: string;
+};
+export type NavigationFinishedResult = {
+	redirect?: false;
 	state: NavigationState;
 	props: Record<string, any>;
 };
@@ -62,8 +67,8 @@ export type BranchNode = {
 		url: boolean; // TODO make more granular?
 		session: boolean;
 		dependencies: Set<string>;
+		parent: boolean;
 	};
-	redirect: string | undefined;
 };
 
 export type NavigationState = {
