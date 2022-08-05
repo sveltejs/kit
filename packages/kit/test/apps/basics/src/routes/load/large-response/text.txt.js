@@ -6,6 +6,8 @@ for (let i = 0; i < chunk_size; i += 1) {
 	chunk += String(i % 10);
 }
 
+const encoder = new TextEncoder();
+
 export function GET() {
 	let i = 0;
 
@@ -13,7 +15,7 @@ export function GET() {
 		body: new ReadableStream({
 			pull: (controller) => {
 				if (i++ < chunk_count) {
-					controller.enqueue(chunk);
+					controller.enqueue(encoder.encode(chunk));
 				} else {
 					controller.close();
 				}

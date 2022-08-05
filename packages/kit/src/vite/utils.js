@@ -273,7 +273,6 @@ const find_illegal_rollup_imports = (
 		if (chain) return [{ name, dynamic }, ...chain];
 	}
 
-	seen.delete(name);
 	return null;
 };
 
@@ -335,6 +334,5 @@ function find_illegal_vite_imports(node, illegal_imports, module_types, seen = n
 		if (chain) return [{ name, dynamic: false }, ...chain];
 	}
 
-	seen.delete(name);
 	return null;
 }
