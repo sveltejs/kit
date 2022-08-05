@@ -14,8 +14,9 @@ import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import { get_aliases, resolve_entry, prevent_illegal_rollup_imports } from './utils.js';
+import { get_aliases, resolve_entry, prevent_illegal_rollup_imports, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
+import { create_env_module } from '../core/sync/write_ambient.js';
 
 const cwd = process.cwd();
 
@@ -438,6 +439,30 @@ function kit() {
 		 */
 		configurePreviewServer(vite) {
 			return preview(vite, vite_config, svelte_config);
+		},
+
+		async resolveId(id) {
+			switch (id) {
+				case '$env/static/private':
+					return '\0$env/static/private';
+				case '$env/static/public':
+					return '\0$env/static/public';
+			}
+		},
+
+		async load(id) {
+			switch (id) {
+				case '\0$env/static/private':
+					return create_env_module(
+						'$env/static/private',
+						get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix).private
+					);
+				case '\0$env/static/public':
+					return create_env_module(
+						'$env/static/private',
+						get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix).public
+					);
+			}
 		}
 	};
 }

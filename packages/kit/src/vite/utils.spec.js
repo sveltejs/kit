@@ -236,16 +236,12 @@ test('transform kit.alias to resolve.alias', () => {
 		{ find: /^key$/.toString(), replacement: 'value' },
 		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' },
 		{
-			find: '$env/static/public',
-			replacement: '.svelte-kit/runtime/env/static/public.js'
+			find: '$env/dynamic/public',
+			replacement: '.svelte-kit/runtime/env/dynamic/public.js'
 		},
 		{
-			find: '$env/static/private',
-			replacement: '.svelte-kit/runtime/env/static/private.js'
-		},
-		{
-			find: '$env',
-			replacement: 'src/runtime/env'
+			find: '$env/dynamic/private',
+			replacement: '.svelte-kit/runtime/env/dynamic/private.js'
 		}
 	]);
 });

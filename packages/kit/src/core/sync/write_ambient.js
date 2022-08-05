@@ -1,5 +1,4 @@
 import path from 'path';
-import colors from 'kleur';
 import { get_env } from '../../vite/utils.js';
 import { write_if_changed, reserved, valid_identifier } from './utils.js';
 
@@ -16,16 +15,9 @@ const types_reference = '/// <reference types="@sveltejs/kit" />\n\n';
 export function write_ambient(config, mode) {
 	const env = get_env(mode, config.env.publicPrefix);
 
-	// TODO when testing src, `$app` points at `src/runtime/app`... will
-	// probably need to fiddle with aliases
 	write_if_changed(
 		path.join(config.outDir, 'runtime/env/static/public.js'),
 		create_env_module('$env/static/public', env.public)
-	);
-
-	write_if_changed(
-		path.join(config.outDir, 'runtime/env/static/private.js'),
-		create_env_module('$env/static/private', env.private)
 	);
 
 	write_if_changed(
@@ -43,23 +35,12 @@ export function write_ambient(config, mode) {
  * @param {Record<string, string>} env
  * @returns {string}
  */
-function create_env_module(id, env) {
+export function create_env_module(id, env) {
 	/** @type {string[]} */
 	const declarations = [];
 
 	for (const key in env) {
-		const warning = !valid_identifier.test(key)
-			? 'not a valid identifier'
-			: reserved.has(key)
-			? 'a reserved word'
-			: null;
-
-		if (warning) {
-			console.error(
-				colors
-					.bold()
-					.yellow(`Omitting environment variable "${key}" from ${id} as it is ${warning}`)
-			);
+		if (!valid_identifier.test(key) || reserved.has(key)) {
 			continue;
 		}
 
