@@ -32,7 +32,7 @@ export function serialize_error(error, get_stack) {
  * @param {Error} error
  * @param {(error: Error) => string | undefined} get_stack
  */
-function clone_error(error, get_stack) {
+export function clone_error(error, get_stack) {
 	const {
 		name,
 		message,

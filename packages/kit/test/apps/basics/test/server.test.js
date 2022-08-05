@@ -109,9 +109,6 @@ test.describe('Errors', () => {
 		);
 	});
 
-	// TODO before we implemented route fallthroughs, and there was a 1:1
-	// regex:route relationship, it was simple to say 'method not implemented
-	// for this endpoint'. now it's a little tricker. does a 404 suffice?
 	test('unhandled http method', async ({ request }) => {
 		const response = await request.put('/errors/invalid-route-response');
 
@@ -155,17 +152,10 @@ test.describe('Errors', () => {
 			}
 		});
 
-		const { message, name, stack } = await response.json();
+		const { message } = await response.json();
 
 		expect(response.status()).toBe(400);
-		expect(name).toBe('Error');
 		expect(message).toBe('oops');
-
-		if (process.env.DEV) {
-			expect(stack.split('\n').length).toBeGreaterThan(1);
-		} else {
-			expect(stack.split('\n').length).toBe(1);
-		}
 	});
 
 	test('returns 400 when accessing a malformed URI', async ({ page }) => {

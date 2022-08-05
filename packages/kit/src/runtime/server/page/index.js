@@ -1,11 +1,11 @@
 import { negotiate } from '../../../utils/http.js';
 import { render_response } from './render.js';
-import { load_data } from './load_data.js';
 import { respond_with_error } from './respond_with_error.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { method_not_allowed } from '../utils.js';
-import { Redirect } from '../../../index/private.js';
+import { method_not_allowed, clone_error } from '../utils.js';
+import { HttpError, Redirect } from '../../../index/private.js';
 import { create_fetch } from './fetch.js';
+import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -38,34 +38,13 @@ export async function render_page(event, route, options, state, resolve_opts) {
 	if (accept === 'application/json') {
 		const node = await options.manifest._.nodes[route.page]();
 		if (node.server) {
-			return handle_json_request(event, node.server);
+			return handle_json_request(event, options, node.server);
 		}
 	}
 
 	const $session = await options.hooks.getSession(event);
 
 	const { fetcher, fetched } = create_fetch({ event, options, state, route });
-
-	// TODO for non-GET requests, first call handler in +page.server.js
-	// (this also determines status code)
-
-	if (!resolve_opts.ssr) {
-		return await render_response({
-			branch: [],
-			fetched,
-			page_config: {
-				hydrate: true,
-				router: true
-			},
-			status: 200,
-			error: null,
-			event,
-			options,
-			state,
-			$session,
-			resolve_opts
-		});
-	}
 
 	try {
 		const nodes = await Promise.all([
@@ -74,9 +53,27 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			options.manifest._.nodes[route.page]()
 		]);
 
+		// TODO for non-GET requests, first call handler in +page.server.js
+		// (this also determines status code)
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
 
-		let page_config = get_page_config(leaf_node, options);
+		if (!resolve_opts.ssr) {
+			return await render_response({
+				branch: [],
+				fetched,
+				page_config: {
+					hydrate: true,
+					router: true
+				},
+				status: 200,
+				error: null,
+				event,
+				options,
+				state,
+				$session,
+				resolve_opts
+			});
+		}
 
 		if (state.prerendering) {
 			// if the page isn't marked as prerenderable (or is explicitly
@@ -101,21 +98,91 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		/** @type {number} */
 		let status = 200;
 
+		/** @type {Error | null} */
+		let error = null;
+
+		/** @type {Array<Promise<import('types').JSONObject | null>>} */
+		const server_promises = nodes.map((node, i) => {
+			if (error) throw error; // if an error happens immediately, don't bother with the rest of the nodes
+			return Promise.resolve().then(async () => {
+				try {
+					const server_data = node?.server?.GET?.call(null, {
+						...event,
+						parent: async () => {
+							const data = {};
+							for (let j = 0; j < i - 1; j += 1) {
+								Object.assign(data, await server_promises[j]);
+							}
+							return data;
+						}
+					});
+
+					return server_data ? unwrap_promises(server_data) : null;
+				} catch (e) {
+					error = /** @type {Error} */ (e);
+					throw error;
+				}
+			});
+		});
+
+		/** @type {Array<Promise<Record<string, any> | null>>} */
+		const load_promises = nodes.map((node, i) => {
+			if (error) throw error;
+			return Promise.resolve().then(async () => {
+				try {
+					const server_data = await server_promises[i];
+
+					if (node?.module?.load) {
+						const data = await node?.module?.load?.call(null, {
+							url: state.prerendering ? new PrerenderingURL(event.url) : new LoadURL(event.url),
+							params: event.params,
+							data: server_data,
+							routeId: event.routeId,
+							get session() {
+								if (node.module.prerender ?? options.prerender.default) {
+									throw Error(
+										'Attempted to access session from a prerendered page. Session would never be populated.'
+									);
+								}
+								return $session;
+							},
+							fetch: fetcher,
+							setHeaders: event.setHeaders,
+							depends: () => {},
+							parent: async () => {
+								const data = {};
+								for (let j = 0; j < i - 1; j += 1) {
+									Object.assign(data, await load_promises[j]);
+								}
+								return data;
+							}
+						});
+
+						return data ? unwrap_promises(data) : null;
+					}
+
+					return server_data;
+				} catch (e) {
+					error = /** @type {Error} */ (e);
+					throw error;
+				}
+			});
+		});
+
+		// if we don't do this, rejections will be unhandled
+		for (const p of server_promises) p.catch(() => {});
+		for (const p of load_promises) p.catch(() => {});
+
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
 
 			if (node) {
 				try {
-					const loaded = await load_data({
-						event,
-						options,
-						state,
-						$session,
+					branch.push({
 						node,
-						fetcher
+						server_data: await server_promises[i],
+						data: await load_promises[i]
 					});
-
-					branch.push(loaded);
 				} catch (err) {
 					const error = coalesce_to_error(err);
 
@@ -126,16 +193,10 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					while (i--) {
 						if (route.errors[i]) {
 							const index = /** @type {number} */ (route.errors[i]);
-							const error_node = await options.manifest._.nodes[index]();
+							const node = await options.manifest._.nodes[index]();
 
 							let j = i;
 							while (!branch[j]) j -= 1;
-
-							const error_loaded = /** @type {import('./types').Loaded} */ ({
-								node: error_node,
-								data: {},
-								server_data: {}
-							});
 
 							return await render_response({
 								event,
@@ -149,7 +210,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 								branch: branch
 									.slice(0, j + 1)
 									.filter(Boolean)
-									.concat(error_loaded),
+									.concat({ node, data: null, server_data: null }),
 								fetched
 							});
 						}
@@ -168,7 +229,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			state,
 			$session,
 			resolve_opts,
-			page_config,
+			page_config: get_page_config(leaf_node, options),
 			status,
 			error: null,
 			branch: branch.filter(Boolean),
@@ -211,9 +272,10 @@ function get_page_config(leaf, options) {
 
 /**
  * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
  * @param {import('types').SSRNode['server']} mod
  */
-async function handle_json_request(event, mod) {
+async function handle_json_request(event, options, mod) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 	const handler = mod[method === 'HEAD' ? 'GET' : method];
 
@@ -245,11 +307,15 @@ async function handle_json_request(event, mod) {
 
 		return new Response(undefined, { status: 204 });
 	} catch (error) {
-		if (error instanceof Redirect) {
+		if (error?.__is_redirect) {
 			return Response.redirect(error.location, error.status);
 		}
 
-		return json_response({ message: error.message }, error.status || 500);
+		if (error?.__is_http_error) {
+			return json_response({ message: error.message }, error.status);
+		}
+
+		return json_response(clone_error(error, options.get_stack), 500);
 	}
 }
 
@@ -265,4 +331,16 @@ function json_response(data, status) {
 			'content-type': 'application/json; charset=utf-8'
 		}
 	});
+}
+
+/** @param {Record<string, any>} object */
+async function unwrap_promises(object) {
+	/** @type {import('types').JSONObject} */
+	const unwrapped = {};
+
+	for (const key in object) {
+		unwrapped[key] = await object[key];
+	}
+
+	return unwrapped;
 }

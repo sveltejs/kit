@@ -191,7 +191,7 @@ export interface LoadEvent<
 > {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
-	data: Data;
+	data: JSONObject | null;
 	routeId: string | null;
 	session: App.Session;
 	setHeaders: (headers: ResponseHeaders) => void;
