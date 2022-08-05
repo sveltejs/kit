@@ -13,22 +13,8 @@ import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
  * @returns {Promise<import('./types').Loaded>}
  */
 export async function load_data({ event, options, state, node, fetcher, $session }) {
-	/** @type {Record<string, any>} */
-	let server_data;
-
-	if (node.server) {
-		const should_prerender = node.module?.prerender ?? options.prerender.default;
-		const mod = node.server;
-
-		if (should_prerender && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
-			throw new Error('Cannot prerender pages that have endpoints with mutative methods');
-		}
-
-		// TODO unwrap top-level promises
-		server_data = await mod.GET.call(null, event);
-	} else {
-		server_data = {};
-	}
+	/** @type {Record<string, any> | null} */
+	const server_data = node.server?.GET?.call(null, event) ?? null; // TODO unwrap top-level promises
 
 	let data = server_data;
 
@@ -52,7 +38,7 @@ export async function load_data({ event, options, state, node, fetcher, $session
 		};
 
 		// TODO unwrap top-level promises
-		data = await node.module.load.call(null, load_event);
+		data = (await node.module.load.call(null, load_event)) ?? null;
 	}
 
 	return {

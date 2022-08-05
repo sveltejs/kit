@@ -88,6 +88,11 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					status: 204
 				});
 			}
+
+			const mod = leaf_node.server;
+			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
+				throw new Error('Cannot prerender pages that have endpoints with mutative methods');
+			}
 		}
 
 		/** @type {Array<Loaded | null>} */

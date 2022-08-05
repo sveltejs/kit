@@ -19,7 +19,7 @@ export interface FetchState {
 
 export type Loaded = {
 	node: SSRNode;
-	data: Record<string, any>;
+	data: Record<string, any> | null;
 	server_data: JSONValue;
 };
 

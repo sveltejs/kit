@@ -187,7 +187,7 @@ export interface Load<
 
 export interface LoadEvent<
 	Params extends Record<string, string> = Record<string, string>,
-	Data extends Record<string, any> = Record<string, any>
+	Data extends Record<string, any> | null = Record<string, any> | null
 > {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
@@ -196,7 +196,8 @@ export interface LoadEvent<
 	session: App.Session;
 	setHeaders: (headers: ResponseHeaders) => void;
 	url: URL;
-	// TODO parent, depends
+	parent: () => Promise<Record<string, any>>;
+	depends: (...deps: string[]) => void;
 }
 
 export interface LoadOutputCache {
