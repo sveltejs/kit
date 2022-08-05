@@ -97,7 +97,7 @@ const Sentry: any;
 // @filename: index.js
 // ---cut---
 /** @type {import('@sveltejs/kit').HandleError} */
-export async function handleError({ error, event }) {
+export function handleError({ error, event }) {
 	// example integration with https://sentry.io/
 	Sentry.captureException(error, { event });
 }
