@@ -110,7 +110,7 @@ export async function load({ parent }) {
 
 #### depends
 
-`depends` is a helper method which allows to declare a dependency on a specific resource. The input is an array of strings representing URLs the page depends on, which can subsequently be used with [`invalidate`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun. You only need to invoke `depends` with them if you're using a custom API client; URLs loaded with the provided `fetch` function are added automatically.
+`depends` is a helper method which allows to declare a dependency on a specific resource. The input is one or more strings representing URLs the page depends on, which can subsequently be used with [`invalidate`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun. You only need to invoke `depends` with them if you're using a custom API client; URLs loaded with the provided `fetch` function are added automatically.
 
 URLs can be absolute or relative to the page being loaded, and must be [encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding).
 
@@ -120,7 +120,7 @@ URLs can be absolute or relative to the page being loaded, and must be [encoded]
 export async function load({ depends }) {
 	const url = `https://cms.example.com/articles.json`;
 	const response = await myOwnFetch(url);
-	depends(url);
+	depends(url /*, url2, url3, .. */);
 
 	return {
 		article: await response.json()
