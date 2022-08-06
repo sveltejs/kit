@@ -1,5 +1,13 @@
 # svelte-migrate
 
+## 1.0.0-next.3
+
+### Patch Changes
+
+- handle more import cases ([#5828](https://github.com/sveltejs/kit/pull/5828))
+
+* check load function input ([#5838](https://github.com/sveltejs/kit/pull/5838))
+
 ## 1.0.0-next.2
 
 ### Patch Changes
