@@ -33,7 +33,7 @@ export function migrate_page_server(content) {
 			if (GET?.body) {
 				// possible TODOs — handle errors and redirects
 				rewrite_returns(GET.body, (expr, node) => {
-					const nodes = expr && ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
+					const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
 
 					if (!nodes || nodes.headers || (nodes.status && nodes.status.getText() !== '200')) {
 						manual_return_migration(node || GET, file.code, TASKS.PAGE_ENDPOINT);

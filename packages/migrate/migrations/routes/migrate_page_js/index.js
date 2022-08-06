@@ -41,7 +41,7 @@ export function migrate_page(content) {
 			const imports = new Set();
 
 			rewrite_returns(fn.body, (expr, node) => {
-				const nodes = expr && ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
+				const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
 
 				if (nodes) {
 					const keys = Object.keys(nodes).sort().join(' ');
