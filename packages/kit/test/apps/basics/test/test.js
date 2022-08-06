@@ -429,16 +429,6 @@ test.describe('Errors', () => {
 		expect(/** @type {Response} */ (response).status()).toBe(555);
 	});
 
-	test('server-side error from load() is malformed', async ({ page }) => {
-		await page.goto('/errors/load-error-malformed-server');
-
-		const body = await page.textContent('body');
-
-		expect(body).toMatch(
-			'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
-		);
-	});
-
 	test('error in endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint');
 
@@ -451,7 +441,9 @@ test.describe('Errors', () => {
 		}
 
 		expect(res && res.status()).toBe(500);
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Error"'
+		);
 
 		const contents = await page.textContent('#stack');
 		const location = /endpoint\.svelte:12:9|endpoint\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
@@ -469,7 +461,9 @@ test.describe('Errors', () => {
 		expect(read_errors('/errors/endpoint-not-ok.json')).toBeUndefined();
 
 		expect(res && res.status()).toBe(555);
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Error"'
+		);
 
 		const contents = await page.textContent('#stack');
 		const location = /endpoint-not-ok\.svelte:12:9|endpoint-not-ok\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
@@ -482,6 +476,8 @@ test.describe('Errors', () => {
 	});
 
 	test('error in shadow endpoint', async ({ page, read_errors }) => {
+		const location = '+page.server.js:3:8';
+
 		const res = await page.goto('/errors/endpoint-shadow');
 
 		// should include stack trace
@@ -489,7 +485,7 @@ test.describe('Errors', () => {
 		expect(lines[0]).toMatch('nope');
 
 		if (process.env.DEV) {
-			expect(lines[1]).toMatch('endpoint-shadow.js:3:8');
+			expect(lines[1]).toMatch(location);
 		}
 
 		expect(res && res.status()).toBe(500);
@@ -498,7 +494,6 @@ test.describe('Errors', () => {
 		);
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint-shadow.js:3:8';
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
@@ -514,16 +509,8 @@ test.describe('Errors', () => {
 
 		expect(res && res.status()).toBe(555);
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Failed to load data"'
+			'This is your custom error page saying: "Error: 555"'
 		);
-	});
-
-	test('server-side 4xx status without error from load()', async ({ page }) => {
-		const response = await page.goto('/errors/load-status-without-error-server');
-
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: "401"');
-		expect(/** @type {Response} */ (response).status()).toBe(401);
 	});
 
 	test('error thrown in handle results in a rendered error page', async ({ page }) => {
@@ -572,7 +559,7 @@ test.describe('Errors', () => {
 
 		if (process.env.DEV) {
 			const lines = stack.split('\n');
-			expect(lines[1]).toContain('get-implicit.js:4:8');
+			expect(lines[1]).toContain('+page.server.js:4:8');
 		}
 
 		const error = read_errors('/errors/page-endpoint/get-implicit');
