@@ -179,7 +179,7 @@ export function guess_indent(content) {
 
 	// Otherwise, we need to guess the multiple
 	const min = spaced.reduce((previous, current) => {
-		const count = /^ +/.exec(current)[0].length;
+		const count = /^ +/.exec(current)?.[0].length ?? 0;
 		return Math.min(count, previous);
 	}, Infinity);
 
@@ -192,7 +192,7 @@ export function guess_indent(content) {
  */
 export function indent_at_line(content, offset) {
 	const substr = content.substring(content.lastIndexOf('\n', offset) + 1, offset);
-	return /\s*/.exec(substr)[0];
+	return /\s*/.exec(substr)?.[0] ?? '';
 }
 
 /**
@@ -282,13 +282,18 @@ export function get_exports(node) {
 	let complex = false;
 
 	for (const statement of node.statements) {
-		if (ts.isExportDeclaration(statement) && ts.isNamedExports(statement.exportClause)) {
+		if (
+			ts.isExportDeclaration(statement) &&
+			statement.exportClause &&
+			ts.isNamedExports(statement.exportClause)
+		) {
 			// export { x }, export { x as y }
 			for (const specifier of statement.exportClause.elements) {
 				map.set(specifier.name.text, specifier.propertyName?.text || specifier.name.text);
 			}
 		} else if (
 			ts.isFunctionDeclaration(statement) &&
+			statement.name &&
 			statement.modifiers?.[0]?.kind === ts.SyntaxKind.ExportKeyword
 		) {
 			// export function x ...
@@ -316,10 +321,14 @@ export function get_exports(node) {
 /**
  * @param {ts.Node} statement
  * @param {string[]} names
- * @returns {ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction | void}
+ * @returns {ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction | undefined}
  */
 export function get_function_node(statement, ...names) {
-	if (ts.isFunctionDeclaration(statement) && names.includes(statement.name.text)) {
+	if (
+		ts.isFunctionDeclaration(statement) &&
+		statement.name &&
+		names.includes(statement.name.text)
+	) {
 		// export function x ...
 		return statement;
 	}
@@ -329,6 +338,7 @@ export function get_function_node(statement, ...names) {
 			if (
 				ts.isIdentifier(declaration.name) &&
 				names.includes(declaration.name.text) &&
+				declaration.initializer &&
 				(ts.isArrowFunction(declaration.initializer) ||
 					ts.isFunctionExpression(declaration.initializer))
 			) {
@@ -340,10 +350,11 @@ export function get_function_node(statement, ...names) {
 }
 
 /**
- * Utility for rewriting return statements. If `node` is `undefined`,
- * it means it's a concise arrow function body (`() => ({}))`
+ * Utility for rewriting return statements.
+ * If `node` is `undefined`, it means it's a concise arrow function body (`() => ({}))`.
+ * Lone `return;` statements are left untouched.
  * @param {ts.Block | ts.ConciseBody} block
- * @param {(expression: ts.Expression, node: ts.ReturnStatement | void) => void} callback
+ * @param {(expression: ts.Expression, node: ts.ReturnStatement | undefined) => void} callback
  */
 export function rewrite_returns(block, callback) {
 	if (ts.isBlock(block)) {
@@ -358,7 +369,7 @@ export function rewrite_returns(block, callback) {
 				return;
 			}
 
-			if (ts.isReturnStatement(node)) {
+			if (ts.isReturnStatement(node) && node.expression) {
 				callback(node.expression, node);
 				return;
 			}
@@ -372,7 +383,7 @@ export function rewrite_returns(block, callback) {
 			block = block.expression;
 		}
 
-		callback(block, null);
+		callback(block, undefined);
 	}
 }
 

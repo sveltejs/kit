@@ -32,6 +32,7 @@
 		"uvu": "^0.5.6"
 	},
 	"scripts": {
-		"test": "uvu"
+		"test": "uvu",
+		"check": "tsc"
 	}
 }

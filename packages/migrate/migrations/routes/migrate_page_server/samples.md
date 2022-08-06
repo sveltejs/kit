@@ -69,3 +69,17 @@ export function POST() {
 	return {};
 }
 ```
+
+## A function that returns nothing
+
+```js before
+export function GET() {
+	return;
+}
+```
+
+```js after
+export function GET() {
+	return;
+}
+```

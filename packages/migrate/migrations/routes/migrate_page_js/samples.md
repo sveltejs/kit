@@ -280,3 +280,17 @@ export const load = (input) => {
 	return {};
 }
 ```
+
+## A load function that returns nothing
+
+```js before
+export function load() {
+	return;
+}
+```
+
+```js after
+export function load() {
+	return;
+}
+```

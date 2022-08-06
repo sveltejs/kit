@@ -30,8 +30,8 @@ export function migrate_server(content) {
 
 	for (const statement of file.ast.statements) {
 		for (const method of methods) {
-			const fn = get_function_node(statement, file.exports.map.get(method));
-			if (fn) {
+			const fn = get_function_node(statement, /** @type{string} */ (file.exports.map.get(method)));
+			if (fn?.body) {
 				rewrite_returns(fn.body, (expr, node) => {
 					// leave `() => new Response(...)` alone
 					if (is_new(expr, 'Response')) return;

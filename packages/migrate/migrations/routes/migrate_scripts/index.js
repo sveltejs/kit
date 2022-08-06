@@ -46,7 +46,7 @@ export function migrate_scripts(content, is_error, moved) {
 				const delete_var = (/** @type {string } */ key) => {
 					const declaration = declared?.get(key);
 					if (declaration && !declaration.import) {
-						declared.delete(key);
+						declared?.delete(key);
 					}
 				};
 				delete_var('load');
@@ -61,7 +61,7 @@ export function migrate_scripts(content, is_error, moved) {
 						declaration.import.from === '@sveltejs/kit' &&
 						!new RegExp(`\\W${key}\\W`).test(except_str(content, match))
 					) {
-						declared.delete(key);
+						declared?.delete(key);
 					}
 				};
 				delete_kit_type('Load');
@@ -98,7 +98,7 @@ function find_declarations(content) {
 	const file = parse(content);
 	if (!file) return;
 
-	/** @type {Map<string, {name: string, import: {from: string, type_only: boolean}}>} */
+	/** @type {Map<string, {name: string, import?: {from: string, type_only: boolean}}>} */
 	const declared = new Map();
 	/**
 	 * @param {string} name
@@ -111,7 +111,9 @@ function find_declarations(content) {
 	for (const statement of file.ast.statements) {
 		if (ts.isImportDeclaration(statement) && statement.importClause) {
 			let type_only = statement.importClause.isTypeOnly;
-			const from = ts.isStringLiteral(statement.moduleSpecifier) && statement.moduleSpecifier.text;
+			const from = ts.isStringLiteral(statement.moduleSpecifier)
+				? statement.moduleSpecifier.text
+				: '';
 
 			if (statement.importClause.name) {
 				add(statement.importClause.name.text, { from, type_only });
@@ -137,7 +139,7 @@ function find_declarations(content) {
 				}
 			}
 		} else if (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) {
-			if (ts.isIdentifier(statement.name)) {
+			if (statement.name && ts.isIdentifier(statement.name)) {
 				add(statement.name.text);
 			}
 		} else if (ts.isExportDeclaration(statement) && !statement.exportClause) {
