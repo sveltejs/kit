@@ -4,4 +4,4 @@
 '@sveltejs/kit': patch
 ---
 
-Move compress inside kit
+Move `compress` logic to `Builder` API
