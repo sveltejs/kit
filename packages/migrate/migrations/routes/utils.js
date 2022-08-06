@@ -321,7 +321,7 @@ export function get_exports(node) {
 /**
  * @param {ts.Node} statement
  * @param {string[]} names
- * @returns {ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction | void}
+ * @returns {ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction | undefined}
  */
 export function get_function_node(statement, ...names) {
 	if (
@@ -352,10 +352,9 @@ export function get_function_node(statement, ...names) {
 /**
  * Utility for rewriting return statements.
  * If `node` is `undefined`, it means it's a concise arrow function body (`() => ({}))`.
- * If `expression` is `undefined`, it means it's a lone return statement `return;`.
- * Both can't be `undefined` at the same time.
+ * Lone `return;` statements are left untouched.
  * @param {ts.Block | ts.ConciseBody} block
- * @param {(expression: ts.Expression | undefined, node: ts.ReturnStatement | undefined) => void} callback
+ * @param {(expression: ts.Expression, node: ts.ReturnStatement | undefined) => void} callback
  */
 export function rewrite_returns(block, callback) {
 	if (ts.isBlock(block)) {
@@ -370,7 +369,7 @@ export function rewrite_returns(block, callback) {
 				return;
 			}
 
-			if (ts.isReturnStatement(node)) {
+			if (ts.isReturnStatement(node) && node.expression) {
 				callback(node.expression, node);
 				return;
 			}
