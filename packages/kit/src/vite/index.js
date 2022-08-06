@@ -103,7 +103,7 @@ function env() {
 					);
 				case '\0$env/static/public':
 					return create_env_module(
-						'$env/static/private',
+						'$env/static/public',
 						get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix).public
 					);
 			}
