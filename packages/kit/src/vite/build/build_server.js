@@ -8,7 +8,6 @@ import {
 	create_build,
 	find_deps,
 	get_default_config,
-	remove_svelte_kit,
 	is_http_method
 } from './utils.js';
 import { s } from '../../utils/misc.js';
@@ -214,8 +213,6 @@ export async function build_server(options, client) {
 		get_default_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
 		await get_vite_config(vite_config, vite_config_env)
 	);
-
-	remove_svelte_kit(merged_config);
 
 	const { chunks } = await create_build(merged_config);
 

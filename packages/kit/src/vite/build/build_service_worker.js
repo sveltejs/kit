@@ -1,8 +1,7 @@
 import fs from 'fs';
 import * as vite from 'vite';
 import { s } from '../../utils/misc.js';
-import { get_vite_config, merge_vite_configs } from '../utils.js';
-import { assets_base, remove_svelte_kit } from './utils.js';
+import { assets_base } from './utils.js';
 
 /**
  * @param {{
@@ -17,7 +16,7 @@ import { assets_base, remove_svelte_kit } from './utils.js';
  * @param {import('vite').Manifest} client_manifest
  */
 export async function build_service_worker(
-	{ config, vite_config, vite_config_env, manifest_data, output_dir, service_worker_entry_file },
+	{ config, manifest_data, output_dir, service_worker_entry_file },
 	prerendered,
 	client_manifest
 ) {
@@ -64,7 +63,7 @@ export async function build_service_worker(
 			.trim()
 	);
 
-	const merged_config = merge_vite_configs(await get_vite_config(vite_config, vite_config_env), {
+	await vite.build({
 		base: assets_base(config.kit),
 		build: {
 			lib: {
@@ -80,7 +79,6 @@ export async function build_service_worker(
 			outDir: `${output_dir}/client`,
 			emptyOutDir: false
 		},
-		// @ts-expect-error
 		configFile: false,
 		resolve: {
 			alias: {
@@ -89,8 +87,4 @@ export async function build_service_worker(
 			}
 		}
 	});
-
-	remove_svelte_kit(merged_config);
-
-	await vite.build(merged_config);
 }
