@@ -208,6 +208,17 @@ export function manual_return_migration(node, str, comment_nr, suggestion) {
 		node = node.parent.parent.parent;
 	}
 
+	manual_migration(node, str, 'Migrate this return statement', comment_nr, suggestion);
+}
+
+/**
+ * @param {ts.Node} node
+ * @param {MagicString} str
+ * @param {string} message
+ * @param {string} comment_nr
+ * @param {string} [suggestion]
+ */
+export function manual_migration(node, str, message, comment_nr, suggestion) {
 	const indent = indent_at_line(str.original, node.getStart());
 
 	let appended = '';
@@ -219,10 +230,7 @@ export function manual_return_migration(node, str, comment_nr, suggestion) {
 		)}`;
 	}
 
-	str.prependLeft(
-		node.getStart(),
-		error('Migrate this return statement', comment_nr) + appended + `\n${indent}`
-	);
+	str.prependLeft(node.getStart(), error(message, comment_nr) + appended + `\n${indent}`);
 }
 
 /**
