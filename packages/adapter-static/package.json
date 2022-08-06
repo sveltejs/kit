@@ -24,9 +24,6 @@
 		"format": "npm run lint -- --write",
 		"test": "uvu test test.js"
 	},
-	"dependencies": {
-		"tiny-glob": "^0.2.9"
-	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"@types/node": "^16.11.36",

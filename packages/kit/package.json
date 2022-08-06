@@ -12,7 +12,8 @@
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^1.0.1",
 		"chokidar": "^3.5.3",
-		"sade": "^1.8.1"
+		"sade": "^1.8.1",
+		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.23.4",
