@@ -147,20 +147,6 @@ export function assets_base(config) {
 	return `${assets || base}/`;
 }
 
-/**
- * vite.config.js will contain vite-plugin-svelte-kit, which kicks off the server and service
- * worker builds in a hook. When running the server and service worker builds we must remove
- * the SvelteKit plugin so that we do not kick off additional instances of these builds.
- * @param {import('vite').UserConfig} config
- */
-export function remove_svelte_kit(config) {
-	// TODO i feel like there's a more elegant way to do this
-	// @ts-expect-error - it can't handle infinite type expansion
-	config.plugins = (config.plugins || [])
-		.flat(Infinity)
-		.filter((plugin) => plugin.name !== 'vite-plugin-svelte-kit');
-}
-
 const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH']);
 
 // If we'd written this in TypeScript, it could be easy...

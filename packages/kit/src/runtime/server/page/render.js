@@ -57,6 +57,9 @@ export async function render_response({
 	const stylesheets = new Set(entry.stylesheets);
 	const modulepreloads = new Set(entry.imports);
 
+	/** @type {Set<string>} */
+	const link_header_preloads = new Set();
+
 	/** @type {Map<string, string>} */
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
@@ -216,32 +219,35 @@ export async function render_response({
 		head += `\n\t<style${attributes.join('')}>${content}</style>`;
 	}
 
-	// prettier-ignore
-	head += Array.from(stylesheets)
-		.map((dep) => {
-			const attributes = [
-				'rel="stylesheet"',
-				`href="${options.prefix + dep}"`
-			];
+	for (const dep of stylesheets) {
+		const path = options.prefix + dep;
+		const attributes = [];
 
-			if (csp.style_needs_nonce) {
-				attributes.push(`nonce="${csp.nonce}"`);
-			}
+		if (csp.style_needs_nonce) {
+			attributes.push(`nonce="${csp.nonce}"`);
+		}
 
-			if (inline_styles.has(dep)) {
-				// don't load stylesheets that are already inlined
-				// include them in disabled state so that Vite can detect them and doesn't try to add them
-				attributes.push('disabled', 'media="(max-width: 0)"');
-			}
+		if (inline_styles.has(dep)) {
+			// don't load stylesheets that are already inlined
+			// include them in disabled state so that Vite can detect them and doesn't try to add them
+			attributes.push('disabled', 'media="(max-width: 0)"');
+		} else {
+			const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
+			link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+		}
 
-			return `\n\t<link ${attributes.join(' ')}>`;
-		})
-		.join('');
+		attributes.unshift('rel="stylesheet"');
+		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
+	}
 
 	if (page_config.router || page_config.hydrate) {
-		head += Array.from(modulepreloads)
-			.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
-			.join('');
+		for (const dep of modulepreloads) {
+			const path = options.prefix + dep;
+			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			if (state.prerendering) {
+				head += `\n\t<link rel="modulepreload" href="${path}">`;
+			}
+		}
 
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
 
@@ -307,6 +313,10 @@ export async function render_response({
 		'content-type': 'text/html',
 		etag: `"${hash(html)}"`
 	});
+
+	if (link_header_preloads.size) {
+		headers.set('link', Array.from(link_header_preloads).join(', '));
+	}
 
 	if (cache) {
 		headers.set('cache-control', `${is_private ? 'private' : 'public'}, max-age=${cache.maxage}`);
