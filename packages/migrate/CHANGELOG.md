@@ -1,5 +1,13 @@
 # svelte-migrate
 
+## 1.0.0-next.4
+
+### Patch Changes
+
+- handle lone return statements ([#5831](https://github.com/sveltejs/kit/pull/5831))
+
+* Fix error placement on (arrow) function when checking load input ([#5840](https://github.com/sveltejs/kit/pull/5840))
+
 ## 1.0.0-next.3
 
 ### Patch Changes
