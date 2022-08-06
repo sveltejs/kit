@@ -7,6 +7,7 @@ import {
 	get_object_nodes,
 	is_new,
 	is_string_like,
+	manual_migration,
 	manual_return_migration,
 	parse,
 	rewrite_returns
@@ -34,6 +35,8 @@ export function migrate_page(content) {
 	for (const statement of file.ast.statements) {
 		const fn = get_function_node(statement, name);
 		if (fn) {
+			check_fn_param(fn, file.code);
+
 			/** @type {Set<string>} */
 			const imports = new Set();
 
@@ -42,6 +45,10 @@ export function migrate_page(content) {
 
 				if (nodes) {
 					const keys = Object.keys(nodes).sort().join(' ');
+
+					if (keys === '') {
+						return; // nothing to do
+					}
 
 					if (keys === 'props') {
 						automigration(expr, file.code, dedent(nodes.props.getText()));
@@ -101,4 +108,55 @@ export function migrate_page(content) {
 	// we failed to rewrite the load function, so we inject
 	// an error at the top of the file
 	return give_up + content;
+}
+
+/**
+ * Check the load function parameter, and either adjust
+ * the property names, or add an error
+ * @param {ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction} fn
+ * @param {import('magic-string').default} str
+ */
+function check_fn_param(fn, str) {
+	const param = fn.parameters[0];
+	if (!param) {
+		return;
+	}
+	if (ts.isObjectBindingPattern(param.name)) {
+		for (const binding of param.name.elements) {
+			if (
+				!ts.isIdentifier(binding.name) ||
+				(binding.propertyName && !ts.isIdentifier(binding.propertyName))
+			) {
+				bail(true);
+				return;
+			}
+			const name = binding.propertyName
+				? /** @type {ts.Identifier} */ (binding.propertyName).text
+				: binding.name.text;
+			if (['stuff', 'status', 'error'].includes(name)) {
+				bail();
+				return;
+			}
+			if (name === 'props') {
+				if (binding.propertyName) {
+					bail();
+					return;
+				} else {
+					str.overwrite(binding.name.getStart(), binding.name.getEnd(), 'data: props');
+				}
+			}
+		}
+	} else {
+		// load(param) { .. } -> bail, we won't check what is used in the function body
+		bail(true);
+	}
+
+	function bail(check = false) {
+		manual_migration(
+			fn,
+			str,
+			(check ? 'Check if you need to migrate' : 'Migrate') + ' the load function input',
+			TASKS.PAGE_LOAD
+		);
+	}
 }
