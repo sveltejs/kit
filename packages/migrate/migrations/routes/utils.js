@@ -203,11 +203,6 @@ export function indent_at_line(content, offset) {
  * @param {string} [suggestion]
  */
 export function manual_return_migration(node, str, comment_nr, suggestion) {
-	// handle case where this is called on a (arrow) function
-	if (ts.isFunctionExpression(node) || ts.isArrowFunction(node)) {
-		node = node.parent.parent.parent;
-	}
-
 	manual_migration(node, str, 'Migrate this return statement', comment_nr, suggestion);
 }
 
@@ -219,6 +214,11 @@ export function manual_return_migration(node, str, comment_nr, suggestion) {
  * @param {string} [suggestion]
  */
 export function manual_migration(node, str, message, comment_nr, suggestion) {
+	// handle case where this is called on a (arrow) function
+	if (ts.isFunctionExpression(node) || ts.isArrowFunction(node)) {
+		node = node.parent.parent.parent;
+	}
+
 	const indent = indent_at_line(str.original, node.getStart());
 
 	let appended = '';
