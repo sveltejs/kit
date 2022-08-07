@@ -155,7 +155,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 						...event,
 						parent: async () => {
 							const data = {};
-							for (let j = 0; j < i - 1; j += 1) {
+							for (let j = 0; j < i; j += 1) {
 								Object.assign(data, await server_promises[j]);
 							}
 							return data;
@@ -196,7 +196,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 							depends: () => {},
 							parent: async () => {
 								const data = {};
-								for (let j = 0; j < i - 1; j += 1) {
+								for (let j = 0; j < i; j += 1) {
 									Object.assign(data, await load_promises[j]);
 								}
 								return data;

@@ -719,11 +719,13 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('static file');
 	});
 
-	test('stuff is inherited', async ({ page, javaScriptEnabled, app }) => {
-		await page.goto('/load/stuff/a/b/c');
+	test('data is inherited', async ({ page, javaScriptEnabled, app }) => {
+		await page.goto('/load/parent/a/b/c');
 		expect(await page.textContent('h1')).toBe('message: original + new');
 		expect(await page.textContent('pre')).toBe(
 			JSON.stringify({
+				foo: { bar: 'Custom layout' },
+				message: 'original + new',
 				x: 'a',
 				y: 'b',
 				z: 'c'
@@ -731,7 +733,7 @@ test.describe('Load', () => {
 		);
 
 		if (javaScriptEnabled) {
-			await app.goto('/load/stuff/d/e/f');
+			await app.goto('/load/parent/d/e/f');
 
 			expect(await page.textContent('h1')).toBe('message: original + new');
 			expect(await page.textContent('pre')).toBe(
