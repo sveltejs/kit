@@ -34,12 +34,14 @@ importers:
     specifiers:
       '@sveltejs/adapter-cloudflare': workspace:*
       '@sveltejs/adapter-netlify': workspace:*
+      '@sveltejs/adapter-static': workspace:*
       '@sveltejs/adapter-vercel': workspace:*
       '@types/node': ^16.11.36
       typescript: ^4.8.2
     dependencies:
       '@sveltejs/adapter-cloudflare': link:../adapter-cloudflare
       '@sveltejs/adapter-netlify': link:../adapter-netlify
+      '@sveltejs/adapter-static': link:../adapter-static
       '@sveltejs/adapter-vercel': link:../adapter-vercel
     devDependencies:
       '@types/node': 16.11.42

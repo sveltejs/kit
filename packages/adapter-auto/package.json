@@ -32,6 +32,7 @@
 	"dependencies": {
 		"@sveltejs/adapter-cloudflare": "workspace:*",
 		"@sveltejs/adapter-netlify": "workspace:*",
+		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/adapter-vercel": "workspace:*"
 	},
 	"devDependencies": {
