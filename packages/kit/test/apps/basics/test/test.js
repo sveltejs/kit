@@ -1129,19 +1129,22 @@ test.describe('$app/stores', () => {
 		javaScriptEnabled
 	}) => {
 		await page.goto('/store/data/foo?reset=true');
-		const stuff1 = JSON.stringify({ name: 'SvelteKit', value: 789, error: 'uh oh' });
-		const stuff2 = JSON.stringify({ name: 'SvelteKit', value: 123, foo: true });
+		const stuff1 = { foo: { bar: 'Custom layout' }, name: 'SvelteKit', value: 123 };
+		const stuff2 = { ...stuff1, foo: true };
+		const stuff3 = { ...stuff2, number: 2 };
 		await page.goto('/store/data/www');
 
 		await clicknav('a[href="/store/data/foo"]');
-		expect(await page.textContent('#store-data')).toBe(stuff1);
+		expect(JSON.parse(await page.textContent('#store-data'))).toEqual(stuff1);
 
 		await clicknav('#reload-button');
-		expect(await page.textContent('#store-data')).toBe(javaScriptEnabled ? stuff2 : stuff1);
+		expect(JSON.parse(await page.textContent('#store-data'))).toEqual(
+			javaScriptEnabled ? stuff2 : stuff1
+		);
 
 		await clicknav('a[href="/store/data/zzz"]');
 		await clicknav('a[href="/store/data/foo"]');
-		expect(await page.textContent('#store-data')).toBe(stuff2);
+		expect(JSON.parse(await page.textContent('#store-data'))).toEqual(stuff3);
 	});
 
 	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
