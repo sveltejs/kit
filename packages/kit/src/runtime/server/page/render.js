@@ -105,7 +105,8 @@ export async function render_response({
 				params: event.params,
 				routeId: event.routeId,
 				status,
-				url: state.prerendering ? new PrerenderingURL(event.url) : event.url
+				url: state.prerendering ? new PrerenderingURL(event.url) : event.url,
+				data: branch.reduce((acc, { data }) => (Object.assign(acc, data), acc), {})
 			},
 			components: branch.map(({ node }) => node.component)
 		};

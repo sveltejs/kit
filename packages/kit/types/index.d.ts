@@ -216,6 +216,7 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	routeId: string | null;
 	status: number;
 	error: Error | null;
+	data: Record<string, any>;
 }
 
 export interface ParamMatcher {

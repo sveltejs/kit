@@ -1096,48 +1096,52 @@ test.describe('$app/stores', () => {
 		expect(oops).toBeUndefined();
 	});
 
-	test('page store contains stuff', async ({ page, clicknav }) => {
-		await page.goto('/store/stuff/www');
+	test('page store contains data', async ({ page, clicknav }) => {
+		await page.goto('/store/data/www');
 
-		expect(await page.textContent('#store-stuff')).toBe(
-			JSON.stringify({ name: 'SvelteKit', value: 456, page: 'www' })
+		const foo = { bar: 'Custom layout' };
+
+		expect(await page.textContent('#store-data')).toBe(
+			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'www' })
 		);
 
-		await clicknav('a[href="/store/stuff/zzz"]');
-		expect(await page.textContent('#store-stuff')).toBe(
-			JSON.stringify({ name: 'SvelteKit', value: 456, page: 'zzz' })
+		await clicknav('a[href="/store/data/zzz"]');
+		expect(await page.textContent('#store-data')).toBe(
+			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'zzz' })
 		);
 
-		await clicknav('a[href="/store/stuff/xxx"]');
-		expect(await page.textContent('#store-stuff')).toBe(
-			JSON.stringify({ name: 'SvelteKit', value: 789, error: 'Params = xxx' })
+		await clicknav('a[href="/store/data/xxx"]');
+		expect(await page.textContent('#store-data')).toBe(
+			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
 		);
+		expect(await page.textContent('#store-error')).toBe('Params = xxx');
 
-		await clicknav('a[href="/store/stuff/yyy"]');
-		expect(await page.textContent('#store-stuff')).toBe(
-			JSON.stringify({ name: 'SvelteKit', value: 789, error: 'Params = yyy' })
+		await clicknav('a[href="/store/data/yyy"]');
+		expect(await page.textContent('#store-data')).toBe(
+			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
 		);
+		expect(await page.textContent('#store-error')).toBe('Params = yyy');
 	});
 
-	test('should load stuff after reloading by goto', async ({
+	test('should load data after reloading by goto', async ({
 		page,
 		clicknav,
 		javaScriptEnabled
 	}) => {
-		await page.goto('/store/stuff/foo?reset=true');
+		await page.goto('/store/data/foo?reset=true');
 		const stuff1 = JSON.stringify({ name: 'SvelteKit', value: 789, error: 'uh oh' });
 		const stuff2 = JSON.stringify({ name: 'SvelteKit', value: 123, foo: true });
-		await page.goto('/store/stuff/www');
+		await page.goto('/store/data/www');
 
-		await clicknav('a[href="/store/stuff/foo"]');
-		expect(await page.textContent('#store-stuff')).toBe(stuff1);
+		await clicknav('a[href="/store/data/foo"]');
+		expect(await page.textContent('#store-data')).toBe(stuff1);
 
 		await clicknav('#reload-button');
-		expect(await page.textContent('#store-stuff')).toBe(javaScriptEnabled ? stuff2 : stuff1);
+		expect(await page.textContent('#store-data')).toBe(javaScriptEnabled ? stuff2 : stuff1);
 
-		await clicknav('a[href="/store/stuff/zzz"]');
-		await clicknav('a[href="/store/stuff/foo"]');
-		expect(await page.textContent('#store-stuff')).toBe(stuff2);
+		await clicknav('a[href="/store/data/zzz"]');
+		await clicknav('a[href="/store/data/foo"]');
+		expect(await page.textContent('#store-data')).toBe(stuff2);
 	});
 
 	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
