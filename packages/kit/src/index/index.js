@@ -13,5 +13,9 @@ export function error(status, message) {
  * @param {string} location
  */
 export function redirect(status, location) {
+	if (isNaN(status) || status < 300 || status > 399) {
+		throw new Error('Invalid status code');
+	}
+
 	return new Redirect(status, location);
 }

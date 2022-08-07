@@ -1280,15 +1280,13 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/a`);
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: ""redirect" property returned from load() must be accompanied by a 3xx status code"'
+			'This is your custom error page saying: "Invalid status code"'
 		);
 
 		if (!javaScriptEnabled) {
 			// handleError is not invoked for client-side navigation
 			const lines = read_errors('/redirect/missing-status/a').split('\n');
-			expect(lines[0]).toBe(
-				'Error: "redirect" property returned from load() must be accompanied by a 3xx status code'
-			);
+			expect(lines[0]).toBe('Error: Invalid status code');
 		}
 	});
 
@@ -1300,7 +1298,7 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/b`);
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: ""redirect" property returned from load() must be accompanied by a 3xx status code"'
+			'This is your custom error page saying: "Invalid status code"'
 		);
 	});
 
