@@ -13,5 +13,10 @@ export const adapters = [
 		name: 'Netlify',
 		test: () => !!process.env.NETLIFY,
 		module: '@sveltejs/adapter-netlify'
+	},
+	{
+		name: 'GitHub Pages',
+		test: () => !!process.env.GITHUB_ACTIONS,
+		module: '@sveltejs/adapter-static'
 	}
 ];
