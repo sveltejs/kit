@@ -441,32 +441,10 @@ test.describe('Errors', () => {
 		}
 
 		expect(res && res.status()).toBe(500);
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Error"'
-		);
+		expect(await page.textContent('#message')).toBe('This is your custom error page saying: "500"');
 
 		const contents = await page.textContent('#stack');
-		const location = /endpoint\.svelte:12:9|endpoint\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
-
-		if (process.env.DEV) {
-			expect(contents).toMatch(location);
-		} else {
-			expect(contents).not.toMatch(location);
-		}
-	});
-
-	test('not ok response from endpoint', async ({ page, read_errors }) => {
-		const res = await page.goto('/errors/endpoint-not-ok');
-
-		expect(read_errors('/errors/endpoint-not-ok.json')).toBeUndefined();
-
-		expect(res && res.status()).toBe(555);
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Error"'
-		);
-
-		const contents = await page.textContent('#stack');
-		const location = /endpoint-not-ok\.svelte:12:9|endpoint-not-ok\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
+		const location = '+page.js:7:9';
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
@@ -536,8 +514,10 @@ test.describe('Errors', () => {
 		page
 	}) => {
 		await page.goto('/prerendering/mutative-endpoint');
-		expect(await page.textContent('h1')).toBe(
-			'500: Cannot prerender pages that have endpoints with mutative methods'
+		expect(await page.textContent('h1')).toBe('500');
+
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Cannot prerender pages that have endpoints with mutative methods"'
 		);
 	});
 

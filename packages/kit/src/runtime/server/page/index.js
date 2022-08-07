@@ -113,20 +113,20 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			});
 		}
 
-		if (state.prerendering) {
+		const should_prerender = leaf_node.module?.prerender ?? options.prerender.default;
+		if (should_prerender) {
+			const mod = leaf_node.server;
+			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
+				throw new Error('Cannot prerender pages that have endpoints with mutative methods');
+			}
+		} else if (state.prerendering) {
 			// if the page isn't marked as prerenderable (or is explicitly
 			// marked NOT prerenderable, if `prerender.default` is `true`),
 			// then bail out at this point
-			const should_prerender = leaf_node.module.prerender ?? options.prerender.default;
 			if (!should_prerender) {
 				return new Response(undefined, {
 					status: 204
 				});
-			}
-
-			const mod = leaf_node.server;
-			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
-				throw new Error('Cannot prerender pages that have endpoints with mutative methods');
 			}
 		}
 
