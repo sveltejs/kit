@@ -85,6 +85,6 @@ export const platforms = [
 		defaults: () => ({
 			fallback: '404.html'
 		}),
-		done: () => {}
+		done: (builder) => fs.writeFileSync(`${builder.config.kit.outDir}/.nojekyll`, '')
 	}
 ];
