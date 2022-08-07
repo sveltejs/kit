@@ -77,12 +77,18 @@ function env() {
 	/** @type {import('vite').ConfigEnv} */
 	let vite_config_env;
 
+	/** @typedef {{public: {[k: string]: string;};private: {[k: string]: string;};}} ResolvedEnv */
+
+	/** @type {ResolvedEnv} */
+	let resolved_environment;
+
 	return {
 		name: 'vite-plugin-svelte-kit:env',
 
 		async config(_, config_env) {
 			vite_config_env = config_env;
 			svelte_config = await load_config();
+			resolved_environment = get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix);
 		},
 
 		async resolveId(id) {
@@ -97,15 +103,9 @@ function env() {
 		async load(id) {
 			switch (id) {
 				case '\0$env/static/private':
-					return create_env_module(
-						'$env/static/private',
-						get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix).private
-					);
+					return create_env_module('$env/static/private', resolved_environment.private);
 				case '\0$env/static/public':
-					return create_env_module(
-						'$env/static/public',
-						get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix).public
-					);
+					return create_env_module('$env/static/public', resolved_environment.public);
 			}
 		}
 	};
