@@ -78,5 +78,13 @@ export const platforms = [
 				})
 			);
 		}
+	},
+	{
+		name: 'GitHub Pages',
+		test: () => !!process.env.GITHUB_ACTIONS,
+		defaults: () => ({
+			fallback: '404.html'
+		}),
+		done: () => {}
 	}
 ];
