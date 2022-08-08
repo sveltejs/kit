@@ -2,12 +2,17 @@ import { OutputAsset, OutputChunk } from 'rollup';
 import { SvelteComponent } from 'svelte/internal';
 import {
 	Config,
+	DELETE,
 	ExternalFetch,
+	GET,
 	GetSession,
 	Handle,
 	HandleError,
 	KitConfig,
 	Load,
+	PATCH,
+	POST,
+	PUT,
 	RequestEvent,
 	RequestHandler,
 	ResolveOptions,
@@ -241,11 +246,11 @@ export interface SSRNode {
 
 	server: {
 		// TODO create types for these
-		GET?: TODO;
-		POST?: TODO;
-		PATCH?: TODO;
-		PUT?: TODO;
-		DELETE?: TODO;
+		GET?: GET;
+		POST?: POST;
+		PATCH?: PATCH;
+		PUT?: PUT;
+		DELETE?: DELETE;
 	};
 }
 
