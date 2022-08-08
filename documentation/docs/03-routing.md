@@ -295,7 +295,7 @@ Standalone endpoints reside in a `+server.js` (or `.ts`) file, the folder descri
 
 | filename                              | endpoint   |
 | ------------------------------------- | ---------- |
-| src/routes/data/index.json/+server.js | /data.json |
+| src/routes/data.json/+server.js | /data.json |
 | src/routes/data/+server.js            | /data      |
 
 Because the foldername describes the endpoint URL, you can't have a `+server.js` file next to a `+page.svelte` file — when hitting the URL, SvelteKit wouldn't know if you want to render the page or return data from the endpoint.
