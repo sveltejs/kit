@@ -154,10 +154,14 @@ function tweak_types(content, names) {
 				for (const comment of node.jsDoc) {
 					for (const tag of comment.tags) {
 						if (ts.isJSDocTypeTag(tag)) {
-							code.overwrite(tag.tagName.pos, tag.tagName.end, 'param');
-							code.prependRight(tag.typeExpression.pos + 1, 'Parameters<');
-							code.appendLeft(tag.typeExpression.end - 1, '>[0]');
-							code.appendLeft(tag.typeExpression.end, ' event');
+							if (node.parameters?.length > 0) {
+								code.overwrite(tag.tagName.pos, tag.tagName.end, 'param');
+								code.prependRight(tag.typeExpression.pos + 1, 'Parameters<');
+								code.appendLeft(tag.typeExpression.end - 1, '>[0]');
+								code.appendLeft(tag.typeExpression.end, ' event');
+							} else {
+								code.overwrite(tag.pos, tag.end, '');
+							}
 						}
 					}
 				}
