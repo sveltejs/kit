@@ -136,7 +136,19 @@ function kit() {
 				const name = relative.startsWith('..')
 					? path.basename(node.component)
 					: posixify(path.join('pages', relative));
-				input[name] = resolved;
+				input[`components/${name}`] = resolved;
+			}
+
+			if (node.module) {
+				const resolved = path.resolve(cwd, node.module);
+				const relative = decodeURIComponent(
+					path.relative(svelte_config.kit.files.routes, resolved)
+				);
+
+				const name = relative.startsWith('..')
+					? path.basename(node.module)
+					: posixify(path.join('pages', relative));
+				input[`modules/${name}`] = resolved;
 			}
 		});
 

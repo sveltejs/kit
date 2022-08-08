@@ -246,37 +246,32 @@ export async function build_server(options, client) {
 		const imports = [];
 
 		/** @type {string[]} */
-		const exports = [];
+		const exports = [`export const index = ${i};`];
+
+		/** @type {string[]} */
+		const imported = [];
+
+		/** @type {string[]} */
+		const stylesheets = [];
 
 		if (node.component) {
 			const entry = find_deps(client.vite_manifest, node.component, true);
 
+			imported.push(...entry.imports);
+			stylesheets.push(...entry.stylesheets);
+
 			exports.push(
 				`export { default as component } from '../${vite_manifest[node.component].file}';`,
-				`export const index = ${i};`,
-				`export const file = '${entry.file}';`,
-				`export const imports = ${s(entry.imports)};`, // TODO do we need to get imports from +page.js/+layout.js as well?
-				`export const stylesheets = ${s(entry.stylesheets)};`
+				`export const file = '${entry.file}';` // TODO what is this?
 			);
-
-			/** @type {string[]} */
-			const styles = [];
-
-			entry.stylesheets.forEach((file) => {
-				if (stylesheet_lookup.has(file)) {
-					const index = stylesheet_lookup.get(file);
-					const name = `stylesheet_${index}`;
-					imports.push(`import ${name} from '../stylesheets/${index}.js';`);
-					styles.push(`\t${s(file)}: ${name}`);
-				}
-			});
-
-			if (styles.length > 0) {
-				exports.push(`export const inline_styles = () => ({\n${styles.join(',\n')}\n});`);
-			}
 		}
 
 		if (node.module) {
+			const entry = find_deps(client.vite_manifest, node.module, true);
+
+			imported.push(...entry.imports);
+			stylesheets.push(...entry.stylesheets);
+
 			imports.push(`import * as module from '../${vite_manifest[node.module].file}';`);
 			exports.push(`export { module };`);
 		}
@@ -284,6 +279,27 @@ export async function build_server(options, client) {
 		if (node.server) {
 			imports.push(`import * as server from '../${vite_manifest[node.server].file}';`);
 			exports.push(`export { server };`);
+		}
+
+		exports.push(
+			`export const imports = ${s(imported)};`,
+			`export const stylesheets = ${s(stylesheets)};`
+		);
+
+		/** @type {string[]} */
+		const styles = [];
+
+		stylesheets.forEach((file) => {
+			if (stylesheet_lookup.has(file)) {
+				const index = stylesheet_lookup.get(file);
+				const name = `stylesheet_${index}`;
+				imports.push(`import ${name} from '../stylesheets/${index}.js';`);
+				styles.push(`\t${s(file)}: ${name}`);
+			}
+		});
+
+		if (styles.length > 0) {
+			exports.push(`export const inline_styles = () => ({\n${styles.join(',\n')}\n});`);
 		}
 
 		const out = `${output_dir}/server/nodes/${i}.js`;
