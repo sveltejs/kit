@@ -268,6 +268,10 @@ export async function render_response({
 			http_equiv.push(csp_headers);
 		}
 
+		if (state.prerendering.cache) {
+			http_equiv.push(`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`);
+		}
+
 		if (http_equiv.length > 0) {
 			head = http_equiv.join('\n') + head;
 		}

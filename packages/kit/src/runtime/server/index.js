@@ -137,12 +137,18 @@ export async function respond(request, options, state) {
 		routeId: route && route.id,
 		setHeaders: (new_headers) => {
 			for (const key in new_headers) {
-				if (key in headers) {
+				const lower = key.toLowerCase();
+
+				if (lower in headers) {
 					throw new Error(`"${key}" header is already set`);
 				}
 
 				// TODO apply these headers to the response
-				headers[key.toLowerCase()] = new_headers[key];
+				headers[lower] = new_headers[key];
+
+				if (state.prerendering && lower === 'cache-control') {
+					state.prerendering.cache = /** @type {string} */ (new_headers[key]);
+				}
 			}
 		},
 		url
