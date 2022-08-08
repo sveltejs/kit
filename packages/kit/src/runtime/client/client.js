@@ -668,7 +668,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 						routeId: route.id,
 						parent: async () => {
 							const data = {};
-							for (let j = 0; j < i - 1; j += 1) {
+							for (let j = 0; j < i; j += 1) {
 								Object.assign(data, await branch_promises[j]);
 							}
 							return data;
@@ -1182,7 +1182,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 							routeId,
 							parent: async () => {
 								const data = {};
-								for (let j = 0; j < i - 1; j += 1) {
+								for (let j = 0; j < i; j += 1) {
 									Object.assign(data, await branch[j]);
 								}
 								return data;
