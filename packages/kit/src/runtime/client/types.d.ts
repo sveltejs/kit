@@ -48,12 +48,12 @@ export type NavigationIntent = {
 	url: URL;
 };
 
-export type NavigationResult = NavigationRedirectResult | NavigationFinishedResult;
-export type NavigationRedirectResult = {
+export type NavigationResult = NavigationRedirect | NavigationFinished;
+export type NavigationRedirect = {
 	redirect: true;
 	location: string;
 };
-export type NavigationFinishedResult = {
+export type NavigationFinished = {
 	redirect?: false;
 	state: NavigationState;
 	props: Record<string, any>;

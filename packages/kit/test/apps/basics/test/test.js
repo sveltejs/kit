@@ -709,6 +709,8 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('message: original + new');
 			expect(await page.textContent('pre')).toBe(
 				JSON.stringify({
+					foo: { bar: 'Custom layout' },
+					message: 'original + new',
 					x: 'd',
 					y: 'e',
 					z: 'f'

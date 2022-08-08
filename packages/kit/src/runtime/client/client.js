@@ -360,7 +360,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		updating = false;
 	}
 
-	/** @param {import('./types').NavigationFinishedResult} result */
+	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
 		current = result.state;
 
@@ -404,7 +404,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 
-		/** @type {import('./types').NavigationFinishedResult} */
+		/** @type {import('./types').NavigationFinished} */
 		const result = {
 			state: {
 				url,
@@ -418,7 +418,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 			}
 		};
 
+		let data = {};
 		for (let i = 0; i < filtered.length; i += 1) {
+			Object.assign(data, filtered[i].data);
 			// Only set props if the node actually updated. This prevents needless rerenders.
 			if (!current.branch.some((node) => node === filtered[i])) {
 				result.props[`data_${i}`] = filtered[i].data;
@@ -428,7 +430,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const page_changed = !current.url || url.href !== current.url.href || current.error !== error;
 
 		if (page_changed) {
-			result.props.page = { error, params, routeId, status, url };
+			result.props.page = { error, params, routeId, status, url, data };
 
 			// TODO remove this for 1.0
 			/**
@@ -700,7 +702,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 						parent: async () => {
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
-								Object.assign(data, await branch_promises[j]);
+								Object.assign(data, (await branch_promises[j])?.data);
 							}
 							return data;
 						}
@@ -1198,7 +1200,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			/** @type {Array<Promise<import('./types').BranchNode>>} */
 			const branch = [];
 
-			/** @type {import('./types').NavigationFinishedResult | undefined} */
+			/** @type {import('./types').NavigationFinished | undefined} */
 			let result;
 
 			try {
@@ -1214,7 +1216,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 							parent: async () => {
 								const data = {};
 								for (let j = 0; j < i; j += 1) {
-									Object.assign(data, await branch[j]);
+									Object.assign(data, (await branch[j]).data);
 								}
 								return data;
 							}
