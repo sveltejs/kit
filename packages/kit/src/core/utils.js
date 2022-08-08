@@ -16,13 +16,8 @@ export function get_runtime_prefix(config) {
 
 /**
  * Get the resolved path of the `runtime` directory
- * @param {import('types').ValidatedKitConfig} config
  */
-export function get_runtime_directory(config) {
-	if (process.env.BUNDLED) {
-		return path.join(config.outDir, 'runtime');
-	}
-
+export function get_runtime_directory() {
 	return fileURLToPath(new URL('../runtime', import.meta.url));
 }
 

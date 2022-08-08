@@ -4,7 +4,7 @@ import replace from '@rollup/plugin-replace';
 import resolve from '@rollup/plugin-node-resolve';
 import pkg from './package.json';
 
-(fs.rmSync || fs.rmdirSync)('assets', { recursive: true, force: true });
+(fs.rmSync || fs.rmdirSync)('dist', { recursive: true, force: true });
 
 const external = [].concat(
 	Object.keys(pkg.dependencies || {}),
@@ -21,28 +21,28 @@ const external = [].concat(
 export default {
 	input: {
 		// TODO move assets to dist/assets
-		'assets/client/start': 'src/runtime/client/start.js',
-		'assets/client/singletons': 'src/runtime/client/singletons.js',
-		'assets/app/navigation': 'src/runtime/app/navigation.js',
-		'assets/app/stores': 'src/runtime/app/stores.js',
-		'assets/app/paths': 'src/runtime/app/paths.js',
-		'assets/app/env': 'src/runtime/app/env.js',
-		'assets/env/dynamic/private': 'src/runtime/env/dynamic/private.js',
-		'assets/env/dynamic/public': 'src/runtime/env/dynamic/public.js',
-		'assets/env-private': 'src/runtime/env-private.js',
-		'assets/env-public': 'src/runtime/env-public.js',
-		'assets/paths': 'src/runtime/paths.js',
-		'assets/env': 'src/runtime/env.js',
-		'assets/server/index': 'src/runtime/server/index.js',
+		'dist/runtime/client/start': 'src/runtime/client/start.js',
+		'dist/runtime/client/singletons': 'src/runtime/client/singletons.js',
+		'dist/runtime/app/navigation': 'src/runtime/app/navigation.js',
+		'dist/runtime/app/stores': 'src/runtime/app/stores.js',
+		'dist/runtime/app/paths': 'src/runtime/app/paths.js',
+		'dist/runtime/app/env': 'src/runtime/app/env.js',
+		'dist/runtime/env/dynamic/private': 'src/runtime/env/dynamic/private.js',
+		'dist/runtime/env/dynamic/public': 'src/runtime/env/dynamic/public.js',
+		'dist/runtime/env-private': 'src/runtime/env-private.js',
+		'dist/runtime/env-public': 'src/runtime/env-public.js',
+		'dist/runtime/paths': 'src/runtime/paths.js',
+		'dist/runtime/env': 'src/runtime/env.js',
+		'dist/runtime/server/index': 'src/runtime/server/index.js',
 
 		// TODO move dist to dist/exports
 		'dist/cli': 'src/cli.js',
-		'dist/index': 'src/index/index.js',
-		'dist/hooks': 'src/hooks.js',
-		'dist/node': 'src/node/index.js',
-		'dist/node/polyfills': 'src/node/polyfills.js',
-		'dist/prerender': 'src/core/prerender/prerender.js',
-		'dist/vite': 'src/vite/index.js'
+		'dist/exports/index': 'src/index/index.js',
+		'dist/exports/hooks': 'src/hooks.js',
+		'dist/exports/node': 'src/node/index.js',
+		'dist/exports/node/polyfills': 'src/node/polyfills.js',
+		'dist/exports/prerender': 'src/core/prerender/prerender.js',
+		'dist/exports/vite': 'src/vite/index.js'
 	},
 	output: {
 		dir: '.',

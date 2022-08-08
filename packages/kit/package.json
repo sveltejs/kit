@@ -60,7 +60,7 @@
 		"svelte-kit.js"
 	],
 	"scripts": {
-		"build": "rollup -c && node scripts/cp.js src/runtime/components assets/components && npm run types",
+		"build": "rollup -c && node scripts/cp.js src/runtime/components dist/runtime/components && npm run types",
 		"dev": "rollup -cw",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
@@ -77,20 +77,20 @@
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
-			"import": "./dist/index.js",
+			"import": "./dist/exports/index.js",
 			"types": "./types/index.d.ts"
 		},
 		"./node": {
-			"import": "./dist/node.js"
+			"import": "./dist/exports/node.js"
 		},
 		"./node/polyfills": {
-			"import": "./dist/node/polyfills.js"
+			"import": "./dist/exports/node/polyfills.js"
 		},
 		"./hooks": {
-			"import": "./dist/hooks.js"
+			"import": "./dist/exports/hooks.js"
 		},
 		"./vite": {
-			"import": "./dist/vite.js"
+			"import": "./dist/exports/vite.js"
 		}
 	},
 	"types": "types/index.d.ts",

@@ -16,6 +16,7 @@ import { error, redirect } from '../../index/index.js';
 
 import Root from '__GENERATED__/root.svelte';
 import { nodes, dictionary, matchers } from '__GENERATED__/client-manifest.js';
+import { HttpError, Redirect } from '../../index/private.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -724,16 +725,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 				try {
 					branch.push(await branch_promises[i]);
 				} catch (e) {
-					if (/** @type {Redirect} */ (e)?.__is_redirect) {
+					if (e instanceof Redirect) {
 						return {
 							redirect: true,
 							location: /** @type {Redirect} */ (e).location
 						};
 					}
 
-					const status = /** @type {HttpError} */ (e).__is_http_error
-						? /** @type {HttpError} */ (e).status
-						: 500;
+					const status = e instanceof HttpError ? e.status : 500;
 					const error = coalesce_to_error(e);
 
 					while (i--) {
@@ -1239,7 +1238,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			} catch (e) {
 				// TODO handle HttpError cases
 				// TODO order of these ifs sensible?
-				if (/** @type {Redirect} */ (e).__is_redirect) {
+				if (e instanceof Redirect) {
 					// this is a real edge case — `load` would need to return
 					// a redirect but only in the browser
 					await native_navigation(new URL(/** @type {Redirect} */ (e).location, location.href));

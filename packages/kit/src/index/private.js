@@ -6,10 +6,6 @@ export class HttpError {
 	constructor(status, message) {
 		this.status = status;
 		this.message = message || `Error: ${status}`;
-
-		// this is a hack to workaround failed instanceof checks
-		// TODO figure out a better way to do this
-		this.__is_http_error = true;
 	}
 
 	toString() {
@@ -25,9 +21,5 @@ export class Redirect {
 	constructor(status, location) {
 		this.status = status;
 		this.location = location;
-
-		// this is a hack to workaround failed instanceof checks
-		// TODO figure out a better way to do this
-		this.__is_redirect = true;
 	}
 }
