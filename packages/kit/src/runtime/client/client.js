@@ -472,10 +472,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			parent: false
 		};
 
-		/** @param dep {string} */
-		function depends(dep) {
-			const { href } = new URL(dep, url);
-			uses.dependencies.add(href);
+		/** @param {string[]} deps */
+		function depends(...deps) {
+			for (const dep of deps) {
+				const { href } = new URL(dep, url);
+				uses.dependencies.add(href);
+			}
 		}
 
 		/** @type {Record<string, any> | null} */

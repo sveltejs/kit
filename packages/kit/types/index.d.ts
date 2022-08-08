@@ -6,7 +6,6 @@ import './ambient.js';
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
-	BodyValidator,
 	CspDirectives,
 	JSONObject,
 	JSONValue,
@@ -187,11 +186,11 @@ export interface Load<
 
 export interface LoadEvent<
 	Params extends Record<string, string> = Record<string, string>,
-	Data extends Record<string, any> | null = Record<string, any> | null
+	Data extends JSONObject | null = JSONObject | null
 > {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
-	data: JSONObject | null;
+	data: Data;
 	routeId: string | null;
 	session: App.Session;
 	setHeaders: (headers: ResponseHeaders) => void;
