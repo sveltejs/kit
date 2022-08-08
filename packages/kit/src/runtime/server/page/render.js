@@ -1,5 +1,6 @@
 import devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
+import * as cookie from 'cookie';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { render_json_payload_script } from '../../../utils/escape.js';
@@ -292,9 +293,10 @@ export async function render_response({
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
 
-		for (const cookie of cookies) {
-			console.error('cookie', cookie);
-			// headers.append('set-cookie', );
+		for (const new_cookie of cookies) {
+			const { name, value, ...options } = new_cookie;
+			// @ts-expect-error
+			headers.append('set-cookie', cookie.serialize(name, value, options));
 		}
 	}
 
