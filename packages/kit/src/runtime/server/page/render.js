@@ -1,5 +1,6 @@
 import devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
+import * as cookie from 'cookie';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { render_json_payload_script } from '../../../utils/escape.js';
@@ -19,6 +20,8 @@ const updated = {
  * Creates the HTML response.
  * @param {{
  *   branch: Array<import('./types').Loaded>;
+ *   fetched: Array<import('./types').Fetched>;
+ *   cookies: import('set-cookie-parser').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   $session: any;
@@ -27,11 +30,13 @@ const updated = {
  *   error: Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   stuff: Record<string, any>;
+ *   validation_errors: Record<string, string> | undefined;
  * }} opts
  */
 export async function render_response({
 	branch,
+	fetched,
+	cookies,
 	options,
 	state,
 	$session,
@@ -40,7 +45,7 @@ export async function render_response({
 	error = null,
 	event,
 	resolve_opts,
-	stuff
+	validation_errors
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -64,13 +69,7 @@ export async function render_response({
 	/** @type {Array<import('./types').Fetched>} */
 	const serialized_data = [];
 
-	let shadow_props;
-
 	let rendered;
-
-	let is_private = false;
-	/** @type {import('types').NormalizedLoadOutputCache | undefined} */
-	let cache;
 
 	const stack = error?.stack;
 
@@ -79,15 +78,7 @@ export async function render_response({
 	}
 
 	if (resolve_opts.ssr) {
-		const leaf = /** @type {import('./types.js').Loaded} */ (branch.at(-1));
-
-		if (leaf.loaded.status) {
-			// explicit status returned from `load` or a page endpoint trumps
-			// initial status
-			status = leaf.loaded.status;
-		}
-
-		for (const { node, props, loaded, fetched, uses_credentials } of branch) {
+		for (const { node } of branch) {
 			if (node.imports) {
 				node.imports.forEach((url) => modulepreloads.add(url));
 			}
@@ -99,18 +90,11 @@ export async function render_response({
 			if (node.inline_styles) {
 				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
 			}
-
-			// TODO probably better if `fetched` wasn't populated unless `hydrate`
-			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
-			if (props) shadow_props = props;
-
-			cache = loaded?.cache;
-			is_private = cache?.private ?? uses_credentials;
 		}
 
+		if (fetched && page_config.hydrate) serialized_data.push(...fetched);
+
 		const session = writable($session);
-		// Even if $session isn't accessed, it still ends up serialized in the rendered HTML
-		is_private = is_private || (cache?.private ?? (!!$session && Object.keys($session).length > 0));
 
 		/** @type {Record<string, any>} */
 		const props = {
@@ -126,10 +110,10 @@ export async function render_response({
 				params: event.params,
 				routeId: event.routeId,
 				status,
-				stuff,
-				url: state.prerendering ? new PrerenderingURL(event.url) : event.url
+				url: state.prerendering ? new PrerenderingURL(event.url) : event.url,
+				data: branch.reduce((acc, { data }) => (Object.assign(acc, data), acc), {})
 			},
-			components: branch.map(({ node }) => node.module.default)
+			components: branch.map(({ node }) => node.component)
 		};
 
 		// TODO remove this for 1.0
@@ -152,7 +136,11 @@ export async function render_response({
 		// props_n (instead of props[n]) makes it easy to avoid
 		// unnecessary updates for layout components
 		for (let i = 0; i < branch.length; i += 1) {
-			props[`props_${i}`] = await branch[i].loaded.props;
+			props[`data_${i}`] = branch[i].data;
+		}
+
+		if (validation_errors) {
+			props.errors = validation_errors;
 		}
 
 		rendered = options.root.render(props);
@@ -187,7 +175,7 @@ export async function render_response({
 			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
 				status: ${status},
 				error: ${error && serialize_error(error, e => e.stack)},
-				nodes: [${branch.map(({ node }) => node.index).join(', ')}],
+				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)}
 			}` : 'null'}
@@ -261,10 +249,6 @@ export async function render_response({
 				)
 			)
 			.join('\n\t');
-
-		if (shadow_props) {
-			body += render_json_payload_script({ type: 'props' }, shadow_props);
-		}
 	}
 
 	if (options.service_worker) {
@@ -276,6 +260,7 @@ export async function render_response({
 	}
 
 	if (state.prerendering) {
+		// TODO read headers set with setHeaders and convert into http-equiv where possible
 		const http_equiv = [];
 
 		const csp_headers = csp.csp_provider.get_meta();
@@ -283,8 +268,8 @@ export async function render_response({
 			http_equiv.push(csp_headers);
 		}
 
-		if (cache) {
-			http_equiv.push(`<meta http-equiv="cache-control" content="max-age=${cache.maxage}">`);
+		if (state.prerendering.cache) {
+			http_equiv.push(`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`);
 		}
 
 		if (http_equiv.length > 0) {
@@ -308,10 +293,6 @@ export async function render_response({
 		etag: `"${hash(html)}"`
 	});
 
-	if (cache) {
-		headers.set('cache-control', `${is_private ? 'private' : 'public'}, max-age=${cache.maxage}`);
-	}
-
 	if (!state.prerendering) {
 		const csp_header = csp.csp_provider.get_header();
 		if (csp_header) {
@@ -320,6 +301,12 @@ export async function render_response({
 		const report_only_header = csp.report_only_provider.get_header();
 		if (report_only_header) {
 			headers.set('content-security-policy-report-only', report_only_header);
+		}
+
+		for (const new_cookie of cookies) {
+			const { name, value, ...options } = new_cookie;
+			// @ts-expect-error
+			headers.append('set-cookie', cookie.serialize(name, value, options));
 		}
 	}
 

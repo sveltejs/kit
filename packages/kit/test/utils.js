@@ -152,12 +152,12 @@ export const config = {
 	},
 	retries: process.env.CI ? 5 : 0,
 	projects: [
-		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
-			use: {
-				javaScriptEnabled: true
-			}
-		},
+		// {
+		// 	name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
+		// 	use: {
+		// 		javaScriptEnabled: true
+		// 	}
+		// },
 		{
 			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}-no-js`,
 			use: {

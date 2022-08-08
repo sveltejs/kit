@@ -343,7 +343,7 @@ export async function prerender() {
 				/** @type {import('types').ManifestData} */
 				const { routes } = (await import(pathToFileURL(manifest_path).href)).manifest._;
 				const entries = routes
-					.map((route) => (route.type === 'page' ? route.path : ''))
+					.map((route) => (route.type === 'page' && !route.id.includes('[') ? `/${route.id}` : ''))
 					.filter(Boolean);
 
 				for (const entry of entries) {

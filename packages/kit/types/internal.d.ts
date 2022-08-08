@@ -1,4 +1,5 @@
 import { OutputAsset, OutputChunk } from 'rollup';
+import { SvelteComponent } from 'svelte/internal';
 import {
 	Config,
 	ExternalFetch,
@@ -64,16 +65,24 @@ export interface BuildData {
 	};
 }
 
-export type CSRComponent = any; // TODO
+export interface CSRPageNode {
+	component: typeof SvelteComponent;
+	module: {
+		load: Load;
+		hydrate: boolean;
+		router: boolean;
+	};
+	server: boolean;
+}
 
-export type CSRComponentLoader = () => Promise<CSRComponent>;
+export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
 
 export type CSRRoute = {
 	id: string;
 	exec: (path: string) => undefined | Record<string, string>;
-	a: CSRComponentLoader[];
-	b: CSRComponentLoader[];
-	has_shadow: boolean;
+	errors: CSRPageNodeLoader[];
+	layouts: CSRPageNodeLoader[];
+	page: CSRPageNodeLoader;
 };
 
 export interface EndpointData {
@@ -109,7 +118,7 @@ export class InternalServer extends Server {
 
 export interface ManifestData {
 	assets: Asset[];
-	components: string[];
+	nodes: PageNode[];
 	routes: RouteData[];
 	matchers: Record<string, string>;
 }
@@ -119,29 +128,19 @@ export interface MethodOverride {
 	allowed: string[];
 }
 
-export type NormalizedLoadOutput = {
-	status?: number;
-	error?: Error;
-	redirect?: string;
-	props?: Record<string, any> | Promise<Record<string, any>>;
-	stuff?: Record<string, any>;
-	cache?: NormalizedLoadOutputCache;
-	dependencies?: string[];
-};
-
-export interface NormalizedLoadOutputCache {
-	maxage: number;
-	private?: boolean;
+export interface PageNode {
+	component?: string; // TODO supply default component if it's missing (bit of an edge case)
+	module?: string;
+	server?: string;
 }
 
 export interface PageData {
 	type: 'page';
 	id: string;
-	shadow: string | null;
 	pattern: RegExp;
-	path: string;
-	a: Array<string | undefined>;
-	b: Array<string | undefined>;
+	errors: Array<PageNode | undefined>;
+	layouts: Array<PageNode | undefined>;
+	page: PageNode;
 }
 
 export type PayloadScriptAttributes =
@@ -154,6 +153,7 @@ export interface PrerenderDependency {
 }
 
 export interface PrerenderOptions {
+	cache?: string; // including this here is a bit of a hack, but it makes it easy to add <meta http-equiv>
 	fallback?: boolean;
 	dependencies: Map<string, PrerenderDependency>;
 }
@@ -193,10 +193,6 @@ export interface ShadowData {
 }
 
 export interface SSRComponent {
-	router?: boolean;
-	hydrate?: boolean;
-	prerender?: boolean;
-	load: Load;
 	default: {
 		render(props: Record<string, any>): {
 			html: string;
@@ -223,7 +219,7 @@ export interface SSREndpoint {
 }
 
 export interface SSRNode {
-	module: SSRComponent;
+	component: SSRComponent;
 	/** index into the `components` array in client-manifest.js */
 	index: number;
 	/** client-side module URL for this component */
@@ -234,6 +230,23 @@ export interface SSRNode {
 	stylesheets: string[];
 	/** inlined styles */
 	inline_styles?: () => MaybePromise<Record<string, string>>;
+
+	module: {
+		load?: Load;
+		hydrate?: boolean;
+		prerender?: boolean;
+		router?: boolean;
+		ssr?: boolean;
+	};
+
+	server: {
+		// TODO create types for these
+		GET?: TODO;
+		POST?: TODO;
+		PATCH?: TODO;
+		PUT?: TODO;
+		DELETE?: TODO;
+	};
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
@@ -282,20 +295,9 @@ export interface SSRPage {
 	pattern: RegExp;
 	names: string[];
 	types: string[];
-	shadow:
-		| null
-		| (() => Promise<{
-				[method: string]: ShadowRequestHandler;
-		  }>);
-	/**
-	 * plan a is to render 1 or more layout components followed by a leaf component.
-	 */
-	a: Array<number | undefined>;
-	/**
-	 * plan b — if one of them components fails in `load` we backtrack until we find
-	 * the nearest error component.
-	 */
-	b: Array<number | undefined>;
+	errors: Array<number | undefined>;
+	layouts: Array<number | undefined>;
+	page: number;
 }
 
 export interface SSRErrorPage {

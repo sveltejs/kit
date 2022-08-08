@@ -1,9 +1,7 @@
-
-
 <script>
 	import { browser, dev } from '$app/env';
 
-	/** @type {import('./$types/').Data} */
+	/** @type {import('./$types').Data} */
 	export let data;
 </script>
 

@@ -6,19 +6,9 @@ export async function GET({ params }) {
 
 	const file = fs.readFileSync(`./static/image.${extension}`);
 
-	throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292701)");
-	// Suggestion (check for correctness before using):
-	// return new Response(JSON.stringify(file), {
-	// 	headers: 'content-type': 'application/json; charset=utf-8',
-	// 		
-	// 		'Content-Type': 'image/' + extension
-	// 	}
-	// });
-	return {
-		status: 200,
+	return new Response(file, {
 		headers: {
 			'Content-Type': 'image/' + extension
-		},
-		body: file
-	};
+		}
+	});
 }

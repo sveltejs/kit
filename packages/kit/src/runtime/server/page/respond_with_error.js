@@ -1,7 +1,8 @@
 import { render_response } from './render.js';
-import { load_node } from './load_node.js';
+import { load_data } from './load_data.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { GENERIC_ERROR } from '../utils.js';
+import { create_fetch } from './fetch.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -29,50 +30,32 @@ export async function respond_with_error({
 	error,
 	resolve_opts
 }) {
+	const { fetcher, fetched, cookies } = create_fetch({
+		event,
+		options,
+		state,
+		route: GENERIC_ERROR
+	});
+
 	try {
 		const branch = [];
-		let stuff = {};
 
 		if (resolve_opts.ssr) {
-			const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
-			const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
-
-			const layout_loaded = /** @type {Loaded} */ (
-				await load_node({
+			branch.push(
+				await load_data({
 					event,
 					options,
 					state,
-					route: GENERIC_ERROR,
-					node: default_layout,
+					node: await options.manifest._.nodes[0](), // 0 is always the root layout
 					$session,
-					stuff: {},
-					is_error: false,
-					is_leaf: false
-				})
+					fetcher
+				}),
+				{
+					node: await options.manifest._.nodes[1](), // 1 is always the root error
+					data: null,
+					server_data: null
+				}
 			);
-
-			if (layout_loaded.loaded.error) {
-				throw layout_loaded.loaded.error;
-			}
-
-			const error_loaded = /** @type {Loaded} */ (
-				await load_node({
-					event,
-					options,
-					state,
-					route: GENERIC_ERROR,
-					node: default_error,
-					$session,
-					stuff: layout_loaded ? layout_loaded.stuff : {},
-					is_error: true,
-					is_leaf: false,
-					status,
-					error
-				})
-			);
-
-			branch.push(layout_loaded, error_loaded);
-			stuff = error_loaded.stuff;
 		}
 
 		return await render_response({
@@ -83,10 +66,11 @@ export async function respond_with_error({
 				hydrate: options.hydrate,
 				router: options.router
 			},
-			stuff,
 			status,
 			error,
 			branch,
+			fetched,
+			cookies,
 			event,
 			resolve_opts
 		});

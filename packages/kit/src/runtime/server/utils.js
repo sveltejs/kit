@@ -1,15 +1,3 @@
-/** @param {Record<string, any>} obj */
-export function lowercase_keys(obj) {
-	/** @type {Record<string, any>} */
-	const clone = {};
-
-	for (const key in obj) {
-		clone[key.toLowerCase()] = obj[key];
-	}
-
-	return clone;
-}
-
 /** @param {any} body */
 export function is_pojo(body) {
 	if (typeof body !== 'object') return false;
@@ -44,7 +32,7 @@ export function serialize_error(error, get_stack) {
  * @param {Error} error
  * @param {(error: Error) => string | undefined} get_stack
  */
-function clone_error(error, get_stack) {
+export function clone_error(error, get_stack) {
 	const {
 		name,
 		message,
@@ -84,3 +72,31 @@ export function check_method_names(mod) {
 export const GENERIC_ERROR = {
 	id: '__error'
 };
+
+/**
+ * @param {Record<import('types').HttpMethod, any>} mod
+ * @param {import('types').HttpMethod} method
+ */
+export function method_not_allowed(mod, method) {
+	return new Response(`${method} method not allowed`, {
+		status: 405,
+		headers: {
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+			// "The server must generate an Allow header field in a 405 status code response"
+			allow: allowed_methods(mod).join(', ')
+		}
+	});
+}
+
+/** @param {Record<import('types').HttpMethod, any>} mod */
+export function allowed_methods(mod) {
+	const allowed = [];
+
+	for (const method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
+		if (method in mod) allowed.push(method);
+	}
+
+	if (mod.GET || mod.HEAD) allowed.push('HEAD');
+
+	return allowed;
+}

@@ -1,7 +1,10 @@
 <script>
 	import { page } from '$app/stores';
 
+	/** @type {import('./$types').Data} */
 	export let data;
+
+	/** @type {import('./$types').Errors} */
 	export let errors;
 </script>
 

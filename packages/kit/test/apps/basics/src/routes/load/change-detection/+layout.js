@@ -1,21 +1,20 @@
-throw new Error("@migration task: Update load function (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693)");
-
-
 let count = 0;
 
 /** @type {import('@sveltejs/kit').Load} */
-export async function load({ fetch }) {
+export async function load({ fetch, depends, setHeaders }) {
 	const res = await fetch('/load/change-detection/data.json');
 	const { type } = await res.json();
 
 	count += 1;
 
+	depends('custom:change-detection-layout');
+
+	setHeaders({
+		'cache-control': 'public, max-age=5'
+	});
+
 	return {
-		cache: { maxage: 5 },
-		props: {
-			type,
-			loads: count
-		},
-		dependencies: ['custom:change-detection-layout']
+		type,
+		loads: count
 	};
 }

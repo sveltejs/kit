@@ -166,10 +166,8 @@ export async function build_server(options, client) {
 
 	// add entry points for every endpoint...
 	manifest_data.routes.forEach((route) => {
-		const file = route.type === 'endpoint' ? route.file : route.shadow;
-
-		if (file) {
-			const resolved = path.resolve(cwd, file);
+		if (route.type === 'endpoint') {
+			const resolved = path.resolve(cwd, route.file);
 			const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
 			const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
 			input[name] = resolved;
@@ -177,14 +175,18 @@ export async function build_server(options, client) {
 	});
 
 	// ...and every component used by pages...
-	manifest_data.components.forEach((file) => {
-		const resolved = path.resolve(cwd, file);
-		const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
+	manifest_data.nodes.forEach((node) => {
+		for (const file of [node.component, node.module, node.server]) {
+			if (file) {
+				const resolved = path.resolve(cwd, file);
+				const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
 
-		const name = relative.startsWith('..')
-			? posixify(path.join('entries/fallbacks', path.basename(file)))
-			: posixify(path.join('entries/pages', relative));
-		input[name] = resolved;
+				const name = relative.startsWith('..')
+					? posixify(path.join('entries/fallbacks', path.basename(file)))
+					: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
+				input[name] = resolved;
+			}
+		}
 	});
 
 	// ...and every matcher
@@ -239,23 +241,55 @@ export async function build_server(options, client) {
 		}
 	});
 
-	manifest_data.components.forEach((component, i) => {
-		const entry = find_deps(client.vite_manifest, component, true);
+	manifest_data.nodes.forEach((node, i) => {
+		/** @type {string[]} */
+		const imports = [];
 
-		const imports = [`import * as module from '../${vite_manifest[component].file}';`];
+		/** @type {string[]} */
+		const exports = [`export const index = ${i};`];
 
-		const exports = [
-			'export { module };',
-			`export const index = ${i};`,
-			`export const file = '${entry.file}';`,
-			`export const imports = ${s(entry.imports)};`,
-			`export const stylesheets = ${s(entry.stylesheets)};`
-		];
+		/** @type {string[]} */
+		const imported = [];
+
+		/** @type {string[]} */
+		const stylesheets = [];
+
+		if (node.component) {
+			const entry = find_deps(client.vite_manifest, node.component, true);
+
+			imported.push(...entry.imports);
+			stylesheets.push(...entry.stylesheets);
+
+			exports.push(
+				`export { default as component } from '../${vite_manifest[node.component].file}';`,
+				`export const file = '${entry.file}';` // TODO what is this?
+			);
+		}
+
+		if (node.module) {
+			const entry = find_deps(client.vite_manifest, node.module, true);
+
+			imported.push(...entry.imports);
+			stylesheets.push(...entry.stylesheets);
+
+			imports.push(`import * as module from '../${vite_manifest[node.module].file}';`);
+			exports.push(`export { module };`);
+		}
+
+		if (node.server) {
+			imports.push(`import * as server from '../${vite_manifest[node.server].file}';`);
+			exports.push(`export { server };`);
+		}
+
+		exports.push(
+			`export const imports = ${s(imported)};`,
+			`export const stylesheets = ${s(stylesheets)};`
+		);
 
 		/** @type {string[]} */
 		const styles = [];
 
-		entry.stylesheets.forEach((file) => {
+		stylesheets.forEach((file) => {
 			if (stylesheet_lookup.has(file)) {
 				const index = stylesheet_lookup.get(file);
 				const name = `stylesheet_${index}`;
@@ -296,7 +330,7 @@ function get_methods(cwd, output, manifest_data) {
 	/** @type {Record<string, import('types').HttpMethod[]>} */
 	const methods = {};
 	manifest_data.routes.forEach((route) => {
-		const file = route.type === 'endpoint' ? route.file : route.shadow;
+		const file = route.type === 'endpoint' ? route.file : route.page.server;
 
 		if (file && lookup[file]) {
 			methods[file] = lookup[file].filter(is_http_method);

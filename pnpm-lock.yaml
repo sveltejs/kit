@@ -289,13 +289,12 @@ importers:
       cross-env: ^7.0.3
       devalue: ^2.0.1
       kleur: ^4.1.4
-      locate-character: ^2.0.5
+      magic-string: ^0.26.2
       marked: ^4.0.16
       mime: ^3.0.0
       node-fetch: ^3.2.4
       rollup: ^2.75.7
       sade: ^1.8.1
-      selfsigned: ^2.0.1
       set-cookie-parser: ^2.4.8
       sirv: ^2.0.2
       svelte: ^3.48.0
@@ -325,12 +324,11 @@ importers:
       cross-env: 7.0.3
       devalue: 2.0.1
       kleur: 4.1.5
-      locate-character: 2.0.5
+      magic-string: 0.26.2
       marked: 4.0.17
       mime: 3.0.0
       node-fetch: 3.2.6
       rollup: 2.75.7
-      selfsigned: 2.0.1
       set-cookie-parser: 2.5.0
       sirv: 2.0.2
       svelte: 3.48.0
@@ -2724,10 +2722,6 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /locate-character/2.0.5:
-    resolution: {integrity: sha512-n2GmejDXtOPBAZdIiEFy5dJ5N38xBCXLNOtw2WpB9kGh6pnrEuKlwYI+Tkpofc4wDtVXHtoAOJaMRlYG/oYaxg==}
-    dev: true
-
   /locate-path/2.0.0:
     resolution: {integrity: sha512-NCI2kiDkyR7VeEKm27Kda/iQHyKJe1Bu0FlTbYp3CqJu+9IFe9bLyAjMxf5ZDDbEg+iMPzB5zYyUTSm8wVTKmA==}
     engines: {node: '>=4'}
@@ -2993,11 +2987,6 @@ packages:
       data-uri-to-buffer: 4.0.0
       fetch-blob: 3.1.5
       formdata-polyfill: 4.0.10
-    dev: true
-
-  /node-forge/1.3.1:
-    resolution: {integrity: sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==}
-    engines: {node: '>= 6.13.0'}
     dev: true
 
   /node-gyp-build/4.5.0:
@@ -3613,13 +3602,6 @@ packages:
       graceful-fs: 4.2.10
       mkdirp: 0.5.6
       rimraf: 2.7.1
-    dev: true
-
-  /selfsigned/2.0.1:
-    resolution: {integrity: sha512-LmME957M1zOsUhG+67rAjKfiWFox3SBxE/yymatMZsAx+oMrJ0YQ8AToOnyCm7xbeg2ep37IHLxdu0o2MavQOQ==}
-    engines: {node: '>=10'}
-    dependencies:
-      node-forge: 1.3.1
     dev: true
 
   /semiver/1.1.0:

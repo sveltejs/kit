@@ -1,5 +1,5 @@
 import { render_endpoint } from './endpoint.js';
-import { render_page } from './page/index.js';
+import { handle_json_request, render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
@@ -112,6 +112,9 @@ export async function respond(request, options, state) {
 		}
 	}
 
+	/** @type {import('types').ResponseHeaders} */
+	const headers = {};
+
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		get clientAddress() {
@@ -132,6 +135,22 @@ export async function respond(request, options, state) {
 		platform: state.platform,
 		request,
 		routeId: route && route.id,
+		setHeaders: (new_headers) => {
+			for (const key in new_headers) {
+				const lower = key.toLowerCase();
+
+				if (lower in headers) {
+					throw new Error(`"${key}" header is already set`);
+				}
+
+				// TODO apply these headers to the response
+				headers[lower] = new_headers[key];
+
+				if (state.prerendering && lower === 'cache-control') {
+					state.prerendering.cache = /** @type {string} */ (new_headers[key]);
+				}
+			}
+		},
 		url
 	};
 
@@ -202,10 +221,12 @@ export async function respond(request, options, state) {
 						state,
 						$session: await options.hooks.getSession(event),
 						page_config: { router: true, hydrate: true },
-						stuff: {},
 						status: 200,
 						error: null,
 						branch: [],
+						fetched: [],
+						validation_errors: undefined,
+						cookies: [],
 						resolve_opts: {
 							...resolve_opts,
 							ssr: false
@@ -217,34 +238,52 @@ export async function respond(request, options, state) {
 					/** @type {Response} */
 					let response;
 
-					if (is_data_request && route.type === 'page' && route.shadow) {
-						response = await render_endpoint(event, await route.shadow(), options);
-
-						// loading data for a client-side transition is a special case
-						if (request.headers.has('x-sveltekit-load')) {
-							// since redirects are opaque to the browser, we need to repackage
-							// 3xx responses as 200s with a custom header
-							if (response.status >= 300 && response.status < 400) {
+					if (is_data_request && route.type === 'page') {
+						const module = await options.manifest._.nodes[route.page]();
+						if (module.server) {
+							const response = await handle_json_request(event, options, module.server);
+							if (
+								request.headers.has('x-sveltekit-load') &&
+								response.status >= 300 &&
+								response.status < 400
+							) {
+								// since redirects are opaque to the browser, we need to repackage
+								// 3xx responses as 200s with a custom header
 								const location = response.headers.get('location');
 
 								if (location) {
 									const headers = new Headers(response.headers);
 									headers.set('x-sveltekit-location', location);
-									response = new Response(undefined, {
+									return new Response(undefined, {
 										status: 204,
 										headers
 									});
 								}
+							} else {
+								return response;
 							}
+						} else {
+							return new Response('not found', { status: 404 });
 						}
 					} else {
 						response =
 							route.type === 'endpoint'
-								? await render_endpoint(event, await route.load(), options)
+								? await render_endpoint(event, route)
 								: await render_page(event, route, options, state, resolve_opts);
 					}
 
 					if (response) {
+						for (const key in headers) {
+							const value = headers[key];
+							if (key === 'set-cookie') {
+								for (const cookie of Array.isArray(value) ? value : [value]) {
+									response.headers.append(key, cookie);
+								}
+							} else {
+								response.headers.set(key, /** @type {string} */ (value));
+							}
+						}
+
 						// respond with 304 if etag matches
 						if (response.status === 200 && response.headers.has('etag')) {
 							let if_none_match_value = request.headers.get('if-none-match');

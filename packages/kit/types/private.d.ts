@@ -26,6 +26,7 @@ export interface AdapterEntry {
 	}) => MaybePromise<void>;
 }
 
+// TODO is this still used?
 export type BodyValidator<T> = {
 	[P in keyof T]: T[P] extends { [k: string]: unknown }
 		? BodyValidator<T[P]> // recurse when T[P] is an object

@@ -40,6 +40,20 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 	/** @type {import('types').SSRManifest} */
 	let manifest;
 
+	const extensions = [...svelte_config.extensions, ...svelte_config.kit.moduleExtensions];
+
+	/** @param {string} id */
+	async function resolve(id) {
+		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
+
+		const module = await vite.ssrLoadModule(url);
+
+		const module_node = await vite.moduleGraph.getModuleByUrl(url);
+		if (!module_node) throw new Error(`Could not find node for ${url}`);
+
+		return { module, module_node, url };
+	}
+
 	function update_manifest() {
 		const { manifest_data } = sync.update(svelte_config);
 
@@ -53,60 +67,91 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					imports: [],
 					stylesheets: []
 				},
-				nodes: manifest_data.components.map((id, index) => {
+				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
-						const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
+						/** @type {import('types').SSRNode} */
+						const result = {};
 
-						const module = /** @type {import('types').SSRComponent} */ (
-							await vite.ssrLoadModule(url)
-						);
+						/** @type {import('vite').ModuleNode[]} */
+						const module_nodes = [];
 
-						const node = await vite.moduleGraph.getModuleByUrl(url);
-						if (!node) throw new Error(`Could not find node for ${url}`);
+						result.index = index;
 
-						prevent_illegal_vite_imports(
-							node,
-							illegal_imports,
-							[...svelte_config.extensions, ...svelte_config.kit.moduleExtensions],
-							svelte_config.kit.outDir
-						);
+						// these are unused in dev, it's easier to include them
+						result.imports = [];
+						result.stylesheets = [];
 
-						return {
-							module,
-							index,
-							file: url.endsWith('.svelte') ? url : url + '?import',
-							imports: [],
-							stylesheets: [],
-							// in dev we inline all styles to avoid FOUC
-							inline_styles: async () => {
-								const deps = new Set();
-								await find_deps(vite, node, deps);
+						if (node.component) {
+							const { module, module_node, url } = await resolve(node.component);
 
-								/** @type {Record<string, string>} */
-								const styles = {};
+							module_nodes.push(module_node);
 
-								for (const dep of deps) {
-									const parsed = new URL(dep.url, 'http://localhost/');
-									const query = parsed.searchParams;
+							result.component = module.default;
+							result.file = url.endsWith('.svelte') ? url : url + '?import'; // TODO what is this for?
 
-									if (
-										style_pattern.test(dep.file) ||
-										(query.has('svelte') && query.get('type') === 'style')
-									) {
-										try {
-											const mod = await vite.ssrLoadModule(dep.url);
-											styles[dep.url] = mod.default;
-										} catch {
-											// this can happen with dynamically imported modules, I think
-											// because the Vite module graph doesn't distinguish between
-											// static and dynamic imports? TODO investigate, submit fix
-										}
+							prevent_illegal_vite_imports(
+								module_node,
+								illegal_imports,
+								extensions,
+								svelte_config.kit.outDir
+							);
+						}
+
+						if (node.module) {
+							const { module, module_node } = await resolve(node.module);
+
+							module_nodes.push(module_node);
+
+							result.module = module;
+
+							prevent_illegal_vite_imports(
+								module_node,
+								illegal_imports,
+								extensions,
+								svelte_config.kit.outDir
+							);
+						}
+
+						if (node.server) {
+							const { module } = await resolve(node.server);
+							result.server = module;
+						}
+
+						// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
+						// components/stylesheets loaded via import() during `load` are included
+						result.inline_styles = async () => {
+							const deps = new Set();
+
+							for (const module_node of module_nodes) {
+								await find_deps(vite, module_node, deps);
+							}
+
+							/** @type {Record<string, string>} */
+							const styles = {};
+
+							for (const dep of deps) {
+								const parsed = new URL(dep.url, 'http://localhost/');
+								const query = parsed.searchParams;
+
+								if (
+									style_pattern.test(dep.file) ||
+									(query.has('svelte') && query.get('type') === 'style')
+								) {
+									try {
+										const mod = await vite.ssrLoadModule(dep.url);
+										styles[dep.url] = mod.default;
+									} catch {
+										// this can happen with dynamically imported modules, I think
+										// because the Vite module graph doesn't distinguish between
+										// static and dynamic imports? TODO investigate, submit fix
 									}
 								}
-
-								return styles;
 							}
+
+							return styles;
 						};
+
+						return result;
 					};
 				}),
 				routes: manifest_data.routes.map((route) => {
@@ -119,14 +164,11 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							pattern,
 							names,
 							types,
-							shadow: route.shadow
-								? async () => {
-										const url = path.resolve(cwd, /** @type {string} */ (route.shadow));
-										return await vite.ssrLoadModule(url);
-								  }
-								: null,
-							a: route.a.map((id) => (id ? manifest_data.components.indexOf(id) : undefined)),
-							b: route.b.map((id) => (id ? manifest_data.components.indexOf(id) : undefined))
+							errors: route.errors.map((id) => (id ? manifest_data.nodes.indexOf(id) : undefined)),
+							layouts: route.layouts.map((id) =>
+								id ? manifest_data.nodes.indexOf(id) : undefined
+							),
+							page: manifest_data.nodes.indexOf(route.page)
 						};
 					}
 

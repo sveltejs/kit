@@ -13,6 +13,4 @@ declare namespace App {
 	// interface PublicEnv {}
 
 	// interface Session {}
-
-	// interface Stuff {}
 }

@@ -6,8 +6,8 @@ import './ambient.js';
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
-	BodyValidator,
 	CspDirectives,
+	JSONObject,
 	JSONValue,
 	Logger,
 	MaybePromise,
@@ -19,6 +19,7 @@ import {
 	TrailingSlash
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
+import { HttpError, Redirect } from '../src/index/private.js';
 
 export interface Adapter {
 	name: string;
@@ -140,7 +141,6 @@ export interface KitConfig {
 		onError?: PrerenderOnErrorValue;
 		origin?: string;
 	};
-	routes?: (filepath: string) => boolean;
 	serviceWorker?: {
 		register?: boolean;
 		files?: (filepath: string) => boolean;
@@ -178,35 +178,25 @@ export interface HandleError {
  */
 export interface Load<
 	Params extends Record<string, string> = Record<string, string>,
-	InputProps extends Record<string, any> = Record<string, any>,
-	OutputProps extends Record<string, any> = InputProps
+	InputData extends Record<string, any> = Record<string, any>,
+	OutputData extends Record<string, any> = Record<string, any>
 > {
-	(event: LoadEvent<Params, InputProps>): MaybePromise<LoadOutput<OutputProps> | void>;
+	(event: LoadEvent<Params, InputData>): MaybePromise<OutputData | void>;
 }
 
 export interface LoadEvent<
 	Params extends Record<string, string> = Record<string, string>,
-	Props extends Record<string, any> = Record<string, any>
+	Data extends JSONObject | null = JSONObject | null
 > {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
-	props: Props;
+	data: Data;
 	routeId: string | null;
 	session: App.Session;
-	stuff: Partial<App.Stuff>;
+	setHeaders: (headers: ResponseHeaders) => void;
 	url: URL;
-	status: number | null;
-	error: Error | null;
-}
-
-export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {
-	status?: number;
-	error?: string | Error;
-	redirect?: string;
-	props?: Props;
-	stuff?: Partial<App.Stuff>;
-	cache?: LoadOutputCache;
-	dependencies?: string[];
+	parent: () => Promise<Record<string, any>>;
+	depends: (...deps: string[]) => void;
 }
 
 export interface LoadOutputCache {
@@ -223,9 +213,9 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	url: URL;
 	params: Params;
 	routeId: string | null;
-	stuff: App.Stuff;
 	status: number;
 	error: Error | null;
+	data: Record<string, any>;
 }
 
 export interface ParamMatcher {
@@ -239,27 +229,17 @@ export interface RequestEvent<Params extends Record<string, string> = Record<str
 	platform: Readonly<App.Platform>;
 	request: Request;
 	routeId: string | null;
+	setHeaders: (headers: ResponseHeaders) => void;
 	url: URL;
 }
 
 /**
- * A `(event: RequestEvent) => RequestHandlerOutput` function exported from an endpoint that corresponds to an HTTP verb (`GET`, `PUT`, `PATCH`, etc) and handles requests with that method.
+ * A `(event: RequestEvent) => Response` function exported from a +server.js file that corresponds to an HTTP verb (`GET`, `PUT`, `PATCH`, etc) and handles requests with that method.
  *
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](/docs/types#generated-types) instead.
- *
- * The next generic argument `Output` is used to validate the returned `body` from your functions by passing it through `BodyValidator`, which will make sure the variable in the `body` matches what with you assign here. It defaults to `ResponseBody`, which will error when `body` receives a [custom object type](https://www.typescriptlang.org/docs/handbook/2/objects.html).
  */
-export interface RequestHandler<
-	Params extends Record<string, string> = Record<string, string>,
-	Output = ResponseBody
-> {
-	(event: RequestEvent<Params>): MaybePromise<RequestHandlerOutput<Output>>;
-}
-
-export interface RequestHandlerOutput<Output = ResponseBody> {
-	status?: number;
-	headers?: Headers | Partial<ResponseHeaders>;
-	body?: Output extends ResponseBody ? Output : BodyValidator<Output>;
+export interface RequestHandler<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<Response>;
 }
 
 export interface ResolveOptions {
@@ -296,3 +276,36 @@ export interface SSRManifest {
 		matchers: () => Promise<Record<string, ParamMatcher>>;
 	};
 }
+
+export interface GET<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<JSONObject>;
+}
+
+export interface POST<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<
+		| { status?: number; errors: Record<string, string>; location?: never }
+		| { status?: never; errors?: never; location: string }
+		| void
+	>;
+}
+
+export interface PUT<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<{
+		status?: number;
+		errors: Record<string, string>;
+	} | void>;
+}
+
+export interface PATCH<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<{
+		status?: number;
+		errors: Record<string, string>;
+	} | void>;
+}
+
+export interface DELETE<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<void>;
+}
+
+export function error(status: number, message?: string): HttpError;
+export function redirect(status: number, location?: string): Redirect;

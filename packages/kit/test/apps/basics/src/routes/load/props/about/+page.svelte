@@ -1,5 +1,5 @@
 <script>
-	export let data = 'undefined';
+	export let data = 'this default is always ignored';
 </script>
 
 <h3>About</h3>

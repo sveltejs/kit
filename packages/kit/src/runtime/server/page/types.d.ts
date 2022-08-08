@@ -1,6 +1,6 @@
-import { JSONValue, NormalizedLoadOutput, ResponseHeaders, SSRNode, CspDirectives } from 'types';
+import { JSONValue, ResponseHeaders, SSRNode, CspDirectives } from 'types';
 
-export type Fetched = {
+export interface Fetched {
 	url: string;
 	body?: string | null;
 	response: {
@@ -9,16 +9,18 @@ export type Fetched = {
 		headers: ResponseHeaders;
 		body: string;
 	};
-};
+}
+
+export interface FetchState {
+	fetched: Fetched[];
+	cookies: string[];
+	new_cookies: string[];
+}
 
 export type Loaded = {
 	node: SSRNode;
-	props: JSONValue | undefined;
-	loaded: NormalizedLoadOutput;
-	stuff: Record<string, any>;
-	fetched: Fetched[];
-	set_cookie_headers: string[];
-	uses_credentials: boolean;
+	data: Record<string, any> | null;
+	server_data: JSONValue;
 };
 
 type CspMode = 'hash' | 'nonce' | 'auto';
