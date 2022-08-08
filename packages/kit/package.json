@@ -80,10 +80,10 @@
 			"import": "./src/node/index.js"
 		},
 		"./node/polyfills": {
-			"import": "./src/node/polyfills/index.js"
+			"import": "./src/node/polyfills.js"
 		},
 		"./hooks": {
-			"import": "./src/hooks/index.js"
+			"import": "./src/hooks.js"
 		},
 		"./vite": {
 			"import": "./src/vite/index.js"
