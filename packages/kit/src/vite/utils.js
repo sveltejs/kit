@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { loadConfigFromFile, loadEnv, normalizePath } from 'vite';
-import { get_runtime_directory } from '../core/utils.js';
+import { runtime_directory } from '../core/utils.js';
 
 /**
  * @param {import('vite').ResolvedConfig} config
@@ -104,7 +104,7 @@ export function get_aliases(config) {
 	/** @type {import('vite').Alias[]} */
 	const alias = [
 		{ find: '__GENERATED__', replacement: path.posix.join(config.outDir, 'generated') },
-		{ find: '$app', replacement: `${get_runtime_directory()}/app` },
+		{ find: '$app', replacement: `${runtime_directory}/app` },
 		// For now, we handle `$lib` specially here rather than make it a default value for
 		// `config.kit.alias` since it has special meaning for packaging, etc.
 		{ find: '$lib', replacement: config.files.lib }
@@ -139,7 +139,7 @@ export function get_aliases(config) {
 		},
 		{
 			find: '$env',
-			replacement: `${get_runtime_directory()}/env`
+			replacement: `${runtime_directory}/env`
 		}
 	);
 
