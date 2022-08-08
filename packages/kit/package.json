@@ -12,8 +12,18 @@
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^1.0.1",
 		"chokidar": "^3.5.3",
+		"cookie": "^0.5.0",
+		"devalue": "^2.0.1",
+		"kleur": "^4.1.4",
+		"magic-string": "^0.26.2",
+		"mime": "^3.0.0",
+		"node-fetch": "^3.2.4",
 		"sade": "^1.8.1",
-		"tiny-glob": "^0.2.9"
+		"set-cookie-parser": "^2.4.8",
+		"sirv": "^2.0.2",
+		"tiny-glob": "^0.2.9",
+		"typescript": "^4.7.4",
+		"undici": "^5.8.1"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.23.4",
@@ -25,24 +35,13 @@
 		"@types/node": "^16.11.36",
 		"@types/sade": "^1.7.4",
 		"@types/set-cookie-parser": "^2.4.2",
-		"cookie": "^0.5.0",
 		"cross-env": "^7.0.3",
-		"devalue": "^2.0.1",
-		"kleur": "^4.1.4",
-		"magic-string": "^0.26.2",
 		"marked": "^4.0.16",
-		"mime": "^3.0.0",
-		"node-fetch": "^3.2.4",
 		"rollup": "^2.75.7",
-		"set-cookie-parser": "^2.4.8",
-		"sirv": "^2.0.2",
 		"svelte": "^3.48.0",
 		"svelte-check": "^2.7.1",
 		"svelte-preprocess": "^4.10.6",
 		"svelte2tsx": "~0.5.10",
-		"tiny-glob": "^0.2.9",
-		"typescript": "^4.7.4",
-		"undici": "^5.8.1",
 		"uvu": "^0.5.3",
 		"vite": "^3.0.0"
 	},
@@ -60,7 +59,7 @@
 		"svelte-kit.js"
 	],
 	"scripts": {
-		"build": "rollup -c && node scripts/cp.js src/runtime/components dist/runtime/components && npm run types",
+		"build": "npm run types",
 		"dev": "rollup -cw",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
@@ -77,20 +76,20 @@
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
-			"import": "./dist/exports/index.js",
+			"import": "./src/index/index.js",
 			"types": "./types/index.d.ts"
 		},
 		"./node": {
-			"import": "./dist/exports/node.js"
+			"import": "./src/node/index.js"
 		},
 		"./node/polyfills": {
-			"import": "./dist/exports/node/polyfills.js"
+			"import": "./src/node/polyfills/index.js"
 		},
 		"./hooks": {
-			"import": "./dist/exports/hooks.js"
+			"import": "./src/hooks/index.js"
 		},
 		"./vite": {
-			"import": "./dist/exports/vite.js"
+			"import": "./src/vite/index.js"
 		}
 	},
 	"types": "types/index.d.ts",

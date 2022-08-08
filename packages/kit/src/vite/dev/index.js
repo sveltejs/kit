@@ -292,9 +292,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					);
 				}
 
-				const runtime_base = process.env.BUNDLED
-					? `/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/runtime`))}`
-					: `/@fs${runtime}`;
+				const runtime_base = `/@fs${runtime}`;
 
 				const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
 				const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);

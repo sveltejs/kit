@@ -233,7 +233,7 @@ function kit() {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point
 						// eventhough server otherwise works without it
-						input: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
+						input: `${get_runtime_directory()}/client/start.js`
 					}
 				},
 				define: {
@@ -376,12 +376,7 @@ function kit() {
 				const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
 
 				// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-				const script = fileURLToPath(
-					new URL(
-						process.env.BUNDLED ? './prerender.js' : '../core/prerender/prerender.js',
-						import.meta.url
-					)
-				);
+				const script = fileURLToPath(new URL('../core/prerender/prerender.js', import.meta.url));
 
 				const child = fork(
 					script,

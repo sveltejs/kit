@@ -4,14 +4,9 @@ import { fileURLToPath } from 'url';
 
 /**
  * Get the prefix for the `runtime` directory, for use with import declarations
- * @param {import('types').ValidatedKitConfig} config
  */
-export function get_runtime_prefix(config) {
-	if (process.env.BUNDLED) {
-		return posixify_path(path.join(config.outDir, 'runtime'));
-	}
-
-	return posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
+export function get_runtime_prefix() {
+	return posixify_path(get_runtime_directory());
 }
 
 /**
