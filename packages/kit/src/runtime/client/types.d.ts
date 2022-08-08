@@ -61,7 +61,7 @@ export type NavigationFinished = {
 
 export type BranchNode = {
 	node: CSRPageNode;
-	data: Record<string, any>;
+	data: Record<string, any> | null;
 	uses: {
 		params: Set<string>;
 		url: boolean; // TODO make more granular?

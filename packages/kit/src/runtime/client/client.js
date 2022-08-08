@@ -481,6 +481,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 			}
 		}
 
+		/** @type {import('types').JSONObject | null} */
+		let server_data = null;
+
 		/** @type {Record<string, any> | null} */
 		let data = null;
 
@@ -507,7 +510,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					throw redirect(399, redirect_location);
 				}
 
-				data = res.status === 204 ? {} : await res.json();
+				server_data = res.status === 204 ? {} : await res.json();
 			} else {
 				// TODO does this sufficiently differentiate if this was a `throw error()` or an unexpected error?
 				let json;
@@ -546,7 +549,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			const load_input = {
 				routeId,
 				params: uses_params,
-				data,
+				data: server_data,
 				get url() {
 					uses.url = true;
 					return load_url;
@@ -609,29 +612,20 @@ export function create_client({ target, session, base, trailing_slash }) {
 			};
 
 			if (import.meta.env.DEV) {
-				// TODO remove this for 1.0
-				Object.defineProperty(load_input, 'page', {
-					get: () => {
-						throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
-					}
-				});
-			}
-
-			if (import.meta.env.DEV) {
 				try {
 					lock_fetch();
-					data = await node.module.load.call(null, load_input);
+					data = (await node.module.load.call(null, load_input)) ?? null;
 				} finally {
 					unlock_fetch();
 				}
 			} else {
-				data = await node.module.load.call(null, load_input);
+				data = (await node.module.load.call(null, load_input)) ?? null;
 			}
 		}
 
 		return {
 			node,
-			data: data || {},
+			data,
 			uses
 		};
 	}

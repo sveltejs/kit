@@ -67,7 +67,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			// for non-GET requests, first call handler in +page.server.js
 			// (this also determines status code)
 			try {
-				const handler = leaf_node.server[event.request.method];
+				const method = /** @type {'POST' | 'PATCH' | 'PUT' | 'DELETE'} */ (event.request.method);
+				const handler = leaf_node.server[method];
 				if (handler) {
 					const result = await handler.call(null, event);
 
@@ -91,7 +92,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					return redirect_response(e.status, e.location);
 				}
 
-				mutation_error = e;
+				mutation_error = /** @type {HttpError | Error} */ (e);
 			}
 		}
 

@@ -74,7 +74,7 @@ export const GENERIC_ERROR = {
 };
 
 /**
- * @param {Record<import('types').HttpMethod, any>} mod
+ * @param {Partial<Record<import('types').HttpMethod, any>>} mod
  * @param {import('types').HttpMethod} method
  */
 export function method_not_allowed(mod, method) {
@@ -88,7 +88,7 @@ export function method_not_allowed(mod, method) {
 	});
 }
 
-/** @param {Record<import('types').HttpMethod, any>} mod */
+/** @param {Partial<Record<import('types').HttpMethod, any>>} mod */
 export function allowed_methods(mod) {
 	const allowed = [];
 

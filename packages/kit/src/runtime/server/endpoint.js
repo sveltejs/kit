@@ -6,14 +6,13 @@ import { check_method_names, method_not_allowed } from './utils.js';
  * @returns {Promise<Response>}
  */
 export async function render_endpoint(event, route) {
-	const { method } = event.request;
+	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	const mod = await route.load();
 
 	// TODO: Remove for 1.0
 	check_method_names(mod);
 
-	/** @type {import('types').RequestHandler} */
 	let handler = mod[method];
 
 	if (!handler && method === 'HEAD') {

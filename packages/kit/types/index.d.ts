@@ -183,7 +183,7 @@ export interface HandleError {
  */
 export interface Load<
 	Params extends Record<string, string> = Record<string, string>,
-	InputData extends Record<string, any> = Record<string, any>,
+	InputData extends JSONObject | null = JSONObject | null,
 	OutputData extends Record<string, any> = Record<string, any>
 > {
 	(event: LoadEvent<Params, InputData>): MaybePromise<OutputData | void>;

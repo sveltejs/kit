@@ -218,9 +218,7 @@ export interface SSREndpoint {
 	pattern: RegExp;
 	names: string[];
 	types: string[];
-	load(): Promise<{
-		[method: string]: RequestHandler;
-	}>;
+	load(): Promise<Partial<Record<HttpMethod, RequestHandler>>>;
 }
 
 export interface SSRNode {
@@ -245,8 +243,8 @@ export interface SSRNode {
 	};
 
 	server: {
-		// TODO create types for these
 		GET?: GET;
+		HEAD?: GET;
 		POST?: POST;
 		PATCH?: PATCH;
 		PUT?: PUT;

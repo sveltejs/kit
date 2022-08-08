@@ -123,7 +123,11 @@ function tweak_types(content, names) {
 		const exports = new Map();
 
 		ast.forEachChild((node) => {
-			if (ts.isExportDeclaration(node) && ts.isNamedExports(node.exportClause)) {
+			if (
+				ts.isExportDeclaration(node) &&
+				node.exportClause &&
+				ts.isNamedExports(node.exportClause)
+			) {
 				node.exportClause.elements.forEach((element) => {
 					const exported = element.name;
 					if (names.has(element.name.text)) {
@@ -150,11 +154,18 @@ function tweak_types(content, names) {
 
 		/** @param {import('typescript').Node} node */
 		function replace_jsdoc_type_tags(node) {
+			// @ts-ignore
 			if (node.jsDoc) {
+				// @ts-ignore
 				for (const comment of node.jsDoc) {
 					for (const tag of comment.tags) {
 						if (ts.isJSDocTypeTag(tag)) {
-							if (node.parameters?.length > 0) {
+							const is_fn =
+								ts.isFunctionDeclaration(node) ||
+								ts.isFunctionExpression(node) ||
+								ts.isArrowFunction(node);
+
+							if (is_fn && node.parameters?.length > 0) {
 								code.overwrite(tag.tagName.pos, tag.tagName.end, 'param');
 								code.prependRight(tag.typeExpression.pos + 1, 'Parameters<');
 								code.appendLeft(tag.typeExpression.end - 1, '>[0]');

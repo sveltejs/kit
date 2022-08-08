@@ -235,9 +235,6 @@ export async function respond(request, options, state) {
 				}
 
 				if (route) {
-					/** @type {Response} */
-					let response;
-
 					if (is_data_request && route.type === 'page') {
 						const module = await options.manifest._.nodes[route.page]();
 						if (module.server) {
@@ -259,66 +256,59 @@ export async function respond(request, options, state) {
 										headers
 									});
 								}
-							} else {
-								return response;
+							}
+
+							return response;
+						}
+
+						return new Response('not found', { status: 404 });
+					}
+
+					/** @type {Response} */
+					const response =
+						route.type === 'endpoint'
+							? await render_endpoint(event, route)
+							: await render_page(event, route, options, state, resolve_opts);
+
+					for (const key in headers) {
+						const value = headers[key];
+						if (key === 'set-cookie') {
+							for (const cookie of Array.isArray(value) ? value : [value]) {
+								response.headers.append(key, /** @type {string} */ (cookie));
 							}
 						} else {
-							return new Response('not found', { status: 404 });
+							response.headers.set(key, /** @type {string} */ (value));
 						}
-					} else {
-						response =
-							route.type === 'endpoint'
-								? await render_endpoint(event, route)
-								: await render_page(event, route, options, state, resolve_opts);
 					}
 
-					if (response) {
-						for (const key in headers) {
-							const value = headers[key];
-							if (key === 'set-cookie') {
-								for (const cookie of Array.isArray(value) ? value : [value]) {
-									response.headers.append(key, cookie);
-								}
-							} else {
-								response.headers.set(key, /** @type {string} */ (value));
-							}
+					// respond with 304 if etag matches
+					if (response.status === 200 && response.headers.has('etag')) {
+						let if_none_match_value = request.headers.get('if-none-match');
+
+						// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
+						if (if_none_match_value?.startsWith('W/"')) {
+							if_none_match_value = if_none_match_value.substring(2);
 						}
 
-						// respond with 304 if etag matches
-						if (response.status === 200 && response.headers.has('etag')) {
-							let if_none_match_value = request.headers.get('if-none-match');
+						const etag = /** @type {string} */ (response.headers.get('etag'));
 
-							// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
-							if (if_none_match_value?.startsWith('W/"')) {
-								if_none_match_value = if_none_match_value.substring(2);
+						if (if_none_match_value === etag) {
+							const headers = new Headers({ etag });
+
+							// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
+							for (const key of ['cache-control', 'content-location', 'date', 'expires', 'vary']) {
+								const value = response.headers.get(key);
+								if (value) headers.set(key, value);
 							}
 
-							const etag = /** @type {string} */ (response.headers.get('etag'));
-
-							if (if_none_match_value === etag) {
-								const headers = new Headers({ etag });
-
-								// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
-								for (const key of [
-									'cache-control',
-									'content-location',
-									'date',
-									'expires',
-									'vary'
-								]) {
-									const value = response.headers.get(key);
-									if (value) headers.set(key, value);
-								}
-
-								return new Response(undefined, {
-									status: 304,
-									headers
-								});
-							}
+							return new Response(undefined, {
+								status: 304,
+								headers
+							});
 						}
-
-						return response;
 					}
+
+					return response;
 				}
 
 				if (state.initiator === GENERIC_ERROR) {
