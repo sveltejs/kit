@@ -546,7 +546,7 @@ test.describe('Errors', () => {
 		expect(error).toContain('oops');
 	});
 
-	test('page endpoint GET returned error message is preserved', async ({
+	test('page endpoint GET HttpError message is preserved', async ({
 		page,
 		clicknav,
 		read_errors
@@ -555,23 +555,20 @@ test.describe('Errors', () => {
 		await clicknav('#get-explicit');
 		const json = await page.textContent('pre');
 		if (!json) throw new Error('Could not extract content from element');
-		const { status, name, message, stack, fancy } = JSON.parse(json);
+		const { status, message, stack } = JSON.parse(json);
 
 		expect(status).toBe(400);
-		expect(name).toBe('FancyError');
 		expect(message).toBe('oops');
-		expect(fancy).toBe(true);
-
-		if (process.env.DEV) {
-			const lines = stack.split('\n');
-			expect(lines[1]).toContain('get-explicit.js:5:8');
-		}
+		expect(stack).toBeUndefined();
 
 		const error = read_errors('/errors/page-endpoint/get-explicit');
 		expect(error).toBe(undefined);
 	});
 
-	test('page endpoint POST thrown error message is preserved', async ({ page, read_errors }) => {
+	test('page endpoint POST unexpected error message is preserved', async ({
+		page,
+		read_errors
+	}) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
@@ -594,7 +591,7 @@ test.describe('Errors', () => {
 		expect(error).toContain('oops');
 	});
 
-	test('page endpoint POST returned error message is preserved', async ({ page, read_errors }) => {
+	test('page endpoint POST HttpError error message is preserved', async ({ page, read_errors }) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
