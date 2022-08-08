@@ -584,7 +584,7 @@ test.describe('Errors', () => {
 
 		if (process.env.DEV) {
 			const lines = stack.split('\n');
-			expect(lines[1]).toContain('post-implicit.js:4:8');
+			expect(lines[1]).toContain('+page.server.js:4:8');
 		}
 
 		const error = read_errors('/errors/page-endpoint/post-implicit');
@@ -598,17 +598,11 @@ test.describe('Errors', () => {
 		await Promise.all([page.waitForNavigation(), page.click('#post-explicit')]);
 		const json = await page.textContent('pre');
 		if (!json) throw new Error('Could not extract content from element');
-		const { status, name, message, stack, fancy } = JSON.parse(json);
+		const { status, message, stack } = JSON.parse(json);
 
 		expect(status).toBe(400);
-		expect(name).toBe('FancyError');
 		expect(message).toBe('oops');
-		expect(fancy).toBe(true);
-
-		if (process.env.DEV) {
-			const lines = stack.split('\n');
-			expect(lines[1]).toContain('post-explicit.js:5:8');
-		}
+		expect(stack).toBeUndefined();
 
 		const error = read_errors('/errors/page-endpoint/post-explicit');
 		expect(error).toBe(undefined);

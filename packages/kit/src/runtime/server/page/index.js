@@ -145,14 +145,14 @@ export async function render_page(event, route, options, state, resolve_opts) {
 				throw load_error;
 			}
 
-			if (node === leaf_node && mutation_error) {
-				// we wait until here to throw the error so that we can use
-				// any nested +error.svelte components that were defined
-				throw mutation_error;
-			}
-
 			return Promise.resolve().then(async () => {
 				try {
+					if (node === leaf_node && mutation_error) {
+						// we wait until here to throw the error so that we can use
+						// any nested +error.svelte components that were defined
+						throw mutation_error;
+					}
+
 					const server_data = node?.server?.GET?.call(null, {
 						...event,
 						parent: async () => {
