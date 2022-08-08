@@ -4,7 +4,7 @@ import { respond_with_error } from './respond_with_error.js';
 import { method_not_allowed, clone_error, allowed_methods } from '../utils.js';
 import { create_fetch } from './fetch.js';
 import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
-import { Redirect } from '../../../index/private.js';
+import { HttpError, Redirect } from '../../../index/private.js';
 import { error } from '../../../index/index.js';
 
 /**
@@ -87,7 +87,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					mutation_error = error(405, 'Method not allowed');
 				}
 			} catch (e) {
-				if (e.__is_redirect) {
+				if (e instanceof Redirect) {
 					return redirect_response(e.status, e.location);
 				}
 
@@ -255,15 +255,15 @@ export async function render_page(event, route, options, state, resolve_opts) {
 						state.prerendering.dependencies.set(pathname, dependency);
 					}
 				} catch (error) {
-					if (/** @type {Redirect} */ (error).__is_redirect) {
+					if (error instanceof Redirect) {
 						return redirect_response(error.status, error.location);
 					}
 
-					if (!error.__is_http_error) {
-						options.handle_error(error, event);
+					if (!(error instanceof HttpError)) {
+						options.handle_error(/** @type {Error} */ (error), event);
 					}
 
-					const status = error.__is_http_error ? error.status : 500;
+					const status = error instanceof HttpError ? error.status : 500;
 
 					while (i--) {
 						if (route.errors[i]) {
@@ -393,11 +393,11 @@ export async function handle_json_request(event, options, mod) {
 
 		return new Response(undefined, { status: 204 });
 	} catch (error) {
-		if (error?.__is_redirect) {
+		if (error instanceof Redirect) {
 			return redirect_response(error.status, error.location);
 		}
 
-		if (error?.__is_http_error) {
+		if (error instanceof HttpError) {
 			return json_response({ message: error.message }, error.status);
 		}
 

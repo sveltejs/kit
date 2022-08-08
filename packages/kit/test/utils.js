@@ -205,7 +205,3 @@ export async function start_server(handler) {
 		}
 	};
 }
-
-export const plugin = process.env.CI
-	? (await import('../dist/vite.js')).sveltekit
-	: (await import('../src/vite/index.js')).sveltekit;

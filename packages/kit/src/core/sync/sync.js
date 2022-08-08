@@ -1,6 +1,5 @@
 import path from 'path';
 import create_manifest_data from './create_manifest_data/index.js';
-import { copy_assets } from './copy_assets.js';
 import { write_client_manifest } from './write_client_manifest.js';
 import { write_matchers } from './write_matchers.js';
 import { write_root } from './write_root.js';
@@ -14,8 +13,6 @@ import { write_ambient } from './write_ambient.js';
  * @param {string} mode
  */
 export function init(config, mode) {
-	copy_assets(path.join(config.kit.outDir, 'runtime'));
-
 	write_tsconfig(config.kit);
 	write_ambient(config.kit, mode);
 }

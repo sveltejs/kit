@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
-import { get_runtime_directory } from '../../utils.js';
+import { runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 
@@ -17,7 +17,7 @@ const DEFAULT = 'default';
  */
 export default function create_manifest_data({
 	config,
-	fallback = `${get_runtime_directory(config.kit)}/components`,
+	fallback = `${runtime_directory}/components`,
 	cwd = process.cwd()
 }) {
 	/** @type {Map<string, import('types').RouteData>} */

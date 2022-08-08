@@ -2,29 +2,11 @@ import path from 'path';
 import colors from 'kleur';
 import { fileURLToPath } from 'url';
 
-/**
- * Get the prefix for the `runtime` directory, for use with import declarations
- * @param {import('types').ValidatedKitConfig} config
- */
-export function get_runtime_prefix(config) {
-	if (process.env.BUNDLED) {
-		return posixify_path(path.join(config.outDir, 'runtime'));
-	}
+/** Resolved path of the `runtime` directory */
+export const runtime_directory = fileURLToPath(new URL('../runtime', import.meta.url));
 
-	return posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
-}
-
-/**
- * Get the resolved path of the `runtime` directory
- * @param {import('types').ValidatedKitConfig} config
- */
-export function get_runtime_directory(config) {
-	if (process.env.BUNDLED) {
-		return path.join(config.outDir, 'runtime');
-	}
-
-	return fileURLToPath(new URL('../runtime', import.meta.url));
-}
+/** Prefix for the `runtime` directory, for use with import declarations */
+export const runtime_prefix = posixify_path(runtime_directory);
 
 /** @param {string} str */
 function posixify_path(str) {

@@ -11,7 +11,7 @@ import { build_service_worker } from './build/build_service_worker.js';
 import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
-import { get_runtime_directory, logger } from '../core/utils.js';
+import { runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry, prevent_illegal_rollup_imports } from './utils.js';
@@ -123,7 +123,7 @@ function kit() {
 		const input = {
 			// Put unchanging assets in immutable directory. We don't set that in the
 			// outDir so that other plugins can add mutable assets to the bundle
-			start: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
+			start: `${runtime_directory}/client/start.js`
 		};
 
 		manifest_data.nodes.forEach((node) => {
@@ -170,9 +170,7 @@ function kit() {
 			fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
 		);
 
-		const entry_id = posixify(
-			path.relative(cwd, `${get_runtime_directory(svelte_config.kit)}/client/start.js`)
-		);
+		const entry_id = posixify(path.relative(cwd, `${runtime_directory}/client/start.js`));
 
 		return {
 			assets,
@@ -233,7 +231,7 @@ function kit() {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point
 						// eventhough server otherwise works without it
-						input: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
+						input: `${runtime_directory}/client/start.js`
 					}
 				},
 				define: {
@@ -376,12 +374,7 @@ function kit() {
 				const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
 
 				// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-				const script = fileURLToPath(
-					new URL(
-						process.env.BUNDLED ? './prerender.js' : '../core/prerender/prerender.js',
-						import.meta.url
-					)
-				);
+				const script = fileURLToPath(new URL('../core/prerender/prerender.js', import.meta.url));
 
 				const child = fork(
 					script,
