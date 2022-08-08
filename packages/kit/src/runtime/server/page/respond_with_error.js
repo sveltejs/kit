@@ -30,7 +30,12 @@ export async function respond_with_error({
 	error,
 	resolve_opts
 }) {
-	const { fetcher, fetched } = create_fetch({ event, options, state, route: GENERIC_ERROR });
+	const { fetcher, fetched, cookies } = create_fetch({
+		event,
+		options,
+		state,
+		route: GENERIC_ERROR
+	});
 
 	try {
 		const branch = [];
@@ -65,6 +70,7 @@ export async function respond_with_error({
 			error,
 			branch,
 			fetched,
+			cookies,
 			event,
 			resolve_opts
 		});

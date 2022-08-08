@@ -16,10 +16,10 @@ export function create_fetch({ event, options, state, route }) {
 	/** @type {import('./types').Fetched[]} */
 	const fetched = [];
 
-	const cookies = cookie.parse(event.request.headers.get('cookie') || '');
+	const initial_cookies = cookie.parse(event.request.headers.get('cookie') || '');
 
 	/** @type {import('set-cookie-parser').Cookie[]} */
-	const new_cookies = [];
+	const cookies = [];
 
 	/** @type {typeof fetch} */
 	const fetcher = async (resource, opts = {}) => {
@@ -100,9 +100,9 @@ export function create_fetch({ event, options, state, route }) {
 
 				// combine cookies from the initiating request with any that were
 				// added via set-cookie
-				const combined_cookies = { ...cookies };
+				const combined_cookies = { ...initial_cookies };
 
-				for (const cookie of new_cookies) {
+				for (const cookie of cookies) {
 					if (!domain_matches(event.url.hostname, cookie.domain)) continue;
 					if (!path_matches(resolved, cookie.path)) continue;
 
@@ -177,7 +177,7 @@ export function create_fetch({ event, options, state, route }) {
 
 		const set_cookie = response.headers.get('set-cookie');
 		if (set_cookie) {
-			new_cookies.push(
+			cookies.push(
 				...set_cookie_parser
 					.splitCookiesString(set_cookie)
 					.map((str) => set_cookie_parser.parseString(str))
@@ -261,5 +261,5 @@ export function create_fetch({ event, options, state, route }) {
 		return proxy;
 	};
 
-	return { fetcher, fetched };
+	return { fetcher, fetched, cookies };
 }

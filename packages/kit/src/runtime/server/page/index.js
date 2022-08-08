@@ -44,7 +44,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 
 	const $session = await options.hooks.getSession(event);
 
-	const { fetcher, fetched } = create_fetch({ event, options, state, route });
+	const { fetcher, fetched, cookies } = create_fetch({ event, options, state, route });
 
 	try {
 		const nodes = await Promise.all([
@@ -99,6 +99,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			return await render_response({
 				branch: [],
 				fetched,
+				cookies,
 				page_config: {
 					hydrate: true,
 					router: true
@@ -260,7 +261,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 									.slice(0, j + 1)
 									.filter(Boolean)
 									.concat({ node, data: null, server_data: null }),
-								fetched
+								fetched,
+								cookies
 							});
 						}
 					}
@@ -290,7 +292,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			status: 200, // TODO unless POST/PUT/PATCH/DELETE thinks otherwise
 			error: null,
 			branch: branch.filter(Boolean),
-			fetched
+			fetched,
+			cookies
 		});
 	} catch (error) {
 		// if we end up here, it means the data loaded successfull

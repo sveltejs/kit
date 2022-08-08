@@ -219,6 +219,7 @@ export async function respond(request, options, state) {
 						error: null,
 						branch: [],
 						fetched: [],
+						cookies: [],
 						resolve_opts: {
 							...resolve_opts,
 							ssr: false

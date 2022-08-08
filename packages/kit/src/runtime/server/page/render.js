@@ -20,6 +20,7 @@ const updated = {
  * @param {{
  *   branch: Array<import('./types').Loaded>;
  *   fetched: Array<import('./types').Fetched>;
+ *   cookies: import('set-cookie-parser').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   $session: any;
@@ -33,6 +34,7 @@ const updated = {
 export async function render_response({
 	branch,
 	fetched,
+	cookies,
 	options,
 	state,
 	$session,
@@ -288,6 +290,11 @@ export async function render_response({
 		const report_only_header = csp.report_only_provider.get_header();
 		if (report_only_header) {
 			headers.set('content-security-policy-report-only', report_only_header);
+		}
+
+		for (const cookie of cookies) {
+			console.error('cookie', cookie);
+			// headers.append('set-cookie', );
 		}
 	}
 
