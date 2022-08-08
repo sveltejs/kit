@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.0.0-next.405
+
+### Patch Changes
+
+- Move `compress` logic to `Builder` API ([#5822](https://github.com/sveltejs/kit/pull/5822))
+
+* [feat] implement Link header ([#5735](https://github.com/sveltejs/kit/pull/5735))
+
+## 1.0.0-next.404
+
+### Patch Changes
+
+- Build server without removing `sveltekit` Vite plugin ([#5839](https://github.com/sveltejs/kit/pull/5839))
+
 ## 1.0.0-next.403
 
 ### Patch Changes

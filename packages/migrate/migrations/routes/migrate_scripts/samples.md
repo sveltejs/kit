@@ -125,3 +125,123 @@
 
 <Foo>{sry}</Foo>
 ```
+
+## Module context with type imports only
+
+```svelte before
+<script context="module">
+	import type { Load, LoadEvent, LoadOutput } from '@sveltejs/kit';
+	export function load() {
+		return {
+			props: {
+				sry: 'not anymore'
+			}
+		}
+	}
+</script>
+```
+
+```svelte after
+```
+
+## Module context with type imports only but used in instance script
+
+```svelte before
+<script context="module">
+	import type { Load, LoadEvent, LoadOutput } from '@sveltejs/kit';
+	export function load() {
+		return {
+			props: {
+				sry: 'not anymore'
+			}
+		}
+	}
+</script>
+
+<script>
+	const whywouldyoudothis: Load = 'I dont know lol';
+</script>
+```
+
+```svelte after
+<script context="module">
+	throw new Error("@migration task: Check code was safely removed (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292722)");
+
+	// import type { Load, LoadEvent, LoadOutput } from '@sveltejs/kit';
+	// export function load() {
+	// 	return {
+	// 		props: {
+	// 			sry: 'not anymore'
+	// 		}
+	// 	}
+	// }
+</script>
+
+<script>
+	const whywouldyoudothis: Load = 'I dont know lol';
+</script>
+```
+
+## Module context with export * from '..'
+
+```svelte before
+<script context="module">
+	export * from './somewhere';
+</script>
+```
+
+```svelte after
+<script context="module">
+	throw new Error("@migration task: Check code was safely removed (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292722)");
+
+	// export * from './somewhere';
+</script>
+```
+
+## Module context with named imports
+
+```svelte before
+<script context="module">
+	import { bar } from './somewhere';
+</script>
+
+<script>
+	let foo = bar;
+</script>
+```
+
+```svelte after
+<script context="module">
+	throw new Error("@migration task: Check code was safely removed (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292722)");
+
+	// import { bar } from './somewhere';
+</script>
+
+<script>
+	let foo = bar;
+</script>
+```
+
+## Module context with named imports that have same name as a load option
+
+```svelte before
+<script context="module">
+	import { router } from './somewhere';
+</script>
+
+<script>
+	let foo = router;
+</script>
+```
+
+```svelte after
+<script context="module">
+	throw new Error("@migration task: Check code was safely removed (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292722)");
+
+	// import { router } from './somewhere';
+</script>
+
+<script>
+	let foo = router;
+</script>
+```

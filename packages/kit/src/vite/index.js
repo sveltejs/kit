@@ -193,6 +193,11 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
 		async config(config, config_env) {
+			// The config is created in build_server for SSR mode and passed inline
+			if (config.build?.ssr) {
+				return;
+			}
+
 			vite_config_env = config_env;
 			svelte_config = await load_config();
 			is_build = config_env.command === 'build';
@@ -277,6 +282,10 @@ function kit() {
 		 * Clears the output directories.
 		 */
 		buildStart() {
+			if (vite_config.build.ssr) {
+				return;
+			}
+
 			// Reset for new build. Goes here because `build --watch` calls buildStart but not config
 			completed_build = false;
 
@@ -295,6 +304,10 @@ function kit() {
 		 * then use this hook to kick off builds for the server and service worker.
 		 */
 		async writeBundle(_options, bundle) {
+			if (vite_config.build.ssr) {
+				return;
+			}
+
 			manifest_data.nodes.forEach((_node, i) => {
 				const id = vite.normalizePath(
 					path.resolve(svelte_config.kit.outDir, `generated/nodes/${i}.js`)
@@ -414,9 +427,10 @@ function kit() {
 		 * Runs the adapter.
 		 */
 		async closeBundle() {
-			if (!completed_build) {
-				// vite calls closeBundle when dev-server restarts, ignore that,
-				// and only adapt when build successfully completes.
+			// vite calls closeBundle when dev-server restarts, ignore that,
+			// and only adapt when build successfully completes.
+			const is_restart = !completed_build;
+			if (vite_config.build.ssr || is_restart) {
 				return;
 			}
 

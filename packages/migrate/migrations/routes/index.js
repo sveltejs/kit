@@ -9,7 +9,7 @@ import { migrate_scripts } from './migrate_scripts/index.js';
 import { migrate_page } from './migrate_page_js/index.js';
 import { migrate_page_server } from './migrate_page_server/index.js';
 import { migrate_server } from './migrate_server/index.js';
-import { adjust_imports, bail, dedent, move_file, relative, task } from './utils.js';
+import { adjust_imports, bail, move_file, relative, task } from './utils.js';
 
 export async function migrate() {
 	if (!fs.existsSync('svelte.config.js')) {
