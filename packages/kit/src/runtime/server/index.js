@@ -2,6 +2,7 @@ import { render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
+import { json_response } from './page/index.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { serialize_error, GENERIC_ERROR } from './utils.js';
 import { decode_params, normalize_path } from '../../utils/url.js';
@@ -219,6 +220,7 @@ export async function respond(request, options, state) {
 						error: null,
 						branch: [],
 						fetched: [],
+						validation_errors: undefined,
 						cookies: [],
 						resolve_opts: {
 							...resolve_opts,
@@ -232,7 +234,22 @@ export async function respond(request, options, state) {
 					let response;
 
 					if (is_data_request && route.type === 'page') {
-						throw new Error('TODO return JSON');
+						const module = await options.manifest._.nodes[route.page]();
+						if (module.server) {
+							const handler = module.server[event.request.method];
+							if (handler) {
+								const result = await handler.call(null, event);
+								return json_response(result, 200);
+							} else {
+								return new Response(undefined, {
+									status: 405,
+									allow: allowed_methods(module.server).join(', ')
+								});
+							}
+							const result = await module.server;
+						} else {
+							return new Response('not found', { status: 404 });
+						}
 
 						// loading data for a client-side transition is a special case
 						// if (request.headers.has('x-sveltekit-load')) {
