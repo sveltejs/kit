@@ -37,7 +37,6 @@ export default {
 
 		// TODO move dist to dist/exports
 		'dist/cli': 'src/cli.js',
-		'dist/index': 'src/index/index.js',
 		'dist/hooks': 'src/hooks.js',
 		'dist/node': 'src/node/index.js',
 		'dist/node/polyfills': 'src/node/polyfills.js',
