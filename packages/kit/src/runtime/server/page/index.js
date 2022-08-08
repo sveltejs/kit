@@ -153,7 +153,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 						throw mutation_error;
 					}
 
-					const server_data = node?.server?.GET?.call(null, {
+					const server_data = await node?.server?.GET?.call(null, {
 						// can't use destructuring here because it will always
 						// invoke event.clientAddress, which breaks prerendering
 						get clientAddress() {
@@ -236,11 +236,24 @@ export async function render_page(event, route, options, state, resolve_opts) {
 
 			if (node) {
 				try {
-					branch.push({
-						node,
-						server_data: await server_promises[i],
-						data: await load_promises[i]
-					});
+					const server_data = await server_promises[i];
+					const data = await load_promises[i];
+
+					branch.push({ node, server_data, data });
+
+					// generate __data.json files when prerendering
+					// TODO for this is just leaf nodes, so that stuff passes, but
+					// ultimately we need ./__data/0.json, ./__data/1.json, etc
+					if (node === leaf_node && server_data && state.prerendering) {
+						const pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
+
+						const dependency = {
+							response: new Response(undefined),
+							body: JSON.stringify(server_data)
+						};
+
+						state.prerendering.dependencies.set(pathname, dependency);
+					}
 				} catch (error) {
 					if (/** @type {Redirect} */ (error).__is_redirect) {
 						return redirect_response(error.status, error.location);
