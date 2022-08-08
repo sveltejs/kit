@@ -1,8 +1,7 @@
 import { render_endpoint } from './endpoint.js';
-import { render_page } from './page/index.js';
+import { handle_json_request, render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
-import { json_response } from './page/index.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { serialize_error, GENERIC_ERROR } from './utils.js';
 import { decode_params, normalize_path } from '../../utils/url.js';
@@ -236,38 +235,30 @@ export async function respond(request, options, state) {
 					if (is_data_request && route.type === 'page') {
 						const module = await options.manifest._.nodes[route.page]();
 						if (module.server) {
-							const handler = module.server[event.request.method];
-							if (handler) {
-								const result = await handler.call(null, event);
-								return json_response(result, 200);
+							const response = await handle_json_request(event, options, module.server);
+							if (
+								request.headers.has('x-sveltekit-load') &&
+								response.status >= 300 &&
+								response.status < 400
+							) {
+								// since redirects are opaque to the browser, we need to repackage
+								// 3xx responses as 200s with a custom header
+								const location = response.headers.get('location');
+
+								if (location) {
+									const headers = new Headers(response.headers);
+									headers.set('x-sveltekit-location', location);
+									return new Response(undefined, {
+										status: 204,
+										headers
+									});
+								}
 							} else {
-								return new Response(undefined, {
-									status: 405,
-									allow: allowed_methods(module.server).join(', ')
-								});
+								return response;
 							}
-							const result = await module.server;
 						} else {
 							return new Response('not found', { status: 404 });
 						}
-
-						// loading data for a client-side transition is a special case
-						// if (request.headers.has('x-sveltekit-load')) {
-						// 	// since redirects are opaque to the browser, we need to repackage
-						// 	// 3xx responses as 200s with a custom header
-						// 	if (response.status >= 300 && response.status < 400) {
-						// 		const location = response.headers.get('location');
-
-						// 		if (location) {
-						// 			const headers = new Headers(response.headers);
-						// 			headers.set('x-sveltekit-location', location);
-						// 			response = new Response(undefined, {
-						// 				status: 204,
-						// 				headers
-						// 			});
-						// 		}
-						// 	}
-						// }
 					} else {
 						response =
 							route.type === 'endpoint'

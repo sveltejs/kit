@@ -337,7 +337,7 @@ function get_page_config(leaf, options) {
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRNode['server']} mod
  */
-async function handle_json_request(event, options, mod) {
+export async function handle_json_request(event, options, mod) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 	const handler = mod[method === 'HEAD' ? 'GET' : method];
 

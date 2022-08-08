@@ -12,10 +12,10 @@ import {
 } from './utils.js';
 import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
+import { error, redirect } from '../../index/index.js';
 
 import Root from '__GENERATED__/root.svelte';
 import { nodes, dictionary, matchers } from '__GENERATED__/client-manifest.js';
-import { HttpError, Redirect } from '../../index/private.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -462,8 +462,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
 	async function load_node({ node, parent, url, params, routeId }) {
-		// TODO loading from node.server belongs in here, not in load_route etc
-
 		const uses = {
 			params: new Set(),
 			url: false,
@@ -489,7 +487,40 @@ export function create_client({ target, session, base, trailing_slash }) {
 			// be returned to the client either as payload or custom headers
 			uses.dependencies.add(url.href);
 
-			throw new Error('TODO load data from server');
+			const res = await native_fetch(
+				`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
+				{
+					headers: {
+						'x-sveltekit-load': 'true'
+					}
+				}
+			);
+
+			if (res.ok) {
+				const redirect_location = res.headers.get('x-sveltekit-location');
+
+				if (redirect_location) {
+					// We are client-side, where the redirect status code doesn't matter
+					throw redirect(399, redirect_location);
+				}
+
+				data = res.status === 204 ? {} : await res.json();
+			} else {
+				// TODO does this sufficiently differentiate if this was a `throw error()` or an unexpected error?
+				let json;
+				let error_msg;
+				try {
+					json = await res.json();
+					error_msg = json.message;
+				} catch (e) {
+					throw error(500, 'Failed to load data');
+				}
+				if (error_msg) {
+					throw error(res.status, error_msg);
+				} else {
+					throw json;
+				}
+			}
 		}
 
 		/** @type {Record<string, string>} */
