@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 
-/** @type {import('@sveltejs/kit').Load} */
+/** @type {import('./$types').Load} */
 export async function load() {
 	if (typeof window !== 'undefined') {
 		throw error(555, 'Not found');

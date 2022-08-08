@@ -283,17 +283,7 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('client-side error from load() is a string', async ({ page }) => {
-		await page.goto('/errors/load-error-string-client');
-
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Not found"'
-		);
-		expect(await page.innerHTML('h1')).toBe('555');
-	});
-
-	test('client-side error from load() is an Error', async ({ page }) => {
+	test('client-side error from load()', async ({ page }) => {
 		await page.goto('/errors/load-error-client');
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
@@ -303,21 +293,13 @@ test.describe('Errors', () => {
 		expect(await page.innerHTML('h1')).toBe('555');
 	});
 
-	test('client-side error from load() is malformed', async ({ page }) => {
-		await page.goto('/errors/load-error-malformed-client');
-
-		const body = await page.textContent('body');
-
-		expect(body).toMatch(
-			'"error" property returned from load() must be a string or instance of Error, received type "object"'
-		);
-	});
-
 	test('client-side 4xx status without error from load()', async ({ page }) => {
 		await page.goto('/errors/load-status-without-error-client');
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: "401"');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Error: 401"'
+		);
 		expect(await page.innerHTML('h1')).toBe('401');
 	});
 });

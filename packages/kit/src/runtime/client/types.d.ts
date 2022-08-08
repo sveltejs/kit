@@ -7,6 +7,7 @@ import {
 	prefetchRoutes
 } from '$app/navigation';
 import { CSRPageNode, CSRRoute } from 'types';
+import { HttpError } from '../../index/private.js';
 
 export interface Client {
 	// public API, exposed via $app/navigation
@@ -73,7 +74,7 @@ export type BranchNode = {
 
 export type NavigationState = {
 	branch: Array<BranchNode | undefined>;
-	error: Error | null;
+	error: HttpError | Error | null;
 	params: Record<string, string>;
 	session_id: number;
 	url: URL;

@@ -1,6 +1,6 @@
 import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
-import { coalesce_to_error } from '../../utils/error.js';
+import { coalesce_to_error, normalize_error } from '../../utils/error.js';
 import { LoadURL, decode_params, normalize_path } from '../../utils/url.js';
 import {
 	create_updated_store,
@@ -391,7 +391,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   params: Record<string, string>;
 	 *   branch: Array<import('./types').BranchNode | undefined>;
 	 *   status: number;
-	 *   error: Error | null;
+	 *   error: HttpError | Error | null;
 	 *   routeId: string | null;
 	 * }} opts
 	 */
@@ -719,7 +719,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 				try {
 					branch.push(await branch_promises[i]);
 				} catch (e) {
-					if (e instanceof Redirect) {
+					const error = normalize_error(e);
+
+					if (error instanceof Redirect) {
 						return {
 							redirect: true,
 							location: /** @type {Redirect} */ (e).location
@@ -727,7 +729,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 					}
 
 					const status = e instanceof HttpError ? e.status : 500;
-					const error = coalesce_to_error(e);
 
 					while (i--) {
 						if (errors[i]) {
@@ -791,7 +792,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	/**
 	 * @param {{
 	 *   status: number;
-	 *   error: Error;
+	 *   error: HttpError | Error;
 	 *   url: URL;
 	 *   routeId: string | null
 	 * }} opts
@@ -1230,19 +1231,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 					routeId
 				});
 			} catch (e) {
-				// TODO handle HttpError cases
-				// TODO order of these ifs sensible?
-				if (e instanceof Redirect) {
+				const error = normalize_error(e);
+
+				if (error instanceof Redirect) {
 					// this is a real edge case — `load` would need to return
 					// a redirect but only in the browser
 					await native_navigation(new URL(/** @type {Redirect} */ (e).location, location.href));
-				} else if (error) {
-					throw e;
+					return;
 				}
 
 				result = await load_root_error_page({
-					status: 500,
-					error: coalesce_to_error(e),
+					status: error instanceof HttpError ? error.status : 500,
+					error,
 					url,
 					routeId
 				});
