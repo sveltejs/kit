@@ -71,13 +71,7 @@ export function sveltekit() {
  * @return {import('vite').Plugin}
  */
 function env() {
-	/** @type {import('types').ValidatedConfig} */
-	let svelte_config;
-
-	/** @type {import('vite').ConfigEnv} */
-	let vite_config_env;
-
-	/** @typedef {{public: {[k: string]: string;};private: {[k: string]: string;};}} ResolvedEnv */
+	/** @typedef {{public: {[k: string]: string;}; private: {[k: string]: string;};}} ResolvedEnv */
 
 	/** @type {ResolvedEnv} */
 	let resolved_environment;
@@ -86,8 +80,8 @@ function env() {
 		name: 'vite-plugin-svelte-kit:env',
 
 		async config(_, config_env) {
-			vite_config_env = config_env;
-			svelte_config = await load_config();
+			const vite_config_env = config_env;
+			const svelte_config = await load_config();
 			resolved_environment = get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix);
 		},
 
