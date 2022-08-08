@@ -817,11 +817,11 @@ test.describe('Load', () => {
 
 	test('does not leak props to other pages', async ({ page, clicknav }) => {
 		await page.goto('/load/props/about');
-		expect(await page.textContent('p')).toBe('Data: undefined');
+		expect(await page.textContent('p')).toBe('Data: null');
 		await clicknav('[href="/load/props/"]');
 		expect(await page.textContent('p')).toBe('Data: Hello from Index!');
 		await clicknav('[href="/load/props/about"]');
-		expect(await page.textContent('p')).toBe('Data: undefined');
+		expect(await page.textContent('p')).toBe('Data: null');
 	});
 
 	test('server-side fetch respects set-cookie header', async ({ page, context }) => {

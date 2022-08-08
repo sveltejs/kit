@@ -1,4 +1,4 @@
 export async function load() {
-	const data = 'Hello from Index!';
-	return { data };
+	const message = 'Hello from Index!';
+	return { message };
 }
