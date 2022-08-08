@@ -691,14 +691,16 @@ export function create_client({ target, session, base, trailing_slash }) {
 				try {
 					branch.push(await branch_promises[i]);
 				} catch (e) {
-					if (e instanceof Redirect) {
+					if (/** @type {Redirect} */ (e)?.__is_redirect) {
 						return {
 							redirect: true,
-							location: e.location
+							location: /** @type {Redirect} */ (e).location
 						};
 					}
 
-					const status = e instanceof HttpError ? e.status : 500;
+					const status = /** @type {HttpError} */ (e).__is_http_error
+						? /** @type {HttpError} */ (e).status
+						: 500;
 					const error = coalesce_to_error(e);
 
 					while (i--) {
@@ -1204,10 +1206,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 			} catch (e) {
 				// TODO handle HttpError cases
 				// TODO order of these ifs sensible?
-				if (e instanceof Redirect) {
+				if (/** @type {Redirect} */ (e).__is_redirect) {
 					// this is a real edge case — `load` would need to return
 					// a redirect but only in the browser
-					await native_navigation(new URL(e.location, location.href));
+					await native_navigation(new URL(/** @type {Redirect} */ (e).location, location.href));
 				} else if (error) {
 					throw e;
 				}
