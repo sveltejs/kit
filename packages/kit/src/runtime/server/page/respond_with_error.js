@@ -1,5 +1,5 @@
 import { render_response } from './render.js';
-import { load_data } from './load_data.js';
+import { load_data, load_server_data } from './load_data.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { GENERIC_ERROR } from '../utils.js';
 import { create_fetch } from './fetch.js';
@@ -41,15 +41,33 @@ export async function respond_with_error({
 		const branch = [];
 
 		if (resolve_opts.ssr) {
+			const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
+
+			const server_data_promise = load_server_data({
+				event,
+				node: default_layout,
+				parent: async () => ({})
+			});
+
+			const server_data = await server_data_promise;
+
+			const data = await load_data({
+				$session,
+				event,
+				fetcher,
+				node: default_layout,
+				options,
+				parent: async () => ({}),
+				server_data_promise,
+				state
+			});
+
 			branch.push(
-				await load_data({
-					event,
-					options,
-					state,
-					node: await options.manifest._.nodes[0](), // 0 is always the root layout
-					$session,
-					fetcher
-				}),
+				{
+					node: default_layout,
+					server_data,
+					data
+				},
 				{
 					node: await options.manifest._.nodes[1](), // 1 is always the root error
 					data: null,
@@ -72,7 +90,8 @@ export async function respond_with_error({
 			fetched,
 			cookies,
 			event,
-			resolve_opts
+			resolve_opts,
+			validation_errors: undefined
 		});
 	} catch (err) {
 		const error = coalesce_to_error(err);

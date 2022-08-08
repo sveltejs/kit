@@ -3,10 +3,10 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { method_not_allowed, clone_error, allowed_methods } from '../utils.js';
 import { create_fetch } from './fetch.js';
-import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
 import { HttpError, Redirect } from '../../../index/private.js';
 import { error } from '../../../index/index.js';
 import { normalize_error } from '../../../utils/error.js';
+import { load_data, load_server_data } from './load_data.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -155,29 +155,18 @@ export async function render_page(event, route, options, state, resolve_opts) {
 						throw mutation_error;
 					}
 
-					const server_data = await node?.server?.GET?.call(null, {
-						// can't use destructuring here because it will always
-						// invoke event.clientAddress, which breaks prerendering
-						get clientAddress() {
-							return event.clientAddress;
-						},
-						locals: event.locals,
-						params: event.params,
+					return await load_server_data({
+						event,
+						node,
 						parent: async () => {
+							/** @type {import('types').JSONObject} */
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
 								Object.assign(data, await server_promises[j]);
 							}
 							return data;
-						},
-						platform: event.platform,
-						request: event.request,
-						routeId: event.routeId,
-						setHeaders: event.setHeaders,
-						url: event.url
+						}
 					});
-
-					return server_data ? unwrap_promises(server_data) : null;
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);
 					throw load_error;
@@ -190,38 +179,22 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			if (load_error) throw load_error;
 			return Promise.resolve().then(async () => {
 				try {
-					const server_data = await server_promises[i];
-
-					if (node?.module?.load) {
-						const data = await node?.module?.load?.call(null, {
-							url: state.prerendering ? new PrerenderingURL(event.url) : new LoadURL(event.url),
-							params: event.params,
-							data: server_data,
-							routeId: event.routeId,
-							get session() {
-								if (node.module.prerender ?? options.prerender.default) {
-									throw Error(
-										'Attempted to access session from a prerendered page. Session would never be populated.'
-									);
-								}
-								return $session;
-							},
-							fetch: fetcher,
-							setHeaders: event.setHeaders,
-							depends: () => {},
-							parent: async () => {
-								const data = {};
-								for (let j = 0; j < i; j += 1) {
-									Object.assign(data, await load_promises[j]);
-								}
-								return data;
+					return await load_data({
+						$session,
+						event,
+						fetcher,
+						node,
+						options,
+						parent: async () => {
+							const data = {};
+							for (let j = 0; j < i; j += 1) {
+								Object.assign(data, await load_promises[j]);
 							}
-						});
-
-						return data ? unwrap_promises(data) : null;
-					}
-
-					return server_data;
+							return data;
+						},
+						server_data_promise: server_promises[i],
+						state
+					});
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);
 					throw load_error;
@@ -433,18 +406,6 @@ export function json_response(data, status) {
 			'content-type': 'application/json; charset=utf-8'
 		}
 	});
-}
-
-/** @param {Record<string, any>} object */
-async function unwrap_promises(object) {
-	/** @type {import('types').JSONObject} */
-	const unwrapped = {};
-
-	for (const key in object) {
-		unwrapped[key] = await object[key];
-	}
-
-	return unwrapped;
 }
 
 /**

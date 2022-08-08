@@ -200,7 +200,7 @@ export interface LoadEvent<
 	session: App.Session;
 	setHeaders: (headers: ResponseHeaders) => void;
 	url: URL;
-	parent: () => Promise<Record<string, any>>;
+	parent: () => Promise<Record<string, any> | null>;
 	depends: (...deps: string[]) => void;
 }
 
