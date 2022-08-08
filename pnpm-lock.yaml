@@ -269,7 +269,6 @@ importers:
   packages/kit:
     specifiers:
       '@playwright/test': ^1.23.4
-      '@rollup/plugin-replace': ^4.0.0
       '@sveltejs/vite-plugin-svelte': ^1.0.1
       '@types/connect': ^3.4.35
       '@types/cookie': ^0.5.1
@@ -280,7 +279,6 @@ importers:
       '@types/set-cookie-parser': ^2.4.2
       chokidar: ^3.5.3
       cookie: ^0.5.0
-      cross-env: ^7.0.3
       devalue: ^2.0.1
       kleur: ^4.1.4
       magic-string: ^0.26.2
@@ -292,7 +290,6 @@ importers:
       set-cookie-parser: ^2.4.8
       sirv: ^2.0.2
       svelte: ^3.48.0
-      svelte-check: ^2.7.1
       svelte-preprocess: ^4.10.6
       svelte2tsx: ~0.5.10
       tiny-glob: ^0.2.9
@@ -317,7 +314,6 @@ importers:
       undici: 5.8.1
     devDependencies:
       '@playwright/test': 1.23.4
-      '@rollup/plugin-replace': 4.0.0_rollup@2.75.7
       '@types/connect': 3.4.35
       '@types/cookie': 0.5.1
       '@types/marked': 4.0.3
@@ -325,11 +321,9 @@ importers:
       '@types/node': 16.11.42
       '@types/sade': 1.7.4
       '@types/set-cookie-parser': 2.4.2
-      cross-env: 7.0.3
       marked: 4.0.17
       rollup: 2.75.7
       svelte: 3.48.0
-      svelte-check: 2.8.0_svelte@3.48.0
       svelte-preprocess: 4.10.7_lvfi2wesz6u4l5rfbnetbucfmm
       svelte2tsx: 0.5.11_lvfi2wesz6u4l5rfbnetbucfmm
       uvu: 0.5.4
@@ -952,16 +946,6 @@ packages:
       is-builtin-module: 3.1.0
       is-module: 1.0.0
       resolve: 1.22.0
-      rollup: 2.75.7
-    dev: true
-
-  /@rollup/plugin-replace/4.0.0_rollup@2.75.7:
-    resolution: {integrity: sha512-+rumQFiaNac9y64OHtkHGmdjm7us9bo1PlbgQfdihQtuNxzjpaB064HbRnewUOggLQxVCCyINfStkgmBeQpv1g==}
-    peerDependencies:
-      rollup: ^1.20.0 || ^2.0.0
-    dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.75.7
-      magic-string: 0.25.9
       rollup: 2.75.7
     dev: true
 

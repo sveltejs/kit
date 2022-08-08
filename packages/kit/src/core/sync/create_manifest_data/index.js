@@ -17,7 +17,7 @@ const DEFAULT = 'default';
  */
 export default function create_manifest_data({
 	config,
-	fallback = `${get_runtime_directory(config.kit)}/components`,
+	fallback = `${get_runtime_directory()}/components`,
 	cwd = process.cwd()
 }) {
 	/** @type {Map<string, import('types').RouteData>} */

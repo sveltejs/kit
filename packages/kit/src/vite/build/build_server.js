@@ -201,7 +201,7 @@ export async function build_server(options, client) {
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: config.kit.serviceWorker.register && !!service_worker_entry_file,
-			runtime: posixify(path.relative(build_dir, get_runtime_directory(config.kit))),
+			runtime: posixify(path.relative(build_dir, get_runtime_directory())),
 			template: load_template(cwd, config)
 		})
 	);

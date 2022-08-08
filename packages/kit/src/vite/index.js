@@ -123,7 +123,7 @@ function kit() {
 		const input = {
 			// Put unchanging assets in immutable directory. We don't set that in the
 			// outDir so that other plugins can add mutable assets to the bundle
-			start: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
+			start: `${get_runtime_directory()}/client/start.js`
 		};
 
 		manifest_data.nodes.forEach((node) => {
@@ -170,9 +170,7 @@ function kit() {
 			fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
 		);
 
-		const entry_id = posixify(
-			path.relative(cwd, `${get_runtime_directory(svelte_config.kit)}/client/start.js`)
-		);
+		const entry_id = posixify(path.relative(cwd, `${get_runtime_directory()}/client/start.js`));
 
 		return {
 			assets,
