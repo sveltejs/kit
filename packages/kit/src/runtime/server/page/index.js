@@ -154,14 +154,25 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					}
 
 					const server_data = node?.server?.GET?.call(null, {
-						...event,
+						// can't use destructuring here because it will always
+						// invoke event.clientAddress, which breaks prerendering
+						get clientAddress() {
+							return event.clientAddress;
+						},
+						locals: event.locals,
+						params: event.params,
 						parent: async () => {
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
 								Object.assign(data, await server_promises[j]);
 							}
 							return data;
-						}
+						},
+						platform: event.platform,
+						request: event.request,
+						routeId: event.routeId,
+						setHeaders: event.setHeaders,
+						url: event.url
 					});
 
 					return server_data ? unwrap_promises(server_data) : null;
