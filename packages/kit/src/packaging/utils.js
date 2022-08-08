@@ -103,6 +103,7 @@ export function analyze(config, file) {
 export function generate_pkg(cwd, files) {
 	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
 
+	delete pkg.publishConfig?.directory;
 	delete pkg.scripts;
 	pkg.type = 'module';
 
