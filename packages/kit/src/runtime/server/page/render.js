@@ -8,6 +8,7 @@ import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { PrerenderingURL } from '../../../utils/url.js';
 import { serialize_error } from '../utils.js';
+import { HttpError } from '../../../index/private.js';
 
 // TODO rename this function/module
 
@@ -27,7 +28,7 @@ const updated = {
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean };
  *   status: number;
- *   error: Error | null;
+ *   error: HttpError | Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   validation_errors: Record<string, string> | undefined;
@@ -74,9 +75,9 @@ export async function render_response({
 
 	let rendered;
 
-	const stack = error?.stack;
+	const stack = error instanceof HttpError ? undefined : error?.stack;
 
-	if (options.dev && error) {
+	if (error && options.dev && !(error instanceof HttpError)) {
 		error.stack = options.get_stack(error);
 	}
 
@@ -320,7 +321,7 @@ export async function render_response({
 		}
 	}
 
-	if (options.dev && error) {
+	if (error && options.dev && !(error instanceof HttpError)) {
 		// reset stack, otherwise it may be 'fixed' a second time
 		error.stack = stack;
 	}

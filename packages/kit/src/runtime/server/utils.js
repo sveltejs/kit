@@ -1,3 +1,5 @@
+import { HttpError } from '../../index/private';
+
 /** @param {any} body */
 export function is_pojo(body) {
 	if (typeof body !== 'object') return false;
@@ -21,7 +23,7 @@ export function is_pojo(body) {
  * and (in dev) `stack`, plus any custom properties, plus recursively
  * serialized `cause` properties. This is necessary because
  * `JSON.stringify(error) === '{}'`
- * @param {Error} error
+ * @param {Error | HttpError} error
  * @param {(error: Error) => string | undefined} get_stack
  */
 export function serialize_error(error, get_stack) {
@@ -29,10 +31,16 @@ export function serialize_error(error, get_stack) {
 }
 
 /**
- * @param {Error} error
+ * @param {HttpError | Error} error
  * @param {(error: Error) => string | undefined} get_stack
  */
 export function clone_error(error, get_stack) {
+	if (error instanceof HttpError) {
+		return {
+			message: error.message
+		};
+	}
+
 	const {
 		name,
 		message,

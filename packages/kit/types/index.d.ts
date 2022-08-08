@@ -219,7 +219,7 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	params: Params;
 	routeId: string | null;
 	status: number;
-	error: Error | null;
+	error: HttpError | Error | null;
 	data: Record<string, any>;
 }
 

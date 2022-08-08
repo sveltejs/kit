@@ -6,6 +6,7 @@ import { create_fetch } from './fetch.js';
 import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
 import { HttpError, Redirect } from '../../../index/private.js';
 import { error } from '../../../index/index.js';
+import { normalize_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -255,7 +256,9 @@ export async function render_page(event, route, options, state, resolve_opts) {
 
 						state.prerendering.dependencies.set(pathname, dependency);
 					}
-				} catch (error) {
+				} catch (e) {
+					const error = normalize_error(e);
+
 					if (error instanceof Redirect) {
 						return redirect_response(error.status, error.location);
 					}
@@ -283,12 +286,14 @@ export async function render_page(event, route, options, state, resolve_opts) {
 								page_config: { router: true, hydrate: true },
 								status,
 								error,
-								branch: branch
-									.slice(0, j + 1)
-									.filter(Boolean)
-									.concat({ node, data: null, server_data: null }),
+								branch: compact(branch.slice(0, j + 1)).concat({
+									node,
+									data: null,
+									server_data: null
+								}),
 								fetched,
-								cookies
+								cookies,
+								validation_errors: undefined
 							});
 						}
 					}
@@ -297,7 +302,10 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					// which means we have to fall back to a plain text response
 					// TODO since the requester is expecting HTML, maybe it makes sense to
 					// doll this up a bit
-					return new Response(options.get_stack(error) || error.message, { status });
+					return new Response(
+						error instanceof HttpError ? error.message : options.get_stack(error),
+						{ status }
+					);
 				}
 			} else {
 				// push an empty slot so we can rewind past gaps to the
@@ -317,7 +325,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			page_config: get_page_config(leaf_node, options),
 			status,
 			error: null,
-			branch: branch.filter(Boolean),
+			branch: compact(branch),
 			validation_errors,
 			fetched,
 			cookies
@@ -325,7 +333,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 	} catch (error) {
 		// if we end up here, it means the data loaded successfull
 		// but the page failed to render
-		options.handle_error(error, event);
+		options.handle_error(/** @type {Error} */ (error), event);
 
 		return await respond_with_error({
 			event,
@@ -333,7 +341,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			state,
 			$session,
 			status: 500,
-			error,
+			error: /** @type {Error} */ (error),
 			resolve_opts
 		});
 	}
@@ -371,6 +379,7 @@ export async function handle_json_request(event, options, mod) {
 	}
 
 	try {
+		// @ts-ignore
 		const result = await handler.call(null, event);
 
 		if (method === 'HEAD') {
@@ -382,18 +391,23 @@ export async function handle_json_request(event, options, mod) {
 		}
 
 		if (method === 'POST') {
+			// @ts-ignore
 			if (result.errors) {
+				// @ts-ignore
 				return json_response({ errors: result.errors }, result.status || 400);
 			}
 
 			return new Response(undefined, {
 				status: 201,
+				// @ts-ignore
 				headers: result.location ? { location: result.location } : undefined
 			});
 		}
 
 		return new Response(undefined, { status: 204 });
-	} catch (error) {
+	} catch (e) {
+		const error = normalize_error(e);
+
 		if (error instanceof Redirect) {
 			return redirect_response(error.status, error.location);
 		}
@@ -442,4 +456,19 @@ function redirect_response(status, location) {
 		status,
 		headers: { location }
 	});
+}
+
+/**
+ * @template T
+ * @param {Array<T | null>} array
+ * @returns {T[]}
+ */
+function compact(array) {
+	const compacted = [];
+	for (const item of array) {
+		if (item) {
+			compacted.push(item);
+		}
+	}
+	return compacted;
 }
