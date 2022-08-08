@@ -17,6 +17,7 @@ import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry, prevent_illegal_rollup_imports, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
+import { generate_package_json } from '../../core/generate_package_json/index.js';
 
 const cwd = process.cwd();
 
@@ -403,6 +404,15 @@ function kit() {
 						routes: manifest_data.routes
 					})};\n`
 				);
+
+			const package_json_path = `${paths.output_dir}/package.json`;
+			fs.writeFileSync(
+				package_json_path,
+				generate_package_json({
+					build_data,
+					cwd,
+				})
+			);
 
 				log.info('Prerendering');
 				await new Promise((fulfil, reject) => {

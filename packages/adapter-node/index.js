@@ -45,7 +45,13 @@ export default function (opts = {}) {
 				`export const manifest = ${builder.generateManifest({ relativePath: './' })};`
 			);
 
-			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+			const optimizedPackageJson = builder.generatePackageJson()
+			writeFileSync(
+				`${out}/package.json`,
+				optimizedPackageJson,
+			);
+
+			const pkg = JSON.parse(optimizedPackageJson);
 
 			await esbuild.build({
 				platform: 'node',

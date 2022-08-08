@@ -5,6 +5,7 @@ import { pipeline } from 'stream';
 import { promisify } from 'util';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
+import { generate_package_json } from '../generate_package_json/index.js';
 
 const pipe = promisify(pipeline);
 
@@ -111,6 +112,13 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 				routes,
 				format
 			});
+		},
+
+		generatePackageJson: () => {
+			return generate_package_json({
+				build_data,
+				cwd: process.cwd()
+			})
 		},
 
 		getBuildDirectory(name) {
