@@ -60,8 +60,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		/** @type {HttpError | Error} */
 		let mutation_error;
 
-		/** @type {Record<string, string>} */
-		let mutation_validation_errors;
+		/** @type {Record<string, string> | undefined} */
+		let validation_errors;
 
 		if (leaf_node.server && event.request.method !== 'GET' && event.request.method !== 'HEAD') {
 			// for non-GET requests, first call handler in +page.server.js
@@ -72,7 +72,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					const result = await handler.call(null, event);
 
 					if (result?.errors) {
-						mutation_validation_errors = result.errors;
+						validation_errors = result.errors;
 						status = result.status ?? 400;
 					}
 
@@ -98,13 +98,14 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		if (!resolve_opts.ssr) {
 			return await render_response({
 				branch: [],
+				validation_errors: undefined,
 				fetched,
 				cookies,
 				page_config: {
 					hydrate: true,
 					router: true
 				},
-				status: 200,
+				status,
 				error: null,
 				event,
 				options,
@@ -280,7 +281,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			}
 		}
 
-		// TODO use mutation_validation_errors
+		// TODO use validation_errors
 
 		return await render_response({
 			event,
@@ -289,9 +290,10 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			$session,
 			resolve_opts,
 			page_config: get_page_config(leaf_node, options),
-			status: 200, // TODO unless POST/PUT/PATCH/DELETE thinks otherwise
+			status,
 			error: null,
 			branch: branch.filter(Boolean),
+			validation_errors,
 			fetched,
 			cookies
 		});

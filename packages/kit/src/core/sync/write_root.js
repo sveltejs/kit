@@ -30,7 +30,7 @@ export function write_root(manifest_data, output) {
 					${pyramid.replace(/\n/g, '\n\t\t\t\t\t')}
 				</svelte:component>
 			{:else}
-				<svelte:component this={components[${l}]} data={data_${l}} />
+				<svelte:component this={components[${l}]} data={data_${l}} {errors} />
 			{/if}
 		`
 			.replace(/^\t\t\t/gm, '')
@@ -50,6 +50,7 @@ export function write_root(manifest_data, output) {
 
 				export let components;
 				${levels.map((l) => `export let data_${l} = null;`).join('\n\t\t\t\t')}
+				export let errors;
 
 				setContext('__svelte__', stores);
 

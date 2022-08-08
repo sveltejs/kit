@@ -30,6 +30,7 @@ const updated = {
  *   error: Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
+ *   validation_errors: Record<string, string> | undefined;
  * }} opts
  */
 export async function render_response({
@@ -43,7 +44,8 @@ export async function render_response({
 	status,
 	error = null,
 	event,
-	resolve_opts
+	resolve_opts,
+	validation_errors
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -135,6 +137,10 @@ export async function render_response({
 		// unnecessary updates for layout components
 		for (let i = 0; i < branch.length; i += 1) {
 			props[`data_${i}`] = branch[i].data;
+		}
+
+		if (validation_errors) {
+			props.errors = validation_errors;
 		}
 
 		rendered = options.root.render(props);
