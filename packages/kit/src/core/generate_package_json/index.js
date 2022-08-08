@@ -45,7 +45,7 @@ export function generate_package_json({build_data, cwd}) {
  */
 function filter_import_packages(chunks, dependencies_set) {
   /** @type {string[]} */
-  const import_names = chunks.reduce((deps, chunk) => {
+  const import_names = chunks.reduce((/** @type {string[]} */ deps, chunk) => {
     if(chunk.imports.length > 0) {
       for(let i = 0; i < chunk.imports.length; i++) {
         const importName = chunk.imports[i];
