@@ -730,6 +730,15 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 					const status = e instanceof HttpError ? e.status : 500;
 
+					// On the server, the manifest adds trailing `null`s to the layout array
+					// when there's error pages at a depth where's no layout.
+					// On the client, the manifest omits these, so on the server it's [1,null] but on the client it's [1,]
+					// The former is an array of length 2 but the latter is an array of length 1.
+					// That's why we need to be extra careful with the index in the client
+					// The alternative fix would be to add a trailing `null` to layouts if their last one is empty
+					if (i === layouts.length && errors.length > layouts.length) {
+						i++;
+					}
 					while (i--) {
 						if (errors[i]) {
 							/** @type {import('./types').BranchNode | undefined} */
