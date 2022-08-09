@@ -420,17 +420,19 @@ export function create_client({ target, session, base, trailing_slash }) {
 		};
 
 		let data = {};
+		let data_changed = false;
 		for (let i = 0; i < filtered.length; i += 1) {
 			Object.assign(data, filtered[i].data);
 			// Only set props if the node actually updated. This prevents needless rerenders.
 			if (!current.branch.some((node) => node === filtered[i])) {
 				result.props[`data_${i}`] = filtered[i].data;
+				data_changed = true;
 			}
 		}
 
 		const page_changed = !current.url || url.href !== current.url.href || current.error !== error;
 
-		if (page_changed) {
+		if (page_changed || data_changed) {
 			result.props.page = { error, params, routeId, status, url, data };
 
 			// TODO remove this for 1.0

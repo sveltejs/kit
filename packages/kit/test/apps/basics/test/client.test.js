@@ -592,3 +592,20 @@ test.describe('Shadow DOM', () => {
 		expect(requests).toEqual([]);
 	});
 });
+
+test.describe('Page Store', () => {
+	test.only('Updates data if changed even when no URL change visible', async ({ page }) => {
+		await page.goto('/store/data/only-data-changes');
+		expect(await page.textContent('#page-data')).toBe('{"answer":42,"calls":0}');
+		expect(await page.textContent('#store-data')).toBe(
+			'{"foo":{"bar":"Custom layout"},"name":"SvelteKit","value":123,"answer":42,"calls":0}'
+		);
+
+		await page.click('button');
+
+		expect(await page.textContent('#page-data')).toBe('{"foo":"bar"}');
+		expect(await page.textContent('#store-data')).toBe(
+			'{"foo":"bar","name":"SvelteKit","value":123}'
+		);
+	});
+});
