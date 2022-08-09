@@ -12,6 +12,9 @@ export const runtime_directory = lowercase_root(
  * Vite thinks these are two separate paths, so we need to lowercase the root.
  * @param {string} dir_path */
 function lowercase_root(dir_path) {
+	// TODO Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.
+	// In playwright debug mode run through VS Code this lowercase conversion is needed, else it has the opposite effect and introduces bugs.
+	return dir_path;
 	const parsed = path.parse(dir_path);
 	// We know there's name and we know there's no extension since we call this with a directory path
 	return parsed.root.toLowerCase() + parsed.dir.slice(parsed.root.length) + path.sep + parsed.name;
