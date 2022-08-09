@@ -3,7 +3,19 @@ import colors from 'kleur';
 import { fileURLToPath } from 'url';
 
 /** Resolved path of the `runtime` directory */
-export const runtime_directory = fileURLToPath(new URL('../runtime', import.meta.url));
+export const runtime_directory = lowercase_root(
+	fileURLToPath(new URL('../runtime', import.meta.url))
+);
+
+/**
+ * Vite puts a lowercase root dir in front of the posixified path, while Windows uses uppercase.
+ * Vite thinks these are two separate paths, so we need to lowercase the root.
+ * @param {string} dir_path */
+function lowercase_root(dir_path) {
+	const parsed = path.parse(dir_path);
+	// We know there's name and we know there's no extension since we call this with a directory path
+	return parsed.root.toLowerCase() + parsed.dir.slice(parsed.root.length) + path.sep + parsed.name;
+}
 
 /** Prefix for the `runtime` directory, for use with import declarations */
 export const runtime_prefix = posixify_path(runtime_directory);
