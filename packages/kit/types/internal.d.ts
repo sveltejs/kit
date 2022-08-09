@@ -150,7 +150,7 @@ export interface PageData {
 
 export type PayloadScriptAttributes =
 	| { type: 'data'; url: string; body?: string }
-	| { type: 'props' };
+	| { type: 'server_data'; node_idx: string };
 
 export interface PrerenderDependency {
 	response: Response;

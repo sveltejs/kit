@@ -70,9 +70,6 @@ export async function render_response({
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
-	/** @type {Array<import('./types').Fetched>} */
-	const serialized_data = [];
-
 	let rendered;
 
 	const stack = error instanceof HttpError ? undefined : error?.stack;
@@ -95,8 +92,6 @@ export async function render_response({
 				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
 			}
 		}
-
-		if (fetched && page_config.hydrate) serialized_data.push(...fetched);
 
 		const session = writable($session);
 
@@ -248,14 +243,30 @@ export async function render_response({
 
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 
-		body += serialized_data
-			.map(({ url, body, response }) =>
-				render_json_payload_script(
-					{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
-					response
+		if (resolve_opts.ssr) {
+			body += fetched
+				.map(({ url, body, response }) =>
+					render_json_payload_script(
+						{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
+						response
+					)
 				)
-			)
-			.join('\n\t');
+				.join('\n\t');
+			body += branch
+				.map(({ server_data }, idx) => {
+					// != to keep other falsy values
+					if (server_data != null) {
+						// Inline server data response with node index for correct retrieval on the client.
+						// Right now this only applies to the leaf/page node, once layout endpoints are implemented,
+						// they get written out here, too.
+						return render_json_payload_script(
+							{ type: 'server_data', node_idx: String(idx) },
+							server_data
+						);
+					}
+				})
+				.filter(Boolean);
+		}
 	}
 
 	if (options.service_worker) {

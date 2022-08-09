@@ -457,16 +457,20 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/**
+	 * Call the load function of the given node, if it exists.
+	 * If `server_data` is passed, this is treated as the initial run and the page endpoint is not requested.
+	 *
 	 * @param {{
 	 *   node: import('types').CSRPageNode;
 	 * 	 parent: () => Promise<Record<string, any>>;
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   routeId: string | null;
+	 * 	 server_data?: import('types').JSONObject | null;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
-	async function load_node({ node, parent, url, params, routeId }) {
+	async function load_node({ node, parent, url, params, routeId, server_data }) {
 		const uses = {
 			params: new Set(),
 			url: false,
@@ -483,13 +487,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 			}
 		}
 
-		/** @type {import('types').JSONObject | null} */
-		let server_data = null;
-
 		/** @type {Record<string, any> | null} */
 		let data = null;
 
-		if (node.server) {
+		if (node.server && server_data === undefined) {
 			// +page.server.js data means we need to mark this URL as a dependency of itself,
 			// unless we want to get clever with usage detection on the server, which could
 			// be returned to the client either as payload or custom headers
@@ -530,6 +531,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				}
 			}
 		}
+		server_data = server_data || null;
 
 		/** @type {Record<string, string>} */
 		const uses_params = {};
@@ -627,7 +629,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		return {
 			node,
-			data,
+			data: data || server_data,
 			uses
 		};
 	}
@@ -1213,6 +1215,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 					const node_id = node_ids[i];
 
 					const branch_node = Promise.resolve().then(async () => {
+						let server_data = null;
+						const serialized = document.querySelector(
+							`script[sveltekit\\:data-type="server_data"][sveltekit\\:data-node_idx="${i}"`
+						);
+						if (serialized) {
+							server_data = JSON.parse(/** @type {string} */ (serialized.textContent));
+						}
 						return load_node({
 							node: await nodes[node_id](),
 							url,
@@ -1224,9 +1233,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 									Object.assign(data, (await branch[j]).data);
 								}
 								return data;
-							}
-							// TODO pass deserialized server data
-							// TODO ..but in a way that each node only gets its own data? was that the case before?
+							},
+							server_data
 						});
 					});
 
