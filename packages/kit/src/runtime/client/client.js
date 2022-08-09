@@ -991,7 +991,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				: routes;
 
 			const promises = matching.map((r) => {
-				Promise.all([...r.errors, ...r.layouts, r.page].map((load) => load()));
+				return Promise.all([...r.layouts, r.page].map((load) => load?.()));
 			});
 
 			await Promise.all(promises);
