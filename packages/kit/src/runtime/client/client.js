@@ -490,44 +490,47 @@ export function create_client({ target, session, base, trailing_slash }) {
 		/** @type {Record<string, any> | null} */
 		let data = null;
 
-		if (node.server && server_data === undefined) {
+		if (node.server) {
 			// +page.server.js data means we need to mark this URL as a dependency of itself,
 			// unless we want to get clever with usage detection on the server, which could
 			// be returned to the client either as payload or custom headers
 			uses.dependencies.add(url.href);
+			uses.url = true;
 
-			const res = await native_fetch(
-				`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
-				{
-					headers: {
-						'x-sveltekit-load': 'true'
+			if (server_data === undefined) {
+				const res = await native_fetch(
+					`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
+					{
+						headers: {
+							'x-sveltekit-load': 'true'
+						}
 					}
-				}
-			);
+				);
 
-			if (res.ok) {
-				const redirect_location = res.headers.get('x-sveltekit-location');
+				if (res.ok) {
+					const redirect_location = res.headers.get('x-sveltekit-location');
 
-				if (redirect_location) {
-					// We are client-side, where the redirect status code doesn't matter
-					throw redirect(399, redirect_location);
-				}
+					if (redirect_location) {
+						// We are client-side, where the redirect status code doesn't matter
+						throw redirect(399, redirect_location);
+					}
 
-				server_data = res.status === 204 ? {} : await res.json();
-			} else {
-				// TODO does this sufficiently differentiate if this was a `throw error()` or an unexpected error?
-				let json;
-				let error_msg;
-				try {
-					json = await res.json();
-					error_msg = json.message;
-				} catch (e) {
-					throw error(500, 'Failed to load data');
-				}
-				if (error_msg) {
-					throw error(res.status, error_msg);
+					server_data = res.status === 204 ? {} : await res.json();
 				} else {
-					throw json;
+					// TODO does this sufficiently differentiate if this was a `throw error()` or an unexpected error?
+					let json;
+					let error_msg;
+					try {
+						json = await res.json();
+						error_msg = json.message;
+					} catch (e) {
+						throw error(500, 'Failed to load data');
+					}
+					if (error_msg) {
+						throw error(res.status, error_msg);
+					} else {
+						throw json;
+					}
 				}
 			}
 		}
