@@ -239,21 +239,26 @@ export async function respond(request, options, state) {
 						const module = await options.manifest._.nodes[route.page]();
 						if (module.server) {
 							const response = await handle_json_request(event, options, module.server);
-							if (
-								request.headers.has('x-sveltekit-load') &&
-								response.status >= 300 &&
-								response.status < 400
-							) {
-								// since redirects are opaque to the browser, we need to repackage
-								// 3xx responses as 200s with a custom header
-								const location = response.headers.get('location');
+							if (request.headers.has('x-sveltekit-load')) {
+								if (response.status >= 300 && response.status < 400) {
+									// since redirects are opaque to the browser, we need to repackage
+									// 3xx responses as 200s with a custom header
+									const location = response.headers.get('location');
 
-								if (location) {
-									const headers = new Headers(response.headers);
-									headers.set('x-sveltekit-location', location);
+									if (location) {
+										const headers = new Headers(response.headers);
+										headers.set('x-sveltekit-location', location);
+										return new Response(undefined, {
+											status: 204,
+											headers
+										});
+									}
+								} else if (response.status === 405) {
+									// TODO would be nice to avoid these requests altogether,
+									// by noting whether or not page endpoints export `get`,
+									// possibly through enhancing the manifest
 									return new Response(undefined, {
-										status: 204,
-										headers
+										status: 204
 									});
 								}
 							}
