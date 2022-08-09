@@ -52,12 +52,12 @@ export function write_client_manifest(manifest_data, output) {
 			.map((route) => {
 				if (route.type === 'page') {
 					const errors = route.errors.map((node) => (node ? node_indexes.get(node) : '')).join(',');
-
-					const nodes = [...route.layouts, route.page]
+					const layouts = route.layouts
 						.map((node) => (node ? node_indexes.get(node) : ''))
 						.join(',');
+					const page = route.page ? node_indexes.get(route.page) : '';
 
-					return `${s(route.id)}: [[${errors}], [${nodes}]]`;
+					return `${s(route.id)}: [[${errors}], [${layouts}], ${page}]`;
 				}
 			})
 			.filter(Boolean)
