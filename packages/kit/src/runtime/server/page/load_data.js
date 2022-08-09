@@ -53,11 +53,9 @@ export async function load_data({
 	server_data_promise,
 	state
 }) {
-	if (!node?.module) return null;
-
 	const server_data = await server_data_promise;
 
-	if (!node.module.load) {
+	if (!node?.module?.load) {
 		return server_data;
 	}
 

@@ -1105,8 +1105,8 @@ test.describe('$app/stores', () => {
 	}) => {
 		await page.goto('/store/data/foo?reset=true');
 		const stuff1 = { foo: { bar: 'Custom layout' }, name: 'SvelteKit', value: 123 };
-		const stuff2 = { ...stuff1, foo: true };
-		const stuff3 = { ...stuff2, number: 2 };
+		const stuff2 = { ...stuff1, foo: true, number: 2 };
+		const stuff3 = { ...stuff2 };
 		await page.goto('/store/data/www');
 
 		await clicknav('a[href="/store/data/foo"]');

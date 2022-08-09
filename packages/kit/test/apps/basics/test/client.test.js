@@ -464,7 +464,7 @@ test.describe('Prefetching', () => {
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {
-			expect(requests.filter((req) => req.endsWith('index.svelte')).length).toBe(1);
+			expect(requests.filter((req) => req.endsWith('+page.svelte')).length).toBe(1);
 		} else {
 			// the preload helper causes an additional request to be made in Firefox,
 			// so we use toBeGreaterThan rather than toBe
