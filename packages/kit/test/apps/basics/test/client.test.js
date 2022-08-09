@@ -594,7 +594,7 @@ test.describe('Shadow DOM', () => {
 });
 
 test.describe('Page Store', () => {
-	test.only('Updates data if changed even when no URL change visible', async ({ page }) => {
+	test('Updates data if changed even when no URL change visible', async ({ page }) => {
 		await page.goto('/store/data/only-data-changes');
 		expect(await page.textContent('#page-data')).toBe('{"answer":42,"calls":0}');
 		expect(await page.textContent('#store-data')).toBe(
