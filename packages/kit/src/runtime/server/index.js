@@ -235,10 +235,12 @@ export async function respond(request, options, state) {
 				}
 
 				if (route) {
+					/** @type {Response} */
+					let response;
 					if (is_data_request && route.type === 'page') {
 						const module = await options.manifest._.nodes[route.page]();
 						if (module.server) {
-							const response = await handle_json_request(event, options, module.server);
+							response = await handle_json_request(event, options, module.server);
 							if (request.headers.has('x-sveltekit-load')) {
 								if (response.status >= 300 && response.status < 400) {
 									// since redirects are opaque to the browser, we need to repackage
@@ -248,7 +250,7 @@ export async function respond(request, options, state) {
 									if (location) {
 										const headers = new Headers(response.headers);
 										headers.set('x-sveltekit-location', location);
-										return new Response(undefined, {
+										response = new Response(undefined, {
 											status: 204,
 											headers
 										});
@@ -262,18 +264,15 @@ export async function respond(request, options, state) {
 									});
 								}
 							}
-
-							return response;
+						} else {
+							return new Response('not found', { status: 404 });
 						}
-
-						return new Response('not found', { status: 404 });
+					} else {
+						response =
+							route.type === 'endpoint'
+								? await render_endpoint(event, route)
+								: await render_page(event, route, options, state, resolve_opts);
 					}
-
-					/** @type {Response} */
-					const response =
-						route.type === 'endpoint'
-							? await render_endpoint(event, route)
-							: await render_page(event, route, options, state, resolve_opts);
 
 					for (const key in headers) {
 						const value = headers[key];
