@@ -9,9 +9,10 @@ export async function load({ fetch, depends, setHeaders }) {
 
 	depends('custom:change-detection-layout');
 
-	setHeaders({
-		'cache-control': 'public, max-age=5'
-	});
+	// TODO this throws an error now - was this there on purpose in the old version?
+	// setHeaders({
+	// 	'cache-control': 'public, max-age=5'
+	// });
 
 	return {
 		type,

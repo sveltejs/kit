@@ -1,5 +1,4 @@
 import { browser } from '$app/env';
-import { invalidate } from '$app/navigation';
 
 let count = 0;
 
