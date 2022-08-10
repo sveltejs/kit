@@ -37,7 +37,7 @@ export const GET: Get = async ({ locals }) => {
 	if (response.status === 200) {
 		return {
 			/** @type {Todo[]} */
-			todos: await response.json() as Todo[]
+			todos: (await response.json()) as Todo[]
 		};
 	}
 
