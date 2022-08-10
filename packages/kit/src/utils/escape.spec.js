@@ -6,8 +6,11 @@ const json = suite('render_json_payload_script');
 
 json('escapes slashes', () => {
 	assert.equal(
-		render_json_payload_script({ type: 'props' }, { unsafe: '</script><script>alert("xss")' }),
-		'<script type="application/json" sveltekit:data-type="props">' +
+		render_json_payload_script(
+			{ type: 'server_data', node_idx: '0' },
+			{ unsafe: '</script><script>alert("xss")' }
+		),
+		'<script type="application/json" sveltekit:data-type="server_data" sveltekit:data-node_idx="0">' +
 			'{"unsafe":"\\u003C/script>\\u003Cscript>alert(\\"xss\\")"}' +
 			'</script>'
 	);
@@ -15,8 +18,11 @@ json('escapes slashes', () => {
 
 json('escapes exclamation marks', () => {
 	assert.equal(
-		render_json_payload_script({ type: 'props' }, { '<!--</script>...-->alert("xss")': 'unsafe' }),
-		'<script type="application/json" sveltekit:data-type="props">' +
+		render_json_payload_script(
+			{ type: 'server_data', node_idx: '1' },
+			{ '<!--</script>...-->alert("xss")': 'unsafe' }
+		),
+		'<script type="application/json" sveltekit:data-type="server_data" sveltekit:data-node_idx="1">' +
 			'{"\\u003C!--\\u003C/script>...-->alert(\\"xss\\")":"unsafe"}' +
 			'</script>'
 	);
