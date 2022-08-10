@@ -49,6 +49,7 @@ export async function write_types(config, manifest_data) {
 					.join(',\n\t')}\n} from '@sveltejs/kit';`
 			);
 
+			// @ts-ignore temporarily
 			for (const node of route.layouts) {
 				// TODO handle edge case where a layout doesn't have a sibling +page
 			}

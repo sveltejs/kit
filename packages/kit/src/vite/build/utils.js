@@ -1,4 +1,3 @@
-import fs from 'fs';
 import * as vite from 'vite';
 import { get_aliases } from '../utils.js';
 

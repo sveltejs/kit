@@ -1,4 +1,10 @@
 export class HttpError {
+	// without these, things like `$page.error.stack` will error. we don't want to
+	// include a stack for these sorts of errors, but we also don't want red
+	// squigglies everywhere, so this feels like a not-terribile compromise
+	name = 'HttpError';
+	stack = '';
+
 	/**
 	 * @param {number} status
 	 * @param {string} message
