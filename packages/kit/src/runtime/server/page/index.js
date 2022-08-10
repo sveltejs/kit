@@ -385,6 +385,10 @@ export async function handle_json_request(event, options, mod) {
 			return redirect_response(error.status, error.location);
 		}
 
+		if (!(error instanceof HttpError)) {
+			options.handle_error(error, event);
+		}
+
 		return json_response(
 			error_to_pojo(error, options.get_stack),
 			error instanceof HttpError ? error.status : 500
