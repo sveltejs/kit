@@ -282,11 +282,11 @@ export interface SSRManifest {
 	};
 }
 
-export interface GET<Params extends Record<string, string> = Record<string, string>> {
+export interface Get<Params extends Record<string, string> = Record<string, string>> {
 	(event: RequestEvent<Params>): MaybePromise<JSONObject>;
 }
 
-export interface POST<Params extends Record<string, string> = Record<string, string>> {
+export interface Post<Params extends Record<string, string> = Record<string, string>> {
 	(event: RequestEvent<Params>): MaybePromise<
 		| { status?: number; errors: Record<string, string>; location?: never }
 		| { status?: never; errors?: never; location: string }
@@ -294,21 +294,21 @@ export interface POST<Params extends Record<string, string> = Record<string, str
 	>;
 }
 
-export interface PUT<Params extends Record<string, string> = Record<string, string>> {
+export interface Put<Params extends Record<string, string> = Record<string, string>> {
 	(event: RequestEvent<Params>): MaybePromise<{
 		status?: number;
 		errors: Record<string, string>;
 	} | void>;
 }
 
-export interface PATCH<Params extends Record<string, string> = Record<string, string>> {
+export interface Patch<Params extends Record<string, string> = Record<string, string>> {
 	(event: RequestEvent<Params>): MaybePromise<{
 		status?: number;
 		errors: Record<string, string>;
 	} | void>;
 }
 
-export interface DELETE<Params extends Record<string, string> = Record<string, string>> {
+export interface Delete<Params extends Record<string, string> = Record<string, string>> {
 	(event: RequestEvent<Params>): MaybePromise<void>;
 }
 

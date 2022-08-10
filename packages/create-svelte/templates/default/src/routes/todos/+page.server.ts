@@ -1,10 +1,27 @@
 import { error } from '@sveltejs/kit';
 import { api } from './api';
-import type { GET, POST, PATCH, DELETE } from './$types';
-import type { Todo } from './types';
+import type { Get, Post, Patch, Delete } from './$types';
 
-/** @type {import('./$types').GET<Todo[]>} */
-export const GET: GET<Todo[]> = async ({ locals }) => {
+type Todo = {
+	uid: string;
+	created_at: Date;
+	text: string;
+	done: boolean;
+	pending_delete: boolean;
+};
+
+/**
+ * @typedef {{
+ *   uid: string;
+ *   created_at: Date;
+ *   text: string;
+ *   done: boolean;
+ *   pending_delete: boolean;
+ * }} Todo
+ */
+
+/** @type {import('./$types').Get} */
+export const GET: Get = async ({ locals }) => {
 	// locals.userid comes from src/hooks.js
 	const response = await api('GET', `todos/${locals.userid}`);
 
@@ -12,21 +29,23 @@ export const GET: GET<Todo[]> = async ({ locals }) => {
 		// user hasn't created a todo list.
 		// start with an empty array
 		return {
-			todos: []
+			/** @type {Todo[]} */
+			todos: [] as Todo[]
 		};
 	}
 
 	if (response.status === 200) {
 		return {
-			todos: await response.json()
+			/** @type {Todo[]} */
+			todos: await response.json() as Todo[]
 		};
 	}
 
 	throw error(response.status);
 };
 
-/** @type {import('./$types').POST} */
-export const POST: POST = async ({ request, locals }) => {
+/** @type {import('./$types').Post} */
+export const POST: Post = async ({ request, locals }) => {
 	const form = await request.formData();
 
 	await api('POST', `todos/${locals.userid}`, {
@@ -34,8 +53,8 @@ export const POST: POST = async ({ request, locals }) => {
 	});
 };
 
-/** @type {import('./$types').PATCH} */
-export const PATCH: PATCH = async ({ request, locals }) => {
+/** @type {import('./$types').Patch} */
+export const PATCH: Patch = async ({ request, locals }) => {
 	const form = await request.formData();
 
 	await api('PATCH', `todos/${locals.userid}/${form.get('uid')}`, {
@@ -44,8 +63,8 @@ export const PATCH: PATCH = async ({ request, locals }) => {
 	});
 };
 
-/** @type {import('./$types').DELETE} */
-export const DELETE: DELETE = async ({ request, locals }) => {
+/** @type {import('./$types').Delete} */
+export const DELETE: Delete = async ({ request, locals }) => {
 	const form = await request.formData();
 
 	await api('DELETE', `todos/${locals.userid}/${form.get('uid')}`);

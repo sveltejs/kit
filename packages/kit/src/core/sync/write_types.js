@@ -5,10 +5,10 @@ import { rimraf } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
 import { write } from './utils.js';
 
-const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+const methods = ['Get', 'Post', 'Put', 'Patch', 'Delete'];
 
 const module_names = new Set(['load']);
-const server_names = new Set(methods);
+const server_names = new Set(methods.map((m) => m.toUpperCase()));
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -20,7 +20,7 @@ export async function write_types(config, manifest_data) {
 	/** @type {import('typescript') | undefined} */
 	let ts = undefined;
 	try {
-		ts = await import('typescript');
+		ts = (await import('typescript')).default;
 	} catch (e) {
 		// No TypeScript installed - skip proxy generation
 	}
@@ -116,7 +116,7 @@ export async function write_types(config, manifest_data) {
  * @param {string} content
  * @param {Set<string>} names
  */
-function tweak_types(ts, content, names) {
+export function tweak_types(ts, content, names) {
 	try {
 		let modified = false;
 
@@ -162,9 +162,11 @@ function tweak_types(ts, content, names) {
 			}
 		});
 
-		/** @param {import('typescript').Node} node */
-		function replace_jsdoc_type_tags(node) {
-			let modified = false;
+		/**
+		 * @param {import('typescript').Node} node
+		 * @param {import('typescript').Node} value
+		 */
+		function replace_jsdoc_type_tags(node, value) {
 			// @ts-ignore
 			if (node.jsDoc) {
 				// @ts-ignore
@@ -172,11 +174,11 @@ function tweak_types(ts, content, names) {
 					for (const tag of comment.tags) {
 						if (ts.isJSDocTypeTag(tag)) {
 							const is_fn =
-								ts.isFunctionDeclaration(node) ||
-								ts.isFunctionExpression(node) ||
-								ts.isArrowFunction(node);
+								ts.isFunctionDeclaration(value) ||
+								ts.isFunctionExpression(value) ||
+								ts.isArrowFunction(value);
 
-							if (is_fn && node.parameters?.length > 0) {
+							if (is_fn && value.parameters?.length > 0) {
 								code.overwrite(tag.tagName.pos, tag.tagName.end, 'param');
 								code.prependRight(tag.typeExpression.pos + 1, 'Parameters<');
 								code.appendLeft(tag.typeExpression.end - 1, '>[0]');
@@ -189,32 +191,36 @@ function tweak_types(ts, content, names) {
 					}
 				}
 			}
-			return modified;
 		}
 
 		ast.forEachChild((node) => {
 			if (ts.isFunctionDeclaration(node) && node.name?.text && names.has(node.name?.text)) {
 				// remove JSDoc comment above `export function load ...`
-				modified ||= replace_jsdoc_type_tags(node);
+				replace_jsdoc_type_tags(node, node);
 			}
 
 			if (ts.isVariableStatement(node)) {
 				// remove JSDoc comment above `export const load = ...`
 				if (
 					ts.isIdentifier(node.declarationList.declarations[0].name) &&
-					names.has(node.declarationList.declarations[0].name.text)
+					names.has(node.declarationList.declarations[0].name.text) &&
+					node.declarationList.declarations[0].initializer
 				) {
-					modified ||= replace_jsdoc_type_tags(node);
+					replace_jsdoc_type_tags(node, (node.declarationList.declarations[0].initializer));
 				}
 
 				for (const declaration of node.declarationList.declarations) {
-					if (ts.isIdentifier(declaration.name) && names.has(declaration.name.text)) {
+					if (ts.isIdentifier(declaration.name) && names.has(declaration.name.text) && declaration.initializer) {
 						// edge case — remove JSDoc comment above individual export
-						modified ||= replace_jsdoc_type_tags(declaration);
+						replace_jsdoc_type_tags(declaration, declaration.initializer);
 
 						// remove type from `export const load: Load ...`
 						if (declaration.type) {
-							const type = content.slice(declaration.type.pos, declaration.type.end);
+							let a = declaration.type.pos;
+							let b = declaration.type.end;
+							while (/\s/.test(content[a])) a += 1;
+
+							const type = content.slice(a, b);
 							code.remove(declaration.name.end, declaration.type.end);
 
 							const rhs = declaration.initializer;
@@ -233,6 +239,7 @@ function tweak_types(ts, content, names) {
 									);
 								}
 							}
+
 							modified = true;
 						}
 					}
@@ -240,7 +247,7 @@ function tweak_types(ts, content, names) {
 			}
 		});
 
-		if (modified) {
+		if (modified || exports.size > 0) {
 			return {
 				code: code.toString(),
 				exports: Array.from(exports.keys())
