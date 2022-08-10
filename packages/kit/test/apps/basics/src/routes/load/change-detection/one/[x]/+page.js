@@ -8,8 +8,9 @@ export async function load({ params, setHeaders }) {
 		count += 1;
 	}
 
+	// Using setHeader has no effect on the client; testing that here
 	setHeaders({
-		'cache-control': 'max-age=5'
+		'cache-control': 'public, max-age=5'
 	});
 	return {
 		x: params.x,

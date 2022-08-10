@@ -57,9 +57,6 @@ function update_scroll_positions(index) {
  * @returns {import('./types').Client}
  */
 export function create_client({ target, session, base, trailing_slash }) {
-	/** @type {Map<string, import('./types').NavigationResult>} */
-	const cache = new Map();
-
 	/** @type {Array<((href: string) => boolean)>} */
 	const invalidated = [];
 
@@ -118,7 +115,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const current_load_uses_session = current.branch.some((node) => node?.uses.session);
 		if (!current_load_uses_session) return;
 
-		update(new URL(location.href), [], true);
+		update(new URL(location.href), []);
 	});
 	ready = true;
 
@@ -196,7 +193,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
 
-		load_cache.promise = load_route(intent, false);
+		load_cache.promise = load_route(intent);
 		load_cache.id = intent.id;
 
 		return load_cache.promise;
@@ -206,15 +203,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * Returns `true` if update completes, `false` if it is aborted
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
-	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
 	 * @param {() => void} [callback]
 	 */
-	async function update(url, redirect_chain, no_cache, opts, callback) {
+	async function update(url, redirect_chain, opts, callback) {
 		const intent = get_navigation_intent(url);
 
 		const current_token = (token = {});
-		let navigation_result = intent && (await load_route(intent, no_cache));
+		let navigation_result = intent && (await load_route(intent));
 
 		if (
 			!navigation_result &&
@@ -639,17 +635,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	/**
 	 * @param {import('./types').NavigationIntent} intent
-	 * @param {boolean} no_cache
 	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
-	async function load_route({ id, url, params, route }, no_cache) {
+	async function load_route({ id, url, params, route }) {
 		if (load_cache.id === id && load_cache.promise) {
 			return load_cache.promise;
-		}
-
-		if (!no_cache) {
-			const cached = cache.get(id);
-			if (cached) return cached;
 		}
 
 		const { errors, layouts, page } = route;
@@ -909,7 +899,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		await update(
 			url,
 			redirect_chain,
-			false,
 			{
 				scroll,
 				keepfocus,
@@ -986,7 +975,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			if (!invalidating) {
 				invalidating = Promise.resolve().then(async () => {
-					await update(new URL(location.href), [], true);
+					await update(new URL(location.href), []);
 
 					invalidating = null;
 				});

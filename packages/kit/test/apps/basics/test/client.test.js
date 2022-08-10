@@ -317,27 +317,27 @@ test.describe('Load', () => {
 		expect(await page.textContent('h2')).toBe('y: b: 1');
 
 		await app.goto('/load/change-detection/one/a');
-		expect(await page.textContent('h2')).toBe('x: a: 1');
+		expect(await page.textContent('h2')).toBe('x: a: 2');
 
 		await app.goto('/load/change-detection/one/b');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
 		await app.invalidate('/load/change-detection/data.json');
 		expect(await page.textContent('h1')).toBe('layout loads: 2');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
 		await app.invalidate('/load/change-detection/data.json');
 		expect(await page.textContent('h1')).toBe('layout loads: 3');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
 		await app.invalidate('custom:change-detection-layout');
 		expect(await page.textContent('h1')).toBe('layout loads: 4');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
 		await page.click('button');
 		await page.waitForFunction('window.invalidated');
 		expect(await page.textContent('h1')).toBe('layout loads: 5');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 	});
 
 	test('load function is only called on session change when used in load', async ({ page }) => {
