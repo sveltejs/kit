@@ -563,7 +563,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 				},
 				// @ts-expect-error
 				get stuff() {
-					throw new Error('@migration task: Remove stuff (TODO link)');
+					throw new Error(
+						'@migration task: Remove stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
+					);
 				},
 				async fetch(resource, init) {
 					let requested;
