@@ -17,6 +17,7 @@ You can deploy to the following platforms with the default adapter, `adapter-aut
 - [Cloudflare Pages](https://developers.cloudflare.com/pages/) via [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare)
 - [Netlify](https://netlify.com) via [`adapter-netlify`](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify)
 - [Vercel](https://vercel.com) via [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel)
+- [GitHub Pages](https://pages.github.com) via [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static)
 
 #### Node.js
 
@@ -55,6 +56,20 @@ Most adapters will generate static HTML for any [prerenderable](/docs/page-optio
 You can also use `adapter-static` to generate single-page apps (SPAs) by specifying a [fallback page](https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode).
 
 > You must ensure [`trailingSlash`](configuration#trailingslash) is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+
+#### GitHub Pages
+
+SvelteKit can be automatically configured for deployment on GitHub Pages by using the `actions/configure-pages` GitHub Action before building it.
+
+```yaml
+- uses: actions/configure-pages@v1
+- name: Build
+  run: pnpm run build
+- uses: actions/upload-pages-artifact@v1
+  with:
+    path: build
+- uses: actions/deploy-pages@v1
+```
 
 #### Platform-specific context
 
