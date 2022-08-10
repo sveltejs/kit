@@ -3,7 +3,7 @@ export class HttpError {
 	// include a stack for these sorts of errors, but we also don't want red
 	// squigglies everywhere, so this feels like a not-terribile compromise
 	name = 'HttpError';
-	stack = '';
+	stack = undefined;
 
 	/**
 	 * @param {number} status
