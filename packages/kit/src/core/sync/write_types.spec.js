@@ -15,13 +15,16 @@ test('Rewrites types for a TypeScript module', () => {
 	const rewritten = tweak_types(ts, source, new Set(['GET']));
 
 	assert.equal(rewritten?.exports, ['GET']);
-	assert.equal(rewritten?.code, `
+	assert.equal(
+		rewritten?.code,
+		`
 		export const GET = ({ params }: Parameters<Get>[0]) => {
 			return {
 				a: 1
 			};
 		};
-	`);
+	`
+	);
 });
 
 test('Rewrites types for a JavaScript module with `function`', () => {
@@ -37,14 +40,17 @@ test('Rewrites types for a JavaScript module with `function`', () => {
 	const rewritten = tweak_types(ts, source, new Set(['GET']));
 
 	assert.equal(rewritten?.exports, ['GET']);
-	assert.equal(rewritten?.code, `
+	assert.equal(
+		rewritten?.code,
+		`
 		/** @param {Parameters<import('./$types').Get>[0]} event */
 		export function GET({ params }) {
 			return {
 				a: 1
 			};
 		};
-	`);
+	`
+	);
 });
 
 test('Rewrites types for a JavaScript module with `const`', () => {
@@ -60,14 +66,17 @@ test('Rewrites types for a JavaScript module with `const`', () => {
 	const rewritten = tweak_types(ts, source, new Set(['GET']));
 
 	assert.equal(rewritten?.exports, ['GET']);
-	assert.equal(rewritten?.code, `
+	assert.equal(
+		rewritten?.code,
+		`
 		/** @param {Parameters<import('./$types').Get>[0]} event */
 		export const GET = ({ params }) => {
 			return {
 				a: 1
 			};
 		};
-	`);
+	`
+	);
 });
 
 test.run();

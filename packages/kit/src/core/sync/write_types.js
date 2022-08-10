@@ -206,11 +206,15 @@ export function tweak_types(ts, content, names) {
 					names.has(node.declarationList.declarations[0].name.text) &&
 					node.declarationList.declarations[0].initializer
 				) {
-					replace_jsdoc_type_tags(node, (node.declarationList.declarations[0].initializer));
+					replace_jsdoc_type_tags(node, node.declarationList.declarations[0].initializer);
 				}
 
 				for (const declaration of node.declarationList.declarations) {
-					if (ts.isIdentifier(declaration.name) && names.has(declaration.name.text) && declaration.initializer) {
+					if (
+						ts.isIdentifier(declaration.name) &&
+						names.has(declaration.name.text) &&
+						declaration.initializer
+					) {
 						// edge case — remove JSDoc comment above individual export
 						replace_jsdoc_type_tags(declaration, declaration.initializer);
 
