@@ -22,7 +22,6 @@
 		"set-cookie-parser": "^2.4.8",
 		"sirv": "^2.0.2",
 		"tiny-glob": "^0.2.9",
-		"typescript": "^4.7.4",
 		"undici": "^5.8.1"
 	},
 	"devDependencies": {
@@ -39,6 +38,7 @@
 		"svelte": "^3.48.0",
 		"svelte-preprocess": "^4.10.6",
 		"svelte2tsx": "~0.5.10",
+		"typescript": "^4.7.4",
 		"uvu": "^0.5.3",
 		"vite": "^3.0.0"
 	},
@@ -50,8 +50,11 @@
 		"svelte-kit": "svelte-kit.js"
 	},
 	"files": [
-		"assets",
-		"dist",
+		"src",
+		"!src/**/*.spec.js",
+		"!src/packaging/test",
+		"!src/core/**/fixtures",
+		"!src/core/sync/create_manifest_data/test",
 		"types",
 		"svelte-kit.js"
 	],

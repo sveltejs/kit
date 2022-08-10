@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import ts from 'typescript'; // TODO only do this transformation if there's a jsconfig/tsconfig and typescript is installed in the app?
 import MagicString from 'magic-string';
 import { rimraf } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
@@ -15,8 +14,16 @@ const server_names = new Set(methods);
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  */
-export function write_types(config, manifest_data) {
+export async function write_types(config, manifest_data) {
 	rimraf(`${config.kit.outDir}/types`);
+
+	/** @type {import('typescript') | undefined} */
+	let ts = undefined;
+	try {
+		ts = await import('typescript');
+	} catch (e) {
+		// No TypeScript installed - skip proxy generation
+	}
 
 	const routes_dir = path.relative('.', config.kit.files.routes);
 
@@ -48,7 +55,7 @@ export function write_types(config, manifest_data) {
 
 			if (route.page.module) {
 				const content = fs.readFileSync(route.page.module, 'utf8');
-				const proxy = tweak_types(content, module_names);
+				const proxy = ts && tweak_types(ts, content, module_names);
 
 				if (proxy) {
 					if (proxy.exports.includes('load')) {
@@ -66,7 +73,7 @@ export function write_types(config, manifest_data) {
 
 			if (route.page.server) {
 				const content = fs.readFileSync(route.page.server, 'utf8');
-				const proxy = tweak_types(content, server_names);
+				const proxy = ts && tweak_types(ts, content, server_names);
 
 				if (proxy) {
 					if (proxy.exports.includes('GET')) {
@@ -105,10 +112,11 @@ export function write_types(config, manifest_data) {
 }
 
 /**
+ * @param {import('typescript')} ts
  * @param {string} content
  * @param {Set<string>} names
  */
-function tweak_types(content, names) {
+function tweak_types(ts, content, names) {
 	try {
 		const ast = ts.createSourceFile(
 			'filename.ts',

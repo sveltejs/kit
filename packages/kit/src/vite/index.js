@@ -212,7 +212,7 @@ function kit() {
 			]);
 
 			if (is_build) {
-				manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
+				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 
 				const new_config = vite_client_build_config();
 

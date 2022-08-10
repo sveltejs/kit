@@ -52,8 +52,8 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 		return { module, module_node, url };
 	}
 
-	function update_manifest() {
-		const { manifest_data } = sync.update(svelte_config);
+	async function update_manifest() {
+		const { manifest_data } = await sync.update(svelte_config);
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
@@ -209,7 +209,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 		return error.stack ? vite.ssrRewriteStacktrace(error.stack) : error.stack;
 	}
 
-	update_manifest();
+	await update_manifest();
 
 	for (const event of ['add', 'unlink']) {
 		vite.watcher.on(event, (file) => {
