@@ -124,14 +124,7 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 			alias: get_aliases(config.kit)
 		},
 		ssr: {
-			// when developing against the Kit src code, we want to ensure that
-			// our dependencies are bundled so that apps don't need to install
-			// them as peerDependencies
-			// TODO is this still necessary?
-			noExternal: Object.keys(
-				JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8'))
-					.devDependencies
-			)
+			noExternal: ['@sveltejs/kit']
 		}
 	};
 };
