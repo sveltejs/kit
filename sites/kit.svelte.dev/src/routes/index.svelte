@@ -74,10 +74,7 @@
 			</p>
 
 			<p>
-				Read the <a href="https://svelte.dev/blog/whats-the-deal-with-sveltekit" class="cta"
-					>introductory blog</a
-				>
-				post to learn more.
+				<a href="https://node.new/sveltekit">Try on StackBlitz</a> or create a project locally.
 			</p>
 		</div>
 
