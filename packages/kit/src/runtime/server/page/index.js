@@ -1,7 +1,7 @@
 import { negotiate } from '../../../utils/http.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
-import { method_not_allowed, clone_error, allowed_methods } from '../utils.js';
+import { method_not_allowed, error_to_pojo, allowed_methods } from '../utils.js';
 import { create_fetch } from './fetch.js';
 import { HttpError, Redirect } from '../../../index/private.js';
 import { error } from '../../../index/index.js';
@@ -385,11 +385,10 @@ export async function handle_json_request(event, options, mod) {
 			return redirect_response(error.status, error.location);
 		}
 
-		if (error instanceof HttpError) {
-			return json_response({ message: error.message }, error.status);
-		}
-
-		return json_response(clone_error(error, options.get_stack), 500);
+		return json_response(
+			error_to_pojo(error, options.get_stack),
+			error instanceof HttpError ? error.status : 500
+		);
 	}
 }
 

@@ -430,9 +430,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 			}
 		}
 
-		const page_changed = !current.url || url.href !== current.url.href || current.error !== error;
+		const page_changed =
+			!current.url || url.href !== current.url.href || current.error !== error || data_changed;
 
-		if (page_changed || data_changed) {
+		if (page_changed) {
 			result.props.page = { error, params, routeId, status, url, data };
 
 			// TODO remove this for 1.0
@@ -517,17 +518,16 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 					server_data = res.status === 204 ? {} : await res.json();
 				} else {
-					// TODO does this sufficiently differentiate if this was a `throw error()` or an unexpected error?
 					let json;
-					let error_msg;
 					try {
 						json = await res.json();
-						error_msg = json.message;
 					} catch (e) {
 						throw error(500, 'Failed to load data');
 					}
-					if (error_msg) {
-						throw error(res.status, error_msg);
+					if (
+						/** @type {import('../server/page/types').SerializedHttpError} */ (json).__is_http_error
+					) {
+						throw error(res.status, json.message);
 					} else {
 						throw json;
 					}
@@ -1249,7 +1249,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 					params,
 					branch: await Promise.all(branch),
 					status,
-					error,
+					error: /** @type {import('../server/page/types').SerializedHttpError} */ (error)
+						?.__is_http_error
+						? new HttpError(
+								/** @type {import('../server/page/types').SerializedHttpError} */ (error).status,
+								error.message
+						  )
+						: error,
 					routeId
 				});
 			} catch (e) {

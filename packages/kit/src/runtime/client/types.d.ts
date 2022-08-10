@@ -8,6 +8,7 @@ import {
 } from '$app/navigation';
 import { CSRPageNode, CSRRoute } from 'types';
 import { HttpError } from '../../index/private.js';
+import { SerializedHttpError } from '../server/page/types.js';
 
 export interface Client {
 	// public API, exposed via $app/navigation
@@ -22,7 +23,7 @@ export interface Client {
 	// private API
 	_hydrate: (opts: {
 		status: number;
-		error: Error;
+		error: Error | SerializedHttpError;
 		node_ids: number[];
 		params: Record<string, string>;
 		routeId: string | null;

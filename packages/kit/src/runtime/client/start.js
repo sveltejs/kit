@@ -17,7 +17,7 @@ export { set_public_env } from '../env-public.js';
  *   trailing_slash: import('types').TrailingSlash;
  *   hydrate: {
  *     status: number;
- *     error: Error;
+ *     error: Error | (import('../server/page/types').SerializedHttpError);
  *     node_ids: number[];
  *     params: Record<string, string>;
  *     routeId: string | null;

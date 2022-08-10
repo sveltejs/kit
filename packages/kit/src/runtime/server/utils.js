@@ -19,26 +19,32 @@ export function is_pojo(body) {
 }
 
 /**
- * Serialize an error into a JSON string, by copying its `name`, `message`
- * and (in dev) `stack`, plus any custom properties, plus recursively
- * serialized `cause` properties. This is necessary because
- * `JSON.stringify(error) === '{}'`
+ * Serialize an error into a JSON string through `error_to_pojo`.
+ * This is necessary because `JSON.stringify(error) === '{}'`
+ *
  * @param {Error | HttpError} error
  * @param {(error: Error) => string | undefined} get_stack
  */
 export function serialize_error(error, get_stack) {
-	return JSON.stringify(clone_error(error, get_stack));
+	return JSON.stringify(error_to_pojo(error, get_stack));
 }
 
 /**
- * @param {HttpError | Error} error
+ * Transform an error into a POJO, by copying its `name`, `message`
+ * and (in dev) `stack`, plus any custom properties, plus recursively
+ * serialized `cause` properties.
+ * Our own HttpError gets a meta property attached so we can identify it on the client.
+ *
+ * @param {HttpError | Error } error
  * @param {(error: Error) => string | undefined} get_stack
  */
-export function clone_error(error, get_stack) {
+export function error_to_pojo(error, get_stack) {
 	if (error instanceof HttpError) {
-		return {
-			message: error.message
-		};
+		return /** @type {import('./page/types').SerializedHttpError} */ ({
+			message: error.message,
+			status: error.status,
+			__is_http_error: true
+		});
 	}
 
 	const {
@@ -53,7 +59,7 @@ export function clone_error(error, get_stack) {
 	/** @type {Record<string, any>} */
 	const object = { name, message, stack: get_stack(error) };
 
-	if (cause) object.cause = clone_error(cause, get_stack);
+	if (cause) object.cause = error_to_pojo(cause, get_stack);
 
 	for (const key in custom) {
 		// @ts-expect-error

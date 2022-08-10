@@ -1,4 +1,5 @@
 import { JSONValue, ResponseHeaders, SSRNode, CspDirectives } from 'types';
+import { HttpError } from '../../../index/private';
 
 export interface Fetched {
 	url: string;
@@ -34,4 +35,8 @@ export interface CspConfig {
 export interface CspOpts {
 	dev: boolean;
 	prerender: boolean;
+}
+
+export interface SerializedHttpError extends Pick<HttpError, 'message' | 'status'> {
+	__is_http_error: true;
 }
