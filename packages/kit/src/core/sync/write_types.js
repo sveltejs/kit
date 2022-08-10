@@ -118,6 +118,8 @@ export async function write_types(config, manifest_data) {
  */
 function tweak_types(ts, content, names) {
 	try {
+		let modified = false;
+
 		const ast = ts.createSourceFile(
 			'filename.ts',
 			content,
@@ -162,6 +164,7 @@ function tweak_types(ts, content, names) {
 
 		/** @param {import('typescript').Node} node */
 		function replace_jsdoc_type_tags(node) {
+			let modified = false;
 			// @ts-ignore
 			if (node.jsDoc) {
 				// @ts-ignore
@@ -181,16 +184,18 @@ function tweak_types(ts, content, names) {
 							} else {
 								code.overwrite(tag.pos, tag.end, '');
 							}
+							modified = true;
 						}
 					}
 				}
 			}
+			return modified;
 		}
 
 		ast.forEachChild((node) => {
 			if (ts.isFunctionDeclaration(node) && node.name?.text && names.has(node.name?.text)) {
 				// remove JSDoc comment above `export function load ...`
-				replace_jsdoc_type_tags(node);
+				modified ||= replace_jsdoc_type_tags(node);
 			}
 
 			if (ts.isVariableStatement(node)) {
@@ -199,13 +204,13 @@ function tweak_types(ts, content, names) {
 					ts.isIdentifier(node.declarationList.declarations[0].name) &&
 					names.has(node.declarationList.declarations[0].name.text)
 				) {
-					replace_jsdoc_type_tags(node);
+					modified ||= replace_jsdoc_type_tags(node);
 				}
 
 				for (const declaration of node.declarationList.declarations) {
 					if (ts.isIdentifier(declaration.name) && names.has(declaration.name.text)) {
 						// edge case — remove JSDoc comment above individual export
-						replace_jsdoc_type_tags(declaration);
+						modified ||= replace_jsdoc_type_tags(declaration);
 
 						// remove type from `export const load: Load ...`
 						if (declaration.type) {
@@ -228,16 +233,21 @@ function tweak_types(ts, content, names) {
 									);
 								}
 							}
+							modified = true;
 						}
 					}
 				}
 			}
 		});
 
-		return {
-			code: code.toString(),
-			exports: Array.from(exports.keys())
-		};
+		if (modified) {
+			return {
+				code: code.toString(),
+				exports: Array.from(exports.keys())
+			};
+		} else {
+			return null;
+		}
 	} catch {
 		return null;
 	}
