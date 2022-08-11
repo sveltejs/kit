@@ -294,6 +294,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					// Windows/Linux separation hack
 					runtime_directory.startsWith('/') ? '' : '/'
 				}${runtime_directory}`;
+				throw new Error('runtime_base ' + runtime_base);
 
 				const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
 				const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);
