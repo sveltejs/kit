@@ -5,7 +5,9 @@
 <div class="flex-container">
 
 	<div class="flex-child text">
-		<h3>Fast Initial Load<br/>Faster Navigations</h3>
+		<h3>Starts fast, <span style="font-weight:bold">Stays fast</span></h3>
+		Server-side rendering ensures your visitors aren't left staring at loading spinners.<br/>
+		Client-side navigation makes your app feel like it's 2022.
 	</div>
   
 	<div class="flex-child">
@@ -17,6 +19,7 @@
 <style>
 	.flex-container {
 		display: flex;
+		color: white;
 	}
 
 	.flex-child {
