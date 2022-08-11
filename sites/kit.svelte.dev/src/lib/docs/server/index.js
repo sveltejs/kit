@@ -1,4 +1,4 @@
-import fs from 'fs';
+import * as fs from 'fs';
 import { renderCodeToHTML, runTwoSlash, createShikiHighlighter } from 'shiki-twoslash';
 import PrismJS from 'prismjs';
 import 'prismjs/components/prism-bash.js';
