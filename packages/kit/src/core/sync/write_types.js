@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import MagicString from 'magic-string';
-import { rimraf } from '../../utils/filesystem.js';
+import { posixify, rimraf } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
 import { write } from './utils.js';
 
@@ -35,7 +35,7 @@ export async function write_types(config, manifest_data) {
 
 	rimraf(`${config.kit.outDir}/types`);
 
-	const routes_dir = path.relative('.', config.kit.files.routes);
+	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
 
 	/**
 	 * A map of all directories : route files. We don't just use
@@ -47,13 +47,15 @@ export async function write_types(config, manifest_data) {
 
 	/** @param {string} dir */
 	function get_group(dir) {
-		if (!directories.has(dir)) {
-			directories.set(dir, {
+		let group = directories.get(dir);
+		if (!group) {
+			group = {
 				named_layouts: new Map()
-			});
+			};
+			directories.set(dir, group);
 		}
 
-		return /** @type {NodeGroup} */ (directories.get(dir));
+		return group;
 	}
 
 	// first, populate `directories` with +page/+layout files...
@@ -68,12 +70,6 @@ export async function write_types(config, manifest_data) {
 
 		// error pages don't need types
 		if (file?.startsWith('+error')) continue;
-
-		if (!directories.has(dir)) {
-			directories.set(dir, {
-				named_layouts: new Map()
-			});
-		}
 
 		const group = get_group(dir);
 
@@ -238,21 +234,8 @@ function process_node(ts, node, outdir, params, type_imports) {
 			type_imports.add(`${method} as Generic${method}`);
 		}
 
-		const content = fs.readFileSync(node.server, 'utf8');
-		const proxy = ts && tweak_types(ts, content, server_names);
-
-		if (proxy) {
-			if (proxy.exports.includes('GET')) {
-				// TODO handle validation errors from POST/PUT/PATCH
-				const basename = path.basename(node.server);
-				write(`${outdir}/proxy${basename}`, proxy.code);
-				server_data = `Awaited<ReturnType<typeof import('./proxy${basename}').GET>>`; // TODO this should be wrapped in AwaitedProperties, but that obscures the underlying type
-			} else {
-				server_data = 'null';
-			}
-		} else {
-			server_data = 'unknown';
-		}
+		// TODO handle validation errors from POST/PUT/PATCH
+		server_data = get_data_type(node.server, 'GET', 'null', server_names);
 
 		// TODO replace when GET becomes load and POST etc become actions
 		exported = methods.map((name) => `export type ${name} = Generic${name}<${params}>;`);
@@ -263,28 +246,43 @@ function process_node(ts, node, outdir, params, type_imports) {
 	if (node.module) {
 		type_imports.add('Load as GenericLoad');
 		type_imports.add('AwaitedProperties');
-
-		const content = fs.readFileSync(node.module, 'utf8');
-		const proxy = ts && tweak_types(ts, content, module_names);
-
-		if (proxy) {
-			if (proxy.exports.includes('load')) {
-				const basename = path.basename(node.module);
-				write(`${outdir}/proxy${basename}`, proxy.code);
-				data = `Awaited<ReturnType<typeof import('./proxy${basename}').load>>`; // TODO this should be wrapped in AwaitedProperties, but that obscures the underlying type
-			} else {
-				data = server_data;
-			}
-		} else {
-			data = 'unknown';
-		}
-
+		data = get_data_type(node.module, 'load', server_data, module_names);
 		load = `GenericLoad<${params}, ${server_data}>`;
 	} else {
 		data = server_data;
 	}
 
 	return { data, load, exported };
+
+	/**
+	 * @param {string} file_path
+	 * @param {string} method
+	 * @param {string} fallback
+	 * @param {Set<string>} names
+	 */
+	function get_data_type(file_path, method, fallback, names) {
+		const content = fs.readFileSync(file_path, 'utf8');
+		const proxy = tweak_types(ts, content, names);
+
+		if (proxy) {
+			if (proxy.exports.includes(method)) {
+				if (proxy.modified) {
+					const basename = path.basename(file_path);
+					write(`${outdir}/proxy${basename}`, proxy.code);
+					return `AwaitedProperties<Awaited<ReturnType<typeof import('./proxy${basename}').${method}>>>`;
+				} else {
+					// If the file wasn't tweaked, we can use the return type of the original file.
+					// The advantage is that type updates are reflected without saving.
+					const path_to_original = outdir.split(/[^\/]+/g).join('..') + '/' + file_path;
+					return `AwaitedProperties<Awaited<ReturnType<typeof import("${path_to_original}").${method}>>>;`;
+				}
+			} else {
+				return fallback;
+			}
+		} else {
+			return 'unknown';
+		}
+	}
 }
 
 /**
@@ -427,14 +425,11 @@ export function tweak_types(ts, content, names) {
 			}
 		});
 
-		if (modified || exports.size > 0) {
-			return {
-				code: code.toString(),
-				exports: Array.from(exports.keys())
-			};
-		} else {
-			return null;
-		}
+		return {
+			modified,
+			code: code.toString(),
+			exports: Array.from(exports.keys())
+		};
 	} catch {
 		return null;
 	}
