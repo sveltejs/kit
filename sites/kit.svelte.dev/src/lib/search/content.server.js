@@ -1,7 +1,7 @@
 import fs from 'fs';
-import { extract_frontmatter, transform } from '$lib/docs/server/markdown';
-import { render_modules } from '$lib/docs/server/modules';
-import { slugify } from '../../lib/docs/server';
+import { extract_frontmatter, transform } from '../docs/server/markdown';
+import { render_modules } from '../docs/server/modules';
+import { slugify } from '../docs/server';
 
 const categories = [
 	{
