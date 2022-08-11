@@ -123,13 +123,16 @@ export async function write_types(config, manifest_data) {
 		}
 
 		if (group.page) {
-			const { data, load, exported } = process_node(
+			const { data, load, errors, exported } = process_node(
 				ts,
 				group.page,
 				outdir,
 				'RouteParams',
 				type_imports
 			);
+
+			exports.push(`export type Errors = ${errors};`);
+
 			exports.push(`export type PageData = ${data};`);
 			if (load) {
 				exports.push(`export type PageLoad = ${load};`);
@@ -223,6 +226,7 @@ export async function write_types(config, manifest_data) {
 function process_node(ts, node, outdir, params, type_imports) {
 	let data;
 	let load;
+	let errors;
 	let exported;
 
 	let server_data;
@@ -234,8 +238,33 @@ function process_node(ts, node, outdir, params, type_imports) {
 			type_imports.add(`${method} as Generic${method}`);
 		}
 
-		// TODO handle validation errors from POST/PUT/PATCH
-		server_data = get_data_type(node.server, 'GET', 'null', server_names);
+		const content = fs.readFileSync(node.server, 'utf8');
+		const proxy = tweak_types(ts, content, server_names);
+		const basename = path.basename(node.server);
+		if (proxy?.modified) {
+			write(`${outdir}/proxy${basename}`, proxy.code);
+		}
+		server_data = get_data_type(node.server, 'GET', 'null', proxy);
+		if (proxy) {
+			const types = [];
+			for (const method of ['POST', 'PUT', 'PATCH']) {
+				if (proxy.exports.includes(method)) {
+					type_imports.add('AwaitedErrors');
+					if (proxy.modified) {
+						types.push(`AwaitedErrors<typeof import('./proxy${basename}').${method}>`);
+					} else {
+						// If the file wasn't tweaked, we can use the return type of the original file.
+						// The advantage is that type updates are reflected without saving.
+						types.push(
+							`AwaitedErrors<typeof import("${path_to_original(outdir, node.server)}").${method}>`
+						);
+					}
+				}
+			}
+			errors = types.length ? types.join(' | ') : 'null';
+		} else {
+			errors = 'unknown';
+		}
 
 		// TODO replace when GET becomes load and POST etc become actions
 		exported = methods.map((name) => `export type ${name} = Generic${name}<${params}>;`);
@@ -246,35 +275,40 @@ function process_node(ts, node, outdir, params, type_imports) {
 	if (node.module) {
 		type_imports.add('Load as GenericLoad');
 		type_imports.add('AwaitedProperties');
-		data = get_data_type(node.module, 'load', server_data, module_names);
+
+		const content = fs.readFileSync(node.module, 'utf8');
+		const proxy = tweak_types(ts, content, module_names);
+		if (proxy?.modified) {
+			write(`${outdir}/proxy${path.basename(node.module)}`, proxy.code);
+		}
+		data = get_data_type(node.module, 'load', server_data, proxy);
+
 		load = `GenericLoad<${params}, ${server_data}>`;
 	} else {
 		data = server_data;
 	}
 
-	return { data, load, exported };
+	return { data, load, errors, exported };
 
 	/**
 	 * @param {string} file_path
 	 * @param {string} method
 	 * @param {string} fallback
-	 * @param {Set<string>} names
+	 * @param {Proxy} proxy
 	 */
-	function get_data_type(file_path, method, fallback, names) {
-		const content = fs.readFileSync(file_path, 'utf8');
-		const proxy = tweak_types(ts, content, names);
-
+	function get_data_type(file_path, method, fallback, proxy) {
 		if (proxy) {
 			if (proxy.exports.includes(method)) {
 				if (proxy.modified) {
 					const basename = path.basename(file_path);
-					write(`${outdir}/proxy${basename}`, proxy.code);
 					return `AwaitedProperties<Awaited<ReturnType<typeof import('./proxy${basename}').${method}>>>`;
 				} else {
 					// If the file wasn't tweaked, we can use the return type of the original file.
 					// The advantage is that type updates are reflected without saving.
-					const path_to_original = outdir.split(/[^\/]+/g).join('..') + '/' + file_path;
-					return `AwaitedProperties<Awaited<ReturnType<typeof import("${path_to_original}").${method}>>>;`;
+					return `AwaitedProperties<Awaited<ReturnType<typeof import("${path_to_original(
+						outdir,
+						file_path
+					)}").${method}>>>`;
 				}
 			} else {
 				return fallback;
@@ -286,9 +320,26 @@ function process_node(ts, node, outdir, params, type_imports) {
 }
 
 /**
+ * @param {string} outdir
+ * @param {string} file_path
+ */
+function path_to_original(outdir, file_path) {
+	return outdir.split(/[^\/]+/g).join('..') + '/' + file_path;
+}
+
+/**
+ *  @typedef {{
+ *   modified: boolean;
+ *   code: string;
+ *   exports: any[];
+ *  } | null} Proxy
+ */
+
+/**
  * @param {import('typescript')} ts
  * @param {string} content
  * @param {Set<string>} names
+ * @returns {Proxy}
  */
 export function tweak_types(ts, content, names) {
 	try {
