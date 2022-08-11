@@ -290,8 +290,10 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					);
 				}
 
+				// For some reason using runtime_prefix here is buggy, since Vite will later load the modules
+				// again with a slightly different url (with the drive letter) on windows
 				const runtime_base = `/@fs${
-					// Windows/Linux separation hack
+					// Windows/Linux separation - Windows starts with a drive letter, we need a / in front there
 					runtime_directory.startsWith('/') ? '' : '/'
 				}${runtime_directory}`;
 
