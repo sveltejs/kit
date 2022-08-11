@@ -1,9 +1,10 @@
 <script>
 	import Contents from '$lib/docs/Contents.svelte';
 
-	export let sections;
+	/** @type {import('./$types').LayoutData} */
+	export let data;
 
-	$: contents = sections.map((section) => ({
+	$: contents = data.sections.map((section) => ({
 		path: `/docs/${section.slug}`,
 		title: section.title,
 		sections: section.sections.map((subsection) => ({
