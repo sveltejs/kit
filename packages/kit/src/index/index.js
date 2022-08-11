@@ -2,7 +2,7 @@ import { HttpError, Redirect } from './private.js';
 
 /**
  * @param {number} status
- * @param {string} message
+ * @param {string | undefined} message
  */
 export function error(status, message) {
 	return new HttpError(status, message);

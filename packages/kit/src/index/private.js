@@ -7,11 +7,11 @@ export class HttpError {
 
 	/**
 	 * @param {number} status
-	 * @param {string} message
+	 * @param {string | undefined} message
 	 */
 	constructor(status, message) {
 		this.status = status;
-		this.message = message || `Error: ${status}`;
+		this.message = message ?? `Error: ${status}`;
 	}
 
 	toString() {

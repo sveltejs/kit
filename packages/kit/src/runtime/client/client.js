@@ -665,7 +665,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const nodes = [...layouts, page];
 
 		// To avoid waterfalls when someone awaits a parent, compute as much as possible here already
-		/** @type{boolean[]} */
+		/** @type {boolean[]} */
 		const nodes_changed_since_last_render = [];
 		for (let i = 0; i < nodes.length; i++) {
 			if (!nodes[i]) {
@@ -683,16 +683,45 @@ export function create_client({ target, session, base, trailing_slash }) {
 			}
 		}
 
+		/** @type {import('./types').ServerDataPayload} */
+		let server_data_payload;
+
+		try {
+			// TODO only fetch server data if the page uses it
+			const res = await native_fetch(
+				`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`
+			);
+
+			server_data_payload = await res.json();
+
+			if (!res.ok) {
+				throw server_data_payload;
+			}
+		} catch (e) {
+			throw new Error('TODO render fallback error page');
+		}
+
 		const branch_promises = nodes.map(async (loader, i) => {
 			return Promise.resolve().then(async () => {
 				if (!loader) return;
 				const node = await loader();
+
 				/** @type {import('./types').BranchNode | undefined} */
 				const previous = current.branch[i];
 				const changed_since_last_render =
 					nodes_changed_since_last_render[i] || !previous || node !== previous.node;
 
 				if (changed_since_last_render) {
+					const { error: e, status, message, data } = server_data_payload.nodes[i];
+
+					if (status) {
+						throw error(status, message);
+					}
+
+					if (e) {
+						throw e;
+					}
+
 					return await load_node({
 						node,
 						url,
@@ -704,7 +733,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 								Object.assign(data, (await branch_promises[j])?.data);
 							}
 							return data;
-						}
+						},
+						server_data: data
 					});
 				} else {
 					return previous;
@@ -819,16 +849,22 @@ export function create_client({ target, session, base, trailing_slash }) {
 			url,
 			params,
 			routeId,
-			parent: () => Promise.resolve({})
+			parent: () => Promise.resolve({}),
+			server_data: null // TODO!!!!!
 		});
 
-		const root_error = await load_node({
+		const root_error = {
 			node: await default_error,
-			url,
-			params,
-			routeId,
-			parent: () => Promise.resolve({})
-		});
+			data: null,
+			// TODO make this unnecessary
+			uses: {
+				params: new Set(),
+				url: false,
+				session: false,
+				dependencies: new Set(),
+				parent: false
+			}
+		};
 
 		return await get_navigation_result_from_branch({
 			url,
@@ -1203,47 +1239,34 @@ export function create_client({ target, session, base, trailing_slash }) {
 		_hydrate: async ({ status, error, node_ids, params, routeId }) => {
 			const url = new URL(location.href);
 
-			/** @type {Array<Promise<import('./types').BranchNode>>} */
-			const branch = [];
-
 			/** @type {import('./types').NavigationFinished | undefined} */
 			let result;
 
 			try {
-				for (let i = 0; i < node_ids.length; i += 1) {
-					const node_id = node_ids[i];
+				const script = document.querySelector(`script[sveltekit\\:data-type="server_data"]`);
+				const server_data = script?.textContent ? JSON.parse(script.textContent) : [];
 
-					const branch_node = Promise.resolve().then(async () => {
-						let server_data = null;
-						const serialized = document.querySelector(
-							`script[sveltekit\\:data-type="server_data"][sveltekit\\:data-node_idx="${i}"`
-						);
-						if (serialized) {
-							server_data = JSON.parse(/** @type {string} */ (serialized.textContent));
-						}
-						return load_node({
-							node: await nodes[node_id](),
-							url,
-							params,
-							routeId,
-							parent: async () => {
-								const data = {};
-								for (let j = 0; j < i; j += 1) {
-									Object.assign(data, (await branch[j]).data);
-								}
-								return data;
-							},
-							server_data
-						});
+				const branch_promises = node_ids.map(async (n, i) => {
+					return load_node({
+						node: await nodes[n](),
+						url,
+						params,
+						routeId,
+						parent: async () => {
+							const data = {};
+							for (let j = 0; j < i; j += 1) {
+								Object.assign(data, (await branch_promises[j]).data);
+							}
+							return data;
+						},
+						server_data: server_data[i] ?? null
 					});
-
-					branch.push(branch_node);
-				}
+				});
 
 				result = await get_navigation_result_from_branch({
 					url,
 					params,
-					branch: await Promise.all(branch),
+					branch: await Promise.all(branch_promises),
 					status,
 					error: /** @type {import('../server/page/types').SerializedHttpError} */ (error)
 						?.__is_http_error

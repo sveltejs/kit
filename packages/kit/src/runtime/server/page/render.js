@@ -245,28 +245,28 @@ export async function render_response({
 	}
 
 	if (resolve_opts.ssr && page_config.hydrate) {
-		body += fetched
-			.map(({ url, body, response }) =>
+		/** @type {string[]} */
+		const serialized_data = [];
+
+		for (const { url, body, response } of fetched) {
+			serialized_data.push(
 				render_json_payload_script(
 					{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
 					response
 				)
-			)
-			.join('\n\t');
-		body += branch
-			.map(({ server_data }, idx) => {
-				// != to keep other falsy values
-				if (server_data != null) {
-					// Inline server data response with node index for correct retrieval on the client.
-					// Right now this only applies to the leaf/page node, once layout endpoints are implemented,
-					// they get written out here, too.
-					return render_json_payload_script(
-						{ type: 'server_data', node_idx: String(idx) },
-						server_data
-					);
-				}
-			})
-			.filter(Boolean);
+			);
+		}
+
+		if (branch.some((node) => node.server_data)) {
+			serialized_data.push(
+				render_json_payload_script(
+					{ type: 'server_data' },
+					branch.map(({ server_data }) => server_data)
+				)
+			);
+		}
+
+		body += `\n\t${serialized_data.join('\n\t')}`;
 	}
 
 	if (options.service_worker) {

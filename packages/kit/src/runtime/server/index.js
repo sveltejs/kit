@@ -1,5 +1,5 @@
 import { render_endpoint } from './endpoint.js';
-import { handle_json_request, json_response, render_page } from './page/index.js';
+import { json_response, render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error, normalize_error } from '../../utils/error.js';
@@ -241,39 +241,47 @@ export async function respond(request, options, state) {
 					let response;
 					if (is_data_request && route.type === 'page') {
 						try {
-							/** @type {any} */
+							/** @type {Redirect | HttpError | Error} */
 							let error;
 
 							// TODO only get the data we need for the navigation
 							const promises = [...route.layouts, route.leaf].map(async (n, i) => {
-								const node = n ? await options.manifest._.nodes[n]() : undefined;
-
 								try {
-									return await load_server_data({
-										event,
-										node,
-										parent: async () => {
-											/** @type {import('types').JSONObject} */
-											const data = {};
-											for (let j = 0; j < i; j += 1) {
-												Object.assign(data, await promises[j]);
+									if (error) throw error;
+
+									const node = n ? await options.manifest._.nodes[n]() : undefined;
+									return {
+										// TODO return `uses`, so we can reuse server data effectively
+										data: await load_server_data({
+											event,
+											node,
+											parent: async () => {
+												/** @type {import('types').JSONObject} */
+												const data = {};
+												for (let j = 0; j < i; j += 1) {
+													Object.assign(data, await promises[j]);
+												}
+												return data;
 											}
-											return data;
-										}
-									});
+										})
+									};
 								} catch (e) {
-									error = e;
-									throw error;
+									error = normalize_error(e);
+
+									if (error instanceof Redirect) {
+										throw error;
+									}
+
+									if (error instanceof HttpError) {
+										return error; // { status, message }
+									}
+
+									return { error };
 								}
 							});
 
 							return json_response({
-								nodes: (await Promise.all(promises)).map((data) => {
-									// TODO return `uses`, so we can reuse server data effectively
-									return {
-										data
-									};
-								})
+								nodes: await Promise.all(promises)
 							});
 						} catch (e) {
 							const error = normalize_error(e);
@@ -283,15 +291,6 @@ export async function respond(request, options, state) {
 									redirect: {
 										status: error.status,
 										location: error.location
-									}
-								});
-							}
-
-							if (error instanceof HttpError) {
-								return json_response({
-									error: {
-										status: error.status,
-										message: error.message
 									}
 								});
 							}

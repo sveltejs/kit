@@ -6,7 +6,7 @@ import {
 	prefetch,
 	prefetchRoutes
 } from '$app/navigation';
-import { CSRPageNode, CSRRoute } from 'types';
+import { CSRPageNode, CSRRoute, JSONObject } from 'types';
 import { HttpError } from '../../index/private.js';
 import { SerializedHttpError } from '../server/page/types.js';
 
@@ -80,3 +80,18 @@ export type NavigationState = {
 	session_id: number;
 	url: URL;
 };
+
+export interface ServerDataPayload {
+	redirect?: string;
+	nodes: Array<{
+		data?: JSONObject | null; // TODO or `-1` to indicate 'reuse cached data'?
+		status?: number;
+		message?: string;
+		error?: {
+			name: string;
+			message: string;
+			stack: string;
+			[key: string]: any;
+		};
+	}>;
+}
