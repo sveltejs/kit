@@ -94,7 +94,7 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 		base: assets_base(config.kit),
 		build: {
 			cssCodeSplit: true,
-			manifest: true,
+			manifest: 'vite-manifest.json',
 			outDir,
 			polyfillModulePreload: false,
 			rollupOptions: {

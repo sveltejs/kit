@@ -154,7 +154,7 @@ function kit() {
 	function client_build_info(assets, chunks) {
 		/** @type {import('vite').Manifest} */
 		const vite_manifest = JSON.parse(
-			fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
+			fs.readFileSync(`${paths.client_out_dir}/${vite_config.build.manifest}`, 'utf-8')
 		);
 
 		const entry_id = posixify(
