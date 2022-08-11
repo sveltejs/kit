@@ -428,6 +428,10 @@ function kit() {
 					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
 				);
 			}
+
+			// avoid making the manifest available to users
+			fs.unlinkSync(`${paths.output_dir}/client/${vite_config.build.manifest}`);
+			fs.unlinkSync(`${paths.output_dir}/server/${vite_config.build.manifest}`);
 		},
 
 		/**
