@@ -5,6 +5,13 @@ import { rimraf } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
 import { write } from './utils.js';
 
+/**
+ * @typedef {{
+ *   page?: import('types').PageNode;
+ *   layouts: Map<string, import('types').PageNode>;
+ * }} PageNodeGroup
+ */
+
 const methods = ['Get', 'Post', 'Put', 'Patch', 'Delete'];
 
 const module_names = new Set(['load']);
@@ -28,14 +35,56 @@ export async function write_types(config, manifest_data) {
 
 	const routes_dir = path.relative('.', config.kit.files.routes);
 
-	manifest_data.routes.forEach((route) => {
-		const outdir = `${config.kit.outDir}/types/${routes_dir}/${route.id}`;
+	/**
+	 * A map of all directories : route files. We don't just use
+	 * manifest_data.routes, because that will exclude +layout
+	 * files that aren't accompanied by a +page
+	 * @type {Map<string, PageNodeGroup>}
+	 */
+	const directories = new Map();
+
+	for (const node of manifest_data.nodes) {
+		// skip default layout/error
+		if (!node?.component?.startsWith(routes_dir)) continue;
+
+		const parts = /** @type {string} */ (node.component ?? node.module ?? node.server).split('/');
+
+		const file = /** @type {string} */ (parts.pop());
+		const dir = parts.join('/');
+
+		// error pages don't need types
+		if (file?.startsWith('+error')) continue;
+
+		if (!directories.has(dir)) {
+			directories.set(dir, {
+				layouts: new Map()
+			});
+		}
+
+		const group = /** @type {PageNodeGroup} */ (directories.get(dir));
+
+		if (file?.startsWith('+page')) {
+			group.page = node;
+		} else {
+			const match = /^\+layout(?:-([^@.]+))?/.exec(file);
+
+			// this shouldn't happen, but belt and braces. also keeps TS happy,
+			// and we live to keep TS happy
+			if (!match) throw new Error(`Unexpected route file: ${file}`);
+
+			group.layouts.set(match[1] ?? 'default', node);
+		}
+	}
+
+	for (const [dir, group] of directories) {
+		const outdir = `${config.kit.outDir}/types/${dir}`;
 
 		const imports = [];
 		const declarations = [];
 		const exports = [];
 
-		const params = parse_route_id(route.id).names;
+		const id = dir.slice(routes_dir.length + 1);
+		const params = parse_route_id(id).names;
 
 		declarations.push(
 			`interface Params extends Record<string, string> ${
@@ -43,25 +92,20 @@ export async function write_types(config, manifest_data) {
 			}`
 		);
 
-		if (route.type === 'page') {
-			imports.push(
-				`import type {\n\t${['Load', ...methods]
-					.map((name) => `${name} as Generic${name}`)
-					.join(',\n\t')}\n} from '@sveltejs/kit';`
-			);
+		imports.push(
+			`import type {\n\t${['Load', ...methods]
+				.map((name) => `${name} as Generic${name}`)
+				.join(',\n\t')}\n} from '@sveltejs/kit';`
+		);
 
-			// @ts-ignore temporarily
-			for (const node of route.layouts) {
-				// TODO handle edge case where a layout doesn't have a sibling +page
-			}
-
-			if (route.page.module) {
-				const content = fs.readFileSync(route.page.module, 'utf8');
+		if (group.page) {
+			if (group.page.module) {
+				const content = fs.readFileSync(group.page.module, 'utf8');
 				const proxy = ts && tweak_types(ts, content, module_names);
 
 				if (proxy) {
 					if (proxy.exports.includes('load')) {
-						const basename = path.basename(route.page.module);
+						const basename = path.basename(group.page.module);
 						write(`${outdir}/proxy${basename}`, proxy.code);
 						imports.push(`import { load } from './proxy${basename}';`);
 						exports.push(`export type Data = Awaited<ReturnType<typeof load>>;`);
@@ -73,14 +117,14 @@ export async function write_types(config, manifest_data) {
 				}
 			}
 
-			if (route.page.server) {
-				const content = fs.readFileSync(route.page.server, 'utf8');
+			if (group.page.server) {
+				const content = fs.readFileSync(group.page.server, 'utf8');
 				const proxy = ts && tweak_types(ts, content, server_names);
 
 				if (proxy) {
 					if (proxy.exports.includes('GET')) {
 						// TODO handle validation errors from POST/PUT/PATCH
-						const basename = path.basename(route.page.server);
+						const basename = path.basename(group.page.server);
 						write(`${outdir}/proxy${basename}`, proxy.code);
 						imports.push(`import { GET } from './proxy${basename}';`);
 						declarations.push(`type ServerData = Awaited<ReturnType<typeof GET>>;`);
@@ -94,7 +138,7 @@ export async function write_types(config, manifest_data) {
 				declarations.push(`type ServerData = null;`);
 			}
 
-			if (route.page.server && !route.page.module) {
+			if (group.page.server && !group.page.module) {
 				exports.push(`export type Data = ServerData;`);
 			}
 
@@ -102,15 +146,29 @@ export async function write_types(config, manifest_data) {
 				`export type Load = GenericLoad<Params, ServerData>;`,
 				...methods.map((name) => `export type ${name} = Generic${name}<Params>;`)
 			);
-		} else {
-			imports.push(`import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';`);
-			exports.push(`export type RequestHandler = GenericRequestHandler<Params>;`);
 		}
 
 		const output = `${imports.join('\n')}\n\n${declarations.join('\n')}\n\n${exports.join('\n')}`;
 
 		write(`${outdir}/$types.d.ts`, output);
-	});
+	}
+
+	for (const route of manifest_data.routes) {
+		if (route.type === 'page') continue;
+
+		const params = parse_route_id(route.id).names;
+
+		const statements = [
+			`import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';`,
+			`interface Params extends Record<string, string> ${
+				params.length > 0 ? `{ ${params.map((param) => `${param}: string`).join('; ')} }` : '{}'
+			}`,
+			`export type RequestHandler = GenericRequestHandler<Params>;`
+		].join('\n\n');
+
+		const outdir = `${config.kit.outDir}/types/${routes_dir}/${route.id}`;
+		write(`${outdir}/$types.d.ts`, statements);
+	}
 }
 
 /**
