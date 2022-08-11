@@ -1,7 +1,7 @@
 <script>
 	import { dev } from '$app/env';
 
-	/** @type {import('./$types').Data} */
+	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 

@@ -1,7 +1,7 @@
 <script>
 	import SvelteLogo from '$lib/SvelteLogo.svelte';
 
-	/** @type {import('./$types').Data} */
+	/** @type {import('./$types').PageData} */
 	export let data;
 
 	let n = 0;

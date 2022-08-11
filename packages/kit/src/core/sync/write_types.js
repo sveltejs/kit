@@ -108,12 +108,12 @@ export async function write_types(config, manifest_data) {
 						const basename = path.basename(group.page.module);
 						write(`${outdir}/proxy${basename}`, proxy.code);
 						imports.push(`import { load } from './proxy${basename}';`);
-						exports.push(`export type Data = Awaited<ReturnType<typeof load>>;`);
+						exports.push(`export type PageData = Awaited<ReturnType<typeof load>>;`);
 					} else {
-						exports.push(`export type Data = ServerData;`);
+						exports.push(`export type PageData = ServerData;`);
 					}
 				} else {
-					exports.push(`export type Data = unknown;`);
+					exports.push(`export type PageData = unknown;`);
 				}
 			}
 
@@ -139,7 +139,7 @@ export async function write_types(config, manifest_data) {
 			}
 
 			if (group.page.server && !group.page.module) {
-				exports.push(`export type Data = ServerData;`);
+				exports.push(`export type PageData = ServerData;`);
 			}
 
 			exports.push(

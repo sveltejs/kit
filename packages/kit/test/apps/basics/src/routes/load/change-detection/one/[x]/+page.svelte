@@ -1,8 +1,8 @@
 <script>
 	import { invalidate } from '$app/navigation';
 
-	/** @type {import('./$types').Data} */
-	export let data
+	/** @type {import('./$types').PageData} */
+	export let data;
 </script>
 
 <h2>x: {data.x}: {data.loads}</h2>

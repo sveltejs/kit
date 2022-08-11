@@ -1,7 +1,7 @@
 <script>
 	import './index.css';
 
-	/** @type {import('./$types').Data} */
+	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 

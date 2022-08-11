@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 
-	/** @type {import('./$types').Data} */
+	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 

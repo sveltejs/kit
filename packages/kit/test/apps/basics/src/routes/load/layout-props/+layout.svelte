@@ -1,7 +1,7 @@
 <script>
 	import { session } from '$app/stores';
 
-	/** @type {import('./$types').Data} */
+	/** @type {import('./$types').LayoutData} */
 	export let data;
 
 	let count = 0;

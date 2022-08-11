@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { to_pojo } from './utils.js';
 
-	/** @type {import('./$types').Data}*/
+	/** @type {import('./$types').PageData}*/
 	export let data;
 </script>
 

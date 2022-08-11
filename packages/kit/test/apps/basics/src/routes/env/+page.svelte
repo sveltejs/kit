@@ -2,7 +2,7 @@
 	import { PUBLIC_STATIC } from '$env/static/public';
 	import { env } from '$env/dynamic/public';
 
-	/** @type {import('./$types').Data} */
+	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 

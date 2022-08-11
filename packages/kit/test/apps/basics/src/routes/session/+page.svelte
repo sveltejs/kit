@@ -1,7 +1,7 @@
 <script>
 	import { session } from '$app/stores';
 
-	/** @type {import('./$types').Data} */
+	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 
@@ -14,4 +14,4 @@
 	<h4>answer via store is 43</h4>
 {/if}
 
-<button on:click={() => $session.answer += 1}>+1</button>
+<button on:click={() => ($session.answer += 1)}>+1</button>
