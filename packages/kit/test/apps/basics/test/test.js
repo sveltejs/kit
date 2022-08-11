@@ -339,7 +339,7 @@ test.describe('Encoded paths', () => {
 });
 
 test.describe('Env', () => {
-	test('includes environment variables', async ({ page }) => {
+	test.only('includes environment variables', async ({ page }) => {
 		await page.goto('/env');
 
 		expect(await page.textContent('#static-private')).toBe(

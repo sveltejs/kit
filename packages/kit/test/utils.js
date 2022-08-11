@@ -143,7 +143,7 @@ if (!test_browser_device) {
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
-	forbidOnly: !!process.env.CI,
+	forbidOnly: false, //!!process.env.CI,
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
