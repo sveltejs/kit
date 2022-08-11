@@ -5,7 +5,7 @@
 	import '$lib/docs/client/shiki.css';
 	import * as hovers from '$lib/docs/client/hovers.js';
 
-	/** @type {import('./$types').Data} */
+	/** @type {import('./$types').PageData} */
 	export let data;
 
 	hovers.setup();
