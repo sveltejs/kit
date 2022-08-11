@@ -121,7 +121,7 @@ export default function create_manifest_data({
 				return;
 			}
 
-			const type = item.kind === 'module' && !item.is_layout && !item.is_page ? 'endpoint' : 'page';
+			const type = item.kind === 'server' && !item.is_layout && !item.is_page ? 'endpoint' : 'page';
 
 			if (type === 'endpoint' && route_map.has(id)) {
 				// note that we are relying on +server being lexically ordered after
@@ -185,7 +185,7 @@ export default function create_manifest_data({
 					const { layouts, errors } = trace(tree, id, item.uses_layout, project_relative);
 					route.layouts = layouts;
 					route.errors = errors;
-				} else if (item.is_server) {
+				} else if (item.kind === 'server') {
 					route.page.server = project_relative;
 				} else {
 					route.page.module = project_relative;
@@ -302,15 +302,16 @@ function analyze(file, component_extensions, module_extensions) {
 	const module_extension = module_extensions.find((ext) => file.endsWith(ext));
 	if (module_extension) {
 		const name = file.slice(0, -module_extension.length);
-		const pattern = /^\+(?:(server)|(page(\.server)?)|(layout(-([a-zA-Z0-9_-]+))?(\.server)?))$/;
+		const pattern = /^\+(?:(server)|(page(\.server)?)|(layout(?:-([a-zA-Z0-9_-]+))?(\.server)?))$/;
 		const match = pattern.exec(name);
 		if (!match) return null;
 
+		const kind = !!(match[1] || match[3] || match[6]) ? 'server' : 'module';
+
 		return {
-			kind: 'module',
+			kind,
 			is_page: !!match[2],
 			is_layout: !!match[4],
-			is_server: !!(match[1] || match[3] || match[6]),
 			declares_layout: match[5]
 		};
 	}

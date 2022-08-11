@@ -23,12 +23,18 @@ interface RouteComponent {
 	declares_layout: string | undefined;
 }
 
-interface RouteModule {
-	kind: 'module';
+interface RouteSharedModule {
+	kind: 'module'; // TODO change this to 'shared'
 	is_page: boolean;
 	is_layout: boolean;
-	is_server: boolean;
 	declares_layout: string | undefined;
 }
 
-export type RouteFile = RouteComponent | RouteModule;
+interface RouteServerModule {
+	kind: 'server';
+	is_page: boolean;
+	is_layout: boolean;
+	declares_layout: string | undefined;
+}
+
+export type RouteFile = RouteComponent | RouteSharedModule | RouteServerModule;

@@ -447,7 +447,11 @@ test('creates routes with named layouts', () => {
 		{ component: 'samples/named-layouts/+layout.svelte' },
 		default_error,
 		{ component: 'samples/named-layouts/+layout-home@default.svelte' },
-		{ component: 'samples/named-layouts/+layout-special.svelte' },
+		{
+			component: 'samples/named-layouts/+layout-special.svelte',
+			module: 'samples/named-layouts/+layout-special.js',
+			server: 'samples/named-layouts/+layout-special.server.js'
+		},
 		{ component: 'samples/named-layouts/a/+layout.svelte' },
 		{ component: 'samples/named-layouts/b/+layout-alsospecial@special.svelte' },
 		{ component: 'samples/named-layouts/b/c/+layout.svelte' },
@@ -479,7 +483,13 @@ test('creates routes with named layouts', () => {
 			id: 'a/a2',
 			pattern: /^\/a\/a2\/?$/,
 			errors: [default_error],
-			layouts: [{ component: 'samples/named-layouts/+layout-special.svelte' }],
+			layouts: [
+				{
+					component: 'samples/named-layouts/+layout-special.svelte',
+					module: 'samples/named-layouts/+layout-special.js',
+					server: 'samples/named-layouts/+layout-special.server.js'
+				}
+			],
 			page: { component: 'samples/named-layouts/a/a2/+page@special.svelte' }
 		},
 		{
@@ -499,7 +509,11 @@ test('creates routes with named layouts', () => {
 			pattern: /^\/b\/c\/c1\/?$/,
 			errors: [default_error],
 			layouts: [
-				{ component: 'samples/named-layouts/+layout-special.svelte' },
+				{
+					component: 'samples/named-layouts/+layout-special.svelte',
+					module: 'samples/named-layouts/+layout-special.js',
+					server: 'samples/named-layouts/+layout-special.server.js'
+				},
 				{ component: 'samples/named-layouts/b/+layout-alsospecial@special.svelte' }
 			],
 			page: { component: 'samples/named-layouts/b/c/c1/+page@alsospecial.svelte' }
