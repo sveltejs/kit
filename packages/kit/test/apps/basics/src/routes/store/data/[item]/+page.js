@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 
-/** @type {import('./$types').Load} */
+/** @type {import('./$types').PageLoad} */
 export function load({ params }) {
 	if (params.item === 'xxx') {
 		throw error(500, 'Params = xxx');

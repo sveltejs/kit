@@ -26,6 +26,12 @@ export interface Adapter {
 	adapt(builder: Builder): MaybePromise<void>;
 }
 
+export type AwaitedProperties<input extends Record<string, any> | void> = input extends void
+	? void
+	: {
+			[key in keyof input]: Awaited<input[key]>;
+	  };
+
 export interface Builder {
 	log: Logger;
 	rimraf(dir: string): void;

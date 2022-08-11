@@ -1,4 +1,4 @@
-/** @type {import('./$types').Load} */
+/** @type {import('./$types').PageLoad} */
 export function load({ url, params }) {
 	return {
 		path: url.pathname,
