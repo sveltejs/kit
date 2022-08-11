@@ -27,10 +27,20 @@ export interface Adapter {
 }
 
 export type AwaitedProperties<input extends Record<string, any> | void> = input extends void
-	? void
-	: {
+	? undefined // needs to be undefined, because void will break intellisense
+	: input extends Record<string, any>
+	? {
 			[key in keyof input]: Awaited<input[key]>;
-	  };
+	  }
+	: {} extends input // handles the any case
+	? input
+	: unknown;
+
+export type AwaitedErrors<T extends (...args: any) => any> = Awaited<ReturnType<T>> extends {
+	errors?: any;
+}
+	? Awaited<ReturnType<T>>['errors']
+	: undefined;
 
 export interface Builder {
 	log: Logger;
