@@ -299,7 +299,7 @@ export interface SSRManifest {
 }
 
 export interface Get<Params extends Record<string, string> = Record<string, string>> {
-	(event: RequestEvent<Params>): MaybePromise<JSONObject>;
+	(event: RequestEvent<Params>): MaybePromise<JSONObject | void>;
 }
 
 export interface Post<Params extends Record<string, string> = Record<string, string>> {

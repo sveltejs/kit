@@ -90,14 +90,14 @@ declare module '$lib/database' {
 }
 
 // @filename: $types.d.ts
-import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
-export type RequestHandler<Body = any> = GenericRequestHandler<{ id: string }, Body>;
+import type { Get as GenericGet } from '@sveltejs/kit';
+export type Get = GenericGet<{ id: string }>;
 
 // @filename: index.js
 // ---cut---
 import db from '$lib/database';
 
-/** @type {import('./$types').RequestHandler} */
+/** @type {import('./$types').Get} */
 export async function GET({ params }) {
 	// `params.id` comes from [id] in the folder
 	const item = await db.get(params.id);
@@ -117,7 +117,13 @@ The different types of request handlers and their capabilities are explained in 
 
 ```js
 /// file: src/routes/random/+page.server.js
-/** @type {import('@sveltejs/kit').RequestHandler} */
+// @filename: $types.d.ts
+import type { Get as GenericGet } from '@sveltejs/kit';
+export type Get = GenericGet<{}>;
+
+// @filename: index.js
+// ---cut---
+/** @type {import('./$types').Get} */
 export async function GET({ setHeaders }) {
 	setHeaders({
 		'access-control-allow-origin': '*'
@@ -133,11 +139,26 @@ If something unexpected happens, you `throw` using the `error` helper:
 
 ```js
 /// file: src/routes/dan/+page.server.js
-import { error } from '@sveltejs/kit/data';
+// @filename: ambient.d.ts
+declare namespace App {
+	interface Locals {
+		user?: {
+			name: string;
+		}
+	}
+}
 
-/** @type {import('./$types').GET} */
-export function GET({ session }) {
-	if (session.user?.name !== 'Dan') {
+// @filename: $types.d.ts
+import type { Get as GenericGet } from '@sveltejs/kit';
+export type Get = GenericGet<{}>;
+
+// @filename: index.js
+// ---cut---
+import { error } from '@sveltejs/kit';
+
+/** @type {import('./$types').Get} */
+export function GET({ locals }) {
+	if (locals.user?.name !== 'Dan') {
 		throw error(403, `If your name's not Dan, you're not coming in`);
 	}
 
@@ -157,16 +178,31 @@ In the success case, nothing or a redirect is returned. The latter is often used
 
 ```js
 /// file: src/routes/todos/+page.server.js
+// @filename: $types.d.ts
+import type { Post as GenericPost } from '@sveltejs/kit';
+export type Post = GenericPost<{}>;
 
-/** @type {import('./$types').POST} */
-export function POST({ request }) {
-  const data = await request.formData();
-  await create_todo(data);
-  const id = await create_todo(data);
+// @filename: ambient.d.ts
+interface Todo {
+	id: string;
+}
 
-  return {
-    location: `/todos/${id}`
-  };
+declare global {
+	const create_todo: (data: FormData) => Todo;
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
+/** @type {import('./$types').Post} */
+export async function POST({ request }) {
+	const data = await request.formData();
+	const id = await create_todo(data);
+
+	return {
+		location: `/todos/${id}`
+	};
 }
 ```
 
@@ -178,19 +214,37 @@ Validation errors cause the page to be re-rendered with the errors, so they can 
 
 ```js
 /// file: src/routes/todos/+page.server.js
-/** @type {import('./$types').POST} */
-export function POST({ request }) {
-  const data = await request.formData();
+// @filename: $types.d.ts
+import type { Post as GenericPost } from '@sveltejs/kit';
+export type Post = GenericPost<{}>;
 
-  if (!data.get('description').includes('potato')) {
-    return {
-      errors: {
-        description: 'Must include the word "potato"'
-      }
-    };
-  }
+// @filename: ambient.d.ts
+interface Todo {
+	id: string;
+}
 
-  await create_todo(data);
+declare global {
+	const create_todo: (data: FormData) => Todo;
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
+/** @type {import('./$types').Post} */
+export async function POST({ request }) {
+	const data = await request.formData();
+	const description = /** @type {string} */ (data.get('description'));
+
+	if (!description.includes('potato')) {
+		return {
+			errors: {
+				description: 'Must include the word "potato"'
+			}
+		};
+	}
+
+	await create_todo(data);
 }
 ```
 
@@ -233,11 +287,15 @@ declare global {
 
 export {};
 
+// @filename: $types.d.ts
+import { Post as GenericPost } from '@sveltejs/kit';
+export type Post = GenericPost<{}>;
+
 // @filename: +page.server.js
 // ---cut---
-/** @type {import('@sveltejs/kit').RequestHandler} */
+/** @type {import('./$types').Post} */
 export async function POST({ request }) {
-	const data = await request.formData(); // or .json(), or .text(), etc
+	const data = await request.formData();
 	await create(data);
 }
 ```
@@ -251,9 +309,13 @@ Endpoints can set cookies by invoking the `setHeaders` helper method with `set-c
 const cookie1: string;
 const cookie2: string;
 
+// @filename: $types.d.ts
+import { Get as GenericGet } from '@sveltejs/kit';
+export type Get = GenericGet<{}>;
+
 // @filename: index.js
 // ---cut---
-/** @type {import('@sveltejs/kit').RequestHandler} */
+/** @type {import('@sveltejs/kit').Get} */
 export function GET({ setHeaders }) {
 	setHeaders({
 		'set-cookie': [cookie1, cookie2]
@@ -293,10 +355,10 @@ Most commonly, endpoints exist to provide data to the page with which they're pa
 
 Standalone endpoints reside in a `+server.js` (or `.ts`) file, the folder describes the URL where the endpoint is available - just like for pages:
 
-| filename                              | endpoint   |
-| ------------------------------------- | ---------- |
+| filename                        | endpoint   |
+| ------------------------------- | ---------- |
 | src/routes/data.json/+server.js | /data.json |
-| src/routes/data/+server.js            | /data      |
+| src/routes/data/+server.js      | /data      |
 
 Because the foldername describes the endpoint URL, you can't have a `+server.js` file next to a `+page.svelte` file — when hitting the URL, SvelteKit wouldn't know if you want to render the page or return data from the endpoint.
 
@@ -321,6 +383,7 @@ All methods need to return [`Response`](https://developer.mozilla.org/en-US/docs
 type Item = {
 	id: string;
 };
+
 type ValidationError = {};
 
 declare module '$lib/database' {
@@ -330,7 +393,7 @@ declare module '$lib/database' {
 
 // @filename: $types.d.ts
 import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
-export type RequestHandler<Body = any> = GenericRequestHandler<{}, Body>;
+export type RequestHandler = GenericRequestHandler<{}>;
 
 // @filename: +server.js
 // ---cut---

@@ -37,10 +37,10 @@ export function GET(event) {
 	console.log(...event.request.headers);
 
 	return new Response(
-		{
+		JSON.stringify({
 			// retrieve a specific header
 			userAgent: event.request.headers.get('user-agent')
-		},
+		}),
 		{ headers: { 'content-type': 'application/json; charset=utf-8' } }
 	);
 }
