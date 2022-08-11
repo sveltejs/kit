@@ -226,7 +226,7 @@ test('transform kit.alias to resolve.alias', () => {
 			};
 		})
 		.filter(
-			(entry) => entry.find !== '$app' // testing this would mean to reimplement the logic in the test
+			(entry) => entry.find !== '$app' && entry.find !== '$env' // testing this would mean to reimplement the logic in the test
 		);
 
 	assert.equal(transformed, [
@@ -242,10 +242,6 @@ test('transform kit.alias to resolve.alias', () => {
 		{
 			find: '$env/static/private',
 			replacement: '.svelte-kit/runtime/env/static/private.js'
-		},
-		{
-			find: '$env',
-			replacement: 'src/runtime/env'
 		}
 	]);
 });
