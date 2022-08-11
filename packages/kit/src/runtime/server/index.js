@@ -1,12 +1,14 @@
 import { render_endpoint } from './endpoint.js';
-import { handle_json_request, render_page } from './page/index.js';
+import { handle_json_request, json_response, render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
-import { coalesce_to_error } from '../../utils/error.js';
-import { serialize_error, GENERIC_ERROR } from './utils.js';
+import { coalesce_to_error, normalize_error } from '../../utils/error.js';
+import { serialize_error, GENERIC_ERROR, error_to_pojo } from './utils.js';
 import { decode_params, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
+import { HttpError, Redirect } from '../../index/private.js';
+import { load_server_data } from './page/load_data.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -238,34 +240,63 @@ export async function respond(request, options, state) {
 					/** @type {Response} */
 					let response;
 					if (is_data_request && route.type === 'page') {
-						const module = await options.manifest._.nodes[route.leaf]();
-						if (module.server) {
-							response = await handle_json_request(event, options, module.server);
-							if (request.headers.has('x-sveltekit-load')) {
-								if (response.status >= 300 && response.status < 400) {
-									// since redirects are opaque to the browser, we need to repackage
-									// 3xx responses as 200s with a custom header
-									const location = response.headers.get('location');
+						try {
+							/** @type {any} */
+							let error;
 
-									if (location) {
-										const headers = new Headers(response.headers);
-										headers.set('x-sveltekit-location', location);
-										response = new Response(undefined, {
-											status: 204,
-											headers
-										});
-									}
-								} else if (response.status === 405) {
-									// TODO would be nice to avoid these requests altogether,
-									// by noting whether or not page endpoints export `get`,
-									// possibly through enhancing the manifest
-									return new Response(undefined, {
-										status: 204
+							// TODO only get the data we need for the navigation
+							const promises = [...route.layouts, route.leaf].map(async (n, i) => {
+								const node = n ? await options.manifest._.nodes[n]() : undefined;
+
+								try {
+									return await load_server_data({
+										event,
+										node,
+										parent: async () => {
+											/** @type {import('types').JSONObject} */
+											const data = {};
+											for (let j = 0; j < i; j += 1) {
+												Object.assign(data, await promises[j]);
+											}
+											return data;
+										}
 									});
+								} catch (e) {
+									error = e;
+									throw error;
 								}
+							});
+
+							return json_response({
+								nodes: (await Promise.all(promises)).map((data) => {
+									// TODO return `uses`, so we can reuse server data effectively
+									return {
+										data
+									};
+								})
+							});
+						} catch (e) {
+							const error = normalize_error(e);
+
+							if (error instanceof Redirect) {
+								return json_response({
+									redirect: {
+										status: error.status,
+										location: error.location
+									}
+								});
 							}
-						} else {
-							return new Response('not found', { status: 404 });
+
+							if (error instanceof HttpError) {
+								return json_response({
+									error: {
+										status: error.status,
+										message: error.message
+									}
+								});
+							}
+
+							return json_response(error_to_pojo(error, options.get_stack), 500);
 						}
 					} else {
 						response =

@@ -398,9 +398,9 @@ export async function handle_json_request(event, options, mod) {
 
 /**
  * @param {any} data
- * @param {number} status
+ * @param {number} [status]
  */
-export function json_response(data, status) {
+export function json_response(data, status = 200) {
 	// TODO replace with Response.json one day. in the meantime this probably
 	// belongs in a different module
 	return new Response(JSON.stringify(data), {

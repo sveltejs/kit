@@ -43,7 +43,7 @@ export function error_to_pojo(error, get_stack) {
 		return /** @type {import('./page/types').SerializedHttpError} */ ({
 			message: error.message,
 			status: error.status,
-			__is_http_error: true
+			__is_http_error: true // TODO we should probably make this unnecessary
 		});
 	}
 
