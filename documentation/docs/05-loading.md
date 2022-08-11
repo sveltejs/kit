@@ -10,8 +10,15 @@ If the data for a page comes from its endpoint, you may not need a `load` functi
 /// file: src/routes/blog/[slug]/+page.js
 import { error } from '@sveltejs/kit';
 
+// @filename: $types.d.ts
+export type Load = import('@sveltejs/kit').Load<{ slug: string }>;
+
+// @filename: index.js
+// ---cut---
+import { error } from '@sveltejs/kit';
+
 /** @type {import('./$types').Load} */
-export async function load({ params, fetch, session, stuff }) {
+export async function load({ params, fetch, session }) {
 	const url = `https://cms.example.com/article/${params.slug}.json`;
 	const response = await fetch(url);
 
@@ -98,12 +105,28 @@ If the page or layout you're loading has an associated `.server` file, the data 
 
 ```js
 /// file: src/routes/cart/+page.js
-/** @type {import('./$types').Load} */
+// @errors: 2531
+// @filename: ambient.d.ts
+interface Cart {}
+interface Item {}
+
+declare global {
+	const getCartItems: (cart: Cart) => Promise<Item[]>
+}
+
+export {};
+
+// @filename: $types.d.ts
+export type PageLoad = import('@sveltejs/kit').Load<{}>;
+
+// @filename: index.js
+// ---cut---
+/** @type {import('./$types').PageLoad} */
 export async function load({ parent }) {
 	const user = await parent();
 
 	return {
-		items: await getCartItems(user.cart);
+		items: await getCartItems(user.cart)
 	};
 }
 ```
@@ -116,7 +139,20 @@ URLs can be absolute or relative to the page being loaded, and must be [encoded]
 
 ```js
 /// file: src/routes/blog/+page.js
-/** @type {import('./$types').Load} */
+
+// @filename: ambient.d.ts
+declare global {
+	const myOwnFetch: typeof fetch;
+}
+
+export {}
+
+// @filename: $types.d.ts
+export type PageLoad = import('@sveltejs/kit').Load<{}>;
+
+// @filename: index.js
+// ---cut---
+/** @type {import('./$types').PageLoad} */
 export async function load({ depends }) {
 	const url = `https://cms.example.com/articles.json`;
 	const response = await myOwnFetch(url);
@@ -134,14 +170,20 @@ If you need to set headers for the response, you can do so using the `setHeaders
 
 ```js
 /// file: src/routes/blog/+page.js
-/** @type {import('./$types').Load} */
-export async function load({ fetch }) {
+
+// @filename: $types.d.ts
+export type PageLoad = import('@sveltejs/kit').Load<{}>;
+
+// @filename: index.js
+// ---cut---
+/** @type {import('./$types').PageLoad} */
+export async function load({ fetch, setHeaders }) {
 	const url = `https://cms.example.com/articles.json`;
 	const response = await fetch(url);
 	setHeaders({
 		// Cache the response for 300 seconds and make it public,
 		// meaning it can be cached by CDNs in addition to individual browsers
-		'Cache-Control': 'public, maxage=300'
+		'cache-control': 'public, maxage=300'
 	});
 
 	return {
@@ -156,7 +198,13 @@ If you return a Promise from `load`, SvelteKit will delay rendering until the pr
 
 ```js
 /// file: src/routes/blog/+page.js
-/** @type {import('./$types').Load} */
+
+// @filename: $types.d.ts
+export type PageLoad = import('@sveltejs/kit').Load<{}>;
+
+// @filename: index.js
+// ---cut---
+/** @type {import('./$types').PageLoad} */
 export async function load() {
 	return {
 		article: {
@@ -185,9 +233,14 @@ If something goes wrong during `load`, throw an `error` with a `4xx` or `5xx` st
 
 ```js
 /// file: src/routes/admin/+page.js
+// @filename: $types.d.ts
+export type PageLoad = import('@sveltejs/kit').Load<{}>;
+
+// @filename: index.js
+// ---cut---
 import { error } from '@sveltejs/kit';
 
-/** @type {import('./$types').Load} */
+/** @type {import('./$types').PageLoad} */
 export async function load({ fetch }) {
 	const response = await fetch('https://secret.admin.stuff');
 	if (!response.ok) {
@@ -206,9 +259,14 @@ If the page should redirect (because the page is deprecated, or the user needs t
 
 ```js
 /// file: src/routes/fast/+page.js
+// @filename: $types.d.ts
+export type PageLoad = import('@sveltejs/kit').Load<{}>;
+
+// @filename: index.js
+// ---cut---
 import { redirect } from '@sveltejs/kit';
 
-/** @type {import('./$types').Load} */
+/** @type {import('./$types').PageLoad} */
 export async function load({ fetch }) {
 	throw redirect(301, '/faster');
 }

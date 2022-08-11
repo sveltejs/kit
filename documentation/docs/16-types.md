@@ -28,17 +28,16 @@ To solve this problem, SvelteKit generates `.d.ts` files for each of your endpoi
 ```ts
 /// file: .svelte-kit/types/src/routes/[foo]/[bar]/[baz]/$types.d.ts
 /// link: false
-import type { RequestHandler as GenericRequestHandler, Load as GenericLoad } from '@sveltejs/kit';
+import type * as Kit from '@sveltejs/kit';
 
-export type RequestHandler<Body = any> = GenericRequestHandler<
-	{ foo: string; bar: string; baz: string },
-	Body
->;
+interface RouteParams {
+	foo: string;
+	bar: string;
+	baz: string;
+}
 
-export type Load<
-	InputProps extends Record<string, any> = Record<string, any>,
-	OutputProps extends Record<string, any> = InputProps
-> = GenericLoad<{ foo: string; bar: string; baz: string }, InputProps, OutputProps>;
+export type Get = Kit.Get<RouteParams>;
+export type PageLoad = Kit.Load<RouteParams>;
 ```
 
 These files can be imported into your endpoints and pages as siblings, thanks to the [`rootDirs`](https://www.typescriptlang.org/tsconfig#rootDirs) option in your TypeScript configuration:
@@ -46,25 +45,45 @@ These files can be imported into your endpoints and pages as siblings, thanks to
 ```js
 /// file: src/routes/[foo]/[bar]/[baz]/+page.server.js
 // @filename: $types.d.ts
-import type { RequestHandler as GenericRequestHandler, Load as GenericLoad } from '@sveltejs/kit';
+import type * as Kit from '@sveltejs/kit';
 
-export type RequestHandler<Body = any> = GenericRequestHandler<
-	{ foo: string, bar: string, baz: string },
-	Body
->;
+interface RouteParams {
+	foo: string;
+	bar: string;
+	baz: string;
+}
+
+export type Get = Kit.Get<RouteParams>;
+export type PageLoad = Kit.Load<RouteParams>;
 
 // @filename: index.js
 // @errors: 2355
 // ---cut---
-/** @type {import('./$types').RequestHandler} */
+/** @type {import('./$types').Get} */
 export async function GET({ params }) {
 	// ...
 }
 ```
 
 ```js
-/** @type {import('./$types').Load} */
-export async function load({ params, fetch, session, stuff }) {
+/// file: src/routes/[foo]/[bar]/[baz]/+page.js
+// @filename: $types.d.ts
+import type * as Kit from '@sveltejs/kit';
+
+interface RouteParams {
+	foo: string;
+	bar: string;
+	baz: string;
+}
+
+export type Get = Kit.Get<RouteParams>;
+export type PageLoad = Kit.Load<RouteParams>;
+
+// @filename: index.js
+// @errors: 2355
+// ---cut---
+/** @type {import('./$types').PageLoad} */
+export async function load({ params, fetch, session }) {
 	// ...
 }
 ```

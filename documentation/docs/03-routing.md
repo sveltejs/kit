@@ -90,8 +90,7 @@ declare module '$lib/database' {
 }
 
 // @filename: $types.d.ts
-import type { Get as GenericGet } from '@sveltejs/kit';
-export type Get = GenericGet<{ id: string }>;
+export type Get = import('@sveltejs/kit').Get<{ id: string }>;
 
 // @filename: index.js
 // ---cut---
@@ -118,8 +117,7 @@ The different types of request handlers and their capabilities are explained in 
 ```js
 /// file: src/routes/random/+page.server.js
 // @filename: $types.d.ts
-import type { Get as GenericGet } from '@sveltejs/kit';
-export type Get = GenericGet<{}>;
+export type Get = import('@sveltejs/kit').Get<{}>;
 
 // @filename: index.js
 // ---cut---
@@ -149,8 +147,7 @@ declare namespace App {
 }
 
 // @filename: $types.d.ts
-import type { Get as GenericGet } from '@sveltejs/kit';
-export type Get = GenericGet<{}>;
+export type Get = import('@sveltejs/kit').Get<{}>;
 
 // @filename: index.js
 // ---cut---
@@ -179,8 +176,7 @@ In the success case, nothing or a redirect is returned. The latter is often used
 ```js
 /// file: src/routes/todos/+page.server.js
 // @filename: $types.d.ts
-import type { Post as GenericPost } from '@sveltejs/kit';
-export type Post = GenericPost<{}>;
+export type Post = import('@sveltejs/kit').Post<{}>;
 
 // @filename: ambient.d.ts
 interface Todo {
@@ -215,8 +211,7 @@ Validation errors cause the page to be re-rendered with the errors, so they can 
 ```js
 /// file: src/routes/todos/+page.server.js
 // @filename: $types.d.ts
-import type { Post as GenericPost } from '@sveltejs/kit';
-export type Post = GenericPost<{}>;
+export type Post = import('@sveltejs/kit').Post<{}>;
 
 // @filename: ambient.d.ts
 interface Todo {
@@ -288,8 +283,7 @@ declare global {
 export {};
 
 // @filename: $types.d.ts
-import { Post as GenericPost } from '@sveltejs/kit';
-export type Post = GenericPost<{}>;
+export type Post = import('@sveltejs/kit').Post<{}>;
 
 // @filename: +page.server.js
 // ---cut---
@@ -310,12 +304,11 @@ const cookie1: string;
 const cookie2: string;
 
 // @filename: $types.d.ts
-import { Get as GenericGet } from '@sveltejs/kit';
-export type Get = GenericGet<{}>;
+export type Get = import('@sveltejs/kit').Get<{}>;
 
 // @filename: index.js
 // ---cut---
-/** @type {import('@sveltejs/kit').Get} */
+/** @type {import('./$types').Get} */
 export function GET({ setHeaders }) {
 	setHeaders({
 		'set-cookie': [cookie1, cookie2]
@@ -392,8 +385,7 @@ declare module '$lib/database' {
 }
 
 // @filename: $types.d.ts
-import type { RequestHandler as GenericRequestHandler } from '@sveltejs/kit';
-export type RequestHandler = GenericRequestHandler<{}>;
+export type RequestHandler = import('@sveltejs/kit').RequestHandler<{}>;
 
 // @filename: +server.js
 // ---cut---
