@@ -6,4 +6,4 @@
 <pre id="page-data">{JSON.stringify(data)}</pre>
 <pre id="store-data">{JSON.stringify($page.data)}</pre>
 
-<button on:click={() => $session = { foo: 'bar' }}>Update Session</button>
+<button on:click={() => $session = { answer: 1337 }}>Update Session</button>

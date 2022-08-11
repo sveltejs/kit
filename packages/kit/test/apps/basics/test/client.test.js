@@ -603,9 +603,9 @@ test.describe('Page Store', () => {
 
 		await page.click('button');
 
-		expect(await page.textContent('#page-data')).toBe('{"foo":"bar"}');
+		expect(await page.textContent('#page-data')).toBe('{"answer":1337}');
 		expect(await page.textContent('#store-data')).toBe(
-			'{"foo":"bar","name":"SvelteKit","value":123}'
+			'{"foo":{"bar":"Custom layout"},"name":"SvelteKit","value":123,"answer":1337}'
 		);
 	});
 });
