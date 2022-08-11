@@ -31,12 +31,4 @@
 		margin-bottom: 0.8rem;
 		color: white;
 	}
-
-	.code {
-		max-width: 575px;
-		text-align: left;
-		padding: 1em;
-		background: var(--back-light);
-		box-shadow: inset 1px 1px 3px rgba(81, 81, 81, 0.2);
-	}
 </style>
