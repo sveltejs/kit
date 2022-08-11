@@ -9,6 +9,8 @@
 <script>
 	import Machine from '$img/svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&meta';
 	import { Hero, Blurb } from '@sveltejs/site-kit';
+	import Adapters from './_components/Adapters.svelte';
+	import Lighthouse from './_components/Lighthouse.svelte';
 </script>
 
 <svelte:head>
@@ -91,6 +93,16 @@ npm run dev -- --open</code></pre>
 	</Blurb>
 </div>
 
+<div class="lighthouse">
+	<div class="section">
+		<Lighthouse />
+	</div>
+</div>
+
+<div class="section adapters">
+	<Adapters />
+</div>
+
 <style>
 	:global(.hero-container:dir(rtl)) {
 		max-width: 116rem;
@@ -115,5 +127,27 @@ npm run dev -- --open</code></pre>
 		.blurb-shifter {
 			margin-top: -12em;
 		}
+	}
+
+	.section {
+		position: relative;
+		margin: 0 auto 10rem auto;
+		padding: 0 var(--side-nav);
+		max-width: 120rem;		
+	}
+
+	.adapters {
+		max-width: 575px;
+		text-align: center;
+	}
+
+	.lighthouse {
+		background: #212121;
+		padding: 10rem;
+		margin: 0 auto 10rem auto;
+	}
+
+	.lighthouse .section {
+		margin: 0 auto;
 	}
 </style>
