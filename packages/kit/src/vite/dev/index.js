@@ -290,7 +290,10 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					);
 				}
 
-				const runtime_base = `/@fs/${runtime_directory}`;
+				const runtime_base = `/@fs${
+					// Windows/Linux separation hack
+					runtime_directory.startsWith('/') ? '' : '/'
+				}${runtime_directory}`;
 
 				const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
 				const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);
