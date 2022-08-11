@@ -1,24 +1,17 @@
 import path from 'path';
 import colors from 'kleur';
 import { fileURLToPath } from 'url';
-
-/** Resolved path of the `runtime` directory */
-export const runtime_directory = lowercase_root(
-	fileURLToPath(new URL('../runtime', import.meta.url))
-);
+import { posixify } from '../utils/filesystem.js';
 
 /**
- * Vite puts a lowercase root dir in front of the posixified path, while Windows uses uppercase.
- * Vite thinks these are two separate paths, so we need to lowercase the root.
- * @param {string} dir_path */
-function lowercase_root(dir_path) {
-	// TODO Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.
-	// In playwright debug mode run through VS Code this lowercase conversion is needed, else it has the opposite effect and introduces bugs.
-	return dir_path;
-	const parsed = path.parse(dir_path);
-	// We know there's name and we know there's no extension since we call this with a directory path
-	return parsed.root.toLowerCase() + parsed.dir.slice(parsed.root.length) + path.sep + parsed.name;
-}
+ * Resolved path of the `runtime` directory
+ *
+ * TODO Windows issue:
+ * Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.
+ * In playwright debug mode run through VS Code this a root-to-lowercase conversion is needed in order for the tests to run.
+ * If we do this conversion in other cases it has the opposite effect though and fails.
+ */
+export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', import.meta.url)));
 
 /** Prefix for the `runtime` directory, for use with import declarations */
 export const runtime_prefix = posixify_path(runtime_directory);
