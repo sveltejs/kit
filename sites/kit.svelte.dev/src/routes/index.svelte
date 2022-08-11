@@ -11,6 +11,7 @@
 	import { Hero, Blurb } from '@sveltejs/site-kit';
 	import Adapters from './_components/Adapters.svelte';
 	import Lighthouse from './_components/Lighthouse.svelte';
+	import Waterfall from './_components/Waterfall.svelte';
 </script>
 
 <svelte:head>
@@ -96,6 +97,7 @@ npm run dev -- --open</code></pre>
 <div class="lighthouse">
 	<div class="section">
 		<Lighthouse />
+		<Waterfall />
 	</div>
 </div>
 
