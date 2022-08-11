@@ -11,7 +11,7 @@ import { parse_route_id } from '../../utils/routing.js';
 import { load_template } from '../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
-import { get_mime_lookup, runtime_prefix } from '../../core/utils.js';
+import { get_mime_lookup, runtime_directory, runtime_prefix } from '../../core/utils.js';
 import { get_env, prevent_illegal_vite_imports, resolve_entry } from '../utils.js';
 
 // Vite doesn't expose this so we just copy the list for now
@@ -290,7 +290,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					);
 				}
 
-				const runtime_base = `/@fs${runtime_prefix}`;
+				const runtime_base = `/@fs/${runtime_directory}`;
 
 				const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
 				const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);
