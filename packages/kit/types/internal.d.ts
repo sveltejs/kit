@@ -72,7 +72,7 @@ export interface BuildData {
 
 export interface CSRPageNode {
 	component: typeof SvelteComponent;
-	module: {
+	shared: {
 		load: Load;
 		hydrate: boolean;
 		router: boolean;
@@ -135,7 +135,7 @@ export interface MethodOverride {
 
 export interface PageNode {
 	component?: string; // TODO supply default component if it's missing (bit of an edge case)
-	module?: string;
+	shared?: string;
 	server?: string;
 }
 
@@ -234,7 +234,7 @@ export interface SSRNode {
 	/** inlined styles */
 	inline_styles?: () => MaybePromise<Record<string, string>>;
 
-	module: {
+	shared: {
 		load?: Load;
 		hydrate?: boolean;
 		prerender?: boolean;

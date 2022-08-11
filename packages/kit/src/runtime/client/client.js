@@ -350,7 +350,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		const leaf_node = navigation_result.state.branch.at(-1);
-		router_enabled = leaf_node?.node.module?.router !== false;
+		router_enabled = leaf_node?.node.shared?.router !== false;
 
 		if (callback) callback();
 
@@ -547,7 +547,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const session = $session;
 		const load_url = new LoadURL(url);
 
-		if (node.module?.load) {
+		if (node.shared?.load) {
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
@@ -624,12 +624,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (import.meta.env.DEV) {
 				try {
 					lock_fetch();
-					data = (await node.module.load.call(null, load_input)) ?? null;
+					data = (await node.shared.load.call(null, load_input)) ?? null;
 				} finally {
 					unlock_fetch();
 				}
 			} else {
-				data = (await node.module.load.call(null, load_input)) ?? null;
+				data = (await node.shared.load.call(null, load_input)) ?? null;
 			}
 		}
 

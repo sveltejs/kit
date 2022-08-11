@@ -188,7 +188,7 @@ export default function create_manifest_data({
 				} else if (item.kind === 'server') {
 					route.page.server = project_relative;
 				} else {
-					route.page.module = project_relative;
+					route.page.shared = project_relative;
 				}
 			}
 		});
@@ -306,7 +306,7 @@ function analyze(file, component_extensions, module_extensions) {
 		const match = pattern.exec(name);
 		if (!match) return null;
 
-		const kind = !!(match[1] || match[3] || match[6]) ? 'server' : 'module';
+		const kind = !!(match[1] || match[3] || match[6]) ? 'server' : 'shared';
 
 		return {
 			kind,

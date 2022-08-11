@@ -95,12 +95,12 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							);
 						}
 
-						if (node.module) {
-							const { module, module_node } = await resolve(node.module);
+						if (node.shared) {
+							const { module, module_node } = await resolve(node.shared);
 
 							module_nodes.push(module_node);
 
-							result.module = module;
+							result.shared = module;
 
 							prevent_illegal_vite_imports(
 								module_node,

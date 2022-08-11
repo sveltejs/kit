@@ -117,7 +117,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			});
 		}
 
-		const should_prerender = leaf_node.module?.prerender ?? options.prerender.default;
+		const should_prerender = leaf_node.shared?.prerender ?? options.prerender.default;
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
@@ -326,15 +326,15 @@ export async function render_page(event, route, options, state, resolve_opts) {
  */
 function get_page_config(leaf, options) {
 	// TODO we can reinstate this now that it's in the module
-	if (leaf.module && 'ssr' in leaf.module) {
+	if (leaf.shared && 'ssr' in leaf.shared) {
 		throw new Error(
 			'`export const ssr` has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle'
 		);
 	}
 
 	return {
-		router: leaf.module?.router ?? options.router,
-		hydrate: leaf.module?.hydrate ?? options.hydrate
+		router: leaf.shared?.router ?? options.router,
+		hydrate: leaf.shared?.hydrate ?? options.hydrate
 	};
 }
 

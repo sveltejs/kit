@@ -139,14 +139,14 @@ function kit() {
 				input[`components/${name}`] = resolved;
 			}
 
-			if (node.module) {
-				const resolved = path.resolve(cwd, node.module);
+			if (node.shared) {
+				const resolved = path.resolve(cwd, node.shared);
 				const relative = decodeURIComponent(
 					path.relative(svelte_config.kit.files.routes, resolved)
 				);
 
 				const name = relative.startsWith('..')
-					? path.basename(node.module)
+					? path.basename(node.shared)
 					: posixify(path.join('pages', relative));
 				input[`modules/${name}`] = resolved;
 			}

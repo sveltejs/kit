@@ -24,7 +24,7 @@ interface RouteComponent {
 }
 
 interface RouteSharedModule {
-	kind: 'module'; // TODO change this to 'shared'
+	kind: 'shared';
 	is_page: boolean;
 	is_layout: boolean;
 	declares_layout: string | undefined;

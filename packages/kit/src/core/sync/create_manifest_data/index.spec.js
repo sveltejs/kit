@@ -449,7 +449,7 @@ test('creates routes with named layouts', () => {
 		{ component: 'samples/named-layouts/+layout-home@default.svelte' },
 		{
 			component: 'samples/named-layouts/+layout-special.svelte',
-			module: 'samples/named-layouts/+layout-special.js',
+			shared: 'samples/named-layouts/+layout-special.js',
 			server: 'samples/named-layouts/+layout-special.server.js'
 		},
 		{ component: 'samples/named-layouts/a/+layout.svelte' },
@@ -486,7 +486,7 @@ test('creates routes with named layouts', () => {
 			layouts: [
 				{
 					component: 'samples/named-layouts/+layout-special.svelte',
-					module: 'samples/named-layouts/+layout-special.js',
+					shared: 'samples/named-layouts/+layout-special.js',
 					server: 'samples/named-layouts/+layout-special.server.js'
 				}
 			],
@@ -511,7 +511,7 @@ test('creates routes with named layouts', () => {
 			layouts: [
 				{
 					component: 'samples/named-layouts/+layout-special.svelte',
-					module: 'samples/named-layouts/+layout-special.js',
+					shared: 'samples/named-layouts/+layout-special.js',
 					server: 'samples/named-layouts/+layout-special.server.js'
 				},
 				{ component: 'samples/named-layouts/b/+layout-alsospecial@special.svelte' }

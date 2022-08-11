@@ -170,7 +170,7 @@ export async function build_server(options, client) {
 
 	// ...and every component used by pages...
 	manifest_data.nodes.forEach((node) => {
-		for (const file of [node.component, node.module, node.server]) {
+		for (const file of [node.component, node.shared, node.server]) {
 			if (file) {
 				const resolved = path.resolve(cwd, file);
 				const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
@@ -258,14 +258,14 @@ export async function build_server(options, client) {
 			);
 		}
 
-		if (node.module) {
-			const entry = find_deps(client.vite_manifest, node.module, true);
+		if (node.shared) {
+			const entry = find_deps(client.vite_manifest, node.shared, true);
 
 			imported.push(...entry.imports);
 			stylesheets.push(...entry.stylesheets);
 
-			imports.push(`import * as module from '../${vite_manifest[node.module].file}';`);
-			exports.push(`export { module };`);
+			imports.push(`import * as shared from '../${vite_manifest[node.shared].file}';`);
+			exports.push(`export { shared };`);
 		}
 
 		if (node.server) {

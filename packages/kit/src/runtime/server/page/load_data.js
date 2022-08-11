@@ -55,17 +55,17 @@ export async function load_data({
 }) {
 	const server_data = await server_data_promise;
 
-	if (!node?.module?.load) {
+	if (!node?.shared?.load) {
 		return server_data;
 	}
 
-	const data = await node.module.load.call(null, {
+	const data = await node.shared.load.call(null, {
 		url: state.prerendering ? new PrerenderingURL(event.url) : new LoadURL(event.url),
 		params: event.params,
 		data: server_data,
 		routeId: event.routeId,
 		get session() {
-			if (node.module.prerender ?? options.prerender.default) {
+			if (node.shared.prerender ?? options.prerender.default) {
 				throw Error(
 					'Attempted to access session from a prerendered page. Session would never be populated.'
 				);

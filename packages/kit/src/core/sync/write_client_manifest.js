@@ -19,10 +19,10 @@ export function write_client_manifest(manifest_data, output) {
 	function generate_node(node) {
 		const declarations = [];
 
-		if (node.module) {
+		if (node.shared) {
 			declarations.push(
-				`import * as module from ${s(relative(`${output}/nodes`, node.module))};`,
-				`export { module };`
+				`import * as shared from ${s(relative(`${output}/nodes`, node.shared))};`,
+				`export { shared };`
 			);
 		}
 

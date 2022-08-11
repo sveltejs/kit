@@ -73,7 +73,7 @@ export async function write_types(config, manifest_data) {
 		// skip default layout/error
 		if (!node?.component?.startsWith(routes_dir)) continue;
 
-		const parts = /** @type {string} */ (node.component ?? node.module ?? node.server).split('/');
+		const parts = /** @type {string} */ (node.component ?? node.shared ?? node.server).split('/');
 
 		const file = /** @type {string} */ (parts.pop());
 		const dir = parts.join('/').slice(routes_dir.length + 1);
@@ -257,13 +257,13 @@ function process_node(ts, node, outdir, params) {
 		server_data = 'null';
 	}
 
-	if (node.module) {
-		const content = fs.readFileSync(node.module, 'utf8');
+	if (node.shared) {
+		const content = fs.readFileSync(node.shared, 'utf8');
 		const proxy = tweak_types(ts, content, module_names);
 		if (proxy?.modified) {
-			write(`${outdir}/proxy${path.basename(node.module)}`, proxy.code);
+			write(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code);
 		}
-		data = get_data_type(node.module, 'load', server_data, proxy);
+		data = get_data_type(node.shared, 'load', server_data, proxy);
 
 		load = `Kit.Load<${params}, ${server_data}>`;
 	} else {
