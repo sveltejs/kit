@@ -14,6 +14,16 @@ import { write } from './utils.js';
  * }} NodeGroup
  */
 
+/**
+ *  @typedef {{
+ *   modified: boolean;
+ *   code: string;
+ *   exports: any[];
+ *  } | null} Proxy
+ */
+
+const cwd = process.cwd();
+
 const methods = ['Get', 'Post', 'Put', 'Patch', 'Delete'];
 
 const module_names = new Set(['load']);
@@ -325,18 +335,18 @@ function process_node(ts, node, outdir, params, type_imports) {
  */
 function path_to_original(outdir, file_path) {
 	const ext = path.extname(file_path);
-	// Another extension than `.js` (or nothing, but that fails with node16 moduleResolution)
-	// will result in TS failing to lookup the file
-	return outdir.split(/[^\/]+/g).join('..') + '/' + file_path.slice(0, -ext.length) + '.js';
+	return posixify(
+		path.relative(
+			outdir,
+			path.join(
+				cwd,
+				// Another extension than `.js` (or nothing, but that fails with node16 moduleResolution)
+				// will result in TS failing to lookup the file
+				file_path.slice(0, -ext.length) + '.js'
+			)
+		)
+	);
 }
-
-/**
- *  @typedef {{
- *   modified: boolean;
- *   code: string;
- *   exports: any[];
- *  } | null} Proxy
- */
 
 /**
  * @param {import('typescript')} ts
