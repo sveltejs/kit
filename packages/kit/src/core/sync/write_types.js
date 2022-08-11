@@ -324,7 +324,10 @@ function process_node(ts, node, outdir, params, type_imports) {
  * @param {string} file_path
  */
 function path_to_original(outdir, file_path) {
-	return outdir.split(/[^\/]+/g).join('..') + '/' + file_path;
+	const ext = path.extname(file_path);
+	// Another extension than `.js` (or nothing, but that fails with node16 moduleResolution)
+	// will result in TS failing to lookup the file
+	return outdir.split(/[^\/]+/g).join('..') + '/' + file_path.slice(0, -ext.length) + '.js';
 }
 
 /**
