@@ -2,9 +2,9 @@
 	import { enhance } from '$lib/form';
 	import { scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
-	import type { Data } from './$types';
+	import type { PageData } from './$types';
 
-	/** @type {import('./$types').Data} */
+	/** @type {import('./$types').PageData} */
 	export let data: Data;
 </script>
 
