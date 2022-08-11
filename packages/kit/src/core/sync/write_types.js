@@ -111,11 +111,7 @@ export async function write_types(config, manifest_data) {
 	for (const [dir, group] of directories) {
 		const outdir = `${config.kit.outDir}/types/${routes_dir}/${dir}`;
 
-		/** @type {Set<string>} */
-		const type_imports = new Set();
-
-		/** @type {string[]} */
-		const imports = [];
+		const imports = [`import type * as Kit from '@sveltejs/kit';`];
 
 		/** @type {string[]} */
 		const declarations = [];
@@ -135,13 +131,7 @@ export async function write_types(config, manifest_data) {
 		}
 
 		if (group.page) {
-			const { data, load, errors, exported } = process_node(
-				ts,
-				group.page,
-				outdir,
-				'RouteParams',
-				type_imports
-			);
+			const { data, load, errors, exported } = process_node(ts, group.page, outdir, 'RouteParams');
 
 			exports.push(`export type Errors = ${errors};`);
 
@@ -177,13 +167,7 @@ export async function write_types(config, manifest_data) {
 			}
 
 			if (group.default_layout) {
-				const { data, load } = process_node(
-					ts,
-					group.default_layout,
-					outdir,
-					'LayoutParams',
-					type_imports
-				);
+				const { data, load } = process_node(ts, group.default_layout, outdir, 'LayoutParams');
 				exports.push(`export type LayoutData = ${data};`);
 				if (load) {
 					exports.push(`export type LayoutLoad = ${load};`);
@@ -198,7 +182,7 @@ export async function write_types(config, manifest_data) {
 				const load_exports = [];
 
 				for (const [name, node] of group.named_layouts) {
-					const { data, load } = process_node(ts, node, outdir, 'LayoutParams', type_imports);
+					const { data, load } = process_node(ts, node, outdir, 'LayoutParams');
 					data_exports.push(`export type ${name} = ${data};`);
 					if (load) {
 						load_exports.push(`export type ${name} = ${load};`);
@@ -211,13 +195,7 @@ export async function write_types(config, manifest_data) {
 		}
 
 		if (group.endpoint) {
-			type_imports.add('RequestHandler as GenericRequestHandler');
-			exports.push(`export type RequestHandler = GenericRequestHandler<RouteParams>;`);
-		}
-
-		if (type_imports.size > 0) {
-			const specifiers = Array.from(type_imports).join(',\n\t');
-			imports.unshift(`import type {\n\t${specifiers}\n} from '@sveltejs/kit';`);
+			exports.push(`export type RequestHandler = Kit.RequestHandler<RouteParams>;`);
 		}
 
 		const output = [imports.join('\n'), declarations.join('\n'), exports.join('\n')]
@@ -233,9 +211,8 @@ export async function write_types(config, manifest_data) {
  * @param {import('types').PageNode} node
  * @param {string} outdir
  * @param {string} params
- * @param {Set<string>} type_imports
  */
-function process_node(ts, node, outdir, params, type_imports) {
+function process_node(ts, node, outdir, params) {
 	let data;
 	let load;
 	let errors;
@@ -244,12 +221,6 @@ function process_node(ts, node, outdir, params, type_imports) {
 	let server_data;
 
 	if (node.server) {
-		type_imports.add('AwaitedProperties');
-
-		for (const method of methods) {
-			type_imports.add(`${method} as Generic${method}`);
-		}
-
 		const content = fs.readFileSync(node.server, 'utf8');
 		const proxy = tweak_types(ts, content, server_names);
 		const basename = path.basename(node.server);
@@ -261,14 +232,16 @@ function process_node(ts, node, outdir, params, type_imports) {
 			const types = [];
 			for (const method of ['POST', 'PUT', 'PATCH']) {
 				if (proxy.exports.includes(method)) {
-					type_imports.add('AwaitedErrors');
 					if (proxy.modified) {
-						types.push(`AwaitedErrors<typeof import('./proxy${basename}').${method}>`);
+						types.push(`Kit.AwaitedErrors<typeof import('./proxy${basename}').${method}>`);
 					} else {
 						// If the file wasn't tweaked, we can use the return type of the original file.
 						// The advantage is that type updates are reflected without saving.
 						types.push(
-							`AwaitedErrors<typeof import("${path_to_original(outdir, node.server)}").${method}>`
+							`Kit.AwaitedErrors<typeof import("${path_to_original(
+								outdir,
+								node.server
+							)}").${method}>`
 						);
 					}
 				}
@@ -279,15 +252,12 @@ function process_node(ts, node, outdir, params, type_imports) {
 		}
 
 		// TODO replace when GET becomes load and POST etc become actions
-		exported = methods.map((name) => `export type ${name} = Generic${name}<${params}>;`);
+		exported = methods.map((name) => `export type ${name} = Kit.${name}<${params}>;`);
 	} else {
 		server_data = 'null';
 	}
 
 	if (node.module) {
-		type_imports.add('Load as GenericLoad');
-		type_imports.add('AwaitedProperties');
-
 		const content = fs.readFileSync(node.module, 'utf8');
 		const proxy = tweak_types(ts, content, module_names);
 		if (proxy?.modified) {
@@ -295,7 +265,7 @@ function process_node(ts, node, outdir, params, type_imports) {
 		}
 		data = get_data_type(node.module, 'load', server_data, proxy);
 
-		load = `GenericLoad<${params}, ${server_data}>`;
+		load = `Kit.Load<${params}, ${server_data}>`;
 	} else {
 		data = server_data;
 	}
@@ -313,11 +283,11 @@ function process_node(ts, node, outdir, params, type_imports) {
 			if (proxy.exports.includes(method)) {
 				if (proxy.modified) {
 					const basename = path.basename(file_path);
-					return `AwaitedProperties<Awaited<ReturnType<typeof import('./proxy${basename}').${method}>>>`;
+					return `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('./proxy${basename}').${method}>>>`;
 				} else {
 					// If the file wasn't tweaked, we can use the return type of the original file.
 					// The advantage is that type updates are reflected without saving.
-					return `AwaitedProperties<Awaited<ReturnType<typeof import("${path_to_original(
+					return `Kit.AwaitedProperties<Awaited<ReturnType<typeof import("${path_to_original(
 						outdir,
 						file_path
 					)}").${method}>>>`;
