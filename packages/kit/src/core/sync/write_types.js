@@ -127,9 +127,11 @@ export async function write_types(config, manifest_data) {
 
 		if (route_params.length > 0) {
 			const params = route_params.map((param) => `${param}: string`).join('; ');
-			declarations.push(`interface RouteParams extends Record<string, string> { ${params} }`);
+			declarations.push(
+				`interface RouteParams extends Partial<Record<string, string>> { ${params} }`
+			);
 		} else {
-			declarations.push(`interface RouteParams extends Record<string, string> {}`);
+			declarations.push(`interface RouteParams extends Partial<Record<string, string>> {}`);
 		}
 
 		if (group.page) {
