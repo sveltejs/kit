@@ -145,7 +145,7 @@ export interface PageData {
 	pattern: RegExp;
 	errors: Array<PageNode | undefined>;
 	layouts: Array<PageNode | undefined>;
-	page: PageNode;
+	leaf: PageNode;
 }
 
 export type PayloadScriptAttributes =
@@ -300,7 +300,7 @@ export interface SSRPage {
 	types: string[];
 	errors: Array<number | undefined>;
 	layouts: Array<number | undefined>;
-	page: number;
+	leaf: number;
 }
 
 export interface SSRErrorPage {

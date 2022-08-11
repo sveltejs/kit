@@ -322,7 +322,7 @@ function get_methods(cwd, output, manifest_data) {
 	/** @type {Record<string, import('types').HttpMethod[]>} */
 	const methods = {};
 	manifest_data.routes.forEach((route) => {
-		const file = route.type === 'endpoint' ? route.file : route.page.server;
+		const file = route.type === 'endpoint' ? route.file : route.leaf.server;
 
 		if (file && lookup[file]) {
 			methods[file] = lookup[file].filter(is_http_method);

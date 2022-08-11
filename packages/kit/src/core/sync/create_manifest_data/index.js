@@ -171,7 +171,7 @@ export default function create_manifest_data({
 						pattern,
 						errors: [],
 						layouts: [],
-						page: {}
+						leaf: {}
 					});
 				}
 			}
@@ -180,15 +180,15 @@ export default function create_manifest_data({
 				const route = /** @type {import('types').PageData} */ (route_map.get(id));
 
 				if (item.kind === 'component') {
-					route.page.component = project_relative;
+					route.leaf.component = project_relative;
 
 					const { layouts, errors } = trace(tree, id, item.uses_layout, project_relative);
 					route.layouts = layouts;
 					route.errors = errors;
 				} else if (item.kind === 'server') {
-					route.page.server = project_relative;
+					route.leaf.server = project_relative;
 				} else {
-					route.page.shared = project_relative;
+					route.leaf.shared = project_relative;
 				}
 			}
 		});
@@ -224,7 +224,7 @@ export default function create_manifest_data({
 
 	route_map.forEach((route) => {
 		if (route.type === 'page') {
-			nodes.push(route.page);
+			nodes.push(route.leaf);
 		}
 	});
 

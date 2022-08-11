@@ -7,7 +7,7 @@ import { write } from './utils.js';
 
 /**
  * @typedef {{
- *   page?: import('types').PageNode;
+ *   leaf?: import('types').PageNode;
  *   default_layout?: import('types').PageNode;
  *   named_layouts: Map<string, import('types').PageNode>;
  *   endpoint?: string;
@@ -84,7 +84,7 @@ export async function write_types(config, manifest_data) {
 		const group = get_group(dir);
 
 		if (file?.startsWith('+page')) {
-			group.page = node;
+			group.leaf = node;
 		} else {
 			const match = /^\+layout(?:-([^@.]+))?/.exec(file);
 
@@ -130,8 +130,8 @@ export async function write_types(config, manifest_data) {
 			declarations.push(`interface RouteParams extends Partial<Record<string, string>> {}`);
 		}
 
-		if (group.page) {
-			const { data, load, errors, exported } = process_node(ts, group.page, outdir, 'RouteParams');
+		if (group.leaf) {
+			const { data, load, errors, exported } = process_node(ts, group.leaf, outdir, 'RouteParams');
 
 			exports.push(`export type Errors = ${errors};`);
 

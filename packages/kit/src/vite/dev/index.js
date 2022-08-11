@@ -166,7 +166,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							layouts: route.layouts.map((id) =>
 								id ? manifest_data.nodes.indexOf(id) : undefined
 							),
-							page: manifest_data.nodes.indexOf(route.page)
+							leaf: manifest_data.nodes.indexOf(route.leaf)
 						};
 					}
 

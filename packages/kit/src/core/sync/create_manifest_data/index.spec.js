@@ -51,7 +51,7 @@ test('creates routes', () => {
 			pattern: /^\/$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: index
+			leaf: index
 		},
 
 		{
@@ -67,7 +67,7 @@ test('creates routes', () => {
 			pattern: /^\/about\/?$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: about
+			leaf: about
 		},
 
 		{
@@ -76,7 +76,7 @@ test('creates routes', () => {
 			pattern: /^\/blog\/?$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: blog
+			leaf: blog
 		},
 
 		{
@@ -92,7 +92,7 @@ test('creates routes', () => {
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: blog_$slug
+			leaf: blog_$slug
 		}
 	]);
 });
@@ -118,7 +118,7 @@ test_symlinks('creates symlinked routes', () => {
 			pattern: /^\/$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: index
+			leaf: index
 		},
 
 		{
@@ -127,7 +127,7 @@ test_symlinks('creates symlinked routes', () => {
 			pattern: /^\/foo\/?$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: symlinked_index
+			leaf: symlinked_index
 		}
 	]);
 });
@@ -151,7 +151,7 @@ test('creates routes with layout', () => {
 				pattern: /^\/$/,
 				errors: [default_error],
 				layouts: [layout],
-				page: index
+				leaf: index
 			},
 
 			{
@@ -160,7 +160,7 @@ test('creates routes with layout', () => {
 				pattern: /^\/foo\/?$/,
 				errors: [default_error],
 				layouts: [layout, foo___layout],
-				page: foo
+				leaf: foo
 			}
 		].slice(1, 2)
 	);
@@ -238,7 +238,7 @@ test('sorts routes with rest correctly', () => {
 			pattern: /^\/a(?:\/(.*))?\/?$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: {
+			leaf: {
 				component: 'samples/rest/a/[...rest]/+page.svelte',
 				server: 'samples/rest/a/[...rest]/+page.server.js'
 			}
@@ -249,7 +249,7 @@ test('sorts routes with rest correctly', () => {
 			pattern: /^\/b(?:\/(.*))?\/?$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: {
+			leaf: {
 				component: 'samples/rest/b/[...rest]/+page.svelte',
 				server: 'samples/rest/b/[...rest]/+page.server.ts'
 			}
@@ -267,7 +267,7 @@ test('allows rest parameters inside segments', () => {
 			pattern: /^\/prefix-(.*?)\/?$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: {
+			leaf: {
 				component: 'samples/rest-prefix-suffix/prefix-[...rest]/+page.svelte'
 			}
 		},
@@ -350,7 +350,7 @@ test('works with custom extensions', () => {
 			pattern: /^\/$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: index
+			leaf: index
 		},
 
 		{
@@ -366,7 +366,7 @@ test('works with custom extensions', () => {
 			pattern: /^\/about\/?$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: about
+			leaf: about
 		},
 
 		{
@@ -375,7 +375,7 @@ test('works with custom extensions', () => {
 			pattern: /^\/blog\/?$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: blog
+			leaf: blog
 		},
 
 		{
@@ -391,7 +391,7 @@ test('works with custom extensions', () => {
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			errors: [default_error],
 			layouts: [default_layout],
-			page: blog_$slug
+			leaf: blog_$slug
 		}
 	]);
 });
@@ -433,7 +433,7 @@ test('includes nested error components', () => {
 				undefined,
 				{ component: 'samples/nested-errors/foo/bar/baz/+layout.svelte' }
 			],
-			page: {
+			leaf: {
 				component: 'samples/nested-errors/foo/bar/baz/+page.svelte'
 			}
 		}
@@ -476,7 +476,7 @@ test('creates routes with named layouts', () => {
 				{ component: 'samples/named-layouts/+layout.svelte' },
 				{ component: 'samples/named-layouts/a/+layout.svelte' }
 			],
-			page: { component: 'samples/named-layouts/a/a1/+page.svelte' }
+			leaf: { component: 'samples/named-layouts/a/a1/+page.svelte' }
 		},
 		{
 			type: 'page',
@@ -490,7 +490,7 @@ test('creates routes with named layouts', () => {
 					server: 'samples/named-layouts/+layout-special.server.js'
 				}
 			],
-			page: { component: 'samples/named-layouts/a/a2/+page@special.svelte' }
+			leaf: { component: 'samples/named-layouts/a/a2/+page@special.svelte' }
 		},
 		{
 			type: 'page',
@@ -501,7 +501,7 @@ test('creates routes with named layouts', () => {
 				{ component: 'samples/named-layouts/+layout.svelte' },
 				{ component: 'samples/named-layouts/b/d/+layout-special.svelte' }
 			],
-			page: { component: 'samples/named-layouts/b/d/+page@special.svelte' }
+			leaf: { component: 'samples/named-layouts/b/d/+page@special.svelte' }
 		},
 		{
 			type: 'page',
@@ -516,7 +516,7 @@ test('creates routes with named layouts', () => {
 				},
 				{ component: 'samples/named-layouts/b/+layout-alsospecial@special.svelte' }
 			],
-			page: { component: 'samples/named-layouts/b/c/c1/+page@alsospecial.svelte' }
+			leaf: { component: 'samples/named-layouts/b/c/c1/+page@alsospecial.svelte' }
 		},
 		{
 			type: 'page',
@@ -527,7 +527,7 @@ test('creates routes with named layouts', () => {
 				{ component: 'samples/named-layouts/+layout.svelte' },
 				{ component: 'samples/named-layouts/+layout-home@default.svelte' }
 			],
-			page: { component: 'samples/named-layouts/b/c/c2/+page@home.svelte' }
+			leaf: { component: 'samples/named-layouts/b/c/c2/+page@home.svelte' }
 		},
 		{
 			type: 'page',
@@ -535,7 +535,7 @@ test('creates routes with named layouts', () => {
 			pattern: /^\/b\/d\/d1\/?$/,
 			errors: [default_error],
 			layouts: [{ component: 'samples/named-layouts/+layout.svelte' }],
-			page: { component: 'samples/named-layouts/b/d/d1/+page.svelte' }
+			leaf: { component: 'samples/named-layouts/b/d/d1/+page.svelte' }
 		},
 		{
 			type: 'page',
@@ -547,7 +547,7 @@ test('creates routes with named layouts', () => {
 				{ component: 'samples/named-layouts/b/d/+layout-special.svelte' },
 				{ component: 'samples/named-layouts/b/d/+layout-extraspecial@special.svelte' }
 			],
-			page: { component: 'samples/named-layouts/b/d/d2/+page@extraspecial.svelte' }
+			leaf: { component: 'samples/named-layouts/b/d/d2/+page@extraspecial.svelte' }
 		}
 	]);
 });

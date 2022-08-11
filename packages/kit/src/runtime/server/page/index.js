@@ -37,7 +37,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 	]);
 
 	if (accept === 'application/json') {
-		const node = await options.manifest._.nodes[route.page]();
+		const node = await options.manifest._.nodes[route.leaf]();
 		if (node.server) {
 			return handle_json_request(event, options, node.server);
 		}
@@ -51,7 +51,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		const nodes = await Promise.all([
 			// we use == here rather than === because [undefined] serializes as "[null]"
 			...route.layouts.map((n) => (n == undefined ? n : options.manifest._.nodes[n]())),
-			options.manifest._.nodes[route.page]()
+			options.manifest._.nodes[route.leaf]()
 		]);
 
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));

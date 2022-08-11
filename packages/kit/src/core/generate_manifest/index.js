@@ -70,7 +70,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 							types: ${s(types)},
 							errors: ${s(route.errors.map(get_index))},
 							layouts: ${s(route.layouts.map(get_index))},
-							page: ${s(get_index(route.page))}
+							leaf: ${s(get_index(route.leaf))}
 						}`.replace(/^\t\t/gm, '');
 					} else {
 						if (!build_data.server.vite_manifest[route.file]) {

@@ -238,7 +238,7 @@ export async function respond(request, options, state) {
 					/** @type {Response} */
 					let response;
 					if (is_data_request && route.type === 'page') {
-						const module = await options.manifest._.nodes[route.page]();
+						const module = await options.manifest._.nodes[route.leaf]();
 						if (module.server) {
 							response = await handle_json_request(event, options, module.server);
 							if (request.headers.has('x-sveltekit-load')) {
