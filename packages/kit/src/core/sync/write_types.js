@@ -15,15 +15,16 @@ const server_names = new Set(methods.map((m) => m.toUpperCase()));
  * @param {import('types').ManifestData} manifest_data
  */
 export async function write_types(config, manifest_data) {
-	rimraf(`${config.kit.outDir}/types`);
-
 	/** @type {import('typescript') | undefined} */
 	let ts = undefined;
 	try {
 		ts = (await import('typescript')).default;
 	} catch (e) {
-		// No TypeScript installed - skip proxy generation
+		// No TypeScript installed - skip type generation
+		return;
 	}
+
+	rimraf(`${config.kit.outDir}/types`);
 
 	const routes_dir = path.relative('.', config.kit.files.routes);
 
