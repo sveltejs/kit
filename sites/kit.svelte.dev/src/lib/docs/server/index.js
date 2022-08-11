@@ -292,15 +292,23 @@ export function read_headings(dir) {
  */
 function parse({ body, file, slug, code, codespan }) {
 	const headings = slug ? [slug] : [];
+
+	/** @type {import('./types').Section[]} */
 	const sections = [];
 
+	/** @type {import('./types').Section} */
 	let section;
 
 	// this is a bit hacky, but it allows us to prevent type declarations
 	// from linking to themselves
 	let current = '';
 
+	/** @type {string} */
 	const content = transform(body, {
+		/**
+		 * @param {string} html
+		 * @param {number} level
+		 */
 		heading(html, level) {
 			const title = html
 				.replace(/<\/?code>/g, '')
