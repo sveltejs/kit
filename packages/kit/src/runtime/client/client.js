@@ -561,12 +561,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 					uses.session = true;
 					return session;
 				},
-				// @ts-expect-error
-				get stuff() {
-					throw new Error(
-						'@migration task: Remove stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
-					);
-				},
 				async fetch(resource, init) {
 					let requested;
 
@@ -613,6 +607,17 @@ export function create_client({ target, session, base, trailing_slash }) {
 					// does await parent() inside an if branch which wasn't executed yet.
 					uses.parent = true;
 					return parent;
+				},
+				// @ts-expect-error
+				get props() {
+					throw new Error(
+						'@migration task: Replace `props` with `data` stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
+					);
+				},
+				get stuff() {
+					throw new Error(
+						'@migration task: Remove stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
+					);
 				}
 			};
 
