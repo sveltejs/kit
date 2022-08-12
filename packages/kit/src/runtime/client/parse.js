@@ -10,7 +10,7 @@ export function parse(nodes, dictionary, matchers) {
 	return Object.entries(dictionary).map(([id, [errors, layouts, leaf]]) => {
 		const { pattern, names, types } = parse_route_id(id);
 
-		return {
+		const route = {
 			id,
 			/** @param {string} path */
 			exec: (path) => {
@@ -21,5 +21,15 @@ export function parse(nodes, dictionary, matchers) {
 			layouts: layouts.map((n) => nodes[n]),
 			leaf: nodes[leaf]
 		};
+
+		// bit of a hack, but ensures that layout/error node lists are the same
+		// length, without which the wrong data will be applied if the route
+		// manifest looks like `[[a, b], [c,], d]`
+		route.errors.length = route.layouts.length = Math.max(
+			route.errors.length,
+			route.layouts.length
+		);
+
+		return route;
 	});
 }

@@ -91,7 +91,7 @@ export interface ServerDataRedirected {
 }
 
 export interface ServerDataLoaded {
-	type: 'loaded';
+	type: 'data';
 	nodes: Array<{
 		data?: JSONObject | null; // TODO or `-1` to indicate 'reuse cached data'?
 		status?: number;

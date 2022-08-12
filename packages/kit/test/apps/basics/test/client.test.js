@@ -518,7 +518,7 @@ test.describe('Routing', () => {
 	test('navigates to a new page without reloading', async ({ app, page, clicknav }) => {
 		await page.goto('/routing');
 
-		await app.prefetchRoutes(['/routing/a']).catch((e) => {
+		await app.prefetch('/routing/a').catch((e) => {
 			// from error handler tests; ignore
 			if (!e.message.includes('Crashing now')) throw e;
 		});
@@ -577,7 +577,7 @@ test.describe('Shadow DOM', () => {
 	test('client router captures anchors in shadow dom', async ({ app, page, clicknav }) => {
 		await page.goto('/routing/shadow-dom');
 
-		await app.prefetchRoutes(['/routing/a']).catch((e) => {
+		await app.prefetch('/routing/a').catch((e) => {
 			// from error handler tests; ignore
 			if (!e.message.includes('Crashing now')) throw e;
 		});

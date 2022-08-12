@@ -247,7 +247,7 @@ export async function respond(request, options, state) {
 							// TODO only get the data we need for the navigation
 							const promises = [...route.layouts, route.leaf].map(async (n, i) => {
 								try {
-									if (error) throw error;
+									if (error) return;
 
 									const node = n ? await options.manifest._.nodes[n]() : undefined;
 									return {
@@ -276,11 +276,16 @@ export async function respond(request, options, state) {
 										return error; // { status, message }
 									}
 
-									return { error };
+									options.handle_error(error, event);
+
+									return {
+										error: error_to_pojo(error, options.get_stack)
+									};
 								}
 							});
 
 							response = json_response({
+								type: 'data',
 								nodes: await Promise.all(promises)
 							});
 						} catch (e) {
