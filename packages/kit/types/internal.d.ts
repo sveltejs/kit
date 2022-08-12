@@ -87,7 +87,7 @@ export type CSRRoute = {
 	exec: (path: string) => undefined | Record<string, string>;
 	errors: CSRPageNodeLoader[];
 	layouts: CSRPageNodeLoader[];
-	page: CSRPageNodeLoader;
+	leaf: CSRPageNodeLoader;
 };
 
 export interface EndpointData {

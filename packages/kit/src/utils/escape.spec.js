@@ -6,24 +6,22 @@ const json = suite('render_json_payload_script');
 
 json('escapes slashes', () => {
 	assert.equal(
-		render_json_payload_script(
-			{ type: 'server_data', node_idx: '0' },
+		render_json_payload_script({ type: 'server_data' }, [
 			{ unsafe: '</script><script>alert("xss")' }
-		),
-		'<script type="application/json" sveltekit:data-type="server_data" sveltekit:data-node_idx="0">' +
-			'{"unsafe":"\\u003C/script>\\u003Cscript>alert(\\"xss\\")"}' +
+		]),
+		'<script type="application/json" sveltekit:data-type="server_data">' +
+			'[{"unsafe":"\\u003C/script>\\u003Cscript>alert(\\"xss\\")"}]' +
 			'</script>'
 	);
 });
 
 json('escapes exclamation marks', () => {
 	assert.equal(
-		render_json_payload_script(
-			{ type: 'server_data', node_idx: '1' },
+		render_json_payload_script({ type: 'server_data' }, [
 			{ '<!--</script>...-->alert("xss")': 'unsafe' }
-		),
-		'<script type="application/json" sveltekit:data-type="server_data" sveltekit:data-node_idx="1">' +
-			'{"\\u003C!--\\u003C/script>...-->alert(\\"xss\\")":"unsafe"}' +
+		]),
+		'<script type="application/json" sveltekit:data-type="server_data">' +
+			'[{"\\u003C!--\\u003C/script>...-->alert(\\"xss\\")":"unsafe"}]' +
 			'</script>'
 	);
 });

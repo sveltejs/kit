@@ -649,7 +649,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			return load_cache.promise;
 		}
 
-		const { errors, layouts, page } = route;
+		const { errors, layouts, leaf } = route;
 
 		const changed = current.url && {
 			url: id !== current.url.pathname + current.url.search,
@@ -660,9 +660,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 		// preload modules to avoid waterfall, but handle rejections
 		// so they don't get reported to Sentry et al (we don't need
 		// to act on the failures at this point)
-		[...errors, ...layouts, page].forEach((loader) => loader?.().catch(() => {}));
+		[...errors, ...layouts, leaf].forEach((loader) => loader?.().catch(() => {}));
 
-		const nodes = [...layouts, page];
+		const nodes = [...layouts, leaf];
 
 		// To avoid waterfalls when someone awaits a parent, compute as much as possible here already
 		/** @type {boolean[]} */
@@ -1039,7 +1039,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				: routes;
 
 			const promises = matching.map((r) => {
-				return Promise.all([...r.layouts, r.page].map((load) => load?.()));
+				return Promise.all([...r.layouts, r.leaf].map((load) => load?.()));
 			});
 
 			await Promise.all(promises);

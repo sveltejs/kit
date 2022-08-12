@@ -7,7 +7,7 @@ import { exec, parse_route_id } from '../../utils/routing.js';
  * @returns {import('types').CSRRoute[]}
  */
 export function parse(nodes, dictionary, matchers) {
-	return Object.entries(dictionary).map(([id, [errors, layouts, page]]) => {
+	return Object.entries(dictionary).map(([id, [errors, layouts, leaf]]) => {
 		const { pattern, names, types } = parse_route_id(id);
 
 		return {
@@ -19,7 +19,7 @@ export function parse(nodes, dictionary, matchers) {
 			},
 			errors: errors.map((n) => nodes[n]),
 			layouts: layouts.map((n) => nodes[n]),
-			page: nodes[page]
+			leaf: nodes[leaf]
 		};
 	});
 }

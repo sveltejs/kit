@@ -38,7 +38,7 @@ export async function load_server_data({ event, node, parent }) {
  *   fetcher: typeof fetch;
  *   node: import('types').SSRNode | undefined;
  *   options: import('types').SSROptions;
- *   parent: () => Promise<Record<string, any> | null>;
+ *   parent: () => Promise<Record<string, any>>;
  *   server_data_promise: Promise<import('types').JSONObject | null>;
  *   state: import('types').SSRState;
  * }} opts
