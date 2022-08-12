@@ -652,7 +652,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		if (route.uses_server_data) {
 			try {
-				// TODO only fetch server data if the page uses it
 				const res = await native_fetch(
 					`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`
 				);
