@@ -3,7 +3,7 @@ import path from 'path';
 import MagicString from 'magic-string';
 import { posixify, rimraf } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
-import { write } from './utils.js';
+import { remove_from_previous, write_if_changed } from './utils.js';
 
 /**
  * @typedef {{
@@ -29,6 +29,8 @@ const methods = ['Get', 'Post', 'Put', 'Patch', 'Delete'];
 const module_names = new Set(['load']);
 const server_names = new Set(methods.map((m) => m.toUpperCase()));
 
+let first_run = true;
+
 /**
  * Creates types for the whole manifest
  *
@@ -45,15 +47,31 @@ export async function write_types(config, manifest_data) {
 		return;
 	}
 
-	rimraf(`${config.kit.outDir}/types`);
+	const types_dir = `${config.kit.outDir}/types`;
+
+	if (first_run) {
+		rimraf(types_dir);
+		first_run = false;
+	}
 
 	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
 	const directories = get_directories(manifest_data.nodes, manifest_data.routes, routes_dir);
 
+	let written_files = new Set();
 	// ...then, for each directory, write $types.d.ts
 	for (const [dir, group] of directories) {
-		write_types_for_dir(config, manifest_data, routes_dir, dir, group, ts);
+		const written = write_types_for_dir(config, manifest_data, routes_dir, dir, group, ts);
+		written.forEach((w) => written_files.add(w));
 	}
+
+	// Remove all files that were not updated, which means their original was removed
+	remove_from_previous((file) => {
+		const was_removed = file.startsWith(types_dir) && !written_files.has(file);
+		if (was_removed) {
+			rimraf(file);
+		}
+		return was_removed;
+	});
 }
 
 /**
@@ -185,6 +203,9 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, group, ts) 
 	const imports = [`import type * as Kit from '@sveltejs/kit';`];
 
 	/** @type {string[]} */
+	const written_files = [];
+
+	/** @type {string[]} */
 	const declarations = [];
 
 	/** @type {string[]} */
@@ -202,7 +223,13 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, group, ts) 
 	}
 
 	if (group.leaf) {
-		const { data, load, errors, exported } = process_node(ts, group.leaf, outdir, 'RouteParams');
+		const { data, load, errors, exported, written_proxies } = process_node(
+			ts,
+			group.leaf,
+			outdir,
+			'RouteParams'
+		);
+		written_files.push(...written_proxies);
 
 		exports.push(`export type Errors = ${errors};`);
 
@@ -238,7 +265,13 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, group, ts) 
 		}
 
 		if (group.default_layout) {
-			const { data, load } = process_node(ts, group.default_layout, outdir, 'LayoutParams');
+			const { data, load, written_proxies } = process_node(
+				ts,
+				group.default_layout,
+				outdir,
+				'LayoutParams'
+			);
+			written_files.push(...written_proxies);
 			exports.push(`export type LayoutData = ${data};`);
 			if (load) {
 				exports.push(`export type LayoutLoad = ${load};`);
@@ -253,7 +286,8 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, group, ts) 
 			const load_exports = [];
 
 			for (const [name, node] of group.named_layouts) {
-				const { data, load } = process_node(ts, node, outdir, 'LayoutParams');
+				const { data, load, written_proxies } = process_node(ts, node, outdir, 'LayoutParams');
+				written_files.push(...written_proxies);
 				data_exports.push(`export type ${name} = ${data};`);
 				if (load) {
 					load_exports.push(`export type ${name} = ${load};`);
@@ -273,7 +307,9 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, group, ts) 
 		.filter(Boolean)
 		.join('\n\n');
 
-	write(`${outdir}/$types.d.ts`, output);
+	written_files.push(write(`${outdir}/$types.d.ts`, output));
+
+	return written_files;
 }
 
 /**
@@ -287,6 +323,8 @@ function process_node(ts, node, outdir, params) {
 	let load;
 	let errors;
 	let exported;
+	/** @type {string[]} */
+	let written_proxies = [];
 
 	let server_data;
 
@@ -295,7 +333,7 @@ function process_node(ts, node, outdir, params) {
 		const proxy = tweak_types(ts, content, server_names);
 		const basename = path.basename(node.server);
 		if (proxy?.modified) {
-			write(`${outdir}/proxy${basename}`, proxy.code);
+			written_proxies.push(write(`${outdir}/proxy${basename}`, proxy.code));
 		}
 		server_data = get_data_type(node.server, 'GET', 'null', proxy);
 		if (proxy) {
@@ -331,7 +369,7 @@ function process_node(ts, node, outdir, params) {
 		const content = fs.readFileSync(node.shared, 'utf8');
 		const proxy = tweak_types(ts, content, module_names);
 		if (proxy?.modified) {
-			write(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code);
+			written_proxies.push(write(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code));
 		}
 		data = get_data_type(node.shared, 'load', server_data, proxy);
 
@@ -340,7 +378,7 @@ function process_node(ts, node, outdir, params) {
 		data = server_data;
 	}
 
-	return { data, load, errors, exported };
+	return { data, load, errors, exported, written_proxies };
 
 	/**
 	 * @param {string} file_path
@@ -539,4 +577,13 @@ export function tweak_types(ts, content, names) {
 	} catch {
 		return null;
 	}
+}
+
+/**
+ * @param {string} file
+ * @param {string} content
+ */
+function write(file, content) {
+	write_if_changed(file, content);
+	return file;
 }
