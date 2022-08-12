@@ -35,6 +35,8 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 	/** @type {import('types').Respond} */
 	const respond = (await import(`${runtime_prefix}/server/index.js`)).respond;
 
+	/** @type {import('types').ManifestData} */
+	let manifest_data;
 	/** @type {import('types').SSRManifest} */
 	let manifest;
 
@@ -53,7 +55,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 	}
 
 	async function update_manifest() {
-		const { manifest_data } = await sync.update(svelte_config);
+		({ manifest_data } = await sync.create(svelte_config));
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
@@ -211,13 +213,20 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 
 	await update_manifest();
 
-	for (const event of ['add', 'unlink']) {
+	/**
+	 * @param {string} event
+	 * @param {(file: string) => void} cb
+	 */
+	const watch = (event, cb) => {
 		vite.watcher.on(event, (file) => {
 			if (file.startsWith(svelte_config.kit.files.routes + path.sep)) {
-				update_manifest();
+				cb(file);
 			}
 		});
-	}
+	};
+	watch('add', update_manifest);
+	watch('unlink', update_manifest);
+	watch('change', (file) => sync.update(svelte_config, manifest_data, file));
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
 	const asset_server = sirv(svelte_config.kit.files.assets, {

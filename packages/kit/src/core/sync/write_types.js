@@ -30,6 +30,8 @@ const module_names = new Set(['load']);
 const server_names = new Set(methods.map((m) => m.toUpperCase()));
 
 /**
+ * Creates types for the whole manifest
+ *
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  */
@@ -46,7 +48,65 @@ export async function write_types(config, manifest_data) {
 	rimraf(`${config.kit.outDir}/types`);
 
 	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
+	const directories = get_directories(manifest_data.nodes, manifest_data.routes, routes_dir);
 
+	// ...then, for each directory, write $types.d.ts
+	for (const [dir, group] of directories) {
+		write_types_for_dir(config, manifest_data, routes_dir, dir, group, ts);
+	}
+}
+
+/**
+ * Creates types related to the given file. This should only be called
+ * if the file in question was edited, not if it was created/deleted/moved.
+ *
+ * @param {import('types').ValidatedConfig} config
+ * @param {import('types').ManifestData} manifest_data
+ * @param {string} file
+ */
+export async function write_type(config, manifest_data, file) {
+	if (!path.basename(file).startsWith('+')) {
+		// Not a route file
+		return;
+	}
+
+	/** @type {import('typescript') | undefined} */
+	let ts = undefined;
+	try {
+		ts = (await import('typescript')).default;
+	} catch (e) {
+		// No TypeScript installed - skip type generation
+		return;
+	}
+
+	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
+	const file_dir = posixify(path.dirname(file).slice(config.kit.files.routes.length + 1));
+	const nodes = manifest_data.nodes.filter((node) => {
+		const dir = path
+			.dirname(/** @type {string} */ (node.component ?? node.shared ?? node.server))
+			.slice(routes_dir.length + 1);
+		return dir === file_dir;
+	});
+	const routes = manifest_data.routes.filter((route) => {
+		return route.id === file_dir;
+	});
+	const directories = get_directories(nodes, routes, routes_dir);
+
+	// This should at most one entry, which is the directory of the file that was updated
+	const group = directories.get(directories.keys().next().value);
+	if (!group) {
+		return;
+	}
+
+	write_types_for_dir(config, manifest_data, routes_dir, file_dir, group, ts);
+}
+
+/**
+ * @param {import('types').PageNode[]} nodes
+ * @param {import('types').RouteData[]} routes
+ * @param {string} routes_dir
+ */
+function get_directories(nodes, routes, routes_dir) {
 	/**
 	 * A map of all directories : route files. We don't just use
 	 * manifest_data.routes, because that will exclude +layout
@@ -69,7 +129,7 @@ export async function write_types(config, manifest_data) {
 	}
 
 	// first, populate `directories` with +page/+layout files...
-	for (const node of manifest_data.nodes) {
+	for (const node of nodes) {
 		// skip default layout/error
 		if (!node?.component?.startsWith(routes_dir)) continue;
 
@@ -101,109 +161,119 @@ export async function write_types(config, manifest_data) {
 	}
 
 	// ...then add +server.js files...
-	for (const route of manifest_data.routes) {
+	for (const route of routes) {
 		if (route.type === 'endpoint') {
 			get_group(route.id).endpoint = route.file;
 		}
 	}
 
-	// ...then, for each directory, write $types.d.ts
-	for (const [dir, group] of directories) {
-		const outdir = `${config.kit.outDir}/types/${routes_dir}/${dir}`;
+	return directories;
+}
 
-		const imports = [`import type * as Kit from '@sveltejs/kit';`];
+/**
+ *
+ * @param {import('types').ValidatedConfig} config
+ * @param {import('types').ManifestData} manifest_data
+ * @param {string} routes_dir
+ * @param {string} dir
+ * @param {NodeGroup} group
+ * @param {import('typescript')} ts
+ */
+function write_types_for_dir(config, manifest_data, routes_dir, dir, group, ts) {
+	const outdir = `${config.kit.outDir}/types/${routes_dir}/${dir}`;
 
-		/** @type {string[]} */
-		const declarations = [];
+	const imports = [`import type * as Kit from '@sveltejs/kit';`];
 
-		/** @type {string[]} */
-		const exports = [];
+	/** @type {string[]} */
+	const declarations = [];
 
-		const route_params = parse_route_id(dir).names;
+	/** @type {string[]} */
+	const exports = [];
 
-		if (route_params.length > 0) {
-			const params = route_params.map((param) => `${param}: string`).join('; ');
-			declarations.push(
-				`interface RouteParams extends Partial<Record<string, string>> { ${params} }`
-			);
-		} else {
-			declarations.push(`interface RouteParams extends Partial<Record<string, string>> {}`);
-		}
+	const route_params = parse_route_id(dir).names;
 
-		if (group.leaf) {
-			const { data, load, errors, exported } = process_node(ts, group.leaf, outdir, 'RouteParams');
-
-			exports.push(`export type Errors = ${errors};`);
-
-			exports.push(`export type PageData = ${data};`);
-			if (load) {
-				exports.push(`export type PageLoad = ${load};`);
-			}
-
-			if (exported) {
-				exports.push(...exported);
-			}
-		}
-
-		if (group.default_layout || group.named_layouts.size > 0) {
-			// TODO to be completely rigorous, we should have a LayoutParams per
-			// layout, and only include params for child pages that use each layout.
-			// but that's more work than i care to do right now
-			const layout_params = new Set();
-			manifest_data.routes.forEach((route) => {
-				if (route.type === 'page' && route.id.startsWith(dir + '/')) {
-					// TODO this is O(n^2), see if we need to speed it up
-					for (const name of parse_route_id(route.id).names) {
-						layout_params.add(name);
-					}
-				}
-			});
-
-			if (layout_params.size > 0) {
-				const params = Array.from(layout_params).map((param) => `${param}?: string`);
-				declarations.push(`interface LayoutParams extends RouteParams { ${params.join('; ')} }`);
-			} else {
-				declarations.push(`interface LayoutParams extends RouteParams {}`);
-			}
-
-			if (group.default_layout) {
-				const { data, load } = process_node(ts, group.default_layout, outdir, 'LayoutParams');
-				exports.push(`export type LayoutData = ${data};`);
-				if (load) {
-					exports.push(`export type LayoutLoad = ${load};`);
-				}
-			}
-
-			if (group.named_layouts.size > 0) {
-				/** @type {string[]} */
-				const data_exports = [];
-
-				/** @type {string[]} */
-				const load_exports = [];
-
-				for (const [name, node] of group.named_layouts) {
-					const { data, load } = process_node(ts, node, outdir, 'LayoutParams');
-					data_exports.push(`export type ${name} = ${data};`);
-					if (load) {
-						load_exports.push(`export type ${name} = ${load};`);
-					}
-				}
-
-				exports.push(`\nexport namespace LayoutData {\n\t${data_exports.join('\n\t')}\n}`);
-				exports.push(`\nexport namespace LayoutLoad {\n\t${load_exports.join('\n\t')}\n}`);
-			}
-		}
-
-		if (group.endpoint) {
-			exports.push(`export type RequestHandler = Kit.RequestHandler<RouteParams>;`);
-		}
-
-		const output = [imports.join('\n'), declarations.join('\n'), exports.join('\n')]
-			.filter(Boolean)
-			.join('\n\n');
-
-		write(`${outdir}/$types.d.ts`, output);
+	if (route_params.length > 0) {
+		const params = route_params.map((param) => `${param}: string`).join('; ');
+		declarations.push(
+			`interface RouteParams extends Partial<Record<string, string>> { ${params} }`
+		);
+	} else {
+		declarations.push(`interface RouteParams extends Partial<Record<string, string>> {}`);
 	}
+
+	if (group.leaf) {
+		const { data, load, errors, exported } = process_node(ts, group.leaf, outdir, 'RouteParams');
+
+		exports.push(`export type Errors = ${errors};`);
+
+		exports.push(`export type PageData = ${data};`);
+		if (load) {
+			exports.push(`export type PageLoad = ${load};`);
+		}
+
+		if (exported) {
+			exports.push(...exported);
+		}
+	}
+
+	if (group.default_layout || group.named_layouts.size > 0) {
+		// TODO to be completely rigorous, we should have a LayoutParams per
+		// layout, and only include params for child pages that use each layout.
+		// but that's more work than i care to do right now
+		const layout_params = new Set();
+		manifest_data.routes.forEach((route) => {
+			if (route.type === 'page' && route.id.startsWith(dir + '/')) {
+				// TODO this is O(n^2), see if we need to speed it up
+				for (const name of parse_route_id(route.id).names) {
+					layout_params.add(name);
+				}
+			}
+		});
+
+		if (layout_params.size > 0) {
+			const params = Array.from(layout_params).map((param) => `${param}?: string`);
+			declarations.push(`interface LayoutParams extends RouteParams { ${params.join('; ')} }`);
+		} else {
+			declarations.push(`interface LayoutParams extends RouteParams {}`);
+		}
+
+		if (group.default_layout) {
+			const { data, load } = process_node(ts, group.default_layout, outdir, 'LayoutParams');
+			exports.push(`export type LayoutData = ${data};`);
+			if (load) {
+				exports.push(`export type LayoutLoad = ${load};`);
+			}
+		}
+
+		if (group.named_layouts.size > 0) {
+			/** @type {string[]} */
+			const data_exports = [];
+
+			/** @type {string[]} */
+			const load_exports = [];
+
+			for (const [name, node] of group.named_layouts) {
+				const { data, load } = process_node(ts, node, outdir, 'LayoutParams');
+				data_exports.push(`export type ${name} = ${data};`);
+				if (load) {
+					load_exports.push(`export type ${name} = ${load};`);
+				}
+			}
+
+			exports.push(`\nexport namespace LayoutData {\n\t${data_exports.join('\n\t')}\n}`);
+			exports.push(`\nexport namespace LayoutLoad {\n\t${load_exports.join('\n\t')}\n}`);
+		}
+	}
+
+	if (group.endpoint) {
+		exports.push(`export type RequestHandler = Kit.RequestHandler<RouteParams>;`);
+	}
+
+	const output = [imports.join('\n'), declarations.join('\n'), exports.join('\n')]
+		.filter(Boolean)
+		.join('\n\n');
+
+	write(`${outdir}/$types.d.ts`, output);
 }
 
 /**

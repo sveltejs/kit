@@ -4,7 +4,7 @@ import { write_client_manifest } from './write_client_manifest.js';
 import { write_matchers } from './write_matchers.js';
 import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
-import { write_types } from './write_types.js';
+import { write_type, write_types } from './write_types.js';
 import { write_ambient } from './write_ambient.js';
 
 /**
@@ -18,10 +18,10 @@ export function init(config, mode) {
 }
 
 /**
- * Update SvelteKit's generated files.
+ * Update SvelteKit's generated files
  * @param {import('types').ValidatedConfig} config
  */
-export async function update(config) {
+export async function create(config) {
 	const manifest_data = create_manifest_data({ config });
 
 	const output = path.join(config.kit.outDir, 'generated');
@@ -35,11 +35,25 @@ export async function update(config) {
 }
 
 /**
+ * Update SvelteKit's generated files in response to a single file content update.
+ * Do not call this when the file in question was created/deleted.
+ *
+ * @param {import('types').ValidatedConfig} config
+ * @param {import('types').ManifestData} manifest_data
+ * @param {string} file
+ */
+export async function update(config, manifest_data, file) {
+	await write_type(config, manifest_data, file);
+
+	return { manifest_data };
+}
+
+/**
  * Run sync.init and sync.update in series, returning the result from sync.update.
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode The Vite mode
  */
 export async function all(config, mode) {
 	init(config, mode);
-	return await update(config);
+	return await create(config);
 }
