@@ -224,9 +224,26 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 			}
 		});
 	};
-	watch('add', update_manifest);
-	watch('unlink', update_manifest);
-	watch('change', (file) => sync.update(svelte_config, manifest_data, file));
+	/** @type {NodeJS.Timeout | null } */
+	let timeout = null;
+	/** @param {() => void} to_run */
+	const debounce = (to_run) => {
+		timeout && clearTimeout(timeout);
+		timeout = setTimeout(() => {
+			timeout = null;
+			to_run();
+		}, 100);
+	};
+	// Debounce add/unlink events because in case of folder deletion or moves
+	// they fire in rapid succession, causing needless invocations.
+	watch('add', () => debounce(update_manifest));
+	watch('unlink', () => debounce(update_manifest));
+	watch('change', (file) => {
+		// Don't run for a single file if the whole manifest is about to get updated
+		if (!timeout) {
+			sync.update(svelte_config, manifest_data, file);
+		}
+	});
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
 	const asset_server = sirv(svelte_config.kit.files.assets, {
