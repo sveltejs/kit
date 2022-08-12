@@ -57,7 +57,10 @@ export function write_client_manifest(manifest_data, output) {
 						.join(',');
 					const leaf = route.leaf ? node_indexes.get(route.leaf) : '';
 
-					return `${s(route.id)}: [[${errors}], [${layouts}], ${leaf}]`;
+					const uses_server_data = [...route.layouts, route.leaf].some((node) => node?.server);
+					const suffix = uses_server_data ? ', 1' : '';
+
+					return `${s(route.id)}: [[${errors}], [${layouts}], ${leaf}${suffix}]`;
 				}
 			})
 			.filter(Boolean)

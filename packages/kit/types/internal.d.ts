@@ -88,6 +88,7 @@ export type CSRRoute = {
 	errors: CSRPageNodeLoader[];
 	layouts: CSRPageNodeLoader[];
 	leaf: CSRPageNodeLoader;
+	uses_server_data: boolean;
 };
 
 export interface EndpointData {

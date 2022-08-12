@@ -647,29 +647,31 @@ export function create_client({ target, session, base, trailing_slash }) {
 			}
 		}
 
-		/** @type {import('./types').ServerDataPayload} */
-		let server_data_payload;
+		/** @type {import('./types').ServerDataPayload | null} */
+		let server_data_payload = null;
 
-		try {
-			// TODO only fetch server data if the page uses it
-			const res = await native_fetch(
-				`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`
-			);
+		if (route.uses_server_data) {
+			try {
+				// TODO only fetch server data if the page uses it
+				const res = await native_fetch(
+					`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`
+				);
 
-			server_data_payload = await res.json();
+				server_data_payload = /** @type {import('./types').ServerDataPayload} */ (await res.json());
 
-			if (!res.ok) {
-				throw server_data_payload;
+				if (!res.ok) {
+					throw server_data_payload;
+				}
+			} catch (e) {
+				throw new Error('TODO render fallback error page');
 			}
-		} catch (e) {
-			throw new Error('TODO render fallback error page');
+
+			if (server_data_payload.type === 'redirect') {
+				return server_data_payload;
+			}
 		}
 
-		if (server_data_payload.type === 'redirect') {
-			return server_data_payload;
-		}
-
-		const server_data_nodes = server_data_payload.nodes;
+		const server_data_nodes = server_data_payload?.nodes;
 
 		const branch_promises = nodes.map(async (loader, i) => {
 			return Promise.resolve().then(async () => {
@@ -682,7 +684,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					nodes_changed_since_last_render[i] || !previous || node !== previous.node;
 
 				if (changed_since_last_render) {
-					const payload = server_data_nodes[i];
+					const payload = server_data_nodes?.[i];
 
 					if (payload?.status) {
 						throw error(payload.status, payload.message);
