@@ -200,14 +200,16 @@ export interface HandleError {
 export interface Load<
 	Params extends Record<string, string> = Record<string, string>,
 	InputData extends JSONObject | null = JSONObject | null,
+	ParentData extends Record<string, any> | null = Record<string, any>,
 	OutputData extends Record<string, any> = Record<string, any>
 > {
-	(event: LoadEvent<Params, InputData>): MaybePromise<OutputData | void>;
+	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData | void>;
 }
 
 export interface LoadEvent<
 	Params extends Record<string, string> = Record<string, string>,
-	Data extends JSONObject | null = JSONObject | null
+	Data extends JSONObject | null = JSONObject | null,
+	ParentData extends Record<string, any> | null = Record<string, any>
 > {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
@@ -216,7 +218,7 @@ export interface LoadEvent<
 	session: App.Session;
 	setHeaders: (headers: ResponseHeaders) => void;
 	url: URL;
-	parent: () => Promise<Record<string, any> | null>;
+	parent: () => Promise<ParentData>;
 	depends: (...deps: string[]) => void;
 }
 
