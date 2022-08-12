@@ -463,7 +463,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   routeId: string | null;
-	 * 	 server_data?: import('types').JSONObject | null;
+	 * 	 server_data: import('types').JSONObject | null;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
@@ -488,49 +488,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 		let data = null;
 
 		if (node.server) {
-			// +page.server.js data means we need to mark this URL as a dependency of itself,
+			// +page|layout.server.js data means we need to mark this URL as a dependency of itself,
 			// unless we want to get clever with usage detection on the server, which could
 			// be returned to the client either as payload or custom headers
 			uses.dependencies.add(url.href);
 			uses.url = true;
-
-			if (server_data === undefined) {
-				const res = await native_fetch(
-					`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
-					{
-						headers: {
-							'x-sveltekit-load': 'true'
-						}
-					}
-				);
-
-				if (res.ok) {
-					const redirect_location = res.headers.get('x-sveltekit-location');
-
-					if (redirect_location) {
-						// We are client-side, where the redirect status code doesn't matter
-						throw redirect(399, redirect_location);
-					}
-
-					server_data = res.status === 204 ? {} : await res.json();
-				} else {
-					let json;
-					try {
-						json = await res.json();
-					} catch (e) {
-						throw error(500, 'Failed to load data');
-					}
-					if (
-						/** @type {import('../server/page/types').SerializedHttpError} */ (json).__is_http_error
-					) {
-						throw error(res.status, json.message);
-					} else {
-						throw json;
-					}
-				}
-			}
 		}
-		server_data = server_data || null;
 
 		/** @type {Record<string, string>} */
 		const uses_params = {};
@@ -712,14 +675,16 @@ export function create_client({ target, session, base, trailing_slash }) {
 					nodes_changed_since_last_render[i] || !previous || node !== previous.node;
 
 				if (changed_since_last_render) {
-					const { error: e, status, message, data } = server_data_payload.nodes[i];
+					const payload = /** @type {import('./types').ServerDataLoadResult} */ (
+						server_data_payload
+					).nodes[i];
 
-					if (status) {
-						throw error(status, message);
+					if (payload?.status) {
+						throw error(payload.status, payload.message);
 					}
 
-					if (e) {
-						throw e;
+					if (payload?.error) {
+						throw payload.error;
 					}
 
 					return await load_node({
@@ -734,7 +699,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 							}
 							return data;
 						},
-						server_data: data
+						server_data: payload?.data ?? null
 					});
 				} else {
 					return previous;
