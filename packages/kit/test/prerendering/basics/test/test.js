@@ -64,8 +64,20 @@ test('loads a file with spaces in the filename', () => {
 });
 
 test('generates __data.json file for shadow endpoints', () => {
-	assert.equal(read('__data.json'), JSON.stringify({ message: 'hello' }));
-	assert.equal(read('shadowed-get/__data.json'), JSON.stringify({ answer: 42 }));
+	assert.equal(
+		read('__data.json'),
+		JSON.stringify({
+			type: 'data',
+			nodes: [{ data: null }, { data: { message: 'hello' } }]
+		})
+	);
+	assert.equal(
+		read('shadowed-get/__data.json'),
+		JSON.stringify({
+			type: 'data',
+			nodes: [{ data: null }, { data: { answer: 42 } }]
+		})
+	);
 });
 
 test('does not prerender page with shadow endpoint with non-GET handler', () => {
@@ -150,7 +162,13 @@ test('prerenders binary data', async () => {
 });
 
 test('fetches data from local endpoint', () => {
-	assert.equal(read('origin/__data.json'), JSON.stringify({ message: 'hello' }));
+	assert.equal(
+		read('origin/__data.json'),
+		JSON.stringify({
+			type: 'data',
+			nodes: [{ data: null }, { data: { message: 'hello' } }]
+		})
+	);
 	assert.equal(read('origin/message.json'), JSON.stringify({ message: 'hello' }));
 });
 

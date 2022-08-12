@@ -215,20 +215,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					const data = await load_promises[i];
 
 					branch.push({ node, server_data, data });
-
-					// generate __data.json files when prerendering
-					// TODO for this is just leaf nodes, so that stuff passes, but
-					// ultimately we need ./__data/0.json, ./__data/1.json, etc
-					if (node === leaf_node && server_data && state.prerendering) {
-						const pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
-
-						const dependency = {
-							response: new Response(undefined),
-							body: JSON.stringify(server_data)
-						};
-
-						state.prerendering.dependencies.set(pathname, dependency);
-					}
 				} catch (e) {
 					const error = normalize_error(e);
 
@@ -285,6 +271,21 @@ export async function render_page(event, route, options, state, resolve_opts) {
 				// layout that corresponds with an +error.svelte page
 				branch.push(null);
 			}
+		}
+
+		// generate __data.json files when prerendering
+		if (state.prerendering && nodes.some((node) => node?.server)) {
+			const pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
+
+			const dependency = {
+				response: new Response(undefined),
+				body: JSON.stringify({
+					type: 'data',
+					nodes: branch.map((branch_node) => ({ data: branch_node?.server_data }))
+				})
+			};
+
+			state.prerendering.dependencies.set(pathname, dependency);
 		}
 
 		// TODO use validation_errors
