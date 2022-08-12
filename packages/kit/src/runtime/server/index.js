@@ -288,7 +288,8 @@ export async function respond(request, options, state) {
 
 							if (error instanceof Redirect) {
 								return json_response({
-									redirect: error.location
+									type: 'redirect',
+									location: error.location
 								});
 							}
 

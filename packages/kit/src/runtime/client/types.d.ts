@@ -51,12 +51,14 @@ export type NavigationIntent = {
 };
 
 export type NavigationResult = NavigationRedirect | NavigationFinished;
+
 export type NavigationRedirect = {
-	redirect: true;
+	type: 'redirect';
 	location: string;
 };
+
 export type NavigationFinished = {
-	redirect?: false;
+	type: 'loaded';
 	state: NavigationState;
 	props: Record<string, any>;
 };
@@ -81,8 +83,15 @@ export type NavigationState = {
 	url: URL;
 };
 
-export interface ServerDataPayload {
-	redirect?: string;
+export type ServerDataPayload = ServerDataRedirected | ServerDataLoaded;
+
+export interface ServerDataRedirected {
+	type: 'redirect';
+	location: string;
+}
+
+export interface ServerDataLoaded {
+	type: 'loaded';
 	nodes: Array<{
 		data?: JSONObject | null; // TODO or `-1` to indicate 'reuse cached data'?
 		status?: number;

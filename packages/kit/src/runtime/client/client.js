@@ -244,7 +244,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		invalidated.length = 0;
 
-		if (navigation_result.redirect) {
+		if (navigation_result.type === 'redirect') {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
 				navigation_result = await load_root_error_page({
 					status: 500,
@@ -403,6 +403,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		/** @type {import('./types').NavigationFinished} */
 		const result = {
+			type: 'loaded',
 			state: {
 				url,
 				params,
@@ -664,6 +665,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 			throw new Error('TODO render fallback error page');
 		}
 
+		if (server_data_payload.type === 'redirect') {
+			return server_data_payload;
+		}
+
+		const server_data_nodes = server_data_payload.nodes;
+
 		const branch_promises = nodes.map(async (loader, i) => {
 			return Promise.resolve().then(async () => {
 				if (!loader) return;
@@ -675,9 +682,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					nodes_changed_since_last_render[i] || !previous || node !== previous.node;
 
 				if (changed_since_last_render) {
-					const payload = /** @type {import('./types').ServerDataLoadResult} */ (
-						server_data_payload
-					).nodes[i];
+					const payload = server_data_nodes[i];
 
 					if (payload?.status) {
 						throw error(payload.status, payload.message);
@@ -722,8 +727,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 					if (error instanceof Redirect) {
 						return {
-							redirect: true,
-							location: /** @type {Redirect} */ (e).location
+							type: 'redirect',
+							location: error.location
 						};
 					}
 
