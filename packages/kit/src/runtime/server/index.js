@@ -280,20 +280,20 @@ export async function respond(request, options, state) {
 								}
 							});
 
-							return json_response({
+							response = json_response({
 								nodes: await Promise.all(promises)
 							});
 						} catch (e) {
 							const error = normalize_error(e);
 
 							if (error instanceof Redirect) {
-								return json_response({
+								response = json_response({
 									type: 'redirect',
 									location: error.location
 								});
+							} else {
+								response = json_response(error_to_pojo(error, options.get_stack), 500);
 							}
-
-							return json_response(error_to_pojo(error, options.get_stack), 500);
 						}
 					} else {
 						response =
@@ -308,7 +308,9 @@ export async function respond(request, options, state) {
 							for (const cookie of Array.isArray(value) ? value : [value]) {
 								response.headers.append(key, /** @type {string} */ (cookie));
 							}
-						} else {
+						} else if (!is_data_request) {
+							// we only want to set cookies on __data.json requests, we don't
+							// want to cache stuff erroneously etc
 							response.headers.set(key, /** @type {string} */ (value));
 						}
 					}
