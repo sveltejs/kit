@@ -1,5 +1,5 @@
 ---
-title: Loading
+title: Loading data
 ---
 
 A page or a layout can export a `load` function from their `+page.js` or `+layout.js` file that runs before the component is created. This function runs both during server-side rendering and in the client, and allows you to fetch and manipulate data before the page is rendered, thus preventing loading spinners.
