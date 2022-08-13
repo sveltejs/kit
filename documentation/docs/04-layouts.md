@@ -62,6 +62,8 @@ We can create a layout that only applies to pages below `/settings` (while inher
 <slot></slot>
 ```
 
+> The nested layout has to be placed in the same subdirectory as the nested pages. In the example above, it resides in the settings folder.
+
 ### Named layouts
 
 Some parts of your app might need something other than the default layout. For these cases you can create _named layouts_...
