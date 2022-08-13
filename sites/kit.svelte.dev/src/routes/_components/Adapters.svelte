@@ -3,7 +3,7 @@
 		'Vercel': '@sveltejs/adapter-vercel',
 		'Netlify': '@sveltejs/adapter-netlify',
 		'Cloudflare': '@sveltejs/adapter-cloudflare-pages',
-		'your own server': '@sveltejs/adapter-node',
+		'your server': '@sveltejs/adapter-node',
 		'static hosting': '@sveltejs/adapter-static',
 		'Firebase': 'svelte-adapter-firebase',
 		'Deno': 'svelte-adapter-deno',
@@ -17,27 +17,54 @@
 	function update() {
 		[host, adapter] = adapters[i];
 		i = (i + 1) % adapters.length;
-		setTimeout(update, 1500);
+		setTimeout(update, 2200);
 	}
 
 	update();
 </script>
 
-<h3>Deploy Anywhere</h3>
+<div class="container">
 
-Deploy to {host}
+	<div class="anywhere">
+		<h3>Deploy Anywhere</h3>
+		SvelteKit builds instant, optimized bundles with the Svelte compiler and code-splitting.
+	</div>
 
-<pre class="code"><code>import adapter from '{adapter}';
+	<div class="host">
+		<h3>{host} →</h3>
+	</div>
+
+	<div class="code-container">
+		<pre class="code"><code>import adapter from '{adapter}';
 
 export default &#123;
 	kit: &#123;
 		adapter: adapter()
 	}
 }</code></pre>
+	</div>
+
+</div>
 
 <style>
-	h3 {
-		margin-bottom: 0.8rem;
+	.container {
+		display: grid;
+		grid-template-columns: repeat(4, 25%);
+		gap: 10px;
+		width: 100%;
+	}
+
+	.anywhere {
+		margin: 50px 0 0;
+	}
+
+	.host {
+		margin: 75px 0 0;
+		text-align: center;
+	}
+
+	.code-container {
+		grid-column: 3 / span 2;
 	}
 
 	.code {

@@ -163,11 +163,6 @@ npm run dev -- --open</code></pre>
 		margin: 0 auto 10rem;
 	}
 
-	.adapters {
-		max-width: 575px;
-		text-align: center;
-	}
-
 	.lighthouse {
 		background: #212121;
 		padding: 10rem;
