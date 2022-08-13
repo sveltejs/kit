@@ -10,6 +10,7 @@
 	import Machine from '$img/svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&meta';
 	import { Hero, Blurb } from '@sveltejs/site-kit';
 	import Adapters from './_components/Adapters.svelte';
+	import Fun from './_components/Fun.svelte';
 	import LanguageTools from './_components/LanguageTools.svelte';
 	import Lighthouse from './_components/Lighthouse.svelte';
 	import Waterfall from './_components/Waterfall.svelte';
@@ -93,6 +94,10 @@ npm run dev -- --open</code></pre>
 			<a sveltekit:prefetch href="/docs" class="cta">get started</a>
 		</div>
 	</Blurb>
+</div>
+
+<div class="section fun">
+	<Fun />
 </div>
 
 <div class="lighthouse">

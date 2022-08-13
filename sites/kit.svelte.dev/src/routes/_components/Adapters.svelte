@@ -14,13 +14,13 @@
 	let host;
 	let adapter;
 
-	function updateAdapter() {
+	function update() {
 		[host, adapter] = adapters[i];
 		i = (i + 1) % adapters.length;
-		setTimeout(updateAdapter, 1500);
+		setTimeout(update, 1500);
 	}
 
-	updateAdapter();
+	update();
 </script>
 
 <h3>Deploy Anywhere</h3>
