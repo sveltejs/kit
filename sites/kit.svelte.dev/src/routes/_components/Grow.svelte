@@ -2,7 +2,7 @@
 	import Grow from './grow.png';
 </script>
 
-<h3>Svelte grows with you,<br/><span style="font-weight:bold">whatever</span> you're building</h3>
+<h3>SvelteKit grows with you,<br/><span style="font-weight:bold">whatever</span> you're building</h3>
 
 <img src={Grow} alt="Build SSGs, MPAs, PWAs, or SPAs." />
 
