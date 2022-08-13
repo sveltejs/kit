@@ -33,7 +33,7 @@ The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interf
 /// file: src/routes/what-is-my-user-agent/+server.js
 
 // @filename: $types.d.ts
-export const RequestHandler = import('@sveltejs/kit').RequestHandler<{}>;
+export type RequestHandler = import('@sveltejs/kit').RequestHandler<{}>;
 
 // @filename: index.js
 // ---cut---

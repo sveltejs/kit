@@ -330,4 +330,25 @@ export interface Delete<Params extends Record<string, string> = Record<string, s
 	(event: RequestEvent<Params>): MaybePromise<void>;
 }
 
-export * from '../src/index/index.js';
+// TODO figure out how to just re-export from '../src/index/index.js' without
+// breaking the site
+
+/**
+ * Creates an `HttpError` object with an HTTP status code and an optional message.
+ * This object, if thrown during request handling, will cause SvelteKit to
+ * return an error response without invoking `handleError`
+ * @param {number} status
+ * @param {string | undefined} [message]
+ */
+export function error(status: number, message?: string | undefined): HttpError;
+
+/**
+ * Creates a `Redirect` object. If thrown during request handling, SvelteKit will
+ * return a redirect response.
+ */
+export function redirect(status: number, location: string): Redirect;
+
+/**
+ * Generates a JSON `Response` object from the supplied data.
+ */
+export function json(data: any, init?: ResponseInit): Response;
