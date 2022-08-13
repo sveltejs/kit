@@ -1,5 +1,5 @@
 import { render_endpoint } from './endpoint.js';
-import { json_response, render_page } from './page/index.js';
+import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error, normalize_error } from '../../utils/error.js';
@@ -9,6 +9,7 @@ import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
 import { HttpError, Redirect } from '../../index/private.js';
 import { load_server_data } from './page/load_data.js';
+import { json } from '../../index/index.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -284,7 +285,7 @@ export async function respond(request, options, state) {
 								}
 							});
 
-							response = json_response({
+							response = json({
 								type: 'data',
 								nodes: await Promise.all(promises)
 							});
@@ -292,12 +293,12 @@ export async function respond(request, options, state) {
 							const error = normalize_error(e);
 
 							if (error instanceof Redirect) {
-								response = json_response({
+								response = json({
 									type: 'redirect',
 									location: error.location
 								});
 							} else {
-								response = json_response(error_to_pojo(error, options.get_stack), 500);
+								response = json(error_to_pojo(error, options.get_stack), { status: 500 });
 							}
 						}
 					} else {

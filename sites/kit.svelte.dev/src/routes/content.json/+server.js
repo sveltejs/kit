@@ -1,14 +1,9 @@
 import { content } from '$lib/search/content.server.js';
+import { json } from '@sveltejs/kit';
 
+/** @type {import('./$types').RequestHandler} */
 export function GET() {
-	return new Response(
-		JSON.stringify({
-			blocks: content()
-		}),
-		{
-			headers: {
-				'Content-Type': 'application/json; charset=utf-8'
-			}
-		}
-	);
+	return json({
+		blocks: content()
+	});
 }

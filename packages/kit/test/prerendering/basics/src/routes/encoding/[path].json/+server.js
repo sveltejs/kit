@@ -1,9 +1,8 @@
-/** @type {import('@sveltejs/kit').RequestHandler} */
+import { json } from '@sveltejs/kit';
+
+/** @type {import('./$types').RequestHandler} */
 export function GET({ params }) {
-	return new Response(
-		JSON.stringify({
-			path: params.path
-		}),
-		{ headers: { 'content-type': 'application/json; charset=utf-8' } }
-	);
+	return json({
+		path: params.path
+	});
 }

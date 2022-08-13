@@ -1,8 +1,5 @@
+import { json } from '@sveltejs/kit';
+
 export function GET() {
-	return new Response(
-		JSON.stringify({
-			answer: 42
-		}),
-		{ headers: { 'content-type': 'application/json; charset=utf-8' } }
-	);
+	return json({ answer: 42 });
 }

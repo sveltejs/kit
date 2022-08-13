@@ -1,10 +1,9 @@
+import { json } from '@sveltejs/kit';
+
 /** @type {import('./$types').RequestHandler} */
 export function GET({ locals }) {
-	return new Response(
-		JSON.stringify({
-			key: locals.key,
-			params: locals.params
-		}),
-		{ headers: { 'content-type': 'application/json; charset=utf-8' } }
-	);
+	return json({
+		key: locals.key,
+		params: locals.params
+	});
 }

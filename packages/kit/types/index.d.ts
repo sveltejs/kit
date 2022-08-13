@@ -330,5 +330,4 @@ export interface Delete<Params extends Record<string, string> = Record<string, s
 	(event: RequestEvent<Params>): MaybePromise<void>;
 }
 
-export function error(status: number, message?: string): HttpError;
-export function redirect(status: number, location?: string): Redirect;
+export * from '../src/index/index.js';

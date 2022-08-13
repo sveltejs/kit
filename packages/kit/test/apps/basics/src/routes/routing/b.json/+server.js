@@ -1,6 +1,5 @@
-export function GET() {
-	// TODO check if migrated correctly. old code:
-	// return { body: JSON.stringify('b') };
+import { json } from '@sveltejs/kit';
 
-	return new Response(JSON.stringify('b'));
+export function GET() {
+	return json('b');
 }

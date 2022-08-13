@@ -52,7 +52,7 @@ test('renders page with data from endpoint', () => {
 
 test('renders page with unbuffered data from endpoint', () => {
 	const content = read('fetch-endpoint/not-buffered.html');
-	assert.ok(content.includes('<h1>content-type: application/json; charset=utf-8</h1>'), content);
+	assert.ok(content.includes('<h1>content-type: application/json</h1>'), content);
 
 	const json = read('fetch-endpoint/not-buffered.json');
 	assert.equal(json, JSON.stringify({ answer: 42 }));

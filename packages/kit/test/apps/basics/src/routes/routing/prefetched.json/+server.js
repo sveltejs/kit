@@ -1,3 +1,5 @@
+import { json } from '@sveltejs/kit';
+
 export function GET() {
-	return new Response(JSON.stringify('prefetched'));
+	return json('prefetched');
 }

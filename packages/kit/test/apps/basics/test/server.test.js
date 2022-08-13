@@ -242,7 +242,7 @@ test.describe('Shadowed pages', () => {
 
 		expect(headers.get).toEqual({
 			...headers.head,
-			'content-type': 'application/json; charset=utf-8'
+			'content-type': 'application/json'
 		});
 	});
 

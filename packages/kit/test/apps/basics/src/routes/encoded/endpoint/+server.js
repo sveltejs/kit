@@ -1,8 +1,7 @@
+import { json } from '@sveltejs/kit';
+
 export async function GET() {
-	return new Response(
-		JSON.stringify({
-			fruit: '🍎🍇🍌'
-		}),
-		{ headers: { 'content-type': 'application/json; charset=utf-8' } }
-	);
+	return json({
+		fruit: '🍎🍇🍌'
+	});
 }

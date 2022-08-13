@@ -320,9 +320,11 @@ test.describe('Encoded paths', () => {
 		expect(await page.innerText('pre')).toBe('/苗条?foo=bar&fizz=buzz');
 	});
 
-	test('sets charset on JSON Content-Type', async ({ request }) => {
+	test('serializes JSON correctly', async ({ request }) => {
 		const response = await request.get('/encoded/endpoint');
-		expect(response.headers()['content-type']).toBe('application/json; charset=utf-8');
+		expect(await response.json()).toEqual({
+			fruit: '🍎🍇🍌'
+		});
 	});
 
 	test('allows %-encoded characters in directory names', async ({ page, clicknav }) => {
@@ -639,7 +641,7 @@ test.describe('Load', () => {
 			const script_contents = await page.innerHTML('script[sveltekit\\:data-type="data"]');
 
 			const payload =
-				'{"status":200,"statusText":"","headers":{"content-type":"application/json; charset=utf-8"},"body":"{\\"answer\\":42}"}';
+				'{"status":200,"statusText":"","headers":{"content-type":"application/json"},"body":"{\\"answer\\":42}"}';
 
 			expect(script_contents).toBe(payload);
 		}

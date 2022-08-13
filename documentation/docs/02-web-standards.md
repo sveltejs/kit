@@ -31,18 +31,23 @@ The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interf
 ```js
 // @errors: 2461
 /// file: src/routes/what-is-my-user-agent/+server.js
-/** @type {import('@sveltejs/kit').RequestHandler} */
+
+// @filename: $types.d.ts
+export const RequestHandler = import('@sveltejs/kit').RequestHandler<{}>;
+
+// @filename: index.js
+// ---cut---
+import { json } from '@sveltejs/kit';
+
+/** @type {import('./$types').RequestHandler} */
 export function GET(event) {
 	// log all headers
 	console.log(...event.request.headers);
 
-	return new Response(
-		JSON.stringify({
-			// retrieve a specific header
-			userAgent: event.request.headers.get('user-agent')
-		}),
-		{ headers: { 'content-type': 'application/json; charset=utf-8' } }
-	);
+	return json({
+		// retrieve a specific header
+		userAgent: event.request.headers.get('user-agent')
+	});
 }
 ```
 

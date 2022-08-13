@@ -4,7 +4,7 @@ import { respond_with_error } from './respond_with_error.js';
 import { method_not_allowed, error_to_pojo, allowed_methods } from '../utils.js';
 import { create_fetch } from './fetch.js';
 import { HttpError, Redirect } from '../../../index/private.js';
-import { error } from '../../../index/index.js';
+import { error, json } from '../../../index/index.js';
 import { normalize_error } from '../../../utils/error.js';
 import { load_data, load_server_data } from './load_data.js';
 
@@ -361,14 +361,14 @@ export async function handle_json_request(event, options, mod) {
 		}
 
 		if (method === 'GET') {
-			return json_response(result, 200);
+			return json(result);
 		}
 
 		if (method === 'POST') {
 			// @ts-ignore
 			if (result.errors) {
 				// @ts-ignore
-				return json_response({ errors: result.errors }, result.status || 400);
+				return json({ errors: result.errors }, { status: result.status || 400 });
 			}
 
 			return new Response(undefined, {
@@ -390,26 +390,10 @@ export async function handle_json_request(event, options, mod) {
 			options.handle_error(error, event);
 		}
 
-		return json_response(
-			error_to_pojo(error, options.get_stack),
-			error instanceof HttpError ? error.status : 500
-		);
+		return json(error_to_pojo(error, options.get_stack), {
+			status: error instanceof HttpError ? error.status : 500
+		});
 	}
-}
-
-/**
- * @param {any} data
- * @param {number} [status]
- */
-export function json_response(data, status = 200) {
-	// TODO replace with Response.json one day. in the meantime this probably
-	// belongs in a different module
-	return new Response(JSON.stringify(data), {
-		status,
-		headers: {
-			'content-type': 'application/json; charset=utf-8'
-		}
-	});
 }
 
 /**
