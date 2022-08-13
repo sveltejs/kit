@@ -10,6 +10,7 @@
 	import Machine from '$img/svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&meta';
 	import { Hero, Blurb } from '@sveltejs/site-kit';
 	import Adapters from './_components/Adapters.svelte';
+	import LanguageTools from './_components/LanguageTools.svelte';
 	import Lighthouse from './_components/Lighthouse.svelte';
 	import Waterfall from './_components/Waterfall.svelte';
 </script>
@@ -105,6 +106,12 @@ npm run dev -- --open</code></pre>
 	<Adapters />
 </div>
 
+<div class="language-tools">
+	<div class="section">
+		<LanguageTools />
+	</div>
+</div>
+
 <style>
 	:global(.hero-container:dir(rtl)) {
 		max-width: 116rem;
@@ -135,7 +142,7 @@ npm run dev -- --open</code></pre>
 		position: relative;
 		margin: 0 auto 10rem auto;
 		padding: 0 var(--side-nav);
-		max-width: 120rem;		
+		max-width: 120rem;
 	}
 
 	.adapters {
@@ -150,6 +157,12 @@ npm run dev -- --open</code></pre>
 	}
 
 	.lighthouse .section {
+		margin: 0 auto;
+	}
+
+	.language-tools {
+		background: #f5f8fc;
+		padding: 10rem 10rem;
 		margin: 0 auto;
 	}
 </style>
