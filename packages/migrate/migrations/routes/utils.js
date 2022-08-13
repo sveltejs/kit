@@ -379,12 +379,17 @@ export function rewrite_returns(block, callback) {
 
 		block.forEachChild(walk);
 	} else {
-		while (ts.isParenthesizedExpression(block)) {
-			block = block.expression;
-		}
-
 		callback(block, undefined);
 	}
+}
+
+/** @param {ts.Node} node */
+export function unwrap(node) {
+	if (ts.isParenthesizedExpression(node)) {
+		return node.expression;
+	}
+
+	return node;
 }
 
 /**

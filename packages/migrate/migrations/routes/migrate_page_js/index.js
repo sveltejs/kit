@@ -10,7 +10,8 @@ import {
 	manual_migration,
 	manual_return_migration,
 	parse,
-	rewrite_returns
+	rewrite_returns,
+	unwrap
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
 
@@ -41,7 +42,8 @@ export function migrate_page(content) {
 			const imports = new Set();
 
 			rewrite_returns(fn.body, (expr, node) => {
-				const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
+				const value = unwrap(expr);
+				const nodes = ts.isObjectLiteralExpression(value) && get_object_nodes(value);
 
 				if (nodes) {
 					const keys = Object.keys(nodes).sort().join(' ');
@@ -51,7 +53,7 @@ export function migrate_page(content) {
 					}
 
 					if (keys === 'props') {
-						automigration(expr, file.code, dedent(nodes.props.getText()));
+						automigration(value, file.code, dedent(nodes.props.getText()));
 						return;
 					}
 

@@ -7,7 +7,8 @@ import {
 	get_object_nodes,
 	manual_return_migration,
 	parse,
-	rewrite_returns
+	rewrite_returns,
+	unwrap
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
 
@@ -33,14 +34,15 @@ export function migrate_page_server(content) {
 			if (GET?.body) {
 				// possible TODOs — handle errors and redirects
 				rewrite_returns(GET.body, (expr, node) => {
-					const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
+					const value = unwrap(expr);
+					const nodes = ts.isObjectLiteralExpression(value) && get_object_nodes(value);
 
 					if (!nodes || nodes.headers || (nodes.status && nodes.status.getText() !== '200')) {
 						manual_return_migration(node || GET, file.code, TASKS.PAGE_ENDPOINT);
 						return;
 					}
 
-					automigration(expr, file.code, dedent(nodes.body.getText()));
+					automigration(value, file.code, dedent(nodes.body.getText()));
 				});
 
 				unmigrated.delete('GET');
