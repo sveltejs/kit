@@ -11,6 +11,7 @@
 	import { Hero, Blurb } from '@sveltejs/site-kit';
 	import Adapters from './_components/Adapters.svelte';
 	import Fun from './_components/Fun.svelte';
+	import Grow from './_components/Grow.svelte';
 	import LanguageTools from './_components/LanguageTools.svelte';
 	import Lighthouse from './_components/Lighthouse.svelte';
 	import Waterfall from './_components/Waterfall.svelte';
@@ -96,8 +97,14 @@ npm run dev -- --open</code></pre>
 	</Blurb>
 </div>
 
-<div class="section fun">
-	<Fun />
+<div class="fun">
+	<div class="section">
+		<Fun />
+	</div>
+</div>
+
+<div class="section grow">
+	<Grow />
 </div>
 
 <div class="lighthouse">
@@ -148,6 +155,12 @@ npm run dev -- --open</code></pre>
 		margin: 0 auto 10rem auto;
 		padding: 0 var(--side-nav);
 		max-width: 120rem;
+	}
+
+	.fun {
+		background: #f5f8fc;
+		padding: 10rem 10rem 3rem;
+		margin: 0 auto 10rem;
 	}
 
 	.adapters {
