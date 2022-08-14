@@ -18,6 +18,8 @@
 <style>
 	.flex-container {
 		display: flex;
+		flex-wrap: wrap;
+		gap: 20px;
 	}
 
 	.flex-child {
@@ -25,7 +27,7 @@
 	}
 
 	.text {
-		margin: 50px 20px 0 0;
+		margin: 50px 0 0 0;
 	}
 
 	h3 {

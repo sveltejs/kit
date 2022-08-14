@@ -4,8 +4,7 @@
 		{ text: 'I tried it and then I wanted to teach it immediately. I wanted to share it immediately. I wanted to build more things in it.', author: 'Scott Tolinski', title: 'Creator of Level Up Tutorials' },
 		{ text: 'I use it for pretty much all the articles I work on. The thing I like most about Svelte is how fast you can move.', author: 'Aliza Aufrichtig', title: 'Graphics & Multimedia Editor at The New York Times' },
 		{ text: "There's quite a bit of usage these days and satisfaction is I think the highest or one of the highest for any of the larger or more used JavaScript frameworks.", author: 'Amelia Wattenberger', title: 'Staff Research Engineer at Github Next' },
-		{ text: 'I was considered a React expert and I could not be anywhere near as productive as I could be in Svelte.', author: 'Shawn Wang', title: 'Head of Developer Experience at Temporal.io' },
-		{ text: "When you write your app you're making it fast by construction. It's almost impossible to create a slow app.", author: 'Guillermo Rauch', title: 'CEO at Vercel' }
+		{ text: 'I was considered a React expert and I could not be anywhere near as productive as I could be in Svelte.', author: 'Shawn Wang', title: 'Head of Developer Experience at Temporal.io' }
 	];
 
 	let i = 0;
@@ -37,6 +36,8 @@
 <style>
 	.flex-container {
 		display: flex;
+		flex-wrap: wrap;
+		gap: 20px;
 	}
 
 	.flex-child {
@@ -48,7 +49,7 @@
 	}
 
 	.text {
-		margin: 20px 20px 0 0;
+		margin: 25px 0 0 0;
 	}
 
 	.quote {

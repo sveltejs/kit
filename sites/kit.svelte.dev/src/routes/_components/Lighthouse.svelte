@@ -9,7 +9,7 @@
 		Server-side rendering ensures your visitors aren't left staring at loading spinners.<br/>
 		Client-side navigation makes your app feel like it's 2022.
 	</div>
-  
+
 	<div class="flex-child">
 		<img src={Lighthouse} alt="Speedy page loads" />
 	</div>
@@ -19,15 +19,17 @@
 <style>
 	.flex-container {
 		display: flex;
+		flex-wrap: wrap;
+		gap: 20px;
 		color: white;
 	}
 
 	.flex-child {
 		flex: 1;
-	}  
+	}
 
 	.text {
-		margin: 50px 20px 0 0;
+		margin: 50px 0 0 0;
 	}
 
 	h3 {
