@@ -37,11 +37,11 @@
 	<div class="code-container">
 		<pre class="code"><code>import adapter from '{adapter}';
 
-export default &#123;
-	kit: &#123;
+export default &lbrace;
+	kit: &lbrace;
 		adapter: adapter()
-	}
-}</code></pre>
+	&rbrace;
+&rbrace;</code></pre>
 	</div>
 
 </div>
@@ -61,10 +61,16 @@ export default &#123;
 	.host {
 		margin: 75px 0 0;
 		text-align: center;
+		display: none;
+	}
+
+	.anywhere {
+		grid-column: span 4 / span 4;
+		margin-bottom: 50px;
 	}
 
 	.code-container {
-		grid-column: 3 / span 2;
+		grid-column: span 4 / span 4;
 	}
 
 	.code {
@@ -73,5 +79,26 @@ export default &#123;
 		padding: 1em;
 		background: var(--back-light);
 		box-shadow: inset 1px 1px 3px rgba(81, 81, 81, 0.2);
+	}
+
+	@media (min-width: 640px) {
+		.anywhere {
+			grid-column: span 4 / span 4;
+		}
+		.host {
+			display: block;
+		}
+		.code-container {
+			grid-column: span 3 / span 3;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.anywhere {
+			grid-column: span 1 / span 1;
+		}
+		.code-container {
+			grid-column: span 2 / span 2;
+		}
 	}
 </style>
