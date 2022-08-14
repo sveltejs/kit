@@ -8,6 +8,7 @@ import 'prism-svelte';
 import { extract_frontmatter, transform } from './markdown';
 import { modules } from '../../../../../../packages/kit/docs/types.js';
 import { render_modules } from './modules';
+import { error } from '@sveltejs/kit';
 
 const languages = {
 	bash: 'bash',
@@ -217,7 +218,7 @@ export async function read(dir, slug) {
 	const files = fs.readdirSync(`${base}/${dir}`).filter((file) => /^\d{2}-(.+)\.md$/.test(file));
 	const index = files.findIndex((file) => file.slice(3, -3) === slug);
 
-	if (index === -1) return null;
+	if (index === -1) throw error(404);
 
 	const prev = index > 0 && files[index - 1];
 	const next = index < files.length - 1 && files[index + 1];

@@ -95,7 +95,7 @@ Any files you previously imported from directories in `src/node_modules` will ne
 
 As before, pages and layouts can export a function that allows data to be loaded before rendering takes place.
 
-This function has been renamed from `preload` to [`load`](/docs/loading), it now lives in a `+page.js` (or `+layout.js`) next to its `+page.svelte` (or `+layout.svelte`), and its API has changed. Instead of two arguments — `page` and `session` — there is a single argument that includes both, along with `fetch` (which replaces `this.fetch`) and a new `stuff` object.
+This function has been renamed from `preload` to [`load`](/docs/load), it now lives in a `+page.js` (or `+layout.js`) next to its `+page.svelte` (or `+layout.svelte`), and its API has changed. Instead of two arguments — `page` and `session` — there is a single argument that includes both, along with `fetch` (which replaces `this.fetch`) and a new `stuff` object.
 
 There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead of returning props directly, `load` now returns an object that _contains_ `props`, alongside various other things.
 

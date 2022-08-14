@@ -81,7 +81,7 @@ As well as `load`, `page.js` can export values that configure the page's behavio
 
 #### +page.server.js
 
-If your `load` function can only run on the server — for example, if it needs to fetch data from a database or you need to access private [environment variables](/docs/TODO) like API keys — then you can rename `+page.js` to `+page.server.js` and change the `PageLoad` type to `PageServerLoad`.
+If your `load` function can only run on the server — for example, if it needs to fetch data from a database or you need to access private [environment variables](/docs/modules#$env-static-private) like API keys — then you can rename `+page.js` to `+page.server.js` and change the `PageLoad` type to `PageServerLoad`.
 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js

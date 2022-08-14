@@ -42,11 +42,11 @@ SvelteKit's `load` receives an implementation of `fetch`, which has the followin
 - it can make requests against the app's own endpoints without issuing an HTTP call
 - it makes a copy of the response when you use it, and then sends it embedded in the initial page load for hydration
 
-`load` only applies to [pages](/docs/routing#pages) and [layouts](/docs/layouts) (not components they import), and runs on both the server and in the browser with the default rendering options.
+`load` only applies to [pages](/docs/routing#pages) and [layouts](/docs/routing#layout) (not components they import), and runs on both the server and in the browser with the default rendering options.
 
 > Code called inside `load` blocks:
 >
-> - should use the SvelteKit-provided [`fetch`](/docs/loading#input-fetch) wrapper rather than using the native `fetch`
+> - should use the SvelteKit-provided [`fetch`](/docs/load#input-fetch) wrapper rather than using the native `fetch`
 > - should not reference `window`, `document`, or any browser-specific objects
 > - should not directly reference any API keys or secrets, which will be exposed to the client, but instead call an endpoint that uses any required secrets
 

@@ -65,7 +65,7 @@ declare namespace App {
 	export interface PublicEnv extends Record<string, string> {}
 
 	/**
-	 * The interface that defines `session`, both as an argument to [`load`](https://kit.svelte.dev/docs/loading) functions and the value of the [session store](https://kit.svelte.dev/docs/modules#$app-stores).
+	 * The interface that defines `session`, both as an argument to [`load`](https://kit.svelte.dev/docs/load) functions and the value of the [session store](https://kit.svelte.dev/docs/modules#$app-stores).
 	 */
 	export interface Session {}
 }

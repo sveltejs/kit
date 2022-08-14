@@ -390,7 +390,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
+				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
 			);
 
 			warnings.length = 0;
@@ -399,7 +399,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
+				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
 			);
 		});
 	}
