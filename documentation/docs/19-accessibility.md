@@ -4,7 +4,7 @@ title: Accessibility
 
 SvelteKit strives to provide an accessible platform for your app by default. Svelte's [compile-time accessibility checks](https://svelte.dev/docs#accessibility-warnings) will also apply to any SvelteKit application you build. 
 
-Here's how SvelteKit's built-in accessibility features work and what you need to do to help these features to work as well as possible.
+Here's how SvelteKit's built-in accessibility features work and what you need to do to help these features to work as well as possible. Keep in mind that while SvelteKit aims to provide an accessible foundation, you are still responsible for making sure your application code is accessible. If you're new to accessibility, see the ["further reading"](/docs/accessibility#further-reading) section of this guide for additional resources.
 
 We recognize that accessibility can be hard to get right. If you want to suggest improvements to how SvelteKit handles accessibility, please [open a GitHub issue](https://github.com/sveltejs/kit/issues).
 
@@ -43,7 +43,7 @@ afterNavigate(() => {
 });
 ```
 
-You can also programmatically navigate to a different page using the [`goto`](/docs/modules#$app-navigation-goto) function. By default, this will have the same client-side routing behavior as clicking on a link. However, `goto` also accepts a `keepfocus` option that will preserve the currently-focused element instead of resetting focus. If you enable this option, make sure the currently-focused element still exists on the page after navigation.
+You can also programmatically navigate to a different page using the [`goto`](/docs/modules#$app-navigation-goto) function. By default, this will have the same client-side routing behavior as clicking on a link. However, `goto` also accepts a `keepfocus` option that will preserve the currently-focused element instead of resetting focus. If you enable this option, make sure the currently-focused element still exists on the page after navigation. If the element no longer exists, the user's focus will be lost, making for a confusing experience for assistive technology users.
 
 ### Lang attribute
 
@@ -52,6 +52,31 @@ By default, SvelteKit's page template sets the default language of the document 
 ```html
 /// file: src/app.html
 <html lang="de">
+```
+
+If your content is available in multiple languages, you should set the `lang` attribute based on the language of the current page. You can do this with SvelteKit's [handle hook](/docs/hooks#handle):
+
+```html
+/// file: src/app.html
+<html lang="%lang%">
+```
+
+```js
+/// file: src/hooks.js
+/**
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @returns {string}
+ */
+function get_lang(event) {
+	return 'en';
+}
+// ---cut---
+/** @type {import('@sveltejs/kit').Handle} */
+export function handle({ event, resolve }) {
+	return resolve(event, {
+		transformPageChunk: ({ html }) => html.replace("%lang", get_lang(event))
+	});
+}
 ```
 
 ### Further reading
