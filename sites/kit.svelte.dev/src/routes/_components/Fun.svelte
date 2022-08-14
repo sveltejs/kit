@@ -19,14 +19,14 @@
 	update();
 </script>
 
-<div class="flex-container">
+<div class="container">
 
-	<div class="flex-child text">
+	<div class="text">
 		<h3>Web development. <span style="font-weight:bold">But fun.</span></h3>
 		Don't take our word for it, hear what our users say…
 	</div>
 
-	<div class="flex-child">
+	<div>
 		<p class="quote">{quote.text}</p>
 		<p><span class="author">{quote.author}</span><br/>{quote.title}</p>
 	</div>
@@ -34,14 +34,10 @@
 </div>
 
 <style>
-	.flex-container {
-		display: flex;
-		flex-wrap: wrap;
+	.container {
+		display: grid;
+		grid-template-columns: repeat(1, minmax(0, 1fr));
 		gap: 20px;
-	}
-
-	.flex-child {
-		flex: 1;
 	}
 
 	h3 {
@@ -59,5 +55,11 @@
 
 	.author {
 		font-weight: bold;
+	}
+
+	@media (min-width: 768px) {
+		.container {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
 	}
 </style>

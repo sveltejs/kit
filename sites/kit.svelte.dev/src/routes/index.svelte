@@ -159,13 +159,13 @@ npm run dev -- --open</code></pre>
 
 	.fun {
 		background: #f5f8fc;
-		padding: 10rem 10rem 3rem;
+		padding: 10rem 2rem 3rem;
 		margin: 0 auto 10rem;
 	}
 
 	.lighthouse {
 		background: #212121;
-		padding: 10rem;
+		padding: 10rem 2rem;
 		margin: 0 auto 10rem auto;
 	}
 
@@ -175,7 +175,7 @@ npm run dev -- --open</code></pre>
 
 	.language-tools {
 		background: #f5f8fc;
-		padding: 10rem 10rem;
+		padding: 10rem 2rem;
 		margin: 0 auto;
 	}
 </style>

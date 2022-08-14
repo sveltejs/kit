@@ -10,4 +10,9 @@
 	h3 {
 		margin-bottom: 3rem;
 	}
+
+	img {
+		width: 100%;
+		height: auto;
+	}
 </style>
