@@ -10,7 +10,7 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 /[org]/[repo]/tree/[branch]/[...file]
 ```
 
-...in which case a request for `/sveltejs/kit/tree/master/documentation/docs/01-routing.md` would result in the following parameters being available to the page:
+...in which case a request for `/sveltejs/kit/tree/master/documentation/docs/04-advanced-routing.md` would result in the following parameters being available to the page:
 
 ```js
 // @noErrors
@@ -18,7 +18,7 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 	org: 'sveltejs',
 	repo: 'kit',
 	branch: 'master',
-	file: 'documentation/docs/01-routing.md'
+	file: 'documentation/docs/04-advanced-routing.md'
 }
 ```
 
