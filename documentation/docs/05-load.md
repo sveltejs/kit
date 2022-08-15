@@ -304,3 +304,7 @@ export function load({ locals }) {
 SvelteKit tracks the dependencies of each `load` function to avoid re-running it unnecessarily during navigation. For example, a `load` function in a root `+layout.js` doesn't need to re-run when you navigate from one page to another unless it references `url` or a member of `params` that changed since the last navigation.
 
 Using [`invalidate(url)`](/docs/modules#$app-navigation-invalidate), you can re-run any `load` functions that depend on the invalidated resource (either implicitly, via [`fetch`](#fetch)), or explicitly via [`depends`](#depends). You can also invalidate _all_ `load` functions by calling `invalidate()` without an argument.
+
+### Shared state
+
+In many server environments, a single instance of your app will serve multiple users. For that reason, per-request state must not be stored in shared variables outside your `load` functions, but should instead be stored in `event.locals`.
