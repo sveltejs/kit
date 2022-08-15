@@ -283,17 +283,7 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('client-side error from load() is a string', async ({ page }) => {
-		await page.goto('/errors/load-error-string-client');
-
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Not found"'
-		);
-		expect(await page.innerHTML('h1')).toBe('555');
-	});
-
-	test('client-side error from load() is an Error', async ({ page }) => {
+	test('client-side error from load()', async ({ page }) => {
 		await page.goto('/errors/load-error-client');
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
@@ -303,21 +293,13 @@ test.describe('Errors', () => {
 		expect(await page.innerHTML('h1')).toBe('555');
 	});
 
-	test('client-side error from load() is malformed', async ({ page }) => {
-		await page.goto('/errors/load-error-malformed-client');
-
-		const body = await page.textContent('body');
-
-		expect(body).toMatch(
-			'"error" property returned from load() must be a string or instance of Error, received type "object"'
-		);
-	});
-
 	test('client-side 4xx status without error from load()', async ({ page }) => {
 		await page.goto('/errors/load-status-without-error-client');
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: "401"');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Error: 401"'
+		);
 		expect(await page.innerHTML('h1')).toBe('401');
 	});
 });
@@ -335,27 +317,32 @@ test.describe('Load', () => {
 		expect(await page.textContent('h2')).toBe('y: b: 1');
 
 		await app.goto('/load/change-detection/one/a');
-		expect(await page.textContent('h2')).toBe('x: a: 1');
+		expect(await page.textContent('h2')).toBe('x: a: 2');
 
 		await app.goto('/load/change-detection/one/b');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
 		await app.invalidate('/load/change-detection/data.json');
 		expect(await page.textContent('h1')).toBe('layout loads: 2');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
 		await app.invalidate('/load/change-detection/data.json');
 		expect(await page.textContent('h1')).toBe('layout loads: 3');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
 		await app.invalidate('custom:change-detection-layout');
 		expect(await page.textContent('h1')).toBe('layout loads: 4');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await page.click('button');
+		await page.click('button:has-text("invalidate change-detection/data.json")');
 		await page.waitForFunction('window.invalidated');
 		expect(await page.textContent('h1')).toBe('layout loads: 5');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
+
+		await page.click('button:has-text("invalidate all")');
+		await page.waitForFunction('window.invalidated');
+		expect(await page.textContent('h1')).toBe('layout loads: 6');
+		expect(await page.textContent('h2')).toBe('x: b: 4');
 	});
 
 	test('load function is only called on session change when used in load', async ({ page }) => {
@@ -408,7 +395,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
+				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
 			);
 
 			warnings.length = 0;
@@ -417,7 +404,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
+				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
 			);
 		});
 	}
@@ -482,7 +469,7 @@ test.describe('Prefetching', () => {
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {
-			expect(requests.filter((req) => req.endsWith('index.svelte')).length).toBe(1);
+			expect(requests.filter((req) => req.endsWith('+page.svelte')).length).toBe(1);
 		} else {
 			// the preload helper causes an additional request to be made in Firefox,
 			// so we use toBeGreaterThan rather than toBe
@@ -536,7 +523,7 @@ test.describe('Routing', () => {
 	test('navigates to a new page without reloading', async ({ app, page, clicknav }) => {
 		await page.goto('/routing');
 
-		await app.prefetchRoutes(['/routing/a']).catch((e) => {
+		await app.prefetch('/routing/a').catch((e) => {
 			// from error handler tests; ignore
 			if (!e.message.includes('Crashing now')) throw e;
 		});
@@ -595,7 +582,7 @@ test.describe('Shadow DOM', () => {
 	test('client router captures anchors in shadow dom', async ({ app, page, clicknav }) => {
 		await page.goto('/routing/shadow-dom');
 
-		await app.prefetchRoutes(['/routing/a']).catch((e) => {
+		await app.prefetch('/routing/a').catch((e) => {
 			// from error handler tests; ignore
 			if (!e.message.includes('Crashing now')) throw e;
 		});
@@ -608,5 +595,22 @@ test.describe('Shadow DOM', () => {
 		expect(await page.textContent('h1')).toBe('a');
 
 		expect(requests).toEqual([]);
+	});
+});
+
+test.describe('Page Store', () => {
+	test('Updates data if changed even when no URL change visible', async ({ page }) => {
+		await page.goto('/store/data/only-data-changes');
+		expect(await page.textContent('#page-data')).toBe('{"answer":42,"calls":0}');
+		expect(await page.textContent('#store-data')).toBe(
+			'{"foo":{"bar":"Custom layout"},"name":"SvelteKit","value":123,"answer":42,"calls":0}'
+		);
+
+		await page.click('button');
+
+		expect(await page.textContent('#page-data')).toBe('{"answer":1337}');
+		expect(await page.textContent('#store-data')).toBe(
+			'{"foo":{"bar":"Custom layout"},"name":"SvelteKit","value":123,"answer":1337}'
+		);
 	});
 });

@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.406
+
+### Patch Changes
+
+- [breaking] Overhaul filesystem-based router (https://github.com/sveltejs/kit/discussions/5774) ([#5778](https://github.com/sveltejs/kit/pull/5778))
+
+* [breaking] Change load API (https://github.com/sveltejs/kit/discussions/5774) ([#5778](https://github.com/sveltejs/kit/pull/5778))
+
 ## 1.0.0-next.405
 
 ### Patch Changes

@@ -92,7 +92,7 @@ function strip_origin(str) {
 
 	modules.push({
 		name: '@sveltejs/kit',
-		comment: 'The following types can be imported from `@sveltejs/kit`:',
+		comment: 'The following can be imported from `@sveltejs/kit`:',
 		...get_types(code, node.statements)
 	});
 }

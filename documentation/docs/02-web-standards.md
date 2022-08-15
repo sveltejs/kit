@@ -12,7 +12,7 @@ In particular, you'll get comfortable with the following:
 
 SvelteKit uses [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch) for getting data from the network. It's available in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints) as well as in the browser.
 
-> A special version of `fetch` is available in [`load`](/docs/loading) functions for invoking endpoints directly during server-side rendering, without making an HTTP call, while preserving credentials. (To make credentialled fetches in server-side code outside `load`, you must explicitly pass `cookie` and/or `authorization` headers.) It also allows you to make relative requests, whereas server-side `fetch` normally requires a fully qualified URL.
+> A special version of `fetch` is available in [`load`](/docs/load) functions for invoking endpoints directly during server-side rendering, without making an HTTP call, while preserving credentials. (To make credentialled fetches in server-side code outside `load`, you must explicitly pass `cookie` and/or `authorization` headers.) It also allows you to make relative requests, whereas server-side `fetch` normally requires a fully qualified URL.
 
 Besides `fetch` itself, the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) includes the following interfaces:
 
@@ -22,7 +22,7 @@ An instance of [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Requ
 
 #### Response
 
-An instance of [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) is returned from `await fetch(...)`. Fundamentally, a SvelteKit app is a machine for turning a `Request` into a `Response`.
+An instance of [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) is returned from `await fetch(...)` and handlers in `+server.js` files. Fundamentally, a SvelteKit app is a machine for turning a `Request` into a `Response`.
 
 #### Headers
 
@@ -30,18 +30,18 @@ The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interf
 
 ```js
 // @errors: 2461
-/// file: src/routes/what-is-my-user-agent.js
-/** @type {import('@sveltejs/kit').RequestHandler} */
+/// file: src/routes/what-is-my-user-agent/+server.js
+import { json } from '@sveltejs/kit';
+
+/** @type {import('./$types').RequestHandler} */
 export function GET(event) {
 	// log all headers
 	console.log(...event.request.headers);
 
-	return {
-		body: {
-			// retrieve a specific header
-			userAgent: event.request.headers.get('user-agent')
-		}
-	};
+	return json({
+		// retrieve a specific header
+		userAgent: event.request.headers.get('user-agent')
+	});
 }
 ```
 

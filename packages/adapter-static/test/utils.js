@@ -107,7 +107,3 @@ function create_server(port, handler) {
 function rimraf(path) {
 	(fs.rmSync || fs.rmdirSync)(path, { recursive: true, force: true });
 }
-
-export const plugin = process.env.CI
-	? (await import('../../kit/dist/vite.js')).sveltekit
-	: (await import('../../kit/src/vite/index.js')).sveltekit;

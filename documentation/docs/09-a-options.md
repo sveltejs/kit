@@ -6,7 +6,7 @@ title: Anchor options
 
 SvelteKit uses code splitting to break your app into small chunks (one per route), ensuring fast startup times.
 
-For _dynamic_ routes, such as our `src/routes/blog/[slug].svelte` example, that's not enough. In order to render the blog post, we need to fetch the data for it, and we can't do that until we know what `slug` is. In the worst case, that could cause lag as the browser waits for the data to come back from the server.
+For _dynamic_ routes, such as our `src/routes/blog/[slug]/+page.svelte` example, that's not enough. In order to render the blog post, we need to fetch the data for it, and we can't do that until we know what `slug` is. In the worst case, that could cause lag as the browser waits for the data to come back from the server.
 
 We can mitigate that by _prefetching_ the data. Adding a `sveltekit:prefetch` attribute to a link...
 

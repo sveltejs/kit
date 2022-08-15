@@ -31,7 +31,9 @@ export async function migrate() {
 		config.kit?.routes ??
 		((filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath));
 
-	const files = glob(`${routes}/**`, { filesOnly: true }).map((file) => file.replace(/\\/g, '/'));
+	const files = glob(`${routes}/**`, { filesOnly: true, dot: true }).map((file) =>
+		file.replace(/\\/g, '/')
+	);
 
 	// validate before proceeding
 	for (const file of files) {
@@ -159,7 +161,7 @@ export async function migrate() {
 			if (module) {
 				const ext = /<script[^>]+?lang=['"](ts|typescript)['"][^]*?>/.test(module) ? '.ts' : '.js';
 
-				fs.writeFileSync(sibling + ext, migrate_page(module));
+				fs.writeFileSync(sibling + ext, migrate_page(module, bare));
 			}
 		} else if (module_ext) {
 			// file is a module
@@ -205,7 +207,7 @@ export async function migrate() {
 			move_file(
 				file,
 				renamed,
-				is_page_endpoint ? migrate_page_server(edited) : migrate_server(edited),
+				is_page_endpoint ? migrate_page_server(edited, bare) : migrate_server(edited),
 				use_git
 			);
 		}

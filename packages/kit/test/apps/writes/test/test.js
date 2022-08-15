@@ -18,22 +18,24 @@ test.describe('Filesystem updates', () => {
 			const route = 'zzzz' + Date.now();
 			const content = 'Hello new route';
 			const __dirname = path.dirname(fileURLToPath(import.meta.url));
-			const filePath = path.join(__dirname, `../src/routes/new-route/${route}.svelte`);
+			const filepath = path.join(__dirname, `../src/routes/new-route/${route}/+page.svelte`);
+			const dir = path.dirname(filepath);
 
 			try {
-				fs.writeFileSync(filePath, `<h1>${content}</h1>`);
+				fs.mkdirSync(dir);
+				fs.writeFileSync(filepath, `<h1>${content}</h1>`);
 				await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
 				await page.goto(`/new-route/${route}`);
 
 				expect(await page.textContent('h1')).toBe(content);
 			} finally {
-				fs.unlinkSync(filePath);
+				fs.rmSync(dir, { recursive: true });
 			}
 		});
 	}
 
 	test('Components are not double-mounted', async ({ page, javaScriptEnabled }) => {
-		const file = fileURLToPath(new URL('../src/routes/double-mount/index.svelte', import.meta.url));
+		const file = fileURLToPath(new URL('../src/routes/double-mount/+page.svelte', import.meta.url));
 		const contents = fs.readFileSync(file, 'utf-8');
 
 		const mounted = javaScriptEnabled ? 1 : 0;

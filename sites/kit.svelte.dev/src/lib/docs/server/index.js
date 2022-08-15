@@ -1,4 +1,4 @@
-import fs from 'fs';
+import * as fs from 'fs';
 import { renderCodeToHTML, runTwoSlash, createShikiHighlighter } from 'shiki-twoslash';
 import PrismJS from 'prismjs';
 import 'prismjs/components/prism-bash.js';
@@ -8,6 +8,8 @@ import 'prism-svelte';
 import { extract_frontmatter, transform } from './markdown';
 import { modules } from '../../../../../../packages/kit/docs/types.js';
 import { render_modules } from './modules';
+import { error } from '@sveltejs/kit';
+import { parse_route_id } from '../../../../../../packages/kit/src/utils/routing.js';
 
 const languages = {
 	bash: 'bash',
@@ -92,6 +94,32 @@ export async function read_file(dir, file) {
 
 			if (language === 'js') {
 				try {
+					if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
+						const params = parse_route_id(options.file || '+page.js')
+							.names.map((name) => `${name}: string`)
+							.join(', ');
+
+						let injected = [
+							`// @filename: $types.d.ts`,
+							`import type * as Kit from '@sveltejs/kit';`,
+							`export type PageLoad = Kit.Load<{${params}}>;`,
+							`export type PageServerLoad = Kit.ServerLoad<{${params}}>;`,
+							`export type LayoutLoad = Kit.Load<{${params}}>;`,
+							`export type LayoutServerLoad = Kit.ServerLoad<{${params}}>;`,
+							`export type RequestHandler = Kit.RequestHandler<{${params}}>;`,
+							`export type Action = Kit.Action<{${params}}>;`
+						].join('\n');
+
+						if (source.includes('// @filename:')) {
+							source = source.replace('// @filename:', `${injected}\n\n// @filename:`);
+						} else {
+							source = source.replace(
+								/^(?!\/\/ @)/m,
+								`${injected}\n\n// @filename: index.js\n// ---cut---\n`
+							);
+						}
+					}
+
 					const twoslash = runTwoSlash(source, language, {
 						defaultCompilerOptions: {
 							allowJs: true,
@@ -217,7 +245,7 @@ export async function read(dir, slug) {
 	const files = fs.readdirSync(`${base}/${dir}`).filter((file) => /^\d{2}-(.+)\.md$/.test(file));
 	const index = files.findIndex((file) => file.slice(3, -3) === slug);
 
-	if (index === -1) return null;
+	if (index === -1) throw error(404);
 
 	const prev = index > 0 && files[index - 1];
 	const next = index < files.length - 1 && files[index + 1];
@@ -292,15 +320,23 @@ export function read_headings(dir) {
  */
 function parse({ body, file, slug, code, codespan }) {
 	const headings = slug ? [slug] : [];
+
+	/** @type {import('./types').Section[]} */
 	const sections = [];
 
+	/** @type {import('./types').Section} */
 	let section;
 
 	// this is a bit hacky, but it allows us to prevent type declarations
 	// from linking to themselves
 	let current = '';
 
+	/** @type {string} */
 	const content = transform(body, {
+		/**
+		 * @param {string} html
+		 * @param {number} level
+		 */
 		heading(html, level) {
 			const title = html
 				.replace(/<\/?code>/g, '')

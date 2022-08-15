@@ -21,8 +21,10 @@ For assets included via the CSS `url()` function, you may find the [`experimenta
 ```js
 // svelte.config.js
 export default {
-	experimental: {
-		useVitePreprocess: true
+	vitePlugin: {
+		experimental: {
+			useVitePreprocess: true
+		}
 	}
 };
 ```
