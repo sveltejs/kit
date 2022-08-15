@@ -269,7 +269,7 @@ The first argument to `Response` can be a [`ReadableStream`](https://developer.m
 
 Throughout the examples above, we've been importing types from a `$types.d.ts` file. This is a file SvelteKit creates for you in a hidden directory if you're using TypeScript (or JavaScript with JSDoc type annotations) to give you type safety when working with your root files.
 
-For example, annotating `export let data` with `PageLoad` or `LayoutLoad` tells TypeScript that the type of `data` is whatever was returned from `load`:
+For example, annotating `export let data` with `PageData` (or `LayoutData`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
 
 ```svelte
 /// file: src/routes/blog/[slug]/+page.svelte
