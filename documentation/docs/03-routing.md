@@ -173,6 +173,8 @@ export async function POST({ request, setHeaders, url }) {
 }
 ```
 
+If validation `errors` are returned, they will be available inside `+page.svelte` as `export let errors`.
+
 > The actions API will likely change in the near future: https://github.com/sveltejs/kit/discussions/5875
 
 ### +error
