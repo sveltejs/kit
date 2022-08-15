@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.0.0-next.5
+
+### Patch Changes
+
+- Rewrite type names ([#5778](https://github.com/sveltejs/kit/pull/5778))
+
 ## 1.0.0-next.4
 
 ### Patch Changes

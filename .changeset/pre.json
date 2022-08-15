@@ -29,7 +29,8 @@
     "@sveltejs/amp": "1.0.0-next.0",
     "prerendering-test-disabled": "0.0.2-next.0",
     "test-writes": "0.0.2-next.0",
-    "svelte-migrate": "1.0.0-next.0"
+    "svelte-migrate": "1.0.0-next.0",
+    "skeleton-template": "0.0.1-next.0"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -98,6 +99,7 @@
     "brown-mangos-tie",
     "brown-nails-wait",
     "brown-peas-worry",
+    "brown-pens-glow",
     "calm-pans-peel",
     "calm-pens-prove",
     "calm-pots-turn",
@@ -391,6 +393,7 @@
     "honest-cows-notice",
     "honest-islands-flash",
     "honest-jars-report",
+    "honest-pandas-joke",
     "honest-rats-double",
     "honest-rice-cry",
     "honest-singers-guess",
@@ -625,6 +628,7 @@
     "olive-socks-thank",
     "olive-vans-talk",
     "orange-boats-love",
+    "orange-ties-tell",
     "orange-wolves-fly",
     "perfect-ears-explain",
     "perfect-experts-hammer",
@@ -981,6 +985,7 @@
     "thin-avocados-visit",
     "thin-bats-protect",
     "thin-beans-travel",
+    "thin-carrots-sin",
     "thin-coins-move",
     "thin-grapes-dance",
     "thin-planets-obey",
