@@ -364,21 +364,16 @@ export async function handle_json_request(event, options, mod) {
 			return json(result);
 		}
 
-		if (method === 'POST') {
+		if (result?.errors) {
 			// @ts-ignore
-			if (result.errors) {
-				// @ts-ignore
-				return json({ errors: result.errors }, { status: result.status || 400 });
-			}
-
-			return new Response(undefined, {
-				status: 201,
-				// @ts-ignore
-				headers: result.location ? { location: result.location } : undefined
-			});
+			return json({ errors: result.errors }, { status: result.status || 400 });
 		}
 
-		return new Response(undefined, { status: 204 });
+		return new Response(undefined, {
+			status: 204,
+			// @ts-ignore
+			headers: result?.location ? { location: result.location } : undefined
+		});
 	} catch (e) {
 		const error = normalize_error(e);
 

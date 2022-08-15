@@ -257,6 +257,17 @@ test.describe('Shadowed pages', () => {
 
 		expect(await response.json()).toEqual({ answer: 42 });
 	});
+
+	test('Action can return undefined', async ({ request }) => {
+		const response = await request.post('/shadowed/simple/post', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toEqual('');
+	});
 });
 
 test.describe('Static files', () => {

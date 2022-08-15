@@ -472,7 +472,9 @@ export function read_samples(test_file) {
  * @param {string} new_type
  */
 export function rewrite_type(node, code, old_type, new_type) {
+	// @ts-ignore
 	if (node.jsDoc) {
+		// @ts-ignore
 		for (const comment of node.jsDoc) {
 			const str = comment.getText();
 			const index = str.indexOf(old_type);
