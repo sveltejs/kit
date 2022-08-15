@@ -193,9 +193,8 @@ export interface HandleError {
 }
 
 /**
- * The `(event: LoadEvent) => LoadOutput` `load` function exported from `<script context="module">` in a page or layout.
- *
- * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the Params generic argument.
+ * The generic form of `PageLoad` and `LayoutLoad`. You should import those from './$types' (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
+ * rather than using `Load` directly.
  */
 export interface Load<
 	Params extends Record<string, string> = Record<string, string>,
@@ -222,6 +221,10 @@ export interface LoadEvent<
 	depends: (...deps: string[]) => void;
 }
 
+/**
+ * The generic form of `PageServerLoad` and `LayoutServerLoad`. You should import those from './$types' (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
+ * rather than using `ServerLoad` directly.
+ */
 export interface ServerLoad<
 	Params extends Record<string, string> = Record<string, string>,
 	ParentData extends Record<string, any> | null = Record<string, any>,

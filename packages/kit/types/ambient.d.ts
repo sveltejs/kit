@@ -55,12 +55,12 @@ declare namespace App {
 	export interface Platform {}
 
 	/**
-	 * The interface that defines the dynamic environment variables exported from '$env/dynamic/private'.
+	 * The interface that defines the dynamic environment variables exported from `$env/dynamic/private`.
 	 */
 	export interface PrivateEnv extends Record<string, string> {}
 
 	/**
-	 * The interface that defines the dynamic environment variables exported from '$env/dynamic/public'.
+	 * The interface that defines the dynamic environment variables exported from `$env/dynamic/public`.
 	 */
 	export interface PublicEnv extends Record<string, string> {}
 
