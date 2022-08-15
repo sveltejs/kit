@@ -80,7 +80,7 @@ test('generates __data.json file for shadow endpoints', () => {
 	);
 });
 
-test('does not prerender page with shadow endpoint with non-GET handler', () => {
+test('does not prerender page with shadow endpoint with non-load handler', () => {
 	assert.ok(!fs.existsSync(`${build}/shadowed-post.html`));
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
 });

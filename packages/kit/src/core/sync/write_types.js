@@ -34,10 +34,10 @@ import { remove_from_previous, write_if_changed } from './utils.js';
 
 const cwd = process.cwd();
 
-const methods = ['Get', 'Post', 'Put', 'Patch', 'Delete'];
+const methods = ['Post', 'Put', 'Patch', 'Delete'];
 
 const module_names = new Set(['load']);
-const server_names = new Set(methods.map((m) => m.toUpperCase()));
+const server_names = new Set(methods.map((m) => m.toUpperCase()).concat('load'));
 
 let first_run = true;
 
@@ -235,13 +235,8 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 	}
 
 	if (group.leaf) {
-		const { data, load, errors, exported, written_proxies } = process_node(
-			ts,
-			group.leaf,
-			outdir,
-			'RouteParams',
-			groups
-		);
+		const { data, server_data, load, server_load, errors, exported, written_proxies } =
+			process_node(ts, group.leaf, outdir, 'RouteParams', groups);
 		written_files.push(...written_proxies);
 
 		exports.push(`export type Errors = ${errors};`);
@@ -249,6 +244,11 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 		exports.push(`export type PageData = ${data};`);
 		if (load) {
 			exports.push(`export type PageLoad = ${load};`);
+		}
+
+		exports.push(`export type PageServerData = ${server_data};`);
+		if (server_load) {
+			exports.push(`export type PageServerLoad = ${server_load};`);
 		}
 
 		if (exported) {
@@ -278,7 +278,7 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 		}
 
 		if (group.default_layout) {
-			const { data, load, written_proxies } = process_node(
+			const { data, server_data, load, server_load, written_proxies } = process_node(
 				ts,
 				group.default_layout,
 				outdir,
@@ -286,9 +286,15 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 				groups
 			);
 			written_files.push(...written_proxies);
+
 			exports.push(`export type LayoutData = ${data};`);
 			if (load) {
 				exports.push(`export type LayoutLoad = ${load};`);
+			}
+
+			exports.push(`export type LayoutServerData = ${server_data};`);
+			if (server_load) {
+				exports.push(`export type LayoutServerLoad = ${server_load};`);
 			}
 		}
 
@@ -297,10 +303,16 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 			const data_exports = [];
 
 			/** @type {string[]} */
+			const server_data_exports = [];
+
+			/** @type {string[]} */
 			const load_exports = [];
 
+			/** @type {string[]} */
+			const server_load_exports = [];
+
 			for (const [name, node] of group.named_layouts) {
-				const { data, load, written_proxies } = process_node(
+				const { data, server_data, load, server_load, written_proxies } = process_node(
 					ts,
 					node,
 					outdir,
@@ -309,13 +321,23 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 				);
 				written_files.push(...written_proxies);
 				data_exports.push(`export type ${name} = ${data};`);
+				server_data_exports.push(`export type ${name} = ${server_data};`);
 				if (load) {
 					load_exports.push(`export type ${name} = ${load};`);
+				}
+				if (server_load) {
+					server_load_exports.push(`export type ${name} = ${load};`);
 				}
 			}
 
 			exports.push(`\nexport namespace LayoutData {\n\t${data_exports.join('\n\t')}\n}`);
 			exports.push(`\nexport namespace LayoutLoad {\n\t${load_exports.join('\n\t')}\n}`);
+			exports.push(
+				`\nexport namespace LayoutServerData {\n\t${server_data_exports.join('\n\t')}\n}`
+			);
+			exports.push(
+				`\nexport namespace LayoutServerLoad {\n\t${server_load_exports.join('\n\t')}\n}`
+			);
 		}
 	}
 
@@ -342,6 +364,7 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 function process_node(ts, node, outdir, params, groups) {
 	let data;
 	let load;
+	let server_load;
 	let errors;
 	let exported;
 	/** @type {string[]} */
@@ -356,7 +379,10 @@ function process_node(ts, node, outdir, params, groups) {
 		if (proxy?.modified) {
 			written_proxies.push(write(`${outdir}/proxy${basename}`, proxy.code));
 		}
-		server_data = get_data_type(node.server, 'GET', 'null', proxy);
+
+		server_data = get_data_type(node.server, 'load', 'null', proxy);
+		server_load = `Kit.ServerLoad<${params}, ${get_parent_type('LayoutServerData')}>`;
+
 		if (proxy) {
 			const types = [];
 			for (const method of ['POST', 'PUT', 'PATCH']) {
@@ -380,7 +406,7 @@ function process_node(ts, node, outdir, params, groups) {
 			errors = 'unknown';
 		}
 
-		// TODO replace when GET becomes load and POST etc become actions
+		// TODO replace when POST etc become actions
 		exported = methods.map((name) => `export type ${name} = Kit.${name}<${params}>;`);
 	} else {
 		server_data = 'null';
@@ -394,13 +420,12 @@ function process_node(ts, node, outdir, params, groups) {
 		}
 
 		data = get_data_type(node.shared, 'load', server_data, proxy);
-
-		load = `Kit.Load<${params}, ${server_data}, ${get_parent_type()}>`;
+		load = `Kit.Load<${params}, ${server_data}, ${get_parent_type('LayoutData')}>`;
 	} else {
 		data = server_data;
 	}
 
-	return { data, load, errors, exported, written_proxies };
+	return { data, server_data, load, server_load, errors, exported, written_proxies };
 
 	/**
 	 * @param {string} file_path
@@ -432,8 +457,9 @@ function process_node(ts, node, outdir, params, groups) {
 
 	/**
 	 * Get the parent type string by recursively looking up the parent layout and accumulate them to one type.
+	 * @param {string} type
 	 */
-	function get_parent_type() {
+	function get_parent_type(type) {
 		const parent_imports = [];
 		let parent = node.parent;
 		let acc_diff = 0;
@@ -444,7 +470,7 @@ function process_node(ts, node, outdir, params, groups) {
 			// unshift because we need it the other way round for the import string
 			parent_imports.unshift(
 				(acc_diff === 0 ? '' : `import('` + '../'.repeat(acc_diff) + '$types.js' + `').`) +
-					`LayoutData${parent.name ? `.${parent.name}` : ''}`
+					`${type}${parent.name ? `.${parent.name}` : ''}`
 			);
 			let parent_layout = /** @type {Node} */ (
 				parent.name ? parent_group.named_layouts.get(parent.name) : parent_group.default_layout

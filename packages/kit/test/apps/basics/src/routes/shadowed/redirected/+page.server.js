@@ -1,4 +1,4 @@
-export function GET() {
+export function load() {
 	return {
 		status: 'successful'
 	};

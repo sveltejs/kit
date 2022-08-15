@@ -11,7 +11,7 @@ import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
 export async function load_server_data({ event, node, parent }) {
 	if (!node?.server) return null;
 
-	const server_data = await node.server.GET?.call(null, {
+	const server_data = await node.server.load?.call(null, {
 		// can't use destructuring here because it will always
 		// invoke event.clientAddress, which breaks prerendering
 		get clientAddress() {

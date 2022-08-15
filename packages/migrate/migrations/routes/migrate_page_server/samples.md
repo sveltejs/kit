@@ -11,7 +11,7 @@ export function GET() {
 ```
 
 ```js after
-export function GET() {
+export function load() {
 	return {
 		a: 1
 	};
@@ -32,7 +32,7 @@ export function GET() {
 ```
 
 ```js after
-export function GET() {
+export function load() {
 	return {
 		a: 1
 	};
@@ -50,7 +50,7 @@ export const GET = () => ({
 ```
 
 ```js after
-export const GET = () => ({
+export const load = () => ({
 	a: 1
 });
 ```
@@ -79,7 +79,7 @@ export function GET() {
 ```
 
 ```js after
-export function GET() {
+export function load() {
 	return;
 }
 ```

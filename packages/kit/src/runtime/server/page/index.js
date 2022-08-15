@@ -346,7 +346,7 @@ function get_page_config(leaf, options) {
  */
 export async function handle_json_request(event, options, mod) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
-	const handler = mod[method === 'HEAD' ? 'GET' : method];
+	const handler = mod[method === 'HEAD' || method === 'GET' ? 'load' : method];
 
 	if (!handler) {
 		return method_not_allowed(mod, method);

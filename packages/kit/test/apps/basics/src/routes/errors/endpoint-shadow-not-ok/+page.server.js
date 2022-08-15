@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function GET() {
+export function load() {
 	throw error(555, undefined);
 }

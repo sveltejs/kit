@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
 
-export function GET() {
+export function load() {
 	throw error(404, undefined);
 }

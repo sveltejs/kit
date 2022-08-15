@@ -1,4 +1,4 @@
-/** @type {import('./$types').Get} */
-export function GET({ url }) {
+/** @type {import('./$types').PageServerLoad} */
+export function load({ url }) {
 	return { url: url.toString() };
 }

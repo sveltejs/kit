@@ -5,6 +5,7 @@ import {
 	error,
 	get_function_node,
 	get_object_nodes,
+	manual_migration,
 	manual_return_migration,
 	parse,
 	rewrite_returns,
@@ -31,19 +32,29 @@ export function migrate_page_server(content) {
 		const GET_id = file.exports.map.get('GET');
 		if (GET_id) {
 			const GET = get_function_node(statement, GET_id);
-			if (GET?.body) {
-				// possible TODOs — handle errors and redirects
-				rewrite_returns(GET.body, (expr, node) => {
-					const value = unwrap(expr);
-					const nodes = ts.isObjectLiteralExpression(value) && get_object_nodes(value);
+			if (GET) {
+				if (GET.body) {
+					// possible TODOs — handle errors and redirects
+					rewrite_returns(GET.body, (expr, node) => {
+						const value = unwrap(expr);
+						const nodes = ts.isObjectLiteralExpression(value) && get_object_nodes(value);
 
-					if (!nodes || nodes.headers || (nodes.status && nodes.status.getText() !== '200')) {
-						manual_return_migration(node || GET, file.code, TASKS.PAGE_ENDPOINT);
-						return;
-					}
+						if (!nodes || nodes.headers || (nodes.status && nodes.status.getText() !== '200')) {
+							manual_return_migration(node || GET, file.code, TASKS.PAGE_ENDPOINT);
+							return;
+						}
 
-					automigration(value, file.code, dedent(nodes.body.getText()));
-				});
+						automigration(value, file.code, dedent(nodes.body.getText()));
+					});
+				}
+
+				if (ts.isFunctionDeclaration(GET) && GET.name) {
+					automigration(GET.name, file.code, 'load');
+				} else if (ts.isVariableDeclaration(GET.parent) && ts.isIdentifier(GET.parent.name)) {
+					automigration(GET.parent.name, file.code, 'load');
+				} else {
+					manual_migration(GET, file.code, 'Rename GET to load', TASKS.PAGE_ENDPOINT);
+				}
 
 				unmigrated.delete('GET');
 			}

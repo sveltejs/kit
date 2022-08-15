@@ -4,7 +4,7 @@ import {
 	Config,
 	Delete,
 	ExternalFetch,
-	Get,
+	ServerLoad,
 	GetSession,
 	Handle,
 	HandleError,
@@ -20,14 +20,7 @@ import {
 	ServerInitOptions,
 	SSRManifest
 } from './index.js';
-import {
-	HttpMethod,
-	JSONObject,
-	MaybePromise,
-	RequestOptions,
-	ResponseHeaders,
-	TrailingSlash
-} from './private.js';
+import { HttpMethod, MaybePromise, RequestOptions, TrailingSlash } from './private.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -226,8 +219,8 @@ export interface SSRNode {
 	};
 
 	server: {
-		GET?: Get;
-		HEAD?: Get;
+		load?: ServerLoad;
+		HEAD?: ServerLoad;
 		POST?: Post;
 		PATCH?: Patch;
 		PUT?: Put;

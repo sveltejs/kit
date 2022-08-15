@@ -1,7 +1,7 @@
 import { read } from '$lib/docs/server';
 
-/** @type {import('./$types').Get} */
-export async function GET({ params }) {
+/** @type {import('./$types').PageServerLoad} */
+export async function load({ params }) {
 	const { prev, next, section } = await read('docs', params.slug);
 
 	return {
