@@ -9,7 +9,16 @@
 
 <button
 	on:click={async () => {
+		window.invalidated = false;
 		await invalidate((dep) => dep.includes('change-detection/data.json'));
 		window.invalidated = true;
 	}}>invalidate change-detection/data.json</button
+>
+
+<button
+	on:click={async () => {
+		window.invalidated = false;
+		await invalidate();
+		window.invalidated = true;
+	}}>invalidate all</button
 >

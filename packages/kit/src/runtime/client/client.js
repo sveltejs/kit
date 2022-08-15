@@ -971,7 +971,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 		goto: (href, opts = {}) => goto(href, opts, []),
 
 		invalidate: (resource) => {
-			if (typeof resource === 'function') {
+			if (resource === undefined) {
+				invalidated.push(() => true);
+			} else if (typeof resource === 'function') {
 				invalidated.push(resource);
 			} else {
 				const { href } = new URL(resource, location.href);

@@ -334,9 +334,14 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('layout loads: 4');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await page.click('button');
+		await page.click('button:has-text("invalidate change-detection/data.json")');
 		await page.waitForFunction('window.invalidated');
 		expect(await page.textContent('h1')).toBe('layout loads: 5');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
+
+		await page.click('button:has-text("invalidate all")');
+		await page.waitForFunction('window.invalidated');
+		expect(await page.textContent('h1')).toBe('layout loads: 6');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 	});
 

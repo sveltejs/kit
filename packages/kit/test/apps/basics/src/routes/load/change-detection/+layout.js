@@ -1,7 +1,7 @@
 let count = 0;
 
 /** @type {import('@sveltejs/kit').Load} */
-export async function load({ fetch, depends, setHeaders }) {
+export async function load({ fetch, depends }) {
 	const res = await fetch('/load/change-detection/data.json');
 	const { type } = await res.json();
 
