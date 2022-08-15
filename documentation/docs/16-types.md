@@ -53,13 +53,12 @@ interface RouteParams {
 	baz: string;
 }
 
-export type Get = Kit.Get<RouteParams>;
-export type PageLoad = Kit.Load<RouteParams>;
+export type PageServerLoad = Kit.ServerLoad<RouteParams>;
 
 // @filename: index.js
 // @errors: 2355
 // ---cut---
-/** @type {import('./$types').Get} */
+/** @type {import('./$types').PageServerLoad} */
 export async function GET({ params }) {
 	// ...
 }
@@ -76,7 +75,6 @@ interface RouteParams {
 	baz: string;
 }
 
-export type Get = Kit.Get<RouteParams>;
 export type PageLoad = Kit.Load<RouteParams>;
 
 // @filename: index.js
