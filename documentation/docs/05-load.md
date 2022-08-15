@@ -251,7 +251,7 @@ export type PageLoad = import('@sveltejs/kit').Load<{}>;
 export function load() {
 	return {
 		a: Promise.resolve('a'),
-		b: Promise.resolve('b');
+		b: Promise.resolve('b'),
 		c: {
 			value: Promise.resolve('c')
 		}
