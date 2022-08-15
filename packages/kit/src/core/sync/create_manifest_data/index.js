@@ -362,7 +362,7 @@ function trace(tree, id, layout_id = DEFAULT, project_relative) {
 			layouts.unshift(layout);
 		}
 
-		const parent_layout_id = layout?.component?.split('@')[1]?.split('.')[0];
+		const parent_layout_id = layout?.component?.split('/').at(-1)?.split('@')[1]?.split('.')[0];
 
 		if (parent_layout_id) {
 			layout_id = parent_layout_id;
