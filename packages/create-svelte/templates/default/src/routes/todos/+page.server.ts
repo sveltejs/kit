@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { api } from './api';
-import type { PageServerLoad, Post, Patch, Delete } from './$types';
+import type { PageServerLoad, Action } from './$types';
 
 type Todo = {
 	uid: string;
@@ -44,8 +44,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	throw error(response.status);
 };
 
-/** @type {import('./$types').Post} */
-export const POST: Post = async ({ request, locals }) => {
+/** @type {import('./$types').Action} */
+export const POST: Action = async ({ request, locals }) => {
 	const form = await request.formData();
 
 	await api('POST', `todos/${locals.userid}`, {
@@ -53,8 +53,8 @@ export const POST: Post = async ({ request, locals }) => {
 	});
 };
 
-/** @type {import('./$types').Patch} */
-export const PATCH: Patch = async ({ request, locals }) => {
+/** @type {import('./$types').Action} */
+export const PATCH: Action = async ({ request, locals }) => {
 	const form = await request.formData();
 
 	await api('PATCH', `todos/${locals.userid}/${form.get('uid')}`, {
@@ -63,8 +63,8 @@ export const PATCH: Patch = async ({ request, locals }) => {
 	});
 };
 
-/** @type {import('./$types').Delete} */
-export const DELETE: Delete = async ({ request, locals }) => {
+/** @type {import('./$types').Action} */
+export const DELETE: Action = async ({ request, locals }) => {
 	const form = await request.formData();
 
 	await api('DELETE', `todos/${locals.userid}/${form.get('uid')}`);
