@@ -108,18 +108,42 @@ export async function load({ params }) {
 
 During client-side navigation, SvelteKit will load this data using `fetch`, which means that the returned value must be serializable as JSON.
 
+#### Actions
+
 `+page.server.js` can also declare _actions_, which correspond to the `POST`, `PATCH`, `PUT` and `DELETE` HTTP methods. A request made to the page with one of these methods will invoke the corresponding action before rendering the page.
 
-An action can return a `{ status?, errors }` object (`status` defaults to `400`) if there are validation errors, or an optional `{ location }` object to redirect the user to another page:
+An action can return a `{ status?, errors }` object if there are validation errors (`status` defaults to `400`), or an optional `{ location }` object to redirect the user to another page:
 
 ```js
 /// file: src/routes/login/+page.server.js
+
+// @filename: ambient.d.ts
+declare global {
+	const createSessionCookie: (userid: string) => string;
+	const hash: (content: string) => string;
+	const db: {
+		findUser: (name: string) => Promise<{
+			id: string;
+			username: string;
+			password: string;
+		}>
+	}
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
 import { error } from '@sveltejs/kit';
 
-/** @type {import('./$types).Action} */
+/** @type {import('./$types').Action} */
 export async function POST({ request, setHeaders, url }) {
 	const values = await request.formData();
-	const user = await db.findUser(values.get('username'));
+
+	const username = /** @type {string} */ (values.get('username'));
+	const password = /** @type {string} */ (values.get('password'));
+
+	const user = await db.findUser(username);
 
 	if (!user) {
 		return {
@@ -130,7 +154,7 @@ export async function POST({ request, setHeaders, url }) {
 		};
 	}
 
-	if (user.password !== hash(values.get('password'))) {
+	if (user.password !== hash(password)) {
 		return {
 			status: 403,
 			errors: {

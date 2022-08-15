@@ -106,7 +106,8 @@ export async function read_file(dir, file) {
 							`export type PageServerLoad = Kit.ServerLoad<{${params}}>;`,
 							`export type LayoutLoad = Kit.Load<{${params}}>;`,
 							`export type LayoutServerLoad = Kit.ServerLoad<{${params}}>;`,
-							`export type RequestHandler = Kit.RequestHandler<{${params}}>;`
+							`export type RequestHandler = Kit.RequestHandler<{${params}}>;`,
+							`export type Action = Kit.Action<{${params}}>;`
 						].join('\n');
 
 						if (source.includes('// @filename:')) {
