@@ -214,7 +214,9 @@ export async function build_server(options, client) {
 	const { chunks } = await create_build(merged_config);
 
 	/** @type {import('vite').Manifest} */
-	const vite_manifest = JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8'));
+	const vite_manifest = JSON.parse(
+		fs.readFileSync(`${output_dir}/server/${vite_config.build.manifest}`, 'utf-8')
+	);
 
 	mkdirp(`${output_dir}/server/nodes`);
 	mkdirp(`${output_dir}/server/stylesheets`);

@@ -167,7 +167,7 @@ function kit() {
 	function client_build_info(assets, chunks) {
 		/** @type {import('vite').Manifest} */
 		const vite_manifest = JSON.parse(
-			fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
+			fs.readFileSync(`${paths.client_out_dir}/${vite_config.build.manifest}`, 'utf-8')
 		);
 
 		const entry_id = posixify(path.relative(cwd, `${runtime_directory}/client/start.js`));
@@ -437,6 +437,10 @@ function kit() {
 					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
 				);
 			}
+
+			// avoid making the manifest available to users
+			fs.unlinkSync(`${paths.output_dir}/client/${vite_config.build.manifest}`);
+			fs.unlinkSync(`${paths.output_dir}/server/${vite_config.build.manifest}`);
 		},
 
 		/**
