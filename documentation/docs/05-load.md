@@ -8,11 +8,6 @@ If the `load` function is defined in `+page.js` or `+layout.js` it will run both
 
 ```js
 /// file: src/routes/+page.js
-// @filename: $types.d.ts
-export type PageLoad = import('@sveltejs/kit').Load<{}>;
-
-// @filename: index.js
-// ---cut---
 /** @type {import('./$types').PageLoad} */
 export function load(event) {
 	return {
@@ -31,11 +26,6 @@ Very rarely, you might need both a `+page.js` and a `+page.server.js` (or the `+
 
 ```js
 /// file: src/routes/my-route/+page.server.js
-// @filename: $types.d.ts
-export type PageServerLoad = import('@sveltejs/kit').Load<{}>;
-
-// @filename: index.js
-// ---cut---
 /** @type {import('./$types').PageServerLoad} */
 export function load() {
 	return {
@@ -91,11 +81,6 @@ The name of the current route directory, relative to `src/routes`:
 
 ```js
 /// file: src/routes/blog/[slug]/+page.svelte
-// @filename: $types.d.ts
-export type PageLoad = import('@sveltejs/kit').Load<{ slug: string }>;
-
-// @filename: index.js
-// ---cut---
 /** @type {import('./$types').PageLoad} */
 export function load({ routeId }) {
 	console.log(routeId); // 'blog/[slug]'
@@ -130,9 +115,6 @@ declare module '$lib/api' {
 	}
 }
 
-// @filename: $types.d.ts
-export type PageLoad = import('@sveltejs/kit').Load<{}>;
-
 // @filename: index.js
 // ---cut---
 import * as api from '$lib/api';
@@ -166,11 +148,6 @@ export async function load({ depends }) {
 
 ```js
 /// file: src/routes/+layout.server.js
-// @filename: $types.d.ts
-export type LayoutLoad = import('@sveltejs/kit').Load<{}>;
-
-// @filename: index.js
-// ---cut---
 /** @type {import('./$types').LayoutLoad} */
 export function load() {
 	return { a: 1 };
@@ -217,19 +194,13 @@ If you need to set headers for the response, you can do so using the `setHeaders
 
 ```js
 /// file: src/routes/blog/+page.js
-
-// @filename: $types.d.ts
-export type PageLoad = import('@sveltejs/kit').Load<{}>;
-
-// @filename: index.js
-// ---cut---
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, setHeaders }) {
 	const url = `https://cms.example.com/articles.json`;
 	const response = await fetch(url);
 
 	setHeaders({
-		'age': response.headers.get('age'),
+		age: response.headers.get('age'),
 		'cache-control': response.headers.get('cache-control')
 	});
 
@@ -285,9 +256,6 @@ declare namespace App {
 		}
 	}
 }
-
-// @filename: $types.d.ts
-export type LayoutServerLoad = import('@sveltejs/kit').ServerLoad<{}>;
 
 // @filename: index.js
 // ---cut---

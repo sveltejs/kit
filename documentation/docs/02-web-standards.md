@@ -31,12 +31,6 @@ The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interf
 ```js
 // @errors: 2461
 /// file: src/routes/what-is-my-user-agent/+server.js
-
-// @filename: $types.d.ts
-export type RequestHandler = import('@sveltejs/kit').RequestHandler<{}>;
-
-// @filename: index.js
-// ---cut---
 import { json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */

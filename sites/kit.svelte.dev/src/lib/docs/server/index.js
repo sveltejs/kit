@@ -9,6 +9,7 @@ import { extract_frontmatter, transform } from './markdown';
 import { modules } from '../../../../../../packages/kit/docs/types.js';
 import { render_modules } from './modules';
 import { error } from '@sveltejs/kit';
+import { parse_route_id } from '../../../../../../packages/kit/src/utils/routing.js';
 
 const languages = {
 	bash: 'bash',
@@ -93,6 +94,31 @@ export async function read_file(dir, file) {
 
 			if (language === 'js') {
 				try {
+					if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
+						const params = parse_route_id(options.file || '+page.js')
+							.names.map((name) => `${name}: string`)
+							.join(', ');
+
+						let injected = [
+							`// @filename: $types.d.ts`,
+							`import type * as Kit from '@sveltejs/kit';`,
+							`export type PageLoad = Kit.Load<{${params}}>;`,
+							`export type PageServerLoad = Kit.ServerLoad<{${params}}>;`,
+							`export type LayoutLoad = Kit.Load<{${params}}>;`,
+							`export type LayoutServerLoad = Kit.ServerLoad<{${params}}>;`,
+							`export type RequestHandler = Kit.RequestHandler<{${params}}>;`
+						].join('\n');
+
+						if (source.includes('// @filename:')) {
+							source = source.replace('// @filename:', `${injected}\n\n// @filename:`);
+						} else {
+							source = source.replace(
+								/^(?!\/\/ @)/m,
+								`${injected}\n\n// @filename: index.js\n// ---cut---\n`
+							);
+						}
+					}
+
 					const twoslash = runTwoSlash(source, language, {
 						defaultCompilerOptions: {
 							allowJs: true,

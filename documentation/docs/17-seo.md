@@ -58,12 +58,6 @@ export default config;
 
 ```js
 /// file: src/routes/sitemap.xml/+server.js
-
-// @filename: $types.d.ts
-export const RequestHandler = import('@sveltejs/kit').RequestHandler<{}>;
-
-// @filename: index.js
-// ---cut---
 export async function GET() {
 	return new Response(`
 		<?xml version="1.0" encoding="UTF-8" ?>

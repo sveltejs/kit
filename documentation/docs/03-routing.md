@@ -50,12 +50,6 @@ Often, a page will need to load some data before it can be rendered. For this, w
 
 ```js
 /// file: src/routes/blog/[slug]/+page.js
-
-// @filename: $types.d.ts
-export type PageLoad = import('@sveltejs/kit').Load<{ slug: string }>;
-
-// @filename: index.js
-// ---cut---
 import { error } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageLoad} */
@@ -95,9 +89,6 @@ declare global {
 }
 
 export {};
-
-// @filename: $types.d.ts
-export type PageServerLoad = import('@sveltejs/kit').Load<{ slug: string }>;
 
 // @filename: index.js
 // ---cut---
@@ -206,12 +197,6 @@ Just like `+page.svelte` loading data from `+page.js`, your `+layout.svelte` com
 
 ```js
 /// file: src/routes/settings/+layout.js
-
-// @filename: $types.d.ts
-export type LayoutLoad = import('@sveltejs/kit').Load<{ slug: string }>;
-
-// @filename: index.js
-// ---cut---
 /** @type {import('./$types').LayoutLoad} */
 export function load() {
 	return {
@@ -239,11 +224,6 @@ For example we could create an `/api/random-number` route with a `GET` handler:
 
 ```js
 /// file: src/routes/api/random-number/+server.js
-// @filename: $types.d.ts
-export type RequestHandler = import('@sveltejs/kit').RequestHandler<{}>;
-
-// @filename: index.js
-// ---cut---
 import { error } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
