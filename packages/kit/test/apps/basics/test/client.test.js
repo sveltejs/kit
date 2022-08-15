@@ -342,7 +342,7 @@ test.describe('Load', () => {
 		await page.click('button:has-text("invalidate all")');
 		await page.waitForFunction('window.invalidated');
 		expect(await page.textContent('h1')).toBe('layout loads: 6');
-		expect(await page.textContent('h2')).toBe('x: b: 3');
+		expect(await page.textContent('h2')).toBe('x: b: 4');
 	});
 
 	test('load function is only called on session change when used in load', async ({ page }) => {

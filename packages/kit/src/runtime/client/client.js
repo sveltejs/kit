@@ -972,6 +972,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		invalidate: (resource) => {
 			if (resource === undefined) {
+				// Force rerun of all load functions, regardless of their dependencies
+				for (const node of current.branch) {
+					node?.uses.dependencies.add('');
+				}
 				invalidated.push(() => true);
 			} else if (typeof resource === 'function') {
 				invalidated.push(resource);
