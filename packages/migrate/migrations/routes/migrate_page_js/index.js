@@ -22,7 +22,7 @@ const give_up = `${error('Update load function', TASKS.PAGE_LOAD)}\n\n`;
  * @param {string} content
  * @param {string} filename
  */
-export function migrate_page(content, filename = '+page.js') {
+export function migrate_page(content, filename) {
 	// early out if we can tell there's no load function
 	// without parsing the file
 	if (!/load/.test(content)) return content;

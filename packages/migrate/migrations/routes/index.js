@@ -161,7 +161,7 @@ export async function migrate() {
 			if (module) {
 				const ext = /<script[^>]+?lang=['"](ts|typescript)['"][^]*?>/.test(module) ? '.ts' : '.js';
 
-				fs.writeFileSync(sibling + ext, migrate_page(module));
+				fs.writeFileSync(sibling + ext, migrate_page(module, bare));
 			}
 		} else if (module_ext) {
 			// file is a module
@@ -207,7 +207,7 @@ export async function migrate() {
 			move_file(
 				file,
 				renamed,
-				is_page_endpoint ? migrate_page_server(edited) : migrate_server(edited),
+				is_page_endpoint ? migrate_page_server(edited, bare) : migrate_server(edited),
 				use_git
 			);
 		}
