@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.407
+
+### Patch Changes
+
+- Allow actions to return undefined ([#5892](https://github.com/sveltejs/kit/pull/5892))
+
+* [fix] avoid manifest collisions ([#5874](https://github.com/sveltejs/kit/pull/5874))
+
+- Make package command remove `publishConfig.directory` from generated package.json ([#5848](https://github.com/sveltejs/kit/pull/5848))
+
 ## 1.0.0-next.406
 
 ### Patch Changes
