@@ -34,10 +34,8 @@ import { remove_from_previous, write_if_changed } from './utils.js';
 
 const cwd = process.cwd();
 
-const methods = ['Post', 'Put', 'Patch', 'Delete'];
-
-const module_names = new Set(['load']);
-const server_names = new Set(methods.map((m) => m.toUpperCase()).concat('load'));
+const shared_names = new Set(['load']);
+const server_names = new Set(['load', 'POST', 'PUT', 'PATCH', 'DELETE']); // TODO replace with a single `action`
 
 let first_run = true;
 
@@ -235,8 +233,13 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 	}
 
 	if (group.leaf) {
-		const { data, server_data, load, server_load, errors, exported, written_proxies } =
-			process_node(ts, group.leaf, outdir, 'RouteParams', groups);
+		const { data, server_data, load, server_load, errors, written_proxies } = process_node(
+			ts,
+			group.leaf,
+			outdir,
+			'RouteParams',
+			groups
+		);
 		written_files.push(...written_proxies);
 
 		exports.push(`export type Errors = ${errors};`);
@@ -251,8 +254,8 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 			exports.push(`export type PageServerLoad = ${server_load};`);
 		}
 
-		if (exported) {
-			exports.push(...exported);
+		if (group.leaf.server) {
+			exports.push(`export type Action = Kit.Action<RouteParams>`);
 		}
 	}
 
@@ -366,7 +369,7 @@ function process_node(ts, node, outdir, params, groups) {
 	let load;
 	let server_load;
 	let errors;
-	let exported;
+
 	/** @type {string[]} */
 	let written_proxies = [];
 
@@ -405,16 +408,13 @@ function process_node(ts, node, outdir, params, groups) {
 		} else {
 			errors = 'unknown';
 		}
-
-		// TODO replace when POST etc become actions
-		exported = methods.map((name) => `export type ${name} = Kit.${name}<${params}>;`);
 	} else {
 		server_data = 'null';
 	}
 
 	if (node.shared) {
 		const content = fs.readFileSync(node.shared, 'utf8');
-		const proxy = tweak_types(ts, content, module_names);
+		const proxy = tweak_types(ts, content, shared_names);
 		if (proxy?.modified) {
 			written_proxies.push(write(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code));
 		}
@@ -425,7 +425,7 @@ function process_node(ts, node, outdir, params, groups) {
 		data = server_data;
 	}
 
-	return { data, server_data, load, server_load, errors, exported, written_proxies };
+	return { data, server_data, load, server_load, errors, written_proxies };
 
 	/**
 	 * @param {string} file_path

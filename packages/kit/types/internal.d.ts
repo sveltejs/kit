@@ -1,8 +1,8 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import { SvelteComponent } from 'svelte/internal';
 import {
+	Action,
 	Config,
-	Delete,
 	ExternalFetch,
 	ServerLoad,
 	GetSession,
@@ -10,9 +10,6 @@ import {
 	HandleError,
 	KitConfig,
 	Load,
-	Patch,
-	Post,
-	Put,
 	RequestEvent,
 	RequestHandler,
 	ResolveOptions,
@@ -221,10 +218,10 @@ export interface SSRNode {
 	server: {
 		load?: ServerLoad;
 		HEAD?: ServerLoad;
-		POST?: Post;
-		PATCH?: Patch;
-		PUT?: Put;
-		DELETE?: Delete;
+		POST?: Action;
+		PATCH?: Action;
+		PUT?: Action;
+		DELETE?: Action;
 	};
 }
 

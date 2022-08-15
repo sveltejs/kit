@@ -108,6 +108,49 @@ export async function load({ params }) {
 
 During client-side navigation, SvelteKit will load this data using `fetch`, which means that the returned value must be serializable as JSON.
 
+`+page.server.js` can also declare _actions_, which correspond to the `POST`, `PATCH`, `PUT` and `DELETE` HTTP methods. A request made to the page with one of these methods will invoke the corresponding action before rendering the page.
+
+An action can return a `{ status?, errors }` object (`status` defaults to `400`) if there are validation errors, or an optional `{ location }` object to redirect the user to another page:
+
+```js
+/// file: src/routes/login/+page.server.js
+import { error } from '@sveltejs/kit';
+
+/** @type {import('./$types).Action} */
+export async function POST({ request, setHeaders, url }) {
+	const values = await request.formData();
+	const user = await db.findUser(values.get('username'));
+
+	if (!user) {
+		return {
+			status: 403,
+			errors: {
+				username: 'No user with this username'
+			}
+		};
+	}
+
+	if (user.password !== hash(values.get('password'))) {
+		return {
+			status: 403,
+			errors: {
+				password: 'Incorrect password'
+			}
+		};
+	}
+
+	setHeaders({
+		'set-cookie': createSessionCookie(user.id)
+	});
+
+	return {
+		location: url.searchParams.get('redirectTo') ?? '/'
+	};
+}
+```
+
+> The actions API will likely change in the near future: https://github.com/sveltejs/kit/discussions/5875
+
 ### +error
 
 If an error occurs during `load`, SvelteKit will render a default error page. You can customise this error page on a per-route basis by adding an `+error.svelte` file:

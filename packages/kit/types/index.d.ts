@@ -313,30 +313,12 @@ export interface ServerLoadEvent<
 	parent: () => Promise<ParentData>;
 }
 
-export interface Post<Params extends Record<string, string> = Record<string, string>> {
+export interface Action<Params extends Record<string, string> = Record<string, string>> {
 	(event: RequestEvent<Params>): MaybePromise<
 		| { status?: number; errors: Record<string, string>; location?: never }
 		| { status?: never; errors?: never; location: string }
 		| void
 	>;
-}
-
-export interface Put<Params extends Record<string, string> = Record<string, string>> {
-	(event: RequestEvent<Params>): MaybePromise<{
-		status?: number;
-		errors: Record<string, string>;
-	} | void>;
-}
-
-export interface Patch<Params extends Record<string, string> = Record<string, string>> {
-	(event: RequestEvent<Params>): MaybePromise<{
-		status?: number;
-		errors: Record<string, string>;
-	} | void>;
-}
-
-export interface Delete<Params extends Record<string, string> = Record<string, string>> {
-	(event: RequestEvent<Params>): MaybePromise<void>;
 }
 
 // TODO figure out how to just re-export from '../src/index/index.js' without
