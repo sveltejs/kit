@@ -18,7 +18,7 @@ export function load(event) {
 
 ### Input properties
 
-The argument to a `load` function is a `LoadEvent` or (for server-only `load` functions) a `ServerLoadEvent`, which inherits `clientAddress`, `locals`, `platform` and `request` from `RequestEvent`. All events have the following properties:
+The argument to a `load` function is a `LoadEvent` (or, for server-only `load` functions, a `ServerLoadEvent` which inherits `clientAddress`, `locals`, `platform` and `request` from `RequestEvent`). All events have the following properties:
 
 #### data
 
