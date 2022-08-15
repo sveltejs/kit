@@ -16,7 +16,10 @@ import * as TASKS from '../tasks.js';
 
 const give_up = `${error('Update +page.server.js', TASKS.PAGE_ENDPOINT)}\n\n`;
 
-/** @param {string} content */
+/**
+ * @param {string} content
+ * @param {string} filename
+ */
 export function migrate_page_server(content, filename = '+page.server.js') {
 	const file = parse(content);
 	if (!file) return give_up + content;
