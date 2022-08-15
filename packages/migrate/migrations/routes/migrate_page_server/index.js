@@ -9,6 +9,7 @@ import {
 	manual_return_migration,
 	parse,
 	rewrite_returns,
+	rewrite_type,
 	unwrap
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
@@ -16,7 +17,7 @@ import * as TASKS from '../tasks.js';
 const give_up = `${error('Update +page.server.js', TASKS.PAGE_ENDPOINT)}\n\n`;
 
 /** @param {string} content */
-export function migrate_page_server(content) {
+export function migrate_page_server(content, filename = '+page.server.js') {
 	const file = parse(content);
 	if (!file) return give_up + content;
 
@@ -27,6 +28,16 @@ export function migrate_page_server(content) {
 	const non_get_methods = methods.filter((name) => name !== 'GET');
 
 	const unmigrated = new Set(methods);
+
+	const match = /\+(?:(page)|(layout(?:-([^.@]+))?))/.exec(filename);
+	const load_name = match?.[3]
+		? `LayoutServerLoad.${match[3]}`
+		: match?.[2]
+		? `LayoutServerLoad`
+		: 'PageServerLoad';
+
+	const has_load = file.exports.map.has('GET');
+	const has_action = non_get_methods.some((method) => file.exports.map.has(method));
 
 	for (const statement of file.ast.statements) {
 		const GET_id = file.exports.map.get('GET');
@@ -48,6 +59,8 @@ export function migrate_page_server(content) {
 					});
 				}
 
+				rewrite_type(GET, file.code, 'RequestHandler', load_name);
+
 				if (ts.isFunctionDeclaration(GET) && GET.name) {
 					automigration(GET.name, file.code, 'load');
 				} else if (ts.isVariableDeclaration(GET.parent) && ts.isIdentifier(GET.parent.name)) {
@@ -67,7 +80,23 @@ export function migrate_page_server(content) {
 					manual_return_migration(node || fn, file.code, TASKS.PAGE_ENDPOINT);
 				});
 
+				rewrite_type(fn, file.code, 'RequestHandler', 'Action');
+
 				unmigrated.delete(method);
+			}
+		}
+
+		if (ts.isImportDeclaration(statement) && statement.importClause) {
+			const bindings = statement.importClause.namedBindings;
+
+			if (bindings && !ts.isNamespaceImport(bindings)) {
+				for (const binding of bindings.elements) {
+					if (binding.name.escapedText === 'RequestHandler') {
+						const types = [has_load && load_name, has_action && 'Action'].filter(Boolean);
+
+						file.code.overwrite(binding.getStart(), binding.getEnd(), types.join(', '));
+					}
+				}
 			}
 		}
 	}
