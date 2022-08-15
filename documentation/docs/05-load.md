@@ -237,6 +237,39 @@ export async function load({ fetch, setHeaders }) {
 }
 ```
 
+### Output
+
+Any promises on the returned `data` object will be resolved, if they are top-level properties. This makes it easy to return multiple promises without creating a waterfall:
+
+```js
+// @filename: $types.d.ts
+export type PageLoad = import('@sveltejs/kit').Load<{}>;
+
+// @filename: index.js
+// ---cut---
+/** @type {import('./$types').PageLoad} */
+export function load() {
+	return {
+		a: Promise.resolve('a'),
+		b: Promise.resolve('b');
+		c: {
+			value: Promise.resolve('c')
+		}
+	};
+}
+```
+
+```svelte
+<script>
+	/** @type {import('./$types').PageData} */
+	export let data;
+
+	console.log(data.a); // 'a'
+	console.log(data.b); // 'b'
+	console.log(data.c.value); // `Promise {...}`
+</script>
+```
+
 ### Errors
 
 If an error is thrown during `load`, the nearest [`+error.svelte`](/docs/routing#error) will be rendered. For _expected_ errors, use the `error` helper from `@sveltejs/kit` to specify the HTTP status code and an optional message:
