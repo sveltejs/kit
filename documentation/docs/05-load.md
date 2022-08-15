@@ -136,7 +136,7 @@ export async function load({ depends }) {
 
 - it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request
 - it can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context)
-- requests for endpoints go direct to the handler function when running on the server, without the overhead of an HTTP call
+- internal requests (e.g. for `+server.js` routes) go direct to the handler function when running on the server, without the overhead of an HTTP call
 - during server-side rendering, the response will be captured and inlined into the rendered HTML
 - during hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request
 
@@ -190,7 +190,7 @@ In `+page.js` or `+layout.js` it will return data from `load` functions in paren
 
 #### setHeaders
 
-If you need to set headers for the response, you can do so using the `setHeaders` method. This is useful if you want to cache the response:
+If you need to set headers for the response, you can do so using the `setHeaders` method. This is useful if you want the page to be cached, for example:
 
 ```js
 /// file: src/routes/blog/+page.js
