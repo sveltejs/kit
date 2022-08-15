@@ -266,11 +266,3 @@ In turn, annotating the `load` function with `PageLoad`, `PageServerLoad`, `Layo
 Any other files inside a route directory are ignored by SvelteKit. This means you can colocate components and utility modules with the routes that need them.
 
 If components and modules are needed by multiple routes, it's a good idea to put them in [`$lib`](/docs/modules#$lib).
-
-TODO
-
-- the RequestEvent/LoadEvent interface
-- `load` documentation
-- `setHeaders` (including multiple headers with set-cookie)
-- redirects
-- actions
