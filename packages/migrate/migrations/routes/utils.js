@@ -379,12 +379,17 @@ export function rewrite_returns(block, callback) {
 
 		block.forEachChild(walk);
 	} else {
-		while (ts.isParenthesizedExpression(block)) {
-			block = block.expression;
-		}
-
 		callback(block, undefined);
 	}
+}
+
+/** @param {ts.Node} node */
+export function unwrap(node) {
+	if (ts.isParenthesizedExpression(node)) {
+		return node.expression;
+	}
+
+	return node;
 }
 
 /**
@@ -439,13 +444,16 @@ export function read_samples(test_file) {
 		.slice(1)
 		.map((block) => {
 			const description = block.split('\n')[0];
-			const before = /```(js|svelte) before\n([^]*?)\n```/.exec(block);
-			const after = /```(js|svelte) after\n([^]*?)\n```/.exec(block);
+			const before = /```(js|ts|svelte) before\n([^]*?)\n```/.exec(block);
+			const after = /```(js|ts|svelte) after\n([^]*?)\n```/.exec(block);
+
+			const match = /> file: (.+)/.exec(block);
 
 			return {
 				description,
 				before: before ? before[2] : '',
 				after: after ? after[2] : '',
+				filename: match?.[1],
 				solo: block.includes('> solo')
 			};
 		});
@@ -455,4 +463,31 @@ export function read_samples(test_file) {
 	}
 
 	return samples;
+}
+
+/**
+ * @param {ts.Node} node
+ * @param {MagicString} code
+ * @param {string} old_type
+ * @param {string} new_type
+ */
+export function rewrite_type(node, code, old_type, new_type) {
+	if (node.jsDoc) {
+		for (const comment of node.jsDoc) {
+			const str = comment.getText();
+			const index = str.indexOf(old_type);
+
+			if (index !== -1) {
+				code.overwrite(comment.pos + index, comment.pos + index + old_type.length, new_type);
+			}
+		}
+	}
+
+	// @ts-ignore
+	const type = node.type || node.parent.type; // handle both fn and var declarations
+
+	if (type?.typeName?.escapedText.startsWith(old_type)) {
+		const start = type.getStart();
+		code.overwrite(start, start + old_type.length, new_type);
+	}
 }

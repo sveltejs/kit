@@ -1,6 +1,7 @@
-## A load function that only exports props
+## A load function that only returns props
 
 ```js before
+/** @type {import('./$types').Load} */
 export function load() {
 	return {
 		props: {
@@ -11,7 +12,32 @@ export function load() {
 ```
 
 ```js after
+/** @type {import('./$types').PageLoad} */
 export function load() {
+	return {
+		a: 1
+	};
+}
+```
+
+## A TypeScript load function that only returns props
+
+```ts before
+import type { Load } from './$types';
+
+export const load: Load = () => {
+	return {
+		props: {
+			a: 1
+		}
+	};
+}
+```
+
+```ts after
+import type { PageLoad } from './$types';
+
+export const load: PageLoad = () => {
 	return {
 		a: 1
 	};

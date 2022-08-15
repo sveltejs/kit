@@ -1,11 +1,11 @@
-import { plugin } from '../../utils.js';
+import { sveltekit } from '@sveltejs/kit/vite';
 
 /** @type {import('vite').UserConfig} */
 const config = {
 	build: {
 		minify: false
 	},
-	plugins: [plugin()]
+	plugins: [sveltekit()]
 };
 
 export default config;

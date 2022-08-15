@@ -11,7 +11,7 @@ import { build_service_worker } from './build/build_service_worker.js';
 import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
-import { get_runtime_directory, logger } from '../core/utils.js';
+import { runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry, prevent_illegal_rollup_imports } from './utils.js';
@@ -123,20 +123,33 @@ function kit() {
 		const input = {
 			// Put unchanging assets in immutable directory. We don't set that in the
 			// outDir so that other plugins can add mutable assets to the bundle
-			start: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
+			start: `${runtime_directory}/client/start.js`
 		};
 
-		// This step is optional — Vite/Rollup will create the necessary chunks
-		// for everything regardless — but it means that entry chunks reflect
-		// their location in the source code, which is helpful for debugging
-		manifest_data.components.forEach((file) => {
-			const resolved = path.resolve(cwd, file);
-			const relative = decodeURIComponent(path.relative(svelte_config.kit.files.routes, resolved));
+		manifest_data.nodes.forEach((node) => {
+			if (node.component) {
+				const resolved = path.resolve(cwd, node.component);
+				const relative = decodeURIComponent(
+					path.relative(svelte_config.kit.files.routes, resolved)
+				);
 
-			const name = relative.startsWith('..')
-				? path.basename(file)
-				: posixify(path.join('pages', relative));
-			input[name] = resolved;
+				const name = relative.startsWith('..')
+					? path.basename(node.component)
+					: posixify(path.join('pages', relative));
+				input[`components/${name}`] = resolved;
+			}
+
+			if (node.shared) {
+				const resolved = path.resolve(cwd, node.shared);
+				const relative = decodeURIComponent(
+					path.relative(svelte_config.kit.files.routes, resolved)
+				);
+
+				const name = relative.startsWith('..')
+					? path.basename(node.shared)
+					: posixify(path.join('pages', relative));
+				input[`modules/${name}`] = resolved;
+			}
 		});
 
 		return get_default_build_config({
@@ -157,9 +170,7 @@ function kit() {
 			fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
 		);
 
-		const entry_id = posixify(
-			path.relative(cwd, `${get_runtime_directory(svelte_config.kit)}/client/start.js`)
-		);
+		const entry_id = posixify(path.relative(cwd, `${runtime_directory}/client/start.js`));
 
 		return {
 			assets,
@@ -201,7 +212,7 @@ function kit() {
 			]);
 
 			if (is_build) {
-				manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
+				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 
 				const new_config = vite_client_build_config();
 
@@ -220,7 +231,7 @@ function kit() {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point
 						// eventhough server otherwise works without it
-						input: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
+						input: `${runtime_directory}/client/start.js`
 					}
 				},
 				define: {
@@ -295,19 +306,22 @@ function kit() {
 				return;
 			}
 
-			for (const file of manifest_data.components) {
-				const id = vite.normalizePath(path.resolve(file));
-				const node = this.getModuleInfo(id);
+			manifest_data.nodes.forEach((_node, i) => {
+				const id = vite.normalizePath(
+					path.resolve(svelte_config.kit.outDir, `generated/nodes/${i}.js`)
+				);
 
-				if (node) {
+				const module_node = this.getModuleInfo(id);
+
+				if (module_node) {
 					prevent_illegal_rollup_imports(
 						this.getModuleInfo.bind(this),
-						node,
+						module_node,
 						illegal_imports,
 						svelte_config.kit.outDir
 					);
 				}
-			}
+			});
 
 			const verbose = vite_config.logLevel === 'info';
 			log = logger({
@@ -360,12 +374,7 @@ function kit() {
 				const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
 
 				// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-				const script = fileURLToPath(
-					new URL(
-						process.env.BUNDLED ? './prerender.js' : '../core/prerender/prerender.js',
-						import.meta.url
-					)
-				);
+				const script = fileURLToPath(new URL('../core/prerender/prerender.js', import.meta.url));
 
 				const child = fork(
 					script,

@@ -1,4 +1,3 @@
-import fs from 'fs';
 import * as vite from 'vite';
 import { get_aliases } from '../utils.js';
 
@@ -102,7 +101,9 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 				output: {
 					format: 'esm',
 					entryFileNames: ssr ? '[name].js' : `${config.kit.appDir}/immutable/[name]-[hash].js`,
-					chunkFileNames: `${config.kit.appDir}/immutable/chunks/[name]-[hash].js`,
+					chunkFileNames: ssr
+						? 'chunks/[name].js'
+						: `${config.kit.appDir}/immutable/chunks/[name]-[hash].js`,
 					assetFileNames: `${config.kit.appDir}/immutable/assets/[name]-[hash][extname]`
 				},
 				preserveEntrySignatures: 'strict'
@@ -122,15 +123,7 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 			alias: get_aliases(config.kit)
 		},
 		ssr: {
-			// when developing against the Kit src code, we want to ensure that
-			// our dependencies are bundled so that apps don't need to install
-			// them as peerDependencies
-			noExternal: process.env.BUNDLED
-				? []
-				: Object.keys(
-						JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8'))
-							.devDependencies
-				  )
+			noExternal: ['@sveltejs/kit']
 		}
 	};
 };

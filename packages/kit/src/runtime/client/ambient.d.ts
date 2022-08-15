@@ -1,16 +1,17 @@
 declare module '__GENERATED__/client-manifest.js' {
-	import { CSRComponentLoader, ParamMatcher } from 'types';
+	import { CSRPageNodeLoader, ParamMatcher } from 'types';
 
 	/**
-	 * A list of all the layout/pages components used in the app
+	 * A list of all the error/layout/page nodes used in the app
 	 */
-	export const components: CSRComponentLoader[];
+	export const nodes: CSRPageNodeLoader[];
 
 	/**
-	 * A map of `[routeId: string]: [a, b, has_endpoint]` tuples, which
-	 * is parsed into an array of routes on startup
+	 * A map of `[routeId: string]: [errors, layouts, page]` tuples, which
+	 * is parsed into an array of routes on startup. The numbers refer to the
+	 * indices in `nodes`.
 	 */
-	export const dictionary: Record<string, [number[], number[], 1]>;
+	export const dictionary: Record<string, [number[], number[], number]>;
 
 	export const matchers: Record<string, ParamMatcher>;
 }

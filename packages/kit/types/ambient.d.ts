@@ -14,8 +14,6 @@
  * 	interface PublicEnv {}
  *
  * 	interface Session {}
- *
- * 	interface Stuff {}
  * }
  * ```
  *
@@ -57,24 +55,19 @@ declare namespace App {
 	export interface Platform {}
 
 	/**
-	 * The interface that defines the dynamic environment variables exported from '$env/dynamic/private'.
+	 * The interface that defines the dynamic environment variables exported from `$env/dynamic/private`.
 	 */
 	export interface PrivateEnv extends Record<string, string> {}
 
 	/**
-	 * The interface that defines the dynamic environment variables exported from '$env/dynamic/public'.
+	 * The interface that defines the dynamic environment variables exported from `$env/dynamic/public`.
 	 */
 	export interface PublicEnv extends Record<string, string> {}
 
 	/**
-	 * The interface that defines `session`, both as an argument to [`load`](https://kit.svelte.dev/docs/loading) functions and the value of the [session store](https://kit.svelte.dev/docs/modules#$app-stores).
+	 * The interface that defines `session`, both as an argument to [`load`](https://kit.svelte.dev/docs/load) functions and the value of the [session store](https://kit.svelte.dev/docs/modules#$app-stores).
 	 */
 	export interface Session {}
-
-	/**
-	 * The interface that defines `stuff`, as input or output to [`load`](https://kit.svelte.dev/docs/loading) or as the value of the `stuff` property of the [page store](https://kit.svelte.dev/docs/modules#$app-stores).
-	 */
-	export interface Stuff {}
 }
 
 /**
@@ -165,10 +158,10 @@ declare module '$app/navigation' {
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<void>;
 	/**
-	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question, or re-fetches data from a page endpoint if the invalidated resource is the page itself. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question, or re-fetches data from a page endpoint if the invalidated resource is the page itself. If no argument is given, all resources will be invalidated. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * @param dependency The invalidated resource
 	 */
-	export function invalidate(dependency: string | ((href: string) => boolean)): Promise<void>;
+	export function invalidate(dependency?: string | ((href: string) => boolean)): Promise<void>;
 	/**
 	 * Programmatically prefetches the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and

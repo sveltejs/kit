@@ -11,10 +11,67 @@ export function GET() {
 ```
 
 ```js after
+import { json } from '@sveltejs/kit';
+
 export function GET() {
-	return new Response(JSON.stringify({
+	return json({
 		a: 1
-	}), { headers: { 'content-type': 'application/json; charset=utf-8' } });
+	});
+}
+```
+
+## A GET function that returns a JSON object and already specifies a 'json' identifier
+
+```js before
+export function GET() {
+	const json = 'shadow';
+
+	return {
+		body: {
+			a: 1
+		}
+	};
+}
+```
+
+```js after
+import { json as json$1 } from '@sveltejs/kit';
+
+export function GET() {
+	const json = 'shadow';
+
+	return json$1({
+		a: 1
+	});
+}
+```
+
+## A GET function that returns a JSON object with custom headers
+
+```js before
+export function GET() {
+	return {
+		headers: {
+			'x-foo': '123'
+		},
+		body: {
+			a: 1
+		}
+	};
+}
+```
+
+```js after
+import { json } from '@sveltejs/kit';
+
+export function GET() {
+	return json({
+		a: 1
+	}, {
+		headers: {
+			'x-foo': '123'
+		}
+	});
 }
 ```
 
@@ -29,9 +86,11 @@ export const GET = () => ({
 ```
 
 ```js after
-export const GET = () => (new Response(JSON.stringify({
+import { json } from '@sveltejs/kit';
+
+export const GET = () => json({
 	a: 1
-}), { headers: { 'content-type': 'application/json; charset=utf-8' } }));
+});
 ```
 
 ## GET returns we can't migrate
@@ -61,11 +120,13 @@ export function GET() {
 ```
 
 ```js after
+import { json } from '@sveltejs/kit';
+
 export function GET() {
 	if (a) {
 		throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292701)");
 		// Suggestion (check for correctness before using):
-		// return new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json; charset=utf-8' } });
+		// return json(body);
 		return {
 			body
 		};

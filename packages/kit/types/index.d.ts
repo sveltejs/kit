@@ -6,8 +6,8 @@ import './ambient.js';
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
-	BodyValidator,
 	CspDirectives,
+	JSONObject,
 	JSONValue,
 	Logger,
 	MaybePromise,
@@ -19,11 +19,28 @@ import {
 	TrailingSlash
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
+import { HttpError, Redirect } from '../src/index/private.js';
 
 export interface Adapter {
 	name: string;
 	adapt(builder: Builder): MaybePromise<void>;
 }
+
+export type AwaitedProperties<input extends Record<string, any> | void> = input extends void
+	? undefined // needs to be undefined, because void will break intellisense
+	: input extends Record<string, any>
+	? {
+			[key in keyof input]: Awaited<input[key]>;
+	  }
+	: {} extends input // handles the any case
+	? input
+	: unknown;
+
+export type AwaitedErrors<T extends (...args: any) => any> = Awaited<ReturnType<T>> extends {
+	errors?: any;
+}
+	? Awaited<ReturnType<T>>['errors']
+	: undefined;
 
 export interface Builder {
 	log: Logger;
@@ -145,7 +162,6 @@ export interface KitConfig {
 		onError?: PrerenderOnErrorValue;
 		origin?: string;
 	};
-	routes?: (filepath: string) => boolean;
 	serviceWorker?: {
 		register?: boolean;
 		files?: (filepath: string) => boolean;
@@ -177,46 +193,32 @@ export interface HandleError {
 }
 
 /**
- * The `(event: LoadEvent) => LoadOutput` `load` function exported from `<script context="module">` in a page or layout.
- *
- * Note that you can use [generated types](/docs/types#generated-types) instead of manually specifying the Params generic argument.
+ * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
+ * rather than using `Load` directly.
  */
 export interface Load<
 	Params extends Record<string, string> = Record<string, string>,
-	InputProps extends Record<string, any> = Record<string, any>,
-	OutputProps extends Record<string, any> = InputProps
+	InputData extends JSONObject | null = JSONObject | null,
+	ParentData extends Record<string, any> | null = Record<string, any> | null,
+	OutputData extends Record<string, any> = Record<string, any>
 > {
-	(event: LoadEvent<Params, InputProps>): MaybePromise<LoadOutput<OutputProps> | void>;
+	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData | void>;
 }
 
 export interface LoadEvent<
 	Params extends Record<string, string> = Record<string, string>,
-	Props extends Record<string, any> = Record<string, any>
+	Data extends JSONObject | null = JSONObject | null,
+	ParentData extends Record<string, any> | null = Record<string, any> | null
 > {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
-	props: Props;
+	data: Data;
 	routeId: string | null;
 	session: App.Session;
-	stuff: Partial<App.Stuff>;
+	setHeaders: (headers: ResponseHeaders) => void;
 	url: URL;
-	status: number | null;
-	error: Error | null;
-}
-
-export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {
-	status?: number;
-	error?: string | Error;
-	redirect?: string;
-	props?: Props;
-	stuff?: Partial<App.Stuff>;
-	cache?: LoadOutputCache;
-	dependencies?: string[];
-}
-
-export interface LoadOutputCache {
-	maxage: number;
-	private?: boolean;
+	parent: () => Promise<ParentData>;
+	depends: (...deps: string[]) => void;
 }
 
 export interface Navigation {
@@ -228,9 +230,9 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	url: URL;
 	params: Params;
 	routeId: string | null;
-	stuff: App.Stuff;
 	status: number;
-	error: Error | null;
+	error: HttpError | Error | null;
+	data: Record<string, any>;
 }
 
 export interface ParamMatcher {
@@ -244,27 +246,17 @@ export interface RequestEvent<Params extends Record<string, string> = Record<str
 	platform: Readonly<App.Platform>;
 	request: Request;
 	routeId: string | null;
+	setHeaders: (headers: ResponseHeaders) => void;
 	url: URL;
 }
 
 /**
- * A `(event: RequestEvent) => RequestHandlerOutput` function exported from an endpoint that corresponds to an HTTP verb (`GET`, `PUT`, `PATCH`, etc) and handles requests with that method.
+ * A `(event: RequestEvent) => Response` function exported from a +server.js file that corresponds to an HTTP verb (`GET`, `PUT`, `PATCH`, etc) and handles requests with that method.
  *
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](/docs/types#generated-types) instead.
- *
- * The next generic argument `Output` is used to validate the returned `body` from your functions by passing it through `BodyValidator`, which will make sure the variable in the `body` matches what with you assign here. It defaults to `ResponseBody`, which will error when `body` receives a [custom object type](https://www.typescriptlang.org/docs/handbook/2/objects.html).
  */
-export interface RequestHandler<
-	Params extends Record<string, string> = Record<string, string>,
-	Output = ResponseBody
-> {
-	(event: RequestEvent<Params>): MaybePromise<RequestHandlerOutput<Output>>;
-}
-
-export interface RequestHandlerOutput<Output = ResponseBody> {
-	status?: number;
-	headers?: Headers | Partial<ResponseHeaders>;
-	body?: Output extends ResponseBody ? Output : BodyValidator<Output>;
+export interface RequestHandler<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<Response>;
 }
 
 export interface ResolveOptions {
@@ -301,3 +293,53 @@ export interface SSRManifest {
 		matchers: () => Promise<Record<string, ParamMatcher>>;
 	};
 }
+
+/**
+ * The generic form of `PageServerLoad` and `LayoutServerLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
+ * rather than using `ServerLoad` directly.
+ */
+export interface ServerLoad<
+	Params extends Record<string, string> = Record<string, string>,
+	ParentData extends JSONObject | null = JSONObject | null,
+	OutputData extends JSONObject | void = JSONObject | void
+> {
+	(event: ServerLoadEvent<Params, ParentData>): MaybePromise<OutputData | void>;
+}
+
+export interface ServerLoadEvent<
+	Params extends Record<string, string> = Record<string, string>,
+	ParentData extends JSONObject | null = JSONObject | null
+> extends RequestEvent<Params> {
+	parent: () => Promise<ParentData>;
+}
+
+export interface Action<Params extends Record<string, string> = Record<string, string>> {
+	(event: RequestEvent<Params>): MaybePromise<
+		| { status?: number; errors: Record<string, string>; location?: never }
+		| { status?: never; errors?: never; location: string }
+		| void
+	>;
+}
+
+// TODO figure out how to just re-export from '../src/index/index.js' without
+// breaking the site
+
+/**
+ * Creates an `HttpError` object with an HTTP status code and an optional message.
+ * This object, if thrown during request handling, will cause SvelteKit to
+ * return an error response without invoking `handleError`
+ * @param {number} status
+ * @param {string | undefined} [message]
+ */
+export function error(status: number, message?: string | undefined): HttpError;
+
+/**
+ * Creates a `Redirect` object. If thrown during request handling, SvelteKit will
+ * return a redirect response.
+ */
+export function redirect(status: number, location: string): Redirect;
+
+/**
+ * Generates a JSON `Response` object from the supplied data.
+ */
+export function json(data: any, init?: ResponseInit): Response;

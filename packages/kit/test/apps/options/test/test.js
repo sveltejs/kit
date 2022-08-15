@@ -159,7 +159,10 @@ test.describe('trailingSlash', () => {
 	test('can fetch data from page-endpoint', async ({ request, baseURL }) => {
 		const r = await request.get('/path-base/page-endpoint/__data.json');
 		expect(r.url()).toBe(`${baseURL}/path-base/page-endpoint/__data.json`);
-		expect(await r.json()).toEqual({ data: 'hi' });
+		expect(await r.json()).toEqual({
+			type: 'data',
+			nodes: [{ data: null }, { data: { message: 'hi' } }]
+		});
 	});
 
 	test('accounts for trailingSlash when prefetching', async ({
