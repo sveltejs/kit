@@ -1,4 +1,4 @@
-export function GET() {
+export function load() {
 	return {
 		get_message: 'hello from get'
 	};

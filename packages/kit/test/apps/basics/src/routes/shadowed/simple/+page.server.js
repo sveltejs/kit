@@ -1,5 +1,5 @@
-/** @type {import('./$types').Get} */
-export function GET({ locals }) {
+/** @type {import('./$types').PageServerLoad} */
+export function load({ locals }) {
 	return {
 		answer: locals.answer
 	};

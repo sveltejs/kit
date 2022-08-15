@@ -1,4 +1,4 @@
-export function GET() {
+export function load() {
 	return {
 		answer: 42
 	};

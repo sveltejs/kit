@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
 
-export const GET = () => {
+export const load = () => {
 	throw error(400, 'oops');
 };

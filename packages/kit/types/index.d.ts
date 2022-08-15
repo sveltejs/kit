@@ -199,7 +199,7 @@ export interface HandleError {
 export interface Load<
 	Params extends Record<string, string> = Record<string, string>,
 	InputData extends JSONObject | null = JSONObject | null,
-	ParentData extends Record<string, any> | null = Record<string, any>,
+	ParentData extends Record<string, any> | null = Record<string, any> | null,
 	OutputData extends Record<string, any> = Record<string, any>
 > {
 	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData | void>;
@@ -208,42 +208,11 @@ export interface Load<
 export interface LoadEvent<
 	Params extends Record<string, string> = Record<string, string>,
 	Data extends JSONObject | null = JSONObject | null,
-	ParentData extends Record<string, any> | null = Record<string, any>
+	ParentData extends Record<string, any> | null = Record<string, any> | null
 > {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
 	data: Data;
-	routeId: string | null;
-	session: App.Session;
-	setHeaders: (headers: ResponseHeaders) => void;
-	url: URL;
-	parent: () => Promise<ParentData>;
-	depends: (...deps: string[]) => void;
-}
-
-/**
- * The generic form of `PageServerLoad` and `LayoutServerLoad`. You should import those from './$types' (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
- * rather than using `ServerLoad` directly.
- */
-export interface ServerLoad<
-	Params extends Record<string, string> = Record<string, string>,
-	ParentData extends Record<string, any> | null = Record<string, any>,
-	OutputData extends JSONObject | void = JSONObject | void
-> {
-	(event: ServerLoadEvent<Params, ParentData>): MaybePromise<OutputData | void>;
-}
-
-export interface ServerLoadEvent<
-	Params extends Record<string, string> = Record<string, string>,
-	ParentData extends Record<string, any> | null = Record<string, any>
-> {
-	clientAddress: string;
-	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
-	locals: App.Locals;
-	params: Params;
-	platform: App.Platform;
-	data: null;
-	request: Request;
 	routeId: string | null;
 	session: App.Session;
 	setHeaders: (headers: ResponseHeaders) => void;
@@ -325,8 +294,23 @@ export interface SSRManifest {
 	};
 }
 
-export interface Get<Params extends Record<string, string> = Record<string, string>> {
-	(event: RequestEvent<Params>): MaybePromise<JSONObject | void>;
+/**
+ * The generic form of `PageServerLoad` and `LayoutServerLoad`. You should import those from './$types' (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
+ * rather than using `ServerLoad` directly.
+ */
+export interface ServerLoad<
+	Params extends Record<string, string> = Record<string, string>,
+	ParentData extends JSONObject | null = JSONObject | null,
+	OutputData extends JSONObject | void = JSONObject | void
+> {
+	(event: ServerLoadEvent<Params, ParentData>): MaybePromise<OutputData | void>;
+}
+
+export interface ServerLoadEvent<
+	Params extends Record<string, string> = Record<string, string>,
+	ParentData extends JSONObject | null = JSONObject | null
+> extends RequestEvent<Params> {
+	parent: () => Promise<ParentData>;
 }
 
 export interface Post<Params extends Record<string, string> = Record<string, string>> {
