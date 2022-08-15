@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { api } from './api';
-import type { Get, Post, Patch, Delete } from './$types';
+import type { PageServerLoad, Post, Patch, Delete } from './$types';
 
 type Todo = {
 	uid: string;
@@ -20,8 +20,8 @@ type Todo = {
  * }} Todo
  */
 
-/** @type {import('./$types').Get} */
-export const GET: Get = async ({ locals }) => {
+/** @type {import('./$types').PageServerLoad} */
+export const load: PageServerLoad = async ({ locals }) => {
 	// locals.userid comes from src/hooks.js
 	const response = await api('GET', `todos/${locals.userid}`);
 
