@@ -2,7 +2,7 @@
 	const adapters = Object.entries({
 		'Vercel': '@sveltejs/adapter-vercel',
 		'Netlify': '@sveltejs/adapter-netlify',
-		'Cloudflare': '@sveltejs/adapter-cloudflare-pages',
+		'Cloudflare': '@sveltejs/adapter-cloudflare',
 		'your server': '@sveltejs/adapter-node',
 		'static hosting': '@sveltejs/adapter-static',
 		'Firebase': 'svelte-adapter-firebase',
@@ -74,7 +74,7 @@ export default &lbrace;
 	}
 
 	.code {
-		max-width: 575px;
+		max-width: 450px;
 		text-align: left;
 		padding: 1em;
 		background: var(--back-light);
