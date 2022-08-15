@@ -222,11 +222,6 @@ export interface LoadEvent<
 	depends: (...deps: string[]) => void;
 }
 
-export interface LoadOutputCache {
-	maxage: number;
-	private?: boolean;
-}
-
 export interface Navigation {
 	from: URL;
 	to: URL;

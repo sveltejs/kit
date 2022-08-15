@@ -213,7 +213,7 @@ export interface RequestOptions {
 }
 
 /** `string[]` is only for set-cookie, everything else must be type of `string` */
-export type ResponseHeaders = Record<string, string | number | string[]>;
+export type ResponseHeaders = Record<string, string | number | string[] | null>;
 
 export interface RouteDefinition {
 	id: string;

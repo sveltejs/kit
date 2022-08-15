@@ -180,24 +180,6 @@ export interface Respond {
 
 export type RouteData = PageData | EndpointData;
 
-export interface ShadowEndpointOutput<Output extends JSONObject = JSONObject> {
-	status?: number;
-	headers?: Partial<ResponseHeaders>;
-	body?: Output;
-}
-
-export interface ShadowRequestHandler<Output extends JSONObject = JSONObject> {
-	(event: RequestEvent): MaybePromise<ShadowEndpointOutput<Output>>;
-}
-
-export interface ShadowData {
-	status?: number;
-	error?: Error;
-	redirect?: string;
-	cookies?: string[];
-	body?: JSONObject;
-}
-
 export interface SSRComponent {
 	default: {
 		render(props: Record<string, any>): {
