@@ -87,7 +87,7 @@ src/routes/foo-abc/+page.svelte
 SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
 
 - More specific routes are higher priority (e.g. a route with no parameters is more specific than a route with one dynamic parameter, and so on)
-- Standalone endpoints have higher priority than pages with the same specificity
+- `+server` files have higher priority than `+page` files
 - Parameters with [matchers](#advanced-routing-matching) (`[name=type]`) are higher priority than those without (`[name]`)
 - Rest parameters have lowest priority
 - Ties are resolved alphabetically
@@ -104,7 +104,7 @@ src/routes/[...catchall]/+page.svelte
 
 ### Encoding
 
-Filenames are URI-decoded, meaning that (for example) a filename like `%40[username].svelte` would match characters beginning with `@`:
+Directory names are URI-decoded, meaning that (for example) a directory like `%40[username]` would match characters beginning with `@`:
 
 ```js
 // @filename: ambient.d.ts
@@ -119,8 +119,8 @@ export {};
 // @filename: index.js
 // ---cut---
 assert.equal(
-	decodeURIComponent('%40[username].svelte'),
-	'@[username].svelte'
+	decodeURIComponent('%40[username]'),
+	'@[username]'
 );
 ```
 
