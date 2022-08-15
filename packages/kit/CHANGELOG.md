@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.408
+
+### Patch Changes
+
+- Only search for layout name in basename ([#5897](https://github.com/sveltejs/kit/pull/5897))
+
 ## 1.0.0-next.407
 
 ### Patch Changes
