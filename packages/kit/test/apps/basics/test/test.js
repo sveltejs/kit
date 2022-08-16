@@ -251,6 +251,26 @@ test.describe('Shadowed pages', () => {
 			expect(requests).not.toContain(`${baseURL}/shadowed/missing-get`);
 		}
 	});
+
+	test('Parent data is present', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/parent');
+		expect(await page.textContent('h2')).toBe('Layout data: {"layout":"layout"}');
+		expect(await page.textContent('p')).toBe(
+			'Page data: {"page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+		);
+
+		await clicknav('[href="/shadowed/parent?test"]');
+		expect(await page.textContent('h2')).toBe('Layout data: {"layout":"layout"}');
+		expect(await page.textContent('p')).toBe(
+			'Page data: {"page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+		);
+
+		await clicknav('[href="/shadowed/parent/sub"]');
+		expect(await page.textContent('h2')).toBe('Layout data: {"layout":"layout"}');
+		expect(await page.textContent('p')).toBe(
+			'Page data: {"sub":"sub","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+		);
+	});
 });
 
 test.describe('Encoded paths', () => {
