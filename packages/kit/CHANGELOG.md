@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.414
+
+### Patch Changes
+
+- Correctly provide server parent data ([#5916](https://github.com/sveltejs/kit/pull/5916))
+
 ## 1.0.0-next.413
 
 ### Patch Changes
