@@ -66,7 +66,7 @@
 			</p>
 
 			<p>
-				<a href="https://node.new/sveltekit">Try on StackBlitz</a> or create a project locally.
+				<a href="https://node.new/sveltekit">Try it on StackBlitz</a> or create a project locally.
 			</p>
 		</div>
 
