@@ -1446,6 +1446,7 @@ test.describe('Routing', () => {
 		await clicknav('[href="/routing/a"]');
 
 		await page.goBack();
+		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
