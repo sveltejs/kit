@@ -79,20 +79,6 @@ export async function render_response({
 	}
 
 	if (resolve_opts.ssr) {
-		for (const { node } of branch) {
-			if (node.imports) {
-				node.imports.forEach((url) => modulepreloads.add(url));
-			}
-
-			if (node.stylesheets) {
-				node.stylesheets.forEach((url) => stylesheets.add(url));
-			}
-
-			if (node.inline_styles) {
-				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
-			}
-		}
-
 		const session = writable($session);
 
 		/** @type {Record<string, any>} */
@@ -143,6 +129,20 @@ export async function render_response({
 		}
 
 		rendered = options.root.render(props);
+
+		for (const { node } of branch) {
+			if (node.imports) {
+				node.imports.forEach((url) => modulepreloads.add(url));
+			}
+
+			if (node.stylesheets) {
+				node.stylesheets.forEach((url) => stylesheets.add(url));
+			}
+
+			if (node.inline_styles) {
+				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
+			}
+		}
 	} else {
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
