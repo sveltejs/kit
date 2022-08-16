@@ -110,10 +110,13 @@ test.describe('Scrolling', () => {
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
 		await page.goBack();
+		await page.waitForLoadState('networkidle');
 		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
 
 		await page.goBack();
+		await page.waitForLoadState('networkidle');
+
 		expect(page.url()).toBe(baseURL + '/anchor');
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
@@ -349,6 +352,7 @@ test.describe('Load', () => {
 		await page.goto('/load/change-detection/session/used');
 		expect(await page.textContent('h2')).toBe('1');
 		await page.click('button');
+		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('h2')).toBe('2');
 
 		await page.goto('/load/change-detection/session/unused');
@@ -375,6 +379,7 @@ test.describe('Load', () => {
 		await clicknav('[href="/load/layout-props/b"]');
 		expect(await page.textContent('h1')).toBe('1');
 		await page.click('button');
+		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('h1')).toBe('2');
 	});
 
@@ -607,6 +612,7 @@ test.describe('Page Store', () => {
 		);
 
 		await page.click('button');
+		await page.waitForLoadState('networkidle');
 
 		expect(await page.textContent('#page-data')).toBe('{"answer":1337}');
 		expect(await page.textContent('#store-data')).toBe(
