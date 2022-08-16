@@ -1,4 +1,4 @@
-import { GENERATED_COMMENT } from './constants';
+import { GENERATED_COMMENT } from './constants.js';
 
 /**
  * @param {string} id

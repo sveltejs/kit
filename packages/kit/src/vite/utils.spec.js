@@ -231,10 +231,6 @@ test('transform kit.alias to resolve.alias', () => {
 
 	assert.equal(transformed, [
 		{ find: '__GENERATED__', replacement: '.svelte-kit/generated' },
-		{ find: '$lib', replacement: 'src/lib' },
-		{ find: 'simpleKey', replacement: 'simple/value' },
-		{ find: /^key$/.toString(), replacement: 'value' },
-		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' },
 		{
 			find: '$env/dynamic/public',
 			replacement: 'src/runtime/env/dynamic/public.js'
@@ -242,7 +238,11 @@ test('transform kit.alias to resolve.alias', () => {
 		{
 			find: '$env/dynamic/private',
 			replacement: 'src/runtime/env/dynamic/private.js'
-		}
+		},
+		{ find: '$lib', replacement: 'src/lib' },
+		{ find: 'simpleKey', replacement: 'simple/value' },
+		{ find: /^key$/.toString(), replacement: 'value' },
+		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' }
 	]);
 });
 
