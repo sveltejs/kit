@@ -112,7 +112,7 @@ export async function render_response({
 				url: state.prerendering ? new PrerenderingURL(event.url) : event.url,
 				data: branch.reduce((acc, { data }) => (Object.assign(acc, data), acc), {})
 			},
-			components: branch.map(({ node }) => node.component)
+			components: await Promise.all(branch.map(({ node }) => node.component()))
 		};
 
 		// TODO remove this for 1.0
