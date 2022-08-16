@@ -2,4 +2,4 @@
 'svelte-migrate': patch
 ---
 
-Create .ts files from <script context="module" lang="ts">
+Create `.ts` files from `<script context="module" lang="ts">`
