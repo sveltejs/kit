@@ -17,6 +17,8 @@ my-project/
 │ └ hooks.js
 ├ static/
 │ └ [your static assets]
+├ tests/
+│ └ [your tests]
 ├ package.json
 ├ svelte.config.js
 ├ tsconfig.json
@@ -47,6 +49,10 @@ You can use `.ts` files instead of `.js` files, if using TypeScript.
 #### static
 
 Any static assets that should be served as-is, like `robots.txt` or `favicon.png`, go in here.
+
+#### tests
+
+If you chose to add tests to your project during `npm create svelte@latest`, they will live in this directory.
 
 #### package.json
 
