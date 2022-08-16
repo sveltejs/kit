@@ -5,9 +5,6 @@ import { migrate_page_server } from './index.js';
 
 for (const sample of read_samples(import.meta.url)) {
 	test(sample.description, () => {
-		if (!sample.filename) {
-			throw new Error('Missing filename for sample');
-		}
 		const actual = migrate_page_server(sample.before, sample.filename ?? '+page.server.js');
 		assert.equal(actual, sample.after);
 	});
