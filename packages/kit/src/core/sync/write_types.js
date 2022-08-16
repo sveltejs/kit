@@ -616,7 +616,11 @@ export function tweak_types(ts, content, names) {
 
 							const rhs = declaration.initializer;
 
-							if (rhs && (ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs))) {
+							if (
+								rhs &&
+								(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) &&
+								rhs.parameters.length
+							) {
 								const arg = rhs.parameters[0];
 
 								const add_parens = content[arg.pos - 1] !== '(';
