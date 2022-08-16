@@ -27,6 +27,30 @@ test('Rewrites types for a TypeScript module', () => {
 	);
 });
 
+test('Rewrites types for a TypeScript module without param', () => {
+	const source = `
+		export const GET: Get = () => {
+			return {
+				a: 1
+			};
+		};
+	`;
+
+	const rewritten = tweak_types(ts, source, new Set(['GET']));
+
+	assert.equal(rewritten?.exports, ['GET']);
+	assert.equal(
+		rewritten?.code,
+		`
+		export const GET = () => {
+			return {
+				a: 1
+			};
+		};
+	`
+	);
+});
+
 test('Rewrites types for a JavaScript module with `function`', () => {
 	const source = `
 		/** @type {import('./$types').Get} */
