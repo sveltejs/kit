@@ -435,8 +435,8 @@ function process_node(ts, node, outdir, params, groups) {
 				// The advantage is that type updates are reflected without saving.
 				const basename = path.basename(file_path);
 				const from = proxy.modified
-						? `./proxy${replace_ext_with_js(basename)}`
-						: path_to_original(outdir, file_path);
+					? `./proxy${replace_ext_with_js(basename)}`
+					: path_to_original(outdir, file_path);
 				return `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('${from}').${method}>>>`;
 			} else {
 				return fallback;
