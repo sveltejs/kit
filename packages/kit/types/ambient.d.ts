@@ -12,8 +12,6 @@
  * 	interface PrivateEnv {}
  *
  * 	interface PublicEnv {}
- *
- * 	interface Session {}
  * }
  * ```
  *
@@ -45,7 +43,7 @@
  */
 declare namespace App {
 	/**
-	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://kit.svelte.dev/docs/hooks) (`handle`, `handleError` and `getSession`) and [endpoints](https://kit.svelte.dev/docs/routing#endpoints).
+	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://kit.svelte.dev/docs/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
 	export interface Locals {}
 
@@ -63,11 +61,6 @@ declare namespace App {
 	 * The interface that defines the dynamic environment variables exported from `$env/dynamic/public`.
 	 */
 	export interface PublicEnv extends Record<string, string> {}
-
-	/**
-	 * The interface that defines `session`, both as an argument to [`load`](https://kit.svelte.dev/docs/load) functions and the value of the [session store](https://kit.svelte.dev/docs/modules#$app-stores).
-	 */
-	export interface Session {}
 }
 
 /**
@@ -252,11 +245,6 @@ declare module '$app/stores' {
 	 * When navigating finishes, its value reverts to `null`.
 	 */
 	export const navigating: Readable<Navigation | null>;
-	/**
-	 * A writable store whose initial value is whatever was returned from [`getSession`](https://kit.svelte.dev/docs/hooks#getsession).
-	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
-	 */
-	export const session: Writable<App.Session>;
 	/**
 	 *  A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 */

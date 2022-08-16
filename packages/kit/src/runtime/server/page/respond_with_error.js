@@ -15,21 +15,12 @@ import { create_fetch } from './fetch.js';
  *   event: import('types').RequestEvent;
  *   options: SSROptions;
  *   state: SSRState;
- *   $session: any;
  *   status: number;
  *   error: Error;
  *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts
  */
-export async function respond_with_error({
-	event,
-	options,
-	state,
-	$session,
-	status,
-	error,
-	resolve_opts
-}) {
+export async function respond_with_error({ event, options, state, status, error, resolve_opts }) {
 	const { fetcher, fetched, cookies } = create_fetch({
 		event,
 		options,
@@ -52,7 +43,6 @@ export async function respond_with_error({
 			const server_data = await server_data_promise;
 
 			const data = await load_data({
-				$session,
 				event,
 				fetcher,
 				node: default_layout,
@@ -79,7 +69,6 @@ export async function respond_with_error({
 		return await render_response({
 			options,
 			state,
-			$session,
 			page_config: {
 				hydrate: options.hydrate,
 				router: options.router

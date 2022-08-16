@@ -43,8 +43,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		}
 	}
 
-	const $session = await options.hooks.getSession(event);
-
 	const { fetcher, fetched, cookies } = create_fetch({ event, options, state, route });
 
 	try {
@@ -112,7 +110,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 				event,
 				options,
 				state,
-				$session,
 				resolve_opts
 			});
 		}
@@ -180,7 +177,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			return Promise.resolve().then(async () => {
 				try {
 					return await load_data({
-						$session,
 						event,
 						fetcher,
 						node,
@@ -240,7 +236,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 								event,
 								options,
 								state,
-								$session,
 								resolve_opts,
 								page_config: { router: true, hydrate: true },
 								status,
@@ -294,7 +289,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			event,
 			options,
 			state,
-			$session,
 			resolve_opts,
 			page_config: get_page_config(leaf_node, options),
 			status,
@@ -313,7 +307,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			event,
 			options,
 			state,
-			$session,
 			status: 500,
 			error: /** @type {Error} */ (error),
 			resolve_opts

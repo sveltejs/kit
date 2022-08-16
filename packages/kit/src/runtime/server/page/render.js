@@ -25,7 +25,6 @@ const updated = {
  *   cookies: import('set-cookie-parser').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
- *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean };
  *   status: number;
  *   error: HttpError | Error | null;
@@ -40,7 +39,6 @@ export async function render_response({
 	cookies,
 	options,
 	state,
-	$session,
 	page_config,
 	status,
 	error = null,
@@ -93,14 +91,11 @@ export async function render_response({
 			}
 		}
 
-		const session = writable($session);
-
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session,
 				updated
 			},
 			/** @type {import('types').Page} */
@@ -165,9 +160,6 @@ export async function render_response({
 		start({
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
-			session: ${try_serialize($session, (error) => {
-				throw new Error(`Failed to serialize session data: ${error.message}`);
-			})},
 			route: ${!!page_config.router},
 			spa: ${!resolve_opts.ssr},
 			trailing_slash: ${s(options.trailing_slash)},
