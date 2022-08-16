@@ -25,7 +25,7 @@
 		"undici": "^5.8.1"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.23.4",
+		"@playwright/test": "^1.25.0",
 		"@types/connect": "^3.4.35",
 		"@types/cookie": "^0.5.1",
 		"@types/marked": "^4.0.3",
