@@ -390,18 +390,13 @@ function process_node(ts, node, outdir, params, groups) {
 			const types = [];
 			for (const method of ['POST', 'PUT', 'PATCH']) {
 				if (proxy.exports.includes(method)) {
-					if (proxy.modified) {
-						types.push(`Kit.AwaitedErrors<typeof import('./proxy${basename}').${method}>`);
-					} else {
-						// If the file wasn't tweaked, we can use the return type of the original file.
-						// The advantage is that type updates are reflected without saving.
-						types.push(
-							`Kit.AwaitedErrors<typeof import("${path_to_original(
-								outdir,
-								node.server
-							)}").${method}>`
-						);
-					}
+					// If the file wasn't tweaked, we can use the return type of the original file.
+					// The advantage is that type updates are reflected without saving.
+					const from = proxy.modified
+						? `./proxy${basename}`
+						: path_to_original(outdir, node.server);
+
+					types.push(`Kit.AwaitedErrors<typeof import('${from}').${method}>`);
 				}
 			}
 			errors = types.length ? types.join(' | ') : 'null';
