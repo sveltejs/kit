@@ -62,47 +62,7 @@ const enforced_config = {
  * @return {import('vite').Plugin[]}
  */
 export function sveltekit() {
-	return [...svelte(), env(), kit()];
-}
-
-/**
- * Returns the SvelteKit environment plugin. Replaces `$env/static/*` imports
- * with the actual environment variables.
- * @return {import('vite').Plugin}
- */
-function env() {
-	/** @typedef {{public: {[k: string]: string;}; private: {[k: string]: string;};}} ResolvedEnv */
-
-	/** @type {ResolvedEnv} */
-	let resolved_environment;
-
-	return {
-		name: 'vite-plugin-svelte-kit:env',
-
-		async config(_, config_env) {
-			const vite_config_env = config_env;
-			const svelte_config = await load_config();
-			resolved_environment = get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix);
-		},
-
-		async resolveId(id) {
-			switch (id) {
-				case '$env/static/private':
-					return '\0$env/static/private';
-				case '$env/static/public':
-					return '\0$env/static/public';
-			}
-		},
-
-		async load(id) {
-			switch (id) {
-				case '\0$env/static/private':
-					return create_env_module('$env/static/private', resolved_environment.private);
-				case '\0$env/static/public':
-					return create_env_module('$env/static/public', resolved_environment.public);
-			}
-		}
-	};
+	return [...svelte(), kit()];
 }
 
 /**
@@ -147,6 +107,9 @@ function kit() {
 
 	/** @type {string | undefined} */
 	let deferred_warning;
+
+	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
+	let env;
 
 	/**
 	 * @type {{
@@ -239,6 +202,8 @@ function kit() {
 
 			vite_config_env = config_env;
 			svelte_config = await load_config();
+			env = get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix);
+
 			is_build = config_env.command === 'build';
 
 			paths = {
@@ -308,6 +273,20 @@ function kit() {
 
 			deferred_warning = warn_overridden_config(config, result);
 			return result;
+		},
+
+		async resolveId(id) {
+			// treat $env/static/[public|private] as virtual
+			if (id.startsWith('$env/static/')) return `\0${id}`;
+		},
+
+		async load(id) {
+			switch (id) {
+				case '\0$env/static/private':
+					return create_env_module('$env/static/private', env.private);
+				case '\0$env/static/public':
+					return create_env_module('$env/static/public', env.public);
+			}
 		},
 
 		/**
