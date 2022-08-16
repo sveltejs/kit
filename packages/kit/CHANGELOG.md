@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.413
+
+### Patch Changes
+
+- [feat] `$env/static/*` are now virtual to prevent writing sensitive values to disk ([#5825](https://github.com/sveltejs/kit/pull/5825))
+
 ## 1.0.0-next.412
 
 ### Patch Changes
