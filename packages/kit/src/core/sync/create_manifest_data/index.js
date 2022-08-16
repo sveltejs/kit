@@ -67,14 +67,7 @@ export default function create_manifest_data({
 
 			if (file[0] !== '+') return; // not a route file
 
-			const item = analyze(file, config.extensions, config.kit.moduleExtensions);
-
-			if (!item) {
-				throw new Error(
-					`Files and directories prefixed with + are reserved (saw ${project_relative})`
-				);
-			}
-
+			const item = analyze(project_relative, file, config.extensions, config.kit.moduleExtensions);
 			const id = segments.join('/');
 
 			if (/\]\[/.test(id)) {
@@ -275,19 +268,22 @@ export default function create_manifest_data({
 }
 
 /**
+ * @param {string} project_relative
  * @param {string} file
  * @param {string[]} component_extensions
  * @param {string[]} module_extensions
- * @returns {import('./types').RouteFile | null}
+ * @returns {import('./types').RouteFile}
  */
-function analyze(file, component_extensions, module_extensions) {
+function analyze(project_relative, file, component_extensions, module_extensions) {
 	const component_extension = component_extensions.find((ext) => file.endsWith(ext));
 	if (component_extension) {
 		const name = file.slice(0, -component_extension.length);
 		const pattern =
 			/^\+(?:(page(?:@([a-zA-Z0-9_-]+))?)|(layout(?:-([a-zA-Z0-9_-]+))?(?:@([a-zA-Z0-9_-]+))?)|(error))$/;
 		const match = pattern.exec(name);
-		if (!match) return null;
+		if (!match) {
+			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
+		}
 
 		return {
 			kind: 'component',
@@ -302,21 +298,29 @@ function analyze(file, component_extensions, module_extensions) {
 	const module_extension = module_extensions.find((ext) => file.endsWith(ext));
 	if (module_extension) {
 		const name = file.slice(0, -module_extension.length);
-		const pattern = /^\+(?:(server)|(page(\.server)?)|(layout(?:-([a-zA-Z0-9_-]+))?(\.server)?))$/;
+		const pattern =
+			/^\+(?:(server)|(page(?:@([a-zA-Z0-9_-]+))?(\.server)?)|(layout(?:-([a-zA-Z0-9_-]+))?(?:@([a-zA-Z0-9_-]+))?(\.server)?))$/;
 		const match = pattern.exec(name);
-		if (!match) return null;
+		if (!match) {
+			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
+		} else if (match[3] || match[7]) {
+			throw new Error(
+				// prettier-ignore
+				`Only Svelte files can reference named layouts. Remove '@${match[3] || match[7]}' from ${file} (at ${project_relative})`
+			);
+		}
 
-		const kind = !!(match[1] || match[3] || match[6]) ? 'server' : 'shared';
+		const kind = !!(match[1] || match[4] || match[8]) ? 'server' : 'shared';
 
 		return {
 			kind,
 			is_page: !!match[2],
-			is_layout: !!match[4],
-			declares_layout: match[5]
+			is_layout: !!match[5],
+			declares_layout: match[6]
 		};
 	}
 
-	return null;
+	throw new Error(`Files and directories prefixed with + are reserved (saw ${project_relative})`);
 }
 
 /**

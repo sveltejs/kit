@@ -566,6 +566,13 @@ test('errors on layout named default', () => {
 	);
 });
 
+test('errors on invalid named layout reference', () => {
+	assert.throws(
+		() => create('samples/invalid-named-layout-reference'),
+		/Only Svelte files can reference named layouts. Remove '@named' from \+page@named.js \(at samples\/invalid-named-layout-reference\/\+page@named.js\)/
+	);
+});
+
 test('errors on duplicate layout definition', () => {
 	assert.throws(
 		() => create('samples/duplicate-layout'),
