@@ -294,7 +294,12 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 
 		remove_static_middlewares(vite.middlewares);
 
-		const runtime_base = path.relative('.', runtime_directory);
+		const runtime_base = runtime_directory.startsWith(process.cwd())
+			? `/${path.relative('.', runtime_directory)}`
+			: `/@fs${
+					// Windows/Linux separation - Windows starts with a drive letter, we need a / in front there
+					runtime_directory.startsWith('/') ? '' : '/'
+			  }${runtime_directory}`;
 
 		const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
 		const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);
