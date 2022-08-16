@@ -110,10 +110,13 @@ test.describe('Scrolling', () => {
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
 		await page.goBack();
+		await page.waitForLoadState('networkidle');
 		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
 
 		await page.goBack();
+		await page.waitForLoadState('networkidle');
+
 		expect(page.url()).toBe(baseURL + '/anchor');
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
