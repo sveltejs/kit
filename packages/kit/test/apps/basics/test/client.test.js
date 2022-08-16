@@ -535,7 +535,7 @@ test.describe('Routing', () => {
 		await clicknav('a[href="/routing/a"]');
 		expect(await page.textContent('h1')).toBe('a');
 
-		expect(requests).toEqual([]);
+		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
 	});
 
 	test('navigates programmatically', async ({ page, app }) => {
@@ -563,7 +563,7 @@ test.describe('Routing', () => {
 		const urls = [];
 
 		const { port, close } = await start_server((req, res) => {
-			urls.push(req.url);
+			if (req.url !== '/favicon.ico') urls.push(req.url);
 			res.end('ok');
 		});
 
