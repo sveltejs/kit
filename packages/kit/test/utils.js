@@ -95,7 +95,7 @@ export const test = base.extend({
 					 */
 					const page_ready_conditions = [page.waitForSelector('body.started', { timeout: 5000 })];
 					if (process.env.DEV && fn !== 'goBack') {
-						// if it is an spa back, there is no new connect
+						// if going back via client-side navigation, there is no new connect
 						page_ready_conditions.push(wait_for_vite_connected_message(page, 5000));
 					}
 					await Promise.all(page_ready_conditions);
@@ -206,18 +206,12 @@ export async function start_server(handler) {
 }
 
 /**
- * wait for the vite client to log "[vite] connected." on browser console
- *
+ * Waits for the Vite client to log "[vite] connected." on the browser console.
  * @param page {import('@playwright/test').Page}
  * @param timeout {number}
  * @returns {Promise<void>}
  */
 async function wait_for_vite_connected_message(page, timeout) {
-	// remove once https://github.com/microsoft/playwright/issues/15550 is fixed/released
-	if (process.env.KIT_E2E_BROWSER === 'firefox') {
-		// crude wait instead of checking the console
-		return new Promise((resolve) => setTimeout(resolve, 100));
-	}
 	// @ts-ignore
 	return page.waitForEvent('console', {
 		predicate: async (message) => message?.text()?.includes('[vite] connected.'),
