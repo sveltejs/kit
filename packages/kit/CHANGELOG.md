@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.412
+
+### Patch Changes
+
+- Lazy load Svelte components to reenable no-ssr use cases ([#5930](https://github.com/sveltejs/kit/pull/5930))
+
 ## 1.0.0-next.411
 
 ### Patch Changes
