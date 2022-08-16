@@ -263,7 +263,7 @@ export async function respond(request, options, state) {
 												for (let j = 0; j < i; j += 1) {
 													const parent = await promises[j];
 													if (!parent || parent instanceof HttpError || 'error' in parent) {
-														return;
+														return data;
 													}
 													Object.assign(data, parent.data);
 												}
