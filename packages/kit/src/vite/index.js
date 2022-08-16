@@ -14,8 +14,9 @@ import { generate_manifest } from '../core/generate_manifest/index.js';
 import { runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import { get_aliases, resolve_entry, prevent_illegal_rollup_imports } from './utils.js';
+import { get_aliases, resolve_entry, prevent_illegal_rollup_imports, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
+import { create_module } from '../core/env.js';
 
 const cwd = process.cwd();
 
@@ -107,6 +108,9 @@ function kit() {
 	/** @type {string | undefined} */
 	let deferred_warning;
 
+	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
+	let env;
+
 	/**
 	 * @type {{
 	 *   build_dir: string;
@@ -191,13 +195,13 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
 		async config(config, config_env) {
-			// The config is created in build_server for SSR mode and passed inline
-			if (config.build?.ssr) {
-				return;
-			}
-
 			vite_config_env = config_env;
 			svelte_config = await load_config();
+			env = get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix);
+
+			// The config is created in build_server for SSR mode and passed inline
+			if (config.build?.ssr) return;
+
 			is_build = config_env.command === 'build';
 
 			paths = {
@@ -267,6 +271,20 @@ function kit() {
 
 			deferred_warning = warn_overridden_config(config, result);
 			return result;
+		},
+
+		async resolveId(id) {
+			// treat $env/static/[public|private] as virtual
+			if (id.startsWith('$env/static/')) return `\0${id}`;
+		},
+
+		async load(id) {
+			switch (id) {
+				case '\0$env/static/private':
+					return create_module('$env/static/private', env.private);
+				case '\0$env/static/public':
+					return create_module('$env/static/public', env.public);
+			}
 		},
 
 		/**
@@ -432,9 +450,10 @@ function kit() {
 				await adapt(svelte_config, build_data, prerendered, { log });
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
-				// prettier-ignore
+
+				const link = colors.bold().cyan('https://kit.svelte.dev/docs/adapters');
 				console.log(
-					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
+					`See ${link} to learn how to configure your app to run on the platform of your choosing`
 				);
 			}
 

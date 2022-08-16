@@ -210,39 +210,24 @@ test('transform kit.alias to resolve.alias', () => {
 		kit: { alias: { simpleKey: 'simple/value', key: 'value', 'key/*': 'value/*' } }
 	});
 
-	const prefix = path.resolve('.');
+	const transformed = get_aliases(config.kit).map((entry) => {
+		const replacement = posixify(path.relative('.', entry.replacement));
 
-	const transformed = get_aliases(config.kit)
-		.map((entry) => {
-			const replacement = posixify(
-				entry.replacement.startsWith(prefix)
-					? entry.replacement.slice(prefix.length + 1)
-					: entry.replacement
-			);
-
-			return {
-				find: entry.find.toString(), // else assertion fails
-				replacement
-			};
-		})
-		.filter(
-			(entry) => entry.find !== '$app' && entry.find !== '$env' // testing this would mean to reimplement the logic in the test
-		);
+		return {
+			find: entry.find.toString(), // else assertion fails
+			replacement
+		};
+	});
 
 	assert.equal(transformed, [
 		{ find: '__GENERATED__', replacement: '.svelte-kit/generated' },
+		{ find: '$app', replacement: 'src/runtime/app' },
+		{ find: '$env/dynamic/public', replacement: 'src/runtime/env/dynamic/public.js' },
+		{ find: '$env/dynamic/private', replacement: 'src/runtime/env/dynamic/private.js' },
 		{ find: '$lib', replacement: 'src/lib' },
 		{ find: 'simpleKey', replacement: 'simple/value' },
 		{ find: /^key$/.toString(), replacement: 'value' },
-		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' },
-		{
-			find: '$env/static/public',
-			replacement: '.svelte-kit/runtime/env/static/public.js'
-		},
-		{
-			find: '$env/static/private',
-			replacement: '.svelte-kit/runtime/env/static/private.js'
-		}
+		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' }
 	]);
 });
 
