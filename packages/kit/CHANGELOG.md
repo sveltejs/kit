@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.410
+
+### Patch Changes
+
+- Fix generated path extension for `AwaitedProperties` ([#5917](https://github.com/sveltejs/kit/pull/5917))
+
 ## 1.0.0-next.409
 
 ### Patch Changes
