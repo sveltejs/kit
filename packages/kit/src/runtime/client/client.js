@@ -389,6 +389,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   status: number;
 	 *   error: HttpError | Error | null;
 	 *   routeId: string | null;
+	 *   validation_errors?: string | undefined;
 	 * }} opts
 	 */
 	async function get_navigation_result_from_branch({
@@ -397,7 +398,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 		branch,
 		status,
 		error,
-		routeId
+		routeId,
+		validation_errors
 	}) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 
@@ -412,7 +414,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 				session_id
 			},
 			props: {
-				components: filtered.map((branch_node) => branch_node.node.component)
+				components: filtered.map((branch_node) => branch_node.node.component),
+				errors: validation_errors
 			}
 		};
 
@@ -1211,8 +1214,16 @@ export function create_client({ target, session, base, trailing_slash }) {
 			let result;
 
 			try {
-				const script = document.querySelector(`script[sveltekit\\:data-type="server_data"]`);
-				const server_data = script?.textContent ? JSON.parse(script.textContent) : [];
+				/**
+				 * @param {string} type
+				 * @param {any} fallback
+				 */
+				const parse = (type, fallback) => {
+					const script = document.querySelector(`script[sveltekit\\:data-type="${type}"]`);
+					return script?.textContent ? JSON.parse(script.textContent) : fallback;
+				};
+				const server_data = parse('server_data', []);
+				const validation_errors = parse('validation_errors', undefined);
 
 				const branch_promises = node_ids.map(async (n, i) => {
 					return load_node({
@@ -1243,6 +1254,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 								error.message
 						  )
 						: error,
+					validation_errors,
 					routeId
 				});
 			} catch (e) {
