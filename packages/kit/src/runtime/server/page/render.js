@@ -1,7 +1,6 @@
 import devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import * as cookie from 'cookie';
-import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
@@ -339,17 +338,4 @@ export async function render_response({
 		status,
 		headers
 	});
-}
-
-/**
- * @param {any} data
- * @param {(error: Error) => void} [fail]
- */
-function try_serialize(data, fail) {
-	try {
-		return devalue(data);
-	} catch (err) {
-		if (fail) fail(coalesce_to_error(err));
-		return null;
-	}
 }

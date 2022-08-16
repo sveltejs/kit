@@ -46,7 +46,6 @@ export async function respond_with_error({ event, options, state, status, error,
 				event,
 				fetcher,
 				node: default_layout,
-				options,
 				parent: async () => ({}),
 				server_data_promise,
 				state

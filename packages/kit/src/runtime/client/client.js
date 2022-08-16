@@ -503,13 +503,6 @@ export function create_client({ target, base, trailing_slash }) {
 					uses.url = true;
 					return load_url;
 				},
-				// @ts-ignore
-				get session() {
-					// TODO remove this for 1.0
-					throw new Error(
-						'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
-					);
-				},
 				async fetch(resource, init) {
 					let requested;
 
@@ -561,6 +554,12 @@ export function create_client({ target, base, trailing_slash }) {
 				get props() {
 					throw new Error(
 						'@migration task: Replace `props` with `data` stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
+					);
+				},
+				get session() {
+					// TODO remove this for 1.0
+					throw new Error(
+						'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
 					);
 				},
 				get stuff() {

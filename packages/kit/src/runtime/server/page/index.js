@@ -180,7 +180,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 						event,
 						fetcher,
 						node,
-						options,
 						parent: async () => {
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
