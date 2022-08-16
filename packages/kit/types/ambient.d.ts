@@ -15,7 +15,7 @@
  * }
  * ```
  *
- * By populating these interfaces, you will gain type safety when using `env`, `event.locals`, `event.platform`, `session` and `stuff`.
+ * By populating these interfaces, you will gain type safety when using `env`, `event.locals` and `event.platform`.
  *
  * Note that since it's an ambient declaration file, you have to be careful when using `import` statements. Once you add an `import`
  * at the top level, the declaration file is no longer considered ambient and you lose access to these typings in other files.
@@ -213,15 +213,15 @@ declare module '$app/paths' {
 
 /**
  * ```ts
- * import { getStores, navigating, page, session, updated } from '$app/stores';
+ * import { getStores, navigating, page, updated } from '$app/stores';
  * ```
  *
- * Stores are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `session` and `page` are unique to each request on the server, rather than shared between multiple requests handled by the same server simultaneously, which is what makes it safe to include user-specific data in `session`.
+ * Stores are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `page` is unique to each request on the server, rather than shared between multiple requests handled by the same server simultaneously.
  *
  * Because of that, you must subscribe to the stores during component initialization (which happens automatically if you reference the store value, e.g. as `$page`, in a component) before you can use them.
  */
 declare module '$app/stores' {
-	import { Readable, Writable } from 'svelte/store';
+	import { Readable } from 'svelte/store';
 	import { Navigation, Page } from '@sveltejs/kit';
 
 	/**
@@ -231,7 +231,6 @@ declare module '$app/stores' {
 	export function getStores(): {
 		navigating: typeof navigating;
 		page: typeof page;
-		session: typeof session;
 		updated: typeof updated;
 	};
 
