@@ -5,22 +5,25 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { create } from '../index.js';
 import { fileURLToPath } from 'url';
+import glob from 'tiny-glob';
 // use a directory outside of packages to ensure it isn't added to the pnpm workspace
 const test_workspace_dir = fileURLToPath(
 	new URL('../../../.test-tmp/create-svelte/', import.meta.url)
 );
-const overrides = {};
-['kit', 'adapter-auto', 'adapter-cloudflare', 'adapter-netlify', 'adapter-vercel'].forEach(
-	(pkg) => {
-		overrides[`@sveltejs/${pkg}`] = `${path.resolve(
-			test_workspace_dir,
-			'..',
-			'..',
-			'packages',
-			pkg
-		)}`; //'workspace:*';
-	}
-);
+
+const existing_workspace_overrides = JSON.parse(
+	fs.readFileSync(fileURLToPath(new URL('../../../package.json', import.meta.url)), 'utf-8')
+).pnpm?.overrides;
+
+const overrides = { ...existing_workspace_overrides };
+
+(
+	await glob(fileURLToPath(new URL('../../../packages', import.meta.url)) + '/*/package.json')
+).forEach((pkgPath) => {
+	const name = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).name;
+	overrides[name] = path.dirname(path.resolve(pkgPath));
+});
+
 test.before(() => {
 	try {
 		// prepare test pnpm workspace
@@ -69,6 +72,13 @@ for (const template of fs.readdirSync('templates')) {
 				if (pkg.dependencies?.[key]) {
 					pkg.dependencies[key] = value;
 				}
+				if (!pkg.pnpm) {
+					pkg.pnpm = {};
+				}
+				if (!pkg.pnpm.overrides) {
+					pkg.pnpm.overrides = {};
+				}
+				pkg.pnpm.overrides = { ...pkg.pnpm.overrides, ...overrides };
 			});
 			pkg.private = true;
 			fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(pkg, null, '\t') + '\n');

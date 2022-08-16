@@ -82,19 +82,23 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						result.stylesheets = [];
 
 						if (node.component) {
-							const { module, module_node, url } = await resolve(node.component);
+							result.component = async () => {
+								const { module_node, module, url } = await resolve(
+									/** @type {string} */ (node.component)
+								);
 
-							module_nodes.push(module_node);
+								module_nodes.push(module_node);
+								result.file = url.endsWith('.svelte') ? url : url + '?import'; // TODO what is this for?
 
-							result.component = module.default;
-							result.file = url.endsWith('.svelte') ? url : url + '?import'; // TODO what is this for?
+								prevent_illegal_vite_imports(
+									module_node,
+									illegal_imports,
+									extensions,
+									svelte_config.kit.outDir
+								);
 
-							prevent_illegal_vite_imports(
-								module_node,
-								illegal_imports,
-								extensions,
-								svelte_config.kit.outDir
-							);
+								return module.default;
+							};
 						}
 
 						if (node.shared) {

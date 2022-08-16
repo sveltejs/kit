@@ -238,6 +238,8 @@ export async function build_server(options, client) {
 		/** @type {string[]} */
 		const imports = [];
 
+		// String representation of
+		/** @type {import('types').SSRNode} */
 		/** @type {string[]} */
 		const exports = [`export const index = ${i};`];
 
@@ -254,7 +256,9 @@ export async function build_server(options, client) {
 			stylesheets.push(...entry.stylesheets);
 
 			exports.push(
-				`export { default as component } from '../${vite_manifest[node.component].file}';`,
+				`export const component = async () => (await import('../${
+					vite_manifest[node.component].file
+				}')).default;`,
 				`export const file = '${entry.file}';` // TODO what is this?
 			);
 		}

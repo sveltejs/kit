@@ -586,3 +586,9 @@ test.describe('Shadow DOM', () => {
 		expect(requests).toEqual([]);
 	});
 });
+
+test('Can use browser-only global on client-only page', async ({ page, read_errors }) => {
+	await page.goto('/no-ssr/browser-only-global');
+	await expect(page.locator('p')).toHaveText('Works');
+	expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
+});
