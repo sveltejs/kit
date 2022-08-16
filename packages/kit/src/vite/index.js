@@ -16,7 +16,7 @@ import { find_deps, get_default_config as get_default_build_config } from './bui
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry, prevent_illegal_rollup_imports, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
-import { create_env_module } from '../core/sync/write_ambient.js';
+import { create_module } from '../core/env.js';
 
 const cwd = process.cwd();
 
@@ -283,9 +283,9 @@ function kit() {
 		async load(id) {
 			switch (id) {
 				case '\0$env/static/private':
-					return create_env_module('$env/static/private', env.private);
+					return create_module('$env/static/private', env.private);
 				case '\0$env/static/public':
-					return create_env_module('$env/static/public', env.public);
+					return create_module('$env/static/public', env.public);
 			}
 		},
 
