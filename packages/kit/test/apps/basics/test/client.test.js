@@ -563,7 +563,7 @@ test.describe('Routing', () => {
 		const urls = [];
 
 		const { port, close } = await start_server((req, res) => {
-			urls.push(req.url);
+			if (req.url !== '/favicon.ico') urls.push(req.url);
 			res.end('ok');
 		});
 
