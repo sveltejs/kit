@@ -26,72 +26,73 @@ const create = (dir, config = {}) => {
 	});
 };
 
-const default_layout = 'layout.svelte';
-const default_error = 'error.svelte';
+const default_layout = {
+	component: 'layout.svelte'
+};
+
+const default_error = {
+	component: 'error.svelte'
+};
 
 test('creates routes', () => {
-	const { components, routes } = create('samples/basic');
+	const { nodes, routes } = create('samples/basic');
 
-	const index = 'samples/basic/index.svelte';
-	const about = 'samples/basic/about.svelte';
-	const blog = 'samples/basic/blog/index.svelte';
-	const blog_$slug = 'samples/basic/blog/[slug].svelte';
+	const index = { component: 'samples/basic/+page.svelte' };
+	const about = { component: 'samples/basic/about/+page.svelte' };
+	const blog = { component: 'samples/basic/blog/+page.svelte' };
+	const blog_$slug = { component: 'samples/basic/blog/[slug]/+page.svelte' };
 
-	assert.equal(components, [default_layout, default_error, about, blog_$slug, blog, index]);
+	assert.equal(nodes, [default_layout, default_error, index, about, blog, blog_$slug]);
 
 	assert.equal(routes, [
 		{
 			type: 'page',
 			id: '',
 			pattern: /^\/$/,
-			path: '/',
-			shadow: null,
-			a: [default_layout, index],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: index
 		},
 
 		{
 			type: 'endpoint',
 			id: 'blog.json',
 			pattern: /^\/blog\.json$/,
-			file: 'samples/basic/blog/index.json.js'
+			file: 'samples/basic/blog.json/+server.js'
 		},
 
 		{
 			type: 'page',
 			id: 'about',
 			pattern: /^\/about\/?$/,
-			path: '/about',
-			shadow: null,
-			a: [default_layout, about],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: about
 		},
 
 		{
 			type: 'page',
 			id: 'blog',
 			pattern: /^\/blog\/?$/,
-			path: '/blog',
-			shadow: null,
-			a: [default_layout, blog],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: blog
 		},
 
 		{
 			type: 'endpoint',
 			id: 'blog/[slug].json',
 			pattern: /^\/blog\/([^/]+?)\.json$/,
-			file: 'samples/basic/blog/[slug].json.ts'
+			file: 'samples/basic/blog/[slug].json/+server.ts'
 		},
 
 		{
 			type: 'page',
 			id: 'blog/[slug]',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
-			path: '',
-			shadow: null,
-			a: [default_layout, blog_$slug],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: blog_$slug
 		}
 	]);
 });
@@ -103,86 +104,85 @@ const symlink_survived_git = fs
 const test_symlinks = symlink_survived_git ? test : test.skip;
 
 test_symlinks('creates symlinked routes', () => {
-	const { components, routes } = create('samples/symlinks/routes');
+	const { nodes, routes } = create('samples/symlinks/routes');
 
-	const index = 'samples/symlinks/routes/index.svelte';
-	const symlinked_index = 'samples/symlinks/routes/foo/index.svelte';
+	const index = { component: 'samples/symlinks/routes/index.svelte' };
+	const symlinked_index = { component: 'samples/symlinks/routes/foo/index.svelte' };
 
-	assert.equal(components, [default_layout, default_error, symlinked_index, index]);
+	assert.equal(nodes, [default_layout, default_error, symlinked_index, index]);
 
 	assert.equal(routes, [
 		{
 			type: 'page',
 			id: '',
 			pattern: /^\/$/,
-			path: '/',
-			shadow: null,
-			a: [default_layout, index],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: index
 		},
 
 		{
 			type: 'page',
 			id: 'foo',
 			pattern: /^\/foo\/?$/,
-			path: '/foo',
-			shadow: null,
-			a: [default_layout, symlinked_index],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: symlinked_index
 		}
 	]);
 });
 
 test('creates routes with layout', () => {
-	const { components, routes } = create('samples/basic-layout');
+	const { nodes, routes } = create('samples/basic-layout');
 
-	const layout = 'samples/basic-layout/__layout.svelte';
-	const index = 'samples/basic-layout/index.svelte';
-	const foo___layout = 'samples/basic-layout/foo/__layout.svelte';
-	const foo = 'samples/basic-layout/foo/index.svelte';
+	const layout = { component: 'samples/basic-layout/+layout.svelte' };
+	const index = { component: 'samples/basic-layout/+page.svelte' };
+	const foo___layout = { component: 'samples/basic-layout/foo/+layout.svelte' };
+	const foo = { component: 'samples/basic-layout/foo/+page.svelte' };
 
-	assert.equal(components, [layout, default_error, foo___layout, foo, index]);
+	assert.equal(nodes, [layout, default_error, foo___layout, index, foo]);
 
-	assert.equal(routes, [
-		{
-			type: 'page',
-			id: '',
-			pattern: /^\/$/,
-			path: '/',
-			shadow: null,
-			a: [layout, index],
-			b: [default_error]
-		},
+	assert.equal(
+		routes.slice(1, 2),
+		[
+			{
+				type: 'page',
+				id: '',
+				pattern: /^\/$/,
+				errors: [default_error],
+				layouts: [layout],
+				leaf: index
+			},
 
-		{
-			type: 'page',
-			id: 'foo',
-			pattern: /^\/foo\/?$/,
-			path: '/foo',
-			shadow: null,
-			a: [layout, foo___layout, foo],
-			b: [default_error]
-		}
-	]);
+			{
+				type: 'page',
+				id: 'foo',
+				pattern: /^\/foo\/?$/,
+				errors: [default_error],
+				layouts: [layout, foo___layout],
+				leaf: foo
+			}
+		].slice(1, 2)
+	);
 });
 
 test('succeeds when routes does not exist', () => {
-	const { components, routes } = create('samples/basic/routes');
-	assert.equal(components, ['layout.svelte', 'error.svelte']);
+	const { nodes, routes } = create('samples/basic/routes');
+	assert.equal(nodes, [default_layout, default_error]);
 	assert.equal(routes, []);
 });
 
 // TODO some characters will need to be URL-encoded in the filename
 test('encodes invalid characters', () => {
-	const { components, routes } = create('samples/encoding');
+	const { nodes, routes } = create('samples/encoding');
 
 	// had to remove ? and " because windows
 
 	// const quote = 'samples/encoding/".svelte';
-	const hash = 'samples/encoding/%23.svelte';
+	const hash = { component: 'samples/encoding/%23/+page.svelte' };
 	// const question_mark = 'samples/encoding/?.svelte';
 
-	assert.equal(components, [
+	assert.equal(nodes, [
 		default_layout,
 		default_error,
 		// quote,
@@ -231,13 +231,30 @@ test('sorts routes correctly', () => {
 test('sorts routes with rest correctly', () => {
 	const { routes } = create('samples/rest');
 
-	assert.equal(
-		routes.map((p) => (p.type === 'page' ? p.a : p.file)),
-		[
-			[default_layout, 'samples/rest/a/[...rest].svelte'],
-			[default_layout, 'samples/rest/b/[...rest].svelte']
-		]
-	);
+	assert.equal(routes, [
+		{
+			type: 'page',
+			id: 'a/[...rest]',
+			pattern: /^\/a(?:\/(.*))?\/?$/,
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: {
+				component: 'samples/rest/a/[...rest]/+page.svelte',
+				server: 'samples/rest/a/[...rest]/+page.server.js'
+			}
+		},
+		{
+			type: 'page',
+			id: 'b/[...rest]',
+			pattern: /^\/b(?:\/(.*))?\/?$/,
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: {
+				component: 'samples/rest/b/[...rest]/+page.svelte',
+				server: 'samples/rest/b/[...rest]/+page.server.ts'
+			}
+		}
+	]);
 });
 
 test('allows rest parameters inside segments', () => {
@@ -248,16 +265,17 @@ test('allows rest parameters inside segments', () => {
 			type: 'page',
 			id: 'prefix-[...rest]',
 			pattern: /^\/prefix-(.*?)\/?$/,
-			path: '',
-			shadow: null,
-			a: [default_layout, 'samples/rest-prefix-suffix/prefix-[...rest].svelte'],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: {
+				component: 'samples/rest-prefix-suffix/prefix-[...rest]/+page.svelte'
+			}
 		},
 		{
 			type: 'endpoint',
 			id: '[...rest].json',
 			pattern: /^\/(.*?)\.json$/,
-			file: 'samples/rest-prefix-suffix/[...rest].json.js'
+			file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
 		}
 	]);
 });
@@ -266,7 +284,7 @@ test('ignores files and directories with leading underscores', () => {
 	const { routes } = create('samples/hidden-underscore');
 
 	assert.equal(routes.map((r) => r.type === 'endpoint' && r.file).filter(Boolean), [
-		'samples/hidden-underscore/e/f/g/h.js'
+		'samples/hidden-underscore/e/f/g/h/+server.js'
 	]);
 });
 
@@ -274,36 +292,8 @@ test('ignores files and directories with leading dots except .well-known', () =>
 	const { routes } = create('samples/hidden-dot');
 
 	assert.equal(routes.map((r) => r.type === 'endpoint' && r.file).filter(Boolean), [
-		'samples/hidden-dot/.well-known/dnt-policy.txt.js'
+		'samples/hidden-dot/.well-known/dnt-policy.txt/+server.js'
 	]);
-});
-
-test('ignores files by `kit.excludes` config w/RegExp', () => {
-	const { routes } = create('samples/hidden-by-excludes-config', {
-		kit: {
-			routes: (filepath) =>
-				!filepath.endsWith('.test.js') &&
-				!filepath.endsWith('.spec.js') &&
-				!filepath.endsWith('.md')
-		}
-	});
-
-	assert.equal(
-		routes
-			.map((r) => r.type === 'endpoint' && r.file)
-			.filter(Boolean)
-			.sort(),
-		[
-			'samples/hidden-by-excludes-config/.a.js',
-			'samples/hidden-by-excludes-config/.well-known/dnt-policy.txt.js',
-			'samples/hidden-by-excludes-config/_a.js',
-			'samples/hidden-by-excludes-config/a.js',
-			'samples/hidden-by-excludes-config/subdir/.a.js',
-			'samples/hidden-by-excludes-config/subdir/_a.js',
-			'samples/hidden-by-excludes-config/subdir/.well-known/dnt-policy.txt.js',
-			'samples/hidden-by-excludes-config/subdir/a.js'
-		].sort()
-	);
 });
 
 test('allows multiple slugs', () => {
@@ -316,7 +306,7 @@ test('allows multiple slugs', () => {
 				type: 'endpoint',
 				id: '[file].[ext]',
 				pattern: /^\/([^/]+?)\.([^/]+?)$/,
-				file: 'samples/multiple-slugs/[file].[ext].js'
+				file: 'samples/multiple-slugs/[file].[ext]/+server.js'
 			}
 		]
 	);
@@ -325,7 +315,7 @@ test('allows multiple slugs', () => {
 test('fails if dynamic params are not separated', () => {
 	assert.throws(() => {
 		create('samples/invalid-params');
-	}, /Invalid route samples\/invalid-params\/\[foo\]\[bar\]\.js — parameters must be separated/);
+	}, /Invalid route samples\/invalid-params\/\[foo\]\[bar\]\/\+server\.js — parameters must be separated/);
 });
 
 test('ignores things that look like lockfiles', () => {
@@ -335,77 +325,73 @@ test('ignores things that look like lockfiles', () => {
 		{
 			type: 'endpoint',
 			id: 'foo',
-			file: 'samples/lockfiles/foo.js',
+			file: 'samples/lockfiles/foo/+server.js',
 			pattern: /^\/foo\/?$/
 		}
 	]);
 });
 
 test('works with custom extensions', () => {
-	const { components, routes } = create('samples/custom-extension', {
+	const { nodes, routes } = create('samples/custom-extension', {
 		extensions: ['.jazz', '.beebop', '.funk', '.svelte']
 	});
 
-	const index = 'samples/custom-extension/index.funk';
-	const about = 'samples/custom-extension/about.jazz';
-	const blog = 'samples/custom-extension/blog/index.svelte';
-	const blog_$slug = 'samples/custom-extension/blog/[slug].beebop';
+	const index = { component: 'samples/custom-extension/+page.funk' };
+	const about = { component: 'samples/custom-extension/about/+page.jazz' };
+	const blog = { component: 'samples/custom-extension/blog/+page.svelte' };
+	const blog_$slug = { component: 'samples/custom-extension/blog/[slug]/+page.beebop' };
 
-	assert.equal(components, [default_layout, default_error, about, blog_$slug, blog, index]);
+	assert.equal(nodes, [default_layout, default_error, index, about, blog, blog_$slug]);
 
 	assert.equal(routes, [
 		{
 			type: 'page',
 			id: '',
 			pattern: /^\/$/,
-			path: '/',
-			shadow: null,
-			a: [default_layout, index],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: index
 		},
 
 		{
 			type: 'endpoint',
 			id: 'blog.json',
 			pattern: /^\/blog\.json$/,
-			file: 'samples/custom-extension/blog/index.json.js'
+			file: 'samples/custom-extension/blog.json/+server.js'
 		},
 
 		{
 			type: 'page',
 			id: 'about',
 			pattern: /^\/about\/?$/,
-			path: '/about',
-			shadow: null,
-			a: [default_layout, about],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: about
 		},
 
 		{
 			type: 'page',
 			id: 'blog',
 			pattern: /^\/blog\/?$/,
-			path: '/blog',
-			shadow: null,
-			a: [default_layout, blog],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: blog
 		},
 
 		{
 			type: 'endpoint',
 			id: 'blog/[slug].json',
 			pattern: /^\/blog\/([^/]+?)\.json$/,
-			file: 'samples/custom-extension/blog/[slug].json.js'
+			file: 'samples/custom-extension/blog/[slug].json/+server.js'
 		},
 
 		{
 			type: 'page',
 			id: 'blog/[slug]',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
-			path: '',
-			shadow: null,
-			a: [default_layout, blog_$slug],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [default_layout],
+			leaf: blog_$slug
 		}
 	]);
 });
@@ -435,52 +421,49 @@ test('includes nested error components', () => {
 			type: 'page',
 			id: 'foo/bar/baz',
 			pattern: /^\/foo\/bar\/baz\/?$/,
-			path: '/foo/bar/baz',
-			shadow: null,
-			a: [
-				default_layout,
-				'samples/nested-errors/foo/__layout.svelte',
-				undefined,
-				'samples/nested-errors/foo/bar/baz/__layout.svelte',
-				'samples/nested-errors/foo/bar/baz/index.svelte'
-			],
-			b: [
+			errors: [
 				default_error,
 				undefined,
-				'samples/nested-errors/foo/bar/__error.svelte',
-				'samples/nested-errors/foo/bar/baz/__error.svelte'
-			]
+				{ component: 'samples/nested-errors/foo/bar/+error.svelte' },
+				{ component: 'samples/nested-errors/foo/bar/baz/+error.svelte' }
+			],
+			layouts: [
+				default_layout,
+				{ component: 'samples/nested-errors/foo/+layout.svelte' },
+				undefined,
+				{ component: 'samples/nested-errors/foo/bar/baz/+layout.svelte' }
+			],
+			leaf: {
+				component: 'samples/nested-errors/foo/bar/baz/+page.svelte'
+			}
 		}
 	]);
 });
 
-test('errors on encountering an illegal __file', () => {
-	assert.throws(
-		() => create('samples/illegal-dunder'),
-		/Files and directories prefixed with __ are reserved \(saw samples\/illegal-dunder\/__foo.svelte\)/
-	);
-});
-
 test('creates routes with named layouts', () => {
-	const { components, routes } = create('samples/named-layouts');
+	const { nodes, routes } = create('samples/named-layouts');
 
-	assert.equal(components, [
-		'samples/named-layouts/__layout.svelte',
+	assert.equal(nodes, [
+		{ component: 'samples/named-layouts/+layout.svelte' },
 		default_error,
-		'samples/named-layouts/__layout-home@default.svelte',
-		'samples/named-layouts/__layout-special.svelte',
-		'samples/named-layouts/a/__layout.svelte',
-		'samples/named-layouts/b/__layout-alsospecial@special.svelte',
-		'samples/named-layouts/b/c/__layout.svelte',
-		'samples/named-layouts/b/d/__layout-extraspecial@special.svelte',
-		'samples/named-layouts/b/d/__layout-special.svelte',
-		'samples/named-layouts/a/a1.svelte',
-		'samples/named-layouts/a/a2@special.svelte',
-		'samples/named-layouts/b/c/c1@alsospecial.svelte',
-		'samples/named-layouts/b/c/c2@home.svelte',
-		'samples/named-layouts/b/d/d1.svelte',
-		'samples/named-layouts/b/d/d2@extraspecial.svelte',
-		'samples/named-layouts/b/d/index@special.svelte'
+		{ component: 'samples/named-layouts/+layout-home@default.svelte' },
+		{
+			component: 'samples/named-layouts/+layout-special.svelte',
+			shared: 'samples/named-layouts/+layout-special.js',
+			server: 'samples/named-layouts/+layout-special.server.js'
+		},
+		{ component: 'samples/named-layouts/a/+layout.svelte' },
+		{ component: 'samples/named-layouts/b/+layout-alsospecial@special.svelte' },
+		{ component: 'samples/named-layouts/b/c/+layout.svelte' },
+		{ component: 'samples/named-layouts/b/d/+layout-extraspecial@special.svelte' },
+		{ component: 'samples/named-layouts/b/d/+layout-special.svelte' },
+		{ component: 'samples/named-layouts/a/a1/+page.svelte' },
+		{ component: 'samples/named-layouts/a/a2/+page@special.svelte' },
+		{ component: 'samples/named-layouts/b/c/c1/+page@alsospecial.svelte' },
+		{ component: 'samples/named-layouts/b/c/c2/+page@home.svelte' },
+		{ component: 'samples/named-layouts/b/d/+page@special.svelte' },
+		{ component: 'samples/named-layouts/b/d/d1/+page.svelte' },
+		{ component: 'samples/named-layouts/b/d/d2/+page@extraspecial.svelte' }
 	]);
 
 	assert.equal(routes, [
@@ -488,88 +471,83 @@ test('creates routes with named layouts', () => {
 			type: 'page',
 			id: 'a/a1',
 			pattern: /^\/a\/a1\/?$/,
-			path: '/a/a1',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout.svelte',
-				'samples/named-layouts/a/__layout.svelte',
-				'samples/named-layouts/a/a1.svelte'
+			errors: [default_error],
+			layouts: [
+				{ component: 'samples/named-layouts/+layout.svelte' },
+				{ component: 'samples/named-layouts/a/+layout.svelte' }
 			],
-			b: [default_error]
+			leaf: { component: 'samples/named-layouts/a/a1/+page.svelte' }
 		},
 		{
 			type: 'page',
-			id: 'a/a2@special',
+			id: 'a/a2',
 			pattern: /^\/a\/a2\/?$/,
-			path: '/a/a2',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout-special.svelte',
-				'samples/named-layouts/a/a2@special.svelte'
+			errors: [default_error],
+			layouts: [
+				{
+					component: 'samples/named-layouts/+layout-special.svelte',
+					shared: 'samples/named-layouts/+layout-special.js',
+					server: 'samples/named-layouts/+layout-special.server.js'
+				}
 			],
-			b: [default_error]
+			leaf: { component: 'samples/named-layouts/a/a2/+page@special.svelte' }
 		},
 		{
 			type: 'page',
-			id: 'b/d@special',
+			id: 'b/d',
 			pattern: /^\/b\/d\/?$/,
-			path: '/b/d',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout.svelte',
-				'samples/named-layouts/b/d/__layout-special.svelte',
-				'samples/named-layouts/b/d/index@special.svelte'
+			errors: [default_error],
+			layouts: [
+				{ component: 'samples/named-layouts/+layout.svelte' },
+				{ component: 'samples/named-layouts/b/d/+layout-special.svelte' }
 			],
-			b: [default_error]
+			leaf: { component: 'samples/named-layouts/b/d/+page@special.svelte' }
 		},
 		{
 			type: 'page',
-			id: 'b/c/c1@alsospecial',
+			id: 'b/c/c1',
 			pattern: /^\/b\/c\/c1\/?$/,
-			path: '/b/c/c1',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout-special.svelte',
-				'samples/named-layouts/b/__layout-alsospecial@special.svelte',
-				'samples/named-layouts/b/c/c1@alsospecial.svelte'
+			errors: [default_error],
+			layouts: [
+				{
+					component: 'samples/named-layouts/+layout-special.svelte',
+					shared: 'samples/named-layouts/+layout-special.js',
+					server: 'samples/named-layouts/+layout-special.server.js'
+				},
+				{ component: 'samples/named-layouts/b/+layout-alsospecial@special.svelte' }
 			],
-			b: [default_error]
+			leaf: { component: 'samples/named-layouts/b/c/c1/+page@alsospecial.svelte' }
 		},
 		{
 			type: 'page',
-			id: 'b/c/c2@home',
+			id: 'b/c/c2',
 			pattern: /^\/b\/c\/c2\/?$/,
-			path: '/b/c/c2',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout.svelte',
-				'samples/named-layouts/__layout-home@default.svelte',
-				'samples/named-layouts/b/c/c2@home.svelte'
+			errors: [default_error, default_error],
+			layouts: [
+				{ component: 'samples/named-layouts/+layout.svelte' },
+				{ component: 'samples/named-layouts/+layout-home@default.svelte' }
 			],
-			b: [default_error, default_error]
+			leaf: { component: 'samples/named-layouts/b/c/c2/+page@home.svelte' }
 		},
 		{
 			type: 'page',
 			id: 'b/d/d1',
 			pattern: /^\/b\/d\/d1\/?$/,
-			path: '/b/d/d1',
-			shadow: null,
-			a: ['samples/named-layouts/__layout.svelte', 'samples/named-layouts/b/d/d1.svelte'],
-			b: [default_error]
+			errors: [default_error],
+			layouts: [{ component: 'samples/named-layouts/+layout.svelte' }],
+			leaf: { component: 'samples/named-layouts/b/d/d1/+page.svelte' }
 		},
 		{
 			type: 'page',
-			id: 'b/d/d2@extraspecial',
+			id: 'b/d/d2',
 			pattern: /^\/b\/d\/d2\/?$/,
-			path: '/b/d/d2',
-			shadow: null,
-			a: [
-				'samples/named-layouts/__layout.svelte',
-				'samples/named-layouts/b/d/__layout-special.svelte',
-				'samples/named-layouts/b/d/__layout-extraspecial@special.svelte',
-				'samples/named-layouts/b/d/d2@extraspecial.svelte'
+			errors: [default_error],
+			layouts: [
+				{ component: 'samples/named-layouts/+layout.svelte' },
+				{ component: 'samples/named-layouts/b/d/+layout-special.svelte' },
+				{ component: 'samples/named-layouts/b/d/+layout-extraspecial@special.svelte' }
 			],
-			b: [default_error]
+			leaf: { component: 'samples/named-layouts/b/d/d2/+page@extraspecial.svelte' }
 		}
 	]);
 });
@@ -577,56 +555,38 @@ test('creates routes with named layouts', () => {
 test('errors on missing layout', () => {
 	assert.throws(
 		() => create('samples/named-layout-missing'),
-		/samples\/named-layout-missing\/index@missing.svelte references missing layout "missing"/
+		/samples\/named-layout-missing\/\+page@missing.svelte references missing layout "missing"/
 	);
 });
 
 test('errors on layout named default', () => {
 	assert.throws(
 		() => create('samples/named-layout-default'),
-		/samples\/named-layout-default\/__layout-default.svelte cannot use reserved "default" name/
+		/samples\/named-layout-default\/\+layout-default.svelte cannot use reserved "default" name/
 	);
 });
 
 test('errors on duplicate layout definition', () => {
 	assert.throws(
 		() => create('samples/duplicate-layout'),
-		/Duplicate layout samples\/duplicate-layout\/__layout-a@x.svelte already defined at samples\/duplicate-layout\/__layout-a.svelte/
+		/Duplicate layout samples\/duplicate-layout\/\+layout-a@x.svelte already defined at samples\/duplicate-layout\/\+layout-a.svelte/
 	);
 });
 
 test('errors on recursive name layout', () => {
 	assert.throws(
 		() => create('samples/named-layout-recursive-1'),
-		/Recursive layout detected: samples\/named-layout-recursive-1\/__layout-a@b\.svelte -> samples\/named-layout-recursive-1\/__layout-b@a\.svelte -> samples\/named-layout-recursive-1\/__layout-a@b\.svelte/
+		/Recursive layout detected: samples\/named-layout-recursive-1\/\+layout-a@b\.svelte -> samples\/named-layout-recursive-1\/\+layout-b@a\.svelte -> samples\/named-layout-recursive-1\/\+layout-a@b\.svelte/
 	);
 	assert.throws(
 		() => create('samples/named-layout-recursive-2'),
-		/Recursive layout detected: samples\/named-layout-recursive-2\/__layout-a@a\.svelte -> samples\/named-layout-recursive-2\/__layout-a@a\.svelte/
+		/Recursive layout detected: samples\/named-layout-recursive-2\/\+layout-a@a\.svelte -> samples\/named-layout-recursive-2\/\+layout-a@a\.svelte/
 	);
 
 	assert.throws(
 		() => create('samples/named-layout-recursive-3'),
-		/Recursive layout detected: samples\/named-layout-recursive-3\/__layout@a\.svelte -> samples\/named-layout-recursive-3\/__layout-a@default\.svelte -> samples\/named-layout-recursive-3\/__layout@a\.svelte/
+		/Recursive layout detected: samples\/named-layout-recursive-3\/\+layout@a\.svelte -> samples\/named-layout-recursive-3\/\+layout-a@default\.svelte -> samples\/named-layout-recursive-3\/\+layout@a\.svelte/
 	);
-});
-
-test('errors on layout in directory', () => {
-	assert.throws(
-		() => create('samples/named-layout-on-directory-1'),
-		/Invalid route samples\/named-layout-on-directory-1\/foo@a\/index.svelte - named layouts are not allowed in directories/
-	);
-
-	assert.throws(
-		() => create('samples/named-layout-on-directory-2'),
-		/Invalid route samples\/named-layout-on-directory-2\/foo@a\/bar.svelte - named layouts are not allowed in directories/
-	);
-});
-
-test('allows for __tests__ directories', () => {
-	const { routes } = create('samples/legal-dunder');
-
-	assert.equal(routes, []);
 });
 
 test('creates param matchers', () => {
@@ -654,7 +614,9 @@ test('errors on duplicate matchers', () => {
 	try {
 		assert.throws(() => {
 			create('samples/basic', {
-				extensions: ['.js', '.ts']
+				kit: {
+					moduleExtensions: ['.js', '.ts']
+				}
 			});
 		}, /Duplicate matchers/);
 	} finally {

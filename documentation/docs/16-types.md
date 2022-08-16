@@ -9,7 +9,7 @@ title: Types
 The `RequestHandler` and `Load` types both accept a `Params` argument allowing you to type the `params` object. For example this endpoint expects `foo`, `bar` and `baz` params:
 
 ```js
-/// file: src/routes/[foo]/[bar]/[baz].js
+/// file: src/routes/[foo]/[bar]/[baz]/+page.server.js
 // @errors: 2355
 /** @type {import('@sveltejs/kit').RequestHandler<{
  *   foo: string;
@@ -26,49 +26,64 @@ Needless to say, this is cumbersome to write out, and less portable (if you were
 To solve this problem, SvelteKit generates `.d.ts` files for each of your endpoints and pages:
 
 ```ts
-/// file: .svelte-kit/types/src/routes/[foo]/[bar]/__types/[baz].d.ts
+/// file: .svelte-kit/types/src/routes/[foo]/[bar]/[baz]/$types.d.ts
 /// link: false
-import type { RequestHandler as GenericRequestHandler, Load as GenericLoad } from '@sveltejs/kit';
+import type * as Kit from '@sveltejs/kit';
 
-export type RequestHandler<Body = any> = GenericRequestHandler<
-	{ foo: string; bar: string; baz: string },
-	Body
->;
+interface RouteParams {
+	foo: string;
+	bar: string;
+	baz: string;
+}
 
-export type Load<
-	InputProps extends Record<string, any> = Record<string, any>,
-	OutputProps extends Record<string, any> = InputProps
-> = GenericLoad<{ foo: string; bar: string; baz: string }, InputProps, OutputProps>;
+export type PageServerLoad = Kit.ServerLoad<RouteParams>;
+export type PageLoad = Kit.Load<RouteParams>;
 ```
 
 These files can be imported into your endpoints and pages as siblings, thanks to the [`rootDirs`](https://www.typescriptlang.org/tsconfig#rootDirs) option in your TypeScript configuration:
 
 ```js
-/// file: src/routes/[foo]/[bar]/[baz].js
-// @filename: __types/[baz].d.ts
-import type { RequestHandler as GenericRequestHandler, Load as GenericLoad } from '@sveltejs/kit';
+/// file: src/routes/[foo]/[bar]/[baz]/+page.server.js
+// @filename: $types.d.ts
+import type * as Kit from '@sveltejs/kit';
 
-export type RequestHandler<Body = any> = GenericRequestHandler<
-	{ foo: string, bar: string, baz: string },
-	Body
->;
+interface RouteParams {
+	foo: string;
+	bar: string;
+	baz: string;
+}
+
+export type PageServerLoad = Kit.ServerLoad<RouteParams>;
 
 // @filename: index.js
 // @errors: 2355
 // ---cut---
-/** @type {import('./__types/[baz]').RequestHandler} */
+/** @type {import('./$types').PageServerLoad} */
 export async function GET({ params }) {
 	// ...
 }
 ```
 
-```svelte
-<script context="module">
-	/** @type {import('./__types/[baz]').Load} */
-	export async function load({ params, fetch, session, stuff }) {
-		// ...
-	}
-</script>
+```js
+/// file: src/routes/[foo]/[bar]/[baz]/+page.js
+// @filename: $types.d.ts
+import type * as Kit from '@sveltejs/kit';
+
+interface RouteParams {
+	foo: string;
+	bar: string;
+	baz: string;
+}
+
+export type PageLoad = Kit.Load<RouteParams>;
+
+// @filename: index.js
+// @errors: 2355
+// ---cut---
+/** @type {import('./$types').PageLoad} */
+export async function load({ params, fetch, session }) {
+	// ...
+}
 ```
 
 > For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `.svelte-kit/tsconfig.json` (where `.svelte-kit` is your [`outDir`](/docs/configuration#outdir)):
@@ -119,7 +134,7 @@ Others are required for SvelteKit to work properly, and should also be left unto
 
 		// This ensures both `vite build`
 		// and `svelte-kit package` work correctly
-		"lib": ["esnext", "DOM"],
+		"lib": ["esnext", "DOM", "DOM.Iterable"],
 		"moduleResolution": "node",
 		"module": "esnext",
 		"target": "esnext"

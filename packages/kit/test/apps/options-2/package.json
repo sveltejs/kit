@@ -6,7 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"check": "node ../../cli.js sync && tsc && svelte-check",
+		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "npm run test:dev && npm run test:build",
 		"test:dev": "cross-env DEV=true playwright test",
 		"test:build": "playwright test"

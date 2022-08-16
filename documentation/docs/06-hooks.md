@@ -8,7 +8,7 @@ An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exp
 
 ### handle
 
-This function runs every time the SvelteKit server receives a [request](/docs/web-standards#fetch-apis-request) — whether that happens while the app is running, or during [prerendering](/docs/page-options#prerender) — and determines the [response](/docs/web-standards#fetch-apis-response). It receives an `event` object representing the request and a function called `resolve`, which invokes SvelteKit's router and generates a response (rendering a page, or invoking an endpoint) accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs every time the SvelteKit server receives a [request](/docs/web-standards#fetch-apis-request) — whether that happens while the app is running, or during [prerendering](/docs/page-options#prerender) — and determines the [response](/docs/web-standards#fetch-apis-response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 
 ```js
 /// file: src/hooks.js
@@ -25,7 +25,7 @@ export async function handle({ event, resolve }) {
 
 > Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
-If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to endpoints, populate the `event.locals` object, as shown below.
+If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to handlers in `+server.js` and server-only `load` functions, populate the `event.locals` object, as shown below.
 
 ```js
 /// file: src/hooks.js
@@ -83,7 +83,7 @@ export async function handle({ event, resolve }) {
 
 ### handleError
 
-If an error is thrown during rendering, this function will be called with the `error` and the `event` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
+If an error is thrown during loading or rendering, this function will be called with the `error` and the `event` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
 
 During development, if an error occurs because of a syntax error in your Svelte code, a `frame` property will be appended highlighting the location of the error.
 
@@ -103,7 +103,7 @@ export function handleError({ error, event }) {
 }
 ```
 
-> `handleError` is only called in the case of an uncaught exception. It is not called when pages and endpoints explicitly respond with 4xx and 5xx status codes.
+> `handleError` is only called for _unexpected_ errors. It is not called for errors created with the [`error`](/docs/modules#sveltejs-kit-error) function imported from `@sveltejs/kit`, as these are _expected_ errors.
 
 ### getSession
 

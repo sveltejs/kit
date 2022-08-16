@@ -23,8 +23,9 @@ export function create_builder({ config, build_data, prerendered, log }) {
 	/** @param {import('types').RouteData} route */
 	// TODO routes should come pre-filtered
 	function not_prerendered(route) {
-		if (route.type === 'page' && route.path) {
-			return !prerendered_paths.has(route.path) && !prerendered_paths.has(route.path + '/');
+		const path = route.type === 'page' && !route.id.includes('[') && `/${route.id}`;
+		if (path) {
+			return !prerendered_paths.has(path) && !prerendered_paths.has(path + '/');
 		}
 
 		return true;

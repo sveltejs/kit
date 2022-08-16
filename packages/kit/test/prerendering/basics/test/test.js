@@ -52,7 +52,7 @@ test('renders page with data from endpoint', () => {
 
 test('renders page with unbuffered data from endpoint', () => {
 	const content = read('fetch-endpoint/not-buffered.html');
-	assert.ok(content.includes('<h1>content-type: application/json; charset=utf-8</h1>'), content);
+	assert.ok(content.includes('<h1>content-type: application/json</h1>'), content);
 
 	const json = read('fetch-endpoint/not-buffered.json');
 	assert.equal(json, JSON.stringify({ answer: 42 }));
@@ -64,11 +64,23 @@ test('loads a file with spaces in the filename', () => {
 });
 
 test('generates __data.json file for shadow endpoints', () => {
-	assert.equal(read('__data.json'), JSON.stringify({ message: 'hello' }));
-	assert.equal(read('shadowed-get/__data.json'), JSON.stringify({ answer: 42 }));
+	assert.equal(
+		read('__data.json'),
+		JSON.stringify({
+			type: 'data',
+			nodes: [{ data: null }, { data: { message: 'hello' } }]
+		})
+	);
+	assert.equal(
+		read('shadowed-get/__data.json'),
+		JSON.stringify({
+			type: 'data',
+			nodes: [{ data: null }, { data: { answer: 42 } }]
+		})
+	);
 });
 
-test('does not prerender page with shadow endpoint with non-GET handler', () => {
+test('does not prerender page with shadow endpoint with non-load handler', () => {
 	assert.ok(!fs.existsSync(`${build}/shadowed-post.html`));
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
@@ -150,7 +162,13 @@ test('prerenders binary data', async () => {
 });
 
 test('fetches data from local endpoint', () => {
-	assert.equal(read('origin/__data.json'), JSON.stringify({ message: 'hello' }));
+	assert.equal(
+		read('origin/__data.json'),
+		JSON.stringify({
+			type: 'data',
+			nodes: [{ data: null }, { data: { message: 'hello' } }]
+		})
+	);
 	assert.equal(read('origin/message.json'), JSON.stringify({ message: 'hello' }));
 });
 

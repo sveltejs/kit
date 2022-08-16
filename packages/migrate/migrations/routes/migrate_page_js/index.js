@@ -10,14 +10,19 @@ import {
 	manual_migration,
 	manual_return_migration,
 	parse,
-	rewrite_returns
+	rewrite_returns,
+	rewrite_type,
+	unwrap
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
 
 const give_up = `${error('Update load function', TASKS.PAGE_LOAD)}\n\n`;
 
-/** @param {string} content */
-export function migrate_page(content) {
+/**
+ * @param {string} content
+ * @param {string} filename
+ */
+export function migrate_page(content, filename) {
 	// early out if we can tell there's no load function
 	// without parsing the file
 	if (!/load/.test(content)) return content;
@@ -32,6 +37,9 @@ export function migrate_page(content) {
 		return content;
 	}
 
+	const match = /\+(?:(page)|(layout(?:-([^.@]+))?))/.exec(filename);
+	const load_name = match?.[3] ? `LayoutLoad.${match[3]}` : match?.[2] ? `LayoutLoad` : 'PageLoad';
+
 	for (const statement of file.ast.statements) {
 		const fn = name ? get_function_node(statement, name) : undefined;
 		if (fn?.body) {
@@ -40,8 +48,11 @@ export function migrate_page(content) {
 			/** @type {Set<string>} */
 			const imports = new Set();
 
+			rewrite_type(fn, file.code, 'Load', load_name);
+
 			rewrite_returns(fn.body, (expr, node) => {
-				const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
+				const value = unwrap(expr);
+				const nodes = ts.isObjectLiteralExpression(value) && get_object_nodes(value);
 
 				if (nodes) {
 					const keys = Object.keys(nodes).sort().join(' ');
@@ -51,7 +62,7 @@ export function migrate_page(content) {
 					}
 
 					if (keys === 'props') {
-						automigration(expr, file.code, dedent(nodes.props.getText()));
+						automigration(value, file.code, dedent(nodes.props.getText()));
 						return;
 					}
 
@@ -102,6 +113,18 @@ export function migrate_page(content) {
 			}
 
 			return file.code.toString();
+		}
+
+		if (ts.isImportDeclaration(statement) && statement.importClause) {
+			const bindings = statement.importClause.namedBindings;
+
+			if (bindings && !ts.isNamespaceImport(bindings)) {
+				for (const binding of bindings.elements) {
+					if (binding.name.escapedText === 'Load') {
+						file.code.overwrite(binding.getStart(), binding.getEnd(), load_name);
+					}
+				}
+			}
 		}
 	}
 

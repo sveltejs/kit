@@ -19,7 +19,8 @@ function handle_error(e) {
 	process.exit(1);
 }
 
-const prog = sade('svelte-kit').version('__VERSION__');
+const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
+const prog = sade('svelte-kit').version(pkg.version);
 
 prog
 	.command('package')
@@ -67,7 +68,7 @@ prog
 		try {
 			const config = await load_config();
 			const sync = await import('./core/sync/sync.js');
-			sync.all(config, mode);
+			await sync.all(config, mode);
 		} catch (error) {
 			handle_error(error);
 		}
