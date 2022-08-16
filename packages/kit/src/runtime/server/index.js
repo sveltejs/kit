@@ -2,11 +2,14 @@ import { render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
-import { coalesce_to_error } from '../../utils/error.js';
-import { serialize_error, GENERIC_ERROR } from './utils.js';
+import { coalesce_to_error, normalize_error } from '../../utils/error.js';
+import { serialize_error, GENERIC_ERROR, error_to_pojo } from './utils.js';
 import { decode_params, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
+import { HttpError, Redirect } from '../../index/private.js';
+import { load_server_data } from './page/load_data.js';
+import { json } from '../../index/index.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -112,6 +115,9 @@ export async function respond(request, options, state) {
 		}
 	}
 
+	/** @type {import('types').ResponseHeaders} */
+	const headers = {};
+
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		get clientAddress() {
@@ -132,6 +138,22 @@ export async function respond(request, options, state) {
 		platform: state.platform,
 		request,
 		routeId: route && route.id,
+		setHeaders: (new_headers) => {
+			for (const key in new_headers) {
+				const lower = key.toLowerCase();
+
+				if (lower in headers) {
+					throw new Error(`"${key}" header is already set`);
+				}
+
+				// TODO apply these headers to the response
+				headers[lower] = new_headers[key];
+
+				if (state.prerendering && lower === 'cache-control') {
+					state.prerendering.cache = /** @type {string} */ (new_headers[key]);
+				}
+			}
+		},
 		url
 	};
 
@@ -202,10 +224,12 @@ export async function respond(request, options, state) {
 						state,
 						$session: await options.hooks.getSession(event),
 						page_config: { router: true, hydrate: true },
-						stuff: {},
 						status: 200,
 						error: null,
 						branch: [],
+						fetched: [],
+						validation_errors: undefined,
+						cookies: [],
 						resolve_opts: {
 							...resolve_opts,
 							ssr: false
@@ -216,70 +240,115 @@ export async function respond(request, options, state) {
 				if (route) {
 					/** @type {Response} */
 					let response;
+					if (is_data_request && route.type === 'page') {
+						try {
+							/** @type {Redirect | HttpError | Error} */
+							let error;
 
-					if (is_data_request && route.type === 'page' && route.shadow) {
-						response = await render_endpoint(event, await route.shadow(), options);
+							// TODO only get the data we need for the navigation
+							const promises = [...route.layouts, route.leaf].map(async (n, i) => {
+								try {
+									if (error) return;
 
-						// loading data for a client-side transition is a special case
-						if (request.headers.has('x-sveltekit-load')) {
-							// since redirects are opaque to the browser, we need to repackage
-							// 3xx responses as 200s with a custom header
-							if (response.status >= 300 && response.status < 400) {
-								const location = response.headers.get('location');
+									const node = n ? await options.manifest._.nodes[n]() : undefined;
+									return {
+										// TODO return `uses`, so we can reuse server data effectively
+										data: await load_server_data({
+											event,
+											node,
+											parent: async () => {
+												/** @type {import('types').JSONObject} */
+												const data = {};
+												for (let j = 0; j < i; j += 1) {
+													Object.assign(data, await promises[j]);
+												}
+												return data;
+											}
+										})
+									};
+								} catch (e) {
+									error = normalize_error(e);
 
-								if (location) {
-									const headers = new Headers(response.headers);
-									headers.set('x-sveltekit-location', location);
-									response = new Response(undefined, {
-										status: 204,
-										headers
-									});
+									if (error instanceof Redirect) {
+										throw error;
+									}
+
+									if (error instanceof HttpError) {
+										return error; // { status, message }
+									}
+
+									options.handle_error(error, event);
+
+									return {
+										error: error_to_pojo(error, options.get_stack)
+									};
 								}
+							});
+
+							response = json({
+								type: 'data',
+								nodes: await Promise.all(promises)
+							});
+						} catch (e) {
+							const error = normalize_error(e);
+
+							if (error instanceof Redirect) {
+								response = json({
+									type: 'redirect',
+									location: error.location
+								});
+							} else {
+								response = json(error_to_pojo(error, options.get_stack), { status: 500 });
 							}
 						}
 					} else {
 						response =
 							route.type === 'endpoint'
-								? await render_endpoint(event, await route.load(), options)
+								? await render_endpoint(event, route)
 								: await render_page(event, route, options, state, resolve_opts);
 					}
 
-					if (response) {
-						// respond with 304 if etag matches
-						if (response.status === 200 && response.headers.has('etag')) {
-							let if_none_match_value = request.headers.get('if-none-match');
-
-							// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
-							if (if_none_match_value?.startsWith('W/"')) {
-								if_none_match_value = if_none_match_value.substring(2);
+					for (const key in headers) {
+						const value = headers[key];
+						if (key === 'set-cookie') {
+							for (const cookie of Array.isArray(value) ? value : [value]) {
+								response.headers.append(key, /** @type {string} */ (cookie));
 							}
+						} else if (!is_data_request) {
+							// we only want to set cookies on __data.json requests, we don't
+							// want to cache stuff erroneously etc
+							response.headers.set(key, /** @type {string} */ (value));
+						}
+					}
 
-							const etag = /** @type {string} */ (response.headers.get('etag'));
+					// respond with 304 if etag matches
+					if (response.status === 200 && response.headers.has('etag')) {
+						let if_none_match_value = request.headers.get('if-none-match');
 
-							if (if_none_match_value === etag) {
-								const headers = new Headers({ etag });
-
-								// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
-								for (const key of [
-									'cache-control',
-									'content-location',
-									'date',
-									'expires',
-									'vary'
-								]) {
-									const value = response.headers.get(key);
-									if (value) headers.set(key, value);
-								}
-
-								return new Response(undefined, {
-									status: 304,
-									headers
-								});
-							}
+						// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
+						if (if_none_match_value?.startsWith('W/"')) {
+							if_none_match_value = if_none_match_value.substring(2);
 						}
 
-						return response;
+						const etag = /** @type {string} */ (response.headers.get('etag'));
+
+						if (if_none_match_value === etag) {
+							const headers = new Headers({ etag });
+
+							// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
+							for (const key of ['cache-control', 'content-location', 'date', 'expires', 'vary']) {
+								const value = response.headers.get(key);
+								if (value) headers.set(key, value);
+							}
+
+							return new Response(undefined, {
+								status: 304,
+								headers
+							});
+						}
 					}
+
+					return response;
 				}
 
 				if (state.initiator === GENERIC_ERROR) {

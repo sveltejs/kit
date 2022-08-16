@@ -68,7 +68,6 @@ const config = {
 			onError: 'fail',
 			origin: 'http://sveltekit-prerender'
 		},
-		routes: (filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath),
 		serviceWorker: {
 			register: true,
 			files: (filepath) => !/\.DS_Store/.test(filepath)
@@ -285,10 +284,6 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
     ```
 
 - `origin` — the value of `url.origin` during prerendering; useful if it is included in rendered content
-
-### routes
-
-A `(filepath: string) => boolean` function that determines which files create routes and which are treated as [private modules](/docs/routing#private-modules).
 
 ### serviceWorker
 

@@ -6,7 +6,9 @@ import {
 	prefetch,
 	prefetchRoutes
 } from '$app/navigation';
-import { CSRComponent, CSRRoute, NormalizedLoadOutput } from 'types';
+import { CSRPageNode, CSRRoute, JSONObject } from 'types';
+import { HttpError } from '../../index/private.js';
+import { SerializedHttpError } from '../server/page/types.js';
 
 export interface Client {
 	// public API, exposed via $app/navigation
@@ -21,8 +23,8 @@ export interface Client {
 	// private API
 	_hydrate: (opts: {
 		status: number;
-		error: Error;
-		nodes: number[];
+		error: Error | SerializedHttpError;
+		node_ids: number[];
 		params: Record<string, string>;
 		routeId: string | null;
 	}) => Promise<void>;
@@ -48,30 +50,57 @@ export type NavigationIntent = {
 	url: URL;
 };
 
-export type NavigationResult = {
-	redirect?: string;
+export type NavigationResult = NavigationRedirect | NavigationFinished;
+
+export type NavigationRedirect = {
+	type: 'redirect';
+	location: string;
+};
+
+export type NavigationFinished = {
+	type: 'loaded';
 	state: NavigationState;
 	props: Record<string, any>;
 };
 
 export type BranchNode = {
-	module: CSRComponent;
-	loaded: NormalizedLoadOutput | null;
+	node: CSRPageNode;
+	data: Record<string, any> | null;
 	uses: {
 		params: Set<string>;
 		url: boolean; // TODO make more granular?
 		session: boolean;
-		stuff: boolean;
 		dependencies: Set<string>;
+		parent: boolean;
 	};
-	stuff: Record<string, any>;
 };
 
 export type NavigationState = {
 	branch: Array<BranchNode | undefined>;
-	error: Error | null;
+	error: HttpError | Error | null;
 	params: Record<string, string>;
 	session_id: number;
-	stuff: Record<string, any>;
 	url: URL;
 };
+
+export type ServerDataPayload = ServerDataRedirected | ServerDataLoaded;
+
+export interface ServerDataRedirected {
+	type: 'redirect';
+	location: string;
+}
+
+export interface ServerDataLoaded {
+	type: 'data';
+	nodes: Array<{
+		data?: JSONObject | null; // TODO or `-1` to indicate 'reuse cached data'?
+		status?: number;
+		message?: string;
+		error?: {
+			name: string;
+			message: string;
+			stack: string;
+			[key: string]: any;
+		};
+	}>;
+}

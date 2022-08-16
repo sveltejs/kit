@@ -26,6 +26,7 @@ export interface AdapterEntry {
 	}) => MaybePromise<void>;
 }
 
+// TODO is this still used?
 export type BodyValidator<T> = {
 	[P in keyof T]: T[P] extends { [k: string]: unknown }
 		? BodyValidator<T[P]> // recurse when T[P] is an object
@@ -212,7 +213,7 @@ export interface RequestOptions {
 }
 
 /** `string[]` is only for set-cookie, everything else must be type of `string` */
-export type ResponseHeaders = Record<string, string | number | string[]>;
+export type ResponseHeaders = Record<string, string | number | string[] | null>;
 
 export interface RouteDefinition {
 	id: string;

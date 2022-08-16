@@ -9,7 +9,7 @@ import { migrate_scripts } from './migrate_scripts/index.js';
 import { migrate_page } from './migrate_page_js/index.js';
 import { migrate_page_server } from './migrate_page_server/index.js';
 import { migrate_server } from './migrate_server/index.js';
-import { adjust_imports, bail, dedent, move_file, relative, task } from './utils.js';
+import { adjust_imports, bail, move_file, relative, task } from './utils.js';
 
 export async function migrate() {
 	if (!fs.existsSync('svelte.config.js')) {
@@ -31,7 +31,9 @@ export async function migrate() {
 		config.kit?.routes ??
 		((filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath));
 
-	const files = glob(`${routes}/**`, { filesOnly: true }).map((file) => file.replace(/\\/g, '/'));
+	const files = glob(`${routes}/**`, { filesOnly: true, dot: true }).map((file) =>
+		file.replace(/\\/g, '/')
+	);
 
 	// validate before proceeding
 	for (const file of files) {
@@ -146,7 +148,7 @@ export async function migrate() {
 
 			renamed += svelte_ext;
 
-			const { module, main } = migrate_scripts(content, is_error_page, move_to_directory);
+			const { module, main, ext } = migrate_scripts(content, is_error_page, move_to_directory);
 
 			if (move_to_directory) {
 				const dir = path.dirname(renamed);
@@ -157,9 +159,7 @@ export async function migrate() {
 
 			// if component has a <script context="module">, move it to a sibling .js file
 			if (module) {
-				const ext = /<script[^>]+?lang=['"](ts|typescript)['"][^]*?>/.test(module) ? '.ts' : '.js';
-
-				fs.writeFileSync(sibling + ext, migrate_page(module));
+				fs.writeFileSync(sibling + ext, migrate_page(module, bare));
 			}
 		} else if (module_ext) {
 			// file is a module
@@ -205,7 +205,7 @@ export async function migrate() {
 			move_file(
 				file,
 				renamed,
-				is_page_endpoint ? migrate_page_server(edited) : migrate_server(edited),
+				is_page_endpoint ? migrate_page_server(edited, bare) : migrate_server(edited),
 				use_git
 			);
 		}

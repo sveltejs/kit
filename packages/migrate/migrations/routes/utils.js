@@ -179,7 +179,7 @@ export function guess_indent(content) {
 
 	// Otherwise, we need to guess the multiple
 	const min = spaced.reduce((previous, current) => {
-		const count = /^ +/.exec(current)[0].length;
+		const count = /^ +/.exec(current)?.[0].length ?? 0;
 		return Math.min(count, previous);
 	}, Infinity);
 
@@ -192,7 +192,7 @@ export function guess_indent(content) {
  */
 export function indent_at_line(content, offset) {
 	const substr = content.substring(content.lastIndexOf('\n', offset) + 1, offset);
-	return /\s*/.exec(substr)[0];
+	return /\s*/.exec(substr)?.[0] ?? '';
 }
 
 /**
@@ -203,6 +203,17 @@ export function indent_at_line(content, offset) {
  * @param {string} [suggestion]
  */
 export function manual_return_migration(node, str, comment_nr, suggestion) {
+	manual_migration(node, str, 'Migrate this return statement', comment_nr, suggestion);
+}
+
+/**
+ * @param {ts.Node} node
+ * @param {MagicString} str
+ * @param {string} message
+ * @param {string} comment_nr
+ * @param {string} [suggestion]
+ */
+export function manual_migration(node, str, message, comment_nr, suggestion) {
 	// handle case where this is called on a (arrow) function
 	if (ts.isFunctionExpression(node) || ts.isArrowFunction(node)) {
 		node = node.parent.parent.parent;
@@ -219,10 +230,7 @@ export function manual_return_migration(node, str, comment_nr, suggestion) {
 		)}`;
 	}
 
-	str.prependLeft(
-		node.getStart(),
-		error('Migrate this return statement', comment_nr) + appended + `\n${indent}`
-	);
+	str.prependLeft(node.getStart(), error(message, comment_nr) + appended + `\n${indent}`);
 }
 
 /**
@@ -274,13 +282,18 @@ export function get_exports(node) {
 	let complex = false;
 
 	for (const statement of node.statements) {
-		if (ts.isExportDeclaration(statement) && ts.isNamedExports(statement.exportClause)) {
+		if (
+			ts.isExportDeclaration(statement) &&
+			statement.exportClause &&
+			ts.isNamedExports(statement.exportClause)
+		) {
 			// export { x }, export { x as y }
 			for (const specifier of statement.exportClause.elements) {
 				map.set(specifier.name.text, specifier.propertyName?.text || specifier.name.text);
 			}
 		} else if (
 			ts.isFunctionDeclaration(statement) &&
+			statement.name &&
 			statement.modifiers?.[0]?.kind === ts.SyntaxKind.ExportKeyword
 		) {
 			// export function x ...
@@ -308,10 +321,14 @@ export function get_exports(node) {
 /**
  * @param {ts.Node} statement
  * @param {string[]} names
- * @returns {ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction | void}
+ * @returns {ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction | undefined}
  */
 export function get_function_node(statement, ...names) {
-	if (ts.isFunctionDeclaration(statement) && names.includes(statement.name.text)) {
+	if (
+		ts.isFunctionDeclaration(statement) &&
+		statement.name &&
+		names.includes(statement.name.text)
+	) {
 		// export function x ...
 		return statement;
 	}
@@ -321,6 +338,7 @@ export function get_function_node(statement, ...names) {
 			if (
 				ts.isIdentifier(declaration.name) &&
 				names.includes(declaration.name.text) &&
+				declaration.initializer &&
 				(ts.isArrowFunction(declaration.initializer) ||
 					ts.isFunctionExpression(declaration.initializer))
 			) {
@@ -332,10 +350,11 @@ export function get_function_node(statement, ...names) {
 }
 
 /**
- * Utility for rewriting return statements. If `node` is `undefined`,
- * it means it's a concise arrow function body (`() => ({}))`
+ * Utility for rewriting return statements.
+ * If `node` is `undefined`, it means it's a concise arrow function body (`() => ({}))`.
+ * Lone `return;` statements are left untouched.
  * @param {ts.Block | ts.ConciseBody} block
- * @param {(expression: ts.Expression, node: ts.ReturnStatement | void) => void} callback
+ * @param {(expression: ts.Expression, node: ts.ReturnStatement | undefined) => void} callback
  */
 export function rewrite_returns(block, callback) {
 	if (ts.isBlock(block)) {
@@ -350,7 +369,7 @@ export function rewrite_returns(block, callback) {
 				return;
 			}
 
-			if (ts.isReturnStatement(node)) {
+			if (ts.isReturnStatement(node) && node.expression) {
 				callback(node.expression, node);
 				return;
 			}
@@ -360,12 +379,17 @@ export function rewrite_returns(block, callback) {
 
 		block.forEachChild(walk);
 	} else {
-		while (ts.isParenthesizedExpression(block)) {
-			block = block.expression;
-		}
-
-		callback(block, null);
+		callback(block, undefined);
 	}
+}
+
+/** @param {ts.Node} node */
+export function unwrap(node) {
+	if (ts.isParenthesizedExpression(node)) {
+		return node.expression;
+	}
+
+	return node;
 }
 
 /**
@@ -402,6 +426,16 @@ export function parse(content) {
 	}
 }
 
+/**
+ * @param {string} content
+ * @param {string} except
+ */
+export function except_str(content, except) {
+	const start = content.indexOf(except);
+	const end = start + except.length;
+	return content.substring(0, start) + content.substring(end);
+}
+
 /** @param {string} test_file */
 export function read_samples(test_file) {
 	const markdown = fs.readFileSync(new URL('./samples.md', test_file), 'utf8');
@@ -410,13 +444,16 @@ export function read_samples(test_file) {
 		.slice(1)
 		.map((block) => {
 			const description = block.split('\n')[0];
-			const before = /```(js|svelte) before\n([^]*?)\n```/.exec(block);
-			const after = /```(js|svelte) after\n([^]*?)\n```/.exec(block);
+			const before = /```(js|ts|svelte) before\n([^]*?)\n```/.exec(block);
+			const after = /```(js|ts|svelte) after\n([^]*?)\n```/.exec(block);
+
+			const match = /> file: (.+)/.exec(block);
 
 			return {
 				description,
 				before: before ? before[2] : '',
 				after: after ? after[2] : '',
+				filename: match?.[1],
 				solo: block.includes('> solo')
 			};
 		});
@@ -426,4 +463,34 @@ export function read_samples(test_file) {
 	}
 
 	return samples;
+}
+
+/**
+ * @param {ts.Node} node
+ * @param {MagicString} code
+ * @param {string} old_type
+ * @param {string} new_type
+ */
+export function rewrite_type(node, code, old_type, new_type) {
+	// @ts-ignore
+	let jsDoc = node.jsDoc || node.parent?.parent?.parent?.jsDoc;
+	if (jsDoc) {
+		// @ts-ignore
+		for (const comment of jsDoc) {
+			const str = comment.getText();
+			const index = str.indexOf(old_type);
+
+			if (index !== -1) {
+				code.overwrite(comment.pos + index, comment.pos + index + old_type.length, new_type);
+			}
+		}
+	}
+
+	// @ts-ignore
+	const type = node.type || node.parent.type; // handle both fn and var declarations
+
+	if (type?.typeName?.escapedText.startsWith(old_type)) {
+		const start = type.getStart();
+		code.overwrite(start, start + old_type.length, new_type);
+	}
 }

@@ -120,6 +120,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		protocol: undefined,
 		router: undefined,
+		routes: undefined,
 		ssr: undefined,
 		target: undefined,
 		trailingSlash: 'never',

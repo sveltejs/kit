@@ -1,6 +1,7 @@
-## A load function that only exports props
+## A load function that only returns props
 
 ```js before
+/** @type {import('./$types').Load} */
 export function load() {
 	return {
 		props: {
@@ -11,7 +12,32 @@ export function load() {
 ```
 
 ```js after
+/** @type {import('./$types').PageLoad} */
 export function load() {
+	return {
+		a: 1
+	};
+}
+```
+
+## A TypeScript load function that only returns props
+
+```ts before
+import type { Load } from './$types';
+
+export const load: Load = () => {
+	return {
+		props: {
+			a: 1
+		}
+	};
+}
+```
+
+```ts after
+import type { PageLoad } from './$types';
+
+export const load: PageLoad = () => {
 	return {
 		a: 1
 	};
@@ -165,6 +191,7 @@ export function load() {
 ## Arrow function load
 
 ```js before
+/** @type {import('./$types').Load} */
 export const load = () => ({
 	props: {
 		a: 1
@@ -173,6 +200,7 @@ export const load = () => ({
 ```
 
 ```js after
+/** @type {import('./$types').PageLoad} */
 export const load = () => ({
 	a: 1
 });
@@ -234,5 +262,63 @@ export async function load({ fetch }) {
 	const res = await fetch('/x.json');
 	throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693)");
 	return await res.json();
+}
+```
+
+## Renames props -> data, leaves unchanged alone
+
+```js before
+export async function load({ props, params }) {
+	return {};
+}
+```
+
+```js after
+export async function load({ data: props, params }) {
+	return {};
+}
+```
+
+## Errors on stuff
+
+```js before
+export async function load({ stuff }) {
+	return {};
+}
+```
+
+```js after
+throw new Error("@migration task: Migrate the load function input (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693)");
+export async function load({ stuff }) {
+	return {};
+}
+```
+
+## Bails on non-destructured param
+
+```js before
+export const load = (input) => {
+	return {};
+}
+```
+
+```js after
+throw new Error("@migration task: Check if you need to migrate the load function input (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693)");
+export const load = (input) => {
+	return {};
+}
+```
+
+## A load function that returns nothing
+
+```js before
+export function load() {
+	return;
+}
+```
+
+```js after
+export function load() {
+	return;
 }
 ```

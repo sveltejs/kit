@@ -7,16 +7,22 @@ import {
 	get_object_nodes,
 	is_new,
 	is_string_like,
+	manual_migration,
 	manual_return_migration,
 	parse,
-	rewrite_returns
+	rewrite_returns,
+	rewrite_type,
+	unwrap
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
 
 const give_up = `${error('Update load function', TASKS.PAGE_LOAD)}\n\n`;
 
-/** @param {string} content */
-export function migrate_page(content) {
+/**
+ * @param {string} content
+ * @param {string} filename
+ */
+export function migrate_page(content, filename) {
 	// early out if we can tell there's no load function
 	// without parsing the file
 	if (!/load/.test(content)) return content;
@@ -24,27 +30,39 @@ export function migrate_page(content) {
 	const file = parse(content);
 	if (!file) return give_up + content;
 
-	if (!file.exports.map.has('load') && !file.exports.complex) {
+	const name = file.exports.map.get('load');
+
+	if (!name && !file.exports.complex) {
 		// there's no load function here, so there's nothing to do
 		return content;
 	}
 
-	const name = file.exports.map.get('load');
+	const match = /__layout(?:-([^.@]+))?/.exec(filename);
+	const load_name = match?.[1] ? `LayoutLoad.${match[1]}` : match ? `LayoutLoad` : 'PageLoad';
 
 	for (const statement of file.ast.statements) {
-		const fn = get_function_node(statement, name);
-		if (fn) {
+		const fn = name ? get_function_node(statement, name) : undefined;
+		if (fn?.body) {
+			check_fn_param(fn, file.code);
+
 			/** @type {Set<string>} */
 			const imports = new Set();
 
+			rewrite_type(fn, file.code, 'Load', load_name);
+
 			rewrite_returns(fn.body, (expr, node) => {
-				const nodes = ts.isObjectLiteralExpression(expr) && get_object_nodes(expr);
+				const value = unwrap(expr);
+				const nodes = ts.isObjectLiteralExpression(value) && get_object_nodes(value);
 
 				if (nodes) {
 					const keys = Object.keys(nodes).sort().join(' ');
 
+					if (keys === '') {
+						return; // nothing to do
+					}
+
 					if (keys === 'props') {
-						automigration(expr, file.code, dedent(nodes.props.getText()));
+						automigration(value, file.code, dedent(nodes.props.getText()));
 						return;
 					}
 
@@ -96,9 +114,72 @@ export function migrate_page(content) {
 
 			return file.code.toString();
 		}
+
+		if (ts.isImportDeclaration(statement) && statement.importClause) {
+			const bindings = statement.importClause.namedBindings;
+
+			if (bindings && !ts.isNamespaceImport(bindings)) {
+				for (const binding of bindings.elements) {
+					if (binding.name.escapedText === 'Load') {
+						file.code.overwrite(binding.getStart(), binding.getEnd(), load_name);
+					}
+				}
+			}
+		}
 	}
 
 	// we failed to rewrite the load function, so we inject
 	// an error at the top of the file
 	return give_up + content;
+}
+
+/**
+ * Check the load function parameter, and either adjust
+ * the property names, or add an error
+ * @param {ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction} fn
+ * @param {import('magic-string').default} str
+ */
+function check_fn_param(fn, str) {
+	const param = fn.parameters[0];
+	if (!param) {
+		return;
+	}
+	if (ts.isObjectBindingPattern(param.name)) {
+		for (const binding of param.name.elements) {
+			if (
+				!ts.isIdentifier(binding.name) ||
+				(binding.propertyName && !ts.isIdentifier(binding.propertyName))
+			) {
+				bail(true);
+				return;
+			}
+			const name = binding.propertyName
+				? /** @type {ts.Identifier} */ (binding.propertyName).text
+				: binding.name.text;
+			if (['stuff', 'status', 'error'].includes(name)) {
+				bail();
+				return;
+			}
+			if (name === 'props') {
+				if (binding.propertyName) {
+					bail();
+					return;
+				} else {
+					str.overwrite(binding.name.getStart(), binding.name.getEnd(), 'data: props');
+				}
+			}
+		}
+	} else {
+		// load(param) { .. } -> bail, we won't check what is used in the function body
+		bail(true);
+	}
+
+	function bail(check = false) {
+		manual_migration(
+			fn,
+			str,
+			(check ? 'Check if you need to migrate' : 'Migrate') + ' the load function input',
+			TASKS.PAGE_LOAD
+		);
+	}
 }

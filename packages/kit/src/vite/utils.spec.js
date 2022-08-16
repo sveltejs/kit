@@ -226,7 +226,7 @@ test('transform kit.alias to resolve.alias', () => {
 			};
 		})
 		.filter(
-			(entry) => entry.find !== '$app' // testing this would mean to reimplement the logic in the test
+			(entry) => entry.find !== '$app' && entry.find !== '$env' // testing this would mean to reimplement the logic in the test
 		);
 
 	assert.equal(transformed, [
