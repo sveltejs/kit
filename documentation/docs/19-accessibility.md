@@ -45,7 +45,7 @@ afterNavigate(() => {
 
 You can also programmatically navigate to a different page using the [`goto`](/docs/modules#$app-navigation-goto) function. By default, this will have the same client-side routing behavior as clicking on a link. However, `goto` also accepts a `keepfocus` option that will preserve the currently-focused element instead of resetting focus. If you enable this option, make sure the currently-focused element still exists on the page after navigation. If the element no longer exists, the user's focus will be lost, making for a confusing experience for assistive technology users.
 
-### Lang attribute
+### The "lang" attribute
 
 By default, SvelteKit's page template sets the default language of the document to English. If your content is not in English, you should update the `<html>` element in `src/app.html` to have the correct [`lang`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang#accessibility) attribute. This will ensure that any assistive technology reading the document uses the correct pronunciation. For example, if your content is in German, you should update `app.html` to the following:
 
