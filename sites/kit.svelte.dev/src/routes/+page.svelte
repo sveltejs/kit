@@ -1,12 +1,12 @@
 <script>
 	import Machine from '$img/svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&meta';
 	import { Hero, Blurb } from '@sveltejs/site-kit';
-	import Adapters from './_components/Adapters.svelte';
-	import Fun from './_components/Fun.svelte';
-	import Grow from './_components/Grow.svelte';
-	import LanguageTools from './_components/LanguageTools.svelte';
-	import Lighthouse from './_components/Lighthouse.svelte';
-	import Waterfall from './_components/Waterfall.svelte';
+	import Adapters from './Adapters.svelte';
+	import Fun from './Fun.svelte';
+	import Grow from './Grow.svelte';
+	import LanguageTools from './LanguageTools.svelte';
+	import Lighthouse from './Lighthouse.svelte';
+	import Waterfall from './Waterfall.svelte';
 </script>
 
 <svelte:head>
