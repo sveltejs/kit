@@ -1174,7 +1174,7 @@ test.describe('$app/stores', () => {
 			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
 			await page.click('a[href="/store/navigating/a"]');
 
-			await page.waitForSelector('#not-navigating', { timeout: 500 });
+			await page.waitForSelector('#not-navigating', { timeout: 5000 });
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 		}
 	});
