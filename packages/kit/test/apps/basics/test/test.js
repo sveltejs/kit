@@ -1717,3 +1717,14 @@ test.describe('XSS', () => {
 		);
 	});
 });
+
+test.describe('Actions', () => {
+	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/form-errors');
+		await page.click('button');
+		expect(await page.textContent('p.server')).toBe('an error occurred');
+		if (javaScriptEnabled) {
+			expect(await page.textContent('p.client')).toBe('hydrated: an error occurred');
+		}
+	});
+});

@@ -266,6 +266,12 @@ export async function render_response({
 			);
 		}
 
+		if (validation_errors) {
+			serialized_data.push(
+				render_json_payload_script({ type: 'validation_errors' }, validation_errors)
+			);
+		}
+
 		body += `\n\t${serialized_data.join('\n\t')}`;
 	}
 

@@ -191,6 +191,7 @@ export function load() {
 ## Arrow function load
 
 ```js before
+/** @type {import('./$types').Load} */
 export const load = () => ({
 	props: {
 		a: 1
@@ -199,6 +200,7 @@ export const load = () => ({
 ```
 
 ```js after
+/** @type {import('./$types').PageLoad} */
 export const load = () => ({
 	a: 1
 });
