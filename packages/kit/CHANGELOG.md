@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.409
+
+### Patch Changes
+
+- make generated type import path ends in `.js` ([#5907](https://github.com/sveltejs/kit/pull/5907))
+
 ## 1.0.0-next.408
 
 ### Patch Changes
