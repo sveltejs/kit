@@ -148,7 +148,7 @@ export async function migrate() {
 
 			renamed += svelte_ext;
 
-			const { module, main } = migrate_scripts(content, is_error_page, move_to_directory);
+			const { module, main, ext } = migrate_scripts(content, is_error_page, move_to_directory);
 
 			if (move_to_directory) {
 				const dir = path.dirname(renamed);
@@ -159,8 +159,6 @@ export async function migrate() {
 
 			// if component has a <script context="module">, move it to a sibling .js file
 			if (module) {
-				const ext = /<script[^>]+?lang=['"](ts|typescript)['"][^]*?>/.test(module) ? '.ts' : '.js';
-
 				fs.writeFileSync(sibling + ext, migrate_page(module, bare));
 			}
 		} else if (module_ext) {
