@@ -1,5 +1,5 @@
 <script context="module">
-    document;
+	document;
 </script>
 
 <p>Works</p>
