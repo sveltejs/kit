@@ -2,9 +2,9 @@
 title: Accessibility
 ---
 
-SvelteKit strives to provide an accessible platform for your app by default. Svelte's [compile-time accessibility checks](https://svelte.dev/docs#accessibility-warnings) will also apply to any SvelteKit application you build. 
+SvelteKit strives to provide an accessible platform for your app by default. Svelte's [compile-time accessibility checks](https://svelte.dev/docs#accessibility-warnings) will also apply to any SvelteKit application you build.
 
-Here's how SvelteKit's built-in accessibility features work and what you need to do to help these features to work as well as possible. Keep in mind that while SvelteKit aims to provide an accessible foundation, you are still responsible for making sure your application code is accessible. If you're new to accessibility, see the ["further reading"](/docs/accessibility#further-reading) section of this guide for additional resources.
+Here's how SvelteKit's built-in accessibility features work and what you need to do to help these features to work as well as possible. Keep in mind that while SvelteKit provides an accessible foundation, you are still responsible for making sure your application code is accessible. If you're new to accessibility, see the ["further reading"](/docs/accessibility#further-reading) section of this guide for additional resources.
 
 We recognize that accessibility can be hard to get right. If you want to suggest improvements to how SvelteKit handles accessibility, please [open a GitHub issue](https://github.com/sveltejs/kit/issues).
 
@@ -17,7 +17,7 @@ Since navigation between pages in SvelteKit happens without reloading the page (
 Because of this behavior, every page in your app should have a unique, descriptive title. In SvelteKit, you can do this by placing a `<svelte:head>` element on each page:
 
 ```svelte
-/// file: src/routes/index.svelte
+/// file: src/routes/+page.svelte
 <svelte:head>
 	<title>Todo List</title>
 </svelte:head>
@@ -74,7 +74,7 @@ function get_lang(event) {
 /** @type {import('@sveltejs/kit').Handle} */
 export function handle({ event, resolve }) {
 	return resolve(event, {
-		transformPageChunk: ({ html }) => html.replace("%lang", get_lang(event))
+		transformPageChunk: ({ html }) => html.replace('%lang', get_lang(event))
 	});
 }
 ```
