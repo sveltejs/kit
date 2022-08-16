@@ -177,7 +177,10 @@ export async function render_response({
 				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)}
-			}` : 'null'}
+			}` : 'null'},
+			props: {
+				errors: ${validation_errors}
+			}
 		});
 	`;
 
