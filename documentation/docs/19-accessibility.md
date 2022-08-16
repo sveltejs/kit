@@ -74,7 +74,7 @@ function get_lang(event) {
 /** @type {import('@sveltejs/kit').Handle} */
 export function handle({ event, resolve }) {
 	return resolve(event, {
-		transformPageChunk: ({ html }) => html.replace('%lang', get_lang(event))
+		transformPageChunk: ({ html }) => html.replace('%lang%', get_lang(event))
 	});
 }
 ```
