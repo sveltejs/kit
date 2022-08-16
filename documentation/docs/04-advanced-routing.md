@@ -144,6 +144,8 @@ Some parts of your app might need something other than the default layout. For t
 <h1>I am inside +layout-foo</h1>
 ```
 
+> Only the Svelte file should reference the named layout, not its accompanying `+page.js` for example
+
 Named layouts are very powerful, but it can take a minute to get your head round them. Don't worry if this doesn't make sense all at once.
 
 #### Scoping
