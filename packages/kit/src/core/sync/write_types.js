@@ -393,7 +393,7 @@ function process_node(ts, node, outdir, params, groups) {
 					// If the file wasn't tweaked, we can use the return type of the original file.
 					// The advantage is that type updates are reflected without saving.
 					const from = proxy.modified
-						? `./proxy${basename.replace(/\.ts$/, '.js')}`
+						? `./proxy${replace_ext_with_js(basename)}`
 						: path_to_original(outdir, node.server);
 
 					types.push(`Kit.AwaitedErrors<typeof import('${from}').${method}>`);
@@ -489,18 +489,17 @@ function process_node(ts, node, outdir, params, groups) {
  * @param {string} file_path
  */
 function path_to_original(outdir, file_path) {
+	return posixify(path.relative(outdir, path.join(cwd, replace_ext_with_js(file_path))));
+}
+
+/**
+ * @param {string} file_path
+ */
+function replace_ext_with_js(file_path) {
+	// Another extension than `.js` (or nothing, but that fails with node16 moduleResolution)
+	// will result in TS failing to lookup the file
 	const ext = path.extname(file_path);
-	return posixify(
-		path.relative(
-			outdir,
-			path.join(
-				cwd,
-				// Another extension than `.js` (or nothing, but that fails with node16 moduleResolution)
-				// will result in TS failing to lookup the file
-				file_path.slice(0, -ext.length) + '.js'
-			)
-		)
-	);
+	return file_path.slice(0, -ext.length) + '.js';
 }
 
 /**
@@ -717,10 +716,6 @@ export function find_nearest_layout(routes_dir, nodes, start_idx) {
 		}
 
 		// matching parent layout found
-		// let import_path = posixify(path.relative(path.dirname(start_file), common_path + '/$types.js'));
-		// if (!import_path.startsWith('.')) {
-		// 	import_path = './' + import_path;
-		// }
 		let folder_depth_diff =
 			posixify(path.relative(path.dirname(start_file), common_path + '/$types.js')).split('/')
 				.length - 1;
