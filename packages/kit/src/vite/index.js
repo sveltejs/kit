@@ -195,14 +195,12 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
 		async config(config, config_env) {
-			// The config is created in build_server for SSR mode and passed inline
-			if (config.build?.ssr) {
-				return;
-			}
-
 			vite_config_env = config_env;
 			svelte_config = await load_config();
 			env = get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix);
+
+			// The config is created in build_server for SSR mode and passed inline
+			if (config.build?.ssr) return;
 
 			is_build = config_env.command === 'build';
 
