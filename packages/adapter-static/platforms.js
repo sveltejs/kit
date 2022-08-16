@@ -81,7 +81,7 @@ export const platforms = [
 	},
 	{
 		name: 'GitHub Pages',
-		test: () => !!process.env.GITHUB_ACTIONS,
+		test: () => !!process.env.GITHUB_PAGES,
 		defaults: () => ({
 			fallback: '404.html'
 		}),

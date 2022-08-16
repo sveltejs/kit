@@ -16,7 +16,7 @@ export const adapters = [
 	},
 	{
 		name: 'GitHub Pages',
-		test: () => !!process.env.GITHUB_ACTIONS,
+		test: () => !!process.env.GITHUB_PAGES,
 		module: '@sveltejs/adapter-static'
 	}
 ];
