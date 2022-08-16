@@ -34,7 +34,7 @@
 			<source src="/svelte.webm" type="video/webm">
 			Sorry, your browser doesn't support embedded videos.
 		</video>
-		Watch the whole <a href="https://www.youtube.com/watch?v=kMlkCYL9qo0">Svelte Origins documentary on YouTube</a>.
+		Watch the full-length <a href="https://www.youtube.com/watch?v=kMlkCYL9qo0">Svelte Origins documentary on YouTube</a>.
 	</div>
 
 </div>
