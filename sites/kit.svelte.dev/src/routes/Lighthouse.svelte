@@ -1,5 +1,5 @@
 <script>
-	import Lighthouse from './lighthouse3.png';
+	import Lighthouse from './lighthouse.png';
 </script>
 
 <div class="container">

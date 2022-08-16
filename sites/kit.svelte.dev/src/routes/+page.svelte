@@ -6,7 +6,6 @@
 	import Grow from './Grow.svelte';
 	import LanguageTools from './LanguageTools.svelte';
 	import Lighthouse from './Lighthouse.svelte';
-	import Waterfall from './Waterfall.svelte';
 </script>
 
 <svelte:head>
@@ -104,7 +103,6 @@ npm run dev -- --open</code
 <div class="lighthouse">
 	<div class="section">
 		<Lighthouse />
-		<Waterfall />
 	</div>
 </div>
 
