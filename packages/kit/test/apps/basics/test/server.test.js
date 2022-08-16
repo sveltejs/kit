@@ -171,13 +171,13 @@ test.describe('Errors', () => {
 
 	test('stack traces are not fixed twice', async ({ page }) => {
 		await page.goto('/errors/stack-trace');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
 		);
 
 		// check the stack wasn't mutated
 		await page.goto('/errors/stack-trace');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
 		);
 	});
