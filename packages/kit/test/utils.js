@@ -107,7 +107,6 @@ export const test = base.extend({
 		await use(page);
 	},
 
-	// eslint-disable-next-line
 	read_errors: ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
