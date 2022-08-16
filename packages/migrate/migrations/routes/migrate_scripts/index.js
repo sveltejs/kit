@@ -19,6 +19,8 @@ export function migrate_scripts(content, is_error, moved) {
 	/** @type {string | null} */
 	let module = null;
 
+	let ext = '.js';
+
 	// instance script
 	const main = content.replace(
 		/<script([^]*?)>([^]+?)<\/script>(\n*)/g,
@@ -38,6 +40,10 @@ export function migrate_scripts(content, is_error, moved) {
 					)}`;
 
 					return `<script${attrs}>${body}</script>${whitespace}`;
+				}
+
+				if (/lang(?:uage)?=(['"])(ts|typescript)\1/.test(attrs)) {
+					ext = '.ts';
 				}
 
 				module = dedent(contents.replace(/^\n/, ''));
@@ -90,7 +96,7 @@ export function migrate_scripts(content, is_error, moved) {
 		}
 	);
 
-	return { module, main };
+	return { module, main, ext };
 }
 
 /** @param {string} content */
