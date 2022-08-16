@@ -450,10 +450,11 @@ function kit() {
 				await adapt(svelte_config, build_data, prerendered, { log });
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
-				// prettier-ignore
+
+				const link = colors.bold().cyan('https://kit.svelte.dev/docs/adapters');
 				console.log(
-          `See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
-        );
+					`See ${link} to learn how to configure your app to run on the platform of your choosing`
+				);
 			}
 
 			// avoid making the manifest available to users
