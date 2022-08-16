@@ -8,7 +8,7 @@ for (const sample of read_samples(import.meta.url)) {
 		if (!sample.filename) {
 			throw new Error('Missing filename for sample');
 		}
-		const actual = migrate_page_server(sample.before, sample.filename);
+		const actual = migrate_page_server(sample.before, sample.filename ?? '+page.server.js');
 		assert.equal(actual, sample.after);
 	});
 }
