@@ -196,7 +196,7 @@ export interface SSREndpoint {
 }
 
 export interface SSRNode {
-	component: SSRComponent;
+	component: SSRComponentLoader;
 	/** index into the `components` array in client-manifest.js */
 	index: number;
 	/** client-side module URL for this component */
@@ -279,11 +279,6 @@ export interface SSRPage {
 
 export interface SSRErrorPage {
 	id: '__error';
-}
-
-export interface SSRPagePart {
-	id: string;
-	load: SSRComponentLoader;
 }
 
 export type SSRRoute = SSREndpoint | SSRPage;
