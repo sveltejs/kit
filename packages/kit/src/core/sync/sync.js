@@ -1,11 +1,10 @@
 import path from 'path';
 import create_manifest_data from './create_manifest_data/index.js';
-import { copy_assets } from './copy_assets.js';
-import { write_manifest } from './write_manifest.js';
+import { write_client_manifest } from './write_client_manifest.js';
 import { write_matchers } from './write_matchers.js';
 import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
-import { write_types } from './write_types.js';
+import { write_type, write_types } from './write_types.js';
 import { write_ambient } from './write_ambient.js';
 
 /**
@@ -14,26 +13,37 @@ import { write_ambient } from './write_ambient.js';
  * @param {string} mode
  */
 export function init(config, mode) {
-	copy_assets(path.join(config.kit.outDir, 'runtime'));
-
 	write_tsconfig(config.kit);
 	write_ambient(config.kit, mode);
 }
 
 /**
- * Update SvelteKit's generated files.
+ * Update SvelteKit's generated files
  * @param {import('types').ValidatedConfig} config
  */
-export function update(config) {
+export async function create(config) {
 	const manifest_data = create_manifest_data({ config });
 
 	const output = path.join(config.kit.outDir, 'generated');
-	const base = path.relative('.', output);
 
-	write_manifest(manifest_data, base, output);
+	write_client_manifest(manifest_data, output);
 	write_root(manifest_data, output);
 	write_matchers(manifest_data, output);
-	write_types(config, manifest_data);
+	await write_types(config, manifest_data);
+
+	return { manifest_data };
+}
+
+/**
+ * Update SvelteKit's generated files in response to a single file content update.
+ * Do not call this when the file in question was created/deleted.
+ *
+ * @param {import('types').ValidatedConfig} config
+ * @param {import('types').ManifestData} manifest_data
+ * @param {string} file
+ */
+export async function update(config, manifest_data, file) {
+	await write_type(config, manifest_data, file);
 
 	return { manifest_data };
 }
@@ -43,7 +53,7 @@ export function update(config) {
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode The Vite mode
  */
-export function all(config, mode) {
+export async function all(config, mode) {
 	init(config, mode);
-	return update(config);
+	return await create(config);
 }

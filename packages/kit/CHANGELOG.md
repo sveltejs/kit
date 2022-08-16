@@ -1,5 +1,91 @@
 # @sveltejs/kit
 
+## 1.0.0-next.411
+
+### Patch Changes
+
+- Hydration validation errors ([#5918](https://github.com/sveltejs/kit/pull/5918))
+
+* Handle function without params when writing TS proxy ([#5928](https://github.com/sveltejs/kit/pull/5928))
+
+- [fix] prevent `Content-Length` header from being incorrectly inherited by requests made from `load`'s `fetch` during SSR ([#5922](https://github.com/sveltejs/kit/pull/5922))
+
+* Provide helpful error message on invalid named layout reference ([#5912](https://github.com/sveltejs/kit/pull/5912))
+
+## 1.0.0-next.410
+
+### Patch Changes
+
+- Fix generated path extension for `AwaitedProperties` ([#5917](https://github.com/sveltejs/kit/pull/5917))
+
+## 1.0.0-next.409
+
+### Patch Changes
+
+- make generated type import path ends in `.js` ([#5907](https://github.com/sveltejs/kit/pull/5907))
+
+## 1.0.0-next.408
+
+### Patch Changes
+
+- Only search for layout name in basename ([#5897](https://github.com/sveltejs/kit/pull/5897))
+
+## 1.0.0-next.407
+
+### Patch Changes
+
+- Allow actions to return undefined ([#5892](https://github.com/sveltejs/kit/pull/5892))
+
+* [fix] avoid manifest collisions ([#5874](https://github.com/sveltejs/kit/pull/5874))
+
+- Make package command remove `publishConfig.directory` from generated package.json ([#5848](https://github.com/sveltejs/kit/pull/5848))
+
+## 1.0.0-next.406
+
+### Patch Changes
+
+- [breaking] Overhaul filesystem-based router (https://github.com/sveltejs/kit/discussions/5774) ([#5778](https://github.com/sveltejs/kit/pull/5778))
+
+* [breaking] Change load API (https://github.com/sveltejs/kit/discussions/5774) ([#5778](https://github.com/sveltejs/kit/pull/5778))
+
+## 1.0.0-next.405
+
+### Patch Changes
+
+- Move `compress` logic to `Builder` API ([#5822](https://github.com/sveltejs/kit/pull/5822))
+
+* [feat] implement Link header ([#5735](https://github.com/sveltejs/kit/pull/5735))
+
+## 1.0.0-next.404
+
+### Patch Changes
+
+- Build server without removing `sveltekit` Vite plugin ([#5839](https://github.com/sveltejs/kit/pull/5839))
+
+## 1.0.0-next.403
+
+### Patch Changes
+
+- [chore] upgrade to Undici 5.8.1 ([#5804](https://github.com/sveltejs/kit/pull/5804))
+
+## 1.0.0-next.402
+
+### Patch Changes
+
+- [fix] Import analysis doesn't get stuck in an infinite loop when encountering cyclical imports ([#5794](https://github.com/sveltejs/kit/pull/5794))
+
+## 1.0.0-next.401
+
+### Patch Changes
+
+- [fix] chdir to user's application directory before running postinstall sync ([#5771](https://github.com/sveltejs/kit/pull/5771))
+
+## 1.0.0-next.400
+
+### Patch Changes
+
+- More robust path aliasing ([#5582](https://github.com/sveltejs/kit/pull/5582))
+
 ## 1.0.0-next.399
 
 ### Patch Changes

@@ -67,7 +67,7 @@ export default {
 
 		// dynamically-generated pages
 		return await server.respond(req, {
-			platform: { env, context },
+			platform: { env, context, caches },
 			getClientAddress() {
 				return req.headers.get('cf-connecting-ip');
 			}

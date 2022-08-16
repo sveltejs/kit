@@ -6,7 +6,7 @@
 		"dev": "vite dev -c vite.custom.config.js",
 		"build": "vite build -c vite.custom.config.js --mode custom",
 		"preview": "vite preview -c vite.custom.config.js",
-		"check": "node ../../cli.js sync && tsc && svelte-check",
+		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "npm run test:dev && npm run test:build",
 		"test:dev": "cross-env DEV=true playwright test",
 		"test:build": "playwright test"

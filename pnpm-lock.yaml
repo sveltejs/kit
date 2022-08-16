@@ -9,7 +9,7 @@ importers:
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^13.3.0
       '@svitejs/changesets-changelog-github-compact': ^0.1.1
-      playwright: ^1.23.4
+      playwright: ^1.25.0
       prettier: ^2.6.2
       rollup: ^2.75.7
       svelte: ^3.48.0
@@ -22,7 +22,7 @@ importers:
       '@rollup/plugin-json': 4.1.0_rollup@2.75.7
       '@rollup/plugin-node-resolve': 13.3.0_rollup@2.75.7
       '@svitejs/changesets-changelog-github-compact': 0.1.1
-      playwright: 1.23.4
+      playwright: 1.25.0
       prettier: 2.7.1
       rollup: 2.75.7
       svelte: 3.48.0
@@ -125,11 +125,8 @@ importers:
       rimraf: ^3.0.2
       rollup: ^2.75.7
       sirv: ^2.0.2
-      tiny-glob: ^0.2.9
       typescript: ^4.7.4
       uvu: ^0.5.3
-    dependencies:
-      tiny-glob: 0.2.9
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.75.7
       '@sveltejs/kit': link:../kit
@@ -147,24 +144,21 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:*
       '@types/node': ^16.11.36
-      playwright-chromium: ^1.23.4
+      playwright-chromium: ^1.25.0
       sirv: ^2.0.2
       svelte: ^3.48.0
-      tiny-glob: ^0.2.9
       typescript: ^4.7.4
       uvu: ^0.5.3
       vite: ^3.0.4
-    dependencies:
-      tiny-glob: 0.2.9
     devDependencies:
       '@sveltejs/kit': link:../kit
       '@types/node': 16.11.42
-      playwright-chromium: 1.23.4
+      playwright-chromium: 1.25.0
       sirv: 2.0.2
       svelte: 3.48.0
       typescript: 4.7.4
       uvu: 0.5.4
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/adapter-static/test/apps/prerendered:
     specifiers:
@@ -174,7 +168,7 @@ importers:
     devDependencies:
       '@sveltejs/kit': link:../../../../kit
       svelte: 3.48.0
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/adapter-static/test/apps/spa:
     specifiers:
@@ -188,7 +182,7 @@ importers:
       '@sveltejs/kit': link:../../../../kit
       sirv-cli: 2.0.2
       svelte: 3.48.0
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/adapter-vercel:
     specifiers:
@@ -210,7 +204,7 @@ importers:
 
   packages/create-svelte:
     specifiers:
-      '@playwright/test': ^1.23.4
+      '@playwright/test': ^1.25.0
       '@sveltejs/kit': workspace:*
       '@types/gitignore-parser': ^0.0.0
       '@types/prettier': ^2.6.3
@@ -229,7 +223,7 @@ importers:
       kleur: 4.1.5
       prompts: 2.4.2
     devDependencies:
-      '@playwright/test': 1.23.4
+      '@playwright/test': 1.25.0
       '@sveltejs/kit': link:../kit
       '@types/gitignore-parser': 0.0.0
       '@types/prettier': 2.6.3
@@ -264,12 +258,17 @@ importers:
       svelte: 3.48.0
       svelte-preprocess: 4.10.7_lvfi2wesz6u4l5rfbnetbucfmm
       typescript: 4.7.4
-      vite: 3.0.4
+      vite: 3.0.8
+
+  packages/create-svelte/templates/skeleton:
+    specifiers:
+      '@sveltejs/adapter-auto': workspace:1.0.0-next.64
+    devDependencies:
+      '@sveltejs/adapter-auto': link:../../../adapter-auto
 
   packages/kit:
     specifiers:
-      '@playwright/test': ^1.23.4
-      '@rollup/plugin-replace': ^4.0.0
+      '@playwright/test': ^1.25.0
       '@sveltejs/vite-plugin-svelte': ^1.0.1
       '@types/connect': ^3.4.35
       '@types/cookie': ^0.5.1
@@ -280,34 +279,40 @@ importers:
       '@types/set-cookie-parser': ^2.4.2
       chokidar: ^3.5.3
       cookie: ^0.5.0
-      cross-env: ^7.0.3
       devalue: ^2.0.1
       kleur: ^4.1.4
-      locate-character: ^2.0.5
+      magic-string: ^0.26.2
       marked: ^4.0.16
       mime: ^3.0.0
       node-fetch: ^3.2.4
       rollup: ^2.75.7
       sade: ^1.8.1
-      selfsigned: ^2.0.1
       set-cookie-parser: ^2.4.8
       sirv: ^2.0.2
       svelte: ^3.48.0
-      svelte-check: ^2.7.1
       svelte-preprocess: ^4.10.6
       svelte2tsx: ~0.5.10
       tiny-glob: ^0.2.9
       typescript: ^4.7.4
-      undici: ^5.6.1
+      undici: ^5.8.1
       uvu: ^0.5.3
       vite: ^3.0.4
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.1_svelte@3.48.0+vite@3.0.4
+      '@sveltejs/vite-plugin-svelte': 1.0.1_svelte@3.48.0+vite@3.0.8
       chokidar: 3.5.3
+      cookie: 0.5.0
+      devalue: 2.0.1
+      kleur: 4.1.5
+      magic-string: 0.26.2
+      mime: 3.0.0
+      node-fetch: 3.2.6
       sade: 1.8.1
+      set-cookie-parser: 2.5.0
+      sirv: 2.0.2
+      tiny-glob: 0.2.9
+      undici: 5.8.1
     devDependencies:
-      '@playwright/test': 1.23.4
-      '@rollup/plugin-replace': 4.0.0_rollup@2.75.7
+      '@playwright/test': 1.25.0
       '@types/connect': 3.4.35
       '@types/cookie': 0.5.1
       '@types/marked': 4.0.3
@@ -315,27 +320,14 @@ importers:
       '@types/node': 16.11.42
       '@types/sade': 1.7.4
       '@types/set-cookie-parser': 2.4.2
-      cookie: 0.5.0
-      cross-env: 7.0.3
-      devalue: 2.0.1
-      kleur: 4.1.5
-      locate-character: 2.0.5
       marked: 4.0.17
-      mime: 3.0.0
-      node-fetch: 3.2.6
       rollup: 2.75.7
-      selfsigned: 2.0.1
-      set-cookie-parser: 2.5.0
-      sirv: 2.0.2
       svelte: 3.48.0
-      svelte-check: 2.8.0_svelte@3.48.0
       svelte-preprocess: 4.10.7_lvfi2wesz6u4l5rfbnetbucfmm
       svelte2tsx: 0.5.11_lvfi2wesz6u4l5rfbnetbucfmm
-      tiny-glob: 0.2.9
       typescript: 4.7.4
-      undici: 5.6.1
       uvu: 0.5.4
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/kit/test/apps/amp:
     specifiers:
@@ -355,7 +347,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.7.4
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/kit/test/apps/basics:
     specifiers:
@@ -373,7 +365,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.7.4
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/kit/test/apps/options:
     specifiers:
@@ -389,7 +381,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.7.4
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/kit/test/apps/options-2:
     specifiers:
@@ -407,7 +399,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.7.4
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/kit/test/apps/writes:
     specifiers:
@@ -425,7 +417,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.7.4
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/kit/test/prerendering/basics:
     specifiers:
@@ -441,7 +433,7 @@ importers:
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.7.4
       uvu: 0.5.4
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/kit/test/prerendering/fallback:
     specifiers:
@@ -457,7 +449,7 @@ importers:
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.7.4
       uvu: 0.5.4
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/kit/test/prerendering/options:
     specifiers:
@@ -473,7 +465,7 @@ importers:
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.7.4
       uvu: 0.5.4
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/kit/test/prerendering/paths-base:
     specifiers:
@@ -489,7 +481,7 @@ importers:
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.7.4
       uvu: 0.5.4
-      vite: 3.0.4
+      vite: 3.0.8
 
   packages/kit/test/prerendering/trailing-slash:
     specifiers:
@@ -505,7 +497,28 @@ importers:
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.7.4
       uvu: 0.5.4
-      vite: 3.0.4
+      vite: 3.0.8
+
+  packages/migrate:
+    specifiers:
+      '@types/prompts': ^2.0.14
+      kleur: ^4.1.4
+      magic-string: ^0.26.2
+      prettier: ^2.6.2
+      prompts: ^2.4.2
+      tiny-glob: ^0.2.9
+      typescript: ^4.7.4
+      uvu: ^0.5.6
+    dependencies:
+      kleur: 4.1.5
+      magic-string: 0.26.2
+      prompts: 2.4.2
+      tiny-glob: 0.2.9
+      typescript: 4.7.4
+    devDependencies:
+      '@types/prompts': 2.0.14
+      prettier: 2.7.1
+      uvu: 0.5.6
 
   sites/kit.svelte.dev:
     specifiers:
@@ -538,7 +551,7 @@ importers:
       shiki-twoslash: 3.1.0
       svelte: 3.48.0
       typescript: 4.7.4
-      vite: 3.0.4
+      vite: 3.0.8
       vite-imagetools: 4.0.4
 
 packages:
@@ -884,18 +897,17 @@ packages:
       fastq: 1.13.0
     dev: true
 
-  /@playwright/test/1.23.4:
-    resolution: {integrity: sha512-iIsoMJDS/lyuhw82FtcV/B3PXikgVD3hNe5hyvOpRM0uRr1OIpN3LgPeRbBjhzBWmyf6RgRg5fqK5sVcpA03yA==}
+  /@playwright/test/1.25.0:
+    resolution: {integrity: sha512-j4EZhTTQI3dBeWblE21EV//swwmBtOpIrLdOIJIRv4uqsLdHgBg1z+JtTg+AeC5o2bAXIE26kDNW5A0TimG8Bg==}
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
       '@types/node': 18.0.0
-      playwright-core: 1.23.4
+      playwright-core: 1.25.0
     dev: true
 
   /@polka/url/1.0.0-next.21:
     resolution: {integrity: sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==}
-    dev: true
 
   /@rollup/plugin-commonjs/22.0.1_rollup@2.75.7:
     resolution: {integrity: sha512-dGfEZvdjDHObBiP5IvwTKMVeq/tBZGMBHZFMdIV1ClMM/YoWS34xrHFGfag9SN2ZtMgNZRFruqvxZQEa70O6nQ==}
@@ -937,16 +949,6 @@ packages:
       rollup: 2.75.7
     dev: true
 
-  /@rollup/plugin-replace/4.0.0_rollup@2.75.7:
-    resolution: {integrity: sha512-+rumQFiaNac9y64OHtkHGmdjm7us9bo1PlbgQfdihQtuNxzjpaB064HbRnewUOggLQxVCCyINfStkgmBeQpv1g==}
-    peerDependencies:
-      rollup: ^1.20.0 || ^2.0.0
-    dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.75.7
-      magic-string: 0.25.9
-      rollup: 2.75.7
-    dev: true
-
   /@rollup/pluginutils/3.1.0_rollup@2.75.7:
     resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
     engines: {node: '>= 8.0.0'}
@@ -972,7 +974,7 @@ packages:
       golden-fleece: 1.0.9
     dev: true
 
-  /@sveltejs/vite-plugin-svelte/1.0.1_svelte@3.48.0+vite@3.0.4:
+  /@sveltejs/vite-plugin-svelte/1.0.1_svelte@3.48.0+vite@3.0.8:
     resolution: {integrity: sha512-PorCgUounn0VXcpeJu+hOweZODKmGuLHsLomwqSj+p26IwjjGffmYQfVHtiTWq+NqaUuuHWWG7vPge6UFw4Aeg==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
@@ -990,7 +992,7 @@ packages:
       magic-string: 0.26.2
       svelte: 3.48.0
       svelte-hmr: 0.14.12_svelte@3.48.0
-      vite: 3.0.4
+      vite: 3.0.8
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -1554,6 +1556,7 @@ packages:
   /cookie/0.5.0:
     resolution: {integrity: sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==}
     engines: {node: '>= 0.6'}
+    dev: false
 
   /cross-env/7.0.3:
     resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
@@ -1614,7 +1617,6 @@ packages:
   /data-uri-to-buffer/4.0.0:
     resolution: {integrity: sha512-Vr3mLBA8qWmcuschSLAOogKgQ/Jwxulv3RNE4FXnYWRGujzrRWQI4m12fQqRkwX06C0KanhLr4hK+GydchZsaA==}
     engines: {node: '>= 12'}
-    dev: true
 
   /dataloader/1.4.0:
     resolution: {integrity: sha512-68s5jYdlvasItOJnCuI2Q9s4q98g0pCyL3HrcKJu8KNugUl8ahgmZYg38ysLTgQjjXX3H8CJLkAvWrclWfcalw==}
@@ -1703,7 +1705,7 @@ packages:
 
   /devalue/2.0.1:
     resolution: {integrity: sha512-I2TiqT5iWBEyB8GRfTDP0hiLZ0YeDJZ+upDxjBfOC2lebO5LezQMv7QvIUTzdb64jQyAKLf1AHADtGN+jw6v8Q==}
-    dev: true
+    dev: false
 
   /diff/5.1.0:
     resolution: {integrity: sha512-D+mk+qE8VC/PAUrlAU34N+VfXev0ghe5ywmpqrawphmVZc1bEfn56uo9qpyGp1p4xpzOHkSW4ztBd6L7Xx4ACw==}
@@ -2060,7 +2062,6 @@ packages:
     dependencies:
       node-domexception: 1.0.0
       web-streams-polyfill: 3.2.1
-    dev: true
 
   /file-uri-to-path/1.0.0:
     resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
@@ -2119,7 +2120,6 @@ packages:
     engines: {node: '>=12.20.0'}
     dependencies:
       fetch-blob: 3.1.5
-    dev: true
 
   /fs-constants/1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
@@ -2697,10 +2697,6 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /locate-character/2.0.5:
-    resolution: {integrity: sha512-n2GmejDXtOPBAZdIiEFy5dJ5N38xBCXLNOtw2WpB9kGh6pnrEuKlwYI+Tkpofc4wDtVXHtoAOJaMRlYG/oYaxg==}
-    dev: true
-
   /locate-path/2.0.0:
     resolution: {integrity: sha512-NCI2kiDkyR7VeEKm27Kda/iQHyKJe1Bu0FlTbYp3CqJu+9IFe9bLyAjMxf5ZDDbEg+iMPzB5zYyUTSm8wVTKmA==}
     engines: {node: '>=4'}
@@ -2825,7 +2821,6 @@ packages:
     resolution: {integrity: sha512-jSCU7/VB1loIWBZe14aEYHU/+1UMEHoaO7qxCOVJOw9GgH72VAWppxNcjU+x9a2k3GSIBXNKxXQFqRvvZ7vr3A==}
     engines: {node: '>=10.0.0'}
     hasBin: true
-    dev: true
 
   /mimic-fn/1.2.0:
     resolution: {integrity: sha512-jf84uxzwiuiIVKiOLpfYk7N46TSy8ubTonmneY9vrpHNAnp0QBt2BxWV9dO3/j+BoVAb+a5G6YDPW3M5HOdMWQ==}
@@ -2946,7 +2941,6 @@ packages:
   /node-domexception/1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
-    dev: true
 
   /node-fetch/2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
@@ -2966,12 +2960,6 @@ packages:
       data-uri-to-buffer: 4.0.0
       fetch-blob: 3.1.5
       formdata-polyfill: 4.0.10
-    dev: true
-
-  /node-forge/1.3.1:
-    resolution: {integrity: sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==}
-    engines: {node: '>= 6.13.0'}
-    dev: true
 
   /node-gyp-build/4.5.0:
     resolution: {integrity: sha512-2iGbaQBV+ITgCz76ZEjmhUKAKVf7xfY1sRl4UiKQspfZMH2h06SyhNsnSVy50cwkFQDGLyif6m/6uFXHkOZ6rg==}
@@ -3234,28 +3222,28 @@ packages:
       find-up: 4.1.0
     dev: true
 
-  /playwright-chromium/1.23.4:
-    resolution: {integrity: sha512-aqiOpX76107knxZqydyd0snNHiU6wgGwmQUFA8MEbG6sVjvjF8fS8Uy6n39z9U52pSpRFGPBP8dfkTkXBokkqQ==}
+  /playwright-chromium/1.25.0:
+    resolution: {integrity: sha512-FH9ho3noAWVStCJx4XW78+D8QW0A99WDp53DDkYeVdEpJqCmAIKHCSE6dl5XtaDKrZPYC1ZG5hGXQh1K5H/p+g==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.23.4
+      playwright-core: 1.25.0
     dev: true
 
-  /playwright-core/1.23.4:
-    resolution: {integrity: sha512-h5V2yw7d8xIwotjyNrkLF13nV9RiiZLHdXeHo+nVJIYGVlZ8U2qV0pMxNJKNTvfQVT0N8/A4CW6/4EW2cOcTiA==}
+  /playwright-core/1.25.0:
+    resolution: {integrity: sha512-kZ3Jwaf3wlu0GgU0nB8UMQ+mXFTqBIFz9h1svTlNduNKjnbPXFxw7mJanLVjqxHJRn62uBfmgBj93YHidk2N5Q==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
 
-  /playwright/1.23.4:
-    resolution: {integrity: sha512-NUPOLMpd8WydmwZFllST/YZ7cImgDDDrvcaq7Gj2vAjNg0jYCndFJt6HHtbkOPSIlRo4BaQYlbFx6meq1r1FXQ==}
+  /playwright/1.25.0:
+    resolution: {integrity: sha512-Z+pQNWI17Qx/tHhnmgMmPsptsisXpKgAnUvYv98kctlHUJaqMt2400P8kTw9vEPoC0xdxqu0JhxO7pDTmaaIKw==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.23.4
+      playwright-core: 1.25.0
     dev: true
 
   /polka/1.0.0-next.22:
@@ -3266,8 +3254,8 @@ packages:
       trouter: 3.2.0
     dev: true
 
-  /postcss/8.4.14:
-    resolution: {integrity: sha512-E398TUmfAYFPBSdzgeieK2Y1+1cpdxJx8yXbK/m57nRhKSmk1GB2tO4lbLBtlkfPQTDKfe4Xqv1ASWPpayPEig==}
+  /postcss/8.4.16:
+    resolution: {integrity: sha512-ipHE1XBvKzm5xI7hiHCZJCSugxvsdq2mPnsq5+UF+VHCjiBvtDrlxJfMBToWaP9D5XlgNmcFGqoHmUn0EYEaRQ==}
     engines: {node: ^10 || ^12 || >=14}
     dependencies:
       nanoid: 3.3.4
@@ -3588,13 +3576,6 @@ packages:
       rimraf: 2.7.1
     dev: true
 
-  /selfsigned/2.0.1:
-    resolution: {integrity: sha512-LmME957M1zOsUhG+67rAjKfiWFox3SBxE/yymatMZsAx+oMrJ0YQ8AToOnyCm7xbeg2ep37IHLxdu0o2MavQOQ==}
-    engines: {node: '>=10'}
-    dependencies:
-      node-forge: 1.3.1
-    dev: true
-
   /semiver/1.1.0:
     resolution: {integrity: sha512-QNI2ChmuioGC1/xjyYwyZYADILWyW6AmS1UH6gDj/SFUUUS4MBAWs/7mxnkRPc/F4iHezDP+O8t0dO8WHiEOdg==}
     engines: {node: '>=6'}
@@ -3621,6 +3602,7 @@ packages:
 
   /set-cookie-parser/2.5.0:
     resolution: {integrity: sha512-cHMAtSXilfyBePduZEBVPTCftTQWz6ehWJD5YNUg4mqvRosrrjKbo4WS8JkB0/RxonMoohHm7cOGH60mDkRQ9w==}
+    dev: false
 
   /sharp/0.30.7:
     resolution: {integrity: sha512-G+MY2YW33jgflKPTXXptVO28HvNOo9G3j0MybYAHeEmby+QuD2U98dT6ueht9cv/XDqZspSpIhoSW+BAKJ7Hig==}
@@ -3731,7 +3713,6 @@ packages:
       '@polka/url': 1.0.0-next.21
       mrmime: 1.0.1
       totalist: 3.0.0
-    dev: true
 
   /sisteransi/1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
@@ -4191,7 +4172,6 @@ packages:
   /totalist/3.0.0:
     resolution: {integrity: sha512-eM+pCBxXO/njtF7vdFsHuqb+ElbxqtI4r5EAvk6grfAFyJ6IvWlSkfZ5T9ozC6xWw3Fj1fGoSmrl0gUs46JVIw==}
     engines: {node: '>=6'}
-    dev: true
 
   /tr46/0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
@@ -4388,7 +4368,6 @@ packages:
     resolution: {integrity: sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==}
     engines: {node: '>=4.2.0'}
     hasBin: true
-    dev: true
 
   /uglify-js/3.16.1:
     resolution: {integrity: sha512-X5BGTIDH8U6IQ1TIRP62YC36k+ULAa1d59BxlWvPUJ1NkW5L3FwcGfEzuVvGmhJFBu0YJ5Ge25tmRISqCmLiRQ==}
@@ -4405,10 +4384,10 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
-  /undici/5.6.1:
-    resolution: {integrity: sha512-yYVqywdCbNb99f/w045wqmv++WExXDjY0FEvLSB7QUZZH6izxrVkF4dJn1aimcvN0+WAhv75Gg7v6VJoqmRtJQ==}
+  /undici/5.8.1:
+    resolution: {integrity: sha512-iDRmWX4Zar/4A/t+1LrKQRm102zw2l9Wgat3LtTlTn8ykvMZmAmpq9tjyHEigx18FsY7IfATvyN3xSw9BDz0eA==}
     engines: {node: '>=12.18'}
-    dev: true
+    dev: false
 
   /universalify/0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
@@ -4425,6 +4404,17 @@ packages:
 
   /uvu/0.5.4:
     resolution: {integrity: sha512-x1CyUjcP9VKaNPhjeB3FIc/jqgLsz2Q9LFhRzUTu/jnaaHILEGNuE0XckQonl8ISLcwyk9I2EZvWlYsQnwxqvQ==}
+    engines: {node: '>=8'}
+    hasBin: true
+    dependencies:
+      dequal: 2.0.2
+      diff: 5.1.0
+      kleur: 4.1.5
+      sade: 1.8.1
+    dev: true
+
+  /uvu/0.5.6:
+    resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}
     engines: {node: '>=8'}
     hasBin: true
     dependencies:
@@ -4459,8 +4449,8 @@ packages:
       magic-string: 0.26.2
     dev: true
 
-  /vite/3.0.4:
-    resolution: {integrity: sha512-NU304nqnBeOx2MkQnskBQxVsa0pRAH5FphokTGmyy8M3oxbvw7qAXts2GORxs+h/2vKsD+osMhZ7An6yK6F1dA==}
+  /vite/3.0.8:
+    resolution: {integrity: sha512-AOZ4eN7mrkJiOLuw8IA7piS4IdOQyQCA81GxGsAQvAZzMRi9ZwGB3TOaYsj4uLAWK46T5L4AfQ6InNGlxX30IQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -4479,7 +4469,7 @@ packages:
         optional: true
     dependencies:
       esbuild: 0.14.48
-      postcss: 8.4.14
+      postcss: 8.4.16
       resolve: 1.22.1
       rollup: 2.75.7
     optionalDependencies:
@@ -4502,7 +4492,6 @@ packages:
   /web-streams-polyfill/3.2.1:
     resolution: {integrity: sha512-e0MO3wdXWKrLbL0DgGnUV7WHVuw9OUvL4hjgnPkIeEvESk74gAITi5G606JtZPp39cd8HA9VQzCIvA49LpPN5Q==}
     engines: {node: '>= 8'}
-    dev: true
 
   /webidl-conversions/3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}

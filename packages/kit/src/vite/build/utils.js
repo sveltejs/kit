@@ -1,4 +1,3 @@
-import fs from 'fs';
 import * as vite from 'vite';
 import { get_aliases } from '../utils.js';
 
@@ -96,7 +95,8 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 		base: ssr ? assets_base(config.kit) : './',
 		build: {
 			cssCodeSplit: true,
-			manifest: true,
+			// don't use the default name to avoid collisions with 'static/manifest.json'
+			manifest: 'vite-manifest.json',
 			outDir,
 			polyfillModulePreload: false,
 			rollupOptions: {
@@ -105,8 +105,6 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 					format: 'esm',
 					entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
 					chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
-					// assetFileNames is the same for ssr/client/workers because we're not actually
-					// outputting the assets in SSR mode, but they need to point to the same place
 					assetFileNames: `${prefix}/assets/[name]-[hash][extname]`
 				},
 				preserveEntrySignatures: 'strict'
@@ -126,15 +124,7 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 			alias: get_aliases(config.kit)
 		},
 		ssr: {
-			// when developing against the Kit src code, we want to ensure that
-			// our dependencies are bundled so that apps don't need to install
-			// them as peerDependencies
-			noExternal: process.env.BUNDLED
-				? []
-				: Object.keys(
-						JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8'))
-							.devDependencies
-				  )
+			noExternal: ['@sveltejs/kit']
 		},
 		worker: {
 			rollupOptions: {
@@ -153,20 +143,6 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
  */
 export function assets_base(config) {
 	return config.paths.assets || config.paths.base || './';
-}
-
-/**
- * vite.config.js will contain vite-plugin-svelte-kit, which kicks off the server and service
- * worker builds in a hook. When running the server and service worker builds we must remove
- * the SvelteKit plugin so that we do not kick off additional instances of these builds.
- * @param {import('vite').UserConfig} config
- */
-export function remove_svelte_kit(config) {
-	// TODO i feel like there's a more elegant way to do this
-	// @ts-expect-error - it can't handle infinite type expansion
-	config.plugins = (config.plugins || [])
-		.flat(Infinity)
-		.filter((plugin) => plugin.name !== 'vite-plugin-svelte-kit');
 }
 
 const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH']);

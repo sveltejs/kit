@@ -1,14 +1,4 @@
-/** @param {Record<string, any>} obj */
-export function lowercase_keys(obj) {
-	/** @type {Record<string, any>} */
-	const clone = {};
-
-	for (const key in obj) {
-		clone[key.toLowerCase()] = obj[key];
-	}
-
-	return clone;
-}
+import { HttpError } from '../../index/private.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -29,22 +19,34 @@ export function is_pojo(body) {
 }
 
 /**
- * Serialize an error into a JSON string, by copying its `name`, `message`
- * and (in dev) `stack`, plus any custom properties, plus recursively
- * serialized `cause` properties. This is necessary because
- * `JSON.stringify(error) === '{}'`
- * @param {Error} error
+ * Serialize an error into a JSON string through `error_to_pojo`.
+ * This is necessary because `JSON.stringify(error) === '{}'`
+ *
+ * @param {Error | HttpError} error
  * @param {(error: Error) => string | undefined} get_stack
  */
 export function serialize_error(error, get_stack) {
-	return JSON.stringify(clone_error(error, get_stack));
+	return JSON.stringify(error_to_pojo(error, get_stack));
 }
 
 /**
- * @param {Error} error
+ * Transform an error into a POJO, by copying its `name`, `message`
+ * and (in dev) `stack`, plus any custom properties, plus recursively
+ * serialized `cause` properties.
+ * Our own HttpError gets a meta property attached so we can identify it on the client.
+ *
+ * @param {HttpError | Error } error
  * @param {(error: Error) => string | undefined} get_stack
  */
-function clone_error(error, get_stack) {
+export function error_to_pojo(error, get_stack) {
+	if (error instanceof HttpError) {
+		return /** @type {import('./page/types').SerializedHttpError} */ ({
+			message: error.message,
+			status: error.status,
+			__is_http_error: true // TODO we should probably make this unnecessary
+		});
+	}
+
 	const {
 		name,
 		message,
@@ -57,7 +59,7 @@ function clone_error(error, get_stack) {
 	/** @type {Record<string, any>} */
 	const object = { name, message, stack: get_stack(error) };
 
-	if (cause) object.cause = clone_error(cause, get_stack);
+	if (cause) object.cause = error_to_pojo(cause, get_stack);
 
 	for (const key in custom) {
 		// @ts-expect-error
@@ -84,3 +86,31 @@ export function check_method_names(mod) {
 export const GENERIC_ERROR = {
 	id: '__error'
 };
+
+/**
+ * @param {Partial<Record<import('types').HttpMethod, any>>} mod
+ * @param {import('types').HttpMethod} method
+ */
+export function method_not_allowed(mod, method) {
+	return new Response(`${method} method not allowed`, {
+		status: 405,
+		headers: {
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+			// "The server must generate an Allow header field in a 405 status code response"
+			allow: allowed_methods(mod).join(', ')
+		}
+	});
+}
+
+/** @param {Partial<Record<import('types').HttpMethod, any>>} mod */
+export function allowed_methods(mod) {
+	const allowed = [];
+
+	for (const method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
+		if (method in mod) allowed.push(method);
+	}
+
+	if (mod.GET || mod.HEAD) allowed.push('HEAD');
+
+	return allowed;
+}

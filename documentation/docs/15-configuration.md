@@ -68,7 +68,6 @@ const config = {
 			onError: 'fail',
 			origin: 'http://sveltekit-prerender'
 		},
-		routes: (filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath),
 		serviceWorker: {
 			register: true,
 			files: (filepath) => !/\.DS_Store/.test(filepath)
@@ -95,16 +94,22 @@ Run when executing `vite build` and determines how the output is converted for d
 
 An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
 
-For example, you can add aliases to a `components` and `utils` folder:
-
 ```js
 /// file: svelte.config.js
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
 		alias: {
-			$components: 'src/components',
-			$utils: 'src/utils'
+			// this will match a file
+			'my-file': 'path/to/my-file.js',
+
+			// this will match a directory and its contents
+			// (`my-directory/x` resolves to `path/to/my-directory/x`)
+			'my-directory': 'path/to/my-directory',
+
+			// an alias ending /* will only match
+			// the contents of a directory, not the directory itself
+			'my-directory/*': 'path/to/my-directory/*'
 		}
 	}
 };
@@ -279,10 +284,6 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
     ```
 
 - `origin` — the value of `url.origin` during prerendering; useful if it is included in rendered content
-
-### routes
-
-A `(filepath: string) => boolean` function that determines which files create routes and which are treated as [private modules](/docs/routing#private-modules).
 
 ### serviceWorker
 
