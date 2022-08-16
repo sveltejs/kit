@@ -92,6 +92,7 @@ export function load() {
 ## Arrow function GET
 
 ```js before
+/** @type {import('./$types').RequestHandler} */
 export const GET = () => ({
 	body: {
 		a: 1
@@ -100,6 +101,7 @@ export const GET = () => ({
 ```
 
 ```js after
+/** @type {import('./$types').PageServerLoad} */
 export const load = () => ({
 	a: 1
 });

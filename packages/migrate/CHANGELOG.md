@@ -1,5 +1,19 @@
 # svelte-migrate
 
+## 1.0.0-next.7
+
+### Patch Changes
+
+- Migrate type comments on arrow functions ([#5933](https://github.com/sveltejs/kit/pull/5933))
+
+* Use LayoutLoad inside +layout.js files ([#5931](https://github.com/sveltejs/kit/pull/5931))
+
+## 1.0.0-next.6
+
+### Patch Changes
+
+- Create `.ts` files from `<script context="module" lang="ts">` ([#5905](https://github.com/sveltejs/kit/pull/5905))
+
 ## 1.0.0-next.5
 
 ### Patch Changes

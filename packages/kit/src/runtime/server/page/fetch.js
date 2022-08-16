@@ -52,6 +52,7 @@ export function create_fetch({ event, options, state, route }) {
 			if (
 				key !== 'authorization' &&
 				key !== 'connection' &&
+				key !== 'content-length' &&
 				key !== 'cookie' &&
 				key !== 'host' &&
 				key !== 'if-none-match' &&
