@@ -250,7 +250,8 @@ export async function respond(request, options, state) {
 								try {
 									if (error) return;
 
-									const node = n ? await options.manifest._.nodes[n]() : undefined;
+									// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
+									const node = n == undefined ? n : await options.manifest._.nodes[n]();
 									return {
 										// TODO return `uses`, so we can reuse server data effectively
 										data: await load_server_data({
@@ -260,7 +261,11 @@ export async function respond(request, options, state) {
 												/** @type {import('types').JSONObject} */
 												const data = {};
 												for (let j = 0; j < i; j += 1) {
-													Object.assign(data, await promises[j]);
+													const parent = await promises[j];
+													if (!parent || parent instanceof HttpError || 'error' in parent) {
+														return data;
+													}
+													Object.assign(data, parent.data);
 												}
 												return data;
 											}

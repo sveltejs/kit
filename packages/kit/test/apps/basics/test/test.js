@@ -251,6 +251,26 @@ test.describe('Shadowed pages', () => {
 			expect(requests).not.toContain(`${baseURL}/shadowed/missing-get`);
 		}
 	});
+
+	test('Parent data is present', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/parent');
+		await expect(page.locator('h2')).toHaveText('Layout data: {"layout":"layout"}');
+		await expect(page.locator('p')).toHaveText(
+			'Page data: {"page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+		);
+
+		await clicknav('[href="/shadowed/parent?test"]');
+		await expect(page.locator('h2')).toHaveText('Layout data: {"layout":"layout"}');
+		await expect(page.locator('p')).toHaveText(
+			'Page data: {"page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+		);
+
+		await clicknav('[href="/shadowed/parent/sub"]');
+		await expect(page.locator('h2')).toHaveText('Layout data: {"layout":"layout"}');
+		await expect(page.locator('p')).toHaveText(
+			'Page data: {"sub":"sub","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+		);
+	});
 });
 
 test.describe('Encoded paths', () => {
@@ -1154,7 +1174,7 @@ test.describe('$app/stores', () => {
 			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
 			await page.click('a[href="/store/navigating/a"]');
 
-			await page.waitForSelector('#not-navigating', { timeout: 500 });
+			await page.waitForSelector('#not-navigating', { timeout: 5000 });
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 		}
 	});
