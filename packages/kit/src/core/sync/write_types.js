@@ -431,17 +431,12 @@ function process_node(ts, node, outdir, params, groups) {
 	function get_data_type(file_path, method, fallback, proxy) {
 		if (proxy) {
 			if (proxy.exports.includes(method)) {
-				if (proxy.modified) {
-					const basename = path.basename(file_path);
-					return `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('./proxy${basename}').${method}>>>`;
-				} else {
-					// If the file wasn't tweaked, we can use the return type of the original file.
-					// The advantage is that type updates are reflected without saving.
-					return `Kit.AwaitedProperties<Awaited<ReturnType<typeof import("${path_to_original(
-						outdir,
-						file_path
-					)}").${method}>>>`;
-				}
+				// If the file wasn't tweaked, we can use the return type of the original file.
+				// The advantage is that type updates are reflected without saving.
+				const from = proxy.modified
+					? `./proxy${replace_ext_with_js(path.basename(file_path))}`
+					: path_to_original(outdir, file_path);
+				return `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('${from}').${method}>>>`;
 			} else {
 				return fallback;
 			}
