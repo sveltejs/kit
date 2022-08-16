@@ -393,7 +393,7 @@ function process_node(ts, node, outdir, params, groups) {
 					// If the file wasn't tweaked, we can use the return type of the original file.
 					// The advantage is that type updates are reflected without saving.
 					const from = proxy.modified
-						? `./proxy${basename}`
+						? `./proxy${basename.replace(/\.ts$/, '.js')}`
 						: path_to_original(outdir, node.server);
 
 					types.push(`Kit.AwaitedErrors<typeof import('${from}').${method}>`);
