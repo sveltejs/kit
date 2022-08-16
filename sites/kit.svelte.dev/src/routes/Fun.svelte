@@ -13,7 +13,7 @@
 	function update() {
 		quote = quotes[i];
 		i = (i + 1) % quotes.length;
-		setTimeout(update, 5000);
+		//setTimeout(update, 5000);
 	}
 
 	update();
@@ -23,12 +23,18 @@
 
 	<div class="text">
 		<h3>Web development. <span style="font-weight:bold">But fun.</span></h3>
-		Don't take our word for it, hear what our users say…
+		Don't take our word for it, hear what our users say…<br/>
+		<br/>
+		<p class="quote">{quote.text}</p>
+		<p><span class="author">{quote.author}</span><br/>{quote.title}</p>
 	</div>
 
 	<div>
-		<p class="quote">{quote.text}</p>
-		<p><span class="author">{quote.author}</span><br/>{quote.title}</p>
+		<video controls width="100%" preload="metadata">
+			<source src="/svelte.webm" type="video/webm">
+			Sorry, your browser doesn't support embedded videos.
+		</video>
+		Watch the whole <a href="https://www.youtube.com/watch?v=kMlkCYL9qo0">Svelte Origins documentary on YouTube</a>.
 	</div>
 
 </div>
