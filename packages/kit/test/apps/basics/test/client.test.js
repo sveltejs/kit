@@ -607,6 +607,7 @@ test.describe('Page Store', () => {
 		);
 
 		await page.click('button');
+		await page.waitForLoadState('networkidle');
 
 		expect(await page.textContent('#page-data')).toBe('{"answer":1337}');
 		expect(await page.textContent('#store-data')).toBe(
