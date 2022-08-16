@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Fix generated extension for AwaitedProperties
+Fix generated path extension for `AwaitedProperties`
