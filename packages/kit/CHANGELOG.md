@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.411
+
+### Patch Changes
+
+- Hydration validation errors ([#5918](https://github.com/sveltejs/kit/pull/5918))
+
+* Handle function without params when writing TS proxy ([#5928](https://github.com/sveltejs/kit/pull/5928))
+
+- [fix] prevent `Content-Length` header from being incorrectly inherited by requests made from `load`'s `fetch` during SSR ([#5922](https://github.com/sveltejs/kit/pull/5922))
+
+* Provide helpful error message on invalid named layout reference ([#5912](https://github.com/sveltejs/kit/pull/5912))
+
 ## 1.0.0-next.410
 
 ### Patch Changes
