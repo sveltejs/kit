@@ -535,7 +535,7 @@ test.describe('Routing', () => {
 		await clicknav('a[href="/routing/a"]');
 		expect(await page.textContent('h1')).toBe('a');
 
-		expect(requests).toEqual([]);
+		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
 	});
 
 	test('navigates programmatically', async ({ page, app }) => {
