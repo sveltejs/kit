@@ -2,13 +2,13 @@
 title: Hooks
 ---
 
-An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports four functions, all optional, that run on the server — `handle`, `handleError`, `getSession`, and `externalFetch`.
+An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports three functions, all optional, that run on the server — `handle`, `handleError` and `externalFetch`.
 
 > The location of this file can be [configured](/docs/configuration) as `config.kit.files.hooks`
 
 ### handle
 
-This function runs every time the SvelteKit server receives a [request](/docs/web-standards#fetch-apis-request) — whether that happens while the app is running, or during [prerendering](/docs/page-options#prerender) — and determines the [response](/docs/web-standards#fetch-apis-response). It receives an `event` object representing the request and a function called `resolve`, which invokes SvelteKit's router and generates a response (rendering a page, or invoking an endpoint) accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs every time the SvelteKit server receives a [request](/docs/web-standards#fetch-apis-request) — whether that happens while the app is running, or during [prerendering](/docs/page-options#prerender) — and determines the [response](/docs/web-standards#fetch-apis-response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 
 ```js
 /// file: src/hooks.js
@@ -25,7 +25,7 @@ export async function handle({ event, resolve }) {
 
 > Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
-If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to endpoints, populate the `event.locals` object, as shown below.
+If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to handlers in `+server.js` and server-only `load` functions, populate the `event.locals` object, as shown below.
 
 ```js
 /// file: src/hooks.js
@@ -83,7 +83,7 @@ export async function handle({ event, resolve }) {
 
 ### handleError
 
-If an error is thrown during rendering, this function will be called with the `error` and the `event` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
+If an error is thrown during loading or rendering, this function will be called with the `error` and the `event` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
 
 During development, if an error occurs because of a syntax error in your Svelte code, a `frame` property will be appended highlighting the location of the error.
 
@@ -97,63 +97,13 @@ const Sentry: any;
 // @filename: index.js
 // ---cut---
 /** @type {import('@sveltejs/kit').HandleError} */
-export async function handleError({ error, event }) {
+export function handleError({ error, event }) {
 	// example integration with https://sentry.io/
 	Sentry.captureException(error, { event });
 }
 ```
 
-> `handleError` is only called in the case of an uncaught exception. It is not called when pages and endpoints explicitly respond with 4xx and 5xx status codes.
-
-### getSession
-
-This function takes the `event` object and returns a `session` object that is [accessible on the client](/docs/modules#$app-stores) and therefore must be safe to expose to users. It runs whenever SvelteKit server-renders a page.
-
-If unimplemented, session is `{}`.
-
-```js
-/// file: src/hooks.js
-// @filename: ambient.d.ts
-declare namespace App {
-	interface Locals {
-		user: {
-			name: string;
-			email: string;
-			avatar: string;
-			token: string;
-		}
-	}
-	interface Session {
-		user?: {
-			name: string;
-			email: string;
-			avatar: string;
-		}
-	}
-}
-
-type MaybePromise<T> = T | Promise<T>;
-
-// @filename: index.js
-// ---cut---
-/** @type {import('@sveltejs/kit').GetSession} */
-export function getSession(event) {
-	return event.locals.user
-		? {
-				user: {
-					// only include properties needed client-side —
-					// exclude anything else attached to the user
-					// like access tokens etc
-					name: event.locals.user.name,
-					email: event.locals.user.email,
-					avatar: event.locals.user.avatar
-				}
-		  }
-		: {};
-}
-```
-
-> `session` must be serializable, which means it must not contain things like functions or custom classes, just built-in JavaScript data types
+> `handleError` is only called for _unexpected_ errors. It is not called for errors created with the [`error`](/docs/modules#sveltejs-kit-error) function imported from `@sveltejs/kit`, as these are _expected_ errors.
 
 ### externalFetch
 

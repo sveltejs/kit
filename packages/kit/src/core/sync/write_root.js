@@ -9,7 +9,7 @@ export function write_root(manifest_data, output) {
 
 	const max_depth = Math.max(
 		...manifest_data.routes.map((route) =>
-			route.type === 'page' ? route.a.filter(Boolean).length : 0
+			route.type === 'page' ? route.layouts.filter(Boolean).length + 1 : 0
 		),
 		1
 	);
@@ -21,16 +21,16 @@ export function write_root(manifest_data, output) {
 
 	let l = max_depth;
 
-	let pyramid = `<svelte:component this={components[${l}]} {...(props_${l} || {})}/>`;
+	let pyramid = `<svelte:component this={components[${l}]} data={data_${l}}/>`;
 
 	while (l--) {
 		pyramid = `
 			{#if components[${l + 1}]}
-				<svelte:component this={components[${l}]} {...(props_${l} || {})}>
+				<svelte:component this={components[${l}]} data={data_${l}}>
 					${pyramid.replace(/\n/g, '\n\t\t\t\t\t')}
 				</svelte:component>
 			{:else}
-				<svelte:component this={components[${l}]} {...(props_${l} || {})} />
+				<svelte:component this={components[${l}]} data={data_${l}} {errors} />
 			{/if}
 		`
 			.replace(/^\t\t\t/gm, '')
@@ -49,7 +49,8 @@ export function write_root(manifest_data, output) {
 				export let page;
 
 				export let components;
-				${levels.map((l) => `export let props_${l} = null;`).join('\n\t\t\t\t')}
+				${levels.map((l) => `export let data_${l} = null;`).join('\n\t\t\t\t')}
+				export let errors;
 
 				setContext('__svelte__', stores);
 

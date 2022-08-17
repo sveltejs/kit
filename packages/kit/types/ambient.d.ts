@@ -12,14 +12,10 @@
  * 	interface PrivateEnv {}
  *
  * 	interface PublicEnv {}
- *
- * 	interface Session {}
- *
- * 	interface Stuff {}
  * }
  * ```
  *
- * By populating these interfaces, you will gain type safety when using `env`, `event.locals`, `event.platform`, `session` and `stuff`.
+ * By populating these interfaces, you will gain type safety when using `env`, `event.locals` and `event.platform`.
  *
  * Note that since it's an ambient declaration file, you have to be careful when using `import` statements. Once you add an `import`
  * at the top level, the declaration file is no longer considered ambient and you lose access to these typings in other files.
@@ -47,7 +43,7 @@
  */
 declare namespace App {
 	/**
-	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://kit.svelte.dev/docs/hooks) (`handle`, `handleError` and `getSession`) and [endpoints](https://kit.svelte.dev/docs/routing#endpoints).
+	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://kit.svelte.dev/docs/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
 	export interface Locals {}
 
@@ -57,24 +53,14 @@ declare namespace App {
 	export interface Platform {}
 
 	/**
-	 * The interface that defines the dynamic environment variables exported from '$env/dynamic/private'.
+	 * The interface that defines the dynamic environment variables exported from `$env/dynamic/private`.
 	 */
 	export interface PrivateEnv extends Record<string, string> {}
 
 	/**
-	 * The interface that defines the dynamic environment variables exported from '$env/dynamic/public'.
+	 * The interface that defines the dynamic environment variables exported from `$env/dynamic/public`.
 	 */
 	export interface PublicEnv extends Record<string, string> {}
-
-	/**
-	 * The interface that defines `session`, both as an argument to [`load`](https://kit.svelte.dev/docs/loading) functions and the value of the [session store](https://kit.svelte.dev/docs/modules#$app-stores).
-	 */
-	export interface Session {}
-
-	/**
-	 * The interface that defines `stuff`, as input or output to [`load`](https://kit.svelte.dev/docs/loading) or as the value of the `stuff` property of the [page store](https://kit.svelte.dev/docs/modules#$app-stores).
-	 */
-	export interface Stuff {}
 }
 
 /**
@@ -165,10 +151,10 @@ declare module '$app/navigation' {
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<void>;
 	/**
-	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question, or re-fetches data from a page endpoint if the invalidated resource is the page itself. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question, or re-fetches data from a page endpoint if the invalidated resource is the page itself. If no argument is given, all resources will be invalidated. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * @param dependency The invalidated resource
 	 */
-	export function invalidate(dependency: string | ((href: string) => boolean)): Promise<void>;
+	export function invalidate(dependency?: string | ((href: string) => boolean)): Promise<void>;
 	/**
 	 * Programmatically prefetches the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
@@ -227,15 +213,15 @@ declare module '$app/paths' {
 
 /**
  * ```ts
- * import { getStores, navigating, page, session, updated } from '$app/stores';
+ * import { getStores, navigating, page, updated } from '$app/stores';
  * ```
  *
- * Stores are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `session` and `page` are unique to each request on the server, rather than shared between multiple requests handled by the same server simultaneously, which is what makes it safe to include user-specific data in `session`.
+ * Stores are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `page` is unique to each request on the server, rather than shared between multiple requests handled by the same server simultaneously.
  *
  * Because of that, you must subscribe to the stores during component initialization (which happens automatically if you reference the store value, e.g. as `$page`, in a component) before you can use them.
  */
 declare module '$app/stores' {
-	import { Readable, Writable } from 'svelte/store';
+	import { Readable } from 'svelte/store';
 	import { Navigation, Page } from '@sveltejs/kit';
 
 	/**
@@ -245,7 +231,6 @@ declare module '$app/stores' {
 	export function getStores(): {
 		navigating: typeof navigating;
 		page: typeof page;
-		session: typeof session;
 		updated: typeof updated;
 	};
 
@@ -259,11 +244,6 @@ declare module '$app/stores' {
 	 * When navigating finishes, its value reverts to `null`.
 	 */
 	export const navigating: Readable<Navigation | null>;
-	/**
-	 * A writable store whose initial value is whatever was returned from [`getSession`](https://kit.svelte.dev/docs/hooks#getsession).
-	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
-	 */
-	export const session: Writable<App.Session>;
 	/**
 	 *  A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 */

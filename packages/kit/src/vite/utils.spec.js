@@ -1,7 +1,12 @@
+import path from 'path';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import { normalizePath } from 'vite';
+import { validate_config } from '../core/config/index.js';
+import { posixify } from '../utils/filesystem.js';
 import {
 	deep_merge,
+	get_aliases,
 	merge_vite_configs,
 	prevent_illegal_rollup_imports,
 	prevent_illegal_vite_imports
@@ -200,6 +205,32 @@ test('merge resolve.alias', () => {
 	});
 });
 
+test('transform kit.alias to resolve.alias', () => {
+	const config = validate_config({
+		kit: { alias: { simpleKey: 'simple/value', key: 'value', 'key/*': 'value/*' } }
+	});
+
+	const transformed = get_aliases(config.kit).map((entry) => {
+		const replacement = posixify(path.relative('.', entry.replacement));
+
+		return {
+			find: entry.find.toString(), // else assertion fails
+			replacement
+		};
+	});
+
+	assert.equal(transformed, [
+		{ find: '__GENERATED__', replacement: '.svelte-kit/generated' },
+		{ find: '$app', replacement: 'src/runtime/app' },
+		{ find: '$env/dynamic/public', replacement: 'src/runtime/env/dynamic/public.js' },
+		{ find: '$env/dynamic/private', replacement: 'src/runtime/env/dynamic/private.js' },
+		{ find: '$lib', replacement: 'src/lib' },
+		{ find: 'simpleKey', replacement: 'simple/value' },
+		{ find: /^key$/.toString(), replacement: 'value' },
+		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' }
+	]);
+});
+
 /** @typedef {{id: string, importedIds: Array<string>, dynamicallyImportedIds: Array<string> }} RollupNode */
 
 /** @type {(id: string) => RollupNode | null} */
@@ -260,7 +291,7 @@ const rollup_node_getter = (id) => {
 	return nodes[id] ?? null;
 };
 
-const illegal_imports = new Set(['/illegal/boom.js']);
+const illegal_imports = new Set([normalizePath('/illegal/boom.js')]);
 const ok_rollup_node = rollup_node_getter('/test/path1.js');
 const bad_rollup_node_static = rollup_node_getter('/bad/static.js');
 const bad_rollup_node_dynamic = rollup_node_getter('/bad/dynamic.js');
