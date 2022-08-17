@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.418
+
+### Patch Changes
+
+- Prevent double import of env modules ([#5955](https://github.com/sveltejs/kit/pull/5955))
+
+* Tighten up params typings, fix load function typings, add event typings to generated types ([#5974](https://github.com/sveltejs/kit/pull/5974))
+
 ## 1.0.0-next.417
 
 ### Patch Changes

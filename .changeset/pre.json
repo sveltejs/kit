@@ -30,7 +30,8 @@
     "prerendering-test-disabled": "0.0.2-next.0",
     "test-writes": "0.0.2-next.0",
     "svelte-migrate": "1.0.0-next.0",
-    "skeleton-template": "0.0.1-next.0"
+    "skeleton-template": "0.0.1-next.0",
+    "@sveltejs/package": "1.0.0-next.1"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -122,6 +123,7 @@
     "chilled-moons-sniff",
     "chilled-rivers-talk",
     "chilled-starfishes-jog",
+    "chilled-years-smash",
     "chilled-zebras-check",
     "chilly-cars-battle",
     "chilly-files-greet",
@@ -574,6 +576,7 @@
     "nasty-llamas-lay",
     "nasty-seahorses-know",
     "nasty-seas-reflect",
+    "nasty-shoes-mate",
     "nasty-trees-cheer",
     "nasty-waves-kneel",
     "neat-cups-begin",
@@ -899,6 +902,7 @@
     "soft-months-fail",
     "soft-news-teach",
     "soft-students-cover",
+    "sour-cherries-play",
     "sour-hounds-punch",
     "sour-needles-compete",
     "sour-penguins-admire",
