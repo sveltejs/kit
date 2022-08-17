@@ -109,7 +109,6 @@ export class Server {
 		if (!this.options.hooks) {
 			const module = await import(${s(hooks)});
 			this.options.hooks = {
-				getSession: module.getSession || (() => ({})),
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
 				handleError: module.handleError || (({ error }) => console.error(error.stack)),
 				externalFetch: module.externalFetch || fetch
@@ -238,6 +237,8 @@ export async function build_server(options, client) {
 		/** @type {string[]} */
 		const imports = [];
 
+		// String representation of
+		/** @type {import('types').SSRNode} */
 		/** @type {string[]} */
 		const exports = [`export const index = ${i};`];
 
@@ -254,7 +255,9 @@ export async function build_server(options, client) {
 			stylesheets.push(...entry.stylesheets);
 
 			exports.push(
-				`export { default as component } from '../${vite_manifest[node.component].file}';`,
+				`export const component = async () => (await import('../${
+					vite_manifest[node.component].file
+				}')).default;`,
 				`export const file = '${entry.file}';` // TODO what is this?
 			);
 		}

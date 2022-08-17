@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 1.0.0-next.415
+
+### Patch Changes
+
+- [breaking] Remove session object ([#5946](https://github.com/sveltejs/kit/pull/5946))
+
+## 1.0.0-next.414
+
+### Patch Changes
+
+- Correctly provide server parent data ([#5916](https://github.com/sveltejs/kit/pull/5916))
+
+## 1.0.0-next.413
+
+### Patch Changes
+
+- [feat] `$env/static/*` are now virtual to prevent writing sensitive values to disk ([#5825](https://github.com/sveltejs/kit/pull/5825))
+
+## 1.0.0-next.412
+
+### Patch Changes
+
+- Lazy load Svelte components to reenable no-ssr use cases ([#5930](https://github.com/sveltejs/kit/pull/5930))
+
 ## 1.0.0-next.411
 
 ### Patch Changes

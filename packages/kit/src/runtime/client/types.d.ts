@@ -69,7 +69,6 @@ export type BranchNode = {
 	uses: {
 		params: Set<string>;
 		url: boolean; // TODO make more granular?
-		session: boolean;
 		dependencies: Set<string>;
 		parent: boolean;
 	};

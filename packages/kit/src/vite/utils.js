@@ -105,6 +105,8 @@ export function get_aliases(config) {
 	const alias = [
 		{ find: '__GENERATED__', replacement: path.posix.join(config.outDir, 'generated') },
 		{ find: '$app', replacement: `${runtime_directory}/app` },
+		{ find: '$env/dynamic/public', replacement: `${runtime_directory}/env/dynamic/public.js` },
+		{ find: '$env/dynamic/private', replacement: `${runtime_directory}/env/dynamic/private.js` },
 		// For now, we handle `$lib` specially here rather than make it a default value for
 		// `config.kit.alias` since it has special meaning for packaging, etc.
 		{ find: '$lib', replacement: config.files.lib }
@@ -127,21 +129,6 @@ export function get_aliases(config) {
 			alias.push({ find: key, replacement: path.resolve(value) });
 		}
 	}
-
-	alias.push(
-		{
-			find: '$env/static/public',
-			replacement: path.posix.join(config.outDir, 'runtime/env/static/public.js')
-		},
-		{
-			find: '$env/static/private',
-			replacement: path.posix.join(config.outDir, 'runtime/env/static/private.js')
-		},
-		{
-			find: '$env',
-			replacement: `${runtime_directory}/env`
-		}
-	);
 
 	return alias;
 }

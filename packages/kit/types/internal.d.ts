@@ -5,7 +5,6 @@ import {
 	Config,
 	ExternalFetch,
 	ServerLoad,
-	GetSession,
 	Handle,
 	HandleError,
 	KitConfig,
@@ -92,7 +91,6 @@ export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
 export interface Hooks {
 	externalFetch: ExternalFetch;
-	getSession: GetSession;
 	handle: Handle;
 	handleError: HandleError;
 }
@@ -196,7 +194,7 @@ export interface SSREndpoint {
 }
 
 export interface SSRNode {
-	component: SSRComponent;
+	component: SSRComponentLoader;
 	/** index into the `components` array in client-manifest.js */
 	index: number;
 	/** client-side module URL for this component */
@@ -278,11 +276,6 @@ export interface SSRPage {
 
 export interface SSRErrorPage {
 	id: '__error';
-}
-
-export interface SSRPagePart {
-	id: string;
-	load: SSRComponentLoader;
 }
 
 export type SSRRoute = SSREndpoint | SSRPage;
