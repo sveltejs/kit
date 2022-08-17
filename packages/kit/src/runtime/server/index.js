@@ -254,6 +254,7 @@ export async function respond(request, options, state) {
 									return {
 										// TODO return `uses`, so we can reuse server data effectively
 										data: await load_server_data({
+											dev: options.dev,
 											event,
 											node,
 											parent: async () => {
@@ -289,7 +290,7 @@ export async function respond(request, options, state) {
 								}
 							});
 
-							response = json({
+							return json({
 								type: 'data',
 								nodes: await Promise.all(promises)
 							});

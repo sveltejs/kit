@@ -119,6 +119,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						if (node.server) {
 							const { module } = await resolve(node.server);
 							result.server = module;
+							result.server_id = node.server;
 						}
 
 						// in dev we inline all styles to avoid FOUC. this gets populated lazily so that

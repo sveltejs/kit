@@ -35,6 +35,7 @@ export async function respond_with_error({ event, options, state, status, error,
 			const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
 
 			const server_data_promise = load_server_data({
+				dev: options.dev,
 				event,
 				node: default_layout,
 				parent: async () => ({})

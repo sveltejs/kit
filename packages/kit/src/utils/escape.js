@@ -38,12 +38,11 @@ const render_json_payload_script_regex = new RegExp(
  *
  * @param {import('types').PayloadScriptAttributes} attrs A list of attributes to be added to the element.
  * @param {any} payload The data to be carried by the element. Must be serializable to JSON.
- * @param {(key: string, value: any) => any} [replacer]
  * @returns {string} The raw HTML of a script element carrying the JSON payload.
  * @example const html = render_json_payload_script({ type: 'data', url: '/data.json' }, { foo: 'bar' });
  */
-export function render_json_payload_script(attrs, payload, replacer) {
-	const safe_payload = JSON.stringify(payload, replacer).replace(
+export function render_json_payload_script(attrs, payload) {
+	const safe_payload = JSON.stringify(payload).replace(
 		render_json_payload_script_regex,
 		(match) => render_json_payload_script_dict[match]
 	);
