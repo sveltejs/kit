@@ -286,6 +286,20 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 		}
 	});
 
+	const runtime_base = runtime_directory.startsWith(process.cwd())
+		? `/${path.relative('.', runtime_directory)}`
+		: `/@fs${
+				// Windows/Linux separation - Windows starts with a drive letter, we need a / in front there
+				runtime_directory.startsWith('/') ? '' : '/'
+		  }${runtime_directory}`;
+
+	const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
+	const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);
+
+	const env = get_env(vite_config.mode, svelte_config.kit.env.publicPrefix);
+	set_private_env(env.private);
+	set_public_env(env.public);
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -319,20 +333,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						`Not found (did you mean ${svelte_config.kit.paths.base + req.url}?)`
 					);
 				}
-
-				// For some reason using runtime_prefix here is buggy, since Vite will later load the modules
-				// again with a slightly different url (with the drive letter) on windows
-				const runtime_base = `/@fs${
-					// Windows/Linux separation - Windows starts with a drive letter, we need a / in front there
-					runtime_directory.startsWith('/') ? '' : '/'
-				}${runtime_directory}`;
-
-				const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
-				const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);
-
-				const env = get_env(vite_config.mode, svelte_config.kit.env.publicPrefix);
-				set_private_env(env.private);
-				set_public_env(env.public);
 
 				/** @type {Partial<import('types').Hooks>} */
 				const user_hooks = resolve_entry(svelte_config.kit.files.hooks)
