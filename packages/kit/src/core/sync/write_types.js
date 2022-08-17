@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import MagicString from 'magic-string';
-import { posixify, rimraf } from '@internal/shared/utils/filesystem.js';
+import { posixify, rimraf } from '../../utils/filesystem.js';
 import { parse_route_id } from '../../utils/routing.js';
 import { remove_from_previous, write_if_changed } from './utils.js';
 

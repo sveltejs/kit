@@ -268,7 +268,6 @@ importers:
 
   packages/kit:
     specifiers:
-      '@internal/shared': workspace:*
       '@playwright/test': ^1.25.0
       '@sveltejs/vite-plugin-svelte': ^1.0.1
       '@types/connect': ^3.4.35
@@ -312,7 +311,6 @@ importers:
       tiny-glob: 0.2.9
       undici: 5.8.1
     devDependencies:
-      '@internal/shared': link:../shared
       '@playwright/test': 1.25.0
       '@types/connect': 3.4.35
       '@types/cookie': 0.5.1
@@ -522,7 +520,6 @@ importers:
 
   packages/package:
     specifiers:
-      '@internal/shared': workspace:*
       '@rollup/plugin-replace': ^4.0.0
       '@sveltejs/kit': workspace:*
       '@sveltejs/vite-plugin-svelte': ^1.0.1
@@ -543,7 +540,6 @@ importers:
       sade: 1.8.1
       svelte2tsx: 0.5.11_lvfi2wesz6u4l5rfbnetbucfmm
     devDependencies:
-      '@internal/shared': link:../shared
       '@rollup/plugin-replace': 4.0.0_rollup@2.75.7
       '@sveltejs/kit': link:../kit
       '@types/node': 16.11.42

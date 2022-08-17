@@ -3,7 +3,7 @@ import { dirname, join, relative } from 'path';
 import colors from 'kleur';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
-import { copy, mkdirp, rimraf } from '@internal/shared/utils/filesystem.js';
+import { copy, mkdirp, rimraf } from './filesystem.js';
 import { analyze, generate_pkg, resolve_lib_alias, scan, strip_lang_tags, write } from './utils.js';
 import { emit_dts, transpile_ts } from './typescript.js';
 

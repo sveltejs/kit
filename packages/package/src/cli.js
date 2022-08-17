@@ -1,12 +1,9 @@
 import colors from 'kleur';
 import sade from 'sade';
 import { load_config } from './config.js';
-import { coalesce_to_error } from '@internal/shared/utils/error.js';
 
-/** @param {unknown} e */
-function handle_error(e) {
-	const error = coalesce_to_error(e);
-
+/** @param {Error} error */
+function handle_error(error) {
 	if (error.name === 'SyntaxError') throw error;
 
 	console.error(colors.bold().red(`> ${error.message}`));
@@ -29,7 +26,7 @@ prog
 
 			await (watch ? packaging.watch(config) : packaging.build(config));
 		} catch (error) {
-			handle_error(error);
+			handle_error(/** @type {Error} */ (error));
 		}
 	});
 

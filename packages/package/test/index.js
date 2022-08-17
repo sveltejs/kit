@@ -8,7 +8,7 @@ import * as assert from 'uvu/assert';
 
 import { build, watch } from '../src/index.js';
 import { load_config } from '../src/config.js';
-import { rimraf, walk } from '@internal/shared/utils/filesystem.js';
+import { rimraf, walk } from '../src/filesystem.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');

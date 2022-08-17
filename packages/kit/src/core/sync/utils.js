@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { mkdirp } from '@internal/shared/utils/filesystem.js';
+import { mkdirp } from '../../utils/filesystem.js';
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();

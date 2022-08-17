@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { mkdirp, posixify } from '@internal/shared/utils/filesystem.js';
+import { mkdirp, posixify } from '../../utils/filesystem.js';
 import { get_vite_config, merge_vite_configs, resolve_entry } from '../utils.js';
 import { load_template } from '../../core/config/index.js';
 import { runtime_directory } from '../../core/utils.js';

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import ts from 'typescript';
 import prettier from 'prettier';
-import { mkdirp } from '@internal/shared/utils/filesystem.js';
+import { mkdirp } from '../src/utils/filesystem';
 import { fileURLToPath } from 'url';
 
 /** @typedef {{ name: string, comment: string, snippet: string }} Extracted */

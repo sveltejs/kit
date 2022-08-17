@@ -1,6 +1,6 @@
 import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
-import { normalize_error } from '@internal/shared/utils/error.js';
+import { normalize_error } from '../../utils/error.js';
 import { LoadURL, decode_params, normalize_path } from '../../utils/url.js';
 import {
 	create_updated_store,

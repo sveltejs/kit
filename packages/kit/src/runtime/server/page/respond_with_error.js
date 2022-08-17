@@ -1,6 +1,6 @@
 import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
-import { coalesce_to_error } from '@internal/shared/utils/error.js';
+import { coalesce_to_error } from '../../../utils/error.js';
 import { GENERIC_ERROR } from '../utils.js';
 import { create_fetch } from './fetch.js';
 

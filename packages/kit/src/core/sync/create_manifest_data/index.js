@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
 import { runtime_directory } from '../../utils.js';
-import { posixify } from '@internal/shared/utils/filesystem.js';
+import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 
 const DEFAULT = 'default';

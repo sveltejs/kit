@@ -1,4 +1,3 @@
-import type { ValidatedKitConfig } from '@sveltejs/kit/types/internal';
 import type { PackageConfig } from 'types';
 
 export interface File {
@@ -22,7 +21,7 @@ export interface ValidatedConfig {
 	preprocess?: any;
 	extensions: string[];
 	package: RecursiveRequired<PackageConfig>;
-	kit?: ValidatedKitConfig;
+	kit?: any;
 }
 
 export type Validator<T = any> = (input: T, keypath: string) => T;

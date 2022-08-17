@@ -25,7 +25,6 @@
 		"undici": "^5.8.1"
 	},
 	"devDependencies": {
-		"@internal/shared": "workspace:*",
 		"@playwright/test": "^1.25.0",
 		"@types/connect": "^3.4.35",
 		"@types/cookie": "^0.5.1",
