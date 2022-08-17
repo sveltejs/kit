@@ -14,7 +14,7 @@ function handle_error(error) {
 	process.exit(1);
 }
 
-const prog = sade('svelte-package').version('__VERSION__');
+const prog = sade('svelte-package', true).version('__VERSION__');
 
 prog
 	.describe('Create a package')
