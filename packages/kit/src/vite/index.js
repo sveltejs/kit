@@ -207,7 +207,7 @@ function kit() {
 			paths = {
 				build_dir: `${svelte_config.kit.outDir}/build`,
 				output_dir: `${svelte_config.kit.outDir}/output`,
-				client_out_dir: `${svelte_config.kit.outDir}/output/client/`
+				client_out_dir: `${svelte_config.kit.outDir}/output/client`
 			};
 
 			illegal_imports = new Set([
@@ -230,7 +230,7 @@ function kit() {
 			/** @type {import('vite').UserConfig} */
 			const result = {
 				appType: 'custom',
-				base: '/',
+				base: './',
 				build: {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point

@@ -48,6 +48,7 @@ You may need to install some dependencies first, e.g. with `npx playwright insta
 If there are tests that fail on the CI, you can retrieve the failed screenshots by going to the summary page of the CI run. You can usually find this by clicking on "Details" of the check results, click "Summary" at the top-left corner, and then scroll to the bottom "Artifacts" section to download the archive.
 
 It is very easy to introduce flakiness in a browser test. If you try to fix the flakiness in a test, you can run it until failure to gain some confidence you've fixed the test with a command like:
+
 ```
 npx playwright test --workers=1 --repeat-each 1000 --max-failures 1 -g "accepts a Request object"
 ```
@@ -60,7 +61,7 @@ If you would like to test local changes to Vite or another dependency, you can b
 {
 	// ...
 	"dependencies": {
-		"vite": "^2.0.0"
+		"vite": "^3.0.0"
 	},
 	"pnpm": {
 		"overrides": {

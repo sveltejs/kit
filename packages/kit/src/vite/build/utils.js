@@ -88,9 +88,11 @@ export function find_deps(manifest, entry, add_dynamic_css) {
  * @return {import('vite').UserConfig}
  */
 export const get_default_config = function ({ config, input, ssr, outDir }) {
+	const prefix = `${config.kit.appDir}/immutable`;
+
 	return {
 		appType: 'custom',
-		base: assets_base(config.kit),
+		base: ssr ? assets_base(config.kit) : './',
 		build: {
 			cssCodeSplit: true,
 			// don't use the default name to avoid collisions with 'static/manifest.json'
@@ -101,11 +103,9 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 				input,
 				output: {
 					format: 'esm',
-					entryFileNames: ssr ? '[name].js' : `${config.kit.appDir}/immutable/[name]-[hash].js`,
-					chunkFileNames: ssr
-						? 'chunks/[name].js'
-						: `${config.kit.appDir}/immutable/chunks/[name]-[hash].js`,
-					assetFileNames: `${config.kit.appDir}/immutable/assets/[name]-[hash][extname]`
+					entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
+					chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
+					assetFileNames: `${prefix}/assets/[name]-[hash][extname]`
 				},
 				preserveEntrySignatures: 'strict'
 			},
@@ -125,6 +125,14 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 		},
 		ssr: {
 			noExternal: ['@sveltejs/kit']
+		},
+		worker: {
+			rollupOptions: {
+				output: {
+					entryFileNames: `${prefix}/workers/[name]-[hash].js`,
+					chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`
+				}
+			}
 		}
 	};
 };
@@ -134,11 +142,7 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
  * @returns {string}
  */
 export function assets_base(config) {
-	// TODO this is so that Vite's preloading works. Unfortunately, it fails
-	// during `svelte-kit preview`, because we use a local asset path. This
-	// may be fixed in Vite 3: https://github.com/vitejs/vite/issues/2009
-	const { base, assets } = config.paths;
-	return `${assets || base}/`;
+	return config.paths.assets || config.paths.base || './';
 }
 
 const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH']);

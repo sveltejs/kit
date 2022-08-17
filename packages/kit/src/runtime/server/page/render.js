@@ -150,9 +150,31 @@ export async function render_response({
 
 	const target = hash(body);
 
+	/**
+	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
+	 * @type {string}
+	 */
+	let assets;
+
+	if (options.paths.assets) {
+		// if an asset path is specified, use it
+		assets = options.paths.assets;
+	} else if (state.prerendering?.fallback) {
+		// if we're creating a fallback page, asset paths need to be root-relative
+		assets = options.paths.base;
+	} else {
+		// otherwise we want asset paths to be relative to the page, so that they
+		// will work in odd contexts like IPFS, the internet archive, and so on
+		const segments = event.url.pathname.slice(options.paths.base.length).split('/').slice(2);
+		assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+	}
+
+	/** @param {string} path */
+	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
+
 	// prettier-ignore
 	const init_app = `
-		import { set_public_env, start } from ${s(options.prefix + entry.file)};
+		import { set_public_env, start } from ${s(prefixed(entry.file))};
 
 		set_public_env(${s(options.public_env)});
 
@@ -195,7 +217,7 @@ export async function render_response({
 	}
 
 	for (const dep of stylesheets) {
-		const path = options.prefix + dep;
+		const path = prefixed(dep);
 		const attributes = [];
 
 		if (csp.style_needs_nonce) {
@@ -217,7 +239,7 @@ export async function render_response({
 
 	if (page_config.router || page_config.hydrate) {
 		for (const dep of modulepreloads) {
-			const path = options.prefix + dep;
+			const path = prefixed(dep);
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
 			if (state.prerendering) {
 				head += `\n\t<link rel="modulepreload" href="${path}">`;
@@ -291,10 +313,6 @@ export async function render_response({
 			head = http_equiv.join('\n') + head;
 		}
 	}
-
-	const segments = event.url.pathname.slice(options.paths.base.length).split('/').slice(2);
-	const assets =
-		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
 	// TODO flush chunks as early as we can
 	const html =

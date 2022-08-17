@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.155
+
+### Patch Changes
+
+- make variable names more descriptive ([#5983](https://github.com/sveltejs/kit/pull/5983))
+
 ## 2.0.0-next.154
 
 ### Patch Changes
