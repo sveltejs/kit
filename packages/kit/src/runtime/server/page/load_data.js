@@ -5,7 +5,7 @@ import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
  * @param {{
  *   event: import('types').RequestEvent;
  *   node: import('types').SSRNode | undefined;
- *   parent: () => Promise<import('types').JSONObject | null>;
+ *   parent: () => Promise<Record<string, any>>;
  * }} opts
  */
 export async function load_server_data({ event, node, parent }) {
@@ -37,7 +37,7 @@ export async function load_server_data({ event, node, parent }) {
  *   fetcher: typeof fetch;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
- *   server_data_promise: Promise<import('types').JSONObject | null>;
+ *   server_data_promise: Promise<Record<string, any> | null>;
  *   state: import('types').SSRState;
  * }} opts
  */
@@ -70,7 +70,7 @@ export async function load_data({ event, fetcher, node, parent, server_data_prom
 
 /** @param {Record<string, any>} object */
 async function unwrap_promises(object) {
-	/** @type {import('types').JSONObject} */
+	/** @type {Record<string, any>} */
 	const unwrapped = {};
 
 	for (const key in object) {

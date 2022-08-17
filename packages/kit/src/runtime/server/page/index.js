@@ -137,7 +137,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		/** @type {Error | null} */
 		let load_error = null;
 
-		/** @type {Array<Promise<import('types').JSONObject | null>>} */
+		/** @type {Array<Promise<Record<string, any> | null>>} */
 		const server_promises = nodes.map((node, i) => {
 			if (load_error) {
 				// if an error happens immediately, don't bother with the rest of the nodes
@@ -156,7 +156,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 						event,
 						node,
 						parent: async () => {
-							/** @type {import('types').JSONObject} */
+							/** @type {Record<string, any>} */
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
 								Object.assign(data, await server_promises[j]);
