@@ -77,7 +77,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					}
 
 					if (event.request.method === 'POST' && result?.location) {
-						return redirect_response(status, result.location);
+						return redirect_response(303, result.location);
 					}
 				} else {
 					event.setHeaders({
