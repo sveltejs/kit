@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.415
+
+### Patch Changes
+
+- [breaking] Remove session object ([#5946](https://github.com/sveltejs/kit/pull/5946))
+
 ## 1.0.0-next.414
 
 ### Patch Changes
