@@ -247,7 +247,7 @@ importers:
       svelte: ^3.48.0
       svelte-preprocess: ^4.10.6
       typescript: ^4.7.4
-      vite: ^3.0.0
+      vite: ^3.0.4
     dependencies:
       '@fontsource/fira-mono': 4.5.8
       '@lukeed/uuid': 2.0.0
@@ -556,7 +556,7 @@ importers:
       shiki-twoslash: ^3.0.2
       svelte: ^3.48.0
       typescript: ^4.7.4
-      vite: ^3.0.0
+      vite: ^3.0.4
       vite-imagetools: ^4.0.3
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
