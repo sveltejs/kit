@@ -95,6 +95,9 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			}
 		}
 
+		const should_prerender_data = nodes.some((node) => node?.server);
+		const data_pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
+
 		if (!resolve_opts.ssr) {
 			return await render_response({
 				branch: [],
@@ -214,6 +217,16 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					const error = normalize_error(e);
 
 					if (error instanceof Redirect) {
+						if (state.prerendering && should_prerender_data) {
+							state.prerendering.dependencies.set(data_pathname, {
+								response: new Response(undefined),
+								body: JSON.stringify({
+									type: 'redirect',
+									location: error.location
+								})
+							});
+						}
+
 						return redirect_response(error.status, error.location);
 					}
 
@@ -267,19 +280,14 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			}
 		}
 
-		// generate __data.json files when prerendering
-		if (state.prerendering && nodes.some((node) => node?.server)) {
-			const pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
-
-			const dependency = {
+		if (state.prerendering && should_prerender_data) {
+			state.prerendering.dependencies.set(data_pathname, {
 				response: new Response(undefined),
 				body: JSON.stringify({
 					type: 'data',
 					nodes: branch.map((branch_node) => ({ data: branch_node?.server_data }))
 				})
-			};
-
-			state.prerendering.dependencies.set(pathname, dependency);
+			});
 		}
 
 		// TODO use validation_errors
