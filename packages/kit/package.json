@@ -66,7 +66,7 @@
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
 		"format": "npm run lint -- --write",
 		"prepublishOnly": "npm run build",
-		"test": "npm run test:unit && npm run test:packaging && npm run test:integration",
+		"test": "npm run test:unit && npm run test:integration",
 		"test:integration": "pnpm run -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\" -i packaging",
 		"types": "node scripts/extract-types.js",
