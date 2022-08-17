@@ -109,6 +109,7 @@ export interface Config {
 	extensions?: string[];
 	kit?: KitConfig;
 	preprocess?: any;
+	[key: string]: any;
 }
 
 export interface KitConfig {
