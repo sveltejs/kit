@@ -176,6 +176,7 @@ export function extract_frontmatter(markdown) {
 	const frontmatter = match[1];
 	const body = markdown.slice(match[0].length);
 
+	/** @type {Record<string, string>} */
 	const metadata = {};
 	frontmatter.split('\n').forEach((pair) => {
 		const i = pair.indexOf(':');

@@ -3,14 +3,8 @@ import path from 'path';
 import { mkdirp, posixify } from '../../utils/filesystem.js';
 import { get_vite_config, merge_vite_configs, resolve_entry } from '../utils.js';
 import { load_template } from '../../core/config/index.js';
-import { get_runtime_directory } from '../../core/utils.js';
-import {
-	create_build,
-	find_deps,
-	get_default_config,
-	remove_svelte_kit,
-	is_http_method
-} from './utils.js';
+import { runtime_directory } from '../../core/utils.js';
+import { create_build, find_deps, get_default_config, is_http_method } from './utils.js';
 import { s } from '../../utils/misc.js';
 
 /**
@@ -27,6 +21,8 @@ import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';
+import { set_private_env } from '${runtime}/env-private.js';
+import { set_public_env } from '${runtime}/env-public.js';
 
 const template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace('%sveltekit.head%', '" + head + "')
@@ -78,6 +74,7 @@ export class Server {
 				default: ${config.kit.prerender.default},
 				enabled: ${config.kit.prerender.enabled}
 			},
+			public_env: {},
 			read,
 			root,
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
@@ -88,6 +85,23 @@ export class Server {
 		};
 	}
 
+	init({ env }) {
+		const entries = Object.entries(env);
+
+		const prv = Object.fromEntries(entries.filter(([k]) => !k.startsWith('${
+			config.kit.env.publicPrefix
+		}')));
+
+		const pub = Object.fromEntries(entries.filter(([k]) => k.startsWith('${
+			config.kit.env.publicPrefix
+		}')));
+
+		set_private_env(prv);
+		set_public_env(pub);
+
+		this.options.public_env = pub;
+	}
+
 	async respond(request, options = {}) {
 		if (!(request instanceof Request)) {
 			throw new Error('The first argument to server.respond must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
@@ -96,7 +110,6 @@ export class Server {
 		if (!this.options.hooks) {
 			const module = await import(${s(hooks)});
 			this.options.hooks = {
-				getSession: module.getSession || (() => ({})),
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
 				handleError: module.handleError || (({ error }) => console.error(error.stack)),
 				externalFetch: module.externalFetch || fetch
@@ -112,6 +125,7 @@ export class Server {
  * @param {{
  *   cwd: string;
  *   config: import('types').ValidatedConfig;
+ *   vite_config: import('vite').ResolvedConfig;
  *   vite_config_env: import('vite').ConfigEnv;
  *   manifest_data: import('types').ManifestData;
  *   build_dir: string;
@@ -124,6 +138,7 @@ export async function build_server(options, client) {
 	const {
 		cwd,
 		config,
+		vite_config,
 		vite_config_env,
 		manifest_data,
 		build_dir,
@@ -144,10 +159,8 @@ export async function build_server(options, client) {
 
 	// add entry points for every endpoint...
 	manifest_data.routes.forEach((route) => {
-		const file = route.type === 'endpoint' ? route.file : route.shadow;
-
-		if (file) {
-			const resolved = path.resolve(cwd, file);
+		if (route.type === 'endpoint') {
+			const resolved = path.resolve(cwd, route.file);
 			const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
 			const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
 			input[name] = resolved;
@@ -155,14 +168,18 @@ export async function build_server(options, client) {
 	});
 
 	// ...and every component used by pages...
-	manifest_data.components.forEach((file) => {
-		const resolved = path.resolve(cwd, file);
-		const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
+	manifest_data.nodes.forEach((node) => {
+		for (const file of [node.component, node.shared, node.server]) {
+			if (file) {
+				const resolved = path.resolve(cwd, file);
+				const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
 
-		const name = relative.startsWith('..')
-			? posixify(path.join('entries/fallbacks', path.basename(file)))
-			: posixify(path.join('entries/pages', relative));
-		input[name] = resolved;
+				const name = relative.startsWith('..')
+					? posixify(path.join('entries/fallbacks', path.basename(file)))
+					: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
+				input[name] = resolved;
+			}
+		}
 	});
 
 	// ...and every matcher
@@ -183,24 +200,22 @@ export async function build_server(options, client) {
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: config.kit.serviceWorker.register && !!service_worker_entry_file,
-			runtime: posixify(path.relative(build_dir, get_runtime_directory(config.kit))),
+			runtime: posixify(path.relative(build_dir, runtime_directory)),
 			template: load_template(cwd, config)
 		})
 	);
 
-	const vite_config = await get_vite_config(vite_config_env);
-
 	const merged_config = merge_vite_configs(
 		get_default_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
-		vite_config
+		await get_vite_config(vite_config, vite_config_env)
 	);
-
-	remove_svelte_kit(merged_config);
 
 	const { chunks } = await create_build(merged_config);
 
 	/** @type {import('vite').Manifest} */
-	const vite_manifest = JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8'));
+	const vite_manifest = JSON.parse(
+		fs.readFileSync(`${output_dir}/server/${vite_config.build.manifest}`, 'utf-8')
+	);
 
 	mkdirp(`${output_dir}/server/nodes`);
 	mkdirp(`${output_dir}/server/stylesheets`);
@@ -219,23 +234,59 @@ export async function build_server(options, client) {
 		}
 	});
 
-	manifest_data.components.forEach((component, i) => {
-		const entry = find_deps(client.vite_manifest, component, true);
+	manifest_data.nodes.forEach((node, i) => {
+		/** @type {string[]} */
+		const imports = [];
 
-		const imports = [`import * as module from '../${vite_manifest[component].file}';`];
+		// String representation of
+		/** @type {import('types').SSRNode} */
+		/** @type {string[]} */
+		const exports = [`export const index = ${i};`];
 
-		const exports = [
-			'export { module };',
-			`export const index = ${i};`,
-			`export const file = '${entry.file}';`,
-			`export const imports = ${s(entry.imports)};`,
-			`export const stylesheets = ${s(entry.stylesheets)};`
-		];
+		/** @type {string[]} */
+		const imported = [];
+
+		/** @type {string[]} */
+		const stylesheets = [];
+
+		if (node.component) {
+			const entry = find_deps(client.vite_manifest, node.component, true);
+
+			imported.push(...entry.imports);
+			stylesheets.push(...entry.stylesheets);
+
+			exports.push(
+				`export const component = async () => (await import('../${
+					vite_manifest[node.component].file
+				}')).default;`,
+				`export const file = '${entry.file}';` // TODO what is this?
+			);
+		}
+
+		if (node.shared) {
+			const entry = find_deps(client.vite_manifest, node.shared, true);
+
+			imported.push(...entry.imports);
+			stylesheets.push(...entry.stylesheets);
+
+			imports.push(`import * as shared from '../${vite_manifest[node.shared].file}';`);
+			exports.push(`export { shared };`);
+		}
+
+		if (node.server) {
+			imports.push(`import * as server from '../${vite_manifest[node.server].file}';`);
+			exports.push(`export { server };`);
+		}
+
+		exports.push(
+			`export const imports = ${s(imported)};`,
+			`export const stylesheets = ${s(stylesheets)};`
+		);
 
 		/** @type {string[]} */
 		const styles = [];
 
-		entry.stylesheets.forEach((file) => {
+		stylesheets.forEach((file) => {
 			if (stylesheet_lookup.has(file)) {
 				const index = stylesheet_lookup.get(file);
 				const name = `stylesheet_${index}`;
@@ -276,7 +327,7 @@ function get_methods(cwd, output, manifest_data) {
 	/** @type {Record<string, import('types').HttpMethod[]>} */
 	const methods = {};
 	manifest_data.routes.forEach((route) => {
-		const file = route.type === 'endpoint' ? route.file : route.shadow;
+		const file = route.type === 'endpoint' ? route.file : route.leaf.server;
 
 		if (file && lookup[file]) {
 			methods[file] = lookup[file].filter(is_http_method);

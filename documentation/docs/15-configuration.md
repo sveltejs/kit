@@ -29,7 +29,9 @@ const config = {
 				// ...
 			}
 		},
-		moduleExtensions: ['.js', '.ts'],
+		env: {
+			publicPrefix: 'PUBLIC_'
+		},
 		files: {
 			assets: 'static',
 			hooks: 'src/hooks',
@@ -44,6 +46,7 @@ const config = {
 			parameter: '_method',
 			allowed: []
 		},
+		moduleExtensions: ['.js', '.ts'],
 		outDir: '.svelte-kit',
 		package: {
 			dir: 'package',
@@ -65,7 +68,6 @@ const config = {
 			onError: 'fail',
 			origin: 'http://sveltekit-prerender'
 		},
-		routes: (filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath),
 		serviceWorker: {
 			register: true,
 			files: (filepath) => !/\.DS_Store/.test(filepath)
@@ -92,16 +94,22 @@ Run when executing `vite build` and determines how the output is converted for d
 
 An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
 
-For example, you can add aliases to a `components` and `utils` folder:
-
 ```js
 /// file: svelte.config.js
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
 		alias: {
-			$components: 'src/components',
-			$utils: 'src/utils'
+			// this will match a file
+			'my-file': 'path/to/my-file.js',
+
+			// this will match a directory and its contents
+			// (`my-directory/x` resolves to `path/to/my-directory/x`)
+			'my-directory': 'path/to/my-directory',
+
+			// an alias ending /* will only match
+			// the contents of a directory, not the directory itself
+			'my-directory/*': 'path/to/my-directory/*'
 		}
 	}
 };
@@ -157,9 +165,11 @@ When pages are prerendered, the CSP header is added via a `<meta http-equiv>` ta
 
 > Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
 
-### moduleExtensions
+### env
 
-An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
+Environment variable configuration:
+
+- `publicPrefix` — a prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](/docs/modules#$env-static-public) and [`$env/dynamic/public`](/docs/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
 
 ### files
 
@@ -185,6 +195,10 @@ See [HTTP Method Overrides](/docs/routing#endpoints-http-method-overrides). An o
 
 - `parameter` — query parameter name to use for passing the intended method value
 - `allowed` - array of HTTP methods that can be used when overriding the original request method
+
+### moduleExtensions
+
+An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
 
 ### outDir
 
@@ -270,10 +284,6 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
     ```
 
 - `origin` — the value of `url.origin` during prerendering; useful if it is included in rendered content
-
-### routes
-
-A `(filepath: string) => boolean` function that determines which files create routes and which are treated as [private modules](/docs/routing#private-modules).
 
 ### serviceWorker
 

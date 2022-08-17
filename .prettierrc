@@ -24,7 +24,8 @@
 				"packages/kit/src/packaging/test/fixtures/**/expected/**/*",
 				"packages/kit/src/packaging/test/watch/expected/**/*",
 				"packages/kit/src/packaging/test/watch/package/**/*",
-				"packages/kit/src/core/prerender/fixtures/**/*"
+				"packages/kit/src/core/prerender/fixtures/**/*",
+				"packages/migrate/migrations/routes/*/samples.md"
 			],
 			"options": {
 				"requirePragma": true

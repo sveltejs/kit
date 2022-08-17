@@ -26,7 +26,7 @@ SvelteKit redirects pathnames with trailing slashes to ones without (or vice ver
 
 Every page should have well-written and unique `<title>` and `<meta name="description">` elements inside a [`<svelte:head>`](https://svelte.dev/docs#template-syntax-svelte-head). Guidance on how to write descriptive titles and descriptions, along with other suggestions on making content understandable by search engines, can be found on Google's [Lighthouse SEO audits](https://web.dev/lighthouse-seo/) documentation.
 
-> A common pattern is to return SEO-related [`stuff`](/docs/loading#output-stuff) from page `load` functions, then use it (as [`$page.stuff`](/docs/modules#$app-stores)) in a `<svelte:head>` in your root [layout](/docs/layouts).
+> A common pattern is to return SEO-related [`stuff`](/docs/load#output-stuff) from page `load` functions, then use it (as [`$page.stuff`](/docs/modules#$app-stores)) in a `<svelte:head>` in your root [layout](/docs/routing#layout).
 
 #### Structured data
 
@@ -57,26 +57,26 @@ export default config;
 [Sitemaps](https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap) help search engines prioritize pages within your site, particularly when you have a large amount of content. You can create a sitemap dynamically using an endpoint:
 
 ```js
-/// file: src/routes/sitemap.xml.js
+/// file: src/routes/sitemap.xml/+server.js
 export async function GET() {
-	return {
-		headers: {
-			'Content-Type': 'application/xml'
-		},
-		body: `
-			<?xml version="1.0" encoding="UTF-8" ?>
-			<urlset
-				xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
-				xmlns:xhtml="https://www.w3.org/1999/xhtml"
-				xmlns:mobile="https://www.google.com/schemas/sitemap-mobile/1.0"
-				xmlns:news="https://www.google.com/schemas/sitemap-news/0.9"
-				xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
-				xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
-			>
-				<!-- <url> elements go here -->
-			</urlset>
-		`.trim()
-	};
+	return new Response(`
+		<?xml version="1.0" encoding="UTF-8" ?>
+		<urlset
+			xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
+			xmlns:xhtml="https://www.w3.org/1999/xhtml"
+			xmlns:mobile="https://www.google.com/schemas/sitemap-mobile/1.0"
+			xmlns:news="https://www.google.com/schemas/sitemap-news/0.9"
+			xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
+			xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
+		>
+			<!-- <url> elements go here -->
+		</urlset>`.trim(),
+		{
+			headers: {
+				'Content-Type': 'application/xml'
+			}
+		}
+	);
 }
 ```
 

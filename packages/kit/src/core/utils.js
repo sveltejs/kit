@@ -1,30 +1,20 @@
 import path from 'path';
 import colors from 'kleur';
 import { fileURLToPath } from 'url';
+import { posixify } from '../utils/filesystem.js';
 
 /**
- * Get the prefix for the `runtime` directory, for use with import declarations
- * @param {import('types').ValidatedKitConfig} config
+ * Resolved path of the `runtime` directory
+ *
+ * TODO Windows issue:
+ * Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.
+ * In playwright debug mode run through VS Code this a root-to-lowercase conversion is needed in order for the tests to run.
+ * If we do this conversion in other cases it has the opposite effect though and fails.
  */
-export function get_runtime_prefix(config) {
-	if (process.env.BUNDLED) {
-		return posixify_path(path.join(config.outDir, 'runtime'));
-	}
+export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', import.meta.url)));
 
-	return posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
-}
-
-/**
- * Get the resolved path of the `runtime` directory
- * @param {import('types').ValidatedKitConfig} config
- */
-export function get_runtime_directory(config) {
-	if (process.env.BUNDLED) {
-		return path.join(config.outDir, 'runtime');
-	}
-
-	return fileURLToPath(new URL('../runtime', import.meta.url));
-}
+/** Prefix for the `runtime` directory, for use with import declarations */
+export const runtime_prefix = posixify_path(runtime_directory);
 
 /** @param {string} str */
 function posixify_path(str) {

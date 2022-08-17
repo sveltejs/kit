@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import colors from 'kleur';
 import sade from 'sade';
 import { load_config } from './core/config/index.js';
@@ -18,7 +19,8 @@ function handle_error(e) {
 	process.exit(1);
 }
 
-const prog = sade('svelte-kit').version('__VERSION__');
+const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
+const prog = sade('svelte-kit').version(pkg.version);
 
 prog
 	.command('package')
@@ -38,16 +40,35 @@ prog
 prog
 	.command('sync')
 	.describe('Synchronise generated files')
-	.action(async () => {
+	.option('--mode', 'Specify a mode for loading environment variables', 'development')
+	.action(async ({ mode }) => {
+		const event = process.env.npm_lifecycle_event;
+
+		// TODO remove for 1.0
+		if (event === 'prepare') {
+			const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+			const message =
+				pkg.scripts.prepare === 'svelte-kit sync'
+					? `\`svelte-kit sync\` now runs on "postinstall" — please remove the "prepare" script from your package.json\n`
+					: `\`svelte-kit sync\` now runs on "postinstall" — please remove it from your "prepare" script\n`;
+
+			console.error(colors.bold().red(message));
+			return;
+		}
+
+		if (event === 'postinstall' && process.env.INIT_CWD) {
+			process.chdir(process.env.INIT_CWD);
+		}
+
 		if (!fs.existsSync('svelte.config.js')) {
-			console.warn('Missing svelte.config.js — skipping');
+			console.warn(`Missing ${path.resolve('svelte.config.js')} — skipping`);
 			return;
 		}
 
 		try {
 			const config = await load_config();
 			const sync = await import('./core/sync/sync.js');
-			sync.all(config);
+			await sync.all(config, mode);
 		} catch (error) {
 			handle_error(error);
 		}

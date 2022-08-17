@@ -58,7 +58,7 @@ export function copy(source, target, opts = {}) {
 					to,
 					data.replace(
 						/** @type {RegExp} */ (regex),
-						(match, key) => /** @type {Record<string, string>} */ (opts.replace)[key]
+						(_match, key) => /** @type {Record<string, string>} */ (opts.replace)[key]
 					)
 				);
 			} else {

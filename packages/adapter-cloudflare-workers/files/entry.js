@@ -15,6 +15,8 @@ export default {
 	 * @param {any} context
 	 */
 	async fetch(req, env, context) {
+		server.init({ env });
+
 		const url = new URL(req.url);
 
 		// static assets
@@ -65,7 +67,7 @@ export default {
 
 		// dynamically-generated pages
 		return await server.respond(req, {
-			platform: { env, context },
+			platform: { env, context, caches },
 			getClientAddress() {
 				return req.headers.get('cf-connecting-ip');
 			}
