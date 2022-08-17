@@ -266,6 +266,9 @@ function kit() {
 							`${posixify(svelte_config.kit.outDir)}/!(generated)`
 						]
 					}
+				},
+				ssr: {
+					external: ['@sveltejs/kit']
 				}
 			};
 
