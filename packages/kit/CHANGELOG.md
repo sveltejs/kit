@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.419
+
+### Patch Changes
+
+- Return a 303 response when a `POST` handler provides a `location` ([#5989](https://github.com/sveltejs/kit/pull/5989))
+
+* Generate `__data.json` files for server-side redirects when prerendering ([#5997](https://github.com/sveltejs/kit/pull/5997))
+
+- [chore] remove chokidar as dependency of kit ([#5996](https://github.com/sveltejs/kit/pull/5996))
+
+* Use relative asset paths where possible ([#4250](https://github.com/sveltejs/kit/pull/4250))
+
 ## 1.0.0-next.418
 
 ### Patch Changes
