@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.416
+
+### Patch Changes
+
+- [fix] allow additional keys in svelte.config.js ([#5961](https://github.com/sveltejs/kit/pull/5961))
+
 ## 1.0.0-next.415
 
 ### Patch Changes
