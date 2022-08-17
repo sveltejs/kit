@@ -11,7 +11,6 @@
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^1.0.1",
-		"chokidar": "^3.5.3",
 		"cookie": "^0.5.0",
 		"devalue": "^2.0.1",
 		"kleur": "^4.1.4",
