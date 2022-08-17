@@ -32,7 +32,10 @@ export const getStores = () => {
 				subscribe: stores.navigating.subscribe
 			};
 		},
-		session: stores.session,
+		get session() {
+			removed_session();
+			return {};
+		},
 		updated: stores.updated
 	};
 };
@@ -54,29 +57,17 @@ export const navigating = {
 	}
 };
 
-/** @param {string} verb */
-const throw_error = (verb) => {
+function removed_session() {
+	// TODO remove for 1.0
 	throw new Error(
-		browser
-			? `Cannot ${verb} session store before subscribing`
-			: `Can only ${verb} session store in browser`
+		'stores.session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
 	);
-};
+}
 
-/** @type {typeof import('$app/stores').session} */
 export const session = {
-	subscribe(fn) {
-		const store = getStores().session;
-
-		if (browser) {
-			session.set = store.set;
-			session.update = store.update;
-		}
-
-		return store.subscribe(fn);
-	},
-	set: () => throw_error('set'),
-	update: () => throw_error('update')
+	subscribe: removed_session,
+	set: removed_session,
+	update: removed_session
 };
 
 /** @type {typeof import('$app/stores').updated} */
@@ -90,5 +81,11 @@ export const updated = {
 
 		return store.subscribe(fn);
 	},
-	check: () => throw_error('check')
+	check: () => {
+		throw new Error(
+			browser
+				? `Cannot check updated store before subscribing`
+				: `Can only check updated store in browser`
+		);
+	}
 };

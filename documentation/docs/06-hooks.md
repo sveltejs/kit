@@ -2,7 +2,7 @@
 title: Hooks
 ---
 
-An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports four functions, all optional, that run on the server — `handle`, `handleError`, `getSession`, and `externalFetch`.
+An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports three functions, all optional, that run on the server — `handle`, `handleError` and `externalFetch`.
 
 > The location of this file can be [configured](/docs/configuration) as `config.kit.files.hooks`
 
@@ -104,56 +104,6 @@ export function handleError({ error, event }) {
 ```
 
 > `handleError` is only called for _unexpected_ errors. It is not called for errors created with the [`error`](/docs/modules#sveltejs-kit-error) function imported from `@sveltejs/kit`, as these are _expected_ errors.
-
-### getSession
-
-This function takes the `event` object and returns a `session` object that is [accessible on the client](/docs/modules#$app-stores) and therefore must be safe to expose to users. It runs whenever SvelteKit server-renders a page.
-
-If unimplemented, session is `{}`.
-
-```js
-/// file: src/hooks.js
-// @filename: ambient.d.ts
-declare namespace App {
-	interface Locals {
-		user: {
-			name: string;
-			email: string;
-			avatar: string;
-			token: string;
-		}
-	}
-	interface Session {
-		user?: {
-			name: string;
-			email: string;
-			avatar: string;
-		}
-	}
-}
-
-type MaybePromise<T> = T | Promise<T>;
-
-// @filename: index.js
-// ---cut---
-/** @type {import('@sveltejs/kit').GetSession} */
-export function getSession(event) {
-	return event.locals.user
-		? {
-				user: {
-					// only include properties needed client-side —
-					// exclude anything else attached to the user
-					// like access tokens etc
-					name: event.locals.user.name,
-					email: event.locals.user.email,
-					avatar: event.locals.user.avatar
-				}
-		  }
-		: {};
-}
-```
-
-> `session` must be serializable, which means it must not contain things like functions or custom classes, just built-in JavaScript data types
 
 ### externalFetch
 

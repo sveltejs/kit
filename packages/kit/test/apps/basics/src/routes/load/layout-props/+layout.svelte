@@ -1,6 +1,4 @@
 <script>
-	import { session } from '$app/stores';
-
 	/** @type {import('./$types').LayoutData} */
 	export let data;
 
@@ -9,5 +7,4 @@
 </script>
 
 <h1>{count}</h1>
-<button on:click={() => ($session.calls = 123)}>Rerun Layout Load Function</button>
 <slot />

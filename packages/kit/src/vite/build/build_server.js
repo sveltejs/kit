@@ -110,7 +110,6 @@ export class Server {
 		if (!this.options.hooks) {
 			const module = await import(${s(hooks)});
 			this.options.hooks = {
-				getSession: module.getSession || (() => ({})),
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
 				handleError: module.handleError || (({ error }) => console.error(error.stack)),
 				externalFetch: module.externalFetch || fetch

@@ -343,7 +343,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 
 				/** @type {import('types').Hooks} */
 				const hooks = {
-					getSession: user_hooks.getSession || (() => ({})),
 					handle,
 					handleError:
 						user_hooks.handleError ||

@@ -222,7 +222,6 @@ export async function respond(request, options, state) {
 						event,
 						options,
 						state,
-						$session: await options.hooks.getSession(event),
 						page_config: { router: true, hydrate: true },
 						status: 200,
 						error: null,
@@ -365,12 +364,10 @@ export async function respond(request, options, state) {
 				// if this request came direct from the user, rather than
 				// via a `fetch` in a `load`, render a 404 page
 				if (!state.initiator) {
-					const $session = await options.hooks.getSession(event);
 					return await respond_with_error({
 						event,
 						options,
 						state,
-						$session,
 						status: 404,
 						error: new Error(`Not found: ${event.url.pathname}`),
 						resolve_opts
@@ -418,12 +415,10 @@ export async function respond(request, options, state) {
 
 		// TODO is this necessary? should we just return a plain 500 at this point?
 		try {
-			const $session = await options.hooks.getSession(event);
 			return await respond_with_error({
 				event,
 				options,
 				state,
-				$session,
 				status: 500,
 				error,
 				resolve_opts

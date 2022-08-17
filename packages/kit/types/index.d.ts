@@ -177,10 +177,6 @@ export interface ExternalFetch {
 	(req: Request): Promise<Response>;
 }
 
-export interface GetSession {
-	(event: RequestEvent): MaybePromise<App.Session>;
-}
-
 export interface Handle {
 	(input: {
 		event: RequestEvent;
@@ -214,7 +210,6 @@ export interface LoadEvent<
 	params: Params;
 	data: Data;
 	routeId: string | null;
-	session: App.Session;
 	setHeaders: (headers: ResponseHeaders) => void;
 	url: URL;
 	parent: () => Promise<ParentData>;

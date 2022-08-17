@@ -348,19 +348,6 @@ test.describe('Load', () => {
 		expect(await page.textContent('h2')).toBe('x: b: 4');
 	});
 
-	test('load function is only called on session change when used in load', async ({ page }) => {
-		await page.goto('/load/change-detection/session/used');
-		expect(await page.textContent('h2')).toBe('1');
-		await page.click('button');
-		await page.waitForLoadState('networkidle');
-		expect(await page.textContent('h2')).toBe('2');
-
-		await page.goto('/load/change-detection/session/unused');
-		expect(await page.textContent('h2')).toBe('1');
-		await page.click('button');
-		expect(await page.textContent('h2')).toBe('1');
-	});
-
 	test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
 		await page.goto('/load/url-hash#please-dont-send-me-to-load');
 		expect(await page.textContent('#message')).toBe(
@@ -378,9 +365,6 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('1');
 		await clicknav('[href="/load/layout-props/b"]');
 		expect(await page.textContent('h1')).toBe('1');
-		await page.click('button');
-		await page.waitForLoadState('networkidle');
-		expect(await page.textContent('h1')).toBe('2');
 	});
 
 	if (process.env.DEV) {
@@ -600,24 +584,6 @@ test.describe('Shadow DOM', () => {
 		expect(await page.textContent('h1')).toBe('a');
 
 		expect(requests).toEqual([]);
-	});
-});
-
-test.describe('Page Store', () => {
-	test('Updates data if changed even when no URL change visible', async ({ page }) => {
-		await page.goto('/store/data/only-data-changes');
-		expect(await page.textContent('#page-data')).toBe('{"answer":42,"calls":0}');
-		expect(await page.textContent('#store-data')).toBe(
-			'{"foo":{"bar":"Custom layout"},"name":"SvelteKit","value":123,"answer":42,"calls":0}'
-		);
-
-		await page.click('button');
-		await page.waitForLoadState('networkidle');
-
-		expect(await page.textContent('#page-data')).toBe('{"answer":1337}');
-		expect(await page.textContent('#store-data')).toBe(
-			'{"foo":{"bar":"Custom layout"},"name":"SvelteKit","value":123,"answer":1337}'
-		);
 	});
 });
 

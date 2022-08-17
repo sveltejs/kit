@@ -1,7 +1,6 @@
 import devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import * as cookie from 'cookie';
-import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
@@ -25,7 +24,6 @@ const updated = {
  *   cookies: import('set-cookie-parser').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
- *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean };
  *   status: number;
  *   error: HttpError | Error | null;
@@ -40,7 +38,6 @@ export async function render_response({
 	cookies,
 	options,
 	state,
-	$session,
 	page_config,
 	status,
 	error = null,
@@ -79,14 +76,11 @@ export async function render_response({
 	}
 
 	if (resolve_opts.ssr) {
-		const session = writable($session);
-
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session,
 				updated
 			},
 			/** @type {import('types').Page} */
@@ -165,9 +159,6 @@ export async function render_response({
 		start({
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
-			session: ${try_serialize($session, (error) => {
-				throw new Error(`Failed to serialize session data: ${error.message}`);
-			})},
 			route: ${!!page_config.router},
 			spa: ${!resolve_opts.ssr},
 			trailing_slash: ${s(options.trailing_slash)},
@@ -347,17 +338,4 @@ export async function render_response({
 		status,
 		headers
 	});
-}
-
-/**
- * @param {any} data
- * @param {(error: Error) => void} [fail]
- */
-function try_serialize(data, fail) {
-	try {
-		return devalue(data);
-	} catch (err) {
-		if (fail) fail(coalesce_to_error(err));
-		return null;
-	}
 }

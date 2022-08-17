@@ -523,15 +523,6 @@ test.describe('Errors', () => {
 		expect(await page.innerHTML('h1')).toBe('500');
 	});
 
-	test('prerendering a page whose load accesses session results in a catchable error', async ({
-		page
-	}) => {
-		await page.goto('/prerendering');
-		expect(await page.textContent('h1')).toBe(
-			'500: Attempted to access session from a prerendered page. Session would never be populated.'
-		);
-	});
-
 	test('prerendering a page with a mutative page endpoint results in a catchable error', async ({
 		page
 	}) => {
@@ -1077,20 +1068,6 @@ test.describe('$app/stores', () => {
 	test('can access page.url', async ({ baseURL, page }) => {
 		await page.goto('/origin');
 		expect(await page.textContent('h1')).toBe(baseURL);
-	});
-
-	test('page store functions as expected', async ({ page, clicknav, javaScriptEnabled }) => {
-		await page.goto('/store');
-
-		expect(await page.textContent('h1')).toBe('Test');
-		expect(await page.textContent('h2')).toBe('Calls: 1');
-
-		await clicknav('a[href="/store/result"]');
-		expect(await page.textContent('h1')).toBe('Result');
-		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 1' : 'Calls: 0');
-
-		const oops = await page.evaluate(() => window.oops);
-		expect(oops).toBeUndefined();
 	});
 
 	test('page store contains data', async ({ page, clicknav }) => {
@@ -1656,21 +1633,6 @@ test.describe('Routing', () => {
 	test('serves a page that clashes with a root directory', async ({ page }) => {
 		await page.goto('/static');
 		expect(await page.textContent('h1')).toBe('hello');
-	});
-});
-
-test.describe('Session', () => {
-	test('session is available', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/session');
-
-		expect(await page.innerHTML('h1')).toBe('answer via props: 42');
-		expect(await page.innerHTML('h2')).toBe('answer via store: 42');
-
-		if (javaScriptEnabled) {
-			await page.click('button');
-			expect(await page.innerHTML('h3')).toBe('answer via props is 43');
-			expect(await page.innerHTML('h4')).toBe('answer via store is 43');
-		}
 	});
 });
 
