@@ -12,7 +12,7 @@ import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
 import { runtime_directory, logger } from '../core/utils.js';
-import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
+import { find_deps, get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry, prevent_illegal_rollup_imports, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
@@ -207,7 +207,7 @@ function kit() {
 			paths = {
 				build_dir: `${svelte_config.kit.outDir}/build`,
 				output_dir: `${svelte_config.kit.outDir}/output`,
-				client_out_dir: `${svelte_config.kit.outDir}/output/client/`
+				client_out_dir: `${svelte_config.kit.outDir}/output/client`
 			};
 
 			illegal_imports = new Set([
@@ -230,7 +230,7 @@ function kit() {
 			/** @type {import('vite').UserConfig} */
 			const result = {
 				appType: 'custom',
-				base: '/',
+				base: './',
 				build: {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point
@@ -266,6 +266,9 @@ function kit() {
 							`${posixify(svelte_config.kit.outDir)}/!(generated)`
 						]
 					}
+				},
+				ssr: {
+					external: ['@sveltejs/kit']
 				}
 			};
 

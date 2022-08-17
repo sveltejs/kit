@@ -239,7 +239,6 @@ export interface SSROptions {
 		base: string;
 		assets: string;
 	};
-	prefix: string;
 	prerender: {
 		default: boolean;
 		enabled: boolean;
