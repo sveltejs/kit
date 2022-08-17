@@ -7,4 +7,4 @@
 '@sveltejs/kit': patch
 ---
 
-[chore] upgrade to Vite 3.0.8
+[chore] upgrade to Vite 3.0.8 and esbuild 0.14.54
