@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.420
+
+### Patch Changes
+
+- [fix] support linked `@sveltejs/kit` project in Vite 3.0.3+ ([#5861](https://github.com/sveltejs/kit/pull/5861))
+
 ## 1.0.0-next.419
 
 ### Patch Changes
