@@ -246,12 +246,18 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 
 		exports.push(`export type PageData = ${data};`);
 		if (load) {
-			exports.push(`export type PageLoad = ${load};`);
+			exports.push(
+				`export type PageLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
+			);
+			exports.push('export type PageLoadEvent = Parameters<PageLoad>[0];');
 		}
 
 		exports.push(`export type PageServerData = ${server_data};`);
 		if (server_load) {
-			exports.push(`export type PageServerLoad = ${server_load};`);
+			exports.push(
+				`export type PageServerLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${server_load};`
+			);
+			exports.push('export type PageServerLoadEvent = Parameters<PageServerLoad>[0];');
 		}
 
 		if (group.leaf.server) {
@@ -292,12 +298,18 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 
 			exports.push(`export type LayoutData = ${data};`);
 			if (load) {
-				exports.push(`export type LayoutLoad = ${load};`);
+				exports.push(
+					`export type LayoutLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
+				);
+				exports.push('export type LayoutLoadEvent = Parameters<LayoutLoad>[0];');
 			}
 
 			exports.push(`export type LayoutServerData = ${server_data};`);
 			if (server_load) {
-				exports.push(`export type LayoutServerLoad = ${server_load};`);
+				exports.push(
+					`export type LayoutServerLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${server_load};`
+				);
+				exports.push('export type LayoutServerLoadEvent = Parameters<LayoutServerLoad>[0];');
 			}
 		}
 
@@ -312,7 +324,13 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 			const load_exports = [];
 
 			/** @type {string[]} */
+			const load_event_exports = [];
+
+			/** @type {string[]} */
 			const server_load_exports = [];
+
+			/** @type {string[]} */
+			const server_load_event_exports = [];
 
 			for (const [name, node] of group.named_layouts) {
 				const { data, server_data, load, server_load, written_proxies } = process_node(
@@ -326,26 +344,39 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 				data_exports.push(`export type ${name} = ${data};`);
 				server_data_exports.push(`export type ${name} = ${server_data};`);
 				if (load) {
-					load_exports.push(`export type ${name} = ${load};`);
+					load_exports.push(
+						`export type ${name}<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
+					);
+					load_event_exports.push(`export type ${name} = Parameters<LayoutLoad.${name}>[0];`);
 				}
 				if (server_load) {
-					server_load_exports.push(`export type ${name} = ${load};`);
+					server_load_exports.push(
+						`export type ${name}<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
+					);
+					server_load_event_exports.push(
+						`export type ${name} = Parameters<LayoutServerLoad.${name}>[0];`
+					);
 				}
 			}
 
 			exports.push(`\nexport namespace LayoutData {\n\t${data_exports.join('\n\t')}\n}`);
 			exports.push(`\nexport namespace LayoutLoad {\n\t${load_exports.join('\n\t')}\n}`);
+			exports.push(`\nexport namespace LayoutLoadEvent {\n\t${load_event_exports.join('\n\t')}\n}`);
 			exports.push(
 				`\nexport namespace LayoutServerData {\n\t${server_data_exports.join('\n\t')}\n}`
 			);
 			exports.push(
 				`\nexport namespace LayoutServerLoad {\n\t${server_load_exports.join('\n\t')}\n}`
 			);
+			exports.push(
+				`\nexport namespace LayoutServerLoadEvent {\n\t${server_load_event_exports.join('\n\t')}\n}`
+			);
 		}
 	}
 
 	if (group.endpoint) {
 		exports.push(`export type RequestHandler = Kit.RequestHandler<RouteParams>;`);
+		exports.push(`export type RequestEvent = Kit.RequestEvent<RouteParams>;`);
 	}
 
 	const output = [imports.join('\n'), declarations.join('\n'), exports.join('\n')]
@@ -384,7 +415,7 @@ function process_node(ts, node, outdir, params, groups) {
 		}
 
 		server_data = get_data_type(node.server, 'load', 'null', proxy);
-		server_load = `Kit.ServerLoad<${params}, ${get_parent_type('LayoutServerData')}>`;
+		server_load = `Kit.ServerLoad<${params}, ${get_parent_type('LayoutServerData')}, OutputData>`;
 
 		if (proxy) {
 			const types = [];
@@ -415,7 +446,7 @@ function process_node(ts, node, outdir, params, groups) {
 		}
 
 		data = get_data_type(node.shared, 'load', server_data, proxy);
-		load = `Kit.Load<${params}, ${server_data}, ${get_parent_type('LayoutData')}>`;
+		load = `Kit.Load<${params}, ${server_data}, ${get_parent_type('LayoutData')}, OutputData>`;
 	} else {
 		data = server_data;
 	}
@@ -468,7 +499,7 @@ function process_node(ts, node, outdir, params, groups) {
 			parent = parent_layout.parent;
 		}
 
-		let parent_str = parent_imports[0] || 'null';
+		let parent_str = parent_imports[0] || 'Record<never, never>';
 		for (let i = 1; i < parent_imports.length; i++) {
 			// Omit is necessary because a parent could have a property with the same key which would
 			// cause a type conflict. At runtime the child overwrites the parent property in this case,

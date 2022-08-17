@@ -86,7 +86,7 @@ export async function render_response({
 			/** @type {import('types').Page} */
 			page: {
 				error,
-				params: event.params,
+				params: /** @type {Record<string, any>} */ (event.params),
 				routeId: event.routeId,
 				status,
 				url: state.prerendering ? new PrerenderingURL(event.url) : event.url,

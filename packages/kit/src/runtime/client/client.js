@@ -448,7 +448,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   routeId: string | null;
-	 * 	 server_data: import('types').JSONObject | null;
+	 * 	 server_data: Record<string, any> | null;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
