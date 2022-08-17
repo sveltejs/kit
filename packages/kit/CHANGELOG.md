@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.417
+
+### Patch Changes
+
+- Render pages without a .svelte file in their proper layout/error files ([#5972](https://github.com/sveltejs/kit/pull/5972))
+
 ## 1.0.0-next.416
 
 ### Patch Changes
