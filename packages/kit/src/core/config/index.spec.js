@@ -175,7 +175,6 @@ test('errors on invalid nested values', () => {
 test('does not error on invalid top-level values', () => {
 	assert.not.throws(() => {
 		validate_config({
-			// @ts-expect-error - valid option for others but not in our definition
 			onwarn: () => {}
 		});
 	});
