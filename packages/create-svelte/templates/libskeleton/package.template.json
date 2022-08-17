@@ -3,8 +3,7 @@
 	"version": "0.0.1",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "svelte-kit sync && svelte-package",
-		"prepare": "svelte-kit sync"
+		"build": "svelte-kit sync && svelte-package"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",
