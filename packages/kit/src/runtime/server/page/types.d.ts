@@ -1,4 +1,4 @@
-import { JSONValue, ResponseHeaders, SSRNode, CspDirectives } from 'types';
+import { ResponseHeaders, SSRNode, CspDirectives } from 'types';
 import { HttpError } from '../../../index/private';
 
 export interface Fetched {
@@ -21,7 +21,7 @@ export interface FetchState {
 export type Loaded = {
 	node: SSRNode;
 	data: Record<string, any> | null;
-	server_data: JSONValue;
+	server_data: any;
 };
 
 type CspMode = 'hash' | 'nonce' | 'auto';

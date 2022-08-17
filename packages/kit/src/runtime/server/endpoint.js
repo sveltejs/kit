@@ -29,7 +29,9 @@ export async function render_endpoint(event, route) {
 		return method_not_allowed(mod, method);
 	}
 
-	const response = await handler(event);
+	const response = await handler(
+		/** @type {import('types').RequestEvent<Record<string, any>>} */ (event)
+	);
 
 	if (!(response instanceof Response)) {
 		return new Response(

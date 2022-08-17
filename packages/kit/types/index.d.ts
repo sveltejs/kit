@@ -7,8 +7,6 @@ import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
 	CspDirectives,
-	JSONObject,
-	JSONValue,
 	Logger,
 	MaybePromise,
 	Prerendered,
@@ -194,18 +192,18 @@ export interface HandleError {
  * rather than using `Load` directly.
  */
 export interface Load<
-	Params extends Record<string, string> = Record<string, string>,
-	InputData extends JSONObject | null = JSONObject | null,
-	ParentData extends Record<string, any> | null = Record<string, any> | null,
-	OutputData extends Record<string, any> = Record<string, any>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	InputData extends Record<string, any> | null = Record<string, any> | null,
+	ParentData extends Record<string, any> = Record<string, any>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
 > {
-	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData | void>;
+	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData>;
 }
 
 export interface LoadEvent<
-	Params extends Record<string, string> = Record<string, string>,
-	Data extends JSONObject | null = JSONObject | null,
-	ParentData extends Record<string, any> | null = Record<string, any> | null
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Data extends Record<string, any> | null = Record<string, any> | null,
+	ParentData extends Record<string, any> = Record<string, any>
 > {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
@@ -235,7 +233,9 @@ export interface ParamMatcher {
 	(param: string): boolean;
 }
 
-export interface RequestEvent<Params extends Record<string, string> = Record<string, string>> {
+export interface RequestEvent<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> {
 	clientAddress: string;
 	locals: App.Locals;
 	params: Params;
@@ -259,8 +259,6 @@ export interface ResolveOptions {
 	ssr?: boolean;
 	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 }
-
-export type ResponseBody = JSONValue | Uint8Array | ReadableStream | Error;
 
 export class Server {
 	constructor(manifest: SSRManifest);
@@ -295,21 +293,23 @@ export interface SSRManifest {
  * rather than using `ServerLoad` directly.
  */
 export interface ServerLoad<
-	Params extends Record<string, string> = Record<string, string>,
-	ParentData extends JSONObject | null = JSONObject | null,
-	OutputData extends JSONObject | void = JSONObject | void
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	ParentData extends Record<string, any> = Record<string, any>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
 > {
-	(event: ServerLoadEvent<Params, ParentData>): MaybePromise<OutputData | void>;
+	(event: ServerLoadEvent<Params, ParentData>): MaybePromise<OutputData>;
 }
 
 export interface ServerLoadEvent<
-	Params extends Record<string, string> = Record<string, string>,
-	ParentData extends JSONObject | null = JSONObject | null
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	ParentData extends Record<string, any> = Record<string, any>
 > extends RequestEvent<Params> {
 	parent: () => Promise<ParentData>;
 }
 
-export interface Action<Params extends Record<string, string> = Record<string, string>> {
+export interface Action<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> {
 	(event: RequestEvent<Params>): MaybePromise<
 		| { status?: number; errors: Record<string, string>; location?: never }
 		| { status?: never; errors?: never; location: string }
