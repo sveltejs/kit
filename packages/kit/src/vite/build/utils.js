@@ -87,7 +87,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
  * }} options
  * @return {import('vite').UserConfig}
  */
-export const get_default_config = function ({ config, input, ssr, outDir }) {
+export function get_default_build_config({ config, input, ssr, outDir }) {
 	const prefix = `${config.kit.appDir}/immutable`;
 
 	return {
@@ -135,7 +135,7 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 			}
 		}
 	};
-};
+}
 
 /**
  * @param {import('types').ValidatedKitConfig} config
