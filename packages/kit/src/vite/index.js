@@ -268,6 +268,10 @@ function kit() {
 					}
 				},
 				ssr: {
+					// Without this, Vite will treat `@sveltejs/kit` as noExternal if it's
+					// a linked dependency, and that causes modules to be imported twice
+					// under different IDs, which breaks a bunch of stuff
+					// https://github.com/vitejs/vite/pull/9296
 					external: ['@sveltejs/kit']
 				}
 			};
