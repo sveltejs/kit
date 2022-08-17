@@ -175,7 +175,7 @@ export default function create_manifest_data({
 				// This ensures that layouts and errors are set for pages that have no Svelte file
 				// and only redirect or throw an error, but are set to the Svelte file definition if it exists.
 				// This ensures the proper error page is used and rendered in the proper layout.
-				if (!(route.errors.length || route.layouts.length) || item.kind === 'component') {
+				if (item.kind === 'component' || route.layouts.length === 0) {
 					const { layouts, errors } = trace(
 						tree,
 						id,
