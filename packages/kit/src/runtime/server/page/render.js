@@ -252,7 +252,16 @@ export async function render_response({
 			serialized_data.push(
 				render_json_payload_script(
 					{ type: 'server_data' },
-					branch.map(({ server_data }) => server_data)
+					branch.map(({ server_data }) => server_data),
+					(key, value) => {
+						const tag = check_serializability(value);
+
+						if (tag) {
+							throw new Error(`Cannot serialize "${key}": ${tag} returned from load function`);
+						}
+
+						return value;
+					}
 				)
 			);
 		}
@@ -338,4 +347,35 @@ export async function render_response({
 		status,
 		headers
 	});
+}
+
+/**
+ * Check whether a value can be serialized as JSON, and return a tag
+ * if not that can be used to throw a descriptive error
+ * @param {any} value
+ */
+function check_serializability(value) {
+	const type = typeof value;
+
+	if (type === 'string' || type === 'boolean' || type === 'number' || type === 'undefined') {
+		// primitives are fine
+		return;
+	}
+
+	if (type === 'object') {
+		// nulls are fine...
+		if (!value) return;
+
+		// ...so are plain arrays...
+		if (Array.isArray(value)) return;
+
+		// ...and objects
+		const tag = Object.prototype.toString.call(value);
+		if (tag !== '[object Object]') return tag;
+
+		return;
+	}
+
+	// everything else is not serializable
+	return `[${type}]`;
 }
