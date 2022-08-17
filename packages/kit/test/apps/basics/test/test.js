@@ -278,15 +278,17 @@ test.describe('Shadowed pages', () => {
 		);
 	});
 
-	test('Data must be serializable', async ({ page, clicknav }) => {
-		await page.goto('/shadowed');
-		await clicknav('[href="/shadowed/serialization"]');
+	if (process.env.DEV) {
+		test('Data must be serializable', async ({ page, clicknav }) => {
+			await page.goto('/shadowed');
+			await clicknav('[href="/shadowed/serialization"]');
 
-		expect(await page.textContent('h1')).toBe('500');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "data.regex returned from \'load\' in src/routes/shadowed/serialization/+page.server.js cannot be serialized as JSON"'
-		);
-	});
+			expect(await page.textContent('h1')).toBe('500');
+			expect(await page.textContent('#message')).toBe(
+				'This is your custom error page saying: "data.regex returned from \'load\' in src/routes/shadowed/serialization/+page.server.js cannot be serialized as JSON"'
+			);
+		});
+	}
 });
 
 test.describe('Encoded paths', () => {
