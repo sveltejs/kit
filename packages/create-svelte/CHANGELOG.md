@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.154
+
+### Patch Changes
+
+- remove session remnants ([#5966](https://github.com/sveltejs/kit/pull/5966))
+
+* remove outdated notes in `api.ts` ([#5964](https://github.com/sveltejs/kit/pull/5964))
+
 ## 2.0.0-next.153
 
 ### Patch Changes
