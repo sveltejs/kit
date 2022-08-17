@@ -110,6 +110,7 @@ export interface Config {
 	kit?: KitConfig;
 	preprocess?: any;
 	package?: any;
+	[key: string]: any;
 }
 
 export interface KitConfig {
