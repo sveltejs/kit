@@ -1,0 +1,12 @@
+{
+	"compilerOptions": {
+		"module": "ESNext",
+		"target": "ESNext",
+		"checkJs": true,
+		"baseUrl": ".",
+		"paths": {
+			"$lib/*": ["./src/lib/*"]
+		}
+	},
+	"include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.svelte"]
+}

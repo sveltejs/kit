@@ -16,6 +16,5 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
 	},
-	"include": ["scripts/**/*", "src/**/*", "types/**/*"],
-	"exclude": ["src/packaging/test/fixtures/**/*", "src/packaging/test/watch/**/*"]
+	"include": ["scripts/**/*", "src/**/*", "types/**/*"]
 }

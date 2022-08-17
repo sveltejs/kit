@@ -173,13 +173,7 @@ const options = object(
 
 			outDir: string('.svelte-kit'),
 
-			package: object({
-				dir: string('package'),
-				// excludes all .d.ts and filename starting with _
-				exports: fun((filepath) => !/^_|\/_|\.d\.ts$/.test(filepath)),
-				files: fun(() => true),
-				emitTypes: boolean(true)
-			}),
+			package: error((keypath) => `${keypath} has been removed — use @sveltejs/package instead`),
 
 			paths: object({
 				base: validate('', (input, keypath) => {

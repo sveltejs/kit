@@ -95,10 +95,6 @@ const get_defaults = (prefix = '') => ({
 		},
 		moduleExtensions: ['.js', '.ts'],
 		outDir: join(prefix, '.svelte-kit'),
-		package: {
-			dir: 'package',
-			emitTypes: true
-		},
 		serviceWorker: {
 			register: true
 		},
@@ -129,15 +125,14 @@ const get_defaults = (prefix = '') => ({
 			pollInterval: 0
 		},
 		// TODO cleanup for 1.0
-		vite: undefined
+		vite: undefined,
+		package: undefined
 	}
 });
 
 test('fills in defaults', () => {
 	const validated = validate_config({});
 
-	assert.equal(validated.kit.package.exports(''), true);
-	assert.equal(validated.kit.package.files(''), true);
 	assert.equal(validated.kit.serviceWorker.files(''), true);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
@@ -200,8 +195,6 @@ test('fills in partial blanks', () => {
 		}
 	});
 
-	assert.equal(validated.kit.package.exports(''), true);
-	assert.equal(validated.kit.package.files(''), true);
 	assert.equal(validated.kit.serviceWorker.files(''), true);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');

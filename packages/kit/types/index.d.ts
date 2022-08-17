@@ -107,6 +107,7 @@ export interface Config {
 	extensions?: string[];
 	kit?: KitConfig;
 	preprocess?: any;
+	package?: any;
 	[key: string]: any;
 }
 
@@ -142,12 +143,6 @@ export interface KitConfig {
 		allowed?: string[];
 	};
 	outDir?: string;
-	package?: {
-		dir?: string;
-		emitTypes?: boolean;
-		exports?(filepath: string): boolean;
-		files?(filepath: string): boolean;
-	};
 	paths?: {
 		assets?: string;
 		base?: string;
