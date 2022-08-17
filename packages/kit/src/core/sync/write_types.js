@@ -246,12 +246,16 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 
 		exports.push(`export type PageData = ${data};`);
 		if (load) {
-			exports.push(`export type PageLoad = ${load};`);
+			exports.push(
+				`export type PageLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
+			);
 		}
 
 		exports.push(`export type PageServerData = ${server_data};`);
 		if (server_load) {
-			exports.push(`export type PageServerLoad = ${server_load};`);
+			exports.push(
+				`export type PageServerLoad<OutputData extends Kit.JSONObject | void = Kit.JSONObject | void> = ${server_load};`
+			);
 		}
 
 		if (group.leaf.server) {
@@ -292,12 +296,16 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 
 			exports.push(`export type LayoutData = ${data};`);
 			if (load) {
-				exports.push(`export type LayoutLoad = ${load};`);
+				exports.push(
+					`export type LayoutLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
+				);
 			}
 
 			exports.push(`export type LayoutServerData = ${server_data};`);
 			if (server_load) {
-				exports.push(`export type LayoutServerLoad = ${server_load};`);
+				exports.push(
+					`export type LayoutServerLoad<OutputData extends Kit.JSONObject | void = Kit.JSONObject | void> = ${server_load};`
+				);
 			}
 		}
 
@@ -326,10 +334,14 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 				data_exports.push(`export type ${name} = ${data};`);
 				server_data_exports.push(`export type ${name} = ${server_data};`);
 				if (load) {
-					load_exports.push(`export type ${name} = ${load};`);
+					load_exports.push(
+						`export type ${name}<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
+					);
 				}
 				if (server_load) {
-					server_load_exports.push(`export type ${name} = ${load};`);
+					server_load_exports.push(
+						`export type ${name}<OutputData extends Kit.JSONObject | void = Kit.JSONObject | void> = ${load};`
+					);
 				}
 			}
 
@@ -384,7 +396,7 @@ function process_node(ts, node, outdir, params, groups) {
 		}
 
 		server_data = get_data_type(node.server, 'load', 'null', proxy);
-		server_load = `Kit.ServerLoad<${params}, ${get_parent_type('LayoutServerData')}>`;
+		server_load = `Kit.ServerLoad<${params}, ${get_parent_type('LayoutServerData')}, OutputData>`;
 
 		if (proxy) {
 			const types = [];
@@ -415,7 +427,7 @@ function process_node(ts, node, outdir, params, groups) {
 		}
 
 		data = get_data_type(node.shared, 'load', server_data, proxy);
-		load = `Kit.Load<${params}, ${server_data}, ${get_parent_type('LayoutData')}>`;
+		load = `Kit.Load<${params}, ${server_data}, ${get_parent_type('LayoutData')}, OutputData>`;
 	} else {
 		data = server_data;
 	}

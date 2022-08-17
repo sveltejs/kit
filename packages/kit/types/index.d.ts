@@ -264,6 +264,8 @@ export interface ResolveOptions {
 
 export type ResponseBody = JSONValue | Uint8Array | ReadableStream | Error;
 
+export { JSONObject };
+
 export class Server {
 	constructor(manifest: SSRManifest);
 	init(options: ServerInitOptions): void;
