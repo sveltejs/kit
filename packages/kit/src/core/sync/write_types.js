@@ -468,7 +468,7 @@ function process_node(ts, node, outdir, params, groups) {
 			parent = parent_layout.parent;
 		}
 
-		let parent_str = parent_imports[0] || 'null';
+		let parent_str = parent_imports[0] || 'Record<never, never>';
 		for (let i = 1; i < parent_imports.length; i++) {
 			// Omit is necessary because a parent could have a property with the same key which would
 			// cause a type conflict. At runtime the child overwrites the parent property in this case,
