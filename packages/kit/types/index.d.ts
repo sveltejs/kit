@@ -107,7 +107,13 @@ export interface Config {
 	extensions?: string[];
 	kit?: KitConfig;
 	preprocess?: any;
-	package?: any;
+	package?: {
+		source?: string;
+		dir?: string;
+		emitTypes?: boolean;
+		exports?: (filepath: string) => boolean;
+		files?: (filepath: string) => boolean;
+	};
 	[key: string]: any;
 }
 
