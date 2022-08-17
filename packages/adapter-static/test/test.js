@@ -14,8 +14,11 @@ run('prerendered', (test) => {
 });
 
 run('spa', (test) => {
-	test('generates a fallback page', ({ cwd }) => {
+	test('generates a fallback page', async ({ base, cwd, page }) => {
 		assert.ok(fs.existsSync(`${cwd}/build/200.html`));
+
+		await page.goto(`${base}/fallback/a/b/c`);
+		assert.equal(await page.textContent('h1'), 'the fallback page was rendered');
 	});
 
 	test('does not prerender pages without prerender=true', ({ cwd }) => {

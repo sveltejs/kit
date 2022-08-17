@@ -188,6 +188,12 @@ test.describe('Shadowed pages', () => {
 		);
 	});
 
+	test('Handles POST success with returned location', async ({ page }) => {
+		await page.goto('/shadowed/post-success-redirect');
+		await Promise.all([page.waitForNavigation(), page.click('button')]);
+		expect(await page.textContent('h1')).toBe('POST was successful');
+	});
+
 	test('Renders error page for 4xx and 5xx responses from GET', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/error-get"]');
