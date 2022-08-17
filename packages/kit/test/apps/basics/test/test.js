@@ -278,7 +278,7 @@ test.describe('Shadowed pages', () => {
 
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot serialize "regex": [object RegExp] returned from load function"'
+			'This is your custom error page saying: "data.regex returned from \'load\' in src/routes/shadowed/serialization/+page.server.js cannot be serialized as JSON"'
 		);
 	});
 });
