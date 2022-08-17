@@ -12,6 +12,10 @@ const config = {
 		fs: {
 			allow: [path.resolve('../../../src')]
 		}
+	},
+	ssr: {
+		// workaround https://github.com/vitejs/vite/pull/9296
+		external: process.env.NODE_ENV === 'development' ? ['@sveltejs/kit'] : undefined
 	}
 };
 
