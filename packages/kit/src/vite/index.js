@@ -276,7 +276,7 @@ function kit() {
 				},
 				optimizeDeps: {
 					exclude: ['@sveltejs/kit']
-				},
+				}
 			};
 
 			deferred_warning = warn_overridden_config(config, result);
