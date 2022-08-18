@@ -164,7 +164,7 @@ export async function POST({ request, setHeaders, url }) {
 	}
 
 	setHeaders({
-		'set-cookie': createSessionCookie(user.id)
+		'Set-Cookie': createSessionCookie(user.id)
 	});
 
 	return {
