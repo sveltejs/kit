@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.156
+
+### Patch Changes
+
+- update `app.d.ts` for library skeleton template ([#6020](https://github.com/sveltejs/kit/pull/6020))
+
 ## 2.0.0-next.155
 
 ### Patch Changes

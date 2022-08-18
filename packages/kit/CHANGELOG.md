@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.421
+
+### Patch Changes
+
+- Respect `export const prerender = false` in `+page.server.js` ([#6012](https://github.com/sveltejs/kit/pull/6012))
+
 ## 1.0.0-next.420
 
 ### Patch Changes
