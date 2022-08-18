@@ -117,7 +117,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			});
 		}
 
-		const should_prerender = leaf_node.shared?.prerender ?? options.prerender.default;
+		const should_prerender =
+			leaf_node.shared?.prerender ?? leaf_node.server?.prerender ?? options.prerender.default;
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
