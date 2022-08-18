@@ -449,6 +449,8 @@ function process_node(ts, node, outdir, params, groups) {
 		server_data = 'null';
 	}
 
+	const parent_type = get_parent_type('LayoutData');
+
 	if (node.shared) {
 		const content = fs.readFileSync(node.shared, 'utf8');
 		const proxy = tweak_types(ts, content, shared_names);
@@ -456,10 +458,17 @@ function process_node(ts, node, outdir, params, groups) {
 			written_proxies.push(write(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code));
 		}
 
-		data = get_data_type(node.shared, 'load', server_data, proxy);
-		load = `Kit.Load<${params}, ${server_data}, ${get_parent_type('LayoutData')}, OutputData>`;
+		data = `${parent_type} & ${get_data_type(
+			node.shared,
+			'load',
+			`${parent_type} & ${server_data}`,
+			proxy
+		)}`;
+		load = `Kit.Load<${params}, ${server_data}, ${parent_type}, OutputData>`;
+	} else if (server_data === 'null') {
+		data = parent_type;
 	} else {
-		data = server_data;
+		data = `${parent_type} & ${server_data}`;
 	}
 
 	return { data, server_data, load, server_load, errors, written_proxies };
