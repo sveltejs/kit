@@ -405,7 +405,7 @@ export function create_client({ target, base, trailing_slash }) {
 		for (let i = 0; i < filtered.length; i += 1) {
 			data = { ...data, ...filtered[i].data };
 			// Only set props if the node actually updated. This prevents needless rerenders.
-			if (!current.branch.some((node) => node === filtered[i])) {
+			if (data_changed || !current.branch.some((node) => node === filtered[i])) {
 				result.props[`data_${i}`] = data;
 				data_changed = true;
 			}
