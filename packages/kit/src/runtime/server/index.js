@@ -290,7 +290,7 @@ export async function respond(request, options, state) {
 								}
 							});
 
-							return json({
+							response = json({
 								type: 'data',
 								nodes: await Promise.all(promises)
 							});
