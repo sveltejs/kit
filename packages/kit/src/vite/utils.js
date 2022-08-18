@@ -319,9 +319,6 @@ function find_illegal_vite_imports(node, illegal_imports, module_types, seen = n
 	if (!node.id) return null; // TODO when does this happen?
 	const name = removeQueryFromPath(normalizePath(node.id));
 
-	console.log(name);
-	console.log(name === '$env/dynamic/private');
-	console.log(name === '/@id/__x00__$env/dynamic/private');
 	if (path.extname(name) !== '' && (seen.has(name) || !module_types.has(path.extname(name)))) {
 		return null;
 	}
