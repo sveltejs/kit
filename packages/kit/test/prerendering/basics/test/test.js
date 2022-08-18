@@ -99,6 +99,11 @@ test('does not prerender page with shadow endpoint with non-load handler', () =>
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 
+test('does not prerender page with prerender = false in +page.server.js', () => {
+	assert.ok(!fs.existsSync(`${build}/page-server-options.html`));
+	assert.ok(!fs.existsSync(`${build}/page-server-options/__data.json`));
+});
+
 test('decodes paths when writing files', () => {
 	let content = read('encoding/path with spaces.html');
 	assert.ok(content.includes('<p id="a">path with spaces</p>'));

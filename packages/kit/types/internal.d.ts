@@ -211,12 +211,11 @@ export interface SSRNode {
 		hydrate?: boolean;
 		prerender?: boolean;
 		router?: boolean;
-		ssr?: boolean;
 	};
 
 	server: {
 		load?: ServerLoad;
-		HEAD?: ServerLoad;
+		prerender?: boolean;
 		POST?: Action;
 		PATCH?: Action;
 		PUT?: Action;
