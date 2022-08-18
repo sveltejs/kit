@@ -1,11 +1,12 @@
 import { GENERATED_COMMENT } from './constants.js';
+import { runtime_base } from './utils.js';
 
 /**
  * @param {string} id
  * @param {Record<string, string>} env
  * @returns {string}
  */
-export function create_module(id, env) {
+export function create_static_module(id, env) {
 	/** @type {string[]} */
 	const declarations = [];
 
@@ -21,6 +22,14 @@ export function create_module(id, env) {
 	}
 
 	return GENERATED_COMMENT + declarations.join('\n\n');
+}
+
+/**
+ * @param {boolean} pub
+ * @returns {string}
+ */
+export function create_dynamic_module(pub) {
+	return `export { env } from '${runtime_base}/env-${pub ? 'public' : 'private'}.js';`;
 }
 
 /**

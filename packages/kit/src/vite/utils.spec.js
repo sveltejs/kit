@@ -222,8 +222,6 @@ test('transform kit.alias to resolve.alias', () => {
 	assert.equal(transformed, [
 		{ find: '__GENERATED__', replacement: '.svelte-kit/generated' },
 		{ find: '$app', replacement: 'src/runtime/app' },
-		{ find: '$env/dynamic/public', replacement: 'src/runtime/env/dynamic/public.js' },
-		{ find: '$env/dynamic/private', replacement: 'src/runtime/env/dynamic/private.js' },
 		{ find: '$lib', replacement: 'src/lib' },
 		{ find: 'simpleKey', replacement: 'simple/value' },
 		{ find: /^key$/.toString(), replacement: 'value' },
@@ -316,8 +314,7 @@ test('does not allow bad dynamic rollup imports', () => {
 			// @ts-ignore
 			rollup_node_getter,
 			bad_rollup_node_dynamic,
-			illegal_imports,
-			''
+			illegal_imports
 		);
 	});
 });
