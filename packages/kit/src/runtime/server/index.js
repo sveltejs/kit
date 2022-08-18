@@ -145,10 +145,10 @@ export async function respond(request, options, state) {
 				if (lower in headers) {
 					if (lower === 'set-cookie') {
 						if (!Array.isArray(headers[lower])) {
-							headers[lower] = [/**@type{string} */ (headers[lower])];
+							headers[lower] = [/** @type{string} */ (headers[lower])];
 						}
-						const cookies = /**@type{string[]} */ (headers[lower]);
-						const new_cookies = /**@type{string[]} */ (
+						const cookies = /** @type{string[]} */ (headers[lower]);
+						const new_cookies = /** @type{string[]} */ (
 							Array.isArray(new_headers[key]) ? new_headers[key] : [new_headers[key]]
 						);
 						for (const new_cookie of new_cookies) {
