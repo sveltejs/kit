@@ -161,7 +161,6 @@ export async function respond(request, options, state) {
 						throw new Error(`"${key}" header is already set`);
 					}
 				} else {
-					// TODO apply these headers to the response <- is this TODO outdated?
 					headers[lower] = new_headers[key];
 				}
 
