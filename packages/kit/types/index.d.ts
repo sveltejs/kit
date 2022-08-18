@@ -312,7 +312,7 @@ export interface Action<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
 > {
 	(event: RequestEvent<Params>): MaybePromise<
-		| { status?: number; errors: Record<string, string>; location?: never }
+		| { status?: number; errors: Record<string, any>; location?: never }
 		| { status?: never; errors?: never; location: string }
 		| void
 	>;
