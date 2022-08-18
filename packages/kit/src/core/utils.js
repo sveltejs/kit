@@ -16,6 +16,16 @@ export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', im
 /** Prefix for the `runtime` directory, for use with import declarations */
 export const runtime_prefix = posixify_path(runtime_directory);
 
+/**
+ * TODO: Make good comment
+ */
+export const runtime_base = runtime_directory.startsWith(process.cwd())
+	? `/${path.relative('.', runtime_directory)}`
+	: `/@fs${
+			// Windows/Linux separation - Windows starts with a drive letter, we need a / in front there
+			runtime_directory.startsWith('/') ? '' : '/'
+	  }${runtime_directory}`;
+
 /** @param {string} str */
 function posixify_path(str) {
 	const parsed = path.parse(str);
