@@ -139,12 +139,23 @@ function get_groups(manifest_data, routes_dir) {
 		return group;
 	}
 
-	// first, sort nodes by path length (necessary for finding the nearest layout more efficiently)...
-	const nodes = [...manifest_data.nodes].sort(
-		(n1, n2) =>
+	// first, sort nodes (necessary for finding the nearest layout more efficiently)...
+	const nodes = [...manifest_data.nodes].sort((n1, n2) => {
+		// Sort by path length first...
+		const path_length_diff =
 			/** @type {string} */ (n1.component ?? n1.shared ?? n1.server).split('/').length -
-			/** @type {string} */ (n2.component ?? n2.shared ?? n2.server).split('/').length
-	);
+			/** @type {string} */ (n2.component ?? n2.shared ?? n2.server).split('/').length;
+
+		return (
+			path_length_diff ||
+			// ...on ties, sort named layouts first
+			(path.basename(n1.component || '').includes('-')
+				? -1
+				: path.basename(n2.component || '').includes('-')
+				? 1
+				: 0)
+		);
+	});
 
 	// ...then, populate `directories` with +page/+layout files...
 	for (let i = 0; i < nodes.length; i += 1) {
@@ -713,12 +724,12 @@ export function find_nearest_layout(routes_dir, nodes, start_idx) {
 	}
 
 	let common_path = path.dirname(start_file);
-	if (match[1] === 'layout' && !name) {
+	if (match[1] === 'layout' && !match[2] && !name) {
 		// We are a default layout, so we skip the current level
 		common_path = path.dirname(common_path);
 	}
 
-	for (let i = start_idx; i >= 0; i -= 1) {
+	for (let i = start_idx - 1; i >= 0; i -= 1) {
 		const node = nodes[i];
 		const file = /** @type {string} */ (node.component || node.shared || node.server);
 
