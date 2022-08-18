@@ -147,6 +147,26 @@ test.describe('Errors', () => {
 			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
 		);
 	});
+
+	test('throw error(..) in endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-throw-error');
+
+		const error = read_errors('/errors/endpoint-throw-error');
+		expect(error).toBe(undefined);
+
+		expect(await res?.text()).toBe('You shall not pass');
+		expect(res?.status()).toBe(401);
+	});
+
+	test('throw redirect(..) in endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-throw-redirect');
+		expect(res?.status()).toBe(200); // redirects are opaque to the browser
+
+		const error = read_errors('/errors/endpoint-throw-redirect');
+		expect(error).toBe(undefined);
+
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+	});
 });
 
 test.describe('Load', () => {
