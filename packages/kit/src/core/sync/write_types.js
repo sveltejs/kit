@@ -458,16 +458,14 @@ function process_node(ts, node, outdir, params, groups) {
 			written_proxies.push(write(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code));
 		}
 
-		data = `${parent_type} & ${get_data_type(
-			node.shared,
-			`${parent_type} & ${server_data}`,
-			proxy
-		)}`;
+		const type = get_data_type(node.shared, `${parent_type} & ${server_data}`, proxy);
+
+		data = `Omit<${parent_type}, keyof ${type}> & ${type}`;
 		load = `Kit.Load<${params}, ${server_data}, ${parent_type}, OutputData>`;
 	} else if (server_data === 'null') {
 		data = parent_type;
 	} else {
-		data = `${parent_type} & ${server_data}`;
+		data = `Omit<${parent_type}, keyof ${server_data}> & ${server_data}`;
 	}
 
 	return { data, server_data, load, server_load, errors, written_proxies };
