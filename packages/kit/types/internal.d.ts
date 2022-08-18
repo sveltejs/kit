@@ -220,6 +220,7 @@ export interface SSRNode {
 		PATCH?: Action;
 		PUT?: Action;
 		DELETE?: Action;
+		OPTIONS?: Action;
 	};
 }
 

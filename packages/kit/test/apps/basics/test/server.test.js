@@ -49,6 +49,17 @@ test.describe('Endpoints', () => {
 		expect(headers.head).toEqual(headers.get);
 	});
 
+	test('OPTIONS request', async ({ request }) => {
+		const url = '/endpoint-output/body';
+
+		var response = await request.fetch(url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(response.text()).toBe('{}');
+	});
+
 	// TODO all the remaining tests in this section are really only testing
 	// setResponse, since we're not otherwise changing anything on the response.
 	// might be worth making these unit tests instead
