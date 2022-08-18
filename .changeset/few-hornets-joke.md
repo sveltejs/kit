@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Respect prerender = false in +page.server.js
+Respect `export const prerender = false` in `+page.server.js`
