@@ -425,7 +425,7 @@ function process_node(ts, node, outdir, params, groups) {
 			written_proxies.push(write(`${outdir}/proxy${basename}`, proxy.code));
 		}
 
-		server_data = get_data_type(node.server, 'load', 'null', proxy);
+		server_data = get_data_type(node.server, 'null', proxy);
 		server_load = `Kit.ServerLoad<${params}, ${get_parent_type('LayoutServerData')}, OutputData>`;
 
 		if (proxy) {
@@ -460,7 +460,6 @@ function process_node(ts, node, outdir, params, groups) {
 
 		data = `${parent_type} & ${get_data_type(
 			node.shared,
-			'load',
 			`${parent_type} & ${server_data}`,
 			proxy
 		)}`;
@@ -475,19 +474,18 @@ function process_node(ts, node, outdir, params, groups) {
 
 	/**
 	 * @param {string} file_path
-	 * @param {string} method
 	 * @param {string} fallback
 	 * @param {Proxy} proxy
 	 */
-	function get_data_type(file_path, method, fallback, proxy) {
+	function get_data_type(file_path, fallback, proxy) {
 		if (proxy) {
-			if (proxy.exports.includes(method)) {
+			if (proxy.exports.includes('load')) {
 				// If the file wasn't tweaked, we can use the return type of the original file.
 				// The advantage is that type updates are reflected without saving.
 				const from = proxy.modified
 					? `./proxy${replace_ext_with_js(path.basename(file_path))}`
 					: path_to_original(outdir, file_path);
-				return `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('${from}').${method}>>>`;
+				return `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('${from}').load>>>`;
 			} else {
 				return fallback;
 			}
