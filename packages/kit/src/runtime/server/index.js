@@ -267,6 +267,7 @@ export async function respond(request, options, state) {
 									return {
 										// TODO return `uses`, so we can reuse server data effectively
 										data: await load_server_data({
+											dev: options.dev,
 											event,
 											node,
 											parent: async () => {

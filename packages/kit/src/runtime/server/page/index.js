@@ -161,6 +161,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					}
 
 					return await load_server_data({
+						dev: options.dev,
 						event,
 						node,
 						parent: async () => {

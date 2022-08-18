@@ -5,6 +5,7 @@
 <a href="/shadowed/no-get">no-get</a>
 <a href="/shadowed/dynamic/foo">dynamic/foo</a>
 <a href="/shadowed/missing-get">missing-get</a>
+<a href="/shadowed/serialization">serialization</a>
 
 <form action="/shadowed/redirect-post" method="post">
 	<button type="submit" id="redirect-post">redirect</button>

@@ -221,6 +221,9 @@ export interface SSRNode {
 		PUT?: Action;
 		DELETE?: Action;
 	};
+
+	// store this in dev so we can print serialization errors
+	server_id?: string;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
