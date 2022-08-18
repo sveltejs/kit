@@ -50,7 +50,7 @@ test.describe('Endpoints', () => {
 	});
 
 	test('OPTIONS request', async ({ request }) => {
-		const url = '/endpoint-output/body';
+		const url = '/endpoint-output/options';
 
 		var response = await request.fetch(url, {
 			method: 'OPTIONS'
