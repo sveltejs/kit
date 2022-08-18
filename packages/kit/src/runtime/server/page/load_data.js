@@ -5,7 +5,7 @@ import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
  * @param {{
  *   event: import('types').RequestEvent;
  *   node: import('types').SSRNode | undefined;
- *   parent: () => Promise<import('types').JSONObject | null>;
+ *   parent: () => Promise<Record<string, any>>;
  * }} opts
  */
 export async function load_server_data({ event, node, parent }) {
@@ -33,26 +33,15 @@ export async function load_server_data({ event, node, parent }) {
 /**
  * Calls the user's `load` function.
  * @param {{
- *   $session: Record<string, any>;
  *   event: import('types').RequestEvent;
  *   fetcher: typeof fetch;
  *   node: import('types').SSRNode | undefined;
- *   options: import('types').SSROptions;
  *   parent: () => Promise<Record<string, any>>;
- *   server_data_promise: Promise<import('types').JSONObject | null>;
+ *   server_data_promise: Promise<Record<string, any> | null>;
  *   state: import('types').SSRState;
  * }} opts
  */
-export async function load_data({
-	$session,
-	event,
-	fetcher,
-	node,
-	options,
-	parent,
-	server_data_promise,
-	state
-}) {
+export async function load_data({ event, fetcher, node, parent, server_data_promise, state }) {
 	const server_data = await server_data_promise;
 
 	if (!node?.shared?.load) {
@@ -65,12 +54,10 @@ export async function load_data({
 		data: server_data,
 		routeId: event.routeId,
 		get session() {
-			if (node.shared.prerender ?? options.prerender.default) {
-				throw Error(
-					'Attempted to access session from a prerendered page. Session would never be populated.'
-				);
-			}
-			return $session;
+			// TODO remove for 1.0
+			throw new Error(
+				'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
+			);
 		},
 		fetch: fetcher,
 		setHeaders: event.setHeaders,
@@ -83,7 +70,7 @@ export async function load_data({
 
 /** @param {Record<string, any>} object */
 async function unwrap_promises(object) {
-	/** @type {import('types').JSONObject} */
+	/** @type {Record<string, any>} */
 	const unwrapped = {};
 
 	for (const key in object) {

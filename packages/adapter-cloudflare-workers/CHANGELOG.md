@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.53
+
+### Patch Changes
+
+- expose caches on platform ([#5887](https://github.com/sveltejs/kit/pull/5887))
+
 ## 1.0.0-next.52
 
 ### Patch Changes

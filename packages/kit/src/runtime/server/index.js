@@ -222,7 +222,6 @@ export async function respond(request, options, state) {
 						event,
 						options,
 						state,
-						$session: await options.hooks.getSession(event),
 						page_config: { router: true, hydrate: true },
 						status: 200,
 						error: null,
@@ -250,17 +249,22 @@ export async function respond(request, options, state) {
 								try {
 									if (error) return;
 
-									const node = n ? await options.manifest._.nodes[n]() : undefined;
+									// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
+									const node = n == undefined ? n : await options.manifest._.nodes[n]();
 									return {
 										// TODO return `uses`, so we can reuse server data effectively
 										data: await load_server_data({
 											event,
 											node,
 											parent: async () => {
-												/** @type {import('types').JSONObject} */
+												/** @type {Record<string, any>} */
 												const data = {};
 												for (let j = 0; j < i; j += 1) {
-													Object.assign(data, await promises[j]);
+													const parent = await promises[j];
+													if (!parent || parent instanceof HttpError || 'error' in parent) {
+														return data;
+													}
+													Object.assign(data, parent.data);
 												}
 												return data;
 											}
@@ -360,12 +364,10 @@ export async function respond(request, options, state) {
 				// if this request came direct from the user, rather than
 				// via a `fetch` in a `load`, render a 404 page
 				if (!state.initiator) {
-					const $session = await options.hooks.getSession(event);
 					return await respond_with_error({
 						event,
 						options,
 						state,
-						$session,
 						status: 404,
 						error: new Error(`Not found: ${event.url.pathname}`),
 						resolve_opts
@@ -413,12 +415,10 @@ export async function respond(request, options, state) {
 
 		// TODO is this necessary? should we just return a plain 500 at this point?
 		try {
-			const $session = await options.hooks.getSession(event);
 			return await respond_with_error({
 				event,
 				options,
 				state,
-				$session,
 				status: 500,
 				error,
 				resolve_opts

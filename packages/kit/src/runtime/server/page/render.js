@@ -1,7 +1,6 @@
 import devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import * as cookie from 'cookie';
-import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
@@ -25,7 +24,6 @@ const updated = {
  *   cookies: import('set-cookie-parser').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
- *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean };
  *   status: number;
  *   error: HttpError | Error | null;
@@ -40,7 +38,6 @@ export async function render_response({
 	cookies,
 	options,
 	state,
-	$session,
 	page_config,
 	status,
 	error = null,
@@ -79,40 +76,23 @@ export async function render_response({
 	}
 
 	if (resolve_opts.ssr) {
-		for (const { node } of branch) {
-			if (node.imports) {
-				node.imports.forEach((url) => modulepreloads.add(url));
-			}
-
-			if (node.stylesheets) {
-				node.stylesheets.forEach((url) => stylesheets.add(url));
-			}
-
-			if (node.inline_styles) {
-				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
-			}
-		}
-
-		const session = writable($session);
-
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session,
 				updated
 			},
 			/** @type {import('types').Page} */
 			page: {
 				error,
-				params: event.params,
+				params: /** @type {Record<string, any>} */ (event.params),
 				routeId: event.routeId,
 				status,
 				url: state.prerendering ? new PrerenderingURL(event.url) : event.url,
 				data: branch.reduce((acc, { data }) => (Object.assign(acc, data), acc), {})
 			},
-			components: branch.map(({ node }) => node.component)
+			components: await Promise.all(branch.map(({ node }) => node.component()))
 		};
 
 		// TODO remove this for 1.0
@@ -143,6 +123,20 @@ export async function render_response({
 		}
 
 		rendered = options.root.render(props);
+
+		for (const { node } of branch) {
+			if (node.imports) {
+				node.imports.forEach((url) => modulepreloads.add(url));
+			}
+
+			if (node.stylesheets) {
+				node.stylesheets.forEach((url) => stylesheets.add(url));
+			}
+
+			if (node.inline_styles) {
+				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
+			}
+		}
 	} else {
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
@@ -156,18 +150,37 @@ export async function render_response({
 
 	const target = hash(body);
 
+	/**
+	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
+	 * @type {string}
+	 */
+	let assets;
+
+	if (options.paths.assets) {
+		// if an asset path is specified, use it
+		assets = options.paths.assets;
+	} else if (state.prerendering?.fallback) {
+		// if we're creating a fallback page, asset paths need to be root-relative
+		assets = options.paths.base;
+	} else {
+		// otherwise we want asset paths to be relative to the page, so that they
+		// will work in odd contexts like IPFS, the internet archive, and so on
+		const segments = event.url.pathname.slice(options.paths.base.length).split('/').slice(2);
+		assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+	}
+
+	/** @param {string} path */
+	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
+
 	// prettier-ignore
 	const init_app = `
-		import { set_public_env, start } from ${s(options.prefix + entry.file)};
+		import { set_public_env, start } from ${s(prefixed(entry.file))};
 
 		set_public_env(${s(options.public_env)});
 
 		start({
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
-			session: ${try_serialize($session, (error) => {
-				throw new Error(`Failed to serialize session data: ${error.message}`);
-			})},
 			route: ${!!page_config.router},
 			spa: ${!resolve_opts.ssr},
 			trailing_slash: ${s(options.trailing_slash)},
@@ -204,7 +217,7 @@ export async function render_response({
 	}
 
 	for (const dep of stylesheets) {
-		const path = options.prefix + dep;
+		const path = prefixed(dep);
 		const attributes = [];
 
 		if (csp.style_needs_nonce) {
@@ -226,7 +239,7 @@ export async function render_response({
 
 	if (page_config.router || page_config.hydrate) {
 		for (const dep of modulepreloads) {
-			const path = options.prefix + dep;
+			const path = prefixed(dep);
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
 			if (state.prerendering) {
 				head += `\n\t<link rel="modulepreload" href="${path}">`;
@@ -301,10 +314,6 @@ export async function render_response({
 		}
 	}
 
-	const segments = event.url.pathname.slice(options.paths.base.length).split('/').slice(2);
-	const assets =
-		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
-
 	// TODO flush chunks as early as we can
 	const html =
 		(await resolve_opts.transformPageChunk({
@@ -347,17 +356,4 @@ export async function render_response({
 		status,
 		headers
 	});
-}
-
-/**
- * @param {any} data
- * @param {(error: Error) => void} [fail]
- */
-function try_serialize(data, fail) {
-	try {
-		return devalue(data);
-	} catch (err) {
-		if (fail) fail(coalesce_to_error(err));
-		return null;
-	}
 }

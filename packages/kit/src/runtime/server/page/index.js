@@ -43,8 +43,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		}
 	}
 
-	const $session = await options.hooks.getSession(event);
-
 	const { fetcher, fetched, cookies } = create_fetch({ event, options, state, route });
 
 	try {
@@ -79,7 +77,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					}
 
 					if (event.request.method === 'POST' && result?.location) {
-						return redirect_response(status, result.location);
+						return redirect_response(303, result.location);
 					}
 				} else {
 					event.setHeaders({
@@ -97,6 +95,9 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			}
 		}
 
+		const should_prerender_data = nodes.some((node) => node?.server);
+		const data_pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
+
 		if (!resolve_opts.ssr) {
 			return await render_response({
 				branch: [],
@@ -112,7 +113,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 				event,
 				options,
 				state,
-				$session,
 				resolve_opts
 			});
 		}
@@ -141,7 +141,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		/** @type {Error | null} */
 		let load_error = null;
 
-		/** @type {Array<Promise<import('types').JSONObject | null>>} */
+		/** @type {Array<Promise<Record<string, any> | null>>} */
 		const server_promises = nodes.map((node, i) => {
 			if (load_error) {
 				// if an error happens immediately, don't bother with the rest of the nodes
@@ -160,7 +160,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 						event,
 						node,
 						parent: async () => {
-							/** @type {import('types').JSONObject} */
+							/** @type {Record<string, any>} */
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
 								Object.assign(data, await server_promises[j]);
@@ -181,11 +181,9 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			return Promise.resolve().then(async () => {
 				try {
 					return await load_data({
-						$session,
 						event,
 						fetcher,
 						node,
-						options,
 						parent: async () => {
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
@@ -220,6 +218,16 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					const error = normalize_error(e);
 
 					if (error instanceof Redirect) {
+						if (state.prerendering && should_prerender_data) {
+							state.prerendering.dependencies.set(data_pathname, {
+								response: new Response(undefined),
+								body: JSON.stringify({
+									type: 'redirect',
+									location: error.location
+								})
+							});
+						}
+
 						return redirect_response(error.status, error.location);
 					}
 
@@ -241,7 +249,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 								event,
 								options,
 								state,
-								$session,
 								resolve_opts,
 								page_config: { router: true, hydrate: true },
 								status,
@@ -274,19 +281,14 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			}
 		}
 
-		// generate __data.json files when prerendering
-		if (state.prerendering && nodes.some((node) => node?.server)) {
-			const pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
-
-			const dependency = {
+		if (state.prerendering && should_prerender_data) {
+			state.prerendering.dependencies.set(data_pathname, {
 				response: new Response(undefined),
 				body: JSON.stringify({
 					type: 'data',
 					nodes: branch.map((branch_node) => ({ data: branch_node?.server_data }))
 				})
-			};
-
-			state.prerendering.dependencies.set(pathname, dependency);
+			});
 		}
 
 		// TODO use validation_errors
@@ -295,7 +297,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			event,
 			options,
 			state,
-			$session,
 			resolve_opts,
 			page_config: get_page_config(leaf_node, options),
 			status,
@@ -314,7 +315,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			event,
 			options,
 			state,
-			$session,
 			status: 500,
 			error: /** @type {Error} */ (error),
 			resolve_opts

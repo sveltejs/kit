@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"noEmit": true,
+		"strict": true,
+		"target": "es2020",
+		"module": "es2022",
+		"moduleResolution": "node",
+		"allowSyntheticDefaultImports": true,
+		"paths": {
+			// internal use only
+			"types": ["./types/index"]
+		}
+	},
+	"include": ["src/**/*", "test/index.js", "types/**/*"],
+	"exclude": ["src/test/fixtures/**/*", "src/test/watch/**/*"]
+}

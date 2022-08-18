@@ -11,7 +11,6 @@ export { set_public_env } from '../env-public.js';
  *     base: string;
  *   },
  *   target: Element;
- *   session: any;
  *   route: boolean;
  *   spa: boolean;
  *   trailing_slash: import('types').TrailingSlash;
@@ -24,10 +23,9 @@ export { set_public_env } from '../env-public.js';
  *   };
  * }} opts
  */
-export async function start({ paths, target, session, route, spa, trailing_slash, hydrate }) {
+export async function start({ paths, target, route, spa, trailing_slash, hydrate }) {
 	const client = create_client({
 		target,
-		session,
 		base: paths.base,
 		trailing_slash
 	});

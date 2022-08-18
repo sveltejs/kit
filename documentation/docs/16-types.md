@@ -81,7 +81,7 @@ export type PageLoad = Kit.Load<RouteParams>;
 // @errors: 2355
 // ---cut---
 /** @type {import('./$types').PageLoad} */
-export async function load({ params, fetch, session }) {
+export async function load({ params, fetch }) {
 	// ...
 }
 ```

@@ -188,6 +188,12 @@ test.describe('Shadowed pages', () => {
 		);
 	});
 
+	test('Handles POST success with returned location', async ({ page }) => {
+		await page.goto('/shadowed/post-success-redirect');
+		await Promise.all([page.waitForNavigation(), page.click('button')]);
+		expect(await page.textContent('h1')).toBe('POST was successful');
+	});
+
 	test('Renders error page for 4xx and 5xx responses from GET', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/error-get"]');
@@ -250,6 +256,26 @@ test.describe('Shadowed pages', () => {
 		if (javaScriptEnabled) {
 			expect(requests).not.toContain(`${baseURL}/shadowed/missing-get`);
 		}
+	});
+
+	test('Parent data is present', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/parent');
+		await expect(page.locator('h2')).toHaveText('Layout data: {"layout":"layout"}');
+		await expect(page.locator('p')).toHaveText(
+			'Page data: {"page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+		);
+
+		await clicknav('[href="/shadowed/parent?test"]');
+		await expect(page.locator('h2')).toHaveText('Layout data: {"layout":"layout"}');
+		await expect(page.locator('p')).toHaveText(
+			'Page data: {"page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+		);
+
+		await clicknav('[href="/shadowed/parent/sub"]');
+		await expect(page.locator('h2')).toHaveText('Layout data: {"layout":"layout"}');
+		await expect(page.locator('p')).toHaveText(
+			'Page data: {"sub":"sub","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+		);
 	});
 });
 
@@ -501,15 +527,6 @@ test.describe('Errors', () => {
 			'This is your custom error page saying: "Error in handle"'
 		);
 		expect(await page.innerHTML('h1')).toBe('500');
-	});
-
-	test('prerendering a page whose load accesses session results in a catchable error', async ({
-		page
-	}) => {
-		await page.goto('/prerendering');
-		expect(await page.textContent('h1')).toBe(
-			'500: Attempted to access session from a prerendered page. Session would never be populated.'
-		);
 	});
 
 	test('prerendering a page with a mutative page endpoint results in a catchable error', async ({
@@ -1059,20 +1076,6 @@ test.describe('$app/stores', () => {
 		expect(await page.textContent('h1')).toBe(baseURL);
 	});
 
-	test('page store functions as expected', async ({ page, clicknav, javaScriptEnabled }) => {
-		await page.goto('/store');
-
-		expect(await page.textContent('h1')).toBe('Test');
-		expect(await page.textContent('h2')).toBe('Calls: 1');
-
-		await clicknav('a[href="/store/result"]');
-		expect(await page.textContent('h1')).toBe('Result');
-		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 1' : 'Calls: 0');
-
-		const oops = await page.evaluate(() => window.oops);
-		expect(oops).toBeUndefined();
-	});
-
 	test('page store contains data', async ({ page, clicknav }) => {
 		await page.goto('/store/data/www');
 
@@ -1154,7 +1157,7 @@ test.describe('$app/stores', () => {
 			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
 			await page.click('a[href="/store/navigating/a"]');
 
-			await page.waitForSelector('#not-navigating', { timeout: 500 });
+			await page.waitForSelector('#not-navigating', { timeout: 5000 });
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 		}
 	});
@@ -1446,6 +1449,7 @@ test.describe('Routing', () => {
 		await clicknav('[href="/routing/a"]');
 
 		await page.goBack();
+		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
@@ -1635,21 +1639,6 @@ test.describe('Routing', () => {
 	test('serves a page that clashes with a root directory', async ({ page }) => {
 		await page.goto('/static');
 		expect(await page.textContent('h1')).toBe('hello');
-	});
-});
-
-test.describe('Session', () => {
-	test('session is available', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/session');
-
-		expect(await page.innerHTML('h1')).toBe('answer via props: 42');
-		expect(await page.innerHTML('h2')).toBe('answer via store: 42');
-
-		if (javaScriptEnabled) {
-			await page.click('button');
-			expect(await page.innerHTML('h3')).toBe('answer via props is 43');
-			expect(await page.innerHTML('h4')).toBe('answer via store is 43');
-		}
 	});
 });
 

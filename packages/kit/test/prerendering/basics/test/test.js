@@ -21,6 +21,20 @@ test('renders a redirect', () => {
 	);
 });
 
+test('renders a server-side redirect', () => {
+	const html = read('redirect-server.html');
+	assert.equal(html, '<meta http-equiv="refresh" content="0;url=https://example.com/redirected">');
+
+	const json = read('redirect-server/__data.json');
+	assert.equal(
+		json,
+		JSON.stringify({
+			type: 'redirect',
+			location: 'https://example.com/redirected'
+		})
+	);
+});
+
 test('does not double-encode redirect locations', () => {
 	const content = read('redirect-encoded.html');
 	assert.equal(

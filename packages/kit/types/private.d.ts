@@ -26,15 +26,6 @@ export interface AdapterEntry {
 	}) => MaybePromise<void>;
 }
 
-// TODO is this still used?
-export type BodyValidator<T> = {
-	[P in keyof T]: T[P] extends { [k: string]: unknown }
-		? BodyValidator<T[P]> // recurse when T[P] is an object
-		: T[P] extends BigInt | Function | Symbol
-		? never
-		: T[P];
-};
-
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
 //
 // MIT License
@@ -145,20 +136,6 @@ export interface CspDirectives {
 
 export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
-export interface JSONObject {
-	[key: string]: JSONValue;
-}
-
-export type JSONValue =
-	| string
-	| number
-	| boolean
-	| null
-	| undefined
-	| ToJSON
-	| JSONValue[]
-	| JSONObject;
-
 export interface Logger {
 	(msg: string): void;
 	success(msg: string): void;
@@ -227,10 +204,6 @@ export interface RouteSegment {
 	content: string;
 	dynamic: boolean;
 	rest: boolean;
-}
-
-export interface ToJSON {
-	toJSON(...args: any[]): Exclude<JSONValue, ToJSON>;
 }
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
