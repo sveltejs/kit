@@ -36,7 +36,11 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		'application/json'
 	]);
 
-	if (accept === 'application/json') {
+	if (
+		accept === 'application/json' &&
+		event.request.method !== 'GET' &&
+		event.request.method !== 'HEAD'
+	) {
 		const node = await options.manifest._.nodes[route.leaf]();
 		if (node.server) {
 			return handle_json_request(event, options, node.server);
@@ -346,8 +350,8 @@ function get_page_config(leaf, options) {
  * @param {import('types').SSRNode['server']} mod
  */
 export async function handle_json_request(event, options, mod) {
-	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
-	const handler = mod[method === 'HEAD' || method === 'GET' ? 'load' : method];
+	const method = /** @type {'POST' | 'PUT' | 'PATCH' | 'DELETE'} */ (event.request.method);
+	const handler = mod[method];
 
 	if (!handler) {
 		return method_not_allowed(mod, method);
@@ -356,14 +360,6 @@ export async function handle_json_request(event, options, mod) {
 	try {
 		// @ts-ignore
 		const result = await handler.call(null, event);
-
-		if (method === 'HEAD') {
-			return new Response();
-		}
-
-		if (method === 'GET') {
-			return json(result);
-		}
 
 		if (result?.errors) {
 			// @ts-ignore
