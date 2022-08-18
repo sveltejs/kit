@@ -279,6 +279,18 @@ export function load() {
 
 Unlike `+page.js`, `+layout.js` cannot export `prerender`, `hydrate` and `router`, as these are page-level options.
 
+Data returned from a layout's `load` function is also available to all its child pages:
+
+```svelte
+/// file: src/routes/settings/profile/+page.svelte
+<script>
+	/** @type {import('./$types').PageData} */
+	export let data;
+
+	console.log(data.sections); // [{ slug: 'profile', title: 'Profile' }, ...]
+</script>
+```
+
 > Often, layout data is unchanged when navigating between pages. SvelteKit will intelligently re-run [`load`](/docs/load) functions when necessary.
 
 #### +layout.server.js
