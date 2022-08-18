@@ -18,10 +18,10 @@ export type RecursiveRequired<T> = {
 };
 
 export interface ValidatedConfig {
-	preprocess?: any;
 	extensions: string[];
-	package: RecursiveRequired<PackageConfig>;
 	kit?: any;
+	package: RecursiveRequired<PackageConfig>;
+	preprocess?: any;
 }
 
 export type Validator<T = any> = (input: T, keypath: string) => T;
