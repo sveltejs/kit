@@ -203,7 +203,10 @@ export async function load({ parent, fetch }) {
 	const data = await fetch('./some-api');
 +	const parentData = await parent();
 
-	return { ...data, ...parentData };
+	return {
+		...data
+		meta: { ...parentData.meta, ...data.meta }
+	};
 }
 ```
 
