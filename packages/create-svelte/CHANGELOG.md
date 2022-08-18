@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.157
+
+### Patch Changes
+
+- Run svelte-kit sync before svelte-check in check scripts ([#6037](https://github.com/sveltejs/kit/pull/6037))
+
 ## 2.0.0-next.156
 
 ### Patch Changes

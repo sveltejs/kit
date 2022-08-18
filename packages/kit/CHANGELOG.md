@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.0.0-next.422
+
+### Patch Changes
+
+- [breaking] remove ability for `+page.server.js` to respond to `GET` requests with JSON ([#6007](https://github.com/sveltejs/kit/pull/6007))
+
+* Handle `throw error/redirect` in `+server.js` ([#6028](https://github.com/sveltejs/kit/pull/6028))
+
+- handle `set-cookie` in `setHeaders` ([#6033](https://github.com/sveltejs/kit/pull/6033))
+
+* Handle windows paths and regexp chars in kit.alias ([#6034](https://github.com/sveltejs/kit/pull/6034))
+
+- Make errors type in Action type less restrictive ([#6022](https://github.com/sveltejs/kit/pull/6022))
+
+* Check that data is serializable ([#5987](https://github.com/sveltejs/kit/pull/5987))
+
+- Fix parent data type for layouts referencing named layouts in the same folder ([#6025](https://github.com/sveltejs/kit/pull/6025))
+
 ## 1.0.0-next.421
 
 ### Patch Changes
