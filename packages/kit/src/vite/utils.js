@@ -177,9 +177,18 @@ function repeat(str, times) {
  */
 function format_illegal_import_chain(stack, out_dir) {
 	const app = path.join(out_dir, 'runtime/env');
+	const dev_virtual_prefix = '/@id/__x00__';
+	const prod_virtual_prefix = '\0';
 
 	stack = stack.map((file) => {
 		if (file.name.startsWith(app)) return { ...file, name: file.name.replace(app, '$env') };
+		if (file.name.startsWith(dev_virtual_prefix)) {
+			return { ...file, name: file.name.replace(dev_virtual_prefix, '') };
+		}
+		if (file.name.startsWith(prod_virtual_prefix)) {
+			return { ...file, name: file.name.replace(prod_virtual_prefix, '') };
+		}
+
 		return { ...file, name: path.relative(process.cwd(), file.name) };
 	});
 
@@ -306,7 +315,9 @@ function find_illegal_vite_imports(node, illegal_imports, module_types, seen = n
 	if (!node.id) return null; // TODO when does this happen?
 	const name = normalizePath(node.id);
 
-	if (seen.has(name) || !module_types.has(path.extname(name))) return null;
+	if (path.extname(name) !== '' && (seen.has(name) || !module_types.has(path.extname(name)))) {
+		return null;
+	}
 	seen.add(name);
 
 	if (name && illegal_imports.has(name)) {

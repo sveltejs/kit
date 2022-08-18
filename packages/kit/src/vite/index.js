@@ -212,7 +212,8 @@ function kit() {
 
 			illegal_imports = new Set([
 				vite.normalizePath(`${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`),
-				vite.normalizePath(`${svelte_config.kit.outDir}/runtime/env/static/private.js`)
+				'/@id/__x00__$env/static/private', // dev
+				'\0$env/static/private' // prod
 			]);
 
 			if (is_build) {
