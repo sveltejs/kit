@@ -26,7 +26,7 @@ SvelteKit redirects pathnames with trailing slashes to ones without (or vice ver
 
 Every page should have well-written and unique `<title>` and `<meta name="description">` elements inside a [`<svelte:head>`](https://svelte.dev/docs#template-syntax-svelte-head). Guidance on how to write descriptive titles and descriptions, along with other suggestions on making content understandable by search engines, can be found on Google's [Lighthouse SEO audits](https://web.dev/lighthouse-seo/) documentation.
 
-> A common pattern is to return SEO-related [`stuff`](/docs/load#output-stuff) from page `load` functions, then use it (as [`$page.stuff`](/docs/modules#$app-stores)) in a `<svelte:head>` in your root [layout](/docs/routing#layout).
+> A common pattern is to return SEO-related `data` from page [`load`](/docs/load) functions, then use it (as [`$page.data`](/docs/modules#$app-stores)) in a `<svelte:head>` in your root [layout](/docs/routing#layout).
 
 #### Structured data
 
@@ -59,7 +59,8 @@ export default config;
 ```js
 /// file: src/routes/sitemap.xml/+server.js
 export async function GET() {
-	return new Response(`
+	return new Response(
+		`
 		<?xml version="1.0" encoding="UTF-8" ?>
 		<urlset
 			xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
