@@ -207,7 +207,15 @@ test('merge resolve.alias', () => {
 
 test('transform kit.alias to resolve.alias', () => {
 	const config = validate_config({
-		kit: { alias: { simpleKey: 'simple/value', key: 'value', 'key/*': 'value/*' } }
+		kit: {
+			alias: {
+				simpleKey: 'simple/value',
+				key: 'value',
+				'key/*': 'value/*',
+				$regexChar: 'windows\\path',
+				'$regexChar/*': 'windows\\path\\*'
+			}
+		}
 	});
 
 	const transformed = get_aliases(config.kit).map((entry) => {
@@ -227,7 +235,9 @@ test('transform kit.alias to resolve.alias', () => {
 		{ find: '$lib', replacement: 'src/lib' },
 		{ find: 'simpleKey', replacement: 'simple/value' },
 		{ find: /^key$/.toString(), replacement: 'value' },
-		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' }
+		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' },
+		{ find: /^\$regexChar$/.toString(), replacement: 'windows/path' },
+		{ find: /^\$regexChar\/(.+)$/.toString(), replacement: 'windows/path/$1' }
 	]);
 });
 

@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { loadConfigFromFile, loadEnv, normalizePath } from 'vite';
 import { runtime_directory } from '../core/utils.js';
+import { posixify } from '../utils/filesystem.js';
 
 /**
  * @param {import('vite').ResolvedConfig} config
@@ -113,24 +114,35 @@ export function get_aliases(config) {
 	];
 
 	for (let [key, value] of Object.entries(config.alias)) {
+		value = posixify(value);
 		if (value.endsWith('/*')) {
 			value = value.slice(0, -2);
 		}
 		if (key.endsWith('/*')) {
 			// Doing just `{ find: key.slice(0, -2) ,..}` would mean `import .. from "key"` would also be matched, which we don't want
 			alias.push({
-				find: new RegExp(`^${key.slice(0, -2)}\\/(.+)$`),
+				find: new RegExp(`^${escape_for_regexp(key.slice(0, -2))}\\/(.+)$`),
 				replacement: `${path.resolve(value)}/$1`
 			});
 		} else if (key + '/*' in config.alias) {
 			// key and key/* both exist -> the replacement for key needs to happen _only_ on import .. from "key"
-			alias.push({ find: new RegExp(`^${key}$`), replacement: path.resolve(value) });
+			alias.push({
+				find: new RegExp(`^${escape_for_regexp(key)}$`),
+				replacement: path.resolve(value)
+			});
 		} else {
 			alias.push({ find: key, replacement: path.resolve(value) });
 		}
 	}
 
 	return alias;
+}
+
+/**
+ * @param {string} str
+ */
+function escape_for_regexp(str) {
+	return str.replace(/[.*+?^${}()|[\]\\]/g, (match) => '\\' + match);
 }
 
 /**
