@@ -72,9 +72,6 @@ const config = {
 		}
 	},
 
-	// options passed to svelte.preprocess (https://svelte.dev/docs#compile-time-svelte-preprocess)
-	preprocess: null,
-
 	// options passed to @sveltejs/package
 	package: {
 		source: 'value of kit.files.lib, if available, else src/lib',
@@ -83,7 +80,10 @@ const config = {
 		// excludes all .d.ts and files starting with _ as the name
 		exports: (filepath) => !/^_|\/_|\.d\.ts$/.test(filepath),
 		files: () => true
-	}
+	},
+
+	// options passed to svelte.preprocess (https://svelte.dev/docs#compile-time-svelte-preprocess)
+	preprocess: null
 };
 
 export default config;
