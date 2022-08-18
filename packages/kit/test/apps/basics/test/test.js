@@ -878,6 +878,21 @@ test.describe('Load', () => {
 			})
 		).toBe('rgb(255, 0, 0)');
 	});
+
+	test('page without load has access to layout data', async ({ page, clicknav }) => {
+		await page.goto('/load/accumulated');
+
+		await clicknav('[href="/load/accumulated/without-page-data"]');
+		expect(await page.textContent('h1')).toBe('foo.bar: Custom layout');
+	});
+
+	test('page with load has access to layout data', async ({ page, clicknav }) => {
+		await page.goto('/load/accumulated');
+
+		await clicknav('[href="/load/accumulated/with-page-data"]');
+		expect(await page.textContent('h1')).toBe('foo.bar: Custom layout');
+		expect(await page.textContent('h2')).toBe('pagedata: pagedata');
+	});
 });
 
 test.describe('Method overrides', () => {
