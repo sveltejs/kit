@@ -253,6 +253,14 @@ test.describe('Static files', () => {
 	});
 });
 
+test.describe('setHeaders', () => {
+	test('allows multiple set-cookie headers with different values', async ({ page }) => {
+		const response = await page.goto('/headers/set-cookie/sub');
+		const cookies = (await response?.allHeaders())['set-cookie'];
+		expect(cookies.includes('cookie1=value1') && cookies.includes('cookie2=value2')).toBe(true);
+	});
+});
+
 test.describe('Miscellaneous', () => {
 	test('does not serve version.json with an immutable cache header', async ({ request }) => {
 		// this isn't actually a great test, because caching behaviour is down to adapters.

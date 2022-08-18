@@ -118,6 +118,9 @@ export async function respond(request, options, state) {
 	/** @type {import('types').ResponseHeaders} */
 	const headers = {};
 
+	/** @type {string[]} */
+	const cookies = [];
+
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		get clientAddress() {
@@ -141,16 +144,26 @@ export async function respond(request, options, state) {
 		setHeaders: (new_headers) => {
 			for (const key in new_headers) {
 				const lower = key.toLowerCase();
+				const value = new_headers[key];
 
-				if (lower in headers) {
+				if (lower === 'set-cookie') {
+					const new_cookies = /** @type {string[]} */ (Array.isArray(value) ? value : [value]);
+
+					for (const cookie of new_cookies) {
+						if (cookies.includes(cookie)) {
+							throw new Error(`"${key}" header already has cookie with same value`);
+						}
+
+						cookies.push(cookie);
+					}
+				} else if (lower in headers) {
 					throw new Error(`"${key}" header is already set`);
-				}
+				} else {
+					headers[lower] = value;
 
-				// TODO apply these headers to the response
-				headers[lower] = new_headers[key];
-
-				if (state.prerendering && lower === 'cache-control') {
-					state.prerendering.cache = /** @type {string} */ (new_headers[key]);
+					if (state.prerendering && lower === 'cache-control') {
+						state.prerendering.cache = /** @type {string} */ (value);
+					}
 				}
 			}
 		},
@@ -312,17 +325,17 @@ export async function respond(request, options, state) {
 								: await render_page(event, route, options, state, resolve_opts);
 					}
 
-					for (const key in headers) {
-						const value = headers[key];
-						if (key === 'set-cookie') {
-							for (const cookie of Array.isArray(value) ? value : [value]) {
-								response.headers.append(key, /** @type {string} */ (cookie));
-							}
-						} else if (!is_data_request) {
-							// we only want to set cookies on __data.json requests, we don't
-							// want to cache stuff erroneously etc
+					if (!is_data_request) {
+						// we only want to set cookies on __data.json requests, we don't
+						// want to cache stuff erroneously etc
+						for (const key in headers) {
+							const value = headers[key];
 							response.headers.set(key, /** @type {string} */ (value));
 						}
+					}
+
+					for (const cookie of cookies) {
+						response.headers.append('set-cookie', cookie);
 					}
 
 					// respond with 304 if etag matches
