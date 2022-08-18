@@ -106,7 +106,6 @@ export interface Config {
 	compilerOptions?: CompileOptions;
 	extensions?: string[];
 	kit?: KitConfig;
-	preprocess?: any;
 	package?: {
 		source?: string;
 		dir?: string;
@@ -114,6 +113,7 @@ export interface Config {
 		exports?: (filepath: string) => boolean;
 		files?: (filepath: string) => boolean;
 	};
+	preprocess?: any;
 	[key: string]: any;
 }
 

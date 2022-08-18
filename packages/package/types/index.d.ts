@@ -29,6 +29,6 @@ export interface Config {
 	compilerOptions?: CompileOptions;
 	extensions?: string[];
 	kit?: any;
-	preprocess?: any;
 	package?: PackageConfig;
+	preprocess?: any;
 }
