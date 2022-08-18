@@ -143,11 +143,27 @@ export async function respond(request, options, state) {
 				const lower = key.toLowerCase();
 
 				if (lower in headers) {
-					throw new Error(`"${key}" header is already set`);
+					if (lower === 'set-cookie') {
+						if (!Array.isArray(headers[lower])) {
+							headers[lower] = [/**@type{string} */ (headers[lower])];
+						}
+						const cookies = /**@type{string[]} */ (headers[lower]);
+						const new_cookies = /**@type{string[]} */ (
+							Array.isArray(new_headers[key]) ? new_headers[key] : [new_headers[key]]
+						);
+						for (const new_cookie of new_cookies) {
+							if (cookies.includes(new_cookie)) {
+								throw new Error(`"${key}" header already has cookie with same value`);
+							}
+							cookies.push(new_cookie);
+						}
+					} else {
+						throw new Error(`"${key}" header is already set`);
+					}
+				} else {
+					// TODO apply these headers to the response <- is this TODO outdated?
+					headers[lower] = new_headers[key];
 				}
-
-				// TODO apply these headers to the response
-				headers[lower] = new_headers[key];
 
 				if (state.prerendering && lower === 'cache-control') {
 					state.prerendering.cache = /** @type {string} */ (new_headers[key]);
