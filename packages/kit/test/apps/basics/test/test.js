@@ -260,21 +260,27 @@ test.describe('Shadowed pages', () => {
 
 	test('Parent data is present', async ({ page, clicknav }) => {
 		await page.goto('/shadowed/parent');
-		await expect(page.locator('h2')).toHaveText('Layout data: {"layout":"layout"}');
+		await expect(page.locator('h2')).toHaveText(
+			'Layout data: {"foo":{"bar":"Custom layout"},"layout":"layout"}'
+		);
 		await expect(page.locator('p')).toHaveText(
-			'Page data: {"page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+			'Page data: {"foo":{"bar":"Custom layout"},"layout":"layout","page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
 		);
 
 		await clicknav('[href="/shadowed/parent?test"]');
-		await expect(page.locator('h2')).toHaveText('Layout data: {"layout":"layout"}');
+		await expect(page.locator('h2')).toHaveText(
+			'Layout data: {"foo":{"bar":"Custom layout"},"layout":"layout"}'
+		);
 		await expect(page.locator('p')).toHaveText(
-			'Page data: {"page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+			'Page data: {"foo":{"bar":"Custom layout"},"layout":"layout","page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
 		);
 
 		await clicknav('[href="/shadowed/parent/sub"]');
-		await expect(page.locator('h2')).toHaveText('Layout data: {"layout":"layout"}');
+		await expect(page.locator('h2')).toHaveText(
+			'Layout data: {"foo":{"bar":"Custom layout"},"layout":"layout"}'
+		);
 		await expect(page.locator('p')).toHaveText(
-			'Page data: {"sub":"sub","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+			'Page data: {"foo":{"bar":"Custom layout"},"layout":"layout","sub":"sub","data":{"rootlayout":"rootlayout","layout":"layout"}}'
 		);
 	});
 
@@ -842,15 +848,6 @@ test.describe('Load', () => {
 		expect(await page.innerHTML('.raw')).toBe('{ "oddly" : { "formatted" : "json" } }');
 	});
 
-	test('does not leak props to other pages', async ({ page, clicknav }) => {
-		await page.goto('/load/props/about');
-		expect(await page.textContent('p')).toBe('Data: null');
-		await clicknav('[href="/load/props/"]');
-		expect(await page.textContent('p')).toBe('Data: Hello from Index!');
-		await clicknav('[href="/load/props/about"]');
-		expect(await page.textContent('p')).toBe('Data: null');
-	});
-
 	test('server-side fetch respects set-cookie header', async ({ page, context }) => {
 		await context.clearCookies();
 
@@ -877,6 +874,21 @@ test.describe('Load', () => {
 				return el && getComputedStyle(el).color;
 			})
 		).toBe('rgb(255, 0, 0)');
+	});
+
+	test('page without load has access to layout data', async ({ page, clicknav }) => {
+		await page.goto('/load/accumulated');
+
+		await clicknav('[href="/load/accumulated/without-page-data"]');
+		expect(await page.textContent('h1')).toBe('foo.bar: Custom layout');
+	});
+
+	test('page with load has access to layout data', async ({ page, clicknav }) => {
+		await page.goto('/load/accumulated');
+
+		await clicknav('[href="/load/accumulated/with-page-data"]');
+		expect(await page.textContent('h1')).toBe('foo.bar: Custom layout');
+		expect(await page.textContent('h2')).toBe('pagedata: pagedata');
 	});
 });
 

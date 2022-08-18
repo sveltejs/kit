@@ -83,17 +83,30 @@ export async function render_response({
 				navigating: writable(null),
 				updated
 			},
-			/** @type {import('types').Page} */
-			page: {
-				error,
-				params: /** @type {Record<string, any>} */ (event.params),
-				routeId: event.routeId,
-				status,
-				url: state.prerendering ? new PrerenderingURL(event.url) : event.url,
-				data: branch.reduce((acc, { data }) => (Object.assign(acc, data), acc), {})
-			},
 			components: await Promise.all(branch.map(({ node }) => node.component()))
 		};
+
+		let data = {};
+
+		// props_n (instead of props[n]) makes it easy to avoid
+		// unnecessary updates for layout components
+		for (let i = 0; i < branch.length; i += 1) {
+			data = { ...data, ...branch[i].data };
+			props[`data_${i}`] = data;
+		}
+
+		props.page = {
+			error,
+			params: /** @type {Record<string, any>} */ (event.params),
+			routeId: event.routeId,
+			status,
+			url: state.prerendering ? new PrerenderingURL(event.url) : event.url,
+			data
+		};
+
+		if (validation_errors) {
+			props.errors = validation_errors;
+		}
 
 		// TODO remove this for 1.0
 		/**
@@ -111,16 +124,6 @@ export async function render_response({
 		print_error('origin', 'origin');
 		print_error('path', 'pathname');
 		print_error('query', 'searchParams');
-
-		// props_n (instead of props[n]) makes it easy to avoid
-		// unnecessary updates for layout components
-		for (let i = 0; i < branch.length; i += 1) {
-			props[`data_${i}`] = branch[i].data;
-		}
-
-		if (validation_errors) {
-			props.errors = validation_errors;
-		}
 
 		rendered = options.root.render(props);
 
