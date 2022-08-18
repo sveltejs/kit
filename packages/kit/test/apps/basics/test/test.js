@@ -907,6 +907,8 @@ test.describe('Load', () => {
 		await clicknav('[href="/load/unchanged/with-parent/b"]');
 		expect(await page.textContent('h1')).toBe('slug: b');
 		expect(await page.textContent('h2')).toBe('count: 0');
+
+		// this looks wrong, but is actually the intended behaviour (the increment side-effect in a GET would be a bug in a real app)
 		expect(await page.textContent('h3')).toBe('doubled: 2');
 	});
 
