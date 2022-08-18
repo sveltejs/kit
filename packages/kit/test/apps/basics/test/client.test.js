@@ -360,13 +360,6 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe("I didn't break!");
 	});
 
-	test("layout props don't cause rerender when unchanged", async ({ page, clicknav }) => {
-		await page.goto('/load/layout-props/a');
-		expect(await page.textContent('h1')).toBe('1');
-		await clicknav('[href="/load/layout-props/b"]');
-		expect(await page.textContent('h1')).toBe('1');
-	});
-
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page }) => {
 			const port = 5173;
