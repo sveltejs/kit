@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.423
+
+### Patch Changes
+
+- Accumulate data from parent layouts into `export let data` ([#6050](https://github.com/sveltejs/kit/pull/6050))
+
 ## 1.0.0-next.422
 
 ### Patch Changes
