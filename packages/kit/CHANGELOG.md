@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.427
+
+### Patch Changes
+
+- Throw error if browser.hydrate is false and browser.router is true ([#6086](https://github.com/sveltejs/kit/pull/6086))
+
 ## 1.0.0-next.426
 
 ### Patch Changes
