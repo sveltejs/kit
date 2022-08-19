@@ -1,4 +1,4 @@
-/** @type {import('./$types').PageData} */
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ params, parent }) {
 	const { count } = await parent();
 

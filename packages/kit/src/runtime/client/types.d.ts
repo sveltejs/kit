@@ -93,8 +93,10 @@ export interface ServerDataLoaded {
 	type: 'data';
 	nodes: Array<{
 		data?: Record<string, any> | null; // TODO or `-1` to indicate 'reuse cached data'?
-		status?: number;
-		message?: string;
+		httperror?: {
+			status: number;
+			message: string;
+		};
 		error?: {
 			name: string;
 			message: string;

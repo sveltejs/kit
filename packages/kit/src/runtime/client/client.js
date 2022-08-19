@@ -498,7 +498,7 @@ export function create_client({ target, base, trailing_slash }) {
 			const load_input = {
 				routeId,
 				params: uses_params,
-				data: server_data,
+				data: server_data ?? null,
 				get url() {
 					uses.url = true;
 					return load_url;
@@ -667,8 +667,8 @@ export function create_client({ target, base, trailing_slash }) {
 				if (changed_since_last_render) {
 					const payload = server_data_nodes?.[i];
 
-					if (payload?.status) {
-						throw error(payload.status, payload.message);
+					if (payload?.httperror) {
+						throw error(payload.httperror.status, payload.httperror.message);
 					}
 
 					if (payload?.error) {
@@ -1199,10 +1199,13 @@ export function create_client({ target, base, trailing_slash }) {
 					const script = document.querySelector(`script[sveltekit\\:data-type="${type}"]`);
 					return script?.textContent ? JSON.parse(script.textContent) : fallback;
 				};
-				const server_data = parse('server_data', []);
+				const all_server_data = parse('server_data', []);
 				const validation_errors = parse('validation_errors', undefined);
 
 				const branch_promises = node_ids.map(async (n, i) => {
+					// TODO handle case where this contains an "error" or "httperror"
+					const server_data = all_server_data[i];
+
 					return load_node({
 						node: await nodes[n](),
 						url,
@@ -1215,7 +1218,7 @@ export function create_client({ target, base, trailing_slash }) {
 							}
 							return data;
 						},
-						server_data: server_data[i] ?? null
+						server_data: server_data?.data ?? null
 					});
 				});
 

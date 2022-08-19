@@ -254,58 +254,62 @@ export async function respond(request, options, state) {
 					let response;
 					if (is_data_request && route.type === 'page') {
 						try {
-							/** @type {Redirect | HttpError | Error} */
-							let error;
+							let aborted = false;
 
-							// TODO only get the data we need for the navigation
 							const promises = [...route.layouts, route.leaf].map(async (n, i) => {
 								try {
-									if (error) return;
+									if (aborted) return;
 
 									// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
 									const node = n == undefined ? n : await options.manifest._.nodes[n]();
-									return {
-										// TODO return `uses`, so we can reuse server data effectively
-										data: await load_server_data({
-											dev: options.dev,
-											event,
-											node,
-											parent: async () => {
-												/** @type {Record<string, any>} */
-												const data = {};
-												for (let j = 0; j < i; j += 1) {
-													const parent = await promises[j];
-													if (!parent || parent instanceof HttpError || 'error' in parent) {
-														return data;
-													}
-													Object.assign(data, parent.data);
-												}
-												return data;
+									return await load_server_data({
+										dev: options.dev,
+										event,
+										node,
+										parent: async () => {
+											/** @type {Record<string, any>} */
+											const data = {};
+											for (let j = 0; j < i; j += 1) {
+												const parent = await promises[j];
+												Object.assign(data, parent.data);
 											}
-										})
-									};
+											return data;
+										}
+									});
 								} catch (e) {
-									error = normalize_error(e);
-
-									if (error instanceof Redirect) {
-										throw error;
-									}
-
-									if (error instanceof HttpError) {
-										return error; // { status, message }
-									}
-
-									options.handle_error(error, event);
-
-									return {
-										error: error_to_pojo(error, options.get_stack)
-									};
+									aborted = true;
+									throw e;
 								}
 							});
 
+							let length = promises.length;
+							const nodes = await Promise.all(
+								promises.map((p, i) =>
+									p.catch((e) => {
+										const error = normalize_error(e);
+
+										if (error instanceof Redirect) {
+											throw error;
+										}
+
+										length = Math.min(length, i + 1);
+
+										if (error instanceof HttpError) {
+											return { httperror: error };
+										}
+
+										options.handle_error(error, event);
+
+										return {
+											error: error_to_pojo(error, options.get_stack)
+										};
+									})
+								)
+							);
+
 							response = json({
 								type: 'data',
-								nodes: await Promise.all(promises)
+								nodes: nodes.slice(0, length)
 							});
 						} catch (e) {
 							const error = normalize_error(e);

@@ -67,10 +67,10 @@ export async function load_server_data({ dev, event, node, parent }) {
 	return {
 		data,
 		uses: {
-			dependencies: Array.from(uses.dependencies),
-			params: Array.from(uses.params),
-			parent: uses.parent,
-			url: uses.url
+			dependencies: uses.dependencies.size > 0 ? Array.from(uses.dependencies) : undefined,
+			params: uses.params.size > 0 ? Array.from(uses.params) : undefined,
+			parent: uses.parent ? 1 : undefined,
+			url: uses.url ? 1 : undefined
 		}
 	};
 }
@@ -82,7 +82,7 @@ export async function load_server_data({ dev, event, node, parent }) {
  *   fetcher: typeof fetch;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
- *   server_data_promise: Promise<Record<string, any> | null>;
+ *   server_data_promise: Promise<{ data: Record<string, any> } | null>;
  *   state: import('types').SSRState;
  * }} opts
  */
@@ -90,13 +90,13 @@ export async function load_data({ event, fetcher, node, parent, server_data_prom
 	const server_data = await server_data_promise;
 
 	if (!node?.shared?.load) {
-		return server_data;
+		return server_data?.data;
 	}
 
 	const data = await node.shared.load.call(null, {
 		url: state.prerendering ? new PrerenderingURL(event.url) : new LoadURL(event.url),
 		params: event.params,
-		data: server_data,
+		data: server_data?.data ?? null,
 		routeId: event.routeId,
 		get session() {
 			// TODO remove for 1.0

@@ -876,7 +876,7 @@ test.describe('Load', () => {
 		).toBe('rgb(255, 0, 0)');
 	});
 
-	test.only('+layout.server.js does not re-run when downstream load functions are invalidated', async ({
+	test('+layout.server.js does not re-run when downstream load functions are invalidated', async ({
 		page,
 		request,
 		clicknav
@@ -892,7 +892,7 @@ test.describe('Load', () => {
 		expect(await page.textContent('h2')).toBe('count: 0');
 	});
 
-	test.only('+layout.server.js re-runs when await parent() is called from downstream load function', async ({
+	test('+layout.server.js re-runs when await parent() is called from downstream load function', async ({
 		page,
 		request,
 		clicknav
