@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.425
+
+### Patch Changes
+
+- Silence more unknown prop warnings coming from SvelteKit ([#6078](https://github.com/sveltejs/kit/pull/6078))
+
 ## 1.0.0-next.424
 
 ### Patch Changes
