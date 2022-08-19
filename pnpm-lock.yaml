@@ -528,6 +528,7 @@ importers:
       '@sveltejs/kit': workspace:*
       '@sveltejs/site-kit': ^2.1.0
       '@types/node': ^16.11.36
+      cobe: ^0.6.0
       flexsearch: ^0.7.21
       marked: ^4.0.16
       prism-svelte: ^0.5.0
@@ -544,6 +545,7 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': 2.1.0
       '@types/node': 16.11.42
+      cobe: 0.6.0
       flexsearch: 0.7.21
       marked: 4.0.17
       prism-svelte: 0.5.0
@@ -1474,6 +1476,12 @@ packages:
   /clone/1.0.4:
     resolution: {integrity: sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg==}
     engines: {node: '>=0.8'}
+    dev: true
+
+  /cobe/0.6.0:
+    resolution: {integrity: sha512-+FuvBjhfxPMOGXkSzAmj3XVmXqq6vqKtufeg64axTr0ipBxOwGIpyXN6T6wR7SGRCueF/bkbyL2fMITtZwjUNQ==}
+    dependencies:
+      phenomenon: 1.6.0
     dev: true
 
   /code-point-at/1.1.0:
@@ -3191,6 +3199,10 @@ packages:
   /path-type/4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
     engines: {node: '>=8'}
+    dev: true
+
+  /phenomenon/1.6.0:
+    resolution: {integrity: sha512-7h9/fjPD3qNlgggzm88cY58l9sudZ6Ey+UmZsizfhtawO6E3srZQXywaNm2lBwT72TbpHYRPy7ytIHeBUD/G0A==}
     dev: true
 
   /picocolors/1.0.0:
