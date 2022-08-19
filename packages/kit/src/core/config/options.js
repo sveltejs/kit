@@ -107,9 +107,14 @@ const options = object(
 				return input;
 			}),
 
-			browser: object({
-				hydrate: boolean(true),
-				router: boolean(true)
+			browser: validate({ hydrate: true, router: true }, (input, keypath) => {
+				const value = object({ hydrate: boolean(true), router: boolean(true) })(input, keypath);
+				if (!value.hydrate && value.router) {
+					throw new Error(
+						'config.kit.browser.router cannot be true if config.kit.browser.hydrate is false'
+					);
+				}
+				return value;
 			}),
 
 			csp: object({
