@@ -345,3 +345,36 @@ export function load() {
 	return;
 }
 ```
+
+## A load function that returns props and status 200
+
+```js before
+export function load() {
+	return {
+		status: 200,
+		props: {}
+	};
+}
+```
+
+```js after
+export function load() {
+	return {};
+}
+```
+
+## A load function that returns status 200
+
+```js before
+export function load() {
+	return {
+		status: 200 
+	};
+}
+```
+
+```js after
+export function load() {
+	return ;
+}
+```

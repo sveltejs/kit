@@ -61,8 +61,12 @@ export function migrate_page(content, filename) {
 						return; // nothing to do
 					}
 
-					if (keys === 'props') {
-						automigration(value, file.code, dedent(nodes.props.getText()));
+					if (
+						keys === 'props' ||
+						((keys === 'status' || keys === 'props status') &&
+							Number(nodes.status.getText()) === 200)
+					) {
+						automigration(value, file.code, dedent(nodes.props?.getText() || ''));
 						return;
 					}
 
