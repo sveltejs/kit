@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.424
+
+### Patch Changes
+
+- prevent duplicate module ids by disabling optimizeDeps for @sveltejs/kit ([#6057](https://github.com/sveltejs/kit/pull/6057))
+
+* Generate types when Svelte file missing, fix layout params ([#6066](https://github.com/sveltejs/kit/pull/6066))
+
+- Silence unknown prop warnings coming from SvelteKit ([#6071](https://github.com/sveltejs/kit/pull/6071))
+
 ## 1.0.0-next.423
 
 ### Patch Changes

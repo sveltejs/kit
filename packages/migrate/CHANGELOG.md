@@ -1,5 +1,13 @@
 # svelte-migrate
 
+## 1.0.0-next.8
+
+### Patch Changes
+
+- Suggest props destructuring if possible ([#6069](https://github.com/sveltejs/kit/pull/6069))
+
+* Fix typo in migration task ([#6070](https://github.com/sveltejs/kit/pull/6070))
+
 ## 1.0.0-next.7
 
 ### Patch Changes
