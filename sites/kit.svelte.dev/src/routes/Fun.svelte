@@ -1,10 +1,11 @@
 <div class="container">
 
+
 	<div class="text">
-		<h3>Web development. <span style="font-weight:bold">But fun.</span></h3>
+		<h3>Web development. <br/><span style="font-weight:bold">But fun.</span></h3>
 		Don't take our word for it, hear what our users say…<br/>
 		<br/>
-		<p class="quote">I tried it and then I wanted to teach it immediately. I wanted to share it immediately. I wanted to build more things in it.</p>
+		<p class="quote">"I tried it and then I wanted to teach it immediately. I wanted to share it immediately. I wanted to build more things in it."</p>
 		<p><span class="author">Scott Tolinski</span><br/>Creator of Level Up Tutorials</p>
 	</div>
 
@@ -35,7 +36,10 @@
 
 	.quote {
 		color: #40b3ff;
-		font-size: 2rem;
+		font-size: 4rem;
+		line-height: 1.1;
+		max-width: 12em;
+		margin-bottom: 1rem;
 	}
 
 	.author {
