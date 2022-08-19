@@ -274,7 +274,7 @@ export function create_client({ target, base, trailing_slash }) {
 				console.warn = (...args) => {
 					if (
 						args.length !== 1 ||
-						!/<(Layout|Page)> was created with unknown prop '(data|errors)'/.test(args[0])
+						!/<(Layout|Page)(_[\w$]+)?> was created with unknown prop '(data|errors)'/.test(args[0])
 					) {
 						warn(...args);
 					}
@@ -368,7 +368,7 @@ export function create_client({ target, base, trailing_slash }) {
 			console.warn = (...args) => {
 				if (
 					args.length !== 1 ||
-					!/<(Layout|Page)> was created with unknown prop '(data|errors)'/.test(args[0])
+					!/<(Layout|Page)(_[\w$]+)?> was created with unknown prop '(data|errors)'/.test(args[0])
 				) {
 					warn(...args);
 				}
