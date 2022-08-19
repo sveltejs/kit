@@ -7,6 +7,7 @@ for (const sample of read_samples(import.meta.url)) {
 	test(sample.description, () => {
 		const actual = migrate_scripts(
 			sample.before,
+			sample.filename ?? 'some-page.svelte',
 			sample.description.includes('error'),
 			sample.description.includes('moved')
 		);

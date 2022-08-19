@@ -77,12 +77,18 @@
 ```svelte after
 <script>
 	throw new Error("@migration task: Add data prop (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292707)");
+	// Suggestion (check code before using, and possibly convert to data.X access later):
+	// /** @type {import('./$types').PageData} */
+	// export let data;
+	// $: ({ a } = data);
 
 	export let a;
 </script>
 ```
 
 ## Module context with moved imports
+
+> file: __layout.svelte
 
 ```svelte before
 <script context="module">
@@ -96,7 +102,7 @@
 	}
 </script>
 
-<script>
+<script lang="ts">
 	export let sry;
 </script>
 
@@ -117,8 +123,12 @@
 	// }
 </script>
 
-<script>
+<script lang="ts">
 	throw new Error("@migration task: Add data prop (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292707)");
+	// Suggestion (check code before using, and possibly convert to data.X access later):
+	// import type { LayoutData } from './$types';
+	// export let data: LayoutData;
+	// $: ({ sry } = data);
 
 	export let sry;
 </script>
