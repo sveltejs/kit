@@ -292,6 +292,13 @@ export interface SSRState {
 
 export type StrictBody = string | Uint8Array;
 
+export interface Uses {
+	dependencies: Set<string>;
+	params: Set<string>;
+	parent: boolean;
+	url: boolean;
+}
+
 export type ValidatedConfig = RecursiveRequired<Config>;
 
 export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
