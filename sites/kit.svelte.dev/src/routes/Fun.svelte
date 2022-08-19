@@ -1,7 +1,7 @@
 <div class="container">
 
 
-	<div class="text">
+	<div>
 		<h3>Web development. <br/><span style="font-weight:bold">But fun.</span></h3>
 		Don't take our word for it, hear what our users say…<br/>
 		<br/>
@@ -30,13 +30,9 @@
 		margin-bottom: 0.8rem;
 	}
 
-	.text {
-		margin: 25px 0 0 0;
-	}
-
 	.quote {
 		color: #40b3ff;
-		font-size: 4rem;
+		font-size: 3rem;
 		line-height: 1.1;
 		max-width: 12em;
 		margin-bottom: 1rem;

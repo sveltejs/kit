@@ -54,10 +54,6 @@ export default &lbrace;
 		width: 100%;
 	}
 
-	.anywhere {
-		margin: 50px 0 0;
-	}
-
 	.host {
 		margin: 75px 0 0;
 		text-align: center;

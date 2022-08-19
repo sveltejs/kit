@@ -23,7 +23,7 @@
 	}
 
 	.text {
-		margin-top: 50px;
+		padding-right: 50px;
 	}
 
 	h3 {

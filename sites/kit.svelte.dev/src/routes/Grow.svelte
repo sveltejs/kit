@@ -2,14 +2,12 @@
 	import createGlobe from 'cobe';
 	import { onMount } from 'svelte';
 
-	// @vedam, aren't svgs smaller in size and at better quality than .pngs?
 	import Grow from './grow.svg';
 
 	let canvas;
 	let phi = 0;
 
 	onMount(() => {
-		// @vedam, tweaked the values here
 		const globe = createGlobe(canvas, {
 			devicePixelRatio: 2,
 			width: 1000 * 2,
@@ -47,7 +45,7 @@
 			],
 			onRender: (state) => {
 				state.phi = phi;
-				phi += 0.008;
+				phi += 0.003;
 			}
 		});
 	});
@@ -81,7 +79,7 @@
 			So I tried this ugly, failing workaround. Sorry.
 			Only looks correct at arround 1500px viewport-width.
 			This should be done by someone who has a clue about what he's doing.
-			
+
 			These 7em at bottom are to push "Starts fast" down.
 		*/
 		margin: 5em 0 7em 0;
