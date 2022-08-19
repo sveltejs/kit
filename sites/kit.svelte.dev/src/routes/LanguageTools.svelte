@@ -5,7 +5,7 @@
 <div class="container">
 
 	<div class="text">
-		<h3>TypeScript and IDE support</h3>
+		<h3>TypeScript and<br/>IDE support</h3>
 		Type definitions for all APIs for first-class TypeScript support. And an official <a href="https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode">VS Code extension</a> and <a href="https://sveltesociety.dev/tools#editor-support">community support for numerous other editors</a> like Emacs, Vim, and Sublime Text.
 	</div>
 
