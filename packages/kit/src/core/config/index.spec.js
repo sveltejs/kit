@@ -246,6 +246,19 @@ test('fails if kit.appDir ends with slash', () => {
 	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs\/configuration$/);
 });
 
+test('fails if browser.hydrate is false and browser.router is true', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				browser: {
+					hydrate: false,
+					router: true
+				}
+			}
+		});
+	}, /^config\.kit\.browser\.router cannot be true if config\.kit\.browser\.hydrate is false$/);
+});
+
 test('fails if paths.base is not root-relative', () => {
 	assert.throws(() => {
 		validate_config({
