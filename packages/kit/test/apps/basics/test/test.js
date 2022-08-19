@@ -876,12 +876,12 @@ test.describe('Load', () => {
 		).toBe('rgb(255, 0, 0)');
 	});
 
-	test('+layout.server.js does not re-run when downstream load functions are invalidated', async ({
+	test.only('+layout.server.js does not re-run when downstream load functions are invalidated', async ({
 		page,
 		request,
 		clicknav
 	}) => {
-		await request.post('/load/unchanged/reset');
+		await request.get('/load/unchanged/reset');
 
 		await page.goto('/load/unchanged/isolated/a');
 		expect(await page.textContent('h1')).toBe('slug: a');
@@ -892,19 +892,19 @@ test.describe('Load', () => {
 		expect(await page.textContent('h2')).toBe('count: 0');
 	});
 
-	test('+layout.server.js re-runs when await parent() is called from downstream load function', async ({
+	test.only('+layout.server.js re-runs when await parent() is called from downstream load function', async ({
 		page,
 		request,
 		clicknav
 	}) => {
-		await request.post('/load/unchanged/reset');
+		await request.get('/load/unchanged/reset');
 
-		await page.goto('/load/unchanged/with-parent/a');
+		await page.goto('/load/unchanged/uses-parent/a');
 		expect(await page.textContent('h1')).toBe('slug: a');
 		expect(await page.textContent('h2')).toBe('count: 0');
 		expect(await page.textContent('h3')).toBe('doubled: 0');
 
-		await clicknav('[href="/load/unchanged/with-parent/b"]');
+		await clicknav('[href="/load/unchanged/uses-parent/b"]');
 		expect(await page.textContent('h1')).toBe('slug: b');
 		expect(await page.textContent('h2')).toBe('count: 0');
 
