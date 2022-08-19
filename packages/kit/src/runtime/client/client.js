@@ -345,7 +345,7 @@ export function create_client({ target, base, trailing_slash }) {
 			page = navigation_result.props.page;
 		}
 
-		const leaf_node = navigation_result.state.branch.at(-1);
+		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		router_enabled = leaf_node?.node.shared?.router !== false;
 
 		if (callback) callback();
