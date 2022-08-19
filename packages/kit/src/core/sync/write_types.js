@@ -162,10 +162,11 @@ function get_groups(manifest_data, routes_dir) {
 		/** @type {Node} */
 		const node = { ...nodes[i] }; // shallow copy so we don't mutate the original when setting parent
 
+		const file_path = /** @type {string} */ (node.component ?? node.shared ?? node.server);
 		// skip default layout/error
-		if (!node?.component?.startsWith(routes_dir)) continue;
+		if (!file_path.startsWith(routes_dir)) continue;
 
-		const parts = /** @type {string} */ (node.component ?? node.shared ?? node.server).split('/');
+		const parts = file_path.split('/');
 
 		const file = /** @type {string} */ (parts.pop());
 		const dir = parts.join('/').slice(routes_dir.length + 1);
@@ -284,7 +285,7 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 		manifest_data.routes.forEach((route) => {
 			if (route.type === 'page' && route.id.startsWith(dir + '/')) {
 				// TODO this is O(n^2), see if we need to speed it up
-				for (const name of parse_route_id(route.id).names) {
+				for (const name of parse_route_id(route.id.slice(dir.length + 1)).names) {
 					layout_params.add(name);
 				}
 			}
