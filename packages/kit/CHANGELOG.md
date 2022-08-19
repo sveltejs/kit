@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.426
+
+### Patch Changes
+
+- Avoid using [].at(-1) in the client ([#6082](https://github.com/sveltejs/kit/pull/6082))
+
 ## 1.0.0-next.425
 
 ### Patch Changes
