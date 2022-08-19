@@ -268,7 +268,22 @@ export function create_client({ target, base, trailing_slash }) {
 				navigation_result.props.page.url = url;
 			}
 
-			root.$set(navigation_result.props);
+			if (import.meta.env.DEV) {
+				// Nasty hack to silence harmless warnings the user can do nothing about
+				const warn = console.warn;
+				console.warn = (...args) => {
+					if (
+						args.length !== 1 ||
+						!/<(Layout|Page)> was created with unknown prop '(data|errors)'/.test(args[0])
+					) {
+						warn(...args);
+					}
+				};
+				root.$set(navigation_result.props);
+				tick().then(() => (console.warn = warn));
+			} else {
+				root.$set(navigation_result.props);
+			}
 		} else {
 			initialize(navigation_result);
 		}
@@ -347,11 +362,30 @@ export function create_client({ target, base, trailing_slash }) {
 
 		page = result.props.page;
 
-		root = new Root({
-			target,
-			props: { ...result.props, stores },
-			hydrate: true
-		});
+		if (import.meta.env.DEV) {
+			// Nasty hack to silence harmless warnings the user can do nothing about
+			const warn = console.warn;
+			console.warn = (...args) => {
+				if (
+					args.length !== 1 ||
+					!/<(Layout|Page)> was created with unknown prop '(data|errors)'/.test(args[0])
+				) {
+					warn(...args);
+				}
+			};
+			root = new Root({
+				target,
+				props: { ...result.props, stores },
+				hydrate: true
+			});
+			console.warn = warn;
+		} else {
+			root = new Root({
+				target,
+				props: { ...result.props, stores },
+				hydrate: true
+			});
+		}
 
 		if (router_enabled) {
 			const navigation = { from: null, to: new URL(location.href) };
