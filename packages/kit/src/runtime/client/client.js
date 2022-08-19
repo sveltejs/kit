@@ -583,25 +583,36 @@ export function create_client({ target, base, trailing_slash }) {
 					// does await parent() inside an if branch which wasn't executed yet.
 					uses.parent = true;
 					return parent;
-				},
-				// @ts-expect-error
-				get props() {
-					throw new Error(
-						'@migration task: Replace `props` with `data` stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
-					);
-				},
-				get session() {
-					// TODO remove this for 1.0
-					throw new Error(
-						'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
-					);
-				},
-				get stuff() {
-					throw new Error(
-						'@migration task: Remove stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
-					);
 				}
 			};
+
+			// TODO remove this for 1.0
+			Object.defineProperties(load_input, {
+				props: {
+					get() {
+						throw new Error(
+							'@migration task: Replace `props` with `data` stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
+						);
+					},
+					enumerable: false
+				},
+				session: {
+					get() {
+						throw new Error(
+							'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
+						);
+					},
+					enumerable: false
+				},
+				stuff: {
+					get() {
+						throw new Error(
+							'@migration task: Remove stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
+						);
+					},
+					enumerable: false
+				}
+			});
 
 			if (import.meta.env.DEV) {
 				try {
