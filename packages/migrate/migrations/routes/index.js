@@ -148,12 +148,7 @@ export async function migrate() {
 
 			renamed += svelte_ext;
 
-			const { module, main, ext } = migrate_scripts(
-				content,
-				bare,
-				is_error_page,
-				move_to_directory
-			);
+			const { module, main, ext } = migrate_scripts(content, is_error_page, move_to_directory);
 
 			if (move_to_directory) {
 				const dir = path.dirname(renamed);
