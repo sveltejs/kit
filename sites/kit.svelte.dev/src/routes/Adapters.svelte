@@ -1,4 +1,7 @@
 <script>
+	import '$lib/docs/client/docs.css';
+	import '$lib/docs/client/shiki.css';
+	import '@sveltejs/site-kit/code.css';
 	import Vercel from './logo-vercel.svg';
 	import Netlify from './logo-netlify.svg';
 	import Cloudflare from './logo-cloudflare.svg';
@@ -39,17 +42,14 @@
 
 	<div class="host">
 		<h3>{adapter.display} →</h3>
-		<img src={adapter.image} />
+		<img src={adapter.image} alt="" />
 	</div>
 
 	<div class="code-container">
-		<pre class="code"><code>import adapter from '{adapter.code}';
-
-export default &lbrace;
-	kit: &lbrace;
-		adapter: adapter()
-	&rbrace;
-&rbrace;</code></pre>
+		<!-- This has to be prerendered through a complicated pipeline.
+			   I just wrote an FAQ with this code block and then copied the output here.
+				 Needed to encode the curly braces and then update the dynamic part. -->
+		<div class="code-block"><pre class="shiki twoslash lsp" style="background-color: var(--shiki-color-background); color: var(--shiki-color-text)"><div class="language-id">ts</div><div class="code-container"><code><div class="line"><span style="color: var(--shiki-token-keyword)">import</span><span style="color: var(--shiki-color-text)"> <data-lsp lsp="(alias) function adapter(options?: AdapterOptions): <a href=&quot;/docs/types#sveltejs-kit-adapter&quot;>Adapter</a>&amp;#10;import adapter">adapter</data-lsp> </span><span style="color: var(--shiki-token-keyword)">from</span><span style="color: var(--shiki-color-text)"> </span><span style="color: var(--shiki-token-string-expression)">'{adapter.package}'</span><span style="color: var(--shiki-color-text)">;</span></div><div class="line">&nbsp;</div><div class="line"><span style="color: var(--shiki-token-keyword)">export</span><span style="color: var(--shiki-color-text)"> </span><span style="color: var(--shiki-token-keyword)">default</span><span style="color: var(--shiki-color-text)"> &lcub;</span></div><div class="line"><span style="color: var(--shiki-color-text)">  <data-lsp lsp="(property) kit: &lcub;&amp;#10;    adapter: <a href=&quot;/docs/types#sveltejs-kit-adapter&quot;>Adapter</a>;&amp;#10;}">kit</data-lsp></span><span style="color: var(--shiki-token-keyword)">:</span><span style="color: var(--shiki-color-text)"> &lcub;</span></div><div class="line"><span style="color: var(--shiki-color-text)">    <data-lsp lsp="(property) adapter: <a href=&quot;/docs/types#sveltejs-kit-adapter&quot;>Adapter</a>">adapter</data-lsp></span><span style="color: var(--shiki-token-keyword)">:</span><span style="color: var(--shiki-color-text)"> </span><span style="color: var(--shiki-token-function)"><data-lsp lsp="(alias) adapter(options?: AdapterOptions | undefined): <a href=&quot;/docs/types#sveltejs-kit-adapter&quot;>Adapter</a>&amp;#10;import adapter">adapter</data-lsp></span><span style="color: var(--shiki-color-text)">()</span></div><div class="line"><span style="color: var(--shiki-color-text)">  &rcub;</span></div><div class="line"><span style="color: var(--shiki-color-text)">&rcub;</span></div></code></div></pre></div>
 	</div>
 
 </div>
@@ -57,52 +57,51 @@ export default &lbrace;
 <style>
 	.container {
 		display: grid;
-		grid-template-columns: repeat(4, 25%);
+		grid-template-columns: repeat(10, 10%);
 		gap: 10px;
 		width: 100%;
 	}
 
 	.host {
-		margin: 15px 0 0;
 		text-align: center;
 		display: none;
 	}
 
 	.anywhere {
-		grid-column: span 4 / span 4;
+		grid-column: span 10 / span 10;
 		margin-bottom: 50px;
 	}
 
 	.code-container {
-		grid-column: span 4 / span 4;
+		grid-column: span 10 / span 10;
 	}
 
-	.code {
+	.code-block {
 		max-width: 450px;
-		text-align: left;
-		padding: 1em;
-		background: var(--back-light);
-		box-shadow: inset 1px 1px 3px rgba(81, 81, 81, 0.2);
 	}
 
 	@media (min-width: 640px) {
 		.anywhere {
-			grid-column: span 4 / span 4;
+			grid-column: span 10 / span 10;
 		}
 		.host {
+			grid-column: span 4 / span 4;
 			display: block;
 		}
 		.code-container {
-			grid-column: span 3 / span 3;
+			grid-column: span 6 / span 6;
 		}
 	}
 
 	@media (min-width: 1024px) {
 		.anywhere {
-			grid-column: span 1 / span 1;
+			grid-column: span 3 / span 3;
+		}
+		.host {
+			grid-column: span 3 / span 3;
 		}
 		.code-container {
-			grid-column: span 2 / span 2;
+			grid-column: span 4 / span 4;
 		}
 	}
 </style>
