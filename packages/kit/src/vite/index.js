@@ -273,6 +273,9 @@ function kit() {
 					// under different IDs, which breaks a bunch of stuff
 					// https://github.com/vitejs/vite/pull/9296
 					external: ['@sveltejs/kit']
+				},
+				optimizeDeps: {
+					exclude: ['@sveltejs/kit']
 				}
 			};
 
