@@ -3,17 +3,15 @@
 </script>
 
 <div class="container">
-
 	<div class="text">
-		<h3>Starts fast, <span style="font-weight:bold">Stays fast</span></h3>
-		Server-side rendering ensures your visitors aren't left staring at loading spinners.<br/>
+		<h3>Starts fast, <br /><span style="font-weight:bold">Stays fast</span></h3>
+		Server-side rendering ensures your visitors aren't left staring at loading spinners.<br />
 		Client-side navigation makes your app feel like it's 2022.
 	</div>
 
 	<div class="image">
 		<img src={Lighthouse} alt="Speedy page loads" />
 	</div>
-
 </div>
 
 <style>
