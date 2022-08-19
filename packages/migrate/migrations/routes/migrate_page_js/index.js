@@ -85,10 +85,16 @@ export function migrate_page(content, filename) {
 						if (nodes.error) {
 							const message = is_string_like(nodes.error)
 								? nodes.error.getText()
-								: is_new(nodes.error, 'Error') && nodes.error.arguments[0].getText();
+								: is_new(nodes.error, 'Error')
+								? /** @type {string | undefined} */ (nodes.error.arguments[0]?.getText())
+								: false;
 
-							if (message) {
-								automigration(node, file.code, `throw error(${status || 500}, ${message});`);
+							if (message !== false) {
+								automigration(
+									node,
+									file.code,
+									`throw error(${status || 500}${message ? `, ${message}` : ''});`
+								);
 								imports.add('error');
 								return;
 							}

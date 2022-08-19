@@ -157,6 +157,29 @@ export function load({ session }) {
 }
 ```
 
+## Error constructor with no arguments
+
+```js before
+export function load({ session }) {
+	if (!session.user?.admin) {
+		return {
+			status: 403,
+			error: new Error()
+		};
+	}
+}
+```
+
+```js after
+import { error } from '@sveltejs/kit';
+
+export function load({ session }) {
+	if (!session.user?.admin) {
+		throw error(403);
+	}
+}
+```
+
 ## Error status with no error
 
 ```js before
