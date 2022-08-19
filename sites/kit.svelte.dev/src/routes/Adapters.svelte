@@ -1,21 +1,28 @@
 <script>
-	const adapters = Object.entries({
-		'Vercel': '@sveltejs/adapter-vercel',
-		'Netlify': '@sveltejs/adapter-netlify',
-		'Cloudflare': '@sveltejs/adapter-cloudflare',
-		'your server': '@sveltejs/adapter-node',
-		'static hosting': '@sveltejs/adapter-static',
-		'Firebase': 'svelte-adapter-firebase',
-		'Deno': 'svelte-adapter-deno',
-		'AppEngine': 'svelte-adapter-appengine'
-	});
+	import Vercel from './logo-vercel.svg';
+	import Netlify from './logo-netlify.svg';
+	import Cloudflare from './logo-cloudflare.svg';
+	import Node from './logo-nodejs.svg';
+	import Firebase from './logo-firebase.svg';
+	import Deno from './logo-deno.svg';
+	import AppEngine from './logo-appengine.svg';
+
+	const adapters = [
+		{ display: 'Vercel', package: '@sveltejs/adapter-vercel', image: Vercel },
+		{ display: 'Netlify', package: '@sveltejs/adapter-netlify', image: Netlify },
+		{ display: 'Cloudflare', package: '@sveltejs/adapter-cloudflare', image: Cloudflare },
+		{ display: 'your server', package: '@sveltejs/adapter-node', image: Node },
+		{ display: 'static hosting', package: '@sveltejs/adapter-static', image: Node },
+		{ display: 'Firebase', package: 'svelte-adapter-firebase', image: Firebase },
+		{ display: 'Deno', package: 'svelte-adapter-deno', image: Deno },
+		{ display: 'AppEngine', package: 'svelte-adapter-appengine', image: AppEngine },
+	];
 
 	let i = 0;
-	let host;
 	let adapter;
 
 	function update() {
-		[host, adapter] = adapters[i];
+		adapter = adapters[i];
 		i = (i + 1) % adapters.length;
 		setTimeout(update, 2200);
 	}
@@ -31,11 +38,12 @@
 	</div>
 
 	<div class="host">
-		<h3>{host} →</h3>
+		<h3>{adapter.display} →</h3>
+		<img src={adapter.image} />
 	</div>
 
 	<div class="code-container">
-		<pre class="code"><code>import adapter from '{adapter}';
+		<pre class="code"><code>import adapter from '{adapter.code}';
 
 export default &lbrace;
 	kit: &lbrace;
@@ -55,7 +63,7 @@ export default &lbrace;
 	}
 
 	.host {
-		margin: 75px 0 0;
+		margin: 15px 0 0;
 		text-align: center;
 		display: none;
 	}
