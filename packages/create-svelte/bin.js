@@ -24,15 +24,39 @@ async function main() {
 	console.log(disclaimer);
 
 	let cwd = process.argv[2] || '.';
-	const args = await yargs(hideBin(process.argv)).argv;
+
+	/**
+	 * @typedef {object} params
+	 * @property {string} $0
+	 * @property {(string|number)[]} _
+	 * @property {string=} template
+	 * @property {string=} types
+	 * @property {string=} eslint
+	 * @property {string=} prettier
+	 * @property {string=} playwright
+	 * @property {string=} overwrite
+	 */
+	/** @type {params} */
+	const params = await yargs(hideBin(process.argv)).argv;
 
 	const overrides = Object.fromEntries([
-		...(args?.template === undefined ? [] : [['template', fs.readdirSync(dist('templates')).includes(args?.template) ? args?.template : 'default']]),
-		...(args?.types === undefined ? [] : [['types', ['checkjs', 'typescript'].includes(args?.types) ? args?.types : null]]),
-		...(args?.eslint === undefined ? [] : [['eslint', args?.eslint === 'true']]),
-		...(args?.prettier === undefined ? [] : [['prettier', args?.prettier === 'true']]),
-		...(args?.playwright === undefined ? [] : [['playwright', args?.playwright === 'true']]),
-		...(args?.overwrite === undefined ? [] : [['overwrite', args?.overwrite === 'true']])
+		...(params?.template === undefined
+			? []
+			: [
+					[
+						'template',
+						fs.readdirSync(dist('templates')).includes(params?.template)
+							? params?.template
+							: 'default'
+					]
+			  ]),
+		...(params?.types === undefined
+			? []
+			: [['types', ['checkjs', 'typescript'].includes(params?.types) ? params?.types : null]]),
+		...(params?.eslint === undefined ? [] : [['eslint', params?.eslint === 'true']]),
+		...(params?.prettier === undefined ? [] : [['prettier', params?.prettier === 'true']]),
+		...(params?.playwright === undefined ? [] : [['playwright', params?.playwright === 'true']]),
+		...(params?.overwrite === undefined ? [] : [['overwrite', params?.overwrite === 'true']])
 	]);
 	prompts.override(overrides);
 
