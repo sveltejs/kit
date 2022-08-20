@@ -478,9 +478,9 @@ function list_files(dir, path = '', files = []) {
 			// sort each directory in (+layout, +error, everything else) order
 			// so that we can trace layouts/errors immediately
 
-			if (a.startsWith('+layout')) {
-				if (!b.startsWith('+layout')) return -1;
-			} else if (b.startsWith('+layout')) {
+			if (a.startsWith('+layout') || a.startsWith('+error')) {
+				if (!b.startsWith('+layout') && !b.startsWith('+error')) return -1;
+			} else if (b.startsWith('+layout') || b.startsWith('+error')) {
 				return 1;
 			} else if (a.startsWith('__')) {
 				if (!b.startsWith('__')) return -1;
