@@ -53,6 +53,12 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 		include.push(config_relative(`${relative}/**/*.ts`));
 		include.push(config_relative(`${relative}/**/*.svelte`));
 	}
+	// Test folder is a special case - we advocate putting tests in a top-level test folder
+	// and it's not configurable (should we make it?)
+	const test_folder = project_relative('tests');
+	include.push(config_relative(`${test_folder}/**/*.js`));
+	include.push(config_relative(`${test_folder}/**/*.ts`));
+	include.push(config_relative(`${test_folder}/**/*.svelte`));
 
 	write_if_changed(
 		out,
