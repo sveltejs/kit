@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import fs from 'fs';
-import path from 'path';
 import { bold, cyan, gray, green, red } from 'kleur/colors';
+import path from 'path';
 import prompts from 'prompts';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 import { create } from './index.js';
 import { dist } from './utils.js';
 
@@ -22,6 +24,17 @@ async function main() {
 	console.log(disclaimer);
 
 	let cwd = process.argv[2] || '.';
+	const args = await yargs(hideBin(process.argv)).argv;
+
+	const overrides = Object.fromEntries([
+		...(args?.template === undefined ? [] : [['template', fs.readdirSync(dist('templates')).includes(args?.template) ? args?.template : 'default']]),
+		...(args?.types === undefined ? [] : [['types', ['checkjs', 'typescript'].includes(args?.types) ? args?.types : null]]),
+		...(args?.eslint === undefined ? [] : [['eslint', args?.eslint === 'true']]),
+		...(args?.prettier === undefined ? [] : [['prettier', args?.prettier === 'true']]),
+		...(args?.playwright === undefined ? [] : [['playwright', args?.playwright === 'true']]),
+		...(args?.overwrite === undefined ? [] : [['overwrite', args?.overwrite === 'true']])
+	]);
+	prompts.override(overrides);
 
 	if (cwd === '.') {
 		const opts = await prompts([
@@ -41,12 +54,12 @@ async function main() {
 		if (fs.readdirSync(cwd).length > 0) {
 			const response = await prompts({
 				type: 'confirm',
-				name: 'value',
+				name: 'overwrite',
 				message: 'Directory not empty. Continue?',
 				initial: false
 			});
 
-			if (!response.value) {
+			if (!response.overwrite) {
 				process.exit(1);
 			}
 		}
@@ -124,7 +137,15 @@ async function main() {
 
 	await create(cwd, options);
 
-	console.log(bold(green('\nYour project is ready!')));
+	console.log(bold(green('\nYour project is ready!\n')));
+
+	if (overrides.template) {
+		const { title, description } = JSON.parse(
+			fs.readFileSync(dist(`templates/${options.template}/meta.json`), 'utf8')
+		);
+		console.log(bold(`✔ ${title}`));
+		console.log(`  ${description}`);
+	}
 
 	if (options.types === 'typescript') {
 		console.log(bold('✔ Typescript'));

@@ -12,7 +12,8 @@
 	"main": "./index.js",
 	"dependencies": {
 		"kleur": "^4.1.4",
-		"prompts": "^2.4.2"
+		"prompts": "^2.4.2",
+		"yargs": "^17.5.1"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.25.0",
@@ -20,6 +21,7 @@
 		"@types/gitignore-parser": "^0.0.0",
 		"@types/prettier": "^2.6.3",
 		"@types/prompts": "^2.0.14",
+		"@types/yargs": "^17.0.11",
 		"gitignore-parser": "^0.0.2",
 		"prettier": "^2.6.2",
 		"prettier-plugin-svelte": "^2.7.0",
