@@ -585,3 +585,10 @@ test('Can use browser-only global on client-only page', async ({ page, read_erro
 	await expect(page.locator('p')).toHaveText('Works');
 	expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
 });
+
+test('can use $app/stores from anywhere on client', async ({ page }) => {
+	await page.goto('/store/client-access');
+	await expect(page.locator('h1')).toHaveText('undefined');
+	await page.click('button');
+	await expect(page.locator('h1')).toHaveText('/store/client-access');
+});

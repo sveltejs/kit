@@ -1,5 +1,6 @@
 import { getContext } from 'svelte';
 import { browser } from './env.js';
+import { stores as browser_stores } from '../client/singletons.js';
 
 // TODO remove this (for 1.0? after 1.0?)
 let warned = false;
@@ -15,7 +16,7 @@ export function stores() {
  * @type {import('$app/stores').getStores}
  */
 export const getStores = () => {
-	const stores = getContext('__svelte__');
+	const stores = browser ? browser_stores : getContext('__svelte__');
 
 	const readonly_stores = {
 		page: {

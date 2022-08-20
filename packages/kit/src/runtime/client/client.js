@@ -1,15 +1,7 @@
 import { onMount, tick } from 'svelte';
-import { writable } from 'svelte/store';
 import { normalize_error } from '../../utils/error.js';
 import { LoadURL, decode_params, normalize_path } from '../../utils/url.js';
-import {
-	create_updated_store,
-	find_anchor,
-	get_base_uri,
-	get_href,
-	notifiable_store,
-	scroll_state
-} from './utils.js';
+import { find_anchor, get_base_uri, get_href, scroll_state } from './utils.js';
 import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 import { error } from '../../index/index.js';
@@ -17,6 +9,7 @@ import { error } from '../../index/index.js';
 import Root from '__GENERATED__/root.svelte';
 import { nodes, dictionary, matchers } from '__GENERATED__/client-manifest.js';
 import { HttpError, Redirect } from '../../index/private.js';
+import { stores } from './singletons.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -58,13 +51,6 @@ function update_scroll_positions(index) {
 export function create_client({ target, base, trailing_slash }) {
 	/** @type {Array<((href: string) => boolean)>} */
 	const invalidated = [];
-
-	const stores = {
-		url: notifiable_store({}),
-		page: notifiable_store({}),
-		navigating: writable(/** @type {import('types').Navigation | null} */ (null)),
-		updated: create_updated_store()
-	};
 
 	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
 	const load_cache = {
