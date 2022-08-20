@@ -114,6 +114,7 @@ function check_serializability(value, id, path) {
 		}
 
 		// ...and objects
+		if (typeof value.toJSON === 'function') return;
 		const tag = Object.prototype.toString.call(value);
 		if (tag === '[object Object]') {
 			for (const key in value) {
