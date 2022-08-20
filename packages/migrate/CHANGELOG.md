@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.0.0-next.11
+
+### Patch Changes
+
+- [fix] git mv files correctly when they contain \$ characters ([#6129](https://github.com/sveltejs/kit/pull/6129))
+
 ## 1.0.0-next.10
 
 ### Patch Changes
