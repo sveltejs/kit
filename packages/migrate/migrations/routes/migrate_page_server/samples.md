@@ -137,3 +137,19 @@ export function load() {
 	return;
 }
 ```
+
+## A function that wrongfully has no body
+
+```js before
+export function GET() {
+	return {
+		status: 200
+	};
+}
+```
+
+```js after
+export function load() {
+	return ;
+}
+```
