@@ -216,9 +216,11 @@ declare module '$app/paths' {
  * import { getStores, navigating, page, updated } from '$app/stores';
  * ```
  *
- * Stores are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `page` is unique to each request on the server, rather than shared between multiple requests handled by the same server simultaneously.
+ * Stores on the server are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `page` is unique to each request, rather than shared between multiple requests handled by the same server simultaneously.
  *
  * Because of that, you must subscribe to the stores during component initialization (which happens automatically if you reference the store value, e.g. as `$page`, in a component) before you can use them.
+ *
+ * In the browser, we don't need to worry about this, and stores can be accessed from anywhere. Code that will only ever run on the browser can refer to (or subscribe to) any of these stores at any time.
  */
 declare module '$app/stores' {
 	import { Readable } from 'svelte/store';
