@@ -24,6 +24,7 @@ async function main() {
 	console.log(disclaimer);
 
 	let cwd = process.argv[2] || '.';
+	if (cwd.startsWith('--')) cwd = '.';
 
 	/**
 	 * @typedef {object} params
