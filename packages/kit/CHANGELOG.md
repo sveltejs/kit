@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 1.0.0-next.428
+
+### Patch Changes
+
+- Allow `$app/stores` to be used from anywhere on the browser ([#6100](https://github.com/sveltejs/kit/pull/6100))
+
+* use `enumerable: false` on "[x] no longer exists" getters so that they are not triggered by spreading ([#6105](https://github.com/sveltejs/kit/pull/6105))
+
+- Fix pattern matching for routes starting with an encoded `@` symbol ([#6110](https://github.com/sveltejs/kit/pull/6110))
+
+* Fix typos in generating `LayoutServerLoad.{name}` type ([#6123](https://github.com/sveltejs/kit/pull/6123))
+
+- Fix sorting of files into +layout, +error, everything else. ([#6108](https://github.com/sveltejs/kit/pull/6108))
+
+* Add test folder to generated tsconfig ([#6085](https://github.com/sveltejs/kit/pull/6085))
+
 ## 1.0.0-next.427
 
 ### Patch Changes
