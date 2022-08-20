@@ -448,57 +448,50 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   routeId: string | null;
-	 * 	 server_data: Record<string, any> | null;
+	 * 	 server_data_node: import('./types').DataNode | null;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
-	async function load_node({ node, parent, url, params, routeId, server_data }) {
-		const uses = {
-			params: new Set(),
-			url: false,
-			dependencies: new Set(),
-			parent: false
-		};
-
-		/** @param {string[]} deps */
-		function depends(...deps) {
-			for (const dep of deps) {
-				const { href } = new URL(dep, url);
-				uses.dependencies.add(href);
-			}
-		}
-
+	async function load_node({ node, parent, url, params, routeId, server_data_node }) {
 		/** @type {Record<string, any> | null} */
 		let data = null;
 
-		if (node.server) {
-			// +page|layout.server.js data means we need to mark this URL as a dependency of itself,
-			// unless we want to get clever with usage detection on the server, which could
-			// be returned to the client either as payload or custom headers
-			uses.dependencies.add(url.href);
-			uses.url = true;
-		}
-
-		/** @type {Record<string, string>} */
-		const uses_params = {};
-		for (const key in params) {
-			Object.defineProperty(uses_params, key, {
-				get() {
-					uses.params.add(key);
-					return params[key];
-				},
-				enumerable: true
-			});
-		}
-
-		const load_url = new LoadURL(url);
+		/** @type {import('types').Uses} */
+		const uses = {
+			dependencies: new Set(),
+			params: new Set(),
+			parent: false,
+			url: false
+		};
 
 		if (node.shared?.load) {
+			/** @param {string[]} deps */
+			function depends(...deps) {
+				for (const dep of deps) {
+					const { href } = new URL(dep, url);
+					uses.dependencies.add(href);
+				}
+			}
+
+			/** @type {Record<string, string>} */
+			const uses_params = {};
+			for (const key in params) {
+				Object.defineProperty(uses_params, key, {
+					get() {
+						uses.params.add(key);
+						return params[key];
+					},
+					enumerable: true
+				});
+			}
+
+			const load_url = new LoadURL(url);
+
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
 				params: uses_params,
-				data: server_data ?? null,
+				data: server_data_node?.data ?? null,
 				get url() {
 					uses.url = true;
 					return load_url;
@@ -544,11 +537,9 @@ export function create_client({ target, base, trailing_slash }) {
 				},
 				setHeaders: () => {}, // noop
 				depends,
-				get parent() {
-					// uses.parent assignment here, not on method inokation, else we wouldn't notice when someone
-					// does await parent() inside an if branch which wasn't executed yet.
+				parent() {
 					uses.parent = true;
-					return parent;
+					return parent();
 				},
 				// @ts-expect-error
 				get props() {
@@ -583,9 +574,61 @@ export function create_client({ target, base, trailing_slash }) {
 
 		return {
 			node,
-			data: data || server_data,
-			uses
+			server: server_data_node
+				? {
+						data: server_data_node.data,
+						uses: {
+							dependencies: new Set(server_data_node.uses.dependencies ?? []),
+							params: new Set(server_data_node.uses.params ?? []),
+							parent: !!server_data_node.uses.parent,
+							url: !!server_data_node.uses.url
+						}
+				  }
+				: null,
+			shared: node.shared?.load ? { data, uses } : null,
+			data: data ?? server_data_node?.data ?? null
 		};
+	}
+
+	/**
+	 * @param {import('types').Uses} uses
+	 * @param {boolean} parent_changed
+	 * @param {{ url: boolean, params: string[] }} changed
+	 */
+	function detect_change(changed, parent_changed, uses) {
+		if (uses.parent && parent_changed) return true;
+		if (changed.url && uses.url) return true;
+
+		for (const param of changed.params) {
+			if (uses.params.has(param)) return true;
+		}
+
+		for (const dep of uses.dependencies) {
+			if (invalidated.some((fn) => fn(dep))) return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode} node
+	 * @param {import('./types').DataNode | null} previous
+	 * @returns {import('./types').DataNode | null}
+	 */
+	function create_data_node(node, previous) {
+		if (node.type === 'data') {
+			return {
+				data: node.data,
+				uses: {
+					dependencies: new Set(node.uses.dependencies ?? []),
+					params: new Set(node.uses.params ?? []),
+					parent: !!node.uses.parent,
+					url: !!node.uses.url
+				}
+			};
+		}
+
+		return previous;
 	}
 
 	/**
@@ -609,52 +652,74 @@ export function create_client({ target, base, trailing_slash }) {
 		// to act on the failures at this point)
 		[...errors, ...layouts, leaf].forEach((loader) => loader?.().catch(() => {}));
 
-		const nodes = [...layouts, leaf];
+		const loaders = [...layouts, leaf];
 
 		// To avoid waterfalls when someone awaits a parent, compute as much as possible here already
-		/** @type {boolean[]} */
-		const nodes_changed_since_last_render = [];
-		for (let i = 0; i < nodes.length; i++) {
-			if (!nodes[i]) {
-				nodes_changed_since_last_render.push(false);
-			} else {
-				const previous = current.branch[i];
-				const changed_since_last_render =
-					!previous ||
-					(changed.url && previous.uses.url) ||
-					changed.params.some((param) => previous.uses.params.has(param)) ||
-					Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep))) ||
-					(previous.uses.parent && nodes_changed_since_last_render.includes(true));
-				nodes_changed_since_last_render.push(changed_since_last_render);
-			}
-		}
 
-		/** @type {import('./types').ServerDataPayload | null} */
-		let server_data_payload = null;
+		let server_parent_changed = false;
+		let shared_parent_changed = false;
+
+		/** @type {Array<{ server: boolean, shared: boolean } | null>} */
+		const nodes_changed_since_last_render = loaders.map((loader, i) => {
+			if (!loader) return null;
+
+			const previous = current.branch[i];
+			if (!previous) {
+				return {
+					server: (server_parent_changed = true),
+					shared: (shared_parent_changed = true)
+				};
+			}
+
+			// TODO if the previous node errored, we might need to always include it?
+			const { server, shared } = previous;
+
+			const result = {
+				server: server ? detect_change(changed, server_parent_changed, server.uses) : false,
+				shared: shared ? detect_change(changed, shared_parent_changed, shared.uses) : false
+			};
+
+			if (result.server) server_parent_changed = true;
+			if (result.shared) shared_parent_changed = true;
+
+			return result;
+		});
+
+		console.log(nodes_changed_since_last_render);
+
+		/** @type {import('types').ServerData | null} */
+		let server_data = null;
 
 		if (route.uses_server_data) {
 			try {
 				const res = await native_fetch(
-					`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`
+					`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
+					{
+						headers: {
+							'x-svelte-kit-invalidated': nodes_changed_since_last_render
+								.map((node) => (node?.server ? '1' : '0'))
+								.join(',')
+						}
+					}
 				);
 
-				server_data_payload = /** @type {import('./types').ServerDataPayload} */ (await res.json());
+				server_data = /** @type {import('types').ServerData} */ (await res.json());
 
 				if (!res.ok) {
-					throw server_data_payload;
+					throw server_data;
 				}
 			} catch (e) {
 				throw new Error('TODO render fallback error page');
 			}
 
-			if (server_data_payload.type === 'redirect') {
-				return server_data_payload;
+			if (server_data.type === 'redirect') {
+				return server_data;
 			}
 		}
 
-		const server_data_nodes = server_data_payload?.nodes;
+		const server_data_nodes = server_data?.nodes;
 
-		const branch_promises = nodes.map(async (loader, i) => {
+		const branch_promises = loaders.map(async (loader, i) => {
 			return Promise.resolve().then(async () => {
 				if (!loader) return;
 				const node = await loader();
@@ -665,14 +730,15 @@ export function create_client({ target, base, trailing_slash }) {
 					nodes_changed_since_last_render[i] || !previous || node !== previous.node;
 
 				if (changed_since_last_render) {
-					const payload = server_data_nodes?.[i];
+					const server_data_node = server_data_nodes?.[i] ?? null;
 
-					if (payload?.httperror) {
-						throw error(payload.httperror.status, payload.httperror.message);
-					}
-
-					if (payload?.error) {
-						throw payload.error;
+					if (server_data_node?.type === 'error') {
+						if (server_data_node.httperror) {
+							// reconstruct as an HttpError
+							throw error(server_data_node.httperror.status, server_data_node.httperror.message);
+						} else {
+							throw server_data_node.error;
+						}
 					}
 
 					return await load_node({
@@ -687,7 +753,9 @@ export function create_client({ target, base, trailing_slash }) {
 							}
 							return data;
 						},
-						server_data: payload?.data ?? null
+						server_data_node:
+							server_data_node &&
+							create_data_node(server_data_node, previous ? previous.server : null)
 					});
 				} else {
 					return previous;
@@ -701,8 +769,8 @@ export function create_client({ target, base, trailing_slash }) {
 		/** @type {Array<import('./types').BranchNode | undefined>} */
 		const branch = [];
 
-		for (let i = 0; i < nodes.length; i += 1) {
-			if (nodes[i]) {
+		for (let i = 0; i < loaders.length; i += 1) {
+			if (loaders[i]) {
 				try {
 					branch.push(await branch_promises[i]);
 				} catch (e) {
@@ -729,12 +797,8 @@ export function create_client({ target, base, trailing_slash }) {
 								error_loaded = {
 									node: await errors[i](),
 									data: {},
-									uses: {
-										params: new Set(),
-										url: false,
-										dependencies: new Set(),
-										parent: false
-									}
+									server_uses: null,
+									shared_uses: null
 								};
 
 								return await get_navigation_result_from_branch({
@@ -793,7 +857,8 @@ export function create_client({ target, base, trailing_slash }) {
 			params,
 			routeId,
 			parent: () => Promise.resolve({}),
-			server_data: null // TODO!!!!!
+			// TODO!!!!! need to load root layout server data
+			server_data_node: null
 		});
 
 		const root_error = {
@@ -1199,12 +1264,13 @@ export function create_client({ target, base, trailing_slash }) {
 					const script = document.querySelector(`script[sveltekit\\:data-type="${type}"]`);
 					return script?.textContent ? JSON.parse(script.textContent) : fallback;
 				};
-				const all_server_data = parse('server_data', []);
+				/** @type {import('types').ServerDataNode[]} */
+				const server_data_nodes = parse('server_data', []);
 				const validation_errors = parse('validation_errors', undefined);
 
 				const branch_promises = node_ids.map(async (n, i) => {
 					// TODO handle case where this contains an "error" or "httperror"
-					const server_data = all_server_data[i];
+					const server_data_node = server_data_nodes[i];
 
 					return load_node({
 						node: await nodes[n](),
@@ -1218,7 +1284,7 @@ export function create_client({ target, base, trailing_slash }) {
 							}
 							return data;
 						},
-						server_data: server_data?.data ?? null
+						server_data_node
 					});
 				});
 

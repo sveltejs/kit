@@ -258,7 +258,7 @@ export async function respond(request, options, state) {
 
 							const promises = [...route.layouts, route.leaf].map(async (n, i) => {
 								try {
-									if (aborted) return;
+									if (aborted) return null;
 
 									// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
 									const node = n == undefined ? n : await options.manifest._.nodes[n]();
@@ -270,7 +270,9 @@ export async function respond(request, options, state) {
 											/** @type {Record<string, any>} */
 											const data = {};
 											for (let j = 0; j < i; j += 1) {
-												const parent = await promises[j];
+												const parent = /** @type {import('types').ServerDataNode} */ (
+													await promises[j]
+												);
 												Object.assign(data, parent.data);
 											}
 											return data;
@@ -295,7 +297,7 @@ export async function respond(request, options, state) {
 										length = Math.min(length, i + 1);
 
 										if (error instanceof HttpError) {
-											return { httperror: error };
+											return { httperror: { ...error } };
 										}
 
 										options.handle_error(error, event);
@@ -307,18 +309,24 @@ export async function respond(request, options, state) {
 								)
 							);
 
-							response = json({
+							/** @type {import('types').ServerData} */
+							const server_data = {
 								type: 'data',
 								nodes: nodes.slice(0, length)
-							});
+							};
+
+							response = json(server_data);
 						} catch (e) {
 							const error = normalize_error(e);
 
 							if (error instanceof Redirect) {
-								response = json({
+								/** @type {import('types').ServerData} */
+								const server_data = {
 									type: 'redirect',
 									location: error.location
-								});
+								};
+
+								response = json(server_data);
 							} else {
 								response = json(error_to_pojo(error, options.get_stack), { status: 500 });
 							}

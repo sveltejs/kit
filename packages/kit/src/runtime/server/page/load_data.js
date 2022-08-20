@@ -29,12 +29,8 @@ export async function load_server_data({ dev, event, node, parent }) {
 
 	const params = new Proxy(event.params, {
 		get: (target, key) => {
-			if (key in target) {
-				uses.params.add(key);
-				return target[/** @type {string} */ (key)];
-			}
-
-			return undefined;
+			uses.params.add(key);
+			return target[/** @type {string} */ (key)];
 		}
 	});
 
