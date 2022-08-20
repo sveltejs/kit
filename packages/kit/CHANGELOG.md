@@ -1,5 +1,125 @@
 # @sveltejs/kit
 
+## 1.0.0-next.427
+
+### Patch Changes
+
+- Throw error if browser.hydrate is false and browser.router is true ([#6086](https://github.com/sveltejs/kit/pull/6086))
+
+## 1.0.0-next.426
+
+### Patch Changes
+
+- Avoid using [].at(-1) in the client ([#6082](https://github.com/sveltejs/kit/pull/6082))
+
+## 1.0.0-next.425
+
+### Patch Changes
+
+- Silence more unknown prop warnings coming from SvelteKit ([#6078](https://github.com/sveltejs/kit/pull/6078))
+
+## 1.0.0-next.424
+
+### Patch Changes
+
+- prevent duplicate module ids by disabling optimizeDeps for @sveltejs/kit ([#6057](https://github.com/sveltejs/kit/pull/6057))
+
+* Generate types when Svelte file missing, fix layout params ([#6066](https://github.com/sveltejs/kit/pull/6066))
+
+- Silence unknown prop warnings coming from SvelteKit ([#6071](https://github.com/sveltejs/kit/pull/6071))
+
+## 1.0.0-next.423
+
+### Patch Changes
+
+- Accumulate data from parent layouts into `export let data` ([#6050](https://github.com/sveltejs/kit/pull/6050))
+
+## 1.0.0-next.422
+
+### Patch Changes
+
+- [breaking] remove ability for `+page.server.js` to respond to `GET` requests with JSON ([#6007](https://github.com/sveltejs/kit/pull/6007))
+
+* Handle `throw error/redirect` in `+server.js` ([#6028](https://github.com/sveltejs/kit/pull/6028))
+
+- handle `set-cookie` in `setHeaders` ([#6033](https://github.com/sveltejs/kit/pull/6033))
+
+* Handle windows paths and regexp chars in kit.alias ([#6034](https://github.com/sveltejs/kit/pull/6034))
+
+- Make errors type in Action type less restrictive ([#6022](https://github.com/sveltejs/kit/pull/6022))
+
+* Check that data is serializable ([#5987](https://github.com/sveltejs/kit/pull/5987))
+
+- Fix parent data type for layouts referencing named layouts in the same folder ([#6025](https://github.com/sveltejs/kit/pull/6025))
+
+## 1.0.0-next.421
+
+### Patch Changes
+
+- Respect `export const prerender = false` in `+page.server.js` ([#6012](https://github.com/sveltejs/kit/pull/6012))
+
+## 1.0.0-next.420
+
+### Patch Changes
+
+- [fix] support linked `@sveltejs/kit` project in Vite 3.0.3+ ([#5861](https://github.com/sveltejs/kit/pull/5861))
+
+## 1.0.0-next.419
+
+### Patch Changes
+
+- Return a 303 response when a `POST` handler provides a `location` ([#5989](https://github.com/sveltejs/kit/pull/5989))
+
+* Generate `__data.json` files for server-side redirects when prerendering ([#5997](https://github.com/sveltejs/kit/pull/5997))
+
+- [chore] remove chokidar as dependency of kit ([#5996](https://github.com/sveltejs/kit/pull/5996))
+
+* Use relative asset paths where possible ([#4250](https://github.com/sveltejs/kit/pull/4250))
+
+## 1.0.0-next.418
+
+### Patch Changes
+
+- Prevent double import of env modules ([#5955](https://github.com/sveltejs/kit/pull/5955))
+
+* Tighten up params typings, fix load function typings, add event typings to generated types ([#5974](https://github.com/sveltejs/kit/pull/5974))
+
+## 1.0.0-next.417
+
+### Patch Changes
+
+- Render pages without a .svelte file in their proper layout/error files ([#5972](https://github.com/sveltejs/kit/pull/5972))
+
+## 1.0.0-next.416
+
+### Patch Changes
+
+- [fix] allow additional keys in svelte.config.js ([#5961](https://github.com/sveltejs/kit/pull/5961))
+
+## 1.0.0-next.415
+
+### Patch Changes
+
+- [breaking] Remove session object ([#5946](https://github.com/sveltejs/kit/pull/5946))
+
+## 1.0.0-next.414
+
+### Patch Changes
+
+- Correctly provide server parent data ([#5916](https://github.com/sveltejs/kit/pull/5916))
+
+## 1.0.0-next.413
+
+### Patch Changes
+
+- [feat] `$env/static/*` are now virtual to prevent writing sensitive values to disk ([#5825](https://github.com/sveltejs/kit/pull/5825))
+
+## 1.0.0-next.412
+
+### Patch Changes
+
+- Lazy load Svelte components to reenable no-ssr use cases ([#5930](https://github.com/sveltejs/kit/pull/5930))
+
 ## 1.0.0-next.411
 
 ### Patch Changes

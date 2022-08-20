@@ -118,6 +118,9 @@ export async function respond(request, options, state) {
 	/** @type {import('types').ResponseHeaders} */
 	const headers = {};
 
+	/** @type {string[]} */
+	const cookies = [];
+
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		get clientAddress() {
@@ -141,16 +144,26 @@ export async function respond(request, options, state) {
 		setHeaders: (new_headers) => {
 			for (const key in new_headers) {
 				const lower = key.toLowerCase();
+				const value = new_headers[key];
 
-				if (lower in headers) {
+				if (lower === 'set-cookie') {
+					const new_cookies = /** @type {string[]} */ (Array.isArray(value) ? value : [value]);
+
+					for (const cookie of new_cookies) {
+						if (cookies.includes(cookie)) {
+							throw new Error(`"${key}" header already has cookie with same value`);
+						}
+
+						cookies.push(cookie);
+					}
+				} else if (lower in headers) {
 					throw new Error(`"${key}" header is already set`);
-				}
+				} else {
+					headers[lower] = value;
 
-				// TODO apply these headers to the response
-				headers[lower] = new_headers[key];
-
-				if (state.prerendering && lower === 'cache-control') {
-					state.prerendering.cache = /** @type {string} */ (new_headers[key]);
+					if (state.prerendering && lower === 'cache-control') {
+						state.prerendering.cache = /** @type {string} */ (value);
+					}
 				}
 			}
 		},
@@ -222,7 +235,6 @@ export async function respond(request, options, state) {
 						event,
 						options,
 						state,
-						$session: await options.hooks.getSession(event),
 						page_config: { router: true, hydrate: true },
 						status: 200,
 						error: null,
@@ -250,17 +262,23 @@ export async function respond(request, options, state) {
 								try {
 									if (error) return;
 
-									const node = n ? await options.manifest._.nodes[n]() : undefined;
+									// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
+									const node = n == undefined ? n : await options.manifest._.nodes[n]();
 									return {
 										// TODO return `uses`, so we can reuse server data effectively
 										data: await load_server_data({
+											dev: options.dev,
 											event,
 											node,
 											parent: async () => {
-												/** @type {import('types').JSONObject} */
+												/** @type {Record<string, any>} */
 												const data = {};
 												for (let j = 0; j < i; j += 1) {
-													Object.assign(data, await promises[j]);
+													const parent = await promises[j];
+													if (!parent || parent instanceof HttpError || 'error' in parent) {
+														return data;
+													}
+													Object.assign(data, parent.data);
 												}
 												return data;
 											}
@@ -308,17 +326,17 @@ export async function respond(request, options, state) {
 								: await render_page(event, route, options, state, resolve_opts);
 					}
 
-					for (const key in headers) {
-						const value = headers[key];
-						if (key === 'set-cookie') {
-							for (const cookie of Array.isArray(value) ? value : [value]) {
-								response.headers.append(key, /** @type {string} */ (cookie));
-							}
-						} else if (!is_data_request) {
-							// we only want to set cookies on __data.json requests, we don't
-							// want to cache stuff erroneously etc
+					if (!is_data_request) {
+						// we only want to set cookies on __data.json requests, we don't
+						// want to cache stuff erroneously etc
+						for (const key in headers) {
+							const value = headers[key];
 							response.headers.set(key, /** @type {string} */ (value));
 						}
+					}
+
+					for (const cookie of cookies) {
+						response.headers.append('set-cookie', cookie);
 					}
 
 					// respond with 304 if etag matches
@@ -360,12 +378,10 @@ export async function respond(request, options, state) {
 				// if this request came direct from the user, rather than
 				// via a `fetch` in a `load`, render a 404 page
 				if (!state.initiator) {
-					const $session = await options.hooks.getSession(event);
 					return await respond_with_error({
 						event,
 						options,
 						state,
-						$session,
 						status: 404,
 						error: new Error(`Not found: ${event.url.pathname}`),
 						resolve_opts
@@ -413,12 +429,10 @@ export async function respond(request, options, state) {
 
 		// TODO is this necessary? should we just return a plain 500 at this point?
 		try {
-			const $session = await options.hooks.getSession(event);
 			return await respond_with_error({
 				event,
 				options,
 				state,
-				$session,
 				status: 500,
 				error,
 				resolve_opts

@@ -188,6 +188,28 @@ export async function load({ parent }) {
 
 In `+page.js` or `+layout.js` it will return data from `load` functions in parent `+layout.js` files. Implicitly, a missing `+layout.js` is treated as a `({ data }) => data` function, meaning that it will also return data from parent `+layout.server.js` files.
 
+Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
+
+```diff
+/// file: src/routes/foo/+page.server.js
+// @filename: $types.d.ts
+export type PageLoad = import('@sveltejs/kit').Load<{}, null, { a: number, b: number }>;
+
+// @filename: index.js
+// ---cut---
+/** @type {import('./$types').PageLoad} */
+export async function load({ parent, fetch }) {
+-	const parentData = await parent();
+	const data = await fetch('./some-api');
++	const parentData = await parent();
+
+	return {
+		...data
+		meta: { ...parentData.meta, ...data.meta }
+	};
+}
+```
+
 #### setHeaders
 
 If you need to set headers for the response, you can do so using the `setHeaders` method. This is useful if you want the page to be cached, for example:

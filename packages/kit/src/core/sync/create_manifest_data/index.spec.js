@@ -552,6 +552,95 @@ test('creates routes with named layouts', () => {
 	]);
 });
 
+test('handles pages without .svelte file', () => {
+	const { routes } = create('samples/page-without-svelte-file');
+
+	assert.equal(routes, [
+		{
+			type: 'page',
+			id: '',
+			pattern: /^\/$/,
+			errors: [
+				{
+					component: 'error.svelte'
+				}
+			],
+			layouts: [
+				{
+					component: 'layout.svelte'
+				}
+			],
+			leaf: {
+				component: 'samples/page-without-svelte-file/+page.svelte'
+			}
+		},
+		{
+			type: 'page',
+			id: 'layout/exists',
+			pattern: /^\/layout\/exists\/?$/,
+			errors: [
+				{
+					component: 'error.svelte'
+				}
+			],
+			layouts: [
+				{
+					component: 'layout.svelte'
+				},
+				{
+					component: 'samples/page-without-svelte-file/layout/+layout.svelte'
+				}
+			],
+			leaf: {
+				component: 'samples/page-without-svelte-file/layout/exists/+page.svelte'
+			}
+		},
+		{
+			type: 'page',
+			id: 'layout/redirect',
+			pattern: /^\/layout\/redirect\/?$/,
+			errors: [
+				{
+					component: 'error.svelte'
+				}
+			],
+			layouts: [
+				{
+					component: 'layout.svelte'
+				},
+				{
+					component: 'samples/page-without-svelte-file/layout/+layout.svelte'
+				}
+			],
+			leaf: {
+				server: 'samples/page-without-svelte-file/layout/redirect/+page.server.js'
+			}
+		},
+		{
+			type: 'page',
+			id: 'error/[...path]',
+			pattern: /^\/error(?:\/(.*))?\/?$/,
+			errors: [
+				{
+					component: 'error.svelte'
+				},
+				{
+					component: 'samples/page-without-svelte-file/error/+error.svelte'
+				}
+			],
+			layouts: [
+				{
+					component: 'layout.svelte'
+				},
+				undefined
+			],
+			leaf: {
+				shared: 'samples/page-without-svelte-file/error/[...path]/+page.js'
+			}
+		}
+	]);
+});
+
 test('errors on missing layout', () => {
 	assert.throws(
 		() => create('samples/named-layout-missing'),

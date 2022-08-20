@@ -9,15 +9,20 @@ import {
 	except_str
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
+import MagicString from 'magic-string';
 
 /**
  * @param {string} content
+ * @param {string} filename
  * @param {boolean} is_error
  * @param {boolean} moved
  */
-export function migrate_scripts(content, is_error, moved) {
+export function migrate_scripts(content, filename, is_error, moved) {
 	/** @type {string | null} */
 	let module = null;
+
+	const match = /__layout(?:-([^.@]+))?/.exec(filename);
+	const data_name = match?.[1] ? `LayoutData.${match[1]}` : match ? `LayoutData` : 'PageData';
 
 	let ext = '.js';
 
@@ -31,6 +36,10 @@ export function migrate_scripts(content, is_error, moved) {
 				contents = adjust_imports(contents);
 			}
 
+			if (/lang(?:uage)?=(['"])(ts|typescript)\1/.test(attrs)) {
+				ext = '.ts';
+			}
+
 			if (/context=(['"])module\1/.test(attrs)) {
 				// special case — load is no longer supported in error
 				if (is_error) {
@@ -40,10 +49,6 @@ export function migrate_scripts(content, is_error, moved) {
 					)}`;
 
 					return `<script${attrs}>${body}</script>${whitespace}`;
-				}
-
-				if (/lang(?:uage)?=(['"])(ts|typescript)\1/.test(attrs)) {
-					ext = '.ts';
 				}
 
 				module = dedent(contents.replace(/^\n/, ''));
@@ -88,8 +93,22 @@ export function migrate_scripts(content, is_error, moved) {
 			}
 
 			if (!is_error && /export/.test(contents)) {
-				contents = `\n${indent}${error('Add data prop', TASKS.PAGE_DATA_PROP)}\n${contents}`;
-				// Possible TODO: migrate props to data.prop, or suggest $: ({propX, propY, ...} = data);
+				let prefix = `\n${indent}${error('Add data prop', TASKS.PAGE_DATA_PROP)}`;
+				const props = get_props(contents);
+				if (props) {
+					prefix += `\n${comment(
+						`${indent}Suggestion (check code before using, and possibly convert to data.X access later):\n` +
+							`${indent}${
+								ext === '.ts'
+									? `import type { ${data_name} } from './$types';`
+									: `/** @type {import('./$types').${data_name}} */`
+							}\n` +
+							`${indent}export let data${ext === '.ts' ? `: ${data_name}` : ''};\n` +
+							`${indent}$: ({ ${props.join(', ')} } = data);`,
+						indent
+					)}`;
+				}
+				contents = `${prefix}\n${contents}`;
 			}
 
 			return `<script${attrs}>${contents}</script>${whitespace}`;
@@ -154,4 +173,75 @@ function find_declarations(content) {
 	}
 
 	return declared;
+}
+
+/**
+ * @param {string} content
+ */
+function get_props(content) {
+	try {
+		const ast = ts.createSourceFile(
+			'filename.ts',
+			content,
+			ts.ScriptTarget.Latest,
+			true,
+			ts.ScriptKind.TS
+		);
+
+		const code = new MagicString(content);
+		let give_up = false;
+		/** @type {string[] } */
+		let exports = [];
+
+		/** @param {ts.Node} node */
+		function walk(node) {
+			if (
+				ts.isExportDeclaration(node) ||
+				((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) && hasExportKeyword(node))
+			) {
+				give_up = true;
+				return;
+			}
+
+			if (ts.isVariableStatement(node)) {
+				if (hasExportKeyword(node)) {
+					const isLet = node.declarationList.flags === ts.NodeFlags.Let;
+					if (isLet) {
+						ts.forEachChild(node.declarationList, (node) => {
+							if (ts.isVariableDeclaration(node)) {
+								if (ts.isIdentifier(node.name)) {
+									const name = node.name.getText();
+									if (name === 'data') {
+										give_up = true;
+										return;
+									} else {
+										exports.push(name);
+									}
+								} else {
+									give_up = true;
+									return;
+								}
+							}
+						});
+					} else {
+						give_up = true;
+						return;
+					}
+				}
+			}
+		}
+
+		ts.forEachChild(ast, walk);
+		if (give_up) return;
+		return exports;
+	} catch (e) {
+		return;
+	}
+}
+
+/**
+ * @param {ts.Node} node
+ */
+export function hasExportKeyword(node) {
+	return node.modifiers?.find((x) => x.kind == ts.SyntaxKind.ExportKeyword);
 }

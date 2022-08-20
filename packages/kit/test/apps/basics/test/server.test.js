@@ -124,40 +124,6 @@ test.describe('Errors', () => {
 		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
 	});
 
-	test('page endpoint thrown error respects `accept: application/json`', async ({ request }) => {
-		const response = await request.get('/errors/page-endpoint/get-implicit', {
-			headers: {
-				accept: 'application/json'
-			}
-		});
-
-		const { message, name, stack, fancy } = await response.json();
-
-		expect(response.status()).toBe(500);
-		expect(name).toBe('FancyError');
-		expect(message).toBe('oops');
-		expect(fancy).toBe(true);
-
-		if (process.env.DEV) {
-			expect(stack.split('\n').length).toBeGreaterThan(1);
-		} else {
-			expect(stack.split('\n').length).toBe(1);
-		}
-	});
-
-	test('page endpoint returned error respects `accept: application/json`', async ({ request }) => {
-		const response = await request.get('/errors/page-endpoint/get-explicit', {
-			headers: {
-				accept: 'application/json'
-			}
-		});
-
-		const { message } = await response.json();
-
-		expect(response.status()).toBe(400);
-		expect(message).toBe('oops');
-	});
-
 	test('returns 400 when accessing a malformed URI', async ({ page }) => {
 		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
 		if (process.env.DEV) {
@@ -180,6 +146,26 @@ test.describe('Errors', () => {
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
 		);
+	});
+
+	test('throw error(..) in endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-throw-error');
+
+		const error = read_errors('/errors/endpoint-throw-error');
+		expect(error).toBe(undefined);
+
+		expect(await res?.text()).toBe('You shall not pass');
+		expect(res?.status()).toBe(401);
+	});
+
+	test('throw redirect(..) in endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-throw-redirect');
+		expect(res?.status()).toBe(200); // redirects are opaque to the browser
+
+		const error = read_errors('/errors/endpoint-throw-redirect');
+		expect(error).toBe(undefined);
+
+		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 });
 
@@ -211,53 +197,6 @@ test.describe('Routing', () => {
 });
 
 test.describe('Shadowed pages', () => {
-	test('responds to HEAD requests from endpoint', async ({ request }) => {
-		const url = '/shadowed/simple';
-
-		const opts = {
-			headers: {
-				accept: 'application/json'
-			}
-		};
-
-		const responses = {
-			head: await request.head(url, opts),
-			get: await request.get(url, opts)
-		};
-
-		const headers = {
-			head: responses.head.headers(),
-			get: responses.get.headers()
-		};
-
-		expect(responses.head.status()).toBe(200);
-		expect(responses.get.status()).toBe(200);
-		expect(await responses.head.text()).toBe('');
-		expect(await responses.get.json()).toEqual({ answer: 42 });
-
-		['date', 'transfer-encoding'].forEach((name) => {
-			delete headers.head[name];
-			delete headers.get[name];
-		});
-
-		expect(headers.get).toEqual({
-			...headers.head,
-			'content-type': 'application/json'
-		});
-	});
-
-	test('Responds from endpoint if Accept includes application/json but not text/html', async ({
-		request
-	}) => {
-		const response = await request.get('/shadowed/simple', {
-			headers: {
-				accept: 'application/json'
-			}
-		});
-
-		expect(await response.json()).toEqual({ answer: 42 });
-	});
-
 	test('Action can return undefined', async ({ request }) => {
 		const response = await request.post('/shadowed/simple/post', {
 			headers: {
@@ -311,6 +250,14 @@ test.describe('Static files', () => {
 		const response = await request.get('/symlink-from/hello.txt');
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('hello');
+	});
+});
+
+test.describe('setHeaders', () => {
+	test('allows multiple set-cookie headers with different values', async ({ page }) => {
+		const response = await page.goto('/headers/set-cookie/sub');
+		const cookies = (await response?.allHeaders())['set-cookie'];
+		expect(cookies.includes('cookie1=value1') && cookies.includes('cookie2=value2')).toBe(true);
 	});
 });
 

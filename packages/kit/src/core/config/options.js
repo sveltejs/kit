@@ -107,9 +107,14 @@ const options = object(
 				return input;
 			}),
 
-			browser: object({
-				hydrate: boolean(true),
-				router: boolean(true)
+			browser: validate({ hydrate: true, router: true }, (input, keypath) => {
+				const value = object({ hydrate: boolean(true), router: boolean(true) })(input, keypath);
+				if (!value.hydrate && value.router) {
+					throw new Error(
+						'config.kit.browser.router cannot be true if config.kit.browser.hydrate is false'
+					);
+				}
+				return value;
 			}),
 
 			csp: object({
@@ -173,13 +178,7 @@ const options = object(
 
 			outDir: string('.svelte-kit'),
 
-			package: object({
-				dir: string('package'),
-				// excludes all .d.ts and filename starting with _
-				exports: fun((filepath) => !/^_|\/_|\.d\.ts$/.test(filepath)),
-				files: fun(() => true),
-				emitTypes: boolean(true)
-			}),
+			package: error((keypath) => `${keypath} has been removed — use @sveltejs/package instead`),
 
 			paths: object({
 				base: validate('', (input, keypath) => {

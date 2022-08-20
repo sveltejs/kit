@@ -7,8 +7,6 @@ import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
 	CspDirectives,
-	JSONObject,
-	JSONValue,
 	Logger,
 	MaybePromise,
 	Prerendered,
@@ -108,7 +106,15 @@ export interface Config {
 	compilerOptions?: CompileOptions;
 	extensions?: string[];
 	kit?: KitConfig;
+	package?: {
+		source?: string;
+		dir?: string;
+		emitTypes?: boolean;
+		exports?: (filepath: string) => boolean;
+		files?: (filepath: string) => boolean;
+	};
 	preprocess?: any;
+	[key: string]: any;
 }
 
 export interface KitConfig {
@@ -143,12 +149,6 @@ export interface KitConfig {
 		allowed?: string[];
 	};
 	outDir?: string;
-	package?: {
-		dir?: string;
-		emitTypes?: boolean;
-		exports?(filepath: string): boolean;
-		files?(filepath: string): boolean;
-	};
 	paths?: {
 		assets?: string;
 		base?: string;
@@ -177,10 +177,6 @@ export interface ExternalFetch {
 	(req: Request): Promise<Response>;
 }
 
-export interface GetSession {
-	(event: RequestEvent): MaybePromise<App.Session>;
-}
-
 export interface Handle {
 	(input: {
 		event: RequestEvent;
@@ -197,24 +193,23 @@ export interface HandleError {
  * rather than using `Load` directly.
  */
 export interface Load<
-	Params extends Record<string, string> = Record<string, string>,
-	InputData extends JSONObject | null = JSONObject | null,
-	ParentData extends Record<string, any> | null = Record<string, any> | null,
-	OutputData extends Record<string, any> = Record<string, any>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	InputData extends Record<string, any> | null = Record<string, any> | null,
+	ParentData extends Record<string, any> = Record<string, any>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
 > {
-	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData | void>;
+	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData>;
 }
 
 export interface LoadEvent<
-	Params extends Record<string, string> = Record<string, string>,
-	Data extends JSONObject | null = JSONObject | null,
-	ParentData extends Record<string, any> | null = Record<string, any> | null
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Data extends Record<string, any> | null = Record<string, any> | null,
+	ParentData extends Record<string, any> = Record<string, any>
 > {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
 	data: Data;
 	routeId: string | null;
-	session: App.Session;
 	setHeaders: (headers: ResponseHeaders) => void;
 	url: URL;
 	parent: () => Promise<ParentData>;
@@ -239,7 +234,9 @@ export interface ParamMatcher {
 	(param: string): boolean;
 }
 
-export interface RequestEvent<Params extends Record<string, string> = Record<string, string>> {
+export interface RequestEvent<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> {
 	clientAddress: string;
 	locals: App.Locals;
 	params: Params;
@@ -263,8 +260,6 @@ export interface ResolveOptions {
 	ssr?: boolean;
 	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 }
-
-export type ResponseBody = JSONValue | Uint8Array | ReadableStream | Error;
 
 export class Server {
 	constructor(manifest: SSRManifest);
@@ -299,23 +294,25 @@ export interface SSRManifest {
  * rather than using `ServerLoad` directly.
  */
 export interface ServerLoad<
-	Params extends Record<string, string> = Record<string, string>,
-	ParentData extends JSONObject | null = JSONObject | null,
-	OutputData extends JSONObject | void = JSONObject | void
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	ParentData extends Record<string, any> = Record<string, any>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
 > {
-	(event: ServerLoadEvent<Params, ParentData>): MaybePromise<OutputData | void>;
+	(event: ServerLoadEvent<Params, ParentData>): MaybePromise<OutputData>;
 }
 
 export interface ServerLoadEvent<
-	Params extends Record<string, string> = Record<string, string>,
-	ParentData extends JSONObject | null = JSONObject | null
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	ParentData extends Record<string, any> = Record<string, any>
 > extends RequestEvent<Params> {
 	parent: () => Promise<ParentData>;
 }
 
-export interface Action<Params extends Record<string, string> = Record<string, string>> {
+export interface Action<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> {
 	(event: RequestEvent<Params>): MaybePromise<
-		| { status?: number; errors: Record<string, string>; location?: never }
+		| { status?: number; errors: Record<string, any>; location?: never }
 		| { status?: never; errors?: never; location: string }
 		| void
 	>;

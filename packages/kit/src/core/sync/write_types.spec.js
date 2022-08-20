@@ -160,6 +160,14 @@ test('Finds nearest layout (named)', () => {
 	});
 });
 
+test('Finds nearest named layout from layout', () => {
+	assert.equal(find_nearest_layout('src/routes', nodes, 1), {
+		key: '',
+		folder_depth_diff: 0,
+		name: ''
+	});
+});
+
 test('Finds nearest layout (recursively named)', () => {
 	assert.equal(find_nearest_layout('src/routes', nodes, 3), {
 		key: '',

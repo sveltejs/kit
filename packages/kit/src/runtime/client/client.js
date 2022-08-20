@@ -50,13 +50,12 @@ function update_scroll_positions(index) {
 /**
  * @param {{
  *   target: Element;
- *   session: App.Session;
  *   base: string;
  *   trailing_slash: import('types').TrailingSlash;
  * }} opts
  * @returns {import('./types').Client}
  */
-export function create_client({ target, session, base, trailing_slash }) {
+export function create_client({ target, base, trailing_slash }) {
 	/** @type {Array<((href: string) => boolean)>} */
 	const invalidated = [];
 
@@ -64,7 +63,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		url: notifiable_store({}),
 		page: notifiable_store({}),
 		navigating: writable(/** @type {import('types').Navigation | null} */ (null)),
-		session: writable(session),
 		updated: create_updated_store()
 	};
 
@@ -101,23 +99,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	/** @type {import('svelte').SvelteComponent} */
 	let root;
-
-	/** @type {App.Session} */
-	let $session;
-
-	let ready = false;
-	stores.session.subscribe(async (value) => {
-		$session = value;
-
-		if (!ready) return;
-		session_id += 1;
-
-		const current_load_uses_session = current.branch.some((node) => node?.uses.session);
-		if (!current_load_uses_session) return;
-
-		update(new URL(location.href), []);
-	});
-	ready = true;
 
 	let router_enabled = true;
 
@@ -287,7 +268,22 @@ export function create_client({ target, session, base, trailing_slash }) {
 				navigation_result.props.page.url = url;
 			}
 
-			root.$set(navigation_result.props);
+			if (import.meta.env.DEV) {
+				// Nasty hack to silence harmless warnings the user can do nothing about
+				const warn = console.warn;
+				console.warn = (...args) => {
+					if (
+						args.length !== 1 ||
+						!/<(Layout|Page)(_[\w$]+)?> was created with unknown prop '(data|errors)'/.test(args[0])
+					) {
+						warn(...args);
+					}
+				};
+				root.$set(navigation_result.props);
+				tick().then(() => (console.warn = warn));
+			} else {
+				root.$set(navigation_result.props);
+			}
 		} else {
 			initialize(navigation_result);
 		}
@@ -349,7 +345,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			page = navigation_result.props.page;
 		}
 
-		const leaf_node = navigation_result.state.branch.at(-1);
+		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		router_enabled = leaf_node?.node.shared?.router !== false;
 
 		if (callback) callback();
@@ -366,11 +362,30 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		page = result.props.page;
 
-		root = new Root({
-			target,
-			props: { ...result.props, stores },
-			hydrate: true
-		});
+		if (import.meta.env.DEV) {
+			// Nasty hack to silence harmless warnings the user can do nothing about
+			const warn = console.warn;
+			console.warn = (...args) => {
+				if (
+					args.length !== 1 ||
+					!/<(Layout|Page)(_[\w$]+)?> was created with unknown prop '(data|errors)'/.test(args[0])
+				) {
+					warn(...args);
+				}
+			};
+			root = new Root({
+				target,
+				props: { ...result.props, stores },
+				hydrate: true
+			});
+			console.warn = warn;
+		} else {
+			root = new Root({
+				target,
+				props: { ...result.props, stores },
+				hydrate: true
+			});
+		}
 
 		if (router_enabled) {
 			const navigation = { from: null, to: new URL(location.href) };
@@ -422,10 +437,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 		let data = {};
 		let data_changed = false;
 		for (let i = 0; i < filtered.length; i += 1) {
-			Object.assign(data, filtered[i].data);
+			data = { ...data, ...filtered[i].data };
 			// Only set props if the node actually updated. This prevents needless rerenders.
-			if (!current.branch.some((node) => node === filtered[i])) {
-				result.props[`data_${i}`] = filtered[i].data;
+			if (data_changed || !current.branch.some((node) => node === filtered[i])) {
+				result.props[`data_${i}`] = data;
 				data_changed = true;
 			}
 		}
@@ -467,7 +482,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   routeId: string | null;
-	 * 	 server_data: import('types').JSONObject | null;
+	 * 	 server_data: Record<string, any> | null;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
@@ -475,7 +490,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const uses = {
 			params: new Set(),
 			url: false,
-			session: false,
 			dependencies: new Set(),
 			parent: false
 		};
@@ -511,7 +525,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		}
 
-		const session = $session;
 		const load_url = new LoadURL(url);
 
 		if (node.shared?.load) {
@@ -523,10 +536,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 				get url() {
 					uses.url = true;
 					return load_url;
-				},
-				get session() {
-					uses.session = true;
-					return session;
 				},
 				async fetch(resource, init) {
 					let requested;
@@ -581,6 +590,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 						'@migration task: Replace `props` with `data` stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
 					);
 				},
+				get session() {
+					// TODO remove this for 1.0
+					throw new Error(
+						'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
+					);
+				},
 				get stuff() {
 					throw new Error(
 						'@migration task: Remove stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
@@ -620,8 +635,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		const changed = current.url && {
 			url: id !== current.url.pathname + current.url.search,
-			params: Object.keys(params).filter((key) => current.params[key] !== params[key]),
-			session: session_id !== current.session_id
+			params: Object.keys(params).filter((key) => current.params[key] !== params[key])
 		};
 
 		// preload modules to avoid waterfall, but handle rejections
@@ -643,7 +657,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 					!previous ||
 					(changed.url && previous.uses.url) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
-					(changed.session && previous.uses.session) ||
 					Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep))) ||
 					(previous.uses.parent && nodes_changed_since_last_render.includes(true));
 				nodes_changed_since_last_render.push(changed_since_last_render);
@@ -753,7 +766,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 									uses: {
 										params: new Set(),
 										url: false,
-										session: false,
 										dependencies: new Set(),
 										parent: false
 									}
@@ -825,7 +837,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 			uses: {
 				params: new Set(),
 				url: false,
-				session: false,
 				dependencies: new Set(),
 				parent: false
 			}

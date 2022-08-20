@@ -3,12 +3,13 @@ import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
 /**
  * Calls the user's `load` function.
  * @param {{
+ *   dev: boolean;
  *   event: import('types').RequestEvent;
  *   node: import('types').SSRNode | undefined;
- *   parent: () => Promise<import('types').JSONObject | null>;
+ *   parent: () => Promise<Record<string, any>>;
  * }} opts
  */
-export async function load_server_data({ event, node, parent }) {
+export async function load_server_data({ dev, event, node, parent }) {
 	if (!node?.server) return null;
 
 	const server_data = await node.server.load?.call(null, {
@@ -27,32 +28,27 @@ export async function load_server_data({ event, node, parent }) {
 		url: event.url
 	});
 
-	return server_data ? unwrap_promises(server_data) : null;
+	const result = server_data ? await unwrap_promises(server_data) : null;
+
+	if (dev) {
+		check_serializability(result, /** @type {string} */ (node.server_id), 'data');
+	}
+
+	return result;
 }
 
 /**
  * Calls the user's `load` function.
  * @param {{
- *   $session: Record<string, any>;
  *   event: import('types').RequestEvent;
  *   fetcher: typeof fetch;
  *   node: import('types').SSRNode | undefined;
- *   options: import('types').SSROptions;
  *   parent: () => Promise<Record<string, any>>;
- *   server_data_promise: Promise<import('types').JSONObject | null>;
+ *   server_data_promise: Promise<Record<string, any> | null>;
  *   state: import('types').SSRState;
  * }} opts
  */
-export async function load_data({
-	$session,
-	event,
-	fetcher,
-	node,
-	options,
-	parent,
-	server_data_promise,
-	state
-}) {
+export async function load_data({ event, fetcher, node, parent, server_data_promise, state }) {
 	const server_data = await server_data_promise;
 
 	if (!node?.shared?.load) {
@@ -65,12 +61,10 @@ export async function load_data({
 		data: server_data,
 		routeId: event.routeId,
 		get session() {
-			if (node.shared.prerender ?? options.prerender.default) {
-				throw Error(
-					'Attempted to access session from a prerendered page. Session would never be populated.'
-				);
-			}
-			return $session;
+			// TODO remove for 1.0
+			throw new Error(
+				'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
+			);
 		},
 		fetch: fetcher,
 		setHeaders: event.setHeaders,
@@ -83,7 +77,7 @@ export async function load_data({
 
 /** @param {Record<string, any>} object */
 async function unwrap_promises(object) {
-	/** @type {import('types').JSONObject} */
+	/** @type {Record<string, any>} */
 	const unwrapped = {};
 
 	for (const key in object) {
@@ -91,4 +85,43 @@ async function unwrap_promises(object) {
 	}
 
 	return unwrapped;
+}
+
+/**
+ * Check that the data can safely be serialized to JSON
+ * @param {any} value
+ * @param {string} id
+ * @param {string} path
+ */
+function check_serializability(value, id, path) {
+	const type = typeof value;
+
+	if (type === 'string' || type === 'boolean' || type === 'number' || type === 'undefined') {
+		// primitives are fine
+		return;
+	}
+
+	if (type === 'object') {
+		// nulls are fine...
+		if (!value) return;
+
+		// ...so are plain arrays...
+		if (Array.isArray(value)) {
+			value.forEach((child, i) => {
+				check_serializability(child, id, `${path}[${i}]`);
+			});
+			return;
+		}
+
+		// ...and objects
+		const tag = Object.prototype.toString.call(value);
+		if (tag === '[object Object]') {
+			for (const key in value) {
+				check_serializability(value[key], id, `${path}.${key}`);
+			}
+			return;
+		}
+	}
+
+	throw new Error(`${path} returned from 'load' in ${id} cannot be serialized as JSON`);
 }

@@ -36,14 +36,16 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		'application/json'
 	]);
 
-	if (accept === 'application/json') {
+	if (
+		accept === 'application/json' &&
+		event.request.method !== 'GET' &&
+		event.request.method !== 'HEAD'
+	) {
 		const node = await options.manifest._.nodes[route.leaf]();
 		if (node.server) {
 			return handle_json_request(event, options, node.server);
 		}
 	}
-
-	const $session = await options.hooks.getSession(event);
 
 	const { fetcher, fetched, cookies } = create_fetch({ event, options, state, route });
 
@@ -79,7 +81,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					}
 
 					if (event.request.method === 'POST' && result?.location) {
-						return redirect_response(status, result.location);
+						return redirect_response(303, result.location);
 					}
 				} else {
 					event.setHeaders({
@@ -97,6 +99,9 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			}
 		}
 
+		const should_prerender_data = nodes.some((node) => node?.server);
+		const data_pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
+
 		if (!resolve_opts.ssr) {
 			return await render_response({
 				branch: [],
@@ -112,12 +117,12 @@ export async function render_page(event, route, options, state, resolve_opts) {
 				event,
 				options,
 				state,
-				$session,
 				resolve_opts
 			});
 		}
 
-		const should_prerender = leaf_node.shared?.prerender ?? options.prerender.default;
+		const should_prerender =
+			leaf_node.shared?.prerender ?? leaf_node.server?.prerender ?? options.prerender.default;
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
@@ -140,7 +145,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		/** @type {Error | null} */
 		let load_error = null;
 
-		/** @type {Array<Promise<import('types').JSONObject | null>>} */
+		/** @type {Array<Promise<Record<string, any> | null>>} */
 		const server_promises = nodes.map((node, i) => {
 			if (load_error) {
 				// if an error happens immediately, don't bother with the rest of the nodes
@@ -156,10 +161,11 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					}
 
 					return await load_server_data({
+						dev: options.dev,
 						event,
 						node,
 						parent: async () => {
-							/** @type {import('types').JSONObject} */
+							/** @type {Record<string, any>} */
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
 								Object.assign(data, await server_promises[j]);
@@ -180,11 +186,9 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			return Promise.resolve().then(async () => {
 				try {
 					return await load_data({
-						$session,
 						event,
 						fetcher,
 						node,
-						options,
 						parent: async () => {
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
@@ -219,6 +223,16 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					const error = normalize_error(e);
 
 					if (error instanceof Redirect) {
+						if (state.prerendering && should_prerender_data) {
+							state.prerendering.dependencies.set(data_pathname, {
+								response: new Response(undefined),
+								body: JSON.stringify({
+									type: 'redirect',
+									location: error.location
+								})
+							});
+						}
+
 						return redirect_response(error.status, error.location);
 					}
 
@@ -240,7 +254,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 								event,
 								options,
 								state,
-								$session,
 								resolve_opts,
 								page_config: { router: true, hydrate: true },
 								status,
@@ -273,19 +286,14 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			}
 		}
 
-		// generate __data.json files when prerendering
-		if (state.prerendering && nodes.some((node) => node?.server)) {
-			const pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
-
-			const dependency = {
+		if (state.prerendering && should_prerender_data) {
+			state.prerendering.dependencies.set(data_pathname, {
 				response: new Response(undefined),
 				body: JSON.stringify({
 					type: 'data',
 					nodes: branch.map((branch_node) => ({ data: branch_node?.server_data }))
 				})
-			};
-
-			state.prerendering.dependencies.set(pathname, dependency);
+			});
 		}
 
 		// TODO use validation_errors
@@ -294,7 +302,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			event,
 			options,
 			state,
-			$session,
 			resolve_opts,
 			page_config: get_page_config(leaf_node, options),
 			status,
@@ -313,7 +320,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			event,
 			options,
 			state,
-			$session,
 			status: 500,
 			error: /** @type {Error} */ (error),
 			resolve_opts
@@ -345,8 +351,8 @@ function get_page_config(leaf, options) {
  * @param {import('types').SSRNode['server']} mod
  */
 export async function handle_json_request(event, options, mod) {
-	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
-	const handler = mod[method === 'HEAD' || method === 'GET' ? 'load' : method];
+	const method = /** @type {'POST' | 'PUT' | 'PATCH' | 'DELETE'} */ (event.request.method);
+	const handler = mod[method];
 
 	if (!handler) {
 		return method_not_allowed(mod, method);
@@ -355,14 +361,6 @@ export async function handle_json_request(event, options, mod) {
 	try {
 		// @ts-ignore
 		const result = await handler.call(null, event);
-
-		if (method === 'HEAD') {
-			return new Response();
-		}
-
-		if (method === 'GET') {
-			return json(result);
-		}
 
 		if (result?.errors) {
 			// @ts-ignore

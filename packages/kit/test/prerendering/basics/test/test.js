@@ -21,6 +21,20 @@ test('renders a redirect', () => {
 	);
 });
 
+test('renders a server-side redirect', () => {
+	const html = read('redirect-server.html');
+	assert.equal(html, '<meta http-equiv="refresh" content="0;url=https://example.com/redirected">');
+
+	const json = read('redirect-server/__data.json');
+	assert.equal(
+		json,
+		JSON.stringify({
+			type: 'redirect',
+			location: 'https://example.com/redirected'
+		})
+	);
+});
+
 test('does not double-encode redirect locations', () => {
 	const content = read('redirect-encoded.html');
 	assert.equal(
@@ -85,10 +99,9 @@ test('does not prerender page with shadow endpoint with non-load handler', () =>
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 
-test('does not prerender page accessing session in load', () => {
-	// This should fail to prerender as session can never be populated
-	// for a prerendered page.
-	assert.ok(!fs.existsSync(`${build}/accesses-session.html`));
+test('does not prerender page with prerender = false in +page.server.js', () => {
+	assert.ok(!fs.existsSync(`${build}/page-server-options.html`));
+	assert.ok(!fs.existsSync(`${build}/page-server-options/__data.json`));
 });
 
 test('decodes paths when writing files', () => {

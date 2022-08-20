@@ -6,7 +6,7 @@ import {
 	prefetch,
 	prefetchRoutes
 } from '$app/navigation';
-import { CSRPageNode, CSRRoute, JSONObject } from 'types';
+import { CSRPageNode, CSRRoute } from 'types';
 import { HttpError } from '../../index/private.js';
 import { SerializedHttpError } from '../server/page/types.js';
 
@@ -69,7 +69,6 @@ export type BranchNode = {
 	uses: {
 		params: Set<string>;
 		url: boolean; // TODO make more granular?
-		session: boolean;
 		dependencies: Set<string>;
 		parent: boolean;
 	};
@@ -93,7 +92,7 @@ export interface ServerDataRedirected {
 export interface ServerDataLoaded {
 	type: 'data';
 	nodes: Array<{
-		data?: JSONObject | null; // TODO or `-1` to indicate 'reuse cached data'?
+		data?: Record<string, any> | null; // TODO or `-1` to indicate 'reuse cached data'?
 		status?: number;
 		message?: string;
 		error?: {
