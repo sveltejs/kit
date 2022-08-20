@@ -46,7 +46,7 @@ export function error(description, comment_id) {
  */
 export function move_file(file, renamed, content, use_git) {
 	if (use_git) {
-		execSync(`git mv ${JSON.stringify(file)} ${JSON.stringify(renamed)}`);
+		execSync(`git mv '${file.replace(/'/g, "\\'")}' '${renamed.replace(/'/g, "\\'")}'`);
 	} else {
 		fs.unlinkSync(file);
 	}
