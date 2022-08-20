@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.158
+
+### Patch Changes
+
+- Add notes about includes/excludes and path aliases ([#6085](https://github.com/sveltejs/kit/pull/6085))
+
+* setup prettier plugin-search-dirs to enable use with pnpm ([#6101](https://github.com/sveltejs/kit/pull/6101))
+
 ## 2.0.0-next.157
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.0.0-next.9
+
+### Patch Changes
+
+- Handle Error without message, handle status 200, handle missing body ([#6096](https://github.com/sveltejs/kit/pull/6096))
+
 ## 1.0.0-next.8
 
 ### Patch Changes
