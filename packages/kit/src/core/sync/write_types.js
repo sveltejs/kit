@@ -363,7 +363,7 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 				}
 				if (server_load) {
 					server_load_exports.push(
-						`export type ${name}<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
+						`export type ${name}<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${server_load};`
 					);
 					server_load_event_exports.push(
 						`export type ${name} = Parameters<LayoutServerLoad.${name}>[0];`
