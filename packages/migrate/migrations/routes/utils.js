@@ -3,6 +3,7 @@ import path from 'path';
 import colors from 'kleur';
 import ts from 'typescript';
 import MagicString from 'magic-string';
+import sq from 'shell-quote';
 import { execSync } from 'child_process';
 
 /** @param {string} message */
@@ -46,7 +47,7 @@ export function error(description, comment_id) {
  */
 export function move_file(file, renamed, content, use_git) {
 	if (use_git) {
-		execSync(`git mv '${file.replace(/'/g, "\\'")}' '${renamed.replace(/'/g, "\\'")}'`);
+		execSync(`git mv ${sq.quote([file, renamed])}`);
 	} else {
 		fs.unlinkSync(file);
 	}

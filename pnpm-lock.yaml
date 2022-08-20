@@ -502,6 +502,7 @@ importers:
       magic-string: ^0.26.2
       prettier: ^2.6.2
       prompts: ^2.4.2
+      shell-quote: ^1.7.3
       tiny-glob: ^0.2.9
       typescript: ^4.7.4
       uvu: ^0.5.6
@@ -509,6 +510,7 @@ importers:
       kleur: 4.1.5
       magic-string: 0.26.2
       prompts: 2.4.2
+      shell-quote: 1.7.3
       tiny-glob: 0.2.9
       typescript: 4.7.4
     devDependencies:
@@ -3670,6 +3672,10 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
     dev: true
+
+  /shell-quote/1.7.3:
+    resolution: {integrity: sha512-Vpfqwm4EnqGdlsBFNmHhxhElJYrdfcxPThu+ryKS5J8L/fhAwLazFZtq+S+TWZ9ANj2piSQLGj6NQg+lKPmxrw==}
+    dev: false
 
   /shiki-twoslash/3.1.0:
     resolution: {integrity: sha512-uDqrTutOIZzyHbo103GsK7Vvc10saK1XCCivnOQ1NHJzgp3FBilEpftGeVzVSMOJs+JyhI7whkvhXV7kXQ5zCg==}
