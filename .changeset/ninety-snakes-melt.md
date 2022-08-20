@@ -1,0 +1,1 @@
+Suggest props destructuring if possible
