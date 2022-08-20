@@ -55,22 +55,30 @@ export async function load_data({ event, fetcher, node, parent, server_data_prom
 		return server_data;
 	}
 
-	const data = await node.shared.load.call(null, {
+	const load_input = {
 		url: state.prerendering ? new PrerenderingURL(event.url) : new LoadURL(event.url),
 		params: event.params,
 		data: server_data,
 		routeId: event.routeId,
-		get session() {
-			// TODO remove for 1.0
-			throw new Error(
-				'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
-			);
-		},
 		fetch: fetcher,
 		setHeaders: event.setHeaders,
 		depends: () => {},
 		parent
+	};
+
+	// TODO remove this for 1.0
+	Object.defineProperties(load_input, {
+		session: {
+			get() {
+				throw new Error(
+					'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
+				);
+			},
+			enumerable: false
+		}
 	});
+
+	const data = await node.shared.load.call(null, load_input);
 
 	return data ? unwrap_promises(data) : null;
 }
