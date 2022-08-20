@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.0.0-next.10
+
+### Patch Changes
+
+- Revert change to suggest props destructuring ([#6099](https://github.com/sveltejs/kit/pull/6099))
+
 ## 1.0.0-next.9
 
 ### Patch Changes
