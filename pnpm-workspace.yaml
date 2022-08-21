@@ -4,5 +4,6 @@ packages:
   - 'packages/adapter-static/test/apps/*'
   - 'packages/kit/test/apps/*'
   - 'packages/kit/test/prerendering/*'
+  - 'packages/kit/test/meta/**'
   - 'packages/create-svelte/templates/*'
   - '!.test-tmp/**'
