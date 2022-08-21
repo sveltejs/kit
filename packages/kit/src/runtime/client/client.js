@@ -1065,7 +1065,7 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @param {Event} event */
 			const trigger_prefetch = (event) => {
 				const a = find_anchor(event);
-				if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
+				if (a && a.href && a.hasAttribute('data-sveltekit-prefetch')) {
 					prefetch(get_href(a));
 				}
 			};

@@ -324,6 +324,46 @@ function kit() {
 			}
 		},
 
+		// IDEA: Maybe the attribute replacement could be done when rendering the chunks to avoid looping an extra time (as is the case with generateBundle).
+		// /** @type {import('rollup').RenderChunkHook} */
+		// renderChunk(code, chunk) {
+		// 	for (const [attribute, replacement] of [['sveltekit:prefetch', 'data-sveltekit-prefetch']]) {
+		// 		if (code.includes(attribute)) {
+		// 			console.log(`[${chunk.name}]: Replacing "${attribute}" with "${replacement}"`);
+
+		// 			return code.replace(attribute, replacement);
+		// 		}
+		// 	}
+
+		// 	return code;
+		// },
+
+		// TODO: Ensure the replacement only happens for attributes
+		// TODO: Ensure the replacement happens for prerendered HTML too
+		// This might be read from the svelte source file which means we need to replace it when server side rendering the HTML response too.
+		/**
+		 * @param {import('rollup').OutputOptions} _options
+		 * @param {{ [fileName: string]: any }} bundle
+		 */
+		generateBundle(_options, bundle) {
+			for (const entry of Object.values(bundle)) {
+				if (entry.type !== 'chunk') continue;
+
+				for (const [attribute, replacement] of [
+					['sveltekit:prefetch', 'data-sveltekit-prefetch']
+				]) {
+					if (entry.code.includes(attribute)) {
+						console.log(`[${entry.fileName}]: Replacing "${attribute}" with "${replacement}"`);
+
+						bundle[entry.fileName] = {
+							...entry,
+							code: entry.code.replaceAll(attribute, replacement)
+						};
+					}
+				}
+			}
+		},
+
 		/**
 		 * Vite builds a single bundle. We need three bundles: client, server, and service worker.
 		 * The user's package.json scripts will invoke the Vite CLI to execute the client build. We
