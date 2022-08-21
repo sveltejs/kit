@@ -1,10 +1,9 @@
 import { fork } from 'node:child_process';
-import fs, { existsSync } from 'node:fs';
+import fs from 'node:fs';
 import path from 'node:path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import * as vite from 'vite';
-import legacy from '@vitejs/plugin-legacy';
 import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
 import * as sync from '../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
@@ -86,6 +85,8 @@ function kit() {
 
 	/** @type {import('vite').ConfigEnv} */
 	let vite_config_env;
+
+	let outputCount = 0;
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
@@ -242,10 +243,6 @@ function kit() {
 				}
 			};
 
-			if (svelte_config.kit.legacy) {
-				result.plugins = [legacy(svelte_config.kit.legacy)];
-			}
-
 			deferred_warning = warn_overridden_config(config, result);
 			return result;
 		},
@@ -279,6 +276,13 @@ function kit() {
 		 * then use this hook to kick off builds for the server and service worker.
 		 */
 		async writeBundle(_options, bundle) {
+			++outputCount;
+			const output = vite_config.build.rollupOptions.output;
+			const outputLength = Array.isArray(output) ? output.length : 1;
+			if (outputCount < outputLength) {
+				return;// Wait untill all output will be done building, since we need the manifest
+			}
+			
 			const verbose = vite_config.logLevel === 'info';
 			log = logger({ verbose });
 

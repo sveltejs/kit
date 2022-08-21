@@ -278,7 +278,6 @@ importers:
       '@types/node': ^16.11.36
       '@types/sade': ^1.7.4
       '@types/set-cookie-parser': ^2.4.2
-      '@vitejs/plugin-legacy': 2.0.0
       chokidar: ^3.5.3
       cookie: ^0.5.0
       cross-env: ^7.0.3
@@ -305,7 +304,6 @@ importers:
       vite: ^3.0.0
     dependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.1_svelte@3.48.0+vite@3.0.0
-      '@vitejs/plugin-legacy': 2.0.0_terser@5.14.2+vite@3.0.0
       chokidar: 3.5.3
       sade: 1.8.1
       terser: 5.14.2
@@ -519,12 +517,14 @@ importers:
       '@sveltejs/kit': workspace:*
       '@sveltejs/site-kit': ^2.1.0
       '@types/node': ^16.11.36
+      '@vitejs/plugin-legacy': ^2.0.1
       flexsearch: ^0.7.21
       marked: ^4.0.16
       prism-svelte: ^0.5.0
       prismjs: ^1.28.0
       shiki-twoslash: ^3.0.2
       svelte: ^3.48.0
+      terser: '>=5.4.0 <6.0.0'
       typescript: ^4.7.4
       vite: ^3.0.0
       vite-imagetools: ^4.0.3
@@ -535,15 +535,17 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': 2.1.0
       '@types/node': 16.11.42
+      '@vitejs/plugin-legacy': 2.0.1_terser@5.14.2+vite@3.0.0
       flexsearch: 0.7.21
       marked: 4.0.17
       prism-svelte: 0.5.0
       prismjs: 1.28.0
       shiki-twoslash: 3.1.0
       svelte: 3.48.0
+      terser: 5.14.2
       typescript: 4.7.4
-      vite: 3.0.0
-      vite-imagetools: 4.0.4
+      vite: 3.0.0_terser@5.14.2
+      vite-imagetools: 4.0.3
 
 packages:
 
@@ -575,10 +577,10 @@ packages:
       regenerator-runtime: 0.13.9
     dev: true
 
-  /@babel/standalone/7.18.9:
-    resolution: {integrity: sha512-6E+p5azHMHcMkHzGFnA7Pqhtgfwx1cClwjMqomMHhdFupCLZDDpVQUctRGYE7p7nn7cXJZSI/L9en+tt30AP3w==}
+  /@babel/standalone/7.18.12:
+    resolution: {integrity: sha512-wDh3K5IUJiSMAY0MLYBFoCaj2RCZwvDz5BHn2uHat9KOsGWEVDFgFQFIOO+81Js2phFKNppLC45iOCsZVfJniw==}
     engines: {node: '>=6.9.0'}
-    dev: false
+    dev: true
 
   /@bcoe/v8-coverage/0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
@@ -1187,21 +1189,21 @@ packages:
       - supports-color
     dev: false
 
-  /@vitejs/plugin-legacy/2.0.0_terser@5.14.2+vite@3.0.0:
-    resolution: {integrity: sha512-cuc45C4BQo2VlOsHZML4fc3MPfSjOEFeezHxr+WWlOOmi+muy1rz2snnFiePtyjVc1CYGTsnxk13cXpzQvMZaw==}
-    engines: {node: '>=14.18.0'}
+  /@vitejs/plugin-legacy/2.0.1_terser@5.14.2+vite@3.0.0:
+    resolution: {integrity: sha512-kKC56rfsXwebApzyuZqdQlGmqTyH1ugy0l0rY58gx5OXzq4/t5/DCqGUoz53Db51OqfjRqsHfqmvq9or6w9k/Q==}
+    engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       terser: ^5.4.0
       vite: ^3.0.0
     dependencies:
-      '@babel/standalone': 7.18.9
-      core-js: 3.24.0
+      '@babel/standalone': 7.18.12
+      core-js: 3.24.1
       magic-string: 0.26.2
       regenerator-runtime: 0.13.9
-      systemjs: 6.12.1
+      systemjs: 6.12.3
       terser: 5.14.2
       vite: 3.0.0_terser@5.14.2
-    dev: false
+    dev: true
 
   /abbrev/1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
@@ -1600,10 +1602,10 @@ packages:
     resolution: {integrity: sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==}
     engines: {node: '>= 0.6'}
 
-  /core-js/3.24.0:
-    resolution: {integrity: sha512-IeOyT8A6iK37Ep4kZDD423mpi6JfPRoPUdQwEWYiGolvn4o6j2diaRzNfDfpTdu3a5qMbrGUzKUpYpRY8jXCkQ==}
+  /core-js/3.24.1:
+    resolution: {integrity: sha512-0QTBSYSUZ6Gq21utGzkfITDylE8jWC9Ne1D2MrhvlsZBI1x39OdDIVbzSqtgMndIy6BlHxBXpMGqzZmnztg2rg==}
     requiresBuild: true
-    dev: false
+    dev: true
 
   /cross-env/7.0.3:
     resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
@@ -2278,7 +2280,7 @@ packages:
     dev: true
 
   /github-from-package/0.0.0:
-    resolution: {integrity: sha1-l/tdlr/eiXMxPyDoKI75oWf6ZM4=}
+    resolution: {integrity: sha512-SyHy3T1v2NUXn29OsWdxmK6RwHD+vkj3v8en8AOBZ1wBQ/hCAQ5bAQTD02kW4W9tUp/3Qh6J8r9EvntiyCmOOw==}
     dev: true
 
   /gitignore-parser/0.0.2:
@@ -2982,8 +2984,8 @@ packages:
       tslib: 2.4.0
     dev: true
 
-  /node-abi/3.22.0:
-    resolution: {integrity: sha512-u4uAs/4Zzmp/jjsD9cyFYDXeISfUWaAVWshPmDZOFOv4Xl4SbzTXm53I04C2uRueYJ+0t5PEtLH/owbn2Npf/w==}
+  /node-abi/3.24.0:
+    resolution: {integrity: sha512-YPG3Co0luSu6GwOBsmIdGW6Wx0NyNDLg/hriIyDllVsNwnI6UeqaWShxC3lbH4LtEQUgoLP3XR1ndXiDAWvmRw==}
     engines: {node: '>=10'}
     dependencies:
       semver: 7.3.7
@@ -3335,7 +3337,7 @@ packages:
       minimist: 1.2.6
       mkdirp-classic: 0.5.3
       napi-build-utils: 1.0.2
-      node-abi: 3.22.0
+      node-abi: 3.24.0
       pump: 3.0.0
       rc: 1.2.8
       simple-get: 4.0.1
@@ -3503,6 +3505,7 @@ packages:
 
   /regenerator-runtime/0.13.9:
     resolution: {integrity: sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA==}
+    dev: true
 
   /regexp.prototype.flags/1.4.3:
     resolution: {integrity: sha512-fjggEOO3slI6Wvgjwflkc4NFRCTZAu5CnNfBd5qOMYhWdn67nJBBu34/TkD++eeFmd8C9r9jfXJ27+nSiRkSUA==}
@@ -4159,9 +4162,9 @@ packages:
       typescript: 4.7.4
     dev: true
 
-  /systemjs/6.12.1:
-    resolution: {integrity: sha512-hqTN6kW+pN6/qro6G9OZ7ceDQOcYno020zBQKpZQLsJhYTDMCMNfXi/Y8duF5iW+4WWZr42ry0MMkcRGpbwG2A==}
-    dev: false
+  /systemjs/6.12.3:
+    resolution: {integrity: sha512-TtYUN86Hs8V1QGAoj9ad1xmJmZS9Lurfi8Iu8QWOKaUDDuTH0Bpfdxz9qZIdxsmvAg3WMQnZ5/pkQvloh2sr/Q==}
+    dev: true
 
   /tar-fs/2.1.1:
     resolution: {integrity: sha512-V0r2Y9scmbDRLCNex/+hYzvp/zyYjvFbHPNgVTKfQvVrb6guiE/fxP+XblDNR011utopbkex2nM4dHNV6GDsng==}
@@ -4518,13 +4521,13 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-imagetools/4.0.4:
-    resolution: {integrity: sha512-ik1Sq4ueKYN2iBjxe3g8YxqM9aul2goQ2z8CuTKKxOG3M1nF63SRqialbXMuJVH8aKJ9A2oGhs1sktCAoo9EBg==}
+  /vite-imagetools/4.0.3:
+    resolution: {integrity: sha512-8MfpwoUvJBGNgrBhVNd+HIRH32+1yN9vtFVGEAAWxa+/9E1pXGu4Lwj3d9Ydi6HwR9sFi4ZQdgaRkQDGKX9O1Q==}
     engines: {node: '>=12.0.0'}
     dependencies:
       '@rollup/pluginutils': 4.2.1
       imagetools-core: 3.0.3
-      magic-string: 0.26.2
+      magic-string: 0.25.9
     dev: true
 
   /vite/3.0.0:
