@@ -14,7 +14,7 @@ import { generate_manifest } from '../core/generate_manifest/index.js';
 import { get_runtime_directory, logger } from '../core/utils.js';
 import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import { get_aliases, resolve_entry } from './utils.js';
+import { get_aliases, resolve_entry, prevent_illegal_rollup_imports } from './utils.js';
 import { fileURLToPath } from 'node:url';
 
 const cwd = process.cwd();
@@ -103,6 +103,9 @@ function kit() {
 	/** @type {import('types').BuildData} */
 	let build_data;
 
+	/** @type {Set<string>} */
+	let illegal_imports;
+
 	/** @type {string | undefined} */
 	let deferred_warning;
 
@@ -189,8 +192,13 @@ function kit() {
 				client_out_dir: `${svelte_config.kit.outDir}/output/client/`
 			};
 
+			illegal_imports = new Set([
+				`${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`,
+				`${svelte_config.kit.outDir}/runtime/env/static/private.js`
+			]);
+
 			if (is_build) {
-				manifest_data = sync.all(svelte_config).manifest_data;
+				manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
 
 				const new_config = vite_client_build_config();
 
@@ -283,8 +291,24 @@ function kit() {
 				return;// Wait untill all output will be done building, since we need the manifest
 			}
 			
+			for (const file of manifest_data.components) {
+				const id = path.resolve(file);
+				const node = this.getModuleInfo(id);
+
+				if (node) {
+					prevent_illegal_rollup_imports(
+						this.getModuleInfo.bind(this),
+						node,
+						illegal_imports,
+						svelte_config.kit.outDir
+					);
+				}
+			}
+
 			const verbose = vite_config.logLevel === 'info';
-			log = logger({ verbose });
+			log = logger({
+				verbose
+			});
 
 			fs.writeFileSync(
 				`${paths.client_out_dir}/${svelte_config.kit.appDir}/version.json`,
@@ -414,7 +438,7 @@ function kit() {
 				if (deferred_warning) console.error('\n' + deferred_warning);
 			};
 
-			return await dev(vite, vite_config, svelte_config);
+			return await dev(vite, vite_config, svelte_config, illegal_imports);
 		},
 
 		/**
@@ -422,7 +446,7 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
-			return preview(vite, svelte_config, vite_config.preview.https ? 'https' : 'http');
+			return preview(vite, vite_config, svelte_config);
 		}
 	};
 }

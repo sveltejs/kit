@@ -38,7 +38,8 @@ prog
 prog
 	.command('sync')
 	.describe('Synchronise generated files')
-	.action(async () => {
+	.option('--mode', 'Specify a mode for loading environment variables', 'development')
+	.action(async ({ mode }) => {
 		if (!fs.existsSync('svelte.config.js')) {
 			console.warn('Missing svelte.config.js — skipping');
 			return;
@@ -47,7 +48,7 @@ prog
 		try {
 			const config = await load_config();
 			const sync = await import('./core/sync/sync.js');
-			sync.all(config);
+			sync.all(config, mode);
 		} catch (error) {
 			handle_error(error);
 		}

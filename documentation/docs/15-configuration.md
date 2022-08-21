@@ -29,7 +29,9 @@ const config = {
 				// ...
 			}
 		},
-		moduleExtensions: ['.js', '.ts'],
+		env: {
+			publicPrefix: 'PUBLIC_'
+		},
 		files: {
 			assets: 'static',
 			hooks: 'src/hooks',
@@ -44,6 +46,7 @@ const config = {
 			parameter: '_method',
 			allowed: []
 		},
+		moduleExtensions: ['.js', '.ts'],
 		outDir: '.svelte-kit',
 		package: {
 			dir: 'package',
@@ -157,9 +160,11 @@ When pages are prerendered, the CSP header is added via a `<meta http-equiv>` ta
 
 > Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
 
-### moduleExtensions
+### env
 
-An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
+Environment variable configuration:
+
+- `publicPrefix` — a prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](/docs/modules#$env-static-public) and [`$env/dynamic/public`](/docs/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
 
 ### files
 
@@ -185,6 +190,10 @@ See [HTTP Method Overrides](/docs/routing#endpoints-http-method-overrides). An o
 
 - `parameter` — query parameter name to use for passing the intended method value
 - `allowed` - array of HTTP methods that can be used when overriding the original request method
+
+### moduleExtensions
+
+An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
 
 ### outDir
 

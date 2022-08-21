@@ -2,6 +2,8 @@ import { create_client } from './client.js';
 import { init } from './singletons.js';
 import { set_paths } from '../paths.js';
 
+export { set_public_env } from '../env-public.js';
+
 /**
  * @param {{
  *   paths: {
