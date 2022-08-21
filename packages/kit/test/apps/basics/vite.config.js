@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { plugin } from '../../utils.js';
+import { sveltekit } from '@sveltejs/kit/vite';
 
 /** @type {import('vite').UserConfig} */
 const config = {
@@ -12,7 +12,7 @@ const config = {
 		// the reload confuses Playwright
 		include: ['cookie', 'marked']
 	},
-	plugins: [plugin()],
+	plugins: [sveltekit()],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

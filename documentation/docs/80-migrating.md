@@ -49,7 +49,7 @@ This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start
 
 #### src/server.js
 
-When using `adapter-node` the equivalent is a [custom server](https://github.com/sveltejs/kit/tree/master/packages/adapter-node#custom-server). Otherwise, this file has no direct equivalent, since SvelteKit apps can run in serverless environments. You can, however, use the [hooks module](/docs/hooks) to implement session logic.
+When using `adapter-node` the equivalent is a [custom server](https://github.com/sveltejs/kit/tree/master/packages/adapter-node#custom-server). Otherwise, this file has no direct equivalent, since SvelteKit apps can run in serverless environments.
 
 #### src/service-worker.js
 
@@ -74,7 +74,14 @@ A common pattern in Sapper apps is to put your internal library in a directory i
 
 #### Renamed files
 
-Your custom error page component should be renamed from `_error.svelte` to `__error.svelte`. Any `_layout.svelte` files should likewise be renamed `__layout.svelte`. The double underscore prefix is reserved for SvelteKit; your own [private modules](/docs/routing#private-modules) are still denoted with a single `_` prefix (configurable via [`routes`](/docs/configuration#routes) config).
+Routes now are made up of the folder name exclusively to remove ambiguity, the folder names leading up to a `+page.svelte` correspond to the route. See [the routing docs](/docs/routing) for an overview. The following shows a old/new comparison:
+
+| Old                       | New                       |
+| ------------------------- | ------------------------- |
+| routes/about/index.svelte | routes/about/+page.svelte |
+| routes/about.svelte       | routes/about/+page.svelte |
+
+Your custom error page component should be renamed from `_error.svelte` to `+error.svelte`. Any `_layout.svelte` files should likewise be renamed `+layout.svelte`. The double underscore prefix is reserved for SvelteKit; your own [private modules](/docs/routing#private-modules) are still denoted with a single `_` prefix (configurable via [`routes`](/docs/configuration#routes) config).
 
 #### Imports
 
@@ -88,7 +95,7 @@ Any files you previously imported from directories in `src/node_modules` will ne
 
 As before, pages and layouts can export a function that allows data to be loaded before rendering takes place.
 
-This function has been renamed from `preload` to [`load`](/docs/loading), and its API has changed. Instead of two arguments — `page` and `session` — there is a single argument that includes both, along with `fetch` (which replaces `this.fetch`) and a new `stuff` object.
+This function has been renamed from `preload` to [`load`](/docs/load), it now lives in a `+page.js` (or `+layout.js`) next to its `+page.svelte` (or `+layout.svelte`), and its API has changed. Instead of two arguments — `page` and `session` — there is a single `event` argument.
 
 There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead of returning props directly, `load` now returns an object that _contains_ `props`, alongside various other things.
 
@@ -108,9 +115,9 @@ import { stores } from '@sapper/app';
 const { preloading, page, session } = stores();
 ```
 
-The `page` and `session` stores still exist; `preloading` has been replaced with a `navigating` store that contains `from` and `to` properties. `page` now has `url` and `params` properties, but no `path` or `query`.
+The `page` store still exists; `preloading` has been replaced with a `navigating` store that contains `from` and `to` properties. `page` now has `url` and `params` properties, but no `path` or `query`.
 
-You access them differently in SvelteKit. `stores` is now `getStores`, but in most cases it is unnecessary since you can import `navigating`, `page` and `session` directly from [`$app/stores`](/docs/modules#$app-stores).
+You access them differently in SvelteKit. `stores` is now `getStores`, but in most cases it is unnecessary since you can import `navigating`, and `page` directly from [`$app/stores`](/docs/modules#$app-stores).
 
 #### Routing
 

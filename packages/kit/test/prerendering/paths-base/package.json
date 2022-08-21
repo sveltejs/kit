@@ -6,8 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"prepare": "node ../../cli.js sync",
-		"check": "tsc && svelte-check",
+		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "npm run build && uvu test"
 	},
 	"devDependencies": {
@@ -16,7 +15,7 @@
 		"svelte-check": "^2.7.1",
 		"typescript": "^4.7.4",
 		"uvu": "^0.5.3",
-		"vite": "^3.0.0"
+		"vite": "^3.0.8"
 	},
 	"type": "module"
 }

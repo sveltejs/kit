@@ -2,19 +2,6 @@ import fs from 'fs';
 import cookie from 'cookie';
 import { sequence } from '../../../../src/hooks';
 
-/** @type {import('@sveltejs/kit').GetSession} */
-export function getSession(request) {
-	if (request.url.href.includes('caching') && !request.url.href.includes('session')) {
-		// necessary, else some caching tests fail
-		return {};
-	}
-
-	return {
-		answer: request.locals.answer,
-		calls: 0
-	};
-}
-
 /** @type {import('@sveltejs/kit').HandleError} */
 export const handleError = ({ event, error }) => {
 	// TODO we do this because there's no other way (that i'm aware of)

@@ -1,4 +1,3 @@
-import fs from 'fs';
 import * as vite from 'vite';
 import { get_aliases } from '../utils.js';
 
@@ -88,22 +87,25 @@ export function find_deps(manifest, entry, add_dynamic_css) {
  * }} options
  * @return {import('vite').UserConfig}
  */
-export const get_default_config = function ({ config, input, ssr, outDir }) {
+export function get_default_build_config({ config, input, ssr, outDir }) {
+	const prefix = `${config.kit.appDir}/immutable`;
+
 	return {
 		appType: 'custom',
-		base: assets_base(config.kit),
+		base: ssr ? assets_base(config.kit) : './',
 		build: {
 			cssCodeSplit: true,
-			manifest: true,
+			// don't use the default name to avoid collisions with 'static/manifest.json'
+			manifest: 'vite-manifest.json',
 			outDir,
 			polyfillModulePreload: false,
 			rollupOptions: {
 				input,
 				output: {
 					format: 'esm',
-					entryFileNames: ssr ? '[name].js' : `${config.kit.appDir}/immutable/[name]-[hash].js`,
-					chunkFileNames: `${config.kit.appDir}/immutable/chunks/[name]-[hash].js`,
-					assetFileNames: `${config.kit.appDir}/immutable/assets/[name]-[hash][extname]`
+					entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
+					chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
+					assetFileNames: `${prefix}/assets/[name]-[hash][extname]`
 				},
 				preserveEntrySignatures: 'strict'
 			},
@@ -121,44 +123,29 @@ export const get_default_config = function ({ config, input, ssr, outDir }) {
 		resolve: {
 			alias: get_aliases(config.kit)
 		},
+		optimizeDeps: {
+			exclude: ['@sveltejs/kit']
+		},
 		ssr: {
-			// when developing against the Kit src code, we want to ensure that
-			// our dependencies are bundled so that apps don't need to install
-			// them as peerDependencies
-			noExternal: process.env.BUNDLED
-				? []
-				: Object.keys(
-						JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url), 'utf-8'))
-							.devDependencies
-				  )
+			noExternal: ['@sveltejs/kit']
+		},
+		worker: {
+			rollupOptions: {
+				output: {
+					entryFileNames: `${prefix}/workers/[name]-[hash].js`,
+					chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`
+				}
+			}
 		}
 	};
-};
+}
 
 /**
  * @param {import('types').ValidatedKitConfig} config
  * @returns {string}
  */
 export function assets_base(config) {
-	// TODO this is so that Vite's preloading works. Unfortunately, it fails
-	// during `svelte-kit preview`, because we use a local asset path. This
-	// may be fixed in Vite 3: https://github.com/vitejs/vite/issues/2009
-	const { base, assets } = config.paths;
-	return `${assets || base}/`;
-}
-
-/**
- * vite.config.js will contain vite-plugin-svelte-kit, which kicks off the server and service
- * worker builds in a hook. When running the server and service worker builds we must remove
- * the SvelteKit plugin so that we do not kick off additional instances of these builds.
- * @param {import('vite').UserConfig} config
- */
-export function remove_svelte_kit(config) {
-	// TODO i feel like there's a more elegant way to do this
-	// @ts-expect-error - it can't handle infinite type expansion
-	config.plugins = (config.plugins || [])
-		.flat(Infinity)
-		.filter((plugin) => plugin.name !== 'vite-plugin-svelte-kit');
+	return config.paths.assets || config.paths.base || './';
 }
 
 const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH']);

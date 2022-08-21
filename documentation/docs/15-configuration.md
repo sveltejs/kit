@@ -48,13 +48,6 @@ const config = {
 		},
 		moduleExtensions: ['.js', '.ts'],
 		outDir: '.svelte-kit',
-		package: {
-			dir: 'package',
-			emitTypes: true,
-			// excludes all .d.ts and files starting with _ as the name
-			exports: (filepath) => !/^_|\/_|\.d\.ts$/.test(filepath),
-			files: () => true
-		},
 		paths: {
 			assets: '',
 			base: ''
@@ -68,7 +61,6 @@ const config = {
 			onError: 'fail',
 			origin: 'http://sveltekit-prerender'
 		},
-		routes: (filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath),
 		serviceWorker: {
 			register: true,
 			files: (filepath) => !/\.DS_Store/.test(filepath)
@@ -78,6 +70,16 @@ const config = {
 			name: Date.now().toString(),
 			pollInterval: 0
 		}
+	},
+
+	// options passed to @sveltejs/package
+	package: {
+		source: 'value of kit.files.lib, if available, else src/lib',
+		dir: 'package',
+		emitTypes: true,
+		// excludes all .d.ts and files starting with _ as the name
+		exports: (filepath) => !/^_|\/_|\.d\.ts$/.test(filepath),
+		files: () => true
 	},
 
 	// options passed to svelte.preprocess (https://svelte.dev/docs#compile-time-svelte-preprocess)
@@ -95,22 +97,30 @@ Run when executing `vite build` and determines how the output is converted for d
 
 An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
 
-For example, you can add aliases to a `components` and `utils` folder:
-
 ```js
 /// file: svelte.config.js
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
 		alias: {
-			$components: 'src/components',
-			$utils: 'src/utils'
+			// this will match a file
+			'my-file': 'path/to/my-file.js',
+
+			// this will match a directory and its contents
+			// (`my-directory/x` resolves to `path/to/my-directory/x`)
+			'my-directory': 'path/to/my-directory',
+
+			// an alias ending /* will only match
+			// the contents of a directory, not the directory itself
+			'my-directory/*': 'path/to/my-directory/*'
 		}
 	}
 };
 ```
 
 > The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
+
+> You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
 
 ### appDir
 
@@ -203,8 +213,9 @@ The directory that SvelteKit writes files to during `dev` and `build`. You shoul
 
 Options related to [creating a package](/docs/packaging).
 
+- `source` - library directory
 - `dir` - output directory
-- `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `.d.ts` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead)
+- `emitTypes` - by default, `svelte-package` will automatically generate types for your package in the form of `.d.ts` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead)
 - `exports` - a function with the type of `(filepath: string) => boolean`. When `true`, the filepath will be included in the `exports` field of the `package.json`. Any existing values in the `package.json` source will be merged with values from the original `exports` field taking precedence
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the file will be processed and copied over to the final output folder, specified in `dir`
 
@@ -221,14 +232,12 @@ import mm from 'micromatch';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	kit: {
-		package: {
-			exports: (filepath) => {
-				if (filepath.endsWith('.d.ts')) return false;
-				return mm.isMatch(filepath, ['!**/_*', '!**/internal/**']);
-			},
-			files: mm.matcher('!**/build.*')
-		}
+	package: {
+		exports: (filepath) => {
+			if (filepath.endsWith('.d.ts')) return false;
+			return mm.isMatch(filepath, ['!**/_*', '!**/internal/**']);
+		},
+		files: mm.matcher('!**/build.*')
 	}
 };
 
@@ -279,10 +288,6 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
     ```
 
 - `origin` — the value of `url.origin` during prerendering; useful if it is included in rendered content
-
-### routes
-
-A `(filepath: string) => boolean` function that determines which files create routes and which are treated as [private modules](/docs/routing#private-modules).
 
 ### serviceWorker
 

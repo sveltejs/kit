@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.67
+
+### Patch Changes
+
+- Use `platform: 'browser'` for esbuild in Vercel Edge Functions. ([#6109](https://github.com/sveltejs/kit/pull/6109))
+
 ## 1.0.0-next.66
 
 ### Patch Changes

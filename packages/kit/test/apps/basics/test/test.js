@@ -188,6 +188,12 @@ test.describe('Shadowed pages', () => {
 		);
 	});
 
+	test('Handles POST success with returned location', async ({ page }) => {
+		await page.goto('/shadowed/post-success-redirect');
+		await Promise.all([page.waitForNavigation(), page.click('button')]);
+		expect(await page.textContent('h1')).toBe('POST was successful');
+	});
+
 	test('Renders error page for 4xx and 5xx responses from GET', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/error-get"]');
@@ -251,6 +257,44 @@ test.describe('Shadowed pages', () => {
 			expect(requests).not.toContain(`${baseURL}/shadowed/missing-get`);
 		}
 	});
+
+	test('Parent data is present', async ({ page, clicknav }) => {
+		await page.goto('/shadowed/parent');
+		await expect(page.locator('h2')).toHaveText(
+			'Layout data: {"foo":{"bar":"Custom layout"},"layout":"layout"}'
+		);
+		await expect(page.locator('p')).toHaveText(
+			'Page data: {"foo":{"bar":"Custom layout"},"layout":"layout","page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+		);
+
+		await clicknav('[href="/shadowed/parent?test"]');
+		await expect(page.locator('h2')).toHaveText(
+			'Layout data: {"foo":{"bar":"Custom layout"},"layout":"layout"}'
+		);
+		await expect(page.locator('p')).toHaveText(
+			'Page data: {"foo":{"bar":"Custom layout"},"layout":"layout","page":"page","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+		);
+
+		await clicknav('[href="/shadowed/parent/sub"]');
+		await expect(page.locator('h2')).toHaveText(
+			'Layout data: {"foo":{"bar":"Custom layout"},"layout":"layout"}'
+		);
+		await expect(page.locator('p')).toHaveText(
+			'Page data: {"foo":{"bar":"Custom layout"},"layout":"layout","sub":"sub","data":{"rootlayout":"rootlayout","layout":"layout"}}'
+		);
+	});
+
+	if (process.env.DEV) {
+		test('Data must be serializable', async ({ page, clicknav }) => {
+			await page.goto('/shadowed');
+			await clicknav('[href="/shadowed/serialization"]');
+
+			expect(await page.textContent('h1')).toBe('500');
+			expect(await page.textContent('#message')).toBe(
+				'This is your custom error page saying: "data.regex returned from \'load\' in src/routes/shadowed/serialization/+page.server.js cannot be serialized as JSON"'
+			);
+		});
+	}
 });
 
 test.describe('Encoded paths', () => {
@@ -320,9 +364,11 @@ test.describe('Encoded paths', () => {
 		expect(await page.innerText('pre')).toBe('/苗条?foo=bar&fizz=buzz');
 	});
 
-	test('sets charset on JSON Content-Type', async ({ request }) => {
+	test('serializes JSON correctly', async ({ request }) => {
 		const response = await request.get('/encoded/endpoint');
-		expect(response.headers()['content-type']).toBe('application/json; charset=utf-8');
+		expect(await response.json()).toEqual({
+			fruit: '🍎🍇🍌'
+		});
 	});
 
 	test('allows %-encoded characters in directory names', async ({ page, clicknav }) => {
@@ -429,16 +475,6 @@ test.describe('Errors', () => {
 		expect(/** @type {Response} */ (response).status()).toBe(555);
 	});
 
-	test('server-side error from load() is malformed', async ({ page }) => {
-		await page.goto('/errors/load-error-malformed-server');
-
-		const body = await page.textContent('body');
-
-		expect(body).toMatch(
-			'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
-		);
-	});
-
 	test('error in endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint');
 
@@ -451,28 +487,10 @@ test.describe('Errors', () => {
 		}
 
 		expect(res && res.status()).toBe(500);
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+		expect(await page.textContent('#message')).toBe('This is your custom error page saying: "500"');
 
 		const contents = await page.textContent('#stack');
-		const location = /endpoint\.svelte:12:9|endpoint\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
-
-		if (process.env.DEV) {
-			expect(contents).toMatch(location);
-		} else {
-			expect(contents).not.toMatch(location);
-		}
-	});
-
-	test('not ok response from endpoint', async ({ page, read_errors }) => {
-		const res = await page.goto('/errors/endpoint-not-ok');
-
-		expect(read_errors('/errors/endpoint-not-ok.json')).toBeUndefined();
-
-		expect(res && res.status()).toBe(555);
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
-
-		const contents = await page.textContent('#stack');
-		const location = /endpoint-not-ok\.svelte:12:9|endpoint-not-ok\.svelte:12:15/; // TODO: Remove second location with Vite 2.9
+		const location = '+page.js:7:9';
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
@@ -482,6 +500,8 @@ test.describe('Errors', () => {
 	});
 
 	test('error in shadow endpoint', async ({ page, read_errors }) => {
+		const location = '+page.server.js:3:8';
+
 		const res = await page.goto('/errors/endpoint-shadow');
 
 		// should include stack trace
@@ -489,7 +509,7 @@ test.describe('Errors', () => {
 		expect(lines[0]).toMatch('nope');
 
 		if (process.env.DEV) {
-			expect(lines[1]).toMatch('endpoint-shadow.js:3:8');
+			expect(lines[1]).toMatch(location);
 		}
 
 		expect(res && res.status()).toBe(500);
@@ -498,7 +518,6 @@ test.describe('Errors', () => {
 		);
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint-shadow.js:3:8';
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
@@ -514,16 +533,8 @@ test.describe('Errors', () => {
 
 		expect(res && res.status()).toBe(555);
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Failed to load data"'
+			'This is your custom error page saying: "Error: 555"'
 		);
-	});
-
-	test('server-side 4xx status without error from load()', async ({ page }) => {
-		const response = await page.goto('/errors/load-status-without-error-server');
-
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: "401"');
-		expect(/** @type {Response} */ (response).status()).toBe(401);
 	});
 
 	test('error thrown in handle results in a rendered error page', async ({ page }) => {
@@ -536,21 +547,14 @@ test.describe('Errors', () => {
 		expect(await page.innerHTML('h1')).toBe('500');
 	});
 
-	test('prerendering a page whose load accesses session results in a catchable error', async ({
-		page
-	}) => {
-		await page.goto('/prerendering');
-		expect(await page.textContent('h1')).toBe(
-			'500: Attempted to access session from a prerendered page. Session would never be populated.'
-		);
-	});
-
 	test('prerendering a page with a mutative page endpoint results in a catchable error', async ({
 		page
 	}) => {
 		await page.goto('/prerendering/mutative-endpoint');
-		expect(await page.textContent('h1')).toBe(
-			'500: Cannot prerender pages that have endpoints with mutative methods'
+		expect(await page.textContent('h1')).toBe('500');
+
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Cannot prerender pages that have endpoints with mutative methods"'
 		);
 	});
 
@@ -572,14 +576,14 @@ test.describe('Errors', () => {
 
 		if (process.env.DEV) {
 			const lines = stack.split('\n');
-			expect(lines[1]).toContain('get-implicit.js:4:8');
+			expect(lines[1]).toContain('+page.server.js:4:8');
 		}
 
 		const error = read_errors('/errors/page-endpoint/get-implicit');
 		expect(error).toContain('oops');
 	});
 
-	test('page endpoint GET returned error message is preserved', async ({
+	test('page endpoint GET HttpError message is preserved', async ({
 		page,
 		clicknav,
 		read_errors
@@ -588,23 +592,20 @@ test.describe('Errors', () => {
 		await clicknav('#get-explicit');
 		const json = await page.textContent('pre');
 		if (!json) throw new Error('Could not extract content from element');
-		const { status, name, message, stack, fancy } = JSON.parse(json);
+		const { status, message, stack } = JSON.parse(json);
 
 		expect(status).toBe(400);
-		expect(name).toBe('FancyError');
 		expect(message).toBe('oops');
-		expect(fancy).toBe(true);
-
-		if (process.env.DEV) {
-			const lines = stack.split('\n');
-			expect(lines[1]).toContain('get-explicit.js:5:8');
-		}
+		expect(stack).toBeUndefined();
 
 		const error = read_errors('/errors/page-endpoint/get-explicit');
 		expect(error).toBe(undefined);
 	});
 
-	test('page endpoint POST thrown error message is preserved', async ({ page, read_errors }) => {
+	test('page endpoint POST unexpected error message is preserved', async ({
+		page,
+		read_errors
+	}) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
@@ -620,31 +621,25 @@ test.describe('Errors', () => {
 
 		if (process.env.DEV) {
 			const lines = stack.split('\n');
-			expect(lines[1]).toContain('post-implicit.js:4:8');
+			expect(lines[1]).toContain('+page.server.js:4:8');
 		}
 
 		const error = read_errors('/errors/page-endpoint/post-implicit');
 		expect(error).toContain('oops');
 	});
 
-	test('page endpoint POST returned error message is preserved', async ({ page, read_errors }) => {
+	test('page endpoint POST HttpError error message is preserved', async ({ page, read_errors }) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
 		await Promise.all([page.waitForNavigation(), page.click('#post-explicit')]);
 		const json = await page.textContent('pre');
 		if (!json) throw new Error('Could not extract content from element');
-		const { status, name, message, stack, fancy } = JSON.parse(json);
+		const { status, message, stack } = JSON.parse(json);
 
 		expect(status).toBe(400);
-		expect(name).toBe('FancyError');
 		expect(message).toBe('oops');
-		expect(fancy).toBe(true);
-
-		if (process.env.DEV) {
-			const lines = stack.split('\n');
-			expect(lines[1]).toContain('post-explicit.js:5:8');
-		}
+		expect(stack).toBeUndefined();
 
 		const error = read_errors('/errors/page-endpoint/post-explicit');
 		expect(error).toBe(undefined);
@@ -681,7 +676,7 @@ test.describe('Load', () => {
 			const script_contents = await page.innerHTML('script[sveltekit\\:data-type="data"]');
 
 			const payload =
-				'{"status":200,"statusText":"","headers":{"content-type":"application/json; charset=utf-8"},"body":"{\\"answer\\":42}"}';
+				'{"status":200,"statusText":"","headers":{"content-type":"application/json"},"body":"{\\"answer\\":42}"}';
 
 			expect(script_contents).toBe(payload);
 		}
@@ -732,11 +727,13 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('static file');
 	});
 
-	test('stuff is inherited', async ({ page, javaScriptEnabled, app }) => {
-		await page.goto('/load/stuff/a/b/c');
+	test('data is inherited', async ({ page, javaScriptEnabled, app }) => {
+		await page.goto('/load/parent/a/b/c');
 		expect(await page.textContent('h1')).toBe('message: original + new');
 		expect(await page.textContent('pre')).toBe(
 			JSON.stringify({
+				foo: { bar: 'Custom layout' },
+				message: 'original + new',
 				x: 'a',
 				y: 'b',
 				z: 'c'
@@ -744,11 +741,13 @@ test.describe('Load', () => {
 		);
 
 		if (javaScriptEnabled) {
-			await app.goto('/load/stuff/d/e/f');
+			await app.goto('/load/parent/d/e/f');
 
 			expect(await page.textContent('h1')).toBe('message: original + new');
 			expect(await page.textContent('pre')).toBe(
 				JSON.stringify({
+					foo: { bar: 'Custom layout' },
+					message: 'original + new',
 					x: 'd',
 					y: 'e',
 					z: 'f'
@@ -849,15 +848,6 @@ test.describe('Load', () => {
 		expect(await page.innerHTML('.raw')).toBe('{ "oddly" : { "formatted" : "json" } }');
 	});
 
-	test('does not leak props to other pages', async ({ page, clicknav }) => {
-		await page.goto('/load/props/about');
-		expect(await page.textContent('p')).toBe('Data: undefined');
-		await clicknav('[href="/load/props/"]');
-		expect(await page.textContent('p')).toBe('Data: Hello from Index!');
-		await clicknav('[href="/load/props/about"]');
-		expect(await page.textContent('p')).toBe('Data: undefined');
-	});
-
 	test('server-side fetch respects set-cookie header', async ({ page, context }) => {
 		await context.clearCookies();
 
@@ -884,6 +874,21 @@ test.describe('Load', () => {
 				return el && getComputedStyle(el).color;
 			})
 		).toBe('rgb(255, 0, 0)');
+	});
+
+	test('page without load has access to layout data', async ({ page, clicknav }) => {
+		await page.goto('/load/accumulated');
+
+		await clicknav('[href="/load/accumulated/without-page-data"]');
+		expect(await page.textContent('h1')).toBe('foo.bar: Custom layout');
+	});
+
+	test('page with load has access to layout data', async ({ page, clicknav }) => {
+		await page.goto('/load/accumulated');
+
+		await clicknav('[href="/load/accumulated/with-page-data"]');
+		expect(await page.textContent('h1')).toBe('foo.bar: Custom layout');
+		expect(await page.textContent('h2')).toBe('pagedata: pagedata');
 	});
 });
 
@@ -1095,62 +1100,55 @@ test.describe('$app/stores', () => {
 		expect(await page.textContent('h1')).toBe(baseURL);
 	});
 
-	test('page store functions as expected', async ({ page, clicknav, javaScriptEnabled }) => {
-		await page.goto('/store');
+	test('page store contains data', async ({ page, clicknav }) => {
+		await page.goto('/store/data/www');
 
-		expect(await page.textContent('h1')).toBe('Test');
-		expect(await page.textContent('h2')).toBe('Calls: 1');
+		const foo = { bar: 'Custom layout' };
 
-		await clicknav('a[href="/store/result"]');
-		expect(await page.textContent('h1')).toBe('Result');
-		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 1' : 'Calls: 0');
+		expect(await page.textContent('#store-data')).toBe(
+			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'www' })
+		);
 
-		const oops = await page.evaluate(() => window.oops);
-		expect(oops).toBeUndefined();
+		await clicknav('a[href="/store/data/zzz"]');
+		expect(await page.textContent('#store-data')).toBe(
+			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'zzz' })
+		);
+
+		await clicknav('a[href="/store/data/xxx"]');
+		expect(await page.textContent('#store-data')).toBe(
+			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
+		);
+		expect(await page.textContent('#store-error')).toBe('Params = xxx');
+
+		await clicknav('a[href="/store/data/yyy"]');
+		expect(await page.textContent('#store-data')).toBe(
+			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
+		);
+		expect(await page.textContent('#store-error')).toBe('Params = yyy');
 	});
 
-	test('page store contains stuff', async ({ page, clicknav }) => {
-		await page.goto('/store/stuff/www');
-
-		expect(await page.textContent('#store-stuff')).toBe(
-			JSON.stringify({ name: 'SvelteKit', value: 456, page: 'www' })
-		);
-
-		await clicknav('a[href="/store/stuff/zzz"]');
-		expect(await page.textContent('#store-stuff')).toBe(
-			JSON.stringify({ name: 'SvelteKit', value: 456, page: 'zzz' })
-		);
-
-		await clicknav('a[href="/store/stuff/xxx"]');
-		expect(await page.textContent('#store-stuff')).toBe(
-			JSON.stringify({ name: 'SvelteKit', value: 789, error: 'Params = xxx' })
-		);
-
-		await clicknav('a[href="/store/stuff/yyy"]');
-		expect(await page.textContent('#store-stuff')).toBe(
-			JSON.stringify({ name: 'SvelteKit', value: 789, error: 'Params = yyy' })
-		);
-	});
-
-	test('should load stuff after reloading by goto', async ({
+	test('should load data after reloading by goto', async ({
 		page,
 		clicknav,
 		javaScriptEnabled
 	}) => {
-		await page.goto('/store/stuff/foo?reset=true');
-		const stuff1 = JSON.stringify({ name: 'SvelteKit', value: 789, error: 'uh oh' });
-		const stuff2 = JSON.stringify({ name: 'SvelteKit', value: 123, foo: true });
-		await page.goto('/store/stuff/www');
+		await page.goto('/store/data/foo?reset=true');
+		const stuff1 = { foo: { bar: 'Custom layout' }, name: 'SvelteKit', value: 123 };
+		const stuff2 = { ...stuff1, foo: true, number: 2 };
+		const stuff3 = { ...stuff2 };
+		await page.goto('/store/data/www');
 
-		await clicknav('a[href="/store/stuff/foo"]');
-		expect(await page.textContent('#store-stuff')).toBe(stuff1);
+		await clicknav('a[href="/store/data/foo"]');
+		expect(JSON.parse(await page.textContent('#store-data'))).toEqual(stuff1);
 
 		await clicknav('#reload-button');
-		expect(await page.textContent('#store-stuff')).toBe(javaScriptEnabled ? stuff2 : stuff1);
+		expect(JSON.parse(await page.textContent('#store-data'))).toEqual(
+			javaScriptEnabled ? stuff2 : stuff1
+		);
 
-		await clicknav('a[href="/store/stuff/zzz"]');
-		await clicknav('a[href="/store/stuff/foo"]');
-		expect(await page.textContent('#store-stuff')).toBe(stuff2);
+		await clicknav('a[href="/store/data/zzz"]');
+		await clicknav('a[href="/store/data/foo"]');
+		expect(JSON.parse(await page.textContent('#store-data'))).toEqual(stuff3);
 	});
 
 	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
@@ -1183,7 +1181,7 @@ test.describe('$app/stores', () => {
 			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
 			await page.click('a[href="/store/navigating/a"]');
 
-			await page.waitForSelector('#not-navigating', { timeout: 500 });
+			await page.waitForSelector('#not-navigating', { timeout: 5000 });
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 		}
 	});
@@ -1286,15 +1284,13 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/a`);
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: ""redirect" property returned from load() must be accompanied by a 3xx status code"'
+			'This is your custom error page saying: "Invalid status code"'
 		);
 
 		if (!javaScriptEnabled) {
 			// handleError is not invoked for client-side navigation
 			const lines = read_errors('/redirect/missing-status/a').split('\n');
-			expect(lines[0]).toBe(
-				'Error: "redirect" property returned from load() must be accompanied by a 3xx status code'
-			);
+			expect(lines[0]).toBe('Error: Invalid status code');
 		}
 	});
 
@@ -1306,7 +1302,7 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/b`);
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: ""redirect" property returned from load() must be accompanied by a 3xx status code"'
+			'This is your custom error page saying: "Invalid status code"'
 		);
 	});
 
@@ -1477,6 +1473,7 @@ test.describe('Routing', () => {
 		await clicknav('[href="/routing/a"]');
 
 		await page.goBack();
+		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
@@ -1669,21 +1666,6 @@ test.describe('Routing', () => {
 	});
 });
 
-test.describe('Session', () => {
-	test('session is available', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/session');
-
-		expect(await page.innerHTML('h1')).toBe('answer via props: 42');
-		expect(await page.innerHTML('h2')).toBe('answer via store: 42');
-
-		if (javaScriptEnabled) {
-			await page.click('button');
-			expect(await page.innerHTML('h3')).toBe('answer via props is 43');
-			expect(await page.innerHTML('h4')).toBe('answer via store is 43');
-		}
-	});
-});
-
 test.describe('Matchers', () => {
 	test('Matches parameters', async ({ page, clicknav }) => {
 		await page.goto('/routing/matched');
@@ -1746,5 +1728,16 @@ test.describe('XSS', () => {
 		expect(await page.textContent('h1')).toBe(
 			'user.name is </script><script>window.pwned = 1</script>'
 		);
+	});
+});
+
+test.describe('Actions', () => {
+	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/form-errors');
+		await page.click('button');
+		expect(await page.textContent('p.server')).toBe('an error occurred');
+		if (javaScriptEnabled) {
+			expect(await page.textContent('p.client')).toBe('hydrated: an error occurred');
+		}
 	});
 });

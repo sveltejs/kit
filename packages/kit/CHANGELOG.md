@@ -1,5 +1,258 @@
 # @sveltejs/kit
 
+## 1.0.0-next.428
+
+### Patch Changes
+
+- Allow `$app/stores` to be used from anywhere on the browser ([#6100](https://github.com/sveltejs/kit/pull/6100))
+
+* use `enumerable: false` on "[x] no longer exists" getters so that they are not triggered by spreading ([#6105](https://github.com/sveltejs/kit/pull/6105))
+
+- Fix pattern matching for routes starting with an encoded `@` symbol ([#6110](https://github.com/sveltejs/kit/pull/6110))
+
+* Fix typos in generating `LayoutServerLoad.{name}` type ([#6123](https://github.com/sveltejs/kit/pull/6123))
+
+- Fix sorting of files into +layout, +error, everything else. ([#6108](https://github.com/sveltejs/kit/pull/6108))
+
+* Add test folder to generated tsconfig ([#6085](https://github.com/sveltejs/kit/pull/6085))
+
+## 1.0.0-next.427
+
+### Patch Changes
+
+- Throw error if browser.hydrate is false and browser.router is true ([#6086](https://github.com/sveltejs/kit/pull/6086))
+
+## 1.0.0-next.426
+
+### Patch Changes
+
+- Avoid using [].at(-1) in the client ([#6082](https://github.com/sveltejs/kit/pull/6082))
+
+## 1.0.0-next.425
+
+### Patch Changes
+
+- Silence more unknown prop warnings coming from SvelteKit ([#6078](https://github.com/sveltejs/kit/pull/6078))
+
+## 1.0.0-next.424
+
+### Patch Changes
+
+- prevent duplicate module ids by disabling optimizeDeps for @sveltejs/kit ([#6057](https://github.com/sveltejs/kit/pull/6057))
+
+* Generate types when Svelte file missing, fix layout params ([#6066](https://github.com/sveltejs/kit/pull/6066))
+
+- Silence unknown prop warnings coming from SvelteKit ([#6071](https://github.com/sveltejs/kit/pull/6071))
+
+## 1.0.0-next.423
+
+### Patch Changes
+
+- Accumulate data from parent layouts into `export let data` ([#6050](https://github.com/sveltejs/kit/pull/6050))
+
+## 1.0.0-next.422
+
+### Patch Changes
+
+- [breaking] remove ability for `+page.server.js` to respond to `GET` requests with JSON ([#6007](https://github.com/sveltejs/kit/pull/6007))
+
+* Handle `throw error/redirect` in `+server.js` ([#6028](https://github.com/sveltejs/kit/pull/6028))
+
+- handle `set-cookie` in `setHeaders` ([#6033](https://github.com/sveltejs/kit/pull/6033))
+
+* Handle windows paths and regexp chars in kit.alias ([#6034](https://github.com/sveltejs/kit/pull/6034))
+
+- Make errors type in Action type less restrictive ([#6022](https://github.com/sveltejs/kit/pull/6022))
+
+* Check that data is serializable ([#5987](https://github.com/sveltejs/kit/pull/5987))
+
+- Fix parent data type for layouts referencing named layouts in the same folder ([#6025](https://github.com/sveltejs/kit/pull/6025))
+
+## 1.0.0-next.421
+
+### Patch Changes
+
+- Respect `export const prerender = false` in `+page.server.js` ([#6012](https://github.com/sveltejs/kit/pull/6012))
+
+## 1.0.0-next.420
+
+### Patch Changes
+
+- [fix] support linked `@sveltejs/kit` project in Vite 3.0.3+ ([#5861](https://github.com/sveltejs/kit/pull/5861))
+
+## 1.0.0-next.419
+
+### Patch Changes
+
+- Return a 303 response when a `POST` handler provides a `location` ([#5989](https://github.com/sveltejs/kit/pull/5989))
+
+* Generate `__data.json` files for server-side redirects when prerendering ([#5997](https://github.com/sveltejs/kit/pull/5997))
+
+- [chore] remove chokidar as dependency of kit ([#5996](https://github.com/sveltejs/kit/pull/5996))
+
+* Use relative asset paths where possible ([#4250](https://github.com/sveltejs/kit/pull/4250))
+
+## 1.0.0-next.418
+
+### Patch Changes
+
+- Prevent double import of env modules ([#5955](https://github.com/sveltejs/kit/pull/5955))
+
+* Tighten up params typings, fix load function typings, add event typings to generated types ([#5974](https://github.com/sveltejs/kit/pull/5974))
+
+## 1.0.0-next.417
+
+### Patch Changes
+
+- Render pages without a .svelte file in their proper layout/error files ([#5972](https://github.com/sveltejs/kit/pull/5972))
+
+## 1.0.0-next.416
+
+### Patch Changes
+
+- [fix] allow additional keys in svelte.config.js ([#5961](https://github.com/sveltejs/kit/pull/5961))
+
+## 1.0.0-next.415
+
+### Patch Changes
+
+- [breaking] Remove session object ([#5946](https://github.com/sveltejs/kit/pull/5946))
+
+## 1.0.0-next.414
+
+### Patch Changes
+
+- Correctly provide server parent data ([#5916](https://github.com/sveltejs/kit/pull/5916))
+
+## 1.0.0-next.413
+
+### Patch Changes
+
+- [feat] `$env/static/*` are now virtual to prevent writing sensitive values to disk ([#5825](https://github.com/sveltejs/kit/pull/5825))
+
+## 1.0.0-next.412
+
+### Patch Changes
+
+- Lazy load Svelte components to reenable no-ssr use cases ([#5930](https://github.com/sveltejs/kit/pull/5930))
+
+## 1.0.0-next.411
+
+### Patch Changes
+
+- Hydration validation errors ([#5918](https://github.com/sveltejs/kit/pull/5918))
+
+* Handle function without params when writing TS proxy ([#5928](https://github.com/sveltejs/kit/pull/5928))
+
+- [fix] prevent `Content-Length` header from being incorrectly inherited by requests made from `load`'s `fetch` during SSR ([#5922](https://github.com/sveltejs/kit/pull/5922))
+
+* Provide helpful error message on invalid named layout reference ([#5912](https://github.com/sveltejs/kit/pull/5912))
+
+## 1.0.0-next.410
+
+### Patch Changes
+
+- Fix generated path extension for `AwaitedProperties` ([#5917](https://github.com/sveltejs/kit/pull/5917))
+
+## 1.0.0-next.409
+
+### Patch Changes
+
+- make generated type import path ends in `.js` ([#5907](https://github.com/sveltejs/kit/pull/5907))
+
+## 1.0.0-next.408
+
+### Patch Changes
+
+- Only search for layout name in basename ([#5897](https://github.com/sveltejs/kit/pull/5897))
+
+## 1.0.0-next.407
+
+### Patch Changes
+
+- Allow actions to return undefined ([#5892](https://github.com/sveltejs/kit/pull/5892))
+
+* [fix] avoid manifest collisions ([#5874](https://github.com/sveltejs/kit/pull/5874))
+
+- Make package command remove `publishConfig.directory` from generated package.json ([#5848](https://github.com/sveltejs/kit/pull/5848))
+
+## 1.0.0-next.406
+
+### Patch Changes
+
+- [breaking] Overhaul filesystem-based router (https://github.com/sveltejs/kit/discussions/5774) ([#5778](https://github.com/sveltejs/kit/pull/5778))
+
+* [breaking] Change load API (https://github.com/sveltejs/kit/discussions/5774) ([#5778](https://github.com/sveltejs/kit/pull/5778))
+
+## 1.0.0-next.405
+
+### Patch Changes
+
+- Move `compress` logic to `Builder` API ([#5822](https://github.com/sveltejs/kit/pull/5822))
+
+* [feat] implement Link header ([#5735](https://github.com/sveltejs/kit/pull/5735))
+
+## 1.0.0-next.404
+
+### Patch Changes
+
+- Build server without removing `sveltekit` Vite plugin ([#5839](https://github.com/sveltejs/kit/pull/5839))
+
+## 1.0.0-next.403
+
+### Patch Changes
+
+- [chore] upgrade to Undici 5.8.1 ([#5804](https://github.com/sveltejs/kit/pull/5804))
+
+## 1.0.0-next.402
+
+### Patch Changes
+
+- [fix] Import analysis doesn't get stuck in an infinite loop when encountering cyclical imports ([#5794](https://github.com/sveltejs/kit/pull/5794))
+
+## 1.0.0-next.401
+
+### Patch Changes
+
+- [fix] chdir to user's application directory before running postinstall sync ([#5771](https://github.com/sveltejs/kit/pull/5771))
+
+## 1.0.0-next.400
+
+### Patch Changes
+
+- More robust path aliasing ([#5582](https://github.com/sveltejs/kit/pull/5582))
+
+## 1.0.0-next.399
+
+### Patch Changes
+
+- Use @sveltejs/kit postinstall lifecycle hook to invoke 'svelte-kit sync' instead of prepare in projects created by create-svelte ([#5760](https://github.com/sveltejs/kit/pull/5760))
+
+## 1.0.0-next.398
+
+### Patch Changes
+
+- Check url protocol to avoid mailto links navigated by kit in mobile devices ([#5726](https://github.com/sveltejs/kit/pull/5726))
+
+* [fix] Windows correctly errors on `$env/*/private` imports ([#5739](https://github.com/sveltejs/kit/pull/5739))
+  [fix] Illegal module analysis in dev ignores non-js|ts|svelte files
+
+- [feat] include reference to `@sveltejs/kit` types in ambient file ([#5745](https://github.com/sveltejs/kit/pull/5745))
+
+## 1.0.0-next.397
+
+### Patch Changes
+
+- load env before importing hooks during dev ([#5728](https://github.com/sveltejs/kit/pull/5728))
+
+* Add DOM.Iterable to default tsconfig ([#5734](https://github.com/sveltejs/kit/pull/5734))
+
+## 1.0.0-next.396
+
+### Patch Changes
+
+- [fix] Environment variable generated types ([#5719](https://github.com/sveltejs/kit/pull/5719))
+
 ## 1.0.0-next.395
 
 ### Patch Changes

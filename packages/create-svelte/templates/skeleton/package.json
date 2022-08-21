@@ -1,0 +1,8 @@
+{
+	"name": "skeleton-template",
+	"version": "0.0.1-next.0",
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "workspace:*"
+	},
+	"type": "module"
+}

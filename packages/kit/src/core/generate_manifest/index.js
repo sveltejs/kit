@@ -14,33 +14,14 @@ import { get_mime_lookup } from '../utils.js';
  */
 export function generate_manifest({ build_data, relative_path, routes, format = 'esm' }) {
 	/** @typedef {{ index: number, path: string }} LookupEntry */
-	/** @type {Map<string, LookupEntry>} */
+	/** @type {Map<import('types').PageNode, LookupEntry>} */
 	const bundled_nodes = new Map();
 
-	// 0 and 1 are special, they correspond to the root layout and root error nodes
-	bundled_nodes.set(build_data.manifest_data.components[0], {
-		path: `${relative_path}/nodes/0.js`,
-		index: 0
-	});
-
-	bundled_nodes.set(build_data.manifest_data.components[1], {
-		path: `${relative_path}/nodes/1.js`,
-		index: 1
-	});
-
-	routes.forEach((route) => {
-		if (route.type === 'page') {
-			[...route.a, ...route.b].forEach((component) => {
-				if (component && !bundled_nodes.has(component)) {
-					const i = build_data.manifest_data.components.indexOf(component);
-
-					bundled_nodes.set(component, {
-						path: `${relative_path}/nodes/${i}.js`,
-						index: bundled_nodes.size
-					});
-				}
-			});
-		}
+	build_data.manifest_data.nodes.forEach((node, i) => {
+		bundled_nodes.set(node, {
+			path: `${relative_path}/nodes/${i}.js`,
+			index: i
+		});
 	});
 
 	/** @type {(path: string) => string} */
@@ -57,7 +38,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 		assets.push(build_data.service_worker);
 	}
 
-	/** @param {string | undefined} id */
+	/** @param {import('types').PageNode | undefined} id */
 	const get_index = (id) => id && /** @type {LookupEntry} */ (bundled_nodes.get(id)).index;
 
 	const matchers = new Set();
@@ -87,10 +68,9 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 							pattern: ${pattern},
 							names: ${s(names)},
 							types: ${s(types)},
-							path: ${route.path ? s(route.path) : null},
-							shadow: ${route.shadow ? loader(`${relative_path}/${build_data.server.vite_manifest[route.shadow].file}`) : null},
-							a: ${s(route.a.map(get_index))},
-							b: ${s(route.b.map(get_index))}
+							errors: ${s(route.errors.map(get_index))},
+							layouts: ${s(route.layouts.map(get_index))},
+							leaf: ${s(get_index(route.leaf))}
 						}`.replace(/^\t\t/gm, '');
 					} else {
 						if (!build_data.server.vite_manifest[route.file]) {

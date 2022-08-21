@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { start_server, test } from '../../../utils.js';
+import { test } from '../../../utils.js';
 import { createHash, randomBytes } from 'node:crypto';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -13,88 +13,6 @@ test.describe('Caching', () => {
 		const response = await request.get('/caching');
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
 	});
-
-	test('sets cache-control: private if page uses session in load and cache.private is unset', async ({
-		request
-	}) => {
-		const response = await request.get('/caching/private/uses-session-in-load');
-		expect(response.headers()['cache-control']).toBe('private, max-age=30');
-	});
-
-	test('sets cache-control: private if page uses session in init and cache.private is unset', async ({
-		request
-	}) => {
-		const response = await request.get('/caching/private/uses-session-in-init');
-		expect(response.headers()['cache-control']).toBe('private, max-age=30');
-	});
-
-	test('sets cache-control: private even if page doesnt use session but one exists and cache.private is unset', async ({
-		request
-	}) => {
-		const response = await request.get('/caching/private/has-session');
-		expect(response.headers()['cache-control']).toBe('private, max-age=30');
-	});
-
-	test('sets cache-control: private if page uses fetch and cache.private is unset', async ({
-		request
-	}) => {
-		const response = await request.get('/caching/private/uses-fetch?credentials=include');
-		expect(response.headers()['cache-control']).toBe('private, max-age=30');
-	});
-
-	test('sets cache-control: public if page uses fetch without credentials and cache.private is unset', async ({
-		request
-	}) => {
-		const response = await request.get('/caching/private/uses-fetch?credentials=omit');
-		expect(response.headers()['cache-control']).toBe('public, max-age=30');
-	});
-
-	test('sets cache-control: private if cache.private is true', async ({ request }) => {
-		const response = await request.get('/caching/private/uses-cache-private?private=true');
-		expect(response.headers()['cache-control']).toBe('private, max-age=30');
-	});
-
-	test('sets cache-control: public if cache.private is false', async ({ request }) => {
-		const response = await request.get('/caching/private/uses-cache-private?private=false');
-		expect(response.headers()['cache-control']).toBe('public, max-age=30');
-	});
-
-	test('sets cache-control: public if page uses session in load and cache.private is false', async ({
-		request
-	}) => {
-		const response = await request.get('/caching/private/uses-session-in-load?private=false');
-		expect(response.headers()['cache-control']).toBe('public, max-age=30');
-	});
-
-	test('sets cache-control: public if page uses session in init and cache.private is false', async ({
-		request
-	}) => {
-		const response = await request.get('/caching/private/uses-session-in-init?private=false');
-		expect(response.headers()['cache-control']).toBe('public, max-age=30');
-	});
-
-	test('sets cache-control: public if page has session and cache.private is false', async ({
-		request
-	}) => {
-		const response = await request.get('/caching/private/has-session?private=false');
-		expect(response.headers()['cache-control']).toBe('public, max-age=30');
-	});
-
-	test('sets cache-control: public if page uses fetch and cache.private is false', async ({
-		request
-	}) => {
-		const response = await request.get(
-			'/caching/private/uses-fetch?credentials=include&private=false'
-		);
-		expect(response.headers()['cache-control']).toBe('public, max-age=30');
-	});
-
-	test('sets cache-control: private if page uses fetch without credentials and cache.private is true', async ({
-		request
-	}) => {
-		const response = await request.get('/caching/private/uses-fetch?credentials=omit&private=true');
-		expect(response.headers()['cache-control']).toBe('private, max-age=30');
-	});
 });
 
 test.describe('Content-Type', () => {
@@ -104,78 +22,7 @@ test.describe('Content-Type', () => {
 	});
 });
 
-test.describe('ETags', () => {
-	test('generates etag/304 for text body', async ({ request }) => {
-		const r1 = await request.get('/etag/text');
-		const etag = r1.headers()['etag'];
-		expect(etag).toBeTruthy();
-
-		const r2 = await request.get('/etag/text', {
-			headers: {
-				'if-none-match': etag
-			}
-		});
-
-		expect(r2.status()).toBe(304);
-		expect(r2.headers()['expires']).toBe('yesterday');
-	});
-
-	test('generates etag/304 for binary body', async ({ request }) => {
-		const r1 = await request.get('/etag/binary');
-		const etag = r1.headers()['etag'];
-		expect(etag).toBeTruthy();
-
-		const r2 = await request.get('/etag/binary', {
-			headers: {
-				'if-none-match': etag
-			}
-		});
-
-		expect(r2.status()).toBe(304);
-	});
-
-	test('support W/ etag prefix', async ({ request }) => {
-		const r1 = await request.get('/etag/text');
-		const etag = r1.headers()['etag'];
-		expect(etag).toBeTruthy();
-
-		const r2 = await request.get('/etag/text', {
-			headers: {
-				'if-none-match': `W/${etag}`
-			}
-		});
-
-		expect(r2.status()).toBe(304);
-	});
-
-	test('custom etag', async ({ request }) => {
-		const r1 = await request.get('/etag/custom');
-		const etag = r1.headers()['etag'];
-		expect(etag).toBe('@1234@');
-
-		const r2 = await request.get('/etag/custom', {
-			headers: {
-				'if-none-match': '@1234@'
-			}
-		});
-
-		expect(r2.status()).toBe(304);
-	});
-});
-
 test.describe('Endpoints', () => {
-	test('200 status on empty endpoint', async ({ request }) => {
-		const response = await request.get('/endpoint-output/empty');
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
-		expect(await response.json()).toEqual({});
-	});
-
-	test('set-cookie without body', async ({ request }) => {
-		const response = await request.get('/endpoint-output/headers');
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
-		expect(response.headers()['set-cookie']).toBeDefined();
-	});
-
 	test('HEAD with matching headers but without body', async ({ request }) => {
 		const url = '/endpoint-output/body';
 
@@ -202,63 +49,9 @@ test.describe('Endpoints', () => {
 		expect(headers.head).toEqual(headers.get);
 	});
 
-	test('200 status by default', async ({ request }) => {
-		const response = await request.get('/endpoint-output/body');
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
-		expect(await response.text()).toBe('{}');
-	});
-
-	// TODO are these tests useful?
-	test('always returns a body', async ({ request }) => {
-		const response = await request.get('/endpoint-output/empty');
-		expect(typeof (await response.body())).toEqual('object');
-	});
-
-	test('null body returns null json value', async ({ request }) => {
-		const response = await request.get('/endpoint-output/null');
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
-		expect(await response.json()).toBe(null);
-	});
-
-	test('gets string response with XML Content-Type', async ({ request }) => {
-		const response = await request.get('/endpoint-output/xml-text');
-
-		expect(response.headers()['content-type']).toBe('application/xml');
-		expect(await response.text()).toBe('<foo />');
-	});
-
-	test('gets binary response with XML Content-Type', async ({ request }) => {
-		const response = await request.get('/endpoint-output/xml-bytes');
-
-		expect(response.headers()['content-type']).toBe('application/xml');
-		expect(await response.text()).toBe('<foo />');
-	});
-
-	test('allows headers to be a Headers object', async ({ request }) => {
-		const response = await request.get('/endpoint-output/headers-object');
-
-		expect(response.headers()['x-foo']).toBe('bar');
-	});
-
-	test('allows return value to be a Response', async ({ request }) => {
-		const { port, close } = await start_server((req, res) => {
-			res.writeHead(200, {
-				'X-Foo': 'bar'
-			});
-
-			res.end('ok');
-		});
-
-		try {
-			const response = await request.get(`/endpoint-output/proxy?port=${port}`);
-
-			expect(await response.text()).toBe('ok');
-			expect(response.headers()['x-foo']).toBe('bar');
-		} finally {
-			await close();
-		}
-	});
-
+	// TODO all the remaining tests in this section are really only testing
+	// setResponse, since we're not otherwise changing anything on the response.
+	// might be worth making these unit tests instead
 	test('multiple set-cookie on endpoints using GET', async ({ request }) => {
 		const response = await request.get('/set-cookie');
 
@@ -274,17 +67,7 @@ test.describe('Endpoints', () => {
 		]);
 	});
 
-	test('Standalone endpoint is not accessible via /__data.json suffix', async ({ request }) => {
-		const r1 = await request.get('/endpoint-output/simple', {
-			headers: { accept: 'application/json' }
-		});
-
-		expect(await r1.json()).toEqual({ answer: 42 });
-
-		const r2 = await request.get('/endpoint-output/simple/__data.json');
-		expect(r2.status()).toBe(404);
-	});
-
+	// TODO see above
 	test('body can be a binary ReadableStream', async ({ request }) => {
 		const interruptedResponse = request.get('/endpoint-output/stream-throw-error');
 		await expect(interruptedResponse).rejects.toThrow('socket hang up');
@@ -295,6 +78,7 @@ test.describe('Endpoints', () => {
 		expect(response.headers()['digest']).toEqual(`sha-256=${digest}`);
 	});
 
+	// TODO see above
 	test('stream can be canceled with TypeError', async ({ request }) => {
 		const responseBefore = await request.get('/endpoint-output/stream-typeerror?what');
 		expect(await responseBefore.text()).toEqual('null');
@@ -306,6 +90,7 @@ test.describe('Endpoints', () => {
 		expect(await responseAfter.text()).toEqual('TypeError');
 	});
 
+	// TODO see above
 	test('request body can be read slow', async ({ request }) => {
 		const data = randomBytes(1024 * 256);
 		const digest = createHash('sha256').update(data).digest('base64url');
@@ -319,12 +104,11 @@ test.describe('Errors', () => {
 		const response = await request.get('/errors/invalid-route-response');
 
 		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(500);
-		expect(await response.text()).toMatch('expected an object');
+		expect(await response.text()).toMatch(
+			'Invalid response from route /errors/invalid-route-response: handler should return a Response object'
+		);
 	});
 
-	// TODO before we implemented route fallthroughs, and there was a 1:1
-	// regex:route relationship, it was simple to say 'method not implemented
-	// for this endpoint'. now it's a little tricker. does a 404 suffice?
 	test('unhandled http method', async ({ request }) => {
 		const response = await request.put('/errors/invalid-route-response');
 
@@ -338,47 +122,6 @@ test.describe('Errors', () => {
 
 		expect(response.status()).toBe(500);
 		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
-	});
-
-	test('page endpoint thrown error respects `accept: application/json`', async ({ request }) => {
-		const response = await request.get('/errors/page-endpoint/get-implicit', {
-			headers: {
-				accept: 'application/json'
-			}
-		});
-
-		const { message, name, stack, fancy } = await response.json();
-
-		expect(response.status()).toBe(500);
-		expect(name).toBe('FancyError');
-		expect(message).toBe('oops');
-		expect(fancy).toBe(true);
-
-		if (process.env.DEV) {
-			expect(stack.split('\n').length).toBeGreaterThan(1);
-		} else {
-			expect(stack.split('\n').length).toBe(1);
-		}
-	});
-
-	test('page endpoint returned error respects `accept: application/json`', async ({ request }) => {
-		const response = await request.get('/errors/page-endpoint/get-explicit', {
-			headers: {
-				accept: 'application/json'
-			}
-		});
-
-		const { message, name, stack } = await response.json();
-
-		expect(response.status()).toBe(400);
-		expect(name).toBe('FancyError');
-		expect(message).toBe('oops');
-
-		if (process.env.DEV) {
-			expect(stack.split('\n').length).toBeGreaterThan(1);
-		} else {
-			expect(stack.split('\n').length).toBe(1);
-		}
 	});
 
 	test('returns 400 when accessing a malformed URI', async ({ page }) => {
@@ -403,6 +146,26 @@ test.describe('Errors', () => {
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
 		);
+	});
+
+	test('throw error(..) in endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-throw-error');
+
+		const error = read_errors('/errors/endpoint-throw-error');
+		expect(error).toBe(undefined);
+
+		expect(await res?.text()).toBe('You shall not pass');
+		expect(res?.status()).toBe(401);
+	});
+
+	test('throw redirect(..) in endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-throw-redirect');
+		expect(res?.status()).toBe(200); // redirects are opaque to the browser
+
+		const error = read_errors('/errors/endpoint-throw-redirect');
+		expect(error).toBe(undefined);
+
+		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 });
 
@@ -434,48 +197,15 @@ test.describe('Routing', () => {
 });
 
 test.describe('Shadowed pages', () => {
-	test('responds to HEAD requests from endpoint', async ({ request }) => {
-		const url = '/shadowed/simple';
-
-		const opts = {
-			headers: {
-				accept: 'application/json'
-			}
-		};
-
-		const responses = {
-			head: await request.head(url, opts),
-			get: await request.get(url, opts)
-		};
-
-		const headers = {
-			head: responses.head.headers(),
-			get: responses.get.headers()
-		};
-
-		expect(responses.head.status()).toBe(200);
-		expect(responses.get.status()).toBe(200);
-		expect(await responses.head.text()).toBe('');
-		expect(await responses.get.json()).toEqual({ answer: 42 });
-
-		['date', 'transfer-encoding'].forEach((name) => {
-			delete headers.head[name];
-			delete headers.get[name];
-		});
-
-		expect(headers.head).toEqual(headers.get);
-	});
-
-	test('Responds from endpoint if Accept includes application/json but not text/html', async ({
-		request
-	}) => {
-		const response = await request.get('/shadowed/simple', {
+	test('Action can return undefined', async ({ request }) => {
+		const response = await request.post('/shadowed/simple/post', {
 			headers: {
 				accept: 'application/json'
 			}
 		});
 
-		expect(await response.json()).toEqual({ answer: 42 });
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toEqual('');
 	});
 });
 
@@ -520,6 +250,14 @@ test.describe('Static files', () => {
 		const response = await request.get('/symlink-from/hello.txt');
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('hello');
+	});
+});
+
+test.describe('setHeaders', () => {
+	test('allows multiple set-cookie headers with different values', async ({ page }) => {
+		const response = await page.goto('/headers/set-cookie/sub');
+		const cookies = (await response?.allHeaders())['set-cookie'];
+		expect(cookies.includes('cookie1=value1') && cookies.includes('cookie2=value2')).toBe(true);
 	});
 });
 

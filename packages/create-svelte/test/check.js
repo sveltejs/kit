@@ -2,25 +2,29 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 import path from 'path';
 import { test } from 'uvu';
+import { Writable } from 'stream';
 import * as assert from 'uvu/assert';
 import { create } from '../index.js';
 import { fileURLToPath } from 'url';
+import glob from 'tiny-glob';
 // use a directory outside of packages to ensure it isn't added to the pnpm workspace
 const test_workspace_dir = fileURLToPath(
 	new URL('../../../.test-tmp/create-svelte/', import.meta.url)
 );
-const overrides = {};
-['kit', 'adapter-auto', 'adapter-cloudflare', 'adapter-netlify', 'adapter-vercel'].forEach(
-	(pkg) => {
-		overrides[`@sveltejs/${pkg}`] = `${path.resolve(
-			test_workspace_dir,
-			'..',
-			'..',
-			'packages',
-			pkg
-		)}`; //'workspace:*';
-	}
-);
+
+const existing_workspace_overrides = JSON.parse(
+	fs.readFileSync(fileURLToPath(new URL('../../../package.json', import.meta.url)), 'utf-8')
+).pnpm?.overrides;
+
+const overrides = { ...existing_workspace_overrides };
+
+(
+	await glob(fileURLToPath(new URL('../../../packages', import.meta.url)) + '/*/package.json')
+).forEach((pkgPath) => {
+	const name = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).name;
+	overrides[name] = path.dirname(path.resolve(pkgPath));
+});
+
 test.before(() => {
 	try {
 		// prepare test pnpm workspace
@@ -40,7 +44,8 @@ test.before(() => {
 		fs.writeFileSync(path.join(test_workspace_dir, 'pnpm-workspace.yaml'), 'packages:\n  - ./*\n');
 
 		// force creation of pnpm-lock.yaml in test workspace
-		execSync('pnpm install --no-frozen-lockfile', { dir: test_workspace_dir, stdio: 'inherit' });
+		console.log(`running pnpm install in .test-tmp/create-svelte`);
+		execSync('pnpm install --no-frozen-lockfile', { dir: test_workspace_dir, stdio: 'ignore' });
 	} catch (e) {
 		console.error('failed to setup create-svelte test workspace', e);
 		throw e;
@@ -69,12 +74,20 @@ for (const template of fs.readdirSync('templates')) {
 				if (pkg.dependencies?.[key]) {
 					pkg.dependencies[key] = value;
 				}
+				if (!pkg.pnpm) {
+					pkg.pnpm = {};
+				}
+				if (!pkg.pnpm.overrides) {
+					pkg.pnpm.overrides = {};
+				}
+				pkg.pnpm.overrides = { ...pkg.pnpm.overrides, ...overrides };
 			});
 			pkg.private = true;
 			fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(pkg, null, '\t') + '\n');
 
 			// this pnpm install works in the test workspace, which redirects to our local packages again
-			execSync('pnpm install --no-frozen-lockfile', { cwd, stdio: 'inherit' });
+			console.log(`running pnpm install in ${cwd}`);
+			execSync('pnpm install --no-frozen-lockfile', { cwd, stdio: 'ignore' });
 
 			// run provided scripts that are non-blocking. All of them should exit with 0
 			const scripts_to_test = ['prepare', 'check', 'lint', 'build', 'sync'];
@@ -85,17 +98,20 @@ for (const template of fs.readdirSync('templates')) {
 			}
 
 			// not all templates have all scripts
+			console.group(`${template}-${types}`);
 			for (const script of Object.keys(pkg.scripts).filter((s) => scripts_to_test.includes(s))) {
-				const command = `pnpm run ${script}`;
 				try {
-					console.log(`executing ${command} in ${cwd}`);
-					execSync(command, { cwd, stdio: 'inherit' });
+					execSync(`pnpm run ${script}`, { cwd, stdio: 'pipe' });
+					console.log(`✅ ${script}`);
 				} catch (e) {
-					const msg = `${command} failed in ${cwd}`;
-					console.error(msg, e);
-					assert.unreachable(msg);
+					console.error(`❌ ${script}`);
+					console.error(`---\nstdout:\n${e.stdout}`);
+					console.error(`---\nstderr:\n${e.stderr}`);
+					console.groupEnd();
+					assert.unreachable(e.message);
 				}
 			}
+			console.groupEnd();
 		});
 	}
 }

@@ -5,14 +5,13 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"package": "svelte-kit package",
-		"preview": "vite preview",
-		"prepare": "svelte-kit sync"
+		"preview": "vite preview"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "next",
 		"@sveltejs/kit": "next",
 		"svelte": "^3.46.0",
-		"vite": "^3.0.0"
+		"vite": "^3.0.8"
 	},
 	"type": "module",
 	"dependencies": {

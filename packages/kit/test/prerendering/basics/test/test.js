@@ -21,6 +21,20 @@ test('renders a redirect', () => {
 	);
 });
 
+test('renders a server-side redirect', () => {
+	const html = read('redirect-server.html');
+	assert.equal(html, '<meta http-equiv="refresh" content="0;url=https://example.com/redirected">');
+
+	const json = read('redirect-server/__data.json');
+	assert.equal(
+		json,
+		JSON.stringify({
+			type: 'redirect',
+			location: 'https://example.com/redirected'
+		})
+	);
+});
+
 test('does not double-encode redirect locations', () => {
 	const content = read('redirect-encoded.html');
 	assert.equal(
@@ -52,7 +66,7 @@ test('renders page with data from endpoint', () => {
 
 test('renders page with unbuffered data from endpoint', () => {
 	const content = read('fetch-endpoint/not-buffered.html');
-	assert.ok(content.includes('<h1>content-type: application/json; charset=utf-8</h1>'), content);
+	assert.ok(content.includes('<h1>content-type: application/json</h1>'), content);
 
 	const json = read('fetch-endpoint/not-buffered.json');
 	assert.equal(json, JSON.stringify({ answer: 42 }));
@@ -64,19 +78,30 @@ test('loads a file with spaces in the filename', () => {
 });
 
 test('generates __data.json file for shadow endpoints', () => {
-	assert.equal(read('__data.json'), JSON.stringify({ message: 'hello' }));
-	assert.equal(read('shadowed-get/__data.json'), JSON.stringify({ answer: 42 }));
+	assert.equal(
+		read('__data.json'),
+		JSON.stringify({
+			type: 'data',
+			nodes: [{ data: null }, { data: { message: 'hello' } }]
+		})
+	);
+	assert.equal(
+		read('shadowed-get/__data.json'),
+		JSON.stringify({
+			type: 'data',
+			nodes: [{ data: null }, { data: { answer: 42 } }]
+		})
+	);
 });
 
-test('does not prerender page with shadow endpoint with non-GET handler', () => {
+test('does not prerender page with shadow endpoint with non-load handler', () => {
 	assert.ok(!fs.existsSync(`${build}/shadowed-post.html`));
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 
-test('does not prerender page accessing session in load', () => {
-	// This should fail to prerender as session can never be populated
-	// for a prerendered page.
-	assert.ok(!fs.existsSync(`${build}/accesses-session.html`));
+test('does not prerender page with prerender = false in +page.server.js', () => {
+	assert.ok(!fs.existsSync(`${build}/page-server-options.html`));
+	assert.ok(!fs.existsSync(`${build}/page-server-options/__data.json`));
 });
 
 test('decodes paths when writing files', () => {
@@ -150,7 +175,13 @@ test('prerenders binary data', async () => {
 });
 
 test('fetches data from local endpoint', () => {
-	assert.equal(read('origin/__data.json'), JSON.stringify({ message: 'hello' }));
+	assert.equal(
+		read('origin/__data.json'),
+		JSON.stringify({
+			type: 'data',
+			nodes: [{ data: null }, { data: { message: 'hello' } }]
+		})
+	);
 	assert.equal(read('origin/message.json'), JSON.stringify({ message: 'hello' }));
 });
 

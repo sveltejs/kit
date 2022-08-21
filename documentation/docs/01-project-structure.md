@@ -17,6 +17,8 @@ my-project/
 │ └ hooks.js
 ├ static/
 │ └ [your static assets]
+├ tests/
+│ └ [your tests]
 ├ package.json
 ├ svelte.config.js
 ├ tsconfig.json
@@ -32,12 +34,12 @@ You'll also find common files like `.gitignore` and `.npmrc` (and `.prettierrc` 
 The `src` directory contains the meat of your project.
 
 - `lib` contains your library code, which can be imported via the [`$lib`](/docs/modules#$lib) alias, or packaged up for distribution using [`svelte-kit package`](/docs/packaging)
-- `params` contains any [param matchers](/docs/routing#advanced-routing-matching) your app needs
-- `routes` contains the [pages](/docs/routing#pages) and [endpoints](/docs/routing#endpoints) of your application
+- `params` contains any [param matchers](/docs/advanced-routing#matching) your app needs
+- `routes` contains the [routes](/docs/routing) of your application
 - `app.html` is your page template — an HTML document containing the following placeholders:
   - `%sveltekit.head%` — `<link>` and `<script>` elements needed by the app, plus any `<svelte:head>` content
   - `%sveltekit.body%` — the markup for a rendered page
-  - `%sveltekit.assets%` — a relative path from the page to [`paths.assets`](/docs/configuration#paths)
+  - `%sveltekit.assets%` — either [`paths.assets`](/docs/configuration#paths), if specified, or a relative path to [`paths.base`](/docs/configuration#base)
   - `%sveltekit.nonce%` — a [CSP](/docs/configuration#csp) nonce for manually included links and scripts, if used
 - `hooks.js` (optional) contains your application's [hooks](/docs/hooks)
 - `service-worker.js` (optional) contains your [service worker](/docs/service-workers)
@@ -47,6 +49,10 @@ You can use `.ts` files instead of `.js` files, if using TypeScript.
 #### static
 
 Any static assets that should be served as-is, like `robots.txt` or `favicon.png`, go in here.
+
+#### tests
+
+If you chose to add tests to your project during `npm create svelte@latest`, they will live in this directory.
 
 #### package.json
 

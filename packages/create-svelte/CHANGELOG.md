@@ -1,5 +1,57 @@
 # create-svelte
 
+## 2.0.0-next.158
+
+### Patch Changes
+
+- Add notes about includes/excludes and path aliases ([#6085](https://github.com/sveltejs/kit/pull/6085))
+
+* setup prettier plugin-search-dirs to enable use with pnpm ([#6101](https://github.com/sveltejs/kit/pull/6101))
+
+## 2.0.0-next.157
+
+### Patch Changes
+
+- Run svelte-kit sync before svelte-check in check scripts ([#6037](https://github.com/sveltejs/kit/pull/6037))
+
+## 2.0.0-next.156
+
+### Patch Changes
+
+- update `app.d.ts` for library skeleton template ([#6020](https://github.com/sveltejs/kit/pull/6020))
+
+## 2.0.0-next.155
+
+### Patch Changes
+
+- make variable names more descriptive ([#5983](https://github.com/sveltejs/kit/pull/5983))
+
+## 2.0.0-next.154
+
+### Patch Changes
+
+- remove session remnants ([#5966](https://github.com/sveltejs/kit/pull/5966))
+
+* remove outdated notes in `api.ts` ([#5964](https://github.com/sveltejs/kit/pull/5964))
+
+## 2.0.0-next.153
+
+### Patch Changes
+
+- Update templates ([#5778](https://github.com/sveltejs/kit/pull/5778))
+
+## 2.0.0-next.152
+
+### Patch Changes
+
+- Use @sveltejs/kit postinstall lifecycle hook to invoke 'svelte-kit sync' instead of prepare in projects created by create-svelte ([#5760](https://github.com/sveltejs/kit/pull/5760))
+
+## 2.0.0-next.151
+
+### Patch Changes
+
+- [feat] include reference to `@sveltejs/kit` types in ambient file ([#5745](https://github.com/sveltejs/kit/pull/5745))
+
 ## 2.0.0-next.150
 
 ### Patch Changes

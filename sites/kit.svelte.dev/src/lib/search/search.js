@@ -43,7 +43,8 @@ export function init(blocks) {
  * @returns {import('./types').Block[]}
  */
 export function search(query) {
-	const regex = new RegExp(`\\b${query}`, 'i');
+	const escaped = query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+	const regex = new RegExp(`(^|\\b)${escaped}`, 'i');
 
 	const blocks = indexes
 		.map((index) => index.search(query))

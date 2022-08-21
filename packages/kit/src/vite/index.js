@@ -11,11 +11,12 @@ import { build_service_worker } from './build/build_service_worker.js';
 import { load_config } from '../core/config/index.js';
 import { dev } from './dev/index.js';
 import { generate_manifest } from '../core/generate_manifest/index.js';
-import { get_runtime_directory, logger } from '../core/utils.js';
-import { find_deps, get_default_config as get_default_build_config } from './build/utils.js';
+import { runtime_directory, logger } from '../core/utils.js';
+import { find_deps, get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import { get_aliases, resolve_entry, prevent_illegal_rollup_imports } from './utils.js';
+import { get_aliases, resolve_entry, prevent_illegal_rollup_imports, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
+import { create_module } from '../core/env.js';
 
 const cwd = process.cwd();
 
@@ -109,6 +110,9 @@ function kit() {
 	/** @type {string | undefined} */
 	let deferred_warning;
 
+	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
+	let env;
+
 	/**
 	 * @type {{
 	 *   build_dir: string;
@@ -125,20 +129,33 @@ function kit() {
 		const input = {
 			// Put unchanging assets in immutable directory. We don't set that in the
 			// outDir so that other plugins can add mutable assets to the bundle
-			start: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
+			start: `${runtime_directory}/client/start.js`
 		};
 
-		// This step is optional — Vite/Rollup will create the necessary chunks
-		// for everything regardless — but it means that entry chunks reflect
-		// their location in the source code, which is helpful for debugging
-		manifest_data.components.forEach((file) => {
-			const resolved = path.resolve(cwd, file);
-			const relative = decodeURIComponent(path.relative(svelte_config.kit.files.routes, resolved));
+		manifest_data.nodes.forEach((node) => {
+			if (node.component) {
+				const resolved = path.resolve(cwd, node.component);
+				const relative = decodeURIComponent(
+					path.relative(svelte_config.kit.files.routes, resolved)
+				);
 
-			const name = relative.startsWith('..')
-				? path.basename(file)
-				: posixify(path.join('pages', relative));
-			input[name] = resolved;
+				const name = relative.startsWith('..')
+					? path.basename(node.component)
+					: posixify(path.join('pages', relative));
+				input[`components/${name}`] = resolved;
+			}
+
+			if (node.shared) {
+				const resolved = path.resolve(cwd, node.shared);
+				const relative = decodeURIComponent(
+					path.relative(svelte_config.kit.files.routes, resolved)
+				);
+
+				const name = relative.startsWith('..')
+					? path.basename(node.shared)
+					: posixify(path.join('pages', relative));
+				input[`modules/${name}`] = resolved;
+			}
 		});
 
 		return get_default_build_config({
@@ -156,12 +173,10 @@ function kit() {
 	function client_build_info(assets, chunks) {
 		/** @type {import('vite').Manifest} */
 		const vite_manifest = JSON.parse(
-			fs.readFileSync(`${paths.client_out_dir}/manifest.json`, 'utf-8')
+			fs.readFileSync(`${paths.client_out_dir}/${vite_config.build.manifest}`, 'utf-8')
 		);
 
-		const entry_id = posixify(
-			path.relative(cwd, `${get_runtime_directory(svelte_config.kit)}/client/start.js`)
-		);
+		const entry_id = posixify(path.relative(cwd, `${runtime_directory}/client/start.js`));
 
 		return {
 			assets,
@@ -184,21 +199,26 @@ function kit() {
 		async config(config, config_env) {
 			vite_config_env = config_env;
 			svelte_config = await load_config();
+			env = get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix);
+
+			// The config is created in build_server for SSR mode and passed inline
+			if (config.build?.ssr) return;
+
 			is_build = config_env.command === 'build';
 
 			paths = {
 				build_dir: `${svelte_config.kit.outDir}/build`,
 				output_dir: `${svelte_config.kit.outDir}/output`,
-				client_out_dir: `${svelte_config.kit.outDir}/output/client/`
+				client_out_dir: `${svelte_config.kit.outDir}/output/client`
 			};
 
 			illegal_imports = new Set([
-				`${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`,
-				`${svelte_config.kit.outDir}/runtime/env/static/private.js`
+				vite.normalizePath(`${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`),
+				vite.normalizePath(`${svelte_config.kit.outDir}/runtime/env/static/private.js`)
 			]);
 
 			if (is_build) {
-				manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
+				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 
 				const new_config = vite_client_build_config();
 
@@ -212,12 +232,12 @@ function kit() {
 			/** @type {import('vite').UserConfig} */
 			const result = {
 				appType: 'custom',
-				base: '/',
+				base: './',
 				build: {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point
 						// eventhough server otherwise works without it
-						input: `${get_runtime_directory(svelte_config.kit)}/client/start.js`
+						input: `${runtime_directory}/client/start.js`
 					}
 				},
 				define: {
@@ -248,11 +268,35 @@ function kit() {
 							`${posixify(svelte_config.kit.outDir)}/!(generated)`
 						]
 					}
+				},
+				ssr: {
+					// Without this, Vite will treat `@sveltejs/kit` as noExternal if it's
+					// a linked dependency, and that causes modules to be imported twice
+					// under different IDs, which breaks a bunch of stuff
+					// https://github.com/vitejs/vite/pull/9296
+					external: ['@sveltejs/kit']
+				},
+				optimizeDeps: {
+					exclude: ['@sveltejs/kit']
 				}
 			};
 
 			deferred_warning = warn_overridden_config(config, result);
 			return result;
+		},
+
+		async resolveId(id) {
+			// treat $env/static/[public|private] as virtual
+			if (id.startsWith('$env/static/')) return `\0${id}`;
+		},
+
+		async load(id) {
+			switch (id) {
+				case '\0$env/static/private':
+					return create_module('$env/static/private', env.private);
+				case '\0$env/static/public':
+					return create_module('$env/static/public', env.public);
+			}
 		},
 
 		/**
@@ -266,6 +310,10 @@ function kit() {
 		 * Clears the output directories.
 		 */
 		buildStart() {
+			if (vite_config.build.ssr) {
+				return;
+			}
+
 			// Reset for new build. Goes here because `build --watch` calls buildStart but not config
 			completed_build = false;
 
@@ -291,19 +339,26 @@ function kit() {
 				return;// Wait untill all output will be done building, since we need the manifest
 			}
 			
-			for (const file of manifest_data.components) {
-				const id = path.resolve(file);
-				const node = this.getModuleInfo(id);
+			if (vite_config.build.ssr) {
+				return;
+			}
 
-				if (node) {
+			manifest_data.nodes.forEach((_node, i) => {
+				const id = vite.normalizePath(
+					path.resolve(svelte_config.kit.outDir, `generated/nodes/${i}.js`)
+				);
+
+				const module_node = this.getModuleInfo(id);
+
+				if (module_node) {
 					prevent_illegal_rollup_imports(
 						this.getModuleInfo.bind(this),
-						node,
+						module_node,
 						illegal_imports,
 						svelte_config.kit.outDir
 					);
 				}
-			}
+			});
 
 			const verbose = vite_config.logLevel === 'info';
 			log = logger({
@@ -356,12 +411,7 @@ function kit() {
 				const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
 
 				// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-				const script = fileURLToPath(
-					new URL(
-						process.env.BUNDLED ? './prerender.js' : '../core/prerender/prerender.js',
-						import.meta.url
-					)
-				);
+				const script = fileURLToPath(new URL('../core/prerender/prerender.js', import.meta.url));
 
 				const child = fork(
 					script,
@@ -407,9 +457,10 @@ function kit() {
 		 * Runs the adapter.
 		 */
 		async closeBundle() {
-			if (!completed_build) {
-				// vite calls closeBundle when dev-server restarts, ignore that,
-				// and only adapt when build successfully completes.
+			// vite calls closeBundle when dev-server restarts, ignore that,
+			// and only adapt when build successfully completes.
+			const is_restart = !completed_build;
+			if (vite_config.build.ssr || is_restart) {
 				return;
 			}
 
@@ -418,11 +469,16 @@ function kit() {
 				await adapt(svelte_config, build_data, prerendered, { log });
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
-				// prettier-ignore
+
+				const link = colors.bold().cyan('https://kit.svelte.dev/docs/adapters');
 				console.log(
-					`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
+					`See ${link} to learn how to configure your app to run on the platform of your choosing`
 				);
 			}
+
+			// avoid making the manifest available to users
+			fs.unlinkSync(`${paths.output_dir}/client/${vite_config.build.manifest}`);
+			fs.unlinkSync(`${paths.output_dir}/server/${vite_config.build.manifest}`);
 		},
 
 		/**

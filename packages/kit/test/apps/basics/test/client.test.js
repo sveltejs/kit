@@ -110,10 +110,13 @@ test.describe('Scrolling', () => {
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
 		await page.goBack();
+		await page.waitForLoadState('networkidle');
 		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
 
 		await page.goBack();
+		await page.waitForLoadState('networkidle');
+
 		expect(page.url()).toBe(baseURL + '/anchor');
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
@@ -283,17 +286,7 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('client-side error from load() is a string', async ({ page }) => {
-		await page.goto('/errors/load-error-string-client');
-
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Not found"'
-		);
-		expect(await page.innerHTML('h1')).toBe('555');
-	});
-
-	test('client-side error from load() is an Error', async ({ page }) => {
+	test('client-side error from load()', async ({ page }) => {
 		await page.goto('/errors/load-error-client');
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
@@ -303,21 +296,13 @@ test.describe('Errors', () => {
 		expect(await page.innerHTML('h1')).toBe('555');
 	});
 
-	test('client-side error from load() is malformed', async ({ page }) => {
-		await page.goto('/errors/load-error-malformed-client');
-
-		const body = await page.textContent('body');
-
-		expect(body).toMatch(
-			'"error" property returned from load() must be a string or instance of Error, received type "object"'
-		);
-	});
-
 	test('client-side 4xx status without error from load()', async ({ page }) => {
 		await page.goto('/errors/load-status-without-error-client');
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: "401"');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Error: 401"'
+		);
 		expect(await page.innerHTML('h1')).toBe('401');
 	});
 });
@@ -335,39 +320,32 @@ test.describe('Load', () => {
 		expect(await page.textContent('h2')).toBe('y: b: 1');
 
 		await app.goto('/load/change-detection/one/a');
-		expect(await page.textContent('h2')).toBe('x: a: 1');
+		expect(await page.textContent('h2')).toBe('x: a: 2');
 
 		await app.goto('/load/change-detection/one/b');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
 		await app.invalidate('/load/change-detection/data.json');
 		expect(await page.textContent('h1')).toBe('layout loads: 2');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
 		await app.invalidate('/load/change-detection/data.json');
 		expect(await page.textContent('h1')).toBe('layout loads: 3');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
 		await app.invalidate('custom:change-detection-layout');
 		expect(await page.textContent('h1')).toBe('layout loads: 4');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await page.click('button');
+		await page.click('button:has-text("invalidate change-detection/data.json")');
 		await page.waitForFunction('window.invalidated');
 		expect(await page.textContent('h1')).toBe('layout loads: 5');
-		expect(await page.textContent('h2')).toBe('x: b: 2');
-	});
+		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-	test('load function is only called on session change when used in load', async ({ page }) => {
-		await page.goto('/load/change-detection/session/used');
-		expect(await page.textContent('h2')).toBe('1');
-		await page.click('button');
-		expect(await page.textContent('h2')).toBe('2');
-
-		await page.goto('/load/change-detection/session/unused');
-		expect(await page.textContent('h2')).toBe('1');
-		await page.click('button');
-		expect(await page.textContent('h2')).toBe('1');
+		await page.click('button:has-text("invalidate all")');
+		await page.waitForFunction('window.invalidated');
+		expect(await page.textContent('h1')).toBe('layout loads: 6');
+		expect(await page.textContent('h2')).toBe('x: b: 4');
 	});
 
 	test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
@@ -380,15 +358,6 @@ test.describe('Load', () => {
 	test('url instance methods work in load', async ({ page }) => {
 		await page.goto('/load/url-to-string');
 		expect(await page.textContent('h1')).toBe("I didn't break!");
-	});
-
-	test("layout props don't cause rerender when unchanged", async ({ page, clicknav }) => {
-		await page.goto('/load/layout-props/a');
-		expect(await page.textContent('h1')).toBe('1');
-		await clicknav('[href="/load/layout-props/b"]');
-		expect(await page.textContent('h1')).toBe('1');
-		await page.click('button');
-		expect(await page.textContent('h1')).toBe('2');
 	});
 
 	if (process.env.DEV) {
@@ -408,7 +377,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
+				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
 			);
 
 			warnings.length = 0;
@@ -417,7 +386,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/loading#input-fetch`
+				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
 			);
 		});
 	}
@@ -482,7 +451,7 @@ test.describe('Prefetching', () => {
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {
-			expect(requests.filter((req) => req.endsWith('index.svelte')).length).toBe(1);
+			expect(requests.filter((req) => req.endsWith('+page.svelte')).length).toBe(1);
 		} else {
 			// the preload helper causes an additional request to be made in Firefox,
 			// so we use toBeGreaterThan rather than toBe
@@ -536,7 +505,7 @@ test.describe('Routing', () => {
 	test('navigates to a new page without reloading', async ({ app, page, clicknav }) => {
 		await page.goto('/routing');
 
-		await app.prefetchRoutes(['/routing/a']).catch((e) => {
+		await app.prefetch('/routing/a').catch((e) => {
 			// from error handler tests; ignore
 			if (!e.message.includes('Crashing now')) throw e;
 		});
@@ -548,7 +517,7 @@ test.describe('Routing', () => {
 		await clicknav('a[href="/routing/a"]');
 		expect(await page.textContent('h1')).toBe('a');
 
-		expect(requests).toEqual([]);
+		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
 	});
 
 	test('navigates programmatically', async ({ page, app }) => {
@@ -576,7 +545,7 @@ test.describe('Routing', () => {
 		const urls = [];
 
 		const { port, close } = await start_server((req, res) => {
-			urls.push(req.url);
+			if (req.url !== '/favicon.ico') urls.push(req.url);
 			res.end('ok');
 		});
 
@@ -595,7 +564,7 @@ test.describe('Shadow DOM', () => {
 	test('client router captures anchors in shadow dom', async ({ app, page, clicknav }) => {
 		await page.goto('/routing/shadow-dom');
 
-		await app.prefetchRoutes(['/routing/a']).catch((e) => {
+		await app.prefetch('/routing/a').catch((e) => {
 			// from error handler tests; ignore
 			if (!e.message.includes('Crashing now')) throw e;
 		});
@@ -609,4 +578,17 @@ test.describe('Shadow DOM', () => {
 
 		expect(requests).toEqual([]);
 	});
+});
+
+test('Can use browser-only global on client-only page', async ({ page, read_errors }) => {
+	await page.goto('/no-ssr/browser-only-global');
+	await expect(page.locator('p')).toHaveText('Works');
+	expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
+});
+
+test('can use $app/stores from anywhere on client', async ({ page }) => {
+	await page.goto('/store/client-access');
+	await expect(page.locator('h1')).toHaveText('undefined');
+	await page.click('button');
+	await expect(page.locator('h1')).toHaveText('/store/client-access');
 });

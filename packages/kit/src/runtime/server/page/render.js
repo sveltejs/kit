@@ -1,12 +1,13 @@
 import devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
-import { coalesce_to_error } from '../../../utils/error.js';
+import * as cookie from 'cookie';
 import { hash } from '../../hash.js';
 import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { PrerenderingURL } from '../../../utils/url.js';
 import { serialize_error } from '../utils.js';
+import { HttpError } from '../../../index/private.js';
 
 // TODO rename this function/module
 
@@ -19,28 +20,30 @@ const updated = {
  * Creates the HTML response.
  * @param {{
  *   branch: Array<import('./types').Loaded>;
+ *   fetched: Array<import('./types').Fetched>;
+ *   cookies: import('set-cookie-parser').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
- *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean };
  *   status: number;
- *   error: Error | null;
+ *   error: HttpError | Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   stuff: Record<string, any>;
+ *   validation_errors: Record<string, string> | undefined;
  * }} opts
  */
 export async function render_response({
 	branch,
+	fetched,
+	cookies,
 	options,
 	state,
-	$session,
 	page_config,
 	status,
 	error = null,
 	event,
 	resolve_opts,
-	stuff
+	validation_errors
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -57,80 +60,53 @@ export async function render_response({
 	const stylesheets = new Set(entry.stylesheets);
 	const modulepreloads = new Set(entry.imports);
 
+	/** @type {Set<string>} */
+	const link_header_preloads = new Set();
+
 	/** @type {Map<string, string>} */
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
-	/** @type {Array<import('./types').Fetched>} */
-	const serialized_data = [];
-
-	let shadow_props;
-
 	let rendered;
 
-	let is_private = false;
-	/** @type {import('types').NormalizedLoadOutputCache | undefined} */
-	let cache;
+	const stack = error instanceof HttpError ? undefined : error?.stack;
 
-	const stack = error?.stack;
-
-	if (options.dev && error) {
+	if (error && options.dev && !(error instanceof HttpError)) {
 		error.stack = options.get_stack(error);
 	}
 
 	if (resolve_opts.ssr) {
-		const leaf = /** @type {import('./types.js').Loaded} */ (branch.at(-1));
-
-		if (leaf.loaded.status) {
-			// explicit status returned from `load` or a page endpoint trumps
-			// initial status
-			status = leaf.loaded.status;
-		}
-
-		for (const { node, props, loaded, fetched, uses_credentials } of branch) {
-			if (node.imports) {
-				node.imports.forEach((url) => modulepreloads.add(url));
-			}
-
-			if (node.stylesheets) {
-				node.stylesheets.forEach((url) => stylesheets.add(url));
-			}
-
-			if (node.inline_styles) {
-				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
-			}
-
-			// TODO probably better if `fetched` wasn't populated unless `hydrate`
-			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
-			if (props) shadow_props = props;
-
-			cache = loaded?.cache;
-			is_private = cache?.private ?? uses_credentials;
-		}
-
-		const session = writable($session);
-		// Even if $session isn't accessed, it still ends up serialized in the rendered HTML
-		is_private = is_private || (cache?.private ?? (!!$session && Object.keys($session).length > 0));
-
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session,
 				updated
 			},
-			/** @type {import('types').Page} */
-			page: {
-				error,
-				params: event.params,
-				routeId: event.routeId,
-				status,
-				stuff,
-				url: state.prerendering ? new PrerenderingURL(event.url) : event.url
-			},
-			components: branch.map(({ node }) => node.module.default)
+			components: await Promise.all(branch.map(({ node }) => node.component()))
 		};
+
+		let data = {};
+
+		// props_n (instead of props[n]) makes it easy to avoid
+		// unnecessary updates for layout components
+		for (let i = 0; i < branch.length; i += 1) {
+			data = { ...data, ...branch[i].data };
+			props[`data_${i}`] = data;
+		}
+
+		props.page = {
+			error,
+			params: /** @type {Record<string, any>} */ (event.params),
+			routeId: event.routeId,
+			status,
+			url: state.prerendering ? new PrerenderingURL(event.url) : event.url,
+			data
+		};
+
+		if (validation_errors) {
+			props.errors = validation_errors;
+		}
 
 		// TODO remove this for 1.0
 		/**
@@ -149,13 +125,21 @@ export async function render_response({
 		print_error('path', 'pathname');
 		print_error('query', 'searchParams');
 
-		// props_n (instead of props[n]) makes it easy to avoid
-		// unnecessary updates for layout components
-		for (let i = 0; i < branch.length; i += 1) {
-			props[`props_${i}`] = await branch[i].loaded.props;
-		}
-
 		rendered = options.root.render(props);
+
+		for (const { node } of branch) {
+			if (node.imports) {
+				node.imports.forEach((url) => modulepreloads.add(url));
+			}
+
+			if (node.stylesheets) {
+				node.stylesheets.forEach((url) => stylesheets.add(url));
+			}
+
+			if (node.inline_styles) {
+				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
+			}
+		}
 	} else {
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
@@ -169,25 +153,44 @@ export async function render_response({
 
 	const target = hash(body);
 
+	/**
+	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
+	 * @type {string}
+	 */
+	let assets;
+
+	if (options.paths.assets) {
+		// if an asset path is specified, use it
+		assets = options.paths.assets;
+	} else if (state.prerendering?.fallback) {
+		// if we're creating a fallback page, asset paths need to be root-relative
+		assets = options.paths.base;
+	} else {
+		// otherwise we want asset paths to be relative to the page, so that they
+		// will work in odd contexts like IPFS, the internet archive, and so on
+		const segments = event.url.pathname.slice(options.paths.base.length).split('/').slice(2);
+		assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+	}
+
+	/** @param {string} path */
+	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
+
 	// prettier-ignore
 	const init_app = `
-		import { set_public_env, start } from ${s(options.prefix + entry.file)};
+		import { set_public_env, start } from ${s(prefixed(entry.file))};
 
 		set_public_env(${s(options.public_env)});
 
 		start({
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
-			session: ${try_serialize($session, (error) => {
-				throw new Error(`Failed to serialize session data: ${error.message}`);
-			})},
 			route: ${!!page_config.router},
 			spa: ${!resolve_opts.ssr},
 			trailing_slash: ${s(options.trailing_slash)},
 			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
 				status: ${status},
 				error: ${error && serialize_error(error, e => e.stack)},
-				nodes: [${branch.map(({ node }) => node.index).join(', ')}],
+				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 				legacy_nodes: [${branch.map(({ node }) => node.legacy).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)}
@@ -236,36 +239,35 @@ export async function render_response({
 		head += `\n\t<style${attributes.join('')}>${content}</style>`;
 	}
 
-	// prettier-ignore
-	head += Array.from(stylesheets)
-		.map((dep) => {
-			const attributes = [
-				'rel="stylesheet"',
-				`href="${options.prefix + dep}"`
-			];
+	for (const dep of stylesheets) {
+		const path = prefixed(dep);
+		const attributes = [];
 
-			if (csp.style_needs_nonce) {
-				attributes.push(`nonce="${csp.nonce}"`);
-			}
+		if (csp.style_needs_nonce) {
+			attributes.push(`nonce="${csp.nonce}"`);
+		}
 
-			if (csp.style_needs_nonce) {
-				attributes.push(`nonce="${csp.nonce}"`);
-			}
+		if (inline_styles.has(dep)) {
+			// don't load stylesheets that are already inlined
+			// include them in disabled state so that Vite can detect them and doesn't try to add them
+			attributes.push('disabled', 'media="(max-width: 0)"');
+		} else {
+			const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
+			link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+		}
 
-			if (inline_styles.has(dep)) {
-				// don't load stylesheets that are already inlined
-				// include them in disabled state so that Vite can detect them and doesn't try to add them
-				attributes.push('disabled', 'media="(max-width: 0)"');
-			}
-
-			return `\n\t<link ${attributes.join(' ')}>`;
-		})
-		.join('');
+		attributes.unshift('rel="stylesheet"');
+		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
+	}
 
 	if (page_config.router || page_config.hydrate) {
-		head += Array.from(modulepreloads)
-			.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
-			.join('');
+		for (const dep of modulepreloads) {
+			const path = prefixed(dep);
+			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			if (state.prerendering) {
+				head += `\n\t<link rel="modulepreload" href="${path}">`;
+			}
+		}
 
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
 
@@ -276,19 +278,37 @@ export async function render_response({
 		}
 
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
+	}
 
-		body += serialized_data
-			.map(({ url, body, response }) =>
+	if (resolve_opts.ssr && page_config.hydrate) {
+		/** @type {string[]} */
+		const serialized_data = [];
+
+		for (const { url, body, response } of fetched) {
+			serialized_data.push(
 				render_json_payload_script(
 					{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
 					response
 				)
-			)
-			.join('\n\t');
-
-		if (shadow_props) {
-			body += render_json_payload_script({ type: 'props' }, shadow_props);
+			);
 		}
+
+		if (branch.some((node) => node.server_data)) {
+			serialized_data.push(
+				render_json_payload_script(
+					{ type: 'server_data' },
+					branch.map(({ server_data }) => server_data)
+				)
+			);
+		}
+
+		if (validation_errors) {
+			serialized_data.push(
+				render_json_payload_script({ type: 'validation_errors' }, validation_errors)
+			);
+		}
+
+		body += `\n\t${serialized_data.join('\n\t')}`;
 	}
 
 	if (options.service_worker) {
@@ -300,6 +320,7 @@ export async function render_response({
 	}
 
 	if (state.prerendering) {
+		// TODO read headers set with setHeaders and convert into http-equiv where possible
 		const http_equiv = [];
 
 		const csp_headers = csp.csp_provider.get_meta();
@@ -307,18 +328,14 @@ export async function render_response({
 			http_equiv.push(csp_headers);
 		}
 
-		if (cache) {
-			http_equiv.push(`<meta http-equiv="cache-control" content="max-age=${cache.maxage}">`);
+		if (state.prerendering.cache) {
+			http_equiv.push(`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`);
 		}
 
 		if (http_equiv.length > 0) {
 			head = http_equiv.join('\n') + head;
 		}
 	}
-
-	const segments = event.url.pathname.slice(options.paths.base.length).split('/').slice(2);
-	const assets =
-		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
 	// TODO flush chunks as early as we can
 	const html =
@@ -332,10 +349,6 @@ export async function render_response({
 		etag: `"${hash(html)}"`
 	});
 
-	if (cache) {
-		headers.set('cache-control', `${is_private ? 'private' : 'public'}, max-age=${cache.maxage}`);
-	}
-
 	if (!state.prerendering) {
 		const csp_header = csp.csp_provider.get_header();
 		if (csp_header) {
@@ -345,9 +358,19 @@ export async function render_response({
 		if (report_only_header) {
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
+
+		for (const new_cookie of cookies) {
+			const { name, value, ...options } = new_cookie;
+			// @ts-expect-error
+			headers.append('set-cookie', cookie.serialize(name, value, options));
+		}
+
+		if (link_header_preloads.size) {
+			headers.set('link', Array.from(link_header_preloads).join(', '));
+		}
 	}
 
-	if (options.dev && error) {
+	if (error && options.dev && !(error instanceof HttpError)) {
 		// reset stack, otherwise it may be 'fixed' a second time
 		error.stack = stack;
 	}
@@ -356,17 +379,4 @@ export async function render_response({
 		status,
 		headers
 	});
-}
-
-/**
- * @param {any} data
- * @param {(error: Error) => void} [fail]
- */
-function try_serialize(data, fail) {
-	try {
-		return devalue(data);
-	} catch (err) {
-		if (fail) fail(coalesce_to_error(err));
-		return null;
-	}
 }
