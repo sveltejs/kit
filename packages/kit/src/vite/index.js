@@ -62,6 +62,16 @@ const enforced_config = {
  * @return {import('vite').Plugin[]}
  */
 export function sveltekit() {
+	// TODO: find out if this is the right place to ensure we add preprocessing for replacing sveltekit specific attributes
+	// NOTE: OR maybe it is autimatically passed in, since it uses the svelte.config.js file where we might have additional preprocessing
+	// TODO: Ensure preprocessing works with multiple calls to `svelte-preprocess`.
+	// Seems like it should be find though, as it likely is using an internal closure to keep state, and returning the callback to actually execute the transform.
+
+	// IDEA: We could use svelte-preprocess to create the needed config for preprocessing `sveltekit:*`
+	// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
+	// import preprocess from 'svelte-preprocess'
+	// preprocess({ replace: [/sveltekit\:prefetch/g, 'data-sveltekit-prefetch'] })
+
 	return [...svelte(), kit()];
 }
 
@@ -197,6 +207,9 @@ function kit() {
 		async config(config, config_env) {
 			vite_config_env = config_env;
 			svelte_config = await load_config();
+
+			console.log('vite svelte.config.js preprocess', svelte_config.preprocess);
+
 			env = get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix);
 
 			// The config is created in build_server for SSR mode and passed inline

@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import * as url from 'url';
 import options from './options.js';
+import preprocess from 'svelte-preprocess';
 
 /**
  * Loads the template (src/app.html by default) and validates that it has the
@@ -62,6 +63,24 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 	const validated = validate_config(config);
 
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
+
+	const replaceSveltkitAttributes = preprocess({
+		// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
+		// replace: [[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch']]
+		replace: [
+			[/sveltekit:attribute/g, 'data-sveltekit-attribute'],
+			[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch']
+		]
+	});
+
+	// TODO: Update types of `config.preprocess` to get type safety here. Use correct typing and validation from vite-plugin-svelte
+	// TODO: This needs to support all valid configs for preprocess, possibly including objects and not just arrays.
+	// TODO: Ensure the svelte.preprocess API can run multiple instances of `svelte-preprocess` if the user has their own config too.
+	if (Array.isArray(validated.preprocess)) {
+		validated.preprocess.push(replaceSveltkitAttributes);
+	} else {
+		validated.preprocess = [replaceSveltkitAttributes];
+	}
 
 	for (const key in validated.kit.files) {
 		// @ts-expect-error this is typescript at its stupidest
