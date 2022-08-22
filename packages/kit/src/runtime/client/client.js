@@ -711,7 +711,7 @@ export function create_client({ target, base, trailing_slash }) {
 					`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 					{
 						headers: {
-							'x-svelte-kit-invalidated': invalid_server_nodes.map((x) => (x ? '1' : '')).join(',')
+							'x-sveltekit-invalidated': invalid_server_nodes.map((x) => (x ? '1' : '')).join(',')
 						}
 					}
 				);
@@ -722,7 +722,9 @@ export function create_client({ target, base, trailing_slash }) {
 					throw server_data;
 				}
 			} catch (e) {
-				throw new Error('TODO render fallback error page');
+				// something went catastrophically wrong — bail and defer to the server
+				native_navigation(url);
+				return;
 			}
 
 			if (server_data.type === 'redirect') {
@@ -833,6 +835,9 @@ export function create_client({ target, base, trailing_slash }) {
 						}
 					}
 
+					// TODO post-https://github.com/sveltejs/kit/discussions/6124, this will
+					// no longer be necessary — if we get here, it's because the root layout
+					// load function failed, which means we have to fall back to the server
 					return await load_root_error_page({
 						status,
 						error,
@@ -864,10 +869,40 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   url: URL;
 	 *   routeId: string | null
 	 * }} opts
+	 * @returns {Promise<import('./types').NavigationFinished>}
 	 */
 	async function load_root_error_page({ status, error, url, routeId }) {
 		/** @type {Record<string, string>} */
 		const params = {}; // error page does not have params
+
+		const node = await default_layout_loader();
+
+		/** @type {import('types').ServerDataNode | null} */
+		let server_data_node = null;
+
+		if (node.server) {
+			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
+			// existing root layout data
+			const res = await native_fetch(
+				`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
+				{
+					headers: {
+						'x-sveltekit-invalidated': '1'
+					}
+				}
+			);
+
+			const server_data_nodes = await res.json();
+			server_data_node = server_data_nodes?.[0] ?? null;
+
+			if (!res.ok || server_data_nodes?.type !== 'data') {
+				// at this point we have no choice but to fall back to the server
+				native_navigation(url);
+
+				// @ts-expect-error
+				return;
+			}
+		}
 
 		const root_layout = await load_node({
 			loader: default_layout_loader,
@@ -875,8 +910,7 @@ export function create_client({ target, base, trailing_slash }) {
 			params,
 			routeId,
 			parent: () => Promise.resolve({}),
-			// TODO!!!!! need to load root layout server data
-			server_data_node: null
+			server_data_node: create_data_node(server_data_node) ?? null
 		});
 
 		/** @type {import('./types').BranchNode} */

@@ -258,7 +258,7 @@ export async function respond(request, options, state) {
 							const node_ids = [...route.layouts, route.leaf];
 
 							const invalidated =
-								request.headers.get('x-svelte-kit-invalidated')?.split(',').map(Boolean) ??
+								request.headers.get('x-sveltekit-invalidated')?.split(',').map(Boolean) ??
 								node_ids.map(() => true);
 
 							let aborted = false;
