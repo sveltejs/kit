@@ -351,6 +351,8 @@ SvelteKit tracks the dependencies of each `load` function to avoid re-running it
 
 Using [`invalidate(url)`](/docs/modules#$app-navigation-invalidate), you can re-run any `load` functions that depend on the invalidated resource (either implicitly, via [`fetch`](#fetch)), or explicitly via [`depends`](#depends). You can also invalidate _all_ `load` functions by calling `invalidate()` without an argument.
 
+If a `load` function is triggered to rerun, the page will not remount — instead, it will update with the new `data`.
+
 ### Shared state
 
 In many server environments, a single instance of your app will serve multiple users. For that reason, per-request state must not be stored in shared variables outside your `load` functions, but should instead be stored in `event.locals`. Similarly, per-user state must not be stored in global variables, but should instead make use of `$page.data` (which contains the combined data of all `load` functions) or use Svelte's [context feature](https://svelte.dev/docs#run-time-svelte-setcontext) to create scoped state.
