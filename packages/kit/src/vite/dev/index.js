@@ -11,7 +11,7 @@ import { parse_route_id } from '../../utils/routing.js';
 import { load_template } from '../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
-import { get_mime_lookup, runtime_directory, runtime_prefix } from '../../core/utils.js';
+import { get_mime_lookup, runtime_base, runtime_prefix } from '../../core/utils.js';
 import { get_env, prevent_illegal_vite_imports, resolve_entry } from '../utils.js';
 
 // Vite doesn't expose this so we just copy the list for now
@@ -90,12 +90,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 								module_nodes.push(module_node);
 								result.file = url.endsWith('.svelte') ? url : url + '?import'; // TODO what is this for?
 
-								prevent_illegal_vite_imports(
-									module_node,
-									illegal_imports,
-									extensions,
-									svelte_config.kit.outDir
-								);
+								prevent_illegal_vite_imports(module_node, illegal_imports, extensions);
 
 								return module.default;
 							};
@@ -108,12 +103,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 
 							result.shared = module;
 
-							prevent_illegal_vite_imports(
-								module_node,
-								illegal_imports,
-								extensions,
-								svelte_config.kit.outDir
-							);
+							prevent_illegal_vite_imports(module_node, illegal_imports, extensions);
 						}
 
 						if (node.server) {
@@ -286,13 +276,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 			res.end(fix_stack_trace(error));
 		}
 	});
-
-	const runtime_base = runtime_directory.startsWith(process.cwd())
-		? `/${path.relative('.', runtime_directory)}`
-		: `/@fs${
-				// Windows/Linux separation - Windows starts with a drive letter, we need a / in front there
-				runtime_directory.startsWith('/') ? '' : '/'
-		  }${runtime_directory}`;
 
 	const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
 	const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);

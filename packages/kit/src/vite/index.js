@@ -16,7 +16,7 @@ import { find_deps, get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry, prevent_illegal_rollup_imports, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
-import { create_module } from '../core/env.js';
+import { create_static_module, create_dynamic_module } from '../core/env.js';
 
 const cwd = process.cwd();
 
@@ -211,8 +211,10 @@ function kit() {
 			};
 
 			illegal_imports = new Set([
-				vite.normalizePath(`${svelte_config.kit.outDir}/runtime/env/dynamic/private.js`),
-				vite.normalizePath(`${svelte_config.kit.outDir}/runtime/env/static/private.js`)
+				'/@id/__x00__$env/dynamic/private', //dev
+				'\0$env/dynamic/private', // prod
+				'/@id/__x00__$env/static/private', // dev
+				'\0$env/static/private' // prod
 			]);
 
 			if (is_build) {
@@ -285,15 +287,19 @@ function kit() {
 
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/static/')) return `\0${id}`;
+			if (id.startsWith('$env/')) return `\0${id}`;
 		},
 
 		async load(id) {
 			switch (id) {
 				case '\0$env/static/private':
-					return create_module('$env/static/private', env.private);
+					return create_static_module('$env/static/private', env.private);
 				case '\0$env/static/public':
-					return create_module('$env/static/public', env.public);
+					return create_static_module('$env/static/public', env.public);
+				case '\0$env/dynamic/private':
+					return create_dynamic_module('private');
+				case '\0$env/dynamic/public':
+					return create_dynamic_module('public');
 			}
 		},
 
@@ -345,8 +351,7 @@ function kit() {
 					prevent_illegal_rollup_imports(
 						this.getModuleInfo.bind(this),
 						module_node,
-						illegal_imports,
-						svelte_config.kit.outDir
+						illegal_imports
 					);
 				}
 			});
