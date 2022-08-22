@@ -24,10 +24,7 @@ export function create_static_module(id, env) {
 	return GENERATED_COMMENT + declarations.join('\n\n');
 }
 
-/**
- * @param {'public' | 'private'} type
- * @returns {string}
- */
+/** @param {'public' | 'private'} type */
 export function create_dynamic_module(type) {
 	return `export { env } from '${runtime_base}/env-${type}.js';`;
 }
