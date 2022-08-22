@@ -1,5 +1,6 @@
 {
 	"name": "test-meta",
+	"private": true,
 	"version": "0.0.0-next.0",
 	"scripts": {
 		"test": "uvu . \"(spec\\.js|test[\\\\/]index\\.js)\""
