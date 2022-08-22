@@ -27,16 +27,13 @@ const config = {
 		}
 	},
 	preprocess: [
-		// IDEA: We could use svelte-preprocess to create the needed config for preprocessing `sveltekit:*`
-		// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
-		// preprocess({
-		// 	// TODO: Find a way to create a combined preprocess() inside of sveltekit.
-		// 	// This works perfectly, but we shouldn't have to expose this detail to app developers. There must be a way to combine it.
-		// 	replace: [
-		// 		[/sveltekit\:attribute/g, 'data-sveltekit-attribute'],
-		// 		[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch']
-		// 	]
-		// })
+		// Test how combined user preprocessing works together with internal sveltekit preprocessing.
+		preprocess({
+			replace: [
+				[/sveltekit\:attribute/g, 'data-sveltekit-attribute'],
+				[/sveltekit\:something/g, 'data-sveltekit-something']
+			]
+		})
 	]
 };
 

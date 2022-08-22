@@ -66,16 +66,16 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 
 	const replaceSveltkitAttributes = preprocess({
 		// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
-		// replace: [[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch']]
+		// TODO: Ensure the replacement happens for prerendered HTML too
 		replace: [
-			[/sveltekit:attribute/g, 'data-sveltekit-attribute'],
-			[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch']
+			[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch'],
+			[/sveltekit\:reload/g, 'data-sveltekit-reload'],
+			[/sveltekit\:noscroll/g, 'data-sveltekit-noscroll']
 		]
 	});
 
 	// TODO: Update types of `config.preprocess` to get type safety here. Use correct typing and validation from vite-plugin-svelte
 	// TODO: This needs to support all valid configs for preprocess, possibly including objects and not just arrays.
-	// TODO: Ensure the svelte.preprocess API can run multiple instances of `svelte-preprocess` if the user has their own config too.
 	if (Array.isArray(validated.preprocess)) {
 		validated.preprocess.push(replaceSveltkitAttributes);
 	} else {

@@ -1122,7 +1122,7 @@ export function create_client({ target, base, trailing_slash }) {
 				if (
 					a.hasAttribute('download') ||
 					rel.includes('external') ||
-					a.hasAttribute('sveltekit:reload')
+					a.hasAttribute('data-sveltekit-reload')
 				) {
 					return;
 				}
@@ -1149,7 +1149,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 				navigate({
 					url,
-					scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
+					scroll: a.hasAttribute('data-sveltekit-noscroll') ? scroll_state() : null,
 					keepfocus: false,
 					redirect_chain: [],
 					details: {

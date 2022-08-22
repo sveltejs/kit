@@ -58,21 +58,14 @@ const enforced_config = {
 	root: true
 };
 
+// TODO: Figure out how to reload the svelte.config.js when changes happen.
+const svelte_config = await load_config();
+
 /**
  * @return {import('vite').Plugin[]}
  */
 export function sveltekit() {
-	// TODO: find out if this is the right place to ensure we add preprocessing for replacing sveltekit specific attributes
-	// NOTE: OR maybe it is autimatically passed in, since it uses the svelte.config.js file where we might have additional preprocessing
-	// TODO: Ensure preprocessing works with multiple calls to `svelte-preprocess`.
-	// Seems like it should be find though, as it likely is using an internal closure to keep state, and returning the callback to actually execute the transform.
-
-	// IDEA: We could use svelte-preprocess to create the needed config for preprocessing `sveltekit:*`
-	// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
-	// import preprocess from 'svelte-preprocess'
-	// preprocess({ replace: [/sveltekit\:prefetch/g, 'data-sveltekit-prefetch'] })
-
-	return [...svelte(), kit()];
+	return [...svelte({ configFile: false, ...svelte_config }), kit()];
 }
 
 /**
@@ -334,46 +327,6 @@ function kit() {
 
 				rimraf(paths.output_dir);
 				mkdirp(paths.output_dir);
-			}
-		},
-
-		// IDEA: Maybe the attribute replacement could be done when rendering the chunks to avoid looping an extra time (as is the case with generateBundle).
-		// /** @type {import('rollup').RenderChunkHook} */
-		// renderChunk(code, chunk) {
-		// 	for (const [attribute, replacement] of [['sveltekit:prefetch', 'data-sveltekit-prefetch']]) {
-		// 		if (code.includes(attribute)) {
-		// 			console.log(`[${chunk.name}]: Replacing "${attribute}" with "${replacement}"`);
-
-		// 			return code.replace(attribute, replacement);
-		// 		}
-		// 	}
-
-		// 	return code;
-		// },
-
-		// TODO: Ensure the replacement only happens for attributes
-		// TODO: Ensure the replacement happens for prerendered HTML too
-		// This might be read from the svelte source file which means we need to replace it when server side rendering the HTML response too.
-		/**
-		 * @param {import('rollup').OutputOptions} _options
-		 * @param {{ [fileName: string]: any }} bundle
-		 */
-		generateBundle(_options, bundle) {
-			for (const entry of Object.values(bundle)) {
-				if (entry.type !== 'chunk') continue;
-
-				for (const [attribute, replacement] of [
-					['sveltekit:prefetch', 'data-sveltekit-prefetch']
-				]) {
-					if (entry.code.includes(attribute)) {
-						console.log(`[${entry.fileName}]: Replacing "${attribute}" with "${replacement}"`);
-
-						bundle[entry.fileName] = {
-							...entry,
-							code: entry.code.replaceAll(attribute, replacement)
-						};
-					}
-				}
 			}
 		},
 
