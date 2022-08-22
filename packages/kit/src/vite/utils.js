@@ -223,7 +223,7 @@ export function prevent_illegal_rollup_imports(node_getter, node, illegal_import
 	if (chain) throw new Error(format_illegal_import_chain(chain));
 }
 
-const queryRE = /\?.*$/s;
+const query_pattern = /\?.*$/s;
 
 /**
  *
