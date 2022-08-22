@@ -245,7 +245,7 @@ const find_illegal_rollup_imports = (
 	illegal_imports,
 	seen = new Set()
 ) => {
-	const name = removeQueryFromPath(normalizePath(node.id));
+	const name = remove_query_from_path(normalizePath(node.id));
 	if (seen.has(name)) return null;
 	seen.add(name);
 
