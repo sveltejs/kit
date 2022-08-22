@@ -212,8 +212,6 @@ function kit() {
 			vite_config_env = config_env;
 			svelte_config = await load_config();
 
-			console.log('vite svelte.config.js preprocess', svelte_config.preprocess);
-
 			env = get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix);
 
 			// The config is created in build_server for SSR mode and passed inline
