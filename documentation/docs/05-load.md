@@ -351,7 +351,7 @@ SvelteKit tracks the dependencies of each `load` function to avoid re-running it
 
 Using [`invalidate(url)`](/docs/modules#$app-navigation-invalidate), you can re-run any `load` functions that depend on the invalidated resource (either implicitly, via [`fetch`](#fetch)), or explicitly via [`depends`](#depends). You can also invalidate _all_ `load` functions by calling `invalidate()` without an argument.
 
-If a `load` function is triggered to rerun, the page will not remount, instead it will update with the new contents of the output.
+If a `load` function is triggered to rerun, the page will not remount — instead, it will update with the new `data`.
 
 ### Shared state
 
