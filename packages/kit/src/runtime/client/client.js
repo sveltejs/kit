@@ -752,9 +752,11 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @type {import('./types').BranchNode | undefined} */
 			const previous = current.branch[i];
 
+			const can_reuse_server_data = !server_data_nodes?.[i] || server_data_nodes[i].type === 'skip';
+
 			// re-use data from previous load if it's still valid
 			const valid =
-				!invalid_server_nodes[i] &&
+				can_reuse_server_data &&
 				loader === previous?.loader &&
 				!detect_change(changed, parent_changed, previous.shared?.uses);
 

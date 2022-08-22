@@ -176,7 +176,7 @@ export type ServerData =
 	  }
 	| {
 			type: 'data';
-			nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
+			nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode>;
 	  };
 
 export interface ServerDataNode {
