@@ -305,6 +305,14 @@ test.describe('Errors', () => {
 		);
 		expect(await page.innerHTML('h1')).toBe('401');
 	});
+
+	test('error in root layout renders root error page without layout', async ({ page, app }) => {
+		await page.goto('/');
+		await app.goto('/?root-error');
+		expect(await page.textContent('p')).toBe(
+			'This is your custom error page saying: "Root layout error"'
+		);
+	});
 });
 
 test.describe('Load', () => {

@@ -242,42 +242,52 @@ export async function render_page(event, route, options, state, resolve_opts) {
 
 					const status = error instanceof HttpError ? error.status : 500;
 
-					while (i--) {
-						if (route.errors[i]) {
-							const index = /** @type {number} */ (route.errors[i]);
-							const node = await options.manifest._.nodes[index]();
+					/**
+					 * @param {number} idx
+					 * @param {Array<Loaded>} branch
+					 */
+					const render_error = async (idx, branch) => {
+						const index = /** @type {number} */ (route.errors[idx]);
+						const node = await options.manifest._.nodes[index]();
 
-							let j = i;
-							while (!branch[j]) j -= 1;
+						return await render_response({
+							event,
+							options,
+							state,
+							resolve_opts,
+							page_config: { router: true, hydrate: true },
+							status,
+							error,
+							branch: branch.concat({
+								node,
+								data: null,
+								server_data: null
+							}),
+							fetched,
+							cookies,
+							validation_errors: undefined
+						});
+					};
 
-							return await render_response({
-								event,
-								options,
-								state,
-								resolve_opts,
-								page_config: { router: true, hydrate: true },
-								status,
-								error,
-								branch: compact(branch.slice(0, j + 1)).concat({
-									node,
-									data: null,
-									server_data: null
-								}),
-								fetched,
-								cookies,
-								validation_errors: undefined
-							});
+					if (i === 0) {
+						// if the error is in the root layout, we render the error page only
+						return await render_error(0, []);
+					} else {
+						while (i--) {
+							if (route.errors[i]) {
+								let j = i;
+								while (!branch[j]) j -= 1;
+
+								return await render_error(i, compact(branch.slice(0, j + 1)));
+							}
 						}
-					}
 
-					// if we're still here, it means the error happened in the root layout,
-					// which means we have to fall back to a plain text response
-					// TODO since the requester is expecting HTML, maybe it makes sense to
-					// doll this up a bit
-					return new Response(
-						error instanceof HttpError ? error.message : options.get_stack(error),
-						{ status }
-					);
+						// It shouldn't be possible to get here since we always have a root error page
+						return new Response(
+							error instanceof HttpError ? error.message : options.get_stack(error),
+							{ status }
+						);
+					}
 				}
 			} else {
 				// push an empty slot so we can rewind past gaps to the

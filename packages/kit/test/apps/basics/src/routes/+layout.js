@@ -6,6 +6,9 @@ export async function load({ fetch, url }) {
 		const res = await fetch('/errors/error-in-layout/non-existent');
 		throw error(res.status);
 	}
+	if (url.searchParams.has('root-error')) {
+		throw error(500, 'Root layout error');
+	}
 
 	return {
 		foo: {

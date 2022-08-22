@@ -167,6 +167,13 @@ test.describe('Errors', () => {
 
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
+
+	test('error in root layout renders root error page without layout', async ({ page }) => {
+		await page.goto('/?root-error');
+		expect(await page.textContent('p')).toBe(
+			'This is your custom error page saying: "Root layout error"'
+		);
+	});
 });
 
 test.describe('Load', () => {

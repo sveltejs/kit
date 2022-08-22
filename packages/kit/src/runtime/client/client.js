@@ -818,14 +818,19 @@ export function create_client({ target, base, trailing_slash }) {
 		/** @type {Record<string, string>} */
 		const params = {}; // error page does not have params
 
-		const root_layout = await load_node({
-			node: await default_layout,
-			url,
-			params,
-			routeId,
-			parent: () => Promise.resolve({}),
-			server_data: null // TODO!!!!!
-		});
+		let root_layout;
+		try {
+			root_layout = await load_node({
+				node: await default_layout,
+				url,
+				params,
+				routeId,
+				parent: () => Promise.resolve({}),
+				server_data: null // TODO!!!!!
+			});
+		} catch (e) {
+			// Root layout threw an error, we have to ignore it at this point
+		}
 
 		const root_error = {
 			node: await default_error,
