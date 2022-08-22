@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.429
+
+### Patch Changes
+
+- [fix] Prevent import of `$env/*/private` in client ([#6018](https://github.com/sveltejs/kit/pull/6018))
+
+* Fix vite.config.ts "Cannot find module '@sveltejs/kit/vite' or its corresponding type declarations." ([#6140](https://github.com/sveltejs/kit/pull/6140))
+
 ## 1.0.0-next.428
 
 ### Patch Changes
