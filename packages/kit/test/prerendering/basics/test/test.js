@@ -82,14 +82,20 @@ test('generates __data.json file for shadow endpoints', () => {
 		read('__data.json'),
 		JSON.stringify({
 			type: 'data',
-			nodes: [{ data: null }, { data: { message: 'hello' } }]
+			nodes: [
+				{ type: 'data', data: null, uses: {} },
+				{ type: 'data', data: { message: 'hello' }, uses: {} }
+			]
 		})
 	);
 	assert.equal(
 		read('shadowed-get/__data.json'),
 		JSON.stringify({
 			type: 'data',
-			nodes: [{ data: null }, { data: { answer: 42 } }]
+			nodes: [
+				{ type: 'data', data: null, uses: {} },
+				{ type: 'data', data: { answer: 42 }, uses: {} }
+			]
 		})
 	);
 });
