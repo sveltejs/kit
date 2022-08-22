@@ -120,6 +120,8 @@ const config = {
 
 > The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
 
+> You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
+
 ### appDir
 
 The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.

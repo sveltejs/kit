@@ -16,7 +16,7 @@ import {
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
 
-const give_up = `${error('Update +page.server.js', TASKS.STANDALONE_ENDPOINT)}\n\n`;
+const give_up = `${error('Update +server.js', TASKS.STANDALONE_ENDPOINT)}\n\n`;
 
 /** @param {string} content */
 export function migrate_server(content) {

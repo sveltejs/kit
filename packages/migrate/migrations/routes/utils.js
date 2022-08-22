@@ -3,7 +3,7 @@ import path from 'path';
 import colors from 'kleur';
 import ts from 'typescript';
 import MagicString from 'magic-string';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 /** @param {string} message */
 export function bail(message) {
@@ -46,7 +46,7 @@ export function error(description, comment_id) {
  */
 export function move_file(file, renamed, content, use_git) {
 	if (use_git) {
-		execSync(`git mv ${JSON.stringify(file)} ${JSON.stringify(renamed)}`);
+		execFileSync('git', ['mv', file, renamed]);
 	} else {
 		fs.unlinkSync(file);
 	}

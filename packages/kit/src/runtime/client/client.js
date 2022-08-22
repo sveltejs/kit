@@ -1,15 +1,7 @@
 import { onMount, tick } from 'svelte';
-import { writable } from 'svelte/store';
 import { normalize_error } from '../../utils/error.js';
 import { LoadURL, decode_params, normalize_path } from '../../utils/url.js';
-import {
-	create_updated_store,
-	find_anchor,
-	get_base_uri,
-	get_href,
-	notifiable_store,
-	scroll_state
-} from './utils.js';
+import { find_anchor, get_base_uri, get_href, scroll_state } from './utils.js';
 import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 import { error } from '../../index/index.js';
@@ -17,6 +9,7 @@ import { error } from '../../index/index.js';
 import Root from '__GENERATED__/root.svelte';
 import { nodes, dictionary, matchers } from '__GENERATED__/client-manifest.js';
 import { HttpError, Redirect } from '../../index/private.js';
+import { stores } from './singletons.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -58,13 +51,6 @@ function update_scroll_positions(index) {
 export function create_client({ target, base, trailing_slash }) {
 	/** @type {Array<((href: string) => boolean)>} */
 	const invalidated = [];
-
-	const stores = {
-		url: notifiable_store({}),
-		page: notifiable_store({}),
-		navigating: writable(/** @type {import('types').Navigation | null} */ (null)),
-		updated: create_updated_store()
-	};
 
 	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
 	const load_cache = {
@@ -268,7 +254,22 @@ export function create_client({ target, base, trailing_slash }) {
 				navigation_result.props.page.url = url;
 			}
 
-			root.$set(navigation_result.props);
+			if (import.meta.env.DEV) {
+				// Nasty hack to silence harmless warnings the user can do nothing about
+				const warn = console.warn;
+				console.warn = (...args) => {
+					if (
+						args.length !== 1 ||
+						!/<(Layout|Page)(_[\w$]+)?> was created with unknown prop '(data|errors)'/.test(args[0])
+					) {
+						warn(...args);
+					}
+				};
+				root.$set(navigation_result.props);
+				tick().then(() => (console.warn = warn));
+			} else {
+				root.$set(navigation_result.props);
+			}
 		} else {
 			initialize(navigation_result);
 		}
@@ -330,7 +331,7 @@ export function create_client({ target, base, trailing_slash }) {
 			page = navigation_result.props.page;
 		}
 
-		const leaf_node = navigation_result.state.branch.at(-1);
+		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		router_enabled = leaf_node?.node.shared?.router !== false;
 
 		if (callback) callback();
@@ -347,11 +348,30 @@ export function create_client({ target, base, trailing_slash }) {
 
 		page = result.props.page;
 
-		root = new Root({
-			target,
-			props: { ...result.props, stores },
-			hydrate: true
-		});
+		if (import.meta.env.DEV) {
+			// Nasty hack to silence harmless warnings the user can do nothing about
+			const warn = console.warn;
+			console.warn = (...args) => {
+				if (
+					args.length !== 1 ||
+					!/<(Layout|Page)(_[\w$]+)?> was created with unknown prop '(data|errors)'/.test(args[0])
+				) {
+					warn(...args);
+				}
+			};
+			root = new Root({
+				target,
+				props: { ...result.props, stores },
+				hydrate: true
+			});
+			console.warn = warn;
+		} else {
+			root = new Root({
+				target,
+				props: { ...result.props, stores },
+				hydrate: true
+			});
+		}
 
 		if (router_enabled) {
 			const navigation = { from: null, to: new URL(location.href) };
@@ -540,25 +560,36 @@ export function create_client({ target, base, trailing_slash }) {
 				parent() {
 					uses.parent = true;
 					return parent();
-				},
-				// @ts-expect-error
-				get props() {
-					throw new Error(
-						'@migration task: Replace `props` with `data` stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
-					);
-				},
-				get session() {
-					// TODO remove this for 1.0
-					throw new Error(
-						'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
-					);
-				},
-				get stuff() {
-					throw new Error(
-						'@migration task: Remove stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
-					);
 				}
 			};
+
+			// TODO remove this for 1.0
+			Object.defineProperties(load_input, {
+				props: {
+					get() {
+						throw new Error(
+							'@migration task: Replace `props` with `data` stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
+						);
+					},
+					enumerable: false
+				},
+				session: {
+					get() {
+						throw new Error(
+							'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
+						);
+					},
+					enumerable: false
+				},
+				stuff: {
+					get() {
+						throw new Error(
+							'@migration task: Remove stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
+						);
+					},
+					enumerable: false
+				}
+			});
 
 			if (import.meta.env.DEV) {
 				try {

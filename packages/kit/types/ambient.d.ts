@@ -216,23 +216,15 @@ declare module '$app/paths' {
  * import { getStores, navigating, page, updated } from '$app/stores';
  * ```
  *
- * Stores are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `page` is unique to each request on the server, rather than shared between multiple requests handled by the same server simultaneously.
+ * Stores on the server are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `page` is unique to each request, rather than shared between multiple requests handled by the same server simultaneously.
  *
  * Because of that, you must subscribe to the stores during component initialization (which happens automatically if you reference the store value, e.g. as `$page`, in a component) before you can use them.
+ *
+ * In the browser, we don't need to worry about this, and stores can be accessed from anywhere. Code that will only ever run on the browser can refer to (or subscribe to) any of these stores at any time.
  */
 declare module '$app/stores' {
 	import { Readable } from 'svelte/store';
 	import { Navigation, Page } from '@sveltejs/kit';
-
-	/**
-	 * A convenience function around `getContext`. Must be called during component initialization.
-	 * Only use this if you need to defer store subscription until after the component has mounted, for some reason.
-	 */
-	export function getStores(): {
-		navigating: typeof navigating;
-		page: typeof page;
-		updated: typeof updated;
-	};
 
 	/**
 	 * A readable store whose value contains page data.
@@ -248,6 +240,16 @@ declare module '$app/stores' {
 	 *  A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 */
 	export const updated: Readable<boolean> & { check: () => boolean };
+
+	/**
+	 * A function that returns all of the contextual stores. On the server, this must be called during component initialization.
+	 * Only use this if you need to defer store subscription until after the component has mounted, for some reason.
+	 */
+	export function getStores(): {
+		navigating: typeof navigating;
+		page: typeof page;
+		updated: typeof updated;
+	};
 }
 
 /**

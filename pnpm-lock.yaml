@@ -262,7 +262,7 @@ importers:
 
   packages/create-svelte/templates/skeleton:
     specifiers:
-      '@sveltejs/adapter-auto': workspace:1.0.0-next.64
+      '@sveltejs/adapter-auto': workspace:*
     devDependencies:
       '@sveltejs/adapter-auto': link:../../../adapter-auto
 

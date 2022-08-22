@@ -248,7 +248,7 @@ export interface RequestEvent<
 }
 
 /**
- * A `(event: RequestEvent) => Response` function exported from a +server.js file that corresponds to an HTTP verb (`GET`, `PUT`, `PATCH`, etc) and handles requests with that method.
+ * A `(event: RequestEvent) => Response` function exported from a `+server.js` file that corresponds to an HTTP verb (`GET`, `PUT`, `PATCH`, etc) and handles requests with that method.
  *
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](/docs/types#generated-types) instead.
  */

@@ -58,7 +58,7 @@ export function migrate_page_server(content, filename) {
 							return;
 						}
 
-						automigration(value, file.code, dedent(nodes.body.getText()));
+						automigration(value, file.code, dedent(nodes.body?.getText() || ''));
 					});
 				}
 

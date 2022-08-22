@@ -123,6 +123,9 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 		resolve: {
 			alias: get_aliases(config.kit)
 		},
+		optimizeDeps: {
+			exclude: ['@sveltejs/kit']
+		},
 		ssr: {
 			noExternal: ['@sveltejs/kit']
 		},

@@ -1,5 +1,55 @@
 # @sveltejs/kit
 
+## 1.0.0-next.428
+
+### Patch Changes
+
+- Allow `$app/stores` to be used from anywhere on the browser ([#6100](https://github.com/sveltejs/kit/pull/6100))
+
+* use `enumerable: false` on "[x] no longer exists" getters so that they are not triggered by spreading ([#6105](https://github.com/sveltejs/kit/pull/6105))
+
+- Fix pattern matching for routes starting with an encoded `@` symbol ([#6110](https://github.com/sveltejs/kit/pull/6110))
+
+* Fix typos in generating `LayoutServerLoad.{name}` type ([#6123](https://github.com/sveltejs/kit/pull/6123))
+
+- Fix sorting of files into +layout, +error, everything else. ([#6108](https://github.com/sveltejs/kit/pull/6108))
+
+* Add test folder to generated tsconfig ([#6085](https://github.com/sveltejs/kit/pull/6085))
+
+## 1.0.0-next.427
+
+### Patch Changes
+
+- Throw error if browser.hydrate is false and browser.router is true ([#6086](https://github.com/sveltejs/kit/pull/6086))
+
+## 1.0.0-next.426
+
+### Patch Changes
+
+- Avoid using [].at(-1) in the client ([#6082](https://github.com/sveltejs/kit/pull/6082))
+
+## 1.0.0-next.425
+
+### Patch Changes
+
+- Silence more unknown prop warnings coming from SvelteKit ([#6078](https://github.com/sveltejs/kit/pull/6078))
+
+## 1.0.0-next.424
+
+### Patch Changes
+
+- prevent duplicate module ids by disabling optimizeDeps for @sveltejs/kit ([#6057](https://github.com/sveltejs/kit/pull/6057))
+
+* Generate types when Svelte file missing, fix layout params ([#6066](https://github.com/sveltejs/kit/pull/6066))
+
+- Silence unknown prop warnings coming from SvelteKit ([#6071](https://github.com/sveltejs/kit/pull/6071))
+
+## 1.0.0-next.423
+
+### Patch Changes
+
+- Accumulate data from parent layouts into `export let data` ([#6050](https://github.com/sveltejs/kit/pull/6050))
+
 ## 1.0.0-next.422
 
 ### Patch Changes
