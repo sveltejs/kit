@@ -27,7 +27,6 @@ const config = {
 		}
 	},
 	preprocess: [
-		// Test how combined user preprocessing works together with internal sveltekit preprocessing.
 		preprocess({
 			replace: [
 				[/sveltekit\:attribute/g, 'data-sveltekit-attribute'],

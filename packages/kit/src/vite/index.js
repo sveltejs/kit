@@ -63,24 +63,7 @@ const enforced_config = {
  * @return {import('vite').Plugin[]}
  */
 export function sveltekit() {
-	return [
-		...svelte({
-			// IDEA: Maybe vite-plugin-svelte can me modified to allow extending the user's svelte.config.js
-			// This would allow us to add inlineOptions with the preprocessing we need, without overwriting preprocessing from the user's config.
-			preprocess: [
-				preprocess({
-					// 	// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
-					// 	// TODO: Ensure the replacement happens for prerendered HTML too
-					replace: [
-						[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch'],
-						[/sveltekit\:reload/g, 'data-sveltekit-reload'],
-						[/sveltekit\:noscroll/g, 'data-sveltekit-noscroll']
-					]
-				})
-			]
-		}),
-		kit()
-	];
+	return [...svelte(), kit()];
 }
 
 /**
@@ -207,6 +190,19 @@ function kit() {
 
 	return {
 		name: 'vite-plugin-svelte-kit',
+
+		api: {
+			// Replace custom attributes with valid HTML attributes
+			sveltePreprocess: preprocess({
+				// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
+				// TODO: Ensure the replacement happens for SvelteKit packages too
+				replace: [
+					[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch'],
+					[/sveltekit\:reload/g, 'data-sveltekit-reload'],
+					[/sveltekit\:noscroll/g, 'data-sveltekit-noscroll']
+				]
+			})
+		},
 
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
