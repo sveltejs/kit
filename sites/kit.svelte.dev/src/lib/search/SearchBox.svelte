@@ -20,30 +20,34 @@
 	let has_pending = false;
 
 	onMount(async () => {
-		worker = new SearchWorker();
+		if ('serviceWorker' in navigator) {
+			worker = new SearchWorker();
 
-		worker.addEventListener('message', (event) => {
-			const { type, payload } = event.data;
+			worker.addEventListener('message', (event) => {
+				const { type, payload } = event.data;
 
-			if (type === 'ready') {
-				ready = true;
-			}
+				if (type === 'ready') {
+					ready = true;
+				}
 
-			if (type === 'results') {
-				search = payload;
-			}
+				if (type === 'results') {
+					search = payload;
+				}
 
-			if (type === 'recents') {
-				recent_searches = payload;
-			}
-		});
+				if (type === 'recents') {
+					recent_searches = payload;
+				}
+			});
 
-		worker.postMessage({
-			type: 'init',
-			payload: {
-				origin: location.origin
-			}
-		});
+			worker.postMessage({
+				type: 'init',
+				payload: {
+					origin: location.origin
+				}
+			});
+		} else {
+			console.warn("The search web worker can't be initialized in this platform, searching wouldn't work.");
+		}
 	});
 
 	afterNavigate(() => {

@@ -17,7 +17,9 @@
 	let positions = [];
 
 	onMount(async () => {
-		await document.fonts.ready;
+		if (document.fonts) {
+			await document.fonts.ready;
+		}
 
 		update();
 		highlight();
