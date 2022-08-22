@@ -185,7 +185,10 @@ test('fetches data from local endpoint', () => {
 		read('origin/__data.json'),
 		JSON.stringify({
 			type: 'data',
-			nodes: [{ data: null }, { data: { message: 'hello' } }]
+			nodes: [
+				{ type: 'data', data: null, uses: {} },
+				{ type: 'data', data: { message: 'hello' }, uses: null }
+			]
 		})
 	);
 	assert.equal(read('origin/message.json'), JSON.stringify({ message: 'hello' }));
