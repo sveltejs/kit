@@ -313,7 +313,7 @@ export function prevent_illegal_vite_imports(node, illegal_imports, module_types
  */
 function find_illegal_vite_imports(node, illegal_imports, module_types, seen = new Set()) {
 	if (!node.id) return null; // TODO when does this happen?
-	const name = removeQueryFromPath(normalizePath(node.id));
+	const name = remove_query_from_path(normalizePath(node.id));
 
 	if (path.extname(name) !== '' && (seen.has(name) || !module_types.has(path.extname(name)))) {
 		return null;
