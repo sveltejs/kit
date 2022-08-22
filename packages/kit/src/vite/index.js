@@ -294,9 +294,9 @@ function kit() {
 				case '\0$env/static/public':
 					return create_static_module('$env/static/public', env.public);
 				case '\0$env/dynamic/private':
-					return create_dynamic_module(false);
+					return create_dynamic_module('private');
 				case '\0$env/dynamic/public':
-					return create_dynamic_module(true);
+					return create_dynamic_module('public');
 			}
 		},
 
