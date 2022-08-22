@@ -80,7 +80,7 @@ For a route filename example like `src/routes/a/[b]/[...c]` and a `url.pathname`
 The name of the current route directory, relative to `src/routes`:
 
 ```js
-/// file: src/routes/blog/[slug]/+page.svelte
+/// file: src/routes/blog/[slug]/+page.js
 /** @type {import('./$types').PageLoad} */
 export function load({ routeId }) {
 	console.log(routeId); // 'blog/[slug]'
