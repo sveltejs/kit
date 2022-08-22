@@ -6,29 +6,31 @@ import { test } from '../../../utils.js';
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('$env', () => {
-	test('$env/dynamic/private is not statically importable from the client', async ({ page }) => {
-		const resp = await fetch('http://localhost:5173/env/dynamic-private');
+	test('$env/dynamic/private is not statically importable from the client', async ({ request }) => {
+		const resp = await request.get('/env/dynamic-private');
 		expect(await resp.text()).toMatch(
 			/.*Error: Cannot import \$env\/dynamic\/private into client-side code:.*/gs
 		);
 	});
 
-	test('$env/dynamic/private is not dynamically importable from the client', async ({ page }) => {
-		const resp = await fetch('http://localhost:5173/env/dynamic-private-dynamic-import');
+	test('$env/dynamic/private is not dynamically importable from the client', async ({
+		request
+	}) => {
+		const resp = await request.get('http://localhost:5173/env/dynamic-private-dynamic-import');
 		expect(await resp.text()).toMatch(
 			/.*Error: Cannot import \$env\/dynamic\/private into client-side code:.*/gs
 		);
 	});
 
-	test('$env/static/private is not statically importable from the client', async ({ page }) => {
-		const resp = await fetch('http://localhost:5173/env/static-private');
+	test('$env/static/private is not statically importable from the client', async ({ request }) => {
+		const resp = await request.get('http://localhost:5173/env/static-private');
 		expect(await resp.text()).toMatch(
 			/.*Error: Cannot import \$env\/static\/private into client-side code:.*/gs
 		);
 	});
 
-	test('$env/static/private is not dynamically importable from the client', async ({ page }) => {
-		const resp = await fetch('http://localhost:5173/env/static-private-dynamic-import');
+	test('$env/static/private is not dynamically importable from the client', async ({ request }) => {
+		const resp = await request.get('http://localhost:5173/env/static-private-dynamic-import');
 		expect(await resp.text()).toMatch(
 			/.*Error: Cannot import \$env\/static\/private into client-side code:.*/gs
 		);
