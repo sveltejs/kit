@@ -50,6 +50,10 @@ export interface BuildData {
 			imports: string[];
 			stylesheets: string[];
 		};
+		entry_legacy: {
+			file: string | null;
+			legacy_polyfills_file: string | null;
+		};
 		vite_manifest: import('vite').Manifest;
 	};
 	server: {

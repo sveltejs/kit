@@ -198,25 +198,6 @@ export async function render_response({
 		});
 	`;
 
-	let legacy_scripts = '';
-
-	if (entry_legacy) {
-		head += `<script type="module">!function(){try{new Function("m","return import(m)")}catch(o){console.warn("vite: loading legacy build because dynamic import is unsupported, syntax error above should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src=e.src,n.onload=function(){System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))},document.body.appendChild(n)}}();</script>`;
-
-		legacy_scripts = [
-			'<script nomodule>!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();</script>',
-			`<script nomodule id="vite-legacy-polyfill" src=${s(
-				entry_legacy.polyfills
-			)}></script>`,
-			`<script nomodule id="vite-legacy-entry" data-src="${s(
-				entry_legacy.file
-			)}">System.import(${s(
-				entry_legacy.file
-			)}).then(function (m){m.start(window.__KIT_DATA__);});
-		</script>`
-		].join('\n\t\t');
-	}
-
 	// we use an anonymous function instead of an arrow function to support
 	// older browsers (https://github.com/sveltejs/kit/pull/5417)
 	const init_service_worker = `
@@ -278,6 +259,59 @@ export async function render_response({
 		}
 
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
+	}
+
+	let legacy_scripts = '';// TODO: Get rid of this
+
+	if (entry_legacy.file || entry_legacy.legacy_polyfills_file) {
+		// TODO: Make sure we have the appropriate scripts from Vite legacy plugin
+
+		// TODO: Move the details to its own global def(e.g. `window.__KIT_DATA__`), to share between legacy&modern
+		const startDetails = `{
+			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
+			paths: ${s(options.paths)},
+			route: ${!!page_config.router},
+			spa: ${!resolve_opts.ssr},
+			trailing_slash: ${s(options.trailing_slash)},
+			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
+				status: ${status},
+				error: ${error && serialize_error(error, e => e.stack)},
+				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
+				legacy_nodes: [${branch.map(({ node }) => node.legacy).join(', ')}],
+				params: ${devalue(event.params)},
+				routeId: ${s(event.routeId)}
+			}` : 'null'}
+		}`;
+
+		// From vite plugin legacy:
+		// we set the entry path on the element as an attribute so that the
+		// script content will stay consistent - which allows using a constant
+		// hash value for CSP.
+		const legacyEntryId = 'vite-legacy-entry';
+
+		// TODO: Have interaction with the main non-legacy call to start, to not excecute it twice (on special cases).
+		const importAndStartCall = `System.import(document.getElementById('${legacyEntryId}').getAttribute('data-src')).then(function(m){m.set_public_env(${s(options.public_env)}); m.start(${startDetails});});`;
+
+		var legacyScripts = [
+			'<script nomodule>!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();</script>',
+		];
+
+		if (entry_legacy.legacy_polyfills_file) {
+			legacyScripts.push(`<script nomodule id="vite-legacy-polyfill" src=${s(
+				entry_legacy.legacy_polyfills_file
+			)}></script>`);
+		}
+
+		if (entry_legacy.file) {
+			legacyScripts = legacyScripts.concat([
+				`<script nomodule id="${legacyEntryId}" data-src=${s(entry_legacy.file)}>${importAndStartCall}</script>`,
+				`<script type="module">!function(){try{new Function("m","return import(m)")}catch(o){console.warn("vite: loading legacy build because dynamic import is unsupported, syntax error above should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src=e.src,n.onload=function(){${importAndStartCall}},document.body.appendChild(n)}}();</script>`,
+			]);
+		}
+
+		body += ([''].concat(legacyScripts)).join('\n\t\t');
+
+		// TODO: Should it be added to CSP?
 	}
 
 	if (resolve_opts.ssr && page_config.hydrate) {

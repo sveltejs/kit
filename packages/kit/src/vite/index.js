@@ -169,6 +169,7 @@ function kit() {
 	/**
 	 * @param {import('rollup').OutputAsset[]} assets
 	 * @param {import('rollup').OutputChunk[]} chunks
+	 * @returns {import('types').BuildData['client']}
 	 */
 	function client_build_info(assets, chunks) {
 		/** @type {import('vite').Manifest} */
@@ -176,12 +177,29 @@ function kit() {
 			fs.readFileSync(`${paths.client_out_dir}/${vite_config.build.manifest}`, 'utf-8')
 		);
 
+		/**
+		 * 
+		 * @param {string} entry
+		 */
+		const find_file_if_exist = (entry) =>
+			(entry in vite_manifest) ? '/' + vite_manifest[entry].file : null;// TODO: Handle the "/" more correctly
+
 		const entry_id = posixify(path.relative(cwd, `${runtime_directory}/client/start.js`));
+		const entry_legacy_id = posixify(path.relative(cwd, `${runtime_directory}/client/start-legacy.js`));// TODO: Use the convertion function?
+		const legacy_polyfills_id = 'vite/legacy-polyfills-legacy';// TODO: Use the convertion function?
+		// TODO: Support also modern polyfills? Just need another import
+		// TODO: Can we have automatic detection of legacy chunks to be configuraless? (detect legacy only by reading the manifest)
+
+		const entry_legacy = {
+			file: find_file_if_exist(entry_legacy_id),
+			legacy_polyfills_file: find_file_if_exist(legacy_polyfills_id)
+		};
 
 		return {
 			assets,
 			chunks,
 			entry: find_deps(vite_manifest, entry_id, false),
+			entry_legacy,
 			vite_manifest
 		};
 	}

@@ -558,6 +558,7 @@ importers:
       svelte: ^3.48.0
       terser: '>=5.4.0 <6.0.0'
       typescript: ^4.7.4
+      unorm: ^1.6.0
       vite: ^3.0.8
       vite-imagetools: ^4.0.3
     devDependencies:
@@ -576,6 +577,7 @@ importers:
       svelte: 3.48.0
       terser: 5.14.2
       typescript: 4.7.4
+      unorm: 1.6.0
       vite: 3.0.9_terser@5.14.2
       vite-imagetools: 4.0.3
 
@@ -4491,6 +4493,11 @@ packages:
   /universalify/0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
+    dev: true
+
+  /unorm/1.6.0:
+    resolution: {integrity: sha512-b2/KCUlYZUeA7JFUuRJZPUtr4gZvBh7tavtv4fvk4+KV9pfGiR6CQAQAWl49ZpR3ts2dk4FYkP7EIgDJoiOLDA==}
+    engines: {node: '>= 0.4.0'}
     dev: true
 
   /urix/0.1.0:

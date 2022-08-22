@@ -314,9 +314,9 @@ export interface SSRManifest {
 			imports: string[];
 			stylesheets: string[];
 		};
-		entry_legacy?: {
-			file: string;
-			polyfills: string;
+		entry_legacy: {
+			file: string | null;
+			legacy_polyfills_file: string | null;
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
