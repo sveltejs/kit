@@ -9,10 +9,8 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-    "paths": {
-      "types": [
-        "../../../../types/internal"
-      ]
-    }
-	},
+		"paths": {
+			"types": ["../../../../types/internal"]
+		}
+	}
 }
