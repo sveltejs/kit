@@ -471,7 +471,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   routeId: string | null;
-	 * 	 server_data_node: import('types').ServerDataNode | import('types').ServerErrorNode | null;
+	 * 	 server_data_node: import('./types').DataNode | import('types').ServerErrorNode | null;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
@@ -619,18 +619,8 @@ export function create_client({ target, base, trailing_slash }) {
 		return {
 			node,
 			loader,
-			server: server_data_node
-				? {
-						data: server_data_node.data,
-						uses: {
-							dependencies: new Set(server_data_node.uses.dependencies ?? []),
-							params: new Set(server_data_node.uses.params ?? []),
-							parent: !!server_data_node.uses.parent,
-							url: !!server_data_node.uses.url
-						}
-				  }
-				: null,
-			shared: node.shared?.load ? { data, uses } : null,
+			server: server_data_node,
+			shared: node.shared?.load ? { type: 'data', data, uses } : null,
 			data: data ?? server_data_node?.data ?? null
 		};
 	}
@@ -658,13 +648,13 @@ export function create_client({ target, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode} node
-	 * @param {import('./types').DataNode | null} previous
-	 * @returns {import('./types').DataNode | null}
+	 * @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | null} node
+	 * @returns {import('./types').DataNode | undefined}
 	 */
-	function create_data_node(node, previous) {
-		if (node.type === 'data') {
+	function create_data_node(node) {
+		if (node?.type === 'data') {
 			return {
+				type: 'data',
 				data: node.data,
 				uses: {
 					dependencies: new Set(node.uses.dependencies ?? []),
@@ -674,8 +664,6 @@ export function create_client({ target, base, trailing_slash }) {
 				}
 			};
 		}
-
-		return previous;
 	}
 
 	/**
@@ -752,7 +740,8 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @type {import('./types').BranchNode | undefined} */
 			const previous = current.branch[i];
 
-			const can_reuse_server_data = !server_data_nodes?.[i] || server_data_nodes[i].type === 'skip';
+			const can_reuse_server_data =
+				!server_data_nodes?.[i] || server_data_nodes[i]?.type === 'skip';
 
 			// re-use data from previous load if it's still valid
 			const valid =
@@ -787,8 +776,7 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 					return data;
 				},
-				server_data_node:
-					server_data_node && create_data_node(server_data_node, previous ? previous.server : null)
+				server_data_node: create_data_node(server_data_node) ?? previous?.server ?? null
 			});
 		});
 
@@ -895,16 +883,7 @@ export function create_client({ target, base, trailing_slash }) {
 		const root_error = {
 			node: await default_error_loader(),
 			loader: default_error_loader,
-			shared: {
-				// TODO make all this unnecessary
-				data: null,
-				uses: {
-					params: new Set(),
-					url: false,
-					dependencies: new Set(),
-					parent: false
-				}
-			},
+			shared: null,
 			server: null,
 			data: null
 		};
@@ -1321,16 +1300,7 @@ export function create_client({ target, base, trailing_slash }) {
 							}
 							return data;
 						},
-						server_data_node: {
-							data: server_data_node?.data ?? null,
-							uses: {
-								// TODO DRY out with create_data_node
-								dependencies: new Set(server_data_node?.uses.dependencies ?? []),
-								params: new Set(server_data_node?.uses.params ?? []),
-								parent: server_data_node?.uses.parent ? true : false,
-								url: server_data_node?.uses.url ? true : false
-							}
-						}
+						server_data_node: create_data_node(server_data_node) ?? null
 					});
 				});
 

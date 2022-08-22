@@ -8,6 +8,7 @@ import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  * }} opts
+ * @returns {Promise<import('types').ServerDataNode | null>}
  */
 export async function load_server_data({ dev, event, node, parent }) {
 	if (!node?.server) return null;
@@ -79,21 +80,22 @@ export async function load_server_data({ dev, event, node, parent }) {
  *   fetcher: typeof fetch;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
- *   server_data_promise: Promise<{ data: Record<string, any> } | null>;
+ *   server_data_promise: Promise<import('types').ServerDataNode | null>;
  *   state: import('types').SSRState;
  * }} opts
+ * @returns {Promise<Record<string, any> | null>}
  */
 export async function load_data({ event, fetcher, node, parent, server_data_promise, state }) {
-	const server_data = await server_data_promise;
+	const server_data_node = await server_data_promise;
 
 	if (!node?.shared?.load) {
-		return server_data?.data;
+		return server_data_node?.data ?? null;
 	}
 
 	const load_input = {
 		url: state.prerendering ? new PrerenderingURL(event.url) : new LoadURL(event.url),
 		params: event.params,
-		data: server_data?.data ?? null,
+		data: server_data_node?.data ?? null,
 		routeId: event.routeId,
 		fetch: fetcher,
 		setHeaders: event.setHeaders,

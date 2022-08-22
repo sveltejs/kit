@@ -266,7 +266,11 @@ export async function respond(request, options, state) {
 							const functions = node_ids.map((n, i) => {
 								return once(async () => {
 									try {
-										if (aborted) return { type: 'skip' };
+										if (aborted) {
+											return /** @type {import('types').ServerDataSkippedNode} */ ({
+												type: 'skip'
+											});
+										}
 
 										// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
 										const node = n == undefined ? n : await options.manifest._.nodes[n]();
@@ -295,9 +299,9 @@ export async function respond(request, options, state) {
 
 							const promises = functions.map(async (fn, i) => {
 								if (!invalidated[i]) {
-									return {
+									return /** @type {import('types').ServerDataSkippedNode} */ ({
 										type: 'skip'
-									};
+									});
 								}
 
 								return fn();
@@ -316,18 +320,18 @@ export async function respond(request, options, state) {
 										length = Math.min(length, i + 1);
 
 										if (error instanceof HttpError) {
-											return {
+											return /** @type {import('types').ServerErrorNode} */ ({
 												type: 'error',
 												httperror: { ...error }
-											};
+											});
 										}
 
 										options.handle_error(error, event);
 
-										return {
+										return /** @type {import('types').ServerErrorNode} */ ({
 											type: 'error',
 											error: error_to_pojo(error, options.get_stack)
-										};
+										});
 									})
 								)
 							);
