@@ -17,6 +17,7 @@ import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry, prevent_illegal_rollup_imports, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
 import { create_module } from '../core/env.js';
+import preprocess from 'svelte-preprocess';
 
 const cwd = process.cwd();
 
@@ -58,14 +59,28 @@ const enforced_config = {
 	root: true
 };
 
-// TODO: Figure out how to reload the svelte.config.js when changes happen.
-const svelte_config = await load_config();
-
 /**
  * @return {import('vite').Plugin[]}
  */
 export function sveltekit() {
-	return [...svelte({ configFile: false, ...svelte_config }), kit()];
+	return [
+		...svelte({
+			// IDEA: Maybe vite-plugin-svelte can me modified to allow extending the user's svelte.config.js
+			// This would allow us to add inlineOptions with the preprocessing we need, without overwriting preprocessing from the user's config.
+			preprocess: [
+				preprocess({
+					// 	// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
+					// 	// TODO: Ensure the replacement happens for prerendered HTML too
+					replace: [
+						[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch'],
+						[/sveltekit\:reload/g, 'data-sveltekit-reload'],
+						[/sveltekit\:noscroll/g, 'data-sveltekit-noscroll']
+					]
+				})
+			]
+		}),
+		kit()
+	];
 }
 
 /**

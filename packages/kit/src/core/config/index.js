@@ -64,23 +64,23 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 
-	const replaceSveltkitAttributes = preprocess({
-		// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
-		// TODO: Ensure the replacement happens for prerendered HTML too
-		replace: [
-			[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch'],
-			[/sveltekit\:reload/g, 'data-sveltekit-reload'],
-			[/sveltekit\:noscroll/g, 'data-sveltekit-noscroll']
-		]
-	});
+	// const replaceSveltkitAttributes = preprocess({
+	// 	// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
+	// 	// TODO: Ensure the replacement happens for prerendered HTML too
+	// 	replace: [
+	// 		[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch'],
+	// 		[/sveltekit\:reload/g, 'data-sveltekit-reload'],
+	// 		[/sveltekit\:noscroll/g, 'data-sveltekit-noscroll']
+	// 	]
+	// });
 
-	// TODO: Update types of `config.preprocess` to get type safety here. Use correct typing and validation from vite-plugin-svelte
-	// TODO: This needs to support all valid configs for preprocess, possibly including objects and not just arrays.
-	if (Array.isArray(validated.preprocess)) {
-		validated.preprocess.push(replaceSveltkitAttributes);
-	} else {
-		validated.preprocess = [replaceSveltkitAttributes];
-	}
+	// // TODO: Update types of `config.preprocess` to get type safety here. Use correct typing and validation from vite-plugin-svelte
+	// // TODO: This needs to support all valid configs for preprocess, possibly including objects and not just arrays.
+	// if (Array.isArray(validated.preprocess)) {
+	// 	validated.preprocess.push(replaceSveltkitAttributes);
+	// } else {
+	// 	validated.preprocess = [replaceSveltkitAttributes];
+	// }
 
 	for (const key in validated.kit.files) {
 		// @ts-expect-error this is typescript at its stupidest
