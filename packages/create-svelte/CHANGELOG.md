@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.159
+
+### Patch Changes
+
+- Update text referring to route location ([#6134](https://github.com/sveltejs/kit/pull/6134))
+
 ## 2.0.0-next.158
 
 ### Patch Changes
