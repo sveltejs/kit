@@ -82,20 +82,14 @@ test('generates __data.json file for shadow endpoints', () => {
 		read('__data.json'),
 		JSON.stringify({
 			type: 'data',
-			nodes: [
-				{ type: 'data', data: null, uses: {} },
-				{ type: 'data', data: { message: 'hello' }, uses: {} }
-			]
+			nodes: [null, { type: 'data', data: { message: 'hello' }, uses: {} }]
 		})
 	);
 	assert.equal(
 		read('shadowed-get/__data.json'),
 		JSON.stringify({
 			type: 'data',
-			nodes: [
-				{ type: 'data', data: null, uses: {} },
-				{ type: 'data', data: { answer: 42 }, uses: {} }
-			]
+			nodes: [null, { type: 'data', data: { answer: 42 }, uses: {} }]
 		})
 	);
 });
@@ -185,10 +179,7 @@ test('fetches data from local endpoint', () => {
 		read('origin/__data.json'),
 		JSON.stringify({
 			type: 'data',
-			nodes: [
-				{ type: 'data', data: null, uses: {} },
-				{ type: 'data', data: { message: 'hello' }, uses: null }
-			]
+			nodes: [null, { type: 'data', data: { message: 'hello' }, uses: {} }]
 		})
 	);
 	assert.equal(read('origin/message.json'), JSON.stringify({ message: 'hello' }));

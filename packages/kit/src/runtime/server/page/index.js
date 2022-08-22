@@ -292,7 +292,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 				response: new Response(undefined),
 				body: JSON.stringify({
 					type: 'data',
-					nodes: branch.map((branch_node) => ({ data: branch_node?.server_data }))
+					nodes: branch.map((branch_node) => branch_node?.server_data)
 				})
 			});
 		}
