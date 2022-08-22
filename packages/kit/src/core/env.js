@@ -25,11 +25,11 @@ export function create_static_module(id, env) {
 }
 
 /**
- * @param {boolean} pub
+ * @param {'public' | 'private'} type
  * @returns {string}
  */
-export function create_dynamic_module(pub) {
-	return `export { env } from '${runtime_base}/env-${pub ? 'public' : 'private'}.js';`;
+export function create_dynamic_module(type) {
+	return `export { env } from '${runtime_base}/env-${type}.js';`;
 }
 
 /**
