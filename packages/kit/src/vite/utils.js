@@ -225,13 +225,9 @@ export function prevent_illegal_rollup_imports(node_getter, node, illegal_import
 
 const query_pattern = /\?.*$/s;
 
-/**
- *
- * @param {string} path
- * @returns {string}
- */
-function removeQueryFromPath(path) {
-	return path.replace(queryRE, '');
+/** @param {string} path */
+function remove_query_from_path(path) {
+	return path.replace(query_pattern, '');
 }
 
 /**
