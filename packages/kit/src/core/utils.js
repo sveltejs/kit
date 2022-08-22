@@ -17,7 +17,9 @@ export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', im
 export const runtime_prefix = posixify_path(runtime_directory);
 
 /**
- * TODO: Make good comment
+ * This allows us to import SvelteKit internals that aren't exposed via `pkg.exports` in a
+ * way that works whether `@sveltejs/kit` is installed inside the project's `node_modules`
+ * or in a workspace root
  */
 export const runtime_base = runtime_directory.startsWith(process.cwd())
 	? `/${path.relative('.', runtime_directory)}`
