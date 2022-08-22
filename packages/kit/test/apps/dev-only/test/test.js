@@ -23,7 +23,7 @@ test.describe('$env', () => {
 	});
 
 	test('$env/static/private is not statically importable from the client', async ({ request }) => {
-		const resp = await request.get('http://localhost:5173/env/static-private');
+		const resp = await request.get('/env/static-private');
 		expect(await resp.text()).toMatch(
 			/.*Error: Cannot import \$env\/static\/private into client-side code:.*/gs
 		);
