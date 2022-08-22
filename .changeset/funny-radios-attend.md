@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: \$env/\*/private are no longer importable in client
+[fix] Prevent import of `$env/*/private` in client
