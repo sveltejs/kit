@@ -16,7 +16,7 @@ test.describe('$env', () => {
 	test('$env/dynamic/private is not dynamically importable from the client', async ({
 		request
 	}) => {
-		const resp = await request.get('http://localhost:5173/env/dynamic-private-dynamic-import');
+		const resp = await request.get('/env/dynamic-private-dynamic-import');
 		expect(await resp.text()).toMatch(
 			/.*Error: Cannot import \$env\/dynamic\/private into client-side code:.*/gs
 		);
