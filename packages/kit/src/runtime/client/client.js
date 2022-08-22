@@ -16,10 +16,13 @@ const INDEX_KEY = 'sveltekit:index';
 
 const routes = parse(nodes, dictionary, matchers);
 
+const default_layout_loader = nodes[0];
+const default_error_loader = nodes[1];
+
 // we import the root layout/error nodes eagerly, so that
 // connectivity errors after initialisation don't nuke the app
-const default_layout = nodes[0]();
-const default_error = nodes[1]();
+default_layout_loader();
+default_error_loader();
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -463,16 +466,24 @@ export function create_client({ target, base, trailing_slash }) {
 	 * If `server_data` is passed, this is treated as the initial run and the page endpoint is not requested.
 	 *
 	 * @param {{
-	 *   node: import('types').CSRPageNode;
+	 *   loader: import('types').CSRPageNodeLoader;
 	 * 	 parent: () => Promise<Record<string, any>>;
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   routeId: string | null;
-	 * 	 server_data_node: import('./types').DataNode | null;
+	 * 	 server_data_node: import('types').ServerDataNode | import('types').ServerErrorNode | null;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
-	async function load_node({ node, parent, url, params, routeId, server_data_node }) {
+	async function load_node({ loader, parent, url, params, routeId, server_data_node }) {
+		if (server_data_node?.type === 'error') {
+			if (server_data_node.httperror) {
+				throw error(server_data_node.httperror.status, server_data_node.httperror.message);
+			}
+
+			throw server_data_node.error;
+		}
+
 		/** @type {Record<string, any> | null} */
 		let data = null;
 
@@ -483,6 +494,8 @@ export function create_client({ target, base, trailing_slash }) {
 			parent: false,
 			url: false
 		};
+
+		const node = await loader();
 
 		if (node.shared?.load) {
 			/** @param {string[]} deps */
@@ -605,6 +618,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 		return {
 			node,
+			loader,
 			server: server_data_node
 				? {
 						data: server_data_node.data,
@@ -622,11 +636,13 @@ export function create_client({ target, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('types').Uses} uses
+	 * @param {import('types').Uses | undefined} uses
 	 * @param {boolean} parent_changed
 	 * @param {{ url: boolean, params: string[] }} changed
 	 */
 	function detect_change(changed, parent_changed, uses) {
+		if (!uses) return false;
+
 		if (uses.parent && parent_changed) return true;
 		if (changed.url && uses.url) return true;
 
@@ -687,49 +703,27 @@ export function create_client({ target, base, trailing_slash }) {
 
 		// To avoid waterfalls when someone awaits a parent, compute as much as possible here already
 
-		let server_parent_changed = false;
-		let shared_parent_changed = false;
-
-		/** @type {Array<{ server: boolean, shared: boolean } | null>} */
-		const nodes_changed_since_last_render = loaders.map((loader, i) => {
-			if (!loader) return null;
-
-			const previous = current.branch[i];
-			if (!previous) {
-				return {
-					server: (server_parent_changed = true),
-					shared: (shared_parent_changed = true)
-				};
-			}
-
-			// TODO if the previous node errored, we might need to always include it?
-			const { server, shared } = previous;
-
-			const result = {
-				server: server ? detect_change(changed, server_parent_changed, server.uses) : false,
-				shared: shared ? detect_change(changed, shared_parent_changed, shared.uses) : false
-			};
-
-			if (result.server) server_parent_changed = true;
-			if (result.shared) shared_parent_changed = true;
-
-			return result;
-		});
-
-		console.log(nodes_changed_since_last_render);
-
 		/** @type {import('types').ServerData | null} */
 		let server_data = null;
 
-		if (route.uses_server_data) {
+		const invalid_server_nodes = accumulate(loaders, (loader, i, acc) => {
+			if (!loader) return false;
+
+			const previous = current.branch[i];
+
+			return (
+				previous?.loader !== loader ||
+				detect_change(changed, acc.some(Boolean), previous.server?.uses)
+			);
+		});
+
+		if (route.uses_server_data && invalid_server_nodes.some(Boolean)) {
 			try {
 				const res = await native_fetch(
 					`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 					{
 						headers: {
-							'x-svelte-kit-invalidated': nodes_changed_since_last_render
-								.map((node) => (node?.server ? '1' : '0'))
-								.join(',')
+							'x-svelte-kit-invalidated': invalid_server_nodes.map((x) => (x ? '1' : '')).join(',')
 						}
 					}
 				);
@@ -750,47 +744,49 @@ export function create_client({ target, base, trailing_slash }) {
 
 		const server_data_nodes = server_data?.nodes;
 
+		let parent_changed = false;
+
 		const branch_promises = loaders.map(async (loader, i) => {
-			return Promise.resolve().then(async () => {
-				if (!loader) return;
-				const node = await loader();
+			if (!loader) return;
 
-				/** @type {import('./types').BranchNode | undefined} */
-				const previous = current.branch[i];
-				const changed_since_last_render =
-					nodes_changed_since_last_render[i] || !previous || node !== previous.node;
+			/** @type {import('./types').BranchNode | undefined} */
+			const previous = current.branch[i];
 
-				if (changed_since_last_render) {
-					const server_data_node = server_data_nodes?.[i] ?? null;
+			// re-use data from previous load if it's still valid
+			const valid =
+				!invalid_server_nodes[i] &&
+				loader === previous?.loader &&
+				!detect_change(changed, parent_changed, previous.shared?.uses);
 
-					if (server_data_node?.type === 'error') {
-						if (server_data_node.httperror) {
-							// reconstruct as an HttpError
-							throw error(server_data_node.httperror.status, server_data_node.httperror.message);
-						} else {
-							throw server_data_node.error;
-						}
-					}
+			if (valid) return previous;
 
-					return await load_node({
-						node,
-						url,
-						params,
-						routeId: route.id,
-						parent: async () => {
-							const data = {};
-							for (let j = 0; j < i; j += 1) {
-								Object.assign(data, (await branch_promises[j])?.data);
-							}
-							return data;
-						},
-						server_data_node:
-							server_data_node &&
-							create_data_node(server_data_node, previous ? previous.server : null)
-					});
+			parent_changed = true;
+
+			const server_data_node = server_data_nodes?.[i] ?? null;
+
+			if (server_data_node?.type === 'error') {
+				if (server_data_node.httperror) {
+					// reconstruct as an HttpError
+					throw error(server_data_node.httperror.status, server_data_node.httperror.message);
 				} else {
-					return previous;
+					throw server_data_node.error;
 				}
+			}
+
+			return load_node({
+				loader,
+				url,
+				params,
+				routeId: route.id,
+				parent: async () => {
+					const data = {};
+					for (let j = 0; j < i; j += 1) {
+						Object.assign(data, (await branch_promises[j])?.data);
+					}
+					return data;
+				},
+				server_data_node:
+					server_data_node && create_data_node(server_data_node, previous ? previous.server : null)
 			});
 		});
 
@@ -827,9 +823,10 @@ export function create_client({ target, base, trailing_slash }) {
 							try {
 								error_loaded = {
 									node: await errors[i](),
+									loader: errors[i],
 									data: {},
-									server_uses: null,
-									shared_uses: null
+									server: null,
+									shared: null
 								};
 
 								return await get_navigation_result_from_branch({
@@ -883,7 +880,7 @@ export function create_client({ target, base, trailing_slash }) {
 		const params = {}; // error page does not have params
 
 		const root_layout = await load_node({
-			node: await default_layout,
+			loader: default_layout_loader,
 			url,
 			params,
 			routeId,
@@ -892,16 +889,22 @@ export function create_client({ target, base, trailing_slash }) {
 			server_data_node: null
 		});
 
+		/** @type {import('./types').BranchNode} */
 		const root_error = {
-			node: await default_error,
-			data: null,
-			// TODO make this unnecessary
-			uses: {
-				params: new Set(),
-				url: false,
-				dependencies: new Set(),
-				parent: false
-			}
+			node: await default_error_loader(),
+			loader: default_error_loader,
+			shared: {
+				// TODO make all this unnecessary
+				data: null,
+				uses: {
+					params: new Set(),
+					url: false,
+					dependencies: new Set(),
+					parent: false
+				}
+			},
+			server: null,
+			data: null
 		};
 
 		return await get_navigation_result_from_branch({
@@ -1050,7 +1053,8 @@ export function create_client({ target, base, trailing_slash }) {
 			if (resource === undefined) {
 				// Force rerun of all load functions, regardless of their dependencies
 				for (const node of current.branch) {
-					node?.uses.dependencies.add('');
+					node?.server?.uses.dependencies.add('');
+					node?.shared?.uses.dependencies.add('');
 				}
 				invalidated.push(() => true);
 			} else if (typeof resource === 'function') {
@@ -1304,7 +1308,7 @@ export function create_client({ target, base, trailing_slash }) {
 					const server_data_node = server_data_nodes[i];
 
 					return load_node({
-						node: await nodes[n](),
+						loader: nodes[n],
 						url,
 						params,
 						routeId,
@@ -1315,7 +1319,16 @@ export function create_client({ target, base, trailing_slash }) {
 							}
 							return data;
 						},
-						server_data_node
+						server_data_node: {
+							data: server_data_node?.data ?? null,
+							uses: {
+								// TODO DRY out with create_data_node
+								dependencies: new Set(server_data_node?.uses.dependencies ?? []),
+								params: new Set(server_data_node?.uses.params ?? []),
+								parent: server_data_node?.uses.parent ? true : false,
+								url: server_data_node?.uses.url ? true : false
+							}
+						}
 					});
 				});
 
@@ -1355,4 +1368,20 @@ export function create_client({ target, base, trailing_slash }) {
 			initialize(result);
 		}
 	};
+}
+
+/**
+ * @template T
+ * @param {T[]} array
+ * @param {(item: T, i: number, acc: boolean[]) => boolean} fn
+ */
+function accumulate(array, fn) {
+	/** @type {boolean[]} */
+	const acc = [];
+
+	for (let i = 0; i < array.length; i += 1) {
+		acc.push(fn(array[i], i, acc));
+	}
+
+	return acc;
 }

@@ -592,3 +592,41 @@ test('can use $app/stores from anywhere on client', async ({ page }) => {
 	await page.click('button');
 	await expect(page.locator('h1')).toHaveText('/store/client-access');
 });
+
+test.describe.serial('Invalidation', () => {
+	test('+layout.server.js does not re-run when downstream load functions are invalidated', async ({
+		page,
+		request,
+		clicknav
+	}) => {
+		await request.get('/load/unchanged/reset');
+
+		await page.goto('/load/unchanged/isolated/a');
+		expect(await page.textContent('h1')).toBe('slug: a');
+		expect(await page.textContent('h2')).toBe('count: 0');
+
+		await clicknav('[href="/load/unchanged/isolated/b"]');
+		expect(await page.textContent('h1')).toBe('slug: b');
+		expect(await page.textContent('h2')).toBe('count: 0');
+	});
+
+	test('+layout.server.js re-runs when await parent() is called from downstream load function', async ({
+		page,
+		request,
+		clicknav
+	}) => {
+		await request.get('/load/unchanged/reset');
+
+		await page.goto('/load/unchanged/uses-parent/a');
+		expect(await page.textContent('h1')).toBe('slug: a');
+		expect(await page.textContent('h2')).toBe('count: 0');
+		expect(await page.textContent('h3')).toBe('doubled: 0');
+
+		await clicknav('[href="/load/unchanged/uses-parent/b"]');
+		expect(await page.textContent('h1')).toBe('slug: b');
+		expect(await page.textContent('h2')).toBe('count: 0');
+
+		// this looks wrong, but is actually the intended behaviour (the increment side-effect in a GET would be a bug in a real app)
+		expect(await page.textContent('h3')).toBe('doubled: 2');
+	});
+});

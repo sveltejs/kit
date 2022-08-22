@@ -10,6 +10,7 @@ import { negotiate } from '../../utils/http.js';
 import { HttpError, Redirect } from '../../index/private.js';
 import { load_server_data } from './page/load_data.js';
 import { json } from '../../index/index.js';
+import { once } from '../../utils/functions.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -254,34 +255,47 @@ export async function respond(request, options, state) {
 					let response;
 					if (is_data_request && route.type === 'page') {
 						try {
+							const node_ids = [...route.layouts, route.leaf];
+
+							const invalidated =
+								request.headers.get('x-svelte-kit-invalidated')?.split(',').map(Boolean) ??
+								node_ids.map(() => true);
+
 							let aborted = false;
 
-							const promises = [...route.layouts, route.leaf].map(async (n, i) => {
-								try {
-									if (aborted) return null;
+							const functions = node_ids.map((n, i) => {
+								return once(async () => {
+									try {
+										if (aborted) return null;
 
-									// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
-									const node = n == undefined ? n : await options.manifest._.nodes[n]();
-									return await load_server_data({
-										dev: options.dev,
-										event,
-										node,
-										parent: async () => {
-											/** @type {Record<string, any>} */
-											const data = {};
-											for (let j = 0; j < i; j += 1) {
-												const parent = /** @type {import('types').ServerDataNode} */ (
-													await promises[j]
-												);
-												Object.assign(data, parent.data);
+										// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
+										const node = n == undefined ? n : await options.manifest._.nodes[n]();
+										return load_server_data({
+											dev: options.dev,
+											event,
+											node,
+											parent: async () => {
+												/** @type {Record<string, any>} */
+												const data = {};
+												for (let j = 0; j < i; j += 1) {
+													const parent = /** @type {import('types').ServerDataNode} */ (
+														await functions[j]()
+													);
+													Object.assign(data, parent.data);
+												}
+												return data;
 											}
-											return data;
-										}
-									});
-								} catch (e) {
-									aborted = true;
-									throw e;
-								}
+										});
+									} catch (e) {
+										aborted = true;
+										throw e;
+									}
+								});
+							});
+
+							const promises = functions.map(async (fn, i) => {
+								if (!invalidated[i]) return null;
+								return fn();
 							});
 
 							let length = promises.length;

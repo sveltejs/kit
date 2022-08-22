@@ -6,7 +6,7 @@ import {
 	prefetch,
 	prefetchRoutes
 } from '$app/navigation';
-import { CSRPageNode, CSRRoute, Uses } from 'types';
+import { CSRPageNode, CSRPageNodeLoader, CSRRoute, ServerDataNode, Uses } from 'types';
 import { HttpError } from '../../index/private.js';
 import { SerializedHttpError } from '../server/page/types.js';
 
@@ -65,7 +65,8 @@ export type NavigationFinished = {
 
 export type BranchNode = {
 	node: CSRPageNode;
-	server: DataNode | null;
+	loader: CSRPageNodeLoader;
+	server: ServerDataNode | null;
 	shared: DataNode | null;
 	data: Record<string, any> | null;
 };

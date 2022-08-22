@@ -876,42 +876,6 @@ test.describe('Load', () => {
 		).toBe('rgb(255, 0, 0)');
 	});
 
-	test.only('+layout.server.js does not re-run when downstream load functions are invalidated', async ({
-		page,
-		request,
-		clicknav
-	}) => {
-		await request.get('/load/unchanged/reset');
-
-		await page.goto('/load/unchanged/isolated/a');
-		expect(await page.textContent('h1')).toBe('slug: a');
-		expect(await page.textContent('h2')).toBe('count: 0');
-
-		await clicknav('[href="/load/unchanged/isolated/b"]');
-		expect(await page.textContent('h1')).toBe('slug: b');
-		expect(await page.textContent('h2')).toBe('count: 0');
-	});
-
-	test.only('+layout.server.js re-runs when await parent() is called from downstream load function', async ({
-		page,
-		request,
-		clicknav
-	}) => {
-		await request.get('/load/unchanged/reset');
-
-		await page.goto('/load/unchanged/uses-parent/a');
-		expect(await page.textContent('h1')).toBe('slug: a');
-		expect(await page.textContent('h2')).toBe('count: 0');
-		expect(await page.textContent('h3')).toBe('doubled: 0');
-
-		await clicknav('[href="/load/unchanged/uses-parent/b"]');
-		expect(await page.textContent('h1')).toBe('slug: b');
-		expect(await page.textContent('h2')).toBe('count: 0');
-
-		// this looks wrong, but is actually the intended behaviour (the increment side-effect in a GET would be a bug in a real app)
-		expect(await page.textContent('h3')).toBe('doubled: 2');
-	});
-
 	test('page without load has access to layout data', async ({ page, clicknav }) => {
 		await page.goto('/load/accumulated');
 

@@ -61,6 +61,7 @@ export async function load_server_data({ dev, event, node, parent }) {
 	}
 
 	return {
+		type: 'data',
 		data,
 		uses: {
 			dependencies: uses.dependencies.size > 0 ? Array.from(uses.dependencies) : undefined,
