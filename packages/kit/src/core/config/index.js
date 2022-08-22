@@ -64,20 +64,29 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 
-	// const replaceSveltkitAttributes = preprocess({
-	// 	// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
-	// 	// TODO: Ensure the replacement happens for prerendered HTML too
-	// 	replace: [
-	// 		[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch'],
-	// 		[/sveltekit\:reload/g, 'data-sveltekit-reload'],
-	// 		[/sveltekit\:noscroll/g, 'data-sveltekit-noscroll']
-	// 	]
-	// });
+	const replaceSveltkitAttributes = preprocess({
+		// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
+		// TODO: Ensure the replacement happens for prerendered HTML too
+		// TODO: Ensure the replacement happens for SvelteKit packages too
+		replace: [
+			[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch'],
+			[/sveltekit\:reload/g, 'data-sveltekit-reload'],
+			[/sveltekit\:noscroll/g, 'data-sveltekit-noscroll']
+		]
+	});
 
-	// // TODO: Update types of `config.preprocess` to get type safety here. Use correct typing and validation from vite-plugin-svelte
-	// // TODO: This needs to support all valid configs for preprocess, possibly including objects and not just arrays.
+	/** @ts-expect-error RecursiveRequired<Config> is messing up the regular Config which is all we need for `preprocess` */
+	validated.preprocess = Array.isArray(validated.preprocess)
+		? [...validated.preprocess, replaceSveltkitAttributes]
+		: typeof validated.preprocess === 'object'
+		? [validated.preprocess, replaceSveltkitAttributes]
+		: [replaceSveltkitAttributes];
+
+	// NOTE: This would be much cleaner with distinct if/else statements, but would require fixing the types.
 	// if (Array.isArray(validated.preprocess)) {
 	// 	validated.preprocess.push(replaceSveltkitAttributes);
+	// } else if (typeof validated.preprocess === 'object') {
+	// 	validated.preprocess = [validated.preprocess, replaceSveltkitAttributes];
 	// } else {
 	// 	validated.preprocess = [replaceSveltkitAttributes];
 	// }

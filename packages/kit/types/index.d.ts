@@ -4,6 +4,7 @@
 import './ambient.js';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
+import type { SvelteOptions } from '@sveltejs/vite-plugin-svelte';
 import {
 	AdapterEntry,
 	CspDirectives,
@@ -113,7 +114,7 @@ export interface Config {
 		exports?: (filepath: string) => boolean;
 		files?: (filepath: string) => boolean;
 	};
-	preprocess?: any;
+	preprocess?: SvelteOptions['preprocess'];
 	[key: string]: any;
 }
 
