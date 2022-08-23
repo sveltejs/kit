@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.431
+
+### Patch Changes
+
+- [feat] Avoid running load on the server unnecessarily ([#6056](https://github.com/sveltejs/kit/pull/6056))
+
 ## 1.0.0-next.430
 
 ### Patch Changes
