@@ -9,9 +9,6 @@ import { trim, write_if_changed } from './utils.js';
  * @param {string} output
  */
 export function write_client_manifest(manifest_data, output) {
-	/** @type {Map<import('types').PageNode, number>} */
-	const node_indexes = new Map();
-
 	/**
 	 * Creates a module that exports a `CSRPageNode`
 	 * @param {import('types').PageNode} node
@@ -41,12 +38,12 @@ export function write_client_manifest(manifest_data, output) {
 
 	const nodes = manifest_data.nodes
 		.map((node, i) => {
-			node_indexes.set(node, i);
 			write_if_changed(`${output}/nodes/${i}.js`, generate_node(node));
 			return `() => import('./nodes/${i}')`;
 		})
 		.join(',\n\t');
 
+	// TODO omit default layout/error, as they are common to all routes
 	const dictionary = `{
 		${manifest_data.routes
 			.map((route) => {
