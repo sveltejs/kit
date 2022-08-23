@@ -119,9 +119,13 @@ export default function create_manifest_data({
 				} else if (item.is_layout) {
 					if (!route.layout) route.layout = {};
 					route.layout[item.kind] = project_relative;
-				} else {
+				} else if (item.is_page) {
 					if (!route.leaf) route.leaf = {};
 					route.leaf[item.kind] = project_relative;
+				} else {
+					route.endpoint = {
+						file: project_relative
+					};
 				}
 			}
 
@@ -175,6 +179,11 @@ export default function create_manifest_data({
 
 		if (route.layout) nodes.push(route.layout);
 		if (route.error) nodes.push(route.error);
+	});
+
+	// we do leaves after layouts so that layouts are grouped at the top
+	// of the manifest, saving a few bytes
+	route_map.forEach((route) => {
 		if (route.leaf) nodes.push(route.leaf);
 	});
 

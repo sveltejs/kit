@@ -34,65 +34,69 @@ const default_error = {
 	component: 'error.svelte'
 };
 
+/** @param {import('types').RouteData} route */
+function simplify(route) {
+	/** @type {{ id: string, pattern: string, page?: import('types').PageNodeIndexes, endpoint?: { file: string } }} */
+	const simplified = {
+		id: route.id,
+		pattern: route.pattern.toString().replace(/\\\//g, '/').replace(/\\\./g, '.')
+	};
+
+	if (route.page) simplified.page = route.page;
+	if (route.endpoint) simplified.endpoint = route.endpoint;
+
+	return simplified;
+}
+
 test('creates routes', () => {
 	const { nodes, routes } = create('samples/basic');
 
-	const index = { component: 'samples/basic/+page.svelte' };
-	const about = { component: 'samples/basic/about/+page.svelte' };
-	const blog = { component: 'samples/basic/blog/+page.svelte' };
-	const blog_$slug = { component: 'samples/basic/blog/[slug]/+page.svelte' };
+	assert.equal(nodes, [
+		default_layout,
+		default_error,
+		{ component: 'samples/basic/+page.svelte' },
+		{ component: 'samples/basic/about/+page.svelte' },
+		{ component: 'samples/basic/blog/+page.svelte' },
+		{ component: 'samples/basic/blog/[slug]/+page.svelte' }
+	]);
 
-	assert.equal(nodes, [default_layout, default_error, index, about, blog, blog_$slug]);
-
-	assert.equal(routes, [
+	assert.equal(routes.map(simplify), [
 		{
-			type: 'page',
 			id: '',
-			pattern: /^\/$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: index
+			pattern: '/^/$/',
+			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 
 		{
-			type: 'endpoint',
 			id: 'blog.json',
-			pattern: /^\/blog\.json$/,
-			file: 'samples/basic/blog.json/+server.js'
+			pattern: '/^/blog.json$/',
+			endpoint: { file: 'samples/basic/blog.json/+server.js' }
 		},
 
 		{
-			type: 'page',
 			id: 'about',
-			pattern: /^\/about\/?$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: about
+			pattern: '/^/about/?$/',
+			page: { layouts: [0], errors: [1], leaf: 3 }
 		},
 
 		{
-			type: 'page',
 			id: 'blog',
-			pattern: /^\/blog\/?$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: blog
+			pattern: '/^/blog/?$/',
+			page: { layouts: [0], errors: [1], leaf: 4 }
 		},
 
 		{
-			type: 'endpoint',
 			id: 'blog/[slug].json',
-			pattern: /^\/blog\/([^/]+?)\.json$/,
-			file: 'samples/basic/blog/[slug].json/+server.ts'
+			pattern: '/^/blog/([^/]+?).json$/',
+			endpoint: {
+				file: 'samples/basic/blog/[slug].json/+server.ts'
+			}
 		},
 
 		{
-			type: 'page',
 			id: 'blog/[slug]',
-			pattern: /^\/blog\/([^/]+?)\/?$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: blog_$slug
+			pattern: '/^/blog/([^/]+?)/?$/',
+			page: { layouts: [0], errors: [1], leaf: 5 }
 		}
 	]);
 });
@@ -106,28 +110,24 @@ const test_symlinks = symlink_survived_git ? test : test.skip;
 test_symlinks('creates symlinked routes', () => {
 	const { nodes, routes } = create('samples/symlinks/routes');
 
-	const index = { component: 'samples/symlinks/routes/index.svelte' };
-	const symlinked_index = { component: 'samples/symlinks/routes/foo/index.svelte' };
-
-	assert.equal(nodes, [default_layout, default_error, symlinked_index, index]);
+	assert.equal(nodes, [
+		default_layout,
+		default_error,
+		{ component: 'samples/symlinks/routes/foo/index.svelte' },
+		{ component: 'samples/symlinks/routes/index.svelte' }
+	]);
 
 	assert.equal(routes, [
 		{
-			type: 'page',
 			id: '',
-			pattern: /^\/$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: index
+			pattern: '/^/$/',
+			page: { layouts: [0], errors: [1], leaf: 1 }
 		},
 
 		{
-			type: 'page',
 			id: 'foo',
-			pattern: /^\/foo\/?$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: symlinked_index
+			pattern: '/^/foo/?$/',
+			page: { layouts: [0], errors: [1], leaf: 2 }
 		}
 	]);
 });
@@ -135,35 +135,27 @@ test_symlinks('creates symlinked routes', () => {
 test('creates routes with layout', () => {
 	const { nodes, routes } = create('samples/basic-layout');
 
-	const layout = { component: 'samples/basic-layout/+layout.svelte' };
-	const index = { component: 'samples/basic-layout/+page.svelte' };
-	const foo___layout = { component: 'samples/basic-layout/foo/+layout.svelte' };
-	const foo = { component: 'samples/basic-layout/foo/+page.svelte' };
+	assert.equal(nodes, [
+		{ component: 'samples/basic-layout/+layout.svelte' },
+		default_error,
+		{ component: 'samples/basic-layout/foo/+layout.svelte' },
+		{ component: 'samples/basic-layout/+page.svelte' },
+		{ component: 'samples/basic-layout/foo/+page.svelte' }
+	]);
 
-	assert.equal(nodes, [layout, default_error, foo___layout, index, foo]);
+	assert.equal(routes.map(simplify), [
+		{
+			id: '',
+			pattern: '/^/$/',
+			page: { layouts: [0], errors: [1], leaf: 3 }
+		},
 
-	assert.equal(
-		routes.slice(1, 2),
-		[
-			{
-				type: 'page',
-				id: '',
-				pattern: /^\/$/,
-				errors: [default_error],
-				layouts: [layout],
-				leaf: index
-			},
-
-			{
-				type: 'page',
-				id: 'foo',
-				pattern: /^\/foo\/?$/,
-				errors: [default_error],
-				layouts: [layout, foo___layout],
-				leaf: foo
-			}
-		].slice(1, 2)
-	);
+		{
+			id: 'foo',
+			pattern: '/^/foo/?$/',
+			page: { layouts: [0, 2], errors: [1, undefined], leaf: 4 }
+		}
+	]);
 });
 
 test('succeeds when routes does not exist', () => {
