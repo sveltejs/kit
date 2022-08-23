@@ -80,7 +80,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 					// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
 					preserveValueImports: true,
 
-					// This is required for svelte-kit package to work as expected
+					// This is required for svelte-package to work as expected
 					// Can be overwritten
 					lib: ['esnext', 'DOM', 'DOM.Iterable'],
 					moduleResolution: 'node',

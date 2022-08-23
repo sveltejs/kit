@@ -14,7 +14,7 @@ const types_reference = '/// <reference types="@sveltejs/kit" />\n\n';
  * @param {string} mode The Vite mode
  */
 export function write_ambient(config, mode) {
-	const env = get_env(mode, config.env.publicPrefix);
+	const env = get_env(config.env, mode);
 
 	write_if_changed(
 		path.join(config.outDir, 'ambient.d.ts'),

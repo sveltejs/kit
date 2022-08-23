@@ -38,6 +38,12 @@ declare module 'your-library/Foo.svelte';
 import Foo from 'your-library/Foo.svelte';
 ```
 
+### Options
+
+`svelte-package` accepts the following options:
+
+- `-w`/`--watch` — watch files in `src/lib` for changes and rebuild the package
+
 ### Publishing
 
 To publish the generated package:

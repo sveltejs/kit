@@ -22,6 +22,10 @@ const config = {
 		paths: {
 			base: '/path-base',
 			assets: 'https://cdn.example.com/stuff'
+		},
+		env: {
+			dir: './env-dir',
+			publicPrefix: 'GO_AWAY_'
 		}
 	}
 };

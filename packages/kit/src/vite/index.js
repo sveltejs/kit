@@ -197,7 +197,7 @@ function kit() {
 		async config(config, config_env) {
 			vite_config_env = config_env;
 			svelte_config = await load_config();
-			env = get_env(vite_config_env.mode, svelte_config.kit.env.publicPrefix);
+			env = get_env(svelte_config.kit.env, vite_config_env.mode);
 
 			// The config is created in build_server for SSR mode and passed inline
 			if (config.build?.ssr) return;

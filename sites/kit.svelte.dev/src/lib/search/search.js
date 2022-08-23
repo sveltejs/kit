@@ -23,7 +23,7 @@ export function init(blocks) {
 	);
 
 	for (const block of blocks) {
-		const title = block.breadcrumbs.at(-1);
+		const title = block.breadcrumbs[block.breadcrumbs.length - 1];
 		map.set(block.href, {
 			title,
 			href: block.href,

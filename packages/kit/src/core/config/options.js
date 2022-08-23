@@ -129,6 +129,7 @@ const options = object(
 			),
 
 			env: object({
+				dir: string(process.cwd()),
 				publicPrefix: string('PUBLIC_')
 			}),
 
