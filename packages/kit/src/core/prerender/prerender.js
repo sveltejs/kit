@@ -159,6 +159,8 @@ export async function prerender() {
 	});
 
 	const server = new Server(manifest);
+	const env = /** @type {Record<string, string>} */ (process.env);
+	await server.init({ env });
 
 	const error = normalise_error_handler(log, config);
 
