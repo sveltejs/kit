@@ -471,19 +471,11 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   routeId: string | null;
-	 * 	 server_data_node: import('./types').DataNode | import('types').ServerErrorNode | null;
+	 * 	 server_data_node: import('./types').DataNode | null;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
 	async function load_node({ loader, parent, url, params, routeId, server_data_node }) {
-		if (server_data_node?.type === 'error') {
-			if (server_data_node.httperror) {
-				throw error(server_data_node.httperror.status, server_data_node.httperror.message);
-			}
-
-			throw server_data_node.error;
-		}
-
 		/** @type {Record<string, any> | null} */
 		let data = null;
 
@@ -649,7 +641,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/**
 	 * @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | null} node
-	 * @returns {import('./types').DataNode | undefined}
+	 * @returns {import('./types').DataNode | null}
 	 */
 	function create_data_node(node) {
 		if (node?.type === 'data') {
@@ -664,6 +656,7 @@ export function create_client({ target, base, trailing_slash }) {
 				}
 			};
 		}
+		return null;
 	}
 
 	/**
@@ -907,7 +900,7 @@ export function create_client({ target, base, trailing_slash }) {
 			params,
 			routeId,
 			parent: () => Promise.resolve({}),
-			server_data_node: create_data_node(server_data_node) ?? null
+			server_data_node: create_data_node(server_data_node)
 		});
 
 		/** @type {import('./types').BranchNode} */
@@ -1311,14 +1304,16 @@ export function create_client({ target, base, trailing_slash }) {
 					const script = document.querySelector(`script[sveltekit\\:data-type="${type}"]`);
 					return script?.textContent ? JSON.parse(script.textContent) : fallback;
 				};
-				/** @type {import('types').ServerDataNode[]} */
+				/**
+				 * @type {Array<import('types').ServerDataNode | null>}
+				 * On initial navigation, this will only consist of data nodes or `null`.
+				 * A possible error is passed through the `error` property, in which case
+				 * the last entry of `node_ids` is an error page.
+				 */
 				const server_data_nodes = parse('server_data', []);
 				const validation_errors = parse('validation_errors', undefined);
 
 				const branch_promises = node_ids.map(async (n, i) => {
-					// TODO handle case where this contains an "error" or "httperror"
-					const server_data_node = server_data_nodes[i];
-
 					return load_node({
 						loader: nodes[n],
 						url,
@@ -1331,7 +1326,7 @@ export function create_client({ target, base, trailing_slash }) {
 							}
 							return data;
 						},
-						server_data_node: create_data_node(server_data_node) ?? null
+						server_data_node: create_data_node(server_data_nodes[i])
 					});
 				});
 
