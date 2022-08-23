@@ -209,26 +209,34 @@ export default function create_manifest_data({
 			};
 
 			/** @type {import('types').RouteData | null} */
-			let current = route;
-			let component = route.leaf.component;
+			let current_route = route;
+			let current_node = route.leaf;
 			let parent_id = route.leaf.parent_id;
 
-			while (current) {
-				if (parent_id === undefined || current.segment === parent_id) {
-					if (current.layout || current.error) {
-						route.page.layouts.unshift(current.layout ? indexes.get(current.layout) : undefined);
-						route.page.errors.unshift(current.error ? indexes.get(current.error) : undefined);
+			while (current_route) {
+				if (parent_id === undefined || current_route.segment === parent_id) {
+					if (current_route.layout || current_route.error) {
+						route.page.layouts.unshift(
+							current_route.layout ? indexes.get(current_route.layout) : undefined
+						);
+						route.page.errors.unshift(
+							current_route.error ? indexes.get(current_route.error) : undefined
+						);
 					}
 
-					parent_id = current.layout?.parent_id;
-					component = current.layout?.component;
+					if (current_route.layout) {
+						current_node.parent = current_node = current_route.layout;
+						parent_id = current_node.parent_id;
+					} else {
+						parent_id = undefined;
+					}
 				}
 
-				current = current.parent;
+				current_route = current_route.parent;
 			}
 
 			if (parent_id !== undefined) {
-				throw new Error(`${component} references missing segment "${parent_id}"`);
+				throw new Error(`${current_node.component} references missing segment "${parent_id}"`);
 			}
 		});
 	}

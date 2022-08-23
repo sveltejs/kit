@@ -120,6 +120,7 @@ export interface PageNode {
 	shared?: string;
 	server?: string;
 	parent_id?: string;
+	parent?: PageNode;
 }
 
 export type PayloadScriptAttributes =
