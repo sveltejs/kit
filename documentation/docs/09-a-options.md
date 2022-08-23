@@ -34,14 +34,14 @@ Adding a `sveltekit:reload` attribute to a link...
 
 Links with a `rel="external"` attribute will receive the same treatment. In addition, they will be ignored during [prerendering](https://kit.svelte.dev/docs/page-options#prerender).
 
-### sveltekit:noscroll
+### data-sveltekit-noscroll
 
 When navigating to internal links, SvelteKit mirrors the browser's default navigation behaviour: it will change the scroll position to 0,0 so that the user is at the very top left of the page (unless the link includes a `#hash`, in which case it will scroll to the element with a matching ID).
 
-In certain cases, you may wish to disable this behaviour. Adding a `sveltekit:noscroll` attribute to a link...
+In certain cases, you may wish to disable this behaviour. Adding a `data-sveltekit-noscroll` attribute to a link...
 
 ```html
-<a href="path" sveltekit:noscroll>Path</a>
+<a href="path" data-sveltekit-noscroll>Path</a>
 ```
 
 ...will prevent scrolling after the link is clicked.
