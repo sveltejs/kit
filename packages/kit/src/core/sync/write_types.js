@@ -12,6 +12,12 @@ import { remove_from_previous, write_if_changed } from './utils.js';
  *  } | null} Proxy
  */
 
+/** @type {import('typescript') | undefined} */
+let ts = undefined;
+try {
+	ts = (await import('typescript')).default;
+} catch {}
+
 const cwd = process.cwd();
 
 const shared_names = new Set(['load']);
@@ -25,15 +31,6 @@ let first_run = true;
  * @param {import('types').ManifestData} manifest_data
  */
 export async function write_types(config, manifest_data) {
-	/** @type {import('typescript') | undefined} */
-	let ts = undefined;
-	try {
-		ts = (await import('typescript')).default;
-	} catch (e) {
-		// No TypeScript installed - skip type generation
-		return;
-	}
-
 	const types_dir = `${config.kit.outDir}/types`;
 
 	if (first_run) {
@@ -72,15 +69,6 @@ export async function write_types(config, manifest_data) {
 export async function write_type(config, manifest_data, file) {
 	if (!path.basename(file).startsWith('+')) {
 		// Not a route file
-		return;
-	}
-
-	/** @type {import('typescript') | undefined} */
-	let ts = undefined;
-	try {
-		ts = (await import('typescript')).default;
-	} catch (e) {
-		// No TypeScript installed - skip type generation
 		return;
 	}
 

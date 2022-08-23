@@ -219,15 +219,16 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 			to_run();
 		}, 100);
 	};
+
 	// Debounce add/unlink events because in case of folder deletion or moves
 	// they fire in rapid succession, causing needless invocations.
 	watch('add', () => debounce(update_manifest));
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
-		if (!timeout) {
-			sync.update(svelte_config, manifest_data, file);
-		}
+		if (timeout) return;
+
+		sync.update(svelte_config, manifest_data, file);
 	});
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
