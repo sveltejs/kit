@@ -6,6 +6,9 @@ const config = {
 		},
 		serviceWorker: {
 			register: false
+		},
+		env: {
+			dir: '../../env'
 		}
 	}
 };

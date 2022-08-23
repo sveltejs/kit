@@ -74,6 +74,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		endpointExtensions: undefined,
 		env: {
+			dir: process.cwd(),
 			publicPrefix: 'PUBLIC_'
 		},
 		files: {

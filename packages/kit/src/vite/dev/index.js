@@ -280,7 +280,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 	const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
 	const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);
 
-	const env = get_env(vite_config.mode, svelte_config.kit.env.publicPrefix);
+	const env = get_env(svelte_config.kit.env, vite_config.mode);
 	set_private_env(env.private);
 	set_public_env(env.public);
 
