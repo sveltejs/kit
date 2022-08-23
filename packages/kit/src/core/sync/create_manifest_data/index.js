@@ -26,6 +26,11 @@ export default function create_manifest_data({
 
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
 
+	const valid_extensions = [...config.extensions, ...config.kit.moduleExtensions];
+
+	/** @type {import('types').PageNode[]} */
+	const nodes = [];
+
 	if (fs.existsSync(config.kit.files.routes)) {
 		/**
 		 * @param {string} id
@@ -92,6 +97,7 @@ export default function create_manifest_data({
 			for (const file of files) {
 				if (file.isDirectory()) continue;
 				if (!file.name.startsWith('+')) continue;
+				if (!valid_extensions.find((ext) => file.name.endsWith(ext))) continue;
 
 				const project_relative = path.relative(cwd, path.join(dir, file.name));
 
@@ -145,85 +151,87 @@ export default function create_manifest_data({
 				'The filesystem router API has changed, see https://github.com/sveltejs/kit/discussions/5774 for details'
 			);
 		}
-	}
 
-	/** @type {import('types').PageNode[]} */
-	const nodes = [];
+		/** @type {Map<string, string>} */
+		const conflicts = new Map();
 
-	/** @type {Map<string, string>} */
-	const conflicts = new Map();
+		const root = /** @type {import('types').RouteData} */ (route_map.get(''));
 
-	const root = /** @type {import('types').RouteData} */ (route_map.get(''));
-
-	if (!root.layout?.component) {
-		if (!root.layout) root.layout = {};
-		root.layout.component = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
-	}
-
-	if (!root.error?.component) {
-		if (!root.error) root.error = {};
-		root.error.component = posixify(path.relative(cwd, `${fallback}/error.svelte`));
-	}
-
-	route_map.forEach((route) => {
-		const normalized = route.id
-			.split('/')
-			.filter((segment) => !/^\([^)]+\)$/.test(segment))
-			.join('/');
-
-		if (conflicts.has(normalized)) {
-			throw new Error(`${conflicts.get(normalized)} and ${route.id} occupy the same route`);
+		if (!root.layout?.component) {
+			if (!root.layout) root.layout = {};
+			root.layout.component = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
 		}
 
-		conflicts.set(normalized, route.id);
-
-		if (route.layout) nodes.push(route.layout);
-		if (route.error) nodes.push(route.error);
-	});
-
-	// we do leaves after layouts so that layouts are grouped at the top
-	// of the manifest, saving a few bytes
-	route_map.forEach((route) => {
-		if (route.leaf) nodes.push(route.leaf);
-	});
-
-	const indexes = new Map(nodes.map((node, i) => [node, i]));
-
-	route_map.forEach((route) => {
-		if (!route.leaf) return;
-
-		if (route.leaf && route.endpoint) {
-			// TODO possibly relax this https://github.com/sveltejs/kit/issues/5896
-			throw new Error(`${route.endpoint.file} cannot share a directory with other route files`);
+		if (!root.error?.component) {
+			if (!root.error) root.error = {};
+			root.error.component = posixify(path.relative(cwd, `${fallback}/error.svelte`));
 		}
 
-		route.page = {
-			layouts: [],
-			errors: [],
-			leaf: /** @type {number} */ (indexes.get(route.leaf))
-		};
+		// we do layouts/errors first as they are more likely to be reused,
+		// and smaller indexes take fewer bytes. also, this guarantees that
+		// the default error/layout are 0/1
+		route_map.forEach((route) => {
+			if (route.layout) nodes.push(route.layout);
+			if (route.error) nodes.push(route.error);
+		});
 
-		/** @type {import('types').RouteData | null} */
-		let current = route;
-		let parent_id = route.leaf.parent_id;
+		route_map.forEach((route) => {
+			if (!route.leaf) return;
 
-		while (current) {
-			if (parent_id === undefined || current.segment === parent_id) {
-				if (current.layout || current.error) {
-					route.page.layouts.unshift(current.layout ? indexes.get(current.layout) : undefined);
-					route.page.errors.unshift(current.error ? indexes.get(current.error) : undefined);
-				}
+			nodes.push(route.leaf);
 
-				parent_id = current.layout?.parent_id;
+			const normalized = route.id
+				.split('/')
+				.filter((segment) => !/^\([^)]+\)$/.test(segment))
+				.join('/');
+
+			if (conflicts.has(normalized)) {
+				throw new Error(`${conflicts.get(normalized)} and ${route.id} occupy the same route`);
 			}
 
-			current = current.parent;
-		}
+			conflicts.set(normalized, route.id);
+		});
 
-		if (parent_id !== undefined) {
-			throw new Error(`${route.leaf} references missing segment "${parent_id}"`);
-		}
-	});
+		const indexes = new Map(nodes.map((node, i) => [node, i]));
+
+		route_map.forEach((route) => {
+			if (!route.leaf) return;
+
+			if (route.leaf && route.endpoint) {
+				// TODO possibly relax this https://github.com/sveltejs/kit/issues/5896
+				throw new Error(`${route.endpoint.file} cannot share a directory with other route files`);
+			}
+
+			route.page = {
+				layouts: [],
+				errors: [],
+				leaf: /** @type {number} */ (indexes.get(route.leaf))
+			};
+
+			/** @type {import('types').RouteData | null} */
+			let current = route;
+			let component = route.leaf.component;
+			let parent_id = route.leaf.parent_id;
+
+			while (current) {
+				if (parent_id === undefined || current.segment === parent_id) {
+					if (current.layout || current.error) {
+						route.page.layouts.unshift(current.layout ? indexes.get(current.layout) : undefined);
+						route.page.errors.unshift(current.error ? indexes.get(current.error) : undefined);
+					}
+
+					parent_id = current.layout?.parent_id;
+					component = current.layout?.component;
+				}
+
+				current = current.parent;
+			}
+
+			if (parent_id !== undefined) {
+				throw new Error(`${component} references missing segment "${parent_id}"`);
+			}
+		});
+	}
 
 	const routes = Array.from(route_map.values()).sort((a, b) => compare(a, b, segment_map));
 

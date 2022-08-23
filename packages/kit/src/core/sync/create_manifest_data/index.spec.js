@@ -160,7 +160,7 @@ test('creates routes with layout', () => {
 
 test('succeeds when routes does not exist', () => {
 	const { nodes, routes } = create('samples/basic/routes');
-	assert.equal(nodes, [default_layout, default_error]);
+	assert.equal(nodes, []);
 	assert.equal(routes, []);
 });
 
@@ -185,6 +185,7 @@ test('encodes invalid characters', () => {
 	assert.equal(
 		routes.map((p) => p.pattern),
 		[
+			/^\/$/,
 			// /^\/%22\/?$/,
 			/^\/%23\/?$/
 			// /^\/%3F\/?$/
@@ -221,53 +222,74 @@ test('sorts routes correctly', () => {
 });
 
 test('sorts routes with rest correctly', () => {
-	const { routes } = create('samples/rest');
+	const { nodes, routes } = create('samples/rest');
 
-	assert.equal(routes, [
+	assert.equal(nodes, [
+		default_layout,
+		default_error,
 		{
-			type: 'page',
-			id: 'a/[...rest]',
-			pattern: /^\/a(?:\/(.*))?\/?$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: {
-				component: 'samples/rest/a/[...rest]/+page.svelte',
-				server: 'samples/rest/a/[...rest]/+page.server.js'
-			}
+			component: 'samples/rest/a/[...rest]/+page.svelte',
+			server: 'samples/rest/a/[...rest]/+page.server.js'
 		},
 		{
-			type: 'page',
+			component: 'samples/rest/b/[...rest]/+page.svelte',
+			server: 'samples/rest/b/[...rest]/+page.server.ts'
+		}
+	]);
+
+	assert.equal(routes.map(simplify), [
+		{
+			id: '',
+			pattern: '/^/$/'
+		},
+		{
+			id: 'a',
+			pattern: '/^/a/?$/'
+		},
+		{
+			id: 'b',
+			pattern: '/^/b/?$/'
+		},
+		{
+			id: 'a/[...rest]',
+			pattern: '/^/a(?:/(.*))?/?$/',
+			page: { layouts: [0], errors: [1], leaf: 2 }
+		},
+		{
 			id: 'b/[...rest]',
-			pattern: /^\/b(?:\/(.*))?\/?$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: {
-				component: 'samples/rest/b/[...rest]/+page.svelte',
-				server: 'samples/rest/b/[...rest]/+page.server.ts'
-			}
+			pattern: '/^/b(?:/(.*))?/?$/',
+			page: { layouts: [0], errors: [1], leaf: 3 }
 		}
 	]);
 });
 
 test('allows rest parameters inside segments', () => {
-	const { routes } = create('samples/rest-prefix-suffix');
+	const { nodes, routes } = create('samples/rest-prefix-suffix');
 
-	assert.equal(routes, [
+	assert.equal(nodes, [
+		default_layout,
+		default_error,
 		{
-			type: 'page',
-			id: 'prefix-[...rest]',
-			pattern: /^\/prefix-(.*?)\/?$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: {
-				component: 'samples/rest-prefix-suffix/prefix-[...rest]/+page.svelte'
-			}
+			component: 'samples/rest-prefix-suffix/prefix-[...rest]/+page.svelte'
+		}
+	]);
+
+	assert.equal(routes.map(simplify), [
+		{
+			id: '',
+			pattern: '/^/$/'
 		},
 		{
-			type: 'endpoint',
+			id: 'prefix-[...rest]',
+			pattern: '/^/prefix-(.*?)/?$/',
+			page: { layouts: [0], errors: [1], leaf: 2 }
+		},
+		{
 			id: '[...rest].json',
-			pattern: /^\/(.*?)\.json$/,
-			file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
+			pattern: '/^/(.*?).json$/',
+			endpoint: {
+				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
+			}
 		}
 	]);
 });
@@ -291,34 +313,37 @@ test('ignores files and directories with leading dots except .well-known', () =>
 test('allows multiple slugs', () => {
 	const { routes } = create('samples/multiple-slugs');
 
-	assert.equal(
-		routes.filter((route) => route.endpoint),
-		[
-			{
-				type: 'endpoint',
-				id: '[file].[ext]',
-				pattern: /^\/([^/]+?)\.([^/]+?)$/,
+	assert.equal(routes.filter((route) => route.endpoint).map(simplify), [
+		{
+			id: '[file].[ext]',
+			pattern: '/^/([^/]+?).([^/]+?)$/',
+			endpoint: {
 				file: 'samples/multiple-slugs/[file].[ext]/+server.js'
 			}
-		]
-	);
+		}
+	]);
 });
 
 test('fails if dynamic params are not separated', () => {
 	assert.throws(() => {
 		create('samples/invalid-params');
-	}, /Invalid route samples\/invalid-params\/\[foo\]\[bar\]\/\+server\.js — parameters must be separated/);
+	}, /Invalid route \[foo\]\[bar\] — parameters must be separated/);
 });
 
 test('ignores things that look like lockfiles', () => {
 	const { routes } = create('samples/lockfiles');
 
-	assert.equal(routes, [
+	assert.equal(routes.map(simplify), [
 		{
-			type: 'endpoint',
+			id: '',
+			pattern: '/^/$/'
+		},
+		{
 			id: 'foo',
-			file: 'samples/lockfiles/foo/+server.js',
-			pattern: /^\/foo\/?$/
+			pattern: '/^/foo/?$/',
+			endpoint: {
+				file: 'samples/lockfiles/foo/+server.js'
+			}
 		}
 	]);
 });
@@ -328,62 +353,54 @@ test('works with custom extensions', () => {
 		extensions: ['.jazz', '.beebop', '.funk', '.svelte']
 	});
 
-	const index = { component: 'samples/custom-extension/+page.funk' };
-	const about = { component: 'samples/custom-extension/about/+page.jazz' };
-	const blog = { component: 'samples/custom-extension/blog/+page.svelte' };
-	const blog_$slug = { component: 'samples/custom-extension/blog/[slug]/+page.beebop' };
+	assert.equal(nodes, [
+		default_layout,
+		default_error,
+		{ component: 'samples/custom-extension/+page.funk' },
+		{ component: 'samples/custom-extension/about/+page.jazz' },
+		{ component: 'samples/custom-extension/blog/+page.svelte' },
+		{ component: 'samples/custom-extension/blog/[slug]/+page.beebop' }
+	]);
 
-	assert.equal(nodes, [default_layout, default_error, index, about, blog, blog_$slug]);
-
-	assert.equal(routes, [
+	assert.equal(routes.map(simplify), [
 		{
-			type: 'page',
 			id: '',
-			pattern: /^\/$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: index
+			pattern: '/^/$/',
+			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 
 		{
-			type: 'endpoint',
 			id: 'blog.json',
-			pattern: /^\/blog\.json$/,
-			file: 'samples/custom-extension/blog.json/+server.js'
+			pattern: '/^/blog.json$/',
+			endpoint: {
+				file: 'samples/custom-extension/blog.json/+server.js'
+			}
 		},
 
 		{
-			type: 'page',
 			id: 'about',
-			pattern: /^\/about\/?$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: about
+			pattern: '/^/about/?$/',
+			page: { layouts: [0], errors: [1], leaf: 3 }
 		},
 
 		{
-			type: 'page',
 			id: 'blog',
-			pattern: /^\/blog\/?$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: blog
+			pattern: '/^/blog/?$/',
+			page: { layouts: [0], errors: [1], leaf: 4 }
 		},
 
 		{
-			type: 'endpoint',
 			id: 'blog/[slug].json',
-			pattern: /^\/blog\/([^/]+?)\.json$/,
-			file: 'samples/custom-extension/blog/[slug].json/+server.js'
+			pattern: '/^/blog/([^/]+?).json$/',
+			endpoint: {
+				file: 'samples/custom-extension/blog/[slug].json/+server.js'
+			}
 		},
 
 		{
-			type: 'page',
 			id: 'blog/[slug]',
-			pattern: /^\/blog\/([^/]+?)\/?$/,
-			errors: [default_error],
-			layouts: [default_layout],
-			leaf: blog_$slug
+			pattern: '/^/blog/([^/]+?)/?$/',
+			page: { layouts: [0], errors: [1], leaf: 5 }
 		}
 	]);
 });
@@ -406,28 +423,35 @@ test('lists static assets', () => {
 });
 
 test('includes nested error components', () => {
-	const { routes } = create('samples/nested-errors');
+	const { nodes, routes } = create('samples/nested-errors');
 
-	assert.equal(routes, [
+	assert.equal(nodes, [
+		default_layout,
+		default_error,
+		{ component: 'samples/nested-errors/foo/+layout.svelte' },
+		{ component: 'samples/nested-errors/foo/bar/+error.svelte' },
+		{ component: 'samples/nested-errors/foo/bar/baz/+layout.svelte' },
+		{ component: 'samples/nested-errors/foo/bar/baz/+error.svelte' },
+		{ component: 'samples/nested-errors/foo/bar/baz/+page.svelte' }
+	]);
+
+	assert.equal(routes.map(simplify), [
 		{
-			type: 'page',
+			id: '',
+			pattern: '/^/$/'
+		},
+		{
+			id: 'foo',
+			pattern: '/^/foo/?$/'
+		},
+		{
+			id: 'foo/bar',
+			pattern: '/^/foo/bar/?$/'
+		},
+		{
 			id: 'foo/bar/baz',
-			pattern: /^\/foo\/bar\/baz\/?$/,
-			errors: [
-				default_error,
-				undefined,
-				{ component: 'samples/nested-errors/foo/bar/+error.svelte' },
-				{ component: 'samples/nested-errors/foo/bar/baz/+error.svelte' }
-			],
-			layouts: [
-				default_layout,
-				{ component: 'samples/nested-errors/foo/+layout.svelte' },
-				undefined,
-				{ component: 'samples/nested-errors/foo/bar/baz/+layout.svelte' }
-			],
-			leaf: {
-				component: 'samples/nested-errors/foo/bar/baz/+page.svelte'
-			}
+			pattern: '/^/foo/bar/baz/?$/',
+			page: { layouts: [0, 2, undefined, 4], errors: [1, undefined, 3, 5], leaf: 6 }
 		}
 	]);
 });
@@ -435,189 +459,112 @@ test('includes nested error components', () => {
 test('creates routes with named layouts', () => {
 	const { nodes, routes } = create('samples/named-layouts');
 
-	const root_layout = { component: 'samples/named-layouts/+layout.svelte' };
-	const special_layout = {
-		component: 'samples/named-layouts/(special)/+layout.svelte',
-		shared: 'samples/named-layouts/(special)/+layout.js',
-		server: 'samples/named-layouts/(special)/+layout.server.js'
-	};
-
 	assert.equal(nodes, [
 		// layouts
-		root_layout,
-		default_error,
-		special_layout,
-		{ component: 'samples/named-layouts/(special)/(alsospecial)/+layout.svelte' },
-		{ component: 'samples/named-layouts/a/+layout.svelte' },
-		{ component: 'samples/named-layouts/b/c/+layout.svelte' },
-		{ component: 'samples/named-layouts/b/d/(special)/+layout.svelte' },
-		{ component: 'samples/named-layouts/b/d/(special)/(extraspecial)/+layout.svelte' },
+		{ component: 'samples/named-layouts/+layout.svelte' }, // 0
+		default_error, // 1
+		{
+			component: 'samples/named-layouts/(special)/+layout.svelte',
+			shared: 'samples/named-layouts/(special)/+layout.js',
+			server: 'samples/named-layouts/(special)/+layout.server.js'
+		}, // 2
+		{ component: 'samples/named-layouts/(special)/(alsospecial)/+layout.svelte' }, // 3
+		{ component: 'samples/named-layouts/a/+layout.svelte' }, // 4
+		{ component: 'samples/named-layouts/b/c/+layout.svelte' }, // 5
+		{ component: 'samples/named-layouts/b/d/(special)/+layout.svelte' }, // 6
+		{ component: 'samples/named-layouts/b/d/(special)/(extraspecial)/+layout.svelte' }, // 7
 
 		// pages
-		{ component: 'samples/named-layouts/(special)/(alsospecial)/b/c/c1/+page.svelte' },
-		{ component: 'samples/named-layouts/(special)/a/a2/+page.svelte' },
-		{ component: 'samples/named-layouts/a/a1/+page.svelte' },
-		{ component: 'samples/named-layouts/b/c/c2/+page@.svelte' },
-		{ component: 'samples/named-layouts/b/d/(special)/(extraspecial)/d2/+page.svelte' },
-		{ component: 'samples/named-layouts/b/d/(special)/+page.svelte' },
-		{ component: 'samples/named-layouts/b/d/d1/+page.svelte' }
+		{ component: 'samples/named-layouts/(special)/(alsospecial)/b/c/c1/+page.svelte' }, // 8
+		{ component: 'samples/named-layouts/(special)/a/a2/+page.svelte' }, // 9
+		{ component: 'samples/named-layouts/a/a1/+page.svelte' }, // 10
+		{ component: 'samples/named-layouts/b/c/c2/+page@.svelte' }, // 11
+		{ component: 'samples/named-layouts/b/d/(special)/+page.svelte' }, // 12
+		{ component: 'samples/named-layouts/b/d/(special)/(extraspecial)/d2/+page.svelte' }, // 13
+		{ component: 'samples/named-layouts/b/d/d1/+page.svelte' } // 14
 	]);
 
-	assert.equal(routes, [
+	assert.equal(routes.filter((route) => route.page).map(simplify), [
 		{
-			type: 'page',
 			id: 'a/a1',
-			pattern: /^\/a\/a1\/?$/,
-			errors: [default_error],
-			layouts: [root_layout, { component: 'samples/named-layouts/a/+layout.svelte' }],
-			leaf: { component: 'samples/named-layouts/a/a1/+page.svelte' }
+			pattern: '/^/a/a1/?$/',
+			page: { layouts: [0, 4], errors: [1, undefined], leaf: 10 }
 		},
 		{
-			type: 'page',
 			id: '(special)/a/a2',
-			pattern: /^\/a\/a2\/?$/,
-			errors: [default_error],
-			layouts: [root_layout, special_layout],
-			leaf: { component: 'samples/named-layouts/(special)/a/a2/+page.svelte' }
+			pattern: '/^/a/a2/?$/',
+			page: { layouts: [0, 2], errors: [1, undefined], leaf: 9 }
 		},
 		{
-			type: 'page',
 			id: 'b/c/c2',
-			pattern: /^\/b\/c\/c2\/?$/,
-			errors: [default_error],
-			layouts: [root_layout, { component: 'samples/named-layouts/b/c/+layout.svelte' }],
-			leaf: { component: 'samples/named-layouts/b/c/c2/+page@.svelte' }
+			pattern: '/^/b/c/c2/?$/',
+			page: { layouts: [0, 5], errors: [1, undefined], leaf: 11 }
 		},
 		{
-			type: 'page',
 			id: 'b/d/(special)',
-			pattern: /^\/b\/d\/?$/,
-			errors: [default_error],
-			layouts: [root_layout, { component: 'samples/named-layouts/b/d/(special)/+layout.svelte' }],
-			leaf: { component: 'samples/named-layouts/b/d/(special)/+page.svelte' }
+			pattern: '/^/b/d/?$/',
+			page: { layouts: [0, 6], errors: [1, undefined], leaf: 12 }
 		},
 		{
-			type: 'page',
 			id: 'b/d/d1',
-			pattern: /^\/b\/d\/d1\/?$/,
-			errors: [default_error],
-			layouts: [root_layout],
-			leaf: { component: 'samples/named-layouts/b/d/d1/+page.svelte' }
+			pattern: '/^/b/d/d1/?$/',
+			page: { layouts: [0], errors: [1], leaf: 14 }
 		},
 		{
-			type: 'page',
 			id: '(special)/(alsospecial)/b/c/c1',
-			pattern: /^\/b\/c\/c1\/?$/,
-			errors: [default_error],
-			layouts: [
-				root_layout,
-				special_layout,
-				{ component: 'samples/named-layouts/(special)/(alsospecial)/+layout.svelte' }
-			],
-			leaf: {
-				component: 'samples/named-layouts/(special)/(alsospecial)/b/c/c1/+page.svelte'
-			}
+			pattern: '/^/b/c/c1/?$/',
+			page: { layouts: [0, 2, 3], errors: [1, undefined, undefined], leaf: 8 }
 		},
 		{
-			type: 'page',
 			id: 'b/d/(special)/(extraspecial)/d2',
-			pattern: /^\/b\/d\/d2\/?$/,
-			errors: [default_error],
-			layouts: [
-				root_layout,
-				{ component: 'samples/named-layouts/b/d/(special)/+layout.svelte' },
-				{ component: 'samples/named-layouts/b/d/(special)/(extraspecial)/+layout.svelte' }
-			],
-			leaf: { component: 'samples/named-layouts/b/d/(special)/(extraspecial)/d2/+page.svelte' }
+			pattern: '/^/b/d/d2/?$/',
+			page: { layouts: [0, 6, 7], errors: [1, undefined, undefined], leaf: 13 }
 		}
 	]);
 });
 
 test('handles pages without .svelte file', () => {
-	const { routes } = create('samples/page-without-svelte-file');
+	const { nodes, routes } = create('samples/page-without-svelte-file');
 
-	assert.equal(routes, [
+	assert.equal(nodes, [
+		default_layout,
+		default_error,
+		{ component: 'samples/page-without-svelte-file/error/+error.svelte' },
+		{ component: 'samples/page-without-svelte-file/layout/+layout.svelte' },
+		{ component: 'samples/page-without-svelte-file/+page.svelte' },
+		{ shared: 'samples/page-without-svelte-file/error/[...path]/+page.js' },
+		{ component: 'samples/page-without-svelte-file/layout/exists/+page.svelte' },
+		{ server: 'samples/page-without-svelte-file/layout/redirect/+page.server.js' }
+	]);
+
+	assert.equal(routes.map(simplify), [
 		{
-			type: 'page',
 			id: '',
-			pattern: /^\/$/,
-			errors: [
-				{
-					component: 'error.svelte'
-				}
-			],
-			layouts: [
-				{
-					component: 'layout.svelte'
-				}
-			],
-			leaf: {
-				component: 'samples/page-without-svelte-file/+page.svelte'
-			}
+			pattern: '/^/$/',
+			page: { layouts: [0], errors: [1], leaf: 4 }
 		},
 		{
-			type: 'page',
+			id: 'error',
+			pattern: '/^/error/?$/'
+		},
+		{
+			id: 'layout',
+			pattern: '/^/layout/?$/'
+		},
+		{
 			id: 'layout/exists',
-			pattern: /^\/layout\/exists\/?$/,
-			errors: [
-				{
-					component: 'error.svelte'
-				}
-			],
-			layouts: [
-				{
-					component: 'layout.svelte'
-				},
-				{
-					component: 'samples/page-without-svelte-file/layout/+layout.svelte'
-				}
-			],
-			leaf: {
-				component: 'samples/page-without-svelte-file/layout/exists/+page.svelte'
-			}
+			pattern: '/^/layout/exists/?$/',
+			page: { layouts: [0, 3], errors: [1, undefined], leaf: 6 }
 		},
 		{
-			type: 'page',
 			id: 'layout/redirect',
-			pattern: /^\/layout\/redirect\/?$/,
-			errors: [
-				{
-					component: 'error.svelte'
-				}
-			],
-			layouts: [
-				{
-					component: 'layout.svelte'
-				},
-				{
-					component: 'samples/page-without-svelte-file/layout/+layout.svelte'
-				}
-			],
-			leaf: {
-				server: 'samples/page-without-svelte-file/layout/redirect/+page.server.js'
-			}
+			pattern: '/^/layout/redirect/?$/',
+			page: { layouts: [0, 3], errors: [1, undefined], leaf: 7 }
 		},
 		{
-			type: 'page',
 			id: 'error/[...path]',
-			pattern: /^\/error(?:\/(.*))?\/?$/,
-			errors: [
-				{
-					component: 'error.svelte'
-				},
-				{
-					component: 'samples/page-without-svelte-file/error/+error.svelte'
-				}
-			],
-			layouts: [
-				{
-					component: 'layout.svelte'
-				},
-				undefined
-			],
-			leaf: {
-				shared: 'samples/page-without-svelte-file/error/[...path]/+page.js'
-			}
+			pattern: '/^/error(?:/(.*))?/?$/',
+			page: { layouts: [0, undefined], errors: [1, 2], leaf: 5 }
 		}
 	]);
 });
