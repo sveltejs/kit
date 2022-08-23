@@ -200,6 +200,7 @@ export interface ServerDataSkippedNode {
 
 export interface ServerErrorNode {
 	type: 'error';
+	// Either-or situation, but we don't want to have to do a type assertion
 	error?: Record<string, any>;
 	httperror?: { status: number; message: string };
 }

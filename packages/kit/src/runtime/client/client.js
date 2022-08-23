@@ -1308,7 +1308,8 @@ export function create_client({ target, base, trailing_slash }) {
 				 * @type {Array<import('types').ServerDataNode | null>}
 				 * On initial navigation, this will only consist of data nodes or `null`.
 				 * A possible error is passed through the `error` property, in which case
-				 * the last entry of `node_ids` is an error page.
+				 * the last entry of `node_ids` is an error page and the last entry of
+				 * `server_data_nodes` is `null`.
 				 */
 				const server_data_nodes = parse('server_data', []);
 				const validation_errors = parse('validation_errors', undefined);
