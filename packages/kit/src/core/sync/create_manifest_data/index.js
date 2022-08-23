@@ -283,6 +283,13 @@ function analyze(project_relative, file, component_extensions, module_extensions
 		const pattern = /^\+(?:(page(?:@([a-zA-Z0-9_-]*))?)|(layout(?:@([a-zA-Z0-9_-]*))?)|(error))$/;
 		const match = pattern.exec(name);
 		if (!match) {
+			// TODO remove for 1.0
+			if (/^\+layout-/.test(name)) {
+				throw new Error(
+					`${project_relative} should be reimplemented with layout groups: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts`
+				);
+			}
+
 			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
 		}
 
