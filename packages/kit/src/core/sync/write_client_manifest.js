@@ -50,14 +50,18 @@ export function write_client_manifest(manifest_data, output) {
 	const dictionary = `{
 		${manifest_data.routes
 			.map((route) => {
-				if (route.type === 'page') {
-					const errors = route.errors.map((node) => (node ? node_indexes.get(node) : '')).join(',');
-					const layouts = route.layouts
-						.map((node) => (node ? node_indexes.get(node) : ''))
-						.join(',');
-					const leaf = route.leaf ? node_indexes.get(route.leaf) : '';
+				if (route.page) {
+					const errors = route.page.errors.map((n) => n ?? '').join(',');
+					const layouts = route.page.layouts.map((n) => n ?? '').join(',');
+					const leaf = route.page.leaf;
 
-					const uses_server_data = [...route.layouts, route.leaf].some((node) => node?.server);
+					let node = route.leaf;
+					let uses_server_data = false;
+					while (node && !uses_server_data) {
+						uses_server_data = !!node.server;
+						node = node.parent;
+					}
+
 					const suffix = uses_server_data ? ', 1' : '';
 
 					return `${s(route.id)}: [[${errors}], [${layouts}], ${leaf}${suffix}]`;

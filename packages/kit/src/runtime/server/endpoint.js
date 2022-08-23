@@ -3,13 +3,11 @@ import { check_method_names, method_not_allowed } from './utils.js';
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {import('types').SSREndpoint} route
+ * @param {import('types').SSREndpoint} mod
  * @returns {Promise<Response>}
  */
-export async function render_endpoint(event, route) {
+export async function render_endpoint(event, mod) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
-
-	const mod = await route.load();
 
 	// TODO: Remove for 1.0
 	check_method_names(mod);
@@ -21,12 +19,6 @@ export async function render_endpoint(event, route) {
 	}
 
 	if (!handler) {
-		if (event.request.headers.get('x-sveltekit-load')) {
-			// TODO would be nice to avoid these requests altogether,
-			// by noting whether or not page endpoints export `get`
-			return new Response(undefined, { status: 204 });
-		}
-
 		return method_not_allowed(mod, method);
 	}
 

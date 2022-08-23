@@ -24,166 +24,116 @@ export default function create_manifest_data({
 	/** @type {Map<string, import('./types').Part[][]>} */
 	const segment_map = new Map();
 
-	/** @type {import('./types').RouteTree} */
-	const tree = new Map();
-
-	// set default root layout/error
-	tree.set('', {
-		error: {
-			component: posixify(path.relative(cwd, `${fallback}/error.svelte`))
-		},
-		layout: {
-			component: posixify(path.relative(cwd, `${fallback}/layout.svelte`))
-		}
-	});
-
-	/** @param {string} id */
-	function tree_node(id) {
-		if (!tree.has(id)) {
-			tree.set(id, {
-				error: undefined,
-				layout: undefined
-			});
-		}
-
-		return /** @type {import('./types').RouteTreeNode} */ (tree.get(id));
-	}
-
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
-	const valid_extensions = [...config.extensions, ...config.kit.moduleExtensions];
 
 	if (fs.existsSync(config.kit.files.routes)) {
-		list_files(config.kit.files.routes).forEach((filepath) => {
-			const extension = valid_extensions.find((ext) => filepath.endsWith(ext));
-			if (!extension) return;
+		/**
+		 * @param {string} id
+		 * @param {string} segment
+		 * @param {import('types').RouteData | null} parent
+		 */
+		const walk = (id, segment, parent) => {
+			const { pattern, names, types } = parse_route_id(id);
 
-			const project_relative = `${routes_base}/${filepath}`;
-			const segments = filepath.split('/');
-			const file = /** @type {string} */ (segments.pop());
+			const segments = id.split('/');
 
-			if (file[0] !== '+') return; // not a route file
+			segment_map.set(
+				id,
+				segments.filter(Boolean).map((segment) => {
+					/** @type {import('./types').Part[]} */
+					const parts = [];
+					segment.split(/\[(.+?)\]/).map((content, i) => {
+						const dynamic = !!(i % 2);
 
-			const item = analyze(project_relative, file, config.extensions, config.kit.moduleExtensions);
-			const id = segments.join('/');
+						if (!content) return;
 
-			if (/\]\[/.test(id)) {
-				throw new Error(`Invalid route ${project_relative} — parameters must be separated`);
-			}
-
-			if (count_occurrences('[', id) !== count_occurrences(']', id)) {
-				throw new Error(`Invalid route ${project_relative} — brackets are unbalanced`);
-			}
-
-			// error/layout files should be added to the tree, but don't result
-			// in a route being created, so deal with them first. note: we are
-			// relying on the fact that the +error and +layout files precede
-			// +page files alphabetically, and will therefore be processed
-			// before we reach the page
-			if (item.kind === 'component' && item.is_error) {
-				tree_node(id).error = {
-					component: project_relative
-				};
-
-				return;
-			}
-
-			if (item.is_layout) {
-				const group = tree_node(id);
-				const defined = group.layout || (group.layout = {});
-
-				if (defined[item.kind] && id !== '') {
-					// edge case
-					throw new Error(
-						`Duplicate layout ${project_relative} already defined at ${defined[item.kind]}`
-					);
-				}
-
-				defined[item.kind] = project_relative;
-
-				return;
-			}
-
-			const type = item.kind === 'server' && !item.is_layout && !item.is_page ? 'endpoint' : 'page';
-
-			if (type === 'endpoint' && route_map.has(id)) {
-				// note that we are relying on +server being lexically ordered after
-				// all other route files — if we added +view or something this is
-				// potentially brittle, since the server might be added before
-				// another route file. a problem for another day
-				throw new Error(
-					`${file} cannot share a directory with other route files (${project_relative})`
-				);
-			}
-
-			if (!route_map.has(id)) {
-				const pattern = parse_route_id(id).pattern;
-
-				segment_map.set(
-					id,
-					segments.filter(Boolean).map((segment) => {
-						/** @type {import('./types').Part[]} */
-						const parts = [];
-						segment.split(/\[(.+?)\]/).map((content, i) => {
-							const dynamic = !!(i % 2);
-
-							if (!content) return;
-
-							parts.push({
-								content,
-								dynamic,
-								rest: dynamic && content.startsWith('...'),
-								type: (dynamic && content.split('=')[1]) || null
-							});
+						parts.push({
+							content,
+							dynamic,
+							rest: dynamic && content.startsWith('...'),
+							type: (dynamic && content.split('=')[1]) || null
 						});
-						return parts;
-					})
+					});
+					return parts;
+				})
+			);
+
+			/** @type {import('types').RouteData} */
+			const route = {
+				id,
+				parent,
+
+				segment,
+				pattern,
+				names,
+				types,
+
+				layout: null,
+				error: null,
+				leaf: null,
+				page: null,
+				endpoint: null
+			};
+
+			// important to do this before walking children, so that child
+			// routes appear later
+			route_map.set(id, route);
+
+			// if we don't do this, the route map becomes unwieldy to console.log
+			Object.defineProperty(route, 'parent', { enumerable: false });
+
+			const dir = path.join(cwd, routes_base, id);
+
+			const files = fs.readdirSync(dir, {
+				withFileTypes: true
+			});
+
+			// process files first
+			for (const file of files) {
+				if (file.isDirectory()) continue;
+				if (!file.name.startsWith('+')) continue;
+
+				const project_relative = path.relative(cwd, path.join(dir, file.name));
+
+				const item = analyze(
+					project_relative,
+					file.name,
+					config.extensions,
+					config.kit.moduleExtensions
 				);
-
-				if (type === 'endpoint') {
-					route_map.set(id, {
-						type,
-						id,
-						pattern,
-						file: project_relative
-					});
-				} else {
-					route_map.set(id, {
-						type,
-						id,
-						pattern,
-						errors: [],
-						layouts: [],
-						leaf: {}
-					});
-				}
-			}
-
-			if (item.is_page) {
-				const route = /** @type {import('types').PageData} */ (route_map.get(id));
-
-				// This ensures that layouts and errors are set for pages that have no Svelte file
-				// and only redirect or throw an error, but are set to the Svelte file definition if it exists.
-				// This ensures the proper error page is used and rendered in the proper layout.
-				if (item.kind === 'component' || route.layouts.length === 0) {
-					const { layouts, errors } = trace(
-						tree,
-						id,
-						item.kind === 'component' ? item.uses_layout : undefined,
-						project_relative
-					);
-					route.layouts = layouts;
-					route.errors = errors;
-				}
 
 				if (item.kind === 'component') {
-					route.leaf.component = project_relative;
-				} else if (item.kind === 'server') {
-					route.leaf.server = project_relative;
+					if (item.is_error) {
+						route.error = {
+							component: project_relative
+						};
+					} else if (item.is_layout) {
+						if (!route.layout) route.layout = {};
+						route.layout.component = project_relative;
+						if (item.uses_layout) route.layout.parent_id = item.uses_layout;
+					} else {
+						if (!route.leaf) route.leaf = {};
+						route.leaf.component = project_relative;
+						if (item.uses_layout) route.leaf.parent_id = item.uses_layout;
+					}
+				} else if (item.is_layout) {
+					if (!route.layout) route.layout = {};
+					route.layout[item.kind] = project_relative;
 				} else {
-					route.leaf.shared = project_relative;
+					if (!route.leaf) route.leaf = {};
+					route.leaf[item.kind] = project_relative;
 				}
 			}
-		});
+
+			// then handle children
+			for (const file of files) {
+				if (file.isDirectory()) {
+					walk(path.join(id, file.name), file.name, route);
+				}
+			}
+		};
+
+		walk('', '', null);
 
 		// TODO remove for 1.0
 		if (route_map.size === 0) {
@@ -199,12 +149,17 @@ export default function create_manifest_data({
 	/** @type {Map<string, string>} */
 	const conflicts = new Map();
 
-	tree.forEach(({ layout, error }) => {
-		// we do [default, error, ...other_layouts] so that components[0] and [1]
-		// are the root layout/error. kinda janky, there's probably a nicer way
-		if (layout) nodes.push(layout);
-		if (error) nodes.push(error);
-	});
+	const root = /** @type {import('types').RouteData} */ (route_map.get(''));
+
+	if (!root.layout?.component) {
+		if (!root.layout) root.layout = {};
+		root.layout.component = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
+	}
+
+	if (!root.error?.component) {
+		if (!root.error) root.error = {};
+		root.error.component = posixify(path.relative(cwd, `${fallback}/error.svelte`));
+	}
 
 	route_map.forEach((route) => {
 		const normalized = route.id
@@ -218,21 +173,52 @@ export default function create_manifest_data({
 
 		conflicts.set(normalized, route.id);
 
-		if (route.type === 'page') {
-			nodes.push(route.leaf);
+		if (route.layout) nodes.push(route.layout);
+		if (route.error) nodes.push(route.error);
+		if (route.leaf) nodes.push(route.leaf);
+	});
+
+	const indexes = new Map(nodes.map((node, i) => [node, i]));
+
+	route_map.forEach((route) => {
+		if (!route.leaf) return;
+
+		route.page = {
+			layouts: [],
+			errors: [],
+			leaf: /** @type {number} */ (indexes.get(route.leaf))
+		};
+
+		/** @type {import('types').RouteData | null} */
+		let current = route;
+		let parent_id = route.leaf.parent_id;
+
+		while (current) {
+			if (parent_id === undefined || current.segment === parent_id) {
+				if (current.layout || current.error) {
+					route.page.layouts.unshift(current.layout ? indexes.get(current.layout) : undefined);
+					route.page.errors.unshift(current.error ? indexes.get(current.error) : undefined);
+				}
+
+				parent_id = current.layout?.parent_id;
+			}
+
+			current = current.parent;
+		}
+
+		if (parent_id !== undefined) {
+			throw new Error(`${route.leaf} references missing segment "${parent_id}"`);
 		}
 	});
 
 	const routes = Array.from(route_map.values()).sort((a, b) => compare(a, b, segment_map));
 
 	/** @type {import('types').Asset[]} */
-	const assets = fs.existsSync(config.kit.files.assets)
-		? list_files(config.kit.files.assets).map((file) => ({
-				file,
-				size: fs.statSync(`${config.kit.files.assets}/${file}`).size,
-				type: mime.getType(file)
-		  }))
-		: [];
+	const assets = list_files(config.kit.files.assets).map((file) => ({
+		file,
+		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
+		type: mime.getType(file)
+	}));
 
 	const params_base = path.relative(cwd, config.kit.files.params);
 
@@ -330,64 +316,6 @@ function analyze(project_relative, file, component_extensions, module_extensions
 }
 
 /**
- * @param {import('./types').RouteTree} tree
- * @param {string} id
- * @param {string | undefined} layout_id
- * @param {string} project_relative
- */
-function trace(tree, id, layout_id, project_relative) {
-	/** @type {Array<import('types').PageNode | undefined>} */
-	const layouts = [];
-
-	/** @type {Array<import('types').PageNode | undefined>} */
-	const errors = [];
-
-	const parts = id.split('/').filter(Boolean);
-
-	// walk up the tree, find which +layout and +error components
-	// apply to this page
-	while (true) {
-		const node = tree.get(parts.join('/'));
-
-		if (node && (layout_id === undefined || parts.at(-1) === layout_id)) {
-			// any segment that has neither a +layout nor an +error can be discarded.
-			// in other words these...
-			//  layouts: [a, , b, c]
-			//  errors:  [d, , e,  ]
-			//
-			// ...can be compacted to these:
-			//  layouts: [a, b, c]
-			//  errors:  [d, e,  ]
-			if (node.error || node.layout) {
-				errors.unshift(node.error);
-				layouts.unshift(node.layout);
-			}
-
-			layout_id = node.layout?.component?.split('/').at(-1)?.split('@')[1]?.split('.')[0];
-		}
-
-		if (parts.length === 0) break;
-		parts.pop();
-	}
-
-	if (layout_id === '') {
-		// special case — `+page@.svelte` selects the root layout
-		const node = tree.get('');
-		errors.unshift(node?.error);
-		layouts.unshift(node?.layout);
-	} else if (layout_id !== undefined) {
-		throw new Error(`${project_relative} references missing segment "${layout_id}"`);
-	}
-
-	// trim empty space off the end of the errors array
-	let i = errors.length;
-	while (i--) if (errors[i]) break;
-	errors.length = i + 1;
-
-	return { layouts, errors };
-}
-
-/**
  * @param {import('types').RouteData} a
  * @param {import('types').RouteData} b
  * @param {Map<string, import('./types').Part[][]>} segment_map
@@ -433,62 +361,31 @@ function compare(a, b, segment_map) {
 		}
 	}
 
-	const a_is_endpoint = a.type === 'endpoint';
-	const b_is_endpoint = b.type === 'endpoint';
-
-	if (a_is_endpoint !== b_is_endpoint) {
-		return a_is_endpoint ? -1 : +1;
+	if (!!a.endpoint !== !!b.endpoint) {
+		return a.endpoint ? -1 : +1;
 	}
 
 	return a < b ? -1 : 1;
 }
 
-/**
- * @param {string} needle
- * @param {string} haystack
- */
-function count_occurrences(needle, haystack) {
-	let count = 0;
-	for (let i = 0; i < haystack.length; i += 1) {
-		if (haystack[i] === needle) count += 1;
-	}
-	return count;
-}
+/** @param {string} dir */
+function list_files(dir) {
+	/** @type {string[]} */
+	const files = [];
 
-/**
- * @param {string} dir
- * @param {string} [path]
- * @param {string[]} [files]
- */
-function list_files(dir, path = '', files = []) {
-	fs.readdirSync(dir)
-		.sort((a, b) => {
-			// sort each directory in (+layout, +error, everything else) order
-			// so that we can trace layouts/errors immediately
-
-			if (a.startsWith('+layout') || a.startsWith('+error')) {
-				if (!b.startsWith('+layout') && !b.startsWith('+error')) return -1;
-			} else if (b.startsWith('+layout') || b.startsWith('+error')) {
-				return 1;
-			} else if (a.startsWith('__')) {
-				if (!b.startsWith('__')) return -1;
-			} else if (b.startsWith('__')) {
-				return 1;
-			}
-
-			return a < b ? -1 : 1;
-		})
-		.forEach((file) => {
-			const full = `${dir}/${file}`;
-			const stats = fs.statSync(full);
-			const joined = path ? `${path}/${file}` : file;
-
-			if (stats.isDirectory()) {
-				list_files(full, joined, files);
+	/** @param {string} current */
+	function walk(current) {
+		for (const file of fs.readdirSync(path.resolve(dir, current))) {
+			const child = path.posix.join(current, file);
+			if (fs.statSync(path.resolve(dir, child)).isDirectory()) {
+				walk(child);
 			} else {
-				files.push(joined);
+				files.push(child);
 			}
-		});
+		}
+	}
+
+	if (fs.existsSync(dir)) walk('');
 
 	return files;
 }

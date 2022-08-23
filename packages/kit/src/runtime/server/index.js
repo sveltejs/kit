@@ -92,7 +92,7 @@ export async function respond(request, options, state) {
 	}
 
 	if (route) {
-		if (route.type === 'page') {
+		if (route.page) {
 			const normalized = normalize_path(url.pathname, options.trailing_slash);
 
 			if (normalized !== url.pathname && !state.prerendering?.fallback) {
@@ -252,13 +252,13 @@ export async function respond(request, options, state) {
 				if (route) {
 					/** @type {Response} */
 					let response;
-					if (is_data_request && route.type === 'page') {
+					if (is_data_request && route.page) {
 						try {
 							/** @type {Redirect | HttpError | Error} */
 							let error;
 
 							// TODO only get the data we need for the navigation
-							const promises = [...route.layouts, route.leaf].map(async (n, i) => {
+							const promises = [...route.page.layouts, route.page.leaf].map(async (n, i) => {
 								try {
 									if (error) return;
 
@@ -319,11 +319,14 @@ export async function respond(request, options, state) {
 								response = json(error_to_pojo(error, options.get_stack), { status: 500 });
 							}
 						}
+					} else if (route.page) {
+						response = await render_page(event, route, route.page, options, state, resolve_opts);
+					} else if (route.endpoint) {
+						response = await render_endpoint(event, await route.endpoint());
 					} else {
-						response =
-							route.type === 'endpoint'
-								? await render_endpoint(event, route)
-								: await render_page(event, route, options, state, resolve_opts);
+						// a route will always have a page or an endpoint, but TypeScript
+						// doesn't know that
+						throw new Error('This should never happen');
 					}
 
 					if (!is_data_request) {

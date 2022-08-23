@@ -7,7 +7,6 @@ import { getRequest, setResponse } from '../../node/index.js';
 import { installPolyfills } from '../../node/polyfills.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { posixify } from '../../utils/filesystem.js';
-import { parse_route_id } from '../../utils/routing.js';
 import { load_template } from '../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
@@ -159,36 +158,27 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						return result;
 					};
 				}),
-				routes: manifest_data.routes.map((route) => {
-					const { pattern, names, types } = parse_route_id(route.id);
+				routes: manifest_data.routes
+					.map((route) => {
+						if (!route.page && !route.endpoint) return null;
 
-					if (route.type === 'page') {
+						const endpoint = route.endpoint;
+
 						return {
-							type: 'page',
 							id: route.id,
-							pattern,
-							names,
-							types,
-							errors: route.errors.map((id) => (id ? manifest_data.nodes.indexOf(id) : undefined)),
-							layouts: route.layouts.map((id) =>
-								id ? manifest_data.nodes.indexOf(id) : undefined
-							),
-							leaf: manifest_data.nodes.indexOf(route.leaf)
+							pattern: route.pattern,
+							names: route.names,
+							types: route.names,
+							page: route.page,
+							endpoint: endpoint
+								? async () => {
+										const url = path.resolve(cwd, endpoint.file);
+										return await vite.ssrLoadModule(url);
+								  }
+								: null
 						};
-					}
-
-					return {
-						type: 'endpoint',
-						id: route.id,
-						pattern,
-						names,
-						types,
-						load: async () => {
-							const url = path.resolve(cwd, route.file);
-							return await vite.ssrLoadModule(url);
-						}
-					};
-				}),
+					})
+					.filter(/** @returns {route is import('types').SSRRoute} */ (route) => !!route),
 				matchers: async () => {
 					/** @type {Record<string, import('types').ParamMatcher>} */
 					const matchers = {};
