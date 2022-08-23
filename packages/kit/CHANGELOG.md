@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.430
+
+### Patch Changes
+
+- [feat] Added config.kit.env.dir, which allows users to set a directory to search for .env files ([#6175](https://github.com/sveltejs/kit/pull/6175))
+
 ## 1.0.0-next.429
 
 ### Patch Changes
