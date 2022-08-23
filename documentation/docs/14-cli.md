@@ -8,15 +8,7 @@ SvelteKit projects use [Vite](https://vitejs.dev), meaning you'll mostly use its
 - `vite build` — build a production version of your app
 - `vite preview` — run the production version locally
 
-However SvelteKit includes its own CLI for creating distributable packages and initialising your project:
-
-### svelte-kit package
-
-> `svelte-kit package` is currently experimental and is not subject to Semantic Versioning rules. Non-backward compatible changes may occur in any future release.
-
-See [packaging](/docs/packaging). `svelte-kit package` accepts the following options:
-
-- `-w`/`--watch` — watch files in `src/lib` for changes and rebuild the package
+However SvelteKit includes its own CLI for initialising your project:
 
 ### svelte-kit sync
 
