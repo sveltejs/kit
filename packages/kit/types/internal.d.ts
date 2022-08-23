@@ -62,9 +62,9 @@ export interface BuildData {
 export interface CSRPageNode {
 	component: typeof SvelteComponent;
 	shared: {
-		load: Load;
-		hydrate: boolean;
-		router: boolean;
+		load?: Load;
+		hydrate?: boolean;
+		router?: boolean;
 	};
 	server: boolean;
 }
@@ -168,6 +168,50 @@ export interface Respond {
 }
 
 export type RouteData = PageData | EndpointData;
+
+export type ServerData =
+	| {
+			type: 'redirect';
+			location: string;
+	  }
+	| {
+			type: 'data';
+			nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
+	  };
+
+/**
+ * Signals a successful response of the server `load` function.
+ * The `uses` property tells the client when it's possible to reuse this data
+ * in a subsequent request.
+ */
+export interface ServerDataNode {
+	type: 'data';
+	data: Record<string, any> | null;
+	uses: {
+		dependencies?: string[];
+		params?: string[];
+		parent?: number | void; // 1 or undefined
+		url?: number | void; // 1 or undefined
+	};
+}
+
+/**
+ * Signals that the server `load` function was not run, and the
+ * client should use what it has in memory
+ */
+export interface ServerDataSkippedNode {
+	type: 'skip';
+}
+
+/**
+ * Signals that the server `load` function failed
+ */
+export interface ServerErrorNode {
+	type: 'error';
+	// Either-or situation, but we don't want to have to do a type assertion
+	error?: Record<string, any>;
+	httperror?: { status: number; message: string };
+}
 
 export interface SSRComponent {
 	default: {
@@ -291,6 +335,13 @@ export interface SSRState {
 }
 
 export type StrictBody = string | Uint8Array;
+
+export interface Uses {
+	dependencies: Set<string>;
+	params: Set<string>;
+	parent: boolean;
+	url: boolean;
+}
 
 export type ValidatedConfig = RecursiveRequired<Config>;
 

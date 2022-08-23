@@ -168,7 +168,7 @@ test.describe('trailingSlash', () => {
 		expect(r.url()).toBe(`${baseURL}/path-base/page-endpoint/__data.json`);
 		expect(await r.json()).toEqual({
 			type: 'data',
-			nodes: [{ data: null }, { data: { message: 'hi' } }]
+			nodes: [null, { type: 'data', data: { message: 'hi' }, uses: {} }]
 		});
 	});
 
