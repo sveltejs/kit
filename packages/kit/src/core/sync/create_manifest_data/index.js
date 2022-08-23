@@ -288,8 +288,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	const component_extension = component_extensions.find((ext) => file.endsWith(ext));
 	if (component_extension) {
 		const name = file.slice(0, -component_extension.length);
-		const pattern =
-			/^\+(?:(page(?:@([a-zA-Z0-9_-]+))?)|(layout(?:-([a-zA-Z0-9_-]+))?(?:@([a-zA-Z0-9_-]+))?)|(error))$/;
+		const pattern = /^\+(?:(page(?:@([a-zA-Z0-9_-]*))?)|(layout(?:@([a-zA-Z0-9_-]*))?)|(error))$/;
 		const match = pattern.exec(name);
 		if (!match) {
 			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
@@ -299,9 +298,8 @@ function analyze(project_relative, file, component_extensions, module_extensions
 			kind: 'component',
 			is_page: !!match[1],
 			is_layout: !!match[3],
-			is_error: !!match[6],
-			uses_layout: match[2] || match[5],
-			declares_layout: match[4]
+			is_error: !!match[5],
+			uses_layout: match[2] || match[5]
 		};
 	}
 
@@ -309,24 +307,23 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	if (module_extension) {
 		const name = file.slice(0, -module_extension.length);
 		const pattern =
-			/^\+(?:(server)|(page(?:@([a-zA-Z0-9_-]+))?(\.server)?)|(layout(?:-([a-zA-Z0-9_-]+))?(?:@([a-zA-Z0-9_-]+))?(\.server)?))$/;
+			/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]+))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]+))?(\.server)?))$/;
 		const match = pattern.exec(name);
 		if (!match) {
 			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
-		} else if (match[3] || match[7]) {
+		} else if (match[3] || match[6]) {
 			throw new Error(
 				// prettier-ignore
-				`Only Svelte files can reference named layouts. Remove '@${match[3] || match[7]}' from ${file} (at ${project_relative})`
+				`Only Svelte files can reference named layouts. Remove '${match[3] || match[6]}' from ${file} (at ${project_relative})`
 			);
 		}
 
-		const kind = !!(match[1] || match[4] || match[8]) ? 'server' : 'shared';
+		const kind = !!(match[1] || match[4] || match[7]) ? 'server' : 'shared';
 
 		return {
 			kind,
 			is_page: !!match[2],
-			is_layout: !!match[5],
-			declares_layout: match[6]
+			is_layout: !!match[5]
 		};
 	}
 
