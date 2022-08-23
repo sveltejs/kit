@@ -384,7 +384,7 @@ test.describe('Encoded paths', () => {
 	});
 });
 
-test.describe('Env', () => {
+test.describe('$env', () => {
 	test('includes environment variables', async ({ page }) => {
 		await page.goto('/env');
 

@@ -146,7 +146,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 		/** @type {Error | null} */
 		let load_error = null;
 
-		/** @type {Array<Promise<Record<string, any> | null>>} */
+		/** @type {Array<Promise<import('types').ServerDataNode | null>>} */
 		const server_promises = nodes.map((node, i) => {
 			if (load_error) {
 				// if an error happens immediately, don't bother with the rest of the nodes
@@ -169,7 +169,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 							/** @type {Record<string, any>} */
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
-								Object.assign(data, await server_promises[j]);
+								const parent = await server_promises[j];
+								if (parent) Object.assign(data, await parent.data);
 							}
 							return data;
 						}
@@ -292,7 +293,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 				response: new Response(undefined),
 				body: JSON.stringify({
 					type: 'data',
-					nodes: branch.map((branch_node) => ({ data: branch_node?.server_data }))
+					nodes: branch.map((branch_node) => branch_node?.server_data)
 				})
 			});
 		}
