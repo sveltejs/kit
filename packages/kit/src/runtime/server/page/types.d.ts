@@ -1,4 +1,4 @@
-import { ResponseHeaders, SSRNode, CspDirectives } from 'types';
+import { ResponseHeaders, CspDirectives, LoadedSSRNode } from 'types';
 import { HttpError } from '../../../index/private';
 
 export interface Fetched {
@@ -19,7 +19,7 @@ export interface FetchState {
 }
 
 export type Loaded = {
-	node: SSRNode;
+	node: LoadedSSRNode;
 	data: Record<string, any> | null;
 	server_data: any;
 };

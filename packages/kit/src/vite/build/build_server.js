@@ -268,8 +268,9 @@ export async function build_server(options, client) {
 			imported.push(...entry.imports);
 			stylesheets.push(...entry.stylesheets);
 
-			imports.push(`import * as shared from '../${vite_manifest[node.shared].file}';`);
-			exports.push(`export { shared };`);
+			exports.push(
+				`export const shared = async () => (await import('../${vite_manifest[node.shared].file}'));`
+			);
 		}
 
 		if (node.server) {

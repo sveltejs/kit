@@ -5,7 +5,7 @@ import { LoadURL, PrerenderingURL } from '../../../utils/url.js';
  * @param {{
  *   dev: boolean;
  *   event: import('types').RequestEvent;
- *   node: import('types').SSRNode | undefined;
+ *   node: import('types').SSRNode | import('types').LoadedSSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
@@ -78,7 +78,7 @@ export async function load_server_data({ dev, event, node, parent }) {
  * @param {{
  *   event: import('types').RequestEvent;
  *   fetcher: typeof fetch;
- *   node: import('types').SSRNode | undefined;
+ *   node: import('types').LoadedSSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  *   server_data_promise: Promise<import('types').ServerDataNode | null>;
  *   state: import('types').SSRState;

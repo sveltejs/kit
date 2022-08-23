@@ -1,0 +1,2 @@
+document;
+export function load() {}

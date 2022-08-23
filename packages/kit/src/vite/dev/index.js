@@ -97,13 +97,14 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						}
 
 						if (node.shared) {
-							const { module, module_node } = await resolve(node.shared);
+							result.shared = async () => {
+								const { module, module_node } = await resolve(/** @type {string} */ (node.shared));
+								module_nodes.push(module_node);
 
-							module_nodes.push(module_node);
+								prevent_illegal_vite_imports(module_node, illegal_imports, extensions);
 
-							result.shared = module;
-
-							prevent_illegal_vite_imports(module_node, illegal_imports, extensions);
+								return module;
+							};
 						}
 
 						if (node.server) {

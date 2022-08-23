@@ -83,4 +83,6 @@ Normally, SvelteKit renders your page on the server first and sends that HTML to
 export const ssr = false;
 ```
 
-In contrast to the other options, you can set this option in both `+page.js` and `+layout.js`. `ssr` options in subsequent layouts or the page overwrite earlier options. You cannot set this option in `+page.server.js` or `+layout.server.js`. This option overwrites the `ssr` option [in the handle hook](/docs/hooks#handle).
+In contrast to the other options, you can set this option in both `+page.js` and `+layout.js`. `ssr` options in subsequent layouts or the page overwrite earlier options. You cannot set this option in `+page.server.js` or `+layout.server.js`. This option does not take effect if the `ssr` option [in the handle hook](/docs/hooks#handle) is evaluated to `false`.
+
+> Why two `ssr` options? The `ssr` option in the handle hook is useful if your `+page.js` is already eagerly accessing browser-only objects, which means the server would crash while trying to evaluate the `ssr` option.

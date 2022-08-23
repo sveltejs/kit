@@ -1,7 +1,7 @@
 import { negotiate } from '../../../utils/http.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
-import { method_not_allowed, error_to_pojo, allowed_methods } from '../utils.js';
+import { method_not_allowed, error_to_pojo, allowed_methods, load_ssr_node } from '../utils.js';
 import { create_fetch } from './fetch.js';
 import { HttpError, Redirect } from '../../../index/private.js';
 import { error, json } from '../../../index/index.js';
@@ -48,12 +48,18 @@ export async function render_page(event, route, options, state, resolve_opts) {
 	}
 
 	const { fetcher, fetched, cookies } = create_fetch({ event, options, state, route });
+	const is_get_request = event.request.method === 'GET' || event.request.method === 'HEAD';
+
+	if (is_get_request && !resolve_opts.ssr) {
+		return await spa_response(200);
+	}
 
 	try {
+		/** @type {Array<import('types').LoadedSSRNode | undefined>} */
 		const nodes = await Promise.all([
 			// we use == here rather than === because [undefined] serializes as "[null]"
-			...route.layouts.map((n) => (n == undefined ? n : options.manifest._.nodes[n]())),
-			options.manifest._.nodes[route.leaf]()
+			...route.layouts.map(async (n) => (n == undefined ? n : load_ssr_node(options.manifest, n))),
+			load_ssr_node(options.manifest, route.leaf)
 		]);
 
 		resolve_opts = {
@@ -65,7 +71,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 				) ?? resolve_opts.ssr
 		};
 
-		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
+		const leaf_node = /** @type {import('types').LoadedSSRNode} */ (nodes.at(-1));
 
 		let status = 200;
 
@@ -75,7 +81,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		/** @type {Record<string, string> | undefined} */
 		let validation_errors;
 
-		if (leaf_node.server && event.request.method !== 'GET' && event.request.method !== 'HEAD') {
+		if (leaf_node.server && !is_get_request) {
 			// for non-GET requests, first call handler in +page.server.js
 			// (this also determines status code)
 			try {
@@ -112,22 +118,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		const data_pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
 
 		if (!resolve_opts.ssr) {
-			return await render_response({
-				branch: [],
-				validation_errors: undefined,
-				fetched,
-				cookies,
-				page_config: {
-					hydrate: true,
-					router: true
-				},
-				status,
-				error: null,
-				event,
-				options,
-				state,
-				resolve_opts
-			});
+			return await spa_response(status);
 		}
 
 		const should_prerender =
@@ -255,7 +246,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					while (i--) {
 						if (route.errors[i]) {
 							const index = /** @type {number} */ (route.errors[i]);
-							const node = await options.manifest._.nodes[index]();
+							const node = await load_ssr_node(options.manifest, index);
 
 							let j = i;
 							while (!branch[j]) j -= 1;
@@ -338,12 +329,34 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			resolve_opts
 		});
 	}
+
+	/**
+	 * @param {number} status
+	 */
+	async function spa_response(status) {
+		return await render_response({
+			branch: [],
+			validation_errors: undefined,
+			fetched,
+			cookies,
+			page_config: {
+				hydrate: true,
+				router: true
+			},
+			status,
+			error: null,
+			event,
+			options,
+			state,
+			resolve_opts
+		});
+	}
 }
 
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
- * @param {import('types').SSRNode['server']} mod
+ * @param {Required<import('types').SSRNode>['server']} mod
  */
 export async function handle_json_request(event, options, mod) {
 	const method = /** @type {'POST' | 'PUT' | 'PATCH' | 'DELETE'} */ (event.request.method);

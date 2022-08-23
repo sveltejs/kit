@@ -238,6 +238,7 @@ export interface SSREndpoint {
 }
 
 export interface SSRNode {
+	/** The component to render. Lazy-loaded due to ssr option */
 	component: SSRComponentLoader;
 	/** index into the `components` array in client-manifest.js */
 	index: number;
@@ -250,15 +251,16 @@ export interface SSRNode {
 	/** inlined styles */
 	inline_styles?: () => MaybePromise<Record<string, string>>;
 
-	shared: {
+	/** The `+page/layout.js` file. Lazy-loaded due to ssr option */
+	shared?: () => Promise<{
 		load?: Load;
 		hydrate?: boolean;
 		prerender?: boolean;
 		router?: boolean;
 		ssr?: boolean;
-	};
+	}>;
 
-	server: {
+	server?: {
 		load?: ServerLoad;
 		prerender?: boolean;
 		POST?: Action;
@@ -269,6 +271,10 @@ export interface SSRNode {
 
 	// store this in dev so we can print serialization errors
 	server_id?: string;
+}
+
+export interface LoadedSSRNode extends Omit<SSRNode, 'shared'> {
+	shared?: Awaited<ReturnType<Required<SSRNode>['shared']>>;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;

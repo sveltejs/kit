@@ -114,3 +114,16 @@ export function allowed_methods(mod) {
 
 	return allowed;
 }
+
+/**
+ * @param {import('types').SSRManifest} manifest
+ * @param {number} idx
+ * @returns {Promise<import('types').LoadedSSRNode>}
+ */
+export async function load_ssr_node(manifest, idx) {
+	const node = await manifest._.nodes[idx]();
+	return {
+		...node,
+		shared: node.shared && (await node.shared())
+	};
+}

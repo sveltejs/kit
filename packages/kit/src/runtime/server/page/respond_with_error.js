@@ -1,7 +1,7 @@
 import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { GENERIC_ERROR } from '../utils.js';
+import { GENERIC_ERROR, load_ssr_node } from '../utils.js';
 import { create_fetch } from './fetch.js';
 
 /**
@@ -32,7 +32,7 @@ export async function respond_with_error({ event, options, state, status, error,
 		const branch = [];
 
 		if (resolve_opts.ssr) {
-			const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
+			const default_layout = await load_ssr_node(options.manifest, 0); // 0 is always the root layout
 
 			const server_data_promise = load_server_data({
 				dev: options.dev,
@@ -59,7 +59,7 @@ export async function respond_with_error({ event, options, state, status, error,
 					data
 				},
 				{
-					node: await options.manifest._.nodes[1](), // 1 is always the root error
+					node: await load_ssr_node(options.manifest, 1), // 1 is always the root error
 					data: null,
 					server_data: null
 				}
