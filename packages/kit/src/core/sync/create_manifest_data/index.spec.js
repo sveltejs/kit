@@ -443,27 +443,32 @@ test('includes nested error components', () => {
 test('creates routes with named layouts', () => {
 	const { nodes, routes } = create('samples/named-layouts');
 
+	const root_layout = { component: 'samples/named-layouts/+layout.svelte' };
+	const special_layout = {
+		component: 'samples/named-layouts/(special)/+layout.svelte',
+		shared: 'samples/named-layouts/(special)/+layout.js',
+		server: 'samples/named-layouts/(special)/+layout.server.js'
+	};
+
 	assert.equal(nodes, [
-		{ component: 'samples/named-layouts/+layout.svelte' },
+		// layouts
+		root_layout,
 		default_error,
-		{ component: 'samples/named-layouts/+layout-home@default.svelte' },
-		{
-			component: 'samples/named-layouts/+layout-special.svelte',
-			shared: 'samples/named-layouts/+layout-special.js',
-			server: 'samples/named-layouts/+layout-special.server.js'
-		},
+		special_layout,
+		{ component: 'samples/named-layouts/(special)/(alsospecial)/+layout.svelte' },
 		{ component: 'samples/named-layouts/a/+layout.svelte' },
-		{ component: 'samples/named-layouts/b/+layout-alsospecial@special.svelte' },
 		{ component: 'samples/named-layouts/b/c/+layout.svelte' },
-		{ component: 'samples/named-layouts/b/d/+layout-extraspecial@special.svelte' },
-		{ component: 'samples/named-layouts/b/d/+layout-special.svelte' },
+		{ component: 'samples/named-layouts/b/d/(special)/+layout.svelte' },
+		{ component: 'samples/named-layouts/b/d/(special)/(extraspecial)/+layout.svelte' },
+
+		// pages
+		{ component: 'samples/named-layouts/(special)/(alsospecial)/b/c/c1/+page.svelte' },
+		{ component: 'samples/named-layouts/(special)/a/a2/+page.svelte' },
 		{ component: 'samples/named-layouts/a/a1/+page.svelte' },
-		{ component: 'samples/named-layouts/a/a2/+page@special.svelte' },
-		{ component: 'samples/named-layouts/b/c/c1/+page@alsospecial.svelte' },
-		{ component: 'samples/named-layouts/b/c/c2/+page@home.svelte' },
-		{ component: 'samples/named-layouts/b/d/+page@special.svelte' },
-		{ component: 'samples/named-layouts/b/d/d1/+page.svelte' },
-		{ component: 'samples/named-layouts/b/d/d2/+page@extraspecial.svelte' }
+		{ component: 'samples/named-layouts/b/c/c2/+page@.svelte' },
+		{ component: 'samples/named-layouts/b/d/(special)/(extraspecial)/d2/+page.svelte' },
+		{ component: 'samples/named-layouts/b/d/(special)/+page.svelte' },
+		{ component: 'samples/named-layouts/b/d/d1/+page.svelte' }
 	]);
 
 	assert.equal(routes, [
@@ -472,82 +477,66 @@ test('creates routes with named layouts', () => {
 			id: 'a/a1',
 			pattern: /^\/a\/a1\/?$/,
 			errors: [default_error],
-			layouts: [
-				{ component: 'samples/named-layouts/+layout.svelte' },
-				{ component: 'samples/named-layouts/a/+layout.svelte' }
-			],
+			layouts: [root_layout, { component: 'samples/named-layouts/a/+layout.svelte' }],
 			leaf: { component: 'samples/named-layouts/a/a1/+page.svelte' }
 		},
 		{
 			type: 'page',
-			id: 'a/a2',
+			id: '(special)/a/a2',
 			pattern: /^\/a\/a2\/?$/,
 			errors: [default_error],
-			layouts: [
-				{
-					component: 'samples/named-layouts/+layout-special.svelte',
-					shared: 'samples/named-layouts/+layout-special.js',
-					server: 'samples/named-layouts/+layout-special.server.js'
-				}
-			],
-			leaf: { component: 'samples/named-layouts/a/a2/+page@special.svelte' }
-		},
-		{
-			type: 'page',
-			id: 'b/d',
-			pattern: /^\/b\/d\/?$/,
-			errors: [default_error],
-			layouts: [
-				{ component: 'samples/named-layouts/+layout.svelte' },
-				{ component: 'samples/named-layouts/b/d/+layout-special.svelte' }
-			],
-			leaf: { component: 'samples/named-layouts/b/d/+page@special.svelte' }
-		},
-		{
-			type: 'page',
-			id: 'b/c/c1',
-			pattern: /^\/b\/c\/c1\/?$/,
-			errors: [default_error],
-			layouts: [
-				{
-					component: 'samples/named-layouts/+layout-special.svelte',
-					shared: 'samples/named-layouts/+layout-special.js',
-					server: 'samples/named-layouts/+layout-special.server.js'
-				},
-				{ component: 'samples/named-layouts/b/+layout-alsospecial@special.svelte' }
-			],
-			leaf: { component: 'samples/named-layouts/b/c/c1/+page@alsospecial.svelte' }
+			layouts: [root_layout, special_layout],
+			leaf: { component: 'samples/named-layouts/(special)/a/a2/+page.svelte' }
 		},
 		{
 			type: 'page',
 			id: 'b/c/c2',
 			pattern: /^\/b\/c\/c2\/?$/,
-			errors: [default_error, default_error],
-			layouts: [
-				{ component: 'samples/named-layouts/+layout.svelte' },
-				{ component: 'samples/named-layouts/+layout-home@default.svelte' }
-			],
-			leaf: { component: 'samples/named-layouts/b/c/c2/+page@home.svelte' }
+			errors: [default_error],
+			layouts: [root_layout, { component: 'samples/named-layouts/b/c/+layout.svelte' }],
+			leaf: { component: 'samples/named-layouts/b/c/c2/+page@.svelte' }
+		},
+		{
+			type: 'page',
+			id: 'b/d/(special)',
+			pattern: /^\/b\/d\/?$/,
+			errors: [default_error],
+			layouts: [root_layout, { component: 'samples/named-layouts/b/d/(special)/+layout.svelte' }],
+			leaf: { component: 'samples/named-layouts/b/d/(special)/+page.svelte' }
 		},
 		{
 			type: 'page',
 			id: 'b/d/d1',
 			pattern: /^\/b\/d\/d1\/?$/,
 			errors: [default_error],
-			layouts: [{ component: 'samples/named-layouts/+layout.svelte' }],
+			layouts: [root_layout],
 			leaf: { component: 'samples/named-layouts/b/d/d1/+page.svelte' }
 		},
 		{
 			type: 'page',
-			id: 'b/d/d2',
+			id: '(special)/(alsospecial)/b/c/c1',
+			pattern: /^\/b\/c\/c1\/?$/,
+			errors: [default_error],
+			layouts: [
+				root_layout,
+				special_layout,
+				{ component: 'samples/named-layouts/(special)/(alsospecial)/+layout.svelte' }
+			],
+			leaf: {
+				component: 'samples/named-layouts/(special)/(alsospecial)/b/c/c1/+page.svelte'
+			}
+		},
+		{
+			type: 'page',
+			id: 'b/d/(special)/(extraspecial)/d2',
 			pattern: /^\/b\/d\/d2\/?$/,
 			errors: [default_error],
 			layouts: [
-				{ component: 'samples/named-layouts/+layout.svelte' },
-				{ component: 'samples/named-layouts/b/d/+layout-special.svelte' },
-				{ component: 'samples/named-layouts/b/d/+layout-extraspecial@special.svelte' }
+				root_layout,
+				{ component: 'samples/named-layouts/b/d/(special)/+layout.svelte' },
+				{ component: 'samples/named-layouts/b/d/(special)/(extraspecial)/+layout.svelte' }
 			],
-			leaf: { component: 'samples/named-layouts/b/d/d2/+page@extraspecial.svelte' }
+			leaf: { component: 'samples/named-layouts/b/d/(special)/(extraspecial)/d2/+page.svelte' }
 		}
 	]);
 });
@@ -644,14 +633,14 @@ test('handles pages without .svelte file', () => {
 test('errors on missing layout', () => {
 	assert.throws(
 		() => create('samples/named-layout-missing'),
-		/samples\/named-layout-missing\/\+page@missing.svelte references missing layout "missing"/
+		/samples\/named-layout-missing\/\+page@missing.svelte references missing segment "missing"/
 	);
 });
 
 test('errors on invalid named layout reference', () => {
 	assert.throws(
 		() => create('samples/invalid-named-layout-reference'),
-		/Only Svelte files can reference named layouts. Remove '@' from \+page@.js \(at samples\/invalid-named-layout-reference\/x\/\+page@named.js\)/
+		/Only Svelte files can reference named layouts. Remove '@' from \+page@.js \(at samples\/invalid-named-layout-reference\/x\/\+page@.js\)/
 	);
 });
 

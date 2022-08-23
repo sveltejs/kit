@@ -9,7 +9,7 @@ interface Part {
 
 interface RouteTreeNode {
 	error: PageNode | undefined;
-	layouts: Record<string, PageNode>;
+	layout: PageNode | undefined;
 }
 
 export type RouteTree = Map<string, RouteTreeNode>;

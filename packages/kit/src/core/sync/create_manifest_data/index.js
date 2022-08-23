@@ -29,16 +29,14 @@ export default function create_manifest_data({
 	/** @type {import('./types').RouteTree} */
 	const tree = new Map();
 
-	const default_layout = {
-		component: posixify(path.relative(cwd, `${fallback}/layout.svelte`))
-	};
-
 	// set default root layout/error
 	tree.set('', {
 		error: {
 			component: posixify(path.relative(cwd, `${fallback}/error.svelte`))
 		},
-		layouts: { [DEFAULT]: default_layout }
+		layout: {
+			component: posixify(path.relative(cwd, `${fallback}/layout.svelte`))
+		}
 	});
 
 	/** @param {string} id */
@@ -46,7 +44,7 @@ export default function create_manifest_data({
 		if (!tree.has(id)) {
 			tree.set(id, {
 				error: undefined,
-				layouts: {}
+				layout: undefined
 			});
 		}
 
@@ -81,7 +79,7 @@ export default function create_manifest_data({
 			// error/layout files should be added to the tree, but don't result
 			// in a route being created, so deal with them first. note: we are
 			// relying on the fact that the +error and +layout files precede
-			// +page files alphabetically, and will therefore be processes
+			// +page files alphabetically, and will therefore be processed
 			// before we reach the page
 			if (item.kind === 'component' && item.is_error) {
 				tree_node(id).error = {
@@ -92,17 +90,10 @@ export default function create_manifest_data({
 			}
 
 			if (item.is_layout) {
-				if (item.declares_layout === DEFAULT) {
-					throw new Error(`${project_relative} cannot use reserved "${DEFAULT}" name`);
-				}
-
-				const layout_id = item.declares_layout || DEFAULT;
-
 				const group = tree_node(id);
+				const defined = group.layout || (group.layout = {});
 
-				const defined = group.layouts[layout_id] || (group.layouts[layout_id] = {});
-
-				if (defined[item.kind] && layout_id !== DEFAULT) {
+				if (defined[item.kind] && id !== '') {
 					// edge case
 					throw new Error(
 						`Duplicate layout ${project_relative} already defined at ${defined[item.kind]}`
@@ -207,22 +198,11 @@ export default function create_manifest_data({
 	/** @type {import('types').PageNode[]} */
 	const nodes = [];
 
-	tree.forEach(({ layouts, error }) => {
+	tree.forEach(({ layout, error }) => {
 		// we do [default, error, ...other_layouts] so that components[0] and [1]
 		// are the root layout/error. kinda janky, there's probably a nicer way
-		if (layouts[DEFAULT]) {
-			nodes.push(layouts[DEFAULT]);
-		}
-
-		if (error) {
-			nodes.push(error);
-		}
-
-		for (const id in layouts) {
-			if (id !== DEFAULT) {
-				nodes.push(layouts[id]);
-			}
-		}
+		if (layout) nodes.push(layout);
+		if (error) nodes.push(error);
 	});
 
 	route_map.forEach((route) => {
@@ -307,7 +287,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	if (module_extension) {
 		const name = file.slice(0, -module_extension.length);
 		const pattern =
-			/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]+))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]+))?(\.server)?))$/;
+			/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/;
 		const match = pattern.exec(name);
 		if (!match) {
 			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
@@ -349,43 +329,31 @@ function trace(tree, id, layout_id = DEFAULT, project_relative) {
 	// apply to this page
 	while (true) {
 		const node = tree.get(parts.join('/'));
-		const layout = node?.layouts[layout_id];
 
-		if (layout && layouts.indexOf(layout) > -1) {
-			// TODO this needs to be fixed for #5748
-			throw new Error(
-				`Recursive layout detected: ${layout.component} -> ${layouts
-					.map((l) => l?.component)
-					.join(' -> ')}`
-			);
+		if (node && (layout_id === DEFAULT || parts.at(-1) === layout_id)) {
+			// any segment that has neither a +layout nor an +error can be discarded.
+			// in other words these...
+			//  layouts: [a, , b, c]
+			//  errors:  [d, , e,  ]
+			//
+			// ...can be compacted to these:
+			//  layouts: [a, b, c]
+			//  errors:  [d, e,  ]
+			if (node.error || node.layout) {
+				errors.unshift(node.error);
+				layouts.unshift(node.layout);
+			}
+
+			layout_id =
+				node.layout?.component?.split('/').at(-1)?.split('@')[1]?.split('.')[0] ?? DEFAULT;
 		}
 
-		// any segment that has neither a +layout nor an +error can be discarded.
-		// in other words these...
-		//  layouts: [a, , b, c]
-		//  errors:  [d, , e,  ]
-		//
-		// ...can be compacted to these:
-		//  layouts: [a, b, c]
-		//  errors:  [d, e,  ]
-		if (node?.error || layout) {
-			errors.unshift(node?.error);
-			layouts.unshift(layout);
-		}
-
-		const parent_layout_id = layout?.component?.split('/').at(-1)?.split('@')[1]?.split('.')[0];
-
-		if (parent_layout_id) {
-			layout_id = parent_layout_id;
-		} else {
-			if (layout) layout_id = DEFAULT;
-			if (parts.length === 0) break;
-			parts.pop();
-		}
+		if (parts.length === 0) break;
+		parts.pop();
 	}
 
 	if (layout_id !== DEFAULT) {
-		throw new Error(`${project_relative} references missing layout "${layout_id}"`);
+		throw new Error(`${project_relative} references missing segment "${layout_id}"`);
 	}
 
 	// trim empty space off the end of the errors array
