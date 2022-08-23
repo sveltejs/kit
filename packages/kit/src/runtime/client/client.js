@@ -630,7 +630,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @param {boolean} parent_changed
 	 * @param {{ url: boolean, params: string[] }} changed
 	 */
-	function detect_change(changed, parent_changed, uses) {
+	function has_changed(changed, parent_changed, uses) {
 		if (!uses) return false;
 
 		if (uses.parent && parent_changed) return true;
@@ -694,16 +694,16 @@ export function create_client({ target, base, trailing_slash }) {
 		/** @type {import('types').ServerData | null} */
 		let server_data = null;
 
-		const invalid_server_nodes = accumulate(loaders, (loader, i, acc) => {
-			if (!loader) return false;
-
+		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];
+			const invalid =
+				loader &&
+				(previous?.loader !== loader ||
+					has_changed(changed, acc.some(Boolean), previous.server?.uses));
 
-			return (
-				previous?.loader !== loader ||
-				detect_change(changed, acc.some(Boolean), previous.server?.uses)
-			);
-		});
+			acc.push(invalid);
+			return acc;
+		}, /** @type {boolean[]} */ ([]));
 
 		if (route.uses_server_data && invalid_server_nodes.some(Boolean)) {
 			try {
@@ -742,20 +742,17 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @type {import('./types').BranchNode | undefined} */
 			const previous = current.branch[i];
 
-			const can_reuse_server_data =
-				!server_data_nodes?.[i] || server_data_nodes[i]?.type === 'skip';
+			const server_data_node = server_data_nodes?.[i] ?? null;
 
+			const can_reuse_server_data = !server_data_node || server_data_node.type === 'skip';
 			// re-use data from previous load if it's still valid
 			const valid =
 				can_reuse_server_data &&
 				loader === previous?.loader &&
-				!detect_change(changed, parent_changed, previous.shared?.uses);
-
+				!has_changed(changed, parent_changed, previous.shared?.uses);
 			if (valid) return previous;
 
 			parent_changed = true;
-
-			const server_data_node = server_data_nodes?.[i] ?? null;
 
 			if (server_data_node?.type === 'error') {
 				if (server_data_node.httperror) {
@@ -1374,20 +1371,4 @@ export function create_client({ target, base, trailing_slash }) {
 			initialize(result);
 		}
 	};
-}
-
-/**
- * @template T
- * @param {T[]} array
- * @param {(item: T, i: number, acc: boolean[]) => boolean} fn
- */
-function accumulate(array, fn) {
-	/** @type {boolean[]} */
-	const acc = [];
-
-	for (let i = 0; i < array.length; i += 1) {
-		acc.push(fn(array[i], i, acc));
-	}
-
-	return acc;
 }
