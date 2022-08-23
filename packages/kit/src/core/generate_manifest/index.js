@@ -1,5 +1,4 @@
 import { s } from '../../utils/misc.js';
-import { parse_route_id } from '../../utils/routing.js';
 import { get_mime_lookup } from '../utils.js';
 
 /**
@@ -54,9 +53,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 			],
 			routes: [
 				${routes.map(route => {
-					const { pattern, names, types } = parse_route_id(route.id);
-
-					types.forEach(type => {
+					route.types.forEach(type => {
 						if (type) matchers.add(type);
 					});
 
@@ -64,10 +61,10 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 
 					return `{
 						id: ${s(route.id)},
-						pattern: ${pattern},
-						names: ${s(names)},
-						types: ${s(types)},
-						page: TODO, // { page: n, layouts: [...n], errors: [...n] }
+						pattern: ${route.pattern},
+						names: ${s(route.names)},
+						types: ${s(route.types)},
+						page: ${s(route.page)},
 						endpoint: ${route.endpoint ? loader(`${relative_path}/${build_data.server.vite_manifest[route.endpoint.file].file}`) : 'null'}
 					}`;
 				}).filter(Boolean).join(',\n\t\t\t\t')}
