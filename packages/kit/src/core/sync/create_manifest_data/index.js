@@ -196,6 +196,9 @@ export default function create_manifest_data({
 	/** @type {import('types').PageNode[]} */
 	const nodes = [];
 
+	/** @type {Map<string, string>} */
+	const conflicts = new Map();
+
 	tree.forEach(({ layout, error }) => {
 		// we do [default, error, ...other_layouts] so that components[0] and [1]
 		// are the root layout/error. kinda janky, there's probably a nicer way
@@ -204,6 +207,17 @@ export default function create_manifest_data({
 	});
 
 	route_map.forEach((route) => {
+		const normalized = route.id
+			.split('/')
+			.filter((segment) => !/^\([^)]+\)$/.test(segment))
+			.join('/');
+
+		if (conflicts.has(normalized)) {
+			throw new Error(`${conflicts.get(normalized)} and ${route.id} occupy the same route`);
+		}
+
+		conflicts.set(normalized, route.id);
+
 		if (route.type === 'page') {
 			nodes.push(route.leaf);
 		}
