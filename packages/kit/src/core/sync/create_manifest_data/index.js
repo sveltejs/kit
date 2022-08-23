@@ -33,11 +33,12 @@ export default function create_manifest_data({
 
 	if (fs.existsSync(config.kit.files.routes)) {
 		/**
+		 * @param {number} depth
 		 * @param {string} id
 		 * @param {string} segment
 		 * @param {import('types').RouteData | null} parent
 		 */
-		const walk = (id, segment, parent) => {
+		const walk = (depth, id, segment, parent) => {
 			const { pattern, names, types } = parse_route_id(id);
 
 			const segments = id.split('/');
@@ -111,22 +112,23 @@ export default function create_manifest_data({
 				if (item.kind === 'component') {
 					if (item.is_error) {
 						route.error = {
+							depth,
 							component: project_relative
 						};
 					} else if (item.is_layout) {
-						if (!route.layout) route.layout = {};
+						if (!route.layout) route.layout = { depth };
 						route.layout.component = project_relative;
 						if (item.uses_layout !== undefined) route.layout.parent_id = item.uses_layout;
 					} else {
-						if (!route.leaf) route.leaf = {};
+						if (!route.leaf) route.leaf = { depth };
 						route.leaf.component = project_relative;
 						if (item.uses_layout !== undefined) route.leaf.parent_id = item.uses_layout;
 					}
 				} else if (item.is_layout) {
-					if (!route.layout) route.layout = {};
+					if (!route.layout) route.layout = { depth };
 					route.layout[item.kind] = project_relative;
 				} else if (item.is_page) {
-					if (!route.leaf) route.leaf = {};
+					if (!route.leaf) route.leaf = { depth };
 					route.leaf[item.kind] = project_relative;
 				} else {
 					route.endpoint = {
@@ -138,12 +140,12 @@ export default function create_manifest_data({
 			// then handle children
 			for (const file of files) {
 				if (file.isDirectory()) {
-					walk(path.join(id, file.name), file.name, route);
+					walk(depth + 1, path.join(id, file.name), file.name, route);
 				}
 			}
 		};
 
-		walk('', '', null);
+		walk(0, '', '', null);
 
 		// TODO remove for 1.0
 		if (route_map.size === 0) {
@@ -158,12 +160,12 @@ export default function create_manifest_data({
 		const root = /** @type {import('types').RouteData} */ (route_map.get(''));
 
 		if (!root.layout?.component) {
-			if (!root.layout) root.layout = {};
+			if (!root.layout) root.layout = { depth: 0 };
 			root.layout.component = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
 		}
 
 		if (!root.error?.component) {
-			if (!root.error) root.error = {};
+			if (!root.error) root.error = { depth: 0 };
 			root.error.component = posixify(path.relative(cwd, `${fallback}/error.svelte`));
 		}
 

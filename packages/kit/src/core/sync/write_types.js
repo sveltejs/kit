@@ -243,7 +243,10 @@ function process_node(ts, node, outdir, params) {
 		}
 
 		server_data = get_data_type(node.server, 'null', proxy);
-		server_load = `Kit.ServerLoad<${params}, ${get_parent_type('LayoutServerData')}, OutputData>`;
+		server_load = `Kit.ServerLoad<${params}, ${get_parent_type(
+			node,
+			'LayoutServerData'
+		)}, OutputData>`;
 
 		if (proxy) {
 			const types = [];
@@ -266,7 +269,7 @@ function process_node(ts, node, outdir, params) {
 		server_data = 'null';
 	}
 
-	const parent_type = get_parent_type('LayoutData');
+	const parent_type = get_parent_type(node, 'LayoutData');
 
 	if (node.shared) {
 		const content = fs.readFileSync(node.shared, 'utf8');
@@ -308,40 +311,35 @@ function process_node(ts, node, outdir, params) {
 			return 'unknown';
 		}
 	}
+}
 
-	/**
-	 * Get the parent type string by recursively looking up the parent layout and accumulate them to one type.
-	 * @param {string} type
-	 */
-	function get_parent_type(type) {
-		// TODO add an `id` to PageNode to avoid this
-		const depth = (node.component ?? node.shared ?? node.server)?.split('/').length ?? 0;
+/**
+ * Get the parent type string by recursively looking up the parent layout and accumulate them to one type.
+ * @param {import('types').PageNode} node
+ * @param {string} type
+ */
+function get_parent_type(node, type) {
+	const parent_imports = [];
 
-		const parent_imports = [];
+	let parent = node.parent;
 
-		let parent = node.parent;
-
-		while (parent) {
-			const parent_depth =
-				(parent.component ?? parent.shared ?? parent.server)?.split('/').length ?? 0;
-
-			const d = depth - parent_depth;
-			// unshift because we need it the other way round for the import string
-			parent_imports.unshift(
-				`${d === 0 ? '' : `import('${'../'.repeat(d)}${'$types.js'}').`}${type}`
-			);
-			parent = parent.parent;
-		}
-
-		let parent_str = parent_imports[0] || 'Record<never, never>';
-		for (let i = 1; i < parent_imports.length; i++) {
-			// Omit is necessary because a parent could have a property with the same key which would
-			// cause a type conflict. At runtime the child overwrites the parent property in this case,
-			// so reflect that in the type definition.
-			parent_str = `Omit<${parent_str}, keyof ${parent_imports[i]}> & ${parent_imports[i]}`;
-		}
-		return parent_str;
+	while (parent) {
+		const d = node.depth - parent.depth;
+		// unshift because we need it the other way round for the import string
+		parent_imports.unshift(
+			`${d === 0 ? '' : `import('${'../'.repeat(d)}${'$types.js'}').`}${type}`
+		);
+		parent = parent.parent;
 	}
+
+	let parent_str = parent_imports[0] || 'Record<never, never>';
+	for (let i = 1; i < parent_imports.length; i++) {
+		// Omit is necessary because a parent could have a property with the same key which would
+		// cause a type conflict. At runtime the child overwrites the parent property in this case,
+		// so reflect that in the type definition.
+		parent_str = `Omit<${parent_str}, keyof ${parent_imports[i]}> & ${parent_imports[i]}`;
+	}
+	return parent_str;
 }
 
 /**

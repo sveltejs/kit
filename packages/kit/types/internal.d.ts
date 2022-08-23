@@ -116,6 +116,7 @@ export interface MethodOverride {
 }
 
 export interface PageNode {
+	depth: number;
 	component?: string; // TODO supply default component if it's missing (bit of an edge case)
 	shared?: string;
 	server?: string;
