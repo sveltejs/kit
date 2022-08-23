@@ -1,9 +1,5 @@
 import { prerendering } from '$app/env';
 
-import { env } from '$env/dynamic/private';
-
-console.log(env);
-
 const initial_prerendering = prerendering;
 
 /** @type {import('@sveltejs/kit').Handle} */
