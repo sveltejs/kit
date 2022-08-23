@@ -13,7 +13,7 @@ import { env } from './env.js';
 const server = new Server(manifest);
 // Dear Rich,
 // it says top-level await isn't available. Should it be?
-let init_promise = server.init({ env: process.env });
+await server.init({ env: process.env });
 const origin = env('ORIGIN', undefined);
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 
@@ -22,14 +22,6 @@ const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
 const host_header = env('HOST_HEADER', 'host').toLowerCase();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/** @type {import('polka').Middleware} */
-const init = async () => {
-	if (init_promise !== null) {
-		await init_promise;
-		init_promise = null;
-	}
-};
 
 /**
  * @param {string} path
@@ -142,7 +134,6 @@ function get_origin(headers) {
 
 export const handler = sequence(
 	[
-		init,
 		serve(path.join(__dirname, '/client'), true),
 		serve(path.join(__dirname, '/static')),
 		serve(path.join(__dirname, '/prerendered')),
