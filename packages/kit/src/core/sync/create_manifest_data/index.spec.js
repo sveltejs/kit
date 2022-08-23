@@ -478,7 +478,7 @@ test('creates routes with named layouts', () => {
 		{ component: 'samples/named-layouts/(special)/(alsospecial)/b/c/c1/+page.svelte' }, // 8
 		{ component: 'samples/named-layouts/(special)/a/a2/+page.svelte' }, // 9
 		{ component: 'samples/named-layouts/a/a1/+page.svelte' }, // 10
-		{ component: 'samples/named-layouts/b/c/c2/+page@.svelte' }, // 11
+		{ component: 'samples/named-layouts/b/c/c2/+page@.svelte', parent_id: '' }, // 11
 		{ component: 'samples/named-layouts/b/d/(special)/+page.svelte' }, // 12
 		{ component: 'samples/named-layouts/b/d/(special)/(extraspecial)/d2/+page.svelte' }, // 13
 		{ component: 'samples/named-layouts/b/d/d1/+page.svelte' } // 14
@@ -498,7 +498,7 @@ test('creates routes with named layouts', () => {
 		{
 			id: 'b/c/c2',
 			pattern: '/^/b/c/c2/?$/',
-			page: { layouts: [0, 5], errors: [1, undefined], leaf: 11 }
+			page: { layouts: [0], errors: [1], leaf: 11 }
 		},
 		{
 			id: 'b/d/(special)',
