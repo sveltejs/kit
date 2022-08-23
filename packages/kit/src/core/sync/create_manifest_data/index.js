@@ -116,11 +116,11 @@ export default function create_manifest_data({
 					} else if (item.is_layout) {
 						if (!route.layout) route.layout = {};
 						route.layout.component = project_relative;
-						if (item.uses_layout) route.layout.parent_id = item.uses_layout;
+						if (item.uses_layout !== undefined) route.layout.parent_id = item.uses_layout;
 					} else {
 						if (!route.leaf) route.leaf = {};
 						route.leaf.component = project_relative;
-						if (item.uses_layout) route.leaf.parent_id = item.uses_layout;
+						if (item.uses_layout !== undefined) route.leaf.parent_id = item.uses_layout;
 					}
 				} else if (item.is_layout) {
 					if (!route.layout) route.layout = {};
@@ -306,7 +306,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 			is_page: !!match[1],
 			is_layout: !!match[3],
 			is_error: !!match[5],
-			uses_layout: match[2] || match[5]
+			uses_layout: match[2] ?? match[4]
 		};
 	}
 
