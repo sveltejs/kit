@@ -179,6 +179,11 @@ export type ServerData =
 			nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
 	  };
 
+/**
+ * Signals a successful response of the server `load` function.
+ * The `uses` property tells the client when it's possible to reuse this data
+ * in a subsequent request.
+ */
 export interface ServerDataNode {
 	type: 'data';
 	data: Record<string, any> | null;
@@ -191,13 +196,16 @@ export interface ServerDataNode {
 }
 
 /**
- * Signals that the `load` function was not run, and the
+ * Signals that the server `load` function was not run, and the
  * client should use what it has in memory
  */
 export interface ServerDataSkippedNode {
 	type: 'skip';
 }
 
+/**
+ * Signals that the server `load` function failed
+ */
 export interface ServerErrorNode {
 	type: 'error';
 	// Either-or situation, but we don't want to have to do a type assertion
