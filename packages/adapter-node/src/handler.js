@@ -11,8 +11,6 @@ import { env } from './env.js';
 /* global ENV_PREFIX */
 
 const server = new Server(manifest);
-// Dear Rich,
-// it says top-level await isn't available. Should it be?
 await server.init({ env: process.env });
 const origin = env('ORIGIN', undefined);
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
