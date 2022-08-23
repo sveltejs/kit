@@ -15,10 +15,6 @@ export function init(manifest) {
 
 	return async (event, context) => {
 		if (init_promise !== null) {
-			// dear Rich,
-			// should we just await it indiscriminately?
-			// sincerely,
-			// me
 			await init_promise;
 			init_promise = null;
 		}
