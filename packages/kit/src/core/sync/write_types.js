@@ -31,6 +31,8 @@ let first_run = true;
  * @param {import('types').ManifestData} manifest_data
  */
 export async function write_types(config, manifest_data) {
+	if (!ts) return;
+
 	const types_dir = `${config.kit.outDir}/types`;
 
 	if (first_run) {
@@ -44,7 +46,7 @@ export async function write_types(config, manifest_data) {
 
 	// For each directory, write $types.d.ts
 	for (const route of manifest_data.routes) {
-		const written = write_types_for_dir(config, manifest_data, routes_dir, route, ts);
+		const written = write_types_for_dir(config, manifest_data, routes_dir, route);
 		written.forEach((w) => written_files.add(w));
 	}
 
@@ -67,6 +69,8 @@ export async function write_types(config, manifest_data) {
  * @param {string} file
  */
 export async function write_type(config, manifest_data, file) {
+	if (!ts) return;
+
 	if (!path.basename(file).startsWith('+')) {
 		// Not a route file
 		return;
@@ -80,7 +84,7 @@ export async function write_type(config, manifest_data, file) {
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return; // this shouldn't ever happen
 
-	write_types_for_dir(config, manifest_data, routes_dir, route, ts);
+	write_types_for_dir(config, manifest_data, routes_dir, route);
 }
 
 /**
@@ -89,9 +93,8 @@ export async function write_type(config, manifest_data, file) {
  * @param {import('types').ManifestData} manifest_data
  * @param {string} routes_dir
  * @param {import('types').RouteData} route
- * @param {import('typescript')} ts
  */
-function write_types_for_dir(config, manifest_data, routes_dir, route, ts) {
+function write_types_for_dir(config, manifest_data, routes_dir, route) {
 	const outdir = `${config.kit.outDir}/types/${routes_dir}/${route.id}`;
 
 	const imports = [`import type * as Kit from '@sveltejs/kit';`];
