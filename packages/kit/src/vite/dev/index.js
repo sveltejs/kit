@@ -32,6 +32,11 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 
 	sync.init(svelte_config, vite_config.mode);
 
+	/** @type {Partial<import('types').Hooks>} */
+	const user_hooks = resolve_entry(svelte_config.kit.files.hooks)
+		? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
+		: {};
+
 	/** @type {import('types').Respond} */
 	const respond = (await import(`${runtime_prefix}/server/index.js`)).respond;
 
@@ -317,11 +322,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						`Not found (did you mean ${svelte_config.kit.paths.base + req.url}?)`
 					);
 				}
-
-				/** @type {Partial<import('types').Hooks>} */
-				const user_hooks = resolve_entry(svelte_config.kit.files.hooks)
-					? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
-					: {};
 
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
 
