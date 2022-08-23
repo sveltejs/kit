@@ -84,6 +84,11 @@ export class Server {
 		};
 	}
 
+	/**
+	 * Take care: Some adapters may have to call \`Server.init\` per-request to set env vars,
+	 * so anything that shouldn't be rerun should be wrapped in an \`if\` block to make sure it hasn't
+	 * been done already.
+	 */
 	async init({ env }) {
 		const entries = Object.entries(env);
 
