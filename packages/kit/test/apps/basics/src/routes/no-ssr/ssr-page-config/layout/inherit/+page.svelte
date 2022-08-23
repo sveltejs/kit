@@ -2,4 +2,6 @@
 	document;
 </script>
 
+{document}
+
 <p>Works</p>
