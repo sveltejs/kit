@@ -100,7 +100,7 @@ export class Server {
 
 		this.options.public_env = pub;
 
-    if (!this.options.hooks) {
+		if (!this.options.hooks) {
 			const module = await import(${s(hooks)});
 			this.options.hooks = {
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
