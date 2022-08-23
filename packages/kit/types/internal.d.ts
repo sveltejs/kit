@@ -101,7 +101,7 @@ export interface ImportNode {
 }
 
 export class InternalServer extends Server {
-	init(options: ServerInitOptions): void;
+	init(options: ServerInitOptions): Promise<void>;
 	respond(
 		request: Request,
 		options: RequestOptions & {
