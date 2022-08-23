@@ -133,7 +133,7 @@ Others are required for SvelteKit to work properly, and should also be left unto
 		"preserveValueImports": true,
 
 		// This ensures both `vite build`
-		// and `svelte-kit package` work correctly
+		// and `svelte-package` work correctly
 		"lib": ["esnext", "DOM", "DOM.Iterable"],
 		"moduleResolution": "node",
 		"module": "esnext",
