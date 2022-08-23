@@ -17,7 +17,6 @@ import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry, prevent_illegal_rollup_imports, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
 import { create_module } from '../core/env.js';
-import preprocess from 'svelte-preprocess';
 
 const cwd = process.cwd();
 
@@ -190,19 +189,6 @@ function kit() {
 
 	return {
 		name: 'vite-plugin-svelte-kit',
-
-		api: {
-			// Replace custom attributes with valid HTML attributes
-			sveltePreprocess: preprocess({
-				// TODO: Update regex to only match attributes and not all string values, to prevent it from replacing text content.
-				// TODO: Ensure the replacement happens for SvelteKit packages too
-				replace: [
-					[/sveltekit\:prefetch/g, 'data-sveltekit-prefetch'],
-					[/sveltekit\:reload/g, 'data-sveltekit-reload'],
-					[/sveltekit\:noscroll/g, 'data-sveltekit-noscroll']
-				]
-			})
-		},
 
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.

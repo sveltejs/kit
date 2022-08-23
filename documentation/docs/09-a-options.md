@@ -2,16 +2,16 @@
 title: Anchor options
 ---
 
-### sveltekit:prefetch
+### data-sveltekit-prefetch
 
 SvelteKit uses code splitting to break your app into small chunks (one per route), ensuring fast startup times.
 
 For _dynamic_ routes, such as our `src/routes/blog/[slug]/+page.svelte` example, that's not enough. In order to render the blog post, we need to fetch the data for it, and we can't do that until we know what `slug` is. In the worst case, that could cause lag as the browser waits for the data to come back from the server.
 
-We can mitigate that by _prefetching_ the data. Adding a `sveltekit:prefetch` attribute to a link...
+We can mitigate that by _prefetching_ the data. Adding a `data-sveltekit-prefetch` attribute to a link...
 
 ```html
-<a sveltekit:prefetch href="blog/what-is-sveltekit">What is SvelteKit?</a>
+<a data-sveltekit-prefetch href="blog/what-is-sveltekit">What is SvelteKit?</a>
 ```
 
 ...will cause SvelteKit to run the page's `load` function as soon as the user hovers over the link (on a desktop) or touches it (on mobile), rather than waiting for the `click` event to trigger navigation. Typically, this buys us an extra couple of hundred milliseconds, which is the difference between a user interface that feels laggy, and one that feels snappy.

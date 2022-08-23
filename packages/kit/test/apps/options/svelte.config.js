@@ -1,5 +1,3 @@
-import preprocess from 'svelte-preprocess';
-
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	extensions: ['.jesuslivesineveryone', '.whokilledthemuffinman', '.svelte.md', '.svelte'],
@@ -25,15 +23,7 @@ const config = {
 			base: '/path-base',
 			assets: 'https://cdn.example.com/stuff'
 		}
-	},
-	preprocess: [
-		preprocess({
-			replace: [
-				[/sveltekit\:attribute/g, 'data-sveltekit-attribute'],
-				[/sveltekit\:something/g, 'data-sveltekit-something']
-			]
-		})
-	]
+	}
 };
 
 export default config;
