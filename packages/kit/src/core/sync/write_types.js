@@ -21,7 +21,6 @@ let first_run = true;
 
 /**
  * Creates types for the whole manifest
- *
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  */
@@ -522,69 +521,4 @@ export function tweak_types(ts, content, names) {
 function write(file, content) {
 	write_if_changed(file, content);
 	return file;
-}
-
-/**
- * Finds the nearest layout for given node.
- * Assumes that nodes is sorted by path length (lowest first).
- *
- * @param {string} routes_dir
- * @param {import('types').PageNode[]} nodes
- * @param {number} start_idx
- */
-export function find_nearest_layout(routes_dir, nodes, start_idx) {
-	const start_file = /** @type {string} */ (
-		nodes[start_idx].component || nodes[start_idx].shared || nodes[start_idx].server
-	);
-
-	let name = '';
-	const match = /^\+(layout|page)(?:-([^@.]+))?(?:@([^@.]+))?/.exec(path.basename(start_file));
-	if (!match) throw new Error(`Unexpected route file: ${start_file}`);
-	if (match[3] && match[3] !== 'default') {
-		name = match[3]; // a named layout is referenced
-	}
-
-	let common_path = path.dirname(start_file);
-	if (match[1] === 'layout' && !match[2] && !name) {
-		// We are a default layout, so we skip the current level
-		common_path = path.dirname(common_path);
-	}
-
-	for (let i = start_idx - 1; i >= 0; i -= 1) {
-		const node = nodes[i];
-		const file = /** @type {string} */ (node.component || node.shared || node.server);
-
-		const current_path = path.dirname(file);
-		const common_path_length = common_path.split('/').length;
-		const current_path_length = current_path.split('/').length;
-
-		if (common_path_length < current_path_length) {
-			// this is a layout in a different tree
-			continue;
-		} else if (common_path_length > current_path_length) {
-			// we've gone back up a folder level
-			common_path = path.dirname(common_path);
-		}
-		if (common_path !== current_path) {
-			// this is a layout in a different tree
-			continue;
-		}
-		if (
-			path.basename(file, path.extname(file)).split('@')[0] !==
-			'+layout' + (name ? `-${name}` : '')
-		) {
-			// this is not the layout we are searching for
-			continue;
-		}
-
-		// matching parent layout found
-		let folder_depth_diff =
-			posixify(path.relative(path.dirname(start_file), common_path + '/$types.js')).split('/')
-				.length - 1;
-		return {
-			key: path.dirname(file).slice(routes_dir.length + 1),
-			name,
-			folder_depth_diff
-		};
-	}
 }
