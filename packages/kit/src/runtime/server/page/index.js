@@ -56,6 +56,15 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			options.manifest._.nodes[route.leaf]()
 		]);
 
+		resolve_opts = {
+			...resolve_opts,
+			ssr:
+				nodes.reduce(
+					(ssr, node) => node?.shared?.ssr ?? ssr,
+					/** @type {boolean|undefined} */ (undefined)
+				) ?? resolve_opts.ssr
+		};
+
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
 
 		let status = 200;
@@ -304,7 +313,10 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			options,
 			state,
 			resolve_opts,
-			page_config: get_page_config(leaf_node, options),
+			page_config: {
+				router: leaf_node.shared?.router ?? options.router,
+				hydrate: leaf_node.shared?.hydrate ?? options.hydrate
+			},
 			status,
 			error: null,
 			branch: compact(branch),
@@ -326,24 +338,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 			resolve_opts
 		});
 	}
-}
-
-/**
- * @param {import('types').SSRNode} leaf
- * @param {SSROptions} options
- */
-function get_page_config(leaf, options) {
-	// TODO we can reinstate this now that it's in the module
-	if (leaf.shared && 'ssr' in leaf.shared) {
-		throw new Error(
-			'`export const ssr` has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle'
-		);
-	}
-
-	return {
-		router: leaf.shared?.router ?? options.router,
-		hydrate: leaf.shared?.hydrate ?? options.hydrate
-	};
 }
 
 /**

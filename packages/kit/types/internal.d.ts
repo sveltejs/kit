@@ -255,6 +255,7 @@ export interface SSRNode {
 		hydrate?: boolean;
 		prerender?: boolean;
 		router?: boolean;
+		ssr?: boolean;
 	};
 
 	server: {
