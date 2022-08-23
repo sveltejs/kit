@@ -197,8 +197,8 @@ function get_groups(manifest_data, routes_dir) {
 
 	// ...then add +server.js files...
 	for (const route of manifest_data.routes) {
-		if (route.type === 'endpoint') {
-			get_group(route.id).endpoint = route.file;
+		if (route.endpoint) {
+			get_group(route.id).endpoint = route.endpoint.file;
 		}
 	}
 
@@ -283,7 +283,7 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 		// but that's more work than i care to do right now
 		const layout_params = new Set();
 		manifest_data.routes.forEach((route) => {
-			if (route.type === 'page' && route.id.startsWith(dir + '/')) {
+			if (route.page && route.id.startsWith(dir + '/')) {
 				// TODO this is O(n^2), see if we need to speed it up
 				for (const name of parse_route_id(route.id.slice(dir.length + 1)).names) {
 					layout_params.add(name);

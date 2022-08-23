@@ -55,11 +55,17 @@ export function write_client_manifest(manifest_data, output) {
 					const layouts = route.page.layouts.map((n) => n ?? '').join(',');
 					const leaf = route.page.leaf;
 
-					let node = route.leaf;
+					/** @type {import('types').RouteData | null} */
+					let current_route = route;
+
+					/** @type {import('types').PageNode | null} */
+					let current_node = route.leaf;
+
 					let uses_server_data = false;
-					while (node && !uses_server_data) {
-						uses_server_data = !!node.server;
-						node = node.parent;
+					while (current_route && !uses_server_data) {
+						uses_server_data = !!current_node?.server;
+						current_route = current_route.parent;
+						current_node = current_route?.layout ?? null;
 					}
 
 					const suffix = uses_server_data ? ', 1' : '';

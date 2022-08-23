@@ -283,7 +283,7 @@ test('allows rest parameters inside segments', () => {
 test('ignores files and directories with leading underscores', () => {
 	const { routes } = create('samples/hidden-underscore');
 
-	assert.equal(routes.map((r) => r.type === 'endpoint' && r.file).filter(Boolean), [
+	assert.equal(routes.map((r) => r.endpoint?.file).filter(Boolean), [
 		'samples/hidden-underscore/e/f/g/h/+server.js'
 	]);
 });
@@ -291,7 +291,7 @@ test('ignores files and directories with leading underscores', () => {
 test('ignores files and directories with leading dots except .well-known', () => {
 	const { routes } = create('samples/hidden-dot');
 
-	assert.equal(routes.map((r) => r.type === 'endpoint' && r.file).filter(Boolean), [
+	assert.equal(routes.map((r) => r.endpoint?.file).filter(Boolean), [
 		'samples/hidden-dot/.well-known/dnt-policy.txt/+server.js'
 	]);
 });
@@ -300,7 +300,7 @@ test('allows multiple slugs', () => {
 	const { routes } = create('samples/multiple-slugs');
 
 	assert.equal(
-		routes.filter((route) => route.type === 'endpoint'),
+		routes.filter((route) => route.endpoint),
 		[
 			{
 				type: 'endpoint',
