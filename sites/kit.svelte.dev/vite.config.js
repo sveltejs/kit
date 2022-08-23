@@ -15,9 +15,9 @@ const config = {
 				'custom-event-polyfill',
 				'core-js/modules/es.promise.js',
 				'whatwg-fetch',
-				'regenerator-runtime/runtime',
 				// 'global-this' should be used so 'regenerator-runtime' wouldn't do CSP issues
 				'core-js/proposals/global-this',
+				'regenerator-runtime/runtime',
 				'unorm'
 			]
 		}),
