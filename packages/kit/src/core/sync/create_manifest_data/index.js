@@ -5,8 +5,6 @@ import { runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 
-const DEFAULT = 'default';
-
 /**
  * @param {{
  *   config: import('types').ValidatedConfig;
@@ -313,10 +311,10 @@ function analyze(project_relative, file, component_extensions, module_extensions
 /**
  * @param {import('./types').RouteTree} tree
  * @param {string} id
- * @param {string} layout_id
+ * @param {string | undefined} layout_id
  * @param {string} project_relative
  */
-function trace(tree, id, layout_id = DEFAULT, project_relative) {
+function trace(tree, id, layout_id, project_relative) {
 	/** @type {Array<import('types').PageNode | undefined>} */
 	const layouts = [];
 
@@ -330,7 +328,7 @@ function trace(tree, id, layout_id = DEFAULT, project_relative) {
 	while (true) {
 		const node = tree.get(parts.join('/'));
 
-		if (node && (layout_id === DEFAULT || parts.at(-1) === layout_id)) {
+		if (node && (layout_id === undefined || parts.at(-1) === layout_id)) {
 			// any segment that has neither a +layout nor an +error can be discarded.
 			// in other words these...
 			//  layouts: [a, , b, c]
@@ -344,15 +342,19 @@ function trace(tree, id, layout_id = DEFAULT, project_relative) {
 				layouts.unshift(node.layout);
 			}
 
-			layout_id =
-				node.layout?.component?.split('/').at(-1)?.split('@')[1]?.split('.')[0] ?? DEFAULT;
+			layout_id = node.layout?.component?.split('/').at(-1)?.split('@')[1]?.split('.')[0];
 		}
 
 		if (parts.length === 0) break;
 		parts.pop();
 	}
 
-	if (layout_id !== DEFAULT) {
+	if (layout_id === '') {
+		// special case — `+page@.svelte` selects the root layout
+		const node = tree.get('');
+		errors.unshift(node?.error);
+		layouts.unshift(node?.layout);
+	} else if (layout_id !== undefined) {
 		throw new Error(`${project_relative} references missing segment "${layout_id}"`);
 	}
 

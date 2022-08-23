@@ -983,7 +983,7 @@ test.describe('Nested layouts', () => {
 
 		expect(await page.textContent('h1')).toBe('Layout reset');
 		expect(await page.textContent('h2')).toBe('Hello');
-		expect(await page.$('#nested')).toBeUndefined();
+		expect(await page.$('#nested')).toBeNull();
 	});
 
 	test('renders the closest error page', async ({ page, clicknav }) => {
