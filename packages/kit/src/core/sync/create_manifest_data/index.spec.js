@@ -648,40 +648,10 @@ test('errors on missing layout', () => {
 	);
 });
 
-test('errors on layout named default', () => {
-	assert.throws(
-		() => create('samples/named-layout-default'),
-		/samples\/named-layout-default\/\+layout-default.svelte cannot use reserved "default" name/
-	);
-});
-
 test('errors on invalid named layout reference', () => {
 	assert.throws(
 		() => create('samples/invalid-named-layout-reference'),
-		/Only Svelte files can reference named layouts. Remove '@named' from \+page@named.js \(at samples\/invalid-named-layout-reference\/\+page@named.js\)/
-	);
-});
-
-test('errors on duplicate layout definition', () => {
-	assert.throws(
-		() => create('samples/duplicate-layout'),
-		/Duplicate layout samples\/duplicate-layout\/\+layout-a@x.svelte already defined at samples\/duplicate-layout\/\+layout-a.svelte/
-	);
-});
-
-test('errors on recursive name layout', () => {
-	assert.throws(
-		() => create('samples/named-layout-recursive-1'),
-		/Recursive layout detected: samples\/named-layout-recursive-1\/\+layout-a@b\.svelte -> samples\/named-layout-recursive-1\/\+layout-b@a\.svelte -> samples\/named-layout-recursive-1\/\+layout-a@b\.svelte/
-	);
-	assert.throws(
-		() => create('samples/named-layout-recursive-2'),
-		/Recursive layout detected: samples\/named-layout-recursive-2\/\+layout-a@a\.svelte -> samples\/named-layout-recursive-2\/\+layout-a@a\.svelte/
-	);
-
-	assert.throws(
-		() => create('samples/named-layout-recursive-3'),
-		/Recursive layout detected: samples\/named-layout-recursive-3\/\+layout@a\.svelte -> samples\/named-layout-recursive-3\/\+layout-a@default\.svelte -> samples\/named-layout-recursive-3\/\+layout@a\.svelte/
+		/Only Svelte files can reference named layouts. Remove '@' from \+page@.js \(at samples\/invalid-named-layout-reference\/x\/\+page@named.js\)/
 	);
 });
 
