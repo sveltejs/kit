@@ -20,14 +20,14 @@ Note that prefetching will not work if the [`router`](/docs/page-options#router)
 
 You can also programmatically invoke `prefetch` from `$app/navigation`.
 
-### sveltekit:reload
+### data-sveltekit-reload
 
 By default, the SvelteKit runtime intercepts clicks on `<a>` elements and bypasses the normal browser navigation for relative (same-origin) URLs that match one of your page routes. We sometimes need to tell SvelteKit that certain links need to be handled by normal browser navigation. Examples of this might be linking to another page on your domain that's not part of your SvelteKit app or linking to an endpoint.
 
-Adding a `sveltekit:reload` attribute to a link...
+Adding a `data-sveltekit-reload` attribute to a link...
 
 ```html
-<a sveltekit:reload href="path">Path</a>
+<a data-sveltekit-reload href="path">Path</a>
 ```
 
 ...will cause browser to navigate via a full page reload when the link is clicked.
