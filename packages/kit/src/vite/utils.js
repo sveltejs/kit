@@ -213,15 +213,15 @@ function format_illegal_import_chain(stack) {
 
 /**
  * Load environment variables from process.env and .env files
+ * @param {import('types').ValidatedKitConfig['env']} env_config
  * @param {string} mode
- * @param {string} prefix
  */
-export function get_env(mode, prefix) {
-	const entries = Object.entries(loadEnv(mode, process.cwd(), ''));
+export function get_env(env_config, mode) {
+	const entries = Object.entries(loadEnv(mode, env_config.dir, ''));
 
 	return {
-		public: Object.fromEntries(entries.filter(([k]) => k.startsWith(prefix))),
-		private: Object.fromEntries(entries.filter(([k]) => !k.startsWith(prefix)))
+		public: Object.fromEntries(entries.filter(([k]) => k.startsWith(env_config.publicPrefix))),
+		private: Object.fromEntries(entries.filter(([k]) => !k.startsWith(env_config.publicPrefix)))
 	};
 }
 
