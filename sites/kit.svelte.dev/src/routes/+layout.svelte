@@ -16,7 +16,7 @@
 <SkipLink href="#main" />
 <Nav {page} logo="/stopwar.svg">
 	<svelte:fragment slot="nav-center">
-		{#if $page.url.pathname !== '/search'}
+		{#if $page.url.pathname !== '/search' && (!browser || ('serviceWorker' in navigator))}
 			<!-- the <Nav> component renders this content inside a <ul>, so
 				we need to wrap it in an <li>. TODO if we adopt this design
 				on other sites, change <Nav> so we don't need to do this -->
