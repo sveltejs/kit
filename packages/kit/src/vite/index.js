@@ -182,7 +182,7 @@ function kit() {
 		 * @param {string} entry
 		 */
 		const find_file_if_exist = (entry) =>
-			(entry in vite_manifest) ? '/' + vite_manifest[entry].file : null;// TODO: Handle the "/" more correctly
+			(entry in vite_manifest) ? vite_manifest[entry].file : null;
 
 		const entry_id = posixify(path.relative(cwd, `${runtime_directory}/client/start.js`));
 		const entry_legacy_id = posixify(path.relative(cwd, `${runtime_directory}/client/start-legacy.js`));

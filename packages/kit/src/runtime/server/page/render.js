@@ -293,14 +293,14 @@ export async function render_response({
 		];
 
 		if (entry_legacy.legacy_polyfills_file) {
-			legacyScripts.push(`<script nomodule id="vite-legacy-polyfill" src=${s(
+			legacyScripts.push(`<script nomodule id="vite-legacy-polyfill" src=${s(prefixed(
 				entry_legacy.legacy_polyfills_file
-			)}></script>`);
+			))}></script>`);
 		}
 
 		if (entry_legacy.file) {
 			legacyScripts = legacyScripts.concat([
-				`<script nomodule id="${legacyEntryId}" data-src=${s(entry_legacy.file)}>${importAndStartCall}</script>`,
+				`<script nomodule id="${legacyEntryId}" data-src=${s(prefixed(entry_legacy.file))}>${importAndStartCall}</script>`,
 				`<script type="module">!function(){try{new Function("m","return import(m)")}catch(o){console.warn("vite: loading legacy build because dynamic import is unsupported, syntax error above should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src=e.src,n.onload=function(){${importAndStartCall}},document.body.appendChild(n)}}();</script>`,
 			]);
 		}
