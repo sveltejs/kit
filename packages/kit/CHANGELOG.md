@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.435
+
+### Patch Changes
+
+- [fix] allow `@` route breakouts to layouts in `[foo]` or `(foo)` directories ([#6224](https://github.com/sveltejs/kit/pull/6224))
+
 ## 1.0.0-next.434
 
 ### Patch Changes
