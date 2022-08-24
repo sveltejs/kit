@@ -155,7 +155,7 @@ export interface Respond {
 }
 
 /**
- * Represents a route segement in the app. It can either be an intermediate node
+ * Represents a route segment in the app. It can either be an intermediate node
  * with only layout/error pages, or a leaf, at which point either `page` and `leaf`
  * or `endpoint` is set.
  */
