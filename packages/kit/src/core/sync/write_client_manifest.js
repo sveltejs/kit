@@ -43,14 +43,15 @@ export function write_client_manifest(manifest_data, output) {
 		})
 		.join(',\n\t');
 
-	// TODO omit default layout/error, as they are common to all routes
 	const dictionary = `{
 		${manifest_data.routes
 			.map((route) => {
 				if (route.page) {
-					const errors = route.page.errors.map((n) => n ?? '').join(',');
-					const layouts = route.page.layouts.map((n) => n ?? '').join(',');
-					const leaf = route.page.leaf;
+					const errors = route.page.errors.slice(1).map((n) => n ?? '');
+					const layouts = route.page.layouts.slice(1).map((n) => n ?? '');
+
+					while (layouts.at(-1) === '') layouts.pop();
+					while (errors.at(-1) === '') errors.pop();
 
 					/** @type {import('types').RouteData | null} */
 					let current_route = route;
@@ -65,9 +66,15 @@ export function write_client_manifest(manifest_data, output) {
 						current_node = current_route?.layout ?? null;
 					}
 
-					const suffix = uses_server_data ? ', 1' : '';
+					// encode whether or not the route uses the server data
+					// using the ones' complement, to save space
+					const array = [`${uses_server_data ? '~' : ''}${route.page.leaf}`];
 
-					return `${s(route.id)}: [[${errors}], [${layouts}], ${leaf}${suffix}]`;
+					// only include non-root layout/error nodes if they exist
+					if (layouts.length > 0) array.push(`[${layouts.join(',')}]`);
+					if (errors.length > 0) array.push(`[${errors.join(',')}]`);
+
+					return `${s(route.id)}: [${array.join(',')}]`;
 				}
 			})
 			.filter(Boolean)
