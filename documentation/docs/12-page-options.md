@@ -24,7 +24,7 @@ You can control this setting on a per-app (via `svelte.config.js`) or per-page (
 Ordinarily, SvelteKit [hydrates](/docs/appendix#hydration) your server-rendered HTML into an interactive page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can skip hydration when the app boots up with the app-wide [`browser.hydrate` config option](/docs/configuration#browser) or the page-level `hydrate` export:
 
 ```js
-/// file: +page.js/+page.js
+/// file: +page.js
 export const hydrate = false;
 ```
 
