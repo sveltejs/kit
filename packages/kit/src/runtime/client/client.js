@@ -1,6 +1,6 @@
 import { onMount, tick } from 'svelte';
 import { normalize_error } from '../../utils/error.js';
-import { LoadURL, decode_params, normalize_path } from '../../utils/url.js';
+import { make_trackable, decode_params, normalize_path } from '../../utils/url.js';
 import { find_anchor, get_base_uri, get_href, scroll_state } from './utils.js';
 import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
@@ -510,17 +510,14 @@ export function create_client({ target, base, trailing_slash }) {
 				});
 			}
 
-			const load_url = new LoadURL(url);
-
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
 				params: uses_params,
 				data: server_data_node?.data ?? null,
-				get url() {
+				url: make_trackable(url, () => {
 					uses.url = true;
-					return load_url;
-				},
+				}),
 				async fetch(resource, init) {
 					let requested;
 
