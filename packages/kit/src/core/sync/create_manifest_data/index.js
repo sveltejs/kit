@@ -140,7 +140,7 @@ export default function create_manifest_data({
 			// then handle children
 			for (const file of files) {
 				if (file.isDirectory()) {
-					walk(depth + 1, `${id}/${file.name}`, file.name, route);
+					walk(depth + 1, path.posix.join(id, file.name), file.name, route);
 				}
 			}
 		};
