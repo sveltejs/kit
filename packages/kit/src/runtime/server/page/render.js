@@ -176,28 +176,6 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
-	// prettier-ignore
-	const init_app = `
-		import { set_public_env, start } from ${s(prefixed(entry.file))};
-
-		set_public_env(${s(options.public_env)});
-
-		start({
-			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-			paths: ${s(options.paths)},
-			route: ${!!page_config.router},
-			spa: ${!resolve_opts.ssr},
-			trailing_slash: ${s(options.trailing_slash)},
-			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
-				status: ${status},
-				error: ${error && serialize_error(error, e => e.stack)},
-				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
-				params: ${devalue(event.params)},
-				routeId: ${s(event.routeId)}
-			}` : 'null'}
-		});
-	`;
-
 	// we use an anonymous function instead of an arrow function to support
 	// older browsers (https://github.com/sveltejs/kit/pull/5417)
 	const init_service_worker = `
@@ -241,10 +219,6 @@ export async function render_response({
 		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
-	if (modern_polyfills_file) {
-		head += `\n\t<script type="module" src=${s(prefixed(modern_polyfills_file))}></script>`;
-	}
-
 	if (page_config.router || page_config.hydrate) {
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
@@ -254,22 +228,62 @@ export async function render_response({
 			}
 		}
 
-		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
-
-		csp.add_script(init_app);
-
-		if (csp.script_needs_nonce) {
-			attributes.push(`nonce="${csp.nonce}"`);
+		if (modern_polyfills_file) {
+			head += `\n\t<script type="module" crossorigin src=${s(prefixed(modern_polyfills_file))}></script>`;
 		}
-
-		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
-	}
-
-	if (legacy_entry_file || legacy_polyfills_file) {
-		// TODO: Make sure we have the appropriate scripts from Vite legacy plugin
-
-		// TODO: Move the details to its own global def(e.g. `window.__KIT_DATA__`), to share between legacy&modern
-		const startDetails = `{
+	
+		let had_emitted_nomodule_script = false;
+		/**
+		 * 
+		 * @param {string} script 
+		 * @param {string | undefined} additionalAttrs
+		 */
+		function add_nomodule_script(script, additionalAttrs = undefined) {
+			/**
+			 * 
+			 * @param {string} script 
+			 * @param {string | undefined} additionalAttrs
+			 */
+			function internal_add(script, additionalAttrs = undefined) {
+				body +=
+					`\n\t\t<script nomodule` +
+					(additionalAttrs ? ` ${additionalAttrs}` : '') +
+					((script && csp.script_needs_nonce) ? ` nonce="${csp.nonce}"` : '') +
+					`>${script}</script>`;
+	
+				if (script) {
+					csp.add_script(script);
+				}
+			}
+	
+			if (!had_emitted_nomodule_script) {
+				// Before adding nomodule scripts, we need to inject Safari 10 nomodule fix
+				// https://gist.github.com/samthor/64b114e4a4f539915a95b91ffd340acc
+				// DO NOT ALTER THIS CONTENT
+				const safari10NoModuleFix = `!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();`
+				internal_add(safari10NoModuleFix);
+	
+				had_emitted_nomodule_script = true;
+			}
+	
+			internal_add(script, additionalAttrs);
+		}
+	
+		if (legacy_polyfills_file) {
+			add_nomodule_script('', `src=${s(prefixed(legacy_polyfills_file))}`);
+		}
+	
+		/**
+		 * 
+		 * @param {string} prefix 
+		 * @returns 
+		 */
+		const getStartupContent = (prefix) => 
+		// prettier-ignore
+		`
+		${prefix}set_public_env(${s(options.public_env)});
+		
+		${prefix}start({
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
 			route: ${!!page_config.router},
@@ -282,37 +296,49 @@ export async function render_response({
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)}
 			}` : 'null'}
-		}`;
-
-		// From vite plugin legacy:
-		// we set the entry path on the element as an attribute so that the
-		// script content will stay consistent - which allows using a constant
-		// hash value for CSP.
-		const legacyEntryId = 'vite-legacy-entry';
-
-		// TODO: Have interaction with the main non-legacy call to start, to not excecute it twice (on special cases).
-		const importAndStartCall = `System.import(document.getElementById('${legacyEntryId}').getAttribute('data-src')).then(function(m){m.set_public_env(${s(options.public_env)}); m.start(${startDetails});});`;
-
-		var legacyScripts = [
-			'<script nomodule>!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();</script>',
-		];
-
-		if (legacy_polyfills_file) {
-			legacyScripts.push(`<script nomodule id="vite-legacy-polyfill" src=${s(prefixed(
-				legacy_polyfills_file
-			))}></script>`);
-		}
-
+		});
+		`;
+		
+		const detectModernBrowserVarName = '__KIT_is_modern_browser';
+		const startup_script_var_name = '__KIT_startup_script';
 		if (legacy_entry_file) {
-			legacyScripts = legacyScripts.concat([
-				`<script nomodule id="${legacyEntryId}" data-src=${s(prefixed(legacy_entry_file))}>${importAndStartCall}</script>`,
-				`<script type="module">!function(){try{new Function("m","return import(m)")}catch(o){console.warn("vite: loading legacy build because dynamic import is unsupported, syntax error above should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src=e.src,n.onload=function(){${importAndStartCall}},document.body.appendChild(n)}}();</script>`,
-			]);
+			const startup_script_js = `window.${startup_script_var_name} = function (m) { ${getStartupContent('m.')} };`;
+			body += `\n\t\t<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${startup_script_js}</script>`;
+			csp.add_script(startup_script_js);
+	
+			const importAndStartCall = `System.import(${s(prefixed(legacy_entry_file))}).then(window.${startup_script_var_name});`;
+	
+			add_nomodule_script(importAndStartCall);
+	
+			const detectModernBrowserCode = `try{import.meta.url;import("_").catch(()=>1);}catch(e){}window.${detectModernBrowserVarName}=true;`;
+			head += `\n\t<script type="module"${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${detectModernBrowserCode}</script>`;
+			csp.add_script(detectModernBrowserCode);
+	
+			const dynamicFallbackInlineCode =
+				`!function(){if(window.${detectModernBrowserVarName})return;console.warn("vite: loading legacy build because dynamic import or import.meta.url is unsupported, syntax error above should be ignored");` +
+				(legacy_polyfills_file ? `var n=document.createElement("script");n.src=${s(prefixed(legacy_polyfills_file))},n.onload=function(){${importAndStartCall}},document.body.appendChild(n)` : `(${importAndStartCall})()`) +
+				`}();`;
+			head += `\n\t<script type="module"${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${dynamicFallbackInlineCode}</script>`;
+			csp.add_script(dynamicFallbackInlineCode);
 		}
 
-		body += ([''].concat(legacyScripts)).join('\n\t\t');
+		// prettier-ignore
+		const init_app = legacy_entry_file ? `
+		if(window.${detectModernBrowserVarName}) {
+			import(${s(prefixed(entry.file))}).then(window.${startup_script_var_name});
+		}
+		` : `
+		import { set_public_env, start } from ${s(prefixed(entry.file))};
+		${getStartupContent('')}`;
+		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
 
-		// TODO: Should it be added to CSP?
+		csp.add_script(init_app);
+
+		if (csp.script_needs_nonce) {
+			attributes.push(`nonce="${csp.nonce}"`);
+		}
+
+		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 	}
 
 	if (resolve_opts.ssr && page_config.hydrate) {
