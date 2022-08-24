@@ -3,7 +3,7 @@ import path from 'path';
 import mime from 'mime';
 import { runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
-import { parse_route_id, is_no_group } from '../../../utils/routing.js';
+import { parse_route_id, affects_path } from '../../../utils/routing.js';
 
 /**
  * @param {{
@@ -247,7 +247,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			nodes.push(route.leaf);
 
-			const normalized = route.id.split('/').filter(is_no_group).join('/');
+			const normalized = route.id.split('/').filter(affects_path).join('/');
 
 			if (conflicts.has(normalized)) {
 				throw new Error(`${conflicts.get(normalized)} and ${route.id} occupy the same route`);
