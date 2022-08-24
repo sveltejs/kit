@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.0.0-next.435
+
+### Patch Changes
+
+- [fix] allow `@` route breakouts to layouts in `[foo]` or `(foo)` directories ([#6224](https://github.com/sveltejs/kit/pull/6224))
+
+## 1.0.0-next.434
+
+### Patch Changes
+
+- Always create `$types` for a route with a layout, leaf or endpoint ([#6222](https://github.com/sveltejs/kit/pull/6222))
+
+## 1.0.0-next.433
+
+### Patch Changes
+
+- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+
 ## 1.0.0-next.432
 
 ### Patch Changes

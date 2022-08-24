@@ -321,7 +321,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	const component_extension = component_extensions.find((ext) => file.endsWith(ext));
 	if (component_extension) {
 		const name = file.slice(0, -component_extension.length);
-		const pattern = /^\+(?:(page(?:@([a-zA-Z0-9_-]*))?)|(layout(?:@([a-zA-Z0-9_-]*))?)|(error))$/;
+		const pattern = /^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/;
 		const match = pattern.exec(name);
 		if (!match) {
 			// TODO remove for 1.0
