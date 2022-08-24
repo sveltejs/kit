@@ -84,7 +84,12 @@ export class Server {
 		};
 	}
 
-	init({ env }) {
+	/**
+	 * Take care: Some adapters may have to call \`Server.init\` per-request to set env vars,
+	 * so anything that shouldn't be rerun should be wrapped in an \`if\` block to make sure it hasn't
+	 * been done already.
+	 */
+	async init({ env }) {
 		const entries = Object.entries(env);
 
 		const prv = Object.fromEntries(entries.filter(([k]) => !k.startsWith('${
@@ -99,12 +104,6 @@ export class Server {
 		set_public_env(pub);
 
 		this.options.public_env = pub;
-	}
-
-	async respond(request, options = {}) {
-		if (!(request instanceof Request)) {
-			throw new Error('The first argument to server.respond must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
-		}
 
 		if (!this.options.hooks) {
 			const module = await import(${s(hooks)});
@@ -113,6 +112,12 @@ export class Server {
 				handleError: module.handleError || (({ error }) => console.error(error.stack)),
 				externalFetch: module.externalFetch || fetch
 			};
+		}
+	}
+
+	async respond(request, options = {}) {
+		if (!(request instanceof Request)) {
+			throw new Error('The first argument to server.respond must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
 		}
 
 		return respond(request, this.options, options);

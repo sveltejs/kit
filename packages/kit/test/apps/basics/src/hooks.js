@@ -1,6 +1,6 @@
 import fs from 'fs';
 import cookie from 'cookie';
-import { sequence } from '../../../../src/hooks';
+import { sequence } from '@sveltejs/kit/hooks';
 
 /** @type {import('@sveltejs/kit').HandleError} */
 export const handleError = ({ event, error }) => {

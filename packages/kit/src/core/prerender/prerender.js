@@ -15,7 +15,7 @@ import { load_config } from '../config/index.js';
  * @typedef {import('types').Logger} Logger
  */
 
-const [, , client_out_dir, results_path, manifest_path, verbose] = process.argv;
+const [, , client_out_dir, results_path, manifest_path, verbose, env] = process.argv;
 
 prerender();
 
@@ -159,6 +159,7 @@ export async function prerender() {
 	});
 
 	const server = new Server(manifest);
+	await server.init({ env: JSON.parse(env) });
 
 	const error = normalise_error_handler(log, config);
 
