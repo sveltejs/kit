@@ -135,7 +135,6 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 				segment,
 				pattern,
-				path: id.includes('[') ? null : `/${id.split('/').filter(affects_path).join('/')}`,
 				names,
 				types,
 
