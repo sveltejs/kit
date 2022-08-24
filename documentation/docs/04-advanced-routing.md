@@ -212,6 +212,7 @@ declare module "$lib/reusable-load-function" {
 // ---cut---
 import { reusableLoad } from '$lib/reusable-load-function';
 
+/** @type {import('./$types').PageLoad} */
 export function load(event) {
 	// Add additional logic here, if needed
 	return reusableLoad(event);
