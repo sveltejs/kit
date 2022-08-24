@@ -346,7 +346,7 @@ export async function prerender() {
 				/** @type {import('types').SSRManifest} */
 				const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 				const { routes } = manifest._;
-				const entries = compact(routes.map((route) => get_path(route.id)));
+				const entries = compact(routes.map((route) => route.page && get_path(route.id)));
 
 				for (const entry of entries) {
 					enqueue(null, config.paths.base + entry); // TODO can we pre-normalize these?
