@@ -205,4 +205,9 @@ test('$env - includes environment variables', () => {
 	assert.match(content, /.*PUBLIC_DYNAMIC: accessible anywhere\/evaluated at run time.*/gs);
 });
 
+test('prerenders a page in a (group)', () => {
+	const content = read('grouped.html');
+	assert.ok(content.includes('<h1>grouped</h1>'));
+});
+
 test.run();

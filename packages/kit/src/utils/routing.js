@@ -97,6 +97,15 @@ export function affects_path(segment) {
 }
 
 /**
+ * Turns a route ID into a path, if possible
+ * @param {string} id
+ */
+export function get_path(id) {
+	if (id.includes('[')) return null;
+	return `/${id.split('/').filter(affects_path).join('/')}`;
+}
+
+/**
  * @param {RegExpMatchArray} match
  * @param {string[]} names
  * @param {string[]} types
