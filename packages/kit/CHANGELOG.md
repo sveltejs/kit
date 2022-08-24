@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.436
+
+### Patch Changes
+
+- [fix] prerender routes in a (group) ([#6232](https://github.com/sveltejs/kit/pull/6232))
+
 ## 1.0.0-next.435
 
 ### Patch Changes
