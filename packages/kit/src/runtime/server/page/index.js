@@ -5,6 +5,7 @@ import { method_not_allowed, error_to_pojo, allowed_methods } from '../utils.js'
 import { create_fetch } from './fetch.js';
 import { HttpError, Redirect } from '../../../index/private.js';
 import { error, json } from '../../../index/index.js';
+import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
 import { load_data, load_server_data } from './load_data.js';
 
@@ -400,19 +401,4 @@ function redirect_response(status, location) {
 		status,
 		headers: { location }
 	});
-}
-
-/**
- * @template T
- * @param {Array<T | null>} array
- * @returns {T[]}
- */
-function compact(array) {
-	const compacted = [];
-	for (const item of array) {
-		if (item) {
-			compacted.push(item);
-		}
-	}
-	return compacted;
 }
