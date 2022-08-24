@@ -147,14 +147,16 @@ export default function create_manifest_data({
 
 		walk(0, '', '', null);
 
-		// TODO remove for 1.0
-		if (route_map.size === 0) {
-			throw new Error(
-				'The filesystem router API has changed, see https://github.com/sveltejs/kit/discussions/5774 for details'
-			);
-		}
-
 		const root = /** @type {import('types').RouteData} */ (route_map.get(''));
+
+		// TODO remove for 1.0
+		if (route_map.size === 1) {
+			if (!root.leaf && !root.error && !root.layout && !root.endpoint) {
+				throw new Error(
+					'The filesystem router API has changed, see https://github.com/sveltejs/kit/discussions/5774 for details'
+				);
+			}
+		}
 
 		if (!root.layout?.component) {
 			if (!root.layout) root.layout = { depth: 0 };
