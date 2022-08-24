@@ -1,4 +1,4 @@
-import { disable_hash, disable_search, make_trackable } from '../../../utils/url.js';
+import { disable_search, make_trackable } from '../../../utils/url.js';
 
 /**
  * Calls the user's `load` function.
