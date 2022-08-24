@@ -71,7 +71,7 @@ export function write_client_manifest(manifest_data, output) {
 					const array = [`${uses_server_data ? '~' : ''}${route.page.leaf}`];
 
 					// only include non-root layout/error nodes if they exist
-					if (layouts.length > 0) array.push(`[${layouts.join(',')}]`);
+					if (layouts.length > 0 || errors.length > 0) array.push(`[${layouts.join(',')}]`);
 					if (errors.length > 0) array.push(`[${errors.join(',')}]`);
 
 					return `${s(route.id)}: [${array.join(',')}]`;
