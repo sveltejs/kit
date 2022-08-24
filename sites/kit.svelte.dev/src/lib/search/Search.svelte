@@ -2,6 +2,8 @@
 	import { browser } from '$app/env';
 	import { searching, query } from './stores.js';
 
+	const has_search_support = !browser || ('serviceWorker' in navigator);
+
 	export let q = '';
 </script>
 
@@ -20,9 +22,10 @@
 		name="q"
 		placeholder="Search"
 		spellcheck="false"
+		disabled={has_search_support || undefined}
 	/>
 
-	{#if browser}
+	{#if browser && has_search_support}
 		<label for="#search">
 			<kbd>{navigator.platform === 'MacIntel' ? '⌘' : 'Ctrl'}</kbd> <kbd>K</kbd>
 		</label>

@@ -98,6 +98,10 @@
 
 <svelte:window
 	on:keydown={(e) => {
+		if (!('serviceWorker' in navigator)) {
+			return;
+		}
+		
 		if (e.key === 'k' && (navigator.platform === 'MacIntel' ? e.metaKey : e.ctrlKey)) {
 			e.preventDefault();
 			$query = '';
