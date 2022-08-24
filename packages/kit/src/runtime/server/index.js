@@ -4,7 +4,7 @@ import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error, normalize_error } from '../../utils/error.js';
 import { serialize_error, GENERIC_ERROR, error_to_pojo } from './utils.js';
-import { decode_params, disable_hash, disable_search, normalize_path } from '../../utils/url.js';
+import { decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
 import { HttpError, Redirect } from '../../index/private.js';
