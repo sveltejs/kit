@@ -629,4 +629,15 @@ test.describe.serial('Invalidation', () => {
 		// this looks wrong, but is actually the intended behaviour (the increment side-effect in a GET would be a bug in a real app)
 		expect(await page.textContent('h3')).toBe('doubled: 2');
 	});
+
+	test('load function re-runs when searchParams change', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/url?a=1');
+		expect(await page.textContent('h1')).toBe('1');
+
+		await clicknav('[href="?a=2"]');
+		expect(await page.textContent('h1')).toBe('2');
+
+		await clicknav('[href="?a=3"]');
+		expect(await page.textContent('h1')).toBe('3');
+	});
 });
