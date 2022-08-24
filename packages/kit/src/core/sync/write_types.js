@@ -155,32 +155,24 @@ function update_types(config, manifest_data, route) {
 		declarations.push(`interface RouteParams extends Partial<Record<string, string>> {}`);
 	}
 
-	if (route.leaf) {
-		const { data, server_data, load, server_load, errors, written_proxies } = process_node(
-			route.leaf,
-			outdir,
-			'RouteParams'
+	// These could also be placed in our public types, but it would bloat them unnecessarily and we may want to change these in the future
+	if (route.layout || route.leaf) {
+		declarations.push(`type MaybeWithVoid<T> = {} extends T ? T | void : T;`);
+		declarations.push(
+			`export type RequiredKeys<T> = { [K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K; }[keyof T];`
 		);
+		declarations.push(
+			`type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any>>`
+		);
+	}
+
+	if (route.leaf) {
+		const { declarations: d, exports: e, written_proxies } = process_node(route.leaf, outdir, true);
+
+		exports.push(...e);
+		declarations.push(...d);
 
 		for (const file of written_proxies) to_delete.delete(file);
-
-		exports.push(`export type Errors = ${errors};`);
-
-		exports.push(`export type PageData = ${data};`);
-		if (load) {
-			exports.push(
-				`export type PageLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
-			);
-			exports.push('export type PageLoadEvent = Parameters<PageLoad>[0];');
-		}
-
-		exports.push(`export type PageServerData = ${server_data};`);
-		if (server_load) {
-			exports.push(
-				`export type PageServerLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${server_load};`
-			);
-			exports.push('export type PageServerLoadEvent = Parameters<PageServerLoad>[0];');
-		}
 
 		if (route.leaf.server) {
 			exports.push(`export type Action = Kit.Action<RouteParams>`);
@@ -206,29 +198,16 @@ function update_types(config, manifest_data, route) {
 			declarations.push(`interface LayoutParams extends RouteParams {}`);
 		}
 
-		const { data, server_data, load, server_load, written_proxies } = process_node(
-			route.layout,
-			outdir,
-			'LayoutParams'
-		);
+		const {
+			exports: e,
+			declarations: d,
+			written_proxies
+		} = process_node(route.layout, outdir, false);
+
+		exports.push(...e);
+		declarations.push(...d);
 
 		for (const file of written_proxies) to_delete.delete(file);
-
-		exports.push(`export type LayoutData = ${data};`);
-		if (load) {
-			exports.push(
-				`export type LayoutLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
-			);
-			exports.push('export type LayoutLoadEvent = Parameters<LayoutLoad>[0];');
-		}
-
-		exports.push(`export type LayoutServerData = ${server_data};`);
-		if (server_load) {
-			exports.push(
-				`export type LayoutServerLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${server_load};`
-			);
-			exports.push('export type LayoutServerLoadEvent = Parameters<LayoutServerLoad>[0];');
-		}
 	}
 
 	if (route.endpoint) {
@@ -251,18 +230,23 @@ function update_types(config, manifest_data, route) {
 /**
  * @param {import('types').PageNode} node
  * @param {string} outdir
- * @param {string} params
+ * @param {boolean} is_page
  */
-function process_node(node, outdir, params) {
-	let data;
-	let load;
-	let server_load;
-	let errors;
+function process_node(node, outdir, is_page) {
+	const params = `${is_page ? 'Route' : 'Layout'}Params`;
+	const prefix = is_page ? 'Page' : 'Layout';
 
 	/** @type {string[]} */
 	let written_proxies = [];
+	/** @type {string[]} */
+	const declarations = [];
+	/** @type {string[]} */
+	const exports = [];
 
+	/** @type {string} */
 	let server_data;
+	/** @type {string} */
+	let data;
 
 	if (node.server) {
 		const content = fs.readFileSync(node.server, 'utf8');
@@ -274,33 +258,49 @@ function process_node(node, outdir, params) {
 		}
 
 		server_data = get_data_type(node.server, 'null', proxy);
-		server_load = `Kit.ServerLoad<${params}, ${get_parent_type(
-			node,
-			'LayoutServerData'
-		)}, OutputData>`;
 
-		if (proxy) {
-			const types = [];
-			for (const method of ['POST', 'PUT', 'PATCH']) {
-				if (proxy.exports.includes(method)) {
-					// If the file wasn't tweaked, we can use the return type of the original file.
-					// The advantage is that type updates are reflected without saving.
-					const from = proxy.modified
-						? `./proxy${replace_ext_with_js(basename)}`
-						: path_to_original(outdir, node.server);
+		const parent_type = `${prefix}ServerParentData`;
 
-					types.push(`Kit.AwaitedErrors<typeof import('${from}').${method}>`);
+		declarations.push(`type ${parent_type} = ${get_parent_type(node, 'LayoutServerData')};`);
+
+		// +page.js load present -> server can return all-optional data
+		// TODO if this is a layout, don't assume all-optional data, instead check if all children pages have a load function. This needs to happen in a later step.
+		const output_data_shape =
+			node.shared || !is_page
+				? `Partial<App.PageData> & Record<string, any> | void`
+				: `OutputDataShape<${parent_type}>`;
+		exports.push(
+			`export type ${prefix}ServerLoad<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.ServerLoad<${params}, ${parent_type}, OutputData>;`
+		);
+
+		exports.push(`export type ${prefix}ServerLoadEvent = Parameters<${prefix}ServerLoad>[0];`);
+
+		if (is_page) {
+			let errors = 'unknown';
+			if (proxy) {
+				const types = [];
+				for (const method of ['POST', 'PUT', 'PATCH']) {
+					if (proxy.exports.includes(method)) {
+						// If the file wasn't tweaked, we can use the return type of the original file.
+						// The advantage is that type updates are reflected without saving.
+						const from = proxy.modified
+							? `./proxy${replace_ext_with_js(basename)}`
+							: path_to_original(outdir, node.server);
+
+						types.push(`Kit.AwaitedErrors<typeof import('${from}').${method}>`);
+					}
 				}
+				errors = types.length ? types.join(' | ') : 'null';
 			}
-			errors = types.length ? types.join(' | ') : 'null';
-		} else {
-			errors = 'unknown';
+			exports.push(`export type Errors = ${errors};`);
 		}
 	} else {
 		server_data = 'null';
 	}
+	exports.push(`export type ${prefix}ServerData = ${server_data};`);
 
-	const parent_type = get_parent_type(node, 'LayoutData');
+	const parent_type = `${prefix}ParentData`;
+	declarations.push(`type ${parent_type} = ${get_parent_type(node, 'LayoutData')};`);
 
 	if (node.shared) {
 		const content = fs.readFileSync(node.shared, 'utf8');
@@ -313,14 +313,25 @@ function process_node(node, outdir, params) {
 		const type = get_data_type(node.shared, `${parent_type} & ${server_data}`, proxy);
 
 		data = `Omit<${parent_type}, keyof ${type}> & ${type}`;
-		load = `Kit.Load<${params}, ${server_data}, ${parent_type}, OutputData>`;
+
+		// TODO if this is a layout, don't assume all-optional data, instead check if all children pages have a load function. This needs to happen in a later step.
+		const output_data_shape = !is_page
+			? `Partial<App.PageData> & Record<string, any> | void`
+			: `OutputDataShape<${parent_type}>`;
+		exports.push(
+			`export type ${prefix}Load<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.Load<${params}, ${server_data}, ${parent_type}, OutputData>;`
+		);
+
+		exports.push(`export type ${prefix}LoadEvent = Parameters<${prefix}Load>[0];`);
 	} else if (server_data === 'null') {
 		data = parent_type;
 	} else {
 		data = `Omit<${parent_type}, keyof ${server_data}> & ${server_data}`;
 	}
 
-	return { data, server_data, load, server_load, errors, written_proxies };
+	exports.push(`export type ${prefix}Data = ${data};`);
+
+	return { declarations, exports, written_proxies };
 
 	/**
 	 * @param {string} file_path
