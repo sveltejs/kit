@@ -494,7 +494,11 @@ test('creates routes with named layouts', () => {
 		{ component: 'samples/named-layouts/b/c/c2/+page@.svelte', parent_id: '' }, // 11
 		{ component: 'samples/named-layouts/b/d/(special)/+page.svelte' }, // 12
 		{ component: 'samples/named-layouts/b/d/(special)/(extraspecial)/d2/+page.svelte' }, // 13
-		{ component: 'samples/named-layouts/b/d/d1/+page.svelte' } // 14
+		{
+			component: 'samples/named-layouts/b/d/(special)/(extraspecial)/d3/+page@(special).svelte',
+			parent_id: '(special)'
+		}, // 14
+		{ component: 'samples/named-layouts/b/d/d1/+page.svelte' } // 15
 	]);
 
 	assert.equal(routes.filter((route) => route.page).map(simplify_route), [
@@ -521,7 +525,7 @@ test('creates routes with named layouts', () => {
 		{
 			id: 'b/d/d1',
 			pattern: '/^/b/d/d1/?$/',
-			page: { layouts: [0], errors: [1], leaf: 14 }
+			page: { layouts: [0], errors: [1], leaf: 15 }
 		},
 		{
 			id: '(special)/(alsospecial)/b/c/c1',
@@ -532,6 +536,11 @@ test('creates routes with named layouts', () => {
 			id: 'b/d/(special)/(extraspecial)/d2',
 			pattern: '/^/b/d/d2/?$/',
 			page: { layouts: [0, 6, 7], errors: [1, undefined, undefined], leaf: 13 }
+		},
+		{
+			id: 'b/d/(special)/(extraspecial)/d3',
+			pattern: '/^/b/d/d3/?$/',
+			page: { layouts: [0, 6], errors: [1, undefined], leaf: 14 }
 		}
 	]);
 });
