@@ -11,7 +11,7 @@ SvelteKit includes a [client-side router](/docs/appendix#routing) that intercept
 In certain circumstances you might need to disable [client-side routing](/docs/appendix#routing) with the app-wide [`browser.router` config option](/docs/configuration#browser) or the page-level `router` export:
 
 ```js
-/// file: +page.js/+page.js
+/// file: +page.js
 export const router = false;
 ```
 
