@@ -1,6 +1,5 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import ts from 'typescript';
 import { tweak_types } from './write_types.js';
 
 test('Rewrites types for a TypeScript module', () => {
@@ -12,7 +11,7 @@ test('Rewrites types for a TypeScript module', () => {
 		};
 	`;
 
-	const rewritten = tweak_types(ts, source, new Set(['GET']));
+	const rewritten = tweak_types(source, new Set(['GET']));
 
 	assert.equal(rewritten?.exports, ['GET']);
 	assert.equal(
@@ -36,7 +35,7 @@ test('Rewrites types for a TypeScript module without param', () => {
 		};
 	`;
 
-	const rewritten = tweak_types(ts, source, new Set(['GET']));
+	const rewritten = tweak_types(source, new Set(['GET']));
 
 	assert.equal(rewritten?.exports, ['GET']);
 	assert.equal(
@@ -61,7 +60,7 @@ test('Rewrites types for a JavaScript module with `function`', () => {
 		};
 	`;
 
-	const rewritten = tweak_types(ts, source, new Set(['GET']));
+	const rewritten = tweak_types(source, new Set(['GET']));
 
 	assert.equal(rewritten?.exports, ['GET']);
 	assert.equal(
@@ -87,7 +86,7 @@ test('Rewrites types for a JavaScript module with `const`', () => {
 		};
 	`;
 
-	const rewritten = tweak_types(ts, source, new Set(['GET']));
+	const rewritten = tweak_types(source, new Set(['GET']));
 
 	assert.equal(rewritten?.exports, ['GET']);
 	assert.equal(

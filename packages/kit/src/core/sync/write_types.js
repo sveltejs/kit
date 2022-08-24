@@ -12,7 +12,8 @@ import { remove_from_previous, write_if_changed } from './utils.js';
  *  } | null} Proxy
  */
 
-/** @type {import('typescript') | undefined} */
+/** @type {import('typescript')} */
+// @ts-ignore
 let ts = undefined;
 try {
 	ts = (await import('typescript')).default;
@@ -118,7 +119,6 @@ function write_types_for_dir(config, manifest_data, routes_dir, route) {
 
 	if (route.leaf) {
 		const { data, server_data, load, server_load, errors, written_proxies } = process_node(
-			ts,
 			route.leaf,
 			outdir,
 			'RouteParams'
@@ -168,7 +168,6 @@ function write_types_for_dir(config, manifest_data, routes_dir, route) {
 		}
 
 		const { data, server_data, load, server_load, written_proxies } = process_node(
-			ts,
 			route.layout,
 			outdir,
 			'LayoutParams'
@@ -207,12 +206,11 @@ function write_types_for_dir(config, manifest_data, routes_dir, route) {
 }
 
 /**
- * @param {import('typescript')} ts
  * @param {import('types').PageNode} node
  * @param {string} outdir
  * @param {string} params
  */
-function process_node(ts, node, outdir, params) {
+function process_node(node, outdir, params) {
 	let data;
 	let load;
 	let server_load;
@@ -225,7 +223,7 @@ function process_node(ts, node, outdir, params) {
 
 	if (node.server) {
 		const content = fs.readFileSync(node.server, 'utf8');
-		const proxy = tweak_types(ts, content, server_names);
+		const proxy = tweak_types(content, server_names);
 		const basename = path.basename(node.server);
 		if (proxy?.modified) {
 			written_proxies.push(write(`${outdir}/proxy${basename}`, proxy.code));
@@ -262,7 +260,7 @@ function process_node(ts, node, outdir, params) {
 
 	if (node.shared) {
 		const content = fs.readFileSync(node.shared, 'utf8');
-		const proxy = tweak_types(ts, content, shared_names);
+		const proxy = tweak_types(content, shared_names);
 		if (proxy?.modified) {
 			written_proxies.push(write(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code));
 		}
@@ -350,12 +348,11 @@ function replace_ext_with_js(file_path) {
 }
 
 /**
- * @param {import('typescript')} ts
  * @param {string} content
  * @param {Set<string>} names
  * @returns {Proxy}
  */
-export function tweak_types(ts, content, names) {
+export function tweak_types(content, names) {
 	try {
 		let modified = false;
 
