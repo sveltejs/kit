@@ -188,11 +188,11 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:*
       '@types/node': ^16.11.36
-      '@vercel/nft': ^0.21.0
+      '@vercel/nft': ^0.22.0
       esbuild: ^0.14.48
       typescript: ^4.7.4
     dependencies:
-      '@vercel/nft': 0.21.0
+      '@vercel/nft': 0.22.0
       esbuild: 0.14.54
     devDependencies:
       '@sveltejs/kit': link:../kit
@@ -1190,8 +1190,8 @@ packages:
       - supports-color
     dev: true
 
-  /@vercel/nft/0.21.0:
-    resolution: {integrity: sha512-hFCAETfI5cG8l5iAiLhMC2bReC5K7SIybzrxGorv+eGspIbIFsVw7Vg85GovXm/LxA08pIDrAlrhR6GN36XB/Q==}
+  /@vercel/nft/0.22.0:
+    resolution: {integrity: sha512-hB80/093PPiCefN2gVbqv6J93MH+63Zr7uDCwkiS/U4W07DXkLoftbnkBmZoS0Q84LiTSl9DRVSHU4XYCX+sJA==}
     hasBin: true
     dependencies:
       '@mapbox/node-pre-gyp': 1.0.9
