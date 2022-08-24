@@ -30,7 +30,7 @@ let first_run = true;
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  */
-export async function write_types(config, manifest_data) {
+export async function write_all_types(config, manifest_data) {
 	if (!ts) return;
 
 	const types_dir = `${config.kit.outDir}/types`;
@@ -63,12 +63,11 @@ export async function write_types(config, manifest_data) {
 /**
  * Creates types related to the given file. This should only be called
  * if the file in question was edited, not if it was created/deleted/moved.
- *
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  * @param {string} file
  */
-export async function write_type(config, manifest_data, file) {
+export async function write_types(config, manifest_data, file) {
 	if (!ts) return;
 
 	if (!path.basename(file).startsWith('+')) {
