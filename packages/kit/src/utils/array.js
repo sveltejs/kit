@@ -1,5 +1,5 @@
 /**
- * Removes falsy values from an array.
+ * Removes nullish values from an array.
  *
  * @function
  * @template T
