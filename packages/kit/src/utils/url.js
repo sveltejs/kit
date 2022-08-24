@@ -96,7 +96,10 @@ export function make_trackable(url, callback) {
 			get() {
 				callback();
 				return value;
-			}
+			},
+
+			enumerable: true,
+			configurable: true
 		});
 	}
 
