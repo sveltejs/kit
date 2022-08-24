@@ -82,6 +82,7 @@ function create_matchers(config, cwd) {
  * @param {string} fallback
  */
 function create_routes_and_nodes(cwd, config, fallback) {
+	/** @type {Map<string, import('types').RouteData>} */
 	const route_map = new Map();
 
 	/** @type {Map<string, import('./types').Part[][]>} */
@@ -134,6 +135,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 				segment,
 				pattern,
+				path: id.includes('[') ? null : `/${id.split('/').filter(affects_path).join('/')}`,
 				names,
 				types,
 

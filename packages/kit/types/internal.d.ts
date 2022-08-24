@@ -165,6 +165,7 @@ export interface RouteData {
 
 	segment: string;
 	pattern: RegExp;
+	path: string | null;
 	names: string[];
 	types: string[];
 
