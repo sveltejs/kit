@@ -59,7 +59,6 @@
 	],
 	"scripts": {
 		"build": "npm run types",
-		"dev": "rollup -cw",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",

@@ -7,12 +7,12 @@ import { getRequest, setResponse } from '../../node/index.js';
 import { installPolyfills } from '../../node/polyfills.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { posixify } from '../../utils/filesystem.js';
-import { parse_route_id } from '../../utils/routing.js';
 import { load_template } from '../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base, runtime_prefix } from '../../core/utils.js';
 import { get_env, prevent_illegal_vite_imports, resolve_entry } from '../utils.js';
+import { compact } from '../../utils/array.js';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
@@ -149,36 +149,27 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						return result;
 					};
 				}),
-				routes: manifest_data.routes.map((route) => {
-					const { pattern, names, types } = parse_route_id(route.id);
+				routes: compact(
+					manifest_data.routes.map((route) => {
+						if (!route.page && !route.endpoint) return null;
 
-					if (route.type === 'page') {
+						const endpoint = route.endpoint;
+
 						return {
-							type: 'page',
 							id: route.id,
-							pattern,
-							names,
-							types,
-							errors: route.errors.map((id) => (id ? manifest_data.nodes.indexOf(id) : undefined)),
-							layouts: route.layouts.map((id) =>
-								id ? manifest_data.nodes.indexOf(id) : undefined
-							),
-							leaf: manifest_data.nodes.indexOf(route.leaf)
+							pattern: route.pattern,
+							names: route.names,
+							types: route.types,
+							page: route.page,
+							endpoint: endpoint
+								? async () => {
+										const url = path.resolve(cwd, endpoint.file);
+										return await vite.ssrLoadModule(url);
+								  }
+								: null
 						};
-					}
-
-					return {
-						type: 'endpoint',
-						id: route.id,
-						pattern,
-						names,
-						types,
-						load: async () => {
-							const url = path.resolve(cwd, route.file);
-							return await vite.ssrLoadModule(url);
-						}
-					};
-				}),
+					})
+				),
 				matchers: async () => {
 					/** @type {Record<string, import('types').ParamMatcher>} */
 					const matchers = {};
@@ -229,15 +220,16 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 			to_run();
 		}, 100);
 	};
+
 	// Debounce add/unlink events because in case of folder deletion or moves
 	// they fire in rapid succession, causing needless invocations.
 	watch('add', () => debounce(update_manifest));
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
-		if (!timeout) {
-			sync.update(svelte_config, manifest_data, file);
-		}
+		if (timeout) return;
+
+		sync.update(svelte_config, manifest_data, file);
 	});
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;

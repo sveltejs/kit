@@ -23,7 +23,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 	/** @param {import('types').RouteData} route */
 	// TODO routes should come pre-filtered
 	function not_prerendered(route) {
-		const path = route.type === 'page' && !route.id.includes('[') && `/${route.id}`;
+		const path = route.page && !route.id.includes('[') && `/${route.id}`;
 		if (path) {
 			return !prerendered_paths.has(path) && !prerendered_paths.has(path + '/');
 		}
@@ -68,17 +68,31 @@ export function create_builder({ config, build_data, prerendered, log }) {
 			const { routes } = build_data.manifest_data;
 
 			/** @type {import('types').RouteDefinition[]} */
-			const facades = routes.map((route) => ({
-				id: route.id,
-				type: route.type,
-				segments: route.id.split('/').map((segment) => ({
-					dynamic: segment.includes('['),
-					rest: segment.includes('[...'),
-					content: segment
-				})),
-				pattern: route.pattern,
-				methods: route.type === 'page' ? ['GET'] : build_data.server.methods[route.file]
-			}));
+			const facades = routes.map((route) => {
+				const methods = new Set();
+
+				if (route.page) {
+					methods.add('SET');
+				}
+
+				if (route.endpoint) {
+					for (const method of build_data.server.methods[route.endpoint.file]) {
+						methods.add(method);
+					}
+				}
+
+				return {
+					id: route.id,
+					type: route.page ? 'page' : 'endpoint', // TODO change this if support pages+endpoints
+					segments: route.id.split('/').map((segment) => ({
+						dynamic: segment.includes('['),
+						rest: segment.includes('[...'),
+						content: segment
+					})),
+					pattern: route.pattern,
+					methods: Array.from(methods)
+				};
+			});
 
 			const seen = new Set();
 
@@ -102,8 +116,9 @@ export function create_builder({ config, build_data, prerendered, log }) {
 
 				// heuristic: if /foo/[bar] is included, /foo/[bar].json should
 				// also be included, since the page likely needs the endpoint
+				// TODO is this still necessary, given the new way of doing things?
 				filtered.forEach((route) => {
-					if (route.type === 'page') {
+					if (route.page) {
 						const endpoint = routes.find((candidate) => candidate.id === route.id + '.json');
 
 						if (endpoint) {

@@ -158,8 +158,8 @@ export async function build_server(options, client) {
 
 	// add entry points for every endpoint...
 	manifest_data.routes.forEach((route) => {
-		if (route.type === 'endpoint') {
-			const resolved = path.resolve(cwd, route.file);
+		if (route.endpoint) {
+			const resolved = path.resolve(cwd, route.endpoint.file);
 			const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
 			const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
 			input[name] = resolved;
@@ -326,10 +326,16 @@ function get_methods(cwd, output, manifest_data) {
 	/** @type {Record<string, import('types').HttpMethod[]>} */
 	const methods = {};
 	manifest_data.routes.forEach((route) => {
-		const file = route.type === 'endpoint' ? route.file : route.leaf.server;
+		if (route.endpoint) {
+			if (lookup[route.endpoint.file]) {
+				methods[route.endpoint.file] = lookup[route.endpoint.file].filter(is_http_method);
+			}
+		}
 
-		if (file && lookup[file]) {
-			methods[file] = lookup[file].filter(is_http_method);
+		if (route.leaf?.server) {
+			if (lookup[route.leaf.server]) {
+				methods[route.leaf.server] = lookup[route.leaf.server].filter(is_http_method);
+			}
 		}
 	});
 

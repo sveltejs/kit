@@ -93,7 +93,7 @@ export async function respond(request, options, state) {
 	}
 
 	if (route) {
-		if (route.type === 'page') {
+		if (route.page) {
 			const normalized = normalize_path(url.pathname, options.trailing_slash);
 
 			if (normalized !== url.pathname && !state.prerendering?.fallback) {
@@ -253,9 +253,9 @@ export async function respond(request, options, state) {
 				if (route) {
 					/** @type {Response} */
 					let response;
-					if (is_data_request && route.type === 'page') {
+					if (is_data_request && route.page) {
 						try {
-							const node_ids = [...route.layouts, route.leaf];
+							const node_ids = [...route.page.layouts, route.page.leaf];
 
 							const invalidated =
 								request.headers.get('x-sveltekit-invalidated')?.split(',').map(Boolean) ??
@@ -317,7 +317,8 @@ export async function respond(request, options, state) {
 											throw error;
 										}
 
-										length = i + 1; // don't include nodes after first error
+										// Math.min because array isn't guaranteed to resolve in order
+										length = Math.min(length, i + 1);
 
 										if (error instanceof HttpError) {
 											return /** @type {import('types').ServerErrorNode} */ ({
@@ -358,11 +359,14 @@ export async function respond(request, options, state) {
 								response = json(error_to_pojo(error, options.get_stack), { status: 500 });
 							}
 						}
+					} else if (route.page) {
+						response = await render_page(event, route, route.page, options, state, resolve_opts);
+					} else if (route.endpoint) {
+						response = await render_endpoint(event, await route.endpoint());
 					} else {
-						response =
-							route.type === 'endpoint'
-								? await render_endpoint(event, route)
-								: await render_page(event, route, options, state, resolve_opts);
+						// a route will always have a page or an endpoint, but TypeScript
+						// doesn't know that
+						throw new Error('This should never happen');
 					}
 
 					if (!is_data_request) {

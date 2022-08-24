@@ -17,13 +17,14 @@ import { load_data, load_server_data } from './load_data.js';
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {import('types').SSRPage} route
+ * @param {import('types').SSRRoute} route
+ * @param {import('types').PageNodeIndexes} page
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRState} state
  * @param {import('types').RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
-export async function render_page(event, route, options, state, resolve_opts) {
+export async function render_page(event, route, page, options, state, resolve_opts) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return new Response(`Not found: ${event.url.pathname}`, {
@@ -41,7 +42,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		event.request.method !== 'GET' &&
 		event.request.method !== 'HEAD'
 	) {
-		const node = await options.manifest._.nodes[route.leaf]();
+		const node = await options.manifest._.nodes[page.leaf]();
 		if (node.server) {
 			return handle_json_request(event, options, node.server);
 		}
@@ -52,8 +53,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 	try {
 		const nodes = await Promise.all([
 			// we use == here rather than === because [undefined] serializes as "[null]"
-			...route.layouts.map((n) => (n == undefined ? n : options.manifest._.nodes[n]())),
-			options.manifest._.nodes[route.leaf]()
+			...page.layouts.map((n) => (n == undefined ? n : options.manifest._.nodes[n]())),
+			options.manifest._.nodes[page.leaf]()
 		]);
 
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
@@ -244,8 +245,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					const status = error instanceof HttpError ? error.status : 500;
 
 					while (i--) {
-						if (route.errors[i]) {
-							const index = /** @type {number} */ (route.errors[i]);
+						if (page.errors[i]) {
+							const index = /** @type {number} */ (page.errors[i]);
 							const node = await options.manifest._.nodes[index]();
 
 							let j = i;

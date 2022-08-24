@@ -80,13 +80,6 @@ export type CSRRoute = {
 	uses_server_data: boolean;
 };
 
-export interface EndpointData {
-	type: 'endpoint';
-	id: string;
-	pattern: RegExp;
-	file: string;
-}
-
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
 export interface Hooks {
@@ -123,18 +116,12 @@ export interface MethodOverride {
 }
 
 export interface PageNode {
+	depth: number;
 	component?: string; // TODO supply default component if it's missing (bit of an edge case)
 	shared?: string;
 	server?: string;
-}
-
-export interface PageData {
-	type: 'page';
-	id: string;
-	pattern: RegExp;
-	errors: Array<PageNode | undefined>;
-	layouts: Array<PageNode | undefined>;
-	leaf: PageNode;
+	parent_id?: string;
+	parent?: PageNode;
 }
 
 export type PayloadScriptAttributes =
@@ -167,7 +154,34 @@ export interface Respond {
 	(request: Request, options: SSROptions, state: SSRState): Promise<Response>;
 }
 
-export type RouteData = PageData | EndpointData;
+/**
+ * Represents a route segement in the app. It can either be an intermediate node
+ * with only layout/error pages, or a leaf, at which point either `page` and `leaf`
+ * or `endpoint` is set.
+ */
+export interface RouteData {
+	id: string;
+	parent: RouteData | null;
+
+	segment: string;
+	pattern: RegExp;
+	names: string[];
+	types: string[];
+
+	layout: PageNode | null;
+	error: PageNode | null;
+	leaf: PageNode | null;
+
+	page: {
+		layouts: Array<number | undefined>;
+		errors: Array<number | undefined>;
+		leaf: number;
+	} | null;
+
+	endpoint: {
+		file: string;
+	} | null;
+}
 
 export type ServerData =
 	| {
@@ -227,15 +241,6 @@ export interface SSRComponent {
 }
 
 export type SSRComponentLoader = () => Promise<SSRComponent>;
-
-export interface SSREndpoint {
-	type: 'endpoint';
-	id: string;
-	pattern: RegExp;
-	names: string[];
-	types: string[];
-	load(): Promise<Partial<Record<HttpMethod, RequestHandler>>>;
-}
 
 export interface SSRNode {
 	component: SSRComponentLoader;
@@ -309,27 +314,33 @@ export interface SSROptions {
 	trailing_slash: TrailingSlash;
 }
 
-export interface SSRPage {
-	type: 'page';
-	id: string;
-	pattern: RegExp;
-	names: string[];
-	types: string[];
+export interface SSRErrorPage {
+	id: '__error';
+}
+
+export interface PageNodeIndexes {
 	errors: Array<number | undefined>;
 	layouts: Array<number | undefined>;
 	leaf: number;
 }
 
-export interface SSRErrorPage {
-	id: '__error';
-}
+export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>>;
 
-export type SSRRoute = SSREndpoint | SSRPage;
+export interface SSRRoute {
+	id: string;
+	pattern: RegExp;
+	names: string[];
+	types: string[];
+
+	page: PageNodeIndexes | null;
+
+	endpoint: (() => Promise<SSREndpoint>) | null;
+}
 
 export interface SSRState {
 	fallback?: string;
 	getClientAddress: () => string;
-	initiator?: SSRPage | SSRErrorPage;
+	initiator?: SSRRoute | SSRErrorPage;
 	platform?: any;
 	prerendering?: PrerenderOptions;
 }

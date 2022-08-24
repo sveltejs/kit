@@ -1,28 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import MagicString from 'magic-string';
-import { posixify, rimraf } from '../../utils/filesystem.js';
-import { parse_route_id } from '../../utils/routing.js';
-import { remove_from_previous, write_if_changed } from './utils.js';
-
-/**
- * @typedef { import('types').PageNode & {
- * 	parent?: {
- *    	key: string;
- *   	name: string;
- *   	folder_depth_diff: number;
- * 	}
- * } } Node
- */
-
-/**
- * @typedef {{
- *   leaf?: Node;
- *   default_layout?: Node;
- *   named_layouts: Map<string, Node>;
- *   endpoint?: string;
- * }} NodeGroup
- */
+import { posixify, rimraf, walk } from '../../utils/filesystem.js';
+import { compact } from '../../utils/array.js';
 
 /**
  *  @typedef {{
@@ -32,200 +12,133 @@ import { remove_from_previous, write_if_changed } from './utils.js';
  *  } | null} Proxy
  */
 
+/** @type {import('typescript')} */
+// @ts-ignore
+let ts = undefined;
+try {
+	ts = (await import('typescript')).default;
+} catch {}
+
 const cwd = process.cwd();
 
 const shared_names = new Set(['load']);
 const server_names = new Set(['load', 'POST', 'PUT', 'PATCH', 'DELETE']); // TODO replace with a single `action`
 
-let first_run = true;
-
 /**
  * Creates types for the whole manifest
- *
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  */
-export async function write_types(config, manifest_data) {
-	/** @type {import('typescript') | undefined} */
-	let ts = undefined;
-	try {
-		ts = (await import('typescript')).default;
-	} catch (e) {
-		// No TypeScript installed - skip type generation
-		return;
-	}
+export async function write_all_types(config, manifest_data) {
+	if (!ts) return;
 
 	const types_dir = `${config.kit.outDir}/types`;
 
-	if (first_run) {
-		rimraf(types_dir);
-		first_run = false;
-	}
+	// empty out files that no longer need to exist
+	const routes_dir = path.relative('.', config.kit.files.routes);
+	const expected_directories = new Set(
+		manifest_data.routes.map((route) => path.join(routes_dir, route.id))
+	);
 
-	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
-	const groups = get_groups(manifest_data, routes_dir);
-
-	let written_files = new Set();
-	// ...then, for each directory, write $types.d.ts
-	for (const [dir] of groups) {
-		const written = write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts);
-		written.forEach((w) => written_files.add(w));
-	}
-
-	// Remove all files that were not updated, which means their original was removed
-	remove_from_previous((file) => {
-		const was_removed = file.startsWith(types_dir) && !written_files.has(file);
-		if (was_removed) {
-			rimraf(file);
+	if (fs.existsSync(types_dir)) {
+		for (const file of walk(types_dir)) {
+			const dir = path.dirname(file);
+			if (!expected_directories.has(dir)) {
+				rimraf(file);
+			}
 		}
-		return was_removed;
-	});
+	}
+
+	// For each directory, write $types.d.ts
+	for (const route of manifest_data.routes) {
+		update_types(config, manifest_data, route);
+	}
 }
 
 /**
  * Creates types related to the given file. This should only be called
  * if the file in question was edited, not if it was created/deleted/moved.
- *
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  * @param {string} file
  */
-export async function write_type(config, manifest_data, file) {
+export async function write_types(config, manifest_data, file) {
+	if (!ts) return;
+
 	if (!path.basename(file).startsWith('+')) {
 		// Not a route file
 		return;
 	}
 
-	/** @type {import('typescript') | undefined} */
-	let ts = undefined;
-	try {
-		ts = (await import('typescript')).default;
-	} catch (e) {
-		// No TypeScript installed - skip type generation
-		return;
-	}
+	const filepath = path.relative(config.kit.files.routes, file);
+	const id = path.dirname(filepath);
 
-	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
-	const file_dir = posixify(path.dirname(file).slice(config.kit.files.routes.length + 1));
-	const groups = get_groups(manifest_data, routes_dir);
+	const route = manifest_data.routes.find((route) => route.id === id);
+	if (!route) return; // this shouldn't ever happen
 
-	// We are only interested in the directory that contains the file
-	write_types_for_dir(config, manifest_data, routes_dir, file_dir, groups, ts);
-}
-
-/**
- * @param {import('types').ManifestData} manifest_data
- * @param {string} routes_dir
- */
-function get_groups(manifest_data, routes_dir) {
-	/**
-	 * A map of all directories : route files. We don't just use
-	 * manifest_data.routes, because that will exclude +layout
-	 * files that aren't accompanied by a +page
-	 * @type {Map<string, NodeGroup>}
-	 */
-	const groups = new Map();
-
-	/** @param {string} dir */
-	function get_group(dir) {
-		let group = groups.get(dir);
-		if (!group) {
-			group = {
-				named_layouts: new Map()
-			};
-			groups.set(dir, group);
-		}
-
-		return group;
-	}
-
-	// first, sort nodes (necessary for finding the nearest layout more efficiently)...
-	const nodes = [...manifest_data.nodes].sort((n1, n2) => {
-		// Sort by path length first...
-		const path_length_diff =
-			/** @type {string} */ (n1.component ?? n1.shared ?? n1.server).split('/').length -
-			/** @type {string} */ (n2.component ?? n2.shared ?? n2.server).split('/').length;
-
-		return (
-			path_length_diff ||
-			// ...on ties, sort named layouts first
-			(path.basename(n1.component || '').includes('-')
-				? -1
-				: path.basename(n2.component || '').includes('-')
-				? 1
-				: 0)
-		);
-	});
-
-	// ...then, populate `directories` with +page/+layout files...
-	for (let i = 0; i < nodes.length; i += 1) {
-		/** @type {Node} */
-		const node = { ...nodes[i] }; // shallow copy so we don't mutate the original when setting parent
-
-		const file_path = /** @type {string} */ (node.component ?? node.shared ?? node.server);
-		// skip default layout/error
-		if (!file_path.startsWith(routes_dir)) continue;
-
-		const parts = file_path.split('/');
-
-		const file = /** @type {string} */ (parts.pop());
-		const dir = parts.join('/').slice(routes_dir.length + 1);
-
-		// error pages don't need types
-		if (!file || file.startsWith('+error')) continue;
-
-		const group = get_group(dir);
-
-		if (file.startsWith('+page')) {
-			group.leaf = node;
-		} else {
-			const match = /^\+layout(?:-([^@.]+))?/.exec(file);
-
-			// this shouldn't happen, but belt and braces. also keeps TS happy,
-			// and we live to keep TS happy
-			if (!match) throw new Error(`Unexpected route file: ${file}`);
-
-			if (match[1]) {
-				group.named_layouts.set(match[1], node);
-			} else {
-				group.default_layout = node;
-			}
-		}
-
-		node.parent = find_nearest_layout(routes_dir, nodes, i);
-	}
-
-	// ...then add +server.js files...
-	for (const route of manifest_data.routes) {
-		if (route.type === 'endpoint') {
-			get_group(route.id).endpoint = route.file;
-		}
-	}
-
-	return groups;
+	update_types(config, manifest_data, route);
 }
 
 /**
  *
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
- * @param {string} routes_dir
- * @param {string} dir
- * @param {Map<string, NodeGroup>} groups
- * @param {import('typescript')} ts
+ * @param {import('types').RouteData} route
  */
-function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts) {
-	const group = groups.get(dir);
-	if (!group) {
-		return [];
+function update_types(config, manifest_data, route) {
+	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
+	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
+
+	// first, check if the types are out of date
+	const input_files = [];
+
+	/** @type {import('types').PageNode | null} */
+	let node = route.leaf;
+	while (node) {
+		if (node.shared) input_files.push(node.shared);
+		if (node.server) input_files.push(node.server);
+		node = node.parent ?? null;
 	}
 
-	const outdir = `${config.kit.outDir}/types/${routes_dir}/${dir}`;
+	/** @type {import('types').PageNode | null} */
+	node = route.layout;
+	while (node) {
+		if (node.shared) input_files.push(node.shared);
+		if (node.server) input_files.push(node.server);
+		node = node.parent ?? null;
+	}
+
+	if (route.endpoint) {
+		input_files.push(route.endpoint.file);
+	}
+
+	if (input_files.length === 0) return; // nothing to do
+
+	try {
+		fs.mkdirSync(outdir, { recursive: true });
+	} catch {}
+
+	const output_files = compact(
+		fs.readdirSync(outdir).map((name) => {
+			const stats = fs.statSync(path.join(outdir, name));
+			if (stats.isDirectory()) return;
+			return {
+				name,
+				updated: stats.mtimeMs
+			};
+		})
+	);
+
+	const source_last_updated = Math.max(...input_files.map((file) => fs.statSync(file).mtimeMs));
+	const types_last_updated = Math.max(...output_files.map((file) => file?.updated));
+
+	// types were generated more recently than the source files, so don't regenerate
+	if (types_last_updated > source_last_updated) return;
+
+	// track which old files end up being surplus to requirements
+	const to_delete = new Set(output_files.map((file) => file.name));
 
 	const imports = [`import type * as Kit from '@sveltejs/kit';`];
-
-	/** @type {string[]} */
-	const written_files = [];
 
 	/** @type {string[]} */
 	const declarations = [];
@@ -233,10 +146,8 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 	/** @type {string[]} */
 	const exports = [];
 
-	const route_params = parse_route_id(dir).names;
-
-	if (route_params.length > 0) {
-		const params = route_params.map((param) => `${param}: string`).join('; ');
+	if (route.names.length > 0) {
+		const params = route.names.map((param) => `${param}: string`).join('; ');
 		declarations.push(
 			`interface RouteParams extends Partial<Record<string, string>> { ${params} }`
 		);
@@ -244,15 +155,14 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 		declarations.push(`interface RouteParams extends Partial<Record<string, string>> {}`);
 	}
 
-	if (group.leaf) {
+	if (route.leaf) {
 		const { data, server_data, load, server_load, errors, written_proxies } = process_node(
-			ts,
-			group.leaf,
+			route.leaf,
 			outdir,
-			'RouteParams',
-			groups
+			'RouteParams'
 		);
-		written_files.push(...written_proxies);
+
+		for (const file of written_proxies) to_delete.delete(file);
 
 		exports.push(`export type Errors = ${errors};`);
 
@@ -272,20 +182,18 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 			exports.push('export type PageServerLoadEvent = Parameters<PageServerLoad>[0];');
 		}
 
-		if (group.leaf.server) {
+		if (route.leaf.server) {
 			exports.push(`export type Action = Kit.Action<RouteParams>`);
 		}
 	}
 
-	if (group.default_layout || group.named_layouts.size > 0) {
-		// TODO to be completely rigorous, we should have a LayoutParams per
-		// layout, and only include params for child pages that use each layout.
-		// but that's more work than i care to do right now
+	if (route.layout) {
+		// TODO collect children in create_manifest_data, instead of this inefficient O(n^2) algorithm
 		const layout_params = new Set();
-		manifest_data.routes.forEach((route) => {
-			if (route.type === 'page' && route.id.startsWith(dir + '/')) {
+		manifest_data.routes.forEach((other) => {
+			if (other.page && other.id.startsWith(route.id + '/')) {
 				// TODO this is O(n^2), see if we need to speed it up
-				for (const name of parse_route_id(route.id.slice(dir.length + 1)).names) {
+				for (const name of other.names) {
 					layout_params.add(name);
 				}
 			}
@@ -298,95 +206,32 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 			declarations.push(`interface LayoutParams extends RouteParams {}`);
 		}
 
-		if (group.default_layout) {
-			const { data, server_data, load, server_load, written_proxies } = process_node(
-				ts,
-				group.default_layout,
-				outdir,
-				'LayoutParams',
-				groups
+		const { data, server_data, load, server_load, written_proxies } = process_node(
+			route.layout,
+			outdir,
+			'LayoutParams'
+		);
+
+		for (const file of written_proxies) to_delete.delete(file);
+
+		exports.push(`export type LayoutData = ${data};`);
+		if (load) {
+			exports.push(
+				`export type LayoutLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
 			);
-			written_files.push(...written_proxies);
-
-			exports.push(`export type LayoutData = ${data};`);
-			if (load) {
-				exports.push(
-					`export type LayoutLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
-				);
-				exports.push('export type LayoutLoadEvent = Parameters<LayoutLoad>[0];');
-			}
-
-			exports.push(`export type LayoutServerData = ${server_data};`);
-			if (server_load) {
-				exports.push(
-					`export type LayoutServerLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${server_load};`
-				);
-				exports.push('export type LayoutServerLoadEvent = Parameters<LayoutServerLoad>[0];');
-			}
+			exports.push('export type LayoutLoadEvent = Parameters<LayoutLoad>[0];');
 		}
 
-		if (group.named_layouts.size > 0) {
-			/** @type {string[]} */
-			const data_exports = [];
-
-			/** @type {string[]} */
-			const server_data_exports = [];
-
-			/** @type {string[]} */
-			const load_exports = [];
-
-			/** @type {string[]} */
-			const load_event_exports = [];
-
-			/** @type {string[]} */
-			const server_load_exports = [];
-
-			/** @type {string[]} */
-			const server_load_event_exports = [];
-
-			for (const [name, node] of group.named_layouts) {
-				const { data, server_data, load, server_load, written_proxies } = process_node(
-					ts,
-					node,
-					outdir,
-					'LayoutParams',
-					groups
-				);
-				written_files.push(...written_proxies);
-				data_exports.push(`export type ${name} = ${data};`);
-				server_data_exports.push(`export type ${name} = ${server_data};`);
-				if (load) {
-					load_exports.push(
-						`export type ${name}<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
-					);
-					load_event_exports.push(`export type ${name} = Parameters<LayoutLoad.${name}>[0];`);
-				}
-				if (server_load) {
-					server_load_exports.push(
-						`export type ${name}<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${server_load};`
-					);
-					server_load_event_exports.push(
-						`export type ${name} = Parameters<LayoutServerLoad.${name}>[0];`
-					);
-				}
-			}
-
-			exports.push(`\nexport namespace LayoutData {\n\t${data_exports.join('\n\t')}\n}`);
-			exports.push(`\nexport namespace LayoutLoad {\n\t${load_exports.join('\n\t')}\n}`);
-			exports.push(`\nexport namespace LayoutLoadEvent {\n\t${load_event_exports.join('\n\t')}\n}`);
+		exports.push(`export type LayoutServerData = ${server_data};`);
+		if (server_load) {
 			exports.push(
-				`\nexport namespace LayoutServerData {\n\t${server_data_exports.join('\n\t')}\n}`
+				`export type LayoutServerLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${server_load};`
 			);
-			exports.push(
-				`\nexport namespace LayoutServerLoad {\n\t${server_load_exports.join('\n\t')}\n}`
-			);
-			exports.push(
-				`\nexport namespace LayoutServerLoadEvent {\n\t${server_load_event_exports.join('\n\t')}\n}`
-			);
+			exports.push('export type LayoutServerLoadEvent = Parameters<LayoutServerLoad>[0];');
 		}
 	}
 
-	if (group.endpoint) {
+	if (route.endpoint) {
 		exports.push(`export type RequestHandler = Kit.RequestHandler<RouteParams>;`);
 		exports.push(`export type RequestEvent = Kit.RequestEvent<RouteParams>;`);
 	}
@@ -395,19 +240,20 @@ function write_types_for_dir(config, manifest_data, routes_dir, dir, groups, ts)
 		.filter(Boolean)
 		.join('\n\n');
 
-	written_files.push(write(`${outdir}/$types.d.ts`, output));
+	fs.writeFileSync(`${outdir}/$types.d.ts`, output);
+	to_delete.delete('$types.d.ts');
 
-	return written_files;
+	for (const file of to_delete) {
+		fs.unlinkSync(path.join(outdir, file));
+	}
 }
 
 /**
- * @param {import('typescript')} ts
- * @param {Node} node
+ * @param {import('types').PageNode} node
  * @param {string} outdir
  * @param {string} params
- * @param {Map<string, NodeGroup>} groups
  */
-function process_node(ts, node, outdir, params, groups) {
+function process_node(node, outdir, params) {
 	let data;
 	let load;
 	let server_load;
@@ -420,14 +266,18 @@ function process_node(ts, node, outdir, params, groups) {
 
 	if (node.server) {
 		const content = fs.readFileSync(node.server, 'utf8');
-		const proxy = tweak_types(ts, content, server_names);
+		const proxy = tweak_types(content, server_names);
 		const basename = path.basename(node.server);
 		if (proxy?.modified) {
-			written_proxies.push(write(`${outdir}/proxy${basename}`, proxy.code));
+			fs.writeFileSync(`${outdir}/proxy${basename}`, proxy.code);
+			written_proxies.push(`proxy${basename}`);
 		}
 
 		server_data = get_data_type(node.server, 'null', proxy);
-		server_load = `Kit.ServerLoad<${params}, ${get_parent_type('LayoutServerData')}, OutputData>`;
+		server_load = `Kit.ServerLoad<${params}, ${get_parent_type(
+			node,
+			'LayoutServerData'
+		)}, OutputData>`;
 
 		if (proxy) {
 			const types = [];
@@ -450,13 +300,14 @@ function process_node(ts, node, outdir, params, groups) {
 		server_data = 'null';
 	}
 
-	const parent_type = get_parent_type('LayoutData');
+	const parent_type = get_parent_type(node, 'LayoutData');
 
 	if (node.shared) {
 		const content = fs.readFileSync(node.shared, 'utf8');
-		const proxy = tweak_types(ts, content, shared_names);
+		const proxy = tweak_types(content, shared_names);
 		if (proxy?.modified) {
-			written_proxies.push(write(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code));
+			fs.writeFileSync(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code);
+			written_proxies.push(`proxy${path.basename(node.shared)}`);
 		}
 
 		const type = get_data_type(node.shared, `${parent_type} & ${server_data}`, proxy);
@@ -492,39 +343,35 @@ function process_node(ts, node, outdir, params, groups) {
 			return 'unknown';
 		}
 	}
+}
 
-	/**
-	 * Get the parent type string by recursively looking up the parent layout and accumulate them to one type.
-	 * @param {string} type
-	 */
-	function get_parent_type(type) {
-		const parent_imports = [];
-		let parent = node.parent;
-		let acc_diff = 0;
+/**
+ * Get the parent type string by recursively looking up the parent layout and accumulate them to one type.
+ * @param {import('types').PageNode} node
+ * @param {string} type
+ */
+function get_parent_type(node, type) {
+	const parent_imports = [];
 
-		while (parent) {
-			acc_diff += parent.folder_depth_diff;
-			let parent_group = /** @type {NodeGroup} */ (groups.get(parent.key));
-			// unshift because we need it the other way round for the import string
-			parent_imports.unshift(
-				(acc_diff === 0 ? '' : `import('` + '../'.repeat(acc_diff) + '$types.js' + `').`) +
-					`${type}${parent.name ? `.${parent.name}` : ''}`
-			);
-			let parent_layout = /** @type {Node} */ (
-				parent.name ? parent_group.named_layouts.get(parent.name) : parent_group.default_layout
-			);
-			parent = parent_layout.parent;
-		}
+	let parent = node.parent;
 
-		let parent_str = parent_imports[0] || 'Record<never, never>';
-		for (let i = 1; i < parent_imports.length; i++) {
-			// Omit is necessary because a parent could have a property with the same key which would
-			// cause a type conflict. At runtime the child overwrites the parent property in this case,
-			// so reflect that in the type definition.
-			parent_str = `Omit<${parent_str}, keyof ${parent_imports[i]}> & ${parent_imports[i]}`;
-		}
-		return parent_str;
+	while (parent) {
+		const d = node.depth - parent.depth;
+		// unshift because we need it the other way round for the import string
+		parent_imports.unshift(
+			`${d === 0 ? '' : `import('${'../'.repeat(d)}${'$types.js'}').`}${type}`
+		);
+		parent = parent.parent;
 	}
+
+	let parent_str = parent_imports[0] || 'Record<never, never>';
+	for (let i = 1; i < parent_imports.length; i++) {
+		// Omit is necessary because a parent could have a property with the same key which would
+		// cause a type conflict. At runtime the child overwrites the parent property in this case,
+		// so reflect that in the type definition.
+		parent_str = `Omit<${parent_str}, keyof ${parent_imports[i]}> & ${parent_imports[i]}`;
+	}
+	return parent_str;
 }
 
 /**
@@ -546,12 +393,11 @@ function replace_ext_with_js(file_path) {
 }
 
 /**
- * @param {import('typescript')} ts
  * @param {string} content
  * @param {Set<string>} names
  * @returns {Proxy}
  */
-export function tweak_types(ts, content, names) {
+export function tweak_types(content, names) {
 	try {
 		let modified = false;
 
@@ -697,79 +543,5 @@ export function tweak_types(ts, content, names) {
 		};
 	} catch {
 		return null;
-	}
-}
-
-/**
- * @param {string} file
- * @param {string} content
- */
-function write(file, content) {
-	write_if_changed(file, content);
-	return file;
-}
-
-/**
- * Finds the nearest layout for given node.
- * Assumes that nodes is sorted by path length (lowest first).
- *
- * @param {string} routes_dir
- * @param {import('types').PageNode[]} nodes
- * @param {number} start_idx
- */
-export function find_nearest_layout(routes_dir, nodes, start_idx) {
-	const start_file = /** @type {string} */ (
-		nodes[start_idx].component || nodes[start_idx].shared || nodes[start_idx].server
-	);
-
-	let name = '';
-	const match = /^\+(layout|page)(?:-([^@.]+))?(?:@([^@.]+))?/.exec(path.basename(start_file));
-	if (!match) throw new Error(`Unexpected route file: ${start_file}`);
-	if (match[3] && match[3] !== 'default') {
-		name = match[3]; // a named layout is referenced
-	}
-
-	let common_path = path.dirname(start_file);
-	if (match[1] === 'layout' && !match[2] && !name) {
-		// We are a default layout, so we skip the current level
-		common_path = path.dirname(common_path);
-	}
-
-	for (let i = start_idx - 1; i >= 0; i -= 1) {
-		const node = nodes[i];
-		const file = /** @type {string} */ (node.component || node.shared || node.server);
-
-		const current_path = path.dirname(file);
-		const common_path_length = common_path.split('/').length;
-		const current_path_length = current_path.split('/').length;
-
-		if (common_path_length < current_path_length) {
-			// this is a layout in a different tree
-			continue;
-		} else if (common_path_length > current_path_length) {
-			// we've gone back up a folder level
-			common_path = path.dirname(common_path);
-		}
-		if (common_path !== current_path) {
-			// this is a layout in a different tree
-			continue;
-		}
-		if (
-			path.basename(file, path.extname(file)).split('@')[0] !==
-			'+layout' + (name ? `-${name}` : '')
-		) {
-			// this is not the layout we are searching for
-			continue;
-		}
-
-		// matching parent layout found
-		let folder_depth_diff =
-			posixify(path.relative(path.dirname(start_file), common_path + '/$types.js')).split('/')
-				.length - 1;
-		return {
-			key: path.dirname(file).slice(routes_dir.length + 1),
-			name,
-			folder_depth_diff
-		};
 	}
 }

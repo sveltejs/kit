@@ -126,75 +126,95 @@ assert.equal(
 
 To express a `%` character, use `%25`, otherwise the result will be malformed.
 
-### Named layouts
+### Advanced layouts
 
-Some parts of your app might need something other than the default layout. For these cases you can create _named layouts_...
+By default, the _layout hierarchy_ mirrors the _route hierarchy_. In some cases, that might not be what you want.
 
-```svelte
-/// file: src/routes/+layout-foo.svelte
-<div class="foo">
-	<slot></slot>
-</div>
-```
+#### (group)
 
-...and then use them by referencing the layout name (`foo`, in the example above) in the filename:
-
-```svelte
-/// file: src/routes/my-special-page/+page@foo.svelte
-<h1>I am inside +layout-foo</h1>
-```
-
-> Named layout should only be referenced from Svelte files
-
-Named layouts are very powerful, but it can take a minute to get your head round them. Don't worry if this doesn't make sense all at once.
-
-#### Scoping
-
-Named layouts can be created at any depth, and will apply to any components in the same subtree. For example, `+layout-foo` will apply to `/x/one` and `/x/two`, but not `/x/three` or `/four`:
-
-```bash
-src/routes/
-├ x/
-│ ├ +layout-foo.svelte
-│ ├ one/+page@foo.svelte       # ✅ page has `@foo`
-│ ├ two/+page@foo.svelte       # ✅ page has `@foo`
-│ └ three/+page.svelte         # ❌ page does not have `@foo`
-└ four/+page@foo.svelte        # ❌ page has `@foo`, but +layout-foo is not 'in scope'
-```
-
-#### Inheritance chains
-
-Layouts can themselves choose to inherit from named layouts, from the same directory or a parent directory. For example, `x/y/+layout@root.svelte` is the default layout for `/x/y` (meaning `/x/y/one`, `/x/y/two` and `/x/y/three` all inherit from it) because it has no name. Because it specifies `@root`, it will inherit directly from the nearest `+layout-root.svelte`, skipping `+layout.svelte` and `x/+layout.svelte`.
-
-```
-src/routes/
-├ x/
-│ ├ y/
-│ │ ├ +layout@root.svelte
-│ │ ├ one/+page.svelte
-│ │ ├ two/+page.svelte
-│ │ └ three/+page.svelte
-│ └ +layout.svelte
-├ +layout.svelte
-└ +layout-root.svelte
-```
-
-> In the case where `+layout-root.svelte` contains a lone `<slot />`, this effectively means we're able to 'reset' to a blank layout for any page or nested layout in the app by adding `@root`.
-
-If no parent is specified, a layout will inherit from the nearest default (i.e. unnamed) layout _above_ it in the tree. In some cases, it's helpful for a named layout to inherit from a default layout _alongside_ it in the tree, such as `+layout-root.svelte` inheriting from `+layout.svelte`. We can do this by explicitly specifying `@default`, allowing `/x/y/one` and siblings to use the app's default layout without using `x/+layout.svelte`:
+Perhaps you have some routes that are 'app' routes that should have one layout (e.g. `/dashboard` or `/item`), and others that are 'marketing' routes that should have a different layout (`/blog` or `/testimonials`). We can group these routes with a directory whose name is wrapped in parentheses — unlike normal directories, `(app)` and `(marketing)` do not affect the URL pathname of the routes inside them:
 
 ```diff
 src/routes/
-├ x/
-│ ├ y/
-│ │ ├ +layout@root.svelte
-│ │ ├ one/+page.svelte
-│ │ ├ two/+page.svelte
-│ │ └ three/+page.svelte
++│ (app)/
+│ ├ dashboard/
+│ ├ item/
 │ └ +layout.svelte
-├ +layout.svelte
--└ +layout-root.svelte
-+└ +layout-root@default.svelte
++│ (marketing)/
+│ ├ about/
+│ ├ testimonials/
+│ └ +layout.svelte
+├ admin/
+└ +layout.svelte
 ```
 
-> `default` is a reserved name — in other words, you can't have a `+layout-default.svelte` file.
+You can also put a `+page` directly inside a `(group)`, for example if `/` should be an `(app)` or a `(marketing)` page.
+
+#### +page@
+
+Conversely, some routes of your app might need to break out of the layout hierarchy. Let's add an `/item/[id]/embed` route inside the `(app)` group from the previous example:
+
+```diff
+src/routes/
+├ (app)/
+│ ├ item/
+│ │ ├ [id]/
+│ │ │ ├ embed/
++│ │ │ │ └ +page.svelte
+│ │ │ └ +layout.svelte
+│ │ └ +layout.svelte
+│ └ +layout.svelte
+└ +layout.svelte
+```
+
+Ordinarily, this would inherit the root layout, the `(app)` layout, the `item` layout and the `[id]` layout. We can reset to one of those layouts by appending `@` followed by the segment name — or, for the root layout, the empty string. In this example, we can choose from `+page@.svelte`, `+page@(app).svelte`, `+page@item.svelte` or `+page@[id].svelte`:
+
+```diff
+src/routes/
+├ (app)/
+│ ├ item/
+│ │ ├ [id]/
+│ │ │ ├ embed/
++│ │ │ │ └ +page@(app).svelte
+│ │ │ └ +layout.svelte
+│ │ └ +layout.svelte
+│ └ +layout.svelte
+└ +layout.svelte
+```
+
+#### +layout@
+
+Like pages, layouts can _themselves_ break out of their parent layout hierarchy, using the same technique. For example, a `+layout@.svelte` component would reset the hierarchy for all its child routes.
+
+#### When to use layout groups
+
+Not all use cases are suited for layout grouping, nor should you feel compelled to use them. It might be that your use case would result in complex `(group)` nesting, or that you don't want to introduce a `(group)` for a single outlier. It's perfectly fine to use other means such as composition (reusable `load` functions or Svelte components) or if-statements to achieve what you want. The following example shows a layout that rewinds to the root layout and reuses components and functions that other layouts can also use:
+
+```svelte
+/// file: src/routes/nested/route/+layout@.svelte
+<script>
+	import ReusableLayout from '$lib/ReusableLayout.svelte';
+	export let data;
+</script>
+
+<ReusableLayout {data}>
+	<slot />
+</ReusableLayout>
+```
+
+```js
+/// file: src/routes/nested/route/+layout.js
+// @filename: ambient.d.ts
+declare module "$lib/reusable-load-function" {
+	export function reusableLoad(event: import('@sveltejs/kit').LoadEvent): Promise<Record<string, any>>;
+}
+// @filename: index.js
+// ---cut---
+import { reusableLoad } from '$lib/reusable-load-function';
+
+/** @type {import('./$types').PageLoad} */
+export function load(event) {
+	// Add additional logic here, if needed
+	return reusableLoad(event);
+}
+```

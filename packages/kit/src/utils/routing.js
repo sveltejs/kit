@@ -12,12 +12,21 @@ export function parse_route_id(id) {
 	// const add_trailing_slash = !/\.[a-z]+$/.test(key);
 	let add_trailing_slash = true;
 
+	if (/\]\[/.test(id)) {
+		throw new Error(`Invalid route ${id} — parameters must be separated`);
+	}
+
+	if (count_occurrences('[', id) !== count_occurrences(']', id)) {
+		throw new Error(`Invalid route ${id} — brackets are unbalanced`);
+	}
+
 	const pattern =
 		id === ''
 			? /^\/$/
 			: new RegExp(
 					`^${id
-						.split(/(?:@[a-zA-Z0-9_-]+)?(?:\/|$)/)
+						.split(/(?:\/|$)/)
+						.filter(is_no_group)
 						.map((segment, i, segments) => {
 							const decoded_segment = decodeURIComponent(segment);
 							// special case — /[...rest]/ could contain zero segments
@@ -80,6 +89,13 @@ export function parse_route_id(id) {
 }
 
 /**
+ * @param {string} segment
+ */
+export function is_no_group(segment) {
+	return !/^\([^)]+\)$/.test(segment);
+}
+
+/**
  * @param {RegExpMatchArray} match
  * @param {string[]} names
  * @param {string[]} types
@@ -105,4 +121,16 @@ export function exec(match, names, types, matchers) {
 	}
 
 	return params;
+}
+
+/**
+ * @param {string} needle
+ * @param {string} haystack
+ */
+function count_occurrences(needle, haystack) {
+	let count = 0;
+	for (let i = 0; i < haystack.length; i += 1) {
+		if (haystack[i] === needle) count += 1;
+	}
+	return count;
 }
