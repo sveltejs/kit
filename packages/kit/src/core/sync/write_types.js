@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import MagicString from 'magic-string';
-import { posixify, rimraf } from '../../utils/filesystem.js';
-import { remove_from_previous, write_if_changed } from './utils.js';
+import { posixify, rimraf, walk } from '../../utils/filesystem.js';
+import { compact } from '../../utils/array.js';
 
 /**
  *  @typedef {{
@@ -24,8 +24,6 @@ const cwd = process.cwd();
 const shared_names = new Set(['load']);
 const server_names = new Set(['load', 'POST', 'PUT', 'PATCH', 'DELETE']); // TODO replace with a single `action`
 
-let first_run = true;
-
 /**
  * Creates types for the whole manifest
  * @param {import('types').ValidatedConfig} config
@@ -36,29 +34,26 @@ export async function write_all_types(config, manifest_data) {
 
 	const types_dir = `${config.kit.outDir}/types`;
 
-	if (first_run) {
-		rimraf(types_dir);
-		first_run = false;
+	// empty out files that no longer need to exist
+	const routes_dir = path.relative('.', config.kit.files.routes);
+	const expected_directories = new Set(
+		manifest_data.routes.map((route) => path.join(routes_dir, route.id))
+	);
+
+	if (fs.existsSync(types_dir)) {
+		for (const file of walk(types_dir)) {
+			const dir = path.dirname(file);
+			if (!expected_directories.has(dir)) {
+				console.log(`removing ${file}`);
+				rimraf(file);
+			}
+		}
 	}
-
-	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
-
-	let written_files = new Set();
 
 	// For each directory, write $types.d.ts
 	for (const route of manifest_data.routes) {
-		const written = write_types_for_dir(config, manifest_data, routes_dir, route);
-		written.forEach((w) => written_files.add(w));
+		update_types(config, manifest_data, route);
 	}
-
-	// Remove all files that were not updated, which means their original was removed
-	remove_from_previous((file) => {
-		const was_removed = file.startsWith(types_dir) && !written_files.has(file);
-		if (was_removed) {
-			rimraf(file);
-		}
-		return was_removed;
-	});
 }
 
 /**
@@ -76,31 +71,75 @@ export async function write_types(config, manifest_data, file) {
 		return;
 	}
 
-	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
-
 	const filepath = path.relative(config.kit.files.routes, file);
 	const id = path.dirname(filepath);
 
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return; // this shouldn't ever happen
 
-	write_types_for_dir(config, manifest_data, routes_dir, route);
+	update_types(config, manifest_data, route);
 }
 
 /**
  *
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
- * @param {string} routes_dir
  * @param {import('types').RouteData} route
  */
-function write_types_for_dir(config, manifest_data, routes_dir, route) {
-	const outdir = `${config.kit.outDir}/types/${routes_dir}/${route.id}`;
+function update_types(config, manifest_data, route) {
+	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
+	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
+
+	// first, check if the types are out of date
+	const input_files = [];
+
+	/** @type {import('types').PageNode | null} */
+	let node = route.leaf;
+	while (node) {
+		if (node.shared) input_files.push(node.shared);
+		if (node.server) input_files.push(node.server);
+		node = node.parent ?? null;
+	}
+
+	/** @type {import('types').PageNode | null} */
+	node = route.layout;
+	while (node) {
+		if (node.shared) input_files.push(node.shared);
+		if (node.server) input_files.push(node.server);
+		node = node.parent ?? null;
+	}
+
+	if (route.endpoint) {
+		input_files.push(route.endpoint.file);
+	}
+
+	if (input_files.length === 0) return; // nothing to do
+
+	try {
+		fs.mkdirSync(outdir, { recursive: true });
+	} catch {}
+
+	const output_files = compact(
+		fs.readdirSync(outdir).map((name) => {
+			const stats = fs.statSync(path.join(outdir, name));
+			if (stats.isDirectory()) return;
+			return {
+				name,
+				updated: stats.mtimeMs
+			};
+		})
+	);
+
+	const source_last_updated = Math.max(...input_files.map((file) => fs.statSync(file).mtimeMs));
+	const types_last_updated = Math.max(...output_files.map((file) => file?.updated));
+
+	// types were generated more recently than the source files, so don't regenerate
+	if (types_last_updated > source_last_updated) return;
+
+	// track which old files end up being surplus to requirements
+	const to_delete = new Set(output_files.map((file) => file.name));
 
 	const imports = [`import type * as Kit from '@sveltejs/kit';`];
-
-	/** @type {string[]} */
-	const written_files = [];
 
 	/** @type {string[]} */
 	const declarations = [];
@@ -123,7 +162,8 @@ function write_types_for_dir(config, manifest_data, routes_dir, route) {
 			outdir,
 			'RouteParams'
 		);
-		written_files.push(...written_proxies);
+
+		for (const file of written_proxies) to_delete.delete(file);
 
 		exports.push(`export type Errors = ${errors};`);
 
@@ -172,7 +212,8 @@ function write_types_for_dir(config, manifest_data, routes_dir, route) {
 			outdir,
 			'LayoutParams'
 		);
-		written_files.push(...written_proxies);
+
+		for (const file of written_proxies) to_delete.delete(file);
 
 		exports.push(`export type LayoutData = ${data};`);
 		if (load) {
@@ -200,9 +241,12 @@ function write_types_for_dir(config, manifest_data, routes_dir, route) {
 		.filter(Boolean)
 		.join('\n\n');
 
-	written_files.push(write(`${outdir}/$types.d.ts`, output));
+	fs.writeFileSync(`${outdir}/$types.d.ts`, output);
+	to_delete.delete('$types.d.ts');
 
-	return written_files;
+	for (const file of to_delete) {
+		fs.unlinkSync(path.join(outdir, file));
+	}
 }
 
 /**
@@ -226,7 +270,8 @@ function process_node(node, outdir, params) {
 		const proxy = tweak_types(content, server_names);
 		const basename = path.basename(node.server);
 		if (proxy?.modified) {
-			written_proxies.push(write(`${outdir}/proxy${basename}`, proxy.code));
+			fs.writeFileSync(`${outdir}/proxy${basename}`, proxy.code);
+			written_proxies.push(`proxy${basename}`);
 		}
 
 		server_data = get_data_type(node.server, 'null', proxy);
@@ -262,7 +307,8 @@ function process_node(node, outdir, params) {
 		const content = fs.readFileSync(node.shared, 'utf8');
 		const proxy = tweak_types(content, shared_names);
 		if (proxy?.modified) {
-			written_proxies.push(write(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code));
+			fs.writeFileSync(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code);
+			written_proxies.push(`proxy${path.basename(node.shared)}`);
 		}
 
 		const type = get_data_type(node.shared, `${parent_type} & ${server_data}`, proxy);
@@ -499,13 +545,4 @@ export function tweak_types(content, names) {
 	} catch {
 		return null;
 	}
-}
-
-/**
- * @param {string} file
- * @param {string} content
- */
-function write(file, content) {
-	write_if_changed(file, content);
-	return file;
 }
