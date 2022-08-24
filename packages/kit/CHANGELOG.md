@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.434
+
+### Patch Changes
+
+- Always create `$types` for a route with a layout, leaf or endpoint ([#6222](https://github.com/sveltejs/kit/pull/6222))
+
 ## 1.0.0-next.433
 
 ### Patch Changes
