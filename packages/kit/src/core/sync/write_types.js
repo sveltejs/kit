@@ -44,7 +44,6 @@ export async function write_all_types(config, manifest_data) {
 		for (const file of walk(types_dir)) {
 			const dir = path.dirname(file);
 			if (!expected_directories.has(dir)) {
-				console.log(`removing ${file}`);
 				rimraf(file);
 			}
 		}
