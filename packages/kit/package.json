@@ -20,7 +20,6 @@
 		"sade": "^1.8.1",
 		"set-cookie-parser": "^2.4.8",
 		"sirv": "^2.0.2",
-		"terser": ">=5.4.0 <6.0.0",
 		"tiny-glob": "^0.2.9",
 		"undici": "^5.8.1"
 	},
