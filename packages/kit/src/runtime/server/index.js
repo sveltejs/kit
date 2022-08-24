@@ -10,6 +10,7 @@ import { negotiate } from '../../utils/http.js';
 import { HttpError, Redirect } from '../../index/private.js';
 import { load_server_data } from './page/load_data.js';
 import { json } from '../../index/index.js';
+import { once } from '../../utils/functions.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -254,19 +255,26 @@ export async function respond(request, options, state) {
 					let response;
 					if (is_data_request && route.type === 'page') {
 						try {
-							/** @type {Redirect | HttpError | Error} */
-							let error;
+							const node_ids = [...route.layouts, route.leaf];
 
-							// TODO only get the data we need for the navigation
-							const promises = [...route.layouts, route.leaf].map(async (n, i) => {
-								try {
-									if (error) return;
+							const invalidated =
+								request.headers.get('x-sveltekit-invalidated')?.split(',').map(Boolean) ??
+								node_ids.map(() => true);
 
-									// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
-									const node = n == undefined ? n : await options.manifest._.nodes[n]();
-									return {
-										// TODO return `uses`, so we can reuse server data effectively
-										data: await load_server_data({
+							let aborted = false;
+
+							const functions = node_ids.map((n, i) => {
+								return once(async () => {
+									try {
+										if (aborted) {
+											return /** @type {import('types').ServerDataSkippedNode} */ ({
+												type: 'skip'
+											});
+										}
+
+										// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
+										const node = n == undefined ? n : await options.manifest._.nodes[n]();
+										return load_server_data({
 											dev: options.dev,
 											event,
 											node,
@@ -274,47 +282,78 @@ export async function respond(request, options, state) {
 												/** @type {Record<string, any>} */
 												const data = {};
 												for (let j = 0; j < i; j += 1) {
-													const parent = await promises[j];
-													if (!parent || parent instanceof HttpError || 'error' in parent) {
-														return data;
-													}
+													const parent = /** @type {import('types').ServerDataNode} */ (
+														await functions[j]()
+													);
 													Object.assign(data, parent.data);
 												}
 												return data;
 											}
-										})
-									};
-								} catch (e) {
-									error = normalize_error(e);
-
-									if (error instanceof Redirect) {
-										throw error;
+										});
+									} catch (e) {
+										aborted = true;
+										throw e;
 									}
+								});
+							});
 
-									if (error instanceof HttpError) {
-										return error; // { status, message }
-									}
-
-									options.handle_error(error, event);
-
-									return {
-										error: error_to_pojo(error, options.get_stack)
-									};
+							const promises = functions.map(async (fn, i) => {
+								if (!invalidated[i]) {
+									return /** @type {import('types').ServerDataSkippedNode} */ ({
+										type: 'skip'
+									});
 								}
+
+								return fn();
 							});
 
-							response = json({
+							let length = promises.length;
+							const nodes = await Promise.all(
+								promises.map((p, i) =>
+									p.catch((e) => {
+										const error = normalize_error(e);
+
+										if (error instanceof Redirect) {
+											throw error;
+										}
+
+										length = i + 1; // don't include nodes after first error
+
+										if (error instanceof HttpError) {
+											return /** @type {import('types').ServerErrorNode} */ ({
+												type: 'error',
+												httperror: { ...error }
+											});
+										}
+
+										options.handle_error(error, event);
+
+										return /** @type {import('types').ServerErrorNode} */ ({
+											type: 'error',
+											error: error_to_pojo(error, options.get_stack)
+										});
+									})
+								)
+							);
+
+							/** @type {import('types').ServerData} */
+							const server_data = {
 								type: 'data',
-								nodes: await Promise.all(promises)
-							});
+								nodes: nodes.slice(0, length)
+							};
+
+							response = json(server_data);
 						} catch (e) {
 							const error = normalize_error(e);
 
 							if (error instanceof Redirect) {
-								response = json({
+								/** @type {import('types').ServerData} */
+								const server_data = {
 									type: 'redirect',
 									location: error.location
-								});
+								};
+
+								response = json(server_data);
 							} else {
 								response = json(error_to_pojo(error, options.get_stack), { status: 500 });
 							}

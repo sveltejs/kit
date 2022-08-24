@@ -80,7 +80,7 @@ For a route filename example like `src/routes/a/[b]/[...c]` and a `url.pathname`
 The name of the current route directory, relative to `src/routes`:
 
 ```js
-/// file: src/routes/blog/[slug]/+page.svelte
+/// file: src/routes/blog/[slug]/+page.js
 /** @type {import('./$types').PageLoad} */
 export function load({ routeId }) {
 	console.log(routeId); // 'blog/[slug]'
@@ -99,7 +99,7 @@ An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), co
 
 #### depends
 
-This function declares a _dependency_ on specific URLs, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
+This function declares that the `load` function has a _dependency_ on one or more URLs, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
 
 Most of the time you won't need this, as `fetch` calls `depends` on your behalf — it's only necessary if you're using a custom API client that bypasses `fetch`.
 
@@ -350,6 +350,8 @@ export function load({ locals }) {
 SvelteKit tracks the dependencies of each `load` function to avoid re-running it unnecessarily during navigation. For example, a `load` function in a root `+layout.js` doesn't need to re-run when you navigate from one page to another unless it references `url` or a member of `params` that changed since the last navigation.
 
 Using [`invalidate(url)`](/docs/modules#$app-navigation-invalidate), you can re-run any `load` functions that depend on the invalidated resource (either implicitly, via [`fetch`](#fetch)), or explicitly via [`depends`](#depends). You can also invalidate _all_ `load` functions by calling `invalidate()` without an argument.
+
+If a `load` function is triggered to rerun, the page will not remount — instead, it will update with the new `data`.
 
 ### Shared state
 
