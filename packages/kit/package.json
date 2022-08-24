@@ -20,8 +20,8 @@
 		"sade": "^1.8.1",
 		"set-cookie-parser": "^2.4.8",
 		"sirv": "^2.0.2",
-		"tiny-glob": "^0.2.9",
 		"terser": ">=5.4.0 <6.0.0",
+		"tiny-glob": "^0.2.9",
 		"undici": "^5.8.1"
 	},
 	"devDependencies": {
@@ -35,7 +35,7 @@
 		"@types/set-cookie-parser": "^2.4.2",
 		"marked": "^4.0.16",
 		"rollup": "^2.75.7",
-		"svelte": "^3.48.0",
+		"svelte": "file:C:/Src/svelte/svelte-3.49.0.tgz",
 		"svelte-preprocess": "^4.10.6",
 		"tiny-glob": "^0.2.9",
 		"typescript": "^4.7.4",
