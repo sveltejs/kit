@@ -196,6 +196,7 @@ export interface SSREndpoint {
 	types: string[];
 	load(): Promise<Partial<Record<HttpMethod, RequestHandler>>>;
 }
+
 export interface SSRNode {
 	component: SSRComponentLoader;
 	/** index into the `components` array in client-manifest.js */
@@ -227,8 +228,6 @@ export interface SSRNode {
 
 	// store this in dev so we can print serialization errors
 	server_id?: string;
-	
-	legacy?: string;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
@@ -258,13 +257,11 @@ export interface SSROptions {
 	template({
 		head,
 		body,
-		legacy_scripts,
 		assets,
 		nonce
 	}: {
 		head: string;
 		body: string;
-		legacy_scripts?: string;
 		assets: string;
 		nonce: string;
 	}): string;

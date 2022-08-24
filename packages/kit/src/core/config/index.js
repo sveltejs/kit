@@ -30,13 +30,6 @@ export function load_template(cwd, config) {
 				throw new Error(`${relative} is missing ${tag}`);
 			}
 		});
-
-		if (config.kit.legacy) {
-			const tag = '%sveltekit.legacy_scripts%';
-			if (contents.indexOf(tag) === -1) {
-				throw new Error(`${relative} is missing ${tag}`);
-			}
-		}
 	} else {
 		throw new Error(`${relative} does not exist`);
 	}

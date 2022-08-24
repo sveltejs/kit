@@ -191,7 +191,6 @@ export async function render_response({
 				status: ${status},
 				error: ${error && serialize_error(error, e => e.stack)},
 				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
-				legacy_nodes: [${branch.map(({ node }) => node.legacy).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)}
 			}` : 'null'}
@@ -261,8 +260,6 @@ export async function render_response({
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 	}
 
-	let legacy_scripts = '';// TODO: Get rid of this
-
 	if (entry_legacy.file || entry_legacy.legacy_polyfills_file) {
 		// TODO: Make sure we have the appropriate scripts from Vite legacy plugin
 
@@ -277,7 +274,6 @@ export async function render_response({
 				status: ${status},
 				error: ${error && serialize_error(error, e => e.stack)},
 				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
-				legacy_nodes: [${branch.map(({ node }) => node.legacy).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)}
 			}` : 'null'}
@@ -374,7 +370,7 @@ export async function render_response({
 	// TODO flush chunks as early as we can
 	const html =
 		(await resolve_opts.transformPageChunk({
-			html: options.template({ head, body, legacy_scripts, assets, nonce: /** @type {string} */ (csp.nonce) }),
+			html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
 			done: true
 		})) || '';
 

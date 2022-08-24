@@ -24,10 +24,9 @@ import { set_prerendering } from '${runtime}/env.js';
 import { set_private_env } from '${runtime}/env-private.js';
 import { set_public_env } from '${runtime}/env-public.js';
 
-const template = ({ head, body, legacy_scripts, assets, nonce }) => ${s(template)
+const template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace('%sveltekit.head%', '" + head + "')
 	.replace('%sveltekit.body%', '" + body + "')
-	.replace('%sveltekit.legacy_scripts%', '" + legacy_scripts + "')
 	.replace(/%sveltekit\.assets%/g, '" + assets + "')
 	.replace(/%sveltekit\.nonce%/g, '" + nonce + "')};
 

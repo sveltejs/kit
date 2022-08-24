@@ -185,10 +185,9 @@ function kit() {
 			(entry in vite_manifest) ? '/' + vite_manifest[entry].file : null;// TODO: Handle the "/" more correctly
 
 		const entry_id = posixify(path.relative(cwd, `${runtime_directory}/client/start.js`));
-		const entry_legacy_id = posixify(path.relative(cwd, `${runtime_directory}/client/start-legacy.js`));// TODO: Use the convertion function?
-		const legacy_polyfills_id = 'vite/legacy-polyfills-legacy';// TODO: Use the convertion function?
+		const entry_legacy_id = posixify(path.relative(cwd, `${runtime_directory}/client/start-legacy.js`));
+		const legacy_polyfills_id = 'vite/legacy-polyfills-legacy';
 		// TODO: Support also modern polyfills? Just need another import
-		// TODO: Can we have automatic detection of legacy chunks to be configuraless? (detect legacy only by reading the manifest)
 
 		const entry_legacy = {
 			file: find_file_if_exist(entry_legacy_id),

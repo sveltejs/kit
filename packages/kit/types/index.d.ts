@@ -19,36 +19,6 @@ import {
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 import { HttpError, Redirect } from '../src/index/private.js';
 
-interface ViteLegacyOptions {
-    /**
-     * default: 'defaults'
-     */
-    targets?: string | string[] | {
-        [key: string]: string;
-    };
-    /**
-     * default: false
-     */
-    ignoreBrowserslistConfig?: boolean;
-    /**
-     * default: true
-     */
-    polyfills?: boolean | string[];
-    additionalLegacyPolyfills?: string[];
-    /**
-     * default: false
-     */
-    modernPolyfills?: boolean | string[];
-    /**
-     * default: true
-     */
-    renderLegacyChunks?: boolean;
-    /**
-     * default: false
-     */
-    externalSystemJS?: boolean;
-}
-
 export interface Adapter {
 	name: string;
 	adapt(builder: Builder): MaybePromise<void>;
@@ -197,7 +167,6 @@ export interface KitConfig {
 		files?: (filepath: string) => boolean;
 	};
 	trailingSlash?: TrailingSlash;
-	legacy?: ViteLegacyOptions;
 	version?: {
 		name?: string;
 		pollInterval?: number;
