@@ -112,7 +112,7 @@ function update_types(config, manifest_data, route) {
 		input_files.push(route.endpoint.file);
 	}
 
-	if (input_files.length === 0) return; // nothing to do
+	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
 
 	try {
 		fs.mkdirSync(outdir, { recursive: true });
