@@ -187,18 +187,19 @@ function kit() {
 		const entry_id = posixify(path.relative(cwd, `${runtime_directory}/client/start.js`));
 		const entry_legacy_id = posixify(path.relative(cwd, `${runtime_directory}/client/start-legacy.js`));
 		const legacy_polyfills_id = 'vite/legacy-polyfills-legacy';
-		// TODO: Support also modern polyfills? Just need another import
+		const modern_polyfills_id = 'vite/legacy-polyfills';
 
-		const entry_legacy = {
-			file: find_file_if_exist(entry_legacy_id),
-			legacy_polyfills_file: find_file_if_exist(legacy_polyfills_id)
+		const legacy_assets = {
+			legacy_entry_file: find_file_if_exist(entry_legacy_id),
+			legacy_polyfills_file: find_file_if_exist(legacy_polyfills_id),
+			modern_polyfills_file: find_file_if_exist(modern_polyfills_id)
 		};
 
 		return {
 			assets,
 			chunks,
 			entry: find_deps(vite_manifest, entry_id, false),
-			entry_legacy,
+			legacy_assets,
 			vite_manifest
 		};
 	}

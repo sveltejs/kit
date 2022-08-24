@@ -55,7 +55,8 @@ export async function render_response({
 		}
 	}
 
-	const { entry, entry_legacy } = options.manifest._;
+	const { entry, legacy_assets } = options.manifest._;
+	const { legacy_entry_file, legacy_polyfills_file, modern_polyfills_file } = legacy_assets;
 
 	const stylesheets = new Set(entry.stylesheets);
 	const modulepreloads = new Set(entry.imports);
@@ -240,6 +241,10 @@ export async function render_response({
 		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
+	if (modern_polyfills_file) {
+		head += `\n\t<script type="module" src=${s(prefixed(modern_polyfills_file))}></script>`;
+	}
+
 	if (page_config.router || page_config.hydrate) {
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
@@ -260,7 +265,7 @@ export async function render_response({
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 	}
 
-	if (entry_legacy.file || entry_legacy.legacy_polyfills_file) {
+	if (legacy_entry_file || legacy_polyfills_file) {
 		// TODO: Make sure we have the appropriate scripts from Vite legacy plugin
 
 		// TODO: Move the details to its own global def(e.g. `window.__KIT_DATA__`), to share between legacy&modern
@@ -292,15 +297,15 @@ export async function render_response({
 			'<script nomodule>!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();</script>',
 		];
 
-		if (entry_legacy.legacy_polyfills_file) {
+		if (legacy_polyfills_file) {
 			legacyScripts.push(`<script nomodule id="vite-legacy-polyfill" src=${s(prefixed(
-				entry_legacy.legacy_polyfills_file
+				legacy_polyfills_file
 			))}></script>`);
 		}
 
-		if (entry_legacy.file) {
+		if (legacy_entry_file) {
 			legacyScripts = legacyScripts.concat([
-				`<script nomodule id="${legacyEntryId}" data-src=${s(prefixed(entry_legacy.file))}>${importAndStartCall}</script>`,
+				`<script nomodule id="${legacyEntryId}" data-src=${s(prefixed(legacy_entry_file))}>${importAndStartCall}</script>`,
 				`<script type="module">!function(){try{new Function("m","return import(m)")}catch(o){console.warn("vite: loading legacy build because dynamic import is unsupported, syntax error above should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src=e.src,n.onload=function(){${importAndStartCall}},document.body.appendChild(n)}}();</script>`,
 			]);
 		}

@@ -50,7 +50,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 		mimeTypes: ${s(get_mime_lookup(build_data.manifest_data))},
 		_: {
 			entry: ${s(build_data.client.entry)},
-			entry_legacy: ${s(build_data.client.entry_legacy)},
+			legacy_assets: ${s(build_data.client.legacy_assets)},
 			nodes: [
 				${Array.from(bundled_nodes.values()).map(node => loader(node.path)).join(',\n\t\t\t\t')}
 			],

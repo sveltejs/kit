@@ -67,9 +67,10 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					imports: [],
 					stylesheets: []
 				},
-				entry_legacy: {// No legacy support in dev mode
-					file: null,
-					legacy_polyfills_file: null
+				legacy_assets: {// No legacy support in dev mode
+					legacy_entry_file: null,
+					legacy_polyfills_file: null,
+					modern_polyfills_file: null
 				},
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
