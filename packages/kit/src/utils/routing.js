@@ -26,7 +26,7 @@ export function parse_route_id(id) {
 			: new RegExp(
 					`^${id
 						.split(/(?:\/|$)/)
-						.filter((segment) => !/^\([^)]+\)$/.test(segment))
+						.filter(is_no_group)
 						.map((segment, i, segments) => {
 							const decoded_segment = decodeURIComponent(segment);
 							// special case — /[...rest]/ could contain zero segments
@@ -86,6 +86,13 @@ export function parse_route_id(id) {
 			  );
 
 	return { pattern, names, types };
+}
+
+/**
+ * @param {string} segment
+ */
+export function is_no_group(segment) {
+	return !/^\([^)]+\)$/.test(segment);
 }
 
 /**

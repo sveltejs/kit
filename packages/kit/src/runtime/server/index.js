@@ -317,7 +317,8 @@ export async function respond(request, options, state) {
 											throw error;
 										}
 
-										length = i + 1; // don't include nodes after first error
+										// Math.min because array isn't guaranteed to resolve in order
+										length = Math.min(length, i + 1);
 
 										if (error instanceof HttpError) {
 											return /** @type {import('types').ServerErrorNode} */ ({

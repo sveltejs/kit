@@ -22,8 +22,8 @@ export function parse(nodes, dictionary, matchers) {
 				const match = pattern.exec(path);
 				if (match) return exec(match, names, types, matchers);
 			},
-			errors: errors ? [1, ...errors].map((n) => nodes[n]) : [nodes[1]],
-			layouts: layouts ? [0, ...layouts].map((n) => nodes[n]) : [nodes[0]],
+			errors: [1, ...(errors || [])].map((n) => nodes[n]),
+			layouts: [0, ...(layouts || [])].map((n) => nodes[n]),
 			leaf: nodes[leaf],
 			uses_server_data
 		};

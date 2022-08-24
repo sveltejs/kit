@@ -1,4 +1,6 @@
 /**
+ * Removes falsy values from an array.
+ *
  * @function
  * @template T
  * @param {Array<T>} arr

@@ -3,7 +3,7 @@ import path from 'path';
 import mime from 'mime';
 import { runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
-import { parse_route_id } from '../../../utils/routing.js';
+import { parse_route_id, is_no_group } from '../../../utils/routing.js';
 
 /**
  * @param {{
@@ -154,9 +154,6 @@ export default function create_manifest_data({
 			);
 		}
 
-		/** @type {Map<string, string>} */
-		const conflicts = new Map();
-
 		const root = /** @type {import('types').RouteData} */ (route_map.get(''));
 
 		if (!root.layout?.component) {
@@ -177,15 +174,15 @@ export default function create_manifest_data({
 			if (route.error) nodes.push(route.error);
 		});
 
+		/** @type {Map<string, string>} */
+		const conflicts = new Map();
+
 		route_map.forEach((route) => {
 			if (!route.leaf) return;
 
 			nodes.push(route.leaf);
 
-			const normalized = route.id
-				.split('/')
-				.filter((segment) => !/^\([^)]+\)$/.test(segment))
-				.join('/');
+			const normalized = route.id.split('/').filter(is_no_group).join('/');
 
 			if (conflicts.has(normalized)) {
 				throw new Error(`${conflicts.get(normalized)} and ${route.id} occupy the same route`);
