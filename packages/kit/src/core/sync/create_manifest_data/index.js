@@ -100,7 +100,7 @@ export default function create_manifest_data({
 				if (!file.name.startsWith('+')) continue;
 				if (!valid_extensions.find((ext) => file.name.endsWith(ext))) continue;
 
-				const project_relative = path.relative(cwd, path.join(dir, file.name));
+				const project_relative = posixify(path.relative(cwd, path.join(dir, file.name)));
 
 				const item = analyze(
 					project_relative,
