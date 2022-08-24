@@ -154,6 +154,11 @@ export interface Respond {
 	(request: Request, options: SSROptions, state: SSRState): Promise<Response>;
 }
 
+/**
+ * Represents a route segement in the app. It can either be an intermediate node
+ * with only layout/error pages, or a leaf, at which point either `page` and `leaf`
+ * or `endpoint` is set.
+ */
 export interface RouteData {
 	id: string;
 	parent: RouteData | null;

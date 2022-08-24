@@ -18,7 +18,70 @@ export default function create_manifest_data({
 	fallback = `${runtime_directory}/components`,
 	cwd = process.cwd()
 }) {
-	/** @type {Map<string, import('types').RouteData>} */
+	const assets = create_assets(config);
+	const matchers = create_matchers(config, cwd);
+	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
+
+	return {
+		assets,
+		matchers,
+		nodes,
+		routes
+	};
+}
+
+/**
+ * @param {import('types').ValidatedConfig} config
+ */
+function create_assets(config) {
+	return list_files(config.kit.files.assets).map((file) => ({
+		file,
+		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
+		type: mime.getType(file)
+	}));
+}
+
+/**
+ * @param {import('types').ValidatedConfig} config
+ * @param {string} cwd
+ */
+function create_matchers(config, cwd) {
+	const params_base = path.relative(cwd, config.kit.files.params);
+
+	/** @type {Record<string, string>} */
+	const matchers = {};
+	if (fs.existsSync(config.kit.files.params)) {
+		for (const file of fs.readdirSync(config.kit.files.params)) {
+			const ext = path.extname(file);
+			if (!config.kit.moduleExtensions.includes(ext)) continue;
+			const type = file.slice(0, -ext.length);
+
+			if (/^\w+$/.test(type)) {
+				const matcher_file = path.join(params_base, file);
+
+				// Disallow same matcher with different extensions
+				if (matchers[type]) {
+					throw new Error(`Duplicate matchers: ${matcher_file} and ${matchers[type]}`);
+				} else {
+					matchers[type] = matcher_file;
+				}
+			} else {
+				throw new Error(
+					`Matcher names can only have underscores and alphanumeric characters — "${file}" is invalid`
+				);
+			}
+		}
+	}
+
+	return matchers;
+}
+
+/**
+ * @param {import('types').ValidatedConfig} config
+ * @param {string} cwd
+ * @param {string} fallback
+ */
+function create_routes_and_nodes(cwd, config, fallback) {
 	const route_map = new Map();
 
 	/** @type {Map<string, import('./types').Part[][]>} */
@@ -244,46 +307,7 @@ export default function create_manifest_data({
 
 	const routes = Array.from(route_map.values()).sort((a, b) => compare(a, b, segment_map));
 
-	/** @type {import('types').Asset[]} */
-	const assets = list_files(config.kit.files.assets).map((file) => ({
-		file,
-		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
-		type: mime.getType(file)
-	}));
-
-	const params_base = path.relative(cwd, config.kit.files.params);
-
-	/** @type {Record<string, string>} */
-	const matchers = {};
-	if (fs.existsSync(config.kit.files.params)) {
-		for (const file of fs.readdirSync(config.kit.files.params)) {
-			const ext = path.extname(file);
-			if (!config.kit.moduleExtensions.includes(ext)) continue;
-			const type = file.slice(0, -ext.length);
-
-			if (/^\w+$/.test(type)) {
-				const matcher_file = path.join(params_base, file);
-
-				// Disallow same matcher with different extensions
-				if (matchers[type]) {
-					throw new Error(`Duplicate matchers: ${matcher_file} and ${matchers[type]}`);
-				} else {
-					matchers[type] = matcher_file;
-				}
-			} else {
-				throw new Error(
-					`Matcher names can only have underscores and alphanumeric characters — "${file}" is invalid`
-				);
-			}
-		}
-	}
-
-	return {
-		assets,
-		nodes,
-		routes,
-		matchers
-	};
+	return { nodes, routes };
 }
 
 /**
