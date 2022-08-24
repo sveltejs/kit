@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.432
+
+### Patch Changes
+
+- [breaking] implement new layout system (see the PR for migration instructions) ([#6174](https://github.com/sveltejs/kit/pull/6174))
+
 ## 1.0.0-next.431
 
 ### Patch Changes
