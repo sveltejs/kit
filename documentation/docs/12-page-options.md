@@ -79,7 +79,7 @@ For _pages_, we skirt around this problem by writing `foo/index.html` instead of
 Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's hydrated. If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page accesses browser-only methods or objects, but in most situations it's not recommended ([see appendix](/docs/appendix#ssr)).
 
 ```js
-/// file: +page.js/+page.js
+/// file: +page.js
 export const ssr = false;
 ```
 
