@@ -12,6 +12,7 @@ import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
 import * as sync from '../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base, runtime_prefix } from '../../core/utils.js';
 import { get_env, prevent_illegal_vite_imports, resolve_entry } from '../utils.js';
+import { compact } from '../../utils/array.js';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
@@ -148,8 +149,8 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						return result;
 					};
 				}),
-				routes: manifest_data.routes
-					.map((route) => {
+				routes: compact(
+					manifest_data.routes.map((route) => {
 						if (!route.page && !route.endpoint) return null;
 
 						const endpoint = route.endpoint;
@@ -168,7 +169,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 								: null
 						};
 					})
-					.filter(/** @returns {route is import('types').SSRRoute} */ (route) => !!route),
+				),
 				matchers: async () => {
 					/** @type {Record<string, import('types').ParamMatcher>} */
 					const matchers = {};
