@@ -284,11 +284,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 	set_private_env(env.private);
 	set_public_env(env.public);
 
-	/** @type {Partial<import('types').Hooks>} */
-	const user_hooks = resolve_entry(svelte_config.kit.files.hooks)
-		? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
-		: {};
-
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -322,6 +317,11 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						`Not found (did you mean ${svelte_config.kit.paths.base + req.url}?)`
 					);
 				}
+
+				/** @type {Partial<import('types').Hooks>} */
+				const user_hooks = resolve_entry(svelte_config.kit.files.hooks)
+					? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
+					: {};
 
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
 
