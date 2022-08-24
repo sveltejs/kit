@@ -204,6 +204,12 @@ Not all use cases are suited for layout grouping, nor should you feel compelled 
 
 ```js
 /// file: src/routes/nested/route/+layout.js
+// @filename: ambient.d.ts
+declare module "$lib/reusable-load-function" {
+	export function reusableLoad(event: import('@sveltejs/kit').LoadEvent): Promise<Record<string, any>>;
+}
+// @filename: index.js
+// ---cut---
 import { reusableLoad } from '$lib/reusable-load-function';
 
 export function load(event) {
