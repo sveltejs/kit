@@ -2,7 +2,7 @@ import { exec, parse_route_id } from '../../utils/routing.js';
 
 /**
  * @param {import('types').CSRPageNodeLoader[]} nodes
- * @param {Record<string, [number, number[]?, number[]?, 1?]>} dictionary
+ * @param {typeof import('__GENERATED__/client-manifest.js').dictionary} dictionary
  * @param {Record<string, (param: string) => boolean>} matchers
  * @returns {import('types').CSRRoute[]}
  */
