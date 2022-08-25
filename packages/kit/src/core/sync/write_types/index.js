@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import MagicString from 'magic-string';
-import { posixify, rimraf, walk } from '../../utils/filesystem.js';
-import { compact } from '../../utils/array.js';
+import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
+import { compact } from '../../../utils/array.js';
 
 /**
  *  @typedef {{
@@ -164,6 +164,7 @@ function update_types(config, manifest_data, route) {
 		declarations.push(
 			`type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any>>`
 		);
+		declarations.push(`type EnsureParentData<T> = NonNullable<T> extends never ? {} : T;`);
 	}
 
 	if (route.leaf) {
@@ -261,7 +262,9 @@ function process_node(node, outdir, is_page) {
 
 		const parent_type = `${prefix}ServerParentData`;
 
-		declarations.push(`type ${parent_type} = ${get_parent_type(node, 'LayoutServerData')};`);
+		declarations.push(
+			`type ${parent_type} = EnsureParentData<${get_parent_type(node, 'LayoutServerData')}>;`
+		);
 
 		// +page.js load present -> server can return all-optional data
 		// TODO if this is a layout, don't assume all-optional data, instead check if all children pages have a load function. This needs to happen in a later step.
@@ -300,7 +303,9 @@ function process_node(node, outdir, is_page) {
 	exports.push(`export type ${prefix}ServerData = ${server_data};`);
 
 	const parent_type = `${prefix}ParentData`;
-	declarations.push(`type ${parent_type} = ${get_parent_type(node, 'LayoutData')};`);
+	declarations.push(
+		`type ${parent_type} = EnsureParentData<${get_parent_type(node, 'LayoutData')}>;`
+	);
 
 	if (node.shared) {
 		const content = fs.readFileSync(node.shared, 'utf8');
@@ -310,7 +315,7 @@ function process_node(node, outdir, is_page) {
 			written_proxies.push(`proxy${path.basename(node.shared)}`);
 		}
 
-		const type = get_data_type(node.shared, `${parent_type} & ${server_data}`, proxy);
+		const type = get_data_type(node.shared, `${parent_type} & ${prefix}ServerData`, proxy);
 
 		data = `Omit<${parent_type}, keyof ${type}> & ${type}`;
 
@@ -319,14 +324,14 @@ function process_node(node, outdir, is_page) {
 			? `Partial<App.PageData> & Record<string, any> | void`
 			: `OutputDataShape<${parent_type}>`;
 		exports.push(
-			`export type ${prefix}Load<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.Load<${params}, ${server_data}, ${parent_type}, OutputData>;`
+			`export type ${prefix}Load<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.Load<${params}, ${prefix}ServerData, ${parent_type}, OutputData>;`
 		);
 
 		exports.push(`export type ${prefix}LoadEvent = Parameters<${prefix}Load>[0];`);
 	} else if (server_data === 'null') {
 		data = parent_type;
 	} else {
-		data = `Omit<${parent_type}, keyof ${server_data}> & ${server_data}`;
+		data = `Omit<${parent_type}, keyof ${prefix}ServerData> & ${prefix}ServerData`;
 	}
 
 	exports.push(`export type ${prefix}Data = ${data};`);
@@ -375,7 +380,7 @@ function get_parent_type(node, type) {
 		parent = parent.parent;
 	}
 
-	let parent_str = parent_imports[0] || 'Record<never, never>';
+	let parent_str = parent_imports[0] || '{}';
 	for (let i = 1; i < parent_imports.length; i++) {
 		// Omit is necessary because a parent could have a property with the same key which would
 		// cause a type conflict. At runtime the child overwrites the parent property in this case,
