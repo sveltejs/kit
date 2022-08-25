@@ -150,7 +150,7 @@ src/routes/
 
 You can also put a `+page` directly inside a `(group)`, for example if `/` should be an `(app)` or a `(marketing)` page.
 
-Pages and layouts inside groups by default will inherit from the layout above it. In the above example, `(app)/+layout.svelte` and `(marketing)/+layout.svelte` both inherit `+layout.svelte`.
+Pages and layouts inside groups — as in any other directory — will inherit layouts above them, unless they _break out_ of the layout hierarchy as shown in the next section. In the above example, `(app)/+layout.svelte` and `(marketing)/+layout.svelte` both inherit `+layout.svelte`.
 
 #### +page@
 
