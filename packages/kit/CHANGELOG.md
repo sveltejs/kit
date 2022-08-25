@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.440
+
+### Patch Changes
+
+- [fix] type tweaks ([#6271](https://github.com/sveltejs/kit/pull/6271))
+
+* Correctly determine whether route uses server data ([#6275](https://github.com/sveltejs/kit/pull/6275))
+
 ## 1.0.0-next.439
 
 ### Patch Changes
