@@ -104,6 +104,9 @@ export async function render_page(event, route, page, options, state, resolve_op
 		const should_prerender_data = nodes.some((node) => node?.server);
 		const data_pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
 
+		// it's crucial that we do this before returning the non-SSR response, otherwise
+		// SvelteKit will erroneously believe that the path has been prerendered,
+		// causing functions to be omitted from the manifesst generated later
 		const should_prerender =
 			leaf_node.shared?.prerender ?? leaf_node.server?.prerender ?? options.prerender.default;
 		if (should_prerender) {
