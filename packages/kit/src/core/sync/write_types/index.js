@@ -167,15 +167,20 @@ function update_types(config, routes, route) {
 		`type RouteParams = { ${route.names.map((param) => `${param}: string`).join('; ')} }`
 	);
 
+	// These could also be placed in our public types, but it would bloat them unnecessarily and we may want to change these in the future
 	if (route.layout || route.leaf) {
-		// These could also be placed in our public types, but it would bloat them unnecessarily and we may want to change these in the future
+		// If T extends the empty object, void is also allowed as a return type
 		declarations.push(`type MaybeWithVoid<T> = {} extends T ? T | void : T;`);
+		// Returns the key of the object whose values are required.
 		declarations.push(
 			`export type RequiredKeys<T> = { [K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K; }[keyof T];`
 		);
+		// Helper type to get the correct output type for load functions. It should be passed the parent type to check what types from App.PageData are still required.
+		// If none, void is also allowed as a return type.
 		declarations.push(
 			`type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any>>`
 		);
+		// null & {} == null, we need to prevent that in some situations
 		declarations.push(`type EnsureParentData<T> = NonNullable<T> extends never ? {} : T;`);
 	}
 
@@ -277,9 +282,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 
 		const parent_type = `${prefix}ServerParentData`;
 
-		declarations.push(
-			`type ${parent_type} = EnsureParentData<${get_parent_type(node, 'LayoutServerData')}>;`
-		);
+		declarations.push(`type ${parent_type} = ${get_parent_type(node, 'LayoutServerData')};`);
 
 		// +page.js load present -> server can return all-optional data
 		const output_data_shape =
@@ -317,9 +320,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 	exports.push(`export type ${prefix}ServerData = ${server_data};`);
 
 	const parent_type = `${prefix}ParentData`;
-	declarations.push(
-		`type ${parent_type} = EnsureParentData<${get_parent_type(node, 'LayoutData')}>;`
-	);
+	declarations.push(`type ${parent_type} = ${get_parent_type(node, 'LayoutData')};`);
 
 	if (node.shared) {
 		const content = fs.readFileSync(node.shared, 'utf8');
@@ -394,12 +395,14 @@ function get_parent_type(node, type) {
 		parent = parent.parent;
 	}
 
-	let parent_str = parent_imports[0] || '{}';
+	let parent_str = `EnsureParentData<${parent_imports[0] || '{}'}>`;
 	for (let i = 1; i < parent_imports.length; i++) {
 		// Omit is necessary because a parent could have a property with the same key which would
 		// cause a type conflict. At runtime the child overwrites the parent property in this case,
 		// so reflect that in the type definition.
-		parent_str = `Omit<${parent_str}, keyof ${parent_imports[i]}> & ${parent_imports[i]}`;
+		// EnsureParentData is necessary because {something: string} & null becomes null.
+		// Output types of server loads can be null but when passed in through the `parent` parameter they are the empty object instead.
+		parent_str = `Omit<${parent_str}, keyof ${parent_imports[i]}> & EnsureParentData<${parent_imports[i]}>`;
 	}
 	return parent_str;
 }

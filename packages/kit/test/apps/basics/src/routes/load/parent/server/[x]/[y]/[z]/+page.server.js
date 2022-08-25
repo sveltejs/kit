@@ -1,6 +1,5 @@
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params, parent }) {
-	// @ts-ignore
 	const { y } = await parent();
 	return {
 		y: `${y} edited`,
