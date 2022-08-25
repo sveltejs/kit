@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.162
+
+### Patch Changes
+
+- remove some unused code ([#6287](https://github.com/sveltejs/kit/pull/6287))
+
 ## 2.0.0-next.161
 
 ### Patch Changes
