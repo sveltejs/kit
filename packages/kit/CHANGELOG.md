@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.439
+
+### Patch Changes
+
+- [feat] add App.PageData type ([#6226](https://github.com/sveltejs/kit/pull/6226))
+
 ## 1.0.0-next.438
 
 ### Patch Changes
