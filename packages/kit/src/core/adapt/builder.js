@@ -5,6 +5,7 @@ import { pipeline } from 'stream';
 import { promisify } from 'util';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
+import { get_path } from '../../utils/routing.js';
 
 /**
  * Creates the Builder which is passed to adapters for building the application.
@@ -23,7 +24,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 	/** @param {import('types').RouteData} route */
 	// TODO routes should come pre-filtered
 	function not_prerendered(route) {
-		const path = route.page && !route.id.includes('[') && `/${route.id}`;
+		const path = route.page && get_path(route.id);
 		if (path) {
 			return !prerendered_paths.has(path) && !prerendered_paths.has(path + '/');
 		}
