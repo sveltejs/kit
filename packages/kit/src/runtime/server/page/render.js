@@ -228,6 +228,9 @@ export async function render_response({
 			}
 		}
 
+		// Injecting (potentially) legacy script together with the modern script - in a similar fashion to the script tags injection of @vitejs/plugin-legacy.
+		// Notice that unlike the script injection on @vitejs/plugin-legacy, we don't need to have a constant CSP since kit handles it.
+
 		if (modern_polyfills_file) {
 			head += `\n\t<script type="module" crossorigin src=${s(
 				prefixed(modern_polyfills_file)
