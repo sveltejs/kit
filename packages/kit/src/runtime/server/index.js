@@ -280,10 +280,13 @@ export async function respond(request, options, state) {
 												/** @type {Record<string, any>} */
 												const data = {};
 												for (let j = 0; j < i; j += 1) {
-													const parent = /** @type {import('types').ServerDataNode} */ (
+													const parent = /** @type {import('types').ServerDataNode | null} */ (
 														await functions[j]()
 													);
-													Object.assign(data, parent.data);
+
+													if (parent) {
+														Object.assign(data, parent.data);
+													}
 												}
 												return data;
 											}
