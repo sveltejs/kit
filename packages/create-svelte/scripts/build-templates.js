@@ -206,22 +206,41 @@ async function generate_shared() {
 		}
 
 		if (name.endsWith('.ts') && !include.includes('typescript')) {
+			// file includes types in TypeScript and JSDoc —
+			// create .js file, with and without JSDoc
+			const js = convert_typescript(contents);
 			const js_name = name.replace(/\.ts$/, '.js');
-			shared.add(js_name);
 
+			// typescript
 			files.push({
-				name: js_name,
-				include: [...include],
-				exclude: [...exclude, 'typescript'],
-				contents: convert_typescript(contents)
+				name,
+				include: [...include, 'typescript'],
+				exclude,
+				contents: strip_jsdoc(contents)
 			});
 
-			include.push('typescript');
+			// checkjs
+			files.push({
+				name: js_name,
+				include: [...include, 'checkjs'],
+				exclude,
+				contents: js
+			});
+
+			// no typechecking
+			files.push({
+				name: js_name,
+				include,
+				exclude: [...exclude, 'typescript', 'checkjs'],
+				contents: strip_jsdoc(js)
+			});
+
+			shared.add(name);
+			shared.add(js_name);
+		} else {
+			shared.add(name);
+			files.push({ name, include, exclude, contents });
 		}
-
-		shared.add(name);
-
-		files.push({ name, include, exclude, contents });
 	});
 
 	files.sort((a, b) => a.include.length + a.exclude.length - (b.include.length + b.exclude.length));
