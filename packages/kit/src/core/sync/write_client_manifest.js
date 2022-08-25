@@ -9,9 +9,6 @@ import { trim, write_if_changed } from './utils.js';
  * @param {string} output
  */
 export function write_client_manifest(manifest_data, output) {
-	/** @type {Map<import('types').PageNode, number>} */
-	const node_indexes = new Map();
-
 	/**
 	 * Creates a module that exports a `CSRPageNode`
 	 * @param {import('types').PageNode} node
@@ -41,7 +38,6 @@ export function write_client_manifest(manifest_data, output) {
 
 	const nodes = manifest_data.nodes
 		.map((node, i) => {
-			node_indexes.set(node, i);
 			write_if_changed(`${output}/nodes/${i}.js`, generate_node(node));
 			return `() => import('./nodes/${i}')`;
 		})
@@ -50,17 +46,35 @@ export function write_client_manifest(manifest_data, output) {
 	const dictionary = `{
 		${manifest_data.routes
 			.map((route) => {
-				if (route.type === 'page') {
-					const errors = route.errors.map((node) => (node ? node_indexes.get(node) : '')).join(',');
-					const layouts = route.layouts
-						.map((node) => (node ? node_indexes.get(node) : ''))
-						.join(',');
-					const leaf = route.leaf ? node_indexes.get(route.leaf) : '';
+				if (route.page) {
+					const errors = route.page.errors.slice(1).map((n) => n ?? '');
+					const layouts = route.page.layouts.slice(1).map((n) => n ?? '');
 
-					const uses_server_data = [...route.layouts, route.leaf].some((node) => node?.server);
-					const suffix = uses_server_data ? ', 1' : '';
+					while (layouts.at(-1) === '') layouts.pop();
+					while (errors.at(-1) === '') errors.pop();
 
-					return `${s(route.id)}: [[${errors}], [${layouts}], ${leaf}${suffix}]`;
+					/** @type {import('types').RouteData | null} */
+					let current_route = route;
+
+					/** @type {import('types').PageNode | null} */
+					let current_node = route.leaf;
+
+					let uses_server_data = false;
+					while (current_route && !uses_server_data) {
+						uses_server_data = !!current_node?.server;
+						current_route = current_route.parent;
+						current_node = current_route?.layout ?? null;
+					}
+
+					// encode whether or not the route uses the server data
+					// using the ones' complement, to save space
+					const array = [`${uses_server_data ? '~' : ''}${route.page.leaf}`];
+
+					// only include non-root layout/error nodes if they exist
+					if (layouts.length > 0 || errors.length > 0) array.push(`[${layouts.join(',')}]`);
+					if (errors.length > 0) array.push(`[${errors.join(',')}]`);
+
+					return `${s(route.id)}: [${array.join(',')}]`;
 				}
 			})
 			.filter(Boolean)

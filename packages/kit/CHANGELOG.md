@@ -1,5 +1,41 @@
 # @sveltejs/kit
 
+## 1.0.0-next.437
+
+### Patch Changes
+
+- [fix] only generate blank non-SSR pages when prerendering is enabled ([#6251](https://github.com/sveltejs/kit/pull/6251))
+
+## 1.0.0-next.436
+
+### Patch Changes
+
+- [fix] prerender routes in a (group) ([#6232](https://github.com/sveltejs/kit/pull/6232))
+
+## 1.0.0-next.435
+
+### Patch Changes
+
+- [fix] allow `@` route breakouts to layouts in `[foo]` or `(foo)` directories ([#6224](https://github.com/sveltejs/kit/pull/6224))
+
+## 1.0.0-next.434
+
+### Patch Changes
+
+- Always create `$types` for a route with a layout, leaf or endpoint ([#6222](https://github.com/sveltejs/kit/pull/6222))
+
+## 1.0.0-next.433
+
+### Patch Changes
+
+- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+
+## 1.0.0-next.432
+
+### Patch Changes
+
+- [breaking] implement new layout system (see the PR for migration instructions) ([#6174](https://github.com/sveltejs/kit/pull/6174))
+
 ## 1.0.0-next.431
 
 ### Patch Changes

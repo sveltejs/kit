@@ -264,7 +264,7 @@ export interface ResolveOptions {
 
 export class Server {
 	constructor(manifest: SSRManifest);
-	init(options: ServerInitOptions): void;
+	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
 }
 

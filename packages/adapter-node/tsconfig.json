@@ -6,7 +6,8 @@
 		"noImplicitAny": true,
 		"allowSyntheticDefaultImports": true,
 		"moduleResolution": "node",
-		"module": "es2020",
+		"module": "es2022",
+		"target": "es2017",
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]

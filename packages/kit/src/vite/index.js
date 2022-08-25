@@ -58,9 +58,7 @@ const enforced_config = {
 	root: true
 };
 
-/**
- * @return {import('vite').Plugin[]}
- */
+/** @return {import('vite').Plugin[]} */
 export function sveltekit() {
 	return [...svelte(), kit()];
 }
@@ -440,7 +438,13 @@ function kit() {
 
 				const child = fork(
 					script,
-					[vite_config.build.outDir, results_path, manifest_path, '' + verbose],
+					[
+						vite_config.build.outDir,
+						results_path,
+						manifest_path,
+						'' + verbose,
+						JSON.stringify({ ...env.private, ...env.public })
+					],
 					{
 						stdio: 'inherit'
 					}

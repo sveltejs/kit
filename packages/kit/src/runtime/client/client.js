@@ -825,15 +825,10 @@ export function create_client({ target, base, trailing_slash }) {
 						}
 					}
 
-					// TODO post-https://github.com/sveltejs/kit/discussions/6124, this will
-					// no longer be necessary — if we get here, it's because the root layout
-					// load function failed, which means we have to fall back to the server
-					return await load_root_error_page({
-						status,
-						error,
-						url,
-						routeId: route.id
-					});
+					// if we get here, it's because the root `load` function failed,
+					// and we need to fall back to the server
+					native_navigation(url);
+					return;
 				}
 			} else {
 				// push an empty slot so we can rewind past gaps to the

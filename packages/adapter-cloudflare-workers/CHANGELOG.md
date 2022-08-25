@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.54
+
+### Patch Changes
+
+- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+
 ## 1.0.0-next.53
 
 ### Patch Changes

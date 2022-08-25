@@ -981,10 +981,9 @@ test.describe('Nested layouts', () => {
 	test('resets layout', async ({ page }) => {
 		await page.goto('/nested-layout/reset');
 
-		expect(await page.evaluate(() => document.querySelector('footer'))).toBe(null);
-		expect(await page.evaluate(() => document.querySelector('p'))).toBe(null);
 		expect(await page.textContent('h1')).toBe('Layout reset');
 		expect(await page.textContent('h2')).toBe('Hello');
+		expect(await page.$('#nested')).toBeNull();
 	});
 
 	test('renders the closest error page', async ({ page, clicknav }) => {

@@ -4,7 +4,7 @@ import { write_client_manifest } from './write_client_manifest.js';
 import { write_matchers } from './write_matchers.js';
 import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
-import { write_type, write_types } from './write_types.js';
+import { write_types, write_all_types } from './write_types.js';
 import { write_ambient } from './write_ambient.js';
 
 /**
@@ -29,7 +29,7 @@ export async function create(config) {
 	write_client_manifest(manifest_data, output);
 	write_root(manifest_data, output);
 	write_matchers(manifest_data, output);
-	await write_types(config, manifest_data);
+	await write_all_types(config, manifest_data);
 
 	return { manifest_data };
 }
@@ -43,7 +43,7 @@ export async function create(config) {
  * @param {string} file
  */
 export async function update(config, manifest_data, file) {
-	await write_type(config, manifest_data, file);
+	await write_types(config, manifest_data, file);
 
 	return { manifest_data };
 }

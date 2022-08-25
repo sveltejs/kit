@@ -9,7 +9,7 @@ import { domain_matches, path_matches } from './cookie.js';
  *   event: import('types').RequestEvent;
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
- *   route: import('types').SSRPage | import('types').SSRErrorPage;
+ *   route: import('types').SSRRoute | import('types').SSRErrorPage;
  * }} opts
  */
 export function create_fetch({ event, options, state, route }) {

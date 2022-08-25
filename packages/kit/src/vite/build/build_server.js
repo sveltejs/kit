@@ -84,7 +84,12 @@ export class Server {
 		};
 	}
 
-	init({ env }) {
+	/**
+	 * Take care: Some adapters may have to call \`Server.init\` per-request to set env vars,
+	 * so anything that shouldn't be rerun should be wrapped in an \`if\` block to make sure it hasn't
+	 * been done already.
+	 */
+	async init({ env }) {
 		const entries = Object.entries(env);
 
 		const prv = Object.fromEntries(entries.filter(([k]) => !k.startsWith('${
@@ -99,12 +104,6 @@ export class Server {
 		set_public_env(pub);
 
 		this.options.public_env = pub;
-	}
-
-	async respond(request, options = {}) {
-		if (!(request instanceof Request)) {
-			throw new Error('The first argument to server.respond must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
-		}
 
 		if (!this.options.hooks) {
 			const module = await import(${s(hooks)});
@@ -113,6 +112,12 @@ export class Server {
 				handleError: module.handleError || (({ error }) => console.error(error.stack)),
 				externalFetch: module.externalFetch || fetch
 			};
+		}
+	}
+
+	async respond(request, options = {}) {
+		if (!(request instanceof Request)) {
+			throw new Error('The first argument to server.respond must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
 		}
 
 		return respond(request, this.options, options);
@@ -158,8 +163,8 @@ export async function build_server(options, client) {
 
 	// add entry points for every endpoint...
 	manifest_data.routes.forEach((route) => {
-		if (route.type === 'endpoint') {
-			const resolved = path.resolve(cwd, route.file);
+		if (route.endpoint) {
+			const resolved = path.resolve(cwd, route.endpoint.file);
 			const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
 			const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
 			input[name] = resolved;
@@ -326,10 +331,16 @@ function get_methods(cwd, output, manifest_data) {
 	/** @type {Record<string, import('types').HttpMethod[]>} */
 	const methods = {};
 	manifest_data.routes.forEach((route) => {
-		const file = route.type === 'endpoint' ? route.file : route.leaf.server;
+		if (route.endpoint) {
+			if (lookup[route.endpoint.file]) {
+				methods[route.endpoint.file] = lookup[route.endpoint.file].filter(is_http_method);
+			}
+		}
 
-		if (file && lookup[file]) {
-			methods[file] = lookup[file].filter(is_http_method);
+		if (route.leaf?.server) {
+			if (lookup[route.leaf.server]) {
+				methods[route.leaf.server] = lookup[route.leaf.server].filter(is_http_method);
+			}
 		}
 	});
 
