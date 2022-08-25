@@ -195,17 +195,17 @@ export interface HandleError {
  */
 export interface Load<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	InputData extends Record<string, any> | null = Record<string, any> | null,
-	ParentData extends Record<string, any> = Record<string, any>,
-	OutputData extends Record<string, any> | void = Record<string, any> | void
+	InputData extends Record<string, unknown> | null = Record<string, any> | null,
+	ParentData extends Record<string, unknown> = Record<string, any>,
+	OutputData extends Record<string, unknown> | void = Record<string, any> | void
 > {
 	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData>;
 }
 
 export interface LoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	Data extends Record<string, any> | null = Record<string, any> | null,
-	ParentData extends Record<string, any> = Record<string, any>
+	Data extends Record<string, unknown> | null = Record<string, any> | null,
+	ParentData extends Record<string, unknown> = Record<string, any>
 > {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	params: Params;
@@ -253,7 +253,9 @@ export interface RequestEvent<
  *
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](/docs/types#generated-types) instead.
  */
-export interface RequestHandler<Params extends Record<string, string> = Record<string, string>> {
+export interface RequestHandler<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> {
 	(event: RequestEvent<Params>): MaybePromise<Response>;
 }
 

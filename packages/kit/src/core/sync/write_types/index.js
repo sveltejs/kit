@@ -163,14 +163,9 @@ function update_types(config, routes, route) {
 	/** @type {string[]} */
 	const exports = [];
 
-	if (route.names.length > 0) {
-		const params = route.names.map((param) => `${param}: string`).join('; ');
-		declarations.push(
-			`interface RouteParams extends Partial<Record<string, string>> { ${params} }`
-		);
-	} else {
-		declarations.push(`interface RouteParams extends Partial<Record<string, string>> {}`);
-	}
+	declarations.push(
+		`type RouteParams = { ${route.names.map((param) => `${param}: string`).join('; ')} }`
+	);
 
 	if (route.layout || route.leaf) {
 		// These could also be placed in our public types, but it would bloat them unnecessarily and we may want to change these in the future
@@ -212,12 +207,11 @@ function update_types(config, routes, route) {
 			}
 		});
 
-		if (layout_params.size > 0) {
-			const params = Array.from(layout_params).map((param) => `${param}?: string`);
-			declarations.push(`interface LayoutParams extends RouteParams { ${params.join('; ')} }`);
-		} else {
-			declarations.push(`interface LayoutParams extends RouteParams {}`);
-		}
+		declarations.push(
+			`type LayoutParams = RouteParams & { ${Array.from(layout_params).map(
+				(param) => `${param}?: string`
+			)} }`
+		);
 
 		const {
 			exports: e,
