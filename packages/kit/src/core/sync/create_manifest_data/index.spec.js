@@ -213,7 +213,10 @@ test('sorts routes correctly', () => {
 		routes.map((p) => p.id),
 		[
 			'',
+			'(foo)',
+			'(foo)/(bar)',
 			'about',
+			'foo',
 			'post',
 			'post/bar',
 			'post/foo',
@@ -221,6 +224,7 @@ test('sorts routes correctly', () => {
 			'post/f[zz]',
 			'post/f[xx]',
 			'post/f[yy]',
+			'foo/[bar]',
 			'post/[id]',
 			'[endpoint]',
 			'[wildcard]',
@@ -228,6 +232,7 @@ test('sorts routes correctly', () => {
 			'[...rest]/deep/[...deep_rest]',
 			'[...rest]/abc',
 			'[...rest]/deep',
+			'(foo)/(bar)/[...all]',
 			'[...anotherrest]',
 			'[...rest]'
 		]

@@ -109,23 +109,25 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			segment_map.set(
 				id,
-				segments.filter(Boolean).map((segment) => {
-					/** @type {import('./types').Part[]} */
-					const parts = [];
-					segment.split(/\[(.+?)\]/).map((content, i) => {
-						const dynamic = !!(i % 2);
+				segments
+					.filter((segment) => segment !== '' && affects_path(segment))
+					.map((segment) => {
+						/** @type {import('./types').Part[]} */
+						const parts = [];
+						segment.split(/\[(.+?)\]/).map((content, i) => {
+							const dynamic = !!(i % 2);
 
-						if (!content) return;
+							if (!content) return;
 
-						parts.push({
-							content,
-							dynamic,
-							rest: dynamic && content.startsWith('...'),
-							type: (dynamic && content.split('=')[1]) || null
+							parts.push({
+								content,
+								dynamic,
+								rest: dynamic && content.startsWith('...'),
+								type: (dynamic && content.split('=')[1]) || null
+							});
 						});
-					});
-					return parts;
-				})
+						return parts;
+					})
 			);
 
 			/** @type {import('types').RouteData} */
