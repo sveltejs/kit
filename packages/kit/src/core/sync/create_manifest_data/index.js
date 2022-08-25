@@ -180,7 +180,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 							component: project_relative
 						};
 					} else if (item.is_layout) {
-						if (!route.layout) route.layout = { depth };
+						if (!route.layout) route.layout = { depth, child_pages: [] };
 						route.layout.component = project_relative;
 						if (item.uses_layout !== undefined) route.layout.parent_id = item.uses_layout;
 					} else {
@@ -189,7 +189,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 						if (item.uses_layout !== undefined) route.leaf.parent_id = item.uses_layout;
 					}
 				} else if (item.is_layout) {
-					if (!route.layout) route.layout = { depth };
+					if (!route.layout) route.layout = { depth, child_pages: [] };
 					route.layout[item.kind] = project_relative;
 				} else if (item.is_page) {
 					if (!route.leaf) route.leaf = { depth };
@@ -223,7 +223,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		}
 
 		if (!root.layout?.component) {
-			if (!root.layout) root.layout = { depth: 0 };
+			if (!root.layout) root.layout = { depth: 0, child_pages: [] };
 			root.layout.component = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
 		}
 
@@ -290,6 +290,9 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					}
 
 					if (current_route.layout) {
+						/** @type {import('types').PageNode[]} */ (current_route.layout.child_pages).push(
+							route.leaf
+						);
 						current_node.parent = current_node = current_route.layout;
 						parent_id = current_node.parent_id;
 					} else {

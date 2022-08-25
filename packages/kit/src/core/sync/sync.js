@@ -4,7 +4,7 @@ import { write_client_manifest } from './write_client_manifest.js';
 import { write_matchers } from './write_matchers.js';
 import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
-import { write_types, write_all_types } from './write_types.js';
+import { write_types, write_all_types } from './write_types/index.js';
 import { write_ambient } from './write_ambient.js';
 
 /**

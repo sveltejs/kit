@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import MagicString from 'magic-string';
-import { posixify, rimraf, walk } from '../../utils/filesystem.js';
-import { compact } from '../../utils/array.js';
+import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
+import { compact } from '../../../utils/array.js';
 
 /**
  *  @typedef {{
@@ -49,9 +49,10 @@ export async function write_all_types(config, manifest_data) {
 		}
 	}
 
+	const routes_map = create_routes_map(manifest_data);
 	// For each directory, write $types.d.ts
 	for (const route of manifest_data.routes) {
-		update_types(config, manifest_data, route);
+		update_types(config, routes_map, route);
 	}
 }
 
@@ -76,16 +77,33 @@ export async function write_types(config, manifest_data, file) {
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return; // this shouldn't ever happen
 
-	update_types(config, manifest_data, route);
+	update_types(config, create_routes_map(manifest_data), route);
 }
 
 /**
- *
- * @param {import('types').ValidatedConfig} config
+ * Collect all leafs into a leaf -> route map
  * @param {import('types').ManifestData} manifest_data
+ */
+function create_routes_map(manifest_data) {
+	/** @type {Map<import('types').PageNode, import('types').RouteData>} */
+	const map = new Map();
+	for (const route of manifest_data.routes) {
+		if (route.leaf) {
+			map.set(route.leaf, route);
+		}
+	}
+	return map;
+}
+
+/**
+ * Update types for a specific route
+ * @param {import('types').ValidatedConfig} config
+ * @param {Map<import('types').PageNode, import('types').RouteData>} routes
  * @param {import('types').RouteData} route
  */
-function update_types(config, manifest_data, route) {
+function update_types(config, routes, route) {
+	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
+
 	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
 	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
 
@@ -112,8 +130,6 @@ function update_types(config, manifest_data, route) {
 		input_files.push(route.endpoint.file);
 	}
 
-	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
-
 	try {
 		fs.mkdirSync(outdir, { recursive: true });
 	} catch {}
@@ -138,6 +154,7 @@ function update_types(config, manifest_data, route) {
 	// track which old files end up being surplus to requirements
 	const to_delete = new Set(output_files.map((file) => file.name));
 
+	// now generate new types
 	const imports = [`import type * as Kit from '@sveltejs/kit';`];
 
 	/** @type {string[]} */
@@ -155,32 +172,25 @@ function update_types(config, manifest_data, route) {
 		declarations.push(`interface RouteParams extends Partial<Record<string, string>> {}`);
 	}
 
-	if (route.leaf) {
-		const { data, server_data, load, server_load, errors, written_proxies } = process_node(
-			route.leaf,
-			outdir,
-			'RouteParams'
+	if (route.layout || route.leaf) {
+		// These could also be placed in our public types, but it would bloat them unnecessarily and we may want to change these in the future
+		declarations.push(`type MaybeWithVoid<T> = {} extends T ? T | void : T;`);
+		declarations.push(
+			`export type RequiredKeys<T> = { [K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K; }[keyof T];`
 		);
+		declarations.push(
+			`type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any>>`
+		);
+		declarations.push(`type EnsureParentData<T> = NonNullable<T> extends never ? {} : T;`);
+	}
+
+	if (route.leaf) {
+		const { declarations: d, exports: e, written_proxies } = process_node(route.leaf, outdir, true);
+
+		exports.push(...e);
+		declarations.push(...d);
 
 		for (const file of written_proxies) to_delete.delete(file);
-
-		exports.push(`export type Errors = ${errors};`);
-
-		exports.push(`export type PageData = ${data};`);
-		if (load) {
-			exports.push(
-				`export type PageLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
-			);
-			exports.push('export type PageLoadEvent = Parameters<PageLoad>[0];');
-		}
-
-		exports.push(`export type PageServerData = ${server_data};`);
-		if (server_load) {
-			exports.push(
-				`export type PageServerLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${server_load};`
-			);
-			exports.push('export type PageServerLoadEvent = Parameters<PageServerLoad>[0];');
-		}
 
 		if (route.leaf.server) {
 			exports.push(`export type Action = Kit.Action<RouteParams>`);
@@ -188,14 +198,17 @@ function update_types(config, manifest_data, route) {
 	}
 
 	if (route.layout) {
-		// TODO collect children in create_manifest_data, instead of this inefficient O(n^2) algorithm
+		let all_pages_have_load = true;
 		const layout_params = new Set();
-		manifest_data.routes.forEach((other) => {
-			if (other.page && other.id.startsWith(route.id + '/')) {
-				// TODO this is O(n^2), see if we need to speed it up
-				for (const name of other.names) {
+		route.layout.child_pages?.forEach((page) => {
+			const leaf = routes.get(page);
+			if (leaf) {
+				for (const name of leaf.names) {
 					layout_params.add(name);
 				}
+			}
+			if (!page.server && !page.shared) {
+				all_pages_have_load = false;
 			}
 		});
 
@@ -206,29 +219,16 @@ function update_types(config, manifest_data, route) {
 			declarations.push(`interface LayoutParams extends RouteParams {}`);
 		}
 
-		const { data, server_data, load, server_load, written_proxies } = process_node(
-			route.layout,
-			outdir,
-			'LayoutParams'
-		);
+		const {
+			exports: e,
+			declarations: d,
+			written_proxies
+		} = process_node(route.layout, outdir, false, all_pages_have_load);
+
+		exports.push(...e);
+		declarations.push(...d);
 
 		for (const file of written_proxies) to_delete.delete(file);
-
-		exports.push(`export type LayoutData = ${data};`);
-		if (load) {
-			exports.push(
-				`export type LayoutLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${load};`
-			);
-			exports.push('export type LayoutLoadEvent = Parameters<LayoutLoad>[0];');
-		}
-
-		exports.push(`export type LayoutServerData = ${server_data};`);
-		if (server_load) {
-			exports.push(
-				`export type LayoutServerLoad<OutputData extends Record<string, any> | void = Record<string, any> | void> = ${server_load};`
-			);
-			exports.push('export type LayoutServerLoadEvent = Parameters<LayoutServerLoad>[0];');
-		}
 	}
 
 	if (route.endpoint) {
@@ -251,18 +251,24 @@ function update_types(config, manifest_data, route) {
 /**
  * @param {import('types').PageNode} node
  * @param {string} outdir
- * @param {string} params
+ * @param {boolean} is_page
+ * @param {boolean} [all_pages_have_load]
  */
-function process_node(node, outdir, params) {
-	let data;
-	let load;
-	let server_load;
-	let errors;
+function process_node(node, outdir, is_page, all_pages_have_load = true) {
+	const params = `${is_page ? 'Route' : 'Layout'}Params`;
+	const prefix = is_page ? 'Page' : 'Layout';
 
 	/** @type {string[]} */
 	let written_proxies = [];
+	/** @type {string[]} */
+	const declarations = [];
+	/** @type {string[]} */
+	const exports = [];
 
+	/** @type {string} */
 	let server_data;
+	/** @type {string} */
+	let data;
 
 	if (node.server) {
 		const content = fs.readFileSync(node.server, 'utf8');
@@ -274,33 +280,52 @@ function process_node(node, outdir, params) {
 		}
 
 		server_data = get_data_type(node.server, 'null', proxy);
-		server_load = `Kit.ServerLoad<${params}, ${get_parent_type(
-			node,
-			'LayoutServerData'
-		)}, OutputData>`;
 
-		if (proxy) {
-			const types = [];
-			for (const method of ['POST', 'PUT', 'PATCH']) {
-				if (proxy.exports.includes(method)) {
-					// If the file wasn't tweaked, we can use the return type of the original file.
-					// The advantage is that type updates are reflected without saving.
-					const from = proxy.modified
-						? `./proxy${replace_ext_with_js(basename)}`
-						: path_to_original(outdir, node.server);
+		const parent_type = `${prefix}ServerParentData`;
 
-					types.push(`Kit.AwaitedErrors<typeof import('${from}').${method}>`);
+		declarations.push(
+			`type ${parent_type} = EnsureParentData<${get_parent_type(node, 'LayoutServerData')}>;`
+		);
+
+		// +page.js load present -> server can return all-optional data
+		const output_data_shape =
+			node.shared || (!is_page && all_pages_have_load)
+				? `Partial<App.PageData> & Record<string, any> | void`
+				: `OutputDataShape<${parent_type}>`;
+		exports.push(
+			`export type ${prefix}ServerLoad<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.ServerLoad<${params}, ${parent_type}, OutputData>;`
+		);
+
+		exports.push(`export type ${prefix}ServerLoadEvent = Parameters<${prefix}ServerLoad>[0];`);
+
+		if (is_page) {
+			let errors = 'unknown';
+			if (proxy) {
+				const types = [];
+				for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
+					if (proxy.exports.includes(method)) {
+						// If the file wasn't tweaked, we can use the return type of the original file.
+						// The advantage is that type updates are reflected without saving.
+						const from = proxy.modified
+							? `./proxy${replace_ext_with_js(basename)}`
+							: path_to_original(outdir, node.server);
+
+						types.push(`Kit.AwaitedErrors<typeof import('${from}').${method}>`);
+					}
 				}
+				errors = types.length ? types.join(' | ') : 'null';
 			}
-			errors = types.length ? types.join(' | ') : 'null';
-		} else {
-			errors = 'unknown';
+			exports.push(`export type Errors = ${errors};`);
 		}
 	} else {
 		server_data = 'null';
 	}
+	exports.push(`export type ${prefix}ServerData = ${server_data};`);
 
-	const parent_type = get_parent_type(node, 'LayoutData');
+	const parent_type = `${prefix}ParentData`;
+	declarations.push(
+		`type ${parent_type} = EnsureParentData<${get_parent_type(node, 'LayoutData')}>;`
+	);
 
 	if (node.shared) {
 		const content = fs.readFileSync(node.shared, 'utf8');
@@ -310,17 +335,28 @@ function process_node(node, outdir, params) {
 			written_proxies.push(`proxy${path.basename(node.shared)}`);
 		}
 
-		const type = get_data_type(node.shared, `${parent_type} & ${server_data}`, proxy);
+		const type = get_data_type(node.shared, `${parent_type} & ${prefix}ServerData`, proxy);
 
 		data = `Omit<${parent_type}, keyof ${type}> & ${type}`;
-		load = `Kit.Load<${params}, ${server_data}, ${parent_type}, OutputData>`;
+
+		const output_data_shape =
+			!is_page && all_pages_have_load
+				? `Partial<App.PageData> & Record<string, any> | void`
+				: `OutputDataShape<${parent_type}>`;
+		exports.push(
+			`export type ${prefix}Load<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.Load<${params}, ${prefix}ServerData, ${parent_type}, OutputData>;`
+		);
+
+		exports.push(`export type ${prefix}LoadEvent = Parameters<${prefix}Load>[0];`);
 	} else if (server_data === 'null') {
 		data = parent_type;
 	} else {
-		data = `Omit<${parent_type}, keyof ${server_data}> & ${server_data}`;
+		data = `Omit<${parent_type}, keyof ${prefix}ServerData> & ${prefix}ServerData`;
 	}
 
-	return { data, server_data, load, server_load, errors, written_proxies };
+	exports.push(`export type ${prefix}Data = ${data};`);
+
+	return { declarations, exports, written_proxies };
 
 	/**
 	 * @param {string} file_path
@@ -364,7 +400,7 @@ function get_parent_type(node, type) {
 		parent = parent.parent;
 	}
 
-	let parent_str = parent_imports[0] || 'Record<never, never>';
+	let parent_str = parent_imports[0] || '{}';
 	for (let i = 1; i < parent_imports.length; i++) {
 		// Omit is necessary because a parent could have a property with the same key which would
 		// cause a type conflict. At runtime the child overwrites the parent property in this case,
