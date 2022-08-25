@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.441
+
+### Patch Changes
+
+- [fix] Set `errors` prop on all layout/leaf components, not just page that happens to be deepest ([#6279](https://github.com/sveltejs/kit/pull/6279))
+
+* Fix route sorting with groups ([#6288](https://github.com/sveltejs/kit/pull/6288))
+
 ## 1.0.0-next.440
 
 ### Patch Changes
