@@ -577,7 +577,7 @@ importers:
       terser: '>=5.4.0 <6.0.0'
       typescript: ^4.7.4
       unorm: ^1.6.0
-      vite: ^3.0.9
+      vite: ^3.1.0-beta.0
       vite-imagetools: ^4.0.3
       whatwg-fetch: ^3.6.2
     devDependencies:
@@ -587,7 +587,7 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': 2.1.0
       '@types/node': 16.11.42
-      '@vitejs/plugin-legacy': 2.0.1_terser@5.14.2+vite@3.0.9
+      '@vitejs/plugin-legacy': 2.0.1_ehyyp6qbbjvbi5s26nmjizfpdi
       custom-event-polyfill: 1.0.7
       flexsearch: 0.7.21
       marked: 4.0.17
@@ -599,7 +599,7 @@ importers:
       terser: 5.14.2
       typescript: 4.7.4
       unorm: 1.6.0
-      vite: 3.0.9_terser@5.14.2
+      vite: 3.1.0-beta.0_terser@5.14.2
       vite-imagetools: 4.0.3
       whatwg-fetch: 3.6.2
 
@@ -1304,7 +1304,7 @@ packages:
       - supports-color
     dev: false
 
-  /@vitejs/plugin-legacy/2.0.1_terser@5.14.2+vite@3.0.9:
+  /@vitejs/plugin-legacy/2.0.1_ehyyp6qbbjvbi5s26nmjizfpdi:
     resolution: {integrity: sha512-kKC56rfsXwebApzyuZqdQlGmqTyH1ugy0l0rY58gx5OXzq4/t5/DCqGUoz53Db51OqfjRqsHfqmvq9or6w9k/Q==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
@@ -1317,7 +1317,7 @@ packages:
       regenerator-runtime: 0.13.9
       systemjs: 6.12.3
       terser: 5.14.2
-      vite: 3.0.9_terser@5.14.2
+      vite: 3.1.0-beta.0_terser@5.14.2
     dev: true
 
   /abbrev/1.1.1:
@@ -4749,8 +4749,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /vite/3.0.9_terser@5.14.2:
-    resolution: {integrity: sha512-waYABTM+G6DBTCpYAxvevpG50UOlZuynR0ckTK5PawNVt7ebX6X7wNXHaGIO6wYYFXSM7/WcuFuO2QzhBB6aMw==}
+  /vite/3.1.0-beta.0_terser@5.14.2:
+    resolution: {integrity: sha512-qOcYZ93lM1SYdulB3FQbhl6Udj6/I1rPnHwy1LIUxb8ihe5C05N64TeO7QegVceOrP3mW5m1Cdi+G5IRSrNP0Q==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -4771,7 +4771,7 @@ packages:
       esbuild: 0.14.54
       postcss: 8.4.16
       resolve: 1.22.1
-      rollup: 2.75.7
+      rollup: 2.78.1
       terser: 5.14.2
     optionalDependencies:
       fsevents: 2.3.2
