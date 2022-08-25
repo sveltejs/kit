@@ -49,9 +49,10 @@ export async function write_all_types(config, manifest_data) {
 		}
 	}
 
+	const routes_map = create_routes_map(manifest_data);
 	// For each directory, write $types.d.ts
 	for (const route of manifest_data.routes) {
-		update_types(config, create_routes_map(manifest_data), route);
+		update_types(config, routes_map, route);
 	}
 }
 
@@ -206,7 +207,7 @@ function update_types(config, routes, route) {
 					layout_params.add(name);
 				}
 			}
-			if (!page?.server && !page?.shared) {
+			if (!page.server && !page.shared) {
 				all_pages_have_load = false;
 			}
 		});
@@ -301,7 +302,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 			let errors = 'unknown';
 			if (proxy) {
 				const types = [];
-				for (const method of ['POST', 'PUT', 'PATCH']) {
+				for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
 					if (proxy.exports.includes(method)) {
 						// If the file wasn't tweaked, we can use the return type of the original file.
 						// The advantage is that type updates are reflected without saving.
