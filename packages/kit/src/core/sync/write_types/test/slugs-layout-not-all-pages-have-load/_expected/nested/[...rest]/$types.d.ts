@@ -11,10 +11,11 @@ type OutputDataShape<T> = MaybeWithVoid<
 		Record<string, any>
 >;
 type EnsureParentData<T> = NonNullable<T> extends never ? {} : T;
-type PageParentData = EnsureParentData<
-	Omit<import('../../$types.js').LayoutData, keyof import('../$types.js').LayoutData> &
-		import('../$types.js').LayoutData
->;
+type PageParentData = Omit<
+	EnsureParentData<import('../../$types.js').LayoutData>,
+	keyof import('../$types.js').LayoutData
+> &
+	EnsureParentData<import('../$types.js').LayoutData>;
 
 export type PageServerData = null;
 export type PageLoad<
