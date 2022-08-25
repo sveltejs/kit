@@ -67,7 +67,8 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					imports: [],
 					stylesheets: []
 				},
-				legacy_assets: {// No legacy support in dev mode
+				legacy_assets: {
+					// No legacy support in dev mode
 					legacy_entry_file: null,
 					legacy_polyfills_file: null,
 					modern_polyfills_file: null

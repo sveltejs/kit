@@ -178,14 +178,16 @@ function kit() {
 		);
 
 		/**
-		 * 
+		 *
 		 * @param {string} entry
 		 */
 		const find_file_if_exist = (entry) =>
-			(entry in vite_manifest) ? vite_manifest[entry].file : null;
+			entry in vite_manifest ? vite_manifest[entry].file : null;
 
 		const entry_id = posixify(path.relative(cwd, `${runtime_directory}/client/start.js`));
-		const entry_legacy_id = posixify(path.relative(cwd, `${runtime_directory}/client/start-legacy.js`));
+		const entry_legacy_id = posixify(
+			path.relative(cwd, `${runtime_directory}/client/start-legacy.js`)
+		);
 		const legacy_polyfills_id = 'vite/legacy-polyfills-legacy';
 		const modern_polyfills_id = 'vite/legacy-polyfills';
 
@@ -360,9 +362,9 @@ function kit() {
 			const output = vite_config.build.rollupOptions.output;
 			const outputLength = Array.isArray(output) ? output.length : 1;
 			if (outputCount < outputLength) {
-				return;// Wait untill all output will be done building, since we need the manifest
+				return; // Wait untill all output will be done building, since we need the manifest
 			}
-			
+
 			if (vite_config.build.ssr) {
 				return;
 			}

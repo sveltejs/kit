@@ -41,9 +41,9 @@ export function find_anchor(event) {
 
 		var target = event.target;
 		var path = [];
-		while(/** @type {any} */(target).parentNode !== null){
+		while (/** @type {any} */ (target).parentNode !== null) {
 			path.push(target);
-			target = /** @type {any} */(target).parentNode;
+			target = /** @type {any} */ (target).parentNode;
 		}
 
 		path.push(document, window);
@@ -51,8 +51,9 @@ export function find_anchor(event) {
 		return path;
 	}
 
-	const node = composedPath(event)
-		.find((e) => e instanceof Node && e.nodeName.toUpperCase() === 'A'); // SVG <a> elements have a lowercase name
+	const node = composedPath(event).find(
+		(e) => e instanceof Node && e.nodeName.toUpperCase() === 'A'
+	); // SVG <a> elements have a lowercase name
 	return /** @type {HTMLAnchorElement | SVGAElement | undefined} */ (node);
 }
 

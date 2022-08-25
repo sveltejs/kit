@@ -229,58 +229,60 @@ export async function render_response({
 		}
 
 		if (modern_polyfills_file) {
-			head += `\n\t<script type="module" crossorigin src=${s(prefixed(modern_polyfills_file))}></script>`;
+			head += `\n\t<script type="module" crossorigin src=${s(
+				prefixed(modern_polyfills_file)
+			)}></script>`;
 		}
-	
+
 		let had_emitted_nomodule_script = false;
 		/**
-		 * 
-		 * @param {string} script 
+		 *
+		 * @param {string} script
 		 * @param {string | undefined} additionalAttrs
 		 */
 		function add_nomodule_script(script, additionalAttrs = undefined) {
 			/**
-			 * 
-			 * @param {string} script 
+			 *
+			 * @param {string} script
 			 * @param {string | undefined} additionalAttrs
 			 */
 			function internal_add(script, additionalAttrs = undefined) {
 				body +=
 					`\n\t\t<script nomodule` +
 					(additionalAttrs ? ` ${additionalAttrs}` : '') +
-					((script && csp.script_needs_nonce) ? ` nonce="${csp.nonce}"` : '') +
+					(script && csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '') +
 					`>${script}</script>`;
-	
+
 				if (script) {
 					csp.add_script(script);
 				}
 			}
-	
+
 			if (!had_emitted_nomodule_script) {
 				// Before adding nomodule scripts, we need to inject Safari 10 nomodule fix
 				// https://gist.github.com/samthor/64b114e4a4f539915a95b91ffd340acc
 				// DO NOT ALTER THIS CONTENT
-				const safari10NoModuleFix = `!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();`
+				const safari10NoModuleFix = `!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();`;
 				internal_add(safari10NoModuleFix);
-	
+
 				had_emitted_nomodule_script = true;
 			}
-	
+
 			internal_add(script, additionalAttrs);
 		}
-	
+
 		if (legacy_polyfills_file) {
 			add_nomodule_script('', `src=${s(prefixed(legacy_polyfills_file))}`);
 		}
-	
+
 		/**
-		 * 
-		 * @param {string} prefix 
-		 * @returns 
+		 *
+		 * @param {string} prefix
+		 * @returns
 		 */
-		const getStartupContent = (prefix) => 
-		// prettier-ignore
-		`
+		const getStartupContent = (prefix) =>
+			// prettier-ignore
+			`
 		${prefix}set_public_env(${s(options.public_env)});
 		
 		${prefix}start({
@@ -298,27 +300,41 @@ export async function render_response({
 			}` : 'null'}
 		});
 		`;
-		
+
 		const detectModernBrowserVarName = '__KIT_is_modern_browser';
 		const startup_script_var_name = '__KIT_startup_script';
 		if (legacy_entry_file) {
-			const startup_script_js = `window.${startup_script_var_name} = function (m) { ${getStartupContent('m.')} };`;
-			body += `\n\t\t<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${startup_script_js}</script>`;
+			const startup_script_js = `window.${startup_script_var_name} = function (m) { ${getStartupContent(
+				'm.'
+			)} };`;
+			body += `\n\t\t<script${
+				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
+			}>${startup_script_js}</script>`;
 			csp.add_script(startup_script_js);
-	
-			const importAndStartCall = `System.import(${s(prefixed(legacy_entry_file))}).then(window.${startup_script_var_name});`;
-	
+
+			const importAndStartCall = `System.import(${s(
+				prefixed(legacy_entry_file)
+			)}).then(window.${startup_script_var_name});`;
+
 			add_nomodule_script(importAndStartCall);
-	
+
 			const detectModernBrowserCode = `try{import.meta.url;import("_").catch(()=>1);}catch(e){}window.${detectModernBrowserVarName}=true;`;
-			head += `\n\t<script type="module"${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${detectModernBrowserCode}</script>`;
+			head += `\n\t<script type="module"${
+				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
+			}>${detectModernBrowserCode}</script>`;
 			csp.add_script(detectModernBrowserCode);
-	
+
 			const dynamicFallbackInlineCode =
 				`!function(){if(window.${detectModernBrowserVarName})return;console.warn("vite: loading legacy build because dynamic import or import.meta.url is unsupported, syntax error above should be ignored");` +
-				(legacy_polyfills_file ? `var n=document.createElement("script");n.src=${s(prefixed(legacy_polyfills_file))},n.onload=function(){${importAndStartCall}},document.body.appendChild(n)` : `(${importAndStartCall})()`) +
+				(legacy_polyfills_file
+					? `var n=document.createElement("script");n.src=${s(
+							prefixed(legacy_polyfills_file)
+					  )},n.onload=function(){${importAndStartCall}},document.body.appendChild(n)`
+					: `(${importAndStartCall})()`) +
 				`}();`;
-			head += `\n\t<script type="module"${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${dynamicFallbackInlineCode}</script>`;
+			head += `\n\t<script type="module"${
+				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
+			}>${dynamicFallbackInlineCode}</script>`;
 			csp.add_script(dynamicFallbackInlineCode);
 		}
 
