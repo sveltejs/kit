@@ -1,5 +1,15 @@
 # create-svelte
 
+## 2.0.0-next.160
+
+### Patch Changes
+
+- Create TypeScript/JSDoc/vanilla versions of shared template .ts files ([#6253](https://github.com/sveltejs/kit/pull/6253))
+
+* Create vite.config.ts when creating TypeScript project ([#6253](https://github.com/sveltejs/kit/pull/6253))
+
+- Invalidate data after form submission ([#6254](https://github.com/sveltejs/kit/pull/6254))
+
 ## 2.0.0-next.159
 
 ### Patch Changes

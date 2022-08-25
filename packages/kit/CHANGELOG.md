@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.438
+
+### Patch Changes
+
+- more granular URL property tracking during load ([#6237](https://github.com/sveltejs/kit/pull/6237))
+
+* [breaking] change event.clientAddress to event.getClientAddress() ([#6237](https://github.com/sveltejs/kit/pull/6237))
+
+- Remove all enumerable getters from RequestEvent and LoadEvent ([#6237](https://github.com/sveltejs/kit/pull/6237))
+
 ## 1.0.0-next.437
 
 ### Patch Changes
