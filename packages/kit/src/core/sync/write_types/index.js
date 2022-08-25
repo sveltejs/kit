@@ -559,7 +559,13 @@ export function tweak_types(content, names) {
 										arg.name.end,
 										`: Parameters<${type}>[0]` + (add_parens ? ')' : '')
 									);
+								} else {
+									// prevent "type X is imported but not used" when svelte-check runs
+									code.append(`;${type};`);
 								}
+							} else {
+								// prevent "type X is imported but not used" when svelte-check runs
+								code.append(`;${type};`);
 							}
 
 							modified = true;
