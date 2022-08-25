@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': patch
+'create-svelte': patch
 ---
 
 Invalidate data after form submission
