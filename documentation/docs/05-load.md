@@ -351,9 +351,15 @@ export function load({ locals }) {
 
 SvelteKit tracks the dependencies of each `load` function to avoid re-running it unnecessarily during navigation. For example, a `load` function in a root `+layout.js` doesn't need to re-run when you navigate from one page to another unless it references `url` or a member of `params` that changed since the last navigation.
 
-Using [`invalidate(url)`](/docs/modules#$app-navigation-invalidate), you can re-run any `load` functions that depend on the invalidated resource (either implicitly, via [`fetch`](#fetch)), or explicitly via [`depends`](#depends). You can also invalidate _all_ `load` functions by calling `invalidate()` without an argument.
+A `load` function will re-run in the following situations:
 
-If a `load` function is triggered to rerun, the page will not remount — instead, it will update with the new `data`.
+- It references a property of `params` whose value has changed
+- It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed
+- It calls `await parent()` and a parent `load` function re-ran
+- It declared a dependency on a specific URL via [`fetch`](#fetch) or [`depends`](#depends), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
+- All active `load` functions were forcibly re-run with [`invalidate()`](/docs/modules#$app-navigation-invalidate)
+
+If a `load` function is triggered to re-run, the page will not remount — instead, it will update with the new `data`. This means that components' internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
 
 ### Shared state
 
