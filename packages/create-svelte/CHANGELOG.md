@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.161
+
+### Patch Changes
+
+- [feat] add App.PageData type ([#6226](https://github.com/sveltejs/kit/pull/6226))
+
 ## 2.0.0-next.160
 
 ### Patch Changes
