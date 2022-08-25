@@ -58,9 +58,7 @@ const enforced_config = {
 	root: true
 };
 
-/**
- * @return {import('vite').Plugin[]}
- */
+/** @return {import('vite').Plugin[]} */
 export function sveltekit() {
 	return [...svelte(), kit()];
 }
