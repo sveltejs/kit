@@ -2,9 +2,9 @@ import fs from 'fs';
 import { join } from 'path';
 import sirv from 'sirv';
 import { pathToFileURL } from 'url';
-import { getRequest, setResponse } from '../../node/index.js';
-import { installPolyfills } from '../../node/polyfills.js';
-import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
+import { getRequest, setResponse } from '../../../exports/node/index.js';
+import { installPolyfills } from '../../../exports/node/polyfills.js';
+import { SVELTE_KIT_ASSETS } from '../../../core/constants.js';
 import { loadEnv } from 'vite';
 
 /** @typedef {import('http').IncomingMessage} Req */

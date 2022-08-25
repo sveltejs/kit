@@ -7,9 +7,9 @@ import { serialize_error, GENERIC_ERROR, error_to_pojo } from './utils.js';
 import { decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
-import { HttpError, Redirect } from '../../index/private.js';
+import { HttpError, Redirect } from '../control.js';
 import { load_server_data } from './page/load_data.js';
-import { json } from '../../index/index.js';
+import { json } from '../../exports/index.js';
 import { once } from '../../utils/functions.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */

@@ -3,16 +3,16 @@ import colors from 'kleur';
 import path from 'path';
 import sirv from 'sirv';
 import { URL } from 'url';
-import { getRequest, setResponse } from '../../node/index.js';
-import { installPolyfills } from '../../node/polyfills.js';
-import { coalesce_to_error } from '../../utils/error.js';
-import { posixify } from '../../utils/filesystem.js';
-import { load_template } from '../../core/config/index.js';
-import { SVELTE_KIT_ASSETS } from '../../core/constants.js';
-import * as sync from '../../core/sync/sync.js';
-import { get_mime_lookup, runtime_base, runtime_prefix } from '../../core/utils.js';
+import { getRequest, setResponse } from '../../../exports/node/index.js';
+import { installPolyfills } from '../../../exports/node/polyfills.js';
+import { coalesce_to_error } from '../../../utils/error.js';
+import { posixify } from '../../../utils/filesystem.js';
+import { load_template } from '../../../core/config/index.js';
+import { SVELTE_KIT_ASSETS } from '../../../core/constants.js';
+import * as sync from '../../../core/sync/sync.js';
+import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
 import { get_env, prevent_illegal_vite_imports, resolve_entry } from '../utils.js';
-import { compact } from '../../utils/array.js';
+import { compact } from '../../../utils/array.js';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
