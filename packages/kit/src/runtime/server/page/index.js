@@ -104,6 +104,24 @@ export async function render_page(event, route, page, options, state, resolve_op
 		const should_prerender_data = nodes.some((node) => node?.server);
 		const data_pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
 
+		const should_prerender =
+			leaf_node.shared?.prerender ?? leaf_node.server?.prerender ?? options.prerender.default;
+		if (should_prerender) {
+			const mod = leaf_node.server;
+			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
+				throw new Error('Cannot prerender pages that have endpoints with mutative methods');
+			}
+		} else if (state.prerendering) {
+			// if the page isn't marked as prerenderable (or is explicitly
+			// marked NOT prerenderable, if `prerender.default` is `true`),
+			// then bail out at this point
+			if (!should_prerender) {
+				return new Response(undefined, {
+					status: 204
+				});
+			}
+		}
+
 		if (!resolve_opts.ssr) {
 			return await render_response({
 				branch: [],
@@ -121,24 +139,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 				state,
 				resolve_opts
 			});
-		}
-
-		const should_prerender =
-			leaf_node.shared?.prerender ?? leaf_node.server?.prerender ?? options.prerender.default;
-		if (should_prerender) {
-			const mod = leaf_node.server;
-			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
-				throw new Error('Cannot prerender pages that have endpoints with mutative methods');
-			}
-		} else if (state.prerendering) {
-			// if the page isn't marked as prerenderable (or is explicitly
-			// marked NOT prerenderable, if `prerender.default` is `true`),
-			// then bail out at this point
-			if (!should_prerender) {
-				return new Response(undefined, {
-					status: 204
-				});
-			}
 		}
 
 		/** @type {Array<Loaded | null>} */
