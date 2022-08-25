@@ -53,17 +53,13 @@ export function write_client_manifest(manifest_data, output) {
 					while (layouts.at(-1) === '') layouts.pop();
 					while (errors.at(-1) === '') errors.pop();
 
-					/** @type {import('types').RouteData | null} */
-					let current_route = route;
-
 					/** @type {import('types').PageNode | null} */
 					let current_node = route.leaf;
 
 					let uses_server_data = false;
-					while (current_route && !uses_server_data) {
+					while (current_node && !uses_server_data) {
 						uses_server_data = !!current_node?.server;
-						current_route = current_route.parent;
-						current_node = current_route?.layout ?? null;
+						current_node = current_node?.parent ?? null;
 					}
 
 					// encode whether or not the route uses the server data
