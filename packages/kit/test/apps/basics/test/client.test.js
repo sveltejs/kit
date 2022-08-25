@@ -351,7 +351,7 @@ test.describe('Load', () => {
 	test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
 		await page.goto('/load/url-hash#please-dont-send-me-to-load');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component."'
+			'This is your custom error page saying: "Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead"'
 		);
 	});
 
@@ -628,5 +628,16 @@ test.describe.serial('Invalidation', () => {
 
 		// this looks wrong, but is actually the intended behaviour (the increment side-effect in a GET would be a bug in a real app)
 		expect(await page.textContent('h3')).toBe('doubled: 2');
+	});
+
+	test('load function re-runs when searchParams change', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/url?a=1');
+		expect(await page.textContent('h1')).toBe('1');
+
+		await clicknav('[href="?a=2"]');
+		expect(await page.textContent('h1')).toBe('2');
+
+		await clicknav('[href="?a=3"]');
+		expect(await page.textContent('h1')).toBe('3');
 	});
 });

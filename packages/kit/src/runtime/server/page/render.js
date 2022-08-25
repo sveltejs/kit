@@ -5,7 +5,6 @@ import { hash } from '../../hash.js';
 import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
-import { PrerenderingURL } from '../../../utils/url.js';
 import { serialize_error } from '../utils.js';
 import { HttpError } from '../../../index/private.js';
 
@@ -100,7 +99,7 @@ export async function render_response({
 			params: /** @type {Record<string, any>} */ (event.params),
 			routeId: event.routeId,
 			status,
-			url: state.prerendering ? new PrerenderingURL(event.url) : event.url,
+			url: event.url,
 			data
 		};
 

@@ -238,7 +238,7 @@ export interface ParamMatcher {
 export interface RequestEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
 > {
-	clientAddress: string;
+	getClientAddress: () => string;
 	locals: App.Locals;
 	params: Params;
 	platform: Readonly<App.Platform>;

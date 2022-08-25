@@ -37,6 +37,7 @@ export async function respond_with_error({ event, options, state, status, error,
 			const server_data_promise = load_server_data({
 				dev: options.dev,
 				event,
+				state,
 				node: default_layout,
 				parent: async () => ({})
 			});
