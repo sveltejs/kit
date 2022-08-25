@@ -122,6 +122,10 @@ export interface PageNode {
 	server?: string;
 	parent_id?: string;
 	parent?: PageNode;
+	/**
+	 * Filled with the pages that reference this layout (if this is a layout)
+	 */
+	child_pages?: PageNode[];
 }
 
 export type PayloadScriptAttributes =

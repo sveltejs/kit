@@ -51,7 +51,7 @@ export async function write_all_types(config, manifest_data) {
 
 	// For each directory, write $types.d.ts
 	for (const route of manifest_data.routes) {
-		update_types(config, manifest_data, route);
+		update_types(config, create_routes_map(manifest_data), route);
 	}
 }
 
@@ -76,16 +76,33 @@ export async function write_types(config, manifest_data, file) {
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return; // this shouldn't ever happen
 
-	update_types(config, manifest_data, route);
+	update_types(config, create_routes_map(manifest_data), route);
 }
 
 /**
- *
- * @param {import('types').ValidatedConfig} config
+ * Collect all leafs into a leaf -> route map
  * @param {import('types').ManifestData} manifest_data
+ */
+function create_routes_map(manifest_data) {
+	/** @type {Map<import('types').PageNode, import('types').RouteData>} */
+	const map = new Map();
+	for (const route of manifest_data.routes) {
+		if (route.leaf) {
+			map.set(route.leaf, route);
+		}
+	}
+	return map;
+}
+
+/**
+ * Update types for a specific route
+ * @param {import('types').ValidatedConfig} config
+ * @param {Map<import('types').PageNode, import('types').RouteData>} routes
  * @param {import('types').RouteData} route
  */
-function update_types(config, manifest_data, route) {
+function update_types(config, routes, route) {
+	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
+
 	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
 	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
 
@@ -112,8 +129,6 @@ function update_types(config, manifest_data, route) {
 		input_files.push(route.endpoint.file);
 	}
 
-	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
-
 	try {
 		fs.mkdirSync(outdir, { recursive: true });
 	} catch {}
@@ -138,6 +153,7 @@ function update_types(config, manifest_data, route) {
 	// track which old files end up being surplus to requirements
 	const to_delete = new Set(output_files.map((file) => file.name));
 
+	// now generate new types
 	const imports = [`import type * as Kit from '@sveltejs/kit';`];
 
 	/** @type {string[]} */
@@ -155,8 +171,8 @@ function update_types(config, manifest_data, route) {
 		declarations.push(`interface RouteParams extends Partial<Record<string, string>> {}`);
 	}
 
-	// These could also be placed in our public types, but it would bloat them unnecessarily and we may want to change these in the future
 	if (route.layout || route.leaf) {
+		// These could also be placed in our public types, but it would bloat them unnecessarily and we may want to change these in the future
 		declarations.push(`type MaybeWithVoid<T> = {} extends T ? T | void : T;`);
 		declarations.push(
 			`export type RequiredKeys<T> = { [K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K; }[keyof T];`
@@ -181,14 +197,17 @@ function update_types(config, manifest_data, route) {
 	}
 
 	if (route.layout) {
-		// TODO collect children in create_manifest_data, instead of this inefficient O(n^2) algorithm
+		let all_pages_have_load = true;
 		const layout_params = new Set();
-		manifest_data.routes.forEach((other) => {
-			if (other.page && other.id.startsWith(route.id + '/')) {
-				// TODO this is O(n^2), see if we need to speed it up
-				for (const name of other.names) {
+		route.layout.child_pages?.forEach((page) => {
+			const leaf = routes.get(page);
+			if (leaf) {
+				for (const name of leaf.names) {
 					layout_params.add(name);
 				}
+			}
+			if (!page?.server && !page?.shared) {
+				all_pages_have_load = false;
 			}
 		});
 
@@ -203,7 +222,7 @@ function update_types(config, manifest_data, route) {
 			exports: e,
 			declarations: d,
 			written_proxies
-		} = process_node(route.layout, outdir, false);
+		} = process_node(route.layout, outdir, false, all_pages_have_load);
 
 		exports.push(...e);
 		declarations.push(...d);
@@ -232,8 +251,9 @@ function update_types(config, manifest_data, route) {
  * @param {import('types').PageNode} node
  * @param {string} outdir
  * @param {boolean} is_page
+ * @param {boolean} [all_pages_have_load]
  */
-function process_node(node, outdir, is_page) {
+function process_node(node, outdir, is_page, all_pages_have_load = true) {
 	const params = `${is_page ? 'Route' : 'Layout'}Params`;
 	const prefix = is_page ? 'Page' : 'Layout';
 
@@ -267,9 +287,8 @@ function process_node(node, outdir, is_page) {
 		);
 
 		// +page.js load present -> server can return all-optional data
-		// TODO if this is a layout, don't assume all-optional data, instead check if all children pages have a load function. This needs to happen in a later step.
 		const output_data_shape =
-			node.shared || !is_page
+			node.shared || (!is_page && all_pages_have_load)
 				? `Partial<App.PageData> & Record<string, any> | void`
 				: `OutputDataShape<${parent_type}>`;
 		exports.push(
@@ -319,10 +338,10 @@ function process_node(node, outdir, is_page) {
 
 		data = `Omit<${parent_type}, keyof ${type}> & ${type}`;
 
-		// TODO if this is a layout, don't assume all-optional data, instead check if all children pages have a load function. This needs to happen in a later step.
-		const output_data_shape = !is_page
-			? `Partial<App.PageData> & Record<string, any> | void`
-			: `OutputDataShape<${parent_type}>`;
+		const output_data_shape =
+			!is_page && all_pages_have_load
+				? `Partial<App.PageData> & Record<string, any> | void`
+				: `OutputDataShape<${parent_type}>`;
 		exports.push(
 			`export type ${prefix}Load<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.Load<${params}, ${prefix}ServerData, ${parent_type}, OutputData>;`
 		);

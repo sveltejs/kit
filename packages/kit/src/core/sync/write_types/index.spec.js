@@ -54,7 +54,7 @@ async function run_test(dir, config = {}) {
 		const actual = format(fs.readFileSync(actual_file, 'utf-8'), {
 			parser: 'typescript'
 		});
-		const err_msg = `Expected equal file contents for ${file} in ${path}`;
+		const err_msg = `Expected equal file contents for ${file} in ${dir}`;
 		assert.fixture(actual, expected, err_msg);
 	}
 }
@@ -77,6 +77,14 @@ test('Create $types for layout and page', async () => {
 
 test('Create $types for grouped layout and page', async () => {
 	await run_test('layout-advanced');
+});
+
+test('Create $types with params', async () => {
+	await run_test('slugs');
+});
+
+test('Create $types with params and required return types for layout', async () => {
+	await run_test('slugs-layout-not-all-pages-have-load');
 });
 
 test('Rewrites types for a TypeScript module', () => {
