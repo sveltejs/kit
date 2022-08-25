@@ -1,8 +1,6 @@
 import type * as Kit from '@sveltejs/kit';
 
-interface RouteParams extends Partial<Record<string, string>> {
-	slug: string;
-}
+type RouteParams = { slug: string };
 type MaybeWithVoid<T> = {} extends T ? T | void : T;
 export type RequiredKeys<T> = {
 	[K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K;

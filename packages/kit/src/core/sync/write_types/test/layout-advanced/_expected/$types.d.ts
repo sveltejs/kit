@@ -1,6 +1,6 @@
 import type * as Kit from '@sveltejs/kit';
 
-interface RouteParams extends Partial<Record<string, string>> {}
+type RouteParams = {};
 type MaybeWithVoid<T> = {} extends T ? T | void : T;
 export type RequiredKeys<T> = {
 	[K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K;
@@ -11,7 +11,7 @@ type OutputDataShape<T> = MaybeWithVoid<
 		Record<string, any>
 >;
 type EnsureParentData<T> = NonNullable<T> extends never ? {} : T;
-interface LayoutParams extends RouteParams {}
+type LayoutParams = RouteParams & {};
 type LayoutParentData = EnsureParentData<{}>;
 
 export type LayoutServerData = null;
