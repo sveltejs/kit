@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.442
+
+### Patch Changes
+
+- [fix] handle case where parent() refers to missing load function ([#6282](https://github.com/sveltejs/kit/pull/6282))
+
 ## 1.0.0-next.441
 
 ### Patch Changes
