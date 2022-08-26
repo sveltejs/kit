@@ -256,7 +256,7 @@ export async function load({ setHeaders }) {
 
 ### Output
 
-On the client, the only requirement for the return value is to be a dictionary at the top level. On the server, the output also needs to be JSON-serializable. On both the client and server any promises on the returned `data` object will be resolved, if they are top-level properties. This makes it easy to return multiple promises without creating a waterfall:
+Any promises on the returned `data` object will be resolved, if they are top-level properties. This makes it easy to return multiple promises without creating a waterfall:
 
 ```js
 // @filename: $types.d.ts
