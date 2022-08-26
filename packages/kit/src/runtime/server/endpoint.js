@@ -1,4 +1,4 @@
-import { HttpError, Redirect } from '../../index/private.js';
+import { HttpError, Redirect } from '../control.js';
 import { check_method_names, method_not_allowed } from './utils.js';
 
 /**

@@ -6,7 +6,7 @@ import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { serialize_error } from '../utils.js';
-import { HttpError } from '../../../index/private.js';
+import { HttpError } from '../../control.js';
 
 // TODO rename this function/module
 

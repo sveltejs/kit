@@ -1,11 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import { mkdirp, posixify } from '../../utils/filesystem.js';
+import { mkdirp, posixify } from '../../../utils/filesystem.js';
 import { get_vite_config, merge_vite_configs, resolve_entry } from '../utils.js';
-import { load_template } from '../../core/config/index.js';
-import { runtime_directory } from '../../core/utils.js';
+import { load_template } from '../../../core/config/index.js';
+import { runtime_directory } from '../../../core/utils.js';
 import { create_build, find_deps, get_default_build_config, is_http_method } from './utils.js';
-import { s } from '../../utils/misc.js';
+import { s } from '../../../utils/misc.js';
 
 /**
  * @param {{
