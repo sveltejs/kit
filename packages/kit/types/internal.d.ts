@@ -194,6 +194,9 @@ export type ServerData =
 	  }
 	| {
 			type: 'data';
+			/**
+			 * If `null`, then there was no load function
+			 */
 			nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
 	  };
 

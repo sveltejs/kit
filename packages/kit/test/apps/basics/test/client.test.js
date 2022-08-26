@@ -360,6 +360,18 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe("I didn't break!");
 	});
 
+	test('server data from previous is not reused if next page has no load function', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/load/server-data-reuse/with-server-load');
+		expect(await page.textContent('pre')).toBe(
+			JSON.stringify({ foo: { bar: 'Custom layout' }, server: true })
+		);
+		await app.goto('/load/server-data-reuse/no-load');
+		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page }) => {
 			const port = 5173;
