@@ -4,7 +4,7 @@ title: Loading data
 
 A [`+page.svelte`](/docs/routing#page-page-svelte) or [`+layout.svelte`](/docs/routing#layout-layout-svelte) gets its `data` from a `load` function.
 
-If the `load` function is defined in `+page.js` or `+layout.js` it will run both on the server and in the browser. If it's instead defined in `+page.server.js` or `+layout.server.js` it will only run on the server, in which case it can (for example) make database calls and access private [environment variables](/docs/modules#$env-static-private), but can only return data that can be serialized as JSON.
+If the `load` function is defined in `+page.js` or `+layout.js` it will run both on the server and in the browser. If it's instead defined in `+page.server.js` or `+layout.server.js` it will only run on the server, in which case it can (for example) make database calls and access private [environment variables](/docs/modules#$env-static-private), but can only return data that can be serialized with [devalue](https://github.com/rich-harris/devalue).
 
 ```js
 /// file: src/routes/+page.js
