@@ -272,7 +272,6 @@ export async function respond(request, options, state) {
 										// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
 										const node = n == undefined ? n : await options.manifest._.nodes[n]();
 										return load_server_data({
-											dev: options.dev,
 											event,
 											state,
 											node,

@@ -191,7 +191,9 @@ export async function render_response({
 				error: ${error && serialize_error(error, e => e.stack)},
 				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 				params: ${devalue(event.params)},
-				routeId: ${s(event.routeId)}
+				routeId: ${s(event.routeId)},
+				data: ${devalue(branch.map(({ server_data }) => server_data))},
+				errors: ${validation_errors ? devalue(validation_errors) : 'null'}
 			}` : 'null'}
 		});
 	`;

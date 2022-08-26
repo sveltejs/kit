@@ -1281,31 +1281,21 @@ export function create_client({ target, base, trailing_slash }) {
 			});
 		},
 
-		_hydrate: async ({ status, error, node_ids, params, routeId }) => {
+		_hydrate: async ({
+			status,
+			error,
+			node_ids,
+			params,
+			routeId,
+			data: server_data_nodes,
+			errors: validation_errors
+		}) => {
 			const url = new URL(location.href);
 
 			/** @type {import('./types').NavigationFinished | undefined} */
 			let result;
 
 			try {
-				/**
-				 * @param {string} type
-				 * @param {any} fallback
-				 */
-				const parse = (type, fallback) => {
-					const script = document.querySelector(`script[sveltekit\\:data-type="${type}"]`);
-					return script?.textContent ? JSON.parse(script.textContent) : fallback;
-				};
-				/**
-				 * @type {Array<import('types').ServerDataNode | null>}
-				 * On initial navigation, this will only consist of data nodes or `null`.
-				 * A possible error is passed through the `error` property, in which case
-				 * the last entry of `node_ids` is an error page and the last entry of
-				 * `server_data_nodes` is `null`.
-				 */
-				const server_data_nodes = parse('server_data', []);
-				const validation_errors = parse('validation_errors', undefined);
-
 				const branch_promises = node_ids.map(async (n, i) => {
 					return load_node({
 						loader: nodes[n],

@@ -892,6 +892,13 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('foo.bar: Custom layout');
 		expect(await page.textContent('h2')).toBe('pagedata: pagedata');
 	});
+
+	test.only('Serializes non-JSON data', async ({ page, clicknav }) => {
+		await page.goto('/load/devalue');
+		await clicknav('[href="/load/devalue/regex"]');
+
+		expect(await page.textContent('h1')).toBe(true);
+	});
 });
 
 test.describe('Method overrides', () => {
