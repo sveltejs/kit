@@ -1,8 +1,22 @@
-<div class="container">
+<script>
+	import CompilerOutput from './compiler-output.png';
+</script>
 
+<div>
+	<h3>Web development. <br/><span style="font-weight:bold">But fun.</span></h3>
+
+	Svelte's a compiler that turns <code>&lt;h1&gt;Hello &lcub;name&rcub;!&lt;/h1&gt;</code> into:
 
 	<div>
-		<h3>Web development. <br/><span style="font-weight:bold">But fun.</span></h3>
+		<img src={CompilerOutput} alt="JavaScript" />
+	</div>
+
+	No <code>useState</code>, <code>ref</code>, or virtual DOM.<br/>The work happens when you build your app - not when you run it.<br />
+	That makes writing code fast, easy, understandable, and fun.
+</div>
+
+<div class="container">
+	<div>
 		Don't take our word for it, hear what our users say…<br/>
 		<br/>
 		<p class="quote">"I tried it and then I wanted to teach it immediately. I wanted to share it immediately. I wanted to build more things in it."</p>
@@ -21,6 +35,7 @@
 
 <style>
 	.container {
+		margin-top: 50px;
 		display: grid;
 		grid-template-columns: repeat(1, minmax(0, 1fr));
 		gap: 20px;
