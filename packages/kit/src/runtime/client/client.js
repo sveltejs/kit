@@ -700,20 +700,20 @@ export function create_client({ target, base, trailing_slash }) {
 
 		if (route.uses_server_data && invalid_server_nodes.some(Boolean)) {
 			try {
-				const res = await native_fetch(
-					`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
-					{
-						headers: {
-							'x-sveltekit-invalidated': invalid_server_nodes.map((x) => (x ? '1' : '')).join(',')
-						}
-					}
+				const data_url = new URL(url);
+				data_url.pathname += `${url.pathname.endsWith('/') ? '' : '/'}__data.js`;
+				data_url.searchParams.set(
+					'__invalid',
+					invalid_server_nodes.map((x) => (x ? 'y' : 'n')).join('')
 				);
 
-				server_data = /** @type {import('types').ServerData} */ (await res.json());
+				await import(/* @vite-ignore */ data_url.href);
 
-				if (!res.ok) {
-					throw server_data;
-				}
+				// @ts-expect-error
+				server_data = /** @type {import('types').ServerData} */ (window.__sveltekit_data);
+
+				// @ts-expect-error
+				delete window.__sveltekit_data;
 			} catch (e) {
 				// something went catastrophically wrong — bail and defer to the server
 				native_navigation(url);

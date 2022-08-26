@@ -1,8 +1,8 @@
-import { HttpError, Redirect } from '../../../index/private.js';
+import { HttpError, Redirect } from '../../control.js';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
-import { error_to_pojo } from '../utils.js';
+import { data_response, error_to_pojo } from '../utils.js';
 import devalue from 'devalue';
 
 /**
@@ -24,8 +24,10 @@ export async function render_data(event, route, options, state) {
 		const node_ids = [...route.page.layouts, route.page.leaf];
 
 		const invalidated =
-			event.request.headers.get('x-sveltekit-invalidated')?.split(',').map(Boolean) ??
-			node_ids.map(() => true);
+			event.url.searchParams
+				.get('__invalid')
+				?.split('')
+				.map((x) => x === 'y') ?? node_ids.map(() => true);
 
 		let aborted = false;
 
@@ -112,7 +114,7 @@ export async function render_data(event, route, options, state) {
 			nodes: nodes.slice(0, length)
 		};
 
-		return new Response(`window.__data = ${devalue(server_data)}`);
+		return data_response(server_data);
 	} catch (e) {
 		const error = normalize_error(e);
 
@@ -123,10 +125,10 @@ export async function render_data(event, route, options, state) {
 				location: error.location
 			};
 
-			return new Response(`window.__data = ${devalue(server_data)}`);
+			return data_response(server_data);
 		} else {
 			// TODO make it clearer that this was an unexpected error
-			return new Response(`window.__data = ${devalue(error_to_pojo(error, options.get_stack))}`);
+			return data_response(error_to_pojo(error, options.get_stack));
 		}
 	}
 }

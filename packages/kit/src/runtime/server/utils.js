@@ -118,5 +118,9 @@ export function allowed_methods(mod) {
 
 /** @param {any} data */
 export function data_response(data) {
-	return new Response(`window.__data = ${devalue(data)}`);
+	return new Response(`window.__sveltekit_data = ${devalue(data)}`, {
+		headers: {
+			'content-type': 'application/javascript'
+		}
+	});
 }
