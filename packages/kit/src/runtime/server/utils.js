@@ -125,7 +125,7 @@ export function data_response(data) {
 			}
 		});
 	} catch (e) {
-		return new Response(`throw new Error(${JSON.stringify(e.message)})`, {
+		return new Response(`throw new Error(${JSON.stringify(/** @type {any} */ (e).message)})`, {
 			headers: {
 				'content-type': 'application/javascript'
 			}
