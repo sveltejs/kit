@@ -1,4 +1,4 @@
-import { HttpError } from '../../index/private.js';
+import { HttpError } from '../control.js';
 
 /** @param {any} body */
 export function is_pojo(body) {

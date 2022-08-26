@@ -4,11 +4,11 @@ import { make_trackable, decode_params, normalize_path } from '../../utils/url.j
 import { find_anchor, get_base_uri, get_href, scroll_state } from './utils.js';
 import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
-import { error } from '../../index/index.js';
+import { error } from '../../exports/index.js';
 
 import Root from '__GENERATED__/root.svelte';
 import { nodes, dictionary, matchers } from '__GENERATED__/client-manifest.js';
-import { HttpError, Redirect } from '../../index/private.js';
+import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
@@ -638,9 +638,10 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/**
 	 * @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | null} node
+	 * @param {import('./types').DataNode | null} [previous]
 	 * @returns {import('./types').DataNode | null}
 	 */
-	function create_data_node(node) {
+	function create_data_node(node, previous) {
 		if (node?.type === 'data') {
 			return {
 				type: 'data',
@@ -652,6 +653,8 @@ export function create_client({ target, base, trailing_slash }) {
 					url: !!node.uses.url
 				}
 			};
+		} else if (node?.type === 'skip') {
+			return previous ?? null;
 		}
 		return null;
 	}
@@ -765,7 +768,7 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 					return data;
 				},
-				server_data_node: create_data_node(server_data_node) ?? previous?.server ?? null
+				server_data_node: create_data_node(server_data_node, previous?.server)
 			});
 		});
 

@@ -1,5 +1,5 @@
 import { ResponseHeaders, SSRNode, CspDirectives } from 'types';
-import { HttpError } from '../../../index/private';
+import { HttpError } from '../../control.js';
 
 export interface Fetched {
 	url: string;

@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.163
+
+### Patch Changes
+
+- fix type definition issue that caused a svelte-check error when using TS 4.8 ([#6306](https://github.com/sveltejs/kit/pull/6306))
+
 ## 2.0.0-next.162
 
 ### Patch Changes

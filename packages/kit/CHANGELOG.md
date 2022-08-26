@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.443
+
+### Patch Changes
+
+- [fix] prevent unused types warning ([#6293](https://github.com/sveltejs/kit/pull/6293))
+
+* [fix] don't reuse server load data from previous page if current doesn't have a load function ([#6309](https://github.com/sveltejs/kit/pull/6309))
+
 ## 1.0.0-next.442
 
 ### Patch Changes
