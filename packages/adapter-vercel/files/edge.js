@@ -10,7 +10,7 @@ await server.init({
 /**
  * @param {Request} request
  */
-export default async (request) => {
+export default (request) => {
 	return server.respond(request, {
 		getClientAddress() {
 			return request.headers.get('x-forwarded-for');
