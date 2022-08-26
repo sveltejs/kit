@@ -424,13 +424,15 @@ export function create_client({ target, base, trailing_slash }) {
 		};
 
 		let data = {};
-		let data_changed = false;
+		let data_changed = !page;
 		for (let i = 0; i < filtered.length; i += 1) {
-			data = { ...data, ...filtered[i].data };
+			const node = filtered[i];
+			data = { ...data, ...node.data };
+
 			// Only set props if the node actually updated. This prevents needless rerenders.
-			if (data_changed || !current.branch.some((node) => node === filtered[i])) {
+			if (data_changed || !current.branch.some((previous) => previous === node)) {
 				result.props[`data_${i}`] = data;
-				data_changed = data_changed || Object.keys(filtered[i].data || {}).length > 0;
+				data_changed = data_changed || Object.keys(node.data ?? {}).length > 0;
 			}
 		}
 		if (!data_changed) {
