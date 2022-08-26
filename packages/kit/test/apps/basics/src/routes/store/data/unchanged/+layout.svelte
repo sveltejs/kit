@@ -9,6 +9,6 @@
     }
 </script>
 
-<p>$page.data was udpdated {count} time(s)</p>
+<p>$page.data was updated {count} time(s)</p>
 <a href="/store/data/unchanged/a">a</a>
 <a href="/store/data/unchanged/b">b</a>
