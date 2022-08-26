@@ -606,7 +606,7 @@ test.describe('$app/stores', () => {
 		await expect(page.locator('h1')).toHaveText('/store/client-access');
 	});
 
-	test('doesnt update if data didnt change', async ({ page, app }) => {
+	test('$page.data does not update if data is unchanged', async ({ page, app }) => {
 		await page.goto('/store/data/unchanged/a');
 		await app.goto('/store/data/unchanged/b');
 		await expect(page.locator('p')).toHaveText('$page.data was updated 0 time(s)');
