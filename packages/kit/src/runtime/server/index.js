@@ -8,10 +8,9 @@ import { decode_params, disable_search, normalize_path } from '../../utils/url.j
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
 import { render_data } from './data/index.js';
+import { DATA_SUFFIX } from '../../constants.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
-
-const DATA_SUFFIX = '/__data.js';
 
 /** @param {{ html: string }} opts */
 const default_transform = ({ html }) => html;

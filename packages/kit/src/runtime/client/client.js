@@ -700,20 +700,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 		if (route.uses_server_data && invalid_server_nodes.some(Boolean)) {
 			try {
-				const data_url = new URL(url);
-				data_url.pathname += `${url.pathname.endsWith('/') ? '' : '/'}__data.js`;
-				data_url.searchParams.set(
-					'__invalid',
-					invalid_server_nodes.map((x) => (x ? 'y' : 'n')).join('')
-				);
-
-				await import(/* @vite-ignore */ data_url.href);
-
-				// @ts-expect-error
-				server_data = /** @type {import('types').ServerData} */ (window.__sveltekit_data);
-
-				// @ts-expect-error
-				delete window.__sveltekit_data;
+				server_data = await load_data(url, invalid_server_nodes);
 			} catch (e) {
 				// something went catastrophically wrong — bail and defer to the server
 				native_navigation(url);
@@ -868,19 +855,18 @@ export function create_client({ target, base, trailing_slash }) {
 		if (node.server) {
 			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
 			// existing root layout data
-			const res = await native_fetch(
-				`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
-				{
-					headers: {
-						'x-sveltekit-invalidated': '1'
-					}
+			try {
+				const server_data = await load_data(url, [true]);
+
+				if (
+					server_data.type !== 'data' ||
+					(server_data.nodes[0] && server_data.nodes[0].type !== 'data')
+				) {
+					throw 0;
 				}
-			);
 
-			const server_data_nodes = await res.json();
-			server_data_node = server_data_nodes?.[0] ?? null;
-
-			if (!res.ok || server_data_nodes?.type !== 'data') {
+				server_data_node = server_data.nodes[0] ?? null;
+			} catch {
 				// at this point we have no choice but to fall back to the server
 				native_navigation(url);
 
@@ -1352,4 +1338,25 @@ export function create_client({ target, base, trailing_slash }) {
 			initialize(result);
 		}
 	};
+}
+
+/**
+ * @param {URL} url
+ * @param {boolean[]} invalid
+ * @returns {Promise<import('types').ServerData>}
+ */
+async function load_data(url, invalid) {
+	const data_url = new URL(url);
+	data_url.pathname += `${url.pathname.endsWith('/') ? '' : '/'}__data.js`;
+	data_url.searchParams.set('__invalid', invalid.map((x) => (x ? 'y' : 'n')).join(''));
+
+	await import(/* @vite-ignore */ data_url.href);
+
+	// @ts-expect-error
+	const server_data = window.__sveltekit_data;
+
+	// @ts-expect-error
+	delete window.__sveltekit_data;
+
+	return server_data;
 }

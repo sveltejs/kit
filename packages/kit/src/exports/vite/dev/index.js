@@ -8,7 +8,7 @@ import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { load_template } from '../../../core/config/index.js';
-import { SVELTE_KIT_ASSETS } from '../../../core/constants.js';
+import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
 import { get_env, prevent_illegal_vite_imports, resolve_entry } from '../utils.js';

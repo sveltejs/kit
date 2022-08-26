@@ -1,6 +1,6 @@
 import path from 'path';
 import { get_env } from '../../exports/vite/utils.js';
-import { GENERATED_COMMENT } from '../constants.js';
+import { GENERATED_COMMENT } from '../../constants.js';
 import { create_types } from '../env.js';
 import { write_if_changed } from './utils.js';
 

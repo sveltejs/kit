@@ -4,6 +4,8 @@ import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
 import { data_response, error_to_pojo } from '../utils.js';
 import devalue from 'devalue';
+import { normalize_path } from '../../../utils/url.js';
+import { DATA_SUFFIX } from '../../../constants.js';
 
 /**
  * @param {import('types').RequestEvent} event
@@ -31,6 +33,16 @@ export async function render_data(event, route, options, state) {
 
 		let aborted = false;
 
+		const url = new URL(event.url);
+		url.pathname = normalize_path(
+			url.pathname.slice(0, -DATA_SUFFIX.length),
+			options.trailing_slash
+		);
+
+		url.searchParams.delete('__invalid');
+
+		const new_event = { ...event, url };
+
 		const functions = node_ids.map((n, i) => {
 			return once(async () => {
 				try {
@@ -43,7 +55,7 @@ export async function render_data(event, route, options, state) {
 					// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
 					const node = n == undefined ? n : await options.manifest._.nodes[n]();
 					return load_server_data({
-						event,
+						event: new_event,
 						state,
 						node,
 						parent: async () => {
