@@ -48,25 +48,17 @@ export function write_client_manifest(manifest_data, output) {
 			.map((route) => {
 				if (route.page) {
 					const errors = route.page.errors.slice(1).map((n) => n ?? '');
-					const layouts = route.page.layouts.slice(1).map((n) => n ?? '');
+					const layouts = route.page.layouts.slice(1).map((n) => {
+						if (n == undefined) {
+							return '';
+						}
+						return get_node_id(manifest_data.nodes, n);
+					});
 
 					while (layouts.at(-1) === '') layouts.pop();
 					while (errors.at(-1) === '') errors.pop();
 
-					/** @type {import('types').PageNode | null} */
-					let current_node = route.leaf;
-
-					let uses_server_data = false;
-					while (current_node && !uses_server_data) {
-						uses_server_data = !!current_node?.server;
-						current_node = current_node?.parent ?? null;
-					}
-
-					// encode whether or not the route uses the server data
-					// using the ones' complement, to save space
-					const array = [`${uses_server_data ? '~' : ''}${route.page.leaf}`];
-					// encode whether or not the leaf uses server data
-					array.push(`${route.leaf?.server ? 1 : 0}`);
+					const array = [get_node_id(manifest_data.nodes, route.page.leaf)];
 
 					// only include non-root layout/error nodes if they exist
 					if (layouts.length > 0 || errors.length > 0) array.push(`[${layouts.join(',')}]`);
@@ -92,4 +84,14 @@ export function write_client_manifest(manifest_data, output) {
 			export const dictionary = ${dictionary};
 		`)
 	);
+}
+
+/**
+ * Encode whether or not the route uses the server data
+ * using the ones' complement, to save space
+ * @param {import('types').PageNode[]} nodes
+ * @param {number} id
+ */
+function get_node_id(nodes, id) {
+	return `${nodes[id].server ? '~' : ''}${id}`;
 }
