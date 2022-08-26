@@ -220,21 +220,23 @@ export async function render_response({
 	}
 
 	if (page_config.router || page_config.hydrate) {
+		// Injecting (potentially) legacy script together with the modern script -
+		//  in a similar fashion to the script tags injection of @vitejs/plugin-legacy.
+		// Notice that unlike the script injection on @vitejs/plugin-legacy,
+		//  we don't need to have a constant CSP since kit handles it.
+
+		if (modern_polyfills_file) {
+			const path = prefixed(modern_polyfills_file);
+			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; crossorigin; nopush`);
+			head += `\n\t<script type="module" crossorigin src=${s(path)}></script>`;
+		}
+
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
 			if (state.prerendering) {
 				head += `\n\t<link rel="modulepreload" href="${path}">`;
 			}
-		}
-
-		// Injecting (potentially) legacy script together with the modern script - in a similar fashion to the script tags injection of @vitejs/plugin-legacy.
-		// Notice that unlike the script injection on @vitejs/plugin-legacy, we don't need to have a constant CSP since kit handles it.
-
-		if (modern_polyfills_file) {
-			head += `\n\t<script type="module" crossorigin src=${s(
-				prefixed(modern_polyfills_file)
-			)}></script>`;
 		}
 
 		let had_emitted_nomodule_script = false;
