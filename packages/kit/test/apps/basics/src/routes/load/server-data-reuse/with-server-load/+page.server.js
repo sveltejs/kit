@@ -1,4 +1,4 @@
-/** @type {import('.$/types').ServerLoad} */
+/** @type {import('./$types').PageServerLoad} */
 export function load() {
 	return { server: true };
 }
