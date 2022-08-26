@@ -393,7 +393,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   status: number;
 	 *   error: HttpError | Error | null;
 	 *   routeId: string | null;
-	 *   validation_errors?: string | undefined;
+	 *   validation_errors?: Record<string, any> | null;
 	 * }} opts
 	 */
 	async function get_navigation_result_from_branch({
@@ -1272,7 +1272,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 		_hydrate: async ({
 			status,
-			error,
+			error: original_error, // TODO get rid of this
 			node_ids,
 			params,
 			routeId,
@@ -1286,6 +1286,16 @@ export function create_client({ target, base, trailing_slash }) {
 
 			try {
 				const branch_promises = node_ids.map(async (n, i) => {
+					const server_data_node = server_data_nodes[i];
+
+					if (server_data_node?.type === 'error') {
+						if (server_data_node.httperror) {
+							throw error(server_data_node.httperror.status, server_data_node.httperror.message);
+						}
+
+						throw server_data_node.error;
+					}
+
 					return load_node({
 						loader: nodes[n],
 						url,
@@ -1298,7 +1308,7 @@ export function create_client({ target, base, trailing_slash }) {
 							}
 							return data;
 						},
-						server_data_node: create_data_node(server_data_nodes[i])
+						server_data_node: create_data_node(server_data_node)
 					});
 				});
 
@@ -1307,13 +1317,15 @@ export function create_client({ target, base, trailing_slash }) {
 					params,
 					branch: await Promise.all(branch_promises),
 					status,
-					error: /** @type {import('../server/page/types').SerializedHttpError} */ (error)
+					error: /** @type {import('../server/page/types').SerializedHttpError} */ (original_error)
 						?.__is_http_error
 						? new HttpError(
-								/** @type {import('../server/page/types').SerializedHttpError} */ (error).status,
-								error.message
+								/** @type {import('../server/page/types').SerializedHttpError} */ (
+									original_error
+								).status,
+								original_error.message
 						  )
-						: error,
+						: original_error,
 					validation_errors,
 					routeId
 				});
