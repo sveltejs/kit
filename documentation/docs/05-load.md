@@ -256,7 +256,7 @@ export async function load({ setHeaders }) {
 
 ### Output
 
-On the client, the only requirement for the returned `data` is to be an object at the top level. On the server, the output also needs to be JSON-serializable. The exception to this rule are top-level promises, which will be resolved before returning. This makes it easy to return multiple promises without creating a waterfall:
+The returned `data`, if any, must be an object of values. For a server-only `load` function, these values must be JSON-serializable. Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
 
 ```js
 // @filename: $types.d.ts
