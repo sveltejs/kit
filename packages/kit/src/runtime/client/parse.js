@@ -7,7 +7,7 @@ import { exec, parse_route_id } from '../../utils/routing.js';
  * @returns {import('types').CSRRoute[]}
  */
 export function parse(nodes, dictionary, matchers) {
-	return Object.entries(dictionary).map(([id, [leaf, layouts, errors]]) => {
+	return Object.entries(dictionary).map(([id, [leaf, leaf_uses_server_data, layouts, errors]]) => {
 		const { pattern, names, types } = parse_route_id(id);
 
 		// whether or not the route uses the server data is
@@ -25,7 +25,8 @@ export function parse(nodes, dictionary, matchers) {
 			errors: [1, ...(errors || [])].map((n) => nodes[n]),
 			layouts: [0, ...(layouts || [])].map((n) => nodes[n]),
 			leaf: nodes[leaf],
-			uses_server_data
+			uses_server_data,
+			leaf_uses_server_data: !!leaf_uses_server_data
 		};
 
 		// bit of a hack, but ensures that layout/error node lists are the same

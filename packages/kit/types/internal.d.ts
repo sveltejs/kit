@@ -78,6 +78,7 @@ export type CSRRoute = {
 	layouts: CSRPageNodeLoader[];
 	leaf: CSRPageNodeLoader;
 	uses_server_data: boolean;
+	leaf_uses_server_data: boolean;
 };
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;

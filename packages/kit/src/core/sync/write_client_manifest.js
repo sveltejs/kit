@@ -65,6 +65,8 @@ export function write_client_manifest(manifest_data, output) {
 					// encode whether or not the route uses the server data
 					// using the ones' complement, to save space
 					const array = [`${uses_server_data ? '~' : ''}${route.page.leaf}`];
+					// encode whether or not the leaf uses server data
+					array.push(`${route.leaf?.server ? 1 : 0}`);
 
 					// only include non-root layout/error nodes if they exist
 					if (layouts.length > 0 || errors.length > 0) array.push(`[${layouts.join(',')}]`);
@@ -77,6 +79,7 @@ export function write_client_manifest(manifest_data, output) {
 			.join(',\n\t\t')}
 	}`.replace(/^\t/gm, '');
 
+	// String representation of __GENERATED__/client-manifest.js
 	write_if_changed(
 		`${output}/client-manifest.js`,
 		trim(`
