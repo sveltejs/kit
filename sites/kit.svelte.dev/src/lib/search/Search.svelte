@@ -20,7 +20,7 @@
 		on:touchend|preventDefault={() => ($searching = true)}
 		type="search"
 		name="q"
-		placeholder="Search"
+		placeholder="Search{has_search_support ? '' : ' (N/A)'}"
 		spellcheck="false"
 		disabled={!has_search_support || undefined}
 	/>
@@ -62,6 +62,10 @@
 		height: 3.2rem;
 		border-radius: var(--border-r);
 		background: no-repeat 1rem 50% / 1em 1em url(../icons/search.svg);
+	}
+
+	input:disabled {
+		background-color: #aaaaaa;
 	}
 
 	input:focus + label {
