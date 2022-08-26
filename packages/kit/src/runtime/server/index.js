@@ -83,7 +83,7 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	if (route?.page) {
+	if (route?.page && !is_data_request) {
 		const normalized = normalize_path(url.pathname, options.trailing_slash);
 
 		if (normalized !== url.pathname && !state.prerendering?.fallback) {

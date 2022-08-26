@@ -27,7 +27,7 @@ test('renders a server-side redirect', () => {
 
 	const code = read('redirect-server/__data.js');
 	const window = {};
-	new Function('window', `(${code})`)(window);
+	new Function('window', code)(window);
 
 	assert.equal(window.__sveltekit_data, {
 		type: 'redirect',
