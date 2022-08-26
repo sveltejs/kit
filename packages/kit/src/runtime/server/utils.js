@@ -1,3 +1,4 @@
+import devalue from 'devalue';
 import { HttpError } from '../../index/private.js';
 
 /** @param {any} body */
@@ -113,4 +114,9 @@ export function allowed_methods(mod) {
 	if (mod.GET || mod.HEAD) allowed.push('HEAD');
 
 	return allowed;
+}
+
+/** @param {any} data */
+export function data_response(data) {
+	return new Response(`window.__data = ${devalue(data)}`);
 }
