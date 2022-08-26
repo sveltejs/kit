@@ -1,4 +1,4 @@
-import { HttpError, Redirect } from './private.js';
+import { HttpError, Redirect } from '../runtime/control.js';
 
 /**
  * Creates an `HttpError` object with an HTTP status code and an optional message.
