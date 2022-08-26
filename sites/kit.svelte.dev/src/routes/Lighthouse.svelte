@@ -42,10 +42,4 @@
 			grid-template-columns: repeat(3, minmax(0, 1fr));
 		}
 	}
-
-	@media (min-width: 1280px) {
-		.text {
-			margin-top: 50px;
-		}
-	}
 </style>
