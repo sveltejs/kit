@@ -256,7 +256,7 @@ export async function load({ setHeaders }) {
 
 ### Output
 
-Any promises on the returned `data` object will be resolved, if they are top-level properties. This makes it easy to return multiple promises without creating a waterfall:
+On the client, the only requirement for the returned `data` is to be an object at the top level. On the server, the output also needs to be JSON-serializable. The exception to this rule are top-level promises, which will be resolved before returning. This makes it easy to return multiple promises without creating a waterfall:
 
 ```js
 // @filename: $types.d.ts
