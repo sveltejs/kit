@@ -188,7 +188,7 @@ test.describe('trailingSlash', () => {
 
 		/** @type {string[]} */
 		let requests = [];
-		page.on('request', (r) => requests.push(r.url()));
+		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
@@ -201,7 +201,7 @@ test.describe('trailingSlash', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/path-base/prefetching/prefetched/__data.js`)).toBe(true);
+		expect(requests.includes(`/path-base/prefetching/prefetched/__data.js`)).toBe(true);
 
 		requests = [];
 		await app.goto('/path-base/prefetching/prefetched');
