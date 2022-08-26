@@ -26,7 +26,7 @@ import { invalidate } from '$app/navigation';
  *     response: Response;
  *     form: HTMLFormElement;
  *   }) => void;
- * }} [opts]
+ * }} opts
  */
 export function enhance(
 	form: HTMLFormElement,
