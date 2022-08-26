@@ -1340,6 +1340,8 @@ export function create_client({ target, base, trailing_slash }) {
 	};
 }
 
+let data_id = 1;
+
 /**
  * @param {URL} url
  * @param {boolean[]} invalid
@@ -1349,6 +1351,7 @@ async function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname += `${url.pathname.endsWith('/') ? '' : '/'}__data.js`;
 	data_url.searchParams.set('__invalid', invalid.map((x) => (x ? 'y' : 'n')).join(''));
+	data_url.searchParams.set('__id', String(data_id++));
 
 	await import(/* @vite-ignore */ data_url.href);
 
