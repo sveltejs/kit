@@ -1,3 +1,4 @@
+// @ts-nocheck
 import path from 'path';
 import fs from 'fs';
 import { format } from 'prettier';
@@ -101,7 +102,8 @@ test('Rewrites types for a TypeScript module', () => {
 	assert.equal(rewritten?.exports, ['GET']);
 	assert.equal(
 		rewritten?.code,
-		`
+		`// @ts-nocheck
+
 		export const GET = ({ params }: Parameters<Get>[0]) => {
 			return {
 				a: 1
@@ -125,13 +127,14 @@ test('Rewrites types for a TypeScript module without param', () => {
 	assert.equal(rewritten?.exports, ['GET']);
 	assert.equal(
 		rewritten?.code,
-		`
+		`// @ts-nocheck
+
 		export const GET = () => {
 			return {
 				a: 1
 			};
 		};
-	`
+	;Get;`
 	);
 });
 
@@ -150,7 +153,8 @@ test('Rewrites types for a JavaScript module with `function`', () => {
 	assert.equal(rewritten?.exports, ['GET']);
 	assert.equal(
 		rewritten?.code,
-		`
+		`// @ts-nocheck
+
 		/** @param {Parameters<import('./$types').Get>[0]} event */
 		export function GET({ params }) {
 			return {
@@ -176,7 +180,36 @@ test('Rewrites types for a JavaScript module with `const`', () => {
 	assert.equal(rewritten?.exports, ['GET']);
 	assert.equal(
 		rewritten?.code,
-		`
+		`// @ts-nocheck
+
+		/** @param {Parameters<import('./$types').Get>[0]} event */
+		export const GET = ({ params }) => {
+			return {
+				a: 1
+			};
+		};
+	`
+	);
+});
+
+test('Appends @ts-nocheck after @ts-check', () => {
+	const source = `// @ts-check
+		/** @type {import('./$types').Get} */
+		export const GET = ({ params }) => {
+			return {
+				a: 1
+			};
+		};
+	`;
+
+	const rewritten = tweak_types(source, new Set(['GET']));
+
+	assert.equal(rewritten?.exports, ['GET']);
+	assert.equal(
+		rewritten?.code,
+		`// @ts-check
+// @ts-nocheck
+
 		/** @param {Parameters<import('./$types').Get>[0]} event */
 		export const GET = ({ params }) => {
 			return {

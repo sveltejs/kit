@@ -2,8 +2,8 @@ import path from 'path';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { normalizePath } from 'vite';
-import { validate_config } from '../core/config/index.js';
-import { posixify } from '../utils/filesystem.js';
+import { validate_config } from '../../core/config/index.js';
+import { posixify } from '../../utils/filesystem.js';
 import {
 	deep_merge,
 	get_aliases,

@@ -4,19 +4,19 @@ import path from 'node:path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import * as vite from 'vite';
-import { mkdirp, posixify, rimraf } from '../utils/filesystem.js';
-import * as sync from '../core/sync/sync.js';
+import { mkdirp, posixify, rimraf } from '../../utils/filesystem.js';
+import * as sync from '../../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { load_config } from '../core/config/index.js';
+import { load_config } from '../../core/config/index.js';
 import { dev } from './dev/index.js';
-import { generate_manifest } from '../core/generate_manifest/index.js';
-import { runtime_directory, logger } from '../core/utils.js';
+import { generate_manifest } from '../../core/generate_manifest/index.js';
+import { runtime_directory, logger } from '../../core/utils.js';
 import { find_deps, get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, resolve_entry, prevent_illegal_rollup_imports, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
-import { create_static_module, create_dynamic_module } from '../core/env.js';
+import { create_static_module, create_dynamic_module } from '../../core/env.js';
 
 const cwd = process.cwd();
 
@@ -405,7 +405,7 @@ function kit() {
 				const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
 
 				// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-				const script = fileURLToPath(new URL('../core/prerender/prerender.js', import.meta.url));
+				const script = fileURLToPath(new URL('../../core/prerender/prerender.js', import.meta.url));
 
 				const child = fork(
 					script,
@@ -465,7 +465,7 @@ function kit() {
 			}
 
 			if (svelte_config.kit.adapter) {
-				const { adapt } = await import('../core/adapt/index.js');
+				const { adapt } = await import('../../core/adapt/index.js');
 				await adapt(svelte_config, build_data, prerendered, { log });
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));

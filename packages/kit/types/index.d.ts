@@ -17,7 +17,7 @@ import {
 	TrailingSlash
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
-import { HttpError, Redirect } from '../src/index/private.js';
+import { HttpError, Redirect } from '../src/runtime/control.js';
 
 export interface Adapter {
 	name: string;

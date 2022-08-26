@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { loadConfigFromFile, loadEnv, normalizePath } from 'vite';
-import { runtime_directory } from '../core/utils.js';
-import { posixify } from '../utils/filesystem.js';
+import { runtime_directory } from '../../core/utils.js';
+import { posixify } from '../../utils/filesystem.js';
 
 /**
  * @param {import('vite').ResolvedConfig} config

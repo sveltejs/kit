@@ -1,6 +1,6 @@
 import fs from 'fs';
 import * as vite from 'vite';
-import { s } from '../../utils/misc.js';
+import { s } from '../../../utils/misc.js';
 import { assets_base } from './utils.js';
 
 /**
