@@ -118,9 +118,17 @@ export function allowed_methods(mod) {
 
 /** @param {any} data */
 export function data_response(data) {
-	return new Response(`window.__sveltekit_data = ${devalue(data)}`, {
-		headers: {
-			'content-type': 'application/javascript'
-		}
-	});
+	try {
+		return new Response(`window.__sveltekit_data = ${devalue(data)}`, {
+			headers: {
+				'content-type': 'application/javascript'
+			}
+		});
+	} catch (e) {
+		return new Response(`throw new Error(${JSON.stringify(e.message)})`, {
+			headers: {
+				'content-type': 'application/javascript'
+			}
+		});
+	}
 }

@@ -291,7 +291,7 @@ test.describe('Shadowed pages', () => {
 
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "data.regex returned from \'load\' in src/routes/shadowed/serialization/+page.server.js cannot be serialized as JSON"'
+				'This is your custom error page saying: "Cannot stringify arbitrary non-POJOs (data.nope)"'
 			);
 		});
 	}
@@ -579,7 +579,7 @@ test.describe('Errors', () => {
 			expect(lines[1]).toContain('+page.server.js:4:8');
 		}
 
-		const error = read_errors('/errors/page-endpoint/get-implicit');
+		const error = read_errors('/errors/page-endpoint/get-implicit/__data.js');
 		expect(error).toContain('oops');
 	});
 

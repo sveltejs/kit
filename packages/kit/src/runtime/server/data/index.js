@@ -39,6 +39,7 @@ export async function render_data(event, route, options, state) {
 		);
 
 		url.searchParams.delete('__invalid');
+		url.searchParams.delete('__id');
 
 		const new_event = { ...event, url };
 

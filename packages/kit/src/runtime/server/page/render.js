@@ -174,6 +174,29 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
+	const serialized = { data: '', errors: 'null' };
+
+	try {
+		serialized.data = devalue(branch.map(({ server_data }) => server_data));
+	} catch (e) {
+		// TODO if we wanted to get super fancy we could track down the origin of the `load`
+		// function, but it would mean passing more stuff around than we currently do
+		const error = /** @type {any} */ (e);
+		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
+		if (match) throw new Error(`${error.message} (data.${match[2]})`);
+		throw error;
+	}
+
+	if (validation_errors) {
+		try {
+			serialized.errors = devalue(validation_errors);
+		} catch (e) {
+			const error = /** @type {any} */ (e);
+			if (error.path) throw new Error(`${error.message} (errors.${error.path})`);
+			throw error;
+		}
+	}
+
 	// prettier-ignore
 	const init_app = `
 		import { set_public_env, start } from ${s(prefixed(entry.file))};
