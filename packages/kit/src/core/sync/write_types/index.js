@@ -559,7 +559,13 @@ export function tweak_types(content, names) {
 										arg.name.end,
 										`: Parameters<${type}>[0]` + (add_parens ? ')' : '')
 									);
+								} else {
+									// prevent "type X is imported but not used" (isn't silenced by @ts-nocheck) when svelte-check runs
+									code.append(`;${type};`);
 								}
+							} else {
+								// prevent "type X is imported but not used" (isn't silenced by @ts-nocheck) when svelte-check runs
+								code.append(`;${type};`);
 							}
 
 							modified = true;
@@ -568,6 +574,16 @@ export function tweak_types(content, names) {
 				}
 			}
 		});
+
+		if (modified) {
+			// Ignore all type errors so they don't show up twice when svelte-check runs
+			// Account for possible @ts-check which would overwrite @ts-nocheck
+			if (code.original.startsWith('// @ts-check')) {
+				code.prependLeft('// @ts-check'.length, '\n// @ts-nocheck\n');
+			} else {
+				code.prepend('// @ts-nocheck\n');
+			}
+		}
 
 		return {
 			modified,
