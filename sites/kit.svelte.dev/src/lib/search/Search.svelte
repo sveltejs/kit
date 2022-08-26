@@ -22,7 +22,7 @@
 		name="q"
 		placeholder="Search"
 		spellcheck="false"
-		disabled={has_search_support || undefined}
+		disabled={!has_search_support || undefined}
 	/>
 
 	{#if browser && has_search_support}
