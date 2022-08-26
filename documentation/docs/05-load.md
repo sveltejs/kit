@@ -4,7 +4,7 @@ title: Loading data
 
 A [`+page.svelte`](/docs/routing#page-page-svelte) or [`+layout.svelte`](/docs/routing#layout-layout-svelte) gets its `data` from a `load` function.
 
-If the `load` function is defined in `+page.js` or `+layout.js` it will run both on the server and in the browser. If it's instead defined in `+page.server.js` or `+layout.server.js` it will only run on the server, in which case it can (for example) make database calls and access private [environment variables](/docs/modules#$env-static-private), but can only return data that can be serialized as JSON.
+If the `load` function is defined in `+page.js` or `+layout.js` it will run both on the server and in the browser. If it's instead defined in `+page.server.js` or `+layout.server.js` it will only run on the server, in which case it can (for example) make database calls and access private [environment variables](/docs/modules#$env-static-private), but can only return data that can be serialized as JSON. In both cases, the return value (if there is one) must be an object.
 
 ```js
 /// file: src/routes/+page.js
@@ -256,7 +256,7 @@ export async function load({ setHeaders }) {
 
 ### Output
 
-Any promises on the returned `data` object will be resolved, if they are top-level properties. This makes it easy to return multiple promises without creating a waterfall:
+The returned `data`, if any, must be an object of values. For a server-only `load` function, these values must be JSON-serializable. Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
 
 ```js
 // @filename: $types.d.ts
