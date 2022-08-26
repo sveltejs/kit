@@ -360,7 +360,7 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe("I didn't break!");
 	});
 
-	test.only('server data from previous is not reused if next page has no load function', async ({
+	test('server data from previous is not reused if next page has no load function', async ({
 		page,
 		app
 	}) => {
