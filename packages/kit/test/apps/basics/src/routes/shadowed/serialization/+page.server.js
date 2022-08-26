@@ -1,6 +1,6 @@
 class Nope {
 	toString() {
-		return 'should not see me'
+		return 'should not see me';
 	}
 }
 
