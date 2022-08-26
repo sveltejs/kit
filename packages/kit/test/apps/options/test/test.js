@@ -163,10 +163,14 @@ test.describe('trailingSlash', () => {
 		expect(await r2.text()).toBe('hi');
 	});
 
-	test('can fetch data from page-endpoint', async ({ request, baseURL }) => {
-		const r = await request.get('/path-base/page-endpoint/__data.json');
-		expect(r.url()).toBe(`${baseURL}/path-base/page-endpoint/__data.json`);
-		expect(await r.json()).toEqual({
+	test('can fetch data from page-endpoint', async ({ request }) => {
+		const r = await request.get('/path-base/page-endpoint/__data.js');
+		const code = await r.text();
+
+		const window = {};
+		new Function('window', code)(window);
+
+		expect(window.__sveltekit_data).toEqual({
 			type: 'data',
 			nodes: [null, { type: 'data', data: { message: 'hi' }, uses: {} }]
 		});
@@ -197,7 +201,7 @@ test.describe('trailingSlash', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/path-base/prefetching/prefetched/__data.json`)).toBe(true);
+		expect(requests.includes(`${baseURL}/path-base/prefetching/prefetched/__data.js`)).toBe(true);
 
 		requests = [];
 		await app.goto('/path-base/prefetching/prefetched');

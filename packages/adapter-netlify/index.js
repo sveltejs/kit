@@ -211,7 +211,7 @@ async function generate_lambda_functions({ builder, publish, split, esm }) {
 					writeFileSync(`.netlify/functions-internal/${name}.js`, fn);
 
 					redirects.push(`${pattern} /.netlify/functions/${name} 200`);
-					redirects.push(`${pattern}/__data.json /.netlify/functions/${name} 200`);
+					redirects.push(`${pattern}/__data.js /.netlify/functions/${name} 200`);
 				}
 			};
 		});
