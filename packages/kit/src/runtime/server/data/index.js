@@ -3,7 +3,6 @@ import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
 import { data_response, error_to_pojo } from '../utils.js';
-import devalue from 'devalue';
 import { normalize_path } from '../../../utils/url.js';
 import { DATA_SUFFIX } from '../../../constants.js';
 

@@ -1,4 +1,4 @@
-import devalue from 'devalue';
+import { devalue } from 'devalue';
 import { HttpError } from '../control.js';
 
 /** @param {any} body */

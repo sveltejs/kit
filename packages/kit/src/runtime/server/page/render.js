@@ -1,4 +1,4 @@
-import devalue from 'devalue';
+import { devalue } from 'devalue';
 import { readable, writable } from 'svelte/store';
 import * as cookie from 'cookie';
 import { hash } from '../../hash.js';
