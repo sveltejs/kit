@@ -2,6 +2,7 @@
 	import Vercel from './logo-vercel.svg';
 	import Netlify from './logo-netlify.svg';
 	import Cloudflare from './logo-cloudflare.svg';
+	import HTML from './logo-html5.svg';
 	import Node from './logo-nodejs.svg';
 	import Firebase from './logo-firebase.svg';
 	import Deno from './logo-deno.svg';
@@ -11,7 +12,7 @@
 		{ display: 'Vercel', package: '@sveltejs/adapter-vercel', image: Vercel },
 		{ display: 'Netlify', package: '@sveltejs/adapter-netlify', image: Netlify },
 		{ display: 'Cloudflare', package: '@sveltejs/adapter-cloudflare', image: Cloudflare },
-		{ display: 'your server', package: '@sveltejs/adapter-node', image: Node },
+		{ display: 'your server', package: '@sveltejs/adapter-node', image: HTML },
 		{ display: 'static hosting', package: '@sveltejs/adapter-static', image: Node },
 		{ display: 'Firebase', package: 'svelte-adapter-firebase', image: Firebase },
 		{ display: 'Deno', package: 'svelte-adapter-deno', image: Deno },
@@ -34,11 +35,12 @@
 
 	<div class="anywhere">
 		<h3>Deploy Anywhere</h3>
-		SvelteKit builds instant, optimized bundles with the Svelte compiler and code-splitting.
+		<p>SvelteKit builds instant, optimized bundles with the Svelte compiler and code-splitting.</p>
+		<p>Deploy to over 20 different platforms with community adapters by changing just a single line of code.</p>
 	</div>
 
 	<div class="host">
-		<h3>{adapter.display} →</h3>
+		<h3>{adapter.display}</h3>
 		<img src={adapter.image} alt="" />
 	</div>
 
