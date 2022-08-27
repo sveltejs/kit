@@ -41,6 +41,16 @@ h1<span class="token punctuation">.</span>textContent <span class="token operato
 		margin-bottom: 0.8rem;
 	}
 
+	.code-block {
+		margin: 1rem 0;
+		max-width: 500px;
+	}
+
+	.language-typescript {
+		background-color:white;
+		margin:0;
+	}
+
 	.description {
 		line-height: 200%;
 	}

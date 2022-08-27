@@ -26,6 +26,10 @@
 		margin-bottom: 0.8rem;
 	}
 
+	.shiki {
+		background-color: white !important;
+	}
+
 	@media (min-width: 1024px) {
 		.container {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
