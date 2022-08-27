@@ -7,48 +7,48 @@
 	let canvas;
 	let phi = 0;
 
-	onMount(() => {
-		const globe = createGlobe(canvas, {
-			devicePixelRatio: 2,
-			width: 1000 * 2,
-			height: 1000 * 2,
-			phi: 0,
-			theta: 0,
-			dark: 0.1,
-			diffuse: 0.6,
-			mapSamples: 16000,
-			mapBrightness: 4,
-			baseColor: [0.9137, 0.9098, 0.9019], // the light warm grey from figma
-			markerColor: [1, 0.2431, 0], // our --primary
-			glowColor: [1, 1, 1], // white
-			offset: [0, 2100],
-			markers: [
-				// https://vercel.com/docs/concepts/edge-network/regions
-				{ location: [59.3293, 18.0686], size: 0.05 }, // Stockholm
-				{ location: [19.076, 72.8777], size: 0.05 }, // Mumbai
-				{ location: [48.8566, 2.3522], size: 0.05 }, // Paris
-				{ location: [41.4993, -81.6944], size: 0.05 }, // Cleveland
-				{ location: [-33.9249, 18.4241], size: 0.05 }, // Cape Town
-				{ location: [53.3498, -6.2603], size: 0.05 }, // Dublin
-				{ location: [50.1109, 8.6821], size: 0.05 }, // Frankfurt
-				{ location: [-23.5558, -46.6396], size: 0.05 }, // São Paulo
-				{ location: [22.3193, 114.1694], size: 0.05 }, // Hong Kong
-				{ location: [35.6762, 139.6503], size: 0.05 }, // Tokyo
-				{ location: [38.9072, -77.0369], size: 0.05 }, // DC
-				{ location: [37.5665, 126.978], size: 0.05 }, // Seoul
-				{ location: [34.6937, 135.5023], size: 0.05 }, // Osaka
-				{ location: [51.5072, -0.1276], size: 0.05 }, // London
-				{ location: [45.5152, -122.6784], size: 0.05 }, // Portland
-				{ location: [37.7595, -122.4367], size: 0.05 }, // SF
-				{ location: [1.3521, 103.8198], size: 0.05 }, // Singapore
-				{ location: [-33.8688, 151.2093], size: 0.05 } // Sydney
-			],
-			onRender: (state) => {
-				state.phi = phi;
-				phi += 0.003;
-			}
-		});
-	});
+	// onMount(() => {
+	// 	const globe = createGlobe(canvas, {
+	// 		devicePixelRatio: 2,
+	// 		width: 1000 * 2,
+	// 		height: 1000 * 2,
+	// 		phi: 0,
+	// 		theta: 0,
+	// 		dark: 0.1,
+	// 		diffuse: 0.6,
+	// 		mapSamples: 16000,
+	// 		mapBrightness: 4,
+	// 		baseColor: [0.9137, 0.9098, 0.9019], // the light warm grey from figma
+	// 		markerColor: [1, 0.2431, 0], // our --primary
+	// 		glowColor: [1, 1, 1], // white
+	// 		offset: [0, 2100],
+	// 		markers: [
+	// 			// https://vercel.com/docs/concepts/edge-network/regions
+	// 			{ location: [59.3293, 18.0686], size: 0.05 }, // Stockholm
+	// 			{ location: [19.076, 72.8777], size: 0.05 }, // Mumbai
+	// 			{ location: [48.8566, 2.3522], size: 0.05 }, // Paris
+	// 			{ location: [41.4993, -81.6944], size: 0.05 }, // Cleveland
+	// 			{ location: [-33.9249, 18.4241], size: 0.05 }, // Cape Town
+	// 			{ location: [53.3498, -6.2603], size: 0.05 }, // Dublin
+	// 			{ location: [50.1109, 8.6821], size: 0.05 }, // Frankfurt
+	// 			{ location: [-23.5558, -46.6396], size: 0.05 }, // São Paulo
+	// 			{ location: [22.3193, 114.1694], size: 0.05 }, // Hong Kong
+	// 			{ location: [35.6762, 139.6503], size: 0.05 }, // Tokyo
+	// 			{ location: [38.9072, -77.0369], size: 0.05 }, // DC
+	// 			{ location: [37.5665, 126.978], size: 0.05 }, // Seoul
+	// 			{ location: [34.6937, 135.5023], size: 0.05 }, // Osaka
+	// 			{ location: [51.5072, -0.1276], size: 0.05 }, // London
+	// 			{ location: [45.5152, -122.6784], size: 0.05 }, // Portland
+	// 			{ location: [37.7595, -122.4367], size: 0.05 }, // SF
+	// 			{ location: [1.3521, 103.8198], size: 0.05 }, // Singapore
+	// 			{ location: [-33.8688, 151.2093], size: 0.05 } // Sydney
+	// 		],
+	// 		onRender: (state) => {
+	// 			state.phi = phi;
+	// 			phi += 0.003;
+	// 		}
+	// 	});
+	// });
 </script>
 
 <h3>
