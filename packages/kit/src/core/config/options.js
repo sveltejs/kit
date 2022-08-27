@@ -111,11 +111,11 @@ const options = object(
 			browser: object({
 				hydrate: error(
 					(keypath) =>
-						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more details: https://github.com/sveltejs/kit/pull/6197`
+						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
 				),
 				router: error(
 					(keypath) =>
-						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more details: https://github.com/sveltejs/kit/pull/6197`
+						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
 				)
 			}),
 

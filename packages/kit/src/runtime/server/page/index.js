@@ -58,11 +58,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 			options.manifest._.nodes[page.leaf]()
 		]);
 
-		resolve_opts = {
-			...resolve_opts,
-			ssr: get_option(nodes, 'ssr') ?? resolve_opts.ssr
-		};
-
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
 
 		let status = 200;
@@ -130,7 +125,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			}
 		}
 
-		if (!resolve_opts.ssr) {
+		if (get_option(nodes, 'ssr') === false) {
 			return await render_response({
 				branch: [],
 				validation_errors: undefined,
@@ -138,7 +133,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 				cookies,
 				page_config: {
 					hydrate: true,
-					router: true
+					router: true,
+					ssr: false
 				},
 				status,
 				error: null,
@@ -267,7 +263,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 								options,
 								state,
 								resolve_opts,
-								page_config: { router: true, hydrate: true },
+								page_config: { router: true, hydrate: true, ssr: true },
 								status,
 								error,
 								branch: compact(branch.slice(0, j + 1)).concat({
@@ -317,7 +313,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 			resolve_opts,
 			page_config: {
 				router: get_option(nodes, 'router') ?? true,
-				hydrate: get_option(nodes, 'hydrate') ?? true
+				hydrate: get_option(nodes, 'hydrate') ?? true,
+				ssr: true
 			},
 			status,
 			error: null,

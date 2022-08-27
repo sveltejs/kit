@@ -256,7 +256,6 @@ export interface RequestHandler<
 }
 
 export interface ResolveOptions {
-	ssr?: boolean;
 	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 }
 

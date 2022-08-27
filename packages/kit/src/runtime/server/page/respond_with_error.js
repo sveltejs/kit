@@ -31,8 +31,9 @@ export async function respond_with_error({ event, options, state, status, error,
 	try {
 		const branch = [];
 		const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
+		const ssr = get_option([default_layout], 'ssr') ?? true;
 
-		if (resolve_opts.ssr) {
+		if (ssr) {
 			const server_data_promise = load_server_data({
 				dev: options.dev,
 				event,
@@ -71,7 +72,8 @@ export async function respond_with_error({ event, options, state, status, error,
 			state,
 			page_config: {
 				hydrate: get_option([default_layout], 'hydrate') ?? true,
-				router: get_option([default_layout], 'router') ?? true
+				router: get_option([default_layout], 'router') ?? true,
+				ssr
 			},
 			status,
 			error,
