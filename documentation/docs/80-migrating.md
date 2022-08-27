@@ -162,7 +162,7 @@ declare module 'html-minifier';
 // @filename: index.js
 // ---cut---
 import { minify } from 'html-minifier';
-import { prerendering } from '$app/env';
+import { prerendering } from '$app/environment';
 
 const minification_options = {
 	collapseBooleanAttributes: true,

@@ -74,10 +74,10 @@ declare namespace App {
 
 /**
  * ```ts
- * import { browser, dev, prerendering } from '$app/env';
+ * import { browser, dev, prerendering } from '$app/environment';
  * ```
  */
-declare module '$app/env' {
+declare module '$app/environment' {
 	/**
 	 * `true` if the app is running in the browser.
 	 */
