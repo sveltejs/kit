@@ -1,7 +1,4 @@
 <script>
-	import '$lib/docs/client/docs.css';
-	import '$lib/docs/client/shiki.css';
-	import '@sveltejs/site-kit/code.css';
 	import Vercel from './logo-vercel.svg';
 	import Netlify from './logo-netlify.svg';
 	import Cloudflare from './logo-cloudflare.svg';

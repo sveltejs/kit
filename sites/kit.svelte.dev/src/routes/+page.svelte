@@ -1,4 +1,12 @@
 <script>
+	// code highlighting
+	import '$lib/docs/client/docs.css';
+	import '$lib/docs/client/shiki.css';
+	import '@sveltejs/site-kit/code.css';
+	import * as hovers from '$lib/docs/client/hovers.js';
+	hovers.setup();
+
+	// images
 	import Machine from '$img/svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&meta';
 	import { Hero, Blurb } from '@sveltejs/site-kit';
 	import Adapters from './Adapters.svelte';
