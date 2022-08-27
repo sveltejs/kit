@@ -4,6 +4,11 @@ import { manifest, prerendered } from 'MANIFEST';
 const server = new Server(manifest);
 const prefix = `/${manifest.appDir}/`;
 
+await server.init({
+	// @ts-ignore
+	env: Deno.env.toObject()
+});
+
 /**
  * @param { Request } request
  * @param { any } context
