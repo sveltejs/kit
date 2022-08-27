@@ -92,7 +92,7 @@ export async function read_file(dir, file) {
 				})
 				.replace(/\*\\\//g, '*/');
 
-			if (language === 'js' || language === 'ts') {
+			if (language === 'js') {
 				try {
 					if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
 						const params = parse_route_id(options.file || `+page.${language}`)
