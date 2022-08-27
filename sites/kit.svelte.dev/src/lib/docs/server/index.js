@@ -95,7 +95,7 @@ export async function read_file(dir, file) {
 			if (language === 'js') {
 				try {
 					if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
-						const params = parse_route_id(options.file || '+page.js')
+						const params = parse_route_id(options.file || `+page.${language}`)
 							.names.map((name) => `${name}: string`)
 							.join(', ');
 
@@ -115,7 +115,7 @@ export async function read_file(dir, file) {
 						} else {
 							source = source.replace(
 								/^(?!\/\/ @)/m,
-								`${injected}\n\n// @filename: index.js\n// ---cut---\n`
+								`${injected}\n\n// @filename: index.${language}\n// ---cut---\n`
 							);
 						}
 					}
