@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.444
+
+### Patch Changes
+
+- set errors on root component ([#6330](https://github.com/sveltejs/kit/pull/6330))
+
+* [fix] do not call server and update `$page.data` unnecessarily ([#6311](https://github.com/sveltejs/kit/pull/6311))
+
 ## 1.0.0-next.443
 
 ### Patch Changes
