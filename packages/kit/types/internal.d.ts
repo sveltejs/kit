@@ -71,13 +71,16 @@ export interface CSRPageNode {
 
 export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
 
+/**
+ * Definition of a client side route.
+ * The boolean in the tuples indicates whether the route has a server load.
+ */
 export type CSRRoute = {
 	id: string;
 	exec: (path: string) => undefined | Record<string, string>;
-	errors: CSRPageNodeLoader[];
-	layouts: CSRPageNodeLoader[];
-	leaf: CSRPageNodeLoader;
-	uses_server_data: boolean;
+	errors: Array<CSRPageNodeLoader | undefined>;
+	layouts: Array<[boolean, CSRPageNodeLoader] | undefined>;
+	leaf: [boolean, CSRPageNodeLoader];
 };
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;

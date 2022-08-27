@@ -598,11 +598,19 @@ test('Can use browser-only global on client-only page', async ({ page, read_erro
 	expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
 });
 
-test('can use $app/stores from anywhere on client', async ({ page }) => {
-	await page.goto('/store/client-access');
-	await expect(page.locator('h1')).toHaveText('undefined');
-	await page.click('button');
-	await expect(page.locator('h1')).toHaveText('/store/client-access');
+test.describe('$app/stores', () => {
+	test('can use $app/stores from anywhere on client', async ({ page }) => {
+		await page.goto('/store/client-access');
+		await expect(page.locator('h1')).toHaveText('undefined');
+		await page.click('button');
+		await expect(page.locator('h1')).toHaveText('/store/client-access');
+	});
+
+	test('$page.data does not update if data is unchanged', async ({ page, app }) => {
+		await page.goto('/store/data/unchanged/a');
+		await app.goto('/store/data/unchanged/b');
+		await expect(page.locator('p')).toHaveText('$page.data was updated 0 time(s)');
+	});
 });
 
 test.describe.serial('Invalidation', () => {
