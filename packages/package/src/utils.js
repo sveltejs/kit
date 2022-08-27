@@ -18,22 +18,31 @@ import { posixify, mkdirp, walk } from './filesystem.js';
 export function resolve_lib_alias(file, content, config) {
 	/**
 	 * @param {string} match
-	 * @param {string} _
 	 * @param {string} import_path
+	 * @param {string} alias
+	 * @param {string} value
 	 */
-	const replace_import_path = (match, _, import_path) => {
-		if (!import_path.startsWith('$lib/')) {
+	const replace_import_path = (match, import_path, alias, value) => {
+		if (!import_path.startsWith(alias)) {
 			return match;
 		}
 
-		const full_path = path.join(config.package.source, file);
-		const full_import_path = path.join(config.package.source, import_path.slice('$lib/'.length));
+		const full_path = path.join(value, file);
+		const full_import_path = path.join(value, import_path.slice(alias.length));
 		let resolved = posixify(path.relative(path.dirname(full_path), full_import_path));
 		resolved = resolved.startsWith('.') ? resolved : './' + resolved;
 		return match.replace(import_path, resolved);
 	};
-	content = content.replace(/from\s+('|")([^"';,]+?)\1/g, replace_import_path);
-	content = content.replace(/import\s*\(\s*('|")([^"';,]+?)\1\s*\)/g, replace_import_path);
+
+	const aliases = { $lib: path.resolve(config.package.source), ...(config.kit?.alias ?? {}) };
+	for (const [alias, value] of Object.entries(aliases)) {
+		content = content.replace(/from\s+('|")([^"';,]+?)\1/g, (match, _, import_path) =>
+			replace_import_path(match, import_path, alias, value)
+		);
+		content = content.replace(/import\s*\(\s*('|")([^"';,]+?)\1\s*\)/g, (match, _, import_path) =>
+			replace_import_path(match, import_path, alias, value)
+		);
+	}
 	return content;
 }
 
