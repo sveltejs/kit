@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.164
+
+### Patch Changes
+
+- [breaking] rename `$app/env` to `$app/environment`, to disambiguate with `$env/...` ([#6334](https://github.com/sveltejs/kit/pull/6334))
+
+* Add svelte-kit sync to check scripts in checkjs templates ([#6339](https://github.com/sveltejs/kit/pull/6339))
+
 ## 2.0.0-next.163
 
 ### Patch Changes
