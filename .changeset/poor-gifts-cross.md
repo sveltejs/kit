@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[feat] allow ssr to be configurable in +page.js and +layout.js
+[breaking] `ssr/hydrate/router` are now configurable in `+page(.server).js` and `+layout(.server).js`
