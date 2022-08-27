@@ -1,10 +1,10 @@
 /**
- * @type {import('$app/env').browser}
+ * @type {import('$app/environment').browser}
  */
 export const browser = !import.meta.env.SSR;
 
 /**
- * @type {import('$app/env').dev}
+ * @type {import('$app/environment').dev}
  */
 export const dev = __SVELTEKIT_DEV__;
 
