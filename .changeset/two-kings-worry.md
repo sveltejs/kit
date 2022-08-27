@@ -3,4 +3,4 @@
 'create-svelte': patch
 ---
 
-[breaking] rename $app/env to $app/environment, to disambiguate with \$env/...
+[breaking] rename `$app/env` to `$app/environment`, to disambiguate with `$env/...`
