@@ -1,18 +1,14 @@
-<script>
-	import CompilerOutput from './compiler-output.png';
-</script>
-
 <div>
 	<h3>Web development. <br/><span style="font-weight:bold">But fun.</span></h3>
 
 	Svelte's a compiler that turns <code>&lt;h1&gt;Hello &lcub;name&rcub;!&lt;/h1&gt;</code> into:
 
-	<div>
-		<img src={CompilerOutput} alt="JavaScript" />
-	</div>
+	<div class="code-block"><pre class="language-typescript"><code>h1 <span class="token operator">=</span> <span class="token function">element</span><span class="token punctuation">(</span><span class="token string">"h1"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+h1<span class="token punctuation">.</span>textContent <span class="token operator">=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">Hello </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">$&lcub;</span>name<span class="token interpolation-punctuation punctuation">&rcub;</span></span><span class="token string">!</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">;</span></code></pre></div>
 
-	No <code>useState</code>, <code>ref</code>, or virtual DOM.<br/>The work happens when you build your app - not when you run it.<br />
-	That makes writing code fast, easy, understandable, and fun.
+	<p class="description">No <code>useState</code>, <code>ref</code>, or virtual DOM.<br/>
+	The work happens when you build your app - not when you run it.<br/>
+	Because writing code should be fast, easy, understandable, and fun.</p>
 </div>
 
 <div class="container">
@@ -43,6 +39,10 @@
 
 	h3 {
 		margin-bottom: 0.8rem;
+	}
+
+	.description {
+		line-height: 200%;
 	}
 
 	.quote {
