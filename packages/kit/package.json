@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.430",
+	"version": "1.0.0-next.444",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -39,7 +39,7 @@
 		"tiny-glob": "^0.2.9",
 		"typescript": "^4.7.4",
 		"uvu": "^0.5.3",
-		"vite": "^3.0.8"
+		"vite": "^3.0.9"
 	},
 	"peerDependencies": {
 		"svelte": "^3.44.0",
@@ -59,7 +59,6 @@
 	],
 	"scripts": {
 		"build": "npm run types",
-		"dev": "rollup -cw",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
@@ -74,20 +73,20 @@
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
-			"import": "./src/index/index.js",
+			"import": "./src/exports/index.js",
 			"types": "./types/index.d.ts"
 		},
 		"./node": {
-			"import": "./src/node/index.js"
+			"import": "./src/exports/node/index.js"
 		},
 		"./node/polyfills": {
-			"import": "./src/node/polyfills.js"
+			"import": "./src/exports/node/polyfills.js"
 		},
 		"./hooks": {
-			"import": "./src/hooks.js"
+			"import": "./src/exports/hooks/index.js"
 		},
 		"./vite": {
-			"import": "./src/vite/index.js"
+			"import": "./src/exports/vite/index.js"
 		}
 	},
 	"types": "types/index.d.ts",

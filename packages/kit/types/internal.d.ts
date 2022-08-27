@@ -71,21 +71,17 @@ export interface CSRPageNode {
 
 export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
 
+/**
+ * Definition of a client side route.
+ * The boolean in the tuples indicates whether the route has a server load.
+ */
 export type CSRRoute = {
 	id: string;
 	exec: (path: string) => undefined | Record<string, string>;
-	errors: CSRPageNodeLoader[];
-	layouts: CSRPageNodeLoader[];
-	leaf: CSRPageNodeLoader;
-	uses_server_data: boolean;
+	errors: Array<CSRPageNodeLoader | undefined>;
+	layouts: Array<[boolean, CSRPageNodeLoader] | undefined>;
+	leaf: [boolean, CSRPageNodeLoader];
 };
-
-export interface EndpointData {
-	type: 'endpoint';
-	id: string;
-	pattern: RegExp;
-	file: string;
-}
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
@@ -101,7 +97,7 @@ export interface ImportNode {
 }
 
 export class InternalServer extends Server {
-	init(options: ServerInitOptions): void;
+	init(options: ServerInitOptions): Promise<void>;
 	respond(
 		request: Request,
 		options: RequestOptions & {
@@ -123,18 +119,16 @@ export interface MethodOverride {
 }
 
 export interface PageNode {
+	depth: number;
 	component?: string; // TODO supply default component if it's missing (bit of an edge case)
 	shared?: string;
 	server?: string;
-}
-
-export interface PageData {
-	type: 'page';
-	id: string;
-	pattern: RegExp;
-	errors: Array<PageNode | undefined>;
-	layouts: Array<PageNode | undefined>;
-	leaf: PageNode;
+	parent_id?: string;
+	parent?: PageNode;
+	/**
+	 * Filled with the pages that reference this layout (if this is a layout)
+	 */
+	child_pages?: PageNode[];
 }
 
 export type PayloadScriptAttributes =
@@ -167,7 +161,34 @@ export interface Respond {
 	(request: Request, options: SSROptions, state: SSRState): Promise<Response>;
 }
 
-export type RouteData = PageData | EndpointData;
+/**
+ * Represents a route segment in the app. It can either be an intermediate node
+ * with only layout/error pages, or a leaf, at which point either `page` and `leaf`
+ * or `endpoint` is set.
+ */
+export interface RouteData {
+	id: string;
+	parent: RouteData | null;
+
+	segment: string;
+	pattern: RegExp;
+	names: string[];
+	types: string[];
+
+	layout: PageNode | null;
+	error: PageNode | null;
+	leaf: PageNode | null;
+
+	page: {
+		layouts: Array<number | undefined>;
+		errors: Array<number | undefined>;
+		leaf: number;
+	} | null;
+
+	endpoint: {
+		file: string;
+	} | null;
+}
 
 export type ServerData =
 	| {
@@ -176,6 +197,9 @@ export type ServerData =
 	  }
 	| {
 			type: 'data';
+			/**
+			 * If `null`, then there was no load function
+			 */
 			nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
 	  };
 
@@ -227,15 +251,6 @@ export interface SSRComponent {
 }
 
 export type SSRComponentLoader = () => Promise<SSRComponent>;
-
-export interface SSREndpoint {
-	type: 'endpoint';
-	id: string;
-	pattern: RegExp;
-	names: string[];
-	types: string[];
-	load(): Promise<Partial<Record<HttpMethod, RequestHandler>>>;
-}
 
 export interface SSRNode {
 	component: SSRComponentLoader;
@@ -310,27 +325,33 @@ export interface SSROptions {
 	trailing_slash: TrailingSlash;
 }
 
-export interface SSRPage {
-	type: 'page';
-	id: string;
-	pattern: RegExp;
-	names: string[];
-	types: string[];
+export interface SSRErrorPage {
+	id: '__error';
+}
+
+export interface PageNodeIndexes {
 	errors: Array<number | undefined>;
 	layouts: Array<number | undefined>;
 	leaf: number;
 }
 
-export interface SSRErrorPage {
-	id: '__error';
-}
+export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>>;
 
-export type SSRRoute = SSREndpoint | SSRPage;
+export interface SSRRoute {
+	id: string;
+	pattern: RegExp;
+	names: string[];
+	types: string[];
+
+	page: PageNodeIndexes | null;
+
+	endpoint: (() => Promise<SSREndpoint>) | null;
+}
 
 export interface SSRState {
 	fallback?: string;
 	getClientAddress: () => string;
-	initiator?: SSRPage | SSRErrorPage;
+	initiator?: SSRRoute | SSRErrorPage;
 	platform?: any;
 	prerendering?: PrerenderOptions;
 }

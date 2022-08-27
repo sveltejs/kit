@@ -7,6 +7,8 @@
  * declare namespace App {
  * 	interface Locals {}
  *
+ * 	interface PageData {}
+ *
  * 	interface Platform {}
  *
  * 	interface PrivateEnv {}
@@ -46,6 +48,13 @@ declare namespace App {
 	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://kit.svelte.dev/docs/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
 	export interface Locals {}
+
+	/**
+	 * Defines the common shape of the [$page.data store](https://kit.svelte.dev/docs/modules#$app-stores-page) - that is, the data that is shared between all pages.
+	 * The `Load` and `ServerLoad` functions in `./$types` will be narrowed accordingly.
+	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
+	 */
+	export interface PageData {}
 
 	/**
 	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
@@ -151,7 +160,7 @@ declare module '$app/navigation' {
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<void>;
 	/**
-	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question, or re-fetches data from a page endpoint if the invalidated resource is the page itself. If no argument is given, all resources will be invalidated. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. If no argument is given, all resources will be invalidated. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * @param dependency The invalidated resource
 	 */
 	export function invalidate(dependency?: string | ((href: string) => boolean)): Promise<void>;

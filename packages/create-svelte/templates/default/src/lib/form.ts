@@ -26,7 +26,7 @@ import { invalidate } from '$app/navigation';
  *     response: Response;
  *     form: HTMLFormElement;
  *   }) => void;
- * }} [opts]
+ * }} opts
  */
 export function enhance(
 	form: HTMLFormElement,
@@ -83,10 +83,7 @@ export function enhance(
 
 			if (response.ok) {
 				if (result) result({ data, form, response });
-
-				const url = new URL(form.action);
-				url.search = url.hash = '';
-				invalidate(url.href);
+				invalidate();
 			} else if (error) {
 				error({ data, form, error: null, response });
 			} else {

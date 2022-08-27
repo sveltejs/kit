@@ -1,4 +1,4 @@
-import child_process from 'child_process';
+import { execSync } from 'child_process';
 import fs from 'fs';
 import http from 'http';
 import { fileURLToPath } from 'url';
@@ -30,11 +30,16 @@ export function run(app, callback) {
 
 			rimraf(`${cwd}/build`);
 
-			await spawn('npm run build', {
-				cwd,
-				stdio: 'inherit',
-				shell: true
-			});
+			try {
+				execSync(`npm run build`, { cwd, stdio: 'pipe' });
+				console.log(`✅ build successful`);
+			} catch (e) {
+				console.error(`❌ failed to build ${app}`);
+				console.error(`---\nstdout:\n${e.stdout}`);
+				console.error(`---\nstderr:\n${e.stderr}`);
+				console.groupEnd();
+				assert.unreachable(e.message);
+			}
 
 			context.cwd = cwd;
 			const handler = sirv(`${cwd}/build`, {
@@ -67,26 +72,6 @@ export function run(app, callback) {
 	callback(suite);
 
 	suite.run();
-}
-
-const parameterRegex = new RegExp('"[^"]+"|[\\S]+', 'g');
-
-/**
- * @param {string} str
- * @param {child_process.SpawnOptions} opts
- */
-function spawn(str, opts) {
-	return new Promise((fulfil, reject) => {
-		const [cmd, ...args] = str.match(parameterRegex);
-
-		const child = child_process.spawn(cmd, args, opts);
-
-		child.on('error', reject);
-
-		child.on('exit', () => {
-			fulfil();
-		});
-	});
 }
 
 /**

@@ -3,8 +3,9 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { method_not_allowed, error_to_pojo, allowed_methods } from '../utils.js';
 import { create_fetch } from './fetch.js';
-import { HttpError, Redirect } from '../../../index/private.js';
-import { error, json } from '../../../index/index.js';
+import { HttpError, Redirect } from '../../control.js';
+import { error, json } from '../../../exports/index.js';
+import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
 import { load_data, load_server_data } from './load_data.js';
 
@@ -17,13 +18,14 @@ import { load_data, load_server_data } from './load_data.js';
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {import('types').SSRPage} route
+ * @param {import('types').SSRRoute} route
+ * @param {import('types').PageNodeIndexes} page
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRState} state
  * @param {import('types').RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
-export async function render_page(event, route, options, state, resolve_opts) {
+export async function render_page(event, route, page, options, state, resolve_opts) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return new Response(`Not found: ${event.url.pathname}`, {
@@ -41,7 +43,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		event.request.method !== 'GET' &&
 		event.request.method !== 'HEAD'
 	) {
-		const node = await options.manifest._.nodes[route.leaf]();
+		const node = await options.manifest._.nodes[page.leaf]();
 		if (node.server) {
 			return handle_json_request(event, options, node.server);
 		}
@@ -52,8 +54,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 	try {
 		const nodes = await Promise.all([
 			// we use == here rather than === because [undefined] serializes as "[null]"
-			...route.layouts.map((n) => (n == undefined ? n : options.manifest._.nodes[n]())),
-			options.manifest._.nodes[route.leaf]()
+			...page.layouts.map((n) => (n == undefined ? n : options.manifest._.nodes[n]())),
+			options.manifest._.nodes[page.leaf]()
 		]);
 
 		resolve_opts = {
@@ -111,6 +113,27 @@ export async function render_page(event, route, options, state, resolve_opts) {
 		const should_prerender_data = nodes.some((node) => node?.server);
 		const data_pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
 
+		// it's crucial that we do this before returning the non-SSR response, otherwise
+		// SvelteKit will erroneously believe that the path has been prerendered,
+		// causing functions to be omitted from the manifesst generated later
+		const should_prerender =
+			leaf_node.shared?.prerender ?? leaf_node.server?.prerender ?? options.prerender.default;
+		if (should_prerender) {
+			const mod = leaf_node.server;
+			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
+				throw new Error('Cannot prerender pages that have endpoints with mutative methods');
+			}
+		} else if (state.prerendering) {
+			// if the page isn't marked as prerenderable (or is explicitly
+			// marked NOT prerenderable, if `prerender.default` is `true`),
+			// then bail out at this point
+			if (!should_prerender) {
+				return new Response(undefined, {
+					status: 204
+				});
+			}
+		}
+
 		if (!resolve_opts.ssr) {
 			return await render_response({
 				branch: [],
@@ -128,24 +151,6 @@ export async function render_page(event, route, options, state, resolve_opts) {
 				state,
 				resolve_opts
 			});
-		}
-
-		const should_prerender =
-			leaf_node.shared?.prerender ?? leaf_node.server?.prerender ?? options.prerender.default;
-		if (should_prerender) {
-			const mod = leaf_node.server;
-			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
-				throw new Error('Cannot prerender pages that have endpoints with mutative methods');
-			}
-		} else if (state.prerendering) {
-			// if the page isn't marked as prerenderable (or is explicitly
-			// marked NOT prerenderable, if `prerender.default` is `true`),
-			// then bail out at this point
-			if (!should_prerender) {
-				return new Response(undefined, {
-					status: 204
-				});
-			}
 		}
 
 		/** @type {Array<Loaded | null>} */
@@ -172,6 +177,7 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					return await load_server_data({
 						dev: options.dev,
 						event,
+						state,
 						node,
 						parent: async () => {
 							/** @type {Record<string, any>} */
@@ -253,8 +259,8 @@ export async function render_page(event, route, options, state, resolve_opts) {
 					const status = error instanceof HttpError ? error.status : 500;
 
 					while (i--) {
-						if (route.errors[i]) {
-							const index = /** @type {number} */ (route.errors[i]);
+						if (page.errors[i]) {
+							const index = /** @type {number} */ (page.errors[i]);
 							const node = await options.manifest._.nodes[index]();
 
 							let j = i;
@@ -393,19 +399,4 @@ function redirect_response(status, location) {
 		status,
 		headers: { location }
 	});
-}
-
-/**
- * @template T
- * @param {Array<T | null>} array
- * @returns {T[]}
- */
-function compact(array) {
-	const compacted = [];
-	for (const item of array) {
-		if (item) {
-			compacted.push(item);
-		}
-	}
-	return compacted;
 }
