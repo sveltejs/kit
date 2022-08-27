@@ -125,7 +125,10 @@ export function data_response(data) {
 			}
 		});
 	} catch (e) {
-		return new Response(`throw new Error(${JSON.stringify(/** @type {any} */ (e).message)})`, {
+		const error = /** @type {any} */ (e);
+		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
+		const message = match ? `${error.message} (data.${match[2]})` : error.message;
+		return new Response(`throw new Error(${JSON.stringify(message)})`, {
 			headers: {
 				'content-type': 'application/javascript'
 			}

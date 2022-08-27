@@ -701,10 +701,13 @@ export function create_client({ target, base, trailing_slash }) {
 		if (route.uses_server_data && invalid_server_nodes.some(Boolean)) {
 			try {
 				server_data = await load_data(url, invalid_server_nodes);
-			} catch (e) {
-				// something went catastrophically wrong — bail and defer to the server
-				native_navigation(url);
-				return;
+			} catch (error) {
+				return load_root_error_page({
+					status: 500,
+					error: /** @type {Error} */ (error),
+					url,
+					routeId: route.id
+				});
 			}
 
 			if (server_data.type === 'redirect') {
