@@ -64,8 +64,8 @@ const get_defaults = (prefix = '') => ({
 		amp: undefined,
 		appDir: '_app',
 		browser: {
-			hydrate: true,
-			router: true
+			hydrate: undefined,
+			router: undefined
 		},
 		csp: {
 			mode: 'auto',
