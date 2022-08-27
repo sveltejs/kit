@@ -27,7 +27,7 @@ export function resolve_lib_alias(file, content, config) {
 			return match;
 		}
 
-		const full_path = path.join(value, file);
+		const full_path = path.join(config.package.source, file);
 		const full_import_path = path.join(value, import_path.slice(alias.length));
 		let resolved = posixify(path.relative(path.dirname(full_path), full_import_path));
 		resolved = resolved.startsWith('.') ? resolved : './' + resolved;
