@@ -21,7 +21,7 @@ export function write_root(manifest_data, output) {
 
 	let l = max_depth;
 
-	let pyramid = `<svelte:component this={components[${l}]} data={data_${l}}/>`;
+	let pyramid = `<svelte:component this={components[${l}]} data={data_${l}} {errors}/>`;
 
 	while (l--) {
 		pyramid = `
