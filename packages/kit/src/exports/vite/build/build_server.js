@@ -65,7 +65,6 @@ export class Server {
 				error.stack = this.options.get_stack(error);
 			},
 			hooks: null,
-			hydrate: ${s(config.kit.browser.hydrate)},
 			manifest,
 			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
@@ -77,7 +76,6 @@ export class Server {
 			read,
 			root,
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
-			router: ${s(config.kit.browser.router)},
 			template,
 			template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			trailing_slash: ${s(config.kit.trailingSlash)}

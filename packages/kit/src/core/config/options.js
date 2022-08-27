@@ -107,14 +107,16 @@ const options = object(
 				return input;
 			}),
 
-			browser: validate({ hydrate: true, router: true }, (input, keypath) => {
-				const value = object({ hydrate: boolean(true), router: boolean(true) })(input, keypath);
-				if (!value.hydrate && value.router) {
-					throw new Error(
-						'config.kit.browser.router cannot be true if config.kit.browser.hydrate is false'
-					);
-				}
-				return value;
+			// TODO: remove this for the 1.0 release
+			browser: object({
+				hydrate: error(
+					(keypath) =>
+						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more details: https://github.com/sveltejs/kit/pull/6197`
+				),
+				router: error(
+					(keypath) =>
+						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more details: https://github.com/sveltejs/kit/pull/6197`
+				)
 			}),
 
 			csp: object({

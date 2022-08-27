@@ -1,7 +1,7 @@
 import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { GENERIC_ERROR } from '../utils.js';
+import { GENERIC_ERROR, get_option } from '../utils.js';
 import { create_fetch } from './fetch.js';
 
 /**
@@ -30,10 +30,9 @@ export async function respond_with_error({ event, options, state, status, error,
 
 	try {
 		const branch = [];
+		const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
 
 		if (resolve_opts.ssr) {
-			const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
-
 			const server_data_promise = load_server_data({
 				dev: options.dev,
 				event,
@@ -71,8 +70,8 @@ export async function respond_with_error({ event, options, state, status, error,
 			options,
 			state,
 			page_config: {
-				hydrate: options.hydrate,
-				router: options.router
+				hydrate: get_option([default_layout], 'hydrate') ?? true,
+				router: get_option([default_layout], 'router') ?? true
 			},
 			status,
 			error,

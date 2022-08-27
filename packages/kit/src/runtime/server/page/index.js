@@ -1,7 +1,7 @@
 import { negotiate } from '../../../utils/http.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
-import { method_not_allowed, error_to_pojo, allowed_methods } from '../utils.js';
+import { method_not_allowed, error_to_pojo, allowed_methods, get_option } from '../utils.js';
 import { create_fetch } from './fetch.js';
 import { HttpError, Redirect } from '../../control.js';
 import { error, json } from '../../../exports/index.js';
@@ -60,11 +60,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 		resolve_opts = {
 			...resolve_opts,
-			ssr:
-				nodes.reduce(
-					(ssr, node) => node?.shared?.ssr ?? ssr,
-					/** @type {boolean|undefined} */ (undefined)
-				) ?? resolve_opts.ssr
+			ssr: get_option(nodes, 'ssr') ?? resolve_opts.ssr
 		};
 
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
@@ -320,8 +316,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 			state,
 			resolve_opts,
 			page_config: {
-				router: leaf_node.shared?.router ?? options.router,
-				hydrate: leaf_node.shared?.hydrate ?? options.hydrate
+				router: get_option(nodes, 'router') ?? true,
+				hydrate: get_option(nodes, 'hydrate') ?? true
 			},
 			status,
 			error: null,

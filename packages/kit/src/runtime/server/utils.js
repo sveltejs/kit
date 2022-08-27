@@ -114,3 +114,14 @@ export function allowed_methods(mod) {
 
 	return allowed;
 }
+
+/**
+ * @param {Array<import('types').SSRNode | undefined>} nodes
+ * @param {'hydrate' | 'prerender' | 'router' | 'ssr' } option
+ */
+export function get_option(nodes, option) {
+	return nodes.reduce(
+		(value, node) => node?.shared?.[option] ?? node?.server?.[option] ?? value,
+		/** @type {boolean|undefined} */ (undefined)
+	);
+}

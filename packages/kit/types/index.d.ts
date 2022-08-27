@@ -121,10 +121,6 @@ export interface KitConfig {
 	adapter?: Adapter;
 	alias?: Record<string, string>;
 	appDir?: string;
-	browser?: {
-		hydrate?: boolean;
-		router?: boolean;
-	};
 	csp?: {
 		mode?: 'hash' | 'nonce' | 'auto';
 		directives?: CspDirectives;
