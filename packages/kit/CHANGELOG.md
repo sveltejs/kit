@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.445
+
+### Patch Changes
+
+- [breaking] rename `$app/env` to `$app/environment`, to disambiguate with `$env/...` ([#6334](https://github.com/sveltejs/kit/pull/6334))
+
 ## 1.0.0-next.444
 
 ### Patch Changes
