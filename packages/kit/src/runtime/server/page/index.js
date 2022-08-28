@@ -9,6 +9,7 @@ import { error, json } from '../../../exports/index.js';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
 import { load_data, load_server_data } from './load_data.js';
+import { DATA_SUFFIX } from '../../../constants.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -103,7 +104,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 
 		const should_prerender_data = nodes.some((node) => node?.server);
-		const data_pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.js`;
+		const data_pathname = event.url.pathname.replace(/\/$/, '') + DATA_SUFFIX;
 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,

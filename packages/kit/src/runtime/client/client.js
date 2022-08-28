@@ -10,6 +10,7 @@ import Root from '__GENERATED__/root.svelte';
 import { nodes, dictionary, matchers } from '__GENERATED__/client-manifest.js';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
+import { DATA_SUFFIX } from '../../constants.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -1364,7 +1365,7 @@ let data_id = 1;
  */
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
-	data_url.pathname += `${url.pathname.endsWith('/') ? '' : '/'}__data.js`;
+	data_url.pathname = url.pathname.replace(/\/$/, '') + DATA_SUFFIX;
 	data_url.searchParams.set('__invalid', invalid.map((x) => (x ? 'y' : 'n')).join(''));
 	data_url.searchParams.set('__id', String(data_id++));
 
