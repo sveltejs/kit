@@ -179,6 +179,7 @@ export async function render_response({
 	try {
 		serialized.data = devalue(branch.map(({ server_data }) => server_data));
 	} catch (e) {
+		// If we're here, the data could not be serialized with devalue
 		// TODO if we wanted to get super fancy we could track down the origin of the `load`
 		// function, but it would mean passing more stuff around than we currently do
 		const error = /** @type {any} */ (e);
@@ -191,6 +192,7 @@ export async function render_response({
 		try {
 			serialized.errors = devalue(validation_errors);
 		} catch (e) {
+			// If we're here, the data could not be serialized with devalue
 			const error = /** @type {any} */ (e);
 			if (error.path) throw new Error(`${error.message} (errors.${error.path})`);
 			throw error;
