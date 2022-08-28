@@ -6,8 +6,8 @@ import {
 	prefetch,
 	prefetchRoutes
 } from '$app/navigation';
-import { CSRPageNode, CSRPageNodeLoader, CSRRoute, ServerErrorNode, Uses } from 'types';
-import { HttpError } from '../../index/private.js';
+import { CSRPageNode, CSRPageNodeLoader, CSRRoute, Uses } from 'types';
+import { HttpError } from '../control.js';
 import { SerializedHttpError } from '../server/page/types.js';
 
 export interface Client {

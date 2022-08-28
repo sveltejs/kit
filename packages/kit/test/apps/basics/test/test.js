@@ -728,31 +728,33 @@ test.describe('Load', () => {
 	});
 
 	test('data is inherited', async ({ page, javaScriptEnabled, app }) => {
-		await page.goto('/load/parent/a/b/c');
-		expect(await page.textContent('h1')).toBe('message: original + new');
-		expect(await page.textContent('pre')).toBe(
-			JSON.stringify({
-				foo: { bar: 'Custom layout' },
-				message: 'original + new',
-				x: 'a',
-				y: 'b',
-				z: 'c'
-			})
-		);
-
-		if (javaScriptEnabled) {
-			await app.goto('/load/parent/d/e/f');
-
+		for (const kind of ['shared', 'server']) {
+			await page.goto(`/load/parent/${kind}/a/b/c`);
 			expect(await page.textContent('h1')).toBe('message: original + new');
 			expect(await page.textContent('pre')).toBe(
 				JSON.stringify({
 					foo: { bar: 'Custom layout' },
 					message: 'original + new',
-					x: 'd',
-					y: 'e',
-					z: 'f'
+					x: 'a',
+					y: 'b edited',
+					z: 'c'
 				})
 			);
+
+			if (javaScriptEnabled) {
+				await app.goto(`/load/parent/${kind}/d/e/f`);
+
+				expect(await page.textContent('h1')).toBe('message: original + new');
+				expect(await page.textContent('pre')).toBe(
+					JSON.stringify({
+						foo: { bar: 'Custom layout' },
+						message: 'original + new',
+						x: 'd',
+						y: 'e edited',
+						z: 'f'
+					})
+				);
+			}
 		}
 	});
 

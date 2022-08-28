@@ -351,13 +351,25 @@ test.describe('Load', () => {
 	test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
 		await page.goto('/load/url-hash#please-dont-send-me-to-load');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component."'
+			'This is your custom error page saying: "Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead"'
 		);
 	});
 
 	test('url instance methods work in load', async ({ page }) => {
 		await page.goto('/load/url-to-string');
 		expect(await page.textContent('h1')).toBe("I didn't break!");
+	});
+
+	test('server data from previous is not reused if next page has no load function', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/load/server-data-reuse/with-server-load');
+		expect(await page.textContent('pre')).toBe(
+			JSON.stringify({ foo: { bar: 'Custom layout' }, server: true })
+		);
+		await app.goto('/load/server-data-reuse/no-load');
+		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 	});
 
 	if (process.env.DEV) {
@@ -586,11 +598,19 @@ test('Can use browser-only global on client-only page', async ({ page, read_erro
 	expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
 });
 
-test('can use $app/stores from anywhere on client', async ({ page }) => {
-	await page.goto('/store/client-access');
-	await expect(page.locator('h1')).toHaveText('undefined');
-	await page.click('button');
-	await expect(page.locator('h1')).toHaveText('/store/client-access');
+test.describe('$app/stores', () => {
+	test('can use $app/stores from anywhere on client', async ({ page }) => {
+		await page.goto('/store/client-access');
+		await expect(page.locator('h1')).toHaveText('undefined');
+		await page.click('button');
+		await expect(page.locator('h1')).toHaveText('/store/client-access');
+	});
+
+	test('$page.data does not update if data is unchanged', async ({ page, app }) => {
+		await page.goto('/store/data/unchanged/a');
+		await app.goto('/store/data/unchanged/b');
+		await expect(page.locator('p')).toHaveText('$page.data was updated 0 time(s)');
+	});
 });
 
 test.describe.serial('Invalidation', () => {
@@ -628,5 +648,36 @@ test.describe.serial('Invalidation', () => {
 
 		// this looks wrong, but is actually the intended behaviour (the increment side-effect in a GET would be a bug in a real app)
 		expect(await page.textContent('h3')).toBe('doubled: 2');
+	});
+
+	test('load function re-runs when searchParams change', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/url?a=1');
+		expect(await page.textContent('h1')).toBe('1');
+
+		await clicknav('[href="?a=2"]');
+		expect(await page.textContent('h1')).toBe('2');
+
+		await clicknav('[href="?a=3"]');
+		expect(await page.textContent('h1')).toBe('3');
+	});
+
+	test('server-only load functions are re-run following forced invalidation', async ({
+		page,
+		request
+	}) => {
+		await request.get('/load/invalidation/forced/reset');
+
+		await page.goto('/load/invalidation/forced');
+		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+
+		await page.click('button');
+		await page.waitForLoadState('networkidle');
+		await page.waitForTimeout(0); // apparently necessary
+		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
+
+		await page.click('button');
+		await page.waitForLoadState('networkidle');
+		await page.waitForTimeout(0);
+		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
 	});
 });

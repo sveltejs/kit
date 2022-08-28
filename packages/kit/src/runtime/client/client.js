@@ -1,14 +1,14 @@
 import { onMount, tick } from 'svelte';
 import { normalize_error } from '../../utils/error.js';
-import { LoadURL, decode_params, normalize_path } from '../../utils/url.js';
+import { make_trackable, decode_params, normalize_path } from '../../utils/url.js';
 import { find_anchor, get_base_uri, get_href, scroll_state } from './utils.js';
 import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
-import { error } from '../../index/index.js';
+import { error } from '../../exports/index.js';
 
 import Root from '__GENERATED__/root.svelte';
 import { nodes, dictionary, matchers } from '__GENERATED__/client-manifest.js';
-import { HttpError, Redirect } from '../../index/private.js';
+import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
@@ -424,21 +424,37 @@ export function create_client({ target, base, trailing_slash }) {
 		};
 
 		let data = {};
-		let data_changed = false;
+		let data_changed = !page;
 		for (let i = 0; i < filtered.length; i += 1) {
-			data = { ...data, ...filtered[i].data };
+			const node = filtered[i];
+			data = { ...data, ...node.data };
+
 			// Only set props if the node actually updated. This prevents needless rerenders.
-			if (data_changed || !current.branch.some((node) => node === filtered[i])) {
+			if (data_changed || !current.branch.some((previous) => previous === node)) {
 				result.props[`data_${i}`] = data;
-				data_changed = true;
+				data_changed = data_changed || Object.keys(node.data ?? {}).length > 0;
 			}
+		}
+		if (!data_changed) {
+			// If nothing was added, and the object entries are the same length, this means
+			// that nothing was removed either and therefore the data is the same as the previous one.
+			// This would be more readable with a separate boolean but that would cost us some bytes.
+			data_changed = Object.keys(page.data).length !== Object.keys(data).length;
 		}
 
 		const page_changed =
 			!current.url || url.href !== current.url.href || current.error !== error || data_changed;
 
 		if (page_changed) {
-			result.props.page = { error, params, routeId, status, url, data };
+			result.props.page = {
+				error,
+				params,
+				routeId,
+				status,
+				url,
+				// The whole page store is updated, but this way the object reference stays the same
+				data: data_changed ? data : page.data
+			};
 
 			// TODO remove this for 1.0
 			/**
@@ -510,17 +526,14 @@ export function create_client({ target, base, trailing_slash }) {
 				});
 			}
 
-			const load_url = new LoadURL(url);
-
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
 				params: uses_params,
 				data: server_data_node?.data ?? null,
-				get url() {
+				url: make_trackable(url, () => {
 					uses.url = true;
-					return load_url;
-				},
+				}),
 				async fetch(resource, init) {
 					let requested;
 
@@ -641,9 +654,10 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/**
 	 * @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | null} node
+	 * @param {import('./types').DataNode | null} [previous]
 	 * @returns {import('./types').DataNode | null}
 	 */
-	function create_data_node(node) {
+	function create_data_node(node, previous) {
 		if (node?.type === 'data') {
 			return {
 				type: 'data',
@@ -655,6 +669,8 @@ export function create_client({ target, base, trailing_slash }) {
 					url: !!node.uses.url
 				}
 			};
+		} else if (node?.type === 'skip') {
+			return previous ?? null;
 		}
 		return null;
 	}
@@ -675,14 +691,13 @@ export function create_client({ target, base, trailing_slash }) {
 			params: Object.keys(params).filter((key) => current.params[key] !== params[key])
 		};
 
+		const loaders = [...layouts, leaf];
+
 		// preload modules to avoid waterfall, but handle rejections
 		// so they don't get reported to Sentry et al (we don't need
 		// to act on the failures at this point)
-		[...errors, ...layouts, leaf].forEach((loader) => loader?.().catch(() => {}));
-
-		const loaders = [...layouts, leaf];
-
-		// To avoid waterfalls when someone awaits a parent, compute as much as possible here already
+		errors.forEach((loader) => loader?.().catch(() => {}));
+		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
 
 		/** @type {import('types').ServerData | null} */
 		let server_data = null;
@@ -690,15 +705,15 @@ export function create_client({ target, base, trailing_slash }) {
 		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];
 			const invalid =
-				loader &&
-				(previous?.loader !== loader ||
+				!!loader?.[0] &&
+				(previous?.loader !== loader[1] ||
 					has_changed(changed, acc.some(Boolean), previous.server?.uses));
 
 			acc.push(invalid);
 			return acc;
 		}, /** @type {boolean[]} */ ([]));
 
-		if (route.uses_server_data && invalid_server_nodes.some(Boolean)) {
+		if (invalid_server_nodes.some(Boolean)) {
 			try {
 				const res = await native_fetch(
 					`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
@@ -741,7 +756,7 @@ export function create_client({ target, base, trailing_slash }) {
 			// re-use data from previous load if it's still valid
 			const valid =
 				can_reuse_server_data &&
-				loader === previous?.loader &&
+				loader[1] === previous?.loader &&
 				!has_changed(changed, parent_changed, previous.shared?.uses);
 			if (valid) return previous;
 
@@ -757,7 +772,7 @@ export function create_client({ target, base, trailing_slash }) {
 			}
 
 			return load_node({
-				loader,
+				loader: loader[1],
 				url,
 				params,
 				routeId: route.id,
@@ -768,7 +783,7 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 					return data;
 				},
-				server_data_node: create_data_node(server_data_node) ?? previous?.server ?? null
+				server_data_node: create_data_node(server_data_node, previous?.server)
 			});
 		});
 
@@ -801,11 +816,10 @@ export function create_client({ target, base, trailing_slash }) {
 
 							let j = i;
 							while (!branch[j]) j -= 1;
-
 							try {
 								error_loaded = {
-									node: await errors[i](),
-									loader: errors[i],
+									node: await /** @type {import('types').CSRPageNodeLoader } */ (errors[i])(),
+									loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
 									data: {},
 									server: null,
 									shared: null
@@ -1087,7 +1101,7 @@ export function create_client({ target, base, trailing_slash }) {
 				: routes;
 
 			const promises = matching.map((r) => {
-				return Promise.all([...r.layouts, r.leaf].map((load) => load?.()));
+				return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
 			});
 
 			await Promise.all(promises);

@@ -7,6 +7,8 @@
  * declare namespace App {
  * 	interface Locals {}
  *
+ * 	interface PageData {}
+ *
  * 	interface Platform {}
  *
  * 	interface PrivateEnv {}
@@ -48,6 +50,13 @@ declare namespace App {
 	export interface Locals {}
 
 	/**
+	 * Defines the common shape of the [$page.data store](https://kit.svelte.dev/docs/modules#$app-stores-page) - that is, the data that is shared between all pages.
+	 * The `Load` and `ServerLoad` functions in `./$types` will be narrowed accordingly.
+	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
+	 */
+	export interface PageData {}
+
+	/**
 	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
 	 */
 	export interface Platform {}
@@ -65,10 +74,10 @@ declare namespace App {
 
 /**
  * ```ts
- * import { browser, dev, prerendering } from '$app/env';
+ * import { browser, dev, prerendering } from '$app/environment';
  * ```
  */
-declare module '$app/env' {
+declare module '$app/environment' {
 	/**
 	 * `true` if the app is running in the browser.
 	 */

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.437",
+	"version": "1.0.0-next.445",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -73,20 +73,20 @@
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
-			"import": "./src/index/index.js",
+			"import": "./src/exports/index.js",
 			"types": "./types/index.d.ts"
 		},
 		"./node": {
-			"import": "./src/node/index.js"
+			"import": "./src/exports/node/index.js"
 		},
 		"./node/polyfills": {
-			"import": "./src/node/polyfills.js"
+			"import": "./src/exports/node/polyfills.js"
 		},
 		"./hooks": {
-			"import": "./src/hooks.js"
+			"import": "./src/exports/hooks/index.js"
 		},
 		"./vite": {
-			"import": "./src/vite/index.js"
+			"import": "./src/exports/vite/index.js"
 		}
 	},
 	"types": "types/index.d.ts",

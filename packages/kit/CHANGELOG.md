@@ -1,5 +1,65 @@
 # @sveltejs/kit
 
+## 1.0.0-next.445
+
+### Patch Changes
+
+- [breaking] rename `$app/env` to `$app/environment`, to disambiguate with `$env/...` ([#6334](https://github.com/sveltejs/kit/pull/6334))
+
+## 1.0.0-next.444
+
+### Patch Changes
+
+- set errors on root component ([#6330](https://github.com/sveltejs/kit/pull/6330))
+
+* [fix] do not call server and update `$page.data` unnecessarily ([#6311](https://github.com/sveltejs/kit/pull/6311))
+
+## 1.0.0-next.443
+
+### Patch Changes
+
+- [fix] prevent unused types warning ([#6293](https://github.com/sveltejs/kit/pull/6293))
+
+* [fix] don't reuse server load data from previous page if current doesn't have a load function ([#6309](https://github.com/sveltejs/kit/pull/6309))
+
+## 1.0.0-next.442
+
+### Patch Changes
+
+- [fix] handle case where parent() refers to missing load function ([#6282](https://github.com/sveltejs/kit/pull/6282))
+
+## 1.0.0-next.441
+
+### Patch Changes
+
+- [fix] Set `errors` prop on all layout/leaf components, not just page that happens to be deepest ([#6279](https://github.com/sveltejs/kit/pull/6279))
+
+* Fix route sorting with groups ([#6288](https://github.com/sveltejs/kit/pull/6288))
+
+## 1.0.0-next.440
+
+### Patch Changes
+
+- [fix] type tweaks ([#6271](https://github.com/sveltejs/kit/pull/6271))
+
+* Correctly determine whether route uses server data ([#6275](https://github.com/sveltejs/kit/pull/6275))
+
+## 1.0.0-next.439
+
+### Patch Changes
+
+- [feat] add App.PageData type ([#6226](https://github.com/sveltejs/kit/pull/6226))
+
+## 1.0.0-next.438
+
+### Patch Changes
+
+- more granular URL property tracking during load ([#6237](https://github.com/sveltejs/kit/pull/6237))
+
+* [breaking] change event.clientAddress to event.getClientAddress() ([#6237](https://github.com/sveltejs/kit/pull/6237))
+
+- Remove all enumerable getters from RequestEvent and LoadEvent ([#6237](https://github.com/sveltejs/kit/pull/6237))
+
 ## 1.0.0-next.437
 
 ### Patch Changes

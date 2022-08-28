@@ -1,5 +1,41 @@
 # create-svelte
 
+## 2.0.0-next.164
+
+### Patch Changes
+
+- [breaking] rename `$app/env` to `$app/environment`, to disambiguate with `$env/...` ([#6334](https://github.com/sveltejs/kit/pull/6334))
+
+* Add svelte-kit sync to check scripts in checkjs templates ([#6339](https://github.com/sveltejs/kit/pull/6339))
+
+## 2.0.0-next.163
+
+### Patch Changes
+
+- fix type definition issue that caused a svelte-check error when using TS 4.8 ([#6306](https://github.com/sveltejs/kit/pull/6306))
+
+## 2.0.0-next.162
+
+### Patch Changes
+
+- remove some unused code ([#6287](https://github.com/sveltejs/kit/pull/6287))
+
+## 2.0.0-next.161
+
+### Patch Changes
+
+- [feat] add App.PageData type ([#6226](https://github.com/sveltejs/kit/pull/6226))
+
+## 2.0.0-next.160
+
+### Patch Changes
+
+- Create TypeScript/JSDoc/vanilla versions of shared template .ts files ([#6253](https://github.com/sveltejs/kit/pull/6253))
+
+* Create vite.config.ts when creating TypeScript project ([#6253](https://github.com/sveltejs/kit/pull/6253))
+
+- Invalidate data after form submission ([#6254](https://github.com/sveltejs/kit/pull/6254))
+
 ## 2.0.0-next.159
 
 ### Patch Changes

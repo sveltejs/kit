@@ -4,12 +4,12 @@ import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error, normalize_error } from '../../utils/error.js';
 import { serialize_error, GENERIC_ERROR, error_to_pojo } from './utils.js';
-import { decode_params, normalize_path } from '../../utils/url.js';
+import { decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
-import { HttpError, Redirect } from '../../index/private.js';
+import { HttpError, Redirect } from '../control.js';
 import { load_server_data } from './page/load_data.js';
-import { json } from '../../index/index.js';
+import { json } from '../../exports/index.js';
 import { once } from '../../utils/functions.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
@@ -122,21 +122,17 @@ export async function respond(request, options, state) {
 	/** @type {string[]} */
 	const cookies = [];
 
+	if (state.prerendering) disable_search(url);
+
 	/** @type {import('types').RequestEvent} */
 	const event = {
-		get clientAddress() {
-			if (!state.getClientAddress) {
+		getClientAddress:
+			state.getClientAddress ||
+			(() => {
 				throw new Error(
 					`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
 				);
-			}
-
-			Object.defineProperty(event, 'clientAddress', {
-				value: state.getClientAddress()
-			});
-
-			return event.clientAddress;
-		},
+			}),
 		locals: {},
 		params,
 		platform: state.platform,
@@ -195,6 +191,7 @@ export async function respond(request, options, state) {
 	};
 
 	Object.defineProperties(event, {
+		clientAddress: removed('clientAddress', 'getClientAddress'),
 		method: removed('method', 'request.method', details),
 		headers: removed('headers', 'request.headers', details),
 		origin: removed('origin', 'url.origin'),
@@ -277,15 +274,19 @@ export async function respond(request, options, state) {
 										return load_server_data({
 											dev: options.dev,
 											event,
+											state,
 											node,
 											parent: async () => {
 												/** @type {Record<string, any>} */
 												const data = {};
 												for (let j = 0; j < i; j += 1) {
-													const parent = /** @type {import('types').ServerDataNode} */ (
+													const parent = /** @type {import('types').ServerDataNode | null} */ (
 														await functions[j]()
 													);
-													Object.assign(data, parent.data);
+
+													if (parent) {
+														Object.assign(data, parent.data);
+													}
 												}
 												return data;
 											}

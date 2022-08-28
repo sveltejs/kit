@@ -1,5 +1,5 @@
 import { getContext } from 'svelte';
-import { browser } from './env.js';
+import { browser } from './environment.js';
 import { stores as browser_stores } from '../client/singletons.js';
 
 // TODO remove this (for 1.0? after 1.0?)

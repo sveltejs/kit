@@ -3,6 +3,10 @@ import { manifest } from 'MANIFEST';
 
 const server = new Server(manifest);
 
+await server.init({
+	env: process.env
+});
+
 /**
  * @param {Request} request
  */

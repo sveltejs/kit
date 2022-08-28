@@ -1,5 +1,5 @@
 <script>
-	import { browser } from '$app/env';
+	import { browser } from '$app/environment';
 	import { searching, query } from './stores.js';
 
 	const has_search_support = !browser || ('serviceWorker' in navigator);

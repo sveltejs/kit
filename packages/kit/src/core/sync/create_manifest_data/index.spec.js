@@ -213,7 +213,10 @@ test('sorts routes correctly', () => {
 		routes.map((p) => p.id),
 		[
 			'',
+			'(foo)',
+			'(foo)/(bar)',
 			'about',
+			'foo',
 			'post',
 			'post/bar',
 			'post/foo',
@@ -221,6 +224,7 @@ test('sorts routes correctly', () => {
 			'post/f[zz]',
 			'post/f[xx]',
 			'post/f[yy]',
+			'foo/[bar]',
 			'post/[id]',
 			'[endpoint]',
 			'[wildcard]',
@@ -228,6 +232,7 @@ test('sorts routes correctly', () => {
 			'[...rest]/deep/[...deep_rest]',
 			'[...rest]/abc',
 			'[...rest]/deep',
+			'(foo)/(bar)/[...all]',
 			'[...anotherrest]',
 			'[...rest]'
 		]
@@ -503,19 +508,14 @@ test('creates routes with named layouts', () => {
 
 	assert.equal(routes.filter((route) => route.page).map(simplify_route), [
 		{
-			id: 'a/a1',
-			pattern: '/^/a/a1/?$/',
-			page: { layouts: [0, 4], errors: [1, undefined], leaf: 10 }
-		},
-		{
 			id: '(special)/a/a2',
 			pattern: '/^/a/a2/?$/',
 			page: { layouts: [0, 2], errors: [1, undefined], leaf: 9 }
 		},
 		{
-			id: 'b/c/c2',
-			pattern: '/^/b/c/c2/?$/',
-			page: { layouts: [0], errors: [1], leaf: 11 }
+			id: 'a/a1',
+			pattern: '/^/a/a1/?$/',
+			page: { layouts: [0, 4], errors: [1, undefined], leaf: 10 }
 		},
 		{
 			id: 'b/d/(special)',
@@ -523,14 +523,14 @@ test('creates routes with named layouts', () => {
 			page: { layouts: [0, 6], errors: [1, undefined], leaf: 12 }
 		},
 		{
-			id: 'b/d/d1',
-			pattern: '/^/b/d/d1/?$/',
-			page: { layouts: [0], errors: [1], leaf: 15 }
-		},
-		{
 			id: '(special)/(alsospecial)/b/c/c1',
 			pattern: '/^/b/c/c1/?$/',
 			page: { layouts: [0, 2, 3], errors: [1, undefined, undefined], leaf: 8 }
+		},
+		{
+			id: 'b/c/c2',
+			pattern: '/^/b/c/c2/?$/',
+			page: { layouts: [0], errors: [1], leaf: 11 }
 		},
 		{
 			id: 'b/d/(special)/(extraspecial)/d2',
@@ -541,6 +541,11 @@ test('creates routes with named layouts', () => {
 			id: 'b/d/(special)/(extraspecial)/d3',
 			pattern: '/^/b/d/d3/?$/',
 			page: { layouts: [0, 6], errors: [1, undefined], leaf: 14 }
+		},
+		{
+			id: 'b/d/d1',
+			pattern: '/^/b/d/d1/?$/',
+			page: { layouts: [0], errors: [1], leaf: 15 }
 		}
 	]);
 });
