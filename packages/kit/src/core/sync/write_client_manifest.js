@@ -47,8 +47,11 @@ export function write_client_manifest(manifest_data, output) {
 		${manifest_data.routes
 			.map((route) => {
 				if (route.page) {
+					// Skip the first error, it's always the root error page with number 1
 					const errors = route.page.errors.slice(1).map((n) => n ?? '');
-					const layouts = route.page.layouts.slice(1).map((n) => {
+					// Do _not_ skip the first layout, it's always the root layout with number 0,
+					// but we don't know whether it has a server load function or not, which we need to encode
+					const layouts = route.page.layouts.map((n) => {
 						if (n == undefined) {
 							return '';
 						}
@@ -60,8 +63,8 @@ export function write_client_manifest(manifest_data, output) {
 
 					const array = [get_node_id(manifest_data.nodes, route.page.leaf)];
 
-					// only include non-root layout/error nodes if they exist
-					if (layouts.length > 0 || errors.length > 0) array.push(`[${layouts.join(',')}]`);
+					array.push(`[${layouts.join(',')}]`);
+					// only include non-root error nodes if they exist
 					if (errors.length > 0) array.push(`[${errors.join(',')}]`);
 
 					return `${s(route.id)}: [${array.join(',')}]`;
@@ -93,5 +96,6 @@ export function write_client_manifest(manifest_data, output) {
  * @param {number} id
  */
 function get_node_id(nodes, id) {
+	console.log(nodes[id]);
 	return `${nodes[id].server ? '~' : ''}${id}`;
 }

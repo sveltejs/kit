@@ -18,7 +18,7 @@ export function parse(nodes, dictionary, matchers) {
 				if (match) return exec(match, names, types, matchers);
 			},
 			errors: [1, ...(errors || [])].map((n) => nodes[n]),
-			layouts: [0, ...(layouts || [])].map(create_loader),
+			layouts: layouts.map(create_loader),
 			leaf: create_loader(leaf)
 		};
 
