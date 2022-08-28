@@ -4,10 +4,14 @@
 
 	import Grow from './grow.svg';
 
+	import * as d3 from 'd3';
+	import * as topojson from 'topojson';
+import { csvParse } from 'd3-dsv';
+
 	let canvas;
 	let phi = 0;
 
-	// onMount(() => {
+	onMount(() => {
 	// 	const globe = createGlobe(canvas, {
 	// 		devicePixelRatio: 2,
 	// 		width: 1000 * 2,
@@ -48,7 +52,54 @@
 	// 			phi += 0.003;
 	// 		}
 	// 	});
-	// });
+
+	var width = 960,
+    height = 500;
+
+var projection = d3.geoMercator()
+    .center([-122.4367, 37.7595])
+    .scale(150)
+    .rotate([0, 0]);
+
+var svg = d3.select('#svg').append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+var path = d3.geoPath()
+    .projection(projection);
+
+var g = svg.append('g');
+
+// load and display the World
+d3.json('https://gist.githubusercontent.com/olemi/d4fb825df71c2939405e0017e360cd73/raw/d6f9f0e9e8bd33183454250bd8b808953869edd2/world-110m2.json').then(function(topology) {
+
+    g.selectAll('path')
+       .data(topojson.feature(topology, topology.objects.countries).features)
+       .enter().append('path')
+       .attr('d', path);
+
+// const csv =
+// `lon,lat\n18.0686,59.3293\n72.8777,19.076\n2.3522,48.8566\n-81.6944,41.4993\n18.4241,-33.9249\n-6.2603,53.3498\n8.6821,50.1109\n-46.6396,-23.5558\n114.1694,22.3193\n139.6503,35.6762\n-77.0369,38.9072\n126.978,37.5665\n135.5023,34.6937\n-0.1276,51.5072\n-122.6784,45.5152\n-122.4367,37.7595\n103.8198,1.3521\n151.2093,-33.8688`;
+
+// csvParse(csv, function(_error, data) {
+// console.log(JSON.stringify(data))
+//         g.selectAll('circle')
+//            .data(data)
+//            .enter()
+//            .append('circle')
+//            .attr('cx', function(d) {
+//                    return projection([d.lon, d.lat])[0];
+//            })
+//            .attr('cy', function(d) {
+//                    return projection([d.lon, d.lat])[1];
+//            })
+//            .attr('r', 5)
+//            .style('fill', 'red');
+// });
+
+});
+
+});
 </script>
 
 <h3>
@@ -58,9 +109,11 @@
 <img src={Grow} alt="Build SSGs, MPAs, PWAs, or SPAs." />
 
 <!-- @vedam see styles -->
-<div class="canvas-wrap">
+<!-- <div class="canvas-wrap">
 	<canvas bind:this={canvas} class="globe" width="1800" height="400" />
-</div>
+</div> -->
+
+<div id="svg"></div>
 
 <div class="box">
 	<p>From your local machine<br />to the edge of the world</p>
@@ -117,5 +170,11 @@
 		color: white;
 		border-radius: var(--border-r);
 		z-index: 1;
+	}
+
+	:global(path) {
+  	stroke: white;
+  	stroke-width: 0.25px;
+  	fill: grey;
 	}
 </style>
