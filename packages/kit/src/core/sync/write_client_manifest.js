@@ -50,12 +50,7 @@ export function write_client_manifest(manifest_data, output) {
 			.map((route) => {
 				if (route.page) {
 					const errors = route.page.errors.slice(1).map((n) => n ?? '');
-					const layouts = route.page.layouts.slice(1).map((n) => {
-						if (n == undefined) {
-							return '';
-						}
-						return get_node_id(manifest_data.nodes, n);
-					});
+					const layouts = route.page.layouts.slice(1).map((n) => n ?? '');
 
 					while (layouts.at(-1) === '') layouts.pop();
 					while (errors.at(-1) === '') errors.pop();
@@ -96,14 +91,4 @@ export function write_client_manifest(manifest_data, output) {
 			export const dictionary = ${dictionary};
 		`)
 	);
-}
-
-/**
- * Encode whether or not the route uses the server data
- * using the ones' complement, to save space
- * @param {import('types').PageNode[]} nodes
- * @param {number} id
- */
-function get_node_id(nodes, id) {
-	return `${nodes[id].server ? '~' : ''}${id}`;
 }

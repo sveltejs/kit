@@ -55,6 +55,6 @@ export function parse(nodes, server_loads, dictionary, matchers) {
 	function create_layout_loader(id) {
 		// whether or not the layout uses the server data is
 		// encoded in the layouts array, to save space
-		return [layouts_with_server_load.has(id), nodes[id]];
+		return id === undefined ? id : [layouts_with_server_load.has(id), nodes[id]];
 	}
 }
