@@ -68,7 +68,6 @@
 
 	.anywhere {
 		grid-column: span 10 / span 10;
-		margin-bottom: 50px;
 	}
 
 	.code-container {

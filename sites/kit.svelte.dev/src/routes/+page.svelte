@@ -126,6 +126,16 @@ npm run dev -- --open</code
 		max-width: 116rem;
 	}
 
+	/* @vedam -------------------------------------
+		Because I didn't want to fiddle arround in @sveltejs/site-kit
+		I tweaked the h3s font-size here.
+		I don't know if changing this value is a foottrap elsewhere.
+	*/
+	:global(.typo-default) {
+		--h3: 3.6rem !important;
+	}
+	/* /@vedam ------------------------------------- */
+
 	pre {
 		height: 100%;
 		display: flex;
