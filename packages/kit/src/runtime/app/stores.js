@@ -1,5 +1,6 @@
 import { getContext } from 'svelte';
-import { browser } from './env.js';
+import { browser } from './environment.js';
+import { stores as browser_stores } from '../client/singletons.js';
 
 // TODO remove this (for 1.0? after 1.0?)
 let warned = false;
@@ -15,29 +16,39 @@ export function stores() {
  * @type {import('$app/stores').getStores}
  */
 export const getStores = () => {
-	const stores = getContext('__svelte__');
+	const stores = browser ? browser_stores : getContext('__svelte__');
 
-	return {
+	const readonly_stores = {
 		page: {
 			subscribe: stores.page.subscribe
 		},
 		navigating: {
 			subscribe: stores.navigating.subscribe
 		},
-		// TODO remove this (for 1.0? after 1.0?)
-		// @ts-expect-error - deprecated, not part of type definitions, but still callable
-		get preloading() {
-			console.error('stores.preloading is deprecated; use stores.navigating instead');
-			return {
-				subscribe: stores.navigating.subscribe
-			};
-		},
-		get session() {
-			removed_session();
-			return {};
-		},
 		updated: stores.updated
 	};
+
+	// TODO remove this for 1.0
+	Object.defineProperties(readonly_stores, {
+		preloading: {
+			get() {
+				console.error('stores.preloading is deprecated; use stores.navigating instead');
+				return {
+					subscribe: stores.navigating.subscribe
+				};
+			},
+			enumerable: false
+		},
+		session: {
+			get() {
+				removed_session();
+				return {};
+			},
+			enumerable: false
+		}
+	});
+
+	return readonly_stores;
 };
 
 /** @type {typeof import('$app/stores').page} */

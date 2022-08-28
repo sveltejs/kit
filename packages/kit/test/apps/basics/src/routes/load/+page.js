@@ -1,4 +1,4 @@
-import { browser } from '$app/env';
+import { browser } from '$app/environment';
 
 /** @type {import('@sveltejs/kit').Load} */
 export function load(pageContext) {

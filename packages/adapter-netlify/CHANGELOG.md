@@ -1,5 +1,17 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.73
+
+### Patch Changes
+
+- Run `server.init()` for edge functions ([#6327](https://github.com/sveltejs/kit/pull/6327))
+
+## 1.0.0-next.72
+
+### Patch Changes
+
+- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+
 ## 1.0.0-next.71
 
 ### Patch Changes

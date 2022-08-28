@@ -1,5 +1,23 @@
 # svelte-migrate
 
+## 1.0.0-next.11
+
+### Patch Changes
+
+- [fix] git mv files correctly when they contain \$ characters ([#6129](https://github.com/sveltejs/kit/pull/6129))
+
+## 1.0.0-next.10
+
+### Patch Changes
+
+- Revert change to suggest props destructuring ([#6099](https://github.com/sveltejs/kit/pull/6099))
+
+## 1.0.0-next.9
+
+### Patch Changes
+
+- Handle Error without message, handle status 200, handle missing body ([#6096](https://github.com/sveltejs/kit/pull/6096))
+
 ## 1.0.0-next.8
 
 ### Patch Changes

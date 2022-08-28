@@ -82,14 +82,14 @@ test('generates __data.json file for shadow endpoints', () => {
 		read('__data.json'),
 		JSON.stringify({
 			type: 'data',
-			nodes: [{ data: null }, { data: { message: 'hello' } }]
+			nodes: [null, { type: 'data', data: { message: 'hello' }, uses: {} }]
 		})
 	);
 	assert.equal(
 		read('shadowed-get/__data.json'),
 		JSON.stringify({
 			type: 'data',
-			nodes: [{ data: null }, { data: { answer: 42 } }]
+			nodes: [null, { type: 'data', data: { answer: 42 }, uses: {} }]
 		})
 	);
 });
@@ -179,7 +179,7 @@ test('fetches data from local endpoint', () => {
 		read('origin/__data.json'),
 		JSON.stringify({
 			type: 'data',
-			nodes: [{ data: null }, { data: { message: 'hello' } }]
+			nodes: [null, { type: 'data', data: { message: 'hello' }, uses: {} }]
 		})
 	);
 	assert.equal(read('origin/message.json'), JSON.stringify({ message: 'hello' }));
@@ -188,6 +188,26 @@ test('fetches data from local endpoint', () => {
 test('respects config.prerender.origin', () => {
 	const content = read('origin.html');
 	assert.ok(content.includes('<h2>http://example.com</h2>'));
+});
+
+test('$env - includes environment variables', () => {
+	const content = read('env.html');
+
+	assert.match(
+		content,
+		/.*PRIVATE_STATIC: accessible to server-side code\/replaced at build time.*/gs
+	);
+	assert.match(
+		content,
+		/.*PRIVATE_DYNAMIC: accessible to server-side code\/evaluated at run time.*/gs
+	);
+	assert.match(content, /.*PUBLIC_STATIC: accessible anywhere\/replaced at build time.*/gs);
+	assert.match(content, /.*PUBLIC_DYNAMIC: accessible anywhere\/evaluated at run time.*/gs);
+});
+
+test('prerenders a page in a (group)', () => {
+	const content = read('grouped.html');
+	assert.ok(content.includes('<h1>grouped</h1>'));
 });
 
 test.run();

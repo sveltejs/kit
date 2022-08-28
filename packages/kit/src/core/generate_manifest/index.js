@@ -1,5 +1,4 @@
 import { s } from '../../utils/misc.js';
-import { parse_route_id } from '../../utils/routing.js';
 import { get_mime_lookup } from '../utils.js';
 
 /**
@@ -38,12 +37,11 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 		assets.push(build_data.service_worker);
 	}
 
-	/** @param {import('types').PageNode | undefined} id */
-	const get_index = (id) => id && /** @type {LookupEntry} */ (bundled_nodes.get(id)).index;
-
 	const matchers = new Set();
 
 	// prettier-ignore
+	// String representation of
+	/** @type {import('types').SSRManifest} */
 	return `{
 		appDir: ${s(build_data.app_dir)},
 		assets: new Set(${s(assets)}),
@@ -55,39 +53,20 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 			],
 			routes: [
 				${routes.map(route => {
-					const { pattern, names, types } = parse_route_id(route.id);
-
-					types.forEach(type => {
+					route.types.forEach(type => {
 						if (type) matchers.add(type);
 					});
 
-					if (route.type === 'page') {
-						return `{
-							type: 'page',
-							id: ${s(route.id)},
-							pattern: ${pattern},
-							names: ${s(names)},
-							types: ${s(types)},
-							errors: ${s(route.errors.map(get_index))},
-							layouts: ${s(route.layouts.map(get_index))},
-							leaf: ${s(get_index(route.leaf))}
-						}`.replace(/^\t\t/gm, '');
-					} else {
-						if (!build_data.server.vite_manifest[route.file]) {
-							// this is necessary in cases where a .css file snuck in —
-							// perhaps it would be better to disallow these (and others?)
-							return null;
-						}
+					if (!route.page && !route.endpoint) return;
 
-						return `{
-							type: 'endpoint',
-							id: ${s(route.id)},
-							pattern: ${pattern},
-							names: ${s(names)},
-							types: ${s(types)},
-							load: ${loader(`${relative_path}/${build_data.server.vite_manifest[route.file].file}`)}
-						}`.replace(/^\t\t/gm, '');
-					}
+					return `{
+						id: ${s(route.id)},
+						pattern: ${route.pattern},
+						names: ${s(route.names)},
+						types: ${s(route.types)},
+						page: ${s(route.page)},
+						endpoint: ${route.endpoint ? loader(`${relative_path}/${build_data.server.vite_manifest[route.endpoint.file].file}`) : 'null'}
+					}`;
 				}).filter(Boolean).join(',\n\t\t\t\t')}
 			],
 			matchers: async () => {

@@ -30,6 +30,7 @@ const config = {
 			}
 		},
 		env: {
+			dir: process.cwd(),
 			publicPrefix: 'PUBLIC_'
 		},
 		files: {
@@ -120,6 +121,8 @@ const config = {
 
 > The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
 
+> You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
+
 ### appDir
 
 The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
@@ -172,6 +175,7 @@ When pages are prerendered, the CSP header is added via a `<meta http-equiv>` ta
 
 Environment variable configuration:
 
+- `dir` — the directory to search for `.env` files.
 - `publicPrefix` — a prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](/docs/modules#$env-static-public) and [`$env/dynamic/public`](/docs/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
 
 ### files

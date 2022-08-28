@@ -1,5 +1,23 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.69
+
+### Patch Changes
+
+- Run `server.init()` for edge functions ([#6327](https://github.com/sveltejs/kit/pull/6327))
+
+## 1.0.0-next.68
+
+### Patch Changes
+
+- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+
+## 1.0.0-next.67
+
+### Patch Changes
+
+- Use `platform: 'browser'` for esbuild in Vercel Edge Functions. ([#6109](https://github.com/sveltejs/kit/pull/6109))
+
 ## 1.0.0-next.66
 
 ### Patch Changes

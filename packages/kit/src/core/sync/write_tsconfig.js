@@ -46,13 +46,19 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(config.outDir, file));
 
-	const include = ['ambient.d.ts'];
+	const include = ['ambient.d.ts', config_relative('vite.config.ts')];
 	for (const dir of [config.files.routes, config.files.lib]) {
 		const relative = project_relative(path.dirname(dir));
 		include.push(config_relative(`${relative}/**/*.js`));
 		include.push(config_relative(`${relative}/**/*.ts`));
 		include.push(config_relative(`${relative}/**/*.svelte`));
 	}
+	// Test folder is a special case - we advocate putting tests in a top-level test folder
+	// and it's not configurable (should we make it?)
+	const test_folder = project_relative('tests');
+	include.push(config_relative(`${test_folder}/**/*.js`));
+	include.push(config_relative(`${test_folder}/**/*.ts`));
+	include.push(config_relative(`${test_folder}/**/*.svelte`));
 
 	write_if_changed(
 		out,
@@ -74,7 +80,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 					// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
 					preserveValueImports: true,
 
-					// This is required for svelte-kit package to work as expected
+					// This is required for svelte-package to work as expected
 					// Can be overwritten
 					lib: ['esnext', 'DOM', 'DOM.Iterable'],
 					moduleResolution: 'node',

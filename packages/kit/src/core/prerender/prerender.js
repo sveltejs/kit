@@ -2,20 +2,22 @@ import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { pathToFileURL, URL } from 'url';
 import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
-import { installPolyfills } from '../../node/polyfills.js';
+import { installPolyfills } from '../../exports/node/polyfills.js';
 import { is_root_relative, resolve } from '../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { load_config } from '../config/index.js';
+import { compact } from '../../utils/array.js';
+import { get_path } from '../../utils/routing.js';
 
 /**
  * @typedef {import('types').PrerenderErrorHandler} PrerenderErrorHandler
  * @typedef {import('types').Logger} Logger
  */
 
-const [, , client_out_dir, results_path, manifest_path, verbose] = process.argv;
+const [, , client_out_dir, results_path, manifest_path, verbose, env] = process.argv;
 
 prerender();
 
@@ -159,6 +161,7 @@ export async function prerender() {
 	});
 
 	const server = new Server(manifest);
+	await server.init({ env: JSON.parse(env) });
 
 	const error = normalise_error_handler(log, config);
 
@@ -340,11 +343,10 @@ export async function prerender() {
 	if (config.prerender.enabled) {
 		for (const entry of config.prerender.entries) {
 			if (entry === '*') {
-				/** @type {import('types').ManifestData} */
-				const { routes } = (await import(pathToFileURL(manifest_path).href)).manifest._;
-				const entries = routes
-					.map((route) => (route.type === 'page' && !route.id.includes('[') ? `/${route.id}` : ''))
-					.filter(Boolean);
+				/** @type {import('types').SSRManifest} */
+				const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
+				const { routes } = manifest._;
+				const entries = compact(routes.map((route) => route.page && get_path(route.id)));
 
 				for (const entry of entries) {
 					enqueue(null, config.paths.base + entry); // TODO can we pre-normalize these?

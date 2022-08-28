@@ -1,4 +1,4 @@
-import { prerendering } from '$app/env';
+import { prerendering } from '$app/environment';
 
 const initial_prerendering = prerendering;
 

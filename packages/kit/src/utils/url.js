@@ -75,23 +75,68 @@ export function decode_params(params) {
 	return params;
 }
 
-export class LoadURL extends URL {
-	/** @returns {string} */
-	get hash() {
-		throw new Error(
-			'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
-		);
+/**
+ * URL properties that could change during the lifetime of the page,
+ * which excludes things like `origin`
+ * @type {Array<keyof URL>}
+ */
+const tracked_url_properties = ['href', 'pathname', 'search', 'searchParams', 'toString', 'toJSON'];
+
+/**
+ * @param {URL} url
+ * @param {() => void} callback
+ */
+export function make_trackable(url, callback) {
+	const tracked = new URL(url);
+
+	for (const property of tracked_url_properties) {
+		let value = tracked[property];
+
+		Object.defineProperty(tracked, property, {
+			get() {
+				callback();
+				return value;
+			},
+
+			enumerable: true,
+			configurable: true
+		});
 	}
+
+	// @ts-ignore
+	tracked[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+		return inspect(url, opts);
+	};
+
+	disable_hash(tracked);
+
+	return tracked;
 }
 
-export class PrerenderingURL extends URL {
-	/** @returns {string} */
-	get search() {
-		throw new Error('Cannot access url.search on a page with prerendering enabled');
-	}
+/**
+ * Disallow access to `url.hash` on the server and in `load`
+ * @param {URL} url
+ */
+export function disable_hash(url) {
+	Object.defineProperty(url, 'hash', {
+		get() {
+			throw new Error(
+				'Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead'
+			);
+		}
+	});
+}
 
-	/** @returns {URLSearchParams} */
-	get searchParams() {
-		throw new Error('Cannot access url.searchParams on a page with prerendering enabled');
+/**
+ * Disallow access to `url.search` and `url.searchParams` during prerendering
+ * @param {URL} url
+ */
+export function disable_search(url) {
+	for (const property of ['search', 'searchParams']) {
+		Object.defineProperty(url, property, {
+			get() {
+				throw new Error(`Cannot access url.${property} on a page with prerendering enabled`);
+			}
+		});
 	}
 }

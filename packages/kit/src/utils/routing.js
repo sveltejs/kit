@@ -12,15 +12,25 @@ export function parse_route_id(id) {
 	// const add_trailing_slash = !/\.[a-z]+$/.test(key);
 	let add_trailing_slash = true;
 
+	if (/\]\[/.test(id)) {
+		throw new Error(`Invalid route ${id} — parameters must be separated`);
+	}
+
+	if (count_occurrences('[', id) !== count_occurrences(']', id)) {
+		throw new Error(`Invalid route ${id} — brackets are unbalanced`);
+	}
+
 	const pattern =
 		id === ''
 			? /^\/$/
 			: new RegExp(
-					`^${decodeURIComponent(id)
-						.split(/(?:@[a-zA-Z0-9_-]+)?(?:\/|$)/)
+					`^${id
+						.split(/(?:\/|$)/)
+						.filter(affects_path)
 						.map((segment, i, segments) => {
+							const decoded_segment = decodeURIComponent(segment);
 							// special case — /[...rest]/ could contain zero segments
-							const match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(segment);
+							const match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(decoded_segment);
 							if (match) {
 								names.push(match[1]);
 								types.push(match[2]);
@@ -30,9 +40,9 @@ export function parse_route_id(id) {
 							const is_last = i === segments.length - 1;
 
 							return (
-								segment &&
+								decoded_segment &&
 								'/' +
-									segment
+									decoded_segment
 										.split(/\[(.+?)\]/)
 										.map((content, i) => {
 											if (i % 2) {
@@ -79,6 +89,23 @@ export function parse_route_id(id) {
 }
 
 /**
+ * Returns `false` for `(group)` segments
+ * @param {string} segment
+ */
+export function affects_path(segment) {
+	return !/^\([^)]+\)$/.test(segment);
+}
+
+/**
+ * Turns a route ID into a path, if possible
+ * @param {string} id
+ */
+export function get_path(id) {
+	if (id.includes('[')) return null;
+	return `/${id.split('/').filter(affects_path).join('/')}`;
+}
+
+/**
  * @param {RegExpMatchArray} match
  * @param {string[]} names
  * @param {string[]} types
@@ -104,4 +131,16 @@ export function exec(match, names, types, matchers) {
 	}
 
 	return params;
+}
+
+/**
+ * @param {string} needle
+ * @param {string} haystack
+ */
+function count_occurrences(needle, haystack) {
+	let count = 0;
+	for (let i = 0; i < haystack.length; i += 1) {
+		if (haystack[i] === needle) count += 1;
+	}
+	return count;
 }
