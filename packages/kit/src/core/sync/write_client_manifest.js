@@ -43,15 +43,14 @@ export function write_client_manifest(manifest_data, output) {
 		})
 		.join(',\n\t');
 
+	const layouts_with_server_load = new Set();
+
 	const dictionary = `{
 		${manifest_data.routes
 			.map((route) => {
 				if (route.page) {
-					// Skip the first error, it's always the root error page with number 1
 					const errors = route.page.errors.slice(1).map((n) => n ?? '');
-					// Do _not_ skip the first layout, it's always the root layout with number 0,
-					// but we don't know whether it has a server load function or not, which we need to encode
-					const layouts = route.page.layouts.map((n) => {
+					const layouts = route.page.layouts.slice(1).map((n) => {
 						if (n == undefined) {
 							return '';
 						}
@@ -61,7 +60,17 @@ export function write_client_manifest(manifest_data, output) {
 					while (layouts.at(-1) === '') layouts.pop();
 					while (errors.at(-1) === '') errors.pop();
 
-					const array = [get_node_id(manifest_data.nodes, route.page.leaf)];
+					// Encode whether or not the route uses server data
+					// using the ones' complement, to save space
+					const array = [`${route.leaf?.server ? '~' : ''}${route.page.leaf}`];
+					// Encode whether or not the layout uses server data.
+					// It's a different method compared to pages because layouts
+					// are reused across pages, so we safe space by doing it this way.
+					route.page.layouts.forEach((layout) => {
+						if (layout != undefined && manifest_data.nodes[layout].server) {
+							layouts_with_server_load.add(layout);
+						}
+					});
 
 					array.push(`[${layouts.join(',')}]`);
 					// only include non-root error nodes if they exist
@@ -80,9 +89,9 @@ export function write_client_manifest(manifest_data, output) {
 		trim(`
 			export { matchers } from './client-matchers.js';
 
-			export const nodes = [
-				${nodes}
-			];
+			export const nodes = [${nodes}];
+
+			export const server_loads = [${[...layouts_with_server_load].join(',')}];
 
 			export const dictionary = ${dictionary};
 		`)
@@ -96,6 +105,5 @@ export function write_client_manifest(manifest_data, output) {
  * @param {number} id
  */
 function get_node_id(nodes, id) {
-	console.log(nodes[id]);
 	return `${nodes[id].server ? '~' : ''}${id}`;
 }

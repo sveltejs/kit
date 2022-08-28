@@ -7,14 +7,14 @@ import { parse } from './parse.js';
 import { error } from '../../exports/index.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { nodes, dictionary, matchers } from '__GENERATED__/client-manifest.js';
+import { nodes, server_loads, dictionary, matchers } from '__GENERATED__/client-manifest.js';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
 
-const routes = parse(nodes, dictionary, matchers);
+const routes = parse(nodes, server_loads, dictionary, matchers);
 
 const default_layout_loader = nodes[0];
 const default_error_loader = nodes[1];
