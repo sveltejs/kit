@@ -720,7 +720,8 @@ export function create_client({ target, base, trailing_slash }) {
 					{
 						headers: {
 							'x-sveltekit-invalidated': invalid_server_nodes.map((x) => (x ? '1' : '')).join(',')
-						}
+						},
+						cache: 'no-cache'
 					}
 				);
 
