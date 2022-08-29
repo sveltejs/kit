@@ -97,6 +97,9 @@ function kit() {
 	/** @type {import('types').Prerendered} */
 	let prerendered;
 
+	/** @type {import('types').PrerenderMap} */
+	let prerender_map;
+
 	/** @type {import('types').BuildData} */
 	let build_data;
 
@@ -424,12 +427,16 @@ function kit() {
 					if (code) {
 						reject(new Error(`Prerendering failed with code ${code}`));
 					} else {
-						prerendered = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
+						const results = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
 							if (key === 'pages' || key === 'assets' || key === 'redirects') {
 								return new Map(value);
 							}
 							return value;
 						});
+
+						prerendered = results.prerendered;
+						prerender_map = new Map(results.prerender_map);
+
 						fulfil(undefined);
 					}
 				});
@@ -465,7 +472,7 @@ function kit() {
 
 			if (svelte_config.kit.adapter) {
 				const { adapt } = await import('../../core/adapt/index.js');
-				await adapt(svelte_config, build_data, prerendered, { log });
+				await adapt(svelte_config, build_data, prerendered, prerender_map, { log });
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
 

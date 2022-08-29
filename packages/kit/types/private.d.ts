@@ -184,6 +184,8 @@ export interface PrerenderErrorHandler {
 
 export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
+export type PrerenderMap = Map<string, boolean | 'auto' | 'unknown'>;
+
 export interface RequestOptions {
 	getClientAddress: () => string;
 	platform?: App.Platform;

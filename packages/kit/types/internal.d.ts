@@ -334,7 +334,9 @@ export interface PageNodeIndexes {
 	leaf: number;
 }
 
-export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>>;
+export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
+	prerender?: boolean | 'auto';
+};
 
 export interface SSRRoute {
 	id: string;
