@@ -17,7 +17,7 @@ import { get_path } from '../../utils/routing.js';
  * @typedef {import('types').Logger} Logger
  */
 
-const [, , client_out_dir, results_path, manifest_path, verbose, env] = process.argv;
+const [, , client_out_dir, results_path, verbose, env] = process.argv;
 
 prerender();
 
@@ -340,24 +340,20 @@ export async function prerender() {
 		}
 	}
 
-	if (config.prerender.enabled) {
-		for (const entry of config.prerender.entries) {
-			if (entry === '*') {
-				/** @type {import('types').SSRManifest} */
-				const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
-				const { routes } = manifest._;
-				const entries = compact(routes.map((route) => route.page && get_path(route.id)));
+	for (const entry of config.prerender.entries) {
+		if (entry === '*') {
+			const { routes } = manifest._;
+			const entries = compact(routes.map((route) => route.page && get_path(route.id)));
 
-				for (const entry of entries) {
-					enqueue(null, config.paths.base + entry); // TODO can we pre-normalize these?
-				}
-			} else {
-				enqueue(null, config.paths.base + entry);
+			for (const entry of entries) {
+				enqueue(null, config.paths.base + entry); // TODO can we pre-normalize these?
 			}
+		} else {
+			enqueue(null, config.paths.base + entry);
 		}
-
-		await q.done();
 	}
+
+	await q.done();
 
 	const rendered = await server.respond(new Request(config.prerender.origin + '/[fallback]'), {
 		getClientAddress,
