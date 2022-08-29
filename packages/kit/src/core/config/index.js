@@ -44,22 +44,7 @@ export function load_template(cwd, config) {
  */
 export function load_error_page(config) {
 	const { errorPage } = config.kit.files;
-
-	if (fs.existsSync(errorPage)) {
-		return fs.readFileSync(errorPage, 'utf-8');
-	} else {
-		return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="utf-8">
-	<title>Error</title>
-</head>
-<body>
-	<h1>Error - %sveltekit.status%</h1>
-	<p>%sveltekit.message%</p>
-</body>
-</html>`;
-	}
+	return fs.readFileSync(errorPage, 'utf-8');
 }
 
 /**
@@ -91,6 +76,12 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 	for (const key in validated.kit.files) {
 		// @ts-expect-error this is typescript at its stupidest
 		validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
+	}
+
+	if (!fs.existsSync(validated.kit.files.errorPage)) {
+		validated.kit.files.errorPage = url.fileURLToPath(
+			new URL('./default-error.html', import.meta.url)
+		);
 	}
 
 	return validated;
