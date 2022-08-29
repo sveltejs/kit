@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.450
+
+### Patch Changes
+
+- [breaking] require Vite 3.1.0-beta.1 ([#6398](https://github.com/sveltejs/kit/pull/6398))
+
 ## 1.0.0-next.449
 
 ### Patch Changes
