@@ -81,7 +81,7 @@ Routes now are made up of the folder name exclusively to remove ambiguity, the f
 | routes/about/index.svelte | routes/about/+page.svelte |
 | routes/about.svelte       | routes/about/+page.svelte |
 
-Your custom error page component should be renamed from `_error.svelte` to `+error.svelte`. Any `_layout.svelte` files should likewise be renamed `+layout.svelte`. The double underscore prefix is reserved for SvelteKit; your own [private modules](/docs/routing#private-modules) are still denoted with a single `_` prefix (configurable via [`routes`](/docs/configuration#routes) config).
+Your custom error page component should be renamed from `_error.svelte` to `+error.svelte`. Any `_layout.svelte` files should likewise be renamed `+layout.svelte`. [Any other files are ignored](https://kit.svelte.dev/docs/routing#other-files).
 
 #### Imports
 
@@ -97,9 +97,7 @@ As before, pages and layouts can export a function that allows data to be loaded
 
 This function has been renamed from `preload` to [`load`](/docs/load), it now lives in a `+page.js` (or `+layout.js`) next to its `+page.svelte` (or `+layout.svelte`), and its API has changed. Instead of two arguments — `page` and `session` — there is a single `event` argument.
 
-There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead of returning props directly, `load` now returns an object that _contains_ `props`, alongside various other things.
-
-Lastly, if your page has a `load` method, make sure to return something otherwise you will get `Not found`.
+There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead, you can get [`fetch`](https://kit.svelte.dev/docs/load#input-methods-fetch) from the input methods, and both [`error`](https://kit.svelte.dev/docs/load#errors) and [`redirect`](https://kit.svelte.dev/docs/load#redirects) are now thrown.
 
 #### Stores
 
