@@ -73,8 +73,8 @@
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
-			"import": "./src/exports/index.js",
-			"types": "./types/index.d.ts"
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/index.js"
 		},
 		"./node": {
 			"import": "./src/exports/node/index.js"
