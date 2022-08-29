@@ -65,7 +65,7 @@ export async function respond(request, options, state) {
 	}
 
 	const is_data_request = decoded.endsWith(DATA_SUFFIX);
-	if (is_data_request) decoded = decoded.slice(0, -DATA_SUFFIX.length);
+	if (is_data_request) decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
 
 	if (!state.prerendering?.fallback) {
 		const matchers = await options.manifest._.matchers();
