@@ -16,7 +16,13 @@ import {
 	ServerInitOptions,
 	SSRManifest
 } from './index.js';
-import { HttpMethod, MaybePromise, RequestOptions, TrailingSlash } from './private.js';
+import {
+	HttpMethod,
+	MaybePromise,
+	PrerenderOption,
+	RequestOptions,
+	TrailingSlash
+} from './private.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -267,13 +273,13 @@ export interface SSRNode {
 	shared: {
 		load?: Load;
 		hydrate?: boolean;
-		prerender?: boolean;
+		prerender?: PrerenderOption;
 		router?: boolean;
 	};
 
 	server: {
 		load?: ServerLoad;
-		prerender?: boolean;
+		prerender?: PrerenderOption;
 		POST?: Action;
 		PATCH?: Action;
 		PUT?: Action;
@@ -334,7 +340,7 @@ export interface PageNodeIndexes {
 }
 
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
-	prerender?: boolean | 'auto';
+	prerender?: PrerenderOption;
 };
 
 export interface SSRRoute {
@@ -354,6 +360,11 @@ export interface SSRState {
 	initiator?: SSRRoute | SSRErrorPage;
 	platform?: any;
 	prerendering?: PrerenderOptions;
+	/**
+	 * When fetching data from a +server.js endpoint in `load`, the page's
+	 * prerender option is inherited by the endpoint, unless overridden
+	 */
+	prerender_default?: PrerenderOption;
 }
 
 export type StrictBody = string | Uint8Array;

@@ -81,6 +81,7 @@ export async function prerender() {
 		paths: []
 	};
 
+	/** @type {import('types').PrerenderMap} */
 	const prerender_map = new Map();
 
 	/** @type {import('types').ValidatedKitConfig} */
@@ -235,6 +236,16 @@ export async function prerender() {
 			const encoded_dependency_path = new URL(dependency_path, 'http://localhost').pathname;
 			const decoded_dependency_path = decodeURI(encoded_dependency_path);
 
+			const prerender = result.response.headers.get('x-sveltekit-prerender');
+
+			if (prerender) {
+				const route_id = /** @type {string} */ (result.response.headers.get('x-sveltekit-routeid'));
+				const existing_value = prerender_map.get(route_id);
+				if (existing_value !== 'auto') {
+					prerender_map.set(route_id, prerender === 'true' ? true : 'auto');
+				}
+			}
+
 			const body = result.body ?? new Uint8Array(await result.response.arrayBuffer());
 			save(
 				'dependencies',
@@ -356,9 +367,6 @@ export async function prerender() {
 					}
 
 					prerender_map.set(route.id, mod.prerender);
-				} else {
-					// TODO set these based on the pages that request them
-					prerender_map.set(route.id, 'unknown');
 				}
 			}
 
@@ -391,7 +399,7 @@ export async function prerender() {
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {
 			for (const [id, prerender] of prerender_map) {
-				if (prerender && prerender !== 'unknown') {
+				if (prerender) {
 					if (id.includes('[')) continue;
 					const path = `/${id.split('/').filter(affects_path).join('/')}`;
 					enqueue(null, config.paths.base + path);

@@ -240,7 +240,7 @@ export async function respond(request, options, state) {
 					} else if (route.page) {
 						response = await render_page(event, route, route.page, options, state, resolve_opts);
 					} else if (route.endpoint) {
-						response = await render_endpoint(event, await route.endpoint());
+						response = await render_endpoint(event, await route.endpoint(), state);
 					} else {
 						// a route will always have a page or an endpoint, but TypeScript
 						// doesn't know that
