@@ -2,4 +2,4 @@
 '@sveltejs/package': patch
 ---
 
-Support for other aliases in package command
+[feat] Support aliases set through `kit.alias`
