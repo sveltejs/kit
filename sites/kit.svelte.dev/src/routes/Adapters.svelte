@@ -56,7 +56,7 @@
 <style>
 	.container {
 		display: grid;
-		grid-template-columns: repeat(10, auto);
+		grid-template-columns: repeat(10, minmax(0, 1fr));
 		gap: 10px;
 		width: 100%;
 	}
@@ -83,11 +83,11 @@
 			grid-column: span 10 / span 10;
 		}
 		.host {
-			grid-column: span 4 / span 4;
+			grid-column: span 3 / span 3;
 			display: block;
 		}
 		.code-container {
-			grid-column: span 6 / span 6;
+			grid-column: span 7 / span 7;
 		}
 	}
 
