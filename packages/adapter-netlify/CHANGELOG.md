@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.75
+
+### Patch Changes
+
+- Use devalue to serialize server-only `load` return values ([#6318](https://github.com/sveltejs/kit/pull/6318))
+
 ## 1.0.0-next.74
 
 ### Patch Changes
