@@ -133,7 +133,6 @@ export interface PageNode {
 
 export type PayloadScriptAttributes =
 	| { type: 'data'; url: string; body?: string }
-	| { type: 'server_data' }
 	| { type: 'validation_errors' };
 
 export interface PrerenderDependency {

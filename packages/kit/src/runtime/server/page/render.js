@@ -299,15 +299,6 @@ export async function render_response({
 			);
 		}
 
-		if (branch.some((node) => node.server_data)) {
-			serialized_data.push(
-				render_json_payload_script(
-					{ type: 'server_data' },
-					branch.map(({ server_data }) => server_data)
-				)
-			);
-		}
-
 		if (validation_errors) {
 			serialized_data.push(
 				render_json_payload_script({ type: 'validation_errors' }, validation_errors)
