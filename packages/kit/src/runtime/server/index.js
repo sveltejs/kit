@@ -482,9 +482,7 @@ export async function respond(request, options, state) {
 				resolve_opts
 			});
 		} catch (/** @type {unknown} */ e) {
-			const error = coalesce_to_error(e);
-
-			return new Response(options.dev ? error.stack : error.message, {
+			return new Response(options.error_page, {
 				status: 500
 			});
 		}

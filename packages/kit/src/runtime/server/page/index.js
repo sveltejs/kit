@@ -278,13 +278,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 					}
 
 					// if we're still here, it means the error happened in the root layout,
-					// which means we have to fall back to a plain text response
-					// TODO since the requester is expecting HTML, maybe it makes sense to
-					// doll this up a bit
-					return new Response(
-						error instanceof HttpError ? error.message : options.get_stack(error),
-						{ status }
-					);
+					// which means we have to fall back to error.html
+					return new Response(options.error_page, { status });
 				}
 			} else {
 				// push an empty slot so we can rewind past gaps to the

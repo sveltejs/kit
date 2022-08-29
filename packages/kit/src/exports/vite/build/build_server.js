@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { mkdirp, posixify } from '../../../utils/filesystem.js';
 import { get_vite_config, merge_vite_configs, resolve_entry } from '../utils.js';
-import { load_template } from '../../../core/config/index.js';
+import { load_error_page, load_template } from '../../../core/config/index.js';
 import { runtime_directory } from '../../../core/utils.js';
 import { create_build, find_deps, get_default_build_config, is_http_method } from './utils.js';
 import { s } from '../../../utils/misc.js';
@@ -14,9 +14,10 @@ import { s } from '../../../utils/misc.js';
  *   has_service_worker: boolean;
  *   runtime: string;
  *   template: string;
+ *   error_page: string;
  * }} opts
  */
-const server_template = ({ config, hooks, has_service_worker, runtime, template }) => `
+const server_template = ({ config, hooks, has_service_worker, runtime, template, error_page }) => `
 import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
@@ -80,6 +81,7 @@ export class Server {
 			router: ${s(config.kit.browser.router)},
 			template,
 			template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
+			error_page: '${error_page}',
 			trailing_slash: ${s(config.kit.trailingSlash)}
 		};
 	}
@@ -205,7 +207,8 @@ export async function build_server(options, client) {
 			hooks: app_relative(hooks_file),
 			has_service_worker: config.kit.serviceWorker.register && !!service_worker_entry_file,
 			runtime: posixify(path.relative(build_dir, runtime_directory)),
-			template: load_template(cwd, config)
+			template: load_template(cwd, config),
+			error_page: load_error_page(cwd, config)
 		})
 	);
 

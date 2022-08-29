@@ -7,7 +7,7 @@ import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { posixify } from '../../../utils/filesystem.js';
-import { load_template } from '../../../core/config/index.js';
+import { load_error_page, load_template } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../core/constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
@@ -427,6 +427,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							);
 						},
 						template_contains_nonce: template.includes('%sveltekit.nonce%'),
+						error_page: load_error_page(cwd, svelte_config),
 						trailing_slash: svelte_config.kit.trailingSlash
 					},
 					{

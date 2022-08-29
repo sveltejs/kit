@@ -38,6 +38,34 @@ export function load_template(cwd, config) {
 }
 
 /**
+ * Loads the error page (src/error.html by default) if it exists.
+ * Falls back to a generic error page content.
+ * @param {string} cwd
+ * @param {import('types').ValidatedConfig} config
+ */
+export function load_error_page(cwd, config) {
+	const { errorPage } = config.kit.files;
+	const relative = path.relative(cwd, errorPage);
+
+	if (fs.existsSync(errorPage)) {
+		return fs.readFileSync(errorPage, 'utf-8');
+	} else {
+		console.log(`${relative} does not exist. Using generic error page instead.`);
+		return `<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Error</title>
+</head>
+<body>
+	<h1>Error</h1>
+	<p>An error occurred.</p>
+</body>
+</html>`;
+	}
+}
+
+/**
  * Loads and validates svelte.config.js
  * @param {{ cwd?: string }} options
  * @returns {Promise<import('types').ValidatedConfig>}

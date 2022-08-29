@@ -190,7 +190,7 @@ If an error occurs during `load`, SvelteKit will render a default error page. Yo
 <h1>{$page.status}: {$page.error.message}</h1>
 ```
 
-SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and `src/routes/+error.svelte` before rendering the default error page.
+SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and `src/routes/+error.svelte` before rendering the default error page. If that fails, the contents of a static error page (`src/error.html` by default) will be rendered instead.
 
 ### +layout
 

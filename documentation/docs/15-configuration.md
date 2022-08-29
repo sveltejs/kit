@@ -40,7 +40,8 @@ const config = {
 			params: 'src/params',
 			routes: 'src/routes',
 			serviceWorker: 'src/service-worker',
-			template: 'src/app.html'
+			template: 'src/app.html',
+			errorPage: 'src/error.html'
 		},
 		inlineStyleThreshold: 0,
 		methodOverride: {

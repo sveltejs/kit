@@ -321,6 +321,7 @@ export interface SSROptions {
 		nonce: string;
 	}): string;
 	template_contains_nonce: boolean;
+	error_page: string;
 	trailing_slash: TrailingSlash;
 }
 

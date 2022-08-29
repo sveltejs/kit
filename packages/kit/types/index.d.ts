@@ -143,6 +143,7 @@ export interface KitConfig {
 		routes?: string;
 		serviceWorker?: string;
 		template?: string;
+		errorPage?: string;
 	};
 	inlineStyleThreshold?: number;
 	methodOverride?: {

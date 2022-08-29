@@ -88,7 +88,7 @@ export async function respond_with_error({ event, options, state, status, error,
 
 		options.handle_error(error, event);
 
-		return new Response(error.stack, {
+		return new Response(options.error_page, {
 			status: 500
 		});
 	}

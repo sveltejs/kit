@@ -140,7 +140,8 @@ const options = object(
 				params: string(join('src', 'params')),
 				routes: string(join('src', 'routes')),
 				serviceWorker: string(join('src', 'service-worker')),
-				template: string(join('src', 'app.html'))
+				template: string(join('src', 'app.html')),
+				errorPage: string(join('src', 'error.html'))
 			}),
 
 			// TODO: remove this for the 1.0 release
