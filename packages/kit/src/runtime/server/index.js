@@ -483,6 +483,7 @@ export async function respond(request, options, state) {
 			});
 		} catch (/** @type {unknown} */ e) {
 			return new Response(options.error_page, {
+				headers: { 'content-type': 'text/html; charset=utf-8' },
 				status: 500
 			});
 		}

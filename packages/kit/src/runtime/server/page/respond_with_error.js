@@ -89,6 +89,7 @@ export async function respond_with_error({ event, options, state, status, error,
 		options.handle_error(error, event);
 
 		return new Response(options.error_page, {
+			headers: { 'content-type': 'text/html; charset=utf-8' },
 			status: 500
 		});
 	}
