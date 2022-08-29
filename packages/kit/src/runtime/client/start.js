@@ -20,7 +20,7 @@ export { set_public_env } from '../env-public.js';
  *     node_ids: number[];
  *     params: Record<string, string>;
  *     routeId: string | null;
- *     data: Array<import('types').ServerDataNode | import('types').ServerErrorNode | null>;
+ *     data: Array<import('types').ServerDataNode | null>;
  *     errors: Record<string, any> | null;
  *   };
  * }} opts
