@@ -51,7 +51,7 @@
 		"src",
 		"!src/**/*.spec.js",
 		"!src/core/**/fixtures",
-		"!src/core/sync/create_manifest_data/test",
+		"!src/core/**/test",
 		"types",
 		"svelte-kit.js"
 	],
