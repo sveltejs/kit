@@ -1292,14 +1292,6 @@ export function create_client({ target, base, trailing_slash }) {
 				const branch_promises = node_ids.map(async (n, i) => {
 					const server_data_node = server_data_nodes[i];
 
-					if (server_data_node?.type === 'error') {
-						if (server_data_node.httperror) {
-							throw error(server_data_node.httperror.status, server_data_node.httperror.message);
-						}
-
-						throw server_data_node.error;
-					}
-
 					return load_node({
 						loader: nodes[n],
 						url,
