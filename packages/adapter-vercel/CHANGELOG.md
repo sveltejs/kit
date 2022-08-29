@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.70
+
+### Patch Changes
+
+- Don't use top-level-await, as it is not supported right now ([#6360](https://github.com/sveltejs/kit/pull/6360))
+
 ## 1.0.0-next.69
 
 ### Patch Changes
