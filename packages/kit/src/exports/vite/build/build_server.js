@@ -31,6 +31,10 @@ const template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace(/%sveltekit\.assets%/g, '" + assets + "')
 	.replace(/%sveltekit\.nonce%/g, '" + nonce + "')};
 
+const error_page = ({ status, message }) => ${s(error_page)
+	.replace(/%sveltekit\.status%/g, '" + status + "')
+	.replace(/%sveltekit\.message%/g, '" + message + "')};
+
 let read = null;
 
 set_paths(${s(config.kit.paths)});
@@ -81,7 +85,7 @@ export class Server {
 			router: ${s(config.kit.browser.router)},
 			template,
 			template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
-			error_page: '${error_page}',
+			error_page,
 			trailing_slash: ${s(config.kit.trailingSlash)}
 		};
 	}

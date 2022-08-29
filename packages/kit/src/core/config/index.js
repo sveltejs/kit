@@ -58,8 +58,8 @@ export function load_error_page(cwd, config) {
 	<title>Error</title>
 </head>
 <body>
-	<h1>Error</h1>
-	<p>An error occurred.</p>
+	<h1>Error - %sveltekit.status%</h1>
+	<p>%sveltekit.message%</p>
 </body>
 </html>`;
 	}

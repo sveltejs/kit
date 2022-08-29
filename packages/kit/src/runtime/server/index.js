@@ -3,7 +3,7 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error, normalize_error } from '../../utils/error.js';
-import { serialize_error, GENERIC_ERROR, error_to_pojo } from './utils.js';
+import { serialize_error, GENERIC_ERROR, error_to_pojo, static_error_page } from './utils.js';
 import { decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
@@ -482,10 +482,8 @@ export async function respond(request, options, state) {
 				resolve_opts
 			});
 		} catch (/** @type {unknown} */ e) {
-			return new Response(options.error_page, {
-				headers: { 'content-type': 'text/html; charset=utf-8' },
-				status: 500
-			});
+			const error = coalesce_to_error(e);
+			return static_error_page(options, 500, error.message);
 		}
 	}
 }

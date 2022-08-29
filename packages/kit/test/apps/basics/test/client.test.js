@@ -309,7 +309,10 @@ test.describe('Errors', () => {
 	test('Root error falls back to error.html', async ({ page }) => {
 		await page.goto('/errors/error-html');
 		await page.click('button');
-		expect(await page.textContent('p')).toBe('This is the static error page');
+		expect(await page.textContent('h1')).toBe('Error - 500');
+		expect(await page.textContent('p')).toBe(
+			'This is the static error page with the following message: Failed to load'
+		);
 	});
 });
 

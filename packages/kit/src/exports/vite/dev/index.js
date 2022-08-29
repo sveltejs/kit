@@ -371,6 +371,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 				}
 
 				const template = load_template(cwd, svelte_config);
+				const error_page = load_error_page(cwd, svelte_config);
 
 				const rendered = await respond(
 					request,
@@ -427,7 +428,11 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							);
 						},
 						template_contains_nonce: template.includes('%sveltekit.nonce%'),
-						error_page: load_error_page(cwd, svelte_config),
+						error_page: ({ status, message }) => {
+							return error_page
+								.replace(/%sveltekit\.status%/g, String(status))
+								.replace(/%sveltekit\.message%/g, message);
+						},
 						trailing_slash: svelte_config.kit.trailingSlash
 					},
 					{

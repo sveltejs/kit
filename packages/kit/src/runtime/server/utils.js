@@ -114,3 +114,17 @@ export function allowed_methods(mod) {
 
 	return allowed;
 }
+
+/**
+ * Return as a response that renders the error.html
+ *
+ * @param {import('types').SSROptions} options
+ * @param {number} status
+ * @param {string} message
+ */
+export function static_error_page(options, status, message) {
+	return new Response(options.error_page({ status, message }), {
+		headers: { 'content-type': 'text/html; charset=utf-8' },
+		status
+	});
+}

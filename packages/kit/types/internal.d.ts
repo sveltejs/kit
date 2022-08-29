@@ -321,7 +321,7 @@ export interface SSROptions {
 		nonce: string;
 	}): string;
 	template_contains_nonce: boolean;
-	error_page: string;
+	error_page({ message, status }: { message: string; status: number }): string;
 	trailing_slash: TrailingSlash;
 }
 
