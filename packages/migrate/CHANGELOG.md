@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.0.0-next.12
+
+### Patch Changes
+
+- [feat] do uppercase http verbs migration on the fly ([#6371](https://github.com/sveltejs/kit/pull/6371))
+
 ## 1.0.0-next.11
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.446
+
+### Patch Changes
+
+- [fix] encode if root layout has server load ([#6352](https://github.com/sveltejs/kit/pull/6352))
+
 ## 1.0.0-next.445
 
 ### Patch Changes
