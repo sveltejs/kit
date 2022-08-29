@@ -56,7 +56,7 @@
 <style>
 	.container {
 		display: grid;
-		grid-template-columns: repeat(10, 10%);
+		grid-template-columns: repeat(10, auto);
 		gap: 10px;
 		width: 100%;
 	}
