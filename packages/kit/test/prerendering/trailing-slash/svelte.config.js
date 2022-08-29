@@ -1,5 +1,7 @@
 import adapter from '../../../../adapter-static/index.js';
 
+export const prerender = true;
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
@@ -8,8 +10,7 @@ const config = {
 		}),
 
 		prerender: {
-			default: true,
-			entries: ['*', '/standalone-endpoint.json']
+			default: true
 		},
 
 		trailingSlash: 'always'
