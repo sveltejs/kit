@@ -333,152 +333,162 @@ function kit() {
 		 * The user's package.json scripts will invoke the Vite CLI to execute the client build. We
 		 * then use this hook to kick off builds for the server and service worker.
 		 */
-		async writeBundle(_options, bundle) {
-			if (vite_config.build.ssr) {
-				return;
-			}
-
-			manifest_data.nodes.forEach((_node, i) => {
-				const id = vite.normalizePath(
-					path.resolve(svelte_config.kit.outDir, `generated/nodes/${i}.js`)
-				);
-
-				const module_node = this.getModuleInfo(id);
-
-				if (module_node) {
-					prevent_illegal_rollup_imports(
-						this.getModuleInfo.bind(this),
-						module_node,
-						illegal_imports
-					);
+		writeBundle: {
+			sequential: true,
+			async handler(_options, bundle) {
+				if (vite_config.build.ssr) {
+					return;
 				}
-			});
 
-			const verbose = vite_config.logLevel === 'info';
-			log = logger({
-				verbose
-			});
+				manifest_data.nodes.forEach((_node, i) => {
+					const id = vite.normalizePath(
+						path.resolve(svelte_config.kit.outDir, `generated/nodes/${i}.js`)
+					);
 
-			fs.writeFileSync(
-				`${paths.client_out_dir}/${svelte_config.kit.appDir}/version.json`,
-				JSON.stringify({ version: svelte_config.kit.version.name })
-			);
+					const module_node = this.getModuleInfo(id);
 
-			const { assets, chunks } = collect_output(bundle);
-			log.info(`Client build completed. Wrote ${chunks.length} chunks and ${assets.length} assets`);
-
-			log.info('Building server');
-			const options = {
-				cwd,
-				config: svelte_config,
-				vite_config,
-				vite_config_env,
-				build_dir: paths.build_dir, // TODO just pass `paths`
-				manifest_data,
-				output_dir: paths.output_dir,
-				service_worker_entry_file: resolve_entry(svelte_config.kit.files.serviceWorker)
-			};
-			const client = client_build_info(assets, chunks);
-			const server = await build_server(options, client);
-
-			/** @type {import('types').BuildData} */
-			build_data = {
-				app_dir: svelte_config.kit.appDir,
-				manifest_data,
-				service_worker: options.service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
-				client,
-				server
-			};
-
-			const manifest_path = `${paths.output_dir}/server/manifest.js`;
-			fs.writeFileSync(
-				manifest_path,
-				`export const manifest = ${generate_manifest({
-					build_data,
-					relative_path: '.',
-					routes: manifest_data.routes
-				})};\n`
-			);
-
-			log.info('Prerendering');
-			await new Promise((fulfil, reject) => {
-				const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
-
-				// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-				const script = fileURLToPath(new URL('../../core/prerender/prerender.js', import.meta.url));
-
-				const child = fork(
-					script,
-					[
-						vite_config.build.outDir,
-						results_path,
-						manifest_path,
-						'' + verbose,
-						JSON.stringify({ ...env.private, ...env.public })
-					],
-					{
-						stdio: 'inherit'
-					}
-				);
-
-				child.on('exit', (code) => {
-					if (code) {
-						reject(new Error(`Prerendering failed with code ${code}`));
-					} else {
-						prerendered = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
-							if (key === 'pages' || key === 'assets' || key === 'redirects') {
-								return new Map(value);
-							}
-							return value;
-						});
-						fulfil(undefined);
+					if (module_node) {
+						prevent_illegal_rollup_imports(
+							this.getModuleInfo.bind(this),
+							module_node,
+							illegal_imports
+						);
 					}
 				});
-			});
 
-			if (options.service_worker_entry_file) {
-				if (svelte_config.kit.paths.assets) {
-					throw new Error('Cannot use service worker alongside config.kit.paths.assets');
+				const verbose = vite_config.logLevel === 'info';
+				log = logger({
+					verbose
+				});
+
+				fs.writeFileSync(
+					`${paths.client_out_dir}/${svelte_config.kit.appDir}/version.json`,
+					JSON.stringify({ version: svelte_config.kit.version.name })
+				);
+
+				const { assets, chunks } = collect_output(bundle);
+				log.info(
+					`Client build completed. Wrote ${chunks.length} chunks and ${assets.length} assets`
+				);
+
+				log.info('Building server');
+				const options = {
+					cwd,
+					config: svelte_config,
+					vite_config,
+					vite_config_env,
+					build_dir: paths.build_dir, // TODO just pass `paths`
+					manifest_data,
+					output_dir: paths.output_dir,
+					service_worker_entry_file: resolve_entry(svelte_config.kit.files.serviceWorker)
+				};
+				const client = client_build_info(assets, chunks);
+				const server = await build_server(options, client);
+
+				/** @type {import('types').BuildData} */
+				build_data = {
+					app_dir: svelte_config.kit.appDir,
+					manifest_data,
+					service_worker: options.service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
+					client,
+					server
+				};
+
+				const manifest_path = `${paths.output_dir}/server/manifest.js`;
+				fs.writeFileSync(
+					manifest_path,
+					`export const manifest = ${generate_manifest({
+						build_data,
+						relative_path: '.',
+						routes: manifest_data.routes
+					})};\n`
+				);
+
+				log.info('Prerendering');
+				await new Promise((fulfil, reject) => {
+					const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
+
+					// do prerendering in a subprocess so any dangling stuff gets killed upon completion
+					const script = fileURLToPath(
+						new URL('../../core/prerender/prerender.js', import.meta.url)
+					);
+
+					const child = fork(
+						script,
+						[
+							vite_config.build.outDir,
+							results_path,
+							manifest_path,
+							'' + verbose,
+							JSON.stringify({ ...env.private, ...env.public })
+						],
+						{
+							stdio: 'inherit'
+						}
+					);
+
+					child.on('exit', (code) => {
+						if (code) {
+							reject(new Error(`Prerendering failed with code ${code}`));
+						} else {
+							prerendered = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
+								if (key === 'pages' || key === 'assets' || key === 'redirects') {
+									return new Map(value);
+								}
+								return value;
+							});
+							fulfil(undefined);
+						}
+					});
+				});
+
+				if (options.service_worker_entry_file) {
+					if (svelte_config.kit.paths.assets) {
+						throw new Error('Cannot use service worker alongside config.kit.paths.assets');
+					}
+
+					log.info('Building service worker');
+
+					await build_service_worker(options, prerendered, client.vite_manifest);
 				}
 
-				log.info('Building service worker');
+				console.log(
+					`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
+				);
 
-				await build_service_worker(options, prerendered, client.vite_manifest);
+				completed_build = true;
 			}
-
-			console.log(
-				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
-			);
-
-			completed_build = true;
 		},
 
 		/**
 		 * Runs the adapter.
 		 */
-		async closeBundle() {
-			// vite calls closeBundle when dev-server restarts, ignore that,
-			// and only adapt when build successfully completes.
-			const is_restart = !completed_build;
-			if (vite_config.build.ssr || is_restart) {
-				return;
+		closeBundle: {
+			sequential: true,
+			async handler() {
+				// vite calls closeBundle when dev-server restarts, ignore that,
+				// and only adapt when build successfully completes.
+				const is_restart = !completed_build;
+				if (vite_config.build.ssr || is_restart) {
+					return;
+				}
+
+				if (svelte_config.kit.adapter) {
+					const { adapt } = await import('../../core/adapt/index.js');
+					await adapt(svelte_config, build_data, prerendered, { log });
+				} else {
+					console.log(colors.bold().yellow('\nNo adapter specified'));
+
+					const link = colors.bold().cyan('https://kit.svelte.dev/docs/adapters');
+					console.log(
+						`See ${link} to learn how to configure your app to run on the platform of your choosing`
+					);
+				}
+
+				// avoid making the manifest available to users
+				fs.unlinkSync(`${paths.output_dir}/client/${vite_config.build.manifest}`);
+				fs.unlinkSync(`${paths.output_dir}/server/${vite_config.build.manifest}`);
 			}
-
-			if (svelte_config.kit.adapter) {
-				const { adapt } = await import('../../core/adapt/index.js');
-				await adapt(svelte_config, build_data, prerendered, { log });
-			} else {
-				console.log(colors.bold().yellow('\nNo adapter specified'));
-
-				const link = colors.bold().cyan('https://kit.svelte.dev/docs/adapters');
-				console.log(
-					`See ${link} to learn how to configure your app to run on the platform of your choosing`
-				);
-			}
-
-			// avoid making the manifest available to users
-			fs.unlinkSync(`${paths.output_dir}/client/${vite_config.build.manifest}`);
-			fs.unlinkSync(`${paths.output_dir}/server/${vite_config.build.manifest}`);
 		},
 
 		/**
