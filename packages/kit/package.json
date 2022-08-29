@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.446",
+	"version": "1.0.0-next.448",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -12,7 +12,7 @@
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^1.0.1",
 		"cookie": "^0.5.0",
-		"devalue": "^2.0.1",
+		"devalue": "^3.1.2",
 		"kleur": "^4.1.4",
 		"magic-string": "^0.26.2",
 		"mime": "^3.0.0",
@@ -36,7 +36,6 @@
 		"rollup": "^2.75.7",
 		"svelte": "^3.48.0",
 		"svelte-preprocess": "^4.10.6",
-		"tiny-glob": "^0.2.9",
 		"typescript": "^4.7.4",
 		"uvu": "^0.5.3",
 		"vite": "^3.0.9"
@@ -51,9 +50,8 @@
 	"files": [
 		"src",
 		"!src/**/*.spec.js",
-		"!src/packaging/test",
 		"!src/core/**/fixtures",
-		"!src/core/sync/create_manifest_data/test",
+		"!src/core/**/test",
 		"types",
 		"svelte-kit.js"
 	],
@@ -66,7 +64,7 @@
 		"prepublishOnly": "npm run build",
 		"test": "npm run test:unit && npm run test:integration",
 		"test:integration": "pnpm run -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\" -i packaging",
+		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"types": "node scripts/extract-types.js",
 		"postinstall": "node svelte-kit.js sync"
 	},
@@ -91,6 +89,6 @@
 	},
 	"types": "types/index.d.ts",
 	"engines": {
-		"node": ">=16.9"
+		"node": ">=16.14"
 	}
 }

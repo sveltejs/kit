@@ -1,3 +1,4 @@
+import { devalue } from 'devalue';
 import { HttpError } from '../control.js';
 
 /** @param {any} body */
@@ -113,4 +114,24 @@ export function allowed_methods(mod) {
 	if (mod.GET || mod.HEAD) allowed.push('HEAD');
 
 	return allowed;
+}
+
+/** @param {any} data */
+export function data_response(data) {
+	try {
+		return new Response(`window.__sveltekit_data = ${devalue(data)}`, {
+			headers: {
+				'content-type': 'application/javascript'
+			}
+		});
+	} catch (e) {
+		const error = /** @type {any} */ (e);
+		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
+		const message = match ? `${error.message} (data.${match[2]})` : error.message;
+		return new Response(`throw new Error(${JSON.stringify(message)})`, {
+			headers: {
+				'content-type': 'application/javascript'
+			}
+		});
+	}
 }

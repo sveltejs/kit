@@ -49,7 +49,7 @@ When configuring your project settings, you must use the following settings:
 - **Environment variables**
   - `NODE_VERSION`: `16`
 
-> **Important:** You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `16.9` or later, so you should use `16` as the `NODE_VERSION` value.
+> **Important:** You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `16.14` or later, so you should use `16` as the `NODE_VERSION` value.
 
 ## Environment variables
 

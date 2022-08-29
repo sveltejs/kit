@@ -1,4 +1,4 @@
-import { GENERATED_COMMENT } from './constants.js';
+import { GENERATED_COMMENT } from '../constants.js';
 import { runtime_base } from './utils.js';
 
 /**
