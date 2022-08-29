@@ -49,8 +49,8 @@ export function parse(nodes, server_loads, dictionary, matchers) {
 	}
 
 	/**
-	 * @param {number} id
-	 * @returns {[boolean, import('types').CSRPageNodeLoader]}
+	 * @param {number | undefined} id
+	 * @returns {[boolean, import('types').CSRPageNodeLoader] | undefined}
 	 */
 	function create_layout_loader(id) {
 		// whether or not the layout uses the server data is

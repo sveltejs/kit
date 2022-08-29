@@ -67,8 +67,8 @@ export function write_client_manifest(manifest_data, output) {
 						}
 					});
 
-					array.push(`[${layouts.join(',')}]`);
-					// only include non-root error nodes if they exist
+					// only include non-root layout/error nodes if they exist
+					if (layouts.length > 0 || errors.length > 0) array.push(`[${layouts.join(',')}]`);
 					if (errors.length > 0) array.push(`[${errors.join(',')}]`);
 
 					return `${s(route.id)}: [${array.join(',')}]`;
