@@ -99,7 +99,7 @@ export interface Builder {
 	/**
 	 * @param {string} directory Path to the directory containing the files to be compressed
 	 */
-	compress(directory: string): void;
+	compress(directory: string): Promise<void>;
 }
 
 export interface Config {
