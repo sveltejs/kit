@@ -731,7 +731,7 @@ export function create_client({ target, base, trailing_slash }) {
 				}
 			} catch (e) {
 				// something went catastrophically wrong — bail and defer to the server
-				native_navigation(url);
+				await native_navigation(url);
 				return;
 			}
 
@@ -841,7 +841,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 					// if we get here, it's because the root `load` function failed,
 					// and we need to fall back to the server
-					native_navigation(url);
+					await native_navigation(url);
 					return;
 				}
 			} else {
@@ -896,7 +896,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 			if (!res.ok || server_data_nodes?.type !== 'data') {
 				// at this point we have no choice but to fall back to the server
-				native_navigation(url);
+				await native_navigation(url);
 
 				// @ts-expect-error
 				return;
