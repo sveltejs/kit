@@ -1,3 +1,4 @@
+import { devalue } from 'devalue';
 import { negotiate } from '../../../utils/http.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
@@ -8,6 +9,7 @@ import { error, json } from '../../../exports/index.js';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
 import { load_data, load_server_data } from './load_data.js';
+import { DATA_SUFFIX } from '../../../constants.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -102,7 +104,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 
 		const should_prerender_data = nodes.some((node) => node?.server);
-		const data_pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
+		const data_pathname = event.url.pathname.replace(/\/$/, '') + DATA_SUFFIX;
 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
@@ -166,7 +168,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 					}
 
 					return await load_server_data({
-						dev: options.dev,
 						event,
 						state,
 						node,
@@ -231,12 +232,14 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 					if (error instanceof Redirect) {
 						if (state.prerendering && should_prerender_data) {
+							const body = `window.__sveltekit_data = ${JSON.stringify({
+								type: 'redirect',
+								location: error.location
+							})}`;
+
 							state.prerendering.dependencies.set(data_pathname, {
-								response: new Response(undefined),
-								body: JSON.stringify({
-									type: 'redirect',
-									location: error.location
-								})
+								response: new Response(body),
+								body
 							});
 						}
 
@@ -294,12 +297,14 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 
 		if (state.prerendering && should_prerender_data) {
+			const body = `window.__sveltekit_data = ${devalue({
+				type: 'data',
+				nodes: branch.map((branch_node) => branch_node?.server_data)
+			})}`;
+
 			state.prerendering.dependencies.set(data_pathname, {
-				response: new Response(undefined),
-				body: JSON.stringify({
-					type: 'data',
-					nodes: branch.map((branch_node) => branch_node?.server_data)
-				})
+				response: new Response(body),
+				body
 			});
 		}
 

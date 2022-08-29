@@ -2,19 +2,15 @@ import { render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
-import { coalesce_to_error, normalize_error } from '../../utils/error.js';
-import { serialize_error, GENERIC_ERROR, error_to_pojo } from './utils.js';
+import { coalesce_to_error } from '../../utils/error.js';
+import { serialize_error, GENERIC_ERROR } from './utils.js';
 import { decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
-import { HttpError, Redirect } from '../control.js';
-import { load_server_data } from './page/load_data.js';
-import { json } from '../../exports/index.js';
-import { once } from '../../utils/functions.js';
+import { render_data } from './data/index.js';
+import { DATA_SUFFIX } from '../../constants.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
-
-const DATA_SUFFIX = '/__data.json';
 
 /** @param {{ html: string }} opts */
 const default_transform = ({ html }) => html;
@@ -69,12 +65,7 @@ export async function respond(request, options, state) {
 	}
 
 	const is_data_request = decoded.endsWith(DATA_SUFFIX);
-
-	if (is_data_request) {
-		const data_suffix_length = DATA_SUFFIX.length - (options.trailing_slash === 'always' ? 1 : 0);
-		decoded = decoded.slice(0, -data_suffix_length) || '/';
-		url = new URL(url.origin + url.pathname.slice(0, -data_suffix_length) + url.search);
-	}
+	if (is_data_request) decoded = decoded.slice(0, -DATA_SUFFIX.length);
 
 	if (!state.prerendering?.fallback) {
 		const matchers = await options.manifest._.matchers();
@@ -92,26 +83,19 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	if (route) {
-		if (route.page) {
-			const normalized = normalize_path(url.pathname, options.trailing_slash);
+	if (route?.page && !is_data_request) {
+		const normalized = normalize_path(url.pathname, options.trailing_slash);
 
-			if (normalized !== url.pathname && !state.prerendering?.fallback) {
-				return new Response(undefined, {
-					status: 301,
-					headers: {
-						'x-sveltekit-normalize': '1',
-						location:
-							// ensure paths starting with '//' are not treated as protocol-relative
-							(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-							(url.search === '?' ? '' : url.search)
-					}
-				});
-			}
-		} else if (is_data_request) {
-			// requesting /__data.json should fail for a standalone endpoint
+		if (normalized !== url.pathname && !state.prerendering?.fallback) {
 			return new Response(undefined, {
-				status: 404
+				status: 301,
+				headers: {
+					'x-sveltekit-normalize': '1',
+					location:
+						// ensure paths starting with '//' are not treated as protocol-relative
+						(normalized.startsWith('//') ? url.origin + normalized : normalized) +
+						(url.search === '?' ? '' : url.search)
+				}
 			});
 		}
 	}
@@ -250,116 +234,9 @@ export async function respond(request, options, state) {
 				if (route) {
 					/** @type {Response} */
 					let response;
-					if (is_data_request && route.page) {
-						try {
-							const node_ids = [...route.page.layouts, route.page.leaf];
 
-							const invalidated =
-								request.headers.get('x-sveltekit-invalidated')?.split(',').map(Boolean) ??
-								node_ids.map(() => true);
-
-							let aborted = false;
-
-							const functions = node_ids.map((n, i) => {
-								return once(async () => {
-									try {
-										if (aborted) {
-											return /** @type {import('types').ServerDataSkippedNode} */ ({
-												type: 'skip'
-											});
-										}
-
-										// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
-										const node = n == undefined ? n : await options.manifest._.nodes[n]();
-										return load_server_data({
-											dev: options.dev,
-											event,
-											state,
-											node,
-											parent: async () => {
-												/** @type {Record<string, any>} */
-												const data = {};
-												for (let j = 0; j < i; j += 1) {
-													const parent = /** @type {import('types').ServerDataNode | null} */ (
-														await functions[j]()
-													);
-
-													if (parent) {
-														Object.assign(data, parent.data);
-													}
-												}
-												return data;
-											}
-										});
-									} catch (e) {
-										aborted = true;
-										throw e;
-									}
-								});
-							});
-
-							const promises = functions.map(async (fn, i) => {
-								if (!invalidated[i]) {
-									return /** @type {import('types').ServerDataSkippedNode} */ ({
-										type: 'skip'
-									});
-								}
-
-								return fn();
-							});
-
-							let length = promises.length;
-							const nodes = await Promise.all(
-								promises.map((p, i) =>
-									p.catch((e) => {
-										const error = normalize_error(e);
-
-										if (error instanceof Redirect) {
-											throw error;
-										}
-
-										// Math.min because array isn't guaranteed to resolve in order
-										length = Math.min(length, i + 1);
-
-										if (error instanceof HttpError) {
-											return /** @type {import('types').ServerErrorNode} */ ({
-												type: 'error',
-												httperror: { ...error }
-											});
-										}
-
-										options.handle_error(error, event);
-
-										return /** @type {import('types').ServerErrorNode} */ ({
-											type: 'error',
-											error: error_to_pojo(error, options.get_stack)
-										});
-									})
-								)
-							);
-
-							/** @type {import('types').ServerData} */
-							const server_data = {
-								type: 'data',
-								nodes: nodes.slice(0, length)
-							};
-
-							response = json(server_data);
-						} catch (e) {
-							const error = normalize_error(e);
-
-							if (error instanceof Redirect) {
-								/** @type {import('types').ServerData} */
-								const server_data = {
-									type: 'redirect',
-									location: error.location
-								};
-
-								response = json(server_data);
-							} else {
-								response = json(error_to_pojo(error, options.get_stack), { status: 500 });
-							}
-						}
+					if (is_data_request) {
+						response = await render_data(event, route, options, state);
 					} else if (route.page) {
 						response = await render_page(event, route, route.page, options, state, resolve_opts);
 					} else if (route.endpoint) {
@@ -371,7 +248,7 @@ export async function respond(request, options, state) {
 					}
 
 					if (!is_data_request) {
-						// we only want to set cookies on __data.json requests, we don't
+						// we only want to set cookies on __data.js requests, we don't
 						// want to cache stuff erroneously etc
 						for (const key in headers) {
 							const value = headers[key];

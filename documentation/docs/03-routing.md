@@ -106,7 +106,7 @@ export async function load({ params }) {
 }
 ```
 
-During client-side navigation, SvelteKit will load this data using `fetch`, which means that the returned value must be serializable as JSON.
+During client-side navigation, SvelteKit will load this data from the server, which means that the returned value must be serializable using [devalue](https://github.com/rich-harris/devalue).
 
 #### Actions
 

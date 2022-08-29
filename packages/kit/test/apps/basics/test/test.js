@@ -291,7 +291,7 @@ test.describe('Shadowed pages', () => {
 
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "data.regex returned from \'load\' in src/routes/shadowed/serialization/+page.server.js cannot be serialized as JSON"'
+				'This is your custom error page saying: "Cannot stringify arbitrary non-POJOs (data.nope)"'
 			);
 		});
 	}
@@ -579,7 +579,7 @@ test.describe('Errors', () => {
 			expect(lines[1]).toContain('+page.server.js:4:8');
 		}
 
-		const error = read_errors('/errors/page-endpoint/get-implicit');
+		const error = read_errors('/errors/page-endpoint/get-implicit/__data.js');
 		expect(error).toContain('oops');
 	});
 
@@ -891,6 +891,13 @@ test.describe('Load', () => {
 		await clicknav('[href="/load/accumulated/with-page-data"]');
 		expect(await page.textContent('h1')).toBe('foo.bar: Custom layout');
 		expect(await page.textContent('h2')).toBe('pagedata: pagedata');
+	});
+
+	test('Serializes non-JSON data', async ({ page, clicknav }) => {
+		await page.goto('/load/devalue');
+		await clicknav('[href="/load/devalue/regex"]');
+
+		expect(await page.textContent('h1')).toBe('true');
 	});
 });
 
