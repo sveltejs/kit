@@ -37,6 +37,35 @@ test('applies handlers in sequence', async () => {
 	assert.equal(order, ['1a', '2a', '3a', '3b', '2b', '1b']);
 });
 
+test('uses transformPageChunk option passed to non-terminal handle function', async () => {
+	const handler = sequence(
+		async ({ event, resolve }) => {
+			return resolve(event, {
+				transformPageChunk: ({ html, done }) => html + (done ? '-1-done' : '-1')
+			});
+		},
+		async ({ event, resolve }) => resolve(event),
+		async ({ event, resolve }) => resolve(event)
+	);
+
+	const event = /** @type {import('types').RequestEvent} */ ({});
+	const response = await handler({
+		event,
+		resolve: async (_event, opts = {}) => {
+			let html = '';
+
+			const { transformPageChunk = ({ html }) => html } = opts;
+
+			html += await transformPageChunk({ html: '0', done: false });
+			html += await transformPageChunk({ html: ' 0', done: true });
+
+			return new Response(html);
+		}
+	});
+
+	assert.equal(await response.text(), '0-1 0-1-done');
+});
+
 test('merges transformPageChunk option', async () => {
 	const handler = sequence(
 		async ({ event, resolve }) => {
