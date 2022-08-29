@@ -212,7 +212,7 @@ export async function build_server(options, client) {
 			has_service_worker: config.kit.serviceWorker.register && !!service_worker_entry_file,
 			runtime: posixify(path.relative(build_dir, runtime_directory)),
 			template: load_template(cwd, config),
-			error_page: load_error_page(cwd, config)
+			error_page: load_error_page(config)
 		})
 	);
 

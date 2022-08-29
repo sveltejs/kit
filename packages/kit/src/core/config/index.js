@@ -40,17 +40,14 @@ export function load_template(cwd, config) {
 /**
  * Loads the error page (src/error.html by default) if it exists.
  * Falls back to a generic error page content.
- * @param {string} cwd
  * @param {import('types').ValidatedConfig} config
  */
-export function load_error_page(cwd, config) {
+export function load_error_page(config) {
 	const { errorPage } = config.kit.files;
-	const relative = path.relative(cwd, errorPage);
 
 	if (fs.existsSync(errorPage)) {
 		return fs.readFileSync(errorPage, 'utf-8');
 	} else {
-		console.log(`${relative} does not exist. Using generic error page instead.`);
 		return `<!DOCTYPE html>
 <html lang="en">
 <head>

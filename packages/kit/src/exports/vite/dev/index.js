@@ -371,7 +371,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 				}
 
 				const template = load_template(cwd, svelte_config);
-				const error_page = load_error_page(cwd, svelte_config);
+				const error_page = load_error_page(svelte_config);
 
 				const rendered = await respond(
 					request,
