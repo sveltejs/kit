@@ -7,7 +7,7 @@ const config = {
 
 		prerender: {
 			default: true,
-			entries: ['*', '/content.json']
+			entries: ['*']
 		}
 	}
 };
