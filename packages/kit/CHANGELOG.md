@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.449
+
+### Patch Changes
+
+- [fix] silence unused type hints in generated proxy files ([#6391](https://github.com/sveltejs/kit/pull/6391))
+
 ## 1.0.0-next.448
 
 ### Patch Changes
