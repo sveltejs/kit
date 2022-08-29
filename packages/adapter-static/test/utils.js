@@ -38,7 +38,6 @@ export function run(app, callback) {
 				console.error(`---\nstdout:\n${e.stdout}`);
 				console.error(`---\nstderr:\n${e.stderr}`);
 				console.groupEnd();
-				assert.unreachable(e.message);
 			}
 
 			context.cwd = cwd;
