@@ -10,7 +10,7 @@ import { domain_matches, path_matches } from './cookie.js';
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   route: import('types').SSRRoute | import('types').SSRErrorPage;
- *   prerender_default: true | false | 'auto';
+ *   prerender_default?: true | false | 'auto';
  * }} opts
  */
 export function create_fetch({ event, options, state, route, prerender_default }) {

@@ -18,12 +18,7 @@ export async function adapt(config, build_data, prerendered, prerender_map, { lo
 		build_data,
 		routes: build_data.manifest_data.routes.filter((route) => {
 			const prerender = prerender_map.get(route.id);
-			return (
-				prerender === false ||
-				prerender === undefined ||
-				prerender === 'auto' ||
-				prerender === 'unknown'
-			);
+			return prerender === false || prerender === undefined || prerender === 'auto';
 		}),
 		prerendered,
 		log
