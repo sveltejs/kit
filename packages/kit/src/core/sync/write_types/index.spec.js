@@ -134,7 +134,7 @@ test('Rewrites types for a TypeScript module without param', () => {
 				a: 1
 			};
 		};
-	;Get;`
+	;null as any as Get;`
 	);
 });
 
