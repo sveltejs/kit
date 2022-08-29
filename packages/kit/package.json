@@ -50,9 +50,8 @@
 	"files": [
 		"src",
 		"!src/**/*.spec.js",
-		"!src/packaging/test",
 		"!src/core/**/fixtures",
-		"!src/core/sync/create_manifest_data/test",
+		"!src/core/**/test",
 		"types",
 		"svelte-kit.js"
 	],
@@ -65,7 +64,7 @@
 		"prepublishOnly": "npm run build",
 		"test": "npm run test:unit && npm run test:integration",
 		"test:integration": "pnpm run -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\" -i packaging",
+		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"types": "node scripts/extract-types.js",
 		"postinstall": "node svelte-kit.js sync"
 	},
