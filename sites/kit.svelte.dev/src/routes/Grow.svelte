@@ -1,105 +1,58 @@
 <script>
-	import createGlobe from 'cobe';
 	import { onMount } from 'svelte';
+	import * as d3 from 'd3';
+	import { csvParse } from 'd3-dsv';
+	import * as topojson from 'topojson';
 
 	import Grow from './grow.svg';
 
-	import * as d3 from 'd3';
-	import * as topojson from 'topojson';
-import { csvParse } from 'd3-dsv';
-
-	let canvas;
-	let phi = 0;
-
 	onMount(() => {
-	// 	const globe = createGlobe(canvas, {
-	// 		devicePixelRatio: 2,
-	// 		width: 1000 * 2,
-	// 		height: 1000 * 2,
-	// 		phi: 0,
-	// 		theta: 0,
-	// 		dark: 0.1,
-	// 		diffuse: 0.6,
-	// 		mapSamples: 16000,
-	// 		mapBrightness: 4,
-	// 		baseColor: [0.9137, 0.9098, 0.9019], // the light warm grey from figma
-	// 		markerColor: [1, 0.2431, 0], // our --primary
-	// 		glowColor: [1, 1, 1], // white
-	// 		offset: [0, 2100],
-	// 		markers: [
-	// 			// https://vercel.com/docs/concepts/edge-network/regions
-	// 			{ location: [59.3293, 18.0686], size: 0.05 }, // Stockholm
-	// 			{ location: [19.076, 72.8777], size: 0.05 }, // Mumbai
-	// 			{ location: [48.8566, 2.3522], size: 0.05 }, // Paris
-	// 			{ location: [41.4993, -81.6944], size: 0.05 }, // Cleveland
-	// 			{ location: [-33.9249, 18.4241], size: 0.05 }, // Cape Town
-	// 			{ location: [53.3498, -6.2603], size: 0.05 }, // Dublin
-	// 			{ location: [50.1109, 8.6821], size: 0.05 }, // Frankfurt
-	// 			{ location: [-23.5558, -46.6396], size: 0.05 }, // São Paulo
-	// 			{ location: [22.3193, 114.1694], size: 0.05 }, // Hong Kong
-	// 			{ location: [35.6762, 139.6503], size: 0.05 }, // Tokyo
-	// 			{ location: [38.9072, -77.0369], size: 0.05 }, // DC
-	// 			{ location: [37.5665, 126.978], size: 0.05 }, // Seoul
-	// 			{ location: [34.6937, 135.5023], size: 0.05 }, // Osaka
-	// 			{ location: [51.5072, -0.1276], size: 0.05 }, // London
-	// 			{ location: [45.5152, -122.6784], size: 0.05 }, // Portland
-	// 			{ location: [37.7595, -122.4367], size: 0.05 }, // SF
-	// 			{ location: [1.3521, 103.8198], size: 0.05 }, // Singapore
-	// 			{ location: [-33.8688, 151.2093], size: 0.05 } // Sydney
-	// 		],
-	// 		onRender: (state) => {
-	// 			state.phi = phi;
-	// 			phi += 0.003;
-	// 		}
-	// 	});
+		const width = 1234, height = 500;
 
-	var width = 960,
-    height = 500;
+		// https://vercel.com/docs/concepts/edge-network/regions
+		const datacenters_csv = `lon,lat\n18.0686,59.3293\n72.8777,19.076\n2.3522,48.8566\n-81.6944,41.4993\n18.4241,-33.9249\n-6.2603,53.3498\n8.6821,50.1109\n-46.6396,-23.5558\n114.1694,22.3193\n139.6503,35.6762\n-77.0369,38.9072\n126.978,37.5665\n135.5023,34.6937\n-0.1276,51.5072\n-122.6784,45.5152\n-122.4367,37.7595\n103.8198,1.3521\n151.2093,-33.8688`;
+		const datacenters = csvParse(datacenters_csv);
+		// for now, hardcode SF datacenter
+		const selected = { lon:-122.4367, lat:37.7595 };
 
-var projection = d3.geoMercator()
-    .center([-122.4367, 37.7595])
-    .scale(150)
-    .rotate([0, 0]);
+		const projection = d3.geoMercator()
+			.center([0, selected.lat])
+			.scale(150)
+			.rotate([-selected.lon, 0]);
 
-var svg = d3.select('#svg').append('svg')
-    .attr('width', width)
-    .attr('height', height);
+		const svg = d3.select('#svg').append('svg')
+			.attr('width', width)
+			.attr('height', height);
 
-var path = d3.geoPath()
-    .projection(projection);
+		const path = d3.geoPath()
+  	  .projection(projection);
 
-var g = svg.append('g');
+		const g = svg.append('g');
 
-// load and display the World
-d3.json('https://gist.githubusercontent.com/olemi/d4fb825df71c2939405e0017e360cd73/raw/d6f9f0e9e8bd33183454250bd8b808953869edd2/world-110m2.json').then(function(topology) {
+		const json_url = 'https://gist.githubusercontent.com/olemi/d4fb825df71c2939405e0017e360cd73/raw/d6f9f0e9e8bd33183454250bd8b808953869edd2/world-110m2.json';
+		d3.json(json_url).then((topology) => {
 
-    g.selectAll('path')
-       .data(topojson.feature(topology, topology.objects.countries).features)
-       .enter().append('path')
-       .attr('d', path);
+			g.selectAll('path')
+				.data(topojson.feature(topology, topology.objects.countries).features)
+				.enter().append('path')
+				.attr('d', path);
 
-// const csv =
-// `lon,lat\n18.0686,59.3293\n72.8777,19.076\n2.3522,48.8566\n-81.6944,41.4993\n18.4241,-33.9249\n-6.2603,53.3498\n8.6821,50.1109\n-46.6396,-23.5558\n114.1694,22.3193\n139.6503,35.6762\n-77.0369,38.9072\n126.978,37.5665\n135.5023,34.6937\n-0.1276,51.5072\n-122.6784,45.5152\n-122.4367,37.7595\n103.8198,1.3521\n151.2093,-33.8688`;
-
-// csvParse(csv, function(_error, data) {
-// console.log(JSON.stringify(data))
-//         g.selectAll('circle')
-//            .data(data)
-//            .enter()
-//            .append('circle')
-//            .attr('cx', function(d) {
-//                    return projection([d.lon, d.lat])[0];
-//            })
-//            .attr('cy', function(d) {
-//                    return projection([d.lon, d.lat])[1];
-//            })
-//            .attr('r', 5)
-//            .style('fill', 'red');
-// });
-
-});
-
-});
+			g.selectAll('circle')
+				.data(datacenters)
+				.enter()
+				.append('circle')
+				.attr('cx', /** @param {{lon: number, lat:number}} d */ (d) => {
+					return projection([d.lon, d.lat])[0];
+				})
+				.attr('cy', /** @param {{lon: number, lat:number}} d */ (d) => {
+					return projection([d.lon, d.lat])[1];
+				})
+				.attr('r', /** @param {{lon: number, lat:number}} d */ (d) => {
+					return d.lon - selected.lon < .01 && d.lat - selected.lat < .01 ? 10 : 4;
+				})
+				.style('fill', '#ff3e00');
+		});
+	});
 </script>
 
 <h3>
@@ -135,17 +88,17 @@ d3.json('https://gist.githubusercontent.com/olemi/d4fb825df71c2939405e0017e360cd
 
 			These 7em at bottom are to push "Starts fast" down.
 		*/
-		margin: 5em 0 7em 0;
+		margin: 0 0 7em 0;
 		width: 100%;
 		height: auto;
 		z-index: 1;
 	}
 
 	/* @vedam - Dirty hack part 2 */
-	.canvas-wrap {
+	#svg {
 		position: absolute;
-		top: 18.6em;
-		left: -10.14vw;
+		top: 18em;
+		left: var(--side-nav);
 		right: 0;
 		bottom: 0;
 		width: 100vw;
@@ -153,11 +106,6 @@ d3.json('https://gist.githubusercontent.com/olemi/d4fb825df71c2939405e0017e360cd
 		overflow: hidden;
 		z-index: -1;
 		/* background-color: #ccc; */
-	}
-
-	/* @vedam - Dirty hack part 3 */
-	.globe {
-		margin-left: -16.5vw;
 	}
 
 	.box {
