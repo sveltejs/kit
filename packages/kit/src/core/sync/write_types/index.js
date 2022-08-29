@@ -561,11 +561,11 @@ export function tweak_types(content, names) {
 									);
 								} else {
 									// prevent "type X is imported but not used" (isn't silenced by @ts-nocheck) when svelte-check runs
-									code.append(`;${type};`);
+									code.append(`;null as any as ${type};`);
 								}
 							} else {
 								// prevent "type X is imported but not used" (isn't silenced by @ts-nocheck) when svelte-check runs
-								code.append(`;${type};`);
+								code.append(`;null as any as ${type};`);
 							}
 
 							modified = true;
