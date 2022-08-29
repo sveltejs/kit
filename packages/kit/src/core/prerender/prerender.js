@@ -348,8 +348,8 @@ export async function prerender() {
 		try {
 			if (route.endpoint) {
 				const mod = await route.endpoint();
-				if (mod.prerender) {
-					if (mod.POST || mod.PATCH || mod.PUT || mod.DELETE) {
+				if (mod.prerender !== undefined) {
+					if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
 						throw new Error(
 							`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
 						);
