@@ -188,3 +188,25 @@ export function GET() {
 	return;
 }
 ```
+
+## A GET function that returns a JSON object
+
+```js before
+export function get() {
+	return {
+		body: {
+			a: 1
+		}
+	};
+}
+```
+
+```js after
+import { json } from '@sveltejs/kit';
+
+export function GET() {
+	return json({
+		a: 1
+	});
+}
+```
