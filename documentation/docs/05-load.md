@@ -327,8 +327,6 @@ If an _unexpected_ error is thrown, SvelteKit will invoke [`handleError`](/docs/
 
 To redirect users, use the `redirect` helper from `@sveltejs/kit` to specify the location to which they should be redirected alongside a `3xx` status code.
 
-> There is a known bug with `redirect`: it will currently fail during client-side navigation, due to [#5952](https://github.com/sveltejs/kit/issues/5952)
-
 ```diff
 /// file: src/routes/admin/+layout.server.js
 -import { error } from '@sveltejs/kit';
