@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.448
+
+### Patch Changes
+
+- prevent test suites from getting published ([#6386](https://github.com/sveltejs/kit/pull/6386))
+
+* [fix] remove unnecessary JSON serialization of server data ([#6382](https://github.com/sveltejs/kit/pull/6382))
+
+- [breaking] require Node 16.14 ([#6388](https://github.com/sveltejs/kit/pull/6388))
+
 ## 1.0.0-next.447
 
 ### Patch Changes
