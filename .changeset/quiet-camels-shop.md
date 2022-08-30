@@ -1,6 +1,5 @@
 ---
 '@sveltejs/kit': patch
-'create-svelte': patch
 ---
 
-[breaking] add error.html page
+[breaking] add `error.html` page, rename `kit.config.files.template` to `kit.config.files.appTemplate`
