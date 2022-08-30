@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.167
+
+### Patch Changes
+
+- [breaking] Replace `sveltekit:*` with valid HTML attributes like `data-sveltekit-*` ([#6170](https://github.com/sveltejs/kit/pull/6170))
+
 ## 2.0.0-next.166
 
 ### Patch Changes
