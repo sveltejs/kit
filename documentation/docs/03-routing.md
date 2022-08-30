@@ -74,7 +74,7 @@ As well as `load`, `page.js` can export values that configure the page's behavio
 - `export const router = true` or `false`
 - `export const ssr = true` or `false`
 
-You can find more information about these in [page options](/docs/12-page-options).
+You can find more information about these in [page options](/docs/page-options).
 
 #### +page.server.js
 
