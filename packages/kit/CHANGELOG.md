@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.451
+
+### Patch Changes
+
+- Prevent infinite reloads on `/` when root `+layout.server.js` exports `load` ([#6405](https://github.com/sveltejs/kit/pull/6405))
+
 ## 1.0.0-next.450
 
 ### Patch Changes
