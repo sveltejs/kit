@@ -64,22 +64,6 @@ export function find_anchor(event) {
 	return { a, url, options };
 }
 
-/**
- * @param {HTMLElement} element
- * @param {string} name
- */
-export function get_closest_attribute(element, name) {
-	/** @type {HTMLElement | null} */
-	let current = element;
-
-	while (current) {
-		const value = current.getAttribute(name);
-		if (value !== null) return value;
-
-		current = current.parentElement;
-	}
-}
-
 /** @param {any} value */
 export function notifiable_store(value) {
 	const store = writable(value);
