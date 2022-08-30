@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.166
+
+### Patch Changes
+
+- Remove App.PrivateEnv and App.PublicEnv placeholders ([#6413](https://github.com/sveltejs/kit/pull/6413))
+
 ## 2.0.0-next.165
 
 ### Patch Changes
