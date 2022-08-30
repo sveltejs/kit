@@ -576,7 +576,7 @@ importers:
       svelte: ^3.48.0
       typescript: ^4.8.2
       vite: ^3.1.0-beta.1
-      vite-imagetools: ^4.0.3
+      vite-imagetools: ^4.0.7
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
       '@sveltejs/adapter-static': link:../../packages/adapter-static
@@ -592,7 +592,7 @@ importers:
       svelte: 3.48.0
       typescript: 4.8.2
       vite: 3.1.0-beta.1
-      vite-imagetools: 4.0.4
+      vite-imagetools: 4.0.7
 
 packages:
 
@@ -2426,8 +2426,8 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
-  /imagetools-core/3.0.3:
-    resolution: {integrity: sha512-JK7kb0ezkzD27zQgZs7mtRd7DekC+/RTePjIzPsuBAp3S/Z17wNt+6TSEdDJRQSV5xiGV+SOG00weSGVdX3Xig==}
+  /imagetools-core/3.1.1:
+    resolution: {integrity: sha512-LNVnortLEgE0ATHaGZBt3WTccKBz8zNk+NWRHsuyhgMiZ1nCJwAA1I2QcHXUq7OMbsiYm/H5muTv+iSLXM2tiA==}
     engines: {node: '>=12.0.0'}
     dependencies:
       sharp: 0.30.7
@@ -4495,12 +4495,12 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-imagetools/4.0.4:
-    resolution: {integrity: sha512-ik1Sq4ueKYN2iBjxe3g8YxqM9aul2goQ2z8CuTKKxOG3M1nF63SRqialbXMuJVH8aKJ9A2oGhs1sktCAoo9EBg==}
+  /vite-imagetools/4.0.7:
+    resolution: {integrity: sha512-QyT5J455oD0jzi+bIfP/QHNNTSVdyYeWLXZBS0XeI5hReZ/7U4fD7ypZM1qwEBTEJFte4hDrOsFeyin09wig2A==}
     engines: {node: '>=12.0.0'}
     dependencies:
       '@rollup/pluginutils': 4.2.1
-      imagetools-core: 3.0.3
+      imagetools-core: 3.1.1
       magic-string: 0.26.2
     dev: true
 
