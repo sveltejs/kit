@@ -144,7 +144,7 @@ export function data_response(data) {
  * @param {string} message
  */
 export function static_error_page(options, status, message) {
-	return new Response(options.error_page({ status, message }), {
+	return new Response(options.error_template({ status, message }), {
 		headers: { 'content-type': 'text/html; charset=utf-8' },
 		status
 	});

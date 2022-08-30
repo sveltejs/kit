@@ -74,6 +74,9 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 
 	for (const key in validated.kit.files) {
+		// TODO remove for 1.0
+		if (key === 'template') continue;
+
 		// @ts-expect-error this is typescript at its stupidest
 		validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
 	}
