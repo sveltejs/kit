@@ -83,20 +83,13 @@ export async function GET() {
 
 #### AMP
 
-An unfortunate reality of modern web development is that it is sometimes necessary to create an [Accelerated Mobile Pages (AMP)](https://amp.dev/) version of your site. In SvelteKit this can be done by enforcing the following [configuration](/docs/configuration) options...
+An unfortunate reality of modern web development is that it is sometimes necessary to create an [Accelerated Mobile Pages (AMP)](https://amp.dev/) version of your site. In SvelteKit this can be done by setting the [`inlineStyleThreshold`](/docs/configuration#inlinestylethreshold) option...
 
 ```js
 /// file: svelte.config.js
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		// the combination of these options
-		// disables JavaScript
-		browser: {
-			hydrate: false,
-			router: false
-		},
-
 		// since <link rel="stylesheet"> isn't
 		// allowed, inline all styles
 		inlineStyleThreshold: Infinity
@@ -104,6 +97,16 @@ const config = {
 };
 
 export default config;
+```
+
+...disabling `hydrate` and `router` in your root `+layout.js`/`+layout.server.js`...
+
+```js
+/// file: src/routes/+layout.server.js
+// the combination of these options
+// disables JavaScript
+export const hydrate = false;
+export const router = false;
 ```
 
 ...and transforming the HTML using `transformPageChunk` along with `transform` imported from `@sveltejs/amp`:

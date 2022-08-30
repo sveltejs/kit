@@ -70,19 +70,13 @@ export class Server {
 				error.stack = this.options.get_stack(error);
 			},
 			hooks: null,
-			hydrate: ${s(config.kit.browser.hydrate)},
 			manifest,
 			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
-			prerender: {
-				default: ${config.kit.prerender.default},
-				enabled: ${config.kit.prerender.enabled}
-			},
 			public_env: {},
 			read,
 			root,
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
-			router: ${s(config.kit.browser.router)},
 			app_template,
 			app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			error_template,

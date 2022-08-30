@@ -275,11 +275,15 @@ export interface SSRNode {
 		hydrate?: boolean;
 		prerender?: PrerenderOption;
 		router?: boolean;
+		ssr?: boolean;
 	};
 
 	server: {
 		load?: ServerLoad;
+		hydrate?: boolean;
 		prerender?: PrerenderOption;
+		router?: boolean;
+		ssr?: boolean;
 		POST?: Action;
 		PATCH?: Action;
 		PUT?: Action;
@@ -298,21 +302,15 @@ export interface SSROptions {
 	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;
-	hydrate: boolean;
 	manifest: SSRManifest;
 	method_override: MethodOverride;
 	paths: {
 		base: string;
 		assets: string;
 	};
-	prerender: {
-		default: boolean;
-		enabled: boolean;
-	};
 	public_env: Record<string, string>;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
-	router: boolean;
 	service_worker?: string;
 	app_template({
 		head,

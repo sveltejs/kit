@@ -69,9 +69,12 @@ This function runs alongside `+page.svelte`, which means it runs on the server d
 
 As well as `load`, `page.js` can export values that configure the page's behaviour:
 
-- `export const prerender = true` or `false` overrides [`config.kit.prerender.default`](/docs/configuration#prerender)
-- `export const hydrate = true` or `false` overrides [`config.kit.browser.hydrate`](/docs/configuration#browser)
-- `export const router = true` or `false` overrides [`config.kit.browser.router`](/docs/configuration#browser)
+- `export const prerender = true` or `false` or `'auto'`
+- `export const hydrate = true` or `false`
+- `export const router = true` or `false`
+- `export const ssr = true` or `false`
+
+You can find more information about these in [page options](/docs/page-options).
 
 #### +page.server.js
 
@@ -107,6 +110,8 @@ export async function load({ params }) {
 ```
 
 During client-side navigation, SvelteKit will load this data from the server, which means that the returned value must be serializable using [devalue](https://github.com/rich-harris/devalue).
+
+Like `+page.js`, `+page.server.js` can export [page options](/docs/page-options) — `prerender`, `hydrate`, `router` and `ssr`.
 
 #### Actions
 
@@ -277,7 +282,7 @@ export function load() {
 }
 ```
 
-Unlike `+page.js`, `+layout.js` cannot export `prerender`, `hydrate` and `router`, as these are page-level options.
+If a `+layout.js` exports [page options](/docs/page-options) — `prerender`, `hydrate` `router` and `ssr` — they will be used as defaults for child pages.
 
 Data returned from a layout's `load` function is also available to all its child pages:
 
@@ -296,6 +301,8 @@ Data returned from a layout's `load` function is also available to all its child
 #### +layout.server.js
 
 To run your layout's `load` function on the server, move it to `+layout.server.js`, and change the `LayoutLoad` type to `LayoutServerLoad`.
+
+Like `+layout.js`, `+layout.server.js` can export [page options](/docs/page-options) — `prerender`, `hydrate` `router` and `ssr`.
 
 ### +server
 

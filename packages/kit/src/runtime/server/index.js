@@ -187,7 +187,6 @@ export async function respond(request, options, state) {
 
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
-		ssr: true,
 		transformPageChunk: default_transform
 	};
 
@@ -205,9 +204,14 @@ export async function respond(request, options, state) {
 							'transformPage has been replaced by transformPageChunk — see https://github.com/sveltejs/kit/pull/5657 for more information'
 						);
 					}
+					// @ts-expect-error
+					if (opts.ssr) {
+						throw new Error(
+							'ssr has been removed, set it in the appropriate +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197'
+						);
+					}
 
 					resolve_opts = {
-						ssr: opts.ssr !== false,
 						transformPageChunk: opts.transformPageChunk || default_transform
 					};
 				}
@@ -217,17 +221,14 @@ export async function respond(request, options, state) {
 						event,
 						options,
 						state,
-						page_config: { router: true, hydrate: true },
+						page_config: { router: true, hydrate: true, ssr: false },
 						status: 200,
 						error: null,
 						branch: [],
 						fetched: [],
 						validation_errors: undefined,
 						cookies: [],
-						resolve_opts: {
-							...resolve_opts,
-							ssr: false
-						}
+						resolve_opts
 					});
 				}
 

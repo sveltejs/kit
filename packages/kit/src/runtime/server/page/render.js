@@ -23,7 +23,7 @@ const updated = {
  *   cookies: import('set-cookie-parser').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
- *   page_config: { hydrate: boolean, router: boolean };
+ *   page_config: { hydrate: boolean, router: boolean; ssr: boolean };
  *   status: number;
  *   error: HttpError | Error | null;
  *   event: import('types').RequestEvent;
@@ -74,7 +74,7 @@ export async function render_response({
 		error.stack = options.get_stack(error);
 	}
 
-	if (resolve_opts.ssr) {
+	if (page_config.ssr) {
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
@@ -209,9 +209,9 @@ export async function render_response({
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
 			route: ${!!page_config.router},
-			spa: ${!resolve_opts.ssr},
+			spa: ${!page_config.ssr},
 			trailing_slash: ${s(options.trailing_slash)},
-			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
+			hydrate: ${page_config.ssr && page_config.hydrate ? `{
 				status: ${status},
 				error: ${error && serialize_error(error, e => e.stack)},
 				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
@@ -286,7 +286,7 @@ export async function render_response({
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 	}
 
-	if (resolve_opts.ssr && page_config.hydrate) {
+	if (page_config.ssr && page_config.hydrate) {
 		/** @type {string[]} */
 		const serialized_data = [];
 
