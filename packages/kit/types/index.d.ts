@@ -113,7 +113,7 @@ export interface Config {
 		exports?: (filepath: string) => boolean;
 		files?: (filepath: string) => boolean;
 	};
-	preprocess?: SvelteOptions['preprocess'];
+	preprocess?: any;
 	[key: string]: any;
 }
 
