@@ -111,6 +111,8 @@ export async function load({ params }) {
 
 During client-side navigation, SvelteKit will load this data from the server, which means that the returned value must be serializable using [devalue](https://github.com/rich-harris/devalue).
 
+Like `+page.js`, `+page.server.js` can export [page options](/docs/page-options) — `prerender`, `hydrate`, `router` and `ssr`.
+
 #### Actions
 
 `+page.server.js` can also declare _actions_, which correspond to the `POST`, `PATCH`, `PUT` and `DELETE` HTTP methods. A request made to the page with one of these methods will invoke the corresponding action before rendering the page.
@@ -280,7 +282,7 @@ export function load() {
 }
 ```
 
-Unlike `+page.js`, `+layout.js` cannot export `prerender`, `hydrate` and `router`, as these are page-level options.
+If a `+layout.js` exports [page options](/docs/page-options) — `prerender`, `hydrate` `router` and `ssr` — they will be used as defaults for child pages.
 
 Data returned from a layout's `load` function is also available to all its child pages:
 
@@ -299,6 +301,8 @@ Data returned from a layout's `load` function is also available to all its child
 #### +layout.server.js
 
 To run your layout's `load` function on the server, move it to `+layout.server.js`, and change the `LayoutLoad` type to `LayoutServerLoad`.
+
+Like `+layout.js`, `+layout.server.js` can export [page options](/docs/page-options) — `prerender`, `hydrate` `router` and `ssr`.
 
 ### +server
 
