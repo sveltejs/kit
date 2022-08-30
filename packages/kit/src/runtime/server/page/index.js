@@ -2,7 +2,7 @@ import { devalue } from 'devalue';
 import { negotiate } from '../../../utils/http.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
-import { method_not_allowed, error_to_pojo, allowed_methods } from '../utils.js';
+import { method_not_allowed, error_to_pojo, allowed_methods, static_error_page } from '../utils.js';
 import { create_fetch } from './fetch.js';
 import { HttpError, Redirect } from '../../control.js';
 import { error, json } from '../../../exports/index.js';
@@ -50,8 +50,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 			return handle_json_request(event, options, node.server);
 		}
 	}
-
-	const { fetcher, fetched, cookies } = create_fetch({ event, options, state, route });
 
 	try {
 		const nodes = await Promise.all([
@@ -109,23 +107,30 @@ export async function render_page(event, route, page, options, state, resolve_op
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
 		// causing functions to be omitted from the manifesst generated later
+		// TODO incorporate layout options in https://github.com/sveltejs/kit/pull/6197
 		const should_prerender =
 			leaf_node.shared?.prerender ?? leaf_node.server?.prerender ?? options.prerender.default;
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
-				throw new Error('Cannot prerender pages that have endpoints with mutative methods');
+				throw new Error('Cannot prerender pages that have mutative methods');
 			}
 		} else if (state.prerendering) {
 			// if the page isn't marked as prerenderable (or is explicitly
 			// marked NOT prerenderable, if `prerender.default` is `true`),
 			// then bail out at this point
-			if (!should_prerender) {
-				return new Response(undefined, {
-					status: 204
-				});
-			}
+			return new Response(undefined, {
+				status: 204
+			});
 		}
+
+		const { fetcher, fetched, cookies } = create_fetch({
+			event,
+			options,
+			state,
+			route,
+			prerender_default: should_prerender
+		});
 
 		if (!resolve_opts.ssr) {
 			return await render_response({
@@ -281,12 +286,11 @@ export async function render_page(event, route, page, options, state, resolve_op
 					}
 
 					// if we're still here, it means the error happened in the root layout,
-					// which means we have to fall back to a plain text response
-					// TODO since the requester is expecting HTML, maybe it makes sense to
-					// doll this up a bit
-					return new Response(
-						error instanceof HttpError ? error.message : options.get_stack(error),
-						{ status }
+					// which means we have to fall back to error.html
+					return static_error_page(
+						options,
+						status,
+						/** @type {HttpError | Error} */ (error).message
 					);
 				}
 			} else {

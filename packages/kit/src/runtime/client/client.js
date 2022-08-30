@@ -853,7 +853,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 					// if we get here, it's because the root `load` function failed,
 					// and we need to fall back to the server
-					native_navigation(url);
+					await native_navigation(url);
 					return;
 				}
 			} else {
@@ -907,7 +907,7 @@ export function create_client({ target, base, trailing_slash }) {
 				server_data_node = server_data.nodes[0] ?? null;
 			} catch {
 				// at this point we have no choice but to fall back to the server
-				native_navigation(url);
+				await native_navigation(url);
 
 				// @ts-expect-error
 				return;

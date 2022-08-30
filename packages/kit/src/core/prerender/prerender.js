@@ -9,15 +9,14 @@ import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { load_config } from '../config/index.js';
-import { compact } from '../../utils/array.js';
-import { get_path } from '../../utils/routing.js';
+import { affects_path } from '../../utils/routing.js';
 
 /**
  * @typedef {import('types').PrerenderErrorHandler} PrerenderErrorHandler
  * @typedef {import('types').Logger} Logger
  */
 
-const [, , client_out_dir, results_path, manifest_path, verbose, env] = process.argv;
+const [, , client_out_dir, results_path, verbose, env] = process.argv;
 
 prerender();
 
@@ -58,12 +57,15 @@ const OK = 2;
 const REDIRECT = 3;
 
 /**
- * @param {import('types').Prerendered} prerendered
+ * @param {{
+ *   prerendered: import('types').Prerendered;
+ *   prerender_map: import('types').PrerenderMap;
+ * }} data
  */
-const output_and_exit = (prerendered) => {
+const output_and_exit = (data) => {
 	writeFileSync(
 		results_path,
-		JSON.stringify(prerendered, (_key, value) =>
+		JSON.stringify(data, (_key, value) =>
 			value instanceof Map ? Array.from(value.entries()) : value
 		)
 	);
@@ -79,11 +81,14 @@ export async function prerender() {
 		paths: []
 	};
 
+	/** @type {import('types').PrerenderMap} */
+	const prerender_map = new Map();
+
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config()).kit;
 
 	if (!config.prerender.enabled) {
-		output_and_exit(prerendered);
+		output_and_exit({ prerendered, prerender_map });
 		return;
 	}
 
@@ -231,6 +236,16 @@ export async function prerender() {
 			const encoded_dependency_path = new URL(dependency_path, 'http://localhost').pathname;
 			const decoded_dependency_path = decodeURI(encoded_dependency_path);
 
+			const prerender = result.response.headers.get('x-sveltekit-prerender');
+
+			if (prerender) {
+				const route_id = /** @type {string} */ (result.response.headers.get('x-sveltekit-routeid'));
+				const existing_value = prerender_map.get(route_id);
+				if (existing_value !== 'auto') {
+					prerender_map.set(route_id, prerender === 'true' ? true : 'auto');
+				}
+			}
+
 			const body = result.body ?? new Uint8Array(await result.response.arrayBuffer());
 			save(
 				'dependencies',
@@ -340,24 +355,62 @@ export async function prerender() {
 		}
 	}
 
-	if (config.prerender.enabled) {
-		for (const entry of config.prerender.entries) {
-			if (entry === '*') {
-				/** @type {import('types').SSRManifest} */
-				const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
-				const { routes } = manifest._;
-				const entries = compact(routes.map((route) => route.page && get_path(route.id)));
+	for (const route of manifest._.routes) {
+		try {
+			if (route.endpoint) {
+				const mod = await route.endpoint();
+				if (mod.prerender !== undefined) {
+					if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
+						throw new Error(
+							`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
+						);
+					}
 
-				for (const entry of entries) {
-					enqueue(null, config.paths.base + entry); // TODO can we pre-normalize these?
+					prerender_map.set(route.id, mod.prerender);
 				}
-			} else {
-				enqueue(null, config.paths.base + entry);
 			}
-		}
 
-		await q.done();
+			if (route.page) {
+				// TODO use setting from layouts, in https://github.com/sveltejs/kit/pull/6197
+				// const nodes = await Promise.all(
+				// 	[...route.page.layouts, route.page.leaf].map((n) => {
+				// 		if (n !== undefined) return manifest._.nodes[n]();
+				// 	})
+				// );
+
+				// let prerender = config.prerender.default;
+				// for (const node of nodes) {
+				// 	prerender = node?.shared?.prerender ?? node?.server?.prerender ?? prerender;
+				// }
+
+				const leaf = await manifest._.nodes[route.page.leaf]();
+				let prerender =
+					leaf.shared?.prerender ?? leaf.server?.prerender ?? config.prerender.default;
+
+				prerender_map.set(route.id, prerender);
+			}
+		} catch (e) {
+			// We failed to import the module, which indicates it can't be prerendered
+			// TODO should we catch these? It's almost certainly a bug in the app
+			console.error(e);
+		}
 	}
+
+	for (const entry of config.prerender.entries) {
+		if (entry === '*') {
+			for (const [id, prerender] of prerender_map) {
+				if (prerender) {
+					if (id.includes('[')) continue;
+					const path = `/${id.split('/').filter(affects_path).join('/')}`;
+					enqueue(null, config.paths.base + path);
+				}
+			}
+		} else {
+			enqueue(null, config.paths.base + entry);
+		}
+	}
+
+	await q.done();
 
 	const rendered = await server.respond(new Request(config.prerender.origin + '/[fallback]'), {
 		getClientAddress,
@@ -371,7 +424,7 @@ export async function prerender() {
 	mkdirp(dirname(file));
 	writeFileSync(file, await rendered.text());
 
-	output_and_exit(prerendered);
+	output_and_exit({ prerendered, prerender_map });
 }
 
 /** @return {string} */

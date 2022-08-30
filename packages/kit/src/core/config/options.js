@@ -140,7 +140,12 @@ const options = object(
 				params: string(join('src', 'params')),
 				routes: string(join('src', 'routes')),
 				serviceWorker: string(join('src', 'service-worker')),
-				template: string(join('src', 'app.html'))
+				appTemplate: string(join('src', 'app.html')),
+				errorTemplate: string(join('src', 'error.html')),
+				// TODO: remove this for the 1.0 release
+				template: error(
+					() => 'config.kit.files.template has been renamed to config.kit.files.appTemplate'
+				)
 			}),
 
 			// TODO: remove this for the 1.0 release
