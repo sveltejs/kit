@@ -10,14 +10,10 @@
  * 	interface PageData {}
  *
  * 	interface Platform {}
- *
- * 	interface PrivateEnv {}
- *
- * 	interface PublicEnv {}
  * }
  * ```
  *
- * By populating these interfaces, you will gain type safety when using `env`, `event.locals` and `event.platform`.
+ * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, and `data` from `load` functions.
  *
  * Note that since it's an ambient declaration file, you have to be careful when using `import` statements. Once you add an `import`
  * at the top level, the declaration file is no longer considered ambient and you lose access to these typings in other files.
@@ -60,16 +56,6 @@ declare namespace App {
 	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
 	 */
 	export interface Platform {}
-
-	/**
-	 * The interface that defines the dynamic environment variables exported from `$env/dynamic/private`.
-	 */
-	export interface PrivateEnv extends Record<string, string> {}
-
-	/**
-	 * The interface that defines the dynamic environment variables exported from `$env/dynamic/public`.
-	 */
-	export interface PublicEnv extends Record<string, string> {}
 }
 
 /**
@@ -92,39 +78,6 @@ declare module '$app/environment' {
 	 * `true` when prerendering, `false` otherwise.
 	 */
 	export const prerendering: boolean;
-}
-
-/**
- * This module provides access to runtime environment variables, as defined by the platform you're running on. For example
- * if you're using [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) (or running
- * [`vite preview`](https://kit.svelte.dev/docs/cli)), this is equivalent to `process.env`. This module only includes
- * variables that _do not_ begin with [`config.kit.env.publicPrefix`](https://kit.svelte.dev/docs/configuration#kit-env-publicprefix).
- *
- * This module cannot be imported into client-side code.
- *
- * ```ts
- * import { env } from '$env/dynamic/private';
- * console.log(env.DEPLOYMENT_SPECIFIC_VARIABLE);
- * ```
- */
-declare module '$env/dynamic/private' {
-	export let env: App.PrivateEnv;
-}
-
-/**
- * Similar to [`$env/dynamic/private`](https://kit.svelte.dev/docs/modules#$env-dynamic-private), but only includes
- * variables that begin with [`config.kit.env.publicPrefix`](https://kit.svelte.dev/docs/configuration#kit-env-publicprefix)
- * (which defaults to `PUBLIC_`), and can therefore safely be exposed to client-side code
- *
- * Note that public dynamic environment variables must all be sent from the server to the client, causing larger network requests — when possible, use `$env/static/public` instead.
- *
- * ```ts
- * import { env } from '$env/dynamic/public';
- * console.log(env.PUBLIC_DEPLOYMENT_SPECIFIC_VARIABLE);
- * ```
- */
-declare module '$env/dynamic/public' {
-	export let env: App.PublicEnv;
 }
 
 /**
