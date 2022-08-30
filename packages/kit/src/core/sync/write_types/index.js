@@ -181,7 +181,7 @@ function update_types(config, routes, route) {
 			`type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any>>`
 		);
 		// null & {} == null, we need to prevent that in some situations
-		declarations.push(`type EnsureParentData<T> = NonNullable<T> extends never ? {} : T;`);
+		declarations.push(`type EnsureParentData<T> = T extends null | undefined ? {} : T;`);
 	}
 
 	if (route.leaf) {
