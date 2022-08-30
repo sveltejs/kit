@@ -1427,7 +1427,7 @@ test.describe('Routing', () => {
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
-	test('does not attempt client-side navigation to links with sveltekit:reload', async ({
+	test('does not attempt client-side navigation to links with data-sveltekit-reload', async ({
 		baseURL,
 		page
 	}) => {

@@ -133,8 +133,8 @@ This caused problems and is no longer the case in SvelteKit. Instead, relative U
 
 #### &lt;a&gt; attributes
 
-- `sapper:prefetch` is now `sveltekit:prefetch`
-- `sapper:noscroll` is now `sveltekit:noscroll`
+- `sapper:prefetch` is now `data-sveltekit-prefetch`
+- `sapper:noscroll` is now `data-sveltekit-noscroll`
 
 ### Endpoints
 
