@@ -9,8 +9,4 @@ declare namespace App {
 	// interface PageData {}
 
 	// interface Platform {}
-
-	// interface PrivateEnv {}
-
-	// interface PublicEnv {}
 }
