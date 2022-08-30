@@ -34,7 +34,7 @@ export function create_dynamic_module(type) {
  * @param {Record<string, string>} env
  * @returns {string}
  */
-export function create_types(id, env) {
+export function create_static_types(id, env) {
 	const declarations = Object.keys(env)
 		.filter((k) => valid_identifier.test(k))
 		.map((k) => `\texport const ${k}: string;`)
