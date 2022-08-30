@@ -9,7 +9,7 @@ interface Part {
 
 interface RouteTreeNode {
 	error: PageNode | undefined;
-	layouts: Record<string, PageNode>;
+	layout: PageNode | undefined;
 }
 
 export type RouteTree = Map<string, RouteTreeNode>;
@@ -20,21 +20,18 @@ interface RouteComponent {
 	is_layout: boolean;
 	is_error: boolean;
 	uses_layout: string | undefined;
-	declares_layout: string | undefined;
 }
 
 interface RouteSharedModule {
 	kind: 'shared';
 	is_page: boolean;
 	is_layout: boolean;
-	declares_layout: string | undefined;
 }
 
 interface RouteServerModule {
 	kind: 'server';
 	is_page: boolean;
 	is_layout: boolean;
-	declares_layout: string | undefined;
 }
 
 export type RouteFile = RouteComponent | RouteSharedModule | RouteServerModule;

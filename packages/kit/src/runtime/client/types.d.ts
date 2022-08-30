@@ -6,8 +6,8 @@ import {
 	prefetch,
 	prefetchRoutes
 } from '$app/navigation';
-import { CSRPageNode, CSRRoute } from 'types';
-import { HttpError } from '../../index/private.js';
+import { CSRPageNode, CSRPageNodeLoader, CSRRoute, Uses } from 'types';
+import { HttpError } from '../control.js';
 import { SerializedHttpError } from '../server/page/types.js';
 
 export interface Client {
@@ -27,6 +27,8 @@ export interface Client {
 		node_ids: number[];
 		params: Record<string, string>;
 		routeId: string | null;
+		data: Array<import('types').ServerDataNode | null>;
+		errors: Record<string, any> | null;
 	}) => Promise<void>;
 	_start_router: () => void;
 }
@@ -65,14 +67,17 @@ export type NavigationFinished = {
 
 export type BranchNode = {
 	node: CSRPageNode;
+	loader: CSRPageNodeLoader;
+	server: DataNode | null;
+	shared: DataNode | null;
 	data: Record<string, any> | null;
-	uses: {
-		params: Set<string>;
-		url: boolean; // TODO make more granular?
-		dependencies: Set<string>;
-		parent: boolean;
-	};
 };
+
+export interface DataNode {
+	type: 'data';
+	data: Record<string, any> | null;
+	uses: Uses;
+}
 
 export type NavigationState = {
 	branch: Array<BranchNode | undefined>;
@@ -81,25 +86,3 @@ export type NavigationState = {
 	session_id: number;
 	url: URL;
 };
-
-export type ServerDataPayload = ServerDataRedirected | ServerDataLoaded;
-
-export interface ServerDataRedirected {
-	type: 'redirect';
-	location: string;
-}
-
-export interface ServerDataLoaded {
-	type: 'data';
-	nodes: Array<{
-		data?: Record<string, any> | null; // TODO or `-1` to indicate 'reuse cached data'?
-		status?: number;
-		message?: string;
-		error?: {
-			name: string;
-			message: string;
-			stack: string;
-			[key: string]: any;
-		};
-	}>;
-}

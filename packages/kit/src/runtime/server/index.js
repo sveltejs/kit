@@ -2,18 +2,15 @@ import { render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
-import { coalesce_to_error, normalize_error } from '../../utils/error.js';
-import { serialize_error, GENERIC_ERROR, error_to_pojo } from './utils.js';
-import { decode_params, normalize_path } from '../../utils/url.js';
+import { coalesce_to_error } from '../../utils/error.js';
+import { serialize_error, GENERIC_ERROR } from './utils.js';
+import { decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
-import { HttpError, Redirect } from '../../index/private.js';
-import { load_server_data } from './page/load_data.js';
-import { json } from '../../index/index.js';
+import { render_data } from './data/index.js';
+import { DATA_SUFFIX } from '../../constants.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
-
-const DATA_SUFFIX = '/__data.json';
 
 /** @param {{ html: string }} opts */
 const default_transform = ({ html }) => html;
@@ -68,12 +65,7 @@ export async function respond(request, options, state) {
 	}
 
 	const is_data_request = decoded.endsWith(DATA_SUFFIX);
-
-	if (is_data_request) {
-		const data_suffix_length = DATA_SUFFIX.length - (options.trailing_slash === 'always' ? 1 : 0);
-		decoded = decoded.slice(0, -data_suffix_length) || '/';
-		url = new URL(url.origin + url.pathname.slice(0, -data_suffix_length) + url.search);
-	}
+	if (is_data_request) decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
 
 	if (!state.prerendering?.fallback) {
 		const matchers = await options.manifest._.matchers();
@@ -91,26 +83,19 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	if (route) {
-		if (route.type === 'page') {
-			const normalized = normalize_path(url.pathname, options.trailing_slash);
+	if (route?.page && !is_data_request) {
+		const normalized = normalize_path(url.pathname, options.trailing_slash);
 
-			if (normalized !== url.pathname && !state.prerendering?.fallback) {
-				return new Response(undefined, {
-					status: 301,
-					headers: {
-						'x-sveltekit-normalize': '1',
-						location:
-							// ensure paths starting with '//' are not treated as protocol-relative
-							(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-							(url.search === '?' ? '' : url.search)
-					}
-				});
-			}
-		} else if (is_data_request) {
-			// requesting /__data.json should fail for a standalone endpoint
+		if (normalized !== url.pathname && !state.prerendering?.fallback) {
 			return new Response(undefined, {
-				status: 404
+				status: 301,
+				headers: {
+					'x-sveltekit-normalize': '1',
+					location:
+						// ensure paths starting with '//' are not treated as protocol-relative
+						(normalized.startsWith('//') ? url.origin + normalized : normalized) +
+						(url.search === '?' ? '' : url.search)
+				}
 			});
 		}
 	}
@@ -121,21 +106,17 @@ export async function respond(request, options, state) {
 	/** @type {string[]} */
 	const cookies = [];
 
+	if (state.prerendering) disable_search(url);
+
 	/** @type {import('types').RequestEvent} */
 	const event = {
-		get clientAddress() {
-			if (!state.getClientAddress) {
+		getClientAddress:
+			state.getClientAddress ||
+			(() => {
 				throw new Error(
 					`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
 				);
-			}
-
-			Object.defineProperty(event, 'clientAddress', {
-				value: state.getClientAddress()
-			});
-
-			return event.clientAddress;
-		},
+			}),
 		locals: {},
 		params,
 		platform: state.platform,
@@ -194,6 +175,7 @@ export async function respond(request, options, state) {
 	};
 
 	Object.defineProperties(event, {
+		clientAddress: removed('clientAddress', 'getClientAddress'),
 		method: removed('method', 'request.method', details),
 		headers: removed('headers', 'request.headers', details),
 		origin: removed('origin', 'url.origin'),
@@ -252,82 +234,21 @@ export async function respond(request, options, state) {
 				if (route) {
 					/** @type {Response} */
 					let response;
-					if (is_data_request && route.type === 'page') {
-						try {
-							/** @type {Redirect | HttpError | Error} */
-							let error;
 
-							// TODO only get the data we need for the navigation
-							const promises = [...route.layouts, route.leaf].map(async (n, i) => {
-								try {
-									if (error) return;
-
-									// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
-									const node = n == undefined ? n : await options.manifest._.nodes[n]();
-									return {
-										// TODO return `uses`, so we can reuse server data effectively
-										data: await load_server_data({
-											dev: options.dev,
-											event,
-											node,
-											parent: async () => {
-												/** @type {Record<string, any>} */
-												const data = {};
-												for (let j = 0; j < i; j += 1) {
-													const parent = await promises[j];
-													if (!parent || parent instanceof HttpError || 'error' in parent) {
-														return data;
-													}
-													Object.assign(data, parent.data);
-												}
-												return data;
-											}
-										})
-									};
-								} catch (e) {
-									error = normalize_error(e);
-
-									if (error instanceof Redirect) {
-										throw error;
-									}
-
-									if (error instanceof HttpError) {
-										return error; // { status, message }
-									}
-
-									options.handle_error(error, event);
-
-									return {
-										error: error_to_pojo(error, options.get_stack)
-									};
-								}
-							});
-
-							response = json({
-								type: 'data',
-								nodes: await Promise.all(promises)
-							});
-						} catch (e) {
-							const error = normalize_error(e);
-
-							if (error instanceof Redirect) {
-								response = json({
-									type: 'redirect',
-									location: error.location
-								});
-							} else {
-								response = json(error_to_pojo(error, options.get_stack), { status: 500 });
-							}
-						}
+					if (is_data_request) {
+						response = await render_data(event, route, options, state);
+					} else if (route.page) {
+						response = await render_page(event, route, route.page, options, state, resolve_opts);
+					} else if (route.endpoint) {
+						response = await render_endpoint(event, await route.endpoint());
 					} else {
-						response =
-							route.type === 'endpoint'
-								? await render_endpoint(event, route)
-								: await render_page(event, route, options, state, resolve_opts);
+						// a route will always have a page or an endpoint, but TypeScript
+						// doesn't know that
+						throw new Error('This should never happen');
 					}
 
 					if (!is_data_request) {
-						// we only want to set cookies on __data.json requests, we don't
+						// we only want to set cookies on __data.js requests, we don't
 						// want to cache stuff erroneously etc
 						for (const key in headers) {
 							const value = headers[key];

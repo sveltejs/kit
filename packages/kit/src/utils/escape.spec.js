@@ -5,11 +5,13 @@ import { render_json_payload_script, escape_html_attr } from './escape.js';
 const json = suite('render_json_payload_script');
 
 json('escapes slashes', () => {
+	// The type here doesn't really matter for the purposes of escaping,
+	// but we want to avoid upsetting TypeScript.
 	assert.equal(
-		render_json_payload_script({ type: 'server_data' }, [
+		render_json_payload_script({ type: 'validation_errors' }, [
 			{ unsafe: '</script><script>alert("xss")' }
 		]),
-		'<script type="application/json" sveltekit:data-type="server_data">' +
+		'<script type="application/json" sveltekit:data-type="validation_errors">' +
 			'[{"unsafe":"\\u003C/script>\\u003Cscript>alert(\\"xss\\")"}]' +
 			'</script>'
 	);
@@ -17,10 +19,10 @@ json('escapes slashes', () => {
 
 json('escapes exclamation marks', () => {
 	assert.equal(
-		render_json_payload_script({ type: 'server_data' }, [
+		render_json_payload_script({ type: 'validation_errors' }, [
 			{ '<!--</script>...-->alert("xss")': 'unsafe' }
 		]),
-		'<script type="application/json" sveltekit:data-type="server_data">' +
+		'<script type="application/json" sveltekit:data-type="validation_errors">' +
 			'[{"\\u003C!--\\u003C/script>...-->alert(\\"xss\\")":"unsafe"}]' +
 			'</script>'
 	);

@@ -1,13 +1,12 @@
-import devalue from 'devalue';
+import { devalue } from 'devalue';
 import { readable, writable } from 'svelte/store';
 import * as cookie from 'cookie';
 import { hash } from '../../hash.js';
 import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
-import { PrerenderingURL } from '../../../utils/url.js';
 import { serialize_error } from '../utils.js';
-import { HttpError } from '../../../index/private.js';
+import { HttpError } from '../../control.js';
 
 // TODO rename this function/module
 
@@ -100,7 +99,7 @@ export async function render_response({
 			params: /** @type {Record<string, any>} */ (event.params),
 			routeId: event.routeId,
 			status,
-			url: state.prerendering ? new PrerenderingURL(event.url) : event.url,
+			url: event.url,
 			data
 		};
 
@@ -175,6 +174,31 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
+	const serialized = { data: '', errors: 'null' };
+
+	try {
+		serialized.data = devalue(branch.map(({ server_data }) => server_data));
+	} catch (e) {
+		// If we're here, the data could not be serialized with devalue
+		// TODO if we wanted to get super fancy we could track down the origin of the `load`
+		// function, but it would mean passing more stuff around than we currently do
+		const error = /** @type {any} */ (e);
+		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
+		if (match) throw new Error(`${error.message} (data.${match[2]})`);
+		throw error;
+	}
+
+	if (validation_errors) {
+		try {
+			serialized.errors = devalue(validation_errors);
+		} catch (e) {
+			// If we're here, the data could not be serialized with devalue
+			const error = /** @type {any} */ (e);
+			if (error.path) throw new Error(`${error.message} (errors.${error.path})`);
+			throw error;
+		}
+	}
+
 	// prettier-ignore
 	const init_app = `
 		import { set_public_env, start } from ${s(prefixed(entry.file))};
@@ -192,7 +216,9 @@ export async function render_response({
 				error: ${error && serialize_error(error, e => e.stack)},
 				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 				params: ${devalue(event.params)},
-				routeId: ${s(event.routeId)}
+				routeId: ${s(event.routeId)},
+				data: ${serialized.data},
+				errors: ${serialized.errors}
 			}` : 'null'}
 		});
 	`;
@@ -269,15 +295,6 @@ export async function render_response({
 				render_json_payload_script(
 					{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
 					response
-				)
-			);
-		}
-
-		if (branch.some((node) => node.server_data)) {
-			serialized_data.push(
-				render_json_payload_script(
-					{ type: 'server_data' },
-					branch.map(({ server_data }) => server_data)
 				)
 			);
 		}

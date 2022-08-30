@@ -5,6 +5,13 @@ import { test } from '../../../utils.js';
 
 test.describe.configure({ mode: 'parallel' });
 
+test.describe('env', () => {
+	test('resolves upwards', async ({ page }) => {
+		await page.goto('/basepath/env');
+		expect(await page.textContent('p')).toBe('resolves upwards!');
+	});
+});
+
 test.describe('paths.base', () => {
 	test('serves /basepath', async ({ page }) => {
 		await page.goto('/basepath');

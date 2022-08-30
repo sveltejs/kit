@@ -3,4 +3,4 @@
 	export let data;
 </script>
 
-<h1>{data.regex.test('nope')}</h1>
+<h1>{data.nope}</h1>

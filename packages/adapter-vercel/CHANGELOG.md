@@ -1,5 +1,29 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.71
+
+### Patch Changes
+
+- Use devalue to serialize server-only `load` return values ([#6318](https://github.com/sveltejs/kit/pull/6318))
+
+## 1.0.0-next.70
+
+### Patch Changes
+
+- Don't use top-level-await, as it is not supported right now ([#6360](https://github.com/sveltejs/kit/pull/6360))
+
+## 1.0.0-next.69
+
+### Patch Changes
+
+- Run `server.init()` for edge functions ([#6327](https://github.com/sveltejs/kit/pull/6327))
+
+## 1.0.0-next.68
+
+### Patch Changes
+
+- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+
 ## 1.0.0-next.67
 
 ### Patch Changes

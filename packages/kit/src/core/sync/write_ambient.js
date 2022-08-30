@@ -1,6 +1,6 @@
 import path from 'path';
-import { get_env } from '../../vite/utils.js';
-import { GENERATED_COMMENT } from '../constants.js';
+import { get_env } from '../../exports/vite/utils.js';
+import { GENERATED_COMMENT } from '../../constants.js';
 import { create_types } from '../env.js';
 import { write_if_changed } from './utils.js';
 
@@ -14,7 +14,7 @@ const types_reference = '/// <reference types="@sveltejs/kit" />\n\n';
  * @param {string} mode The Vite mode
  */
 export function write_ambient(config, mode) {
-	const env = get_env(mode, config.env.publicPrefix);
+	const env = get_env(config.env, mode);
 
 	write_if_changed(
 		path.join(config.outDir, 'ambient.d.ts'),

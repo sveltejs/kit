@@ -7,7 +7,7 @@ installPolyfills();
 
 const server = new Server(manifest);
 
-server.init({
+await server.init({
 	env: process.env
 });
 

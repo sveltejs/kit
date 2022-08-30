@@ -106,7 +106,7 @@ export async function load({ params }) {
 }
 ```
 
-During client-side navigation, SvelteKit will load this data using `fetch`, which means that the returned value must be serializable as JSON.
+During client-side navigation, SvelteKit will load this data from the server, which means that the returned value must be serializable using [devalue](https://github.com/rich-harris/devalue).
 
 #### Actions
 
@@ -325,6 +325,8 @@ export function GET({ url }) {
 ```
 
 The first argument to `Response` can be a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream), making it possible to stream large amounts of data or create server-sent events (unless deploying to platforms that buffer responses, like AWS Lambda).
+
+You can use the `error`, `redirect` and `json` methods from `@sveltejs/kit` for convenience (but you don't have to). Note that `throw error(..)` only returns a plain text error response.
 
 ### $types
 

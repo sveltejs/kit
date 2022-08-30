@@ -5,3 +5,15 @@ _Unlike_ [`$env/dynamic/private`](https://kit.svelte.dev/docs/modules#$env-dynam
 ```ts
 import { API_KEY } from '$env/static/private';
 ```
+
+Note that all environment variables referenced in your code should be declared (for example in an `.env` file), even if they don't have a value until the app is deployed:
+
+```
+MY_FEATURE_FLAG=""
+```
+
+You can override `.env` values from the command line like so:
+
+```bash
+MY_FEATURE_FLAG="enabled" npm run dev
+```

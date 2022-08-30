@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.88
+
+### Patch Changes
+
+- Bundle non-production dependencies with esbuild ([#6372](https://github.com/sveltejs/kit/pull/6372))
+
+## 1.0.0-next.87
+
+### Patch Changes
+
+- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+
 ## 1.0.0-next.86
 
 ### Patch Changes

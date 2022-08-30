@@ -4,7 +4,7 @@ title: Loading data
 
 A [`+page.svelte`](/docs/routing#page-page-svelte) or [`+layout.svelte`](/docs/routing#layout-layout-svelte) gets its `data` from a `load` function.
 
-If the `load` function is defined in `+page.js` or `+layout.js` it will run both on the server and in the browser. If it's instead defined in `+page.server.js` or `+layout.server.js` it will only run on the server, in which case it can (for example) make database calls and access private [environment variables](/docs/modules#$env-static-private), but can only return data that can be serialized as JSON.
+If the `load` function is defined in `+page.js` or `+layout.js` it will run both on the server and in the browser. If it's instead defined in `+page.server.js` or `+layout.server.js` it will only run on the server, in which case it can (for example) make database calls and access private [environment variables](/docs/modules#$env-static-private), but can only return data that can be serialized with [devalue](https://github.com/rich-harris/devalue). In both cases, the return value (if there is one) must be an object.
 
 ```js
 /// file: src/routes/+page.js
@@ -80,7 +80,7 @@ For a route filename example like `src/routes/a/[b]/[...c]` and a `url.pathname`
 The name of the current route directory, relative to `src/routes`:
 
 ```js
-/// file: src/routes/blog/[slug]/+page.svelte
+/// file: src/routes/blog/[slug]/+page.js
 /** @type {import('./$types').PageLoad} */
 export function load({ routeId }) {
 	console.log(routeId); // 'blog/[slug]'
@@ -99,7 +99,7 @@ An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), co
 
 #### depends
 
-This function declares a _dependency_ on specific URLs, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
+This function declares that the `load` function has a _dependency_ on one or more URLs, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
 
 Most of the time you won't need this, as `fetch` calls `depends` on your behalf — it's only necessary if you're using a custom API client that bypasses `fetch`.
 
@@ -256,7 +256,7 @@ export async function load({ setHeaders }) {
 
 ### Output
 
-Any promises on the returned `data` object will be resolved, if they are top-level properties. This makes it easy to return multiple promises without creating a waterfall:
+The returned `data`, if any, must be an object of values. For a server-only `load` function, these values must be serializable with [devalue](https://github.com/rich-harris/devalue). Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
 
 ```js
 // @filename: $types.d.ts
@@ -349,7 +349,15 @@ export function load({ locals }) {
 
 SvelteKit tracks the dependencies of each `load` function to avoid re-running it unnecessarily during navigation. For example, a `load` function in a root `+layout.js` doesn't need to re-run when you navigate from one page to another unless it references `url` or a member of `params` that changed since the last navigation.
 
-Using [`invalidate(url)`](/docs/modules#$app-navigation-invalidate), you can re-run any `load` functions that depend on the invalidated resource (either implicitly, via [`fetch`](#fetch)), or explicitly via [`depends`](#depends). You can also invalidate _all_ `load` functions by calling `invalidate()` without an argument.
+A `load` function will re-run in the following situations:
+
+- It references a property of `params` whose value has changed
+- It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed
+- It calls `await parent()` and a parent `load` function re-ran
+- It declared a dependency on a specific URL via [`fetch`](#fetch) or [`depends`](#depends), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
+- All active `load` functions were forcibly re-run with [`invalidate()`](/docs/modules#$app-navigation-invalidate)
+
+If a `load` function is triggered to re-run, the page will not remount — instead, it will update with the new `data`. This means that components' internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
 
 ### Shared state
 

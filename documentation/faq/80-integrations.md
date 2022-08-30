@@ -48,7 +48,7 @@ If you need access to the `document` or `window` variables or otherwise need cod
 ```js
 /// <reference types="@sveltejs/kit" />
 // ---cut---
-import { browser } from '$app/env';
+import { browser } from '$app/environment';
 
 if (browser) {
 	// client-only code here

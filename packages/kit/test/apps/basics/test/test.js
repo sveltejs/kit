@@ -291,7 +291,7 @@ test.describe('Shadowed pages', () => {
 
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "data.regex returned from \'load\' in src/routes/shadowed/serialization/+page.server.js cannot be serialized as JSON"'
+				'This is your custom error page saying: "Cannot stringify arbitrary non-POJOs (data.nope)"'
 			);
 		});
 	}
@@ -384,7 +384,7 @@ test.describe('Encoded paths', () => {
 	});
 });
 
-test.describe('Env', () => {
+test.describe('$env', () => {
 	test('includes environment variables', async ({ page }) => {
 		await page.goto('/env');
 
@@ -579,7 +579,7 @@ test.describe('Errors', () => {
 			expect(lines[1]).toContain('+page.server.js:4:8');
 		}
 
-		const error = read_errors('/errors/page-endpoint/get-implicit');
+		const error = read_errors('/errors/page-endpoint/get-implicit/__data.js');
 		expect(error).toContain('oops');
 	});
 
@@ -728,31 +728,33 @@ test.describe('Load', () => {
 	});
 
 	test('data is inherited', async ({ page, javaScriptEnabled, app }) => {
-		await page.goto('/load/parent/a/b/c');
-		expect(await page.textContent('h1')).toBe('message: original + new');
-		expect(await page.textContent('pre')).toBe(
-			JSON.stringify({
-				foo: { bar: 'Custom layout' },
-				message: 'original + new',
-				x: 'a',
-				y: 'b',
-				z: 'c'
-			})
-		);
-
-		if (javaScriptEnabled) {
-			await app.goto('/load/parent/d/e/f');
-
+		for (const kind of ['shared', 'server']) {
+			await page.goto(`/load/parent/${kind}/a/b/c`);
 			expect(await page.textContent('h1')).toBe('message: original + new');
 			expect(await page.textContent('pre')).toBe(
 				JSON.stringify({
 					foo: { bar: 'Custom layout' },
 					message: 'original + new',
-					x: 'd',
-					y: 'e',
-					z: 'f'
+					x: 'a',
+					y: 'b edited',
+					z: 'c'
 				})
 			);
+
+			if (javaScriptEnabled) {
+				await app.goto(`/load/parent/${kind}/d/e/f`);
+
+				expect(await page.textContent('h1')).toBe('message: original + new');
+				expect(await page.textContent('pre')).toBe(
+					JSON.stringify({
+						foo: { bar: 'Custom layout' },
+						message: 'original + new',
+						x: 'd',
+						y: 'e edited',
+						z: 'f'
+					})
+				);
+			}
 		}
 	});
 
@@ -890,6 +892,13 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('foo.bar: Custom layout');
 		expect(await page.textContent('h2')).toBe('pagedata: pagedata');
 	});
+
+	test('Serializes non-JSON data', async ({ page, clicknav }) => {
+		await page.goto('/load/devalue');
+		await clicknav('[href="/load/devalue/regex"]');
+
+		expect(await page.textContent('h1')).toBe('true');
+	});
 });
 
 test.describe('Method overrides', () => {
@@ -981,10 +990,9 @@ test.describe('Nested layouts', () => {
 	test('resets layout', async ({ page }) => {
 		await page.goto('/nested-layout/reset');
 
-		expect(await page.evaluate(() => document.querySelector('footer'))).toBe(null);
-		expect(await page.evaluate(() => document.querySelector('p'))).toBe(null);
 		expect(await page.textContent('h1')).toBe('Layout reset');
 		expect(await page.textContent('h2')).toBe('Hello');
+		expect(await page.$('#nested')).toBeNull();
 	});
 
 	test('renders the closest error page', async ({ page, clicknav }) => {

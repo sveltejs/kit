@@ -1,5 +1,161 @@
 # @sveltejs/kit
 
+## 1.0.0-next.451
+
+### Patch Changes
+
+- Prevent infinite reloads on `/` when root `+layout.server.js` exports `load` ([#6405](https://github.com/sveltejs/kit/pull/6405))
+
+## 1.0.0-next.450
+
+### Patch Changes
+
+- [breaking] require Vite 3.1.0-beta.1 ([#6398](https://github.com/sveltejs/kit/pull/6398))
+
+## 1.0.0-next.449
+
+### Patch Changes
+
+- [fix] silence unused type hints in generated proxy files ([#6391](https://github.com/sveltejs/kit/pull/6391))
+
+## 1.0.0-next.448
+
+### Patch Changes
+
+- prevent test suites from getting published ([#6386](https://github.com/sveltejs/kit/pull/6386))
+
+* [fix] remove unnecessary JSON serialization of server data ([#6382](https://github.com/sveltejs/kit/pull/6382))
+
+- [breaking] require Node 16.14 ([#6388](https://github.com/sveltejs/kit/pull/6388))
+
+## 1.0.0-next.447
+
+### Patch Changes
+
+- Use devalue to serialize server-only `load` return values ([#6318](https://github.com/sveltejs/kit/pull/6318))
+
+## 1.0.0-next.446
+
+### Patch Changes
+
+- [fix] encode if root layout has server load ([#6352](https://github.com/sveltejs/kit/pull/6352))
+
+## 1.0.0-next.445
+
+### Patch Changes
+
+- [breaking] rename `$app/env` to `$app/environment`, to disambiguate with `$env/...` ([#6334](https://github.com/sveltejs/kit/pull/6334))
+
+## 1.0.0-next.444
+
+### Patch Changes
+
+- set errors on root component ([#6330](https://github.com/sveltejs/kit/pull/6330))
+
+* [fix] do not call server and update `$page.data` unnecessarily ([#6311](https://github.com/sveltejs/kit/pull/6311))
+
+## 1.0.0-next.443
+
+### Patch Changes
+
+- [fix] prevent unused types warning ([#6293](https://github.com/sveltejs/kit/pull/6293))
+
+* [fix] don't reuse server load data from previous page if current doesn't have a load function ([#6309](https://github.com/sveltejs/kit/pull/6309))
+
+## 1.0.0-next.442
+
+### Patch Changes
+
+- [fix] handle case where parent() refers to missing load function ([#6282](https://github.com/sveltejs/kit/pull/6282))
+
+## 1.0.0-next.441
+
+### Patch Changes
+
+- [fix] Set `errors` prop on all layout/leaf components, not just page that happens to be deepest ([#6279](https://github.com/sveltejs/kit/pull/6279))
+
+* Fix route sorting with groups ([#6288](https://github.com/sveltejs/kit/pull/6288))
+
+## 1.0.0-next.440
+
+### Patch Changes
+
+- [fix] type tweaks ([#6271](https://github.com/sveltejs/kit/pull/6271))
+
+* Correctly determine whether route uses server data ([#6275](https://github.com/sveltejs/kit/pull/6275))
+
+## 1.0.0-next.439
+
+### Patch Changes
+
+- [feat] add App.PageData type ([#6226](https://github.com/sveltejs/kit/pull/6226))
+
+## 1.0.0-next.438
+
+### Patch Changes
+
+- more granular URL property tracking during load ([#6237](https://github.com/sveltejs/kit/pull/6237))
+
+* [breaking] change event.clientAddress to event.getClientAddress() ([#6237](https://github.com/sveltejs/kit/pull/6237))
+
+- Remove all enumerable getters from RequestEvent and LoadEvent ([#6237](https://github.com/sveltejs/kit/pull/6237))
+
+## 1.0.0-next.437
+
+### Patch Changes
+
+- [fix] only generate blank non-SSR pages when prerendering is enabled ([#6251](https://github.com/sveltejs/kit/pull/6251))
+
+## 1.0.0-next.436
+
+### Patch Changes
+
+- [fix] prerender routes in a (group) ([#6232](https://github.com/sveltejs/kit/pull/6232))
+
+## 1.0.0-next.435
+
+### Patch Changes
+
+- [fix] allow `@` route breakouts to layouts in `[foo]` or `(foo)` directories ([#6224](https://github.com/sveltejs/kit/pull/6224))
+
+## 1.0.0-next.434
+
+### Patch Changes
+
+- Always create `$types` for a route with a layout, leaf or endpoint ([#6222](https://github.com/sveltejs/kit/pull/6222))
+
+## 1.0.0-next.433
+
+### Patch Changes
+
+- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+
+## 1.0.0-next.432
+
+### Patch Changes
+
+- [breaking] implement new layout system (see the PR for migration instructions) ([#6174](https://github.com/sveltejs/kit/pull/6174))
+
+## 1.0.0-next.431
+
+### Patch Changes
+
+- [feat] Avoid running load on the server unnecessarily ([#6056](https://github.com/sveltejs/kit/pull/6056))
+
+## 1.0.0-next.430
+
+### Patch Changes
+
+- [feat] Added config.kit.env.dir, which allows users to set a directory to search for .env files ([#6175](https://github.com/sveltejs/kit/pull/6175))
+
+## 1.0.0-next.429
+
+### Patch Changes
+
+- [fix] Prevent import of `$env/*/private` in client ([#6018](https://github.com/sveltejs/kit/pull/6018))
+
+* Fix vite.config.ts "Cannot find module '@sveltejs/kit/vite' or its corresponding type declarations." ([#6140](https://github.com/sveltejs/kit/pull/6140))
+
 ## 1.0.0-next.428
 
 ### Patch Changes
