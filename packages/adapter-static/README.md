@@ -4,7 +4,7 @@
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `svelte.config.js`..
+Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `svelte.config.js`...
 
 ```js
 // svelte.config.js
@@ -24,7 +24,7 @@ export default {
 };
 ```
 
-.. and add the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option to your root layout:
+...and add the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option to your root layout:
 
 ```js
 // src/routes/+layout.js
