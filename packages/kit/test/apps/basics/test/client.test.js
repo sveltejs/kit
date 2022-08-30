@@ -690,3 +690,76 @@ test.describe.serial('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
 	});
 });
+
+test.describe('data-sveltekit attributes', () => {
+	test('data-sveltekit-prefetch', async ({ baseURL, page }) => {
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests).toContain(`${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#two').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests).toContain(`${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#three').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests).not.toContain(
+			`${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`
+		);
+	});
+
+	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await page.goto('/data-sveltekit/reload');
+		await page.click('#one');
+		await page.waitForLoadState('networkidle');
+		expect(requests).toContain(`${baseURL}/src/routes/data-sveltekit/reload/target`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/reload');
+		await page.click('#two');
+		await page.waitForLoadState('networkidle');
+		expect(requests).toContain(`${baseURL}/src/routes/data-sveltekit/reload/target`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/reload');
+		await clicknav('#three');
+		expect(requests).not.toContain(`${baseURL}/src/routes/data-sveltekit/reload/target`);
+	});
+
+	test('data-sveltekit-noscroll', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/data-sveltekit/noscroll');
+		// await page.evaluate(() => window.scrollTo(0, 1000));
+		await clicknav('#one');
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+		// await page.goto('/data-sveltekit/noscroll');
+		// // await page.evaluate(() => window.scrollTo(0, 1000));
+		// await clicknav('#two');
+		// expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+		await page.goto('/data-sveltekit/noscroll');
+		// await page.evaluate(() => window.scrollTo(0, 1000));
+		await clicknav('#three');
+		expect(await page.evaluate(() => window.scrollY)).toBe(0);
+	});
+});
