@@ -221,7 +221,7 @@ export async function respond(request, options, state) {
 						event,
 						options,
 						state,
-						page_config: { router: true, hydrate: true, ssr: false },
+						page_config: { ssr: false, csr: true },
 						status: 200,
 						error: null,
 						branch: [],

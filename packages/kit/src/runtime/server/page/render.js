@@ -23,7 +23,7 @@ const updated = {
  *   cookies: import('set-cookie-parser').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
- *   page_config: { hydrate: boolean, router: boolean; ssr: boolean };
+ *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: HttpError | Error | null;
  *   event: import('types').RequestEvent;
@@ -201,17 +201,11 @@ export async function render_response({
 
 	// prettier-ignore
 	const init_app = `
-		import { set_public_env, start } from ${s(prefixed(entry.file))};
-
-		set_public_env(${s(options.public_env)});
+		import { start } from ${s(prefixed(entry.file))};
 
 		start({
-			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-			paths: ${s(options.paths)},
-			route: ${!!page_config.router},
-			spa: ${!page_config.ssr},
-			trailing_slash: ${s(options.trailing_slash)},
-			hydrate: ${page_config.ssr && page_config.hydrate ? `{
+			env: ${s(options.public_env)},
+			hydrate: ${page_config.ssr ? `{
 				status: ${status},
 				error: ${error && serialize_error(error, e => e.stack)},
 				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
@@ -219,7 +213,10 @@ export async function render_response({
 				routeId: ${s(event.routeId)},
 				data: ${serialized.data},
 				errors: ${serialized.errors}
-			}` : 'null'}
+			}` : 'null'},
+			paths: ${s(options.paths)},
+			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
+			trailing_slash: ${s(options.trailing_slash)}
 		});
 	`;
 
@@ -266,7 +263,7 @@ export async function render_response({
 		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
-	if (page_config.router || page_config.hydrate) {
+	if (page_config.csr) {
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
@@ -286,7 +283,7 @@ export async function render_response({
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 	}
 
-	if (page_config.ssr && page_config.hydrate) {
+	if (page_config.ssr && page_config.csr) {
 		/** @type {string[]} */
 		const serialized_data = [];
 

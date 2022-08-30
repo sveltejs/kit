@@ -1007,19 +1007,17 @@ test.describe('Nested layouts', () => {
 });
 
 test.describe('Page options', () => {
-	test('does not hydrate page with hydrate=false', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/no-hydrate');
+	test('does not include <script> or <link rel="modulepreload"> with csr=false', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) {
+			await page.goto('/no-csr');
+			expect(await page.textContent('h1')).toBe('look ma no javascript');
+			expect(
+				await page.evaluate(() => document.querySelectorAll('link[rel="modulepreload"]').length)
+			).toBe(0);
 
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 0');
-
-		if (javaScriptEnabled) {
-			await Promise.all([page.waitForNavigation(), page.click('[href="/no-hydrate/other"]')]);
-			await Promise.all([page.waitForNavigation(), page.click('[href="/no-hydrate"]')]);
-
-			await page.click('button');
-			expect(await page.textContent('button')).toBe('clicks: 1');
-		} else {
 			// ensure data wasn't inlined
 			expect(
 				await page.evaluate(
@@ -1027,24 +1025,6 @@ test.describe('Page options', () => {
 				)
 			).toBe(0);
 		}
-	});
-
-	test('does not include modulepreload links if JS is completely disabled', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		if (!javaScriptEnabled) {
-			await page.goto('/no-hydrate/no-js');
-			expect(await page.textContent('h1')).toBe('look ma no javascript');
-			expect(
-				await page.evaluate(() => document.querySelectorAll('link[rel="modulepreload"]').length)
-			).toBe(0);
-		}
-	});
-
-	test('transformPageChunk can change the html output', async ({ page }) => {
-		await page.goto('/transform-page-chunk');
-		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
 
 	test('does not SSR page with ssr=false', async ({ page, javaScriptEnabled }) => {
@@ -1061,6 +1041,12 @@ test.describe('Page options', () => {
 	test('does not SSR error page for 404s with ssr=false', async ({ request }) => {
 		const html = await request.get('/no-ssr/missing');
 		expect(await html.text()).not.toContain('load function was called erroneously');
+	});
+
+	// TODO move this test somewhere more suitable
+	test('transformPageChunk can change the html output', async ({ page }) => {
+		await page.goto('/transform-page-chunk');
+		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
 });
 

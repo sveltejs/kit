@@ -137,7 +137,7 @@ export function data_response(data) {
 }
 
 /**
- * @template {'hydrate' | 'prerender' | 'router' | 'ssr'} Option
+ * @template {'prerender' | 'ssr' | 'csr'} Option
  * @template {Option extends 'prerender' ? import('types').PrerenderOption : boolean} Value
  *
  * @param {Array<import('types').SSRNode | undefined>} nodes
