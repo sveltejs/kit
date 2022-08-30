@@ -53,7 +53,8 @@
 		"!src/core/**/fixtures",
 		"!src/core/**/test",
 		"types",
-		"svelte-kit.js"
+		"svelte-kit.js",
+		"scripts/special-types"
 	],
 	"scripts": {
 		"build": "npm run types",
