@@ -44,6 +44,23 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
+/** @type {Record<string, true>} */
+let warned_about_attributes = {};
+
+function check_for_removed_attributes() {
+	const attrs = ['prefetch', 'noscroll', 'reload'];
+	for (const attr of attrs) {
+		if (document.querySelector(`[sveltekit\\:${attr}]`)) {
+			if (!warned_about_attributes[attr]) {
+				warned_about_attributes[attr] = true;
+				console.error(
+					`The sveltekit:${attr} attribute has been replaced with data-sveltekit-${attr}`
+				);
+			}
+		}
+	}
+}
+
 /**
  * @param {{
  *   target: Element;
@@ -271,6 +288,8 @@ export function create_client({ target, base, trailing_slash }) {
 				};
 				root.$set(navigation_result.props);
 				tick().then(() => (console.warn = warn));
+
+				check_for_removed_attributes();
 			} else {
 				root.$set(navigation_result.props);
 			}
@@ -369,6 +388,8 @@ export function create_client({ target, base, trailing_slash }) {
 				hydrate: true
 			});
 			console.warn = warn;
+
+			check_for_removed_attributes();
 		} else {
 			root = new Root({
 				target,
