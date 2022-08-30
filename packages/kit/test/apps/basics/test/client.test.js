@@ -696,13 +696,17 @@ test.describe('data-sveltekit attributes', () => {
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
+		const module = process.env.DEV
+			? `${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`
+			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/prefetch/target/_page`;
+
 		await page.goto('/data-sveltekit/prefetch');
 		await page.locator('#one').dispatchEvent('mousemove');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for prefetching to start
 			page.waitForLoadState('networkidle') // wait for prefetching to finish
 		]);
-		expect(requests).toContain(`${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`);
+		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/prefetch');
@@ -711,7 +715,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForTimeout(100), // wait for prefetching to start
 			page.waitForLoadState('networkidle') // wait for prefetching to finish
 		]);
-		expect(requests).toContain(`${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`);
+		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/prefetch');
@@ -720,9 +724,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForTimeout(100), // wait for prefetching to start
 			page.waitForLoadState('networkidle') // wait for prefetching to finish
 		]);
-		expect(requests).not.toContain(
-			`${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`
-		);
+		expect(requests.find((r) => r.startsWith(module))).toBeUndefined();
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
