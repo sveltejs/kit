@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.454
+
+### Patch Changes
+
+- [breaking] Replace `sveltekit:*` with valid HTML attributes like `data-sveltekit-*` ([#6170](https://github.com/sveltejs/kit/pull/6170))
+
 ## 1.0.0-next.453
 
 ### Patch Changes
