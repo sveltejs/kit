@@ -141,9 +141,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 				fetched,
 				cookies,
 				page_config: {
-					hydrate: true,
-					router: true,
-					ssr: false
+					ssr: false,
+					csr: get_option(nodes, 'csr') ?? true
 				},
 				status,
 				error: null,
@@ -273,7 +272,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 								options,
 								state,
 								resolve_opts,
-								page_config: { router: true, hydrate: true, ssr: true },
+								page_config: { ssr: true, csr: true },
 								status,
 								error,
 								branch: compact(branch.slice(0, j + 1)).concat({
@@ -323,8 +322,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			state,
 			resolve_opts,
 			page_config: {
-				router: get_option(nodes, 'router') ?? true,
-				hydrate: get_option(nodes, 'hydrate') ?? true,
+				csr: get_option(nodes, 'csr') ?? true,
 				ssr: true
 			},
 			status,

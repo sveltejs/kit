@@ -99,14 +99,11 @@ const config = {
 export default config;
 ```
 
-...disabling `hydrate` and `router` in your root `+layout.js`/`+layout.server.js`...
+...disabling `csr` in your root `+layout.js`/`+layout.server.js`...
 
 ```js
 /// file: src/routes/+layout.server.js
-// the combination of these options
-// disables JavaScript
-export const hydrate = false;
-export const router = false;
+export const csr = false;
 ```
 
 ...and transforming the HTML using `transformPageChunk` along with `transform` imported from `@sveltejs/amp`:

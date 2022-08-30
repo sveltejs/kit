@@ -68,35 +68,24 @@ For that reason among others, it's recommended that you always include a file ex
 
 For _pages_, we skirt around this problem by writing `foo/index.html` instead of `foo`.
 
-### hydrate
-
-Ordinarily, SvelteKit [hydrates](/docs/appendix#hydration) your server-rendered HTML into an interactive page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can skip hydration through the `hydrate` export:
-
-```js
-/// file: +page.js
-export const hydrate = false;
-```
-
-> If `hydrate` and `router` are both `false`, SvelteKit will not add any JavaScript to the page at all. If [server-side rendering](/docs/hooks#handle) is disabled in `handle`, `hydrate` must be `true` or no content will be rendered.
-
-### router
-
-SvelteKit includes a [client-side router](/docs/appendix#routing) that intercepts navigations (from the user clicking on links, or interacting with the back/forward buttons) and updates the page contents, rather than letting the browser handle the navigation by reloading.
-
-In certain circumstances you might need to disable [client-side routing](/docs/appendix#routing) through the `router` export:
-
-```js
-/// file: +page.js
-export const router = false;
-```
-
 Note that this will disable client-side routing for any navigation from this page, regardless of whether the router is already active.
 
 ### ssr
 
-Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's hydrated. If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page accesses browser-only methods or objects, but in most situations it's not recommended ([see appendix](/docs/appendix#ssr)).
+Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's hydrated. If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server, but in most situations it's not recommended ([see appendix](/docs/appendix#ssr)).
 
 ```js
 /// file: +page.js
 export const ssr = false;
 ```
+
+### csr
+
+Ordinarily, SvelteKit [hydrates](/docs/appendix#hydration) your server-rendered HTML into an interactive client-side-rendered (CSR) page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can disable CSR:
+
+```js
+/// file: +page.js
+export const csr = false;
+```
+
+> If both `ssr` and `csr` are `false`, nothing will be rendered!
