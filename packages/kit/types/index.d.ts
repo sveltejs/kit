@@ -4,7 +4,6 @@
 import './ambient.js';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
-import type { SvelteOptions } from '@sveltejs/vite-plugin-svelte';
 import {
 	AdapterEntry,
 	CspDirectives,
