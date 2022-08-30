@@ -272,7 +272,7 @@ importers:
   packages/kit:
     specifiers:
       '@playwright/test': ^1.25.0
-      '@sveltejs/vite-plugin-svelte': ^1.0.1
+      '@sveltejs/vite-plugin-svelte': ^1.0.3
       '@types/connect': ^3.4.35
       '@types/cookie': ^0.5.1
       '@types/marked': ^4.0.3
@@ -299,7 +299,7 @@ importers:
       uvu: ^0.5.3
       vite: ^3.1.0-beta.1
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.1_le3uwffmhe7iwfccb43atcj5xe
+      '@sveltejs/vite-plugin-svelte': 1.0.3_le3uwffmhe7iwfccb43atcj5xe
       cookie: 0.5.0
       devalue: 3.1.2
       kleur: 4.1.5
@@ -1022,8 +1022,8 @@ packages:
       golden-fleece: 1.0.9
     dev: true
 
-  /@sveltejs/vite-plugin-svelte/1.0.1_le3uwffmhe7iwfccb43atcj5xe:
-    resolution: {integrity: sha512-PorCgUounn0VXcpeJu+hOweZODKmGuLHsLomwqSj+p26IwjjGffmYQfVHtiTWq+NqaUuuHWWG7vPge6UFw4Aeg==}
+  /@sveltejs/vite-plugin-svelte/1.0.3_le3uwffmhe7iwfccb43atcj5xe:
+    resolution: {integrity: sha512-0Qu51m2W9RBlxWPp8i31KJpnqmjWMOne8vAzgmOX6ZM9uX+/RAv6BNhEMcNoP5MsyLjyW1ZTCiJoaZZ5EeqpFg==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
       diff-match-patch: ^1.0.5
