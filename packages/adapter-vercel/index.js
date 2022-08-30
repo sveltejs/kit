@@ -189,7 +189,8 @@ export default function ({ external = [], edge, split } = {}) {
 					platform: 'browser',
 					format: 'esm',
 					external,
-					sourcemap: 'linked'
+					sourcemap: 'linked',
+					banner: { js: 'globalThis.global = globalThis;' }
 				});
 
 				write(
