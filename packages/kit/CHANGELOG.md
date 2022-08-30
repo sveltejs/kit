@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.453
+
+### Patch Changes
+
+- Include type descriptions for ambient declarations ([#6416](https://github.com/sveltejs/kit/pull/6416))
+
 ## 1.0.0-next.452
 
 ### Patch Changes
