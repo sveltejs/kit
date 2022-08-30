@@ -111,7 +111,7 @@ export async function load({ params }) {
 
 During client-side navigation, SvelteKit will load this data from the server, which means that the returned value must be serializable using [devalue](https://github.com/rich-harris/devalue).
 
-Like `+page.js`, `+page.server.js` can export [page options](/docs/12-page-options) — `prerender`, `hydrate`, `router` and `ssr`.
+Like `+page.js`, `+page.server.js` can export [page options](/docs/page-options) — `prerender`, `hydrate`, `router` and `ssr`.
 
 #### Actions
 
