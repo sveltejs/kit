@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.452
+
+### Patch Changes
+
+- [breaking] remove App.PrivateEnv and App.PublicEnv in favour of generated types ([#6413](https://github.com/sveltejs/kit/pull/6413))
+
 ## 1.0.0-next.451
 
 ### Patch Changes
