@@ -306,22 +306,32 @@ const bad_rollup_node_dynamic = rollup_node_getter('/bad/dynamic.js');
 
 test('allows ok rollup imports', () => {
 	assert.not.throws(() => {
-		// @ts-ignore
-		prevent_illegal_rollup_imports(rollup_node_getter, ok_rollup_node, illegal_imports, '');
+		prevent_illegal_rollup_imports(
+			// @ts-expect-error
+			rollup_node_getter,
+			ok_rollup_node,
+			illegal_imports,
+			'should_not_match_anything'
+		);
 	});
 });
 
 test('does not allow bad static rollup imports', () => {
 	assert.throws(() => {
-		// @ts-ignore
-		prevent_illegal_rollup_imports(rollup_node_getter, bad_rollup_node_static, illegal_imports, '');
+		prevent_illegal_rollup_imports(
+			// @ts-expect-error
+			rollup_node_getter,
+			bad_rollup_node_static,
+			illegal_imports,
+			'should_not_match_anything'
+		);
 	});
 });
 
 test('does not allow bad dynamic rollup imports', () => {
 	assert.throws(() => {
 		prevent_illegal_rollup_imports(
-			// @ts-ignore
+			// @ts-expect-error
 			rollup_node_getter,
 			bad_rollup_node_dynamic,
 			'should_not_match_anything',
@@ -373,15 +383,25 @@ const bad_vite_node = {
 
 test('allows ok vite imports', () => {
 	assert.not.throws(() => {
-		// @ts-ignore
-		prevent_illegal_vite_imports(ok_vite_node, illegal_imports, '');
+		prevent_illegal_vite_imports(
+			// @ts-expect-error
+			ok_vite_node,
+			illegal_imports,
+			'should_not_match_anything',
+			[]
+		);
 	});
 });
 
 test('does not allow bad static rollup imports', () => {
 	assert.throws(() => {
-		// @ts-ignore
-		prevent_illegal_vite_imports(bad_vite_node, illegal_imports, '');
+		prevent_illegal_vite_imports(
+			// @ts-expect-error
+			bad_vite_node,
+			illegal_imports,
+			'should_not_match_anything',
+			[]
+		);
 	});
 });
 
