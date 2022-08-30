@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { get_env } from '../../exports/vite/utils.js';
 import { GENERATED_COMMENT } from '../../constants.js';
-import { create_static_types } from '../env.js';
+import { create_dynamic_types, create_static_types } from '../env.js';
 import { write_if_changed } from './utils.js';
 import { fileURLToPath } from 'url';
 
@@ -31,6 +31,12 @@ ${create_static_types('$env/static/private', env.private)}
 
 ${read_description('$env+static+public.md')}
 ${create_static_types('$env/static/public', env.public)}
+
+${read_description('$env+dynamic+private.md')}
+${create_dynamic_types('$env/dynamic/private', env.private)}
+
+${read_description('$env+dynamic+public.md')}
+${create_dynamic_types('$env/dynamic/public', env.public)}
 `;
 
 /**
