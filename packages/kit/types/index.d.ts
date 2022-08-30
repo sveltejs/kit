@@ -19,6 +19,8 @@ import {
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 import { HttpError, Redirect } from '../src/runtime/control.js';
 
+export { PrerenderOption } from './private.js';
+
 export interface Adapter {
 	name: string;
 	adapt(builder: Builder): MaybePromise<void>;
@@ -99,7 +101,7 @@ export interface Builder {
 	/**
 	 * @param {string} directory Path to the directory containing the files to be compressed
 	 */
-	compress(directory: string): void;
+	compress(directory: string): Promise<void>;
 }
 
 export interface Config {

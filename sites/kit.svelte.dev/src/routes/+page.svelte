@@ -40,7 +40,7 @@
 				of an SPA
 			</p>
 
-			<a sveltekit:prefetch href="/docs" class="cta">read the docs</a>
+			<a data-sveltekit-prefetch href="/docs" class="cta">read the docs</a>
 		</div>
 
 		<div slot="three">
@@ -50,7 +50,7 @@
 				support and more
 			</p>
 
-			<a sveltekit:prefetch href="/docs" class="cta">read the docs</a>
+			<a data-sveltekit-prefetch href="/docs" class="cta">read the docs</a>
 		</div>
 
 		<div class="description" slot="what">
@@ -77,7 +77,7 @@ cd my-app
 npm install
 npm run dev -- --open</code
 				></pre>
-			<a sveltekit:prefetch href="/docs" class="cta">get started</a>
+			<a data-sveltekit-prefetch href="/docs" class="cta">get started</a>
 		</div>
 	</Blurb>
 </div>

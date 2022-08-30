@@ -43,22 +43,29 @@ export function write_client_manifest(manifest_data, output) {
 		})
 		.join(',\n\t');
 
+	const layouts_with_server_load = new Set();
+
 	const dictionary = `{
 		${manifest_data.routes
 			.map((route) => {
 				if (route.page) {
 					const errors = route.page.errors.slice(1).map((n) => n ?? '');
-					const layouts = route.page.layouts.slice(1).map((n) => {
-						if (n == undefined) {
-							return '';
-						}
-						return get_node_id(manifest_data.nodes, n);
-					});
+					const layouts = route.page.layouts.slice(1).map((n) => n ?? '');
 
 					while (layouts.at(-1) === '') layouts.pop();
 					while (errors.at(-1) === '') errors.pop();
 
-					const array = [get_node_id(manifest_data.nodes, route.page.leaf)];
+					// Encode whether or not the route uses server data
+					// using the ones' complement, to save space
+					const array = [`${route.leaf?.server ? '~' : ''}${route.page.leaf}`];
+					// Encode whether or not the layout uses server data.
+					// It's a different method compared to pages because layouts
+					// are reused across pages, so we safe space by doing it this way.
+					route.page.layouts.forEach((layout) => {
+						if (layout != undefined && manifest_data.nodes[layout].server) {
+							layouts_with_server_load.add(layout);
+						}
+					});
 
 					// only include non-root layout/error nodes if they exist
 					if (layouts.length > 0 || errors.length > 0) array.push(`[${layouts.join(',')}]`);
@@ -77,21 +84,11 @@ export function write_client_manifest(manifest_data, output) {
 		trim(`
 			export { matchers } from './client-matchers.js';
 
-			export const nodes = [
-				${nodes}
-			];
+			export const nodes = [${nodes}];
+
+			export const server_loads = [${[...layouts_with_server_load].join(',')}];
 
 			export const dictionary = ${dictionary};
 		`)
 	);
-}
-
-/**
- * Encode whether or not the route uses the server data
- * using the ones' complement, to save space
- * @param {import('types').PageNode[]} nodes
- * @param {number} id
- */
-function get_node_id(nodes, id) {
-	return `${nodes[id].server ? '~' : ''}${id}`;
 }

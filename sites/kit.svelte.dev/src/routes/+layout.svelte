@@ -1,6 +1,6 @@
 <script>
 	import '@sveltejs/site-kit/base.css';
-	import { browser } from '$app/env';
+	import { browser } from '$app/environment';
 	import { page, navigating } from '$app/stores';
 	import { Icon, Icons, Nav, NavItem, PreloadingIndicator, SkipLink } from '@sveltejs/site-kit';
 	import Search from '$lib/search/Search.svelte';

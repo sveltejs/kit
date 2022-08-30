@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
-import { env } from './env.js';
+import { env } from 'ENV';
 
 /* global ENV_PREFIX */
 
@@ -19,7 +19,7 @@ const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
 const host_header = env('HOST_HEADER', 'host').toLowerCase();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const dir = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * @param {string} path
@@ -132,9 +132,9 @@ function get_origin(headers) {
 
 export const handler = sequence(
 	[
-		serve(path.join(__dirname, '/client'), true),
-		serve(path.join(__dirname, '/static')),
-		serve(path.join(__dirname, '/prerendered')),
+		serve(path.join(dir, 'client'), true),
+		serve(path.join(dir, 'static')),
+		serve(path.join(dir, 'prerendered')),
 		ssr
 	].filter(Boolean)
 );

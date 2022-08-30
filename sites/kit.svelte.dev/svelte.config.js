@@ -6,8 +6,7 @@ const config = {
 		adapter: adapter(),
 
 		prerender: {
-			default: true,
-			entries: ['*', '/content.json']
+			default: true
 		}
 	}
 };

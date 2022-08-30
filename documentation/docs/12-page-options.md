@@ -32,20 +32,27 @@ export const hydrate = false;
 
 ### prerender
 
-It's likely that at least some pages of your app can be represented as a simple HTML file generated at build time. These pages can be [_prerendered_](/docs/appendix#prerendering).
+It's likely that at least some routes of your app can be represented as a simple HTML file generated at build time. These routes can be [_prerendered_](/docs/appendix#prerendering).
 
-Prerendering happens automatically for any page with the `prerender` annotation:
+Prerendering happens automatically for any `+page` or `+server` file with the `prerender` annotation:
 
 ```js
-/// file: +page.js/+page.server.js
+/// file: +page.js/+page.server.js/+server.js
 export const prerender = true;
 ```
 
 Alternatively, you can set [`config.kit.prerender.default`](/docs/configuration#prerender) to `true` and prerender everything except pages that are explicitly marked as _not_ prerenderable:
 
 ```js
-/// file: +page.js/+page.server.js
+/// file: +page.js/+page.server.js/+server.js
 export const prerender = false;
+```
+
+Routes with `prerender = true` will be excluded from manifests used for dynamic SSR, making your server (or serverless/edge functions) smaller. In some cases you might want to prerender a route but also include it in the manifest (for example, you want to prerender your most recent/popular content but server-render the long tail) — for these cases, there's a third option, 'auto':
+
+```js
+/// file: +page.js/+page.server.js/+server.js
+export const prerender = 'auto';
 ```
 
 > If your entire app is suitable for prerendering, you can use [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), which will output files suitable for use with any static webserver.
