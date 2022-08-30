@@ -72,7 +72,8 @@ export async function write_types(config, manifest_data, file) {
 	}
 
 	const filepath = path.relative(config.kit.files.routes, file);
-	const id = path.dirname(filepath);
+	let id = path.dirname(filepath);
+	id = id === '.' ? '' : id;
 
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return; // this shouldn't ever happen
