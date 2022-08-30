@@ -44,3 +44,23 @@ In certain cases, you may wish to disable this behaviour. Adding a `data-sveltek
 ```
 
 ...will prevent scrolling after the link is clicked.
+
+### Disabling options
+
+To disable any of these options inside an element where they have been enabled, use the `"off"` value:
+
+```html
+<div data-sveltekit-prefetch>
+	<!-- these links will be prefetched -->
+	<a href="/a">a</a>
+	<a href="/b">b</a>
+	<a href="/c">c</a>
+
+	<div data-sveltekit-prefetch="off">
+		<!-- these links will NOT be prefetched -->
+		<a href="/d">d</a>
+		<a href="/e">e</a>
+		<a href="/f">f</a>
+	</div>
+</div>
+```
