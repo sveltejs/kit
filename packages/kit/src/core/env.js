@@ -34,13 +34,28 @@ export function create_dynamic_module(type) {
  * @param {Record<string, string>} env
  * @returns {string}
  */
-export function create_types(id, env) {
+export function create_static_types(id, env) {
 	const declarations = Object.keys(env)
 		.filter((k) => valid_identifier.test(k))
 		.map((k) => `\texport const ${k}: string;`)
 		.join('\n');
 
 	return `declare module '${id}' {\n${declarations}\n}`;
+}
+
+/**
+ * @param {string} id
+ * @param {Record<string, string>} env
+ * @returns {string}
+ */
+export function create_dynamic_types(id, env) {
+	const properties = Object.keys(env)
+		.filter((k) => valid_identifier.test(k))
+		.map((k) => `\t\t${k}: string;`);
+
+	properties.push(`\t\t[key: string]: string | undefined;`);
+
+	return `declare module '${id}' {\n\texport const env: {\n${properties.join('\n')}\n\t}\n}`;
 }
 
 export const reserved = new Set([

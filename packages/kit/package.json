@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.451",
+	"version": "1.0.0-next.453",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -53,7 +53,8 @@
 		"!src/core/**/fixtures",
 		"!src/core/**/test",
 		"types",
-		"svelte-kit.js"
+		"svelte-kit.js",
+		"scripts/special-types"
 	],
 	"scripts": {
 		"build": "npm run types",
