@@ -84,8 +84,9 @@ const get_defaults = (prefix = '') => ({
 			params: join(prefix, 'src/params'),
 			routes: join(prefix, 'src/routes'),
 			serviceWorker: join(prefix, 'src/service-worker'),
-			template: join(prefix, 'src/app.html'),
-			errorPage: join(prefix, 'src/error.html')
+			appTemplate: join(prefix, 'src/app.html'),
+			errorTemplate: join(prefix, 'src/error.html'),
+			template: undefined
 		},
 		headers: undefined,
 		host: undefined,
@@ -382,7 +383,9 @@ test('load default config (esm)', async () => {
 
 	const defaults = get_defaults(cwd + '/');
 	defaults.kit.version.name = config.kit.version.name;
-	defaults.kit.files.errorPage = fileURLToPath(new URL('./default-error.html', import.meta.url));
+	defaults.kit.files.errorTemplate = fileURLToPath(
+		new URL('./default-error.html', import.meta.url)
+	);
 
 	assert.equal(config, defaults);
 });
