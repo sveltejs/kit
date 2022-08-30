@@ -190,7 +190,7 @@ export default function ({ external = [], edge, split } = {}) {
 					format: 'esm',
 					external,
 					sourcemap: 'linked',
-					banner: { js: 'var global = globalThis;' }
+					banner: { js: 'globalThis.global = globalThis;' }
 				});
 
 				write(
