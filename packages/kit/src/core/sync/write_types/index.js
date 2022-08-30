@@ -71,7 +71,7 @@ export async function write_types(config, manifest_data, file) {
 		return;
 	}
 
-	const filepath = path.relative(config.kit.files.routes, file);
+	const id = path.relative(config.kit.files.routes, path.dirname(file));
 	let id = path.dirname(filepath);
 	id = id === '.' ? '' : id;
 
