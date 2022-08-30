@@ -2,53 +2,27 @@
 title: Page options
 ---
 
-By default, SvelteKit will render any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called **hydration**. For this reason, you need to ensure that components can run in both places. SvelteKit will then initialise a [**router**](/docs/routing) that takes over subsequent navigations.
+By default, SvelteKit will render (or [prerender](/docs/appendix#prerendering)) any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called **hydration**. For this reason, you need to ensure that components can run in both places. SvelteKit will then initialise a [**router**](/docs/routing) that takes over subsequent navigations.
 
-You can control each of these on a per-app (via `svelte.config.js`) or per-page (via `+page.js` or `+page.server.js`) basis. If both are specified, per-page settings override per-app settings in case of conflicts.
-
-### router
-
-SvelteKit includes a [client-side router](/docs/appendix#routing) that intercepts navigations (from the user clicking on links, or interacting with the back/forward buttons) and updates the page contents, rather than letting the browser handle the navigation by reloading.
-
-In certain circumstances you might need to disable [client-side routing](/docs/appendix#routing) with the app-wide [`browser.router` config option](/docs/configuration#browser) or the page-level `router` export:
-
-```js
-/// file: +page.js/+page.server.js
-export const router = false;
-```
-
-Note that this will disable client-side routing for any navigation from this page, regardless of whether the router is already active.
-
-### hydrate
-
-Ordinarily, SvelteKit [hydrates](/docs/appendix#hydration) your server-rendered HTML into an interactive page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can skip hydration when the app boots up with the app-wide [`browser.hydrate` config option](/docs/configuration#browser) or the page-level `hydrate` export:
-
-```js
-/// file: +page.js/+page.server.js
-export const hydrate = false;
-```
-
-> If `hydrate` and `router` are both `false`, SvelteKit will not add any JavaScript to the page at all. If [server-side rendering](/docs/hooks#handle) is disabled in `handle`, `hydrate` must be `true` or no content will be rendered.
+You can control each of these on a page-by-page basis by exporting options from [`+page.js`](/docs/routing#page-page-js) or [`+page.server.js`](/docs/routing#page-page-server-js), or for groups of pages using a shared [`+layout.js`](/docs/routing#layout-layout-js) or [`+layout.server.js`](/docs/routing#layout-layout-server-js). To define an option for the whole app, export it from the root layout. Child layouts and pages override values set in parent layouts, so — for example — you can enable prerendering for your entire app then disable it for pages that need to be dynamically rendered.
 
 ### prerender
 
 It's likely that at least some routes of your app can be represented as a simple HTML file generated at build time. These routes can be [_prerendered_](/docs/appendix#prerendering).
-
-Prerendering happens automatically for any `+page` or `+server` file with the `prerender` annotation:
 
 ```js
 /// file: +page.js/+page.server.js/+server.js
 export const prerender = true;
 ```
 
-Alternatively, you can set [`config.kit.prerender.default`](/docs/configuration#prerender) to `true` and prerender everything except pages that are explicitly marked as _not_ prerenderable:
+Alternatively, you can set `export const prerender = true` in your root `+layout` and prerender everything except pages that are explicitly marked as _not_ prerenderable:
 
 ```js
 /// file: +page.js/+page.server.js/+server.js
 export const prerender = false;
 ```
 
-Routes with `prerender = true` will be excluded from manifests used for dynamic SSR, making your server (or serverless/edge functions) smaller. In some cases you might want to prerender a route but also include it in the manifest (for example, you want to prerender your most recent/popular content but server-render the long tail) — for these cases, there's a third option, 'auto':
+Routes with `prerender = true` will be excluded from manifests used for dynamic SSR, making your server (or serverless/edge functions) smaller. In some cases you might want to prerender a route but also include it in the manifest (for example, with a route like `/blog/[slug]` where you want to prerender your most recent/popular content but server-render the long tail) — for these cases, there's a third option, 'auto':
 
 ```js
 /// file: +page.js/+page.server.js/+server.js
@@ -57,7 +31,24 @@ export const prerender = 'auto';
 
 > If your entire app is suitable for prerendering, you can use [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), which will output files suitable for use with any static webserver.
 
-The prerenderer will start at the root of your app and generate HTML for any prerenderable pages it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with the `entries` option in the [prerender configuration](/docs/configuration#prerender).
+The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with the `entries` option in the [prerender configuration](/docs/configuration#prerender).
+
+#### Prerendering server routes
+
+Unlike the other page options, `prerender` also applies to `+server.js` files. These files are _not_ affected from layouts, but will inherit default values from the pages that fetch data from them, if any. For example if a `+page.js` contains this `load` function...
+
+```js
+/// file: +page.js
+export const prerender = true;
+
+/** @type {import('./$types').PageLoad} */
+export async function load({ fetch }) {
+	const res = await fetch('/my-server-route.json');
+	return await res.json();
+}
+```
+
+...then `src/routes/my-server-route.json/+server.js` will be treated as prerenderable if it doesn't contain its own `export const prerender = false`.
 
 #### When not to prerender
 
@@ -76,3 +67,36 @@ Because prerendering writes to the filesystem, it isn't possible to have two end
 For that reason among others, it's recommended that you always include a file extension — `src/routes/foo.json/+server.js` and `src/routes/foo/bar.json/+server.js` would result in `foo.json` and `foo/bar.json` files living harmoniously side-by-side.
 
 For _pages_, we skirt around this problem by writing `foo/index.html` instead of `foo`.
+
+### hydrate
+
+Ordinarily, SvelteKit [hydrates](/docs/appendix#hydration) your server-rendered HTML into an interactive page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can skip hydration through the `hydrate` export:
+
+```js
+/// file: +page.js
+export const hydrate = false;
+```
+
+> If `hydrate` and `router` are both `false`, SvelteKit will not add any JavaScript to the page at all. If [server-side rendering](/docs/hooks#handle) is disabled in `handle`, `hydrate` must be `true` or no content will be rendered.
+
+### router
+
+SvelteKit includes a [client-side router](/docs/appendix#routing) that intercepts navigations (from the user clicking on links, or interacting with the back/forward buttons) and updates the page contents, rather than letting the browser handle the navigation by reloading.
+
+In certain circumstances you might need to disable [client-side routing](/docs/appendix#routing) through the `router` export:
+
+```js
+/// file: +page.js
+export const router = false;
+```
+
+Note that this will disable client-side routing for any navigation from this page, regardless of whether the router is already active.
+
+### ssr
+
+Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's hydrated. If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page accesses browser-only methods or objects, but in most situations it's not recommended ([see appendix](/docs/appendix#ssr)).
+
+```js
+/// file: +page.js
+export const ssr = false;
+```

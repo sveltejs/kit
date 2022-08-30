@@ -402,21 +402,15 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							});
 						},
 						hooks,
-						hydrate: svelte_config.kit.browser.hydrate,
 						manifest,
 						method_override: svelte_config.kit.methodOverride,
 						paths: {
 							base: svelte_config.kit.paths.base,
 							assets
 						},
-						prerender: {
-							default: svelte_config.kit.prerender.default,
-							enabled: svelte_config.kit.prerender.enabled
-						},
 						public_env: env.public,
 						read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 						root,
-						router: svelte_config.kit.browser.router,
 						app_template: ({ head, body, assets, nonce }) => {
 							return (
 								template

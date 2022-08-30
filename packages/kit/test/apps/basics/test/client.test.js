@@ -601,10 +601,42 @@ test.describe('Shadow DOM', () => {
 	});
 });
 
-test('Can use browser-only global on client-only page', async ({ page, read_errors }) => {
-	await page.goto('/no-ssr/browser-only-global');
-	await expect(page.locator('p')).toHaveText('Works');
-	expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
+test.describe('SPA mode / no SSR', () => {
+	test('Can use browser-only global on client-only page through ssr config in handle', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/browser-only-global');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
+	});
+
+	test('Can use browser-only global on client-only page through ssr config in layout.js', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/ssr-page-config')).toBe(undefined);
+	});
+
+	test('Can use browser-only global on client-only page through ssr config in page.js', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config/layout/inherit');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/ssr-page-config/layout/inherit')).toBe(undefined);
+	});
+
+	test('Cannot use browser-only global on page because of ssr config in page.js', async ({
+		page
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
+		await expect(page.locator('p')).toHaveText(
+			'This is your custom error page saying: "document is not defined"'
+		);
+	});
 });
 
 test.describe('$app/stores', () => {
