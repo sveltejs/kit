@@ -19,6 +19,8 @@ import {
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 import { HttpError, Redirect } from '../src/runtime/control.js';
 
+export { PrerenderOption } from './private.js';
+
 export interface Adapter {
 	name: string;
 	adapt(builder: Builder): MaybePromise<void>;
