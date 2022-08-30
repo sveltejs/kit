@@ -1,13 +1,4 @@
 /**
- * Merge an array of multiple handlers into one. The `resolve` passed
- * to the first handler will call the second handler, and so on,
- * until the last handler calls the framework.
- *
- * If handlers use the `transformPageChunk` option, the functions
- * will be 'chained', meaning a transform function specified in
- * the first handler will be applied to later handlers, and
- * multiple transformations can be applied.
- *
  * @param {...import('types').Handle} handlers
  * @returns {import('types').Handle}
  */
