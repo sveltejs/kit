@@ -11,7 +11,7 @@ import { load_error_page, load_template } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
-import { get_env, prevent_illegal_vite_imports, resolve_entry } from '../utils.js';
+import { prevent_illegal_vite_imports, resolve_entry } from '../utils.js';
 import { compact } from '../../../utils/array.js';
 
 // Vite doesn't expose this so we just copy the list for now
