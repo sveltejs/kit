@@ -731,22 +731,20 @@ test.describe('data-sveltekit attributes', () => {
 
 		await page.goto('/data-sveltekit/reload');
 		await page.click('#one');
-		await page.waitForLoadState('networkidle');
-		expect(requests).toContain(`${baseURL}/src/routes/data-sveltekit/reload/target`);
+		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
 		await page.click('#two');
-		await page.waitForLoadState('networkidle');
-		expect(requests).toContain(`${baseURL}/src/routes/data-sveltekit/reload/target`);
+		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
 		await clicknav('#three');
-		expect(requests).not.toContain(`${baseURL}/src/routes/data-sveltekit/reload/target`);
+		expect(requests).not.toContain(`${baseURL}/data-sveltekit/reload/target`);
 	});
 
-	test('data-sveltekit-noscroll', async ({ baseURL, page, clicknav }) => {
+	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
 		await page.goto('/data-sveltekit/noscroll');
 		// await page.evaluate(() => window.scrollTo(0, 1000));
 		await clicknav('#one');
