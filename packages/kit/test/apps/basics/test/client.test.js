@@ -750,10 +750,9 @@ test.describe('data-sveltekit attributes', () => {
 		await clicknav('#one');
 		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
 
-		// await page.goto('/data-sveltekit/noscroll');
-		// // await page.evaluate(() => window.scrollTo(0, 1000));
-		// await clicknav('#two');
-		// expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+		await page.goto('/data-sveltekit/noscroll');
+		await clicknav('#two');
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
 
 		await page.goto('/data-sveltekit/noscroll');
 		// await page.evaluate(() => window.scrollTo(0, 1000));
