@@ -44,6 +44,23 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
+/** @type {Record<string, true>} */
+let warned_about_attributes = {};
+
+function check_for_removed_attributes() {
+	const attrs = ['prefetch', 'noscroll', 'reload'];
+	for (const attr of attrs) {
+		if (document.querySelector(`[sveltekit\\:${attr}]`)) {
+			if (!warned_about_attributes[attr]) {
+				warned_about_attributes[attr] = true;
+				console.error(
+					`The sveltekit:${attr} attribute has been replaced with data-sveltekit-${attr}`
+				);
+			}
+		}
+	}
+}
+
 /**
  * @param {{
  *   target: Element;
@@ -271,6 +288,8 @@ export function create_client({ target, base, trailing_slash }) {
 				};
 				root.$set(navigation_result.props);
 				tick().then(() => (console.warn = warn));
+
+				check_for_removed_attributes();
 			} else {
 				root.$set(navigation_result.props);
 			}
@@ -369,6 +388,8 @@ export function create_client({ target, base, trailing_slash }) {
 				hydrate: true
 			});
 			console.warn = warn;
+
+			check_for_removed_attributes();
 		} else {
 			root = new Root({
 				target,
@@ -1138,7 +1159,7 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @param {Event} event */
 			const trigger_prefetch = (event) => {
 				const a = find_anchor(event);
-				if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
+				if (a && a.href && a.hasAttribute('data-sveltekit-prefetch')) {
 					prefetch(get_href(a));
 				}
 			};
@@ -1195,7 +1216,7 @@ export function create_client({ target, base, trailing_slash }) {
 				if (
 					a.hasAttribute('download') ||
 					rel.includes('external') ||
-					a.hasAttribute('sveltekit:reload')
+					a.hasAttribute('data-sveltekit-reload')
 				) {
 					return;
 				}
@@ -1222,7 +1243,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 				navigate({
 					url,
-					scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
+					scroll: a.hasAttribute('data-sveltekit-noscroll') ? scroll_state() : null,
 					keepfocus: false,
 					redirect_chain: [],
 					details: {

@@ -58,7 +58,7 @@ You can also use `adapter-static` to generate single-page apps (SPAs) by specify
 
 #### Platform-specific context
 
-Some adapters may have access to additional information about the request. For example, Cloudflare Workers can access an `env` object containing KV namespaces etc. This can be passed to the `RequestEvent` used in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints) as the `platform` property — consult each adapter's documentation to learn more.
+Some adapters may have access to additional information about the request. For example, Cloudflare Workers can access an `env` object containing KV namespaces etc. This can be passed to the `RequestEvent` used in [hooks](/docs/hooks) and [server routes](/docs/routing#server) as the `platform` property — consult each adapter's documentation to learn more.
 
 ### Community adapters
 
