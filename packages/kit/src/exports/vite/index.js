@@ -352,7 +352,7 @@ function kit() {
 							this.getModuleInfo.bind(this),
 							module_node,
 							illegal_imports,
-							path.resolve(svelte_config.kit.files.lib)
+							svelte_config.kit.files.lib
 						);
 					}
 				});
