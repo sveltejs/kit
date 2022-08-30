@@ -92,7 +92,7 @@ export default {
 };
 ```
 
-When operating in SPA mode, you can omit the `prerender` option from your root layout (or set it to `false`, its default value), and only pages that have the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option set will be prerendered at build time.
+When operating in SPA mode, you can omit the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option from your root layout (or set it to `false`, its default value), and only pages that have the `prerender` option set will be prerendered at build time.
 
 SvelteKit will still crawl your app's entry points looking for prerenderable pages. If `svelte-kit build` fails because of pages that can't be loaded outside the browser, you can set `config.kit.prerender.entries` to `[]` to prevent this from happening. (Setting `config.kit.prerender.enabled` to `false` also has this effect, but would prevent the fallback page from being generated.)
 
