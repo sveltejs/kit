@@ -10,7 +10,9 @@
 		"sourceMap": true,
 		"strict": true,
 		"paths": {
-			"types": ["../../../../types/internal"]
+			"types": ["../../../../types/internal"],
+      "$lib": ["src/lib"],
+      "$lib/*": ["src/lib/*"]
 		}
 	}
 }
