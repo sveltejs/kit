@@ -7,7 +7,7 @@ import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { posixify } from '../../../utils/filesystem.js';
-import { load_template } from '../../../core/config/index.js';
+import { load_error_page, load_template } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
@@ -371,6 +371,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 				}
 
 				const template = load_template(cwd, svelte_config);
+				const error_page = load_error_page(svelte_config);
 
 				const rendered = await respond(
 					request,
@@ -416,7 +417,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 						root,
 						router: svelte_config.kit.browser.router,
-						template: ({ head, body, assets, nonce }) => {
+						app_template: ({ head, body, assets, nonce }) => {
 							return (
 								template
 									.replace(/%sveltekit\.assets%/g, assets)
@@ -426,7 +427,12 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 									.replace('%sveltekit.body%', () => body)
 							);
 						},
-						template_contains_nonce: template.includes('%sveltekit.nonce%'),
+						app_template_contains_nonce: template.includes('%sveltekit.nonce%'),
+						error_template: ({ status, message }) => {
+							return error_page
+								.replace(/%sveltekit\.status%/g, String(status))
+								.replace(/%sveltekit\.message%/g, message);
+						},
 						trailing_slash: svelte_config.kit.trailingSlash
 					},
 					{

@@ -135,3 +135,17 @@ export function data_response(data) {
 		});
 	}
 }
+
+/**
+ * Return as a response that renders the error.html
+ *
+ * @param {import('types').SSROptions} options
+ * @param {number} status
+ * @param {string} message
+ */
+export function static_error_page(options, status, message) {
+	return new Response(options.error_template({ status, message }), {
+		headers: { 'content-type': 'text/html; charset=utf-8' },
+		status
+	});
+}

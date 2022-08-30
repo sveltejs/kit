@@ -3,7 +3,7 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
-import { serialize_error, GENERIC_ERROR } from './utils.js';
+import { serialize_error, GENERIC_ERROR, static_error_page } from './utils.js';
 import { decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { negotiate } from '../../utils/http.js';
@@ -360,10 +360,7 @@ export async function respond(request, options, state) {
 			});
 		} catch (/** @type {unknown} */ e) {
 			const error = coalesce_to_error(e);
-
-			return new Response(options.dev ? error.stack : error.message, {
-				status: 500
-			});
+			return static_error_page(options, 500, error.message);
 		}
 	}
 }

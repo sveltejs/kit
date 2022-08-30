@@ -2,7 +2,7 @@ import { devalue } from 'devalue';
 import { negotiate } from '../../../utils/http.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
-import { method_not_allowed, error_to_pojo, allowed_methods } from '../utils.js';
+import { method_not_allowed, error_to_pojo, allowed_methods, static_error_page } from '../utils.js';
 import { create_fetch } from './fetch.js';
 import { HttpError, Redirect } from '../../control.js';
 import { error, json } from '../../../exports/index.js';
@@ -286,12 +286,11 @@ export async function render_page(event, route, page, options, state, resolve_op
 					}
 
 					// if we're still here, it means the error happened in the root layout,
-					// which means we have to fall back to a plain text response
-					// TODO since the requester is expecting HTML, maybe it makes sense to
-					// doll this up a bit
-					return new Response(
-						error instanceof HttpError ? error.message : options.get_stack(error),
-						{ status }
+					// which means we have to fall back to error.html
+					return static_error_page(
+						options,
+						status,
+						/** @type {HttpError | Error} */ (error).message
 					);
 				}
 			} else {
