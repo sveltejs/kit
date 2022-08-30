@@ -7,10 +7,6 @@ const config = {
 
 		paths: {
 			base: '/path-base'
-		},
-
-		prerender: {
-			default: true
 		}
 	}
 };
