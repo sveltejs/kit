@@ -1,6 +1,4 @@
 import { expect } from '@playwright/test';
-import { request } from 'http';
-import { v } from '../../../prerendering/basics/build/_app/immutable/chunks/index-55acff4c.js';
 import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
