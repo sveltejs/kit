@@ -315,7 +315,11 @@ export async function respond(request, options, state) {
 
 				// we can't load the endpoint from our own manifest,
 				// so we need to make an actual HTTP request
-				return await fetch(request);
+				try {
+					return await fetch(request);
+				} catch (e) {
+					return new Response(coalesce_to_error(e).message, { status: 500 });
+				}
 			},
 
 			// TODO remove for 1.0

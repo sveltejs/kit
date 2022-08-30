@@ -60,7 +60,7 @@ export async function render_endpoint(event, mod, state) {
 				headers: { Location: error.location }
 			});
 		} else {
-			throw error;
+			return new Response(/** @type {Error} */ (error)?.message || 'Error', { status: 500 });
 		}
 	}
 }
