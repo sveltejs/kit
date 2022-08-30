@@ -324,6 +324,7 @@ test('does not allow bad dynamic rollup imports', () => {
 			// @ts-ignore
 			rollup_node_getter,
 			bad_rollup_node_dynamic,
+			'should_not_match_anything',
 			illegal_imports
 		);
 	});

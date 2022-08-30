@@ -351,7 +351,8 @@ function kit() {
 						prevent_illegal_rollup_imports(
 							this.getModuleInfo.bind(this),
 							module_node,
-							illegal_imports
+							illegal_imports,
+							path.resolve(svelte_config.kit.files.lib)
 						);
 					}
 				});

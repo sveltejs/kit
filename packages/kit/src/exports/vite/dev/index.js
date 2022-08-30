@@ -90,7 +90,12 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 								module_nodes.push(module_node);
 								result.file = url.endsWith('.svelte') ? url : url + '?import'; // TODO what is this for?
 
-								prevent_illegal_vite_imports(module_node, illegal_imports, extensions);
+								prevent_illegal_vite_imports(
+									module_node,
+									illegal_imports,
+									path.resolve(svelte_config.kit.files.lib),
+									extensions
+								);
 
 								return module.default;
 							};
@@ -103,7 +108,12 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 
 							result.shared = module;
 
-							prevent_illegal_vite_imports(module_node, illegal_imports, extensions);
+							prevent_illegal_vite_imports(
+								module_node,
+								illegal_imports,
+								path.resolve(svelte_config.kit.files.lib),
+								extensions
+							);
 						}
 
 						if (node.server) {
