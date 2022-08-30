@@ -2,9 +2,9 @@
 title: Page options
 ---
 
-By default, SvelteKit will render any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called **hydration**. For this reason, you need to ensure that components can run in both places. SvelteKit will then initialise a [**router**](/docs/routing) that takes over subsequent navigations.
+By default, SvelteKit will render (or [prerender](/docs/appendix#prerendering)) any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called **hydration**. For this reason, you need to ensure that components can run in both places. SvelteKit will then initialise a [**router**](/docs/routing) that takes over subsequent navigations.
 
-You can control each of these through an `export` in your layouts (via `+layout.js` or `+layout.server.js`) or your page (via `+page.js` or `+page.server.js`) basis. To define an option for the whole app, put it inside the root `+layout.js` or `+layout.server.js`. In case of conflicts, when a lower layout or page sets the same option as an upper layout, the last option wins. So for example if you set `ssr` to `false` inside a layout, it means all pages inside that layout are not rendered on the server - except when a page sets `ssr` to `true`, then that page is rendered on the server.
+You can control each of these on a page-by-page basis by exporting options from [`+page.js`](/docs/routing#page-page-js) or [`+page.server.js`](/docs/routing#page-page-server-js), or for groups of pages using a shared [`+layout.js`](/docs/routing#layout-layout-js) or [`+layout.server.js`](/docs/routing#layout-layout-server-js). To define an option for the whole app, export it from the root layout. Child layouts and pages override values set in parent layouts, so — for example — you can enable prerendering for your entire app then disable it for pages that need to be dynamically rendered.
 
 ### router
 
@@ -34,8 +34,6 @@ export const hydrate = false;
 
 It's likely that at least some routes of your app can be represented as a simple HTML file generated at build time. These routes can be [_prerendered_](/docs/appendix#prerendering).
 
-Prerendering happens automatically for any `+page` or `+server` file with the `prerender` annotation:
-
 ```js
 /// file: +page.js/+page.server.js/+server.js
 export const prerender = true;
@@ -48,7 +46,7 @@ Alternatively, you can set `export const prerender = true` in your root `+layout
 export const prerender = false;
 ```
 
-Routes with `prerender = true` will be excluded from manifests used for dynamic SSR, making your server (or serverless/edge functions) smaller. In some cases you might want to prerender a route but also include it in the manifest (for example, you want to prerender your most recent/popular content but server-render the long tail) — for these cases, there's a third option, 'auto':
+Routes with `prerender = true` will be excluded from manifests used for dynamic SSR, making your server (or serverless/edge functions) smaller. In some cases you might want to prerender a route but also include it in the manifest (for example, with a route like `/blog/[slug]` where you want to prerender your most recent/popular content but server-render the long tail) — for these cases, there's a third option, 'auto':
 
 ```js
 /// file: +page.js/+page.server.js/+server.js
@@ -57,7 +55,7 @@ export const prerender = 'auto';
 
 > If your entire app is suitable for prerendering, you can use [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), which will output files suitable for use with any static webserver.
 
-The prerenderer will start at the root of your app and generate HTML for any prerenderable pages it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with the `entries` option in the [prerender configuration](/docs/configuration#prerender).
+The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with the `entries` option in the [prerender configuration](/docs/configuration#prerender).
 
 #### When not to prerender
 
