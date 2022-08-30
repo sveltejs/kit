@@ -112,7 +112,9 @@ export default {
     prerender: { entries: [] }
   }
 };
+```
 
+```js
 // src/routes/+layout.js
 export const ssr = false;
 ```
