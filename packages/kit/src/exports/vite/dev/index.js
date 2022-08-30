@@ -269,13 +269,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 		}
 	});
 
-	const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
-	const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);
-
-	const env = get_env(svelte_config.kit.env, vite_config.mode);
-	set_private_env(env.private);
-	set_public_env(env.public);
-
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -408,7 +401,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							base: svelte_config.kit.paths.base,
 							assets
 						},
-						public_env: env.public,
+						public_env: {},
 						read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 						root,
 						app_template: ({ head, body, assets, nonce }) => {
