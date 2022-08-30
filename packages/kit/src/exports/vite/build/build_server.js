@@ -25,13 +25,13 @@ import { set_prerendering } from '${runtime}/env.js';
 import { set_private_env } from '${runtime}/env-private.js';
 import { set_public_env } from '${runtime}/env-public.js';
 
-const template = ({ head, body, assets, nonce }) => ${s(template)
+const app_template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace('%sveltekit.head%', '" + head + "')
 	.replace('%sveltekit.body%', '" + body + "')
 	.replace(/%sveltekit\.assets%/g, '" + assets + "')
 	.replace(/%sveltekit\.nonce%/g, '" + nonce + "')};
 
-const error_page = ({ status, message }) => ${s(error_page)
+const error_template = ({ status, message }) => ${s(error_page)
 	.replace(/%sveltekit\.status%/g, '" + status + "')
 	.replace(/%sveltekit\.message%/g, '" + message + "')};
 
@@ -83,9 +83,9 @@ export class Server {
 			root,
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
 			router: ${s(config.kit.browser.router)},
-			template,
-			template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
-			error_page,
+			app_template,
+			app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
+			error_template,
 			trailing_slash: ${s(config.kit.trailingSlash)}
 		};
 	}

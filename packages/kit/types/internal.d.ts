@@ -309,7 +309,7 @@ export interface SSROptions {
 	root: SSRComponent['default'];
 	router: boolean;
 	service_worker?: string;
-	template({
+	app_template({
 		head,
 		body,
 		assets,
@@ -320,8 +320,8 @@ export interface SSROptions {
 		assets: string;
 		nonce: string;
 	}): string;
-	template_contains_nonce: boolean;
-	error_page({ message, status }: { message: string; status: number }): string;
+	app_template_contains_nonce: boolean;
+	error_template({ message, status }: { message: string; status: number }): string;
 	trailing_slash: TrailingSlash;
 }
 

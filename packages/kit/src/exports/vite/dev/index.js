@@ -417,7 +417,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 						root,
 						router: svelte_config.kit.browser.router,
-						template: ({ head, body, assets, nonce }) => {
+						app_template: ({ head, body, assets, nonce }) => {
 							return (
 								template
 									.replace(/%sveltekit\.assets%/g, assets)
@@ -427,8 +427,8 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 									.replace('%sveltekit.body%', () => body)
 							);
 						},
-						template_contains_nonce: template.includes('%sveltekit.nonce%'),
-						error_page: ({ status, message }) => {
+						app_template_contains_nonce: template.includes('%sveltekit.nonce%'),
+						error_template: ({ status, message }) => {
 							return error_page
 								.replace(/%sveltekit\.status%/g, String(status))
 								.replace(/%sveltekit\.message%/g, message);
