@@ -51,8 +51,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 	}
 
-	const { fetcher, fetched, cookies } = create_fetch({ event, options, state, route });
-
 	try {
 		const nodes = await Promise.all([
 			// we use == here rather than === because [undefined] serializes as "[null]"
@@ -109,23 +107,30 @@ export async function render_page(event, route, page, options, state, resolve_op
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
 		// causing functions to be omitted from the manifesst generated later
+		// TODO incorporate layout options in https://github.com/sveltejs/kit/pull/6197
 		const should_prerender =
 			leaf_node.shared?.prerender ?? leaf_node.server?.prerender ?? options.prerender.default;
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
-				throw new Error('Cannot prerender pages that have endpoints with mutative methods');
+				throw new Error('Cannot prerender pages that have mutative methods');
 			}
 		} else if (state.prerendering) {
 			// if the page isn't marked as prerenderable (or is explicitly
 			// marked NOT prerenderable, if `prerender.default` is `true`),
 			// then bail out at this point
-			if (!should_prerender) {
-				return new Response(undefined, {
-					status: 204
-				});
-			}
+			return new Response(undefined, {
+				status: 204
+			});
 		}
+
+		const { fetcher, fetched, cookies } = create_fetch({
+			event,
+			options,
+			state,
+			route,
+			prerender_default: should_prerender
+		});
 
 		if (!resolve_opts.ssr) {
 			return await render_response({

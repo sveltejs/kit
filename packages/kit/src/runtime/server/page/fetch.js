@@ -10,9 +10,10 @@ import { domain_matches, path_matches } from './cookie.js';
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   route: import('types').SSRRoute | import('types').SSRErrorPage;
+ *   prerender_default?: import('types').PrerenderOption;
  * }} opts
  */
-export function create_fetch({ event, options, state, route }) {
+export function create_fetch({ event, options, state, route, prerender_default }) {
 	/** @type {import('./types').Fetched[]} */
 	const fetched = [];
 
@@ -135,6 +136,7 @@ export function create_fetch({ event, options, state, route }) {
 				new Request(new URL(requested, event.url).href, { ...opts }),
 				options,
 				{
+					prerender_default,
 					...state,
 					initiator: route
 				}

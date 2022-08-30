@@ -554,7 +554,7 @@ test.describe('Errors', () => {
 		expect(await page.textContent('h1')).toBe('500');
 
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot prerender pages that have endpoints with mutative methods"'
+			'This is your custom error page saying: "Cannot prerender pages that have mutative methods"'
 		);
 	});
 
