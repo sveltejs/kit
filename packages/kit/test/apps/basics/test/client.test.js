@@ -672,12 +672,12 @@ test.describe.serial('Invalidation', () => {
 
 		await page.click('button');
 		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(0); // apparently necessary
+		await page.waitForTimeout(200); // apparently necessary
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 
 		await page.click('button');
 		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(0);
+		await page.waitForTimeout(200);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
 	});
 });
