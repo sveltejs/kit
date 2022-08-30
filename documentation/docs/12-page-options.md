@@ -33,6 +33,23 @@ export const prerender = 'auto';
 
 The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with the `entries` option in the [prerender configuration](/docs/configuration#prerender).
 
+#### Prerendering server routes
+
+Unlike the other page options, `prerender` also applies to `+server.js` files. These files are _not_ affected from layouts, but will inherit default values from the pages that fetch data from them, if any. For example if a `+page.js` contains this `load` function...
+
+```js
+/// file: +page.js
+export const prerender = true;
+
+/** @type {import('./$types').PageLoad} */
+export async function load({ fetch }) {
+	const res = await fetch('/my-server-route.json');
+	return await res.json();
+}
+```
+
+...then `src/routes/my-server-route.json/+server.js` will be treated as prerenderable if it doesn't contain its own `export const prerender = false`.
+
 #### When not to prerender
 
 The basic rule is this: for a page to be prerenderable, any two users hitting it directly must get the same content from the server.
