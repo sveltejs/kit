@@ -68,10 +68,6 @@ export class Server {
 			manifest,
 			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
-			prerender: {
-				default: ${config.kit.prerender.default},
-				enabled: ${config.kit.prerender.enabled}
-			},
 			public_env: {},
 			read,
 			root,

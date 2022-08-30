@@ -107,7 +107,7 @@ const get_defaults = (prefix = '') => ({
 			concurrency: 1,
 			crawl: true,
 			createIndexFiles: undefined,
-			default: false,
+			default: undefined,
 			enabled: true,
 			entries: ['*'],
 			force: undefined,

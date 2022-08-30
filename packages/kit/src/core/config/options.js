@@ -223,7 +223,10 @@ const options = object(
 					(keypath) =>
 						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/configuration#trailingslash`
 				),
-				default: boolean(false),
+				default: error(
+					(keypath) =>
+						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+				),
 				enabled: boolean(true),
 				entries: validate(['*'], (input, keypath) => {
 					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {

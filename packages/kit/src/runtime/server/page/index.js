@@ -107,16 +107,14 @@ export async function render_page(event, route, page, options, state, resolve_op
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
 		// causing functions to be omitted from the manifesst generated later
-		const should_prerender = get_option(nodes, 'prerender') ?? options.prerender.default;
+		const should_prerender = get_option(nodes, 'prerender') ?? false;
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
 				throw new Error('Cannot prerender pages that have mutative methods');
 			}
 		} else if (state.prerendering) {
-			// if the page isn't marked as prerenderable (or is explicitly
-			// marked NOT prerenderable, if `prerender.default` is `true`),
-			// then bail out at this point
+			// if the page isn't marked as prerenderable, then bail out at this point
 			return new Response(undefined, {
 				status: 204
 			});

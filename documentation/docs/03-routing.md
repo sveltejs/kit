@@ -69,9 +69,12 @@ This function runs alongside `+page.svelte`, which means it runs on the server d
 
 As well as `load`, `page.js` can export values that configure the page's behaviour:
 
-- `export const prerender = true` or `false` overrides [`config.kit.prerender.default`](/docs/configuration#prerender)
-- `export const hydrate = true` or `false` overrides [`config.kit.browser.hydrate`](/docs/configuration#browser)
-- `export const router = true` or `false` overrides [`config.kit.browser.router`](/docs/configuration#browser)
+- `export const prerender = true` or `false` or `'auto'`
+- `export const hydrate = true` or `false`
+- `export const router = true` or `false`
+- `export const ssr = true` or `false`
+
+You can find more information about these in [page options](/docs/12-page-options).
 
 #### +page.server.js
 

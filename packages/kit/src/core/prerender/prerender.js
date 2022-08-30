@@ -10,6 +10,7 @@ import { escape_html_attr } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { load_config } from '../config/index.js';
 import { affects_path } from '../../utils/routing.js';
+import { get_option } from '../../runtime/server/utils.js';
 
 /**
  * @typedef {import('types').PrerenderErrorHandler} PrerenderErrorHandler
@@ -371,21 +372,12 @@ export async function prerender() {
 			}
 
 			if (route.page) {
-				// TODO use setting from layouts, in https://github.com/sveltejs/kit/pull/6197
-				// const nodes = await Promise.all(
-				// 	[...route.page.layouts, route.page.leaf].map((n) => {
-				// 		if (n !== undefined) return manifest._.nodes[n]();
-				// 	})
-				// );
-
-				// let prerender = config.prerender.default;
-				// for (const node of nodes) {
-				// 	prerender = node?.shared?.prerender ?? node?.server?.prerender ?? prerender;
-				// }
-
-				const leaf = await manifest._.nodes[route.page.leaf]();
-				let prerender =
-					leaf.shared?.prerender ?? leaf.server?.prerender ?? config.prerender.default;
+				const nodes = await Promise.all(
+					[...route.page.layouts, route.page.leaf].map((n) => {
+						if (n !== undefined) return manifest._.nodes[n]();
+					})
+				);
+				const prerender = get_option(nodes, 'prerender') ?? false;
 
 				prerender_map.set(route.id, prerender);
 			}

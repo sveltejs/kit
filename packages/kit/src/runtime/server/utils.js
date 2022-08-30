@@ -137,12 +137,20 @@ export function data_response(data) {
 }
 
 /**
+ * @template {'hydrate' | 'prerender' | 'router' | 'ssr'} Option
+ * @template {Option extends 'prerender' ? import('types').PrerenderOption : boolean} Value
+ *
  * @param {Array<import('types').SSRNode | undefined>} nodes
- * @param {'hydrate' | 'prerender' | 'router' | 'ssr' } option
+ * @param {Option} option
+ *
+ * @returns {Value | undefined}
  */
 export function get_option(nodes, option) {
 	return nodes.reduce(
-		(value, node) => node?.shared?.[option] ?? node?.server?.[option] ?? value,
-		/** @type {boolean|undefined} */ (undefined)
+		(value, node) =>
+			/** @type {any} TypeScript's too dumb to understand this */ (
+				node?.shared?.[option] ?? node?.server?.[option] ?? value
+			),
+		/** @type {Value | undefined} */ (undefined)
 	);
 }

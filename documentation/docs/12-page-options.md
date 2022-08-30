@@ -41,7 +41,7 @@ Prerendering happens automatically for any `+page` or `+server` file with the `p
 export const prerender = true;
 ```
 
-Alternatively, you can set [`config.kit.prerender.default`](/docs/configuration#prerender) to `true` and prerender everything except pages that are explicitly marked as _not_ prerenderable:
+Alternatively, you can set `export const prerender = true` in your root `+layout` and prerender everything except pages that are explicitly marked as _not_ prerenderable:
 
 ```js
 /// file: +page.js/+page.server.js/+server.js
