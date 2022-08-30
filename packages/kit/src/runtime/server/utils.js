@@ -137,6 +137,32 @@ export function data_response(data) {
 }
 
 /**
+ * @template {'prerender' | 'ssr' | 'csr'} Option
+ * @template {Option extends 'prerender' ? import('types').PrerenderOption : boolean} Value
+ *
+ * @param {Array<import('types').SSRNode | undefined>} nodes
+ * @param {Option} option
+ *
+ * @returns {Value | undefined}
+ */
+export function get_option(nodes, option) {
+	return nodes.reduce((value, node) => {
+		// TODO remove for 1.0
+		for (const thing of [node?.server, node?.shared]) {
+			if (thing && ('router' in thing || 'hydrate' in thing)) {
+				throw new Error(
+					'`export const hydrate` and `export const router` have been replaced with `export const csr`. See https://github.com/sveltejs/kit/pull/6446'
+				);
+			}
+		}
+
+		return /** @type {any} TypeScript's too dumb to understand this */ (
+			node?.shared?.[option] ?? node?.server?.[option] ?? value
+		);
+	}, /** @type {Value | undefined} */ (undefined));
+}
+
+/**
  * Return as a response that renders the error.html
  *
  * @param {import('types').SSROptions} options

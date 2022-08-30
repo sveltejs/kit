@@ -31,7 +31,7 @@ Occasionally, we need to tell SvelteKit not to handle a link, but allow the brow
 
 ...will cause a full-page navigation when the link is clicked.
 
-Links with a `rel="external"` attribute will receive the same treatment. In addition, they will be ignored during [prerendering](https://kit.svelte.dev/docs/page-options#prerender).
+Links with a `rel="external"` attribute will receive the same treatment. In addition, they will be ignored during [prerendering](/docs/page-options#prerender).
 
 ### data-sveltekit-noscroll
 

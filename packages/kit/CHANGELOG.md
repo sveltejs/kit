@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.0.0-next.455
+
+### Patch Changes
+
+- bump vite-plugin-svelte to 1.0.3 to fix an issue with svelte-inspector in vite 3.1 ([#6443](https://github.com/sveltejs/kit/pull/6443))
+
+* [chore] bump ts version and ensure it works with latest changes ([#6428](https://github.com/sveltejs/kit/pull/6428))
+
+- [breaking] `ssr/hydrate/router/prerender.default` are now configurable in `+page(.server).js` and `+layout(.server).js` ([#6197](https://github.com/sveltejs/kit/pull/6197))
+
+* [breaking] add `error.html` page, rename `kit.config.files.template` to `kit.config.files.appTemplate` ([#6367](https://github.com/sveltejs/kit/pull/6367))
+
+- [breaking] merge resolve options when using sequence helper ([#6401](https://github.com/sveltejs/kit/pull/6401))
+
+* [breaking] replace `router`/`hydrate` page options with `csr` ([#6446](https://github.com/sveltejs/kit/pull/6446))
+
+- [breaking] add `prerender = 'auto'` option, and extend `prerender` option to endpoints ([#6392](https://github.com/sveltejs/kit/pull/6392))
+
 ## 1.0.0-next.454
 
 ### Patch Changes

@@ -414,31 +414,6 @@ test.describe('Load', () => {
 });
 
 test.describe('Page options', () => {
-	test('disables router if router=false', async ({ page, clicknav }) => {
-		await page.goto('/no-router/a');
-
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-		expect(await page.textContent('button')).toBe('clicks: 0');
-
-		// wait until hydration before interacting with button
-		await page.waitForSelector('body.started');
-
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		// wait until hydration before attempting backwards client-side navigation
-		await page.waitForSelector('body.started');
-
-		await clicknav('[href="/no-router/a"]');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-		expect(await page.textContent('button')).toBe('clicks: 0');
-	});
-
 	test('applies generated component styles with ssr=false (hides announcer)', async ({
 		page,
 		clicknav
@@ -601,10 +576,42 @@ test.describe('Shadow DOM', () => {
 	});
 });
 
-test('Can use browser-only global on client-only page', async ({ page, read_errors }) => {
-	await page.goto('/no-ssr/browser-only-global');
-	await expect(page.locator('p')).toHaveText('Works');
-	expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
+test.describe('SPA mode / no SSR', () => {
+	test('Can use browser-only global on client-only page through ssr config in handle', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/browser-only-global');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
+	});
+
+	test('Can use browser-only global on client-only page through ssr config in layout.js', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/ssr-page-config')).toBe(undefined);
+	});
+
+	test('Can use browser-only global on client-only page through ssr config in page.js', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config/layout/inherit');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/ssr-page-config/layout/inherit')).toBe(undefined);
+	});
+
+	test('Cannot use browser-only global on page because of ssr config in page.js', async ({
+		page
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
+		await expect(page.locator('p')).toHaveText(
+			'This is your custom error page saying: "document is not defined"'
+		);
+	});
 });
 
 test.describe('$app/stores', () => {
