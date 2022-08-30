@@ -49,7 +49,7 @@ export async function render_response({
 			throw new Error('Cannot use prerendering if config.kit.csp.mode === "nonce"');
 		}
 
-		if (options.template_contains_nonce) {
+		if (options.app_template_contains_nonce) {
 			throw new Error('Cannot use prerendering if page template contains %sveltekit.nonce%');
 		}
 	}
@@ -337,7 +337,7 @@ export async function render_response({
 	// TODO flush chunks as early as we can
 	const html =
 		(await resolve_opts.transformPageChunk({
-			html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
+			html: options.app_template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
 			done: true
 		})) || '';
 

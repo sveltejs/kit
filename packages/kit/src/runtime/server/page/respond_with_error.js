@@ -1,7 +1,7 @@
 import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { GENERIC_ERROR, get_option } from '../utils.js';
+import { GENERIC_ERROR, get_option, static_error_page } from '../utils.js';
 import { create_fetch } from './fetch.js';
 
 /**
@@ -88,8 +88,6 @@ export async function respond_with_error({ event, options, state, status, error,
 
 		options.handle_error(error, event);
 
-		return new Response(error.stack, {
-			status: 500
-		});
+		return static_error_page(options, 500, error.message);
 	}
 }

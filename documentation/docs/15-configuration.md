@@ -36,7 +36,8 @@ const config = {
 			params: 'src/params',
 			routes: 'src/routes',
 			serviceWorker: 'src/service-worker',
-			template: 'src/app.html'
+			appTemplate: 'src/app.html',
+			errorTemplate: 'src/error.html'
 		},
 		inlineStyleThreshold: 0,
 		methodOverride: {
