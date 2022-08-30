@@ -1,4 +1,6 @@
 import { expect } from '@playwright/test';
+import { request } from 'http';
+import { v } from '../../../prerendering/basics/build/_app/immutable/chunks/index-55acff4c.js';
 import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -33,6 +35,21 @@ test.describe('$env', () => {
 		const resp = await request.get('/env/static-private-dynamic-import');
 		expect(await resp.text()).toMatch(
 			/.*Error: Cannot import \$env\/static\/private into client-side code:.*/gs
+		);
+	});
+});
+
+test.describe('server-only modules', () => {
+	test('server-only module is not statically importable from the client', async ({ request }) => {
+		const resp = await request.get('/server-only-modules/static-import');
+		expect(await resp.text()).toMatch(
+			/.*Error: Cannot import \$lib\/test.server.js into client-side code:.*/gs
+		);
+	});
+	test('server-only module is not dynamically importable from the client', async ({ request }) => {
+		const resp = await request.get('/server-only-modules/dynamic-import');
+		expect(await resp.text()).toMatch(
+			/.*Error: Cannot import \$lib\/test.server.js into client-side code:.*/gs
 		);
 	});
 });
