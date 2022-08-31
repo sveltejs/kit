@@ -16,7 +16,13 @@ import {
 	ServerInitOptions,
 	SSRManifest
 } from './index.js';
-import { HttpMethod, MaybePromise, RequestOptions, TrailingSlash } from './private.js';
+import {
+	HttpMethod,
+	MaybePromise,
+	PrerenderOption,
+	RequestOptions,
+	TrailingSlash
+} from './private.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -138,7 +144,6 @@ export interface PageNode {
 
 export type PayloadScriptAttributes =
 	| { type: 'data'; url: string; body?: string }
-	| { type: 'server_data' }
 	| { type: 'validation_errors' };
 
 export interface PrerenderDependency {
@@ -273,13 +278,17 @@ export interface SSRNode {
 	shared: {
 		load?: Load;
 		hydrate?: boolean;
-		prerender?: boolean;
+		prerender?: PrerenderOption;
 		router?: boolean;
+		ssr?: boolean;
 	};
 
 	server: {
 		load?: ServerLoad;
-		prerender?: boolean;
+		hydrate?: boolean;
+		prerender?: PrerenderOption;
+		router?: boolean;
+		ssr?: boolean;
 		POST?: Action;
 		PATCH?: Action;
 		PUT?: Action;
@@ -298,23 +307,17 @@ export interface SSROptions {
 	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;
-	hydrate: boolean;
 	manifest: SSRManifest;
 	method_override: MethodOverride;
 	paths: {
 		base: string;
 		assets: string;
 	};
-	prerender: {
-		default: boolean;
-		enabled: boolean;
-	};
 	public_env: Record<string, string>;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
-	router: boolean;
 	service_worker?: string;
-	template({
+	app_template({
 		head,
 		body,
 		assets,
@@ -325,7 +328,8 @@ export interface SSROptions {
 		assets: string;
 		nonce: string;
 	}): string;
-	template_contains_nonce: boolean;
+	app_template_contains_nonce: boolean;
+	error_template({ message, status }: { message: string; status: number }): string;
 	trailing_slash: TrailingSlash;
 }
 
@@ -339,7 +343,9 @@ export interface PageNodeIndexes {
 	leaf: number;
 }
 
-export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>>;
+export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
+	prerender?: PrerenderOption;
+};
 
 export interface SSRRoute {
 	id: string;
@@ -358,6 +364,11 @@ export interface SSRState {
 	initiator?: SSRRoute | SSRErrorPage;
 	platform?: any;
 	prerendering?: PrerenderOptions;
+	/**
+	 * When fetching data from a +server.js endpoint in `load`, the page's
+	 * prerender option is inherited by the endpoint, unless overridden
+	 */
+	prerender_default?: PrerenderOption;
 }
 
 export type StrictBody = string | Uint8Array;

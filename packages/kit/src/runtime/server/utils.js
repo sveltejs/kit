@@ -1,3 +1,4 @@
+import { devalue } from 'devalue';
 import { HttpError } from '../control.js';
 
 /** @param {any} body */
@@ -113,4 +114,57 @@ export function allowed_methods(mod) {
 	if (mod.GET || mod.HEAD) allowed.push('HEAD');
 
 	return allowed;
+}
+
+/** @param {any} data */
+export function data_response(data) {
+	try {
+		return new Response(`window.__sveltekit_data = ${devalue(data)}`, {
+			headers: {
+				'content-type': 'application/javascript'
+			}
+		});
+	} catch (e) {
+		const error = /** @type {any} */ (e);
+		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
+		const message = match ? `${error.message} (data.${match[2]})` : error.message;
+		return new Response(`throw new Error(${JSON.stringify(message)})`, {
+			headers: {
+				'content-type': 'application/javascript'
+			}
+		});
+	}
+}
+
+/**
+ * @template {'hydrate' | 'prerender' | 'router' | 'ssr'} Option
+ * @template {Option extends 'prerender' ? import('types').PrerenderOption : boolean} Value
+ *
+ * @param {Array<import('types').SSRNode | undefined>} nodes
+ * @param {Option} option
+ *
+ * @returns {Value | undefined}
+ */
+export function get_option(nodes, option) {
+	return nodes.reduce(
+		(value, node) =>
+			/** @type {any} TypeScript's too dumb to understand this */ (
+				node?.shared?.[option] ?? node?.server?.[option] ?? value
+			),
+		/** @type {Value | undefined} */ (undefined)
+	);
+}
+
+/**
+ * Return as a response that renders the error.html
+ *
+ * @param {import('types').SSROptions} options
+ * @param {number} status
+ * @param {string} message
+ */
+export function static_error_page(options, status, message) {
+	return new Response(options.error_template({ status, message }), {
+		headers: { 'content-type': 'text/html; charset=utf-8' },
+		status
+	});
 }

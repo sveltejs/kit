@@ -107,14 +107,16 @@ const options = object(
 				return input;
 			}),
 
-			browser: validate({ hydrate: true, router: true }, (input, keypath) => {
-				const value = object({ hydrate: boolean(true), router: boolean(true) })(input, keypath);
-				if (!value.hydrate && value.router) {
-					throw new Error(
-						'config.kit.browser.router cannot be true if config.kit.browser.hydrate is false'
-					);
-				}
-				return value;
+			// TODO: remove this for the 1.0 release
+			browser: object({
+				hydrate: error(
+					(keypath) =>
+						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+				),
+				router: error(
+					(keypath) =>
+						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+				)
 			}),
 
 			csp: object({
@@ -140,7 +142,12 @@ const options = object(
 				params: string(join('src', 'params')),
 				routes: string(join('src', 'routes')),
 				serviceWorker: string(join('src', 'service-worker')),
-				template: string(join('src', 'app.html'))
+				appTemplate: string(join('src', 'app.html')),
+				errorTemplate: string(join('src', 'error.html')),
+				// TODO: remove this for the 1.0 release
+				template: error(
+					() => 'config.kit.files.template has been renamed to config.kit.files.appTemplate'
+				)
 			}),
 
 			// TODO: remove this for the 1.0 release
@@ -221,7 +228,10 @@ const options = object(
 					(keypath) =>
 						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/configuration#trailingslash`
 				),
-				default: boolean(false),
+				default: error(
+					(keypath) =>
+						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+				),
 				enabled: boolean(true),
 				entries: validate(['*'], (input, keypath) => {
 					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {

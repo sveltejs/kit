@@ -1,5 +1,23 @@
 # create-svelte
 
+## 2.0.0-next.167
+
+### Patch Changes
+
+- [breaking] Replace `sveltekit:*` with valid HTML attributes like `data-sveltekit-*` ([#6170](https://github.com/sveltejs/kit/pull/6170))
+
+## 2.0.0-next.166
+
+### Patch Changes
+
+- Remove App.PrivateEnv and App.PublicEnv placeholders ([#6413](https://github.com/sveltejs/kit/pull/6413))
+
+## 2.0.0-next.165
+
+### Patch Changes
+
+- Update to Vite 3.1.0-beta.1 ([#6407](https://github.com/sveltejs/kit/pull/6407))
+
 ## 2.0.0-next.164
 
 ### Patch Changes

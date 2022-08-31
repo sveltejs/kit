@@ -7,9 +7,18 @@ run('prerendered', (test) => {
 		assert.ok(fs.existsSync(`${cwd}/build/index.html`));
 	});
 
-	test('prerenders content', async ({ base, page }) => {
+	test('prerenders a page', async ({ base, page }) => {
 		await page.goto(base);
 		assert.equal(await page.textContent('h1'), 'This page was prerendered');
+		assert.equal(await page.textContent('p'), 'answer: 42');
+	});
+
+	test('prerenders an unreferenced endpoint with explicit `prerender` setting', async ({ cwd }) => {
+		assert.ok(fs.existsSync(`${cwd}/build/endpoint/explicit.json`));
+	});
+
+	test('prerenders a referenced endpoint with implicit `prerender` setting', async ({ cwd }) => {
+		assert.ok(fs.existsSync(`${cwd}/build/endpoint/implicit.json`));
 	});
 });
 

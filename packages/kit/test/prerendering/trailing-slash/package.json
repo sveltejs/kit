@@ -13,9 +13,9 @@
 		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.48.0",
 		"svelte-check": "^2.7.1",
-		"typescript": "^4.7.4",
+		"typescript": "^4.8.2",
 		"uvu": "^0.5.4",
-		"vite": "^3.0.9"
+		"vite": "^3.1.0-beta.1"
 	},
 	"type": "module"
 }

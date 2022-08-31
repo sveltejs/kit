@@ -3,7 +3,6 @@ import { disable_search, make_trackable } from '../../../utils/url.js';
 /**
  * Calls the user's `load` function.
  * @param {{
- *   dev: boolean;
  *   event: import('types').RequestEvent;
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
@@ -11,7 +10,7 @@ import { disable_search, make_trackable } from '../../../utils/url.js';
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ dev, event, state, node, parent }) {
+export async function load_server_data({ event, state, node, parent }) {
 	if (!node?.server) return null;
 
 	const uses = {
@@ -52,10 +51,6 @@ export async function load_server_data({ dev, event, state, node, parent }) {
 	});
 
 	const data = result ? await unwrap_promises(result) : null;
-
-	if (dev) {
-		check_serializability(data, /** @type {string} */ (node.server_id), 'data');
-	}
 
 	return {
 		type: 'data',
@@ -126,43 +121,4 @@ async function unwrap_promises(object) {
 	}
 
 	return unwrapped;
-}
-
-/**
- * Check that the data can safely be serialized to JSON
- * @param {any} value
- * @param {string} id
- * @param {string} path
- */
-function check_serializability(value, id, path) {
-	const type = typeof value;
-
-	if (type === 'string' || type === 'boolean' || type === 'number' || type === 'undefined') {
-		// primitives are fine
-		return;
-	}
-
-	if (type === 'object') {
-		// nulls are fine...
-		if (!value) return;
-
-		// ...so are plain arrays...
-		if (Array.isArray(value)) {
-			value.forEach((child, i) => {
-				check_serializability(child, id, `${path}[${i}]`);
-			});
-			return;
-		}
-
-		// ...and objects
-		const tag = Object.prototype.toString.call(value);
-		if (tag === '[object Object]') {
-			for (const key in value) {
-				check_serializability(value[key], id, `${path}.${key}`);
-			}
-			return;
-		}
-	}
-
-	throw new Error(`${path} returned from 'load' in ${id} cannot be serialized as JSON`);
 }

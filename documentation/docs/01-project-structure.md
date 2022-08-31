@@ -14,6 +14,7 @@ my-project/
 │ ├ routes/
 │ │ └ [your routes]
 │ ├ app.html
+│ ├ error.html
 │ └ hooks.js
 ├ static/
 │ └ [your static assets]
@@ -41,6 +42,9 @@ The `src` directory contains the meat of your project.
   - `%sveltekit.body%` — the markup for a rendered page. Typically this lives inside a `<div>` or other element, rather than directly inside `<body>`, to prevent bugs caused by browser extensions injecting elements that are then destroyed by the hydration process
   - `%sveltekit.assets%` — either [`paths.assets`](/docs/configuration#paths), if specified, or a relative path to [`paths.base`](/docs/configuration#base)
   - `%sveltekit.nonce%` — a [CSP](/docs/configuration#csp) nonce for manually included links and scripts, if used
+- `error.html` (optional) is the page that is rendered when everything else fails. It can contain the following placeholders:
+  - `%sveltekit.status%` — the HTTP status
+  - `%sveltekit.message%` — the error message
 - `hooks.js` (optional) contains your application's [hooks](/docs/hooks)
 - `service-worker.js` (optional) contains your [service worker](/docs/service-workers)
 

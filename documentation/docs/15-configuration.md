@@ -18,10 +18,6 @@ const config = {
 		adapter: undefined,
 		alias: {},
 		appDir: '_app',
-		browser: {
-			hydrate: true,
-			router: true
-		},
 		csp: {
 			mode: 'auto',
 			directives: {
@@ -40,7 +36,8 @@ const config = {
 			params: 'src/params',
 			routes: 'src/routes',
 			serviceWorker: 'src/service-worker',
-			template: 'src/app.html'
+			appTemplate: 'src/app.html',
+			errorTemplate: 'src/error.html'
 		},
 		inlineStyleThreshold: 0,
 		methodOverride: {
@@ -126,13 +123,6 @@ const config = {
 ### appDir
 
 The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
-
-### browser
-
-An object containing zero or more of the following `boolean` values:
-
-- `hydrate` — whether to [hydrate](/docs/page-options#hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
-- `router` — enables or disables the client-side [router](/docs/page-options#router) app-wide.
 
 ### csp
 

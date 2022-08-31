@@ -1,13 +1,21 @@
+import { devalue } from 'devalue';
 import { negotiate } from '../../../utils/http.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
-import { method_not_allowed, error_to_pojo, allowed_methods } from '../utils.js';
+import {
+	method_not_allowed,
+	error_to_pojo,
+	allowed_methods,
+	get_option,
+	static_error_page
+} from '../utils.js';
 import { create_fetch } from './fetch.js';
 import { HttpError, Redirect } from '../../control.js';
 import { error, json } from '../../../exports/index.js';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
 import { load_data, load_server_data } from './load_data.js';
+import { DATA_SUFFIX } from '../../../constants.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -48,8 +56,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 			return handle_json_request(event, options, node.server);
 		}
 	}
-
-	const { fetcher, fetched, cookies } = create_fetch({ event, options, state, route });
 
 	try {
 		const nodes = await Promise.all([
@@ -102,30 +108,33 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 
 		const should_prerender_data = nodes.some((node) => node?.server);
-		const data_pathname = `${event.url.pathname.replace(/\/$/, '')}/__data.json`;
+		const data_pathname = event.url.pathname.replace(/\/$/, '') + DATA_SUFFIX;
 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
 		// causing functions to be omitted from the manifesst generated later
-		const should_prerender =
-			leaf_node.shared?.prerender ?? leaf_node.server?.prerender ?? options.prerender.default;
+		const should_prerender = get_option(nodes, 'prerender') ?? false;
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
-				throw new Error('Cannot prerender pages that have endpoints with mutative methods');
+				throw new Error('Cannot prerender pages that have mutative methods');
 			}
 		} else if (state.prerendering) {
-			// if the page isn't marked as prerenderable (or is explicitly
-			// marked NOT prerenderable, if `prerender.default` is `true`),
-			// then bail out at this point
-			if (!should_prerender) {
-				return new Response(undefined, {
-					status: 204
-				});
-			}
+			// if the page isn't marked as prerenderable, then bail out at this point
+			return new Response(undefined, {
+				status: 204
+			});
 		}
 
-		if (!resolve_opts.ssr) {
+		const { fetcher, fetched, cookies } = create_fetch({
+			event,
+			options,
+			state,
+			route,
+			prerender_default: should_prerender
+		});
+
+		if (get_option(nodes, 'ssr') === false) {
 			return await render_response({
 				branch: [],
 				validation_errors: undefined,
@@ -133,7 +142,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 				cookies,
 				page_config: {
 					hydrate: true,
-					router: true
+					router: true,
+					ssr: false
 				},
 				status,
 				error: null,
@@ -166,7 +176,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 					}
 
 					return await load_server_data({
-						dev: options.dev,
 						event,
 						state,
 						node,
@@ -231,12 +240,14 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 					if (error instanceof Redirect) {
 						if (state.prerendering && should_prerender_data) {
+							const body = `window.__sveltekit_data = ${JSON.stringify({
+								type: 'redirect',
+								location: error.location
+							})}`;
+
 							state.prerendering.dependencies.set(data_pathname, {
-								response: new Response(undefined),
-								body: JSON.stringify({
-									type: 'redirect',
-									location: error.location
-								})
+								response: new Response(body),
+								body
 							});
 						}
 
@@ -262,7 +273,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 								options,
 								state,
 								resolve_opts,
-								page_config: { router: true, hydrate: true },
+								page_config: { router: true, hydrate: true, ssr: true },
 								status,
 								error,
 								branch: compact(branch.slice(0, j + 1)).concat({
@@ -278,12 +289,11 @@ export async function render_page(event, route, page, options, state, resolve_op
 					}
 
 					// if we're still here, it means the error happened in the root layout,
-					// which means we have to fall back to a plain text response
-					// TODO since the requester is expecting HTML, maybe it makes sense to
-					// doll this up a bit
-					return new Response(
-						error instanceof HttpError ? error.message : options.get_stack(error),
-						{ status }
+					// which means we have to fall back to error.html
+					return static_error_page(
+						options,
+						status,
+						/** @type {HttpError | Error} */ (error).message
 					);
 				}
 			} else {
@@ -294,12 +304,14 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 
 		if (state.prerendering && should_prerender_data) {
+			const body = `window.__sveltekit_data = ${devalue({
+				type: 'data',
+				nodes: branch.map((branch_node) => branch_node?.server_data)
+			})}`;
+
 			state.prerendering.dependencies.set(data_pathname, {
-				response: new Response(undefined),
-				body: JSON.stringify({
-					type: 'data',
-					nodes: branch.map((branch_node) => branch_node?.server_data)
-				})
+				response: new Response(body),
+				body
 			});
 		}
 
@@ -310,7 +322,11 @@ export async function render_page(event, route, page, options, state, resolve_op
 			options,
 			state,
 			resolve_opts,
-			page_config: get_page_config(leaf_node, options),
+			page_config: {
+				router: get_option(nodes, 'router') ?? true,
+				hydrate: get_option(nodes, 'hydrate') ?? true,
+				ssr: true
+			},
 			status,
 			error: null,
 			branch: compact(branch),
@@ -332,24 +348,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 			resolve_opts
 		});
 	}
-}
-
-/**
- * @param {import('types').SSRNode} leaf
- * @param {SSROptions} options
- */
-function get_page_config(leaf, options) {
-	// TODO we can reinstate this now that it's in the module
-	if (leaf.shared && 'ssr' in leaf.shared) {
-		throw new Error(
-			'`export const ssr` has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle'
-		);
-	}
-
-	return {
-		router: leaf.shared?.router ?? options.router,
-		hydrate: leaf.shared?.hydrate ?? options.hydrate
-	};
 }
 
 /**

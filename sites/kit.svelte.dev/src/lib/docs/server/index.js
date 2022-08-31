@@ -153,9 +153,7 @@ export async function read_file(dir, file) {
 				);
 
 				// preserve blank lines in output (maybe there's a more correct way to do this?)
-				html = `<div class="code-block">${
-					options.file ? `<h5>${options.file}</h5>` : ''
-				}${html.replace(/<div class='line'><\/div>/g, '<div class="line"> </div>')}</div>`;
+				html = html.replace(/<div class='line'><\/div>/g, '<div class="line"> </div>');
 			} else if (language === 'diff') {
 				const lines = source.split('\n').map((content) => {
 					let type = null;
@@ -170,22 +168,24 @@ export async function read_file(dir, file) {
 					};
 				});
 
-				html = `<div class="code-block"><pre class="language-diff"><code>${lines
+				html = `<pre class="language-diff"><code>${lines
 					.map((line) => {
 						if (line.type) return `<span class="${line.type}">${line.content}\n</span>`;
 						return line.content + '\n';
 					})
-					.join('')}</code></pre></div>`;
+					.join('')}</code></pre>`;
 			} else {
 				const plang = languages[language];
 				const highlighted = plang
 					? PrismJS.highlight(source, PrismJS.languages[plang], language)
 					: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
-				html = `<div class="code-block">${
-					options.file ? `<h5>${options.file}</h5>` : ''
-				}<pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
+				html = `<pre class='language-${plang}'><code>${highlighted}</code></pre>`;
 			}
+
+			html = `<div class="code-block">${
+				options.file ? `<h5>${options.file}</h5>` : ''
+			}${html}</div>`;
 
 			type_regex.lastIndex = 0;
 

@@ -1,5 +1,63 @@
 # @sveltejs/kit
 
+## 1.0.0-next.454
+
+### Patch Changes
+
+- [breaking] Replace `sveltekit:*` with valid HTML attributes like `data-sveltekit-*` ([#6170](https://github.com/sveltejs/kit/pull/6170))
+
+## 1.0.0-next.453
+
+### Patch Changes
+
+- Include type descriptions for ambient declarations ([#6416](https://github.com/sveltejs/kit/pull/6416))
+
+## 1.0.0-next.452
+
+### Patch Changes
+
+- [breaking] remove App.PrivateEnv and App.PublicEnv in favour of generated types ([#6413](https://github.com/sveltejs/kit/pull/6413))
+
+## 1.0.0-next.451
+
+### Patch Changes
+
+- Prevent infinite reloads on `/` when root `+layout.server.js` exports `load` ([#6405](https://github.com/sveltejs/kit/pull/6405))
+
+## 1.0.0-next.450
+
+### Patch Changes
+
+- [breaking] require Vite 3.1.0-beta.1 ([#6398](https://github.com/sveltejs/kit/pull/6398))
+
+## 1.0.0-next.449
+
+### Patch Changes
+
+- [fix] silence unused type hints in generated proxy files ([#6391](https://github.com/sveltejs/kit/pull/6391))
+
+## 1.0.0-next.448
+
+### Patch Changes
+
+- prevent test suites from getting published ([#6386](https://github.com/sveltejs/kit/pull/6386))
+
+* [fix] remove unnecessary JSON serialization of server data ([#6382](https://github.com/sveltejs/kit/pull/6382))
+
+- [breaking] require Node 16.14 ([#6388](https://github.com/sveltejs/kit/pull/6388))
+
+## 1.0.0-next.447
+
+### Patch Changes
+
+- Use devalue to serialize server-only `load` return values ([#6318](https://github.com/sveltejs/kit/pull/6318))
+
+## 1.0.0-next.446
+
+### Patch Changes
+
+- [fix] encode if root layout has server load ([#6352](https://github.com/sveltejs/kit/pull/6352))
+
 ## 1.0.0-next.445
 
 ### Patch Changes

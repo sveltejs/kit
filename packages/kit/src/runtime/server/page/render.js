@@ -1,4 +1,4 @@
-import devalue from 'devalue';
+import { devalue } from 'devalue';
 import { readable, writable } from 'svelte/store';
 import * as cookie from 'cookie';
 import { hash } from '../../hash.js';
@@ -23,7 +23,7 @@ const updated = {
  *   cookies: import('set-cookie-parser').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
- *   page_config: { hydrate: boolean, router: boolean };
+ *   page_config: { hydrate: boolean, router: boolean; ssr: boolean };
  *   status: number;
  *   error: HttpError | Error | null;
  *   event: import('types').RequestEvent;
@@ -49,7 +49,7 @@ export async function render_response({
 			throw new Error('Cannot use prerendering if config.kit.csp.mode === "nonce"');
 		}
 
-		if (options.template_contains_nonce) {
+		if (options.app_template_contains_nonce) {
 			throw new Error('Cannot use prerendering if page template contains %sveltekit.nonce%');
 		}
 	}
@@ -75,7 +75,7 @@ export async function render_response({
 		error.stack = options.get_stack(error);
 	}
 
-	if (resolve_opts.ssr) {
+	if (page_config.ssr) {
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
@@ -174,6 +174,31 @@ export async function render_response({
 
 	/** @param {string} path */
 	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
+
+	const serialized = { data: '', errors: 'null' };
+
+	try {
+		serialized.data = devalue(branch.map(({ server_data }) => server_data));
+	} catch (e) {
+		// If we're here, the data could not be serialized with devalue
+		// TODO if we wanted to get super fancy we could track down the origin of the `load`
+		// function, but it would mean passing more stuff around than we currently do
+		const error = /** @type {any} */ (e);
+		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
+		if (match) throw new Error(`${error.message} (data.${match[2]})`);
+		throw error;
+	}
+
+	if (validation_errors) {
+		try {
+			serialized.errors = devalue(validation_errors);
+		} catch (e) {
+			// If we're here, the data could not be serialized with devalue
+			const error = /** @type {any} */ (e);
+			if (error.path) throw new Error(`${error.message} (errors.${error.path})`);
+			throw error;
+		}
+	}
 
 	// we use an anonymous function instead of an arrow function to support
 	// older browsers (https://github.com/sveltejs/kit/pull/5417)
@@ -293,14 +318,16 @@ export async function render_response({
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
 			route: ${!!page_config.router},
-			spa: ${!resolve_opts.ssr},
+			spa: ${!page_config.ssr},
 			trailing_slash: ${s(options.trailing_slash)},
-			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
+			hydrate: ${page_config.ssr && page_config.hydrate ? `{
 				status: ${status},
 				error: ${error && serialize_error(error, e => e.stack)},
 				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 				params: ${devalue(event.params)},
-				routeId: ${s(event.routeId)}
+				routeId: ${s(event.routeId)},
+				data: ${serialized.data},
+				errors: ${serialized.errors}
 			}` : 'null'}
 		});
 		`;
@@ -361,7 +388,7 @@ export async function render_response({
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 	}
 
-	if (resolve_opts.ssr && page_config.hydrate) {
+	if (page_config.ssr && page_config.hydrate) {
 		/** @type {string[]} */
 		const serialized_data = [];
 
@@ -370,15 +397,6 @@ export async function render_response({
 				render_json_payload_script(
 					{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
 					response
-				)
-			);
-		}
-
-		if (branch.some((node) => node.server_data)) {
-			serialized_data.push(
-				render_json_payload_script(
-					{ type: 'server_data' },
-					branch.map(({ server_data }) => server_data)
 				)
 			);
 		}
@@ -421,7 +439,7 @@ export async function render_response({
 	// TODO flush chunks as early as we can
 	const html =
 		(await resolve_opts.transformPageChunk({
-			html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
+			html: options.app_template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
 			done: true
 		})) || '';
 

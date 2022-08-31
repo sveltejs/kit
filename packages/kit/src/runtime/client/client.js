@@ -7,14 +7,15 @@ import { parse } from './parse.js';
 import { error } from '../../exports/index.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { nodes, dictionary, matchers } from '__GENERATED__/client-manifest.js';
+import { nodes, server_loads, dictionary, matchers } from '__GENERATED__/client-manifest.js';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
+import { DATA_SUFFIX } from '../../constants.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
 
-const routes = parse(nodes, dictionary, matchers);
+const routes = parse(nodes, server_loads, dictionary, matchers);
 
 const default_layout_loader = nodes[0];
 const default_error_loader = nodes[1];
@@ -41,6 +42,23 @@ try {
 /** @param {number} index */
 function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
+}
+
+/** @type {Record<string, true>} */
+let warned_about_attributes = {};
+
+function check_for_removed_attributes() {
+	const attrs = ['prefetch', 'noscroll', 'reload'];
+	for (const attr of attrs) {
+		if (document.querySelector(`[sveltekit\\:${attr}]`)) {
+			if (!warned_about_attributes[attr]) {
+				warned_about_attributes[attr] = true;
+				console.error(
+					`The sveltekit:${attr} attribute has been replaced with data-sveltekit-${attr}`
+				);
+			}
+		}
+	}
 }
 
 /**
@@ -270,6 +288,8 @@ export function create_client({ target, base, trailing_slash }) {
 				};
 				root.$set(navigation_result.props);
 				tick().then(() => (console.warn = warn));
+
+				check_for_removed_attributes();
 			} else {
 				root.$set(navigation_result.props);
 			}
@@ -368,6 +388,8 @@ export function create_client({ target, base, trailing_slash }) {
 				hydrate: true
 			});
 			console.warn = warn;
+
+			check_for_removed_attributes();
 		} else {
 			root = new Root({
 				target,
@@ -393,7 +415,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   status: number;
 	 *   error: HttpError | Error | null;
 	 *   routeId: string | null;
-	 *   validation_errors?: string | undefined;
+	 *   validation_errors?: Record<string, any> | null;
 	 * }} opts
 	 */
 	async function get_navigation_result_from_branch({
@@ -715,24 +737,14 @@ export function create_client({ target, base, trailing_slash }) {
 
 		if (invalid_server_nodes.some(Boolean)) {
 			try {
-				const res = await native_fetch(
-					`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
-					{
-						headers: {
-							'x-sveltekit-invalidated': invalid_server_nodes.map((x) => (x ? '1' : '')).join(',')
-						}
-					}
-				);
-
-				server_data = /** @type {import('types').ServerData} */ (await res.json());
-
-				if (!res.ok) {
-					throw server_data;
-				}
-			} catch (e) {
-				// something went catastrophically wrong — bail and defer to the server
-				native_navigation(url);
-				return;
+				server_data = await load_data(url, invalid_server_nodes);
+			} catch (error) {
+				return load_root_error_page({
+					status: 500,
+					error: /** @type {Error} */ (error),
+					url,
+					routeId: route.id
+				});
 			}
 
 			if (server_data.type === 'redirect') {
@@ -841,7 +853,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 					// if we get here, it's because the root `load` function failed,
 					// and we need to fall back to the server
-					native_navigation(url);
+					await native_navigation(url);
 					return;
 				}
 			} else {
@@ -882,21 +894,20 @@ export function create_client({ target, base, trailing_slash }) {
 		if (node.server) {
 			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
 			// existing root layout data
-			const res = await native_fetch(
-				`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
-				{
-					headers: {
-						'x-sveltekit-invalidated': '1'
-					}
+			try {
+				const server_data = await load_data(url, [true]);
+
+				if (
+					server_data.type !== 'data' ||
+					(server_data.nodes[0] && server_data.nodes[0].type !== 'data')
+				) {
+					throw 0;
 				}
-			);
 
-			const server_data_nodes = await res.json();
-			server_data_node = server_data_nodes?.[0] ?? null;
-
-			if (!res.ok || server_data_nodes?.type !== 'data') {
+				server_data_node = server_data.nodes[0] ?? null;
+			} catch {
 				// at this point we have no choice but to fall back to the server
-				native_navigation(url);
+				await native_navigation(url);
 
 				// @ts-expect-error
 				return;
@@ -1148,7 +1159,7 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @param {Event} event */
 			const trigger_prefetch = (event) => {
 				const a = find_anchor(event);
-				if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
+				if (a && a.href && a.hasAttribute('data-sveltekit-prefetch')) {
 					prefetch(get_href(a));
 				}
 			};
@@ -1205,7 +1216,7 @@ export function create_client({ target, base, trailing_slash }) {
 				if (
 					a.hasAttribute('download') ||
 					rel.includes('external') ||
-					a.hasAttribute('sveltekit:reload')
+					a.hasAttribute('data-sveltekit-reload')
 				) {
 					return;
 				}
@@ -1232,7 +1243,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 				navigate({
 					url,
-					scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
+					scroll: a.hasAttribute('data-sveltekit-noscroll') ? scroll_state() : null,
 					keepfocus: false,
 					redirect_chain: [],
 					details: {
@@ -1298,32 +1309,24 @@ export function create_client({ target, base, trailing_slash }) {
 			});
 		},
 
-		_hydrate: async ({ status, error, node_ids, params, routeId }) => {
+		_hydrate: async ({
+			status,
+			error: original_error, // TODO get rid of this
+			node_ids,
+			params,
+			routeId,
+			data: server_data_nodes,
+			errors: validation_errors
+		}) => {
 			const url = new URL(location.href);
 
 			/** @type {import('./types').NavigationFinished | undefined} */
 			let result;
 
 			try {
-				/**
-				 * @param {string} type
-				 * @param {any} fallback
-				 */
-				const parse = (type, fallback) => {
-					const script = document.querySelector(`script[sveltekit\\:data-type="${type}"]`);
-					return script?.textContent ? JSON.parse(script.textContent) : fallback;
-				};
-				/**
-				 * @type {Array<import('types').ServerDataNode | null>}
-				 * On initial navigation, this will only consist of data nodes or `null`.
-				 * A possible error is passed through the `error` property, in which case
-				 * the last entry of `node_ids` is an error page and the last entry of
-				 * `server_data_nodes` is `null`.
-				 */
-				const server_data_nodes = parse('server_data', []);
-				const validation_errors = parse('validation_errors', undefined);
-
 				const branch_promises = node_ids.map(async (n, i) => {
+					const server_data_node = server_data_nodes[i];
+
 					return load_node({
 						loader: nodes[n],
 						url,
@@ -1336,7 +1339,7 @@ export function create_client({ target, base, trailing_slash }) {
 							}
 							return data;
 						},
-						server_data_node: create_data_node(server_data_nodes[i])
+						server_data_node: create_data_node(server_data_node)
 					});
 				});
 
@@ -1345,13 +1348,15 @@ export function create_client({ target, base, trailing_slash }) {
 					params,
 					branch: await Promise.all(branch_promises),
 					status,
-					error: /** @type {import('../server/page/types').SerializedHttpError} */ (error)
+					error: /** @type {import('../server/page/types').SerializedHttpError} */ (original_error)
 						?.__is_http_error
 						? new HttpError(
-								/** @type {import('../server/page/types').SerializedHttpError} */ (error).status,
-								error.message
+								/** @type {import('../server/page/types').SerializedHttpError} */ (
+									original_error
+								).status,
+								original_error.message
 						  )
-						: error,
+						: original_error,
 					validation_errors,
 					routeId
 				});
@@ -1376,4 +1381,50 @@ export function create_client({ target, base, trailing_slash }) {
 			initialize(result);
 		}
 	};
+}
+
+let data_id = 1;
+
+/**
+ * @param {URL} url
+ * @param {boolean[]} invalid
+ * @returns {Promise<import('types').ServerData>}
+ */
+async function load_data(url, invalid) {
+	const data_url = new URL(url);
+	data_url.pathname = url.pathname.replace(/\/$/, '') + DATA_SUFFIX;
+	data_url.searchParams.set('__invalid', invalid.map((x) => (x ? 'y' : 'n')).join(''));
+	data_url.searchParams.set('__id', String(data_id++));
+
+	/**
+	 * 
+	 * @param {string} url 
+	 * @returns {Promise<void>}
+	 */
+	const safeRemoteImport = (url) => import.meta.env.LEGACY ?
+		new Promise((resolve, reject) => {
+			const script = document.createElement('script');
+			script.src = url;
+			script.onload = () => resolve();
+			script.onerror = () => reject(`Error while trying to inject <script src="${url}"> to the head element.`);
+			document.head.appendChild(script);
+		}) :
+		import(/* @vite-ignore */ url);
+
+	// The __data.js file is generated by the server and looks like
+	// `window.__sveltekit_data = ${devalue(data)}`. We do this instead
+	// of `export const data` because modules are cached indefinitely,
+	// and that would cause memory leaks.
+	//
+	// The data is read and deleted in the same tick as the promise
+	// resolves, so it's not vulnerable to race conditions
+	await safeRemoteImport(data_url.href);
+
+	// @ts-expect-error
+	const server_data = window.__sveltekit_data;
+
+	// @ts-expect-error
+	delete window.__sveltekit_data;
+
+	return server_data;
 }

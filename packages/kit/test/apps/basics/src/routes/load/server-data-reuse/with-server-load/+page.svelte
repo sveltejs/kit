@@ -1,6 +1,6 @@
-<script lang="ts">
+<script>
 	/** @type {import('./$types').PageData} */
-	export let data 
+	export let data;
 </script>
 
 <p>Page with server load</p>

@@ -45,7 +45,7 @@ If you were using plugins for filetypes that are not automatically handled by [V
 
 #### src/client.js
 
-This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start(...)`) should be expressed in your `__layout.svelte` file, inside an `onMount` callback.
+This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start(...)`) should be expressed in your `+layout.svelte` file, inside an `onMount` callback.
 
 #### src/server.js
 
@@ -81,7 +81,7 @@ Routes now are made up of the folder name exclusively to remove ambiguity, the f
 | routes/about/index.svelte | routes/about/+page.svelte |
 | routes/about.svelte       | routes/about/+page.svelte |
 
-Your custom error page component should be renamed from `_error.svelte` to `+error.svelte`. Any `_layout.svelte` files should likewise be renamed `+layout.svelte`. The double underscore prefix is reserved for SvelteKit; your own [private modules](/docs/routing#private-modules) are still denoted with a single `_` prefix (configurable via [`routes`](/docs/configuration#routes) config).
+Your custom error page component should be renamed from `_error.svelte` to `+error.svelte`. Any `_layout.svelte` files should likewise be renamed `+layout.svelte`. [Any other files are ignored](https://kit.svelte.dev/docs/routing#other-files).
 
 #### Imports
 
@@ -97,9 +97,7 @@ As before, pages and layouts can export a function that allows data to be loaded
 
 This function has been renamed from `preload` to [`load`](/docs/load), it now lives in a `+page.js` (or `+layout.js`) next to its `+page.svelte` (or `+layout.svelte`), and its API has changed. Instead of two arguments — `page` and `session` — there is a single `event` argument.
 
-There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead of returning props directly, `load` now returns an object that _contains_ `props`, alongside various other things.
-
-Lastly, if your page has a `load` method, make sure to return something otherwise you will get `Not found`.
+There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead, you can get [`fetch`](https://kit.svelte.dev/docs/load#input-methods-fetch) from the input methods, and both [`error`](https://kit.svelte.dev/docs/load#errors) and [`redirect`](https://kit.svelte.dev/docs/load#redirects) are now thrown.
 
 #### Stores
 
@@ -135,12 +133,12 @@ This caused problems and is no longer the case in SvelteKit. Instead, relative U
 
 #### &lt;a&gt; attributes
 
-- `sapper:prefetch` is now `sveltekit:prefetch`
-- `sapper:noscroll` is now `sveltekit:noscroll`
+- `sapper:prefetch` is now `data-sveltekit-prefetch`
+- `sapper:noscroll` is now `data-sveltekit-noscroll`
 
 ### Endpoints
 
-In Sapper, 'server routes' — now referred to as [endpoints](/docs/routing#endpoints) — received the `req` and `res` objects exposed by Node's `http` module (or the augmented versions provided by frameworks like Polka and Express).
+In Sapper, [server routes](/docs/routing#server) received the `req` and `res` objects exposed by Node's `http` module (or the augmented versions provided by frameworks like Polka and Express).
 
 SvelteKit is designed to be agnostic as to where the app is running — it could be running on a Node server, but could equally be running on a serverless platform or in a Cloudflare Worker. For that reason, you no longer interact directly with `req` and `res`. Your endpoints will need to be updated to match the new signature.
 

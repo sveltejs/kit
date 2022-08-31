@@ -140,11 +140,13 @@ app.listen(3000, () => {
 
 ## Deploying
 
-You will need the output directory (`build` by default), the project's `package.json`, and the production dependencies in `node_modules` to run the application. Production dependencies can be generated with `npm ci --prod`, you can also skip this step if your app doesn't have any dependencies. You can then start your app with
+You will need the output directory (`build` by default), the project's `package.json`, and the production dependencies in `node_modules` to run the application. Production dependencies can be generated with `npm ci --prod` (you can skip this step if your app doesn't have any dependencies). You can then start your app with
 
 ```bash
 node build
 ```
+
+Development dependencies will be bundled into your app using `esbuild`. To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
 
 ## Changelog
 

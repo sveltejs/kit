@@ -84,7 +84,7 @@
 		{#each contents as section}
 			<li>
 				<a
-					sveltekit:prefetch
+					data-sveltekit-prefetch
 					class="section"
 					class:active={section.path === path}
 					href={section.path}
@@ -97,7 +97,7 @@
 					{#each section.sections as subsection}
 						<li>
 							<a
-								sveltekit:prefetch
+								data-sveltekit-prefetch
 								class="subsection"
 								class:active={subsection.path === path}
 								href={subsection.path}
@@ -111,7 +111,7 @@
 									{#each subsection.sections as subsection}
 										<li>
 											<a
-												sveltekit:prefetch
+												data-sveltekit-prefetch
 												class="nested subsection"
 												class:active={subsection.path === path}
 												href={subsection.path}
