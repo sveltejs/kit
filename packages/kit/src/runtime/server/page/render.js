@@ -23,7 +23,7 @@ const updated = {
  *   cookies: import('set-cookie-parser').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
- *   page_config: { hydrate: boolean, router: boolean; ssr: boolean };
+ *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: HttpError | Error | null;
  *   event: import('types').RequestEvent;
@@ -243,7 +243,7 @@ export async function render_response({
 		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
-	if (page_config.router || page_config.hydrate) {
+	if (page_config.csr) {
 		// Injecting (potentially) legacy script together with the modern script -
 		//  in a similar fashion to the script tags injection of @vitejs/plugin-legacy.
 		// Notice that unlike the script injection on @vitejs/plugin-legacy,
@@ -304,23 +304,11 @@ export async function render_response({
 			add_nomodule_script('', `src=${s(prefixed(legacy_polyfills_file))}`);
 		}
 
-		/**
-		 *
-		 * @param {string} prefix
-		 * @returns
-		 */
-		const getStartupContent = (prefix) =>
-			// prettier-ignore
-			`
-		${prefix}set_public_env(${s(options.public_env)});
-		
-		${prefix}start({
-			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-			paths: ${s(options.paths)},
-			route: ${!!page_config.router},
-			spa: ${!page_config.ssr},
-			trailing_slash: ${s(options.trailing_slash)},
-			hydrate: ${page_config.ssr && page_config.hydrate ? `{
+		// prettier-ignore
+		const startupContent = `
+		start({
+			env: ${s(options.public_env)},
+			hydrate: ${page_config.ssr ? `{
 				status: ${status},
 				error: ${error && serialize_error(error, e => e.stack)},
 				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
@@ -328,16 +316,17 @@ export async function render_response({
 				routeId: ${s(event.routeId)},
 				data: ${serialized.data},
 				errors: ${serialized.errors}
-			}` : 'null'}
+			}` : 'null'},
+			paths: ${s(options.paths)},
+			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
+			trailing_slash: ${s(options.trailing_slash)}
 		});
 		`;
 
 		const detectModernBrowserVarName = '__KIT_is_modern_browser';
 		const startup_script_var_name = '__KIT_startup_script';
 		if (legacy_entry_file) {
-			const startup_script_js = `window.${startup_script_var_name} = function (m) { ${getStartupContent(
-				'm.'
-			)} };`;
+			const startup_script_js = `window.${startup_script_var_name} = function (m) { var start = m.start; ${startupContent} };`;
 			body += `\n\t\t<script${
 				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
 			}>${startup_script_js}</script>`;
@@ -375,8 +364,8 @@ export async function render_response({
 			import(${s(prefixed(entry.file))}).then(window.${startup_script_var_name});
 		}
 		` : `
-		import { set_public_env, start } from ${s(prefixed(entry.file))};
-		${getStartupContent('')}`;
+		import { start } from ${s(prefixed(entry.file))};
+		${startupContent}`;
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
 
 		csp.add_script(init_app);
@@ -388,7 +377,7 @@ export async function render_response({
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 	}
 
-	if (page_config.ssr && page_config.hydrate) {
+	if (page_config.ssr && page_config.csr) {
 		/** @type {string[]} */
 		const serialized_data = [];
 

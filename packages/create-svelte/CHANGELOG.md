@@ -1,5 +1,17 @@
 # create-svelte
 
+## 2.0.0-next.169
+
+### Patch Changes
+
+- Move `data-sveltekit-prefetch` to `<nav>` element ([#6442](https://github.com/sveltejs/kit/pull/6442))
+
+## 2.0.0-next.168
+
+### Patch Changes
+
+- [chore] bump ts version and ensure it works with latest changes ([#6428](https://github.com/sveltejs/kit/pull/6428))
+
 ## 2.0.0-next.167
 
 ### Patch Changes

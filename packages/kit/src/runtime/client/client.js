@@ -1,7 +1,7 @@
 import { onMount, tick } from 'svelte';
 import { normalize_error } from '../../utils/error.js';
 import { make_trackable, decode_params, normalize_path } from '../../utils/url.js';
-import { find_anchor, get_base_uri, get_href, scroll_state } from './utils.js';
+import { find_anchor, get_base_uri, scroll_state } from './utils.js';
 import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 import { error } from '../../exports/index.js';
@@ -107,8 +107,6 @@ export function create_client({ target, base, trailing_slash }) {
 	/** @type {import('svelte').SvelteComponent} */
 	let root;
 
-	let router_enabled = true;
-
 	// keeping track of the history index in order to prevent popstate navigation events if needed
 	let current_history_index = history.state?.[INDEX_KEY];
 
@@ -155,22 +153,18 @@ export function create_client({ target, base, trailing_slash }) {
 			url = new URL(url, get_base_uri(document));
 		}
 
-		if (router_enabled) {
-			return navigate({
-				url,
-				scroll: noscroll ? scroll_state() : null,
-				keepfocus,
-				redirect_chain,
-				details: {
-					state,
-					replaceState
-				},
-				accepted: () => {},
-				blocked: () => {}
-			});
-		}
-
-		await native_navigation(url);
+		return navigate({
+			url,
+			scroll: noscroll ? scroll_state() : null,
+			keepfocus,
+			redirect_chain,
+			details: {
+				state,
+				replaceState
+			},
+			accepted: () => {},
+			blocked: () => {}
+		});
 	}
 
 	/** @param {URL} url */
@@ -241,15 +235,7 @@ export function create_client({ target, base, trailing_slash }) {
 					routeId: null
 				});
 			} else {
-				if (router_enabled) {
-					goto(new URL(navigation_result.location, url).href, {}, [
-						...redirect_chain,
-						url.pathname
-					]);
-				} else {
-					await native_navigation(new URL(navigation_result.location, location.href));
-				}
-
+				goto(new URL(navigation_result.location, url).href, {}, [...redirect_chain, url.pathname]);
 				return false;
 			}
 		} else if (navigation_result.props?.page?.status >= 400) {
@@ -354,9 +340,6 @@ export function create_client({ target, base, trailing_slash }) {
 			page = navigation_result.props.page;
 		}
 
-		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
-		router_enabled = leaf_node?.node.shared?.router !== false;
-
 		if (callback) callback();
 
 		updating = false;
@@ -398,10 +381,8 @@ export function create_client({ target, base, trailing_slash }) {
 			});
 		}
 
-		if (router_enabled) {
-			const navigation = { from: null, to: new URL(location.href) };
-			callbacks.after_navigate.forEach((fn) => fn(navigation));
-		}
+		const navigation = { from: null, to: new URL(location.href) };
+		callbacks.after_navigate.forEach((fn) => fn(navigation));
 
 		started = true;
 	}
@@ -1158,9 +1139,9 @@ export function create_client({ target, base, trailing_slash }) {
 
 			/** @param {Event} event */
 			const trigger_prefetch = (event) => {
-				const a = find_anchor(event);
-				if (a && a.href && a.hasAttribute('data-sveltekit-prefetch')) {
-					prefetch(get_href(a));
+				const { url, options } = find_anchor(event);
+				if (url && options.prefetch === '') {
+					prefetch(url);
 				}
 			};
 
@@ -1185,21 +1166,16 @@ export function create_client({ target, base, trailing_slash }) {
 
 			/** @param {MouseEvent} event */
 			addEventListener('click', (event) => {
-				if (!router_enabled) return;
-
 				// Adapted from https://github.com/visionmedia/page.js
 				// MIT license https://github.com/visionmedia/page.js#license
 				if (event.button || event.which !== 1) return;
 				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 				if (event.defaultPrevented) return;
 
-				const a = find_anchor(event);
-				if (!a) return;
-
-				if (!a.href) return;
+				const { a, url, options } = find_anchor(event);
+				if (!a || !url) return;
 
 				const is_svg_a_element = a instanceof SVGAElement;
-				const url = get_href(a);
 
 				// Ignore non-HTTP URL protocols (e.g. `mailto:`, `tel:`, `myapp:`, etc.)
 				// MEMO: Without this condition, firefox will open mailer twice.
@@ -1213,11 +1189,7 @@ export function create_client({ target, base, trailing_slash }) {
 				// 2. 'rel' attribute includes external
 				const rel = (a.getAttribute('rel') || '').split(/\s+/);
 
-				if (
-					a.hasAttribute('download') ||
-					rel.includes('external') ||
-					a.hasAttribute('data-sveltekit-reload')
-				) {
+				if (a.hasAttribute('download') || rel.includes('external') || options.reload === '') {
 					return;
 				}
 
@@ -1243,7 +1215,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 				navigate({
 					url,
-					scroll: a.hasAttribute('data-sveltekit-noscroll') ? scroll_state() : null,
+					scroll: options.noscroll === '' ? scroll_state() : null,
 					keepfocus: false,
 					redirect_chain: [],
 					details: {
@@ -1256,7 +1228,7 @@ export function create_client({ target, base, trailing_slash }) {
 			});
 
 			addEventListener('popstate', (event) => {
-				if (event.state && router_enabled) {
+				if (event.state) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
@@ -1397,19 +1369,21 @@ async function load_data(url, invalid) {
 	data_url.searchParams.set('__id', String(data_id++));
 
 	/**
-	 * 
-	 * @param {string} url 
+	 *
+	 * @param {string} url
 	 * @returns {Promise<void>}
 	 */
-	const safeRemoteImport = (url) => import.meta.env.LEGACY ?
-		new Promise((resolve, reject) => {
-			const script = document.createElement('script');
-			script.src = url;
-			script.onload = () => resolve();
-			script.onerror = () => reject(`Error while trying to inject <script src="${url}"> to the head element.`);
-			document.head.appendChild(script);
-		}) :
-		import(/* @vite-ignore */ url);
+	const safeRemoteImport = (url) =>
+		import.meta.env.LEGACY
+			? new Promise((resolve, reject) => {
+					const script = document.createElement('script');
+					script.src = url;
+					script.onload = () => resolve();
+					script.onerror = () =>
+						reject(`Error while trying to inject <script src="${url}"> to the head element.`);
+					document.head.appendChild(script);
+			  })
+			: import(/* @vite-ignore */ url);
 
 	// The __data.js file is generated by the server and looks like
 	// `window.__sveltekit_data = ${devalue(data)}`. We do this instead

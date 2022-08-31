@@ -74,8 +74,6 @@ export interface CSRPageNode {
 	component: typeof SvelteComponent;
 	shared: {
 		load?: Load;
-		hydrate?: boolean;
-		router?: boolean;
 	};
 	server: boolean;
 }
@@ -277,18 +275,16 @@ export interface SSRNode {
 
 	shared: {
 		load?: Load;
-		hydrate?: boolean;
 		prerender?: PrerenderOption;
-		router?: boolean;
 		ssr?: boolean;
+		csr?: boolean;
 	};
 
 	server: {
 		load?: ServerLoad;
-		hydrate?: boolean;
 		prerender?: PrerenderOption;
-		router?: boolean;
 		ssr?: boolean;
+		csr?: boolean;
 		POST?: Action;
 		PATCH?: Action;
 		PUT?: Action;

@@ -51,17 +51,44 @@ export function find_anchor(event) {
 		return path;
 	}
 
-	const node = composedPath(event).find(
-		(e) => e instanceof Node && e.nodeName.toUpperCase() === 'A'
-	); // SVG <a> elements have a lowercase name
-	return /** @type {HTMLAnchorElement | SVGAElement | undefined} */ (node);
-}
+	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
+	let a;
 
-/** @param {HTMLAnchorElement | SVGAElement} node */
-export function get_href(node) {
-	return node instanceof SVGAElement
-		? new URL(node.href.baseVal, document.baseURI)
-		: new URL(node.href);
+	const options = {
+		/** @type {string | null} */
+		noscroll: null,
+
+		/** @type {string | null} */
+		prefetch: null,
+
+		/** @type {string | null} */
+		reload: null
+	};
+
+	for (const element of composedPath(event)) {
+		if (!(element instanceof Element)) continue;
+
+		if (!a && element.nodeName.toUpperCase() === 'A') {
+			// SVG <a> elements have a lowercase name
+			a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
+		}
+
+		if (options.noscroll === null) {
+			options.noscroll = element.getAttribute('data-sveltekit-noscroll');
+		}
+
+		if (options.prefetch === null) {
+			options.prefetch = element.getAttribute('data-sveltekit-prefetch');
+		}
+
+		if (options.reload === null) {
+			options.reload = element.getAttribute('data-sveltekit-reload');
+		}
+	}
+
+	const url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
+
+	return { a, url, options };
 }
 
 /** @param {any} value */

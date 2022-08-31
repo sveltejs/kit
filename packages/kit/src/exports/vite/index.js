@@ -359,7 +359,7 @@ function kit() {
 		 * The user's package.json scripts will invoke the Vite CLI to execute the client build. We
 		 * then use this hook to kick off builds for the server and service worker.
 		 */
-		 writeBundle: {
+		writeBundle: {
 			sequential: true,
 			async handler(_options, bundle) {
 				++outputCount;

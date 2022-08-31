@@ -581,7 +581,7 @@ importers:
       typescript: ^4.8.2
       unorm: ^1.6.0
       vite: ^3.1.0-beta.1
-      vite-imagetools: ^4.0.3
+      vite-imagetools: ^4.0.7
       whatwg-fetch: ^3.6.2
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
@@ -603,7 +603,7 @@ importers:
       typescript: 4.8.2
       unorm: 1.6.0
       vite: 3.1.0-beta.1_terser@5.14.2
-      vite-imagetools: 4.0.3
+      vite-imagetools: 4.0.7
       whatwg-fetch: 3.6.2
 
 packages:
@@ -2516,8 +2516,8 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
-  /imagetools-core/3.0.3:
-    resolution: {integrity: sha512-JK7kb0ezkzD27zQgZs7mtRd7DekC+/RTePjIzPsuBAp3S/Z17wNt+6TSEdDJRQSV5xiGV+SOG00weSGVdX3Xig==}
+  /imagetools-core/3.1.1:
+    resolution: {integrity: sha512-LNVnortLEgE0ATHaGZBt3WTccKBz8zNk+NWRHsuyhgMiZ1nCJwAA1I2QcHXUq7OMbsiYm/H5muTv+iSLXM2tiA==}
     engines: {node: '>=12.0.0'}
     dependencies:
       sharp: 0.30.7
@@ -4679,13 +4679,13 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-imagetools/4.0.3:
-    resolution: {integrity: sha512-8MfpwoUvJBGNgrBhVNd+HIRH32+1yN9vtFVGEAAWxa+/9E1pXGu4Lwj3d9Ydi6HwR9sFi4ZQdgaRkQDGKX9O1Q==}
+  /vite-imagetools/4.0.7:
+    resolution: {integrity: sha512-QyT5J455oD0jzi+bIfP/QHNNTSVdyYeWLXZBS0XeI5hReZ/7U4fD7ypZM1qwEBTEJFte4hDrOsFeyin09wig2A==}
     engines: {node: '>=12.0.0'}
     dependencies:
       '@rollup/pluginutils': 4.2.1
-      imagetools-core: 3.0.3
-      magic-string: 0.25.9
+      imagetools-core: 3.1.1
+      magic-string: 0.26.2
     dev: true
 
   /vite/3.1.0-beta.1:

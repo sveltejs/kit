@@ -414,31 +414,6 @@ test.describe('Load', () => {
 });
 
 test.describe('Page options', () => {
-	test('disables router if router=false', async ({ page, clicknav }) => {
-		await page.goto('/no-router/a');
-
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-		expect(await page.textContent('button')).toBe('clicks: 0');
-
-		// wait until hydration before interacting with button
-		await page.waitForSelector('body.started');
-
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		// wait until hydration before attempting backwards client-side navigation
-		await page.waitForSelector('body.started');
-
-		await clicknav('[href="/no-router/a"]');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-		expect(await page.textContent('button')).toBe('clicks: 0');
-	});
-
 	test('applies generated component styles with ssr=false (hides announcer)', async ({
 		page,
 		clicknav
@@ -720,5 +695,77 @@ test.describe.serial('Invalidation', () => {
 		await page.waitForLoadState('networkidle');
 		await page.waitForTimeout(200);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
+	});
+});
+
+test.describe('data-sveltekit attributes', () => {
+	test('data-sveltekit-prefetch', async ({ baseURL, page }) => {
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		const module = process.env.DEV
+			? `${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`
+			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/prefetch/target/_page`;
+
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#two').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#three').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeUndefined();
+	});
+
+	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await page.goto('/data-sveltekit/reload');
+		await page.click('#one');
+		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/reload');
+		await page.click('#two');
+		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/reload');
+		await clicknav('#three');
+		expect(requests).not.toContain(`${baseURL}/data-sveltekit/reload/target`);
+	});
+
+	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
+		await page.goto('/data-sveltekit/noscroll');
+		// await page.evaluate(() => window.scrollTo(0, 1000));
+		await clicknav('#one');
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+		await page.goto('/data-sveltekit/noscroll');
+		await clicknav('#two');
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+		await page.goto('/data-sveltekit/noscroll');
+		// await page.evaluate(() => window.scrollTo(0, 1000));
+		await clicknav('#three');
+		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	});
 });
