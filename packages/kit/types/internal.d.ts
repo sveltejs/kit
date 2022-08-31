@@ -69,8 +69,6 @@ export interface CSRPageNode {
 	component: typeof SvelteComponent;
 	shared: {
 		load?: Load;
-		hydrate?: boolean;
-		router?: boolean;
 	};
 	server: boolean;
 }
@@ -272,14 +270,16 @@ export interface SSRNode {
 
 	shared: {
 		load?: Load;
-		hydrate?: boolean;
 		prerender?: PrerenderOption;
-		router?: boolean;
+		ssr?: boolean;
+		csr?: boolean;
 	};
 
 	server: {
 		load?: ServerLoad;
 		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
 		POST?: Action;
 		PATCH?: Action;
 		PUT?: Action;
@@ -298,23 +298,17 @@ export interface SSROptions {
 	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;
-	hydrate: boolean;
 	manifest: SSRManifest;
 	method_override: MethodOverride;
 	paths: {
 		base: string;
 		assets: string;
 	};
-	prerender: {
-		default: boolean;
-		enabled: boolean;
-	};
 	public_env: Record<string, string>;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
-	router: boolean;
 	service_worker?: string;
-	template({
+	app_template({
 		head,
 		body,
 		assets,
@@ -325,7 +319,8 @@ export interface SSROptions {
 		assets: string;
 		nonce: string;
 	}): string;
-	template_contains_nonce: boolean;
+	app_template_contains_nonce: boolean;
+	error_template({ message, status }: { message: string; status: number }): string;
 	trailing_slash: TrailingSlash;
 }
 

@@ -123,10 +123,6 @@ export interface KitConfig {
 	adapter?: Adapter;
 	alias?: Record<string, string>;
 	appDir?: string;
-	browser?: {
-		hydrate?: boolean;
-		router?: boolean;
-	};
 	csp?: {
 		mode?: 'hash' | 'nonce' | 'auto';
 		directives?: CspDirectives;
@@ -144,7 +140,8 @@ export interface KitConfig {
 		params?: string;
 		routes?: string;
 		serviceWorker?: string;
-		template?: string;
+		appTemplate?: string;
+		errorTemplate?: string;
 	};
 	inlineStyleThreshold?: number;
 	methodOverride?: {
@@ -262,7 +259,6 @@ export interface RequestHandler<
 }
 
 export interface ResolveOptions {
-	ssr?: boolean;
 	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 }
 

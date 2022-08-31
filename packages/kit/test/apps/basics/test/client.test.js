@@ -305,6 +305,15 @@ test.describe('Errors', () => {
 		);
 		expect(await page.innerHTML('h1')).toBe('401');
 	});
+
+	test('Root error falls back to error.html', async ({ page }) => {
+		await page.goto('/errors/error-html');
+		await page.click('button');
+		expect(await page.textContent('h1')).toBe('Error - 500');
+		expect(await page.textContent('p')).toBe(
+			'This is the static error page with the following message: Failed to load'
+		);
+	});
 });
 
 test.describe('Load', () => {
@@ -405,31 +414,6 @@ test.describe('Load', () => {
 });
 
 test.describe('Page options', () => {
-	test('disables router if router=false', async ({ page, clicknav }) => {
-		await page.goto('/no-router/a');
-
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-		expect(await page.textContent('button')).toBe('clicks: 0');
-
-		// wait until hydration before interacting with button
-		await page.waitForSelector('body.started');
-
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		// wait until hydration before attempting backwards client-side navigation
-		await page.waitForSelector('body.started');
-
-		await clicknav('[href="/no-router/a"]');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-		expect(await page.textContent('button')).toBe('clicks: 0');
-	});
-
 	test('applies generated component styles with ssr=false (hides announcer)', async ({
 		page,
 		clicknav
@@ -592,10 +576,42 @@ test.describe('Shadow DOM', () => {
 	});
 });
 
-test('Can use browser-only global on client-only page', async ({ page, read_errors }) => {
-	await page.goto('/no-ssr/browser-only-global');
-	await expect(page.locator('p')).toHaveText('Works');
-	expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
+test.describe('SPA mode / no SSR', () => {
+	test('Can use browser-only global on client-only page through ssr config in handle', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/browser-only-global');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
+	});
+
+	test('Can use browser-only global on client-only page through ssr config in layout.js', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/ssr-page-config')).toBe(undefined);
+	});
+
+	test('Can use browser-only global on client-only page through ssr config in page.js', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config/layout/inherit');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/ssr-page-config/layout/inherit')).toBe(undefined);
+	});
+
+	test('Cannot use browser-only global on page because of ssr config in page.js', async ({
+		page
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
+		await expect(page.locator('p')).toHaveText(
+			'This is your custom error page saying: "document is not defined"'
+		);
+	});
 });
 
 test.describe('$app/stores', () => {
@@ -679,5 +695,77 @@ test.describe.serial('Invalidation', () => {
 		await page.waitForLoadState('networkidle');
 		await page.waitForTimeout(200);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
+	});
+});
+
+test.describe('data-sveltekit attributes', () => {
+	test('data-sveltekit-prefetch', async ({ baseURL, page }) => {
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		const module = process.env.DEV
+			? `${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`
+			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/prefetch/target/_page`;
+
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#two').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#three').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeUndefined();
+	});
+
+	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await page.goto('/data-sveltekit/reload');
+		await page.click('#one');
+		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/reload');
+		await page.click('#two');
+		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/reload');
+		await clicknav('#three');
+		expect(requests).not.toContain(`${baseURL}/data-sveltekit/reload/target`);
+	});
+
+	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
+		await page.goto('/data-sveltekit/noscroll');
+		// await page.evaluate(() => window.scrollTo(0, 1000));
+		await clicknav('#one');
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+		await page.goto('/data-sveltekit/noscroll');
+		await clicknav('#two');
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+		await page.goto('/data-sveltekit/noscroll');
+		// await page.evaluate(() => window.scrollTo(0, 1000));
+		await clicknav('#three');
+		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	});
 });
