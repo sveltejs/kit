@@ -74,7 +74,7 @@ jobs:
       - name: Set Environment Variable of Playwright Browsers Path (windows) - Part 2 (Test only)
         if: runner.os == 'Windows'
         run: |
-          $Variable = (pnpm playwright --version)
+          $PLAYWRIGHT_VERSION = (pnpm playwright --version)
           echo %PLAYWRIGHT_VERSION%
           echo $PLAYWRIGHT_VERSION
       - name: Cache Playwright
