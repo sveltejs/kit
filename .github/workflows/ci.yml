@@ -75,8 +75,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           $PLAYWRIGHT_VERSION = (pnpm playwright --version)
-          echo %PLAYWRIGHT_VERSION%
-          echo $PLAYWRIGHT_VERSION
+          echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> $env:GITHUB_ENV
       - name: Cache Playwright
         uses: actions/cache@v3
         id: playwright_cache
