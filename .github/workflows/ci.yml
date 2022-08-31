@@ -53,7 +53,7 @@ jobs:
     env:
       TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
       # Install playwright's binray under node_modules so it will be cached together
-      PLAYWRIGHT_BROWSERS_PATH: '0'
+      PLAYWRIGHT_BROWSERS_PATH: ./__playwight_browsers
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
@@ -64,6 +64,14 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Get Playwright Version
+        run: echo "playwright_version=`npx playwright --version`" >> $GITHUB_ENV
+      - name: Cache Playwright
+        uses: actions/cache@v3
+        id: playwright_cache
+        with:
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          key: OS - ${{ runner.os }} - Playwright Version - ${{ env.playwright_version }}
       - run: pnpm playwright install
       - run: pnpm test
       - name: Archive test results
