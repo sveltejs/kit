@@ -10,6 +10,7 @@ import { onMount } from 'svelte';
 
 export function setup() {
 	onMount(() => {
+		// give tests programmatic control over the app
 		Object.assign(window, {
 			goto,
 			invalidate,
@@ -19,6 +20,7 @@ export function setup() {
 			afterNavigate
 		});
 
+		// communicate that the app is ready
 		document.body.classList.add('started');
 	});
 }
