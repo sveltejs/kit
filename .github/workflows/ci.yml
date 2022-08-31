@@ -67,6 +67,7 @@ jobs:
         run: |
           echo "PLAYWRIGHT_VERSION=`pnpm playwright --version`" >> $GITHUB_ENV
           echo "PLAYWRIGHT_BROWSERS_PATH=$HOME/__playwight_browsers" >> $GITHUB_ENV
+          echo $KIT_E2E_BROWSER
       - name: Set Environment Variable of Playwright Browsers Path (windows)
         if: runner.os == 'Windows'
         run: |
