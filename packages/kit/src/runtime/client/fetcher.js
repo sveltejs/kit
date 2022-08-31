@@ -76,11 +76,11 @@ export function initial_fetch(resource, resolved, opts) {
 export function subsequent_fetch(resolved, opts) {
 	const cached = cache.get(resolved);
 	if (cached) {
-		if (cached.ttl < performance.now()) {
-			cache.delete(resolved);
+		if (performance.now() < cached.ttl) {
+			return new Response(cached.body, cached.init);
 		}
 
-		return new Response(cached.body, cached.init);
+		cache.delete(resolved);
 	}
 
 	return native_fetch(resolved, opts);

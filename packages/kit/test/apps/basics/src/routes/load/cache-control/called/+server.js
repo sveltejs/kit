@@ -9,4 +9,5 @@ export function GET({ setHeaders }) {
 
 export function POST() {
 	count++;
+	return new Response(undefined, { status: 201 });
 }
