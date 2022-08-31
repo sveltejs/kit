@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Remove sveltekit:start event
+[breaking] Remove sveltekit:start event
