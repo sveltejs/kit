@@ -126,7 +126,7 @@ export async function load({ depends }) {
 	depends(
 		`${api.base}/foo`,
 		`${api.base}/bar`
-		'page:foobar'
+		'my-stuff:foo'
 	);
 
 	return {

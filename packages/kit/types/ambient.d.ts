@@ -113,7 +113,7 @@ declare module '$app/navigation' {
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<void>;
 	/**
-	 * Causes any `load` functions belonging to the currently active page to re-run if they registered it with `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the resource in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
 	 * If no argument is given, all resources will be invalidated.
 	 *
