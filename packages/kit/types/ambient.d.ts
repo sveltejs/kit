@@ -185,7 +185,7 @@ declare module '$app/paths' {
  * In the browser, we don't need to worry about this, and stores can be accessed from anywhere. Code that will only ever run on the browser can refer to (or subscribe to) any of these stores at any time.
  */
 declare module '$app/stores' {
-	import { Readable } from 'svelte/store';
+	import { Readable, Writable } from 'svelte/store';
 	import { Navigation, Page } from '@sveltejs/kit';
 
 	/**
@@ -202,6 +202,11 @@ declare module '$app/stores' {
 	 *  A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 */
 	export const updated: Readable<boolean> & { check: () => boolean };
+	/**
+	 * A writable store whose value contain the errors and values of the last form submission.
+	 * It is updated automatically when using the `<Form />` component, else you need to take care of it yourself.
+	 */
+	export const form: Writable<{ errors: Record<string, any>; values: Record<string, any> }>;
 
 	/**
 	 * A function that returns all of the contextual stores. On the server, this must be called during component initialization.
@@ -211,6 +216,7 @@ declare module '$app/stores' {
 		navigating: typeof navigating;
 		page: typeof page;
 		updated: typeof updated;
+		form: typeof form;
 	};
 }
 

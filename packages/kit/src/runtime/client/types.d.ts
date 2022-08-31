@@ -29,6 +29,7 @@ export interface Client {
 		routeId: string | null;
 		data: Array<import('types').ServerDataNode | null>;
 		errors: Record<string, any> | null;
+		values: Record<string, any> | null;
 	}) => Promise<void>;
 	_start_router: () => void;
 }

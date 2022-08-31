@@ -1734,4 +1734,23 @@ test.describe('Actions', () => {
 			expect(await page.textContent('p.client')).toBe('hydrated: an error occurred');
 		}
 	});
+
+	test('Form fields are persisted', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/form-errors-persist-fields');
+		await page.type('input[name="username"]', 'foo');
+		await page.type('input[name="password"]', 'bar');
+		await Promise.all([
+			page.waitForRequest((request) =>
+				request.url().includes('/actions/form-errors-persist-fields')
+			),
+			page.click('button')
+		]);
+		expect(await page.inputValue('input[name="username"]')).toBe('foo');
+		if (javaScriptEnabled) {
+			expect(await page.inputValue('input[name="password"]')).toBe('bar');
+			expect(await page.textContent('pre')).toBe(JSON.stringify({ username: 'foo' }));
+		} else {
+			expect(await page.inputValue('input[name="password"]')).toBe('');
+		}
+	});
 });

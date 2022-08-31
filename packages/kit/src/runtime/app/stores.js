@@ -25,7 +25,8 @@ export const getStores = () => {
 		navigating: {
 			subscribe: stores.navigating.subscribe
 		},
-		updated: stores.updated
+		updated: stores.updated,
+		form: stores.form
 	};
 
 	// TODO remove this for 1.0
@@ -64,6 +65,22 @@ export const page = {
 export const navigating = {
 	subscribe(fn) {
 		const store = getStores().navigating;
+		return store.subscribe(fn);
+	}
+};
+
+/** @type {typeof import('$app/stores').form} */
+export const form = {
+	set(values) {
+		const store = getStores().form;
+		return store.set(values);
+	},
+	update(value) {
+		const store = getStores().form;
+		return store.update(value);
+	},
+	subscribe(fn) {
+		const store = getStores().form;
 		return store.subscribe(fn);
 	}
 };

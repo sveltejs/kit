@@ -8,7 +8,7 @@ import { error } from '../../exports/index.js';
 
 import Root from '__GENERATED__/root.svelte';
 import { nodes, server_loads, dictionary, matchers } from '__GENERATED__/client-manifest.js';
-import { HttpError, Redirect } from '../control.js';
+import { HttpError, Redirect, ValidationError } from '../control.js';
 import { stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
 
@@ -396,7 +396,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   status: number;
 	 *   error: HttpError | Error | null;
 	 *   routeId: string | null;
-	 *   validation_errors?: Record<string, any> | null;
+	 *   validation_errors?: ValidationError | null;
 	 * }} opts
 	 */
 	async function get_navigation_result_from_branch({
@@ -422,7 +422,8 @@ export function create_client({ target, base, trailing_slash }) {
 			},
 			props: {
 				components: filtered.map((branch_node) => branch_node.node.component),
-				errors: validation_errors
+				errors: validation_errors?.errors ?? null,
+				values: validation_errors?.values ?? null
 			}
 		};
 
@@ -1288,7 +1289,8 @@ export function create_client({ target, base, trailing_slash }) {
 			params,
 			routeId,
 			data: server_data_nodes,
-			errors: validation_errors
+			errors: validation_errors,
+			values: form_values
 		}) => {
 			const url = new URL(location.href);
 
@@ -1329,7 +1331,8 @@ export function create_client({ target, base, trailing_slash }) {
 								original_error.message
 						  )
 						: original_error,
-					validation_errors,
+					validation_errors:
+						validation_errors && new ValidationError(400, validation_errors, form_values),
 					routeId
 				});
 			} catch (e) {

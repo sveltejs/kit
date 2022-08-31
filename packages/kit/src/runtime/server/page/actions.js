@@ -7,6 +7,7 @@ import { error_to_pojo } from '../utils.js';
  * @param {import('types').RequestEvent} event
  */
 export function is_action_json_request(event) {
+	console.log(event.request.headers.get('accept'));
 	const accept = negotiate(event.request.headers.get('accept') || 'text/html', [
 		'text/html',
 		'application/json'
@@ -26,7 +27,7 @@ export function is_action_json_request(event) {
  */
 export async function handle_action_json_request(event, options, server) {
 	// TODO create POJO interface for this with
-	// {status: number, errors?: Record<string, any>, form?: Record<string, any>, result?: Record<string, any>}
+	// {status: number, errors?: Record<string, any>, values?: Record<string, any>, result?: Record<string, any>}
 	const handler = server.actions;
 
 	if (!handler) {
@@ -60,11 +61,14 @@ export async function handle_action_json_request(event, options, server) {
 		}
 
 		if (error instanceof ValidationError) {
-			return json({
-				status: error.status,
-				form: error.form,
-				errors: error.errors
-			});
+			return json(
+				{
+					status: error.status,
+					values: error.values,
+					errors: error.errors
+				},
+				{ status: error.status }
+			);
 		}
 
 		if (!(error instanceof HttpError)) {

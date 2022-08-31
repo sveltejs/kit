@@ -80,6 +80,7 @@ export async function render_response({
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
+				form: writable(null),
 				updated
 			},
 			components: await Promise.all(branch.map(({ node }) => node.component()))
@@ -105,6 +106,7 @@ export async function render_response({
 
 		if (validation_errors) {
 			props.errors = validation_errors.errors;
+			props.values = validation_errors.values;
 		}
 
 		// TODO remove this for 1.0
@@ -174,7 +176,7 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
-	const serialized = { data: '', errors: 'null' };
+	const serialized = { data: '', errors: 'null', values: 'null' };
 
 	try {
 		serialized.data = devalue(branch.map(({ server_data }) => server_data));
@@ -191,6 +193,7 @@ export async function render_response({
 	if (validation_errors) {
 		try {
 			serialized.errors = devalue(validation_errors.errors);
+			serialized.values = devalue(validation_errors.values);
 		} catch (e) {
 			// If we're here, the data could not be serialized with devalue
 			const error = /** @type {any} */ (e);
@@ -212,7 +215,8 @@ export async function render_response({
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)},
 				data: ${serialized.data},
-				errors: ${serialized.errors}
+				errors: ${serialized.errors},
+				values: ${serialized.values},
 			}` : 'null'},
 			paths: ${s(options.paths)},
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,

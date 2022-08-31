@@ -36,10 +36,23 @@ export class ValidationError {
 	/**
 	 * @param {number} status
 	 * @param {Record<string, any>} errors
-	 * @param {FormData} [form]
+	 * @param {FormData | Record<string, any> | null | undefined} [values]
 	 */
-	constructor(status, errors, form) {
-		this.form = form;
+	constructor(status, errors, values) {
+		// NodeJS doesn't have a FormData class, so we have to check it differently
+		if (typeof values?.get === 'function') {
+			/** @type {Record<string, string>} */
+			const converted = {};
+			for (const [key, value] of values.entries()) {
+				if (typeof value === 'string') {
+					converted[key] = value;
+				}
+			}
+			this.values = converted;
+		} else {
+			this.values = values;
+		}
+
 		this.status = status;
 		this.errors = errors;
 	}
