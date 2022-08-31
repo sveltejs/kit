@@ -1,6 +1,7 @@
 <script>
-	import Machine from '$img/svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&meta';
-	import { Hero, Blurb } from '@sveltejs/site-kit';
+	import { Blurb } from '@sveltejs/site-kit';
+	import Hero from './Hero.svelte';
+	import Machine from './svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&picture';
 </script>
 
 <svelte:head>
