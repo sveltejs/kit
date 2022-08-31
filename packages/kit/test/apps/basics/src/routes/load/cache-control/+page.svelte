@@ -1,12 +1,12 @@
 <script>
 	import { invalidate } from '$app/navigation';
-	/**
-	 * @type {import('./$types').PageData}
-	 */
+
+	/** @type {import('./$types').PageData} */
 	export let data;
+
 	async function fetch_again() {
-		await fetch('./cache-control/increment');
-		invalidate('cache:control');
+		await fetch('/load/cache-control/increment');
+		invalidate('/load/cache-control/count');
 	}
 </script>
 
