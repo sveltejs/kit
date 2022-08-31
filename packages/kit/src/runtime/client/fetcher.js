@@ -33,6 +33,26 @@ if (import.meta.env.DEV) {
 			);
 		}
 
+		const method = input instanceof Request ? input.method : init?.method || 'GET';
+
+		if (method !== 'GET') {
+			const url = new URL(input instanceof Request ? input.url : input.toString(), document.baseURI)
+				.href;
+			cache.delete(url);
+		}
+
+		return native_fetch(input, init);
+	};
+} else {
+	window.fetch = (input, init) => {
+		const method = input instanceof Request ? input.method : init?.method || 'GET';
+
+		if (method !== 'GET') {
+			const url = new URL(input instanceof Request ? input.url : input.toString(), document.baseURI)
+				.href;
+			cache.delete(url);
+		}
+
 		return native_fetch(input, init);
 	};
 }
