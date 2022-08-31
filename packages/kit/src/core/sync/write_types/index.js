@@ -193,6 +193,7 @@ function update_types(config, routes, route) {
 
 		if (route.leaf.server) {
 			exports.push(`export type Action = Kit.Action<RouteParams>`);
+			exports.push(`export type Actions = Kit.Actions<RouteParams>`);
 		}
 	}
 

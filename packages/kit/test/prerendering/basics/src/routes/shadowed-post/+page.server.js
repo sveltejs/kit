@@ -4,4 +4,7 @@ export function load() {
 	};
 }
 
-export function actions() {}
+/** @type {import('./$types').Actions} */
+export const actions = {
+	default: () => {}
+};

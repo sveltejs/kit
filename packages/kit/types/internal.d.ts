@@ -14,7 +14,8 @@ import {
 	ResolveOptions,
 	Server,
 	ServerInitOptions,
-	SSRManifest
+	SSRManifest,
+	Actions
 } from './index.js';
 import {
 	HttpMethod,
@@ -280,7 +281,7 @@ export interface SSRNode {
 		prerender?: PrerenderOption;
 		ssr?: boolean;
 		csr?: boolean;
-		actions?: Action;
+		actions?: Actions;
 	};
 
 	// store this in dev so we can print serialization errors

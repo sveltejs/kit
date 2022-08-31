@@ -621,7 +621,7 @@ test.describe('Errors', () => {
 
 		if (process.env.DEV) {
 			const lines = stack.split('\n');
-			expect(lines[1]).toContain('+page.server.js:4:8');
+			expect(lines[1]).toContain('+page.server.js:6:9');
 		}
 
 		const error = read_errors('/errors/page-endpoint/post-implicit');

@@ -312,7 +312,52 @@ export interface ServerLoadEvent<
 export interface Action<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
 > {
-	(event: RequestEvent<Params>): MaybePromise<Record<string, any> | void>;
+	(event: ActionEvent<Params>): MaybePromise<Record<string, any> | void>;
+}
+
+export type Actions<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> = Record<string, Action<Params>>;
+
+export interface ActionEvent<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> extends RequestEvent<Params> {
+	fields: FieldsFormData;
+	files: FilesFormData;
+}
+
+export class FieldsFormData<Fields extends string = string> extends FormData {
+	[Symbol.iterator](): IterableIterator<[Fields, string]>;
+	entries(): IterableIterator<[Fields, string]>;
+	keys(): IterableIterator<Fields>;
+	values(): IterableIterator<string>;
+
+	delete(name: Fields): void;
+	get(name: Fields): string | null;
+	getAll(name: Fields): string[];
+	has(name: Fields): boolean;
+	set(name: string, value: string): void;
+	forEach(
+		callbackfn: (value: string, key: string, parent: FieldsFormData<Fields>) => void,
+		thisArg?: any
+	): void;
+}
+
+export class FilesFormData<Fields extends string = string, FileFileType = File> {
+	[Symbol.iterator](): IterableIterator<[Fields, FileFileType]>;
+	entries(): IterableIterator<[Fields, FileFileType]>;
+	keys(): IterableIterator<Fields>;
+	values(): IterableIterator<FileFileType>;
+
+	delete(name: Fields): void;
+	get(name: Fields): FileFileType | null;
+	getAll(name: Fields): FileFileType[];
+	has(name: Fields): boolean;
+	set(name: string, value: string | Blob, fileName?: string): void;
+	forEach(
+		callbackfn: (value: FileFileType, key: string, parent: FilesFormData) => void,
+		thisArg?: any
+	): void;
 }
 
 export interface FormState extends Partial<Record<string, any>> {

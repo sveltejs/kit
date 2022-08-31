@@ -1,5 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 
-export function actions() {
-	throw redirect(303, '/shadowed/post-success-redirect/redirected');
-}
+/** @type {import('./$types').Actions} */
+export const actions = {
+	default: () => {
+		throw redirect(303, '/shadowed/post-success-redirect/redirected');
+	}
+};

@@ -6,10 +6,11 @@ export function load() {
 	};
 }
 
-export async function actions({ request }) {
-	const data = await request.formData();
-
-	throw validation(400, {
-		post_message: `echo: ${data.get('message')}`
-	});
-}
+/** @type {import('./$types').Actions} */
+export const actions = {
+	default: async ({ fields }) => {
+		throw validation(400, {
+			post_message: `echo: ${fields.get('message')}`
+		});
+	}
+};

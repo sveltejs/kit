@@ -1,10 +1,11 @@
 import { validation } from '@sveltejs/kit';
 
 /**
- * @type {import('./$types').Action}
+ * @type {import('./$types').Actions}
  */
-export const actions = async ({ request }) => {
-	const data = await request.formData();
-	data.delete('password');
-	throw validation(400, { message: 'invalid credentials' }, data);
+export const actions = {
+	default: async ({ fields }) => {
+		fields.delete('password');
+		throw validation(400, { message: 'invalid credentials' }, fields);
+	}
 };

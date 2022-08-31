@@ -199,6 +199,7 @@ test.describe('Routing', () => {
 test.describe('Shadowed pages', () => {
 	test('Action can return undefined', async ({ request }) => {
 		const response = await request.post('/shadowed/simple/post', {
+			form: {},
 			headers: {
 				accept: 'application/json'
 			}

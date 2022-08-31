@@ -28,9 +28,9 @@ export function is_action_json_request(event) {
 export async function handle_action_json_request(event, options, server) {
 	// TODO create POJO interface for this? Something like
 	// {status: number, errors?: Record<string, any>, location?: string, values?: Record<string, any>, result?: Record<string, any>}
-	const handler = server.actions;
+	const actions = server.actions;
 
-	if (!handler) {
+	if (!actions) {
 		maybe_throw_migration_error(server);
 		// TODO should this be a different error altogether?
 		return new Response('POST method not allowed. No actions exist for this page', {
@@ -44,7 +44,7 @@ export async function handle_action_json_request(event, options, server) {
 	}
 
 	try {
-		const result = await handler.call(null, event);
+		const result = await call_action(event, actions);
 		if (!result) {
 			// TODO json({status: 204}) instead?
 			return new Response(undefined, {
@@ -97,9 +97,9 @@ export function is_action_request(event, leaf_node) {
  * @throws {Redirect | ValidationError | HttpError | Error}
  */
 export async function handle_action_request(event, server) {
-	const handler = server.actions;
+	const actions = server.actions;
 
-	if (!handler) {
+	if (!actions) {
 		maybe_throw_migration_error(server);
 		// TODO should this be a different error altogether?
 		event.setHeaders({
@@ -110,7 +110,47 @@ export async function handle_action_request(event, server) {
 		throw error(405, 'POST method not allowed. No actions exist for this page');
 	}
 
-	return await handler.call(null, event);
+	return call_action(event, actions);
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {NonNullable<import('types').SSRNode['server']['actions']>} actions
+ * @throws {Redirect | ValidationError | HttpError | Error}
+ */
+export async function call_action(event, actions) {
+	const url = new URL(event.request.url);
+
+	let name = 'default';
+	for (const param of url.searchParams) {
+		throw param;
+		if (param[0].startsWith('/')) {
+			name = param[0].slice(1);
+			break;
+		}
+	}
+
+	const action = actions[name];
+	if (!action) {
+		throw new Error(`No action with name '${name}' found`);
+	}
+
+	if (event.request.headers.get('content-type') === 'application/json') {
+		throw new Error('Actions expect form-encoded data, JSON is not supported');
+	}
+
+	const form = await event.request.formData();
+	const fields = new FormData();
+	const files = new FilesFormData();
+	for (const [key, value] of form) {
+		if (typeof value === 'string') {
+			fields.append(key, value);
+		} else {
+			files.append(key, value);
+		}
+	}
+
+	return action({ ...event, fields, files });
 }
 
 /**
@@ -122,4 +162,36 @@ function maybe_throw_migration_error(server) {
 			throw new Error(`${method} method no longer allowed in +page.server, use actions instead.`);
 		}
 	}
+}
+
+/** @typedef {import('types').FilesFormData}  FFD */
+
+/** @implements {FFD} */
+export class FilesFormData extends Map {
+	constructor() {
+		super([]);
+	}
+	// @ts-ignore
+	set(key, file) {
+		super.set(key, [file]);
+	}
+	// @ts-ignore
+	get(key) {
+		return super.get(key)[0];
+	}
+	// @ts-ignore
+	append(key, value) {
+		const files = super.get(key) || [];
+		files.push(value);
+		super.set(key, files);
+	}
+	// @ts-ignore
+	getAll(key) {
+		return super.get(key) || [];
+	}
+	// @ts-ignore
+	forEach(callback) {
+		super.forEach((value, key) => callback(value, key, this));
+	}
+	// TODO iteration is wrong because FormData returns entries with multiple values each as a [key, value] pair
 }

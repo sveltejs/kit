@@ -39,8 +39,7 @@ export class ValidationError {
 	 * @param {FormData | Record<string, any> | null | undefined} [values]
 	 */
 	constructor(status, errors, values) {
-		// NodeJS doesn't have a FormData class, so we have to check it differently
-		if (typeof values?.get === 'function') {
+		if (values instanceof FormData) {
 			/** @type {Record<string, string>} */
 			const converted = {};
 			for (const [key, value] of values.entries()) {
