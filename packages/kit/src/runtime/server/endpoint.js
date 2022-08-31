@@ -1,13 +1,17 @@
+import { json } from '../../exports/index.js';
+import { normalize_error } from '../../utils/error.js';
+import { negotiate } from '../../utils/http.js';
 import { HttpError, Redirect } from '../control.js';
-import { check_method_names, method_not_allowed } from './utils.js';
+import { check_method_names, error_to_pojo, method_not_allowed } from './utils.js';
 
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSREndpoint} mod
+ * @param {import('types').SSROptions} options
  * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
  */
-export async function render_endpoint(event, mod, state) {
+export async function render_endpoint(event, mod, options, state) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	// TODO: Remove for 1.0
@@ -39,9 +43,8 @@ export async function render_endpoint(event, mod, state) {
 		);
 
 		if (!(response instanceof Response)) {
-			return new Response(
-				`Invalid response from route ${event.url.pathname}: handler should return a Response object`,
-				{ status: 500 }
+			throw new Error(
+				`Invalid response from route ${event.url.pathname}: handler should return a Response object`
 			);
 		}
 
@@ -51,16 +54,30 @@ export async function render_endpoint(event, mod, state) {
 		}
 
 		return response;
-	} catch (error) {
-		if (error instanceof HttpError) {
-			return new Response(error.message, { status: error.status });
-		} else if (error instanceof Redirect) {
+	} catch (e) {
+		const error = normalize_error(e);
+
+		if (error instanceof Redirect) {
 			return new Response(undefined, {
 				status: error.status,
-				headers: { Location: error.location }
+				headers: { location: error.location }
 			});
-		} else {
-			return new Response(/** @type {Error} */ (error)?.message || 'Error', { status: 500 });
 		}
+
+		if (!(error instanceof HttpError)) {
+			options.handle_error(error, event);
+		}
+
+		const wants_json =
+			negotiate(event.request.headers.get('accept') || 'text/html', [
+				'text/html',
+				'application/json'
+			]) === 'application/json';
+
+		return wants_json
+			? json(error_to_pojo(error, options.get_stack), {
+					status: error instanceof HttpError ? error.status : 500
+			  })
+			: new Response(error.message, { status: error instanceof HttpError ? error.status : 500 });
 	}
 }
