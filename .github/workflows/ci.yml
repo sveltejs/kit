@@ -52,8 +52,6 @@ jobs:
             e2e-browser: 'chromium'
     env:
       TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
-      # Install playwright's binray under node_modules so it will be cached together
-      PLAYWRIGHT_BROWSERS_PATH: ${{ env.GITHUB_WORKSPACE }}/__playwight_browsers
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
@@ -64,8 +62,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Get Playwright Version
-        run: echo "playwright_version=`npx playwright --version`" >> $GITHUB_ENV
+      - name: Setup Playwright Caching Environment Variables
+        run:
+          echo "playwright_version=`npx playwright --version`" >> $GITHUB_ENV
+          echo "PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/__playwight_browsers" >> $GITHUB_ENV
       - name: Cache Playwright
         uses: actions/cache@v3
         id: playwright_cache
