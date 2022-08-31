@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.459
+
+### Patch Changes
+
+- Prevent validation_errors from being serialized twice ([#6468](https://github.com/sveltejs/kit/pull/6468))
+
 ## 1.0.0-next.458
 
 ### Patch Changes
