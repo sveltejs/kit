@@ -78,8 +78,8 @@ jobs:
         id: playwright_cache
         with:
           path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-          key: OS - ${{ runner.os }} - Playwright Version - ${{ env.PLAYWRIGHT_VERSION }}
-      - run: pnpm playwright install
+          key: OS - ${{ runner.os }} - Node ${{ matrix.node-version }} - Browser ${{ matrix.e2e-browser }} - Playwright Version - ${{ env.PLAYWRIGHT_VERSION }}
+      - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm test
       - name: Archive test results
         if: failure()
