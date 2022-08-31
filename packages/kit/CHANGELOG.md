@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.460
+
+### Patch Changes
+
+- [breaking] Remove sveltekit:start event ([#6484](https://github.com/sveltejs/kit/pull/6484))
+
 ## 1.0.0-next.459
 
 ### Patch Changes
