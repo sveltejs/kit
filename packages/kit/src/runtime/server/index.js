@@ -196,14 +196,13 @@ export async function respond(request, options, state) {
 			resolve: async (event, opts) => {
 				if (opts) {
 					// TODO remove for 1.0
-					// @ts-expect-error
-					if (opts.transformPage) {
+					if ('transformPage' in opts) {
 						throw new Error(
 							'transformPage has been replaced by transformPageChunk — see https://github.com/sveltejs/kit/pull/5657 for more information'
 						);
 					}
-					// @ts-expect-error
-					if (opts.ssr) {
+
+					if ('ssr' in opts) {
 						throw new Error(
 							'ssr has been removed, set it in the appropriate +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197'
 						);
