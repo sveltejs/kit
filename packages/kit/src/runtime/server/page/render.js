@@ -6,7 +6,7 @@ import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { serialize_error } from '../utils.js';
-import { HttpError } from '../../control.js';
+import { HttpError, ValidationError } from '../../control.js';
 
 // TODO rename this function/module
 
@@ -28,7 +28,7 @@ const updated = {
  *   error: HttpError | Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   validation_errors: Record<string, string> | undefined;
+ *   validation_errors: ValidationError | undefined;
  * }} opts
  */
 export async function render_response({
@@ -104,7 +104,7 @@ export async function render_response({
 		};
 
 		if (validation_errors) {
-			props.errors = validation_errors;
+			props.errors = validation_errors.errors;
 		}
 
 		// TODO remove this for 1.0
@@ -190,7 +190,7 @@ export async function render_response({
 
 	if (validation_errors) {
 		try {
-			serialized.errors = devalue(validation_errors);
+			serialized.errors = devalue(validation_errors.errors);
 		} catch (e) {
 			// If we're here, the data could not be serialized with devalue
 			const error = /** @type {any} */ (e);
@@ -293,12 +293,6 @@ export async function render_response({
 					{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
 					response
 				)
-			);
-		}
-
-		if (validation_errors) {
-			serialized_data.push(
-				render_json_payload_script({ type: 'validation_errors' }, validation_errors)
 			);
 		}
 

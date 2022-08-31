@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
 
-export function POST() {
+export function actions() {
 	throw redirect(302, '/shadowed/redirected');
 }

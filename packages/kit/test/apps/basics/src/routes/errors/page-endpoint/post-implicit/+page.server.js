@@ -1,5 +1,5 @@
 import { FancyError } from '../_shared.js';
 
-export const POST = () => {
+export const actions = () => {
 	throw new FancyError('oops');
 };

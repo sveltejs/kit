@@ -1,28 +1,19 @@
 import { devalue } from 'devalue';
-import { negotiate } from '../../../utils/http.js';
-import { render_response } from './render.js';
-import { respond_with_error } from './respond_with_error.js';
-import {
-	method_not_allowed,
-	error_to_pojo,
-	allowed_methods,
-	get_option,
-	static_error_page
-} from '../utils.js';
-import { create_fetch } from './fetch.js';
-import { HttpError, Redirect } from '../../control.js';
-import { error, json } from '../../../exports/index.js';
+import { DATA_SUFFIX } from '../../../constants.js';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
+import { HttpError, Redirect, ValidationError } from '../../control.js';
+import { get_option, redirect_response, static_error_page } from '../utils.js';
+import {
+	handle_action_json_request,
+	handle_action_request,
+	is_action_json_request,
+	is_action_request
+} from './actions.js';
+import { create_fetch } from './fetch.js';
 import { load_data, load_server_data } from './load_data.js';
-import { DATA_SUFFIX } from '../../../constants.js';
-
-/**
- * @typedef {import('./types.js').Loaded} Loaded
- * @typedef {import('types').SSRNode} SSRNode
- * @typedef {import('types').SSROptions} SSROptions
- * @typedef {import('types').SSRState} SSRState
- */
+import { render_response } from './render.js';
+import { respond_with_error } from './respond_with_error.js';
 
 /**
  * @param {import('types').RequestEvent} event
@@ -41,19 +32,10 @@ export async function render_page(event, route, page, options, state, resolve_op
 		});
 	}
 
-	const accept = negotiate(event.request.headers.get('accept') || 'text/html', [
-		'text/html',
-		'application/json'
-	]);
-
-	if (
-		accept === 'application/json' &&
-		event.request.method !== 'GET' &&
-		event.request.method !== 'HEAD'
-	) {
+	if (is_action_json_request(event)) {
 		const node = await options.manifest._.nodes[page.leaf]();
 		if (node.server) {
-			return handle_json_request(event, options, node.server);
+			return handle_action_json_request(event, options, node.server);
 		}
 	}
 
@@ -68,42 +50,32 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 		let status = 200;
 
+		/** @type {Record<string, any> | void} */
+		let mutation_data;
+
 		/** @type {HttpError | Error} */
 		let mutation_error;
 
-		/** @type {Record<string, string> | undefined} */
+		/** @type {ValidationError | undefined} */
 		let validation_errors;
 
-		if (leaf_node.server && event.request.method !== 'GET' && event.request.method !== 'HEAD') {
-			// for non-GET requests, first call handler in +page.server.js
+		if (is_action_request(event, leaf_node)) {
+			// for action requests, first call handler in +page.server.js
 			// (this also determines status code)
 			try {
-				const method = /** @type {'POST' | 'PATCH' | 'PUT' | 'DELETE'} */ (event.request.method);
-				const handler = leaf_node.server[method];
-				if (handler) {
-					const result = await handler.call(null, event);
-
-					if (result?.errors) {
-						validation_errors = result.errors;
-						status = result.status ?? 400;
-					}
-
-					if (event.request.method === 'POST' && result?.location) {
-						return redirect_response(303, result.location);
-					}
-				} else {
-					event.setHeaders({
-						allow: allowed_methods(leaf_node.server).join(', ')
-					});
-
-					mutation_error = error(405, 'Method not allowed');
-				}
+				mutation_data = await handle_action_request(event, leaf_node.server);
 			} catch (e) {
-				if (e instanceof Redirect) {
-					return redirect_response(e.status, e.location);
+				const error = /** @type {Redirect | HttpError | ValidationError | Error} */ (e);
+				if (error instanceof Redirect) {
+					return redirect_response(303, error.location);
 				}
-
-				mutation_error = /** @type {HttpError | Error} */ (e);
+				status =
+					error instanceof HttpError || error instanceof ValidationError ? error.status : 500;
+				if (error instanceof ValidationError) {
+					validation_errors = error;
+				} else {
+					mutation_error = error;
+				}
 			}
 		}
 
@@ -116,7 +88,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 		const should_prerender = get_option(nodes, 'prerender') ?? false;
 		if (should_prerender) {
 			const mod = leaf_node.server;
-			if (mod && (mod.POST || mod.PUT || mod.DELETE || mod.PATCH)) {
+			if (mod && mod.actions) {
 				throw new Error('Cannot prerender pages that have mutative methods');
 			}
 		} else if (state.prerendering) {
@@ -153,7 +125,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			});
 		}
 
-		/** @type {Array<Loaded | null>} */
+		/** @type {Array<import('./types.js').Loaded | null>} */
 		let branch = [];
 
 		/** @type {Error | null} */
@@ -346,59 +318,4 @@ export async function render_page(event, route, page, options, state, resolve_op
 			resolve_opts
 		});
 	}
-}
-
-/**
- * @param {import('types').RequestEvent} event
- * @param {import('types').SSROptions} options
- * @param {import('types').SSRNode['server']} mod
- */
-export async function handle_json_request(event, options, mod) {
-	const method = /** @type {'POST' | 'PUT' | 'PATCH' | 'DELETE'} */ (event.request.method);
-	const handler = mod[method];
-
-	if (!handler) {
-		return method_not_allowed(mod, method);
-	}
-
-	try {
-		// @ts-ignore
-		const result = await handler.call(null, event);
-
-		if (result?.errors) {
-			// @ts-ignore
-			return json({ errors: result.errors }, { status: result.status || 400 });
-		}
-
-		return new Response(undefined, {
-			status: 204,
-			// @ts-ignore
-			headers: result?.location ? { location: result.location } : undefined
-		});
-	} catch (e) {
-		const error = normalize_error(e);
-
-		if (error instanceof Redirect) {
-			return redirect_response(error.status, error.location);
-		}
-
-		if (!(error instanceof HttpError)) {
-			options.handle_error(error, event);
-		}
-
-		return json(error_to_pojo(error, options.get_stack), {
-			status: error instanceof HttpError ? error.status : 500
-		});
-	}
-}
-
-/**
- * @param {number} status
- * @param {string} location
- */
-function redirect_response(status, location) {
-	return new Response(undefined, {
-		status,
-		headers: { location }
-	});
 }

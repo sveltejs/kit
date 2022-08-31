@@ -1,1 +1,1 @@
-export const POST = () => {};
+export const actions = () => {};

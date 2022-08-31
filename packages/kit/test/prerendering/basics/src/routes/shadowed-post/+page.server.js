@@ -4,4 +4,4 @@ export function load() {
 	};
 }
 
-export function POST() {}
+export function actions() {}

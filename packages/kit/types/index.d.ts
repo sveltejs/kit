@@ -17,7 +17,7 @@ import {
 	TrailingSlash
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
-import { HttpError, Redirect } from '../src/runtime/control.js';
+import { HttpError, Redirect, ValidationError } from '../src/runtime/control.js';
 
 export { PrerenderOption } from './private.js';
 
@@ -312,11 +312,7 @@ export interface ServerLoadEvent<
 export interface Action<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
 > {
-	(event: RequestEvent<Params>): MaybePromise<
-		| { status?: number; errors: Record<string, any>; location?: never }
-		| { status?: never; errors?: never; location: string }
-		| void
-	>;
+	(event: RequestEvent<Params>): MaybePromise<Record<string, any> | void>;
 }
 
 // TODO figure out how to just re-export from '../src/index/index.js' without
@@ -341,3 +337,12 @@ export function redirect(status: number, location: string): Redirect;
  * Generates a JSON `Response` object from the supplied data.
  */
 export function json(data: any, init?: ResponseInit): Response;
+
+/**
+ * Generates a `ValidationError` object.
+ */
+export function validation(
+	status: number,
+	errors: Record<string, any>,
+	form?: FormData
+): ValidationError;

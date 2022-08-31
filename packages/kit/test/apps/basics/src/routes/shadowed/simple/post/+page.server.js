@@ -1,2 +1,2 @@
 /** @type {import('./$types').Action} */
-export function POST() {}
+export function actions() {}

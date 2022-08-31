@@ -31,3 +31,16 @@ export class Redirect {
 		this.location = location;
 	}
 }
+
+export class ValidationError {
+	/**
+	 * @param {number} status
+	 * @param {Record<string, any>} errors
+	 * @param {FormData} [form]
+	 */
+	constructor(status, errors, form) {
+		this.form = form;
+		this.status = status;
+		this.errors = errors;
+	}
+}

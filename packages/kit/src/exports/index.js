@@ -1,4 +1,4 @@
-import { HttpError, Redirect } from '../runtime/control.js';
+import { HttpError, Redirect, ValidationError } from '../runtime/control.js';
 
 /**
  * Creates an `HttpError` object with an HTTP status code and an optional message.
@@ -42,4 +42,14 @@ export function json(data, init) {
 		...init,
 		headers
 	});
+}
+
+/**
+ * Generates a `ValidationError` object.
+ * @param {number} status
+ * @param {Record<string, any>} errors
+ * @param {FormData} [form]
+ */
+export function validation(status, errors, form) {
+	return new ValidationError(status, errors, form);
 }

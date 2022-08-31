@@ -280,10 +280,7 @@ export interface SSRNode {
 		prerender?: PrerenderOption;
 		ssr?: boolean;
 		csr?: boolean;
-		POST?: Action;
-		PATCH?: Action;
-		PUT?: Action;
-		DELETE?: Action;
+		actions?: Action;
 	};
 
 	// store this in dev so we can print serialization errors

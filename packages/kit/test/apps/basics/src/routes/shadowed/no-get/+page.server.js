@@ -1,3 +1,3 @@
-export function POST() {
+export function actions() {
 	return {};
 }
