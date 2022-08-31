@@ -63,7 +63,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Set Environment Variable of Playwright Version
-        run: echo "playwright_version=`npx playwright --version`" >> $GITHUB_ENV
+        run: npx playwright --version
+        id: playwright_version
       - name: Set Environment Variable of Playwright Browsers Path (non-windows)
         if: runner.os != 'Windows'
         run: echo "PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/__playwight_browsers" >> $GITHUB_ENV
@@ -75,7 +76,7 @@ jobs:
         id: playwright_cache
         with:
           path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-          key: OS - ${{ runner.os }} - Playwright Version - ${{ env.playwright_version }}
+          key: OS - ${{ runner.os }} - Playwright Version - ${{ steps.cmd.playwright_version.stdout }}
       - run: pnpm playwright install
       - run: pnpm test
       - name: Archive test results
