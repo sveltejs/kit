@@ -22,7 +22,7 @@ importers:
       '@rollup/plugin-json': 4.1.0_rollup@2.78.1
       '@rollup/plugin-node-resolve': 13.3.0_rollup@2.78.1
       '@svitejs/changesets-changelog-github-compact': 0.1.1
-      playwright: 1.25.1
+      playwright: 1.25.0
       prettier: 2.7.1
       rollup: 2.78.1
       svelte: 3.49.0
@@ -3382,19 +3382,13 @@ packages:
     hasBin: true
     dev: true
 
-  /playwright-core/1.25.1:
-    resolution: {integrity: sha512-lSvPCmA2n7LawD2Hw7gSCLScZ+vYRkhU8xH0AapMyzwN+ojoDqhkH/KIEUxwNu2PjPoE/fcE0wLAksdOhJ2O5g==}
-    engines: {node: '>=14'}
-    hasBin: true
-    dev: true
-
-  /playwright/1.25.1:
-    resolution: {integrity: sha512-kOlW7mllnQ70ALTwAor73q/FhdH9EEXLUqjdzqioYLcSVC4n4NBfDqeCikGuayFZrLECLkU6Hcbziy/szqTXSA==}
+  /playwright/1.25.0:
+    resolution: {integrity: sha512-Z+pQNWI17Qx/tHhnmgMmPsptsisXpKgAnUvYv98kctlHUJaqMt2400P8kTw9vEPoC0xdxqu0JhxO7pDTmaaIKw==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.25.1
+      playwright-core: 1.25.0
     dev: true
 
   /polka/1.0.0-next.22:
