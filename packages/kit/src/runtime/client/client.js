@@ -11,6 +11,7 @@ import { nodes, server_loads, dictionary, matchers } from '__GENERATED__/client-
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
+import { legacy } from '../legacy.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -1374,7 +1375,7 @@ async function load_data(url, invalid) {
 	 * @returns {Promise<void>}
 	 */
 	const safeRemoteImport = (url) =>
-		import.meta.env.LEGACY
+		legacy
 			? new Promise((resolve, reject) => {
 					const script = document.createElement('script');
 					script.src = url;

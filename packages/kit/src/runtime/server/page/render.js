@@ -249,6 +249,9 @@ export async function render_response({
 		// Notice that unlike the script injection on @vitejs/plugin-legacy,
 		//  we don't need to have a constant CSP since kit handles it.
 
+		const detectModernBrowserVarName = '__KIT_is_modern_browser';
+		const startup_script_var_name = '__KIT_startup_script';
+
 		if (modern_polyfills_file) {
 			const path = prefixed(modern_polyfills_file);
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; crossorigin; nopush`);
@@ -304,8 +307,13 @@ export async function render_response({
 			add_nomodule_script('', `src=${s(prefixed(legacy_polyfills_file))}`);
 		}
 
+		/**
+		 * 
+		 * @param {boolean} detectLegacy If to detect whether we're in legacy, using a global variable.
+		 * @returns 
+		 */
 		// prettier-ignore
-		const startupContent = `
+		const getStartupContent = (detectLegacy) => `
 		start({
 			env: ${s(options.public_env)},
 			hydrate: ${page_config.ssr ? `{
@@ -319,14 +327,13 @@ export async function render_response({
 			}` : 'null'},
 			paths: ${s(options.paths)},
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-			trailing_slash: ${s(options.trailing_slash)}
+			trailing_slash: ${s(options.trailing_slash)},
+			legacy: ${detectLegacy ? `!window.${detectModernBrowserVarName}` : 'false'}
 		});
 		`;
 
-		const detectModernBrowserVarName = '__KIT_is_modern_browser';
-		const startup_script_var_name = '__KIT_startup_script';
 		if (legacy_entry_file) {
-			const startup_script_js = `window.${startup_script_var_name} = function (m) { var start = m.start; ${startupContent} };`;
+			const startup_script_js = `window.${startup_script_var_name} = function (m) { var start = m.start; ${getStartupContent(true)} };`;
 			body += `\n\t\t<script${
 				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
 			}>${startup_script_js}</script>`;
@@ -365,7 +372,7 @@ export async function render_response({
 		}
 		` : `
 		import { start } from ${s(prefixed(entry.file))};
-		${startupContent}`;
+		${getStartupContent(false)}`;
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
 
 		csp.add_script(init_app);
