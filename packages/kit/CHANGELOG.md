@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.457
+
+### Patch Changes
+
+- Print error if resolveOpts.ssr is set ([#6475](https://github.com/sveltejs/kit/pull/6475))
+
 ## 1.0.0-next.456
 
 ### Patch Changes
