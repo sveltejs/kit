@@ -76,7 +76,7 @@ jobs:
         run: |
           pnpm playwright --version > __playwright_version.txt
           echo %PLAYWRIGHT_VERSION%
-          set /P PLAYWRIGHT_VERSION=< __playwright_version.txt
+          set /P PLAYWRIGHT_VERSION= < __playwright_version.txt
           echo %PLAYWRIGHT_VERSION%
       - name: Cache Playwright
         uses: actions/cache@v3
