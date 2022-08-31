@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.456
+
+### Patch Changes
+
+- Apply `data-sveltekit-prefetch/noscroll/reload` to all child `<a>` elements ([#6442](https://github.com/sveltejs/kit/pull/6442))
+
+* [fix] Saving the root route will write types now ([#6450](https://github.com/sveltejs/kit/pull/6450))
+
 ## 1.0.0-next.455
 
 ### Patch Changes
