@@ -62,10 +62,14 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Setup Playwright Caching Environment Variables
-        run: |
-          echo "playwright_version=`npx playwright --version`" >> $GITHUB_ENV
-          echo "PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/__playwight_browsers" >> $GITHUB_ENV
+      - name: Set Environment Variable of Playwright Version
+        run: echo "playwright_version=`npx playwright --version`" >> $GITHUB_ENV
+      - name: Set Environment Variable of Playwright Browsers Path (non-windows)
+        if: runner.os != 'Windows'
+        run: echo "PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/__playwight_browsers" >> $GITHUB_ENV
+      - name: Set Environment Variable of Playwright Browsers Path (windows)
+        if: runner.os == 'Windows'
+        run: echo "PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/__playwight_browsers" >> $env:GITHUB_ENV
       - name: Cache Playwright
         uses: actions/cache@v3
         id: playwright_cache
