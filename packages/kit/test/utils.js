@@ -78,16 +78,6 @@ export const test = base.extend({
 	},
 
 	page: async ({ page, javaScriptEnabled }, use) => {
-		if (javaScriptEnabled) {
-			page.addInitScript({
-				content: `
-					addEventListener('sveltekit:start', () => {
-						document.body.classList.add('started');
-					});
-				`
-			});
-		}
-
 		// automatically wait for kit started event after navigation functions if js is enabled
 		const page_navigation_functions = ['goto', 'goBack', 'reload'];
 		page_navigation_functions.forEach((fn) => {
