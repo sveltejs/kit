@@ -334,7 +334,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 		});
 	} catch (error) {
 		// if we end up here, it means the data loaded successfull
-		// but the page failed to render
+		// but the page failed to render, or that a prerendering error occurred
 		options.handle_error(/** @type {Error} */ (error), event);
 
 		return await respond_with_error({

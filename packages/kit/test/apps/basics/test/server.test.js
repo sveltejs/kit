@@ -148,17 +148,19 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('throw error(..) in endpoint', async ({ page, read_errors }) => {
-		const res = await page.goto('/errors/endpoint-throw-error');
+	test('throw error(...) in endpoint', async ({ request, read_errors }) => {
+		const res = await request.get('/errors/endpoint-throw-error');
 
 		const error = read_errors('/errors/endpoint-throw-error');
 		expect(error).toBe(undefined);
 
-		expect(await res?.text()).toBe('You shall not pass');
+		expect(await res?.text()).toContain(
+			'This is the static error page with the following message: You shall not pass'
+		);
 		expect(res?.status()).toBe(401);
 	});
 
-	test('throw redirect(..) in endpoint', async ({ page, read_errors }) => {
+	test('throw redirect(...) in endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint-throw-redirect');
 		expect(res?.status()).toBe(200); // redirects are opaque to the browser
 
@@ -166,6 +168,15 @@ test.describe('Errors', () => {
 		expect(error).toBe(undefined);
 
 		expect(await page.textContent('h1')).toBe('the answer is 42');
+	});
+
+	test('error thrown in handle results in a rendered error page', async ({ request }) => {
+		const res = await request.get('/errors/error-in-handle');
+
+		expect(await res.text()).toContain(
+			'This is the static error page with the following message: Error in handle'
+		);
+		expect(res.status()).toBe(500);
 	});
 });
 
