@@ -135,10 +135,6 @@ export interface PageNode {
 	child_pages?: PageNode[];
 }
 
-export type PayloadScriptAttributes =
-	| { type: 'data'; url: string; body?: string }
-	| { type: 'validation_errors' };
-
 export interface PrerenderDependency {
 	response: Response;
 	body: null | string | Uint8Array;

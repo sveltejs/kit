@@ -192,6 +192,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 				async function text() {
 					const body = await response.text();
 
+					// TODO just pass `response.headers`, for processing inside `serialize_data`
 					/** @type {import('types').ResponseHeaders} */
 					const headers = {};
 					for (const [key, value] of response.headers) {
