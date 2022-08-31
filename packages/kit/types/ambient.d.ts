@@ -116,7 +116,7 @@ declare module '$app/navigation' {
 	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * @param dependency The invalidated resource
 	 */
-	export function invalidate(dependency: string | ((url: URL) => boolean)): Promise<void>;
+	export function invalidate(url: string | URL | ((url: URL) => boolean)): Promise<void>;
 	/**
 	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * @param dependency The invalidated resource
