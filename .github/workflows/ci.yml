@@ -63,7 +63,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Setup Playwright Caching Environment Variables
-        run:
+        run: |
           echo "playwright_version=`npx playwright --version`" >> $GITHUB_ENV
           echo "PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/__playwight_browsers" >> $GITHUB_ENV
       - name: Cache Playwright
