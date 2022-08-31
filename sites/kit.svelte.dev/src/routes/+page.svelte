@@ -1,6 +1,7 @@
 <script>
 	import { Blurb } from '@sveltejs/site-kit';
 	import Hero from './Hero.svelte';
+	import Logotype from './svelte-kit-logotype.svg';
 	import Machine from './svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&picture';
 </script>
 
@@ -15,7 +16,7 @@
 <h1 class="visually-hidden">SvelteKit</h1>
 <Hero
 	title="SvelteKit"
-	logotype="images/svelte-kit-logotype.svg"
+	logotype={Logotype}
 	tagline="The fastest way to build svelte apps"
 	background={Machine}
 	alt="SvelteKit illustration"
