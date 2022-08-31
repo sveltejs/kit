@@ -1189,8 +1189,6 @@ export function create_client({ target, base, trailing_slash }) {
 				// 2. 'rel' attribute includes external
 				const rel = (a.getAttribute('rel') || '').split(/\s+/);
 
-				console.error(options);
-
 				if (a.hasAttribute('download') || rel.includes('external') || options.reload === '') {
 					return;
 				}
