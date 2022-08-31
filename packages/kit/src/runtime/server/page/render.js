@@ -2,7 +2,7 @@ import { devalue } from 'devalue';
 import { readable, writable } from 'svelte/store';
 import * as cookie from 'cookie';
 import { hash } from '../../hash.js';
-import { render_json_payload_script } from '../../../utils/escape.js';
+import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { serialize_error } from '../utils.js';
@@ -284,25 +284,7 @@ export async function render_response({
 	}
 
 	if (page_config.ssr && page_config.csr) {
-		/** @type {string[]} */
-		const serialized_data = [];
-
-		for (const { url, body, response } of fetched) {
-			serialized_data.push(
-				render_json_payload_script(
-					{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
-					response
-				)
-			);
-		}
-
-		if (validation_errors) {
-			serialized_data.push(
-				render_json_payload_script({ type: 'validation_errors' }, validation_errors)
-			);
-		}
-
-		body += `\n\t${serialized_data.join('\n\t')}`;
+		body += `\n\t${fetched.map(serialize_data).join('\n\t')}`;
 	}
 
 	if (options.service_worker) {
