@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.458
+
+### Patch Changes
+
+- [breaking] catch and render raw response when unexpected error occurs in endpoint ([#6434](https://github.com/sveltejs/kit/pull/6434))
+
 ## 1.0.0-next.457
 
 ### Patch Changes
