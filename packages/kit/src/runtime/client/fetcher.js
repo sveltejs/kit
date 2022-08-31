@@ -37,16 +37,16 @@ if (import.meta.env.DEV) {
 	};
 }
 
-const start = new Date().getTime();
 const cache = new Map();
 
 /**
  * Should be called on the initial run of load functions that hydrate the page.
  * Saves any requests with cache-control max-age to the cache.
  * @param {RequestInfo} resource
+ * @param {string} resolved
  * @param {RequestInit} [opts]
  */
-export function initial_fetch(resource, opts) {
+export function initial_fetch(resource, resolved, opts) {
 	const url = JSON.stringify(typeof resource === 'string' ? resource : resource.url);
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
@@ -56,16 +56,12 @@ export function initial_fetch(resource, opts) {
 	}
 
 	const script = document.querySelector(selector);
-	if (script && script.textContent) {
+	if (script?.textContent) {
 		const { body, ...init } = JSON.parse(script.textContent);
-		const match = /** @type {string | undefined } */ (init?.headers?.['cache-control'])?.match(
-			/max-age=(\d+)/
-		);
-		if (match) {
-			const age = Number(init?.headers?.age ?? '0');
-			const cache_time = Number(match[1]) - age;
-			cache.set(url, { body, init, cache_time });
-		}
+
+		const ttl = script.getAttribute('data-ttl');
+		if (ttl) cache.set(resolved, { body, init, ttl: 1000 * Number(ttl) });
+
 		return Promise.resolve(new Response(body, init));
 	}
 
@@ -74,23 +70,18 @@ export function initial_fetch(resource, opts) {
 
 /**
  * Tries to get the response from the cache, if max-age allows it, else does a fetch.
- * @param {RequestInfo} original
- * @param {RequestInfo} resource
+ * @param {string} resolved
  * @param {RequestInit} [opts]
  */
-export function subsequent_fetch(original, resource, opts) {
-	if (cache.size) {
-		const url = JSON.stringify(typeof original === 'string' ? original : original.url);
-		const cached = cache.get(url);
-		if (cached) {
-			const { body, init, cache_time } = cached;
-			const now = new Date().getTime();
-			if ((now - start) / 1000 < cache_time) {
-				return Promise.resolve(new Response(body, init));
-			}
-			cache.delete(url);
+export function subsequent_fetch(resolved, opts) {
+	const cached = cache.get(resolved);
+	if (cached) {
+		if (cached.ttl < performance.now()) {
+			cache.delete(resolved);
 		}
+
+		return new Response(cached.body, cached.init);
 	}
 
-	return native_fetch(resource, opts);
+	return native_fetch(resolved, opts);
 }

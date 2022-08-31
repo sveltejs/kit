@@ -54,5 +54,18 @@ export function serialize_data(fetched) {
 		attrs.push(`data-hash=${escape_html_attr(hash(fetched.body))}`);
 	}
 
+	if (fetched.method === 'GET') {
+		const cache_control = /** @type {string} */ (fetched.response.headers['cache-control']);
+		if (cache_control) {
+			const match = /s-maxage=(\d+)/g.exec(cache_control) ?? /max-age=(\d+)/g.exec(cache_control);
+			if (match) {
+				const age = /** @type {string} */ (fetched.response.headers['age']) ?? '0';
+
+				const ttl = +match[1] - +age;
+				attrs.push(`data-ttl="${ttl}"`);
+			}
+		}
+	}
+
 	return `<script ${attrs.join(' ')}>${safe_payload}</script>`;
 }

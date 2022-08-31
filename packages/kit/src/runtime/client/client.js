@@ -570,13 +570,13 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 
 					// we must fixup relative urls so they are resolved from the target page
-					const normalized = new URL(requested, url).href;
-					depends(normalized);
+					const resolved = new URL(requested, url).href;
+					depends(resolved);
 
-					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be normalized
+					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
 					return started
-						? subsequent_fetch(requested, normalized, init)
-						: initial_fetch(requested, init);
+						? subsequent_fetch(resolved, init)
+						: initial_fetch(requested, resolved, init);
 				},
 				setHeaders: () => {}, // noop
 				depends,
