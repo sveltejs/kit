@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.88
+
+### Patch Changes
+
+- Bundle non-production dependencies with esbuild ([#6372](https://github.com/sveltejs/kit/pull/6372))
+
 ## 1.0.0-next.87
 
 ### Patch Changes

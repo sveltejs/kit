@@ -1,5 +1,7 @@
 import * as fs from 'fs';
 
+export const prerender = true;
+
 export async function GET({ params }) {
 	const slug = params.slug.split('/');
 	const extension = slug[0].split('.').pop();

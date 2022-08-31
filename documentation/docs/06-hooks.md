@@ -63,7 +63,6 @@ You can add call multiple `handle` functions with [the `sequence` helper functio
 
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
-- `ssr: boolean` (default `true`) — if `false`, renders an empty 'shell' page instead of server-side rendering
 - `transformPageChunk(opts: { html: string, done: boolean }): MaybePromise<string | undefined>` — applies custom transforms to HTML. If `done` is true, it's the final chunk. Chunks are not guaranteed to be well-formed HTML (they could include an element's opening tag but not its closing tag, for example) but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
 
 ```js
@@ -71,15 +70,12 @@ You can add call multiple `handle` functions with [the `sequence` helper functio
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	const response = await resolve(event, {
-		ssr: !event.url.pathname.startsWith('/admin'),
 		transformPageChunk: ({ html }) => html.replace('old', 'new')
 	});
 
 	return response;
 }
 ```
-
-> Disabling [server-side rendering](/docs/appendix#ssr) effectively turns your SvelteKit app into a [**single-page app** or SPA](/docs/appendix#csr-and-spa). In most situations this is not recommended ([see appendix](/docs/appendix#ssr)). Consider whether it's truly appropriate to disable it, and do so selectively rather than for all requests.
 
 ### handleError
 

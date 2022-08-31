@@ -69,9 +69,11 @@ This function runs alongside `+page.svelte`, which means it runs on the server d
 
 As well as `load`, `page.js` can export values that configure the page's behaviour:
 
-- `export const prerender = true` or `false` overrides [`config.kit.prerender.default`](/docs/configuration#prerender)
-- `export const hydrate = true` or `false` overrides [`config.kit.browser.hydrate`](/docs/configuration#browser)
-- `export const router = true` or `false` overrides [`config.kit.browser.router`](/docs/configuration#browser)
+- `export const prerender = true` or `false` or `'auto'`
+- `export const ssr = true` or `false`
+- `export const csr = true` or `false`
+
+You can find more information about these in [page options](/docs/page-options).
 
 #### +page.server.js
 
@@ -106,7 +108,9 @@ export async function load({ params }) {
 }
 ```
 
-During client-side navigation, SvelteKit will load this data using `fetch`, which means that the returned value must be serializable as JSON.
+During client-side navigation, SvelteKit will load this data from the server, which means that the returned value must be serializable using [devalue](https://github.com/rich-harris/devalue).
+
+Like `+page.js`, `+page.server.js` can export [page options](/docs/page-options) — `prerender`, `ssr` and `csr`.
 
 #### Actions
 
@@ -190,7 +194,7 @@ If an error occurs during `load`, SvelteKit will render a default error page. Yo
 <h1>{$page.status}: {$page.error.message}</h1>
 ```
 
-SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and `src/routes/+error.svelte` before rendering the default error page.
+SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and `src/routes/+error.svelte` before rendering the default error page. If _that_ fails, SvelteKit will bail out and render a static fallback error page, which you can customise by creating a `src/error.html` file.
 
 ### +layout
 
@@ -277,7 +281,7 @@ export function load() {
 }
 ```
 
-Unlike `+page.js`, `+layout.js` cannot export `prerender`, `hydrate` and `router`, as these are page-level options.
+If a `+layout.js` exports [page options](/docs/page-options) — `prerender`, `ssr` and `csr` — they will be used as defaults for child pages.
 
 Data returned from a layout's `load` function is also available to all its child pages:
 
@@ -296,6 +300,8 @@ Data returned from a layout's `load` function is also available to all its child
 #### +layout.server.js
 
 To run your layout's `load` function on the server, move it to `+layout.server.js`, and change the `LayoutLoad` type to `LayoutServerLoad`.
+
+Like `+layout.js`, `+layout.server.js` can export [page options](/docs/page-options) — `prerender`, `ssr` and `csr`.
 
 ### +server
 

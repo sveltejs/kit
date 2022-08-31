@@ -10,7 +10,7 @@ type OutputDataShape<T> = MaybeWithVoid<
 		Partial<Pick<App.PageData, keyof T & keyof App.PageData>> &
 		Record<string, any>
 >;
-type EnsureParentData<T> = NonNullable<T> extends never ? {} : T;
+type EnsureParentData<T> = T extends null | undefined ? {} : T;
 type PageParentData = EnsureParentData<import('../$types.js').LayoutData>;
 
 export type PageServerData = null;

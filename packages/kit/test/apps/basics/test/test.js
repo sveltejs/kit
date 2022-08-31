@@ -291,7 +291,7 @@ test.describe('Shadowed pages', () => {
 
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "data.regex returned from \'load\' in src/routes/shadowed/serialization/+page.server.js cannot be serialized as JSON"'
+				'This is your custom error page saying: "Cannot stringify arbitrary non-POJOs (data.nope)"'
 			);
 		});
 	}
@@ -554,7 +554,7 @@ test.describe('Errors', () => {
 		expect(await page.textContent('h1')).toBe('500');
 
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot prerender pages that have endpoints with mutative methods"'
+			'This is your custom error page saying: "Cannot prerender pages that have mutative methods"'
 		);
 	});
 
@@ -579,7 +579,7 @@ test.describe('Errors', () => {
 			expect(lines[1]).toContain('+page.server.js:4:8');
 		}
 
-		const error = read_errors('/errors/page-endpoint/get-implicit');
+		const error = read_errors('/errors/page-endpoint/get-implicit/__data.js');
 		expect(error).toContain('oops');
 	});
 
@@ -892,6 +892,13 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('foo.bar: Custom layout');
 		expect(await page.textContent('h2')).toBe('pagedata: pagedata');
 	});
+
+	test('Serializes non-JSON data', async ({ page, clicknav }) => {
+		await page.goto('/load/devalue');
+		await clicknav('[href="/load/devalue/regex"]');
+
+		expect(await page.textContent('h1')).toBe('true');
+	});
 });
 
 test.describe('Method overrides', () => {
@@ -1000,19 +1007,17 @@ test.describe('Nested layouts', () => {
 });
 
 test.describe('Page options', () => {
-	test('does not hydrate page with hydrate=false', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/no-hydrate');
+	test('does not include <script> or <link rel="modulepreload"> with csr=false', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) {
+			await page.goto('/no-csr');
+			expect(await page.textContent('h1')).toBe('look ma no javascript');
+			expect(
+				await page.evaluate(() => document.querySelectorAll('link[rel="modulepreload"]').length)
+			).toBe(0);
 
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 0');
-
-		if (javaScriptEnabled) {
-			await Promise.all([page.waitForNavigation(), page.click('[href="/no-hydrate/other"]')]);
-			await Promise.all([page.waitForNavigation(), page.click('[href="/no-hydrate"]')]);
-
-			await page.click('button');
-			expect(await page.textContent('button')).toBe('clicks: 1');
-		} else {
 			// ensure data wasn't inlined
 			expect(
 				await page.evaluate(
@@ -1020,24 +1025,6 @@ test.describe('Page options', () => {
 				)
 			).toBe(0);
 		}
-	});
-
-	test('does not include modulepreload links if JS is completely disabled', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		if (!javaScriptEnabled) {
-			await page.goto('/no-hydrate/no-js');
-			expect(await page.textContent('h1')).toBe('look ma no javascript');
-			expect(
-				await page.evaluate(() => document.querySelectorAll('link[rel="modulepreload"]').length)
-			).toBe(0);
-		}
-	});
-
-	test('transformPageChunk can change the html output', async ({ page }) => {
-		await page.goto('/transform-page-chunk');
-		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
 
 	test('does not SSR page with ssr=false', async ({ page, javaScriptEnabled }) => {
@@ -1054,6 +1041,12 @@ test.describe('Page options', () => {
 	test('does not SSR error page for 404s with ssr=false', async ({ request }) => {
 		const html = await request.get('/no-ssr/missing');
 		expect(await html.text()).not.toContain('load function was called erroneously');
+	});
+
+	// TODO move this test somewhere more suitable
+	test('transformPageChunk can change the html output', async ({ page }) => {
+		await page.goto('/transform-page-chunk');
+		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
 });
 
@@ -1420,7 +1413,7 @@ test.describe('Routing', () => {
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
-	test('does not attempt client-side navigation to links with sveltekit:reload', async ({
+	test('does not attempt client-side navigation to links with data-sveltekit-reload', async ({
 		baseURL,
 		page
 	}) => {

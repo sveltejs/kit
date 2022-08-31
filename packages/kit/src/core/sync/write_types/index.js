@@ -71,8 +71,7 @@ export async function write_types(config, manifest_data, file) {
 		return;
 	}
 
-	const filepath = path.relative(config.kit.files.routes, file);
-	const id = path.dirname(filepath);
+	const id = path.relative(config.kit.files.routes, path.dirname(file));
 
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return; // this shouldn't ever happen
@@ -181,7 +180,7 @@ function update_types(config, routes, route) {
 			`type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any>>`
 		);
 		// null & {} == null, we need to prevent that in some situations
-		declarations.push(`type EnsureParentData<T> = NonNullable<T> extends never ? {} : T;`);
+		declarations.push(`type EnsureParentData<T> = T extends null | undefined ? {} : T;`);
 	}
 
 	if (route.leaf) {
@@ -561,11 +560,11 @@ export function tweak_types(content, names) {
 									);
 								} else {
 									// prevent "type X is imported but not used" (isn't silenced by @ts-nocheck) when svelte-check runs
-									code.append(`;${type};`);
+									code.append(`;null as any as ${type};`);
 								}
 							} else {
 								// prevent "type X is imported but not used" (isn't silenced by @ts-nocheck) when svelte-check runs
-								code.append(`;${type};`);
+								code.append(`;null as any as ${type};`);
 							}
 
 							modified = true;

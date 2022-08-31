@@ -5,7 +5,8 @@
 		"checkJs": true,
 		"baseUrl": ".",
 		"paths": {
-			"$lib/*": ["./src/lib/*"]
+			"$lib/*": ["./src/lib/*"],
+			"$utils/*": ["./src/lib/utils/*"]
 		}
 	},
 	"include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.svelte"]

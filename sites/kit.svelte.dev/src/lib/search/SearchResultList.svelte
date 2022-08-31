@@ -37,7 +37,7 @@
 	{#each results as result, i}
 		<li>
 			<a
-				sveltekit:prefetch
+				data-sveltekit-prefetch
 				href={result.href}
 				on:click={() => dispatch('select', { href: result.href })}
 				data-has-node={result.node ? true : undefined}

@@ -1,5 +1,11 @@
+class Nope {
+	toString() {
+		return 'should not see me';
+	}
+}
+
 export function load() {
 	return {
-		regex: /nope/
+		nope: new Nope()
 	};
 }

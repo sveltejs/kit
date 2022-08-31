@@ -1,5 +1,6 @@
-import { writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
+import * as esbuild from 'esbuild';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
@@ -19,33 +20,54 @@ export default function (opts = {}) {
 		name: '@sveltejs/adapter-node',
 
 		async adapt(builder) {
+			const tmp = builder.getBuildDirectory('adapter-node');
+
 			builder.rimraf(out);
+			builder.rimraf(tmp);
+			builder.mkdirp(tmp);
 
 			builder.log.minor('Copying assets');
 			builder.writeClient(`${out}/client`);
-			builder.writeServer(`${out}/server`);
 			builder.writePrerendered(`${out}/prerendered`);
-
-			writeFileSync(
-				`${out}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({
-					relativePath: './server'
-				})};\n`
-			);
-
-			builder.copy(files, out, {
-				replace: {
-					SERVER: './server/index.js',
-					MANIFEST: './manifest.js',
-					ENV_PREFIX: JSON.stringify(envPrefix)
-				}
-			});
 
 			if (precompress) {
 				builder.log.minor('Compressing assets');
 				await builder.compress(`${out}/client`);
 				await builder.compress(`${out}/prerendered`);
 			}
+
+			builder.log.minor('Building server');
+
+			builder.writeServer(tmp);
+
+			writeFileSync(
+				`${tmp}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({ relativePath: './' })};`
+			);
+
+			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+
+			await esbuild.build({
+				platform: 'node',
+				sourcemap: 'linked',
+				target: 'es2022',
+				entryPoints: [`${tmp}/index.js`, `${tmp}/manifest.js`],
+				outdir: `${out}/server`,
+				splitting: true,
+				format: 'esm',
+				bundle: true,
+				external: [...Object.keys(pkg.dependencies || {})]
+			});
+
+			builder.copy(files, out, {
+				replace: {
+					ENV: './env.js',
+					HANDLER: './handler.js',
+					MANIFEST: './server/manifest.js',
+					SERVER: `./server/index.js`,
+					ENV_PREFIX: JSON.stringify(envPrefix)
+				}
+			});
 		}
 	};
 }

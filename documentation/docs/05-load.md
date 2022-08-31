@@ -4,7 +4,7 @@ title: Loading data
 
 A [`+page.svelte`](/docs/routing#page-page-svelte) or [`+layout.svelte`](/docs/routing#layout-layout-svelte) gets its `data` from a `load` function.
 
-If the `load` function is defined in `+page.js` or `+layout.js` it will run both on the server and in the browser. If it's instead defined in `+page.server.js` or `+layout.server.js` it will only run on the server, in which case it can (for example) make database calls and access private [environment variables](/docs/modules#$env-static-private), but can only return data that can be serialized as JSON. In both cases, the return value (if there is one) must be an object.
+If the `load` function is defined in `+page.js` or `+layout.js` it will run both on the server and in the browser. If it's instead defined in `+page.server.js` or `+layout.server.js` it will only run on the server, in which case it can (for example) make database calls and access private [environment variables](/docs/modules#$env-static-private), but can only return data that can be serialized with [devalue](https://github.com/rich-harris/devalue). In both cases, the return value (if there is one) must be an object.
 
 ```js
 /// file: src/routes/+page.js
@@ -256,7 +256,7 @@ export async function load({ setHeaders }) {
 
 ### Output
 
-The returned `data`, if any, must be an object of values. For a server-only `load` function, these values must be JSON-serializable. Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
+The returned `data`, if any, must be an object of values. For a server-only `load` function, these values must be serializable with [devalue](https://github.com/rich-harris/devalue). Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
 
 ```js
 // @filename: $types.d.ts
@@ -327,14 +327,12 @@ If an _unexpected_ error is thrown, SvelteKit will invoke [`handleError`](/docs/
 
 To redirect users, use the `redirect` helper from `@sveltejs/kit` to specify the location to which they should be redirected alongside a `3xx` status code.
 
-> There is a known bug with `redirect`: it will currently fail during client-side navigation, due to [#5952](https://github.com/sveltejs/kit/issues/5952)
-
 ```diff
 /// file: src/routes/admin/+layout.server.js
 -import { error } from '@sveltejs/kit';
 +import { error, redirect } from '@sveltejs/kit';
 
-/** @type {import('./$types').LayoutLoad} */
+/** @type {import('./$types').LayoutServerLoad} */
 export function load({ locals }) {
 	if (!locals.user) {
 -		throw error(401, 'not logged in');
