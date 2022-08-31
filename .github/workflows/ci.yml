@@ -53,7 +53,7 @@ jobs:
     env:
       TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
       # Install playwright's binray under node_modules so it will be cached together
-      PLAYWRIGHT_BROWSERS_PATH: ${{ $GITHUB_WORKSPACE }}/__playwight_browsers
+      PLAYWRIGHT_BROWSERS_PATH: ${{ env.GITHUB_WORKSPACE }}/__playwight_browsers
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
