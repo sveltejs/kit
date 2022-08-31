@@ -1,7 +1,7 @@
 import { onMount, tick } from 'svelte';
 import { normalize_error } from '../../utils/error.js';
 import { make_trackable, decode_params, normalize_path } from '../../utils/url.js';
-import { find_anchor, get_base_uri, get_href, scroll_state } from './utils.js';
+import { find_anchor, get_base_uri, scroll_state } from './utils.js';
 import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 import { error } from '../../exports/index.js';
@@ -1139,9 +1139,9 @@ export function create_client({ target, base, trailing_slash }) {
 
 			/** @param {Event} event */
 			const trigger_prefetch = (event) => {
-				const a = find_anchor(event);
-				if (a && a.href && a.hasAttribute('data-sveltekit-prefetch')) {
-					prefetch(get_href(a));
+				const { url, options } = find_anchor(event);
+				if (url && options.prefetch === '') {
+					prefetch(url);
 				}
 			};
 
@@ -1172,13 +1172,10 @@ export function create_client({ target, base, trailing_slash }) {
 				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 				if (event.defaultPrevented) return;
 
-				const a = find_anchor(event);
-				if (!a) return;
-
-				if (!a.href) return;
+				const { a, url, options } = find_anchor(event);
+				if (!a || !url) return;
 
 				const is_svg_a_element = a instanceof SVGAElement;
-				const url = get_href(a);
 
 				// Ignore non-HTTP URL protocols (e.g. `mailto:`, `tel:`, `myapp:`, etc.)
 				// MEMO: Without this condition, firefox will open mailer twice.
@@ -1192,11 +1189,7 @@ export function create_client({ target, base, trailing_slash }) {
 				// 2. 'rel' attribute includes external
 				const rel = (a.getAttribute('rel') || '').split(/\s+/);
 
-				if (
-					a.hasAttribute('download') ||
-					rel.includes('external') ||
-					a.hasAttribute('data-sveltekit-reload')
-				) {
+				if (a.hasAttribute('download') || rel.includes('external') || options.reload === '') {
 					return;
 				}
 
@@ -1222,7 +1215,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 				navigate({
 					url,
-					scroll: a.hasAttribute('data-sveltekit-noscroll') ? scroll_state() : null,
+					scroll: options.noscroll === '' ? scroll_state() : null,
 					keepfocus: false,
 					redirect_chain: [],
 					details: {
