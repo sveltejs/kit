@@ -113,10 +113,22 @@ declare module '$app/navigation' {
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<void>;
 	/**
-	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. If no argument is given, all resources will be invalidated. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * Causes any `load` functions belonging to the currently active page to re-run if they registered it with `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
+	 *
+	 * If no argument is given, all resources will be invalidated.
+	 *
+	 * The `string` argument has to match the URI that was passed to `fetch` or `depends` exactly (including query parameters).
+	 *
+	 * The `function` argument can be used define a custom predicate. It receives the full URI and causes `load` to rerun if `true` is returned.
+	 * This can be useful if you want to invalidate based on a pattern instead of a exact match.
+	 *
+	 * ```js
+	 * // Example: Match '/path' regardless of the query parameters
+	 * invalidate((url) => (new URL(url)).pathname === '/path')`
+	 * ```
 	 * @param dependency The invalidated resource
 	 */
-	export function invalidate(dependency?: string | ((href: string) => boolean)): Promise<void>;
+	export function invalidate(dependency?: string | ((url: string) => boolean)): Promise<void>;
 	/**
 	 * Programmatically prefetches the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
