@@ -83,7 +83,7 @@ function write_common_files(cwd, options, name) {
  * @returns {boolean}
  */
 function matches_condition(condition, options) {
-	if (condition === 'default' || condition === 'skeleton' || condition === 'libskeleton') {
+	if (condition === 'default' || condition === 'skeleton' || condition === 'skeletonlib') {
 		return options.template === condition;
 	}
 	if (condition === 'typescript' || condition === 'checkjs') {
