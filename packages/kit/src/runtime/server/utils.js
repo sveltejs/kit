@@ -1,4 +1,6 @@
 import { devalue } from 'devalue';
+import { DATA_SUFFIX } from '../../constants.js';
+import { negotiate } from '../../utils/http.js';
 import { HttpError } from '../control.js';
 
 /** @param {any} body */
@@ -174,4 +176,34 @@ export function static_error_page(options, status, message) {
 		headers: { 'content-type': 'text/html; charset=utf-8' },
 		status
 	});
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
+ * @param {Error} error
+ */
+export function handle_fatal_error(event, options, error) {
+	let status = 500;
+
+	if (error instanceof HttpError) {
+		status = error.status;
+	} else {
+		options.handle_error(error, event);
+	}
+
+	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
+	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
+		'text/html',
+		'application/json'
+	]);
+
+	if (event.url.pathname.endsWith(DATA_SUFFIX) || type === 'application/json') {
+		return new Response(serialize_error(error, options.get_stack), {
+			status,
+			headers: { 'content-type': 'application/json; charset=utf-8' }
+		});
+	}
+
+	return static_error_page(options, status, error.message);
 }

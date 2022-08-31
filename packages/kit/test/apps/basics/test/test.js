@@ -537,16 +537,6 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('error thrown in handle results in a rendered error page', async ({ page }) => {
-		await page.goto('/errors/error-in-handle');
-
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Error in handle"'
-		);
-		expect(await page.innerHTML('h1')).toBe('500');
-	});
-
 	test('prerendering a page with a mutative page endpoint results in a catchable error', async ({
 		page
 	}) => {
@@ -673,7 +663,7 @@ test.describe('Load', () => {
 
 		if (!javaScriptEnabled) {
 			// by the time JS has run, hydration will have nuked these scripts
-			const script_contents = await page.innerHTML('script[sveltekit\\:data-type="data"]');
+			const script_contents = await page.innerHTML('script[data-sveltekit-fetched]');
 
 			const payload =
 				'{"status":200,"statusText":"","headers":{"content-type":"application/json"},"body":"{\\"answer\\":42}"}';
@@ -703,11 +693,11 @@ test.describe('Load', () => {
 		if (!javaScriptEnabled) {
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents_a = await page.innerHTML(
-				'script[sveltekit\\:data-type="data"][sveltekit\\:data-url="/load/serialization-post.json"][sveltekit\\:data-body="3t25"]'
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t25"]'
 			);
 
 			const script_contents_b = await page.innerHTML(
-				'script[sveltekit\\:data-type="data"][sveltekit\\:data-url="/load/serialization-post.json"][sveltekit\\:data-body="3t24"]'
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t24"]'
 			);
 
 			expect(script_contents_a).toBe(payload_a);

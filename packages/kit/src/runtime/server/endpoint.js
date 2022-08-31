@@ -1,4 +1,4 @@
-import { HttpError, Redirect } from '../control.js';
+import { Redirect } from '../control.js';
 import { check_method_names, method_not_allowed } from './utils.js';
 
 /**
@@ -39,9 +39,8 @@ export async function render_endpoint(event, mod, state) {
 		);
 
 		if (!(response instanceof Response)) {
-			return new Response(
-				`Invalid response from route ${event.url.pathname}: handler should return a Response object`,
-				{ status: 500 }
+			throw new Error(
+				`Invalid response from route ${event.url.pathname}: handler should return a Response object`
 			);
 		}
 
@@ -52,15 +51,13 @@ export async function render_endpoint(event, mod, state) {
 
 		return response;
 	} catch (error) {
-		if (error instanceof HttpError) {
-			return new Response(error.message, { status: error.status });
-		} else if (error instanceof Redirect) {
+		if (error instanceof Redirect) {
 			return new Response(undefined, {
 				status: error.status,
-				headers: { Location: error.location }
+				headers: { location: error.location }
 			});
-		} else {
-			throw error;
 		}
+
+		throw error;
 	}
 }

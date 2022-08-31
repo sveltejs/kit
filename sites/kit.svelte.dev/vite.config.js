@@ -8,12 +8,6 @@ const config = {
 
 	plugins: [imagetools(), sveltekit()],
 
-	resolve: {
-		alias: {
-			$img: path.resolve('src/images')
-		}
-	},
-
 	server: {
 		fs: {
 			strict: false

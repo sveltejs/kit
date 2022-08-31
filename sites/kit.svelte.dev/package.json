@@ -12,7 +12,7 @@
 		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/amp": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"@sveltejs/site-kit": "^2.1.0",
+		"@sveltejs/site-kit": "^2.1.2",
 		"@types/node": "^16.11.36",
 		"flexsearch": "^0.7.21",
 		"marked": "^4.0.16",
