@@ -190,8 +190,6 @@ export async function respond(request, options, state) {
 		transformPageChunk: default_transform
 	};
 
-	// TODO match route before calling handle?
-
 	try {
 		const response = await options.hooks.handle({
 			event,
