@@ -129,6 +129,7 @@ export interface KitConfig {
 		reportOnly?: CspDirectives;
 	};
 	env?: {
+		devModes?: Array<string>;
 		dir?: string;
 		publicPrefix?: string;
 	};
