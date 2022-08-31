@@ -65,13 +65,13 @@ jobs:
       - name: Set Environment Variables for Playwright (non-windows)
         if: runner.os != 'Windows'
         run: |
-          pnpm playwright --version >> $PLAYWRIGHT_VERSION
+          echo "PLAYWRIGHT_VERSION=`pnpm playwright --version`" >> $GITHUB_ENV
           echo "PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/__playwight_browsers" >> $GITHUB_ENV
       - name: Set Environment Variable of Playwright Browsers Path (windows)
         if: runner.os == 'Windows'
         run: |
-          pnpm playwright --version >> $env:PLAYWRIGHT_VERSION
-          echo "PLAYWRIGHT_BROWSERS_PATH=$GITHUB_WORKSPACE/__playwight_browsers" >> $env:GITHUB_ENV
+          echo "PLAYWRIGHT_VERSION=`pnpm playwright --version`" >> $env:GITHUB_ENV
+          echo "PLAYWRIGHT_BROWSERS_PATH=$env:GITHUB_WORKSPACE/__playwight_browsers" >> $env:GITHUB_ENV
       - name: Cache Playwright
         uses: actions/cache@v3
         id: playwright_cache
