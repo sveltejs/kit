@@ -315,6 +315,12 @@ export interface Action<
 	(event: RequestEvent<Params>): MaybePromise<Record<string, any> | void>;
 }
 
+export interface FormState extends Partial<Record<string, any>> {
+	error?: Record<string, any>;
+	values?: Record<string, any>;
+	result?: Record<string, any>;
+}
+
 // TODO figure out how to just re-export from '../src/index/index.js' without
 // breaking the site
 

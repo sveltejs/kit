@@ -186,7 +186,7 @@ declare module '$app/paths' {
  */
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
-	import { Navigation, Page } from '@sveltejs/kit';
+	import { FormState, Navigation, Page } from '@sveltejs/kit';
 
 	/**
 	 * A readable store whose value contains page data.
@@ -206,7 +206,7 @@ declare module '$app/stores' {
 	 * A writable store whose value contain the errors and values of the last form submission.
 	 * It is updated automatically when using the `<Form />` component, else you need to take care of it yourself.
 	 */
-	export const form: Writable<{ errors: Record<string, any>; values: Record<string, any> }>;
+	export const form: Writable<FormState>;
 
 	/**
 	 * A function that returns all of the contextual stores. On the server, this must be called during component initialization.

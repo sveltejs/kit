@@ -2,8 +2,6 @@
 	import { browser } from '$app/environment';
 	import { form } from '$app/stores';
 
-	export let errors
-
 	$: hydrated_form_values = browser ? $form?.values : '';
 
 	async function submit() {

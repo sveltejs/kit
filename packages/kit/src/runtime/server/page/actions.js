@@ -26,8 +26,8 @@ export function is_action_json_request(event) {
  * @param {import('types').SSRNode['server']} server
  */
 export async function handle_action_json_request(event, options, server) {
-	// TODO create POJO interface for this with
-	// {status: number, errors?: Record<string, any>, values?: Record<string, any>, result?: Record<string, any>}
+	// TODO create POJO interface for this? Something like
+	// {status: number, errors?: Record<string, any>, location?: string, values?: Record<string, any>, result?: Record<string, any>}
 	const handler = server.actions;
 
 	if (!handler) {
