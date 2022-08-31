@@ -14,9 +14,9 @@
 		</div>
 
 		<div class="hero-image">
-			<picture>
+			<picture sizes="(min-width: 480px) 800px, (min-width: 1024px) 480px, 600px">
 				{#each Object.entries(background.sources) as [format, images]}
-					<source srcset={images.map((i) => `${i.src} ${i.width}w`).join(', ')} type={'image/' + format} /> 
+					<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} /> 
 				{/each}
 				<img src={background.fallback} {alt} />
 			</picture>

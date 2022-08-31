@@ -2,7 +2,7 @@
 	import { Blurb } from '@sveltejs/site-kit';
 	import Hero from './Hero.svelte';
 	import Logotype from './svelte-kit-logotype.svg';
-	import Machine from './svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&picture';
+	import Machine from './svelte-kit-machine.webp?w=1440;800;600;480&format=avif;webp;png&picture';
 </script>
 
 <svelte:head>
@@ -20,7 +20,6 @@
 	tagline="The fastest way to build svelte apps"
 	background={Machine}
 	alt="SvelteKit illustration"
-	width={800}
 />
 
 <div class="blurb-shifter">
