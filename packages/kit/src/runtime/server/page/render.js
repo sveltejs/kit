@@ -308,9 +308,9 @@ export async function render_response({
 		}
 
 		/**
-		 * 
+		 *
 		 * @param {boolean} detectLegacy If to detect whether we're in legacy, using a global variable.
-		 * @returns 
+		 * @returns
 		 */
 		// prettier-ignore
 		const getStartupContent = (detectLegacy) => `
@@ -333,7 +333,9 @@ export async function render_response({
 		`;
 
 		if (legacy_entry_file) {
-			const startup_script_js = `window.${startup_script_var_name} = function (m) { var start = m.start; ${getStartupContent(true)} };`;
+			const startup_script_js = `window.${startup_script_var_name} = function (m) { var start = m.start; ${getStartupContent(
+				true
+			)} };`;
 			body += `\n\t\t<script${
 				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
 			}>${startup_script_js}</script>`;
