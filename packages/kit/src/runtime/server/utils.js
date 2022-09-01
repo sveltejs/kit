@@ -194,8 +194,8 @@ export function handle_fatal_error(event, options, error) {
 
 	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
-		'text/html',
-		'application/json'
+		'application/json',
+		'text/html'
 	]);
 
 	if (event.url.pathname.endsWith(DATA_SUFFIX) || type === 'application/json') {
