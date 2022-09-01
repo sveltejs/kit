@@ -381,7 +381,9 @@ test.describe('Load', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 	});
 
-	test('load does not call fetch if max-age allows it', async ({ page }) => {
+	test('load does not call fetch if max-age allows it', async ({ page, request }) => {
+		await request.get('/load/cache-control/reset');
+
 		await page.goto('/load/cache-control');
 		expect(await page.textContent('p')).toBe('Count is 0');
 		await page.waitForTimeout(500);
