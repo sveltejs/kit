@@ -1,3 +1,4 @@
+import { FieldsFormData } from 'types';
 import { error, json } from '../../../exports/index.js';
 import { negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ValidationError } from '../../control.js';
@@ -123,7 +124,6 @@ export async function call_action(event, actions) {
 
 	let name = 'default';
 	for (const param of url.searchParams) {
-		throw param;
 		if (param[0].startsWith('/')) {
 			name = param[0].slice(1);
 			break;
@@ -150,7 +150,7 @@ export async function call_action(event, actions) {
 		}
 	}
 
-	return action({ ...event, fields, files });
+	return action({ ...event, fields: /** @type {FieldsFormData} */ (fields), files });
 }
 
 /**
@@ -164,34 +164,116 @@ function maybe_throw_migration_error(server) {
 	}
 }
 
-/** @typedef {import('types').FilesFormData}  FFD */
+/**
+ * (written like this because JSDoc doesn't support import syntax in `@implements`)
+ * @typedef {import('types').FilesFormData}  FFD
+ */
 
 /** @implements {FFD} */
-export class FilesFormData extends Map {
+export class FilesFormData {
 	constructor() {
-		super([]);
+		/** @type {Map<string, any[]>} */
+		this.map = new Map();
 	}
-	// @ts-ignore
+	/**
+	 * @param {string} key
+	 * @param {any} file
+	 */
 	set(key, file) {
-		super.set(key, [file]);
+		this.map.set(key, [file]);
 	}
-	// @ts-ignore
+	/**
+	 * @param {string} key
+	 */
 	get(key) {
-		return super.get(key)[0];
+		return this.map.get(key)?.[0];
 	}
-	// @ts-ignore
-	append(key, value) {
-		const files = super.get(key) || [];
-		files.push(value);
-		super.set(key, files);
+	/**
+	 * @param {string} key
+	 * @param {any} file
+	 */
+	append(key, file) {
+		const files = this.map.get(key) || [];
+		files.push(file);
+		this.map.set(key, files);
 	}
-	// @ts-ignore
+	/**
+	 * @param {string} key
+	 */
+	delete(key) {
+		this.map.delete(key);
+	}
+	/**
+	 * @param {string} key
+	 */
+	has(key) {
+		return this.map.has(key);
+	}
+	/**
+	 * @param {string} key
+	 */
 	getAll(key) {
-		return super.get(key) || [];
+		return this.map.get(key) || [];
 	}
-	// @ts-ignore
+	/**
+	 * @param {Parameters<FFD['forEach']>[0]} callback
+	 */
 	forEach(callback) {
-		super.forEach((value, key) => callback(value, key, this));
+		this.map.forEach((values, key) => values.forEach((value) => callback(value, key, this)));
 	}
-	// TODO iteration is wrong because FormData returns entries with multiple values each as a [key, value] pair
+	entries() {
+		return new Iterator(this.map, true, true);
+	}
+	keys() {
+		return new Iterator(this.map, true, false);
+	}
+	values() {
+		return new Iterator(this.map, false, true);
+	}
+
+	[Symbol.iterator]() {
+		return new Iterator(this.map, true, true);
+	}
+}
+
+/** @implements {IterableIterator<any>} */
+class Iterator {
+	/**
+	 * @param {Map<string, any[]>} map
+	 * @param {boolean} key
+	 * @param {boolean} value
+	 * */
+	constructor(map, key, value) {
+		this.key = key;
+		this.value = value;
+		this.map = map;
+		this.entries = this.map.entries();
+		this.index = 0;
+		this.current = undefined;
+	}
+	next() {
+		this.current = this.current || this.entries.next();
+		if (this.current.done) {
+			return { value: undefined, done: true };
+		}
+
+		const value =
+			this.key && this.value
+				? [this.current.value[0], this.current.value[1][this.index]]
+				: this.key
+				? this.current.value[0]
+				: this.current.value[1][this.index];
+		const next = { value, done: false };
+
+		this.index++;
+		if (this.index >= this.current.length) {
+			this.index = 0;
+			this.current = undefined;
+		}
+
+		return next;
+	}
+	[Symbol.iterator]() {
+		return this;
+	}
 }

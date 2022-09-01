@@ -354,10 +354,7 @@ export class FilesFormData<Fields extends string = string, FileFileType = File> 
 	getAll(name: Fields): FileFileType[];
 	has(name: Fields): boolean;
 	set(name: string, value: string | Blob, fileName?: string): void;
-	forEach(
-		callbackfn: (value: FileFileType, key: string, parent: FilesFormData) => void,
-		thisArg?: any
-	): void;
+	forEach(callbackfn: (value: FileFileType, key: string, parent: FilesFormData) => void): void;
 }
 
 export interface FormState extends Partial<Record<string, any>> {
