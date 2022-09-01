@@ -381,6 +381,26 @@ test.describe('Load', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 	});
 
+	test('load does not call fetch if max-age allows it', async ({ page, request }) => {
+		await request.get('/load/cache-control/reset');
+
+		page.addInitScript(`
+			window.now = 0;
+			window.performance.now = () => now;
+		`);
+
+		await page.goto('/load/cache-control');
+		expect(await page.textContent('p')).toBe('Count is 0');
+		await page.waitForTimeout(500);
+		await page.click('button');
+		await page.waitForTimeout(500);
+		expect(await page.textContent('p')).toBe('Count is 0');
+
+		await page.evaluate(() => (window.now = 2500));
+		await page.click('button');
+		await expect(page.locator('p')).toHaveText('Count is 2');
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page }) => {
 			const port = 5173;

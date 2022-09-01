@@ -2,7 +2,7 @@ import { onMount, tick } from 'svelte';
 import { normalize_error } from '../../utils/error.js';
 import { make_trackable, decode_params, normalize_path } from '../../utils/url.js';
 import { find_anchor, get_base_uri, scroll_state } from './utils.js';
-import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
+import { lock_fetch, unlock_fetch, initial_fetch, subsequent_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 import { error } from '../../exports/index.js';
 
@@ -584,11 +584,13 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 
 					// we must fixup relative urls so they are resolved from the target page
-					const normalized = new URL(requested, url).href;
-					depends(normalized);
+					const resolved = new URL(requested, url).href;
+					depends(resolved);
 
-					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be normalized
-					return started ? native_fetch(normalized, init) : initial_fetch(requested, init);
+					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
+					return started
+						? subsequent_fetch(resolved, init)
+						: initial_fetch(requested, resolved, init);
 				},
 				setHeaders: () => {}, // noop
 				depends,

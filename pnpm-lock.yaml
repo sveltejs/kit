@@ -147,7 +147,6 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:*
       '@types/node': ^16.11.36
-      playwright-chromium: ^1.25.0
       sirv: ^2.0.2
       svelte: ^3.48.0
       typescript: ^4.8.2
@@ -156,7 +155,6 @@ importers:
     devDependencies:
       '@sveltejs/kit': link:../kit
       '@types/node': 16.11.42
-      playwright-chromium: 1.25.0
       sirv: 2.0.2
       svelte: 3.48.0
       typescript: 4.8.2
@@ -3275,15 +3273,6 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       find-up: 4.1.0
-    dev: true
-
-  /playwright-chromium/1.25.0:
-    resolution: {integrity: sha512-FH9ho3noAWVStCJx4XW78+D8QW0A99WDp53DDkYeVdEpJqCmAIKHCSE6dl5XtaDKrZPYC1ZG5hGXQh1K5H/p+g==}
-    engines: {node: '>=14'}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      playwright-core: 1.25.0
     dev: true
 
   /playwright-core/1.25.0:

@@ -6,6 +6,7 @@ test('escapes slashes', () => {
 	assert.equal(
 		serialize_data({
 			url: 'foo',
+			method: 'GET',
 			body: null,
 			response: {
 				status: 200,
@@ -24,6 +25,7 @@ test('escapes exclamation marks', () => {
 	assert.equal(
 		serialize_data({
 			url: 'foo',
+			method: 'GET',
 			body: null,
 			response: {
 				status: 200,
@@ -44,6 +46,7 @@ test('escapes the attribute values', () => {
 	assert.equal(
 		serialize_data({
 			url: raw,
+			method: 'GET',
 			body: null,
 			response: {
 				status: 200,
