@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.461
+
+### Patch Changes
+
+- [breaking] call `invalidate(fn)` predicates with a URL instead of a string ([#6493](https://github.com/sveltejs/kit/pull/6493))
+
+* Prefer JSON responses when returning errors if accept header is `*/*` ([#6497](https://github.com/sveltejs/kit/pull/6497))
+
+- [breaking] replace invalidate() with invalidateAll() ([#6493](https://github.com/sveltejs/kit/pull/6493))
+
 ## 1.0.0-next.460
 
 ### Patch Changes
