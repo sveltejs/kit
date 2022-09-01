@@ -101,6 +101,23 @@ export function handleError({ error, event }) {
 
 > `handleError` is only called for _unexpected_ errors. It is not called for errors created with the [`error`](/docs/modules#sveltejs-kit-error) function imported from `@sveltejs/kit`, as these are _expected_ errors.
 
+### handleFile
+
+Any files encountered during processing of [form actions](/docs/form-actions) are routed through this handler before being passed into the action function. The return value of `handleFile` becomes the type of each entry of the property `files` on the action; promises are awaited.
+
+```js
+/// file: src/hooks.js
+// @filename: ambient.d.ts
+const ImageService: any;
+
+// @filename: index.js
+// ---cut---
+/** @type {import('@sveltejs/kit').HandleFile} */
+export function handleFile({ file }) {
+	return ImageService.upload(file);
+}
+```
+
 ### externalFetch
 
 This function allows you to modify (or replace) a `fetch` request for an external resource that happens inside a `load` function that runs on the server (or during pre-rendering).

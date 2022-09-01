@@ -43,7 +43,7 @@ export async function handle_action_json_request(event, options, server) {
 	}
 
 	try {
-		const result = await call_action(event, actions);
+		const result = await call_action(event, options, actions);
 		if (!result) {
 			// TODO json({status: 204}) instead?
 			return new Response(undefined, {
@@ -91,11 +91,12 @@ export function is_action_request(event, leaf_node) {
 
 /**
  * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
  * @param {import('types').SSRNode['server']} server
  * @returns {Promise<Record<string,any> | void>}
  * @throws {Redirect | ValidationError | HttpError | Error}
  */
-export async function handle_action_request(event, server) {
+export async function handle_action_request(event, options, server) {
 	const actions = server.actions;
 
 	if (!actions) {
@@ -109,15 +110,16 @@ export async function handle_action_request(event, server) {
 		throw error(405, 'POST method not allowed. No actions exist for this page');
 	}
 
-	return call_action(event, actions);
+	return call_action(event, options, actions);
 }
 
 /**
  * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
  * @param {NonNullable<import('types').SSRNode['server']['actions']>} actions
  * @throws {Redirect | ValidationError | HttpError | Error}
  */
-export async function call_action(event, actions) {
+export async function call_action(event, options, actions) {
 	const url = new URL(event.request.url);
 
 	let name = 'default';
@@ -140,13 +142,21 @@ export async function call_action(event, actions) {
 	const form = await event.request.formData();
 	const fields = new FormData();
 	const files = new FilesFormData();
+	const promises = [];
+
 	for (const [key, value] of form) {
 		if (typeof value === 'string') {
 			fields.append(key, value);
 		} else {
-			files.append(key, value);
+			promises.push(
+				Promise.resolve()
+					.then(() => options.hooks.handleFile({ event, field: key, file: value }))
+					.then((/** @type {any} */ value) => ({ key, value }))
+			);
 		}
 	}
+
+	(await Promise.all(promises)).map(({ key, value }) => files.append(key, value));
 
 	return action({
 		...event,

@@ -11,11 +11,11 @@ Actions are defined through `export const actions = {...}`, with each key being 
 ```svelte
 /// file: src/routes/todos/+page.svelte
 <script>
-	/** @type {import('./$type').PageData} */
+	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 
-<form action="?/addTodo">
+<form action="?/addTodo" method="post">
 	<input type="text" name="text" />
 	<button>Add todo</button>
 </form>
@@ -23,7 +23,7 @@ Actions are defined through `export const actions = {...}`, with each key being 
 <ul>
 	{#each data.todos as todo}
 		<li>
-			<form action="?/editTodo">
+			<form action="?/editTodo" method="post">
 				<input type="hidden" name="id" value={todo.id} />
 				<input type="text" name="text" value={todo.text} />
 				<button>Edit todo</button>
@@ -35,7 +35,7 @@ Actions are defined through `export const actions = {...}`, with each key being 
 
 ```js
 /// file: src/routes/todos/+page.server.js
-/** @type {import('./$type').Actions} */
+/** @type {import('./$types').Actions} */
 export const actions = {
 	addTodo: (event) => {
 		// ...
@@ -48,11 +48,11 @@ export const actions = {
 
 ## Files and strings are separated
 
-Since `actions` are meant to be used with forms, we can make your life easier by awaiting the `FormData` and separating the form fields which contain strings from those who contain files and running the latter through the `handleFile` hook before passing it as `fields` and `files` into the action function.
+Since `actions` are meant to be used with forms, we can make your life easier by awaiting the `FormData` and separating the form fields which contain strings from those who contain files and running the latter through the [`handleFile`](/docs/hooks#handleFile) hook before passing it as `fields` and `files` into the action function.
 
 ```js
 /// file: src/routes/todos/+page.server.js
-/** @type {import('./$type').Actions} */
+/** @type {import('./$types').Actions} */
 export const actions = {
 	default: ({ fields, files }) => {
 		const name = fields.get('name'); // typed as string
@@ -111,7 +111,7 @@ export const actions = {
 	import { form } from '$app/stores';
 </script>
 
-<form action="?/addTodo">
+<form action="?/addTodo" method="post">
 	<input type="text" name="username" value={$form?.values?.username} />
 	{#if $form?.errors?.username}
 		<span>{$form?.errors?.username}</span>
@@ -177,7 +177,7 @@ First we need to ensure that the page is _not_ reloaded on submission. For this,
 	}
 </script>
 
-<form action="?/addTodo" on:submit|preventDefault={login}>
+<form action="?/addTodo" method="post" on:submit|preventDefault={login}>
 	<input type="text" name="username" value={$form?.values?.username} />
 	{#if $form?.errors?.username}
 		<span>{$form?.errors?.username}</span>

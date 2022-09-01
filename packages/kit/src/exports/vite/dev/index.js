@@ -331,6 +331,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 								console.error(colors.gray(error.stack));
 							}
 						}),
+					handleFile: user_hooks.handleFile || (({ file }) => file),
 					externalFetch: user_hooks.externalFetch || fetch
 				};
 
