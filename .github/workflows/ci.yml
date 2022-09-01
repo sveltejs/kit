@@ -9,6 +9,8 @@ on:
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: svelte
+  # we call `pnpm playwright install` instead
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
 # cancel in-progress runs on new commits to same PR (gitub.event.number)
 concurrency:
@@ -18,9 +20,6 @@ concurrency:
 jobs:
   Lint:
     runs-on: ubuntu-latest
-    env:
-      # not needed for linting
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
     steps:
       - uses: actions/checkout@v3
       - uses: pnpm/action-setup@v2.2.2
@@ -52,8 +51,6 @@ jobs:
             e2e-browser: 'chromium'
     env:
       TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
-      # we call `pnpm playwright install` instead
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
@@ -64,23 +61,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Setup playwright cache (non-windows)
-        if: runner.os != 'Windows'
-        run: |
-          echo "PLAYWRIGHT_VERSION=`pnpm playwright --version`" >> $GITHUB_ENV
-          echo "PLAYWRIGHT_BROWSERS_PATH=$HOME/__playwight_browsers" >> $GITHUB_ENV
-      - name: Setup playwright cache (windows)
-        if: runner.os == 'Windows'
-        run: |
-          $PLAYWRIGHT_VERSION = (pnpm playwright --version)
-          echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> $env:GITHUB_ENV
-          echo "PLAYWRIGHT_BROWSERS_PATH=$HOME\__playwight_browsers" >> $env:GITHUB_ENV
-      - name: Cache Playwright
-        uses: actions/cache@v3
-        id: playwright_cache
-        with:
-          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-          key: os-${{ runner.os }}-browser-${{ matrix.e2e-browser }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm test
       - name: Archive test results
