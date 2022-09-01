@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.462
+
+### Patch Changes
+
+- [breaking] block cross-site form POSTs by default. disable with config.kit.csrf.checkOrigin ([#6510](https://github.com/sveltejs/kit/pull/6510))
+
 ## 1.0.0-next.461
 
 ### Patch Changes
