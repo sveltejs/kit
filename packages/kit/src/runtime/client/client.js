@@ -70,7 +70,7 @@ function check_for_removed_attributes() {
  * @returns {import('./types').Client}
  */
 export function create_client({ target, base, trailing_slash }) {
-	/** @type {Array<((href: string) => boolean)>} */
+	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
 	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
@@ -103,6 +103,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/** @type {Promise<void> | null} */
 	let invalidating = null;
+	let force_invalidation = false;
 
 	/** @type {import('svelte').SvelteComponent} */
 	let root;
@@ -138,6 +139,19 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/** @type {{}} */
 	let token;
+
+	function invalidate() {
+		if (!invalidating) {
+			invalidating = Promise.resolve().then(async () => {
+				await update(new URL(location.href), []);
+
+				invalidating = null;
+				force_invalidation = false;
+			});
+		}
+
+		return invalidating;
+	}
 
 	/**
 	 * @param {string | URL} url
@@ -639,6 +653,8 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @param {{ url: boolean, params: string[] }} changed
 	 */
 	function has_changed(changed, parent_changed, uses) {
+		if (force_invalidation) return true;
+
 		if (!uses) return false;
 
 		if (uses.parent && parent_changed) return true;
@@ -648,8 +664,8 @@ export function create_client({ target, base, trailing_slash }) {
 			if (uses.params.has(param)) return true;
 		}
 
-		for (const dep of uses.dependencies) {
-			if (invalidated.some((fn) => fn(dep))) return true;
+		for (const href of uses.dependencies) {
+			if (invalidated.some((fn) => fn(new URL(href)))) return true;
 		}
 
 		return false;
@@ -1057,28 +1073,25 @@ export function create_client({ target, base, trailing_slash }) {
 
 		invalidate: (resource) => {
 			if (resource === undefined) {
-				// Force rerun of all load functions, regardless of their dependencies
-				for (const node of current.branch) {
-					node?.server?.uses.dependencies.add('');
-					node?.shared?.uses.dependencies.add('');
-				}
-				invalidated.push(() => true);
-			} else if (typeof resource === 'function') {
+				// TODO remove for 1.0
+				throw new Error(
+					'`invalidate()` (with no arguments) has been replaced by `invalidateAll()`'
+				);
+			}
+
+			if (typeof resource === 'function') {
 				invalidated.push(resource);
 			} else {
 				const { href } = new URL(resource, location.href);
-				invalidated.push((dep) => dep === href);
+				invalidated.push((url) => url.href === href);
 			}
 
-			if (!invalidating) {
-				invalidating = Promise.resolve().then(async () => {
-					await update(new URL(location.href), []);
+			return invalidate();
+		},
 
-					invalidating = null;
-				});
-			}
-
-			return invalidating;
+		invalidateAll: () => {
+			force_invalidation = true;
+			return invalidate();
 		},
 
 		prefetch: async (href) => {

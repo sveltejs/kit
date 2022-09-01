@@ -44,10 +44,10 @@ if (import.meta.env.DEV) {
 export function initial_fetch(resource, opts) {
 	const url = JSON.stringify(typeof resource === 'string' ? resource : resource.url);
 
-	let selector = `script[sveltekit\\:data-type="data"][sveltekit\\:data-url=${url}]`;
+	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
 	if (opts && typeof opts.body === 'string') {
-		selector += `[sveltekit\\:data-body="${hash(opts.body)}"]`;
+		selector += `[data-hash="${hash(opts.body)}"]`;
 	}
 
 	const script = document.querySelector(selector);

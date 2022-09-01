@@ -163,7 +163,7 @@ async function generate_lambda_functions({ builder, publish, split, esm }) {
 	if (esm) {
 		builder.copy(`${files}/esm`, '.netlify', { replace });
 	} else {
-		glob('**/*.js', { cwd: '.netlify/server' }).forEach((file) => {
+		glob('**/*.js', { cwd: '.netlify/server', filesOnly: true }).forEach((file) => {
 			const filepath = `.netlify/server/${file}`;
 			const input = readFileSync(filepath, 'utf8');
 			const output = esbuild.transformSync(input, { format: 'cjs', target: 'node12' }).code;

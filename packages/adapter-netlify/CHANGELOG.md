@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.76
+
+### Patch Changes
+
+- Update adapter to only glob files ([#6492](https://github.com/sveltejs/kit/pull/6492))
+
 ## 1.0.0-next.75
 
 ### Patch Changes

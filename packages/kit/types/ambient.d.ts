@@ -113,10 +113,25 @@ declare module '$app/navigation' {
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<void>;
 	/**
-	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. If no argument is given, all resources will be invalidated. Returns a `Promise` that resolves when the page is subsequently updated.
-	 * @param dependency The invalidated resource
+	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
+	 *
+	 * If the argument is given as a `string` or `URL`, it must resolve to the same URL that was passed to `fetch` or `depends` (including query parameters).
+	 * To create a custom identifier, use a string beginning with `[a-z]+:` (e.g. `custom:state`) — this is a valid URL.
+	 *
+	 * The `function` argument can be used define a custom predicate. It receives the full `URL` and causes `load` to rerun if `true` is returned.
+	 * This can be useful if you want to invalidate based on a pattern instead of a exact match.
+	 *
+	 * ```ts
+	 * // Example: Match '/path' regardless of the query parameters
+	 * invalidate((url) => url.pathname === '/path');
+	 * ```
+	 * @param url The invalidated URL
 	 */
-	export function invalidate(dependency?: string | ((href: string) => boolean)): Promise<void>;
+	export function invalidate(url: string | URL | ((url: URL) => boolean)): Promise<void>;
+	/**
+	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+	 */
+	export function invalidateAll(): Promise<void>;
 	/**
 	 * Programmatically prefetches the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and

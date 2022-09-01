@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.41
+
+### Patch Changes
+
+- Better error when encountering not-fully-prerenderable routes ([#6474](https://github.com/sveltejs/kit/pull/6474))
+
 ## 1.0.0-next.40
 
 ### Patch Changes

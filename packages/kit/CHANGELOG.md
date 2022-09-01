@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 1.0.0-next.460
+
+### Patch Changes
+
+- [breaking] Remove sveltekit:start event ([#6484](https://github.com/sveltejs/kit/pull/6484))
+
+## 1.0.0-next.459
+
+### Patch Changes
+
+- Prevent validation_errors from being serialized twice ([#6468](https://github.com/sveltejs/kit/pull/6468))
+
+## 1.0.0-next.458
+
+### Patch Changes
+
+- [breaking] catch and render raw response when unexpected error occurs in endpoint ([#6434](https://github.com/sveltejs/kit/pull/6434))
+
+## 1.0.0-next.457
+
+### Patch Changes
+
+- Print error if resolveOpts.ssr is set ([#6475](https://github.com/sveltejs/kit/pull/6475))
+
 ## 1.0.0-next.456
 
 ### Patch Changes

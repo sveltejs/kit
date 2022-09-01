@@ -3,6 +3,7 @@ import {
 	beforeNavigate,
 	goto,
 	invalidate,
+	invalidateAll,
 	prefetch,
 	prefetchRoutes
 } from '$app/navigation';
@@ -17,6 +18,7 @@ export interface Client {
 	disable_scroll_handling: () => void;
 	goto: typeof goto;
 	invalidate: typeof invalidate;
+	invalidateAll: typeof invalidateAll;
 	prefetch: typeof prefetch;
 	prefetch_routes: typeof prefetchRoutes;
 
