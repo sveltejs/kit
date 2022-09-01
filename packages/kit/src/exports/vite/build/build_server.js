@@ -110,6 +110,7 @@ export class Server {
 			this.options.hooks = {
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
 				handleError: module.handleError || (({ error }) => console.error(error.stack)),
+				handleFile: module.handleFile || (({ file }) => file),
 				externalFetch: module.externalFetch || fetch
 			};
 		}
