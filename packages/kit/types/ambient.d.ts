@@ -88,6 +88,7 @@ declare module '$app/environment' {
  * 	disableScrollHandling,
  * 	goto,
  * 	invalidate,
+ * 	invalidateAll,
  * 	prefetch,
  * 	prefetchRoutes
  * } from '$app/navigation';
