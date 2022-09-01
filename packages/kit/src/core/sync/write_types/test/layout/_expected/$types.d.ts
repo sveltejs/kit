@@ -41,6 +41,7 @@ export type PageData = Omit<
 		Awaited<ReturnType<typeof import('../../../../../../../../+page.js').load>>
 	>;
 export type Action = Kit.Action<RouteParams>;
+export type Actions = Kit.Actions<RouteParams>;
 export type LayoutServerLoad<
 	OutputData extends (Partial<App.PageData> & Record<string, any>) | void =
 		| (Partial<App.PageData> & Record<string, any>)

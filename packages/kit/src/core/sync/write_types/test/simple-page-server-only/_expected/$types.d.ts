@@ -26,5 +26,6 @@ export type PageServerData = Kit.AwaitedProperties<
 >;
 export type PageData = Omit<PageParentData, keyof PageServerData> & PageServerData;
 export type Action = Kit.Action<RouteParams>;
+export type Actions = Kit.Actions<RouteParams>;
 export type LayoutServerData = null;
 export type LayoutData = LayoutParentData;
