@@ -168,9 +168,9 @@ When pages are prerendered, the CSP header is added via a `<meta http-equiv>` ta
 
 Protection against [cross-site request forgery](https://owasp.org/www-community/attacks/csrf) attacks:
 
-- `checkOrigin` — if `true`, SvelteKit will check the incoming `origin` header for `POST` requests and verify that it matches the server's origin
+- `checkOrigin` — if `true`, SvelteKit will check the incoming `origin` header for `POST` form submissions and verify that it matches the server's origin
 
-To allow people to make `POST` requests to your app from other origins, you will need to disable this option. Be careful!
+To allow people to make `POST` form submissions to your app from other origins, you will need to disable this option. Be careful!
 
 ### env
 

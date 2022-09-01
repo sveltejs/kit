@@ -30,7 +30,7 @@ test.describe('CSRF', () => {
 		});
 
 		expect(res.status).toBe(403);
-		expect(await res.text()).toBe('Cross-site POST requests are forbidden');
+		expect(await res.text()).toBe('Cross-site POST form submissions are forbidden');
 	});
 });
 
