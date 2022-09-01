@@ -26,7 +26,10 @@ test.describe('Content-Type', () => {
 test.describe('CSRF', () => {
 	test('Blocks requests with incorrect origin', async ({ baseURL }) => {
 		const res = await fetch(`${baseURL}/csrf`, {
-			method: 'POST'
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded'
+			}
 		});
 
 		expect(res.status).toBe(403);
