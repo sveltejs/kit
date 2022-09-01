@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.463
+
+### Patch Changes
+
+- fix peer dependency warning on vite-3.1.0-beta.1 ([#6512](https://github.com/sveltejs/kit/pull/6512))
+
+* [breaking] respect cache-control max-age on the client for initially fetched responses ([#6461](https://github.com/sveltejs/kit/pull/6461))
+
 ## 1.0.0-next.462
 
 ### Patch Changes
