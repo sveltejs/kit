@@ -410,7 +410,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   status: number;
 	 *   error: HttpError | Error | null;
 	 *   routeId: string | null;
-	 *   form_state?: import('types').FormState | null;
+	 *   form_state?: import('types').SubmittedState | null;
 	 * }} opts
 	 */
 	async function get_navigation_result_from_branch({

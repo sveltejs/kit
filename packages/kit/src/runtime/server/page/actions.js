@@ -25,8 +25,6 @@ export function is_action_json_request(event) {
  * @param {import('types').SSRNode['server']} server
  */
 export async function handle_action_json_request(event, options, server) {
-	// TODO create POJO interface for this? Something like
-	// {status: number, errors?: Record<string, any>, location?: string, values?: Record<string, any>, result?: Record<string, any>}
 	const actions = server.actions;
 
 	if (!actions) {
@@ -50,22 +48,27 @@ export async function handle_action_json_request(event, options, server) {
 				status: 204
 			});
 		} else {
-			return json({ status: 200, result });
+			return json(/** @type {import('types').FormFetchResponse} */ ({ status: 200, result }));
 		}
 	} catch (e) {
 		const error = /** @type {Redirect | HttpError | ValidationError | Error} */ (e);
 
 		if (error instanceof Redirect) {
-			return json({ status: 303, location: error.location });
+			return json(
+				/** @type {import('types').FormFetchResponse} */ ({
+					status: error.status,
+					location: error.location
+				})
+			);
 		}
 
 		if (error instanceof ValidationError) {
 			return json(
-				{
+				/** @type {import('types').FormFetchResponse} */ ({
 					status: error.status,
 					values: error.values,
 					errors: error.errors
-				},
+				}),
 				{ status: error.status }
 			);
 		}

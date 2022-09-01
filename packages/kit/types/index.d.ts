@@ -364,10 +364,18 @@ export class FilesFormData<Fields extends string = string, FileFileType = File> 
 	forEach(callbackfn: (value: FileFileType, key: string, parent: FilesFormData) => void): void;
 }
 
-export interface FormState extends Partial<Record<string, any>> {
+export interface SubmittedState {
+	error: Record<string, any>;
+	values: Record<string, string | string[]>;
+}
+
+// TODO make this a union type with type=success/redirect/error?
+export interface FormFetchResponse {
+	status: number;
 	error?: Record<string, any>;
-	values?: Record<string, any>;
+	values?: Record<string, string | string[]>;
 	result?: Record<string, any>;
+	location?: string;
 }
 
 // TODO figure out how to just re-export from '../src/index/index.js' without

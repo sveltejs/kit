@@ -123,7 +123,7 @@ export const actions = {
 
 ## Success
 
-If everything is valid, an action can either return a JSON object with data that is merged with the returned data from `load`, or it can `throw` a `redirect` to redirect the user to another page.
+If everything is valid, an action can return a JSON object with data that is part of the JSON response in the case of a JavaScript fetch - it's discarded in case of a full page reload. Alternatively it can `throw` a `redirect` to redirect the user to another page.
 
 ```js
 /// file: src/routes/login/+page.server.js
@@ -179,8 +179,8 @@ First we need to ensure that the page is _not_ reloaded on submission. For this,
 
 <form action="?/addTodo" method="post" on:submit|preventDefault={login}>
 	<input type="text" name="username" value={$form?.values?.username} />
-	{#if $form?.errors?.username}
-		<span>{$form?.errors?.username}</span>
+	{#if $form?.errors.username}
+		<span>{$form.errors.username}</span>
 	{/if}
 	<input type="password" name="password" />
 	<button>Login</button>
@@ -205,7 +205,7 @@ As you can see, progressive enhancement is doable, but it may become a little cu
 <Form action="?/addTodo" on:success={redirect} let:errors let:values>
 	<input type="text" name="username" value={values?.username} />
 	{#if errors?.username}
-		<span>{errors?.username}</span>
+		<span>{errors.username}</span>
 	{/if}
 	<input type="password" name="password" />
 	<button>Login</button>
@@ -213,3 +213,44 @@ As you can see, progressive enhancement is doable, but it may become a little cu
 ```
 
 TODO explain the API in more detail
+
+## Alternatives
+
+In case you don't need your forms to work without JavaScript, you want to use HTTP verbs other than `POST`, or you want to send arbitrary JSON instead of being restricted to `FormData`, then you can resort to interacting with your API through `+server.js` endpoints (which will be possible to place next to `+page` files, soon).
+
+```svelte
+<script>
+	import { invalidateAll, goto } from '$app/navigation';
+
+	let errors = {};
+
+	async function login(event) {
+		event.preventDefault(); // prevent native form submission
+		const data = Object.fromEntries(new FormData(this)); // create JSON from FormData
+		const response = await fetch('/api/login', { // call your API using fetch
+			method: 'POST',
+			headers: {
+				accept: 'application/json'
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(data)
+		});
+		const json = await response.json(); // destructure response object
+		if (response.ok) { // success, redirect
+			invalidateAll();
+			goto(json.location);
+		} else { // validation error, errors variable
+			errors = json.errors;
+		}
+	}
+</script>
+
+<form on:submit|preventDefault={login}>
+	<input type="text" name="username" />
+	{#if errors.username}
+		<span>{errors.username}</span>
+	{/if}
+	<input type="password" name="password" />
+	<button>Login</button>
+</form>
+```

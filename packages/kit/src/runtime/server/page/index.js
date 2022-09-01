@@ -50,9 +50,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 		let status = 200;
 
-		/** @type {Record<string, any> | void} */
-		let mutation_data;
-
 		/** @type {HttpError | Error} */
 		let mutation_error;
 
@@ -63,7 +60,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			// for action requests, first call handler in +page.server.js
 			// (this also determines status code)
 			try {
-				mutation_data = await handle_action_request(event, options, leaf_node.server);
+				await handle_action_request(event, options, leaf_node.server);
 			} catch (e) {
 				const error = /** @type {Redirect | HttpError | ValidationError | Error} */ (e);
 				if (error instanceof Redirect) {

@@ -7,7 +7,7 @@ import {
 	prefetch,
 	prefetchRoutes
 } from '$app/navigation';
-import { CSRPageNode, CSRPageNodeLoader, CSRRoute, FormState, Uses } from 'types';
+import { CSRPageNode, CSRPageNodeLoader, CSRRoute, SubmittedState, Uses } from 'types';
 import { HttpError } from '../control.js';
 import { SerializedHttpError } from '../server/page/types.js';
 
@@ -30,7 +30,7 @@ export interface Client {
 		params: Record<string, string>;
 		routeId: string | null;
 		data: Array<import('types').ServerDataNode | null>;
-		form: FormState | null;
+		form: SubmittedState | null;
 	}) => Promise<void>;
 	_start_router: () => void;
 }
