@@ -78,7 +78,7 @@ jobs:
         id: playwright_cache
         with:
           path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-          key: OS - ${{ runner.os }} - Node ${{ matrix.node-version }} - Browser ${{ matrix.e2e-browser }} - Playwright Version - ${{ env.PLAYWRIGHT_VERSION }}
+          key: OS - ${{ runner.os }} - Browser ${{ matrix.e2e-browser }} - Playwright Version - ${{ env.PLAYWRIGHT_VERSION }}
       - run: pnpm playwright install ${{ (matrix.e2e-browser == 'safari' && 'webkit') || matrix.e2e-browser }} chromium # adapter-static is being tested only on chromium, so we need it always
       - run: pnpm test
       - name: Archive test results
