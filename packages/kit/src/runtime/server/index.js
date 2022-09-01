@@ -14,9 +14,19 @@ import { DATA_SUFFIX } from '../../constants.js';
 /** @param {{ html: string }} opts */
 const default_transform = ({ html }) => html;
 
+const mutative_methods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
 /** @type {import('types').Respond} */
 export async function respond(request, options, state) {
 	let url = new URL(request.url);
+
+	if (
+		options.csrf.check_origin &&
+		mutative_methods.has(request.method) &&
+		request.headers.get('origin') !== url.origin
+	) {
+		return new Response(`Cross-site ${request.method} requests are forbidden`, { status: 403 });
+	}
 
 	const { parameter, allowed } = options.method_override;
 	const method_override = url.searchParams.get(parameter)?.toUpperCase();

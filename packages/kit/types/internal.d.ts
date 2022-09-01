@@ -290,6 +290,9 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	csp: ValidatedConfig['kit']['csp'];
+	csrf: {
+		check_origin: boolean;
+	};
 	dev: boolean;
 	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;

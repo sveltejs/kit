@@ -377,6 +377,9 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 					request,
 					{
 						csp: svelte_config.kit.csp,
+						csrf: {
+							check_origin: svelte_config.kit.csrf.checkOrigin
+						},
 						dev: true,
 						get_stack: (error) => fix_stack_trace(error),
 						handle_error: (error, event) => {

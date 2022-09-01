@@ -128,6 +128,9 @@ export interface KitConfig {
 		directives?: CspDirectives;
 		reportOnly?: CspDirectives;
 	};
+	csrf?: {
+		checkOrigin?: boolean;
+	};
 	env?: {
 		dir?: string;
 		publicPrefix?: string;
