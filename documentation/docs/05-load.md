@@ -125,7 +125,7 @@ import * as api from '$lib/api';
 export async function load({ depends }) {
 	depends(
 		`${api.base}/foo`,
-		`${api.base}/bar`
+		`${api.base}/bar`,
 		'my-stuff:foo'
 	);
 
