@@ -81,18 +81,18 @@ export function run(app, callback) {
 	});
 
 	suite.after(async (context) => {
-		if(context.browser){
+		if (context.browser) {
 			try {
-				await context.browser.close()
+				await context.browser.close();
 			} catch (e) {
-				console.error('failed to close test browser',e);
+				console.error('failed to close test browser', e);
 			}
 		}
-		if(context.server){
+		if (context.server) {
 			try {
-				await context.server.close()
+				await context.server.close();
 			} catch (e) {
-				console.error('failed to close test server',e);
+				console.error('failed to close test server', e);
 			}
 		}
 	});
