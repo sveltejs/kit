@@ -70,7 +70,7 @@ export const navigating = {
 };
 
 /** @type {typeof import('$app/stores').submitted} */
-export const form = {
+export const submitted = {
 	set(values) {
 		const store = getStores().submitted;
 		return store.set(values);
