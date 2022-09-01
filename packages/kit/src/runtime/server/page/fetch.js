@@ -214,6 +214,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 
 						fetched.push({
 							url: requested,
+							method: opts.method || 'GET',
 							body: opts.body,
 							response: {
 								status: status_number,
