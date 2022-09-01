@@ -8,7 +8,6 @@ import { decode_params, disable_search, normalize_path } from '../../utils/url.j
 import { exec } from '../../utils/routing.js';
 import { render_data } from './data/index.js';
 import { DATA_SUFFIX } from '../../constants.js';
-import { is_mutative_method } from '../../utils/http.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -21,7 +20,7 @@ export async function respond(request, options, state) {
 
 	if (
 		options.csrf.check_origin &&
-		is_mutative_method(request.method) &&
+		request.method === 'POST' &&
 		request.headers.get('origin') !== url.origin
 	) {
 		return new Response(`Cross-site ${request.method} requests are forbidden`, { status: 403 });

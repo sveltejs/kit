@@ -3,7 +3,6 @@ import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from '../index.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { domain_matches, path_matches } from './cookie.js';
-import { is_mutative_method } from '../../../utils/http.js';
 
 /**
  * @param {{
@@ -133,8 +132,9 @@ export function create_fetch({ event, options, state, route, prerender_default }
 				throw new Error('Request body must be a string');
 			}
 
-			// we need to set an origin header if it's not a GET request
-			if (is_mutative_method((opts.method ?? 'GET').toUpperCase())) {
+			// we need to set an origin header if it's a POST request, to avoid
+			// CSRF protection blocking this request
+			if (opts.method?.toUpperCase() === 'POST') {
 				opts.headers.set('origin', event.url.origin);
 			}
 
