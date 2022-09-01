@@ -19,7 +19,7 @@ export async function respond(request, options, state) {
 	let url = new URL(request.url);
 
 	if (options.csrf.check_origin) {
-		const type = request.headers.get('content-type');
+		const type = request.headers.get('content-type')?.split(';')[0];
 
 		const forbidden =
 			request.method === 'POST' &&
