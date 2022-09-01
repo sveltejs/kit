@@ -35,10 +35,11 @@ const pattern = new RegExp(`[${Object.keys(replacements).join('')}]`, 'g');
  * and that the resulting string isn't further modified.
  *
  * @param {import('./types.js').Fetched} fetched
+ * @param {boolean} [prerendering]
  * @returns {string} The raw HTML of a script element carrying the JSON payload.
  * @example const html = serialize_data('/data.json', null, { foo: 'bar' });
  */
-export function serialize_data(fetched) {
+export function serialize_data(fetched, prerendering = false) {
 	const safe_payload = JSON.stringify(fetched.response).replace(
 		pattern,
 		(match) => replacements[match]
@@ -54,7 +55,7 @@ export function serialize_data(fetched) {
 		attrs.push(`data-hash=${escape_html_attr(hash(fetched.body))}`);
 	}
 
-	if (fetched.method === 'GET') {
+	if (!prerendering && fetched.method === 'GET') {
 		const cache_control = /** @type {string} */ (fetched.response.headers['cache-control']);
 		if (cache_control) {
 			const match = /s-maxage=(\d+)/g.exec(cache_control) ?? /max-age=(\d+)/g.exec(cache_control);
