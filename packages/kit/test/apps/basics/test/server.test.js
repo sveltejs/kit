@@ -106,9 +106,7 @@ test.describe('Endpoints', () => {
 	test('request body can be read slow', async ({ request }) => {
 		const data = randomBytes(1024 * 256);
 		const digest = createHash('sha256').update(data).digest('base64url');
-		const response = await request.put('/endpoint-input/sha256', {
-			data
-		});
+		const response = await request.put('/endpoint-input/sha256', { data });
 		expect(await response.text()).toEqual(digest);
 	});
 });
