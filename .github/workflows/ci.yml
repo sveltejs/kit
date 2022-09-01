@@ -64,14 +64,12 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Setup playwright cache
-        id: config_playwright_non_windows
+      - name: Setup playwright cache (non-windows)
         if: runner.os != 'Windows'
         run: |
           echo "PLAYWRIGHT_VERSION=`pnpm playwright --version`" >> $GITHUB_ENV
           echo "PLAYWRIGHT_BROWSERS_PATH=$HOME/__playwight_browsers" >> $GITHUB_ENV
-      - name: Setup playwright cache
-        id: config_playwright_windows
+      - name: Setup playwright cache (windows)
         if: runner.os == 'Windows'
         run: |
           $PLAYWRIGHT_VERSION = (pnpm playwright --version)
