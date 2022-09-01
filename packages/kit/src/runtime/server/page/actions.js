@@ -171,7 +171,9 @@ export async function call_action(event, options, actions) {
 function maybe_throw_migration_error(server) {
 	for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
 		if (/** @type {any} */ (server)[method]) {
-			throw new Error(`${method} method no longer allowed in +page.server, use actions instead.`);
+			throw new Error(
+				`${method} method no longer allowed in +page.server, use actions instead. See the PR for more info: https://github.com/sveltejs/kit/pull/6469`
+			);
 		}
 	}
 }
