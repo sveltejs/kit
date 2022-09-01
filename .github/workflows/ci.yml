@@ -62,15 +62,11 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Fix Browser Name (safary-only)
-        if: runner.os != 'Windows' && matrix.e2e-browser == 'safari'
-        run: echo "PLAYWRIGHT_BROWSER=webkit" >> $GITHUB_ENV
       - name: Set Environment Variables for Playwright (non-windows)
         if: runner.os != 'Windows'
         run: |
           echo "PLAYWRIGHT_VERSION=`pnpm playwright --version`" >> $GITHUB_ENV
           echo "PLAYWRIGHT_BROWSERS_PATH=$HOME/__playwight_browsers" >> $GITHUB_ENV
-          echo $KIT_E2E_BROWSER
       - name: Set Environment Variable of Playwright Browsers Path (windows)
         if: runner.os == 'Windows'
         run: |
