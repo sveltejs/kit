@@ -6,6 +6,6 @@ import { validation } from '@sveltejs/kit';
 export const actions = {
 	default: async ({ fields }) => {
 		fields.delete('password');
-		throw validation(400, { message: 'invalid credentials' }, fields);
+		throw validation(400, fields, { message: 'invalid credentials' });
 	}
 };

@@ -391,6 +391,6 @@ export function json(data: any, init?: ResponseInit): Response;
  */
 export function validation(
 	status: number,
-	errors: Record<string, any>,
-	form?: FormData
+	form: FormData | Record<string, string | string[]> | undefined | null,
+	errors: Record<string, any>
 ): ValidationError;

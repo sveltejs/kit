@@ -1,4 +1,3 @@
-import { FieldsFormData } from 'types';
 import { error, json } from '../../../exports/index.js';
 import { negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ValidationError } from '../../control.js';
@@ -8,7 +7,6 @@ import { error_to_pojo } from '../utils.js';
  * @param {import('types').RequestEvent} event
  */
 export function is_action_json_request(event) {
-	console.log(event.request.headers.get('accept'));
 	const accept = negotiate(event.request.headers.get('accept') || 'text/html', [
 		'text/html',
 		'application/json'
@@ -150,7 +148,11 @@ export async function call_action(event, actions) {
 		}
 	}
 
-	return action({ ...event, fields: /** @type {FieldsFormData} */ (fields), files });
+	return action({
+		...event,
+		fields: /** @type {import('types').FieldsFormData} */ (fields),
+		files
+	});
 }
 
 /**

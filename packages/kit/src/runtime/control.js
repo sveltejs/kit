@@ -35,16 +35,24 @@ export class Redirect {
 export class ValidationError {
 	/**
 	 * @param {number} status
+	 * @param {FormData | Record<string, string | string[]> | null | undefined} values
 	 * @param {Record<string, any>} errors
-	 * @param {FormData | Record<string, any> | null | undefined} [values]
 	 */
-	constructor(status, errors, values) {
+	constructor(status, values, errors) {
 		if (values instanceof FormData) {
-			/** @type {Record<string, string>} */
+			/** @type {Record<string, string | string[]>} */
 			const converted = {};
 			for (const [key, value] of values.entries()) {
 				if (typeof value === 'string') {
-					converted[key] = value;
+					if (converted[key] !== undefined) {
+						const array = /** @type {string[]} */ (
+							Array.isArray(converted[key]) ? converted[key] : [converted[key]]
+						);
+						array.push(value);
+						converted[key] = array;
+					} else {
+						converted[key] = value;
+					}
 				}
 			}
 			this.values = converted;
