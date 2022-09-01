@@ -8,13 +8,12 @@ import { decode_params, disable_search, normalize_path } from '../../utils/url.j
 import { exec } from '../../utils/routing.js';
 import { render_data } from './data/index.js';
 import { DATA_SUFFIX } from '../../constants.js';
+import { is_mutative_method } from '../../utils/http.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
 /** @param {{ html: string }} opts */
 const default_transform = ({ html }) => html;
-
-const mutative_methods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 /** @type {import('types').Respond} */
 export async function respond(request, options, state) {
@@ -22,7 +21,7 @@ export async function respond(request, options, state) {
 
 	if (
 		options.csrf.check_origin &&
-		mutative_methods.has(request.method) &&
+		is_mutative_method(request.method) &&
 		request.headers.get('origin') !== url.origin
 	) {
 		return new Response(`Cross-site ${request.method} requests are forbidden`, { status: 403 });

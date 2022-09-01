@@ -3,6 +3,7 @@ import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from '../index.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { domain_matches, path_matches } from './cookie.js';
+import { is_mutative_method } from '../../../utils/http.js';
 
 /**
  * @param {{
@@ -130,6 +131,11 @@ export function create_fetch({ event, options, state, route, prerender_default }
 				// non-string bodies are irksome to deal with, but luckily aren't particularly useful
 				// in this context anyway, so we take the easy route and ban them
 				throw new Error('Request body must be a string');
+			}
+
+			// we need to set an origin header if it's not a GET request
+			if (is_mutative_method((opts.method ?? 'GET').toUpperCase())) {
+				opts.headers.set('origin', event.url.origin);
 			}
 
 			response = await respond(

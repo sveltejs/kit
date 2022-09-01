@@ -53,3 +53,10 @@ export function negotiate(accept, types) {
 
 	return accepted;
 }
+
+const mutative_methods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/** @param {string} method */
+export function is_mutative_method(method) {
+	return mutative_methods.has(method);
+}

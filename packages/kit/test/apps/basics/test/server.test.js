@@ -103,10 +103,15 @@ test.describe('Endpoints', () => {
 	});
 
 	// TODO see above
-	test('request body can be read slow', async ({ request }) => {
+	test('request body can be read slow', async ({ baseURL, request }) => {
 		const data = randomBytes(1024 * 256);
 		const digest = createHash('sha256').update(data).digest('base64url');
-		const response = await request.put('/endpoint-input/sha256', { data });
+		const response = await request.put('/endpoint-input/sha256', {
+			data,
+			headers: {
+				origin: new URL(baseURL).origin
+			}
+		});
 		expect(await response.text()).toEqual(digest);
 	});
 });
@@ -121,8 +126,12 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('unhandled http method', async ({ request }) => {
-		const response = await request.put('/errors/invalid-route-response');
+	test('unhandled http method', async ({ baseURL, request }) => {
+		const response = await request.put('/errors/invalid-route-response', {
+			headers: {
+				origin: new URL(baseURL).origin
+			}
+		});
 
 		expect(response.status()).toBe(405);
 		expect(await response.text()).toMatch('PUT method not allowed');
@@ -269,10 +278,11 @@ test.describe('Routing', () => {
 });
 
 test.describe('Shadowed pages', () => {
-	test('Action can return undefined', async ({ request }) => {
+	test('Action can return undefined', async ({ baseURL, request }) => {
 		const response = await request.post('/shadowed/simple/post', {
 			headers: {
-				accept: 'application/json'
+				accept: 'application/json',
+				origin: new URL(baseURL).origin
 			}
 		});
 
