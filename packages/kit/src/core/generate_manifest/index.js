@@ -60,13 +60,13 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 					if (!route.page && !route.endpoint) return;
 
 					return `{
-						id: ${s(route.id)},
-						pattern: ${route.pattern},
-						names: ${s(route.names)},
-						types: ${s(route.types)},
-						page: ${s(route.page)},
-						endpoint: ${route.endpoint ? loader(`${relative_path}/${build_data.server.vite_manifest[route.endpoint.file].file}`) : 'null'}
-					}`;
+					id: ${s(route.id)},
+					pattern: ${route.pattern},
+					names: ${s(route.names)},
+					types: ${s(route.types)},
+					page: ${route.page ? `{ layouts: [${route.page.layouts.map(n => n ?? '').join(',')}], errors: [${route.page.errors.map(n => n ?? '').join(',')}], leaf: ${route.page.leaf} }` : 'null'},
+					endpoint: ${route.endpoint ? loader(`${relative_path}/${build_data.server.vite_manifest[route.endpoint.file].file}`) : 'null'}
+				}`;
 				}).filter(Boolean).join(',\n\t\t\t\t')}
 			],
 			matchers: async () => {
