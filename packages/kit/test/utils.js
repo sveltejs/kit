@@ -115,7 +115,7 @@ export const test = base.extend({
 const known_devices = {
 	chromium: devices['Desktop Chrome'],
 	firefox: devices['Desktop Firefox'],
-	safari: devices['Desktop Safari']
+	webkit: devices['Desktop Safari']
 };
 const test_browser = /** @type {keyof typeof known_devices} */ (
 	process.env.KIT_E2E_BROWSER ?? 'chromium'
