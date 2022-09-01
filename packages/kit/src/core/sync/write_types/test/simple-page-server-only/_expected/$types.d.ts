@@ -13,6 +13,9 @@ type OutputDataShape<T> = MaybeWithVoid<
 type EnsureParentData<T> = T extends null | undefined ? {} : T;
 type PageServerParentData = EnsureParentData<LayoutServerData>;
 type PageParentData = EnsureParentData<LayoutData>;
+type FileType = typeof import('src/hooks.js') extends { handleFile: infer T }
+	? ReturnType<T>
+	: File;
 type LayoutParams = RouteParams & {};
 type LayoutParentData = EnsureParentData<{}>;
 
@@ -25,7 +28,7 @@ export type PageServerData = Kit.AwaitedProperties<
 	Awaited<ReturnType<typeof import('../../../../../../../../+page.server.js').load>>
 >;
 export type PageData = Omit<PageParentData, keyof PageServerData> & PageServerData;
-export type Action = Kit.Action<RouteParams>;
-export type Actions = Kit.Actions<RouteParams>;
+export type Action = Kit.Action<RouteParams, FileType>;
+export type Actions = Kit.Actions<RouteParams, FileType>;
 export type LayoutServerData = null;
 export type LayoutData = LayoutParentData;

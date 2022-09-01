@@ -192,8 +192,13 @@ function update_types(config, routes, route) {
 		for (const file of written_proxies) to_delete.delete(file);
 
 		if (route.leaf.server) {
-			exports.push(`export type Action = Kit.Action<RouteParams>`);
-			exports.push(`export type Actions = Kit.Actions<RouteParams>`);
+			declarations.push(
+				`type FileType = typeof import('${posixify(
+					config.kit.files.hooks
+				)}.js') extends { handleFile: infer T } ? ReturnType<T> : File;`
+			);
+			exports.push(`export type Action = Kit.Action<RouteParams, FileType>`);
+			exports.push(`export type Actions = Kit.Actions<RouteParams, FileType>`);
 		}
 	}
 

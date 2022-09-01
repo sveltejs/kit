@@ -43,7 +43,7 @@ export const handle = sequence(
 	}
 );
 
-/** @type {import('@sveltejs/kit').HandleFile} */
+/** @type {import('@sveltejs/kit').HandleFile<string>} */
 export const handleFile = ({ field, file }) => {
 	return field + ':' + file.name;
 };

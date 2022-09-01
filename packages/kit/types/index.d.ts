@@ -314,20 +314,23 @@ export interface ServerLoadEvent<
 }
 
 export interface Action<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	FileType = any
 > {
-	(event: ActionEvent<Params>): MaybePromise<Record<string, any> | void>;
+	(event: ActionEvent<Params, FileType>): MaybePromise<Record<string, any> | void>;
 }
 
 export type Actions<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
-> = Record<string, Action<Params>>;
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	FileType = any
+> = Record<string, Action<Params, FileType>>;
 
 export interface ActionEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	FileType = any
 > extends RequestEvent<Params> {
 	fields: FieldsFormData;
-	files: FilesFormData;
+	files: FilesFormData<string, FileType>;
 }
 
 export class FieldsFormData<Fields extends string = string> extends FormData {
