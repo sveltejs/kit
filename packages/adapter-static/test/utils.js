@@ -3,7 +3,7 @@ import fs from 'fs';
 import http from 'http';
 import { fileURLToPath } from 'url';
 import sirv from 'sirv';
-import { chromium,webkit,firefox } from 'playwright';
+import { chromium, webkit, firefox } from 'playwright';
 import * as uvu from 'uvu';
 
 const known_browsers = {
@@ -11,9 +11,7 @@ const known_browsers = {
 	firefox: firefox,
 	webkit: webkit
 };
-const test_browser_name = /** @type {keyof typeof } */ (
-	process.env.KIT_E2E_BROWSER ?? 'chromium'
-);
+const test_browser_name = /** @type {keyof typeof } */ (process.env.KIT_E2E_BROWSER ?? 'chromium');
 
 const test_browser = known_browsers[test_browser_name];
 
