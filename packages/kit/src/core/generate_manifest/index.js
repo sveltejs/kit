@@ -64,7 +64,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 					pattern: ${route.pattern},
 					names: ${s(route.names)},
 					types: ${s(route.types)},
-					page: ${route.page ? `{ layouts: [${route.page.layouts.map(n => n ?? '').join(',')}], errors: [${route.page.errors.map(n => n ?? '').join(',')}], leaf: ${route.page.leaf} }` : 'null'},
+					page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${route.page.leaf} }` : 'null'},
 					endpoint: ${route.endpoint ? loader(`${relative_path}/${build_data.server.vite_manifest[route.endpoint.file].file}`) : 'null'}
 				}`;
 				}).filter(Boolean).join(',\n\t\t\t\t')}
@@ -75,4 +75,18 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 			}
 		}
 	}`.replace(/^\t/gm, '');
+}
+
+/** @param {Array<number | undefined>} indexes */
+function get_nodes(indexes) {
+	let string = indexes.map((n) => n ?? '').join(',');
+
+	if (indexes.at(-1) === undefined) {
+		// since JavaScript ignores trailing commas, we need to insert a dummy
+		// comma so that the array has the correct length if the last item
+		// is undefined
+		string += ',';
+	}
+
+	return `[${string}]`;
 }
