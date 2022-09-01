@@ -64,7 +64,7 @@ export const actions = {
 
 ## Validation
 
-A core part of form submissions is validation. For this, an action can `throw` the `invalid` helper method exported from `@sveltejs/kit` if there are validation errors. `invalid` expects a `status`, possibly the form `values` (make sure to remove any user sensitive information such as passwords) and an `error` object. In case of a native form submit they populate the `$form` store which is available inside your components so you can preserve user input.
+A core part of form submissions is validation. For this, an action can `throw` the `invalid` helper method exported from `@sveltejs/kit` if there are validation errors. `invalid` expects a `status`, possibly the form `values` (make sure to remove any user sensitive information such as passwords) and an `error` object. In case of a native form submit they populate the `$submitted` store which is available inside your components so you can preserve user input.
 
 ```js
 /// file: src/routes/login/+page.server.js
@@ -108,13 +108,13 @@ export const actions = {
 ```svelte
 /// file: src/routes/login/+page.svelte
 <script>
-	import { form } from '$app/stores';
+	import { submitted } from '$app/stores';
 </script>
 
 <form action="?/addTodo" method="post">
-	<input type="text" name="username" value={$form?.values?.username} />
-	{#if $form?.errors?.username}
-		<span>{$form?.errors?.username}</span>
+	<input type="text" name="username" value={$submitted?.values?.username} />
+	{#if $submitted?.errors?.username}
+		<span>{$submitted?.errors?.username}</span>
 	{/if}
 	<input type="password" name="password" />
 	<button>Login</button>
@@ -154,7 +154,7 @@ First we need to ensure that the page is _not_ reloaded on submission. For this,
 ```svelte
 /// file: src/routes/login/+page.svelte
 <script>
-	import { form } from '$app/stores';
+	import { submitted } from '$app/stores';
 	import { invalidateAll, goto } from '$app/navigation';
 
 	async function login(event) {
@@ -171,16 +171,16 @@ First we need to ensure that the page is _not_ reloaded on submission. For this,
 		if (response.ok) { // success, redirect
 			invalidateAll();
 			goto(location);
-		} else { // validation error, update $form store
-			$form = { errors, values } };
+		} else { // validation error, update $submitted store
+			$submitted = { errors, values } };
 		}
 	}
 </script>
 
 <form action="?/addTodo" method="post" on:submit|preventDefault={login}>
-	<input type="text" name="username" value={$form?.values?.username} />
-	{#if $form?.errors.username}
-		<span>{$form.errors.username}</span>
+	<input type="text" name="username" value={$submitted?.values?.username} />
+	{#if $submitted?.errors.username}
+		<span>{$submitted.errors.username}</span>
 	{/if}
 	<input type="password" name="password" />
 	<button>Login</button>
@@ -189,7 +189,7 @@ First we need to ensure that the page is _not_ reloaded on submission. For this,
 
 ## `<Form>` component
 
-As you can see, progressive enhancement is doable, but it may become a little cumbersome over time. That's we provide an opinionated wrapper component which does all the heavy lifting for you. Here is the same login page using the `<Form>` component from `@sveltejs/kit`:
+As you can see, progressive enhancement is doable, but it may become a little cumbersome over time. That's why we will soon provide an opinionated wrapper component which does all the heavy lifting for you. Here's how the same login page would look like using the `<Form>` component:
 
 ```svelte
 /// file: src/routes/login/+page.svelte
@@ -211,8 +211,6 @@ As you can see, progressive enhancement is doable, but it may become a little cu
 	<button>Login</button>
 </Form>
 ```
-
-TODO explain the API in more detail
 
 ## Alternatives
 

@@ -30,7 +30,7 @@ export interface Client {
 		params: Record<string, string>;
 		routeId: string | null;
 		data: Array<import('types').ServerDataNode | null>;
-		form: SubmittedState | null;
+		submitted: SubmittedState | null;
 	}) => Promise<void>;
 	_start_router: () => void;
 }

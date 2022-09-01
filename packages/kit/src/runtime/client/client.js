@@ -410,7 +410,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   status: number;
 	 *   error: HttpError | Error | null;
 	 *   routeId: string | null;
-	 *   form_state?: import('types').SubmittedState | null;
+	 *   submitted?: import('types').SubmittedState | null;
 	 * }} opts
 	 */
 	async function get_navigation_result_from_branch({
@@ -420,7 +420,7 @@ export function create_client({ target, base, trailing_slash }) {
 		status,
 		error,
 		routeId,
-		form_state
+		submitted
 	}) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 
@@ -436,7 +436,7 @@ export function create_client({ target, base, trailing_slash }) {
 			},
 			props: {
 				components: filtered.map((branch_node) => branch_node.node.component),
-				form: form_state
+				submitted
 			}
 		};
 
@@ -1301,7 +1301,7 @@ export function create_client({ target, base, trailing_slash }) {
 			params,
 			routeId,
 			data: server_data_nodes,
-			form: form_state
+			submitted
 		}) => {
 			const url = new URL(location.href);
 
@@ -1342,7 +1342,7 @@ export function create_client({ target, base, trailing_slash }) {
 								original_error.message
 						  )
 						: original_error,
-					form_state,
+					submitted,
 					routeId
 				});
 			} catch (e) {

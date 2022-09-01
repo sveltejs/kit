@@ -26,7 +26,7 @@ export const getStores = () => {
 			subscribe: stores.navigating.subscribe
 		},
 		updated: stores.updated,
-		form: stores.form
+		submitted: stores.submitted
 	};
 
 	// TODO remove this for 1.0
@@ -69,18 +69,18 @@ export const navigating = {
 	}
 };
 
-/** @type {typeof import('$app/stores').form} */
+/** @type {typeof import('$app/stores').submitted} */
 export const form = {
 	set(values) {
-		const store = getStores().form;
+		const store = getStores().submitted;
 		return store.set(values);
 	},
 	update(value) {
-		const store = getStores().form;
+		const store = getStores().submitted;
 		return store.update(value);
 	},
 	subscribe(fn) {
-		const store = getStores().form;
+		const store = getStores().submitted;
 		return store.subscribe(fn);
 	}
 };

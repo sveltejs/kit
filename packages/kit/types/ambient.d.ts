@@ -221,7 +221,7 @@ declare module '$app/stores' {
 	 * A writable store whose value contain the errors and values of the last form submission.
 	 * It is updated automatically when using the `<Form />` component, else you need to take care of it yourself.
 	 */
-	export const form: Writable<SubmittedState | null>;
+	export const submitted: Writable<SubmittedState | null>;
 
 	/**
 	 * A function that returns all of the contextual stores. On the server, this must be called during component initialization.
@@ -231,7 +231,7 @@ declare module '$app/stores' {
 		navigating: typeof navigating;
 		page: typeof page;
 		updated: typeof updated;
-		form: typeof form;
+		submitted: typeof submitted;
 	};
 }
 

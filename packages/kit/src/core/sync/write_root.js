@@ -51,14 +51,14 @@ export function write_root(manifest_data, output) {
 
 				export let components;
 				${levels.map((l) => `export let data_${l} = null;`).join('\n\t\t\t\t')}
-				export let form;
+				export let submitted;
 
 				if (!browser) {
 					setContext('__svelte__', stores);
 				}
 
 				$: stores.page.set(page);
-				$: stores.form.set(form);
+				$: stores.submitted.set(submitted);
 				afterUpdate(stores.page.notify);
 
 				let mounted = false;

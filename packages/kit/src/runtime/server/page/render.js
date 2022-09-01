@@ -80,7 +80,7 @@ export async function render_response({
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				form: writable(null),
+				submitted: writable(null),
 				updated
 			},
 			components: await Promise.all(branch.map(({ node }) => node.component()))
@@ -105,7 +105,7 @@ export async function render_response({
 		};
 
 		if (validation_errors) {
-			props.form = { errors: validation_errors.errors, values: validation_errors.values };
+			props.submitted = { errors: validation_errors.errors, values: validation_errors.values };
 		}
 
 		// TODO remove this for 1.0
@@ -175,7 +175,7 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
-	const serialized = { data: '', form: 'null' };
+	const serialized = { data: '', submitted: 'null' };
 
 	try {
 		serialized.data = devalue(branch.map(({ server_data }) => server_data));
@@ -191,7 +191,7 @@ export async function render_response({
 
 	if (validation_errors) {
 		try {
-			serialized.form = devalue({
+			serialized.submitted = devalue({
 				errors: validation_errors.errors,
 				values: validation_errors.values
 			});
@@ -216,7 +216,7 @@ export async function render_response({
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)},
 				data: ${serialized.data},
-				form: ${serialized.form}
+				submitted: ${serialized.submitted}
 			}` : 'null'},
 			paths: ${s(options.paths)},
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,

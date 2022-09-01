@@ -1,8 +1,8 @@
 <script>
 	import { browser } from '$app/environment';
-	import { form } from '$app/stores';
+	import { submitted } from '$app/stores';
 
-	$: hydrated_form_values = browser ? $form?.values : '';
+	$: hydrated_form_values = browser ? $submitted?.values : '';
 
 	async function submit() {
 		const res = await fetch(this.action, {
@@ -13,12 +13,12 @@
 			}
 		});
 		const { errors, values } = await res.json();
-		$form = { errors, values };
+		$submitted = { errors, values };
 	}
 </script>
 
 <form method="post" on:submit|preventDefault={submit}>
-	<input type="text" name="username" value={$form?.values?.username ?? ''} />
+	<input type="text" name="username" value={$submitted?.values?.username ?? ''} />
 	<input type="password" name="password" />
 	<button type="submit">Submit</button>
 </form>
