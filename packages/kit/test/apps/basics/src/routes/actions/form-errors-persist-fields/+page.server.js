@@ -1,4 +1,4 @@
-import { validation } from '@sveltejs/kit';
+import { invalid } from '@sveltejs/kit';
 
 /**
  * @type {import('./$types').Actions}
@@ -6,6 +6,6 @@ import { validation } from '@sveltejs/kit';
 export const actions = {
 	default: async ({ fields }) => {
 		fields.delete('password');
-		throw validation(400, fields, { message: 'invalid credentials' });
+		throw invalid(400, fields, { message: 'invalid credentials' });
 	}
 };

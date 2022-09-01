@@ -1,4 +1,4 @@
-import { validation } from '@sveltejs/kit';
+import { invalid } from '@sveltejs/kit';
 
 export function load() {
 	return {
@@ -9,7 +9,7 @@ export function load() {
 /** @type {import('./$types').Actions} */
 export const actions = {
 	default: async ({ fields }) => {
-		throw validation(400, undefined, {
+		throw invalid(400, undefined, {
 			post_message: `echo: ${fields.get('message')}`
 		});
 	}

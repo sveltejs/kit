@@ -50,6 +50,6 @@ export function json(data, init) {
  * @param {FormData | Record<string, string | string[]> | null | undefined} values
  * @param {Record<string, any>} errors
  */
-export function validation(status, values, errors) {
+export function invalid(status, values, errors) {
 	return new ValidationError(status, values, errors);
 }

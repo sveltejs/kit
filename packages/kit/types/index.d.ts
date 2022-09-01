@@ -389,7 +389,7 @@ export function json(data: any, init?: ResponseInit): Response;
 /**
  * Generates a `ValidationError` object.
  */
-export function validation(
+export function invalid(
 	status: number,
 	form: FormData | Record<string, string | string[]> | undefined | null,
 	errors: Record<string, any>
