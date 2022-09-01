@@ -572,7 +572,7 @@ test.describe('Shadow DOM', () => {
 		await clicknav('div[id="clickme"]');
 		expect(await page.textContent('h1')).toBe('a');
 
-		expect(requests).toEqual([]);
+		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
 	});
 });
 
