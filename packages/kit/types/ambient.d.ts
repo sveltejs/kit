@@ -121,9 +121,9 @@ declare module '$app/navigation' {
 	 * The `function` argument can be used define a custom predicate. It receives the full `URL` and causes `load` to rerun if `true` is returned.
 	 * This can be useful if you want to invalidate based on a pattern instead of a exact match.
 	 *
-	 * ```js
+	 * ```ts
 	 * // Example: Match '/path' regardless of the query parameters
-	 * invalidate((url) => url.pathname === '/path')`
+	 * invalidate((url) => url.pathname === '/path');
 	 * ```
 	 * @param url The invalidated URL
 	 */
