@@ -480,8 +480,12 @@ test.describe('Prefetching', () => {
 		await app.goto('/routing/prefetched');
 		expect(requests).toEqual([]);
 
-		const externalPrefetch = await app.prefetch('https://example.com');
-		expect(externalPrefetch).toBe(undefined);
+		try {
+			await app.prefetch('https://example.com');
+			throw new Error('Error was not thrown');
+		} catch (/** @type {any} */ e) {
+			expect(e.message).toMatch('Attempted to prefetch a URL that does not belong to this app');
+		}
 	});
 
 	test('chooses correct route when hash route is prefetched but regular route is clicked', async ({
