@@ -1377,12 +1377,23 @@ async function load_data(url, invalid) {
 	const safeRemoteImport = (url) =>
 		legacy
 			? new Promise((resolve, reject) => {
-					const script = document.createElement('script');
-					script.src = url;
-					script.onload = () => resolve();
-					script.onerror = () =>
-						reject(`Error while trying to inject <script src="${url}"> to the head element.`);
-					document.head.appendChild(script);
+				const script = document.createElement('script');
+				script.src = url;
+
+				const remove = () => {
+					document.head.removeChild(script);
+				};
+
+				script.onload = () => {
+					remove();
+					resolve()
+				};
+				script.onerror = () => {
+					remove();
+					reject(`Error while trying to inject <script src="${url}"> to the head element.`);
+				}
+				
+				document.head.appendChild(script);
 			  })
 			: import(/* @vite-ignore */ url);
 
