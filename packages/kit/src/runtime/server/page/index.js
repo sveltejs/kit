@@ -66,6 +66,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 				const result = await handle_action_request(event, options, leaf_node.server);
 				if (result instanceof ValidationError) {
 					validation_error = result;
+					status = result.status;
 				} else {
 					mutation_data = result;
 				}
