@@ -36,11 +36,11 @@ export type AwaitedProperties<input extends Record<string, any> | void> = input 
 	? input
 	: unknown;
 
-export type AwaitedErrors<T extends (...args: any) => any> = Awaited<ReturnType<T>> extends {
-	errors?: any;
-}
-	? Awaited<ReturnType<T>>['errors']
-	: undefined;
+export type AwaitedActions<T extends Record<string, (...args: any) => any>> = {
+	[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
+}[keyof T];
+
+type UnpackValidationError<T> = T extends ValidationError<infer X> ? X : T;
 
 export interface Builder {
 	log: Logger;
