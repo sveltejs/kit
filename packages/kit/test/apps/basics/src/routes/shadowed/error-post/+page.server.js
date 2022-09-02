@@ -9,7 +9,7 @@ export function load() {
 /** @type {import('./$types').Actions} */
 export const actions = {
 	default: async ({ fields }) => {
-		throw invalid(400, {
+		return invalid(400, {
 			errors: { post_message: `echo: ${fields.get('message')}` }
 		});
 	}

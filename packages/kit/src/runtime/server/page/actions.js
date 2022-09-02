@@ -42,13 +42,18 @@ export async function handle_action_json_request(event, options, server) {
 
 	try {
 		const data = await call_action(event, options, actions);
-		return action_json({
-			type: 'success',
-			status: data ? 200 : 204,
-			data: /** @type {Record<string, any> | undefined} */ (data)
-		});
+
+		if (data instanceof ValidationError) {
+			return action_json({ type: 'invalid', status: data.status, data: data.data });
+		} else {
+			return action_json({
+				type: 'success',
+				status: data ? 200 : 204,
+				data: /** @type {Record<string, any> | undefined} */ (data)
+			});
+		}
 	} catch (e) {
-		const error = /** @type {Redirect | HttpError | ValidationError | Error} */ (e);
+		const error = /** @type {Redirect | HttpError | Error} */ (e);
 
 		if (error instanceof Redirect) {
 			return action_json({
@@ -56,10 +61,6 @@ export async function handle_action_json_request(event, options, server) {
 				status: error.status,
 				location: error.location
 			});
-		}
-
-		if (error instanceof ValidationError) {
-			return action_json({ type: 'invalid', status: error.status, data: error.data });
 		}
 
 		if (!(error instanceof HttpError)) {
