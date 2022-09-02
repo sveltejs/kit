@@ -6,7 +6,7 @@ const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
 const server = new Server(manifest);
 
-const prefix = `/${manifest.appDir}/`;
+const appPath = `/${manifest.appPath}/`;
 
 export default {
 	/**
@@ -20,12 +20,12 @@ export default {
 		const url = new URL(req.url);
 
 		// static assets
-		if (url.pathname.startsWith(prefix)) {
+		if (url.pathname.startsWith(appPath)) {
 			/** @type {Response} */
 			const res = await get_asset_from_kv(req, env, context);
 			if (is_error(res.status)) return res;
 
-			const cache_control = url.pathname.startsWith(prefix + 'immutable/')
+			const cache_control = url.pathname.startsWith(appPath + 'immutable/')
 				? 'public, immutable, max-age=31536000'
 				: 'no-cache';
 

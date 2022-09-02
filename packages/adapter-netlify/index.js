@@ -54,15 +54,16 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.log.minor(`Publishing to "${publish}"`);
 
 			builder.log.minor('Copying assets...');
-			builder.writeClient(publish);
-			builder.writePrerendered(publish);
+			const prefixedPublish = `${publish}${builder.config.kit.paths.base}`;
+			builder.writeClient(prefixedPublish);
+			builder.writePrerendered(prefixedPublish);
 
 			builder.log.minor('Writing custom headers...');
 			const headers_file = join(publish, '_headers');
 			builder.copy('_headers', headers_file);
 			appendFileSync(
 				headers_file,
-				`\n\n/${builder.config.kit.appDir}/immutable/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
+				`\n\n/${builder.getAppPath()}/immutable/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
 			);
 
 			if (edge) {

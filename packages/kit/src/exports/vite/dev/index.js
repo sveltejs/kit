@@ -59,6 +59,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
+			appPath: svelte_config.kit.appDir,
 			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {

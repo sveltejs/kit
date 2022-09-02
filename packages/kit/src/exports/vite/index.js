@@ -379,6 +379,7 @@ function kit() {
 				);
 
 				log.info('Building server');
+
 				const options = {
 					cwd,
 					config: svelte_config,
@@ -395,6 +396,9 @@ function kit() {
 				/** @type {import('types').BuildData} */
 				build_data = {
 					app_dir: svelte_config.kit.appDir,
+					app_path: `${svelte_config.kit.paths.base.slice(1)}${
+						svelte_config.kit.paths.base ? '/' : ''
+					}${svelte_config.kit.appDir}`,
 					manifest_data,
 					service_worker: options.service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client,

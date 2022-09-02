@@ -118,7 +118,7 @@ export default function ({ external = [], edge, split } = {}) {
 				...redirects[builder.config.kit.trailingSlash],
 				...prerendered_redirects,
 				{
-					src: `/${builder.config.kit.appDir}/.+`,
+					src: `/${builder.getAppPath()}/.+`,
 					headers: {
 						'cache-control': 'public, immutable, max-age=31536000'
 					}

@@ -85,6 +85,8 @@ export interface Builder {
 	getClientDirectory(): string;
 	getServerDirectory(): string;
 	getStaticDirectory(): string;
+	/** The application path including any configured base path */
+	getAppPath(): string;
 
 	/**
 	 * @param dest the destination folder to which files should be copied
@@ -379,6 +381,7 @@ export interface ServerInitOptions {
 
 export interface SSRManifest {
 	appDir: string;
+	appPath: string;
 	assets: Set<string>;
 	mimeTypes: Record<string, string>;
 

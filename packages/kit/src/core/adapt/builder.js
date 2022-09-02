@@ -128,6 +128,10 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 			return config.kit.files.assets;
 		},
 
+		getAppPath() {
+			return build_data.app_path;
+		},
+
 		writeClient(dest) {
 			return [...copy(`${config.kit.outDir}/output/client`, dest)];
 		},

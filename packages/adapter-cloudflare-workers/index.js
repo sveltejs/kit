@@ -73,8 +73,9 @@ export default function () {
 			});
 
 			builder.log.minor('Copying assets...');
-			builder.writeClient(site.bucket);
-			builder.writePrerendered(site.bucket);
+			const prefixedBucket = `${site.bucket}${builder.config.kit.paths.base}`;
+			builder.writeClient(prefixedBucket);
+			builder.writePrerendered(prefixedBucket);
 		}
 	};
 }
