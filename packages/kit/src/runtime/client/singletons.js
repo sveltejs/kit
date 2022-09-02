@@ -17,6 +17,5 @@ export const stores = {
 	url: notifiable_store({}),
 	page: notifiable_store({}),
 	navigating: writable(/** @type {import('types').Navigation | null} */ (null)),
-	updated: create_updated_store(),
-	submitted: writable(/** @type {Record<string, any> | null} */ (null))
+	updated: create_updated_store()
 };

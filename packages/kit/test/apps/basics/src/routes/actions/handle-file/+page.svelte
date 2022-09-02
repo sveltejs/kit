@@ -1,10 +1,11 @@
 <script>
-    import { submitted } from '$app/stores';
+	/** @type {import('./$types').FormData} */
+	export let form;
 </script>
 
-<p>Result: {$submitted?.errors.result}</p>
+<p>Result: {form?.errors.result}</p>
 
 <form method="post" enctype="multipart/form-data">
-    <input name="file" type="file" />
-    <button>Submit</button>
+	<input name="file" type="file" />
+	<button>Submit</button>
 </form>

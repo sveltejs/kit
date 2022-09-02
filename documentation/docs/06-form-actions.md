@@ -64,7 +64,7 @@ export const actions = {
 
 ## Validation
 
-A core part of form submissions is validation. For this, an action can `throw` the `invalid` helper method exported from `@sveltejs/kit` if there are validation errors. `invalid` expects a `status` as a required argument, and optionally anything else you want to return as a second argument. This could be the form value (make sure to remove any user sensitive information such as passwords) and an `error` object. In case of a native form submit the second argument to `invalid` populates the `$submitted` store which is available inside your components. You can use this to preserve user input.
+A core part of form submissions is validation. For this, an action can `throw` the `invalid` helper method exported from `@sveltejs/kit` if there are validation errors. `invalid` expects a `status` as a required argument, and optionally anything else you want to return as a second argument. This could be the form value (make sure to remove any user sensitive information such as passwords) and an `error` object. In case of a native form submit the second argument to `invalid` populates the `$page.form` store and the `form` prop which is available inside your components. You can use this to preserve user input.
 
 ```js
 /// file: src/routes/login/+page.server.js
@@ -109,13 +109,14 @@ export const actions = {
 ```svelte
 /// file: src/routes/login/+page.svelte
 <script>
-	import { submitted } from '$app/stores';
+	/** @type {import('./$types').FormData} */
+	export let form;
 </script>
 
 <form action="?/addTodo" method="post">
-	<input type="text" name="username" value={$submitted?.values?.username} />
-	{#if $submitted?.errors?.username}
-		<span>{$submitted?.errors?.username}</span>
+	<input type="text" name="username" value={form?.values?.username} />
+	{#if form?.errors?.username}
+		<span>{form?.errors?.username}</span>
 	{/if}
 	<input type="password" name="password" />
 	<button>Login</button>
@@ -124,7 +125,7 @@ export const actions = {
 
 ## Success
 
-If everything is valid, an action can return a JSON object with data, which will be available through the `$submitted` store. Alternatively it can `throw` a `redirect` to redirect the user to another page.
+If everything is valid, an action can return a JSON object with data, which will be available through the `$page.form` store and the `form` prop. Alternatively it can `throw` a `redirect` to redirect the user to another page.
 
 ```js
 /// file: src/routes/login/+page.server.js
@@ -149,10 +150,11 @@ export const actions = {
 ```svelte
 /// file: src/routes/login/+page.svelte
 <script>
-	import { submitted } from '$app/stores';
+	/** @type {import('./$types').FormData} */
+	export let form;
 </script>
 
-{#if $submitted.success}
+{#if form?.success}
 	<span class="success">Login successful</span>
 {/if}
 
@@ -170,8 +172,10 @@ First we need to ensure that the page is _not_ reloaded on submission. For this,
 ```svelte
 /// file: src/routes/login/+page.svelte
 <script>
-	import { submitted } from '$app/stores';
 	import { invalidateAll, goto } from '$app/navigation';
+
+	/** @type {import('./$types').FormData} */
+	export let form;
 
 	async function login(event) {
 		const data = new FormData(this);
@@ -190,15 +194,15 @@ First we need to ensure that the page is _not_ reloaded on submission. For this,
 			goto(result.location)
 		}
 		if (result.type === 'success' || result.type === 'invalid') {
-			$submitted = { errors, values } };
+			form = { errors, values } };
 		}
 	}
 </script>
 
 <form action="?/addTodo" method="post" on:submit|preventDefault={login}>
-	<input type="text" name="username" value={$submitted?.values?.username} />
-	{#if $submitted?.errors.username}
-		<span>{$submitted.errors.username}</span>
+	<input type="text" name="username" value={form?.values?.username} />
+	{#if form?.errors.username}
+		<span>{form.errors.username}</span>
 	{/if}
 	<input type="password" name="password" />
 	<button>Login</button>

@@ -82,7 +82,6 @@ export async function render_response({
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				submitted: writable(null),
 				updated
 			},
 			components: await Promise.all(branch.map(({ node }) => node.component()))
@@ -103,10 +102,9 @@ export async function render_response({
 			routeId: event.routeId,
 			status,
 			url: event.url,
-			data
+			data,
+			form: mutation_data ?? validation_error?.data ?? null
 		};
-
-		props.submitted = (mutation_data || validation_error?.data) ?? null;
 
 		// TODO remove this for 1.0
 		/**
@@ -175,7 +173,7 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
-	const serialized = { data: '', submitted: 'null' };
+	const serialized = { data: '', form: 'null' };
 
 	try {
 		serialized.data = devalue(branch.map(({ server_data }) => server_data));
@@ -191,7 +189,7 @@ export async function render_response({
 
 	if (validation_error?.data || mutation_data) {
 		try {
-			serialized.submitted = devalue(mutation_data || validation_error?.data);
+			serialized.form = devalue(mutation_data || validation_error?.data);
 		} catch (e) {
 			// If we're here, the data could not be serialized with devalue
 			const error = /** @type {any} */ (e);
@@ -213,7 +211,7 @@ export async function render_response({
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)},
 				data: ${serialized.data},
-				submitted: ${serialized.submitted}
+				form: ${serialized.form}
 			}` : 'null'},
 			paths: ${s(options.paths)},
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,

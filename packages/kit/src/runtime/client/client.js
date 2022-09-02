@@ -410,7 +410,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   status: number;
 	 *   error: HttpError | Error | null;
 	 *   routeId: string | null;
-	 *   submitted?: Record<string, any> | null;
+	 *   form?: Record<string, any> | null;
 	 * }} opts
 	 */
 	async function get_navigation_result_from_branch({
@@ -420,7 +420,7 @@ export function create_client({ target, base, trailing_slash }) {
 		status,
 		error,
 		routeId,
-		submitted
+		form
 	}) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 
@@ -435,8 +435,7 @@ export function create_client({ target, base, trailing_slash }) {
 				session_id
 			},
 			props: {
-				components: filtered.map((branch_node) => branch_node.node.component),
-				submitted
+				components: filtered.map((branch_node) => branch_node.node.component)
 			}
 		};
 
@@ -470,7 +469,8 @@ export function create_client({ target, base, trailing_slash }) {
 				status,
 				url,
 				// The whole page store is updated, but this way the object reference stays the same
-				data: data_changed ? data : page.data
+				data: data_changed ? data : page.data,
+				form
 			};
 
 			// TODO remove this for 1.0
@@ -1301,7 +1301,7 @@ export function create_client({ target, base, trailing_slash }) {
 			params,
 			routeId,
 			data: server_data_nodes,
-			submitted
+			form
 		}) => {
 			const url = new URL(location.href);
 
@@ -1342,7 +1342,7 @@ export function create_client({ target, base, trailing_slash }) {
 								original_error.message
 						  )
 						: original_error,
-					submitted,
+					form,
 					routeId
 				});
 			} catch (e) {

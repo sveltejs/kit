@@ -217,11 +217,6 @@ declare module '$app/stores' {
 	 *  A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 */
 	export const updated: Readable<boolean> & { check: () => boolean };
-	/**
-	 * A writable store whose value contain the errors and values of the last form submission.
-	 * It is updated automatically when using the `<Form />` component, else you need to take care of it yourself.
-	 */
-	export const submitted: Writable<Record<string, any> | null>;
 
 	/**
 	 * A function that returns all of the contextual stores. On the server, this must be called during component initialization.
@@ -231,7 +226,6 @@ declare module '$app/stores' {
 		navigating: typeof navigating;
 		page: typeof page;
 		updated: typeof updated;
-		submitted: typeof submitted;
 	};
 }
 
