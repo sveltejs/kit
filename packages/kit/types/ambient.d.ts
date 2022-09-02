@@ -218,7 +218,7 @@ declare module '$app/stores' {
 	export const page: Readable<Page>;
 	/**
 	 * A readable store.
-	 * When navigating starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+	 * When navigating (or invalidating) starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
 	 * When navigating finishes, its value reverts to `null`.
 	 */
 	export const navigating: Readable<Navigation | null>;
