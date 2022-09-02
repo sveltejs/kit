@@ -95,6 +95,8 @@ declare module '$app/environment' {
  * ```
  */
 declare module '$app/navigation' {
+	import { Navigation } from '@sveltejs/kit';
+
 	/**
 	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
@@ -162,13 +164,13 @@ declare module '$app/navigation' {
 	 * This is helpful if we want to conditionally prevent a navigation from completing or lookup the upcoming url.
 	 */
 	export function beforeNavigate(
-		fn: (navigation: { from: URL; to: URL | null; cancel: () => void }) => void
+		fn: (navigation: Navigation & { cancel: () => void }) => void
 	): void;
 
 	/**
 	 * A lifecycle function that runs when the page mounts, and also whenever SvelteKit navigates to a new URL but stays on this component.
 	 */
-	export function afterNavigate(fn: (navigation: { from: URL | null; to: URL }) => void): void;
+	export function afterNavigate(fn: (navigation: Navigation) => void): void;
 }
 
 /**
