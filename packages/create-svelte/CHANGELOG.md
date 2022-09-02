@@ -1,5 +1,17 @@
 # create-svelte
 
+## 2.0.0-next.171
+
+### Patch Changes
+
+- Use `invalidateAll()` ([#6493](https://github.com/sveltejs/kit/pull/6493))
+
+## 2.0.0-next.170
+
+### Patch Changes
+
+- reorder create-svelte templates such that library is last ([#6481](https://github.com/sveltejs/kit/pull/6481))
+
 ## 2.0.0-next.169
 
 ### Patch Changes

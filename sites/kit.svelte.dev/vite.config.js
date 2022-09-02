@@ -24,12 +24,6 @@ const config = {
 		sveltekit(),
 	],
 
-	resolve: {
-		alias: {
-			$img: path.resolve('src/images')
-		}
-	},
-
 	server: {
 		fs: {
 			strict: false

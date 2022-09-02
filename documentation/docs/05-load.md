@@ -99,11 +99,13 @@ An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), co
 
 #### depends
 
-This function declares that the `load` function has a _dependency_ on one or more URLs, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
+This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
 
 Most of the time you won't need this, as `fetch` calls `depends` on your behalf — it's only necessary if you're using a custom API client that bypasses `fetch`.
 
 URLs can be absolute or relative to the page being loaded, and must be [encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding).
+
+Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html)
 
 ```js
 // @filename: ambient.d.ts
@@ -121,7 +123,11 @@ import * as api from '$lib/api';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ depends }) {
-	depends(`${api.base}/foo`, `${api.base}/bar`);
+	depends(
+		`${api.base}/foo`,
+		`${api.base}/bar`,
+		'my-stuff:foo'
+	);
 
 	return {
 		foo: api.client.get('/foo'),

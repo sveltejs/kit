@@ -147,7 +147,6 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:*
       '@types/node': ^16.11.36
-      playwright-chromium: ^1.25.0
       sirv: ^2.0.2
       svelte: ^3.48.0
       typescript: ^4.8.2
@@ -156,7 +155,6 @@ importers:
     devDependencies:
       '@sveltejs/kit': link:../kit
       '@types/node': 16.11.42
-      playwright-chromium: 1.25.0
       sirv: 2.0.2
       svelte: 3.48.0
       typescript: 4.8.2
@@ -272,7 +270,7 @@ importers:
   packages/kit:
     specifiers:
       '@playwright/test': ^1.25.0
-      '@sveltejs/vite-plugin-svelte': ^1.0.3
+      '@sveltejs/vite-plugin-svelte': ^1.0.4
       '@types/connect': ^3.4.35
       '@types/cookie': ^0.5.1
       '@types/marked': ^4.0.3
@@ -299,7 +297,7 @@ importers:
       uvu: ^0.5.3
       vite: ^3.1.0-beta.1
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.3_fhgkwirxvgjw2igda6zmhiisma
+      '@sveltejs/vite-plugin-svelte': 1.0.4_le3uwffmhe7iwfccb43atcj5xe
       cookie: 0.5.0
       devalue: 3.1.2
       kleur: 4.1.5
@@ -566,7 +564,7 @@ importers:
       '@sveltejs/adapter-static': workspace:*
       '@sveltejs/amp': workspace:*
       '@sveltejs/kit': workspace:*
-      '@sveltejs/site-kit': ^2.1.0
+      '@sveltejs/site-kit': ^2.1.2
       '@types/node': ^16.11.36
       '@vitejs/plugin-legacy': ^2.0.1
       custom-event-polyfill: ^1.0.7
@@ -576,7 +574,7 @@ importers:
       prismjs: ^1.28.0
       regenerator-runtime: ^0.13.9
       shiki-twoslash: ^3.0.2
-      svelte: ^3.48.0
+      svelte: ^3.50.0
       terser: '>=5.4.0 <6.0.0'
       typescript: ^4.8.2
       unorm: ^1.6.0
@@ -588,7 +586,7 @@ importers:
       '@sveltejs/adapter-static': link:../../packages/adapter-static
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': 2.1.0
+      '@sveltejs/site-kit': 2.1.2
       '@types/node': 16.11.42
       '@vitejs/plugin-legacy': 2.0.1_ptjk675v4azmmsk6uqlxavjakq
       custom-event-polyfill: 1.0.7
@@ -598,7 +596,7 @@ importers:
       prismjs: 1.28.0
       regenerator-runtime: 0.13.9
       shiki-twoslash: 3.1.0
-      svelte: 3.49.0
+      svelte: 3.50.0
       terser: 5.14.2
       typescript: 4.8.2
       unorm: 1.6.0
@@ -1070,19 +1068,19 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.1
 
-  /@sveltejs/site-kit/2.1.0:
-    resolution: {integrity: sha512-nJddyYdBHXmiyhIAq0DQZpEjJ0B2Up4NCg08gVZuUxuOsshjUK8wZ5kuszP3Tl/q176MxFbceJo2Me4fj9bu9w==}
+  /@sveltejs/site-kit/2.1.2:
+    resolution: {integrity: sha512-VB5JhdvO1299lgR0ZU1MUdKNPb0TZMq4ck8cxg7p/o3TXFTLwbgwF/aV4ei9I/p11bpWFh9FKGzGUUGxWgJxSg==}
     dependencies:
       golden-fleece: 1.0.9
     dev: true
 
-  /@sveltejs/vite-plugin-svelte/1.0.3_fhgkwirxvgjw2igda6zmhiisma:
-    resolution: {integrity: sha512-0Qu51m2W9RBlxWPp8i31KJpnqmjWMOne8vAzgmOX6ZM9uX+/RAv6BNhEMcNoP5MsyLjyW1ZTCiJoaZZ5EeqpFg==}
+  /@sveltejs/vite-plugin-svelte/1.0.4_le3uwffmhe7iwfccb43atcj5xe:
+    resolution: {integrity: sha512-UZco2fdj0OVuRWC0SUJjEOftITc2IeHLFJNp00ym9MuQ9dShnlO4P29G8KUxRlcS7kSpzHuko6eCR9MOALj7lQ==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
       diff-match-patch: ^1.0.5
       svelte: ^3.44.0
-      vite: ^3.0.0
+      vite: ^3.0.0 || ^3.1.0-beta.1
     peerDependenciesMeta:
       diff-match-patch:
         optional: true
@@ -3367,15 +3365,6 @@ packages:
       find-up: 4.1.0
     dev: true
 
-  /playwright-chromium/1.25.0:
-    resolution: {integrity: sha512-FH9ho3noAWVStCJx4XW78+D8QW0A99WDp53DDkYeVdEpJqCmAIKHCSE6dl5XtaDKrZPYC1ZG5hGXQh1K5H/p+g==}
-    engines: {node: '>=14'}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      playwright-core: 1.25.0
-    dev: true
-
   /playwright-core/1.25.0:
     resolution: {integrity: sha512-kZ3Jwaf3wlu0GgU0nB8UMQ+mXFTqBIFz9h1svTlNduNKjnbPXFxw7mJanLVjqxHJRn62uBfmgBj93YHidk2N5Q==}
     engines: {node: '>=14'}
@@ -4280,6 +4269,11 @@ packages:
   /svelte/3.49.0:
     resolution: {integrity: sha512-+lmjic1pApJWDfPCpUUTc1m8azDqYCG1JN9YEngrx/hUyIcFJo6VZhj0A1Ai0wqoHcEIuQy+e9tk+4uDgdtsFA==}
     engines: {node: '>= 8'}
+
+  /svelte/3.50.0:
+    resolution: {integrity: sha512-zXeOUDS7+85i+RxLN+0iB6PMbGH7OhEgjETcD1fD8ZrhuhNFxYxYEHU41xuhkHIulJavcu3PKbPyuCrBxdxskQ==}
+    engines: {node: '>= 8'}
+    dev: true
 
   /svelte2tsx/0.5.11_rzeu6t3zqu2xw2nsnbtx3gkaoe:
     resolution: {integrity: sha512-Is95G1wqNvEUJZ9DITRS2zfMwVJRZztMduPs1vJJ0cm65WUg/avBl5vBXjHycQL/qmFpaqa3NG4qWnf7bCHPag==}

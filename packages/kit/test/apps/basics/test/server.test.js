@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
+import { fetch } from 'undici';
 import { createHash, randomBytes } from 'node:crypto';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -19,6 +20,20 @@ test.describe('Content-Type', () => {
 	test('sets Content-Type on page', async ({ request }) => {
 		const response = await request.get('/content-type-header');
 		expect(response.headers()['content-type']).toBe('text/html');
+	});
+});
+
+test.describe('CSRF', () => {
+	test('Blocks requests with incorrect origin', async ({ baseURL }) => {
+		const res = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded'
+			}
+		});
+
+		expect(res.status).toBe(403);
+		expect(await res.text()).toBe('Cross-site POST form submissions are forbidden');
 	});
 });
 
@@ -148,17 +163,43 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('throw error(..) in endpoint', async ({ page, read_errors }) => {
-		const res = await page.goto('/errors/endpoint-throw-error');
+	test('throw error(...) in endpoint', async ({ request, read_errors }) => {
+		// HTML
+		{
+			const res = await request.get('/errors/endpoint-throw-error', {
+				headers: {
+					accept: 'text/html'
+				}
+			});
 
-		const error = read_errors('/errors/endpoint-throw-error');
-		expect(error).toBe(undefined);
+			const error = read_errors('/errors/endpoint-throw-error');
+			expect(error).toBe(undefined);
 
-		expect(await res?.text()).toBe('You shall not pass');
-		expect(res?.status()).toBe(401);
+			expect(res.status()).toBe(401);
+			expect(await res.text()).toContain(
+				'This is the static error page with the following message: You shall not pass'
+			);
+		}
+
+		// JSON (default)
+		{
+			const res = await request.get('/errors/endpoint-throw-error');
+
+			const error = read_errors('/errors/endpoint-throw-error');
+			expect(error).toBe(undefined);
+
+			expect(res.status()).toBe(401);
+			expect(await res.json()).toEqual({
+				status: 401,
+				message: 'You shall not pass',
+
+				// TODO this is gross, fix it
+				__is_http_error: true
+			});
+		}
 	});
 
-	test('throw redirect(..) in endpoint', async ({ page, read_errors }) => {
+	test('throw redirect(...) in endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint-throw-redirect');
 		expect(res?.status()).toBe(200); // redirects are opaque to the browser
 
@@ -166,6 +207,40 @@ test.describe('Errors', () => {
 		expect(error).toBe(undefined);
 
 		expect(await page.textContent('h1')).toBe('the answer is 42');
+	});
+
+	test('error thrown in handle results in a rendered error page or JSON response', async ({
+		request
+	}) => {
+		// HTML
+		{
+			const res = await request.get('/errors/error-in-handle', {
+				headers: {
+					accept: 'text/html'
+				}
+			});
+
+			expect(res.status()).toBe(500);
+			expect(await res.text()).toContain(
+				'This is the static error page with the following message: Error in handle'
+			);
+		}
+
+		// JSON (default)
+		{
+			const res = await request.get('/errors/error-in-handle');
+
+			const error = await res.json();
+
+			expect(typeof error.stack).toBe('string');
+			delete error.stack;
+
+			expect(res.status()).toBe(500);
+			expect(error).toEqual({
+				name: 'Error',
+				message: 'Error in handle'
+			});
+		}
 	});
 });
 

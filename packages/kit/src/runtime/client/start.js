@@ -45,6 +45,4 @@ export async function start({ env, hydrate, paths, target, trailing_slash, legac
 	}
 
 	client._start_router();
-
-	dispatchEvent(new CustomEvent('sveltekit:start'));
 }

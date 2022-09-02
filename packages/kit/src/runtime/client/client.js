@@ -2,7 +2,7 @@ import { onMount, tick } from 'svelte';
 import { normalize_error } from '../../utils/error.js';
 import { make_trackable, decode_params, normalize_path } from '../../utils/url.js';
 import { find_anchor, get_base_uri, scroll_state } from './utils.js';
-import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
+import { lock_fetch, unlock_fetch, initial_fetch, subsequent_fetch } from './fetcher.js';
 import { parse } from './parse.js';
 import { error } from '../../exports/index.js';
 
@@ -71,7 +71,7 @@ function check_for_removed_attributes() {
  * @returns {import('./types').Client}
  */
 export function create_client({ target, base, trailing_slash }) {
-	/** @type {Array<((href: string) => boolean)>} */
+	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
 	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
@@ -104,6 +104,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/** @type {Promise<void> | null} */
 	let invalidating = null;
+	let force_invalidation = false;
 
 	/** @type {import('svelte').SvelteComponent} */
 	let root;
@@ -139,6 +140,19 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/** @type {{}} */
 	let token;
+
+	function invalidate() {
+		if (!invalidating) {
+			invalidating = Promise.resolve().then(async () => {
+				await update(new URL(location.href), []);
+
+				invalidating = null;
+				force_invalidation = false;
+			});
+		}
+
+		return invalidating;
+	}
 
 	/**
 	 * @param {string | URL} url
@@ -571,11 +585,13 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 
 					// we must fixup relative urls so they are resolved from the target page
-					const normalized = new URL(requested, url).href;
-					depends(normalized);
+					const resolved = new URL(requested, url).href;
+					depends(resolved);
 
-					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be normalized
-					return started ? native_fetch(normalized, init) : initial_fetch(requested, init);
+					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
+					return started
+						? subsequent_fetch(resolved, init)
+						: initial_fetch(requested, resolved, init);
 				},
 				setHeaders: () => {}, // noop
 				depends,
@@ -640,6 +656,8 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @param {{ url: boolean, params: string[] }} changed
 	 */
 	function has_changed(changed, parent_changed, uses) {
+		if (force_invalidation) return true;
+
 		if (!uses) return false;
 
 		if (uses.parent && parent_changed) return true;
@@ -649,8 +667,8 @@ export function create_client({ target, base, trailing_slash }) {
 			if (uses.params.has(param)) return true;
 		}
 
-		for (const dep of uses.dependencies) {
-			if (invalidated.some((fn) => fn(dep))) return true;
+		for (const href of uses.dependencies) {
+			if (invalidated.some((fn) => fn(new URL(href)))) return true;
 		}
 
 		return false;
@@ -926,7 +944,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/** @param {URL} url */
 	function get_navigation_intent(url) {
-		if (url.origin !== location.origin || !url.pathname.startsWith(base)) return;
+		if (is_external_url(url)) return;
 
 		const path = decodeURI(url.pathname.slice(base.length) || '/');
 
@@ -943,6 +961,11 @@ export function create_client({ target, base, trailing_slash }) {
 				return intent;
 			}
 		}
+	}
+
+	/** @param {URL} url */
+	function is_external_url(url) {
+		return url.origin !== location.origin || !url.pathname.startsWith(base);
 	}
 
 	/**
@@ -1058,28 +1081,25 @@ export function create_client({ target, base, trailing_slash }) {
 
 		invalidate: (resource) => {
 			if (resource === undefined) {
-				// Force rerun of all load functions, regardless of their dependencies
-				for (const node of current.branch) {
-					node?.server?.uses.dependencies.add('');
-					node?.shared?.uses.dependencies.add('');
-				}
-				invalidated.push(() => true);
-			} else if (typeof resource === 'function') {
+				// TODO remove for 1.0
+				throw new Error(
+					'`invalidate()` (with no arguments) has been replaced by `invalidateAll()`'
+				);
+			}
+
+			if (typeof resource === 'function') {
 				invalidated.push(resource);
 			} else {
 				const { href } = new URL(resource, location.href);
-				invalidated.push((dep) => dep === href);
+				invalidated.push((url) => url.href === href);
 			}
 
-			if (!invalidating) {
-				invalidating = Promise.resolve().then(async () => {
-					await update(new URL(location.href), []);
+			return invalidate();
+		},
 
-					invalidating = null;
-				});
-			}
-
-			return invalidating;
+		invalidateAll: () => {
+			force_invalidation = true;
+			return invalidate();
 		},
 
 		prefetch: async (href) => {
@@ -1142,6 +1162,7 @@ export function create_client({ target, base, trailing_slash }) {
 			const trigger_prefetch = (event) => {
 				const { url, options } = find_anchor(event);
 				if (url && options.prefetch === '') {
+					if (is_external_url(url)) return;
 					prefetch(url);
 				}
 			};

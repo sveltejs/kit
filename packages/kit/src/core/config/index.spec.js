@@ -72,6 +72,9 @@ const get_defaults = (prefix = '') => ({
 			directives: directive_defaults,
 			reportOnly: directive_defaults
 		},
+		csrf: {
+			checkOrigin: true
+		},
 		endpointExtensions: undefined,
 		env: {
 			dir: process.cwd(),
