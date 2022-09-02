@@ -1,10 +1,8 @@
 <script>
-	import { browser } from '$app/environment';
-
-	/** @type {import('./$types').PageData} */
-	export let data;
+	import { submitted } from '$app/stores';
 
 	async function submit() {
+		console.log(Object.fromEntries(new FormData(this)))
 		const res = await fetch(this.action, {
 			method: 'POST',
 			body: new FormData(this),
@@ -12,19 +10,12 @@
 				'accept': 'application/json'
 			}
 		});
-		const { result } = await res.json();
-		data.result = { ...data.result, ...result };
+		const result = await res.json();
+		$submitted = result;
 	}
-	
-	$: hydrated = browser ? data : {};
 </script>
 
-<pre class="server">{JSON.stringify(data)}</pre>
-
-<!-- needs to be like this else the selector is found too soon (before hydration) -->
-{#if hydrated}
-	<pre class="client">{JSON.stringify(hydrated)}</pre>
-{/if}
+<pre>{JSON.stringify($submitted)}</pre>
 
 <form method="post" on:submit|preventDefault={submit}>
 	<input name="username" type="text" />

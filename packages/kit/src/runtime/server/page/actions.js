@@ -43,34 +43,26 @@ export async function handle_action_json_request(event, options, server) {
 	try {
 		const result = await call_action(event, options, actions);
 		if (!result) {
-			// TODO json({status: 204}) instead?
 			return new Response(undefined, {
 				status: 204
 			});
 		} else {
-			return json(/** @type {import('types').FormFetchResponse} */ ({ status: 200, result }));
+			return json(result);
 		}
 	} catch (e) {
 		const error = /** @type {Redirect | HttpError | ValidationError | Error} */ (e);
 
 		if (error instanceof Redirect) {
-			return json(
-				/** @type {import('types').FormFetchResponse} */ ({
-					status: error.status,
-					location: error.location
-				})
-			);
+			return json({
+				status: error.status,
+				location: error.location
+			});
 		}
 
 		if (error instanceof ValidationError) {
-			return json(
-				/** @type {import('types').FormFetchResponse} */ ({
-					status: error.status,
-					values: error.values,
-					errors: error.errors
-				}),
-				{ status: error.status }
-			);
+			return json(error.data, {
+				status: error.status
+			});
 		}
 
 		if (!(error instanceof HttpError)) {

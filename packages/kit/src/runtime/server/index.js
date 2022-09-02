@@ -225,7 +225,6 @@ export async function respond(request, options, state) {
 					error: null,
 					branch: [],
 					fetched: [],
-					validation_errors: undefined,
 					cookies: [],
 					resolve_opts
 				});

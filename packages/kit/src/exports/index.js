@@ -47,9 +47,8 @@ export function json(data, init) {
 /**
  * Generates a `ValidationError` object.
  * @param {number} status
- * @param {FormData | Record<string, string | string[]> | null | undefined} values
- * @param {Record<string, any>} errors
+ * @param {Record<string, any> | undefined} [data]
  */
-export function invalid(status, values, errors) {
-	return new ValidationError(status, values, errors);
+export function invalid(status, data) {
+	return new ValidationError(status, data);
 }

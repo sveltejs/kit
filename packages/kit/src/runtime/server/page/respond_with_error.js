@@ -79,8 +79,7 @@ export async function respond_with_error({ event, options, state, status, error,
 			fetched,
 			cookies,
 			event,
-			resolve_opts,
-			validation_errors: undefined
+			resolve_opts
 		});
 	} catch (err) {
 		const error = coalesce_to_error(err);

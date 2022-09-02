@@ -7,9 +7,9 @@ export function load() {
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	default: ({ files }) => {
+	default: ({ fields }) => {
 		return {
-			result: files.get('username')
+			result: fields.get('username')
 		};
 	}
 };

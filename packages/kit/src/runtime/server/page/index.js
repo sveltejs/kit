@@ -50,17 +50,20 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 		let status = 200;
 
+		/** @type {Record<string, any> | void} */
+		let mutation_data;
+
 		/** @type {HttpError | Error} */
 		let mutation_error;
 
 		/** @type {ValidationError | undefined} */
-		let validation_errors;
+		let validation_error;
 
 		if (is_action_request(event, leaf_node)) {
 			// for action requests, first call handler in +page.server.js
 			// (this also determines status code)
 			try {
-				await handle_action_request(event, options, leaf_node.server);
+				mutation_data = await handle_action_request(event, options, leaf_node.server);
 			} catch (e) {
 				const error = /** @type {Redirect | HttpError | ValidationError | Error} */ (e);
 				if (error instanceof Redirect) {
@@ -69,7 +72,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 				status =
 					error instanceof HttpError || error instanceof ValidationError ? error.status : 500;
 				if (error instanceof ValidationError) {
-					validation_errors = error;
+					validation_error = error;
 				} else {
 					mutation_error = error;
 				}
@@ -106,7 +109,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 		if (get_option(nodes, 'ssr') === false) {
 			return await render_response({
 				branch: [],
-				validation_errors: undefined,
 				fetched,
 				cookies,
 				page_config: {
@@ -250,8 +252,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 									server_data: null
 								}),
 								fetched,
-								cookies,
-								validation_errors: undefined
+								cookies
 							});
 						}
 					}
@@ -283,8 +284,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 			});
 		}
 
-		// TODO use validation_errors
-
 		return await render_response({
 			event,
 			options,
@@ -297,7 +296,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 			status,
 			error: null,
 			branch: compact(branch),
-			validation_errors,
+			validation_error,
+			mutation_data,
 			fetched,
 			cookies
 		});

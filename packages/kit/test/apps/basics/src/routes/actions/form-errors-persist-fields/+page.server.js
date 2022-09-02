@@ -6,6 +6,11 @@ import { invalid } from '@sveltejs/kit';
 export const actions = {
 	default: async ({ fields }) => {
 		fields.delete('password');
-		throw invalid(400, fields, { message: 'invalid credentials' });
+		throw invalid(400, {
+			values: Object.fromEntries(fields),
+			errors: {
+				message: 'invalid credentials'
+			}
+		});
 	}
 };

@@ -330,52 +330,40 @@ export interface ActionEvent<
 	FileType = any
 > extends RequestEvent<Params> {
 	fields: FieldsFormData;
-	files: FilesFormData<string, FileType>;
+	files: FilesFormData<FileType>;
 }
 
-export class FieldsFormData<Fields extends string = string> extends FormData {
-	[Symbol.iterator](): IterableIterator<[Fields, string]>;
-	entries(): IterableIterator<[Fields, string]>;
-	keys(): IterableIterator<Fields>;
+export class FieldsFormData extends FormData {
+	[Symbol.iterator](): IterableIterator<[string, string]>;
+	entries(): IterableIterator<[string, string]>;
+	keys(): IterableIterator<string>;
 	values(): IterableIterator<string>;
 
-	delete(name: Fields): void;
-	get(name: Fields): string | null;
-	getAll(name: Fields): string[];
-	has(name: Fields): boolean;
+	delete(name: string): void;
+	get(name: string): string | null;
+	getAll(name: string): string[];
+	has(name: string): boolean;
 	set(name: string, value: string): void;
 	forEach(
-		callbackfn: (value: string, key: string, parent: FieldsFormData<Fields>) => void,
+		callbackfn: (value: string, key: string, parent: FieldsFormData) => void,
 		thisArg?: any
 	): void;
 }
 
-export class FilesFormData<Fields extends string = string, FileFileType = File> {
-	[Symbol.iterator](): IterableIterator<[Fields, FileFileType]>;
-	entries(): IterableIterator<[Fields, FileFileType]>;
-	keys(): IterableIterator<Fields>;
+export class FilesFormData<FileFileType = File> {
+	[Symbol.iterator](): IterableIterator<[string, FileFileType]>;
+	entries(): IterableIterator<[string, FileFileType]>;
+	keys(): IterableIterator<string>;
 	values(): IterableIterator<FileFileType>;
 
-	delete(name: Fields): void;
-	get(name: Fields): FileFileType | null;
-	getAll(name: Fields): FileFileType[];
-	has(name: Fields): boolean;
+	delete(name: string): void;
+	get(name: string): FileFileType | null;
+	getAll(name: string): FileFileType[];
+	has(name: string): boolean;
 	set(name: string, value: string | Blob, fileName?: string): void;
-	forEach(callbackfn: (value: FileFileType, key: string, parent: FilesFormData) => void): void;
-}
-
-export interface SubmittedState {
-	error: Record<string, any>;
-	values: Record<string, string | string[]>;
-}
-
-// TODO make this a union type with type=success/redirect/error?
-export interface FormFetchResponse {
-	status: number;
-	error?: Record<string, any>;
-	values?: Record<string, string | string[]>;
-	result?: Record<string, any>;
-	location?: string;
+	forEach(
+		callbackfn: (value: FileFileType, key: string, parent: FilesFormData<File>) => void
+	): void;
 }
 
 // TODO figure out how to just re-export from '../src/index/index.js' without
@@ -404,8 +392,7 @@ export function json(data: any, init?: ResponseInit): Response;
 /**
  * Generates a `ValidationError` object.
  */
-export function invalid(
+export function invalid<T extends Record<string, unknown> | undefined>(
 	status: number,
-	form: FormData | Record<string, string | string[]> | undefined | null,
-	errors: Record<string, any>
-): ValidationError;
+	data?: T
+): ValidationError<T>;

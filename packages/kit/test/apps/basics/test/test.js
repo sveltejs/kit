@@ -1764,4 +1764,18 @@ test.describe('Actions', () => {
 
 		expect(await page.textContent('p')).toBe('Result: file:test.txt');
 	});
+
+	test('Success data is returned', async ({ page }) => {
+		await page.goto('/actions/success-data');
+
+		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+
+		await page.type('input[name="username"]', 'foo');
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
+			page.click('button')
+		]);
+
+		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
+	});
 });

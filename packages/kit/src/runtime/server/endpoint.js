@@ -58,14 +58,7 @@ export async function render_endpoint(event, mod, state) {
 				headers: { location: error.location }
 			});
 		} else if (error instanceof ValidationError) {
-			return json(
-				{
-					status: error.status,
-					errors: error.errors,
-					values: error.values
-				},
-				{ status: error.status }
-			);
+			return json(error.data, { status: error.status });
 		}
 
 		throw error;

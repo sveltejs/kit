@@ -64,7 +64,7 @@ export const actions = {
 
 ## Validation
 
-A core part of form submissions is validation. For this, an action can `throw` the `invalid` helper method exported from `@sveltejs/kit` if there are validation errors. `invalid` expects a `status`, possibly the form `values` (make sure to remove any user sensitive information such as passwords) and an `error` object. In case of a native form submit they populate the `$submitted` store which is available inside your components so you can preserve user input.
+A core part of form submissions is validation. For this, an action can `throw` the `invalid` helper method exported from `@sveltejs/kit` if there are validation errors. `invalid` expects a `status` as a required argument, and optionally anything else you want to return as a second argument. This could be the form value (make sure to remove any user sensitive information such as passwords) and an `error` object. In case of a native form submit the second argument to `invalid` populates the `$submitted` store which is available inside your components. You can use this to preserve user input.
 
 ```js
 /// file: src/routes/login/+page.server.js
@@ -95,8 +95,9 @@ export const actions = {
 		const user = await db.findUser(username);
 
 		if (!user) {
-			throw invalid(403, { username }, {
-				username: 'No user with this username'
+			throw invalid(403, {
+				values: { username },
+				errors: { username: 'No user with this username' }
 			});
 		}
 
@@ -123,7 +124,7 @@ export const actions = {
 
 ## Success
 
-If everything is valid, an action can return a JSON object with data that is part of the JSON response in the case of a JavaScript fetch - it's discarded in case of a full page reload. Alternatively it can `throw` a `redirect` to redirect the user to another page.
+If everything is valid, an action can return a JSON object with data, which will be available through the `$submitted` store. Alternatively it can `throw` a `redirect` to redirect the user to another page.
 
 ```js
 /// file: src/routes/login/+page.server.js
@@ -143,6 +144,21 @@ export const actions = {
 		}
 	}
 };
+```
+
+```svelte
+/// file: src/routes/login/+page.svelte
+<script>
+	import { submitted } from '$app/stores';
+</script>
+
+{#if $submitted.success}
+	<span class="success">Login successful</span>
+{/if}
+
+<form>
+	...
+</form>
 ```
 
 ## Progressive enhancement
