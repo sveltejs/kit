@@ -943,7 +943,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/** @param {URL} url */
 	function get_navigation_intent(url) {
-		if (url.origin !== location.origin || !url.pathname.startsWith(base)) return;
+		if (is_external_url(url)) return;
 
 		const path = decodeURI(url.pathname.slice(base.length) || '/');
 
@@ -960,6 +960,11 @@ export function create_client({ target, base, trailing_slash }) {
 				return intent;
 			}
 		}
+	}
+
+	/** @param {URL} url */
+	function is_external_url(url) {
+		return url.origin !== location.origin || !url.pathname.startsWith(base);
 	}
 
 	/**
@@ -1156,6 +1161,7 @@ export function create_client({ target, base, trailing_slash }) {
 			const trigger_prefetch = (event) => {
 				const { url, options } = find_anchor(event);
 				if (url && options.prefetch === '') {
+					if (is_external_url(url)) return;
 					prefetch(url);
 				}
 			};
