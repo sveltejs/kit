@@ -3,6 +3,7 @@ import { HttpError } from '../../control.js';
 
 export interface Fetched {
 	url: string;
+	method: string;
 	body?: string | null;
 	response: {
 		status: number;

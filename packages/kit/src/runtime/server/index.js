@@ -18,6 +18,21 @@ const default_transform = ({ html }) => html;
 export async function respond(request, options, state) {
 	let url = new URL(request.url);
 
+	if (options.csrf.check_origin) {
+		const type = request.headers.get('content-type')?.split(';')[0];
+
+		const forbidden =
+			request.method === 'POST' &&
+			request.headers.get('origin') !== url.origin &&
+			(type === 'application/x-www-form-urlencoded' || type === 'multipart/form-data');
+
+		if (forbidden) {
+			return new Response(`Cross-site ${request.method} form submissions are forbidden`, {
+				status: 403
+			});
+		}
+	}
+
 	const { parameter, allowed } = options.method_override;
 	const method_override = url.searchParams.get(parameter)?.toUpperCase();
 

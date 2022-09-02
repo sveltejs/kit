@@ -54,6 +54,9 @@ export class Server {
 	constructor(manifest) {
 		this.options = {
 			csp: ${s(config.kit.csp)},
+			csrf: {
+				check_origin: ${s(config.kit.csrf.checkOrigin)},
+			},
 			dev: false,
 			get_stack: error => String(error), // for security
 			handle_error: (error, event) => {

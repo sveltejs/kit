@@ -25,6 +25,9 @@ const config = {
 				// ...
 			}
 		},
+		csrf: {
+			checkOrigin: true
+		},
 		env: {
 			dir: process.cwd(),
 			publicPrefix: 'PUBLIC_'
@@ -160,6 +163,14 @@ When pages are prerendered, the CSP header is added via a `<meta http-equiv>` ta
 > When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
 
 > Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
+
+### csrf
+
+Protection against [cross-site request forgery](https://owasp.org/www-community/attacks/csrf) attacks:
+
+- `checkOrigin` — if `true`, SvelteKit will check the incoming `origin` header for `POST` form submissions and verify that it matches the server's origin
+
+To allow people to make `POST` form submissions to your app from other origins, you will need to disable this option. Be careful!
 
 ### env
 

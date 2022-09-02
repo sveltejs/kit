@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 1.0.0-next.463
+
+### Patch Changes
+
+- fix peer dependency warning on vite-3.1.0-beta.1 ([#6512](https://github.com/sveltejs/kit/pull/6512))
+
+* [breaking] respect cache-control max-age on the client for initially fetched responses ([#6461](https://github.com/sveltejs/kit/pull/6461))
+
+## 1.0.0-next.462
+
+### Patch Changes
+
+- [breaking] block cross-site form POSTs by default. disable with config.kit.csrf.checkOrigin ([#6510](https://github.com/sveltejs/kit/pull/6510))
+
+## 1.0.0-next.461
+
+### Patch Changes
+
+- [breaking] call `invalidate(fn)` predicates with a URL instead of a string ([#6493](https://github.com/sveltejs/kit/pull/6493))
+
+* Prefer JSON responses when returning errors if accept header is `*/*` ([#6497](https://github.com/sveltejs/kit/pull/6497))
+
+- [breaking] replace invalidate() with invalidateAll() ([#6493](https://github.com/sveltejs/kit/pull/6493))
+
 ## 1.0.0-next.460
 
 ### Patch Changes

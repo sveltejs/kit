@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.171
+
+### Patch Changes
+
+- Use `invalidateAll()` ([#6493](https://github.com/sveltejs/kit/pull/6493))
+
 ## 2.0.0-next.170
 
 ### Patch Changes
