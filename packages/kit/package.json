@@ -1,13 +1,13 @@
 {
-	"name": "@tal500/kit",
-	"version": "1.0.0-next.456-legacy-builds-4",
+	"name": "@sveltejs/kit",
+	"version": "1.0.0-next.456",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Tal500/kit",
+		"url": "https://github.com/sveltejs/kit",
 		"directory": "packages/kit"
 	},
 	"license": "MIT",
-	"homepage": "https://github.com/Tal500/kit/tree/legacy-builds-versioning",
+	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^1.0.3",
