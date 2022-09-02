@@ -160,17 +160,23 @@ declare module '$app/navigation' {
 	export function prefetchRoutes(routes?: string[]): Promise<void>;
 
 	/**
-	 * A navigation interceptor that triggers before we navigate to a new URL (internal or external) whether by clicking a link, calling `goto`, or using the browser back/forward controls.
-	 * This is helpful if we want to conditionally prevent a navigation from completing or lookup the upcoming url.
+	 * A navigation interceptor that triggers before we navigate to a new URL — whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls — or `invalidate(...)` data.
+	 * Calling `cancel()` will prevent the navigation/invalidation from completing.
+	 *
+	 * When navigating to an external URL, `navigation.to` will be `null`.
+	 *
+	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */
 	export function beforeNavigate(
-		fn: (navigation: Navigation & { cancel: () => void }) => void
+		callback: (navigation: Navigation & { cancel: () => void }) => void
 	): void;
 
 	/**
-	 * A lifecycle function that runs when the page mounts, and also whenever SvelteKit navigates to a new URL but stays on this component.
+	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL or`invalidate(...)` data.
+	 *
+	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */
-	export function afterNavigate(fn: (navigation: Navigation) => void): void;
+	export function afterNavigate(callback: (navigation: Navigation) => void): void;
 }
 
 /**
@@ -212,7 +218,7 @@ declare module '$app/stores' {
 	export const page: Readable<Page>;
 	/**
 	 * A readable store.
-	 * When navigating starts, its value is `{ from: URL, to: URL }`,
+	 * When navigating starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
 	 * When navigating finishes, its value reverts to `null`.
 	 */
 	export const navigating: Readable<Navigation | null>;
