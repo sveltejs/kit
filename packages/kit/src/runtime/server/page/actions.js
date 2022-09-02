@@ -41,28 +41,25 @@ export async function handle_action_json_request(event, options, server) {
 	}
 
 	try {
-		const result = await call_action(event, options, actions);
-		if (!result) {
-			return new Response(undefined, {
-				status: 204
-			});
-		} else {
-			return json(result);
-		}
+		const data = await call_action(event, options, actions);
+		return action_json({
+			type: 'success',
+			status: data ? 200 : 204,
+			data: /** @type {Record<string, any> | undefined} */ (data)
+		});
 	} catch (e) {
 		const error = /** @type {Redirect | HttpError | ValidationError | Error} */ (e);
 
 		if (error instanceof Redirect) {
-			return json({
+			return action_json({
+				type: 'redirect',
 				status: error.status,
 				location: error.location
 			});
 		}
 
 		if (error instanceof ValidationError) {
-			return json(error.data, {
-				status: error.status
-			});
+			return action_json({ type: 'invalid', status: error.status, data: error.data });
 		}
 
 		if (!(error instanceof HttpError)) {
@@ -73,6 +70,13 @@ export async function handle_action_json_request(event, options, server) {
 			status: error instanceof HttpError ? error.status : 500
 		});
 	}
+}
+
+/**
+ * @param {import('types').FormFetchResponse} data
+ */
+function action_json(data) {
+	return json(data);
 }
 
 /**

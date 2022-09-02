@@ -265,8 +265,8 @@ test.describe('Shadowed pages', () => {
 			}
 		});
 
-		expect(response.status()).toBe(204);
-		expect(await response.text()).toEqual('');
+		expect(response.status()).toBe(200);
+		expect(await response.json()).toEqual({ type: 'success', status: 204 });
 	});
 });
 

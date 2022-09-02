@@ -10,8 +10,8 @@
 				'accept': 'application/json'
 			}
 		});
-		const result = await res.json();
-		$submitted = result;
+		const { data } = await res.json();
+		$submitted = data;
 	}
 </script>
 

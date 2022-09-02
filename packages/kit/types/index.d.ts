@@ -366,6 +366,14 @@ export class FilesFormData<FileFileType = File> {
 	): void;
 }
 
+/**
+ * When calling a form action via fetch, the response will be one of these shapes.
+ */
+export type FormFetchResponse =
+	| { type: 'success'; status: number; data?: Record<string, any> }
+	| { type: 'invalid'; status: number; data?: Record<string, any> }
+	| { type: 'redirect'; status: number; location: string };
+
 // TODO figure out how to just re-export from '../src/index/index.js' without
 // breaking the site
 

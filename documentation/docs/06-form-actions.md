@@ -165,7 +165,7 @@ export const actions = {
 
 So far, all the code examples run native form submissions - that is, when the user pressed the submit button, the page is reloaded. It's good that this use case is supported since JavaScript may not be loaded all the time. When it is though, it might be a better user experience to use the powers JavaScript gives us to provide a better user experience - this is called progressive enhancement.
 
-First we need to ensure that the page is _not_ reloaded on submission. For this, we prevent the default behavior. Afterwards, we run our JavaScript code instead which does the form submission through `fetch` instead.
+First we need to ensure that the page is _not_ reloaded on submission. For this, we prevent the default behavior. Afterwards, we run our JavaScript code instead which does the form submission through `fetch` instead. The result always contains a `status` and `type` property, which is either `"success"`, `"invalid"` or `"redirect"`. In case of `"redirect"`, a location is given. In case of `"invalid"` and `"success"`, the data returned from the action function is available through the `data` property.
 
 ```svelte
 /// file: src/routes/login/+page.svelte
@@ -174,20 +174,22 @@ First we need to ensure that the page is _not_ reloaded on submission. For this,
 	import { invalidateAll, goto } from '$app/navigation';
 
 	async function login(event) {
-		event.preventDefault(); // prevent native form submission
-		const data = new FormData(this); // create FormData
-		const response = await fetch(this.action, { // call action using fetch
+		const data = new FormData(this);
+		const response = await fetch(this.action, {
 			method: 'POST',
 			headers: {
 				accept: 'application/json'
 			},
 			body: data
 		});
-		const { errors, location, values } = await response.json(); // destructure response object
-		if (response.ok) { // success, redirect
+		const result = await response.json();
+		if (result.type === 'success' || result.type === 'redirect') {
 			invalidateAll();
-			goto(location);
-		} else { // validation error, update $submitted store
+		}
+		if (result.type === 'redirect') {
+			goto(result.location)
+		}
+		if (result.type === 'success' || result.type === 'invalid') {
 			$submitted = { errors, values } };
 		}
 	}
@@ -239,9 +241,8 @@ In case you don't need your forms to work without JavaScript, you want to use HT
 	let errors = {};
 
 	async function login(event) {
-		event.preventDefault(); // prevent native form submission
-		const data = Object.fromEntries(new FormData(this)); // create JSON from FormData
-		const response = await fetch('/api/login', { // call your API using fetch
+		const data = Object.fromEntries(new FormData(this));
+		const response = await fetch('/api/login', {
 			method: 'POST',
 			headers: {
 				accept: 'application/json'

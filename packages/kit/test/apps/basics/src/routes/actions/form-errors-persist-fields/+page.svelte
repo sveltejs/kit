@@ -12,7 +12,7 @@
 				'accept': 'application/json'
 			}
 		});
-		const { errors, values } = await res.json();
+		const { data: { errors, values } } = await res.json();
 		$submitted = { errors, values };
 	}
 </script>
