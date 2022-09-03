@@ -18,7 +18,7 @@
 
 	<form
 		class="new"
-		action="/todos"
+		action="/todos?/add"
 		method="post"
 		use:enhance={{
 			result: async ({ form }) => {
@@ -37,7 +37,7 @@
 			animate:flip={{ duration: 200 }}
 		>
 			<form
-				action="/todos?_method=PATCH"
+				action="/todos?/edit"
 				method="post"
 				use:enhance={{
 					pending: ({ data }) => {
@@ -50,14 +50,14 @@
 				<button class="toggle" aria-label="Mark todo as {todo.done ? 'not done' : 'done'}" />
 			</form>
 
-			<form class="text" action="/todos?_method=PATCH" method="post" use:enhance>
+			<form class="text" action="/todos?/edit" method="post" use:enhance>
 				<input type="hidden" name="uid" value={todo.uid} />
 				<input aria-label="Edit todo" type="text" name="text" value={todo.text} />
 				<button class="save" aria-label="Save todo" />
 			</form>
 
 			<form
-				action="/todos?_method=DELETE"
+				action="/todos?/delete"
 				method="post"
 				use:enhance={{
 					pending: () => (todo.pending_delete = true)
