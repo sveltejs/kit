@@ -1153,11 +1153,12 @@ test.describe('$app/stores', () => {
 			await page.waitForSelector('#not-navigating');
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 
-			page.goBack();
-			await page.waitForSelector('#navigating');
-			expect(await page.textContent('#navigating')).toBe(
-				'navigating from /store/navigating/b to /store/navigating/a (popstate)'
-			);
+			await Promise.all([
+				expect(page.locator('#navigating')).toHaveText(
+					'navigating from /store/navigating/b to /store/navigating/a (popstate)'
+				),
+				page.goBack()
+			]);
 		}
 	});
 
