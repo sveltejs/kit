@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.465
+
+### Patch Changes
+
+- [feat] add `type` to navigation object ([#6537](https://github.com/sveltejs/kit/pull/6537))
+
 ## 1.0.0-next.464
 
 ### Patch Changes
