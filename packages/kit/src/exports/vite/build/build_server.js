@@ -59,8 +59,8 @@ export class Server {
 			},
 			dev: false,
 			fetch: {
-				included_request_headers: ${s(config.kit.fetch.includedRequestHeaders)},
-				included_response_headers: ${s(config.kit.fetch.includedResponseHeaders)}
+				forwarded_request_headers: ${s(config.kit.fetch.forwardedRequestHeaders)},
+				serialized_response_headers: ${s(config.kit.fetch.serializedResponseHeaders)}
 			},
 			get_stack: error => String(error), // for security
 			handle_error: (error, event) => {
