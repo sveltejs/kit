@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.466
+
+### Patch Changes
+
+- [breaking] change Navigation type to include from/to.params and from/to.routeId ([#6552](https://github.com/sveltejs/kit/pull/6552))
+
+* Warn about incorrect data-sveltekit-x values ([#6546](https://github.com/sveltejs/kit/pull/6546))
+
 ## 1.0.0-next.465
 
 ### Patch Changes
