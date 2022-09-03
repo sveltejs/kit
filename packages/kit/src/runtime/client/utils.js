@@ -27,16 +27,14 @@ export function find_anchor(event) {
 	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
 	let a;
 
-	const options = {
-		/** @type {string | null} */
-		noscroll: null,
+	/** @type {boolean | null} */
+	let noscroll = null;
 
-		/** @type {string | null} */
-		prefetch: null,
+	/** @type {boolean | null} */
+	let prefetch = null;
 
-		/** @type {string | null} */
-		reload: null
-	};
+	/** @type {boolean | null} */
+	let reload = null;
 
 	for (const element of event.composedPath()) {
 		if (!(element instanceof Element)) continue;
@@ -46,22 +44,43 @@ export function find_anchor(event) {
 			a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
 		}
 
-		if (options.noscroll === null) {
-			options.noscroll = element.getAttribute('data-sveltekit-noscroll');
-		}
-
-		if (options.prefetch === null) {
-			options.prefetch = element.getAttribute('data-sveltekit-prefetch');
-		}
-
-		if (options.reload === null) {
-			options.reload = element.getAttribute('data-sveltekit-reload');
-		}
+		if (noscroll === null) noscroll = get_link_option(element, 'data-sveltekit-noscroll');
+		if (prefetch === null) prefetch = get_link_option(element, 'data-sveltekit-prefetch');
+		if (reload === null) reload = get_link_option(element, 'data-sveltekit-reload');
 	}
 
 	const url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
 
-	return { a, url, options };
+	return {
+		a,
+		url,
+		options: {
+			noscroll,
+			prefetch,
+			reload
+		}
+	};
+}
+
+const warned = new WeakSet();
+
+/**
+ * @param {Element} element
+ * @param {string} attribute
+ */
+function get_link_option(element, attribute) {
+	const value = element.getAttribute(attribute);
+	if (value === null) return value;
+
+	if (value === '') return true;
+	if (value === 'off') return false;
+
+	if (__SVELTEKIT_DEV__ && !warned.has(element)) {
+		console.error(`Unexpected value for ${attribute} — should be "" or "off"`, element);
+		warned.add(element);
+	}
+
+	return false;
 }
 
 /** @param {any} value */

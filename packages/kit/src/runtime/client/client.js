@@ -1208,7 +1208,7 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @param {Event} event */
 			const trigger_prefetch = (event) => {
 				const { url, options } = find_anchor(event);
-				if (url && options.prefetch === '') {
+				if (url && options.prefetch) {
 					if (is_external_url(url)) return;
 					prefetch(url);
 				}
@@ -1258,7 +1258,7 @@ export function create_client({ target, base, trailing_slash }) {
 				// 2. 'rel' attribute includes external
 				const rel = (a.getAttribute('rel') || '').split(/\s+/);
 
-				if (a.hasAttribute('download') || rel.includes('external') || options.reload === '') {
+				if (a.hasAttribute('download') || rel.includes('external') || options.reload) {
 					return;
 				}
 
@@ -1284,7 +1284,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 				navigate({
 					url,
-					scroll: options.noscroll === '' ? scroll_state() : null,
+					scroll: options.noscroll ? scroll_state() : null,
 					keepfocus: false,
 					redirect_chain: [],
 					details: {
