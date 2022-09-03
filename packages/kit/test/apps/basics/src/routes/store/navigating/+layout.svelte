@@ -11,7 +11,7 @@
 <div id="nav-status">
 	{#if $navigating}
 		<p id="navigating">
-			navigating from {$navigating.from.pathname} to {$navigating.to.pathname} ({$navigating.type})
+			navigating from {$navigating.from.url.pathname} to {$navigating.to.url.pathname} ({$navigating.type})
 		</p>
 	{:else}
 		<p id="not-navigating">not currently navigating</p>
