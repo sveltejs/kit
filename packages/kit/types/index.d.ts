@@ -219,7 +219,7 @@ export interface LoadEvent<
 	depends: (...deps: string[]) => void;
 }
 
-export type NavigationType = 'load' | 'unload' | 'link' | 'goto' | 'popstate' | 'invalidation';
+export type NavigationType = 'load' | 'unload' | 'link' | 'goto' | 'popstate';
 
 export interface Navigation {
 	from: URL | null;

@@ -160,8 +160,8 @@ declare module '$app/navigation' {
 	export function prefetchRoutes(routes?: string[]): Promise<void>;
 
 	/**
-	 * A navigation interceptor that triggers before we navigate to a new URL — whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls — or `invalidate(...)` data.
-	 * Calling `cancel()` will prevent the navigation/invalidation from completing.
+	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
+	 * Calling `cancel()` will prevent the navigation from completing.
 	 *
 	 * When navigating to an external URL, `navigation.to` will be `null`.
 	 *
@@ -172,7 +172,7 @@ declare module '$app/navigation' {
 	): void;
 
 	/**
-	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL or`invalidate(...)` data.
+	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
 	 *
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */
@@ -218,7 +218,7 @@ declare module '$app/stores' {
 	export const page: Readable<Page>;
 	/**
 	 * A readable store.
-	 * When navigating (or invalidating) starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+	 * When navigating starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
 	 * When navigating finishes, its value reverts to `null`.
 	 */
 	export const navigating: Readable<Navigation | null>;
