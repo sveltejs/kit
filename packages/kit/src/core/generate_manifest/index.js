@@ -60,13 +60,13 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 					if (!route.page && !route.endpoint) return;
 
 					return `{
-						id: ${s(route.id)},
-						pattern: ${route.pattern},
-						names: ${s(route.names)},
-						types: ${s(route.types)},
-						page: ${s(route.page)},
-						endpoint: ${route.endpoint ? loader(`${relative_path}/${build_data.server.vite_manifest[route.endpoint.file].file}`) : 'null'}
-					}`;
+					id: ${s(route.id)},
+					pattern: ${route.pattern},
+					names: ${s(route.names)},
+					types: ${s(route.types)},
+					page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${route.page.leaf} }` : 'null'},
+					endpoint: ${route.endpoint ? loader(`${relative_path}/${build_data.server.vite_manifest[route.endpoint.file].file}`) : 'null'}
+				}`;
 				}).filter(Boolean).join(',\n\t\t\t\t')}
 			],
 			matchers: async () => {
@@ -75,4 +75,18 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 			}
 		}
 	}`.replace(/^\t/gm, '');
+}
+
+/** @param {Array<number | undefined>} indexes */
+function get_nodes(indexes) {
+	let string = indexes.map((n) => n ?? '').join(',');
+
+	if (indexes.at(-1) === undefined) {
+		// since JavaScript ignores trailing commas, we need to insert a dummy
+		// comma so that the array has the correct length if the last item
+		// is undefined
+		string += ',';
+	}
+
+	return `[${string}]`;
 }
