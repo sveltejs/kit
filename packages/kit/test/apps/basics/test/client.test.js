@@ -797,8 +797,8 @@ test.describe('hydrated env', () => {
 
 		await page.goto('/hydrated/a');
 		expect(logs).toStrictEqual(['hydrated layout false', 'hydrated a false']);
-		
-		logs = []
+
+		logs = [];
 
 		await clicknav('[href="/hydrated/b"]');
 		expect(logs).toStrictEqual(['hydrated b true']);
