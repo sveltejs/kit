@@ -249,7 +249,7 @@ test.describe('Load', () => {
 		request
 	}) => {
 		const response = await request.get('/errors/error-in-layout');
-		expect(await response.text()).toContain('Error: 500');
+		expect(await response.text()).toContain('Error: 404');
 	});
 
 	test('fetch does not load a file with a # character', async ({ request }) => {
