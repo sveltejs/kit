@@ -80,10 +80,10 @@ export function create_client({ target, base, trailing_slash }) {
 	};
 
 	const callbacks = {
-		/** @type {Array<(opts: { from: URL, to: URL | null, cancel: () => void }) => void>} */
+		/** @type {Array<(navigation: import('types').Navigation & { cancel: () => void }) => void>} */
 		before_navigate: [],
 
-		/** @type {Array<(opts: { from: URL | null, to: URL }) => void>} */
+		/** @type {Array<(navigation: import('types').Navigation) => void>} */
 		after_navigate: []
 	};
 
@@ -142,8 +142,10 @@ export function create_client({ target, base, trailing_slash }) {
 
 	function invalidate() {
 		if (!invalidating) {
+			const url = new URL(location.href);
+
 			invalidating = Promise.resolve().then(async () => {
-				await update(new URL(location.href), []);
+				await update(url, []);
 
 				invalidating = null;
 				force_invalidation = false;
@@ -177,7 +179,8 @@ export function create_client({ target, base, trailing_slash }) {
 				replaceState
 			},
 			accepted: () => {},
-			blocked: () => {}
+			blocked: () => {},
+			type: 'goto'
 		});
 	}
 
@@ -395,7 +398,8 @@ export function create_client({ target, base, trailing_slash }) {
 			});
 		}
 
-		const navigation = { from: null, to: new URL(location.href) };
+		/** @type {import('types').Navigation} */
+		const navigation = { from: null, to: new URL(location.href), type: 'load' };
 		callbacks.after_navigate.forEach((fn) => fn(navigation));
 
 		started = true;
@@ -977,21 +981,44 @@ export function create_client({ target, base, trailing_slash }) {
 	 *     replaceState: boolean;
 	 *     state: any;
 	 *   } | null;
+	 *   type: import('types').NavigationType;
+	 *   delta?: number;
 	 *   accepted: () => void;
 	 *   blocked: () => void;
 	 * }} opts
 	 */
-	async function navigate({ url, scroll, keepfocus, redirect_chain, details, accepted, blocked }) {
-		const from = current.url;
+	async function navigate({
+		url,
+		scroll,
+		keepfocus,
+		redirect_chain,
+		details,
+		type,
+		delta,
+		accepted,
+		blocked
+	}) {
 		let should_block = false;
 
+		/** @type {import('types').Navigation} */
 		const navigation = {
-			from,
+			from: current.url,
 			to: url,
-			cancel: () => (should_block = true)
+			type
 		};
 
-		callbacks.before_navigate.forEach((fn) => fn(navigation));
+		if (delta !== undefined) {
+			navigation.delta = delta;
+		}
+
+		const cancellable = {
+			...navigation,
+			cancel: () => {
+				should_block = true;
+			}
+		};
+
+		callbacks.before_navigate.forEach((fn) => fn(cancellable));
 
 		if (should_block) {
 			blocked();
@@ -1003,10 +1030,7 @@ export function create_client({ target, base, trailing_slash }) {
 		accepted();
 
 		if (started) {
-			stores.navigating.set({
-				from: current.url,
-				to: url
-			});
+			stores.navigating.set(navigation);
 		}
 
 		await update(
@@ -1018,9 +1042,7 @@ export function create_client({ target, base, trailing_slash }) {
 				details
 			},
 			() => {
-				const navigation = { from, to: url };
 				callbacks.after_navigate.forEach((fn) => fn(navigation));
-
 				stores.navigating.set(null);
 			}
 		);
@@ -1129,9 +1151,11 @@ export function create_client({ target, base, trailing_slash }) {
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
 
+				/** @type {import('types').Navigation & { cancel: () => void }} */
 				const navigation = {
 					from: current.url,
 					to: null,
+					type: 'unload',
 					cancel: () => (should_block = true)
 				};
 
@@ -1244,7 +1268,8 @@ export function create_client({ target, base, trailing_slash }) {
 						replaceState: url.href === location.href
 					},
 					accepted: () => event.preventDefault(),
-					blocked: () => event.preventDefault()
+					blocked: () => event.preventDefault(),
+					type: 'link'
 				});
 			});
 
@@ -1253,6 +1278,8 @@ export function create_client({ target, base, trailing_slash }) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
+
+					const delta = event.state[INDEX_KEY] - current_history_index;
 
 					navigate({
 						url: new URL(location.href),
@@ -1264,9 +1291,10 @@ export function create_client({ target, base, trailing_slash }) {
 							current_history_index = event.state[INDEX_KEY];
 						},
 						blocked: () => {
-							const delta = current_history_index - event.state[INDEX_KEY];
-							history.go(delta);
-						}
+							history.go(-delta);
+						},
+						type: 'popstate',
+						delta
 					});
 				}
 			});
