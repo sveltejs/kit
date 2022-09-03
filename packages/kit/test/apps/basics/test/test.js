@@ -889,6 +889,23 @@ test.describe('Load', () => {
 
 		expect(await page.textContent('h1')).toBe('true');
 	});
+
+	test('CORS errors are simulated server-side', async ({ page, read_errors }) => {
+		const { port, close } = await start_server(async (req, res) => {
+			res.end('hello');
+		});
+
+		await page.goto(`/load/cors?port=${port}`);
+		expect(await page.textContent('h1')).toBe('500');
+		expect(read_errors(`/load/cors`)).toContain(
+			`Error: CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource`
+		);
+
+		await page.goto(`/load/cors/no-cors?port=${port}`);
+		expect(await page.textContent('h1')).toBe('result: ');
+
+		await close();
+	});
 });
 
 test.describe('Method overrides', () => {
