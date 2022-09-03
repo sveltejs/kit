@@ -785,3 +785,22 @@ test.describe('data-sveltekit attributes', () => {
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	});
 });
+
+test.describe('hydrated env', () => {
+	test('hydrated flow', async ({ baseURL, page, clicknav }) => {
+		let logs = [];
+		page.on('console', (msg) => {
+			if (msg.type() === 'log') {
+				logs.push(msg.text());
+			}
+		});
+
+		await page.goto('/hydrated/a');
+		expect(logs).toStrictEqual(['hydrated layout false', 'hydrated a false']);
+		
+		logs = []
+
+		await clicknav('[href="/hydrated/b"]');
+		expect(logs).toStrictEqual(['hydrated b true']);
+	});
+});
