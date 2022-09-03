@@ -163,7 +163,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 			// - sub.my.domain.com WILL receive cookies
 			// ports do not affect the resolution
 			// leading dot prevents mydomain.com matching domain.com
-			if (`.$url.hostname}`.endsWith(`.${event.url.hostname}`) && opts.credentials !== 'omit') {
+			if (`.${url.hostname}`.endsWith(`.${event.url.hostname}`) && opts.credentials !== 'omit') {
 				const cookie = event.request.headers.get('cookie');
 				if (cookie) opts.headers.set('cookie', cookie);
 			}
