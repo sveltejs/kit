@@ -81,10 +81,11 @@ export interface DataNode {
 	uses: Uses;
 }
 
-export type NavigationState = {
+export interface NavigationState {
 	branch: Array<BranchNode | undefined>;
 	error: HttpError | Error | null;
 	params: Record<string, string>;
+	route: CSRRoute | null;
 	session_id: number;
 	url: URL;
-};
+}
