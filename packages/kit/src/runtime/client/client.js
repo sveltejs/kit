@@ -1141,6 +1141,29 @@ export function create_client({ target, base, trailing_slash }) {
 			await Promise.all(promises);
 		},
 
+		update_form: async (form) => {
+			page = { ...page, form };
+			if (import.meta.env.DEV) {
+				// Nasty hack to silence harmless warnings the user can do nothing about
+				const warn = console.warn;
+				console.warn = (...args) => {
+					if (
+						args.length !== 1 ||
+						!/<(Layout|Page)(_[\w$]+)?> was created with unknown prop '(data|errors)'/.test(args[0])
+					) {
+						warn(...args);
+					}
+				};
+				root.$set({ page });
+				await tick().then(() => (console.warn = warn));
+
+				check_for_removed_attributes();
+			} else {
+				root.$set({ page });
+				await tick();
+			}
+		},
+
 		_start_router: () => {
 			history.scrollRestoration = 'manual';
 

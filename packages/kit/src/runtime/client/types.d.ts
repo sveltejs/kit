@@ -5,7 +5,8 @@ import {
 	invalidate,
 	invalidateAll,
 	prefetch,
-	prefetchRoutes
+	prefetchRoutes,
+	updateForm
 } from '$app/navigation';
 import { CSRPageNode, CSRPageNodeLoader, CSRRoute, Uses } from 'types';
 import { HttpError } from '../control.js';
@@ -21,6 +22,7 @@ export interface Client {
 	invalidateAll: typeof invalidateAll;
 	prefetch: typeof prefetch;
 	prefetch_routes: typeof prefetchRoutes;
+	update_form: typeof updateForm;
 
 	// private API
 	_hydrate: (opts: {

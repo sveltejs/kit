@@ -19,5 +19,6 @@ export const invalidate = ssr ? guard('invalidate') : client.invalidate;
 export const invalidateAll = ssr ? guard('invalidateAll') : client.invalidateAll;
 export const prefetch = ssr ? guard('prefetch') : client.prefetch;
 export const prefetchRoutes = ssr ? guard('prefetchRoutes') : client.prefetch_routes;
+export const updateForm = ssr ? guard('updateForm') : client.update_form;
 export const beforeNavigate = ssr ? () => {} : client.before_navigate;
 export const afterNavigate = ssr ? () => {} : client.after_navigate;

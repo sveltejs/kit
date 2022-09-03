@@ -1786,4 +1786,17 @@ test.describe('Actions', () => {
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
 	});
+
+	test('updateForm works', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/update-form');
+		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+
+		if (javaScriptEnabled) {
+			await page.click('button');
+			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
+
+			await page.click('button');
+			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 1 }));
+		}
+	});
 });
