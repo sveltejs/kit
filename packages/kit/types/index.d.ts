@@ -137,7 +137,7 @@ export interface KitConfig {
 	};
 	fetch?: {
 		includedRequestHeaders?: string[];
-		includedResponseHeaders?: string[];
+		serializedResponseHeaders?: string[];
 	};
 	files?: {
 		assets?: string;

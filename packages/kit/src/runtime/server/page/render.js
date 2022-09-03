@@ -286,7 +286,7 @@ export async function render_response({
 	if (page_config.ssr && page_config.csr) {
 		body += `\n\t${fetched
 			.map((item) =>
-				serialize_data(item, options.fetch.included_response_headers, !!state.prerendering)
+				serialize_data(item, options.fetch.serialized_response_headers, !!state.prerendering)
 			)
 			.join('\n\t')}`;
 	}

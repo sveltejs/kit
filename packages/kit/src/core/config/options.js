@@ -141,7 +141,7 @@ const options = object(
 
 			fetch: object({
 				includedRequestHeaders: string_array([]),
-				includedResponseHeaders: string_array(['content-type'])
+				serializedResponseHeaders: string_array(['content-type'])
 			}),
 
 			files: object({

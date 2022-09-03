@@ -383,7 +383,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						dev: true,
 						fetch: {
 							included_request_headers: svelte_config.kit.fetch.includedRequestHeaders,
-							included_response_headers: svelte_config.kit.fetch.includedResponseHeaders
+							serialized_response_headers: svelte_config.kit.fetch.serializedResponseHeaders
 						},
 						get_stack: (error) => fix_stack_trace(error),
 						handle_error: (error, event) => {

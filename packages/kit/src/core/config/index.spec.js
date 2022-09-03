@@ -82,7 +82,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		fetch: {
 			includedRequestHeaders: [],
-			includedResponseHeaders: []
+			serializedResponseHeaders: []
 		},
 		files: {
 			assets: join(prefix, 'static'),
