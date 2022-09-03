@@ -140,7 +140,7 @@ const options = object(
 			}),
 
 			fetch: object({
-				includedRequestHeaders: string_array([]),
+				forwardedRequestHeaders: string_array([]),
 				serializedResponseHeaders: string_array(['content-type'])
 			}),
 

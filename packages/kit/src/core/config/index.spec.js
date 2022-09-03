@@ -81,7 +81,7 @@ const get_defaults = (prefix = '') => ({
 			publicPrefix: 'PUBLIC_'
 		},
 		fetch: {
-			includedRequestHeaders: [],
+			forwardedRequestHeaders: [],
 			serializedResponseHeaders: []
 		},
 		files: {

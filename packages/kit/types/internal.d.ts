@@ -295,7 +295,7 @@ export interface SSROptions {
 	};
 	dev: boolean;
 	fetch: {
-		included_request_headers: string[];
+		forwarded_request_headers: string[];
 		serialized_response_headers: string[];
 	};
 	get_stack: (error: Error) => string | undefined;

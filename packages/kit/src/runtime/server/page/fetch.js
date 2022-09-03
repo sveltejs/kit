@@ -49,7 +49,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 		opts.headers = new Headers(opts.headers);
 
 		// merge headers from request
-		for (const header of options.fetch.included_request_headers) {
+		for (const header of options.fetch.forwarded_request_headers) {
 			const value = event.request.headers.get(header);
 
 			if (value !== null && !opts.headers.has(header)) {

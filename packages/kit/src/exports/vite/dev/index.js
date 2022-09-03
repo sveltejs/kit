@@ -382,7 +382,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						},
 						dev: true,
 						fetch: {
-							included_request_headers: svelte_config.kit.fetch.includedRequestHeaders,
+							forwarded_request_headers: svelte_config.kit.fetch.forwardedRequestHeaders,
 							serialized_response_headers: svelte_config.kit.fetch.serializedResponseHeaders
 						},
 						get_stack: (error) => fix_stack_trace(error),
