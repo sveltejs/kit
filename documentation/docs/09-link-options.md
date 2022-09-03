@@ -70,3 +70,5 @@ To apply an attribute to an element conditionally, do this:
 ```html
 <div data-sveltekit-reload={shouldReload ? '' : 'off'}>
 ```
+
+> This works because in HTML, `<element attribute>` is equivalent to `<element attribute="">`
