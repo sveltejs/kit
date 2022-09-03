@@ -796,7 +796,7 @@ test.describe('hydrated env', () => {
 		});
 
 		await page.goto('/hydrated/a');
-		expect(logs).toStrictEqual(['hydrated layout false', 'hydrated a false']);
+		expect(logs.sort()).toStrictEqual(['hydrated layout false', 'hydrated a false'].sort());
 
 		logs = [];
 
