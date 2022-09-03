@@ -11,6 +11,7 @@ import { nodes, server_loads, dictionary, matchers } from '__GENERATED__/client-
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
+import { set_hydrated } from '../env.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -403,6 +404,8 @@ export function create_client({ target, base, trailing_slash }) {
 		callbacks.after_navigate.forEach((fn) => fn(navigation));
 
 		started = true;
+
+		set_hydrated(true);
 	}
 
 	/**

@@ -60,7 +60,7 @@ declare namespace App {
 
 /**
  * ```ts
- * import { browser, dev, prerendering } from '$app/environment';
+ * import { browser, dev, prerendering, hydrated } from '$app/environment';
  * ```
  */
 declare module '$app/environment' {
@@ -78,6 +78,11 @@ declare module '$app/environment' {
 	 * `true` when prerendering, `false` otherwise.
 	 */
 	export const prerendering: boolean;
+
+	/**
+	 * `false` at the start. When the page is hydrated, the value will be set to `true`.
+	 */
+	export const hydrated: boolean;
 }
 
 /**
