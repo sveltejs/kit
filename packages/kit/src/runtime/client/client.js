@@ -144,24 +144,11 @@ export function create_client({ target, base, trailing_slash }) {
 		if (!invalidating) {
 			const url = new URL(location.href);
 
-			/** @type {import('types').Navigation} */
-			const navigation = { from: url, to: url, type: 'invalidation' };
-
-			let cancelled = false;
-			const cancellable = { ...navigation, cancel: () => (cancelled = true) };
-
-			callbacks.before_navigate.forEach((cb) => cb(cancellable));
-
 			invalidating = Promise.resolve().then(async () => {
-				if (!cancelled) {
-					stores.navigating.set(navigation);
-					await update(url, []);
-					callbacks.after_navigate.forEach((cb) => cb(navigation));
-				}
+				await update(url, []);
 
 				invalidating = null;
 				force_invalidation = false;
-				stores.navigating.set(null);
 			});
 		}
 
