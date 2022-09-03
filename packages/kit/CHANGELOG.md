@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.467
+
+### Patch Changes
+
+- [breaking] prevent server-side fetch from reading files with # character in the filename ([#6549](https://github.com/sveltejs/kit/pull/6549))
+
 ## 1.0.0-next.466
 
 ### Patch Changes
