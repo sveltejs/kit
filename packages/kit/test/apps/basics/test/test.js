@@ -1143,22 +1143,23 @@ test.describe('$app/stores', () => {
 		if (javaScriptEnabled) {
 			await app.prefetchRoutes(['/store/navigating/b']);
 
-			const res = await Promise.all([
+			const res_nav_1 = await Promise.all([
 				page.click('a[href="/store/navigating/b"]'),
 				page.textContent('#navigating')
 			]);
 
-			expect(res[1]).toBe('navigating from /store/navigating/a to /store/navigating/b (link)');
+			expect(res_nav_1[1]).toBe(
+				'navigating from /store/navigating/a to /store/navigating/b (link)'
+			);
 
 			await page.waitForSelector('#not-navigating');
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 
-			await Promise.all([
-				expect(page.locator('#navigating')).toHaveText(
-					'navigating from /store/navigating/b to /store/navigating/a (popstate)'
-				),
-				page.goBack()
-			]);
+			const res_nav_2 = await Promise.all([page.goBack(), page.textContent('#navigating')]);
+
+			expect(res_nav_2[1]).toBe(
+				'navigating from /store/navigating/b to /store/navigating/a (popstate)'
+			);
 		}
 	});
 
