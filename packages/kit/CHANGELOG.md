@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.0.0-next.465
+
+### Patch Changes
+
+- [feat] add `type` to navigation object ([#6537](https://github.com/sveltejs/kit/pull/6537))
+
+## 1.0.0-next.464
+
+### Patch Changes
+
+- Fix server manifest generation ([#6507](https://github.com/sveltejs/kit/pull/6507))
+
+* Silently skip prefetching of external URLs when using `data-sveltekit-prefetch`. Warn like before when calling `prefetch()` for external URLs. ([#6518](https://github.com/sveltejs/kit/pull/6518))
+
 ## 1.0.0-next.463
 
 ### Patch Changes
