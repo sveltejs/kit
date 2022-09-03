@@ -1,10 +1,10 @@
 <script>
 	import { afterNavigate } from '$app/navigation';
 
-	/** @type {URL | null} */
+	/** @type {import('@sveltejs/kit').NavigationTarget | null} */
 	let from;
 
-	/** @type {URL} */
+	/** @type {import('@sveltejs/kit').NavigationTarget} */
 	let to;
 
 	afterNavigate((navigation) => {
@@ -13,5 +13,5 @@
 	});
 </script>
 
-<h1>{from?.pathname} -> {to?.pathname}</h1>
+<h1>{from?.url.pathname} -> {to?.url.pathname}</h1>
 <a href="/after-navigate/b">/b</a>

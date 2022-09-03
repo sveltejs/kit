@@ -219,11 +219,17 @@ export interface LoadEvent<
 	depends: (...deps: string[]) => void;
 }
 
+export interface NavigationTarget {
+	params: Record<string, string> | null;
+	routeId: string | null;
+	url: URL;
+}
+
 export type NavigationType = 'load' | 'unload' | 'link' | 'goto' | 'popstate';
 
 export interface Navigation {
-	from: URL | null;
-	to: URL | null;
+	from: NavigationTarget | null;
+	to: NavigationTarget | null;
 	type: NavigationType;
 	delta?: number;
 }

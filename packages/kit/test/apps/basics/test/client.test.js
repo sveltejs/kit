@@ -11,12 +11,8 @@ test.describe('beforeNavigate', () => {
 	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 
-		try {
-			await clicknav('[href="/before-navigate/a"]', { timeout: 1000 });
-			expect(false).toBe(true);
-		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('page.waitForNavigation: Timeout 1000ms exceeded');
-		}
+		await page.click('[href="/before-navigate/a"]');
+		await page.waitForLoadState('networkidle');
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('true');
