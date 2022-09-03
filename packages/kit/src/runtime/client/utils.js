@@ -75,7 +75,7 @@ function get_link_option(element, attribute) {
 	if (value === '') return true;
 	if (value === 'off') return false;
 
-	if (!warned.has(element)) {
+	if (__SVELTEKIT_DEV__ && !warned.has(element)) {
 		console.error(`Unexpected value for ${attribute} — should be "" or "off"`, element);
 		warned.add(element);
 	}
