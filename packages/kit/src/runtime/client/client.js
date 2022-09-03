@@ -1457,3 +1457,16 @@ async function load_data(url, invalid) {
 
 	return server_data;
 }
+function add_url_properties(type, target) {
+	for (const prop of properties) {
+		Object.defineProperty(target, prop, {
+			get() {
+				throw new Error(
+					`The navigation shape changed - ${type}.${prop} should now be ${type}.url.${prop}`
+				);
+			}
+		});
+	}
+
+	return target;
+}

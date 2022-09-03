@@ -147,10 +147,6 @@ export interface KitConfig {
 		errorTemplate?: string;
 	};
 	inlineStyleThreshold?: number;
-	methodOverride?: {
-		parameter?: string;
-		allowed?: string[];
-	};
 	outDir?: string;
 	paths?: {
 		assets?: string;

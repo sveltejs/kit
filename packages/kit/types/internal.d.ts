@@ -120,11 +120,6 @@ export interface ManifestData {
 	matchers: Record<string, string>;
 }
 
-export interface MethodOverride {
-	parameter: string;
-	allowed: string[];
-}
-
 export interface PageNode {
 	depth: number;
 	component?: string; // TODO supply default component if it's missing (bit of an edge case)
@@ -298,7 +293,6 @@ export interface SSROptions {
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;
 	manifest: SSRManifest;
-	method_override: MethodOverride;
 	paths: {
 		base: string;
 		assets: string;

@@ -407,7 +407,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 						},
 						hooks,
 						manifest,
-						method_override: svelte_config.kit.methodOverride,
 						paths: {
 							base: svelte_config.kit.paths.base,
 							assets
