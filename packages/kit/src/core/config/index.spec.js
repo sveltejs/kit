@@ -80,6 +80,10 @@ const get_defaults = (prefix = '') => ({
 			dir: process.cwd(),
 			publicPrefix: 'PUBLIC_'
 		},
+		fetch: {
+			includedRequestHeaders: [],
+			includedResponseHeaders: []
+		},
 		files: {
 			assets: join(prefix, 'static'),
 			hooks: join(prefix, 'src/hooks'),

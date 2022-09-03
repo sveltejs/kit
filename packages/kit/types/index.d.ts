@@ -135,7 +135,10 @@ export interface KitConfig {
 		dir?: string;
 		publicPrefix?: string;
 	};
-	moduleExtensions?: string[];
+	fetch?: {
+		includedRequestHeaders?: string[];
+		includedResponseHeaders?: string[];
+	};
 	files?: {
 		assets?: string;
 		hooks?: string;
@@ -151,6 +154,7 @@ export interface KitConfig {
 		parameter?: string;
 		allowed?: string[];
 	};
+	moduleExtensions?: string[];
 	outDir?: string;
 	paths?: {
 		assets?: string;

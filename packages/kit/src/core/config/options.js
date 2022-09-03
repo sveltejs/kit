@@ -139,6 +139,11 @@ const options = object(
 				publicPrefix: string('PUBLIC_')
 			}),
 
+			fetch: object({
+				includedRequestHeaders: string_array([]),
+				includedResponseHeaders: string_array(['content-type'])
+			}),
+
 			files: object({
 				assets: string('static'),
 				hooks: string(join('src', 'hooks')),

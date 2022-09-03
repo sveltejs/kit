@@ -35,15 +35,29 @@ const pattern = new RegExp(`[${Object.keys(replacements).join('')}]`, 'g');
  * and that the resulting string isn't further modified.
  *
  * @param {import('./types.js').Fetched} fetched
+ * @param {string[]} included_response_headers
  * @param {boolean} [prerendering]
  * @returns {string} The raw HTML of a script element carrying the JSON payload.
  * @example const html = serialize_data('/data.json', null, { foo: 'bar' });
  */
-export function serialize_data(fetched, prerendering = false) {
-	const safe_payload = JSON.stringify(fetched.response).replace(
-		pattern,
-		(match) => replacements[match]
-	);
+export function serialize_data(fetched, included_response_headers, prerendering = false) {
+	/** @type {Record<string, string>} */
+	const headers = {};
+
+	for (const header of included_response_headers) {
+		const value = fetched.response.headers.get(header);
+
+		if (value !== null) {
+			headers[header] = value;
+		}
+	}
+
+	const safe_payload = JSON.stringify({
+		status: fetched.response.status,
+		statusText: fetched.response.statusText,
+		headers,
+		body: fetched.response.body
+	}).replace(pattern, (match) => replacements[match]);
 
 	const attrs = [
 		'type="application/json"',
@@ -56,11 +70,11 @@ export function serialize_data(fetched, prerendering = false) {
 	}
 
 	if (!prerendering && fetched.method === 'GET') {
-		const cache_control = /** @type {string} */ (fetched.response.headers['cache-control']);
+		const cache_control = /** @type {string} */ (fetched.response.headers.get('cache-control'));
 		if (cache_control) {
 			const match = /s-maxage=(\d+)/g.exec(cache_control) ?? /max-age=(\d+)/g.exec(cache_control);
 			if (match) {
-				const age = /** @type {string} */ (fetched.response.headers['age']) ?? '0';
+				const age = /** @type {string} */ (fetched.response.headers.get('age')) ?? '0';
 
 				const ttl = +match[1] - +age;
 				attrs.push(`data-ttl="${ttl}"`);

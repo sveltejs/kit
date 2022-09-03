@@ -294,6 +294,10 @@ export interface SSROptions {
 		check_origin: boolean;
 	};
 	dev: boolean;
+	fetch: {
+		included_request_headers: string[];
+		included_response_headers: string[];
+	};
 	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;

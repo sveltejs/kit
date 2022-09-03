@@ -284,7 +284,11 @@ export async function render_response({
 	}
 
 	if (page_config.ssr && page_config.csr) {
-		body += `\n\t${fetched.map((item) => serialize_data(item, !!state.prerendering)).join('\n\t')}`;
+		body += `\n\t${fetched
+			.map((item) =>
+				serialize_data(item, options.fetch.included_response_headers, !!state.prerendering)
+			)
+			.join('\n\t')}`;
 	}
 
 	if (options.service_worker) {

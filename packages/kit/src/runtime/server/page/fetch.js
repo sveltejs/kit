@@ -49,17 +49,11 @@ export function create_fetch({ event, options, state, route, prerender_default }
 		opts.headers = new Headers(opts.headers);
 
 		// merge headers from request
-		for (const [key, value] of event.request.headers) {
-			if (
-				key !== 'authorization' &&
-				key !== 'connection' &&
-				key !== 'content-length' &&
-				key !== 'cookie' &&
-				key !== 'host' &&
-				key !== 'if-none-match' &&
-				!opts.headers.has(key)
-			) {
-				opts.headers.set(key, value);
+		for (const header of options.fetch.included_request_headers) {
+			const value = event.request.headers.get(header);
+
+			if (value !== null && !opts.headers.has(header)) {
+				opts.headers.set(header, value);
 			}
 		}
 
@@ -192,34 +186,15 @@ export function create_fetch({ event, options, state, route, prerender_default }
 				async function text() {
 					const body = await response.text();
 
-					// TODO just pass `response.headers`, for processing inside `serialize_data`
-					/** @type {import('types').ResponseHeaders} */
-					const headers = {};
-					for (const [key, value] of response.headers) {
-						// TODO skip others besides set-cookie and etag?
-						if (key !== 'set-cookie' && key !== 'etag') {
-							headers[key] = value;
-						}
-					}
-
 					if (!opts.body || typeof opts.body === 'string') {
-						const status_number = Number(response.status);
-						if (isNaN(status_number)) {
-							throw new Error(
-								`response.status is not a number. value: "${
-									response.status
-								}" type: ${typeof response.status}`
-							);
-						}
-
 						fetched.push({
 							url: requested,
 							method: opts.method || 'GET',
 							body: opts.body,
 							response: {
-								status: status_number,
+								status: response.status,
 								statusText: response.statusText,
-								headers,
+								headers: response.headers,
 								body
 							}
 						});

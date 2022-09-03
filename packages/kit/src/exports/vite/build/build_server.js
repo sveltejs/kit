@@ -58,6 +58,10 @@ export class Server {
 				check_origin: ${s(config.kit.csrf.checkOrigin)},
 			},
 			dev: false,
+			fetch: {
+				included_request_headers: ${s(config.kit.fetch.includedRequestHeaders)},
+				included_response_headers: ${s(config.kit.fetch.includedResponseHeaders)}
+			},
 			get_stack: error => String(error), // for security
 			handle_error: (error, event) => {
 				this.options.hooks.handleError({

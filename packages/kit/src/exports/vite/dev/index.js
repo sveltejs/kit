@@ -381,6 +381,10 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							check_origin: svelte_config.kit.csrf.checkOrigin
 						},
 						dev: true,
+						fetch: {
+							included_request_headers: svelte_config.kit.fetch.includedRequestHeaders,
+							included_response_headers: svelte_config.kit.fetch.includedResponseHeaders
+						},
 						get_stack: (error) => fix_stack_trace(error),
 						handle_error: (error, event) => {
 							hooks.handleError({
