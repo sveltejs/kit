@@ -209,30 +209,38 @@ First we need to ensure that the page is _not_ reloaded on submission. For this,
 </form>
 ```
 
-## `<Form>` component
+## `use:enhance`
 
-As you can see, progressive enhancement is doable, but it may become a little cumbersome over time. That's why we will soon provide an opinionated wrapper component which does all the heavy lifting for you. Here's how the same login page would look like using the `<Form>` component:
+As you can see, progressive enhancement is doable, but it may become a little cumbersome over time. That's why we provide a small `enhance` action which does most of the heavy lifting for you. Here's how the same login page would look like using the `enhance` action:
 
 ```svelte
 /// file: src/routes/login/+page.svelte
 <script>
-	import { Form } from '@sveltejs/kit';
+	import { enhance } from '@sveltejs/kit';
 	import { goto } from '$app/navigation';
 
-	async function redirect({ location }) {
+	/** @type {import('./$types').FormData} */
+	export let form;
+
+	function redirect({ location }) {
 		goto(location);
+	}
+	function invalid({ response }) {
+		form = response;
 	}
 </script>
 
-<Form action="?/addTodo" on:success={redirect} let:errors let:values>
-	<input type="text" name="username" value={values?.username} />
-	{#if errors?.username}
-		<span>{errors.username}</span>
+<form action="?/addTodo" use:enhance={{ redirect, invalid }}>
+	<input type="text" name="username" value={forms?.values?.username} />
+	{#if forms?.errors?.username}
+		<span>{forms.errors.username}</span>
 	{/if}
 	<input type="password" name="password" />
 	<button>Login</button>
-</Form>
+</form>
 ```
+
+The `enhance` action is still pretty low-level, but it allows you to create your own wrapper components from it - or you can come up with your own action.
 
 ## Alternatives
 

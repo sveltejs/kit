@@ -291,3 +291,5 @@ class Iterator {
 		return this;
 	}
 }
+
+// enhance action lives in exports due to otherwise cyclic references

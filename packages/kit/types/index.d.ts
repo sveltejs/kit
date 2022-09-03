@@ -412,3 +412,24 @@ export function invalid<T extends Record<string, unknown> | undefined>(
 	status: number,
 	data?: T
 ): ValidationError<T>;
+
+/**
+ * This action enhances a `<form>` element that otherwise would work without JavaScript.
+ * @param form The form element
+ * @param options Callbacks for different states of the form lifecycle, and an option to control whether or not `updateForm` and `invalidateAll` should be called on your behalf
+ */
+export function enhance<Success = Record<string, any>, Invalid = Record<string, any>>(
+	form: HTMLFormElement,
+	options: {
+		pending?: ({ data, form }: { data: FormData; form: HTMLFormElement }) => void;
+		invalid?: (input: { data: FormData; form: HTMLFormElement; response: Invalid }) => void;
+		error?: (input: {
+			data: FormData;
+			form: HTMLFormElement;
+			response: Response | null;
+			error: Error | null;
+		}) => void;
+		redirect?: (input: { data: FormData; form: HTMLFormElement; location: string }) => void;
+		result?: (input: { data: FormData; response: Success; form: HTMLFormElement }) => void;
+	}
+): { destroy: () => void };
