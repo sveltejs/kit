@@ -37,7 +37,12 @@ export const handle = sequence(
 				? ({ html }) => html.replace('__REPLACEME__', 'Worked!')
 				: undefined
 		});
-		response.headers.append('set-cookie', 'name=SvelteKit; path=/; HttpOnly');
+
+		try {
+			// in some tests we fetch stuff with undici, and the headers are immutable.
+			// we can safely ignore it in those cases
+			response.headers.append('set-cookie', 'name=SvelteKit; path=/; HttpOnly');
+		} catch {}
 
 		return response;
 	}

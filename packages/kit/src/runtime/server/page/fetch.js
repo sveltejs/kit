@@ -63,7 +63,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 			}
 		}
 
-		const resolved = resolve(event.url.pathname, requested.split('?')[0]);
+		const resolved = resolve(event.url.pathname, requested.split('?')[0]).replace(/#.+$/, '');
 
 		/** @type {Response} */
 		let response;
