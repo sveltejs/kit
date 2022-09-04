@@ -265,6 +265,53 @@ Under the hood, the `enhance` action uses `updateForm` to update the `form` prop
 <button on:click={update}>Update form prop</button>
 ```
 
+## Multiple forms
+
+In case you have multiple forms on a single page, be aware of the implications this has on `export let form`. Consider the following example: You have a list of todos which you can delete, but there's a validation that the todo needs to be at least 5 minutes old. Relying on `form?.invalid` in the following example would give unexpected results - in case of a validation error, all items would have the validation message shown:
+
+```svelte
+<script>
+	import { enhance } from '$app/forms';
+</script>
+
+<ul>
+	{#each todos as todo}
+		<li>
+			<form method="post" use:enhance>
+				<span>{todo.text}</span>
+				{#if form?.invalid}
+					<span>Can't be deleted yet</span>
+				{/if}
+				<button>Remove</button>
+			</form>
+		<li>
+	{/each}
+<ul>
+```
+
+In situations like this, use different measures such as setting the invalid information on the todo itself:
+
+```svelte
+<script>
+	import { enhance } from '$app/forms';
+</script>
+
+<ul>
+	{#each todos as todo}
+		<li>
+			<form method="post" use:enhance={{ invalid: () => todo.invalid = true }}>
+				<span>{todo.text}</span>
+				<!-- use form?.invalid for the native form submission, use todo.invalid for progressive enhancement -->
+				{#if form?.invalid || todo.invalid}
+					<span>Can't be deleted yet</span>
+				{/if}
+				<button>Remove</button>
+			</form>
+		<li>
+	{/each}
+<ul>
+```
+
 ## Alternatives
 
 In case you don't need your forms to work without JavaScript, you want to use HTTP verbs other than `POST`, or you want to send arbitrary JSON instead of being restricted to `FormData`, then you can resort to interacting with your API through `+server.js` endpoints (which will be possible to place next to `+page` files, soon).
