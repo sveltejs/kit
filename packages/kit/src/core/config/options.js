@@ -131,7 +131,6 @@ const options = object(
 			),
 
 			env: object({
-				devModes: string_array(['development']),
 				dir: string(process.cwd()),
 				publicPrefix: string('PUBLIC_')
 			}),

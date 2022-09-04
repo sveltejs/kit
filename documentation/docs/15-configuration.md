@@ -26,7 +26,6 @@ const config = {
 			}
 		},
 		env: {
-      devModes: ['development'],
 			dir: process.cwd(),
 			publicPrefix: 'PUBLIC_'
 		},
@@ -166,7 +165,6 @@ When pages are prerendered, the CSP header is added via a `<meta http-equiv>` ta
 
 Environment variable configuration:
 
-- `devModes` — a list of Vite modes to be considered "development" modes. When the app is run in any of these modes, `$env/dynamic/*` will be populated in a less-efficient manner compatible with ecosystem tools such as Vitest and `vite-node`.
 - `dir` — the directory to search for `.env` files.
 - `publicPrefix` — a prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](/docs/modules#$env-static-public) and [`$env/dynamic/public`](/docs/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
 

@@ -74,7 +74,6 @@ const get_defaults = (prefix = '') => ({
 		},
 		endpointExtensions: undefined,
 		env: {
-			devModes: ['development'],
 			dir: process.cwd(),
 			publicPrefix: 'PUBLIC_'
 		},
