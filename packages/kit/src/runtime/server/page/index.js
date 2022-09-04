@@ -50,14 +50,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 		let status = 200;
 
-		/** @type {Record<string, any> | void} */
-		let mutation_data;
-
-		/** @type {HttpError | Error} */
-		let mutation_error;
-
-		/** @type {ValidationError | undefined} */
-		let validation_error;
+		/** @type {import('./types').MutationResult} */
+		let mutation_result;
 
 		if (is_action_request(event, leaf_node)) {
 			// for action requests, first call handler in +page.server.js
@@ -65,23 +59,18 @@ export async function render_page(event, route, page, options, state, resolve_op
 			try {
 				const result = await handle_action_request(event, leaf_node.server);
 				if (result instanceof ValidationError) {
-					validation_error = result;
+					mutation_result = { type: 'invalid', result: result.data };
 					status = result.status;
 				} else {
-					mutation_data = result;
+					mutation_result = { type: 'success', result };
 				}
 			} catch (e) {
-				const error = /** @type {Redirect | HttpError | Error} */ (e);
+				const error = normalize_error(e);
 				if (error instanceof Redirect) {
 					return redirect_response(303, error.location);
 				}
-				status =
-					error instanceof HttpError || error instanceof ValidationError ? error.status : 500;
-				if (error instanceof ValidationError) {
-					validation_error = error;
-				} else {
-					mutation_error = error;
-				}
+				status = error instanceof HttpError ? error.status : 500;
+				mutation_result = { type: 'error', error };
 			}
 		}
 
@@ -145,10 +134,10 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 			return Promise.resolve().then(async () => {
 				try {
-					if (node === leaf_node && mutation_error) {
+					if (node === leaf_node && mutation_result?.type === 'error') {
 						// we wait until here to throw the error so that we can use
 						// any nested +error.svelte components that were defined
-						throw mutation_error;
+						throw mutation_result.error;
 					}
 
 					return await load_server_data({
@@ -302,8 +291,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			status,
 			error: null,
 			branch: compact(branch),
-			validation_error,
-			mutation_data,
+			mutation_result,
 			fetched,
 			cookies
 		});

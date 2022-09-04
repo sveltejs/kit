@@ -1,4 +1,5 @@
 import { error, json } from '../../../exports/index.js';
+import { normalize_error } from '../../../utils/error.js';
 import { negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ValidationError } from '../../control.js';
 import { error_to_pojo } from '../utils.js';
@@ -55,7 +56,7 @@ export async function handle_action_json_request(event, options, server) {
 			});
 		}
 	} catch (e) {
-		const error = /** @type {Redirect | HttpError | Error} */ (e);
+		const error = normalize_error(e);
 
 		if (error instanceof Redirect) {
 			return action_json({

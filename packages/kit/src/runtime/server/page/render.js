@@ -28,8 +28,7 @@ const updated = {
  *   error: HttpError | Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   validation_error?: ValidationError | undefined;
- *   mutation_data?: Record<string, any> | void;
+ *   mutation_result?: import('./types').MutationResult;
  * }} opts
  */
 export async function render_response({
@@ -43,8 +42,7 @@ export async function render_response({
 	error = null,
 	event,
 	resolve_opts,
-	validation_error,
-	mutation_data
+	mutation_result
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -85,7 +83,7 @@ export async function render_response({
 				updated
 			},
 			components: await Promise.all(branch.map(({ node }) => node.component())),
-			form: mutation_data ?? validation_error?.data ?? null
+			form: mutation_result?.type !== 'error' ? mutation_result?.result ?? null : null
 		};
 
 		let data = {};
@@ -187,9 +185,9 @@ export async function render_response({
 		throw error;
 	}
 
-	if (validation_error?.data || mutation_data) {
+	if (mutation_result?.type !== 'error' && mutation_result?.result) {
 		try {
-			serialized.form = devalue(mutation_data || validation_error?.data);
+			serialized.form = devalue(mutation_result.result);
 		} catch (e) {
 			// If we're here, the data could not be serialized with devalue
 			const error = /** @type {any} */ (e);

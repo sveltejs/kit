@@ -1,5 +1,5 @@
 import { ResponseHeaders, SSRNode, CspDirectives } from 'types';
-import { HttpError } from '../../control.js';
+import { HttpError, ValidationError } from '../../control.js';
 
 export interface Fetched {
 	url: string;
@@ -43,3 +43,18 @@ export interface SerializedHttpError extends Pick<HttpError, 'message' | 'status
 	stack: '';
 	__is_http_error: true;
 }
+
+export type MutationResult =
+	| {
+			type: 'error';
+			error: HttpError | Error;
+	  }
+	| {
+			type: 'invalid';
+			result: Record<string, any> | undefined;
+	  }
+	| {
+			type: 'success';
+			result: Record<string, any> | void;
+	  }
+	| undefined;
