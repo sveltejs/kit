@@ -28,7 +28,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 			init
 		);
 
-		const body = init?.body;
+		const request_body = init?.body;
 
 		/** @type {import('types').PrerenderDependency} */
 		let dependency;
@@ -139,7 +139,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 					}
 				}
 
-				if (body && typeof body !== 'string') {
+				if (request_body && typeof request_body !== 'string') {
 					// TODO is this still necessary? we just bail out below
 					// per https://developer.mozilla.org/en-US/docs/Web/API/Request/Request, this can be a
 					// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object.
@@ -202,7 +202,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 								? request.url.slice(event.url.origin.length)
 								: request.url,
 							method: request.method,
-							body,
+							body: /** @type {string | undefined} */ (request_body),
 							response: {
 								status: status_number,
 								statusText: response.statusText,
