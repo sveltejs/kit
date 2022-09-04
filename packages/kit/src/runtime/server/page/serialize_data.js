@@ -35,18 +35,20 @@ const pattern = new RegExp(`[${Object.keys(replacements).join('')}]`, 'g');
  * and that the resulting string isn't further modified.
  *
  * @param {import('./types.js').Fetched} fetched
+ * @param {(name: string, value: string) => boolean} filter
  * @param {boolean} [prerendering]
  * @returns {string} The raw HTML of a script element carrying the JSON payload.
  * @example const html = serialize_data('/data.json', null, { foo: 'bar' });
  */
-export function serialize_data(fetched, prerendering = false) {
+export function serialize_data(fetched, filter, prerendering = false) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
 	for (const [key, value] of fetched.response.headers) {
 		const lower = key.toLowerCase();
-		if (lower === 'set-cookie' || lower === 'etag') continue;
-		headers[key] = value;
+		if (filter(lower, value)) {
+			headers[lower] = value;
+		}
 	}
 
 	const payload = {
