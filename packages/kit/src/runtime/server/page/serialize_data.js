@@ -40,10 +40,23 @@ const pattern = new RegExp(`[${Object.keys(replacements).join('')}]`, 'g');
  * @example const html = serialize_data('/data.json', null, { foo: 'bar' });
  */
 export function serialize_data(fetched, prerendering = false) {
-	const safe_payload = JSON.stringify(fetched.response).replace(
-		pattern,
-		(match) => replacements[match]
-	);
+	/** @type {Record<string, string>} */
+	const headers = {};
+
+	for (const [key, value] of fetched.response.headers) {
+		const lower = key.toLowerCase();
+		if (lower === 'set-cookie' || lower === 'etag') continue;
+		headers[key] = value;
+	}
+
+	const payload = {
+		status: fetched.response.status,
+		statusText: fetched.response.statusText,
+		headers,
+		body: fetched.response_body
+	};
+
+	const safe_payload = JSON.stringify(payload).replace(pattern, (match) => replacements[match]);
 
 	const attrs = [
 		'type="application/json"',
@@ -51,16 +64,16 @@ export function serialize_data(fetched, prerendering = false) {
 		`data-url=${escape_html_attr(fetched.url)}`
 	];
 
-	if (fetched.body) {
-		attrs.push(`data-hash=${escape_html_attr(hash(fetched.body))}`);
+	if (fetched.request_body) {
+		attrs.push(`data-hash=${escape_html_attr(hash(fetched.request_body))}`);
 	}
 
 	if (!prerendering && fetched.method === 'GET') {
-		const cache_control = /** @type {string} */ (fetched.response.headers['cache-control']);
+		const cache_control = fetched.response.headers.get('cache-control');
 		if (cache_control) {
 			const match = /s-maxage=(\d+)/g.exec(cache_control) ?? /max-age=(\d+)/g.exec(cache_control);
 			if (match) {
-				const age = /** @type {string} */ (fetched.response.headers['age']) ?? '0';
+				const age = fetched.response.headers.get('age') ?? '0';
 
 				const ttl = +match[1] - +age;
 				attrs.push(`data-ttl="${ttl}"`);

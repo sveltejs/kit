@@ -233,13 +233,9 @@ export function create_fetch({ event, options, state, route, prerender_default }
 						fetched.push({
 							url: requested,
 							method: opts.method || 'GET',
-							body: opts.body,
-							response: {
-								status: status_number,
-								statusText: response.statusText,
-								headers,
-								body
-							}
+							request_body: opts.body,
+							response_body: body,
+							response: response
 						});
 					}
 
