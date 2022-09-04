@@ -63,7 +63,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			// for action requests, first call handler in +page.server.js
 			// (this also determines status code)
 			try {
-				const result = await handle_action_request(event, options, leaf_node.server);
+				const result = await handle_action_request(event, leaf_node.server);
 				if (result instanceof ValidationError) {
 					validation_error = result;
 					status = result.status;

@@ -1676,7 +1676,7 @@ test.describe('XSS', () => {
 	});
 });
 
-test.describe('Actions', () => {
+test.describe.only('Actions', () => {
 	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/form-errors');
 		await page.click('button');
@@ -1705,27 +1705,6 @@ test.describe('Actions', () => {
 		} else {
 			expect(await page.inputValue('input[name="password"]')).toBe('');
 		}
-	});
-
-	test('handleFile is called', async ({ page }) => {
-		await page.goto('/actions/handle-file');
-
-		const [fileChooser] = await Promise.all([
-			page.waitForEvent('filechooser'),
-			page.locator('input[name="file"]').click()
-		]);
-		await fileChooser.setFiles({
-			name: 'test.txt',
-			mimeType: 'text/plain',
-			buffer: Buffer.from('test')
-		});
-
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/handle-file')),
-			page.click('button')
-		]);
-
-		expect(await page.textContent('p')).toBe('Result: file:test.txt');
 	});
 
 	test('Success data is returned', async ({ page }) => {

@@ -43,11 +43,6 @@ export const handle = sequence(
 	}
 );
 
-/** @type {import('@sveltejs/kit').HandleFile<string>} */
-export const handleFile = ({ field, file }) => {
-	return field + ':' + file.name;
-};
-
 /** @type {import('@sveltejs/kit').ExternalFetch} */
 export async function externalFetch(request) {
 	let newRequest = request;

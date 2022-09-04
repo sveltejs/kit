@@ -187,10 +187,6 @@ export interface HandleError {
 	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
 }
 
-export interface HandleFile<Result = any> {
-	(input: { event: RequestEvent; field: string; file: File }): MaybePromise<Result>;
-}
-
 /**
  * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
  * rather than using `Load` directly.
@@ -324,57 +320,14 @@ export interface ServerLoadEvent<
 }
 
 export interface Action<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	FileType = any
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
 > {
-	(event: ActionEvent<Params, FileType>): MaybePromise<Record<string, any> | void>;
+	(event: RequestEvent<Params>): MaybePromise<Record<string, any> | void>;
 }
 
 export type Actions<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	FileType = any
-> = Record<string, Action<Params, FileType>>;
-
-export interface ActionEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	FileType = any
-> extends RequestEvent<Params> {
-	fields: FieldsFormData;
-	files: FilesFormData<FileType>;
-}
-
-export class FieldsFormData extends FormData {
-	[Symbol.iterator](): IterableIterator<[string, string]>;
-	entries(): IterableIterator<[string, string]>;
-	keys(): IterableIterator<string>;
-	values(): IterableIterator<string>;
-
-	delete(name: string): void;
-	get(name: string): string | null;
-	getAll(name: string): string[];
-	has(name: string): boolean;
-	set(name: string, value: string): void;
-	forEach(
-		callbackfn: (value: string, key: string, parent: FieldsFormData) => void,
-		thisArg?: any
-	): void;
-}
-
-export class FilesFormData<FileFileType = File> {
-	[Symbol.iterator](): IterableIterator<[string, FileFileType]>;
-	entries(): IterableIterator<[string, FileFileType]>;
-	keys(): IterableIterator<string>;
-	values(): IterableIterator<FileFileType>;
-
-	delete(name: string): void;
-	get(name: string): FileFileType | null;
-	getAll(name: string): FileFileType[];
-	has(name: string): boolean;
-	set(name: string, value: string | Blob, fileName?: string): void;
-	forEach(
-		callbackfn: (value: FileFileType, key: string, parent: FilesFormData<File>) => void
-	): void;
-}
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> = Record<string, Action<Params>>;
 
 /**
  * When calling a form action via fetch, the response will be one of these shapes.

@@ -41,7 +41,7 @@ export async function handle_action_json_request(event, options, server) {
 	}
 
 	try {
-		const data = await call_action(event, options, actions);
+		const data = await call_action(event, actions);
 
 		if (data instanceof ValidationError) {
 			return action_json({ type: 'invalid', status: data.status, data: data.data });
@@ -91,12 +91,11 @@ export function is_action_request(event, leaf_node) {
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {import('types').SSROptions} options
  * @param {import('types').SSRNode['server']} server
  * @returns {Promise<Record<string,any> | void>}
  * @throws {Redirect | ValidationError | HttpError | Error}
  */
-export async function handle_action_request(event, options, server) {
+export async function handle_action_request(event, server) {
 	const actions = server.actions;
 
 	if (!actions) {
@@ -110,16 +109,15 @@ export async function handle_action_request(event, options, server) {
 		throw error(405, 'POST method not allowed. No actions exist for this page');
 	}
 
-	return call_action(event, options, actions);
+	return call_action(event, actions);
 }
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {import('types').SSROptions} options
  * @param {NonNullable<import('types').SSRNode['server']['actions']>} actions
  * @throws {Redirect | ValidationError | HttpError | Error}
  */
-export async function call_action(event, options, actions) {
+export async function call_action(event, actions) {
 	const url = new URL(event.request.url);
 
 	let name = 'default';
@@ -139,30 +137,7 @@ export async function call_action(event, options, actions) {
 		throw new Error('Actions expect form-encoded data, JSON is not supported');
 	}
 
-	const form = await event.request.formData();
-	const fields = new FormData();
-	const files = new FilesFormData();
-	const promises = [];
-
-	for (const [key, value] of form) {
-		if (typeof value === 'string') {
-			fields.append(key, value);
-		} else {
-			promises.push(
-				Promise.resolve()
-					.then(() => options.hooks.handleFile({ event, field: key, file: value }))
-					.then((/** @type {any} */ value) => ({ key, value }))
-			);
-		}
-	}
-
-	(await Promise.all(promises)).map(({ key, value }) => files.append(key, value));
-
-	return action({
-		...event,
-		fields: /** @type {import('types').FieldsFormData} */ (fields),
-		files
-	});
+	return action(event);
 }
 
 /**
@@ -175,120 +150,6 @@ function maybe_throw_migration_error(server) {
 				`${method} method no longer allowed in +page.server, use actions instead. See the PR for more info: https://github.com/sveltejs/kit/pull/6469`
 			);
 		}
-	}
-}
-
-/**
- * (written like this because JSDoc doesn't support import syntax in `@implements`)
- * @typedef {import('types').FilesFormData}  FFD
- */
-
-/** @implements {FFD} */
-export class FilesFormData {
-	constructor() {
-		/** @type {Map<string, any[]>} */
-		this.map = new Map();
-	}
-	/**
-	 * @param {string} key
-	 * @param {any} file
-	 */
-	set(key, file) {
-		this.map.set(key, [file]);
-	}
-	/**
-	 * @param {string} key
-	 */
-	get(key) {
-		return this.map.get(key)?.[0];
-	}
-	/**
-	 * @param {string} key
-	 * @param {any} file
-	 */
-	append(key, file) {
-		const files = this.map.get(key) || [];
-		files.push(file);
-		this.map.set(key, files);
-	}
-	/**
-	 * @param {string} key
-	 */
-	delete(key) {
-		this.map.delete(key);
-	}
-	/**
-	 * @param {string} key
-	 */
-	has(key) {
-		return this.map.has(key);
-	}
-	/**
-	 * @param {string} key
-	 */
-	getAll(key) {
-		return this.map.get(key) || [];
-	}
-	/**
-	 * @param {Parameters<FFD['forEach']>[0]} callback
-	 */
-	forEach(callback) {
-		this.map.forEach((values, key) => values.forEach((value) => callback(value, key, this)));
-	}
-	entries() {
-		return new Iterator(this.map, true, true);
-	}
-	keys() {
-		return new Iterator(this.map, true, false);
-	}
-	values() {
-		return new Iterator(this.map, false, true);
-	}
-
-	[Symbol.iterator]() {
-		return new Iterator(this.map, true, true);
-	}
-}
-
-/** @implements {IterableIterator<any>} */
-class Iterator {
-	/**
-	 * @param {Map<string, any[]>} map
-	 * @param {boolean} key
-	 * @param {boolean} value
-	 * */
-	constructor(map, key, value) {
-		this.key = key;
-		this.value = value;
-		this.map = map;
-		this.entries = this.map.entries();
-		this.index = 0;
-		this.current = undefined;
-	}
-	next() {
-		this.current = this.current || this.entries.next();
-		if (this.current.done) {
-			return { value: undefined, done: true };
-		}
-
-		const value =
-			this.key && this.value
-				? [this.current.value[0], this.current.value[1][this.index]]
-				: this.key
-				? this.current.value[0]
-				: this.current.value[1][this.index];
-		const next = { value, done: false };
-
-		this.index++;
-		if (this.index >= this.current.length) {
-			this.index = 0;
-			this.current = undefined;
-		}
-
-		return next;
-	}
-	[Symbol.iterator]() {
-		return this;
 	}
 }
 

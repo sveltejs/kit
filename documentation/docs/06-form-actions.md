@@ -46,22 +46,6 @@ export const actions = {
 };
 ```
 
-## Files and strings are separated
-
-Since `actions` are meant to be used with forms, we can make your life easier by awaiting the `FormData` and separating the form fields which contain strings from those who contain files and running the latter through the [`handleFile`](/docs/hooks#handleFile) hook before passing it as `fields` and `files` into the action function.
-
-```js
-/// file: src/routes/todos/+page.server.js
-/** @type {import('./$types').Actions} */
-export const actions = {
-	default: ({ fields, files }) => {
-		const name = fields.get('name'); // typed as string
-		const image = files.get('image'); // typed as the return type of the handleFile hook
-		// ...
-	}
-};
-```
-
 ## Validation
 
 A core part of form submissions is validation. For this, an action can `return` using the `invalid` helper method exported from `@sveltejs/kit` if there are validation errors. `invalid` expects a `status` as a required argument, and optionally anything else you want to return as a second argument. This could be the form value (make sure to remove any user sensitive information such as passwords) and an `error` object. In case of a native form submit the second argument to `invalid` populates the `$page.form` store and the `form` prop which is available inside your components. You can use this to preserve user input.
@@ -88,7 +72,8 @@ import { invalid } from '@sveltejs/kit';
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	default: async ({ fields, setHeaders, url }) => {
+	default: async ({ request, setHeaders, url }) => {
+		const fields = await request.formData();
 		const username = fields.get('username');
 		const password = fields.get('password');
 

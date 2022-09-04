@@ -8,7 +8,8 @@ export function load() {
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	default: async ({ fields }) => {
+	default: async ({ request }) => {
+		const fields = await request.formData();
 		return invalid(400, {
 			errors: { post_message: `echo: ${fields.get('message')}` }
 		});

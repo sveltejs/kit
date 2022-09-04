@@ -15,8 +15,7 @@ import {
 	Server,
 	ServerInitOptions,
 	SSRManifest,
-	Actions,
-	HandleFile
+	Actions
 } from './index.js';
 import {
 	HttpMethod,
@@ -95,7 +94,6 @@ export interface Hooks {
 	externalFetch: ExternalFetch;
 	handle: Handle;
 	handleError: HandleError;
-	handleFile: HandleFile<any>;
 }
 
 export interface ImportNode {

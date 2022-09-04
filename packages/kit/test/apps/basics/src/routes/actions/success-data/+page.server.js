@@ -7,7 +7,8 @@ export function load() {
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	default: ({ fields }) => {
+	default: async ({ request }) => {
+		const fields = await request.formData();
 		return {
 			result: fields.get('username')
 		};
