@@ -81,10 +81,10 @@ export function create_client({ target, base, trailing_slash }) {
 	};
 
 	const callbacks = {
-		/** @type {Array<(opts: { from: URL, to: URL | null, cancel: () => void }) => void>} */
+		/** @type {Array<(navigation: import('types').Navigation & { cancel: () => void }) => void>} */
 		before_navigate: [],
 
-		/** @type {Array<(opts: { from: URL | null, to: URL }) => void>} */
+		/** @type {Array<(navigation: import('types').Navigation) => void>} */
 		after_navigate: []
 	};
 
@@ -143,8 +143,11 @@ export function create_client({ target, base, trailing_slash }) {
 
 	function invalidate() {
 		if (!invalidating) {
+			const url = new URL(location.href);
+
 			invalidating = Promise.resolve().then(async () => {
-				await update(new URL(location.href), []);
+				const intent = get_navigation_intent(url);
+				await update(intent, url, []);
 
 				invalidating = null;
 				force_invalidation = false;
@@ -178,7 +181,8 @@ export function create_client({ target, base, trailing_slash }) {
 				replaceState
 			},
 			accepted: () => {},
-			blocked: () => {}
+			blocked: () => {},
+			type: 'goto'
 		});
 	}
 
@@ -198,14 +202,13 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/**
 	 * Returns `true` if update completes, `false` if it is aborted
+	 * @param {import('./types').NavigationIntent | undefined} intent
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
 	 * @param {() => void} [callback]
 	 */
-	async function update(url, redirect_chain, opts, callback) {
-		const intent = get_navigation_intent(url);
-
+	async function update(intent, url, redirect_chain, opts, callback) {
 		const current_token = (token = {});
 		let navigation_result = intent && (await load_route(intent));
 
@@ -396,7 +399,16 @@ export function create_client({ target, base, trailing_slash }) {
 			});
 		}
 
-		const navigation = { from: null, to: new URL(location.href) };
+		/** @type {import('types').Navigation} */
+		const navigation = {
+			from: null,
+			to: add_url_properties('to', {
+				params: current.params,
+				routeId: current.route?.id ?? null,
+				url: new URL(location.href)
+			}),
+			type: 'load'
+		};
 		callbacks.after_navigate.forEach((fn) => fn(navigation));
 
 		started = true;
@@ -410,7 +422,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   branch: Array<import('./types').BranchNode | undefined>;
 	 *   status: number;
 	 *   error: HttpError | Error | null;
-	 *   routeId: string | null;
+	 *   route: import('types').CSRRoute | null;
 	 *   validation_errors?: Record<string, any> | null;
 	 * }} opts
 	 */
@@ -420,7 +432,7 @@ export function create_client({ target, base, trailing_slash }) {
 		branch,
 		status,
 		error,
-		routeId,
+		route,
 		validation_errors
 	}) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
@@ -433,6 +445,7 @@ export function create_client({ target, base, trailing_slash }) {
 				params,
 				branch,
 				error,
+				route,
 				session_id
 			},
 			props: {
@@ -467,7 +480,7 @@ export function create_client({ target, base, trailing_slash }) {
 			result.props.page = {
 				error,
 				params,
-				routeId,
+				routeId: route && route.id,
 				status,
 				url,
 				// The whole page store is updated, but this way the object reference stays the same
@@ -843,7 +856,7 @@ export function create_client({ target, base, trailing_slash }) {
 									branch: branch.slice(0, j + 1).concat(error_loaded),
 									status,
 									error,
-									routeId: route.id
+									route
 								});
 							} catch (e) {
 								continue;
@@ -869,7 +882,7 @@ export function create_client({ target, base, trailing_slash }) {
 			branch,
 			status: 200,
 			error: null,
-			routeId: route.id
+			route
 		});
 	}
 
@@ -938,7 +951,7 @@ export function create_client({ target, base, trailing_slash }) {
 			branch: [root_layout, root_error],
 			status,
 			error,
-			routeId
+			route: null
 		});
 	}
 
@@ -978,21 +991,54 @@ export function create_client({ target, base, trailing_slash }) {
 	 *     replaceState: boolean;
 	 *     state: any;
 	 *   } | null;
+	 *   type: import('types').NavigationType;
+	 *   delta?: number;
 	 *   accepted: () => void;
 	 *   blocked: () => void;
 	 * }} opts
 	 */
-	async function navigate({ url, scroll, keepfocus, redirect_chain, details, accepted, blocked }) {
-		const from = current.url;
+	async function navigate({
+		url,
+		scroll,
+		keepfocus,
+		redirect_chain,
+		details,
+		type,
+		delta,
+		accepted,
+		blocked
+	}) {
 		let should_block = false;
 
+		const intent = get_navigation_intent(url);
+
+		/** @type {import('types').Navigation} */
 		const navigation = {
-			from,
-			to: url,
-			cancel: () => (should_block = true)
+			from: add_url_properties('from', {
+				params: current.params,
+				routeId: current.route?.id ?? null,
+				url: current.url
+			}),
+			to: add_url_properties('to', {
+				params: intent?.params ?? null,
+				routeId: intent?.route.id ?? null,
+				url
+			}),
+			type
 		};
 
-		callbacks.before_navigate.forEach((fn) => fn(navigation));
+		if (delta !== undefined) {
+			navigation.delta = delta;
+		}
+
+		const cancellable = {
+			...navigation,
+			cancel: () => {
+				should_block = true;
+			}
+		};
+
+		callbacks.before_navigate.forEach((fn) => fn(cancellable));
 
 		if (should_block) {
 			blocked();
@@ -1004,13 +1050,11 @@ export function create_client({ target, base, trailing_slash }) {
 		accepted();
 
 		if (started) {
-			stores.navigating.set({
-				from: current.url,
-				to: url
-			});
+			stores.navigating.set(navigation);
 		}
 
 		await update(
+			intent,
 			url,
 			redirect_chain,
 			{
@@ -1019,9 +1063,7 @@ export function create_client({ target, base, trailing_slash }) {
 				details
 			},
 			() => {
-				const navigation = { from, to: url };
 				callbacks.after_navigate.forEach((fn) => fn(navigation));
-
 				stores.navigating.set(null);
 			}
 		);
@@ -1130,9 +1172,15 @@ export function create_client({ target, base, trailing_slash }) {
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
 
+				/** @type {import('types').Navigation & { cancel: () => void }} */
 				const navigation = {
-					from: current.url,
+					from: add_url_properties('from', {
+						params: current.params,
+						routeId: current.route?.id ?? null,
+						url: current.url
+					}),
 					to: null,
+					type: 'unload',
 					cancel: () => (should_block = true)
 				};
 
@@ -1161,7 +1209,7 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @param {Event} event */
 			const trigger_prefetch = (event) => {
 				const { url, options } = find_anchor(event);
-				if (url && options.prefetch === '') {
+				if (url && options.prefetch) {
 					if (is_external_url(url)) return;
 					prefetch(url);
 				}
@@ -1211,7 +1259,7 @@ export function create_client({ target, base, trailing_slash }) {
 				// 2. 'rel' attribute includes external
 				const rel = (a.getAttribute('rel') || '').split(/\s+/);
 
-				if (a.hasAttribute('download') || rel.includes('external') || options.reload === '') {
+				if (a.hasAttribute('download') || rel.includes('external') || options.reload) {
 					return;
 				}
 
@@ -1237,7 +1285,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 				navigate({
 					url,
-					scroll: options.noscroll === '' ? scroll_state() : null,
+					scroll: options.noscroll ? scroll_state() : null,
 					keepfocus: false,
 					redirect_chain: [],
 					details: {
@@ -1245,7 +1293,8 @@ export function create_client({ target, base, trailing_slash }) {
 						replaceState: url.href === location.href
 					},
 					accepted: () => event.preventDefault(),
-					blocked: () => event.preventDefault()
+					blocked: () => event.preventDefault(),
+					type: 'link'
 				});
 			});
 
@@ -1254,6 +1303,8 @@ export function create_client({ target, base, trailing_slash }) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
+
+					const delta = event.state[INDEX_KEY] - current_history_index;
 
 					navigate({
 						url: new URL(location.href),
@@ -1265,9 +1316,10 @@ export function create_client({ target, base, trailing_slash }) {
 							current_history_index = event.state[INDEX_KEY];
 						},
 						blocked: () => {
-							const delta = current_history_index - event.state[INDEX_KEY];
-							history.go(delta);
-						}
+							history.go(-delta);
+						},
+						type: 'popstate',
+						delta
 					});
 				}
 			});
@@ -1352,7 +1404,7 @@ export function create_client({ target, base, trailing_slash }) {
 						  )
 						: original_error,
 					validation_errors,
-					routeId
+					route: routes.find((route) => route.id === routeId) ?? null
 				});
 			} catch (e) {
 				const error = normalize_error(e);
@@ -1434,4 +1486,38 @@ async function load_data(url, invalid) {
 	delete window.__sveltekit_data;
 
 	return server_data;
+}
+
+// TODO remove for 1.0
+const properties = [
+	'hash',
+	'href',
+	'host',
+	'hostname',
+	'origin',
+	'pathname',
+	'port',
+	'protocol',
+	'search',
+	'searchParams',
+	'toString',
+	'toJSON'
+];
+
+/**
+ * @param {'from' | 'to'} type
+ * @param {import('types').NavigationTarget} target
+ */
+function add_url_properties(type, target) {
+	for (const prop of properties) {
+		Object.defineProperty(target, prop, {
+			get() {
+				throw new Error(
+					`The navigation shape changed - ${type}.${prop} should now be ${type}.url.${prop}`
+				);
+			}
+		});
+	}
+
+	return target;
 }

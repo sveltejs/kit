@@ -889,6 +889,23 @@ test.describe('Load', () => {
 
 		expect(await page.textContent('h1')).toBe('true');
 	});
+
+	test('CORS errors are simulated server-side', async ({ page, read_errors }) => {
+		const { port, close } = await start_server(async (req, res) => {
+			res.end('hello');
+		});
+
+		await page.goto(`/load/cors?port=${port}`);
+		expect(await page.textContent('h1')).toBe('500');
+		expect(read_errors(`/load/cors`)).toContain(
+			`Error: CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource`
+		);
+
+		await page.goto(`/load/cors/no-cors?port=${port}`);
+		expect(await page.textContent('h1')).toBe('result: ');
+
+		await close();
+	});
 });
 
 test.describe('Method overrides', () => {
@@ -1135,7 +1152,7 @@ test.describe('$app/stores', () => {
 		expect(JSON.parse(await page.textContent('#store-data'))).toEqual(stuff3);
 	});
 
-	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
+	test('navigating store contains from, to and type', async ({ app, page, javaScriptEnabled }) => {
 		await page.goto('/store/navigating/a');
 
 		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
@@ -1148,10 +1165,17 @@ test.describe('$app/stores', () => {
 				page.textContent('#navigating')
 			]);
 
-			expect(res[1]).toBe('navigating from /store/navigating/a to /store/navigating/b');
+			expect(res[1]).toBe('navigating from /store/navigating/a to /store/navigating/b (link)');
 
 			await page.waitForSelector('#not-navigating');
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+
+			await Promise.all([
+				expect(page.locator('#navigating')).toHaveText(
+					'navigating from /store/navigating/b to /store/navigating/a (popstate)'
+				),
+				page.goBack()
+			]);
 		}
 	});
 

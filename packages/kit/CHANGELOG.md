@@ -1,5 +1,45 @@
 # @sveltejs/kit
 
+## 1.0.0-next.469
+
+### Patch Changes
+
+- disable `rollupOptions.output.hoistTransitiveImports` by default ([#6560](https://github.com/sveltejs/kit/pull/6560))
+
+## 1.0.0-next.468
+
+### Patch Changes
+
+- [breaking] simulate CORS errors in server-side fetch ([#6550](https://github.com/sveltejs/kit/pull/6550))
+
+## 1.0.0-next.467
+
+### Patch Changes
+
+- [breaking] prevent server-side fetch from reading files with # character in the filename ([#6549](https://github.com/sveltejs/kit/pull/6549))
+
+## 1.0.0-next.466
+
+### Patch Changes
+
+- [breaking] change Navigation type to include from/to.params and from/to.routeId ([#6552](https://github.com/sveltejs/kit/pull/6552))
+
+* Warn about incorrect data-sveltekit-x values ([#6546](https://github.com/sveltejs/kit/pull/6546))
+
+## 1.0.0-next.465
+
+### Patch Changes
+
+- [feat] add `type` to navigation object ([#6537](https://github.com/sveltejs/kit/pull/6537))
+
+## 1.0.0-next.464
+
+### Patch Changes
+
+- Fix server manifest generation ([#6507](https://github.com/sveltejs/kit/pull/6507))
+
+* Silently skip prefetching of external URLs when using `data-sveltekit-prefetch`. Warn like before when calling `prefetch()` for external URLs. ([#6518](https://github.com/sveltejs/kit/pull/6518))
+
 ## 1.0.0-next.463
 
 ### Patch Changes
