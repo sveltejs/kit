@@ -105,7 +105,8 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 					format: 'esm',
 					entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
 					chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
-					assetFileNames: `${prefix}/assets/[name]-[hash][extname]`
+					assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
+					hoistTransitiveImports: false
 				},
 				preserveEntrySignatures: 'strict'
 			},
@@ -133,7 +134,8 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 			rollupOptions: {
 				output: {
 					entryFileNames: `${prefix}/workers/[name]-[hash].js`,
-					chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`
+					chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`,
+					hoistTransitiveImports: false
 				}
 			}
 		}
