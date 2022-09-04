@@ -51,7 +51,10 @@ export const handle = sequence(
 /** @type {import('@sveltejs/kit').HandleFetch} */
 export async function handleFetch({ request, fetch }) {
 	if (request.url.endsWith('/server-fetch-request.json')) {
-		request = new Request('/server-fetch-request-modified.json', request);
+		request = new Request(
+			request.url.replace('/server-fetch-request.json', '/server-fetch-request-modified.json'),
+			request
+		);
 	}
 
 	return fetch(request);

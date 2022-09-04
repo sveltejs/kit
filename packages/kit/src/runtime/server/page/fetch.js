@@ -23,10 +23,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 
 	/** @type {typeof fetch} */
 	const fetcher = async (info, init) => {
-		const request = normalize_fetch_input(
-			typeof info === 'string' ? new URL(info, event.url) : info,
-			init
-		);
+		const request = normalize_fetch_input(info, init, event.url);
 
 		const request_body = init?.body;
 
@@ -37,7 +34,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 			event,
 			request,
 			fetch: async (info, init) => {
-				const request = normalize_fetch_input(info, init);
+				const request = normalize_fetch_input(info, init, event.url);
 
 				const url = new URL(request.url);
 
@@ -259,11 +256,12 @@ export function create_fetch({ event, options, state, route, prerender_default }
 /**
  * @param {RequestInfo | URL} info
  * @param {RequestInit | undefined} init
+ * @param {URL} url
  */
-function normalize_fetch_input(info, init) {
+function normalize_fetch_input(info, init, url) {
 	if (info instanceof Request) {
 		return info;
 	}
 
-	return new Request(info, init);
+	return new Request(typeof info === 'string' ? new URL(info, url) : info, init);
 }
