@@ -110,10 +110,16 @@ export class Server {
 
 		if (!this.options.hooks) {
 			const module = await import(${s(hooks)});
+
+			// TODO remove this for 1.0
+			if (module.externalFetch) {
+				throw new Error('externalFetch has been removed — use handleFetch instead'); // TODO add migration guide
+			}
+
 			this.options.hooks = {
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
 				handleError: module.handleError || (({ error }) => console.error(error.stack)),
-				externalFetch: module.externalFetch || fetch
+				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
 			};
 		}
 	}

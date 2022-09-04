@@ -773,7 +773,8 @@ test.describe('Load', () => {
 		const requested_urls = [];
 
 		const { port, close } = await start_server(async (req, res) => {
-			if (!req.url) throw new Error('Incomplete request');
+			console.error(`req.url ${req.url}`);
+
 			requested_urls.push(req.url);
 
 			if (req.url === '/server-fetch-request-modified.json') {

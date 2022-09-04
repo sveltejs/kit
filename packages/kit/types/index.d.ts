@@ -191,6 +191,10 @@ export interface HandleError {
 	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
 }
 
+export interface HandleFetch {
+	(input: { event: RequestEvent; request: Request; fetch: typeof fetch }): MaybePromise<Response>;
+}
+
 /**
  * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
  * rather than using `Load` directly.
