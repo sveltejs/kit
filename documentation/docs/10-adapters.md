@@ -106,16 +106,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-			- uses: actions/configure-pages@v1
+      - uses: actions/configure-pages@v1
 
-			- name: Build
-				run: pnpm run build
+      - name: Build
+        run: pnpm run build
 
-			- uses: actions/upload-pages-artifact@v1
-				with:
-					path: build
+      - uses: actions/upload-pages-artifact@v1
+        with:
+          path: build
 
-			- uses: actions/deploy-pages@v1
+      - uses: actions/deploy-pages@v1
 ```
 
 #### Platform-specific context
