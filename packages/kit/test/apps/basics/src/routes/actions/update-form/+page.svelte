@@ -1,5 +1,5 @@
 <script>
-	import { updateForm } from '$app/navigation';
+	import { updateForm } from '$app/forms';
 
 	export let form;
 	let count = 0;

@@ -46,7 +46,66 @@ export const actions = {
 };
 ```
 
-## Validation
+## Anatomy of an action
+
+Each action gets the event object you already know from `load`. Part of it is the `request` object from which you get the form data.
+
+```js
+/// file: src/routes/login/+page.server.js
+import { redirect } from '@sveltejs/kit';
+
+/** @type {import('./$types').Actions} */
+export const actions = {
+	default: async ({ request }) => {
+		const fields = await request.formData();
+		// ...
+	}
+};
+```
+
+After that, it's up to you how to proceed with the form data.
+
+### Success
+
+If everything is valid, an action can return a JSON object with data, which will be available through the `$page.form` store and the `form` prop. Alternatively it can `throw` a `redirect` to redirect the user to another page.
+
+```js
+/// file: src/routes/login/+page.server.js
+import { redirect } from '@sveltejs/kit';
+
+/** @type {import('./$types').Actions} */
+export const actions = {
+	default: async ({ url }) => {
+		// ...
+
+		if (url.searchParams.get('redirectTo')) {
+			throw redirect(303, url.searchParams.get('redirectTo'));
+		} else {
+			return {
+				success: true
+			};
+		}
+	}
+};
+```
+
+```svelte
+/// file: src/routes/login/+page.svelte
+<script>
+	/** @type {import('./$types').FormData} */
+	export let form;
+</script>
+
+{#if form?.success}
+	<span class="success">Login successful</span>
+{/if}
+
+<form>
+	...
+</form>
+```
+
+### Validation
 
 A core part of form submissions is validation. For this, an action can `return` using the `invalid` helper method exported from `@sveltejs/kit` if there are validation errors. `invalid` expects a `status` as a required argument, and optionally anything else you want to return as a second argument. This could be the form value (make sure to remove any user sensitive information such as passwords) and an `error` object. In case of a native form submit the second argument to `invalid` populates the `$page.form` store and the `form` prop which is available inside your components. You can use this to preserve user input.
 
@@ -108,46 +167,6 @@ export const actions = {
 </form>
 ```
 
-## Success
-
-If everything is valid, an action can return a JSON object with data, which will be available through the `$page.form` store and the `form` prop. Alternatively it can `throw` a `redirect` to redirect the user to another page.
-
-```js
-/// file: src/routes/login/+page.server.js
-import { redirect } from '@sveltejs/kit';
-
-/** @type {import('./$types').Actions} */
-export const actions = {
-	default: async ({ url }) => {
-		// ...
-
-		if (url.searchParams.get('redirectTo')) {
-			throw redirect(303, url.searchParams.get('redirectTo'));
-		} else {
-			return {
-				success: true
-			};
-		}
-	}
-};
-```
-
-```svelte
-/// file: src/routes/login/+page.svelte
-<script>
-	/** @type {import('./$types').FormData} */
-	export let form;
-</script>
-
-{#if form?.success}
-	<span class="success">Login successful</span>
-{/if}
-
-<form>
-	...
-</form>
-```
-
 ## Progressive enhancement
 
 So far, all the code examples run native form submissions - that is, when the user pressed the submit button, the page is reloaded. It's good that this use case is supported since JavaScript may not be loaded all the time. When it is though, it might be a better user experience to use the powers JavaScript gives us to provide a better user experience - this is called progressive enhancement.
@@ -194,28 +213,20 @@ First we need to ensure that the page is _not_ reloaded on submission. For this,
 </form>
 ```
 
-## `use:enhance`
+### `use:enhance`
 
 As you can see, progressive enhancement is doable, but it may become a little cumbersome over time. That's why we provide a small `enhance` action which does most of the heavy lifting for you. Here's how the same login page would look like using the `enhance` action:
 
 ```svelte
 /// file: src/routes/login/+page.svelte
 <script>
-	import { enhance } from '@sveltejs/kit';
-	import { goto } from '$app/navigation';
+	import { enhance } from '$app/forms';
 
 	/** @type {import('./$types').FormData} */
 	export let form;
-
-	function redirect({ location }) {
-		goto(location);
-	}
-	function invalid({ response }) {
-		form = response;
-	}
 </script>
 
-<form action="?/addTodo" use:enhance={{ redirect, invalid }}>
+<form action="?/addTodo" use:enhance>
 	<input type="text" name="username" value={forms?.values?.username} />
 	{#if forms?.errors?.username}
 		<span>{forms.errors.username}</span>
@@ -225,7 +236,34 @@ As you can see, progressive enhancement is doable, but it may become a little cu
 </form>
 ```
 
-The `enhance` action is still pretty low-level, but it allows you to create your own wrapper components from it - or you can come up with your own action.
+By default, the `enhance` action will
+
+- update the `form` property and invalidate all data on a successful response
+- call `goto` on a redirect response
+- update the `form` property on a invalid response
+
+You can customize this behavior by providing your own callbacks to `enhance`.
+
+### updateForm
+
+Under the hood, the `enhance` action uses `updateForm` to update the `form` prop. It's a low level API that you can use to build your own opinionated actions. The argument passed to it becomes the new value of the `form` prop.
+
+```svelte
+/// file: src/routes/login/+page.svelte
+<script>
+	import { updateForm } from '$app/forms';
+
+	/** @type {import('./$types').FormData} */
+	export let form;
+
+	function update() {
+		// If possible, the value should conform to the `FormData` interface defined through `./$types`
+		updateForm({ next: 'value' });
+	}
+</script>
+
+<button on:click={update}>Update form prop</button>
+```
 
 ## Alternatives
 

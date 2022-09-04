@@ -3,6 +3,8 @@ import { negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ValidationError } from '../../control.js';
 import { error_to_pojo } from '../utils.js';
 
+// Info: `enhance` action and `updateForm` live in `runtime/app/forms.js`
+
 /**
  * @param {import('types').RequestEvent} event
  */
@@ -152,5 +154,3 @@ function maybe_throw_migration_error(server) {
 		}
 	}
 }
-
-// enhance action lives in exports due to otherwise cyclic references

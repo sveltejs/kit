@@ -1676,7 +1676,7 @@ test.describe('XSS', () => {
 	});
 });
 
-test.describe.only('Actions', () => {
+test.describe('Actions', () => {
 	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/form-errors');
 		await page.click('button');

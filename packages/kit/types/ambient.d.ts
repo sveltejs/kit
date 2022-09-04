@@ -82,6 +82,56 @@ declare module '$app/environment' {
 
 /**
  * ```ts
+ * import { enhance, updateForm } from '$app/forms';
+ * ```
+ */
+declare module '$app/forms' {
+	/**
+	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
+	 * @param form The form element
+	 * @param options Callbacks for different states of the form lifecycle
+	 */
+	export function enhance<Success = Record<string, any>, Invalid = Record<string, any>>(
+		form: HTMLFormElement,
+		options: {
+			/**
+			 * Called when submission was made an server call is pending
+			 */
+			pending?: ({ data, form }: { data: FormData; form: HTMLFormElement }) => void;
+			/**
+			 * Called when submission was invalid. If not set, will update the `form` property
+			 */
+			invalid?: (input: { data: FormData; form: HTMLFormElement; response: Invalid }) => void;
+			/**
+			 * Called when an unexpected error occurs
+			 */
+			error?: (input: {
+				data: FormData;
+				form: HTMLFormElement;
+				response: Response | null;
+				error: Error | null;
+			}) => void;
+			/**
+			 * Called when submission was successful and resulted in a redirect response. If not set, will `goto` the given `location`
+			 */
+			redirect?: (input: { data: FormData; form: HTMLFormElement; location: string }) => void;
+			/**
+			 * Called when submission was successful and no redirect happens. If not set, will update the `form` property and call `invalidateAll`
+			 */
+			result?: (input: { data: FormData; response: Success; form: HTMLFormElement }) => void;
+		}
+	): { destroy: () => void };
+
+	/**
+	 * This action updates the `form` property of the current page with the given data.
+	 */
+	export function updateForm<Data extends Record<string, unknown> | null = Record<string, any>>(
+		data: Data
+	): void;
+}
+
+/**
+ * ```ts
  * import {
  * 	afterNavigate,
  * 	beforeNavigate,
