@@ -1450,6 +1450,17 @@ async function load_data(url, invalid) {
 	const safeRemoteImport = (url) =>
 		legacy
 			? new Promise((resolve, reject) => {
+					const time_arg = `__svelte_kit_legacy_time=${new Date().getTime()}`;
+
+					const mark_idx = url.indexOf('?');
+					if (mark_idx < 0) {
+						url += "?" + time_arg;
+					} else if (mark_idx === url.length - 1) {
+						url += time_arg;
+					} else {
+						url += "&" + time_arg;
+					}
+
 					const script = document.createElement('script');
 					script.src = url;
 
