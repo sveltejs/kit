@@ -886,7 +886,7 @@ export function create_client({ target, base, trailing_slash }) {
 			error: null,
 			route,
 			// On invalidateAll/same site navigation, form prop stays, else it's reset
-			form: current.url.href !== url.href ? null : undefined
+			form: current.url?.href !== url.href ? null : undefined
 		});
 	}
 
