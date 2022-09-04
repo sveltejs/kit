@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.468
+
+### Patch Changes
+
+- [breaking] simulate CORS errors in server-side fetch ([#6550](https://github.com/sveltejs/kit/pull/6550))
+
 ## 1.0.0-next.467
 
 ### Patch Changes
