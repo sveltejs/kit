@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$lib/form';
+	import { enhance } from '$app/forms';
 	import { scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import type { PageData } from './$types';
