@@ -84,7 +84,8 @@ export async function render_response({
 				navigating: writable(null),
 				updated
 			},
-			components: await Promise.all(branch.map(({ node }) => node.component()))
+			components: await Promise.all(branch.map(({ node }) => node.component())),
+			form: mutation_data ?? validation_error?.data ?? null
 		};
 
 		let data = {};
@@ -102,8 +103,7 @@ export async function render_response({
 			routeId: event.routeId,
 			status,
 			url: event.url,
-			data,
-			form: mutation_data ?? validation_error?.data ?? null
+			data
 		};
 
 		// TODO remove this for 1.0

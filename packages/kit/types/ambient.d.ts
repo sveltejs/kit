@@ -210,11 +210,6 @@ declare module '$app/navigation' {
 	export function prefetchRoutes(routes?: string[]): Promise<void>;
 
 	/**
-	 * Programmatically update the `$page.form` store with the given `data`. Also updates the `form` prop, if not set otherwise through the second argument.
-	 */
-	export function updateForm(data: Record<string, any> | null): Promise<void>;
-
-	/**
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
 	 * Calling `cancel()` will prevent the navigation from completing.
 	 *

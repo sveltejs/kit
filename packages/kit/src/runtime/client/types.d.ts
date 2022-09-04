@@ -1,3 +1,4 @@
+import { updateForm } from '$app/forms';
 import {
 	afterNavigate,
 	beforeNavigate,
@@ -5,8 +6,7 @@ import {
 	invalidate,
 	invalidateAll,
 	prefetch,
-	prefetchRoutes,
-	updateForm
+	prefetchRoutes
 } from '$app/navigation';
 import { CSRPageNode, CSRPageNodeLoader, CSRRoute, Uses } from 'types';
 import { HttpError } from '../control.js';

@@ -448,7 +448,8 @@ export function create_client({ target, base, trailing_slash }) {
 				session_id
 			},
 			props: {
-				components: filtered.map((branch_node) => branch_node.node.component)
+				components: filtered.map((branch_node) => branch_node.node.component),
+				form
 			}
 		};
 
@@ -482,8 +483,7 @@ export function create_client({ target, base, trailing_slash }) {
 				status,
 				url,
 				// The whole page store is updated, but this way the object reference stays the same
-				data: data_changed ? data : page.data,
-				form
+				data: data_changed ? data : page.data
 			};
 
 			// TODO remove this for 1.0
@@ -1162,7 +1162,6 @@ export function create_client({ target, base, trailing_slash }) {
 		},
 
 		update_form: async (form) => {
-			page = { ...page, form };
 			if (import.meta.env.DEV) {
 				// Nasty hack to silence harmless warnings the user can do nothing about
 				const warn = console.warn;
@@ -1174,12 +1173,12 @@ export function create_client({ target, base, trailing_slash }) {
 						warn(...args);
 					}
 				};
-				root.$set({ page });
+				root.$set({ form });
 				await tick().then(() => (console.warn = warn));
 
 				check_for_removed_attributes();
 			} else {
-				root.$set({ page });
+				root.$set({ form });
 				await tick();
 			}
 		},

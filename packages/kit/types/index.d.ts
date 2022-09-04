@@ -237,7 +237,6 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	status: number;
 	error: HttpError | Error | null;
 	data: App.PageData & Record<string, any>;
-	form: Record<string, any> | null;
 }
 
 export interface ParamMatcher {

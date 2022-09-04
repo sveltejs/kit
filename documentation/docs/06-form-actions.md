@@ -67,7 +67,7 @@ After that, it's up to you how to proceed with the form data.
 
 ### Success
 
-If everything is valid, an action can return a JSON object with data, which will be available through the `$page.form` store and the `form` prop. Alternatively it can `throw` a `redirect` to redirect the user to another page.
+If everything is valid, an action can return a JSON object with data, which will be available through the `form` prop. Alternatively it can `throw` a `redirect` to redirect the user to another page.
 
 ```js
 /// file: src/routes/login/+page.server.js
@@ -107,7 +107,7 @@ export const actions = {
 
 ### Validation
 
-A core part of form submissions is validation. For this, an action can `return` using the `invalid` helper method exported from `@sveltejs/kit` if there are validation errors. `invalid` expects a `status` as a required argument, and optionally anything else you want to return as a second argument. This could be the form value (make sure to remove any user sensitive information such as passwords) and an `error` object. In case of a native form submit the second argument to `invalid` populates the `$page.form` store and the `form` prop which is available inside your components. You can use this to preserve user input.
+A core part of form submissions is validation. For this, an action can `return` using the `invalid` helper method exported from `@sveltejs/kit` if there are validation errors. `invalid` expects a `status` as a required argument, and optionally anything else you want to return as a second argument. This could be the form value (make sure to remove any user sensitive information such as passwords) and an `error` object. In case of a native form submit the second argument to `invalid` populates the `form` prop which is available inside your components. You can use this to preserve user input.
 
 ```js
 /// file: src/routes/login/+page.server.js

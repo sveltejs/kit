@@ -1681,10 +1681,8 @@ test.describe('Actions', () => {
 		await page.goto('/actions/form-errors');
 		await page.click('button');
 		expect(await page.textContent('p.server-prop')).toBe('an error occurred');
-		expect(await page.textContent('p.server-store')).toBe('an error occurred');
 		if (javaScriptEnabled) {
 			expect(await page.textContent('p.client-prop')).toBe('hydrated: an error occurred');
-			expect(await page.textContent('p.client-store')).toBe('hydrated: an error occurred');
 		}
 	});
 
