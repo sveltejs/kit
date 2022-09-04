@@ -1,8 +1,7 @@
 <script>
 	import { browser } from '$app/environment';
-	import { page } from '$app/stores';
 
-	/** @type import('./$types').FormData */
+	/** @type {import('./$types').ActionData} */
 	export let form;
 
 	const hydrated_error_message = browser ? 'hydrated: ' + form?.errors?.message : '';

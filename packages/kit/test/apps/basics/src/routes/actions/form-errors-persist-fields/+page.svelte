@@ -1,7 +1,7 @@
 <script>
 	import { browser } from '$app/environment';
 
-	/** @type {import('./$types').FormData} */
+	/** @type {import('./$types').ActionData} */
 	export let form;
 
 	$: hydrated_form_values = browser ? form?.values : '';
@@ -11,10 +11,12 @@
 			method: 'POST',
 			body: new FormData(this),
 			headers: {
-				'accept': 'application/json'
+				accept: 'application/json'
 			}
 		});
-		const { data: { errors, values } } = await res.json();
+		const {
+			data: { errors, values }
+		} = await res.json();
 		form = { errors, values };
 	}
 </script>

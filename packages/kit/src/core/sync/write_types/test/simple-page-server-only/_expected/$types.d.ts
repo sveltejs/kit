@@ -20,7 +20,7 @@ export type PageServerLoad<
 	OutputData extends OutputDataShape<PageServerParentData> = OutputDataShape<PageServerParentData>
 > = Kit.ServerLoad<RouteParams, PageServerParentData, OutputData>;
 export type PageServerLoadEvent = Parameters<PageServerLoad>[0];
-export type FormData = Kit.AwaitedActions<
+export type ActionData = Kit.AwaitedActions<
 	typeof import('../../../../../../../../+page.server.js').actions
 >;
 export type PageServerData = Kit.AwaitedProperties<

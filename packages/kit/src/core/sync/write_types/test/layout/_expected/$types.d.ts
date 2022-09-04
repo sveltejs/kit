@@ -23,7 +23,7 @@ export type PageServerLoad<
 		| void
 > = Kit.ServerLoad<RouteParams, PageServerParentData, OutputData>;
 export type PageServerLoadEvent = Parameters<PageServerLoad>[0];
-export type FormData = unknown;
+export type ActionData = unknown;
 export type PageServerData = Kit.AwaitedProperties<
 	Awaited<ReturnType<typeof import('../../../../../../../../+page.server.js').load>>
 >;

@@ -1,5 +1,5 @@
 <script>
-	/** @type {import('./$types').FormData} */
+	/** @type {import('./$types').ActionData} */
 	export let form;
 
 	async function submit() {
@@ -7,7 +7,7 @@
 			method: 'POST',
 			body: new FormData(this),
 			headers: {
-				'accept': 'application/json'
+				accept: 'application/json'
 			}
 		});
 		const { data } = await res.json();

@@ -306,7 +306,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 					type = `Kit.AwaitedActions<typeof import('${from}').actions>`;
 				}
 			}
-			exports.push(`export type FormData = ${type};`);
+			exports.push(`export type ActionData = ${type};`);
 		}
 	} else {
 		server_data = 'null';
