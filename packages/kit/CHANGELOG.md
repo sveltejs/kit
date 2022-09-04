@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.469
+
+### Patch Changes
+
+- disable `rollupOptions.output.hoistTransitiveImports` by default ([#6560](https://github.com/sveltejs/kit/pull/6560))
+
 ## 1.0.0-next.468
 
 ### Patch Changes
