@@ -761,6 +761,12 @@ test.describe('Load', () => {
 		expect(await page.textContent('h2')).toBe('the question was ?');
 	});
 
+	test('fetch resolves relative to layout', async ({ page, clicknav }) => {
+		await page.goto('/load');
+		await clicknav('[href="/load/fetch-layout-relative/a/b/c"]');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+	});
+
 	test('handles large responses', async ({ page }) => {
 		await page.goto('/load');
 
