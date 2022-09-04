@@ -59,16 +59,63 @@ You can also use `adapter-static` to generate single-page apps (SPAs) by specify
 
 #### GitHub Pages
 
-SvelteKit can be automatically configured for deployment on GitHub Pages by using the `actions/configure-pages` GitHub Action before building it.
+SvelteKit can be automatically configured for deployment on GitHub Pages by using the [`actions/configure-pages`](https://github.com/actions/configure-pages) GitHub Action before building it. This action will set `GITHUB_PAGES=true` and replace `kit.paths.base` in `svelte.config.js` by the correct path for your GitHub repository.
+
+To use it, create a new [workflow](https://docs.github.com/en/actions/using-workflows/about-workflows) file at `.github/workflows/github-pages.yaml`. You can start with GitHub's [_Node.js CI_ template](https://github.com/actions/starter-workflows/blob/main/ci/node.js.yml), use the template provided here or make your own.
+
+If you want to make your own workflow, it needs to perform these steps:
+
+1. Checkout the repository with [`actions/checkout`](https://github.com/actions/checkout)
+2. Setup Node.JS with [`actions/setup-node`](https://github.com/actions/setup-node)
+3. Install dependencies with `npm i`, `pnpm i` or `yarn`
+4. Setup SvelteKit for GitHub Pages with [`actions/configure-pages`](https://github.com/actions/configure-pages)
+5. Build the website with `npm run build`, `pnpm run build` or `yarn run build`
+6. Upload the built website with [`actions/upload-pages-artifact`](https://github.com/actions/upload-pages-artifact)
+7. Deploy the uploaded website with [`actions/deploy-pages`](https://github.com/actions/deploy-pages)
+
+Here's a complete template using [`pnpm`](https://pnpm.io).
 
 ```yaml
-- uses: actions/configure-pages@v1
-- name: Build
-  run: pnpm run build
-- uses: actions/upload-pages-artifact@v1
-  with:
-    path: build
-- uses: actions/deploy-pages@v1
+name: GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [latest]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+			- uses: actions/configure-pages@v1
+
+			- name: Build
+				run: pnpm run build
+
+			- uses: actions/upload-pages-artifact@v1
+				with:
+					path: build
+
+			- uses: actions/deploy-pages@v1
 ```
 
 #### Platform-specific context
