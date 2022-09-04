@@ -6,7 +6,7 @@ import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { serialize_error } from '../utils.js';
-import { HttpError, ValidationError } from '../../control.js';
+import { HttpError } from '../../control.js';
 
 // TODO rename this function/module
 
