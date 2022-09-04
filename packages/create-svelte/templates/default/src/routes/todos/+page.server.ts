@@ -57,8 +57,14 @@ export const actions: Actions = {
 		const form = await request.formData();
 
 		await api('PATCH', `todos/${locals.userid}/${form.get('uid')}`, {
-			text: form.has('text') ? form.get('text') : undefined,
-			done: form.has('done') ? !!form.get('done') : undefined
+			text: form.get('text')
+		});
+	},
+	toggle: async ({ request, locals }) => {
+		const form = await request.formData();
+
+		await api('PATCH', `todos/${locals.userid}/${form.get('uid')}`, {
+			done: !!form.get('done')
 		});
 	},
 	delete: async ({ request, locals }) => {

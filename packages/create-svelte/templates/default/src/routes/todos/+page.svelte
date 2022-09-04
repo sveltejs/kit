@@ -37,7 +37,7 @@
 			animate:flip={{ duration: 200 }}
 		>
 			<form
-				action="/todos?/edit"
+				action="/todos?/toggle"
 				method="post"
 				use:enhance={{
 					pending: ({ data }) => {
