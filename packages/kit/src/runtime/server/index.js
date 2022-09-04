@@ -14,6 +14,23 @@ import { DATA_SUFFIX } from '../../constants.js';
 /** @param {{ html: string }} opts */
 const default_transform = ({ html }) => html;
 
+/**
+ * @param {Request} request
+ * @param {string} origin
+ * */
+function isOriginMatch(request, origin) {
+	const reqOrigin = request.headers.get('origin')
+	if (reqOrigin !== null) {
+		return reqOrigin === origin;
+	}
+
+	// In some legacy browsers (such as IE/Edge<79 and Firefox<58), the origin header aren't sent on POST requests.
+	// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin#browser_compatibility
+
+	const host = request.headers.get('host');
+	return origin === ("https://" + host) || origin === ("http://" + host)
+}
+
 /** @type {import('types').Respond} */
 export async function respond(request, options, state) {
 	let url = new URL(request.url);
@@ -23,7 +40,7 @@ export async function respond(request, options, state) {
 
 		const forbidden =
 			request.method === 'POST' &&
-			request.headers.get('origin') !== url.origin &&
+			!isOriginMatch(request, url.origin) &&
 			(type === 'application/x-www-form-urlencoded' || type === 'multipart/form-data');
 
 		if (forbidden) {
