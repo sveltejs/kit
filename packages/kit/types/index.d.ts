@@ -176,10 +176,6 @@ export interface KitConfig {
 	};
 }
 
-export interface ExternalFetch {
-	(req: Request): Promise<Response>;
-}
-
 export interface Handle {
 	(input: {
 		event: RequestEvent;
