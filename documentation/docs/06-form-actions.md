@@ -4,7 +4,7 @@ title: Form Actions
 
 `+page.server.js` can declare _actions_ which are specifically designed for form interactions. It enables things like preserving user input in case of a full page reload with validation errors while making progressive enhancement through JavaScript possible.
 
-## Defining actions by name
+### Defining actions by name
 
 Actions are defined through `export const actions = {...}`, with each key being the name of the action and the value being the function that is invoked when the form with that action is submitted. A `POST` request made to the page will invoke the corresponding action using a query parameter that start's with a `/` - so for example `POST todos?/addTodo` will invoke the `addTodo` action. The `default` action is called when no such query parameter is given.
 
@@ -46,7 +46,7 @@ export const actions = {
 };
 ```
 
-## Anatomy of an action
+### Anatomy of an action
 
 Each action gets the event object you already know from `load`. Part of it is the `request` object from which you get the form data.
 
@@ -65,7 +65,7 @@ export const actions = {
 
 After that, it's up to you how to proceed with the form data.
 
-### Success
+#### Success
 
 If everything is valid, an action can return a JSON object with data, which will be available through the `form` prop. Alternatively it can `throw` a `redirect` to redirect the user to another page.
 
@@ -78,8 +78,9 @@ export const actions = {
 	default: async ({ url }) => {
 		// ...
 
-		if (url.searchParams.get('redirectTo')) {
-			throw redirect(303, url.searchParams.get('redirectTo'));
+		const location = url.searchParams.get('redirectTo');
+		if (location) {
+			throw redirect(303, location);
 		} else {
 			return {
 				success: true
@@ -105,7 +106,7 @@ export const actions = {
 </form>
 ```
 
-### Validation
+#### Validation
 
 A core part of form submissions is validation. For this, an action can `return` using the `invalid` helper method exported from `@sveltejs/kit` if there are validation errors. `invalid` expects a `status` as a required argument, and optionally anything else you want to return as a second argument. This could be the form value (make sure to remove any user sensitive information such as passwords) and an `error` object. In case of a native form submit the second argument to `invalid` populates the `form` prop which is available inside your components. You can use this to preserve user input.
 
@@ -133,8 +134,8 @@ import { invalid } from '@sveltejs/kit';
 export const actions = {
 	default: async ({ request, setHeaders, url }) => {
 		const fields = await request.formData();
-		const username = fields.get('username');
-		const password = fields.get('password');
+		const username = /** @type {string} */ (fields.get('username'));
+		const password = /** @type {string} */ (fields.get('password'));
 
 		const user = await db.findUser(username);
 
@@ -167,7 +168,7 @@ export const actions = {
 </form>
 ```
 
-## Progressive enhancement
+### Progressive enhancement
 
 So far, all the code examples run native form submissions - that is, when the user pressed the submit button, the page is reloaded. It's good that this use case is supported since JavaScript may not be loaded all the time. When it is though, it might be a better user experience to use the powers JavaScript gives us to provide a better user experience - this is called progressive enhancement.
 
@@ -213,7 +214,7 @@ First we need to ensure that the page is _not_ reloaded on submission. For this,
 </form>
 ```
 
-### `use:enhance`
+#### `use:enhance`
 
 As you can see, progressive enhancement is doable, but it may become a little cumbersome over time. That's why we provide a small `enhance` action which does most of the heavy lifting for you. Here's how the same login page would look like using the `enhance` action:
 
@@ -244,7 +245,7 @@ By default, the `enhance` action will
 
 You can customize this behavior by providing your own callbacks to `enhance`.
 
-### updateForm
+#### updateForm
 
 Under the hood, the `enhance` action uses `updateForm` to update the `form` prop. It's a low level API that you can use to build your own opinionated actions. The argument passed to it becomes the new value of the `form` prop.
 
@@ -265,7 +266,7 @@ Under the hood, the `enhance` action uses `updateForm` to update the `form` prop
 <button on:click={update}>Update form prop</button>
 ```
 
-## Multiple forms
+### Multiple forms
 
 In case you have multiple forms on a single page, be aware of the implications this has on `export let form`. Consider the following example: You have a list of todos which you can delete, but there's a validation that the todo needs to be at least 5 minutes old. Relying on `form?.invalid` in the following example would give unexpected results - in case of a validation error, all items would have the validation message shown:
 
@@ -312,7 +313,7 @@ In situations like this, use different measures such as setting the invalid info
 <ul>
 ```
 
-## Alternatives
+### Alternatives
 
 In case you don't need your forms to work without JavaScript, you want to use HTTP verbs other than `POST`, or you want to send arbitrary JSON instead of being restricted to `FormData`, then you can resort to interacting with your API through `+server.js` endpoints (which will be possible to place next to `+page` files, soon).
 
