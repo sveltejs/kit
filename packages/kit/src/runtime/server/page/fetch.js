@@ -198,9 +198,9 @@ export function create_fetch({ event, options, state, route, prerender_default }
 						}
 
 						fetched.push({
-							url: response.url.startsWith(event.url.origin)
-								? response.url.slice(event.url.origin.length)
-								: response.url,
+							url: request.url.startsWith(event.url.origin)
+								? request.url.slice(event.url.origin.length)
+								: request.url,
 							method: request.method,
 							body,
 							response: {
