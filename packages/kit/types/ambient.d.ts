@@ -93,7 +93,7 @@ declare module '$app/forms' {
 	 */
 	export function enhance<Success = Record<string, any>, Invalid = Record<string, any>>(
 		form: HTMLFormElement,
-		options: {
+		options?: {
 			/**
 			 * Called when submission was made an server call is pending
 			 */
