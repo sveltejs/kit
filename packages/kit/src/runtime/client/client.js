@@ -1454,11 +1454,11 @@ async function load_data(url, invalid) {
 
 					const mark_idx = url.indexOf('?');
 					if (mark_idx < 0) {
-						url += "?" + time_arg;
+						url += '?' + time_arg;
 					} else if (mark_idx === url.length - 1) {
 						url += time_arg;
 					} else {
-						url += "&" + time_arg;
+						url += '&' + time_arg;
 					}
 
 					const script = document.createElement('script');

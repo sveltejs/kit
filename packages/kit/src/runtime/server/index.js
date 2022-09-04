@@ -18,17 +18,17 @@ const default_transform = ({ html }) => html;
  * @param {Request} request
  * @param {string} origin
  * */
-function isOriginMatch(request, origin) {
-	const reqOrigin = request.headers.get('origin')
-	if (reqOrigin !== null) {
-		return reqOrigin === origin;
+function is_origin_match(request, origin) {
+	const req_origin = request.headers.get('origin');
+	if (req_origin !== null) {
+		return req_origin === origin;
 	}
 
 	// In some legacy browsers (such as IE/Edge<79 and Firefox<58), the origin header aren't sent on POST requests.
 	// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin#browser_compatibility
 
 	const host = request.headers.get('host');
-	return origin === ("https://" + host) || origin === ("http://" + host)
+	return origin === 'https://' + host || origin === 'http://' + host;
 }
 
 /** @type {import('types').Respond} */
@@ -40,7 +40,7 @@ export async function respond(request, options, state) {
 
 		const forbidden =
 			request.method === 'POST' &&
-			!isOriginMatch(request, url.origin) &&
+			!is_origin_match(request, url.origin) &&
 			(type === 'application/x-www-form-urlencoded' || type === 'multipart/form-data');
 
 		if (forbidden) {
