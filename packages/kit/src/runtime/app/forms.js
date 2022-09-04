@@ -12,9 +12,10 @@ function guard(name) {
 
 const ssr = import.meta.env.SSR;
 
+/** @type {import('$app/forms').updateForm} */
 export const updateForm = ssr ? guard('updateForm') : client.update_form;
 
-/** @type {import('types').enhance} */
+/** @type {import('$app/forms').enhance} */
 export function enhance(form, { pending, error, invalid, redirect, result } = {}) {
 	/** @type {unknown} */
 	let current_token;
