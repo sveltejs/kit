@@ -85,8 +85,9 @@ export function create_fetch({ event, options, state, route, prerender_default }
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
 				const prefix = options.paths.assets || options.paths.base;
+				const decoded = decodeURIComponent(url.pathname);
 				const filename = (
-					url.pathname.startsWith(prefix) ? url.pathname.slice(prefix.length) : url.pathname
+					decoded.startsWith(prefix) ? decoded.slice(prefix.length) : decoded
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
