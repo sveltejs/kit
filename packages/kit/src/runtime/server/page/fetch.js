@@ -152,6 +152,8 @@ export function create_fetch({ event, options, state, route, prerender_default }
 				requested = event.url.protocol + requested;
 			}
 
+			const url = new URL(requested);
+
 			// external fetch
 			// allow cookie passthrough for "same-origin"
 			// if SvelteKit is serving my.domain.com:
@@ -161,10 +163,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 			// - sub.my.domain.com WILL receive cookies
 			// ports do not affect the resolution
 			// leading dot prevents mydomain.com matching domain.com
-			if (
-				`.${new URL(requested).hostname}`.endsWith(`.${event.url.hostname}`) &&
-				opts.credentials !== 'omit'
-			) {
+			if (`.${url.hostname}`.endsWith(`.${event.url.hostname}`) && opts.credentials !== 'omit') {
 				const cookie = event.request.headers.get('cookie');
 				if (cookie) opts.headers.set('cookie', cookie);
 			}
@@ -176,6 +175,25 @@ export function create_fetch({ event, options, state, route, prerender_default }
 
 			const external_request = new Request(requested, /** @type {RequestInit} */ (opts));
 			response = await options.hooks.externalFetch.call(null, external_request);
+
+			if (opts.mode === 'no-cors') {
+				response = new Response('', {
+					status: response.status,
+					statusText: response.statusText,
+					headers: response.headers
+				});
+			} else {
+				if (url.origin !== event.url.origin) {
+					const acao = response.headers.get('access-control-allow-origin');
+					if (!acao || (acao !== event.url.origin && acao !== '*')) {
+						throw new Error(
+							`CORS error: ${
+								acao ? 'Incorrect' : 'No'
+							} 'Access-Control-Allow-Origin' header is present on the requested resource`
+						);
+					}
+				}
+			}
 		}
 
 		const set_cookie = response.headers.get('set-cookie');
