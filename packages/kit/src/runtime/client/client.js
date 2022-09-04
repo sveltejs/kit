@@ -448,10 +448,13 @@ export function create_client({ target, base, trailing_slash }) {
 				session_id
 			},
 			props: {
-				components: filtered.map((branch_node) => branch_node.node.component),
-				form
+				components: filtered.map((branch_node) => branch_node.node.component)
 			}
 		};
+
+		if (form !== undefined) {
+			result.props.form = form;
+		}
 
 		let data = {};
 		let data_changed = !page;
@@ -881,7 +884,9 @@ export function create_client({ target, base, trailing_slash }) {
 			branch,
 			status: 200,
 			error: null,
-			route
+			route,
+			// On invalidateAll/same site navigation, form prop stays, else it's reset
+			form: current.url.href !== url.href ? null : undefined
 		});
 	}
 
