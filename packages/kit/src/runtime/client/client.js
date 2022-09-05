@@ -278,24 +278,9 @@ export function create_client({ target, base, trailing_slash }) {
 				navigation_result.props.page.url = url;
 			}
 
-			if (import.meta.env.DEV) {
-				// Nasty hack to silence harmless warnings the user can do nothing about
-				const warn = console.warn;
-				console.warn = (...args) => {
-					if (
-						args.length !== 1 ||
-						!/<(Layout|Page)(_[\w$]+)?> was created with unknown prop '(data|errors)'/.test(args[0])
-					) {
-						warn(...args);
-					}
-				};
-				root.$set(navigation_result.props);
-				tick().then(() => (console.warn = warn));
-
-				check_for_removed_attributes();
-			} else {
-				root.$set(navigation_result.props);
-			}
+			const post_update = pre_update();
+			root.$set(navigation_result.props);
+			post_update();
 		} else {
 			initialize(navigation_result);
 		}
@@ -371,32 +356,13 @@ export function create_client({ target, base, trailing_slash }) {
 
 		page = result.props.page;
 
-		if (import.meta.env.DEV) {
-			// Nasty hack to silence harmless warnings the user can do nothing about
-			const warn = console.warn;
-			console.warn = (...args) => {
-				if (
-					args.length !== 1 ||
-					!/<(Layout|Page)(_[\w$]+)?> was created with unknown prop '(data|errors)'/.test(args[0])
-				) {
-					warn(...args);
-				}
-			};
-			root = new Root({
-				target,
-				props: { ...result.props, stores },
-				hydrate: true
-			});
-			console.warn = warn;
-
-			check_for_removed_attributes();
-		} else {
-			root = new Root({
-				target,
-				props: { ...result.props, stores },
-				hydrate: true
-			});
-		}
+		const post_update = pre_update();
+		root = new Root({
+			target,
+			props: { ...result.props, stores },
+			hydrate: true
+		});
+		post_update();
 
 		/** @type {import('types').Navigation} */
 		const navigation = {
@@ -1169,26 +1135,10 @@ export function create_client({ target, base, trailing_slash }) {
 			await Promise.all(promises);
 		},
 
-		update_form: async (form) => {
-			if (import.meta.env.DEV) {
-				// Nasty hack to silence harmless warnings the user can do nothing about
-				const warn = console.warn;
-				console.warn = (...args) => {
-					if (
-						args.length !== 1 ||
-						!/<(Layout|Page)(_[\w$]+)?> was created with unknown prop '(data|errors)'/.test(args[0])
-					) {
-						warn(...args);
-					}
-				};
-				root.$set({ form });
-				await tick().then(() => (console.warn = warn));
-
-				check_for_removed_attributes();
-			} else {
-				root.$set({ form });
-				await tick();
-			}
+		update_form: (form) => {
+			const post_update = pre_update();
+			root.$set({ form });
+			post_update();
 		},
 
 		_start_router: () => {
@@ -1521,4 +1471,29 @@ function add_url_properties(type, target) {
 	}
 
 	return target;
+}
+
+function pre_update() {
+	if (__SVELTEKIT_DEV__) {
+		// Nasty hack to silence harmless warnings the user can do nothing about
+		const warn = console.warn;
+		console.warn = (...args) => {
+			if (
+				args.length === 1 &&
+				/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
+					args[0]
+				)
+			) {
+				return;
+			}
+			warn(...args);
+		};
+
+		return () => {
+			tick().then(() => (console.warn = warn));
+			check_for_removed_attributes();
+		};
+	}
+
+	return () => {};
 }
