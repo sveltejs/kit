@@ -221,6 +221,7 @@ export async function load({ parent, fetch }) {
 If you need to set headers for the response, you can do so using the `setHeaders` method. This is useful if you want the page to be cached, for example:
 
 ```js
+// @errors: 2322
 /// file: src/routes/blog/+page.js
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, setHeaders }) {

@@ -40,7 +40,7 @@ declare namespace App {
 	}
 }
 
-const getUserInformation: (cookie: string | null) => Promise<User>;
+const getUserInformation: (cookie: string | undefined) => Promise<User>;
 
 // declare global {
 // 	const getUserInformation: (cookie: string) => Promise<User>;

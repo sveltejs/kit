@@ -12,7 +12,6 @@ import {
 	Prerendered,
 	PrerenderOnErrorValue,
 	RequestOptions,
-	ResponseHeaders,
 	RouteDefinition,
 	TrailingSlash
 } from './private.js';
@@ -234,7 +233,7 @@ export interface LoadEvent<
 	params: Params;
 	data: Data;
 	routeId: string | null;
-	setHeaders: (headers: ResponseHeaders) => void;
+	setHeaders: (headers: Record<string, string>) => void;
 	url: URL;
 	parent: () => Promise<ParentData>;
 	depends: (...deps: string[]) => void;
@@ -278,7 +277,7 @@ export interface RequestEvent<
 	platform: Readonly<App.Platform>;
 	request: Request;
 	routeId: string | null;
-	setHeaders: (headers: ResponseHeaders) => void;
+	setHeaders: (headers: Record<string, string>) => void;
 	url: URL;
 }
 

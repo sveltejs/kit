@@ -118,7 +118,7 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	/** @type {import('types').ResponseHeaders} */
+	/** @type {Record<string, string>} */
 	const headers = {};
 
 	const { cookies, new_cookies } = get_cookies(request, url);

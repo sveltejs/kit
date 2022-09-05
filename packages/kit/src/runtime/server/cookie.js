@@ -24,7 +24,7 @@ export function get_cookies(request, url) {
 					domain_matches(url.hostname, cookie.options.domain) &&
 					path_matches(url.pathname, cookie.options.path)
 				) {
-					return decode(cookie.value);
+					return cookie.value;
 				}
 			}
 
