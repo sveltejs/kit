@@ -28,7 +28,7 @@ function is_origin_match(request, origin) {
 	// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin#browser_compatibility
 
 	const referer = request.headers.get('referer');
-	return referer && new URL(referer).origin === origin
+	return referer && new URL(referer).origin === origin;
 }
 
 /** @type {import('types').Respond} */
