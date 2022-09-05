@@ -2,7 +2,7 @@
 title: Hooks
 ---
 
-An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports three functions, all optional, that run on the server — `handle`, `handleError` and `externalFetch`.
+An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports three functions, all optional, that run on the server — `handle`, `handleError` and `handleFetch`.
 
 > The location of this file can be [configured](/docs/configuration) as `config.kit.files.hooks`
 
@@ -101,21 +101,55 @@ export function handleError({ error, event }) {
 
 > `handleError` is only called for _unexpected_ errors. It is not called for errors created with the [`error`](/docs/modules#sveltejs-kit-error) function imported from `@sveltejs/kit`, as these are _expected_ errors.
 
-### externalFetch
+### handleFetch
 
-This function allows you to modify (or replace) a `fetch` request for an external resource that happens inside a `load` function that runs on the server (or during pre-rendering).
+This function allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering).
 
-For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
+For example, you might need to include custom headers that are added by a proxy that sits in front of your app:
 
 ```js
-/** @type {import('@sveltejs/kit').ExternalFetch} */
-export async function externalFetch(request) {
+// @errors: 2345
+/** @type {import('@sveltejs/kit').HandleFetch} */
+export async function handleFetch({ event, request, fetch }) {
+	const name = 'x-geolocation-city';
+	const value = event.request.headers.get(name);
+	request.headers.set(name, value);
+
+	return fetch(request);
+}
+```
+
+Or your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
+
+```js
+/** @type {import('@sveltejs/kit').HandleFetch} */
+export async function handleFetch({ request, fetch }) {
 	if (request.url.startsWith('https://api.yourapp.com/')) {
 		// clone the original request, but change the URL
 		request = new Request(
 			request.url.replace('https://api.yourapp.com/', 'http://localhost:9999/'),
 			request
 		);
+	}
+
+	return fetch(request);
+}
+```
+
+#### Credentials
+
+For same-origin requests, SvelteKit's `fetch` implementation will forward `cookie` and `authorization` headers unless the `credentials` option is set to `"omit"`.
+
+For cross-origin requests, `cookie` will be included if the request URL belongs to a subdomain of the app — for example if your app is on `my-domain.com`, and your API is on `api.my-domain.com`, cookies will be included in the request.
+
+If your app and your API are on sibling subdomains — `www.my-domain.com` and `api.my-domain.com` for example — then a cookie belonging to a common parent domain like `my-domain.com` will _not_ be included, because SvelteKit has no way to know which domain the cookie belongs to. In these cases you will need to manually include the cookie using `handleFetch`:
+
+```js
+// @errors: 2345
+/** @type {import('@sveltejs/kit').HandleFetch} */
+export async function handleFetch({ event, request, fetch }) {
+	if (request.url.startsWith('https://api.my-domain.com/')) {
+		request.headers.set('cookie', event.request.headers.get('cookie'));
 	}
 
 	return fetch(request);

@@ -299,9 +299,15 @@ function kit() {
 				case '\0$env/static/public':
 					return create_static_module('$env/static/public', env.public);
 				case '\0$env/dynamic/private':
-					return create_dynamic_module('private');
+					return create_dynamic_module(
+						'private',
+						vite_config_env.command === 'serve' ? env.private : undefined
+					);
 				case '\0$env/dynamic/public':
-					return create_dynamic_module('public');
+					return create_dynamic_module(
+						'public',
+						vite_config_env.command === 'serve' ? env.public : undefined
+					);
 			}
 		},
 

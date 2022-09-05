@@ -172,10 +172,6 @@ export interface KitConfig {
 	};
 }
 
-export interface ExternalFetch {
-	(req: Request): Promise<Response>;
-}
-
 export interface Handle {
 	(input: {
 		event: RequestEvent;
@@ -185,6 +181,10 @@ export interface Handle {
 
 export interface HandleError {
 	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
+}
+
+export interface HandleFetch {
+	(input: { event: RequestEvent; request: Request; fetch: typeof fetch }): MaybePromise<Response>;
 }
 
 /**

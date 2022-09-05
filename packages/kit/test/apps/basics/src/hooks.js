@@ -37,21 +37,25 @@ export const handle = sequence(
 				? ({ html }) => html.replace('__REPLACEME__', 'Worked!')
 				: undefined
 		});
-		response.headers.append('set-cookie', 'name=SvelteKit; path=/; HttpOnly');
+
+		try {
+			// in some tests we fetch stuff with undici, and the headers are immutable.
+			// we can safely ignore it in those cases
+			response.headers.append('set-cookie', 'name=SvelteKit; path=/; HttpOnly');
+		} catch {}
 
 		return response;
 	}
 );
 
-/** @type {import('@sveltejs/kit').ExternalFetch} */
-export async function externalFetch(request) {
-	let newRequest = request;
+/** @type {import('@sveltejs/kit').HandleFetch} */
+export async function handleFetch({ request, fetch }) {
 	if (request.url.endsWith('/server-fetch-request.json')) {
-		newRequest = new Request(
+		request = new Request(
 			request.url.replace('/server-fetch-request.json', '/server-fetch-request-modified.json'),
 			request
 		);
 	}
 
-	return fetch(newRequest);
+	return fetch(request);
 }

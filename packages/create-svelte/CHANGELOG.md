@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.172
+
+### Patch Changes
+
+- Bump vite-plugin-svelte and required vite version ([#6583](https://github.com/sveltejs/kit/pull/6583))
+
 ## 2.0.0-next.171
 
 ### Patch Changes
