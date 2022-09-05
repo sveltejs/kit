@@ -16,7 +16,25 @@ const ssr = import.meta.env.SSR;
 export const updateForm = ssr ? guard('updateForm') : client.update_form;
 
 /** @type {import('$app/forms').enhance} */
-export function enhance(form, { pending, error, invalid, redirect, result } = {}) {
+export function enhance(form, { submit = () => {} } = {}) {
+	/** @type {ReturnType<NonNullable<NonNullable<Parameters<import('$app/forms').enhance>[1]>['submit']>>} */
+	const fallback_callback = (result) => {
+		if (
+			(result.type === 'success' || result.type === 'invalid') &&
+			location.origin + location.pathname === form.action.split('?')[0]
+		) {
+			updateForm(result.data ?? null);
+		}
+
+		if (result.type === 'success') {
+			invalidateAll();
+		} else if (result.type === 'redirect') {
+			goto(result.location);
+		} else if (result.type === 'error') {
+			console.error(result.error);
+		}
+	};
+
 	/** @type {unknown} */
 	let current_token;
 
@@ -28,7 +46,13 @@ export function enhance(form, { pending, error, invalid, redirect, result } = {}
 
 		const data = new FormData(form);
 
-		if (pending) pending({ data, form });
+		const callback = submit({ form, data }) ?? fallback_callback;
+		if (callback === false) {
+			return;
+		}
+
+		/** @type {import('types').FormFetchResponse | { type: 'error'; error: unknown }} */
+		let result;
 
 		try {
 			const response = await fetch(form.action, {
@@ -41,41 +65,12 @@ export function enhance(form, { pending, error, invalid, redirect, result } = {}
 
 			if (token !== current_token) return;
 
-			if (response.ok) {
-				/** @type {import('types').FormFetchResponse} */
-				const json = await response.json();
-				if (json.type === 'success') {
-					if (result) {
-						result({ data, form, response: /** @type {any} */ (json.data) });
-					} else {
-						await invalidateAll();
-						await updateForm(json.data ?? null);
-					}
-				} else if (json.type === 'invalid') {
-					if (invalid) {
-						invalid({ data, form, response: /** @type {any} */ (json.data) });
-					} else {
-						await updateForm(json.data ?? null);
-					}
-				} else if (json.type === 'redirect') {
-					if (redirect) {
-						redirect({ data, form, location: json.location });
-					} else {
-						goto(json.location);
-					}
-				}
-			} else if (error) {
-				error({ data, form, error: null, response });
-			} else {
-				console.error(await response.text());
-			}
-		} catch (err) {
-			if (error && err instanceof Error) {
-				error({ data, form, error: err, response: null });
-			} else {
-				throw err;
-			}
+			result = await response.json();
+		} catch (error) {
+			result = { type: 'error', error };
 		}
+
+		callback(result);
 	}
 
 	form.addEventListener('submit', handle_submit);

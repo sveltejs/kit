@@ -86,6 +86,8 @@ declare module '$app/environment' {
  * ```
  */
 declare module '$app/forms' {
+	import { FormFetchResponse } from '@sveltejs/kit';
+
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
 	 * @param form The form element
@@ -95,30 +97,23 @@ declare module '$app/forms' {
 		form: HTMLFormElement,
 		options?: {
 			/**
-			 * Called when submission was made an server call is pending
+			 * Called upon submission with the given FormData.
+			 * If `false` is returned, the submission is cancelled.
+			 * If a function is returned, that function is called with the response from the server.
+			 * If nothing is returned, the fallback will be used.
+			 *
+			 * If this function or its return value isn't set, it
+			 * - falls back to updating the `form` prop with the returned data if the action is one same page as the form
+			 * - invalidates all data in case of successful submission with no redirect response
+			 * - redirects in case of a redirect response
 			 */
-			pending?: ({ data, form }: { data: FormData; form: HTMLFormElement }) => void;
-			/**
-			 * Called when submission was invalid. If not set, will update the `form` property
-			 */
-			invalid?: (input: { data: FormData; form: HTMLFormElement; response: Invalid }) => void;
-			/**
-			 * Called when an unexpected error occurs
-			 */
-			error?: (input: {
+			submit?: (input: {
 				data: FormData;
 				form: HTMLFormElement;
-				response: Response | null;
-				error: Error | null;
-			}) => void;
-			/**
-			 * Called when submission was successful and resulted in a redirect response. If not set, will `goto` the given `location`
-			 */
-			redirect?: (input: { data: FormData; form: HTMLFormElement; location: string }) => void;
-			/**
-			 * Called when submission was successful and no redirect happens. If not set, will update the `form` property and call `invalidateAll`
-			 */
-			result?: (input: { data: FormData; response: Success; form: HTMLFormElement }) => void;
+			}) =>
+				| false
+				| undefined
+				| ((result: FormFetchResponse | { type: 'error'; error: any }) => void);
 		}
 	): { destroy: () => void };
 

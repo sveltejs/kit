@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidate } from '$app/navigation';
 	import { scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
-	import type { PageData } from './$types';
 
 	/** @type {import('./$types').PageData} */
-	export let data: PageData;
+	export let data;
+	$: todos = data.todos;
 </script>
 
 <svelte:head>
@@ -21,15 +22,20 @@
 		action="/todos?/add"
 		method="post"
 		use:enhance={{
-			result: async ({ form }) => {
-				form.reset();
+			submit: ({ form }) => {
+				return (result) => {
+					if (result.type === 'success') {
+						form.reset();
+						invalidate('app:todos');
+					}
+				}
 			}
 		}}
 	>
 		<input name="text" aria-label="Add todo" placeholder="+ tap to add a todo" />
 	</form>
 
-	{#each data.todos as todo (todo.uid)}
+	{#each todos as todo (todo.uid)}
 		<div
 			class="todo"
 			class:done={todo.done}
@@ -40,7 +46,7 @@
 				action="/todos?/toggle"
 				method="post"
 				use:enhance={{
-					pending: ({ data }) => {
+					submit: ({ data }) => {
 						todo.done = !!data.get('done');
 					}
 				}}
@@ -60,7 +66,9 @@
 				action="/todos?/delete"
 				method="post"
 				use:enhance={{
-					pending: () => (todo.pending_delete = true)
+					submit: () => {
+						todo.pending_delete = true;
+					}
 				}}
 			>
 				<input type="hidden" name="uid" value={todo.uid} />
