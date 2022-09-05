@@ -356,6 +356,7 @@ function kit() {
 							this.getModuleInfo.bind(this),
 							module_node,
 							illegal_imports,
+							vite.normalizePath(path.resolve(process.cwd(), 'node_modules')),
 							vite.normalizePath(svelte_config.kit.files.lib)
 						);
 					}
