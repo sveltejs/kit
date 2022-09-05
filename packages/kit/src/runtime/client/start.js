@@ -8,7 +8,7 @@ import { set_public_env } from '../env-public.js';
  *   env: Record<string, string>;
  *   hydrate: {
  *     status: number;
- *     error: Error | (import('../server/page/types').SerializedHttpError);
+ *     error: App.PageError;
  *     node_ids: number[];
  *     params: Record<string, string>;
  *     routeId: string | null;

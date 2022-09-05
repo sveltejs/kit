@@ -1,6 +1,38 @@
 import fs from 'fs';
 import cookie from 'cookie';
 import { sequence } from '@sveltejs/kit/hooks';
+import { HttpError } from '../../../../src/runtime/control';
+
+/**
+ * Transform an error into a POJO, by copying its `name`, `message`
+ * and (in dev) `stack`, plus any custom properties, plus recursively
+ * serialized `cause` properties.
+ *
+ * @param {HttpError | Error } error
+ * @param {(error: Error) => string | undefined} get_stack
+ */
+export function error_to_pojo(error, get_stack) {
+	if (error instanceof HttpError) {
+		return {
+			status: error.status,
+			...error.body
+		};
+	}
+
+	const { name, message, stack, cause, ...custom } = error;
+
+	/** @type {Record<string, any>} */
+	const object = { name, message, stack: get_stack(error) };
+
+	// @ts-ignore
+	if (cause) object.cause = error_to_pojo(cause, get_stack);
+
+	for (const key in custom) {
+		object[key] = custom[key];
+	}
+
+	return object;
+}
 
 /** @type {import('@sveltejs/kit').HandleError} */
 export const handleError = ({ event, error }) => {
@@ -11,8 +43,9 @@ export const handleError = ({ event, error }) => {
 	const errors = fs.existsSync('test/errors.json')
 		? JSON.parse(fs.readFileSync('test/errors.json', 'utf8'))
 		: {};
-	errors[event.url.pathname] = error.stack || error.message;
+	errors[event.url.pathname] = error_to_pojo(error, (error) => error.stack);
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
+	return { message: error.message };
 };
 
 export const handle = sequence(

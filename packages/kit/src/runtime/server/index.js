@@ -8,6 +8,7 @@ import { decode_params, disable_search, normalize_path } from '../../utils/url.j
 import { exec } from '../../utils/routing.js';
 import { render_data } from './data/index.js';
 import { DATA_SUFFIX } from '../../constants.js';
+import { HttpError } from '../control.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -332,7 +333,8 @@ export async function respond(request, options, state) {
 			// so we need to make an actual HTTP request
 			return await fetch(request);
 		} catch (e) {
-			const error = coalesce_to_error(e);
+			// HttpError can come from endpoint - TODO should it be handled there instead?
+			const error = e instanceof HttpError ? e : coalesce_to_error(e);
 			return handle_fatal_error(event, options, error);
 		}
 	}

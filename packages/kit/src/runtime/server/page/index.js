@@ -4,10 +4,10 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import {
 	method_not_allowed,
-	error_to_pojo,
 	allowed_methods,
 	get_option,
-	static_error_page
+	static_error_page,
+	handle_error_and_jsonify
 } from '../utils.js';
 import { create_fetch } from './fetch.js';
 import { HttpError, Redirect } from '../../control.js';
@@ -235,13 +235,13 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 					branch.push({ node, server_data, data });
 				} catch (e) {
-					const error = normalize_error(e);
+					const err = normalize_error(e);
 
-					if (error instanceof Redirect) {
+					if (err instanceof Redirect) {
 						if (state.prerendering && should_prerender_data) {
 							const body = `window.__sveltekit_data = ${JSON.stringify({
 								type: 'redirect',
-								location: error.location
+								location: err.location
 							})}`;
 
 							state.prerendering.dependencies.set(data_pathname, {
@@ -250,14 +250,11 @@ export async function render_page(event, route, page, options, state, resolve_op
 							});
 						}
 
-						return redirect_response(error.status, error.location);
+						return redirect_response(err.status, err.location);
 					}
 
-					if (!(error instanceof HttpError)) {
-						options.handle_error(/** @type {Error} */ (error), event);
-					}
-
-					const status = error instanceof HttpError ? error.status : 500;
+					const status = err instanceof HttpError ? err.status : 500;
+					const error = handle_error_and_jsonify(event, options, err);
 
 					while (i--) {
 						if (page.errors[i]) {
@@ -289,11 +286,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 					// if we're still here, it means the error happened in the root layout,
 					// which means we have to fall back to error.html
-					return static_error_page(
-						options,
-						status,
-						/** @type {HttpError | Error} */ (error).message
-					);
+					return static_error_page(options, status, error.message);
 				}
 			} else {
 				// push an empty slot so we can rewind past gaps to the
@@ -335,14 +328,12 @@ export async function render_page(event, route, page, options, state, resolve_op
 	} catch (error) {
 		// if we end up here, it means the data loaded successfull
 		// but the page failed to render, or that a prerendering error occurred
-		options.handle_error(/** @type {Error} */ (error), event);
-
 		return await respond_with_error({
 			event,
 			options,
 			state,
 			status: 500,
-			error: /** @type {Error} */ (error),
+			error: handle_error_and_jsonify(event, options, error),
 			resolve_opts
 		});
 	}
@@ -382,11 +373,7 @@ export async function handle_json_request(event, options, mod) {
 			return redirect_response(error.status, error.location);
 		}
 
-		if (!(error instanceof HttpError)) {
-			options.handle_error(error, event);
-		}
-
-		return json(error_to_pojo(error, options.get_stack), {
+		return json(handle_error_and_jsonify(event, options, error), {
 			status: error instanceof HttpError ? error.status : 500
 		});
 	}

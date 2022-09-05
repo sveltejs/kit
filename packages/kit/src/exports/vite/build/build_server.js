@@ -58,9 +58,8 @@ export class Server {
 				check_origin: ${s(config.kit.csrf.checkOrigin)},
 			},
 			dev: false,
-			get_stack: error => String(error), // for security
 			handle_error: (error, event) => {
-				this.options.hooks.handleError({
+				return this.options.hooks.handleError({
 					error,
 					event,
 
@@ -69,8 +68,7 @@ export class Server {
 					get request() {
 						throw new Error('request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details');
 					}
-				});
-				error.stack = this.options.get_stack(error);
+				}) ?? { message: 'Internal Error' };
 			},
 			hooks: null,
 			manifest,

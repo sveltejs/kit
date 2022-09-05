@@ -190,11 +190,7 @@ test.describe('Errors', () => {
 
 			expect(res.status()).toBe(401);
 			expect(await res.json()).toEqual({
-				status: 401,
-				message: 'You shall not pass',
-
-				// TODO this is gross, fix it
-				__is_http_error: true
+				message: 'You shall not pass'
 			});
 		}
 	});
@@ -232,12 +228,9 @@ test.describe('Errors', () => {
 
 			const error = await res.json();
 
-			expect(typeof error.stack).toBe('string');
-			delete error.stack;
-
+			expect(error.stack).toBe(undefined);
 			expect(res.status()).toBe(500);
 			expect(error).toEqual({
-				name: 'Error',
 				message: 'Error in handle'
 			});
 		}

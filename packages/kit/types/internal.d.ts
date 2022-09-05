@@ -231,9 +231,11 @@ export interface ServerDataSkippedNode {
  */
 export interface ServerErrorNode {
 	type: 'error';
-	// Either-or situation, but we don't want to have to do a type assertion
-	error?: Record<string, any>;
-	httperror?: { status: number; message: string };
+	error: App.PageError;
+	/**
+	 * Only set for HttpErrors
+	 */
+	status?: number;
 }
 
 export interface SSRComponent {
@@ -294,8 +296,7 @@ export interface SSROptions {
 		check_origin: boolean;
 	};
 	dev: boolean;
-	get_stack: (error: Error) => string | undefined;
-	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
+	handle_error(error: Error & { frame?: string }, event: RequestEvent): App.PageError;
 	hooks: Hooks;
 	manifest: SSRManifest;
 	method_override: MethodOverride;

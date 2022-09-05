@@ -188,7 +188,7 @@ export interface Handle {
 }
 
 export interface HandleError {
-	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
+	(input: { error: Error & { frame?: string }; event: RequestEvent }): App.PageError | void;
 }
 
 /**
@@ -332,17 +332,19 @@ export interface Action<
 	>;
 }
 
-// TODO figure out how to just re-export from '../src/index/index.js' without
-// breaking the site
-
 /**
  * Creates an `HttpError` object with an HTTP status code and an optional message.
  * This object, if thrown during request handling, will cause SvelteKit to
  * return an error response without invoking `handleError`
- * @param {number} status
- * @param {string | undefined} [message]
+ * @param status The HTTP status code
+ * @param body An object that conforms to the App.PageError type. If a string is passed, it will be used as the message property.
  */
-export function error(status: number, message?: string | undefined): HttpError;
+export function error(status: number, body: App.PageError): HttpError;
+export function error(
+	status: number,
+	// this overload ensures you can omit the argument or pass in a string if App.PageError is of type { message: string }
+	body?: { message: string } extends App.PageError ? App.PageError | string | undefined : never
+): HttpError;
 
 /**
  * Creates a `Redirect` object. If thrown during request handling, SvelteKit will

@@ -381,28 +381,29 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							check_origin: svelte_config.kit.csrf.checkOrigin
 						},
 						dev: true,
-						get_stack: (error) => fix_stack_trace(error),
 						handle_error: (error, event) => {
-							hooks.handleError({
-								error: new Proxy(error, {
-									get: (target, property) => {
-										if (property === 'stack') {
-											return fix_stack_trace(error);
+							return (
+								hooks.handleError({
+									error: new Proxy(error, {
+										get: (target, property) => {
+											if (property === 'stack') {
+												return fix_stack_trace(error);
+											}
+
+											return Reflect.get(target, property, target);
 										}
+									}),
+									event,
 
-										return Reflect.get(target, property, target);
+									// TODO remove for 1.0
+									// @ts-expect-error
+									get request() {
+										throw new Error(
+											'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
+										);
 									}
-								}),
-								event,
-
-								// TODO remove for 1.0
-								// @ts-expect-error
-								get request() {
-									throw new Error(
-										'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
-									);
-								}
-							});
+								}) ?? { message: 'Internal Error' }
+							);
 						},
 						hooks,
 						manifest,
