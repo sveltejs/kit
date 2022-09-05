@@ -11,12 +11,8 @@ test.describe('beforeNavigate', () => {
 	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 
-		try {
-			await clicknav('[href="/before-navigate/a"]', { timeout: 1000 });
-			expect(false).toBe(true);
-		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('page.waitForNavigation: Timeout 1000ms exceeded');
-		}
+		await page.click('[href="/before-navigate/a"]');
+		await page.waitForLoadState('networkidle');
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('true');
@@ -381,6 +377,26 @@ test.describe('Load', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 	});
 
+	test('load does not call fetch if max-age allows it', async ({ page, request }) => {
+		await request.get('/load/cache-control/reset');
+
+		page.addInitScript(`
+			window.now = 0;
+			window.performance.now = () => now;
+		`);
+
+		await page.goto('/load/cache-control');
+		expect(await page.textContent('p')).toBe('Count is 0');
+		await page.waitForTimeout(500);
+		await page.click('button');
+		await page.waitForTimeout(500);
+		expect(await page.textContent('p')).toBe('Count is 0');
+
+		await page.evaluate(() => (window.now = 2500));
+		await page.click('button');
+		await expect(page.locator('p')).toHaveText('Count is 2');
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page }) => {
 			const port = 5173;
@@ -414,31 +430,6 @@ test.describe('Load', () => {
 });
 
 test.describe('Page options', () => {
-	test('disables router if router=false', async ({ page, clicknav }) => {
-		await page.goto('/no-router/a');
-
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-		expect(await page.textContent('button')).toBe('clicks: 0');
-
-		// wait until hydration before interacting with button
-		await page.waitForSelector('body.started');
-
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		// wait until hydration before attempting backwards client-side navigation
-		await page.waitForSelector('body.started');
-
-		await clicknav('[href="/no-router/a"]');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-		expect(await page.textContent('button')).toBe('clicks: 0');
-	});
-
 	test('applies generated component styles with ssr=false (hides announcer)', async ({
 		page,
 		clicknav
@@ -597,7 +588,7 @@ test.describe('Shadow DOM', () => {
 		await clicknav('div[id="clickme"]');
 		expect(await page.textContent('h1')).toBe('a');
 
-		expect(requests).toEqual([]);
+		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
 	});
 });
 
@@ -720,5 +711,77 @@ test.describe.serial('Invalidation', () => {
 		await page.waitForLoadState('networkidle');
 		await page.waitForTimeout(200);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
+	});
+});
+
+test.describe('data-sveltekit attributes', () => {
+	test('data-sveltekit-prefetch', async ({ baseURL, page }) => {
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		const module = process.env.DEV
+			? `${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`
+			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/prefetch/target/_page`;
+
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#two').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#three').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeUndefined();
+	});
+
+	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await page.goto('/data-sveltekit/reload');
+		await page.click('#one');
+		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/reload');
+		await page.click('#two');
+		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/reload');
+		await clicknav('#three');
+		expect(requests).not.toContain(`${baseURL}/data-sveltekit/reload/target`);
+	});
+
+	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
+		await page.goto('/data-sveltekit/noscroll');
+		// await page.evaluate(() => window.scrollTo(0, 1000));
+		await clicknav('#one');
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+		await page.goto('/data-sveltekit/noscroll');
+		await clicknav('#two');
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+		await page.goto('/data-sveltekit/noscroll');
+		// await page.evaluate(() => window.scrollTo(0, 1000));
+		await clicknav('#three');
+		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	});
 });

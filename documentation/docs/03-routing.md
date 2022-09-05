@@ -70,9 +70,8 @@ This function runs alongside `+page.svelte`, which means it runs on the server d
 As well as `load`, `page.js` can export values that configure the page's behaviour:
 
 - `export const prerender = true` or `false` or `'auto'`
-- `export const hydrate = true` or `false`
-- `export const router = true` or `false`
 - `export const ssr = true` or `false`
+- `export const csr = true` or `false`
 
 You can find more information about these in [page options](/docs/page-options).
 
@@ -111,7 +110,7 @@ export async function load({ params }) {
 
 During client-side navigation, SvelteKit will load this data from the server, which means that the returned value must be serializable using [devalue](https://github.com/rich-harris/devalue).
 
-Like `+page.js`, `+page.server.js` can export [page options](/docs/page-options) — `prerender`, `hydrate`, `router` and `ssr`.
+Like `+page.js`, `+page.server.js` can export [page options](/docs/page-options) — `prerender`, `ssr` and `csr`.
 
 #### Actions
 
@@ -282,7 +281,7 @@ export function load() {
 }
 ```
 
-If a `+layout.js` exports [page options](/docs/page-options) — `prerender`, `hydrate` `router` and `ssr` — they will be used as defaults for child pages.
+If a `+layout.js` exports [page options](/docs/page-options) — `prerender`, `ssr` and `csr` — they will be used as defaults for child pages.
 
 Data returned from a layout's `load` function is also available to all its child pages:
 
@@ -302,7 +301,7 @@ Data returned from a layout's `load` function is also available to all its child
 
 To run your layout's `load` function on the server, move it to `+layout.server.js`, and change the `LayoutLoad` type to `LayoutServerLoad`.
 
-Like `+layout.js`, `+layout.server.js` can export [page options](/docs/page-options) — `prerender`, `hydrate` `router` and `ssr`.
+Like `+layout.js`, `+layout.server.js` can export [page options](/docs/page-options) — `prerender`, `ssr` and `csr`.
 
 ### +server
 

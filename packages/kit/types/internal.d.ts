@@ -69,8 +69,6 @@ export interface CSRPageNode {
 	component: typeof SvelteComponent;
 	shared: {
 		load?: Load;
-		hydrate?: boolean;
-		router?: boolean;
 	};
 	server: boolean;
 }
@@ -136,10 +134,6 @@ export interface PageNode {
 	 */
 	child_pages?: PageNode[];
 }
-
-export type PayloadScriptAttributes =
-	| { type: 'data'; url: string; body?: string }
-	| { type: 'validation_errors' };
 
 export interface PrerenderDependency {
 	response: Response;
@@ -272,18 +266,16 @@ export interface SSRNode {
 
 	shared: {
 		load?: Load;
-		hydrate?: boolean;
 		prerender?: PrerenderOption;
-		router?: boolean;
 		ssr?: boolean;
+		csr?: boolean;
 	};
 
 	server: {
 		load?: ServerLoad;
-		hydrate?: boolean;
 		prerender?: PrerenderOption;
-		router?: boolean;
 		ssr?: boolean;
+		csr?: boolean;
 		POST?: Action;
 		PATCH?: Action;
 		PUT?: Action;
@@ -298,6 +290,9 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	csp: ValidatedConfig['kit']['csp'];
+	csrf: {
+		check_origin: boolean;
+	};
 	dev: boolean;
 	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;

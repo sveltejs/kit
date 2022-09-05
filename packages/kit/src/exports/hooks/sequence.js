@@ -34,12 +34,9 @@ export function sequence(...handlers) {
 						return html;
 					};
 
-					// TODO remove post-https://github.com/sveltejs/kit/pull/6197
-					const ssr = options?.ssr ?? parent_options?.ssr;
-
 					return i < length - 1
-						? apply_handle(i + 1, event, { transformPageChunk, ssr })
-						: resolve(event, { transformPageChunk, ssr });
+						? apply_handle(i + 1, event, { transformPageChunk })
+						: resolve(event, { transformPageChunk });
 				}
 			});
 		}

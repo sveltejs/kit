@@ -1,5 +1,17 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.41
+
+### Patch Changes
+
+- Better error when encountering not-fully-prerenderable routes ([#6474](https://github.com/sveltejs/kit/pull/6474))
+
+## 1.0.0-next.40
+
+### Patch Changes
+
+- [breaking] require all routes to be prerenderable when not using fallback option ([#6392](https://github.com/sveltejs/kit/pull/6392))
+
 ## 1.0.0-next.39
 
 ### Patch Changes

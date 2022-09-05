@@ -1,2 +1,1 @@
-export const hydrate = false;
-export const router = false;
+export const csr = false;

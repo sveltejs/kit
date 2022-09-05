@@ -70,9 +70,8 @@ export async function respond_with_error({ event, options, state, status, error,
 			options,
 			state,
 			page_config: {
-				hydrate: get_option([default_layout], 'hydrate') ?? true,
-				router: get_option([default_layout], 'router') ?? true,
-				ssr
+				ssr,
+				csr: get_option([default_layout], 'csr') ?? true
 			},
 			status,
 			error,

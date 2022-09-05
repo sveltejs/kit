@@ -537,16 +537,6 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('error thrown in handle results in a rendered error page', async ({ page }) => {
-		await page.goto('/errors/error-in-handle');
-
-		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Error in handle"'
-		);
-		expect(await page.innerHTML('h1')).toBe('500');
-	});
-
 	test('prerendering a page with a mutative page endpoint results in a catchable error', async ({
 		page
 	}) => {
@@ -673,7 +663,7 @@ test.describe('Load', () => {
 
 		if (!javaScriptEnabled) {
 			// by the time JS has run, hydration will have nuked these scripts
-			const script_contents = await page.innerHTML('script[sveltekit\\:data-type="data"]');
+			const script_contents = await page.innerHTML('script[data-sveltekit-fetched]');
 
 			const payload =
 				'{"status":200,"statusText":"","headers":{"content-type":"application/json"},"body":"{\\"answer\\":42}"}';
@@ -703,11 +693,11 @@ test.describe('Load', () => {
 		if (!javaScriptEnabled) {
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents_a = await page.innerHTML(
-				'script[sveltekit\\:data-type="data"][sveltekit\\:data-url="/load/serialization-post.json"][sveltekit\\:data-body="3t25"]'
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t25"]'
 			);
 
 			const script_contents_b = await page.innerHTML(
-				'script[sveltekit\\:data-type="data"][sveltekit\\:data-url="/load/serialization-post.json"][sveltekit\\:data-body="3t24"]'
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t24"]'
 			);
 
 			expect(script_contents_a).toBe(payload_a);
@@ -899,6 +889,23 @@ test.describe('Load', () => {
 
 		expect(await page.textContent('h1')).toBe('true');
 	});
+
+	test('CORS errors are simulated server-side', async ({ page, read_errors }) => {
+		const { port, close } = await start_server(async (req, res) => {
+			res.end('hello');
+		});
+
+		await page.goto(`/load/cors?port=${port}`);
+		expect(await page.textContent('h1')).toBe('500');
+		expect(read_errors(`/load/cors`)).toContain(
+			`Error: CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource`
+		);
+
+		await page.goto(`/load/cors/no-cors?port=${port}`);
+		expect(await page.textContent('h1')).toBe('result: ');
+
+		await close();
+	});
 });
 
 test.describe('Method overrides', () => {
@@ -1007,19 +1014,17 @@ test.describe('Nested layouts', () => {
 });
 
 test.describe('Page options', () => {
-	test('does not hydrate page with hydrate=false', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/no-hydrate');
+	test('does not include <script> or <link rel="modulepreload"> with csr=false', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) {
+			await page.goto('/no-csr');
+			expect(await page.textContent('h1')).toBe('look ma no javascript');
+			expect(
+				await page.evaluate(() => document.querySelectorAll('link[rel="modulepreload"]').length)
+			).toBe(0);
 
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 0');
-
-		if (javaScriptEnabled) {
-			await Promise.all([page.waitForNavigation(), page.click('[href="/no-hydrate/other"]')]);
-			await Promise.all([page.waitForNavigation(), page.click('[href="/no-hydrate"]')]);
-
-			await page.click('button');
-			expect(await page.textContent('button')).toBe('clicks: 1');
-		} else {
 			// ensure data wasn't inlined
 			expect(
 				await page.evaluate(
@@ -1027,24 +1032,6 @@ test.describe('Page options', () => {
 				)
 			).toBe(0);
 		}
-	});
-
-	test('does not include modulepreload links if JS is completely disabled', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		if (!javaScriptEnabled) {
-			await page.goto('/no-hydrate/no-js');
-			expect(await page.textContent('h1')).toBe('look ma no javascript');
-			expect(
-				await page.evaluate(() => document.querySelectorAll('link[rel="modulepreload"]').length)
-			).toBe(0);
-		}
-	});
-
-	test('transformPageChunk can change the html output', async ({ page }) => {
-		await page.goto('/transform-page-chunk');
-		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
 
 	test('does not SSR page with ssr=false', async ({ page, javaScriptEnabled }) => {
@@ -1061,6 +1048,12 @@ test.describe('Page options', () => {
 	test('does not SSR error page for 404s with ssr=false', async ({ request }) => {
 		const html = await request.get('/no-ssr/missing');
 		expect(await html.text()).not.toContain('load function was called erroneously');
+	});
+
+	// TODO move this test somewhere more suitable
+	test('transformPageChunk can change the html output', async ({ page }) => {
+		await page.goto('/transform-page-chunk');
+		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
 });
 
@@ -1159,7 +1152,7 @@ test.describe('$app/stores', () => {
 		expect(JSON.parse(await page.textContent('#store-data'))).toEqual(stuff3);
 	});
 
-	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
+	test('navigating store contains from, to and type', async ({ app, page, javaScriptEnabled }) => {
 		await page.goto('/store/navigating/a');
 
 		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
@@ -1172,10 +1165,17 @@ test.describe('$app/stores', () => {
 				page.textContent('#navigating')
 			]);
 
-			expect(res[1]).toBe('navigating from /store/navigating/a to /store/navigating/b');
+			expect(res[1]).toBe('navigating from /store/navigating/a to /store/navigating/b (link)');
 
 			await page.waitForSelector('#not-navigating');
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+
+			await Promise.all([
+				expect(page.locator('#navigating')).toHaveText(
+					'navigating from /store/navigating/b to /store/navigating/a (popstate)'
+				),
+				page.goBack()
+			]);
 		}
 	});
 

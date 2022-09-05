@@ -88,12 +88,15 @@ declare module '$app/environment' {
  * 	disableScrollHandling,
  * 	goto,
  * 	invalidate,
+ * 	invalidateAll,
  * 	prefetch,
  * 	prefetchRoutes
  * } from '$app/navigation';
  * ```
  */
 declare module '$app/navigation' {
+	import { Navigation } from '@sveltejs/kit';
+
 	/**
 	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
@@ -113,10 +116,25 @@ declare module '$app/navigation' {
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<void>;
 	/**
-	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. If no argument is given, all resources will be invalidated. Returns a `Promise` that resolves when the page is subsequently updated.
-	 * @param dependency The invalidated resource
+	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
+	 *
+	 * If the argument is given as a `string` or `URL`, it must resolve to the same URL that was passed to `fetch` or `depends` (including query parameters).
+	 * To create a custom identifier, use a string beginning with `[a-z]+:` (e.g. `custom:state`) — this is a valid URL.
+	 *
+	 * The `function` argument can be used define a custom predicate. It receives the full `URL` and causes `load` to rerun if `true` is returned.
+	 * This can be useful if you want to invalidate based on a pattern instead of a exact match.
+	 *
+	 * ```ts
+	 * // Example: Match '/path' regardless of the query parameters
+	 * invalidate((url) => url.pathname === '/path');
+	 * ```
+	 * @param url The invalidated URL
 	 */
-	export function invalidate(dependency?: string | ((href: string) => boolean)): Promise<void>;
+	export function invalidate(url: string | URL | ((url: URL) => boolean)): Promise<void>;
+	/**
+	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+	 */
+	export function invalidateAll(): Promise<void>;
 	/**
 	 * Programmatically prefetches the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
@@ -142,17 +160,23 @@ declare module '$app/navigation' {
 	export function prefetchRoutes(routes?: string[]): Promise<void>;
 
 	/**
-	 * A navigation interceptor that triggers before we navigate to a new URL (internal or external) whether by clicking a link, calling `goto`, or using the browser back/forward controls.
-	 * This is helpful if we want to conditionally prevent a navigation from completing or lookup the upcoming url.
+	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
+	 * Calling `cancel()` will prevent the navigation from completing.
+	 *
+	 * When navigating to an external URL, `navigation.to` will be `null`.
+	 *
+	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */
 	export function beforeNavigate(
-		fn: (navigation: { from: URL; to: URL | null; cancel: () => void }) => void
+		callback: (navigation: Navigation & { cancel: () => void }) => void
 	): void;
 
 	/**
-	 * A lifecycle function that runs when the page mounts, and also whenever SvelteKit navigates to a new URL but stays on this component.
+	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
+	 *
+	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */
-	export function afterNavigate(fn: (navigation: { from: URL | null; to: URL }) => void): void;
+	export function afterNavigate(callback: (navigation: Navigation) => void): void;
 }
 
 /**
@@ -194,7 +218,7 @@ declare module '$app/stores' {
 	export const page: Readable<Page>;
 	/**
 	 * A readable store.
-	 * When navigating starts, its value is `{ from: URL, to: URL }`,
+	 * When navigating starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
 	 * When navigating finishes, its value reverts to `null`.
 	 */
 	export const navigating: Readable<Navigation | null>;

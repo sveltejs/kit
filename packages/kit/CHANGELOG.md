@@ -1,5 +1,119 @@
 # @sveltejs/kit
 
+## 1.0.0-next.469
+
+### Patch Changes
+
+- disable `rollupOptions.output.hoistTransitiveImports` by default ([#6560](https://github.com/sveltejs/kit/pull/6560))
+
+## 1.0.0-next.468
+
+### Patch Changes
+
+- [breaking] simulate CORS errors in server-side fetch ([#6550](https://github.com/sveltejs/kit/pull/6550))
+
+## 1.0.0-next.467
+
+### Patch Changes
+
+- [breaking] prevent server-side fetch from reading files with # character in the filename ([#6549](https://github.com/sveltejs/kit/pull/6549))
+
+## 1.0.0-next.466
+
+### Patch Changes
+
+- [breaking] change Navigation type to include from/to.params and from/to.routeId ([#6552](https://github.com/sveltejs/kit/pull/6552))
+
+* Warn about incorrect data-sveltekit-x values ([#6546](https://github.com/sveltejs/kit/pull/6546))
+
+## 1.0.0-next.465
+
+### Patch Changes
+
+- [feat] add `type` to navigation object ([#6537](https://github.com/sveltejs/kit/pull/6537))
+
+## 1.0.0-next.464
+
+### Patch Changes
+
+- Fix server manifest generation ([#6507](https://github.com/sveltejs/kit/pull/6507))
+
+* Silently skip prefetching of external URLs when using `data-sveltekit-prefetch`. Warn like before when calling `prefetch()` for external URLs. ([#6518](https://github.com/sveltejs/kit/pull/6518))
+
+## 1.0.0-next.463
+
+### Patch Changes
+
+- fix peer dependency warning on vite-3.1.0-beta.1 ([#6512](https://github.com/sveltejs/kit/pull/6512))
+
+* [breaking] respect cache-control max-age on the client for initially fetched responses ([#6461](https://github.com/sveltejs/kit/pull/6461))
+
+## 1.0.0-next.462
+
+### Patch Changes
+
+- [breaking] block cross-site form POSTs by default. disable with config.kit.csrf.checkOrigin ([#6510](https://github.com/sveltejs/kit/pull/6510))
+
+## 1.0.0-next.461
+
+### Patch Changes
+
+- [breaking] call `invalidate(fn)` predicates with a URL instead of a string ([#6493](https://github.com/sveltejs/kit/pull/6493))
+
+* Prefer JSON responses when returning errors if accept header is `*/*` ([#6497](https://github.com/sveltejs/kit/pull/6497))
+
+- [breaking] replace invalidate() with invalidateAll() ([#6493](https://github.com/sveltejs/kit/pull/6493))
+
+## 1.0.0-next.460
+
+### Patch Changes
+
+- [breaking] Remove sveltekit:start event ([#6484](https://github.com/sveltejs/kit/pull/6484))
+
+## 1.0.0-next.459
+
+### Patch Changes
+
+- Prevent validation_errors from being serialized twice ([#6468](https://github.com/sveltejs/kit/pull/6468))
+
+## 1.0.0-next.458
+
+### Patch Changes
+
+- [breaking] catch and render raw response when unexpected error occurs in endpoint ([#6434](https://github.com/sveltejs/kit/pull/6434))
+
+## 1.0.0-next.457
+
+### Patch Changes
+
+- Print error if resolveOpts.ssr is set ([#6475](https://github.com/sveltejs/kit/pull/6475))
+
+## 1.0.0-next.456
+
+### Patch Changes
+
+- Apply `data-sveltekit-prefetch/noscroll/reload` to all child `<a>` elements ([#6442](https://github.com/sveltejs/kit/pull/6442))
+
+* [fix] Saving the root route will write types now ([#6450](https://github.com/sveltejs/kit/pull/6450))
+
+## 1.0.0-next.455
+
+### Patch Changes
+
+- bump vite-plugin-svelte to 1.0.3 to fix an issue with svelte-inspector in vite 3.1 ([#6443](https://github.com/sveltejs/kit/pull/6443))
+
+* [chore] bump ts version and ensure it works with latest changes ([#6428](https://github.com/sveltejs/kit/pull/6428))
+
+- [breaking] `ssr/hydrate/router/prerender.default` are now configurable in `+page(.server).js` and `+layout(.server).js` ([#6197](https://github.com/sveltejs/kit/pull/6197))
+
+* [breaking] add `error.html` page, rename `kit.config.files.template` to `kit.config.files.appTemplate` ([#6367](https://github.com/sveltejs/kit/pull/6367))
+
+- [breaking] merge resolve options when using sequence helper ([#6401](https://github.com/sveltejs/kit/pull/6401))
+
+* [breaking] replace `router`/`hydrate` page options with `csr` ([#6446](https://github.com/sveltejs/kit/pull/6446))
+
+- [breaking] add `prerender = 'auto'` option, and extend `prerender` option to endpoints ([#6392](https://github.com/sveltejs/kit/pull/6392))
+
 ## 1.0.0-next.454
 
 ### Patch Changes
