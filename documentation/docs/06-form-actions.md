@@ -240,26 +240,28 @@ As you can see, progressive enhancement is doable, but it may become a little cu
 By default, the `enhance` action will
 
 - update the `form` property and invalidate all data on a successful response
-- call `goto` on a redirect response
 - update the `form` property on a invalid response
+- update `$page.status` on a successful or invalid response
+- call `goto` on a redirect response
+- redirect to the nearest error page on an unexpected error
 
-You can customize this behavior by providing your own callbacks to `enhance`.
+You can customize this behavior by providing your own callback to `enhance`.
 
-#### updateForm
+#### applySubmissionResult
 
-Under the hood, the `enhance` action uses `updateForm` to update the `form` prop. It's a low level API that you can use to build your own opinionated actions. The argument passed to it becomes the new value of the `form` prop.
+Under the hood, the `enhance` action uses `applySubmissionResult` to update the `form` prop and `$page.status`. It can also handle `applySubmissionResult` redirects and throws to the error page in case of an unexpected error. It's a low level API that you can use to build your own opinionated actions.
 
 ```svelte
 /// file: src/routes/login/+page.svelte
 <script>
-	import { updateForm } from '$app/forms';
+	import { applySubmissionResult } from '$app/forms';
 
 	/** @type {import('./$types').FormData} */
 	export let form;
 
 	function update() {
 		// If possible, the value should conform to the `FormData` interface defined through `./$types`
-		updateForm({ next: 'value' });
+		applySubmissionResult({ type: 'success', data: { next: 'value' } });
 	}
 </script>
 
@@ -268,19 +270,22 @@ Under the hood, the `enhance` action uses `updateForm` to update the `form` prop
 
 ### Multiple forms
 
-In case you have multiple forms on a single page, be aware of the implications this has on `export let form`. Consider the following example: You have a list of todos which you can delete, but there's a validation that the todo needs to be at least 5 minutes old. Relying on `form?.invalid` in the following example would give unexpected results - in case of a validation error, all items would have the validation message shown:
+In case you have multiple forms on a single page, be aware of the implications this has on `export let form`. Consider the following example: You have a list of todos which you can delete, but there's a validation that the todo needs to be at least 5 minutes old. Relying on `form?.[todo.id]?.invalid` in the following example would give unexpected results - in case of concurrent submissions with multiple validation error, only the last validation message would be shown:
 
 ```svelte
 <script>
 	import { enhance } from '$app/forms';
+
+	/** @type {import('./$types').ActionData} */
+	export let data;
 </script>
 
 <ul>
-	{#each todos as todo}
+	{#each data.todos as todo}
 		<li>
 			<form method="post" use:enhance>
 				<span>{todo.text}</span>
-				{#if form?.invalid}
+				{#if form?.[todo.id]?.invalid}
 					<span>Can't be deleted yet</span>
 				{/if}
 				<button>Remove</button>
@@ -290,20 +295,33 @@ In case you have multiple forms on a single page, be aware of the implications t
 <ul>
 ```
 
-In situations like this, use different measures such as setting the invalid information on the todo itself:
+In situations like this, use different measures such as setting the invalid information on a different variable:
 
 ```svelte
 <script>
+	import { invalidateAll } from '$app/navigation';
 	import { enhance } from '$app/forms';
+
+	/** @type {import('./$types').ActionData} */
+	export let data;
+	/** @type {Record<string, boolean>} */
+	let invalid = {};
 </script>
 
 <ul>
-	{#each todos as todo}
+	{#each data.todos as todo}
 		<li>
-			<form method="post" use:enhance={{ invalid: () => todo.invalid = true }}>
+			<form method="post" use:enhance={{ submit: () => {
+				return (result) => {
+					invalid[todo.id] = result.type === 'invalid';
+					if (result.type === 'success') {
+						invalidateAll();
+					}
+				}
+			}}}>
 				<span>{todo.text}</span>
-				<!-- use form?.invalid for the native form submission, use todo.invalid for progressive enhancement -->
-				{#if form?.invalid || todo.invalid}
+				<!-- use form?.[todo.id]?.invalid for the native form submission, use invalid[todo.id] for progressive enhancement -->
+				{#if form?.[todo.id]?.invalid || invalid[todo.id]}
 					<span>Can't be deleted yet</span>
 				{/if}
 				<button>Remove</button>

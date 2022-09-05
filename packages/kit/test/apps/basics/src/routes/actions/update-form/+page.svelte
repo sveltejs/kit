@@ -1,18 +1,19 @@
 <script>
-	import { updateForm } from '$app/forms';
+	import { applySubmissionResult } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 
 	export let form;
 	let count = 0;
 
+	/** @param {'success' | 'invalid'} type */
 	function update(type) {
-		updateForm({ type, data: { count: count++ } });
+		applySubmissionResult({ type, status: 200, data: { count: count++ } });
 	}
 	function redirect() {
-		updateForm({ type: 'redirect', status: 303, location: '/' });
+		applySubmissionResult({ type: 'redirect', status: 303, location: '/' });
 	}
 	function error() {
-		updateForm({ type: 'error', error: { message: 'Unexpected Form Error' } });
+		applySubmissionResult({ type: 'error', error: { message: 'Unexpected Form Error' } });
 	}
 </script>
 
