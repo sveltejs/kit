@@ -25,10 +25,9 @@ const cwd = process.cwd();
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
- * @param {Set<string>} illegal_imports
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config, illegal_imports) {
+export async function dev(vite, vite_config, svelte_config) {
 	installPolyfills();
 
 	sync.init(svelte_config, vite_config.mode);
@@ -93,7 +92,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 
 								prevent_illegal_vite_imports(
 									module_node,
-									illegal_imports,
 									normalizePath(svelte_config.kit.files.lib),
 									extensions
 								);
@@ -111,7 +109,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 
 							prevent_illegal_vite_imports(
 								module_node,
-								illegal_imports,
 								normalizePath(svelte_config.kit.files.lib),
 								extensions
 							);
