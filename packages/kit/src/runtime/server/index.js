@@ -1,3 +1,4 @@
+import * as cookie from 'cookie';
 import { render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
@@ -8,6 +9,7 @@ import { decode_params, disable_search, normalize_path } from '../../utils/url.j
 import { exec } from '../../utils/routing.js';
 import { render_data } from './data/index.js';
 import { DATA_SUFFIX } from '../../constants.js';
+import { get_cookies } from './cookie.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -119,13 +121,13 @@ export async function respond(request, options, state) {
 	/** @type {import('types').ResponseHeaders} */
 	const headers = {};
 
-	/** @type {string[]} */
-	const cookies = [];
+	const { cookies, new_cookies } = get_cookies(request, url);
 
 	if (state.prerendering) disable_search(url);
 
 	/** @type {import('types').RequestEvent} */
 	const event = {
+		cookies,
 		getClientAddress:
 			state.getClientAddress ||
 			(() => {
@@ -144,15 +146,9 @@ export async function respond(request, options, state) {
 				const value = new_headers[key];
 
 				if (lower === 'set-cookie') {
-					const new_cookies = /** @type {string[]} */ (Array.isArray(value) ? value : [value]);
-
-					for (const cookie of new_cookies) {
-						if (cookies.includes(cookie)) {
-							throw new Error(`"${key}" header already has cookie with same value`);
-						}
-
-						cookies.push(cookie);
-					}
+					throw new Error(
+						`Use \`event.cookie.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
+					);
 				} else if (lower in headers) {
 					throw new Error(`"${key}" header is already set`);
 				} else {
@@ -275,8 +271,11 @@ export async function respond(request, options, state) {
 					}
 				}
 
-				for (const cookie of cookies) {
-					response.headers.append('set-cookie', cookie);
+				for (const new_cookie of new_cookies) {
+					response.headers.append(
+						'set-cookie',
+						cookie.serialize(new_cookie.name, new_cookie.value, new_cookie.options)
+					);
 				}
 
 				// respond with 304 if etag matches

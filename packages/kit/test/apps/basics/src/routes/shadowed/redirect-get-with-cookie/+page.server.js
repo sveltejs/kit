@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 
-export function load({ setHeaders }) {
-	setHeaders({ 'set-cookie': 'shadow-redirect=happy' });
+/** @type {import('./$types').PageServerLoad} */
+export function load({ cookies }) {
+	cookies.set('shadow-redirect', 'happy');
 	throw redirect(302, '/shadowed/redirected');
 }

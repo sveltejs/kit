@@ -119,6 +119,12 @@ export interface Config {
 	[key: string]: any;
 }
 
+export interface Cookies {
+	get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
+	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
+	delete(name: string): void;
+}
+
 export interface KitConfig {
 	adapter?: Adapter;
 	alias?: Record<string, string>;
@@ -250,6 +256,7 @@ export interface ParamMatcher {
 export interface RequestEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
 > {
+	cookies: Cookies;
 	getClientAddress: () => string;
 	locals: App.Locals;
 	params: Params;
