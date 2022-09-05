@@ -131,8 +131,9 @@ export async function call_action(event, actions) {
 		throw new Error(`No action with name '${name}' found`);
 	}
 
-	if (event.request.headers.get('content-type') === 'application/json') {
-		throw new Error('Actions expect form-encoded data, JSON is not supported');
+	const type = event.request.headers.get('content-type')?.split('; ')[0];
+	if (type !== 'application/x-www-form-urlencoded' && type !== 'multipart/form-data') {
+		throw new Error(`Actions expect form-encoded data (received ${type})`);
 	}
 
 	return action(event);
