@@ -3,9 +3,10 @@
 	import { invalidateAll } from '$app/navigation';
 	import { scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
+	import type { PageData } from './$types';
 
 	/** @type {import('./$types').PageData} */
-	export let data;
+	export let data: PageData;
 	$: todos = data.todos;
 </script>
 
