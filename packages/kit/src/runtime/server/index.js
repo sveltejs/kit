@@ -27,8 +27,8 @@ function is_origin_match(request, origin) {
 	// In some legacy browsers (such as IE/Edge<79 and Firefox<58), the origin header aren't sent on POST requests.
 	// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin#browser_compatibility
 
-	const host = request.headers.get('host');
-	return origin === 'https://' + host || origin === 'http://' + host;
+	const referer = request.headers.get('referer');
+	return referer && new URL(referer).origin === origin
 }
 
 /** @type {import('types').Respond} */
