@@ -48,13 +48,16 @@ export type MutationResult =
 	| {
 			type: 'error';
 			error: HttpError | Error;
+			result?: never;
 	  }
 	| {
 			type: 'invalid';
 			result: Record<string, any> | undefined;
+			error?: never;
 	  }
 	| {
 			type: 'success';
 			result: Record<string, any> | void;
+			error?: never;
 	  }
 	| undefined;
