@@ -2,7 +2,7 @@ import { devalue } from 'devalue';
 import { DATA_SUFFIX } from '../../../constants.js';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
-import { HttpError, Redirect, ValidationError } from '../../control.js';
+import { HttpError, Redirect } from '../../control.js';
 import { get_option, redirect_response, static_error_page } from '../utils.js';
 import {
 	handle_action_json_request,
@@ -50,22 +50,22 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 		let status = 200;
 
-		/** @type {import('./types').MutationResult} */
-		let mutation_result;
+		/** @type {import('$app/forms').SubmissionResult | undefined} */
+		let submission_result = undefined;
 
 		if (is_action_request(event, leaf_node)) {
 			// for action requests, first call handler in +page.server.js
 			// (this also determines status code)
-			mutation_result = await handle_action_request(event, leaf_node.server);
-			if (mutation_result?.type === 'redirect') {
-				return redirect_response(303, mutation_result.location);
+			submission_result = await handle_action_request(event, leaf_node.server);
+			if (submission_result?.type === 'redirect') {
+				return redirect_response(303, submission_result.location);
 			}
-			if (mutation_result?.type === 'error') {
-				const error = mutation_result.error;
+			if (submission_result?.type === 'error') {
+				const error = submission_result.error;
 				status = error instanceof HttpError ? error.status : 500;
 			}
-			if (mutation_result?.type === 'invalid') {
-				status = mutation_result.status;
+			if (submission_result?.type === 'invalid') {
+				status = submission_result.status;
 			}
 		}
 
@@ -129,10 +129,10 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 			return Promise.resolve().then(async () => {
 				try {
-					if (node === leaf_node && mutation_result?.type === 'error') {
+					if (node === leaf_node && submission_result?.type === 'error') {
 						// we wait until here to throw the error so that we can use
 						// any nested +error.svelte components that were defined
-						throw mutation_result.error;
+						throw submission_result.error;
 					}
 
 					return await load_server_data({
@@ -286,7 +286,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			status,
 			error: null,
 			branch: compact(branch),
-			mutation_result,
+			submission_result,
 			fetched,
 			cookies
 		});

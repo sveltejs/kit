@@ -88,41 +88,56 @@ declare module '$app/environment' {
 declare module '$app/forms' {
 	import { FormFetchResponse } from '@sveltejs/kit';
 
+	export type SubmissionResult<
+		Success extends Record<string, unknown> | undefined = Record<string, any>,
+		Invalid extends Record<string, unknown> | undefined = Record<string, any>
+	> =
+		| {
+				type: 'error';
+				error: any;
+		  }
+		| FormFetchResponse<Success, Invalid>;
+
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
 	 * @param form The form element
 	 * @param options Callbacks for different states of the form lifecycle
 	 */
-	export function enhance<Success = Record<string, any>, Invalid = Record<string, any>>(
+	export function enhance<
+		Success extends Record<string, unknown> | undefined = Record<string, any>,
+		Invalid extends Record<string, unknown> | undefined = Record<string, any>
+	>(
 		form: HTMLFormElement,
 		options?: {
 			/**
 			 * Called upon submission with the given FormData.
-			 * If `false` is returned, the submission is cancelled.
+			 * If `cancel` is called, the form will not be submitted.
 			 * If a function is returned, that function is called with the response from the server.
 			 * If nothing is returned, the fallback will be used.
 			 *
 			 * If this function or its return value isn't set, it
 			 * - falls back to updating the `form` prop with the returned data if the action is one same page as the form
+			 * - updates `$page.status`
 			 * - invalidates all data in case of successful submission with no redirect response
 			 * - redirects in case of a redirect response
+			 * - redirects to the nearest error page in case of an unexpected error
 			 */
 			submit?: (input: {
 				data: FormData;
 				form: HTMLFormElement;
-			}) =>
-				| false
-				| undefined
-				| ((result: FormFetchResponse | { type: 'error'; error: any }) => void);
+				cancel: () => void;
+			}) => void | ((result: SubmissionResult<Success, Invalid>) => void);
 		}
 	): { destroy: () => void };
 
 	/**
-	 * This action updates the `form` property of the current page with the given data.
+	 * This action updates the `form` property of the current page with the given data and updates `$page.status`.
+	 * In case of an error, it redirects to the nearest error page.
 	 */
-	export function updateForm<Data extends Record<string, unknown> | null = Record<string, any>>(
-		data: Data
-	): void;
+	export function applySubmissionResult<
+		Success extends Record<string, unknown> | undefined = Record<string, any>,
+		Invalid extends Record<string, unknown> | undefined = Record<string, any>
+	>(result: SubmissionResult<Success, Invalid>): Promise<void>;
 }
 
 /**

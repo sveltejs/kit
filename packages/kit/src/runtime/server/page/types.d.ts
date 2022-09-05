@@ -43,11 +43,3 @@ export interface SerializedHttpError extends Pick<HttpError, 'message' | 'status
 	stack: '';
 	__is_http_error: true;
 }
-
-export type MutationResult =
-	| {
-			type: 'error';
-			error: HttpError | Error;
-	  }
-	| FormFetchResponse
-	| undefined;

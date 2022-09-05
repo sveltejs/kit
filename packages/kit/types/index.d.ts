@@ -319,21 +319,26 @@ export interface ServerLoadEvent<
 }
 
 export interface Action<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
 > {
-	(event: RequestEvent<Params>): MaybePromise<Record<string, any> | void>;
+	(event: RequestEvent<Params>): MaybePromise<OutputData>;
 }
 
 export type Actions<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
-> = Record<string, Action<Params>>;
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
+> = Record<string, Action<Params, OutputData>>;
 
 /**
  * When calling a form action via fetch, the response will be one of these shapes.
  */
-export type FormFetchResponse =
-	| { type: 'success'; status: number; data?: Record<string, any> }
-	| { type: 'invalid'; status: number; data?: Record<string, any> }
+export type FormFetchResponse<
+	Success extends Record<string, unknown> | undefined = Record<string, any>,
+	Invalid extends Record<string, unknown> | undefined = Record<string, any>
+> =
+	| { type: 'success'; status: number; data?: Success }
+	| { type: 'invalid'; status: number; data?: Invalid }
 	| { type: 'redirect'; status: number; location: string };
 
 // TODO figure out how to just re-export from '../src/index/index.js' without

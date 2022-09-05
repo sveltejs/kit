@@ -104,6 +104,8 @@ export function create_client({ target, base, trailing_slash }) {
 	/** @type {Promise<void> | null} */
 	let invalidating = null;
 	let force_invalidation = false;
+	/** @type {any} */
+	let forced_error = null;
 
 	/** @type {import('svelte').SvelteComponent} */
 	let root;
@@ -790,6 +792,7 @@ export function create_client({ target, base, trailing_slash }) {
 			if (loaders[i]) {
 				try {
 					branch.push(await branch_promises[i]);
+					if (forced_error && i === loaders.length - 1) throw forced_error;
 				} catch (e) {
 					const error = normalize_error(e);
 
@@ -1135,10 +1138,30 @@ export function create_client({ target, base, trailing_slash }) {
 			await Promise.all(promises);
 		},
 
-		update_form: (form) => {
-			const post_update = pre_update();
-			root.$set({ form });
-			post_update();
+		apply_submission_result: async (result) => {
+			if (result.type === 'error') {
+				const url = new URL(location.href);
+				const intent = get_navigation_intent(url, true);
+				forced_error = result.error;
+				await update(intent, url, []);
+				forced_error = null;
+			} else if (result.type === 'redirect') {
+				goto(result.location, {}, []);
+			} else {
+				/** @type {Record<string, any>} */
+				const props = {
+					form: result.data
+				};
+				if (result.status !== page.status) {
+					props.page = {
+						...page,
+						status: result.status
+					};
+				}
+				const post_update = pre_update();
+				root.$set(props);
+				post_update();
+			}
 		},
 
 		_start_router: () => {

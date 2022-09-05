@@ -12,18 +12,18 @@ function guard(name) {
 
 const ssr = import.meta.env.SSR;
 
-/** @type {import('$app/forms').updateForm} */
-export const updateForm = ssr ? guard('updateForm') : client.update_form;
+/** @type {import('$app/forms').applySubmissionResult} */
+export const applySubmissionResult = ssr ? guard('updateForm') : client.apply_submission_result;
 
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, { submit = () => {} } = {}) {
-	/** @type {ReturnType<NonNullable<NonNullable<Parameters<import('$app/forms').enhance>[1]>['submit']>>} */
+	/** @param {import('$app/forms').SubmissionResult} result */
 	const fallback_callback = (result) => {
 		if (
 			(result.type === 'success' || result.type === 'invalid') &&
 			location.origin + location.pathname === form.action.split('?')[0]
 		) {
-			updateForm(result.data ?? null);
+			applySubmissionResult(result);
 		}
 
 		if (result.type === 'success') {
@@ -45,13 +45,15 @@ export function enhance(form, { submit = () => {} } = {}) {
 		event.preventDefault();
 
 		const data = new FormData(form);
+		let cancelled = false;
+		const cancel = () => (cancelled = true);
 
-		const callback = submit({ form, data }) ?? fallback_callback;
-		if (callback === false) {
+		const callback = submit({ form, data, cancel }) ?? fallback_callback;
+		if (cancelled) {
 			return;
 		}
 
-		/** @type {import('types').FormFetchResponse | { type: 'error'; error: unknown }} */
+		/** @type {import('$app/forms').SubmissionResult} */
 		let result;
 
 		try {
@@ -70,7 +72,7 @@ export function enhance(form, { submit = () => {} } = {}) {
 			result = { type: 'error', error };
 		}
 
-		callback(result);
+		callback(/** @type {import('$app/forms').SubmissionResult<any, any>} */ (result));
 	}
 
 	form.addEventListener('submit', handle_submit);

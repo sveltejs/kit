@@ -90,7 +90,7 @@ export function is_action_request(event, leaf_node) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSRNode['server']} server
- * @returns {Promise<import('./types').MutationResult>}
+ * @returns {Promise<import('$app/forms').SubmissionResult>}
  */
 export async function handle_action_request(event, server) {
 	const actions = server.actions;
@@ -117,7 +117,7 @@ export async function handle_action_request(event, server) {
 		} else {
 			return {
 				type: 'success',
-				status: data ? 200 : 204,
+				status: 200,
 				data: /** @type {Record<string, any> | undefined} */ (data)
 			};
 		}

@@ -1754,16 +1754,61 @@ test.describe('Actions', () => {
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
 	});
 
-	test('updateForm works', async ({ page, javaScriptEnabled }) => {
+	test('updateForm updates form prop', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/update-form');
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
-			await page.click('button.increment');
+			await page.click('button.increment-success');
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
 
-			await page.click('button.increment');
+			await page.click('button.increment-invalid');
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 1 }));
+		}
+	});
+
+	test('form prop stays after invalidation and is reset on navigation', async ({
+		page,
+		app,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/actions/update-form');
+		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+
+		if (javaScriptEnabled) {
+			await page.click('button.increment-success');
+			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
+
+			await page.click('button.invalidateAll');
+			await page.waitForTimeout(500);
+			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
+			await app.goto('/actions/enhance');
+		} else {
+			await page.goto('/actions/enhance');
+		}
+
+		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+	});
+
+	test('updateForm redirects', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/update-form');
+		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+
+		if (javaScriptEnabled) {
+			await page.click('button.redirect');
+			await expect(page.locator('footer')).toHaveText('Custom layout');
+		}
+	});
+
+	test('updateForm errors', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/update-form');
+		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+
+		if (javaScriptEnabled) {
+			await page.click('button.error');
+			await expect(page.locator('p')).toHaveText(
+				'This is your custom error page saying: "Unexpected Form Error"'
+			);
 		}
 	});
 
@@ -1779,28 +1824,5 @@ test.describe('Actions', () => {
 		]);
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
-	});
-
-	test('form prop stays after invalidation and is reset on navigation', async ({
-		page,
-		app,
-		javaScriptEnabled
-	}) => {
-		await page.goto('/actions/update-form');
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
-
-		if (javaScriptEnabled) {
-			await page.click('button.increment');
-			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
-
-			await page.click('button.invalidateAll');
-			await page.waitForTimeout(500);
-			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
-			await app.goto('/actions/enhance');
-		} else {
-			await page.goto('/actions/enhance');
-		}
-
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 	});
 });

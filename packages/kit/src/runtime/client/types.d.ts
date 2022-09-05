@@ -1,4 +1,4 @@
-import { updateForm } from '$app/forms';
+import { applySubmissionResult } from '$app/forms';
 import {
 	afterNavigate,
 	beforeNavigate,
@@ -22,7 +22,7 @@ export interface Client {
 	invalidateAll: typeof invalidateAll;
 	prefetch: typeof prefetch;
 	prefetch_routes: typeof prefetchRoutes;
-	update_form: typeof updateForm;
+	apply_submission_result: typeof applySubmissionResult;
 
 	// private API
 	_hydrate: (opts: {
