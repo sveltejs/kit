@@ -185,7 +185,7 @@ export async function render_response({
 		throw error;
 	}
 
-	if (mutation_result?.type !== 'error' && mutation_result?.result) {
+	if (mutation_result?.result) {
 		try {
 			serialized.form = devalue(mutation_result.result);
 		} catch (e) {
