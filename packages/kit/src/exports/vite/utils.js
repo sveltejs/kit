@@ -215,9 +215,7 @@ function format_illegal_import_chain(stack, lib_dir) {
 	return `Cannot import ${stack.at(-1)?.name} into client-side code:\n${pyramid}`;
 }
 
-function get_node_modules_dir() {
-	return path.resolve(process.cwd(), 'node_modules');
-}
+const node_modules_dir = path.resolve(process.cwd(), 'node_modules');
 
 /**
  * Load environment variables from process.env and .env files
@@ -240,14 +238,7 @@ export function get_env(env_config, mode) {
  * @param {string} lib_dir
  */
 export function prevent_illegal_rollup_imports(node_getter, node, illegal_imports, lib_dir) {
-	const node_modules_dir = get_node_modules_dir();
-	const chain = find_illegal_rollup_imports(
-		node_getter,
-		node,
-		false,
-		illegal_imports,
-		node_modules_dir
-	);
+	const chain = find_illegal_rollup_imports(node_getter, node, false, illegal_imports);
 	if (chain) throw new Error(format_illegal_import_chain(chain, lib_dir));
 }
 
@@ -263,7 +254,6 @@ function remove_query_from_path(path) {
  * @param {import('rollup').ModuleInfo} node
  * @param {boolean} dynamic
  * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call vite.normalizePath!
- * @param {string} node_modules_dir,
  * @param {Set<string>} seen
  * @returns {Array<import('types').ImportNode> | null}
  */
@@ -272,7 +262,6 @@ const find_illegal_rollup_imports = (
 	node,
 	dynamic,
 	illegal_imports,
-	node_modules_dir,
 	seen = new Set()
 ) => {
 	const name = remove_query_from_path(normalizePath(node.id));
@@ -290,30 +279,14 @@ const find_illegal_rollup_imports = (
 	for (const id of node.importedIds) {
 		const child = node_getter(id);
 		const chain =
-			child &&
-			find_illegal_rollup_imports(
-				node_getter,
-				child,
-				false,
-				illegal_imports,
-				node_modules_dir,
-				seen
-			);
+			child && find_illegal_rollup_imports(node_getter, child, false, illegal_imports, seen);
 		if (chain) return [{ name, dynamic }, ...chain];
 	}
 
 	for (const id of node.dynamicallyImportedIds) {
 		const child = node_getter(id);
 		const chain =
-			child &&
-			find_illegal_rollup_imports(
-				node_getter,
-				child,
-				true,
-				illegal_imports,
-				node_modules_dir,
-				seen
-			);
+			child && find_illegal_rollup_imports(node_getter, child, true, illegal_imports, seen);
 		if (chain) return [{ name, dynamic }, ...chain];
 	}
 
@@ -351,31 +324,18 @@ const get_module_types = (config_module_types) => {
  * @param {Iterable<string>} module_types File extensions to analyze in addition to the defaults: `.ts`, `.js`, etc.
  */
 export function prevent_illegal_vite_imports(node, illegal_imports, lib_dir, module_types) {
-	const node_modules_dir = get_node_modules_dir();
-	const chain = find_illegal_vite_imports(
-		node,
-		illegal_imports,
-		node_modules_dir,
-		get_module_types(module_types)
-	);
+	const chain = find_illegal_vite_imports(node, illegal_imports, get_module_types(module_types));
 	if (chain) throw new Error(format_illegal_import_chain(chain, lib_dir));
 }
 
 /**
  * @param {import('vite').ModuleNode} node
  * @param {Set<string>} illegal_imports Illegal module IDs -- be sure to call vite.normalizePath!
- * @param {string} node_modules_dir
  * @param {Set<string>} module_types File extensions to analyze: `.ts`, `.js`, etc.
  * @param {Set<string>} seen
  * @returns {Array<import('types').ImportNode> | null}
  */
-function find_illegal_vite_imports(
-	node,
-	illegal_imports,
-	node_modules_dir,
-	module_types,
-	seen = new Set()
-) {
+function find_illegal_vite_imports(node, illegal_imports, module_types, seen = new Set()) {
 	if (!node.id) return null; // TODO when does this happen?
 	const name = remove_query_from_path(normalizePath(node.id));
 
@@ -393,9 +353,7 @@ function find_illegal_vite_imports(
 	}
 
 	for (const child of node.importedModules) {
-		const chain =
-			child &&
-			find_illegal_vite_imports(child, illegal_imports, node_modules_dir, module_types, seen);
+		const chain = child && find_illegal_vite_imports(child, illegal_imports, module_types, seen);
 		if (chain) return [{ name, dynamic: false }, ...chain];
 	}
 
