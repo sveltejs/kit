@@ -13,7 +13,6 @@ const illegal_imports = new Set([
 
 /** @param {string} id */
 function is_illegal(id) {
-	console.log({ id, cwd: process.cwd(), node_modules_dir });
 	if (illegal_imports.has(id)) return true;
 
 	// files outside the project root are ignored
