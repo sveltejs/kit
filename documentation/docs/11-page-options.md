@@ -15,7 +15,7 @@ It's likely that at least some routes of your app can be represented as a simple
 export const prerender = true;
 ```
 
-Alternatively, you can set `export const prerender = true` in your root `+layout` and prerender everything except pages that are explicitly marked as _not_ prerenderable:
+Alternatively, you can set `export const prerender = true` in your root `+layout.js` or `+layout.server.js` and prerender everything except pages that are explicitly marked as _not_ prerenderable:
 
 ```js
 /// file: +page.js/+page.server.js/+server.js
