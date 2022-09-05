@@ -269,6 +269,7 @@ export interface RequestHandler<
 
 export interface ResolveOptions {
 	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
+	filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
 }
 
 export class Server {

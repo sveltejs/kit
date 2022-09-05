@@ -25,7 +25,8 @@ export async function respond_with_error({ event, options, state, status, error,
 		event,
 		options,
 		state,
-		route: GENERIC_ERROR
+		route: GENERIC_ERROR,
+		resolve_opts
 	});
 
 	try {

@@ -64,13 +64,15 @@ You can add call multiple `handle` functions with [the `sequence` helper functio
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
 - `transformPageChunk(opts: { html: string, done: boolean }): MaybePromise<string | undefined>` — applies custom transforms to HTML. If `done` is true, it's the final chunk. Chunks are not guaranteed to be well-formed HTML (they could include an element's opening tag but not its closing tag, for example) but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
+- `filterSerializedResponseHeaders(name: string, value: string): boolean` — determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`. By default, none will be included.
 
 ```js
 /// file: src/hooks.js
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	const response = await resolve(event, {
-		transformPageChunk: ({ html }) => html.replace('old', 'new')
+		transformPageChunk: ({ html }) => html.replace('old', 'new'),
+		filterSerializedResponseHeaders: (name) => name.startsWith('x-')
 	});
 
 	return response;

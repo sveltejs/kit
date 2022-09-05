@@ -682,8 +682,7 @@ test.describe('Load', () => {
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents = await page.innerHTML('script[data-sveltekit-fetched]');
 
-			const payload =
-				'{"status":200,"statusText":"","headers":{"content-type":"application/json"},"body":"{\\"answer\\":42}"}';
+			const payload = '{"status":200,"statusText":"","headers":{},"body":"{\\"answer\\":42}"}';
 
 			expect(script_contents).toBe(payload);
 		}
@@ -701,11 +700,8 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('a: X');
 		expect(await page.textContent('h2')).toBe('b: Y');
 
-		const payload_a =
-			'{"status":200,"statusText":"","headers":{"content-type":"text/plain;charset=UTF-8"},"body":"X"}';
-
-		const payload_b =
-			'{"status":200,"statusText":"","headers":{"content-type":"text/plain;charset=UTF-8"},"body":"Y"}';
+		const payload_a = '{"status":200,"statusText":"","headers":{},"body":"X"}';
+		const payload_b = '{"status":200,"statusText":"","headers":{},"body":"Y"}';
 
 		if (!javaScriptEnabled) {
 			// by the time JS has run, hydration will have nuked these scripts
@@ -829,7 +825,7 @@ test.describe('Load', () => {
 		browserName
 	}) => {
 		await page.goto('/load');
-		await clicknav('[href="/load/fetch-headers"]');
+		await clicknav('[href="/load/fetch-request-headers"]');
 
 		const json = /** @type {string} */ (await page.textContent('pre'));
 		const headers = JSON.parse(json);

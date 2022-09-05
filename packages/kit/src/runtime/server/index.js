@@ -14,6 +14,8 @@ import { DATA_SUFFIX } from '../../constants.js';
 /** @param {{ html: string }} opts */
 const default_transform = ({ html }) => html;
 
+const default_filter = () => false;
+
 /** @type {import('types').Respond} */
 export async function respond(request, options, state) {
 	let url = new URL(request.url);
@@ -176,7 +178,8 @@ export async function respond(request, options, state) {
 
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
-		transformPageChunk: default_transform
+		transformPageChunk: default_transform,
+		filterSerializedResponseHeaders: default_filter
 	};
 
 	/**
@@ -201,7 +204,8 @@ export async function respond(request, options, state) {
 				}
 
 				resolve_opts = {
-					transformPageChunk: opts.transformPageChunk || default_transform
+					transformPageChunk: opts.transformPageChunk || default_transform,
+					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter
 				};
 			}
 
