@@ -284,7 +284,11 @@ export async function render_response({
 	}
 
 	if (page_config.ssr && page_config.csr) {
-		body += `\n\t${fetched.map((item) => serialize_data(item, !!state.prerendering)).join('\n\t')}`;
+		body += `\n\t${fetched
+			.map((item) =>
+				serialize_data(item, resolve_opts.filterSerializedResponseHeaders, !!state.prerendering)
+			)
+			.join('\n\t')}`;
 	}
 
 	if (options.service_worker) {
@@ -321,6 +325,7 @@ export async function render_response({
 		})) || '';
 
 	const headers = new Headers({
+		'x-sveltekit-page': 'true',
 		'content-type': 'text/html',
 		etag: `"${hash(html)}"`
 	});

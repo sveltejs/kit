@@ -10,9 +10,10 @@ import { domain_matches, path_matches } from './cookie.js';
  *   state: import('types').SSRState;
  *   route: import('types').SSRRoute | import('types').SSRErrorPage;
  *   prerender_default?: import('types').PrerenderOption;
+ *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts
  */
-export function create_fetch({ event, options, state, route, prerender_default }) {
+export function create_fetch({ event, options, state, route, prerender_default, resolve_opts }) {
 	/** @type {import('./types').Fetched[]} */
 	const fetched = [];
 
@@ -189,16 +190,6 @@ export function create_fetch({ event, options, state, route, prerender_default }
 				async function text() {
 					const body = await response.text();
 
-					// TODO just pass `response.headers`, for processing inside `serialize_data`
-					/** @type {import('types').ResponseHeaders} */
-					const headers = {};
-					for (const [key, value] of response.headers) {
-						// TODO skip others besides set-cookie and etag?
-						if (key !== 'set-cookie' && key !== 'etag') {
-							headers[key] = value;
-						}
-					}
-
 					if (!body || typeof body === 'string') {
 						const status_number = Number(response.status);
 						if (isNaN(status_number)) {
@@ -214,14 +205,27 @@ export function create_fetch({ event, options, state, route, prerender_default }
 								? request.url.slice(event.url.origin.length)
 								: request.url,
 							method: request.method,
-							body: /** @type {string | undefined} */ (request_body),
-							response: {
-								status: status_number,
-								statusText: response.statusText,
-								headers,
-								body
-							}
+							request_body: /** @type {string | undefined} */ (request_body),
+							response_body: body,
+							response: response
 						});
+
+						// ensure that excluded headers can't be read
+						const get = response.headers.get;
+						response.headers.get = (key) => {
+							const lower = key.toLowerCase();
+							const value = get.call(response.headers, lower);
+							if (value && !lower.startsWith('x-sveltekit-')) {
+								const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
+								if (!included) {
+									throw new Error(
+										`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#handle`
+									);
+								}
+							}
+
+							return value;
+						};
 					}
 
 					if (dependency) {

@@ -143,7 +143,7 @@ export async function load({ depends }) {
 - it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request
 - it can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context)
 - internal requests (e.g. for `+server.js` routes) go direct to the handler function when running on the server, without the overhead of an HTTP call
-- during server-side rendering, the response will be captured and inlined into the rendered HTML
+- during server-side rendering, the response will be captured and inlined into the rendered HTML. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](/docs/hooks#handle)
 - during hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request
 
 > Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
