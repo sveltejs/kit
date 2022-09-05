@@ -311,14 +311,14 @@ In situations like this, use different measures such as setting the invalid info
 <ul>
 	{#each data.todos as todo}
 		<li>
-			<form method="post" use:enhance={{ submit: () => {
+			<form method="post" use:enhance={() => {
 				return (result) => {
 					invalid[todo.id] = result.type === 'invalid';
 					if (result.type === 'success') {
 						invalidateAll();
 					}
 				}
-			}}}>
+			}}>
 				<span>{todo.text}</span>
 				<!-- use form?.[todo.id]?.invalid for the native form submission, use invalid[todo.id] for progressive enhancement -->
 				{#if form?.[todo.id]?.invalid || invalid[todo.id]}

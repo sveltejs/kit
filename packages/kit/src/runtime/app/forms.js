@@ -16,7 +16,7 @@ const ssr = import.meta.env.SSR;
 export const applyAction = ssr ? guard('updateForm') : client.apply_action;
 
 /** @type {import('$app/forms').enhance} */
-export function enhance(form, { submit = () => {} } = {}) {
+export function enhance(form, submit = () => {}) {
 	/** @param {import('$app/forms').SubmissionResult} result */
 	const fallback_callback = (result) => {
 		if (

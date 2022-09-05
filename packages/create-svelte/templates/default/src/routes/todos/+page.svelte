@@ -21,15 +21,13 @@
 		class="new"
 		action="/todos?/add"
 		method="post"
-		use:enhance={{
-			submit: ({ form }) => {
-				return (result) => {
-					if (result.type === 'success') {
-						form.reset();
-						invalidate('app:todos');
-					}
-				};
-			}
+		use:enhance={({ form }) => {
+			return (result) => {
+				if (result.type === 'success') {
+					form.reset();
+					invalidate('app:todos');
+				}
+			};
 		}}
 	>
 		<input name="text" aria-label="Add todo" placeholder="+ tap to add a todo" />
@@ -45,10 +43,8 @@
 			<form
 				action="/todos?/toggle"
 				method="post"
-				use:enhance={{
-					submit: ({ data }) => {
-						todo.done = !!data.get('done');
-					}
+				use:enhance={({ data }) => {
+					todo.done = !!data.get('done');
 				}}
 			>
 				<input type="hidden" name="uid" value={todo.uid} />
@@ -65,10 +61,8 @@
 			<form
 				action="/todos?/delete"
 				method="post"
-				use:enhance={{
-					submit: () => {
-						todo.pending_delete = true;
-					}
+				use:enhance={() => {
+					todo.pending_delete = true;
 				}}
 			>
 				<input type="hidden" name="uid" value={todo.uid} />

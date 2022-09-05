@@ -108,26 +108,24 @@ declare module '$app/forms' {
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	>(
 		form: HTMLFormElement,
-		options?: {
-			/**
-			 * Called upon submission with the given FormData.
-			 * If `cancel` is called, the form will not be submitted.
-			 * If a function is returned, that function is called with the response from the server.
-			 * If nothing is returned, the fallback will be used.
-			 *
-			 * If this function or its return value isn't set, it
-			 * - falls back to updating the `form` prop with the returned data if the action is one same page as the form
-			 * - updates `$page.status`
-			 * - invalidates all data in case of successful submission with no redirect response
-			 * - redirects in case of a redirect response
-			 * - redirects to the nearest error page in case of an unexpected error
-			 */
-			submit?: (input: {
-				data: FormData;
-				form: HTMLFormElement;
-				cancel: () => void;
-			}) => void | ((result: SubmissionResult<Success, Invalid>) => void);
-		}
+		/**
+		 * Called upon submission with the given FormData.
+		 * If `cancel` is called, the form will not be submitted.
+		 * If a function is returned, that function is called with the response from the server.
+		 * If nothing is returned, the fallback will be used.
+		 *
+		 * If this function or its return value isn't set, it
+		 * - falls back to updating the `form` prop with the returned data if the action is one same page as the form
+		 * - updates `$page.status`
+		 * - invalidates all data in case of successful submission with no redirect response
+		 * - redirects in case of a redirect response
+		 * - redirects to the nearest error page in case of an unexpected error
+		 */
+		submit?: (input: {
+			data: FormData;
+			form: HTMLFormElement;
+			cancel: () => void;
+		}) => void | ((result: SubmissionResult<Success, Invalid>) => void)
 	): { destroy: () => void };
 
 	/**
