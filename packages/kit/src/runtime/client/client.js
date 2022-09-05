@@ -145,7 +145,7 @@ export function create_client({ target, base, trailing_slash }) {
 			const url = new URL(location.href);
 
 			invalidating = Promise.resolve().then(async () => {
-				const intent = get_navigation_intent(url);
+				const intent = get_navigation_intent(url, true);
 				await update(intent, url, []);
 
 				invalidating = null;
@@ -187,7 +187,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/** @param {URL} url */
 	async function prefetch(url) {
-		const intent = get_navigation_intent(url);
+		const intent = get_navigation_intent(url, false);
 
 		if (!intent) {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
@@ -716,7 +716,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @param {import('./types').NavigationIntent} intent
 	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
-	async function load_route({ id, url, params, route }) {
+	async function load_route({ id, invalidating, url, params, route }) {
 		if (load_cache.id === id && load_cache.promise) {
 			return load_cache.promise;
 		}
@@ -885,8 +885,8 @@ export function create_client({ target, base, trailing_slash }) {
 			status: 200,
 			error: null,
 			route,
-			// On invalidateAll/same site navigation, form prop stays, else it's reset
-			form: current.url?.href !== url.href ? null : undefined
+			// Reset `form` on navigation, but not invalidation
+			form: invalidating ? undefined : null
 		});
 	}
 
@@ -959,8 +959,11 @@ export function create_client({ target, base, trailing_slash }) {
 		});
 	}
 
-	/** @param {URL} url */
-	function get_navigation_intent(url) {
+	/**
+	 * @param {URL} url
+	 * @param {boolean} invalidating
+	 */
+	function get_navigation_intent(url, invalidating) {
 		if (is_external_url(url)) return;
 
 		const path = decodeURI(url.pathname.slice(base.length) || '/');
@@ -974,7 +977,7 @@ export function create_client({ target, base, trailing_slash }) {
 				);
 				const id = normalized.pathname + normalized.search;
 				/** @type {import('./types').NavigationIntent} */
-				const intent = { id, route, params: decode_params(params), url: normalized };
+				const intent = { id, invalidating, route, params: decode_params(params), url: normalized };
 				return intent;
 			}
 		}
@@ -1014,7 +1017,7 @@ export function create_client({ target, base, trailing_slash }) {
 	}) {
 		let should_block = false;
 
-		const intent = get_navigation_intent(url);
+		const intent = get_navigation_intent(url, false);
 
 		/** @type {import('types').Navigation} */
 		const navigation = {

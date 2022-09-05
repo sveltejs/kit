@@ -6,7 +6,7 @@
 	let count = 0;
 
 	async function update() {
-		await updateForm({ count: count++ });
+		updateForm({ count: count++ });
 	}
 </script>
 

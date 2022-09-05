@@ -38,21 +38,15 @@ export interface Client {
 }
 
 export type NavigationIntent = {
-	/**
-	 * `url.pathname + url.search`
-	 */
+	/** `url.pathname + url.search`  */
 	id: string;
-	/**
-	 * The route parameters
-	 */
+	/** Whether we are invalidating or navigating */
+	invalidating: boolean;
+	/** The route parameters */
 	params: Record<string, string>;
-	/**
-	 * The route that matches `path`
-	 */
+	/** The route that matches `path` */
 	route: CSRRoute;
-	/**
-	 * The destination URL
-	 */
+	/** The destination URL */
 	url: URL;
 };
 
