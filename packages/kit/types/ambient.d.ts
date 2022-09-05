@@ -134,7 +134,7 @@ declare module '$app/forms' {
 	 * This action updates the `form` property of the current page with the given data and updates `$page.status`.
 	 * In case of an error, it redirects to the nearest error page.
 	 */
-	export function applySubmissionResult<
+	export function applyAction<
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	>(result: SubmissionResult<Success, Invalid>): Promise<void>;

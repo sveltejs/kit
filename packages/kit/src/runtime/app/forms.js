@@ -12,8 +12,8 @@ function guard(name) {
 
 const ssr = import.meta.env.SSR;
 
-/** @type {import('$app/forms').applySubmissionResult} */
-export const applySubmissionResult = ssr ? guard('updateForm') : client.apply_submission_result;
+/** @type {import('$app/forms').applyAction} */
+export const applyAction = ssr ? guard('updateForm') : client.apply_action;
 
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, { submit = () => {} } = {}) {
@@ -23,7 +23,7 @@ export function enhance(form, { submit = () => {} } = {}) {
 			(result.type === 'success' || result.type === 'invalid') &&
 			location.origin + location.pathname === form.action.split('?')[0]
 		) {
-			applySubmissionResult(result);
+			applyAction(result);
 		}
 
 		if (result.type === 'success') {

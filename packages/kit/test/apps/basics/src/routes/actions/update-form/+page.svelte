@@ -1,5 +1,5 @@
 <script>
-	import { applySubmissionResult } from '$app/forms';
+	import { applyAction } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 
 	export let form;
@@ -7,13 +7,13 @@
 
 	/** @param {'success' | 'invalid'} type */
 	function update(type) {
-		applySubmissionResult({ type, status: 200, data: { count: count++ } });
+		applyAction({ type, status: 200, data: { count: count++ } });
 	}
 	function redirect() {
-		applySubmissionResult({ type: 'redirect', status: 303, location: '/' });
+		applyAction({ type: 'redirect', status: 303, location: '/' });
 	}
 	function error() {
-		applySubmissionResult({ type: 'error', error: { message: 'Unexpected Form Error' } });
+		applyAction({ type: 'error', error: { message: 'Unexpected Form Error' } });
 	}
 </script>
 

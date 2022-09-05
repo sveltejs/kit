@@ -247,21 +247,21 @@ By default, the `enhance` action will
 
 You can customize this behavior by providing your own callback to `enhance`.
 
-#### applySubmissionResult
+#### applyAction
 
-Under the hood, the `enhance` action uses `applySubmissionResult` to update the `form` prop and `$page.status`. It can also handle `applySubmissionResult` redirects and throws to the error page in case of an unexpected error. It's a low level API that you can use to build your own opinionated actions.
+Under the hood, the `enhance` action uses `applyAction` to update the `form` prop and `$page.status`. It can also handle `applyAction` redirects and throws to the error page in case of an unexpected error. It's a low level API that you can use to build your own opinionated actions.
 
 ```svelte
 /// file: src/routes/login/+page.svelte
 <script>
-	import { applySubmissionResult } from '$app/forms';
+	import { applyAction } from '$app/forms';
 
 	/** @type {import('./$types').FormData} */
 	export let form;
 
 	function update() {
 		// If possible, the value should conform to the `FormData` interface defined through `./$types`
-		applySubmissionResult({ type: 'success', data: { next: 'value' } });
+		applyAction({ type: 'success', data: { next: 'value' } });
 	}
 </script>
 

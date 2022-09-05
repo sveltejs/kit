@@ -1138,7 +1138,7 @@ export function create_client({ target, base, trailing_slash }) {
 			await Promise.all(promises);
 		},
 
-		apply_submission_result: async (result) => {
+		apply_action: async (result) => {
 			if (result.type === 'error') {
 				const url = new URL(location.href);
 				const intent = get_navigation_intent(url, true);
