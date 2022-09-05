@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.470
+
+### Patch Changes
+
+- Bump vite-plugin-svelte and required vite version ([#6583](https://github.com/sveltejs/kit/pull/6583))
+
+* [feat] Support for `$env/dynamic/*` in Vite ecosystem tools ([#6454](https://github.com/sveltejs/kit/pull/6454))
+
+- [breaking] Replace `externalFetch` with `handleFetch` ([#6565](https://github.com/sveltejs/kit/pull/6565))
+
 ## 1.0.0-next.469
 
 ### Patch Changes
