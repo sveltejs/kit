@@ -74,6 +74,11 @@ export async function render_response({
 		error.stack = options.get_stack(error);
 	}
 
+	const form_value =
+		mutation_result?.type === 'success' || mutation_result?.type === 'invalid'
+			? mutation_result.data ?? null
+			: null;
+
 	if (page_config.ssr) {
 		/** @type {Record<string, any>} */
 		const props = {
@@ -83,7 +88,7 @@ export async function render_response({
 				updated
 			},
 			components: await Promise.all(branch.map(({ node }) => node.component())),
-			form: mutation_result?.result ?? null
+			form: form_value
 		};
 
 		let data = {};
@@ -185,9 +190,9 @@ export async function render_response({
 		throw error;
 	}
 
-	if (mutation_result?.result) {
+	if (form_value) {
 		try {
-			serialized.form = devalue(mutation_result.result);
+			serialized.form = devalue(form_value);
 		} catch (e) {
 			// If we're here, the data could not be serialized with devalue
 			const error = /** @type {any} */ (e);

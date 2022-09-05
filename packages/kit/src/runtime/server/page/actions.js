@@ -90,8 +90,7 @@ export function is_action_request(event, leaf_node) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSRNode['server']} server
- * @returns {Promise<Record<string,any> | void>}
- * @throws {Redirect | ValidationError | HttpError | Error}
+ * @returns {Promise<import('./types').MutationResult>}
  */
 export async function handle_action_request(event, server) {
 	const actions = server.actions;
@@ -104,10 +103,37 @@ export async function handle_action_request(event, server) {
 			// "The server must generate an Allow header field in a 405 status code response"
 			allow: 'GET'
 		});
-		throw error(405, 'POST method not allowed. No actions exist for this page');
+		return {
+			type: 'error',
+			error: error(405, 'POST method not allowed. No actions exist for this page')
+		};
 	}
 
-	return call_action(event, actions);
+	try {
+		const data = await call_action(event, actions);
+
+		if (data instanceof ValidationError) {
+			return { type: 'invalid', status: data.status, data: data.data };
+		} else {
+			return {
+				type: 'success',
+				status: data ? 200 : 204,
+				data: /** @type {Record<string, any> | undefined} */ (data)
+			};
+		}
+	} catch (e) {
+		const error = normalize_error(e);
+
+		if (error instanceof Redirect) {
+			return {
+				type: 'redirect',
+				status: error.status,
+				location: error.location
+			};
+		}
+
+		return { type: 'error', error };
+	}
 }
 
 /**

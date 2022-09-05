@@ -56,21 +56,16 @@ export async function render_page(event, route, page, options, state, resolve_op
 		if (is_action_request(event, leaf_node)) {
 			// for action requests, first call handler in +page.server.js
 			// (this also determines status code)
-			try {
-				const result = await handle_action_request(event, leaf_node.server);
-				if (result instanceof ValidationError) {
-					mutation_result = { type: 'invalid', result: result.data };
-					status = result.status;
-				} else {
-					mutation_result = { type: 'success', result };
-				}
-			} catch (e) {
-				const error = normalize_error(e);
-				if (error instanceof Redirect) {
-					return redirect_response(303, error.location);
-				}
+			mutation_result = await handle_action_request(event, leaf_node.server);
+			if (mutation_result?.type === 'redirect') {
+				return redirect_response(303, mutation_result.location);
+			}
+			if (mutation_result?.type === 'error') {
+				const error = mutation_result.error;
 				status = error instanceof HttpError ? error.status : 500;
-				mutation_result = { type: 'error', error };
+			}
+			if (mutation_result?.type === 'invalid') {
+				status = mutation_result.status;
 			}
 		}
 
