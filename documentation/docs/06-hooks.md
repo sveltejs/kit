@@ -50,7 +50,7 @@ const getUserInformation: (cookie: string | null) => Promise<User>;
 // ---cut---
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
-	event.locals.user = await getUserInformation(event.request.headers.get('cookie'));
+	event.locals.user = await getUserInformation(event.cookies.get('sessionid'));
 
 	const response = await resolve(event);
 	response.headers.set('x-custom-header', 'potato');

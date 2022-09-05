@@ -1,5 +1,4 @@
 import fs from 'fs';
-import cookie from 'cookie';
 import { sequence } from '@sveltejs/kit/hooks';
 
 /** @type {import('@sveltejs/kit').HandleError} */
@@ -23,8 +22,7 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	({ event, resolve }) => {
-		const cookies = cookie.parse(event.request.headers.get('cookie') || '');
-		event.locals.name = cookies.name;
+		event.locals.name = event.cookies.get('name');
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {
