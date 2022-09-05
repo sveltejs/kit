@@ -102,7 +102,7 @@ export async function handle_action_request(event, server) {
 		event.setHeaders({
 			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
 			// "The server must generate an Allow header field in a 405 status code response"
-			allow: ''
+			allow: 'GET'
 		});
 		throw error(405, 'POST method not allowed. No actions exist for this page');
 	}
