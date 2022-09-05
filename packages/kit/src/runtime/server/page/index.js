@@ -84,7 +84,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod && mod.actions) {
-				throw new Error('Cannot prerender pages that have mutative methods');
+				throw new Error('Cannot prerender pages with actions');
 			}
 		} else if (state.prerendering) {
 			// if the page isn't marked as prerenderable, then bail out at this point
