@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidate } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 
@@ -25,7 +25,7 @@
 			return (result) => {
 				if (result.type === 'success') {
 					form.reset();
-					invalidate('app:todos');
+					invalidateAll();
 				}
 			};
 		}}

@@ -21,10 +21,9 @@ type Todo = {
  */
 
 /** @type {import('./$types').PageServerLoad} */
-export const load: PageServerLoad = async ({ locals, depends }) => {
+export const load: PageServerLoad = async ({ locals }) => {
 	// locals.userid comes from src/hooks.js
 	const response = await api('GET', `todos/${locals.userid}`);
-	depends('app:todos');
 
 	if (response.status === 404) {
 		// user hasn't created a todo list.
