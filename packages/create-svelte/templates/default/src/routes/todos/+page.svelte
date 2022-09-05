@@ -28,7 +28,7 @@
 						form.reset();
 						invalidate('app:todos');
 					}
-				}
+				};
 			}
 		}}
 	>
