@@ -94,7 +94,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 								prevent_illegal_vite_imports(
 									module_node,
 									illegal_imports,
-									normalizePath(path.resolve(process.cwd(), 'node_modules')),
 									normalizePath(svelte_config.kit.files.lib),
 									extensions
 								);
@@ -113,7 +112,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							prevent_illegal_vite_imports(
 								module_node,
 								illegal_imports,
-								normalizePath(path.resolve(process.cwd(), 'node_modules')),
 								normalizePath(svelte_config.kit.files.lib),
 								extensions
 							);
