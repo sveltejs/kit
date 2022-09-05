@@ -237,10 +237,11 @@ export async function prerender() {
 			const encoded_dependency_path = new URL(dependency_path, 'http://localhost').pathname;
 			const decoded_dependency_path = decodeURI(encoded_dependency_path);
 
-			const prerender = result.response.headers.get('x-sveltekit-prerender');
+			const headers = Object.fromEntries(result.response.headers);
 
+			const prerender = headers['x-sveltekit-prerender'];
 			if (prerender) {
-				const route_id = /** @type {string} */ (result.response.headers.get('x-sveltekit-routeid'));
+				const route_id = headers['x-sveltekit-routeid'];
 				const existing_value = prerender_map.get(route_id);
 				if (existing_value !== 'auto') {
 					prerender_map.set(route_id, prerender === 'true' ? true : 'auto');
@@ -259,7 +260,10 @@ export async function prerender() {
 			);
 		}
 
-		if (config.prerender.crawl && response.headers.get('content-type') === 'text/html') {
+		// avoid triggering `filterSerializeResponseHeaders` guard
+		const headers = Object.fromEntries(response.headers);
+
+		if (config.prerender.crawl && headers['content-type'] === 'text/html') {
 			for (const href of crawl(body.toString())) {
 				if (href.startsWith('data:') || href.startsWith('#')) continue;
 
@@ -288,7 +292,9 @@ export async function prerender() {
 	 */
 	function save(category, response, body, decoded, encoded, referrer, referenceType) {
 		const response_type = Math.floor(response.status / 100);
-		const type = /** @type {string} */ (response.headers.get('content-type'));
+		const headers = Object.fromEntries(response.headers);
+
+		const type = headers['content-type'];
 		const is_html = response_type === REDIRECT || type === 'text/html';
 
 		const file = output_filename(decoded, is_html);
@@ -297,7 +303,7 @@ export async function prerender() {
 		if (written.has(file)) return;
 
 		if (response_type === REDIRECT) {
-			const location = response.headers.get('location');
+			const location = headers['location'];
 
 			if (location) {
 				const resolved = resolve(encoded, location);
@@ -305,7 +311,7 @@ export async function prerender() {
 					enqueue(decoded, decodeURI(resolved), resolved);
 				}
 
-				if (!response.headers.get('x-sveltekit-normalize')) {
+				if (!headers['x-sveltekit-normalize']) {
 					mkdirp(dirname(dest));
 
 					log.warn(`${response.status} ${decoded} -> ${location}`);

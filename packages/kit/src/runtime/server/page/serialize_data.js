@@ -71,11 +71,11 @@ export function serialize_data(fetched, filter, prerendering = false) {
 	}
 
 	if (!prerendering && fetched.method === 'GET') {
-		const cache_control = fetched.response.headers.get('cache-control');
+		const cache_control = headers['cache-control'];
 		if (cache_control) {
 			const match = /s-maxage=(\d+)/g.exec(cache_control) ?? /max-age=(\d+)/g.exec(cache_control);
 			if (match) {
-				const age = fetched.response.headers.get('age') ?? '0';
+				const age = headers['age'] ?? '0';
 
 				const ttl = +match[1] - +age;
 				attrs.push(`data-ttl="${ttl}"`);

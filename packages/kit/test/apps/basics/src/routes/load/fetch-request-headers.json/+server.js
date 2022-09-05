@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 
-/** @type {import('@sveltejs/kit').RequestHandler} */
+/** @type {import('./$types').RequestHandler} */
 export function GET({ request }) {
 	/** @type {Record<string, string>} */
 	const body = {};

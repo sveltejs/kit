@@ -131,7 +131,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 			options,
 			state,
 			route,
-			prerender_default: should_prerender
+			prerender_default: should_prerender,
+			resolve_opts
 		});
 
 		if (get_option(nodes, 'ssr') === false) {

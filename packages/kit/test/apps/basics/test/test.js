@@ -825,7 +825,7 @@ test.describe('Load', () => {
 		browserName
 	}) => {
 		await page.goto('/load');
-		await clicknav('[href="/load/fetch-headers"]');
+		await clicknav('[href="/load/fetch-request-headers"]');
 
 		const json = /** @type {string} */ (await page.textContent('pre'));
 		const headers = JSON.parse(json);
