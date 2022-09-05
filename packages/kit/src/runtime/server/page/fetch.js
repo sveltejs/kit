@@ -19,7 +19,36 @@ export function create_fetch({ event, options, state, route, prerender_default }
 	const initial_cookies = cookie.parse(event.request.headers.get('cookie') || '');
 
 	/** @type {import('set-cookie-parser').Cookie[]} */
-	const new_cookies = [];
+	const set_cookies = [];
+
+	/**
+	 * @param {URL} url
+	 * @param {string | null} header
+	 */
+	function get_cookie_header(url, header) {
+		/** @type {Record<string, string>} */
+		const new_cookies = {};
+
+		for (const cookie of set_cookies) {
+			if (!domain_matches(url.hostname, cookie.domain)) continue;
+			if (!path_matches(url.pathname, cookie.path)) continue;
+
+			new_cookies[cookie.name] = cookie.value;
+		}
+
+		// cookies from explicit `cookie` header take precedence over cookies previously set
+		// during this load with `set-cookie`, which take precedence over the cookies
+		// sent by the user agent
+		const combined_cookies = {
+			...initial_cookies,
+			...new_cookies,
+			...cookie.parse(header ?? '')
+		};
+
+		return Object.entries(combined_cookies)
+			.map(([name, value]) => `${name}=${value}`)
+			.join('; ');
+	}
 
 	/** @type {typeof fetch} */
 	const fetcher = async (info, init) => {
@@ -51,16 +80,8 @@ export function create_fetch({ event, options, state, route, prerender_default }
 						`.${url.hostname}`.endsWith(`.${event.url.hostname}`) &&
 						request.credentials !== 'omit'
 					) {
-						const combined_cookies = {
-							...cookie.parse(event.request.headers.get('cookie') ?? ''),
-							...cookie.parse(request.headers.get('cookie') ?? '')
-						};
-
-						const cookie_header = Object.entries(combined_cookies)
-							.map(([name, value]) => `${name}=${value}`)
-							.join('; ');
-
-						if (cookie_header) request.headers.set('cookie', cookie_header);
+						const cookie = get_cookie_header(url, request.headers.get('cookie'));
+						if (cookie) request.headers.set('cookie', cookie);
 					}
 
 					let response = await fetch(request);
@@ -119,33 +140,12 @@ export function create_fetch({ event, options, state, route, prerender_default }
 				}
 
 				if (request.credentials !== 'omit') {
+					const cookie = get_cookie_header(url, request.headers.get('cookie'));
+					if (cookie) {
+						request.headers.set('cookie', cookie);
+					}
+
 					const authorization = event.request.headers.get('authorization');
-
-					// combine cookies from the initiating request with any that were
-					// added via set-cookie
-					const combined_cookies = { ...initial_cookies };
-
-					for (const cookie of new_cookies) {
-						if (!domain_matches(event.url.hostname, cookie.domain)) continue;
-						if (!path_matches(url.pathname, cookie.path)) continue;
-
-						combined_cookies[cookie.name] = cookie.value;
-					}
-
-					// add cookies that were included in this request
-					const explicit_cookies = cookie.parse(request.headers.get('cookie') || '');
-					for (const key in explicit_cookies) {
-						combined_cookies[key] = explicit_cookies[key];
-					}
-
-					const cookie_header = Object.entries(combined_cookies)
-						.map(([name, value]) => `${name}=${value}`)
-						.join('; ');
-
-					if (cookie_header) {
-						request.headers.set('cookie', cookie_header);
-					}
-
 					if (authorization && !request.headers.has('authorization')) {
 						request.headers.set('authorization', authorization);
 					}
@@ -177,7 +177,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 
 		const set_cookie = response.headers.get('set-cookie');
 		if (set_cookie) {
-			new_cookies.push(
+			set_cookies.push(
 				...set_cookie_parser
 					.splitCookiesString(set_cookie)
 					.map((str) => set_cookie_parser.parseString(str))
@@ -265,7 +265,7 @@ export function create_fetch({ event, options, state, route, prerender_default }
 		return proxy;
 	};
 
-	return { fetcher, fetched, cookies: new_cookies };
+	return { fetcher, fetched, cookies: set_cookies };
 }
 
 /**
