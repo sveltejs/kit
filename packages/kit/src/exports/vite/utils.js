@@ -13,6 +13,7 @@ const illegal_imports = new Set([
 
 /** @param {string} id */
 function is_illegal(id) {
+	console.log({ id, cwd: process.cwd(), node_modules_dir });
 	if (illegal_imports.has(id)) return true;
 
 	// files outside the project root are ignored
@@ -235,7 +236,7 @@ function format_illegal_import_chain(stack, lib_dir) {
 	return `Cannot import ${stack.at(-1)?.name} into client-side code:\n${pyramid}`;
 }
 
-const node_modules_dir = path.resolve(process.cwd(), 'node_modules');
+const node_modules_dir = normalizePath(path.resolve(process.cwd(), 'node_modules'));
 
 /**
  * Load environment variables from process.env and .env files
