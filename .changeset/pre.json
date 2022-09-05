@@ -31,7 +31,12 @@
     "test-writes": "0.0.2-next.0",
     "svelte-migrate": "1.0.0-next.0",
     "skeleton-template": "0.0.1-next.0",
-    "@sveltejs/package": "1.0.0-next.1"
+    "@sveltejs/package": "1.0.0-next.1",
+    "private-dynamic-env": "0.0.1",
+    "private-dynamic-env-dynamic-import": "0.0.1",
+    "private-static-env": "0.0.1",
+    "private-static-env-dynamic-import": "0.0.1",
+    "server-only-module": "0.0.1"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -723,6 +728,7 @@
     "perfect-ghosts-shake",
     "perfect-kiwis-sneeze",
     "perfect-mayflies-sneeze",
+    "perfect-rules-burn",
     "perfect-socks-sparkle",
     "pink-ducks-press",
     "pink-flies-mix",
@@ -924,6 +930,7 @@
     "shy-oranges-sin",
     "shy-toes-punch",
     "silent-crews-change",
+    "silent-cycles-reply",
     "silly-ants-battle",
     "silly-grapes-cover",
     "silly-jokes-hug",

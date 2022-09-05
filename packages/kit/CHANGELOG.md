@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.471
+
+### Patch Changes
+
+- [breaking] Allow users to designate modules as server-only ([#6422](https://github.com/sveltejs/kit/pull/6422))
+
+* [breaking] exclude headers from serialized responses by default, add `filterSerializedResponseHeaders` `resolve` option ([#6569](https://github.com/sveltejs/kit/pull/6569))
+
 ## 1.0.0-next.470
 
 ### Patch Changes
