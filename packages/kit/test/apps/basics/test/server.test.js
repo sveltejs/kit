@@ -272,13 +272,12 @@ test.describe('Routing', () => {
 });
 
 test.describe('Shadowed pages', () => {
-	// TODO this doesn't work anymore because we call formData on the user's behalf,
-	// and posting FORM data will trigger the CSFR 403, which also check for in other tests in this app
-	test.skip('Action can return undefined', async ({ request }) => {
+	test('Action can return undefined', async ({ baseURL, request }) => {
 		const response = await request.post('/shadowed/simple/post', {
 			form: {},
 			headers: {
-				accept: 'application/json'
+				accept: 'application/json',
+				origin: new URL(baseURL).origin
 			}
 		});
 
