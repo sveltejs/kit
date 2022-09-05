@@ -3,4 +3,4 @@
 '@sveltejs/kit': patch
 ---
 
-[breaking] Implement form actions in favor of POST/PUT/PATCH/DELETE page endpoint methods
+[breaking] Replace `POST`/`PUT`/`PATCH`/`DELETE` in `+page.server.js` with `export const actions`
