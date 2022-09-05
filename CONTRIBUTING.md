@@ -61,7 +61,7 @@ If you would like to test local changes to Vite or another dependency, you can b
 {
 	// ...
 	"dependencies": {
-		"vite": "^3.0.0"
+		"vite": "^3.1.0"
 	},
 	"pnpm": {
 		"overrides": {
