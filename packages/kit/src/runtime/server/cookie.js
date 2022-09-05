@@ -31,7 +31,15 @@ export function get_cookies(request, url) {
 			return decode(initial_cookies[name]);
 		},
 		set(name, value, options = {}) {
-			new_cookies.push({ name, value, options });
+			new_cookies.push({
+				name,
+				value,
+				options: {
+					httpOnly: true,
+					secure: true,
+					...options
+				}
+			});
 		},
 		delete(name) {
 			new_cookies.push({ name, value: '', options: { expires: new Date(0) } });

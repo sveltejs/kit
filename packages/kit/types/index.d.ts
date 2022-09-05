@@ -120,8 +120,23 @@ export interface Config {
 }
 
 export interface Cookies {
+	/**
+	 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
+	 */
 	get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
+
+	/**
+	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make
+	 * the cookie available via `cookies.get` during the current request.
+	 *
+	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly
+	 * disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP
+	 */
 	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
+
+	/**
+	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
+	 */
 	delete(name: string): void;
 }
 
