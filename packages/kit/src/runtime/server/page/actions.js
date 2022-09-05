@@ -74,9 +74,7 @@ export async function handle_action_json_request(event, options, server) {
 	}
 }
 
-/**
- * @param {import('types').FormFetchResponse} data
- */
+/** @param {import('types').FormFetchResponse} data */
 function action_json(data) {
 	return json(data);
 }
