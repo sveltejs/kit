@@ -17,10 +17,10 @@ function is_illegal(id) {
 	if (illegal_imports.has(id)) return true;
 
 	// files outside the project root are ignored
-	if (!id.startsWith(process.cwd())) return false;
+	if (!id.startsWith(normalizePath(process.cwd()))) return false;
 
 	// so are files inside node_modules
-	if (id.startsWith(node_modules_dir)) return false;
+	if (id.startsWith(normalizePath(node_modules_dir))) return false;
 
 	return /.*\.server\..+/.test(path.basename(id));
 }
