@@ -388,8 +388,6 @@ function find_illegal_vite_imports(
 		return [{ name, dynamic: false }];
 	}
 
-	console.log({ name, startsWith: name.startsWith(node_modules_dir) });
-
 	if (!name.startsWith(node_modules_dir) && /.*\.server\..*/.test(path.basename(name))) {
 		return [{ name, dynamic: false }];
 	}
