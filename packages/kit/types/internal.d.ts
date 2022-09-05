@@ -3,7 +3,6 @@ import { SvelteComponent } from 'svelte/internal';
 import {
 	Action,
 	Config,
-	ExternalFetch,
 	ServerLoad,
 	Handle,
 	HandleError,
@@ -14,7 +13,8 @@ import {
 	ResolveOptions,
 	Server,
 	ServerInitOptions,
-	SSRManifest
+	SSRManifest,
+	HandleFetch
 } from './index.js';
 import {
 	HttpMethod,
@@ -90,9 +90,9 @@ export type CSRRoute = {
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
 export interface Hooks {
-	externalFetch: ExternalFetch;
 	handle: Handle;
 	handleError: HandleError;
+	handleFetch: HandleFetch;
 }
 
 export interface ImportNode {

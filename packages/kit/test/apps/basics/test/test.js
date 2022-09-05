@@ -790,7 +790,6 @@ test.describe('Load', () => {
 		const requested_urls = [];
 
 		const { port, close } = await start_server(async (req, res) => {
-			if (!req.url) throw new Error('Incomplete request');
 			requested_urls.push(req.url);
 
 			if (req.url === '/server-fetch-request-modified.json') {
@@ -835,18 +834,20 @@ test.describe('Load', () => {
 		const json = /** @type {string} */ (await page.textContent('pre'));
 		const headers = JSON.parse(json);
 
-		expect(headers).toEqual({
-			// the referer will be the previous page in the client-side
-			// navigation case
-			referer: `${baseURL}/load`,
-			// these headers aren't particularly useful, but they allow us to verify
-			// that page headers are being forwarded
-			'sec-fetch-dest':
-				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'empty' : 'document',
-			'sec-fetch-mode':
-				browserName === 'webkit' ? undefined : javaScriptEnabled ? 'cors' : 'navigate',
-			connection: javaScriptEnabled ? 'keep-alive' : undefined
-		});
+		if (javaScriptEnabled) {
+			expect(headers).toEqual({
+				// the referer will be the previous page in the client-side
+				// navigation case
+				referer: `${baseURL}/load`,
+				// these headers aren't particularly useful, but they allow us to verify
+				// that page headers are being forwarded
+				'sec-fetch-dest': browserName === 'webkit' ? undefined : 'empty',
+				'sec-fetch-mode': browserName === 'webkit' ? undefined : 'cors',
+				connection: 'keep-alive'
+			});
+		} else {
+			expect(headers).toEqual({});
+		}
 	});
 
 	test('exposes rawBody to endpoints', async ({ page, clicknav }) => {

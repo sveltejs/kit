@@ -310,6 +310,14 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
 
+				// TODO remove for 1.0
+				// @ts-expect-error
+				if (user_hooks.externalFetch) {
+					throw new Error(
+						'externalFetch has been removed — use handleFetch instead. See https://github.com/sveltejs/kit/pull/6565 for details'
+					);
+				}
+
 				/** @type {import('types').Hooks} */
 				const hooks = {
 					handle,
@@ -324,7 +332,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 								console.error(colors.gray(error.stack));
 							}
 						}),
-					externalFetch: user_hooks.externalFetch || fetch
+					handleFetch: user_hooks.handleFetch || (({ request, fetch }) => fetch(request))
 				};
 
 				if (/** @type {any} */ (hooks).getContext) {
