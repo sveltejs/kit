@@ -6,9 +6,7 @@ import { error_to_pojo } from '../utils.js';
 
 // Info: `enhance` action and `updateForm` live in `runtime/app/forms.js`
 
-/**
- * @param {import('types').RequestEvent} event
- */
+/** @param {import('types').RequestEvent} event */
 export function is_action_json_request(event) {
 	const accept = negotiate(event.request.headers.get('accept') || 'text/html', [
 		'text/html',
