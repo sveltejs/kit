@@ -313,7 +313,9 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 				// TODO remove for 1.0
 				// @ts-expect-error
 				if (user_hooks.externalFetch) {
-					throw new Error('externalFetch has been removed — use handleFetch instead'); // TODO add migration guide
+					throw new Error(
+						'externalFetch has been removed — use handleFetch instead. See https://github.com/sveltejs/kit/pull/6565 for details'
+					);
 				}
 
 				/** @type {import('types').Hooks} */

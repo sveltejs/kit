@@ -113,7 +113,7 @@ export class Server {
 
 			// TODO remove this for 1.0
 			if (module.externalFetch) {
-				throw new Error('externalFetch has been removed — use handleFetch instead'); // TODO add migration guide
+				throw new Error('externalFetch has been removed — use handleFetch instead. See https://github.com/sveltejs/kit/pull/6565 for details');
 			}
 
 			this.options.hooks = {
