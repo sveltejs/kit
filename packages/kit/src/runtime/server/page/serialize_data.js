@@ -44,11 +44,16 @@ export function serialize_data(fetched, filter, prerendering = false) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
+	let cache_control = null;
+	let age = null;
+
 	for (const [key, value] of fetched.response.headers) {
-		const lower = key.toLowerCase();
-		if (filter(lower, value)) {
-			headers[lower] = value;
+		if (filter(key, value)) {
+			headers[key] = value;
 		}
+
+		if (key === 'cache-control') cache_control = value;
+		if (key === 'age') age = value;
 	}
 
 	const payload = {
@@ -70,16 +75,11 @@ export function serialize_data(fetched, filter, prerendering = false) {
 		attrs.push(`data-hash=${escape_html_attr(hash(fetched.request_body))}`);
 	}
 
-	if (!prerendering && fetched.method === 'GET') {
-		const cache_control = headers['cache-control'];
-		if (cache_control) {
-			const match = /s-maxage=(\d+)/g.exec(cache_control) ?? /max-age=(\d+)/g.exec(cache_control);
-			if (match) {
-				const age = headers['age'] ?? '0';
-
-				const ttl = +match[1] - +age;
-				attrs.push(`data-ttl="${ttl}"`);
-			}
+	if (!prerendering && fetched.method === 'GET' && cache_control) {
+		const match = /s-maxage=(\d+)/g.exec(cache_control) ?? /max-age=(\d+)/g.exec(cache_control);
+		if (match) {
+			const ttl = +match[1] - +(age ?? '0');
+			attrs.push(`data-ttl="${ttl}"`);
 		}
 	}
 
