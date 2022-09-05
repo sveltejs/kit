@@ -103,6 +103,14 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		 * @param {import('types').RouteData | null} parent
 		 */
 		const walk = (depth, id, segment, parent) => {
+			if (/\]\[/.test(id)) {
+				throw new Error(`Invalid route ${id} — parameters must be separated`);
+			}
+
+			if (count_occurrences('[', id) !== count_occurrences(']', id)) {
+				throw new Error(`Invalid route ${id} — brackets are unbalanced`);
+			}
+
 			const { pattern, names, types } = parse_route_id(id);
 
 			const segments = id.split('/');
@@ -449,4 +457,16 @@ function list_files(dir) {
 	if (fs.existsSync(dir)) walk('');
 
 	return files;
+}
+
+/**
+ * @param {string} needle
+ * @param {string} haystack
+ */
+function count_occurrences(needle, haystack) {
+	let count = 0;
+	for (let i = 0; i < haystack.length; i += 1) {
+		if (haystack[i] === needle) count += 1;
+	}
+	return count;
 }

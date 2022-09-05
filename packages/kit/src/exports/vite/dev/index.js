@@ -11,7 +11,7 @@ import { load_error_page, load_template } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
-import { get_env, prevent_illegal_vite_imports, resolve_entry } from '../utils.js';
+import { prevent_illegal_vite_imports, resolve_entry } from '../utils.js';
 import { compact } from '../../../utils/array.js';
 
 // Vite doesn't expose this so we just copy the list for now
@@ -275,13 +275,6 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 		}
 	});
 
-	const { set_private_env } = await vite.ssrLoadModule(`${runtime_base}/env-private.js`);
-	const { set_public_env } = await vite.ssrLoadModule(`${runtime_base}/env-public.js`);
-
-	const env = get_env(svelte_config.kit.env, vite_config.mode);
-	set_private_env(env.private);
-	set_public_env(env.public);
-
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -323,6 +316,14 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
 
+				// TODO remove for 1.0
+				// @ts-expect-error
+				if (user_hooks.externalFetch) {
+					throw new Error(
+						'externalFetch has been removed — use handleFetch instead. See https://github.com/sveltejs/kit/pull/6565 for details'
+					);
+				}
+
 				/** @type {import('types').Hooks} */
 				const hooks = {
 					handle,
@@ -337,7 +338,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 								console.error(colors.gray(error.stack));
 							}
 						}),
-					externalFetch: user_hooks.externalFetch || fetch
+					handleFetch: user_hooks.handleFetch || (({ request, fetch }) => fetch(request))
 				};
 
 				if (/** @type {any} */ (hooks).getContext) {
@@ -417,7 +418,7 @@ export async function dev(vite, vite_config, svelte_config, illegal_imports) {
 							base: svelte_config.kit.paths.base,
 							assets
 						},
-						public_env: env.public,
+						public_env: {},
 						read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 						root,
 						app_template: ({ head, body, assets, nonce }) => {
