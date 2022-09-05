@@ -86,7 +86,6 @@ function action_json(data) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSRNode} leaf_node
- * @returns
  */
 export function is_action_request(event, leaf_node) {
 	return leaf_node.server && event.request.method !== 'GET' && event.request.method !== 'HEAD';
