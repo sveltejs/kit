@@ -38,7 +38,7 @@ export async function handle_action_json_request(event, options, server) {
 			headers: {
 				// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
 				// "The server must generate an Allow header field in a 405 status code response"
-				allow: ''
+				allow: 'GET'
 			}
 		});
 	}
