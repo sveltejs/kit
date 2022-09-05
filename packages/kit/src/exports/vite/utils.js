@@ -11,6 +11,19 @@ const illegal_imports = new Set([
 	'\0$env/static/private' // prod
 ]);
 
+/** @param {string} id */
+function is_illegal(id) {
+	if (illegal_imports.has(id)) return true;
+
+	// files outside the project root are ignored
+	if (!id.startsWith(process.cwd())) return false;
+
+	// so are files inside node_modules
+	if (id.startsWith(node_modules_dir)) return false;
+
+	return /.*\.server\..+/.test(path.basename(id));
+}
+
 /**
  * @param {import('vite').ResolvedConfig} config
  * @param {import('vite').ConfigEnv} config_env
@@ -267,11 +280,7 @@ const find_illegal_rollup_imports = (node_getter, node, dynamic, seen = new Set(
 	if (seen.has(name)) return null;
 	seen.add(name);
 
-	if (illegal_imports.has(name)) {
-		return [{ name, dynamic }];
-	}
-
-	if (!name.startsWith(node_modules_dir) && /.*\.server\..*/.test(path.basename(name))) {
+	if (is_illegal(name)) {
 		return [{ name, dynamic }];
 	}
 
@@ -339,11 +348,7 @@ function find_illegal_vite_imports(node, module_types, seen = new Set()) {
 	}
 	seen.add(name);
 
-	if (name && illegal_imports.has(name)) {
-		return [{ name, dynamic: false }];
-	}
-
-	if (!name.startsWith(node_modules_dir) && /.*\.server\..*/.test(path.basename(name))) {
+	if (is_illegal(name)) {
 		return [{ name, dynamic: false }];
 	}
 
