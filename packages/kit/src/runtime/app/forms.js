@@ -13,7 +13,7 @@ function guard(name) {
 const ssr = import.meta.env.SSR;
 
 /** @type {import('$app/forms').applyAction} */
-export const applyAction = ssr ? guard('updateForm') : client.apply_action;
+export const applyAction = ssr ? guard('applyAction') : client.apply_action;
 
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
