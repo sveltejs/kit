@@ -806,7 +806,7 @@ export function create_client({ target, base, trailing_slash }) {
 						status = err.status;
 						error = err.body;
 					} else {
-						error = handle_error(err);
+						error = handle_error(err, { params, url, routeId: route.id });
 					}
 
 					while (i--) {
@@ -927,7 +927,10 @@ export function create_client({ target, base, trailing_slash }) {
 			params,
 			branch: [root_layout, root_error],
 			status,
-			error: error instanceof HttpError ? error.body : handle_error(error),
+			error:
+				error instanceof HttpError
+					? error.body
+					: handle_error(error, { url, params, routeId: null }),
 			route: null
 		});
 	}
@@ -1499,10 +1502,11 @@ async function load_data(url, invalid) {
 
 /**
  * @param {unknown} error
+ * @param {import('types').ClientRequestEvent} event
  * @returns {App.PageError}
  */
-function handle_error(error) {
-	return hooks.handleError({ error }) ?? /** @type {any} */ ({ error: 'Internal Error' });
+function handle_error(error, event) {
+	return hooks.handleError({ error, event }) ?? /** @type {any} */ ({ error: 'Internal Error' });
 }
 
 // TODO remove for 1.0

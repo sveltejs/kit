@@ -207,7 +207,7 @@ export interface HandleServerError {
 }
 
 export interface HandleClientError {
-	(input: { error: unknown }): void | App.PageError;
+	(input: { error: unknown; event: ClientRequestEvent }): void | App.PageError;
 }
 
 export interface HandleFetch {
@@ -233,13 +233,18 @@ export interface LoadEvent<
 	ParentData extends Record<string, unknown> = Record<string, any>
 > {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
-	params: Params;
 	data: Data;
-	routeId: string | null;
 	setHeaders: (headers: Record<string, string>) => void;
-	url: URL;
 	parent: () => Promise<ParentData>;
 	depends: (...deps: string[]) => void;
+}
+
+export interface ClientRequestEvent<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> {
+	params: Params;
+	routeId: string | null;
+	url: URL;
 }
 
 export interface NavigationTarget {
