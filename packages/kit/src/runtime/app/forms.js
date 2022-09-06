@@ -1,4 +1,4 @@
-import { goto, invalidateAll } from './navigation.js';
+import { invalidateAll } from './navigation.js';
 import { client } from '../client/singletons.js';
 
 /**
@@ -28,26 +28,17 @@ export function enhance(form, submit = () => {}) {
 		}
 	};
 
-	/** @type {unknown} */
-	let current_token;
-
 	/** @param {SubmitEvent} event */
 	async function handle_submit(event) {
-		const token = (current_token = {});
-
 		event.preventDefault();
 
 		const data = new FormData(form);
+
 		let cancelled = false;
 		const cancel = () => (cancelled = true);
 
 		const callback = submit({ form, data, cancel }) ?? fallback_callback;
-		if (cancelled) {
-			return;
-		}
-
-		/** @type {import('$app/forms').ActionResult} */
-		let result;
+		if (cancelled) return;
 
 		try {
 			const response = await fetch(form.action, {
@@ -58,14 +49,10 @@ export function enhance(form, submit = () => {}) {
 				body: data
 			});
 
-			if (token !== current_token) return;
-
-			result = await response.json();
+			callback(await response.json());
 		} catch (error) {
-			result = { type: 'error', error };
+			callback({ type: 'error', error });
 		}
-
-		callback(/** @type {import('$app/forms').ActionResult<any, any>} */ (result));
 	}
 
 	form.addEventListener('submit', handle_submit);
