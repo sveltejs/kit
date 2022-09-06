@@ -71,7 +71,7 @@ For a Single Page Application on an `Apache` Server, you need an `.htaccess` to 
 </IfModule>
 ```
 
-You can also create a `.htaccess` file in the static folder to automatically include the `.htaccess` on every build.
+You can also create an `.htaccess` file in the static folder to automatically include the `.htaccess` on every build.
 
 #### Platform-specific context
 
