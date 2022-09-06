@@ -46,14 +46,15 @@ We can also invoke the action from other pages (for example if there's a login w
 
 ### Named actions
 
-In addition to `default` actions, a page can have as many named actions as it needs:
+Instead of one `default` action, a page can have as many named actions as it needs:
 
 ```diff
 /// file: src/routes/login/+page.server.js
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	default: async (event) => {
+-	default: async (event) => {
++	login: async (event) => {
 		// TODO log the user in
 	},
 +	register: async (event) => {
@@ -78,13 +79,16 @@ As well as the `action` attribute, we can use the `formaction` attribute on a bu
 
 ```diff
 /// file: src/routes/login/+page.svelte
-<form method="POST">
+-<form method="POST">
++<form method="POST" action="?/login">
 	<input name="email" type="email">
 	<input name="password" type="password">
 	<button>Log in</button>
 +	<button formaction="?/register">Register</button>
 </form>
 ```
+
+> We can't have default actions next to named actions, because if you POST to a named action without a redirect, the query parameter is persisted in the URL, which means the next default POST would go through the named action from before.
 
 ### Anatomy of an action
 
@@ -95,7 +99,7 @@ Each action receives a `RequestEvent` object, allowing you to read the data with
 /// file: src/routes/login/+page.server.js
 /** @type {import('./$types').Actions} */
 export const actions = {
-	default: async ({ cookies, request }) => {
+	login: async ({ cookies, request }) => {
 		const data = await request.formData();
 		const email = data.get('email');
 		const password = data.get('password');
@@ -139,7 +143,7 @@ If the request couldn't be processed because of invalid data, you can return val
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	default: async ({ cookies, request }) => {
+	login: async ({ cookies, request }) => {
 		const data = await request.formData();
 		const email = data.get('email');
 		const password = data.get('password');
@@ -167,7 +171,7 @@ export const actions = {
 
 ```diff
 /// file: src/routes/login/+page.svelte
-<form method="POST">
+<form method="POST" action="?/login">
 -	<input name="email" type="email">
 +	{#if form?.missing}<p class="error">No user found with this email</p>{/if}
 +	<input name="email" type="email" value={form?.email ?? ''}>
@@ -193,7 +197,7 @@ Redirects (and errors) work exactly the same as in [`load`](/docs/load#redirects
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-+	default: async ({ cookies, request, url }) => {
++	login: async ({ cookies, request, url }) => {
 		const data = await request.formData();
 		const email = data.get('email');
 		const password = data.get('password');
