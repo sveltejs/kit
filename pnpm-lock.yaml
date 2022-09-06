@@ -666,7 +666,7 @@ importers:
       svelte: ^3.48.0
       typescript: ^4.8.2
       vite: ^3.1.0
-      vite-imagetools: ^4.0.7
+      vite-imagetools: ^4.0.9
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
       '@sveltejs/adapter-static': link:../../packages/adapter-static
@@ -682,7 +682,7 @@ importers:
       svelte: 3.48.0
       typescript: 4.8.2
       vite: 3.1.0
-      vite-imagetools: 4.0.7
+      vite-imagetools: 4.0.9
 
 packages:
 
@@ -2734,11 +2734,11 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
-  /imagetools-core/3.1.1:
-    resolution: {integrity: sha512-LNVnortLEgE0ATHaGZBt3WTccKBz8zNk+NWRHsuyhgMiZ1nCJwAA1I2QcHXUq7OMbsiYm/H5muTv+iSLXM2tiA==}
+  /imagetools-core/3.2.1:
+    resolution: {integrity: sha512-cTa1cQqGUhw1eqBpz6Jdby7aYP4d18v1hLG9j3mS/223+gx/fmRv+B/E/zDYlX7NoZ5gh4Tvft6mcxek7suE/A==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      sharp: 0.30.7
+      sharp: 0.31.0
     dev: true
 
   /import-fresh/3.3.0:
@@ -3121,13 +3121,13 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       sourcemap-codec: 1.4.8
+    dev: false
 
   /magic-string/0.26.3:
     resolution: {integrity: sha512-u1Po0NDyFcwdg2nzHT88wSK0+Rih0N1M+Ph1Sp08k8yvFFU3KR72wryS7e1qMPJypt99WB7fIFVCA92mQrMjrg==}
     engines: {node: '>=12'}
     dependencies:
       sourcemap-codec: 1.4.8
-    dev: false
 
   /make-dir/3.1.0:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
@@ -3965,9 +3965,9 @@ packages:
     resolution: {integrity: sha512-cHMAtSXilfyBePduZEBVPTCftTQWz6ehWJD5YNUg4mqvRosrrjKbo4WS8JkB0/RxonMoohHm7cOGH60mDkRQ9w==}
     dev: false
 
-  /sharp/0.30.7:
-    resolution: {integrity: sha512-G+MY2YW33jgflKPTXXptVO28HvNOo9G3j0MybYAHeEmby+QuD2U98dT6ueht9cv/XDqZspSpIhoSW+BAKJ7Hig==}
-    engines: {node: '>=12.13.0'}
+  /sharp/0.31.0:
+    resolution: {integrity: sha512-ft96f8WzGxavg0rkLpMw90MTPMUZDyf0tHjPPh8Ob59xt6KzX8EqtotcqZGUm7kwqpX2pmYiyYX2LL0IZ/FDEw==}
+    engines: {node: '>=14.15.0'}
     requiresBuild: true
     dependencies:
       color: 4.2.3
@@ -4801,13 +4801,13 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-imagetools/4.0.7:
-    resolution: {integrity: sha512-QyT5J455oD0jzi+bIfP/QHNNTSVdyYeWLXZBS0XeI5hReZ/7U4fD7ypZM1qwEBTEJFte4hDrOsFeyin09wig2A==}
+  /vite-imagetools/4.0.9:
+    resolution: {integrity: sha512-MQZWqYH/dbliA1IC7jiARgzpn+NCT3LEGgmln+IIj2WJiVX/Ry+KgmJoIK1OvA6tUsGXNpQSLhAqBQKRA9NuGQ==}
     engines: {node: '>=12.0.0'}
     dependencies:
       '@rollup/pluginutils': 4.2.1
-      imagetools-core: 3.1.1
-      magic-string: 0.26.2
+      imagetools-core: 3.2.1
+      magic-string: 0.26.3
     dev: true
 
   /vite/3.1.0:
