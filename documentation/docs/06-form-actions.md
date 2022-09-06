@@ -40,7 +40,7 @@ We can also invoke the action from other pages (for example if there's a login w
 ```html
 /// file: src/routes/+layout.svelte
 <form method="POST" action="/login">
-	<!-- contents -->
+	<!-- content -->
 </form>
 ```
 
@@ -174,7 +174,7 @@ export const actions = {
 
 -	<input name="password" type="password">
 +	{#if form?.incorrect}<p class="error">Wrong password!</p>{/if}
-+	<input name="password" type="password" value={form?.password ?? ''}>
+	<input name="password" type="password">
 	<button>Log in</button>
 	<button formaction="?/register">Register</button>
 </form>
