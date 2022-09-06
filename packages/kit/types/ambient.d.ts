@@ -82,7 +82,7 @@ declare module '$app/environment' {
 
 /**
  * ```ts
- * import { enhance, updateForm } from '$app/forms';
+ * import { enhance, applyAction } from '$app/forms';
  * ```
  */
 declare module '$app/forms' {
