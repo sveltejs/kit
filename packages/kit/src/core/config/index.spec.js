@@ -95,10 +95,7 @@ const get_defaults = (prefix = '') => ({
 		host: undefined,
 		hydrate: undefined,
 		inlineStyleThreshold: 0,
-		methodOverride: {
-			parameter: '_method',
-			allowed: []
-		},
+		methodOverride: undefined,
 		moduleExtensions: ['.js', '.ts'],
 		outDir: join(prefix, '.svelte-kit'),
 		serviceWorker: {

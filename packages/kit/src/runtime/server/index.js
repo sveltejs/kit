@@ -37,31 +37,6 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	const { parameter, allowed } = options.method_override;
-	const method_override = url.searchParams.get(parameter)?.toUpperCase();
-
-	if (method_override) {
-		if (request.method === 'POST') {
-			if (allowed.includes(method_override)) {
-				request = new Proxy(request, {
-					get: (target, property, _receiver) => {
-						if (property === 'method') return method_override;
-						return Reflect.get(target, property, target);
-					}
-				});
-			} else {
-				const verb = allowed.length === 0 ? 'enabled' : 'allowed';
-				const body = `${parameter}=${method_override} is not ${verb}. See https://kit.svelte.dev/docs/configuration#methodoverride`;
-
-				return new Response(body, {
-					status: 400
-				});
-			}
-		} else {
-			throw new Error(`${parameter}=${method_override} is only allowed with POST requests`);
-		}
-	}
-
 	let decoded;
 	try {
 		decoded = decodeURI(url.pathname);
@@ -240,7 +215,6 @@ export async function respond(request, options, state) {
 					error: null,
 					branch: [],
 					fetched: [],
-					validation_errors: undefined,
 					cookies: [],
 					resolve_opts
 				});

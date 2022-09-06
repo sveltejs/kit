@@ -16,7 +16,7 @@ import {
 	TrailingSlash
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
-import { HttpError, Redirect } from '../src/runtime/control.js';
+import { HttpError, Redirect, ValidationError } from '../src/runtime/control.js';
 
 export { PrerenderOption } from './private.js';
 
@@ -35,11 +35,11 @@ export type AwaitedProperties<input extends Record<string, any> | void> = input 
 	? input
 	: unknown;
 
-export type AwaitedErrors<T extends (...args: any) => any> = Awaited<ReturnType<T>> extends {
-	errors?: any;
-}
-	? Awaited<ReturnType<T>>['errors']
-	: undefined;
+export type AwaitedActions<T extends Record<string, (...args: any) => any>> = {
+	[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
+}[keyof T];
+
+type UnpackValidationError<T> = T extends ValidationError<infer X> ? X : T;
 
 export interface Builder {
 	log: Logger;
@@ -167,10 +167,6 @@ export interface KitConfig {
 		errorTemplate?: string;
 	};
 	inlineStyleThreshold?: number;
-	methodOverride?: {
-		parameter?: string;
-		allowed?: string[];
-	};
 	outDir?: string;
 	paths?: {
 		assets?: string;
@@ -345,14 +341,28 @@ export interface ServerLoadEvent<
 }
 
 export interface Action<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
 > {
-	(event: RequestEvent<Params>): MaybePromise<
-		| { status?: number; errors: Record<string, any>; location?: never }
-		| { status?: never; errors?: never; location: string }
-		| void
-	>;
+	(event: RequestEvent<Params>): MaybePromise<OutputData>;
 }
+
+export type Actions<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
+> = Record<string, Action<Params, OutputData>>;
+
+/**
+ * When calling a form action via fetch, the response will be one of these shapes.
+ */
+export type ActionResult<
+	Success extends Record<string, unknown> | undefined = Record<string, any>,
+	Invalid extends Record<string, unknown> | undefined = Record<string, any>
+> =
+	| { type: 'success'; status: number; data?: Success }
+	| { type: 'invalid'; status: number; data?: Invalid }
+	| { type: 'redirect'; status: number; location: string }
+	| { type: 'error'; error: any };
 
 // TODO figure out how to just re-export from '../src/index/index.js' without
 // breaking the site
@@ -376,3 +386,11 @@ export function redirect(status: number, location: string): Redirect;
  * Generates a JSON `Response` object from the supplied data.
  */
 export function json(data: any, init?: ResponseInit): Response;
+
+/**
+ * Generates a `ValidationError` object.
+ */
+export function invalid<T extends Record<string, unknown> | undefined>(
+	status: number,
+	data?: T
+): ValidationError<T>;

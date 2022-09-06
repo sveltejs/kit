@@ -43,10 +43,6 @@ const config = {
 			errorTemplate: 'src/error.html'
 		},
 		inlineStyleThreshold: 0,
-		methodOverride: {
-			parameter: '_method',
-			allowed: []
-		},
 		moduleExtensions: ['.js', '.ts'],
 		outDir: '.svelte-kit',
 		paths: {
@@ -195,13 +191,6 @@ An object containing zero or more of the following `string` values:
 Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
 
 > This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
-
-### methodOverride
-
-See [HTTP Method Overrides](/docs/routing#endpoints-http-method-overrides). An object containing zero or more of the following:
-
-- `parameter` — query parameter name to use for passing the intended method value
-- `allowed` - array of HTTP methods that can be used when overriding the original request method
 
 ### moduleExtensions
 

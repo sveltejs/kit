@@ -112,74 +112,7 @@ During client-side navigation, SvelteKit will load this data from the server, wh
 
 Like `+page.js`, `+page.server.js` can export [page options](/docs/page-options) — `prerender`, `ssr` and `csr`.
 
-#### Actions
-
-`+page.server.js` can also declare _actions_, which correspond to the `POST`, `PATCH`, `PUT` and `DELETE` HTTP methods. A request made to the page with one of these methods will invoke the corresponding action before rendering the page.
-
-An action can return a `{ status?, errors }` object if there are validation errors (`status` defaults to `400`), or an optional `{ location }` object to redirect the user to another page:
-
-```js
-/// file: src/routes/login/+page.server.js
-
-// @filename: ambient.d.ts
-declare global {
-	const createSessionCookie: (userid: string) => string;
-	const hash: (content: string) => string;
-	const db: {
-		findUser: (name: string) => Promise<{
-			id: string;
-			username: string;
-			password: string;
-		}>
-	}
-}
-
-export {};
-
-// @filename: index.js
-// ---cut---
-import { error } from '@sveltejs/kit';
-
-/** @type {import('./$types').Action} */
-export async function POST({ cookies, request, url }) {
-	const values = await request.formData();
-
-	const username = /** @type {string} */ (values.get('username'));
-	const password = /** @type {string} */ (values.get('password'));
-
-	const user = await db.findUser(username);
-
-	if (!user) {
-		return {
-			status: 403,
-			errors: {
-				username: 'No user with this username'
-			}
-		};
-	}
-
-	if (user.password !== hash(password)) {
-		return {
-			status: 403,
-			errors: {
-				password: 'Incorrect password'
-			}
-		};
-	}
-
-	cookies.set('sessionid', createSessionCookie(user.id), {
-		httpOnly: true
-	});
-
-	return {
-		location: url.searchParams.get('redirectTo') ?? '/'
-	};
-}
-```
-
-If validation `errors` are returned, they will be available inside `+page.svelte` as `export let errors`.
-
-> The actions API will likely change in the near future: https://github.com/sveltejs/kit/discussions/5875
+A `+page.server.js` file can also export _actions_. If `load` lets you read data from the server, `actions` let you write data _to_ the server using the `<form>` element. To learn how to use them, see the [form actions](/docs/form-actions) section.
 
 ### +error
 

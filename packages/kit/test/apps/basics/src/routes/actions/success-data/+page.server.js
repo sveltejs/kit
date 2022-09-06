@@ -1,8 +1,7 @@
-import { invalid } from '@sveltejs/kit';
-
+/** @type {import('./$types').PageServerLoad} */
 export function load() {
 	return {
-		get_message: 'hello from get'
+		initial: 'initial'
 	};
 }
 
@@ -10,8 +9,8 @@ export function load() {
 export const actions = {
 	default: async ({ request }) => {
 		const fields = await request.formData();
-		return invalid(400, {
-			errors: { post_message: `echo: ${fields.get('message')}` }
-		});
+		return {
+			result: fields.get('username')
+		};
 	}
 };

@@ -207,3 +207,14 @@ export function handle_fatal_error(event, options, error) {
 
 	return static_error_page(options, status, error.message);
 }
+
+/**
+ * @param {number} status
+ * @param {string} location
+ */
+export function redirect_response(status, location) {
+	return new Response(undefined, {
+		status,
+		headers: { location }
+	});
+}

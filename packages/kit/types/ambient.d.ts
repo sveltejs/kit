@@ -82,6 +82,54 @@ declare module '$app/environment' {
 
 /**
  * ```ts
+ * import { enhance, applyAction } from '$app/forms';
+ * ```
+ */
+declare module '$app/forms' {
+	import type { ActionResult } from '@sveltejs/kit';
+
+	/**
+	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
+	 * @param form The form element
+	 * @param options Callbacks for different states of the form lifecycle
+	 */
+	export function enhance<
+		Success extends Record<string, unknown> | undefined = Record<string, any>,
+		Invalid extends Record<string, unknown> | undefined = Record<string, any>
+	>(
+		form: HTMLFormElement,
+		/**
+		 * Called upon submission with the given FormData.
+		 * If `cancel` is called, the form will not be submitted.
+		 * If a function is returned, that function is called with the response from the server.
+		 * If nothing is returned, the fallback will be used.
+		 *
+		 * If this function or its return value isn't set, it
+		 * - falls back to updating the `form` prop with the returned data if the action is one same page as the form
+		 * - updates `$page.status`
+		 * - invalidates all data in case of successful submission with no redirect response
+		 * - redirects in case of a redirect response
+		 * - redirects to the nearest error page in case of an unexpected error
+		 */
+		submit?: (input: {
+			data: FormData;
+			form: HTMLFormElement;
+			cancel: () => void;
+		}) => void | ((result: ActionResult<Success, Invalid>) => void)
+	): { destroy: () => void };
+
+	/**
+	 * This action updates the `form` property of the current page with the given data and updates `$page.status`.
+	 * In case of an error, it redirects to the nearest error page.
+	 */
+	export function applyAction<
+		Success extends Record<string, unknown> | undefined = Record<string, any>,
+		Invalid extends Record<string, unknown> | undefined = Record<string, any>
+	>(result: ActionResult<Success, Invalid>): Promise<void>;
+}
+
+/**
+ * ```ts
  * import {
  * 	afterNavigate,
  * 	beforeNavigate,

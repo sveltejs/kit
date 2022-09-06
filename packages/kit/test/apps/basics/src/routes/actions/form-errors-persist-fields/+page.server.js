@@ -1,17 +1,17 @@
 import { invalid } from '@sveltejs/kit';
 
-export function load() {
-	return {
-		get_message: 'hello from get'
-	};
-}
-
-/** @type {import('./$types').Actions} */
+/**
+ * @type {import('./$types').Actions}
+ */
 export const actions = {
 	default: async ({ request }) => {
 		const fields = await request.formData();
+		fields.delete('password');
 		return invalid(400, {
-			errors: { post_message: `echo: ${fields.get('message')}` }
+			values: Object.fromEntries(fields),
+			errors: {
+				message: 'invalid credentials'
+			}
 		});
 	}
 };

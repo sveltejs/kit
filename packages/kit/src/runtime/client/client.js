@@ -145,7 +145,7 @@ export function create_client({ target, base, trailing_slash }) {
 			const url = new URL(location.href);
 
 			invalidating = Promise.resolve().then(async () => {
-				const intent = get_navigation_intent(url);
+				const intent = get_navigation_intent(url, true);
 				await update(intent, url, []);
 
 				invalidating = null;
@@ -187,7 +187,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/** @param {URL} url */
 	async function prefetch(url) {
-		const intent = get_navigation_intent(url);
+		const intent = get_navigation_intent(url, false);
 
 		if (!intent) {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
@@ -278,24 +278,9 @@ export function create_client({ target, base, trailing_slash }) {
 				navigation_result.props.page.url = url;
 			}
 
-			if (import.meta.env.DEV) {
-				// Nasty hack to silence harmless warnings the user can do nothing about
-				const warn = console.warn;
-				console.warn = (...args) => {
-					if (
-						args.length !== 1 ||
-						!/<(Layout|Page)(_[\w$]+)?> was created with unknown prop '(data|errors)'/.test(args[0])
-					) {
-						warn(...args);
-					}
-				};
-				root.$set(navigation_result.props);
-				tick().then(() => (console.warn = warn));
-
-				check_for_removed_attributes();
-			} else {
-				root.$set(navigation_result.props);
-			}
+			const post_update = pre_update();
+			root.$set(navigation_result.props);
+			post_update();
 		} else {
 			initialize(navigation_result);
 		}
@@ -371,32 +356,13 @@ export function create_client({ target, base, trailing_slash }) {
 
 		page = result.props.page;
 
-		if (import.meta.env.DEV) {
-			// Nasty hack to silence harmless warnings the user can do nothing about
-			const warn = console.warn;
-			console.warn = (...args) => {
-				if (
-					args.length !== 1 ||
-					!/<(Layout|Page)(_[\w$]+)?> was created with unknown prop '(data|errors)'/.test(args[0])
-				) {
-					warn(...args);
-				}
-			};
-			root = new Root({
-				target,
-				props: { ...result.props, stores },
-				hydrate: true
-			});
-			console.warn = warn;
-
-			check_for_removed_attributes();
-		} else {
-			root = new Root({
-				target,
-				props: { ...result.props, stores },
-				hydrate: true
-			});
-		}
+		const post_update = pre_update();
+		root = new Root({
+			target,
+			props: { ...result.props, stores },
+			hydrate: true
+		});
+		post_update();
 
 		/** @type {import('types').Navigation} */
 		const navigation = {
@@ -422,7 +388,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   status: number;
 	 *   error: HttpError | Error | null;
 	 *   route: import('types').CSRRoute | null;
-	 *   validation_errors?: Record<string, any> | null;
+	 *   form?: Record<string, any> | null;
 	 * }} opts
 	 */
 	async function get_navigation_result_from_branch({
@@ -432,7 +398,7 @@ export function create_client({ target, base, trailing_slash }) {
 		status,
 		error,
 		route,
-		validation_errors
+		form
 	}) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 
@@ -448,10 +414,13 @@ export function create_client({ target, base, trailing_slash }) {
 				session_id
 			},
 			props: {
-				components: filtered.map((branch_node) => branch_node.node.component),
-				errors: validation_errors
+				components: filtered.map((branch_node) => branch_node.node.component)
 			}
 		};
+
+		if (form !== undefined) {
+			result.props.form = form;
+		}
 
 		let data = {};
 		let data_changed = !page;
@@ -713,7 +682,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @param {import('./types').NavigationIntent} intent
 	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
-	async function load_route({ id, url, params, route }) {
+	async function load_route({ id, invalidating, url, params, route }) {
 		if (load_cache.id === id && load_cache.promise) {
 			return load_cache.promise;
 		}
@@ -881,7 +850,9 @@ export function create_client({ target, base, trailing_slash }) {
 			branch,
 			status: 200,
 			error: null,
-			route
+			route,
+			// Reset `form` on navigation, but not invalidation
+			form: invalidating ? undefined : null
 		});
 	}
 
@@ -954,8 +925,11 @@ export function create_client({ target, base, trailing_slash }) {
 		});
 	}
 
-	/** @param {URL} url */
-	function get_navigation_intent(url) {
+	/**
+	 * @param {URL} url
+	 * @param {boolean} invalidating
+	 */
+	function get_navigation_intent(url, invalidating) {
 		if (is_external_url(url)) return;
 
 		const path = decodeURI(url.pathname.slice(base.length) || '/');
@@ -969,7 +943,7 @@ export function create_client({ target, base, trailing_slash }) {
 				);
 				const id = normalized.pathname + normalized.search;
 				/** @type {import('./types').NavigationIntent} */
-				const intent = { id, route, params: decode_params(params), url: normalized };
+				const intent = { id, invalidating, route, params: decode_params(params), url: normalized };
 				return intent;
 			}
 		}
@@ -1009,7 +983,7 @@ export function create_client({ target, base, trailing_slash }) {
 	}) {
 		let should_block = false;
 
-		const intent = get_navigation_intent(url);
+		const intent = get_navigation_intent(url, false);
 
 		/** @type {import('types').Navigation} */
 		const navigation = {
@@ -1159,6 +1133,71 @@ export function create_client({ target, base, trailing_slash }) {
 			});
 
 			await Promise.all(promises);
+		},
+
+		apply_action: async (result) => {
+			if (result.type === 'error') {
+				const url = new URL(location.href);
+
+				const { branch, route } = current;
+				if (!route) return;
+
+				let i = current.branch.length;
+
+				while (i--) {
+					if (route.errors[i]) {
+						/** @type {import('./types').BranchNode | undefined} */
+						let error_loaded;
+
+						let j = i;
+						while (!branch[j]) j -= 1;
+						try {
+							error_loaded = {
+								node: await /** @type {import('types').CSRPageNodeLoader } */ (route.errors[i])(),
+								loader: /** @type {import('types').CSRPageNodeLoader } */ (route.errors[i]),
+								data: {},
+								server: null,
+								shared: null
+							};
+
+							const navigation_result = await get_navigation_result_from_branch({
+								url,
+								params: current.params,
+								branch: branch.slice(0, j + 1).concat(error_loaded),
+								status: 500, // TODO might not be 500?
+								error: result.error,
+								route
+							});
+
+							current = navigation_result.state;
+
+							const post_update = pre_update();
+							root.$set(navigation_result.props);
+							post_update();
+
+							return;
+						} catch (e) {
+							continue;
+						}
+					}
+				}
+			} else if (result.type === 'redirect') {
+				goto(result.location, {}, []);
+			} else {
+				/** @type {Record<string, any>} */
+				const props = { form: result.data };
+
+				if (result.status !== page.status) {
+					props.page = {
+						...page,
+						status: result.status
+					};
+				}
+
+				const post_update = pre_update();
+				root.$set(props);
+				post_update();
+			}
 		},
 
 		_start_router: () => {
@@ -1361,7 +1400,7 @@ export function create_client({ target, base, trailing_slash }) {
 			params,
 			routeId,
 			data: server_data_nodes,
-			errors: validation_errors
+			form
 		}) => {
 			const url = new URL(location.href);
 
@@ -1402,7 +1441,7 @@ export function create_client({ target, base, trailing_slash }) {
 								original_error.message
 						  )
 						: original_error,
-					validation_errors,
+					form,
 					route: routes.find((route) => route.id === routeId) ?? null
 				});
 			} catch (e) {
@@ -1491,4 +1530,29 @@ function add_url_properties(type, target) {
 	}
 
 	return target;
+}
+
+function pre_update() {
+	if (__SVELTEKIT_DEV__) {
+		// Nasty hack to silence harmless warnings the user can do nothing about
+		const warn = console.warn;
+		console.warn = (...args) => {
+			if (
+				args.length === 1 &&
+				/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
+					args[0]
+				)
+			) {
+				return;
+			}
+			warn(...args);
+		};
+
+		return () => {
+			tick().then(() => (console.warn = warn));
+			check_for_removed_attributes();
+		};
+	}
+
+	return () => {};
 }

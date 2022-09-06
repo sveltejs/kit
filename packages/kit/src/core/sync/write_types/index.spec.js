@@ -90,21 +90,21 @@ test('Create $types with params and required return types for layout', async () 
 
 test('Rewrites types for a TypeScript module', () => {
 	const source = `
-		export const GET: Get = ({ params }) => {
+		export const load: Get = ({ params }) => {
 			return {
 				a: 1
 			};
 		};
 	`;
 
-	const rewritten = tweak_types(source, new Set(['GET']));
+	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['GET']);
+	assert.equal(rewritten?.exports, ['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
 
-		export const GET = ({ params }: Parameters<Get>[0]) => {
+		export const load = ({ params }: Parameters<Get>[0]) => {
 			return {
 				a: 1
 			};
@@ -115,21 +115,21 @@ test('Rewrites types for a TypeScript module', () => {
 
 test('Rewrites types for a TypeScript module without param', () => {
 	const source = `
-		export const GET: Get = () => {
+		export const load: Get = () => {
 			return {
 				a: 1
 			};
 		};
 	`;
 
-	const rewritten = tweak_types(source, new Set(['GET']));
+	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['GET']);
+	assert.equal(rewritten?.exports, ['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
 
-		export const GET = () => {
+		export const load = () => {
 			return {
 				a: 1
 			};
@@ -141,22 +141,22 @@ test('Rewrites types for a TypeScript module without param', () => {
 test('Rewrites types for a JavaScript module with `function`', () => {
 	const source = `
 		/** @type {import('./$types').Get} */
-		export function GET({ params }) {
+		export function load({ params }) {
 			return {
 				a: 1
 			};
 		};
 	`;
 
-	const rewritten = tweak_types(source, new Set(['GET']));
+	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['GET']);
+	assert.equal(rewritten?.exports, ['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
 
 		/** @param {Parameters<import('./$types').Get>[0]} event */
-		export function GET({ params }) {
+		export function load({ params }) {
 			return {
 				a: 1
 			};
@@ -168,22 +168,22 @@ test('Rewrites types for a JavaScript module with `function`', () => {
 test('Rewrites types for a JavaScript module with `const`', () => {
 	const source = `
 		/** @type {import('./$types').Get} */
-		export const GET = ({ params }) => {
+		export const load = ({ params }) => {
 			return {
 				a: 1
 			};
 		};
 	`;
 
-	const rewritten = tweak_types(source, new Set(['GET']));
+	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['GET']);
+	assert.equal(rewritten?.exports, ['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
 
 		/** @param {Parameters<import('./$types').Get>[0]} event */
-		export const GET = ({ params }) => {
+		export const load = ({ params }) => {
 			return {
 				a: 1
 			};
@@ -195,28 +195,86 @@ test('Rewrites types for a JavaScript module with `const`', () => {
 test('Appends @ts-nocheck after @ts-check', () => {
 	const source = `// @ts-check
 		/** @type {import('./$types').Get} */
-		export const GET = ({ params }) => {
+		export const load = ({ params }) => {
 			return {
 				a: 1
 			};
 		};
 	`;
 
-	const rewritten = tweak_types(source, new Set(['GET']));
+	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['GET']);
+	assert.equal(rewritten?.exports, ['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-check
 // @ts-nocheck
 
 		/** @param {Parameters<import('./$types').Get>[0]} event */
-		export const GET = ({ params }) => {
+		export const load = ({ params }) => {
 			return {
 				a: 1
 			};
 		};
 	`
+	);
+});
+
+test('Rewrites action types for a JavaScript module', () => {
+	const source = `
+		/** @type {import('./$types').Actions} */
+		export const actions = {
+			a: () => {},
+			b: (param) => {},
+			/** @type {import('./$types').Action} */
+			c: (param) => {},
+		}
+	`;
+
+	const rewritten = tweak_types(source, true);
+
+	assert.equal(rewritten?.exports, ['actions']);
+	assert.equal(
+		rewritten?.code,
+		`// @ts-nocheck
+
+		/** */
+		export const actions = {
+			a: () => {},
+			b:/** @param {import('./$types').RequestEvent} param */  (param) => {},
+			/** @param {Parameters<import('./$types').Action>[0]} param */
+			c: (param) => {},
+		}
+	`
+	);
+});
+
+test('Rewrites action types for a TypeScript module', () => {
+	const source = `
+		import type { Actions, RequestEvent } from './$types';
+
+		export const actions: Actions = {
+			a: () => {},
+			b: (param: RequestEvent) => {},
+			c: (param) => {},
+		}
+	`;
+
+	const rewritten = tweak_types(source, true);
+
+	assert.equal(rewritten?.exports, ['actions']);
+	assert.equal(
+		rewritten?.code,
+		`// @ts-nocheck
+
+		import type { Actions, RequestEvent } from './$types';
+
+		export const actions = {
+			a: () => {},
+			b: (param: RequestEvent) => {},
+			c: (param: import('./$types').RequestEvent) => {},
+		}
+	;null as any as Actions;`
 	);
 });
 

@@ -6,15 +6,7 @@ import { set_public_env } from '../env-public.js';
 /**
  * @param {{
  *   env: Record<string, string>;
- *   hydrate: {
- *     status: number;
- *     error: Error | (import('../server/page/types').SerializedHttpError);
- *     node_ids: number[];
- *     params: Record<string, string>;
- *     routeId: string | null;
- *     data: Array<import('types').ServerDataNode | null>;
- *     errors: Record<string, any> | null;
- *   };
+ *   hydrate: Parameters<import('./types').Client['_hydrate']>[0];
  *   paths: {
  *     assets: string;
  *     base: string;
