@@ -220,6 +220,21 @@ function kit() {
 				return new_config;
 			}
 
+			const allow = new Set([
+				svelte_config.kit.files.lib,
+				svelte_config.kit.files.routes,
+				svelte_config.kit.outDir,
+				path.resolve(cwd, 'src'), // TODO this isn't correct if user changed all his files to sth else than src (like in test/options)
+				path.resolve(cwd, 'node_modules'),
+				path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
+			]);
+			// We can only add directories to the allow list, so we find out
+			// if there's a client hooks file and pass its directory
+			const client_hooks = resolve_entry(svelte_config.kit.files.hooks.client);
+			if (client_hooks) {
+				allow.add(path.dirname(client_hooks));
+			}
+
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
 			const result = {
@@ -243,16 +258,7 @@ function kit() {
 				root: cwd,
 				server: {
 					fs: {
-						allow: [
-							...new Set([
-								svelte_config.kit.files.lib,
-								svelte_config.kit.files.routes,
-								svelte_config.kit.outDir,
-								path.resolve(cwd, 'src'),
-								path.resolve(cwd, 'node_modules'),
-								path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
-							])
-						]
+						allow: [...allow]
 					},
 					watch: {
 						ignored: [

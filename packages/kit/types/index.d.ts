@@ -262,7 +262,7 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	params: Params;
 	routeId: string | null;
 	status: number;
-	error: HttpError | Error | null;
+	error: App.PageError | null;
 	data: App.PageData & Record<string, any>;
 }
 
