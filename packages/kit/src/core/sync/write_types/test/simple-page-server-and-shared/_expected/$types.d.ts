@@ -41,6 +41,6 @@ export type PageData = Omit<
 	>;
 export type Action = Kit.Action<RouteParams>;
 export type Actions = Kit.Actions<RouteParams>;
-export type RequestEvent = Kit.RequestEvent<RouteParams>;
 export type LayoutServerData = null;
 export type LayoutData = LayoutParentData;
+export type RequestEvent = Kit.RequestEvent<RouteParams>;

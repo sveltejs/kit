@@ -42,7 +42,6 @@ export type PageData = Omit<
 	>;
 export type Action = Kit.Action<RouteParams>;
 export type Actions = Kit.Actions<RouteParams>;
-export type RequestEvent = Kit.RequestEvent<RouteParams>;
 export type LayoutServerLoad<
 	OutputData extends (Partial<App.PageData> & Record<string, any>) | void =
 		| (Partial<App.PageData> & Record<string, any>)
@@ -67,3 +66,4 @@ export type LayoutData = Omit<
 	Kit.AwaitedProperties<
 		Awaited<ReturnType<typeof import('../../../../../../../../+layout.js').load>>
 	>;
+export type RequestEvent = Kit.RequestEvent<RouteParams>;
