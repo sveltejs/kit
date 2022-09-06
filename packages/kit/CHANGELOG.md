@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.472
+
+### Patch Changes
+
+- [breaking] add API for interacting with cookies ([#6593](https://github.com/sveltejs/kit/pull/6593))
+
+* [breaking] Replace `POST`/`PUT`/`PATCH`/`DELETE` in `+page.server.js` with `export const actions` ([#6469](https://github.com/sveltejs/kit/pull/6469))
+
 ## 1.0.0-next.471
 
 ### Patch Changes
