@@ -410,28 +410,26 @@ export async function dev(vite, vite_config, svelte_config) {
 						dev: true,
 						handle_error: (error, event) => {
 							return (
-								/** @type {any} */ (
-									hooks.handleError({
-										error: new Proxy(error, {
-											get: (target, property) => {
-												if (property === 'stack') {
-													return fix_stack_trace(error);
-												}
-
-												return Reflect.get(target, property, target);
+								hooks.handleError({
+									error: new Proxy(error, {
+										get: (target, property) => {
+											if (property === 'stack') {
+												return fix_stack_trace(error);
 											}
-										}),
-										event,
 
-										// TODO remove for 1.0
-										// @ts-expect-error
-										get request() {
-											throw new Error(
-												'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
-											);
+											return Reflect.get(target, property, target);
 										}
-									})
-								) ?? { message: 'Internal Error' }
+									}),
+									event,
+
+									// TODO remove for 1.0
+									// @ts-expect-error
+									get request() {
+										throw new Error(
+											'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
+										);
+									}
+								}) ?? { message: 'Internal Error' }
 							);
 						},
 						hooks,

@@ -203,11 +203,11 @@ export interface Handle {
 }
 
 export interface HandleServerError {
-	(input: { error: unknown; event: RequestEvent }): void;
+	(input: { error: unknown; event: RequestEvent }): void | App.PageError;
 }
 
 export interface HandleClientError {
-	(input: { error: unknown }): void;
+	(input: { error: unknown }): void | App.PageError;
 }
 
 export interface HandleFetch {
