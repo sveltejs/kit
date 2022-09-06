@@ -199,7 +199,7 @@ export async function render_response({
 			env: ${s(options.public_env)},
 			hydrate: ${page_config.ssr ? `{
 				status: ${status},
-				error: ${error},
+				error: ${s(error)},
 				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)},

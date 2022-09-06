@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { mkdirp, posixify } from '../../../utils/filesystem.js';
-import { get_vite_config, merge_vite_configs, resolve_entry } from '../utils.js';
+import { mkdirp, posixify, resolve_entry } from '../../../utils/filesystem.js';
+import { get_vite_config, merge_vite_configs } from '../utils.js';
 import { load_error_page, load_template } from '../../../core/config/index.js';
 import { runtime_directory } from '../../../core/utils.js';
 import { create_build, find_deps, get_default_build_config, is_http_method } from './utils.js';
@@ -151,7 +151,24 @@ export async function build_server(options, client) {
 		service_worker_entry_file
 	} = options;
 
-	let hooks_file = resolve_entry(config.kit.files.hooks);
+	let hooks_file = resolve_entry(config.kit.files.hooks.server);
+
+	// TODO remove for 1.0
+	if (!hooks_file) {
+		const old_file = resolve_entry(path.join(process.cwd(), 'src', 'hooks'));
+		if (old_file && fs.existsSync(old_file)) {
+			throw new Error(
+				`Rename your server hook file from ${posixify(
+					path.relative(process.cwd(), old_file)
+				)} to ${posixify(
+					path.relative(process.cwd(), config.kit.files.hooks.server)
+				)}.${path.extname(
+					old_file
+				)} (because there's also client hooks now). See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
+			);
+		}
+	}
+
 	if (!hooks_file || !fs.existsSync(hooks_file)) {
 		hooks_file = path.join(config.kit.outDir, 'build/hooks.js');
 		fs.writeFileSync(hooks_file, '');

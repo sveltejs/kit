@@ -333,7 +333,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			options,
 			state,
 			status: 500,
-			error: handle_error_and_jsonify(event, options, error),
+			error,
 			resolve_opts
 		});
 	}

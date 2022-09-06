@@ -138,7 +138,10 @@ export interface KitConfig {
 	moduleExtensions?: string[];
 	files?: {
 		assets?: string;
-		hooks?: string;
+		hooks?: {
+			client?: string;
+			server?: string;
+		};
 		lib?: string;
 		params?: string;
 		routes?: string;
@@ -187,8 +190,12 @@ export interface Handle {
 	}): MaybePromise<Response>;
 }
 
-export interface HandleError {
-	(input: { error: Error & { frame?: string }; event: RequestEvent }): App.PageError | void;
+export interface HandleServerError {
+	(input: { error: unknown; event: RequestEvent }): App.PageError | void;
+}
+
+export interface HandleClientError {
+	(input: { error: unknown }): App.PageError | void;
 }
 
 /**

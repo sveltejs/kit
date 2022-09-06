@@ -6,7 +6,7 @@ import {
 	ExternalFetch,
 	ServerLoad,
 	Handle,
-	HandleError,
+	HandleServerError,
 	KitConfig,
 	Load,
 	RequestEvent,
@@ -14,7 +14,8 @@ import {
 	ResolveOptions,
 	Server,
 	ServerInitOptions,
-	SSRManifest
+	SSRManifest,
+	HandleClientError
 } from './index.js';
 import {
 	HttpMethod,
@@ -89,10 +90,14 @@ export type CSRRoute = {
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
-export interface Hooks {
+export interface ServerHooks {
 	externalFetch: ExternalFetch;
 	handle: Handle;
-	handleError: HandleError;
+	handleError: HandleServerError;
+}
+
+export interface ClientHooks {
+	handleError: HandleClientError;
 }
 
 export interface ImportNode {
@@ -297,7 +302,7 @@ export interface SSROptions {
 	};
 	dev: boolean;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): App.PageError;
-	hooks: Hooks;
+	hooks: ServerHooks;
 	manifest: SSRManifest;
 	method_override: MethodOverride;
 	paths: {

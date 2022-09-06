@@ -34,8 +34,9 @@ export function error_to_pojo(error, get_stack) {
 	return object;
 }
 
-/** @type {import('@sveltejs/kit').HandleError} */
-export const handleError = ({ event, error }) => {
+/** @type {import('@sveltejs/kit').HandleServerError} */
+export const handleError = ({ event, error: e }) => {
+	const error = /** @type {Error} */ (e);
 	// TODO we do this because there's no other way (that i'm aware of)
 	// to communicate errors back to the test suite. even if we could
 	// capture stderr, attributing an error to a specific request

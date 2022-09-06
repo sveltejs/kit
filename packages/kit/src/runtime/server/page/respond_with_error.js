@@ -20,7 +20,7 @@ import { create_fetch } from './fetch.js';
  *   options: SSROptions;
  *   state: SSRState;
  *   status: number;
- *   error: App.PageError;
+ *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts
  */
@@ -78,7 +78,7 @@ export async function respond_with_error({ event, options, state, status, error,
 				csr: get_option([default_layout], 'csr') ?? true
 			},
 			status,
-			error,
+			error: handle_error_and_jsonify(event, options, error),
 			branch,
 			fetched,
 			cookies,

@@ -6,7 +6,7 @@ import { lock_fetch, unlock_fetch, initial_fetch, subsequent_fetch } from './fet
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { nodes, server_loads, dictionary, matchers } from '__GENERATED__/client-manifest.js';
+import { nodes, server_loads, dictionary, matchers, hooks } from '__GENERATED__/client-manifest.js';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
@@ -837,7 +837,7 @@ export function create_client({ target, base, trailing_slash }) {
 						status = err.status;
 						error = err.body;
 					} else {
-						error = { message: 'TODO client hook' };
+						error = handle_error(err);
 					}
 
 					while (i--) {
@@ -956,7 +956,7 @@ export function create_client({ target, base, trailing_slash }) {
 			params,
 			branch: [root_layout, root_error],
 			status,
-			error, // TODO invoke client hook
+			error: error instanceof HttpError ? error.body : handle_error(error),
 			route: null
 		});
 	}
@@ -1456,6 +1456,14 @@ async function load_data(url, invalid) {
 	delete window.__sveltekit_data;
 
 	return server_data;
+}
+
+/**
+ * @param {unknown} error
+ * @returns {App.PageError}
+ */
+function handle_error(error) {
+	return hooks.handleError({ error }) ?? /** @type {any} */ ({ error: 'Internal Error' });
 }
 
 // TODO remove for 1.0
