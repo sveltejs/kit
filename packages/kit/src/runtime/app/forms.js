@@ -18,20 +18,13 @@ export const applyAction = ssr ? guard('applyAction') : client.apply_action;
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
 	/** @param {import('$app/forms').ActionResult} result */
-	const fallback_callback = (result) => {
-		if (
-			(result.type === 'success' || result.type === 'invalid') &&
-			location.origin + location.pathname === form.action.split('?')[0]
-		) {
-			applyAction(result);
+	const fallback_callback = async (result) => {
+		if (result.type === 'success') {
+			await invalidateAll();
 		}
 
-		if (result.type === 'success') {
-			invalidateAll();
-		} else if (result.type === 'redirect') {
-			goto(result.location);
-		} else if (result.type === 'error') {
-			console.error(result.error);
+		if (location.origin + location.pathname === form.action.split('?')[0]) {
+			applyAction(result);
 		}
 	};
 
