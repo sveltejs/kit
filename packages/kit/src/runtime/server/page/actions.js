@@ -39,8 +39,10 @@ export async function handle_action_json_request(event, options, server) {
 		const data = await call_action(event, actions);
 
 		if (data instanceof ValidationError) {
+			check_serializability(data.data, /** @type {string} */ (event.routeId), 'data');
 			return action_json({ type: 'invalid', status: data.status, data: data.data });
 		} else {
+			check_serializability(data, /** @type {string} */ (event.routeId), 'data');
 			return action_json({
 				type: 'success',
 				status: data ? 200 : 204,
@@ -62,9 +64,15 @@ export async function handle_action_json_request(event, options, server) {
 			options.handle_error(error, event);
 		}
 
-		return json(error_to_pojo(error, options.get_stack), {
-			status: error instanceof HttpError ? error.status : 500
-		});
+		return json(
+			{
+				type: 'error',
+				error: error_to_pojo(error, options.get_stack)
+			},
+			{
+				status: error instanceof HttpError ? error.status : 500
+			}
+		);
 	}
 }
 
@@ -170,4 +178,45 @@ function maybe_throw_migration_error(server) {
 			);
 		}
 	}
+}
+
+/**
+ * Check that the data can safely be serialized to JSON
+ * @param {any} value
+ * @param {string} id
+ * @param {string} path
+ */
+function check_serializability(value, id, path) {
+	const type = typeof value;
+
+	if (type === 'string' || type === 'boolean' || type === 'number' || type === 'undefined') {
+		// primitives are fine
+		return;
+	}
+
+	if (type === 'object') {
+		// nulls are fine...
+		if (!value) return;
+
+		// ...so are plain arrays...
+		if (Array.isArray(value)) {
+			value.forEach((child, i) => {
+				check_serializability(child, id, `${path}[${i}]`);
+			});
+			return;
+		}
+
+		// ...and objects
+		// This simple check might potentially run into some weird edge cases
+		// Refer to https://github.com/lodash/lodash/blob/2da024c3b4f9947a48517639de7560457cd4ec6c/isPlainObject.js?rgh-link-date=2022-07-20T12%3A48%3A07Z#L30
+		// if that ever happens
+		if (Object.getPrototypeOf(value) === Object.prototype) {
+			for (const key in value) {
+				check_serializability(value[key], id, `${path}.${key}`);
+			}
+			return;
+		}
+	}
+
+	throw new Error(`${path} returned from action in ${id} cannot be serialized as JSON`);
 }
