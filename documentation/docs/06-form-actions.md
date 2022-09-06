@@ -2,90 +2,111 @@
 title: Form Actions
 ---
 
-`+page.server.js` can declare _actions_ which are specifically designed for form interactions. It enables things like preserving user input in case of a full page reload with validation errors while making progressive enhancement through JavaScript possible.
+A `+page.server.js` file can export _actions_, which allow you to `POST` data to the server using the `<form>` element.
 
-### Defining actions by name
+When using `<form>`, client-side JavaScript is optional, but you can easily _progressively enhance_ your form interactions with JavaScript to provide the best user experience.
 
-Actions are defined through `export const actions = {...}`, with each key being the name of the action and the value being the function that is invoked when the form with that action is submitted. A `POST` request made to the page will invoke the corresponding action using a query parameter that start's with a `/` - so for example `POST todos?/addTodo` will invoke the `addTodo` action. The `default` action is called when no such query parameter is given.
+### Default actions
 
-```svelte
-/// file: src/routes/todos/+page.svelte
-<script>
-	/** @type {import('./$types').PageData} */
-	export let data;
-</script>
-
-<form action="?/addTodo" method="post">
-	<input type="text" name="text" />
-	<button>Add todo</button>
-</form>
-
-<ul>
-	{#each data.todos as todo}
-		<li>
-			<form action="?/editTodo" method="post">
-				<input type="hidden" name="id" value={todo.id} />
-				<input type="text" name="text" value={todo.text} />
-				<button>Edit todo</button>
-			</form>
-		</li>
-	{/each}
-</ul>
-```
+In the simplest case, a page declares a `default` action:
 
 ```js
-/// file: src/routes/todos/+page.server.js
+/// file: src/routes/login/+page.server.js
 /** @type {import('./$types').Actions} */
 export const actions = {
-	addTodo: (event) => {
-		// ...
-	},
-	editTodo: (event) => {
-		// ...
+	default: async (event) => {
+		// TODO log the user in
 	}
 };
+```
+
+To invoke this action from the `/login` page, just add a `<form>` — no JavaScript needed:
+
+```svelte
+/// file: src/routes/login/+page.svelte
+<form method="POST">
+	<input name="email" type="email">
+	<input name="password" type="password">
+	<button>Log in</button>
+</form>
+```
+
+If someone were to click the button, the browser would send the form data via `POST` request to the server, running the default action.
+
+> Actions always use `POST` requests, since `GET` requests should never have side-effects.
+
+We can also invoke the action from other pages (for example if there's a login widget in the nav in the root layout) by adding the `action` attribute, pointing to the page:
+
+```html
+/// file: src/routes/+layout.svelte
+<form method="POST" action="/login">
+	<!-- contents -->
+</form>
+```
+
+### Named actions
+
+In addition to `default` actions, a page can have as many named actions as it needs:
+
+```diff
+/// file: src/routes/login/+page.server.js
+
+/** @type {import('./$types').Actions} */
+export const actions = {
+	default: async (event) => {
+		// TODO log the user in
+	},
++	register: async (event) => {
++		// TODO register the user
++	}
+};
+```
+
+To invoke a named action, add a query parameter with the name prefixed by a `/` character:
+
+```svelte
+/// file: src/routes/login/+page.svelte
+<form method="POST" action="?/register">
+```
+
+```svelte
+/// file: src/routes/+layout.svelte
+<form method="POST" action="/login?/register">
+```
+
+As well as the `action` attribute, we can use the `formaction` attribute on a button to `POST` the same form data to a different action than the parent `<form>`:
+
+```diff
+/// file: src/routes/login/+page.svelte
+<form method="POST">
+	<input name="email" type="email">
+	<input name="password" type="password">
+	<button>Log in</button>
++	<button formaction="?/register">Register</button>
+</form>
 ```
 
 ### Anatomy of an action
 
-Each action gets the event object you already know from `load`. Part of it is the `request` object from which you get the form data.
+Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available as `form` until the next update.
 
 ```js
+// @errors: 2339 2304
 /// file: src/routes/login/+page.server.js
-import { redirect } from '@sveltejs/kit';
-
 /** @type {import('./$types').Actions} */
 export const actions = {
-	default: async ({ request }) => {
-		const fields = await request.formData();
-		// ...
-	}
-};
-```
+	default: async ({ cookies, request }) => {
+		const data = await request.formData();
+		const email = data.get('email');
+		const password = data.get('password');
 
-After that, it's up to you how to proceed with the form data.
+		const user = await db.getUser(email);
+		cookies.set('sessionid', await db.createSession(user));
 
-#### Success
-
-If everything is valid, an action can return a JSON object with data, which will be available through the `form` prop. Alternatively it can `throw` a `redirect` to redirect the user to another page.
-
-```js
-/// file: src/routes/login/+page.server.js
-import { redirect } from '@sveltejs/kit';
-
-/** @type {import('./$types').Actions} */
-export const actions = {
-	default: async ({ url }) => {
-		// ...
-
-		const location = url.searchParams.get('redirectTo');
-		if (location) {
-			throw redirect(303, location);
-		} else {
-			return {
-				success: true
-			};
-		}
+		return { success: true };
+	},
+	register: async (event) => {
+		// TODO register the user
 	}
 };
 ```
@@ -93,280 +114,234 @@ export const actions = {
 ```svelte
 /// file: src/routes/login/+page.svelte
 <script>
-	/** @type {import('./$types').FormData} */
+	/** @type {import('./$types').PageData} */
+	export let data;
+
+	/** @type {import('./$types').ActionData} */
 	export let form;
 </script>
 
 {#if form?.success}
-	<span class="success">Login successful</span>
+	<!-- this message is ephemeral; it exists because the page was rendered in
+	       response to a form submission. it will vanish if the user reloads -->
+	<p>Successfully logged in! Welcome back, {data.user.name}</p>
 {/if}
-
-<form>
-	...
-</form>
 ```
 
-#### Validation
+#### Validation errors
 
-A core part of form submissions is validation. For this, an action can `return` using the `invalid` helper method exported from `@sveltejs/kit` if there are validation errors. `invalid` expects a `status` as a required argument, and optionally anything else you want to return as a second argument. This could be the form value (make sure to remove any user sensitive information such as passwords) and an `error` object. In case of a native form submit the second argument to `invalid` populates the `form` prop which is available inside your components. You can use this to preserve user input.
+If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `invalid` function lets you return an HTTP status code (typically 400, in the case of validation errors) along with the data:
 
-```js
+```diff
+// @errors: 2339 2304
 /// file: src/routes/login/+page.server.js
-
-// @filename: ambient.d.ts
-declare global {
-	const db: {
-		findUser: (name: string) => Promise<{
-			id: string;
-			username: string;
-			password: string;
-		}>
-	}
-}
-
-export {};
-
-// @filename: index.js
-// ---cut---
-import { invalid } from '@sveltejs/kit';
++import { invalid } from '@sveltejs/kit';
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	default: async ({ request, setHeaders, url }) => {
-		const fields = await request.formData();
-		const username = /** @type {string} */ (fields.get('username'));
-		const password = /** @type {string} */ (fields.get('password'));
+	default: async ({ cookies, request }) => {
+		const data = await request.formData();
+		const email = data.get('email');
+		const password = data.get('password');
 
-		const user = await db.findUser(username);
+		const user = await db.getUser(email);
++		if (!user) {
++			return invalid(400, { email, missing: true });
++		}
++
++		if (user.password !== hash(password)) {
++			return invalid(400, { email, incorrect: true });
++		}
 
-		if (!user) {
-			return invalid(403, {
-				values: { username },
-				errors: { username: 'No user with this username' }
-			});
-		}
+		cookies.set('sessionid', await db.createSession(user));
 
-		// ...
+		return { success: true };
+	},
+	register: async (event) => {
+		// TODO register the user
 	}
 };
 ```
 
-```svelte
-/// file: src/routes/login/+page.svelte
-<script>
-	/** @type {import('./$types').FormData} */
-	export let form;
-</script>
+> Note that as a precaution, we only return the email back to the page — not the password.
 
-<form action="?/addTodo" method="post">
-	<input type="text" name="username" value={form?.values?.username} />
-	{#if form?.errors?.username}
-		<span>{form?.errors?.username}</span>
-	{/if}
-	<input type="password" name="password" />
-	<button>Login</button>
+```diff
+/// file: src/routes/login/+page.svelte
+<form method="POST">
+-	<input name="email" type="email">
++	{#if form?.missing}<p class="error">No user found with this email</p>{/if}
++	<input name="email" type="email" value={form?.email ?? ''}>
+
+-	<input name="password" type="password">
++	{#if form?.incorrect}<p class="error">Wrong password!</p>{/if}
++	<input name="password" type="password" value={form?.password ?? ''}>
+	<button>Log in</button>
+	<button formaction="?/register">Register</button>
 </form>
+```
+
+The returned data must be serializable as JSON. Beyond that, the structure is entirely up to you. For example, if you had multiple forms on the page, you could distinguish which `<form>` the returned `form` data referred to with an `id` property or similar.
+
+#### Redirects
+
+Redirects (and errors) work exactly the same as in [`load`](/docs/load#redirects):
+
+```diff
+// @errors: 2339 2304
+/// file: src/routes/login/+page.server.js
++import { invalid, redirect } from '@sveltejs/kit';
+
+/** @type {import('./$types').Actions} */
+export const actions = {
++	default: async ({ cookies, request, url }) => {
+		const data = await request.formData();
+		const email = data.get('email');
+		const password = data.get('password');
+
+		const user = await db.getUser(email);
+		if (!user) {
+			return invalid(400, { email, missing: true });
+		}
+
+		if (user.password !== hash(password)) {
+			return invalid(400, { email, incorrect: true });
+		}
+
+		cookies.set('sessionid', await db.createSession(user));
+
++		if (url.searchParams.has('redirectTo')) {
++			throw redirect(303, url.searchParams.get('redirectTo'));
++		}
+
+		return { success: true };
+	},
+	register: async (event) => {
+		// TODO register the user
+	}
+};
 ```
 
 ### Progressive enhancement
 
-So far, all the code examples run native form submissions - that is, when the user pressed the submit button, the page is reloaded. It's good that this use case is supported since JavaScript may not be loaded all the time. When it is though, it might be a better user experience to use the powers JavaScript gives us to provide a better user experience - this is called progressive enhancement.
+In the preceding sections we built a `/login` action that [works without client-side JavaScript](https://kryogenix.org/code/browser/everyonehasjs.html) — not a `fetch` in sight. That's great, but when JavaScript _is_ available we can progressively enhance our form interactions to provide a better user experience.
 
-First we need to ensure that the page is _not_ reloaded on submission. For this, we prevent the default behavior. Afterwards, we run our JavaScript code instead which does the form submission through `fetch` instead. The result always contains a `status` and `type` property, which is either `"success"`, `"invalid"` or `"redirect"`. In case of `"redirect"`, a location is given. In case of `"invalid"` and `"success"`, the data returned from the action function is available through the `data` property.
+#### use:enhance
 
-```svelte
+The easiest way to progressively enhance a form is to add the `use:enhance` action:
+
+```diff
 /// file: src/routes/login/+page.svelte
 <script>
-	import { invalidateAll, goto } from '$app/navigation';
++	import { enhance } from '$app/forms';
 
-	/** @type {import('./$types').FormData} */
-	export let form;
-
-	async function login(event) {
-		const data = new FormData(this);
-		const response = await fetch(this.action, {
-			method: 'POST',
-			headers: {
-				accept: 'application/json'
-			},
-			body: data
-		});
-		const result = await response.json();
-		if (result.type === 'success' || result.type === 'redirect') {
-			invalidateAll();
-		}
-		if (result.type === 'redirect') {
-			goto(result.location)
-		}
-		if (result.type === 'success' || result.type === 'invalid') {
-			form = { errors, values } };
-		}
-	}
-</script>
-
-<form action="?/addTodo" method="post" on:submit|preventDefault={login}>
-	<input type="text" name="username" value={form?.values?.username} />
-	{#if form?.errors.username}
-		<span>{form.errors.username}</span>
-	{/if}
-	<input type="password" name="password" />
-	<button>Login</button>
-</form>
-```
-
-#### `use:enhance`
-
-As you can see, progressive enhancement is doable, but it may become a little cumbersome over time. That's why we provide a small `enhance` action which does most of the heavy lifting for you. Here's how the same login page would look like using the `enhance` action:
-
-```svelte
-/// file: src/routes/login/+page.svelte
-<script>
-	import { enhance } from '$app/forms';
-
-	/** @type {import('./$types').FormData} */
+	/** @type {import('./$types').ActionData} */
 	export let form;
 </script>
 
-<form action="?/addTodo" use:enhance>
-	<input type="text" name="username" value={forms?.values?.username} />
-	{#if forms?.errors?.username}
-		<span>{forms.errors.username}</span>
-	{/if}
-	<input type="password" name="password" />
-	<button>Login</button>
-</form>
++<form method="POST" use:enhance>
 ```
 
-By default, the `enhance` action will
+> Yes, it's a little confusing that the `enhance` action and `<form action>` are both called 'action'. These docs are action-packed. Sorry.
+
+Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
 - update the `form` property and invalidate all data on a successful response
 - update the `form` property on a invalid response
 - update `$page.status` on a successful or invalid response
 - call `goto` on a redirect response
-- redirect to the nearest error page on an unexpected error
+- render the nearest `+error` boundary if an error occurs
 
-You can customize this behavior by providing your own callback to `enhance`.
+To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`.
+
+```svelte
+<form
+	method="POST"
+	use:enhance={({ form, data, cancel }) => {
+		// `form` is the `<form>` element
+		// `data` is its `FormData` object
+		// `cancel()` will prevent the submission
+
+		return async (result) => {
+			// `result` is an `ActionResult` object
+		};
+	}}
+>
+```
+
+You can use these functions to show and hide loading UI, and so on.
 
 #### applyAction
 
-Under the hood, the `enhance` action uses `applyAction` to update the `form` prop and `$page.status`. It can also handle `applyAction` redirects and throws to the error page in case of an unexpected error. It's a low level API that you can use to build your own opinionated actions.
+If you provide your own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. We can do this with `applyAction`:
+
+```diff
+<script>
++	import { enhance, applyAction } from '$app/forms';
+
+	/** @type {import('./$types').ActionData} */
+	export let form;
+</script>
+
+<form
+	method="POST"
+	use:enhance={({ form, data, cancel }) => {
+		// `form` is the `<form>` element
+		// `data` is its `FormData` object
+		// `cancel()` will prevent the submission
+
+		return async (result) => {
+			// `result` is an `ActionResult` object
++			if (result.type === 'error') {
++				await applyAction(result);
++			}
+		};
+	}}
+>
+```
+
+The behaviour of `applyAction(result)` depends on `result.type`:
+
+- `success`, `invalid` — sets `$page.status` to `result.status` and updates `form` to `result.data`
+- `redirect` — calls `goto(result.location)`
+- `error` — renders the nearest `+error` boundary with `result.error`
+
+#### Custom event listener
+
+We can also implement progressive enhancement ourselves, without `use:enhance`, with a normal event listener on the `<form>`:
 
 ```svelte
 /// file: src/routes/login/+page.svelte
 <script>
+	import { invalidateAll, goto } from '$app/navigation';
 	import { applyAction } from '$app/forms';
 
-	/** @type {import('./$types').FormData} */
+	/** @type {import('./$types').ActionData} */
 	export let form;
 
-	function update() {
-		// If possible, the value should conform to the `FormData` interface defined through `./$types`
-		applyAction({ type: 'success', data: { next: 'value' } });
-	}
-</script>
+	/** @type {any} */
+	let error;
 
-<button on:click={update}>Update form prop</button>
-```
+	async function handleSubmit(event) {
+		const data = new FormData(this);
 
-### Multiple forms
-
-In case you have multiple forms on a single page, be aware of the implications this has on `export let form`. Consider the following example: You have a list of todos which you can delete, but there's a validation that the todo needs to be at least 5 minutes old. Relying on `form?.[todo.id]?.invalid` in the following example would give unexpected results - in case of concurrent submissions with multiple validation error, only the last validation message would be shown:
-
-```svelte
-<script>
-	import { enhance } from '$app/forms';
-
-	/** @type {import('./$types').ActionData} */
-	export let data;
-</script>
-
-<ul>
-	{#each data.todos as todo}
-		<li>
-			<form method="post" use:enhance>
-				<span>{todo.text}</span>
-				{#if form?.[todo.id]?.invalid}
-					<span>Can't be deleted yet</span>
-				{/if}
-				<button>Remove</button>
-			</form>
-		<li>
-	{/each}
-<ul>
-```
-
-In situations like this, use different measures such as setting the invalid information on a different variable:
-
-```svelte
-<script>
-	import { invalidateAll } from '$app/navigation';
-	import { enhance } from '$app/forms';
-
-	/** @type {import('./$types').ActionData} */
-	export let data;
-	/** @type {Record<string, boolean>} */
-	let invalid = {};
-</script>
-
-<ul>
-	{#each data.todos as todo}
-		<li>
-			<form method="post" use:enhance={() => {
-				return (result) => {
-					invalid[todo.id] = result.type === 'invalid';
-					if (result.type === 'success') {
-						invalidateAll();
-					}
-				}
-			}}>
-				<span>{todo.text}</span>
-				<!-- use form?.[todo.id]?.invalid for the native form submission, use invalid[todo.id] for progressive enhancement -->
-				{#if form?.[todo.id]?.invalid || invalid[todo.id]}
-					<span>Can't be deleted yet</span>
-				{/if}
-				<button>Remove</button>
-			</form>
-		<li>
-	{/each}
-<ul>
-```
-
-### Alternatives
-
-In case you don't need your forms to work without JavaScript, you want to use HTTP verbs other than `POST`, or you want to send arbitrary JSON instead of being restricted to `FormData`, then you can resort to interacting with your API through `+server.js` endpoints (which will be possible to place next to `+page` files, soon).
-
-```svelte
-<script>
-	import { invalidateAll, goto } from '$app/navigation';
-
-	let errors = {};
-
-	async function login(event) {
-		const data = Object.fromEntries(new FormData(this));
-		const response = await fetch('/api/login', {
+		const response = await fetch(this.action, {
 			method: 'POST',
-			headers: {
-				accept: 'application/json'
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(data)
+			body: data
 		});
-		const json = await response.json(); // destructure response object
-		if (response.ok) { // success, redirect
-			invalidateAll();
-			goto(json.location);
-		} else { // validation error, errors variable
-			errors = json.errors;
+
+		/** @type {import('@sveltejs/kit').ActionResult} */
+		const result = await response.json();
+
+		if (result.type === 'success') {
+			// re-run all `load` functions, following the successful update
+			await invalidateAll();
 		}
+
+		applyAction(result);
 	}
 </script>
 
-<form on:submit|preventDefault={login}>
-	<input type="text" name="username" />
-	{#if errors.username}
-		<span>{errors.username}</span>
-	{/if}
-	<input type="password" name="password" />
-	<button>Login</button>
+<form method="POST" on:submit|preventDefault={handleSubmit}>
+	<!-- content -->
 </form>
 ```

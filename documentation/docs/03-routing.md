@@ -112,9 +112,7 @@ During client-side navigation, SvelteKit will load this data from the server, wh
 
 Like `+page.js`, `+page.server.js` can export [page options](/docs/page-options) — `prerender`, `ssr` and `csr`.
 
-#### Actions
-
-`+page.server.js` can also declare _actions_ which are specifically designed for form interactions. It enables things like preserving user input in case of a full page reload with validation errors while making progressive enhancement through JavaScript possible. You can learn more about them in [form actions](/docs/form-actions).
+A `+page.server.js` file can also export _actions_. If `load` lets you read data from the server, `actions` let you write data _to_ the server using the `<form>` element. To learn how to use them, see the [form actions](/docs/form-actions) section.
 
 ### +error
 
