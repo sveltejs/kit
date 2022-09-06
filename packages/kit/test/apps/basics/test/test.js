@@ -1750,7 +1750,7 @@ test.describe('Actions', () => {
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
 	});
 
-	test('updateForm updates form prop', async ({ page, javaScriptEnabled }) => {
+	test('applyAction updates form prop', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/update-form');
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
@@ -1786,7 +1786,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 	});
 
-	test('updateForm redirects', async ({ page, javaScriptEnabled }) => {
+	test('applyAction redirects', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/update-form');
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
@@ -1796,7 +1796,7 @@ test.describe('Actions', () => {
 		}
 	});
 
-	test('updateForm errors', async ({ page, javaScriptEnabled }) => {
+	test('applyAction errors', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/update-form');
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
