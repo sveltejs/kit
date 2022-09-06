@@ -66,12 +66,6 @@ export async function render_response({
 
 	let rendered;
 
-	const stack = error instanceof HttpError ? undefined : error?.stack;
-
-	if (error && options.dev && !(error instanceof HttpError)) {
-		error.stack = options.get_stack(error);
-	}
-
 	const form_value =
 		action_result?.type === 'success' || action_result?.type === 'invalid'
 			? action_result.data ?? null

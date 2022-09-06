@@ -1502,7 +1502,10 @@ async function load_data(url, invalid) {
  * @returns {App.PageError}
  */
 function handle_error(error) {
-	return hooks.handleError({ error }) ?? /** @type {any} */ ({ error: 'Internal Error' });
+	return (
+		/** @type {any} */ (hooks.handleError({ error })) ??
+		/** @type {any} */ ({ error: 'Internal Error' })
+	);
 }
 
 // TODO remove for 1.0
