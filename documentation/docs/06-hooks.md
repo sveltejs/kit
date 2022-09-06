@@ -15,7 +15,7 @@ An optional `src/hooks.client.js` (or `src/hooks.client.ts`, or `src/hooks.clien
 If an error is thrown during loading or rendering, this function will be called with the `error`. This allows for two things:
 
 - you can send data to an error tracking service, for example
-- you can customise the formatting. The return value of the function becomes the value of `$page.error`. To make this type-safe, you can customize the expected shape through `App.PageError`.
+- you can customise the formatting. The return value of the function becomes the value of `$page.error`. To make this type-safe, you can customize the expected shape through `App.PageError`. Note that `message` is always a required property, to guarantee a sensible fallback behavior.
 
 ```js
 /// file: src/hooks.client.js
@@ -118,7 +118,7 @@ export async function handle({ event, resolve }) {
 If an error is thrown during loading or rendering, this function will be called with the `error` and the `event` that caused it. This allows for two things:
 
 - you can send data to an error tracking service, for example
-- you can customise the formatting. The return value of the function becomes the value of `$page.error`. To make this type-safe, you can customize the expected shape through `App.PageError`.
+- you can customise the formatting. The return value of the function becomes the value of `$page.error`. To make this type-safe, you can customize the expected shape through `App.PageError`. Note that `message` is always a required property, to guarantee a sensible fallback behavior.
 
 ```js
 /// file: src/hooks.server.js
