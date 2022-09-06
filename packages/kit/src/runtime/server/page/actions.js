@@ -11,10 +11,7 @@ export function is_action_json_request(event) {
 		'text/html'
 	]);
 
-	return (
-		accept === 'application/json' &&
-		event.request.method === 'POST'
-	);
+	return accept === 'application/json' && event.request.method === 'POST';
 }
 
 /**
