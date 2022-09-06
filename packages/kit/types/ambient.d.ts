@@ -267,7 +267,7 @@ declare module '$app/paths' {
  * In the browser, we don't need to worry about this, and stores can be accessed from anywhere. Code that will only ever run on the browser can refer to (or subscribe to) any of these stores at any time.
  */
 declare module '$app/stores' {
-	import { Readable, Writable } from 'svelte/store';
+	import { Readable } from 'svelte/store';
 	import { Navigation, Page } from '@sveltejs/kit';
 
 	/**
