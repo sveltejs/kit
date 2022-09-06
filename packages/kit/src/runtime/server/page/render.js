@@ -191,14 +191,8 @@ export async function render_response({
 	}
 
 	if (form_value) {
-		try {
-			serialized.form = devalue(form_value);
-		} catch (e) {
-			// If we're here, the data could not be serialized with devalue
-			const error = /** @type {any} */ (e);
-			if (error.path) throw new Error(`${error.message} (errors.${error.path})`);
-			throw error;
-		}
+		// no need to check it can be serialized, we already verified that it's JSON-friendly
+		serialized.form = devalue(form_value);
 	}
 
 	// prettier-ignore
