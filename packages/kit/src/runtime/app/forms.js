@@ -17,7 +17,7 @@ export const applyAction = ssr ? guard('applyAction') : client.apply_action;
 
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
-	/** @param {import('$app/forms').ActionResult} result */
+	/** @param {import('types').ActionResult} result */
 	const fallback_callback = async (result) => {
 		if (result.type === 'success') {
 			await invalidateAll();

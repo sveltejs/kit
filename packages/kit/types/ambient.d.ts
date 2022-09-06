@@ -86,17 +86,7 @@ declare module '$app/environment' {
  * ```
  */
 declare module '$app/forms' {
-	import { FormFetchResponse } from '@sveltejs/kit';
-
-	export type ActionResult<
-		Success extends Record<string, unknown> | undefined = Record<string, any>,
-		Invalid extends Record<string, unknown> | undefined = Record<string, any>
-	> =
-		| {
-				type: 'error';
-				error: any;
-		  }
-		| FormFetchResponse<Success, Invalid>;
+	import type { ActionResult } from '@sveltejs/kit';
 
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.

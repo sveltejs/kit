@@ -334,13 +334,14 @@ export type Actions<
 /**
  * When calling a form action via fetch, the response will be one of these shapes.
  */
-export type FormFetchResponse<
+export type ActionResult<
 	Success extends Record<string, unknown> | undefined = Record<string, any>,
 	Invalid extends Record<string, unknown> | undefined = Record<string, any>
 > =
 	| { type: 'success'; status: number; data?: Success }
 	| { type: 'invalid'; status: number; data?: Invalid }
-	| { type: 'redirect'; status: number; location: string };
+	| { type: 'redirect'; status: number; location: string }
+	| { type: 'error'; error: any };
 
 // TODO figure out how to just re-export from '../src/index/index.js' without
 // breaking the site

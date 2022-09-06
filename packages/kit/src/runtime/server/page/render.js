@@ -28,7 +28,7 @@ const updated = {
  *   error: HttpError | Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   action_result?: import('$app/forms').ActionResult;
+ *   action_result?: import('types').ActionResult;
  * }} opts
  */
 export async function render_response({

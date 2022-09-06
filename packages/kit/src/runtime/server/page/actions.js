@@ -64,7 +64,7 @@ export async function handle_action_json_request(event, options, server) {
 			options.handle_error(error, event);
 		}
 
-		return json(
+		return action_json(
 			{
 				type: 'error',
 				error: error_to_pojo(error, options.get_stack)
@@ -76,9 +76,12 @@ export async function handle_action_json_request(event, options, server) {
 	}
 }
 
-/** @param {import('types').FormFetchResponse} data */
-function action_json(data) {
-	return json(data);
+/**
+ * @param {import('types').ActionResult} data
+ * @param {ResponseInit} [init]
+ */
+function action_json(data, init) {
+	return json(data, init);
 }
 
 /**
@@ -92,7 +95,7 @@ export function is_action_request(event, leaf_node) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSRNode['server']} server
- * @returns {Promise<import('$app/forms').ActionResult>}
+ * @returns {Promise<import('types').ActionResult>}
  */
 export async function handle_action_request(event, server) {
 	const actions = server.actions;

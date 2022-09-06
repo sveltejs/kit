@@ -50,7 +50,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 		let status = 200;
 
-		/** @type {import('$app/forms').ActionResult | undefined} */
+		/** @type {import('types').ActionResult | undefined} */
 		let action_result = undefined;
 
 		if (is_action_request(event, leaf_node)) {
