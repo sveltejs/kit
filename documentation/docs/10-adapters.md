@@ -58,7 +58,7 @@ You can also use `adapter-static` to generate single-page apps (SPAs) by specify
 
 #### Static sites on Apache
 
-For a Single Page Application on an `Apache` Server, you need a `.htaccess` to route all of the requests into the entry file for the routing to work, unless it will throw a 404 error once you refresh or visit a page that isn't compiled.
+For a Single Page Application on an `Apache` Server, you need an `.htaccess` to route all of the requests into the entry file for the routing to work, unless it will throw a 404 error once you refresh or visit a page that isn't compiled.
 
 ```
 <IfModule mod_rewrite.c>
