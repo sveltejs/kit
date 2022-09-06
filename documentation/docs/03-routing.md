@@ -141,7 +141,7 @@ export {};
 import { error } from '@sveltejs/kit';
 
 /** @type {import('./$types').Action} */
-export async function POST({ request, setHeaders, url }) {
+export async function POST({ cookies, request, url }) {
 	const values = await request.formData();
 
 	const username = /** @type {string} */ (values.get('username'));
@@ -167,8 +167,8 @@ export async function POST({ request, setHeaders, url }) {
 		};
 	}
 
-	setHeaders({
-		'set-cookie': createSessionCookie(user.id)
+	cookies.set('sessionid', createSessionCookie(user.id), {
+		httpOnly: true
 	});
 
 	return {

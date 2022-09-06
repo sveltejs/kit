@@ -1,7 +1,7 @@
 import * as cookie from 'cookie';
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from '../index.js';
-import { domain_matches, path_matches } from './cookie.js';
+import { domain_matches, path_matches } from '../cookie.js';
 
 /**
  * @param {{

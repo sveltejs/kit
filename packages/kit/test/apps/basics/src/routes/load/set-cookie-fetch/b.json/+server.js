@@ -1,11 +1,8 @@
 import { json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
-export function GET({ request }) {
-	const cookie = request.headers.get('cookie');
-
-	const match = /answer=([^;]+)/.exec(cookie);
-	const answer = +match?.[1];
+export function GET({ cookies }) {
+	const answer = +cookies.get('answer');
 
 	return json(
 		{ answer },
