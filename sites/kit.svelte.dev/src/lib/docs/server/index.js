@@ -182,10 +182,6 @@ export async function read_file(dir, file) {
 					: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
 				html = `<pre class='language-${plang}'><code>${highlighted}</code></pre>`;
-
-				console.log(`\n\n\n\n${current}`);
-				console.log(html);
-				console.log('---');
 			}
 
 			html = `<div class="code-block">${
