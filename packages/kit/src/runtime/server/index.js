@@ -337,6 +337,14 @@ export async function respond(request, options, state) {
 		} catch (e) {
 			const error = coalesce_to_error(e);
 			return handle_fatal_error(event, options, error);
+		} finally {
+			event.cookies.set = () => {
+				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
+			};
+
+			event.setHeaders = () => {
+				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+			};
 		}
 	}
 
