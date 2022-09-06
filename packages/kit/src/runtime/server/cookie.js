@@ -43,6 +43,7 @@ export function get_cookies(request, url) {
 		},
 		delete(name) {
 			new_cookies.push({ name, value: '', options: { expires: new Date(0) } });
+			delete initial_cookies[name];
 		}
 	};
 
