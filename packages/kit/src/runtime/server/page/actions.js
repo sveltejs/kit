@@ -4,19 +4,16 @@ import { negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ValidationError } from '../../control.js';
 import { error_to_pojo } from '../utils.js';
 
-// Info: `enhance` action and `updateForm` live in `runtime/app/forms.js`
-
 /** @param {import('types').RequestEvent} event */
 export function is_action_json_request(event) {
-	const accept = negotiate(event.request.headers.get('accept') || 'text/html', [
-		'text/html',
-		'application/json'
+	const accept = negotiate(event.request.headers.get('accept') ?? '*/*', [
+		'application/json',
+		'text/html'
 	]);
 
 	return (
 		accept === 'application/json' &&
-		event.request.method !== 'GET' &&
-		event.request.method !== 'HEAD'
+		event.request.method === 'POST'
 	);
 }
 
