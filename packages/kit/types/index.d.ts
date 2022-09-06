@@ -202,8 +202,16 @@ export interface Handle {
 	}): MaybePromise<Response>;
 }
 
-export interface HandleError {
-	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
+export interface HandleServerError {
+	(input: { error: unknown; event: RequestEvent }): void;
+}
+
+export interface HandleClientError {
+	(input: { error: unknown }): void;
+}
+
+export interface HandleFetch {
+	(input: { event: RequestEvent; request: Request; fetch: typeof fetch }): MaybePromise<Response>;
 }
 
 /**
