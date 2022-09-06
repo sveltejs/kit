@@ -24,8 +24,17 @@ export function create_static_module(id, env) {
 	return GENERATED_COMMENT + declarations.join('\n\n');
 }
 
-/** @param {'public' | 'private'} type */
-export function create_dynamic_module(type) {
+/**
+ * @param {'public' | 'private'} type
+ * @param {Record<string, string> | undefined} dev_values If in a development mode, values to pre-populate the module with.
+ */
+export function create_dynamic_module(type, dev_values) {
+	if (dev_values) {
+		const objectKeys = Object.entries(dev_values).map(
+			([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`
+		);
+		return `const env = {\n${objectKeys.join(',\n')}\n}\n\nexport { env }`;
+	}
 	return `export { env } from '${runtime_base}/env-${type}.js';`;
 }
 

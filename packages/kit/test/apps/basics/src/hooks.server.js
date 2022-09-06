@@ -1,5 +1,4 @@
 import fs from 'fs';
-import cookie from 'cookie';
 import { sequence } from '@sveltejs/kit/hooks';
 import { HttpError } from '../../../../src/runtime/control';
 
@@ -57,8 +56,7 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	({ event, resolve }) => {
-		const cookies = cookie.parse(event.request.headers.get('cookie') || '');
-		event.locals.name = cookies.name;
+		event.locals.name = event.cookies.get('name');
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {
@@ -82,15 +80,14 @@ export const handle = sequence(
 	}
 );
 
-/** @type {import('@sveltejs/kit').ExternalFetch} */
-export async function externalFetch(request) {
-	let newRequest = request;
+/** @type {import('@sveltejs/kit').HandleFetch} */
+export async function handleFetch({ request, fetch }) {
 	if (request.url.endsWith('/server-fetch-request.json')) {
-		newRequest = new Request(
+		request = new Request(
 			request.url.replace('/server-fetch-request.json', '/server-fetch-request-modified.json'),
 			request
 		);
 	}
 
-	return fetch(newRequest);
+	return fetch(request);
 }

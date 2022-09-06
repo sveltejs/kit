@@ -1,4 +1,4 @@
-import { HttpError, Redirect } from '../runtime/control.js';
+import { HttpError, Redirect, ValidationError } from '../runtime/control.js';
 
 // For some reason we need to type the params as well here,
 // JSdoc doesn't seem to like @type with function overloads
@@ -33,4 +33,13 @@ export function json(data, init) {
 		...init,
 		headers
 	});
+}
+
+/**
+ * Generates a `ValidationError` object.
+ * @param {number} status
+ * @param {Record<string, any> | undefined} [data]
+ */
+export function invalid(status, data) {
+	return new ValidationError(status, data);
 }

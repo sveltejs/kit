@@ -29,7 +29,8 @@ export async function respond_with_error({ event, options, state, status, error,
 		event,
 		options,
 		state,
-		route: GENERIC_ERROR
+		route: GENERIC_ERROR,
+		resolve_opts
 	});
 
 	try {
@@ -83,8 +84,7 @@ export async function respond_with_error({ event, options, state, status, error,
 			fetched,
 			cookies,
 			event,
-			resolve_opts,
-			validation_errors: undefined
+			resolve_opts
 		});
 	} catch (error) {
 		return static_error_page(options, 500, handle_error_and_jsonify(event, options, error).message);

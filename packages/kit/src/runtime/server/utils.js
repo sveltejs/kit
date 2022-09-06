@@ -165,3 +165,14 @@ export function handle_error_and_jsonify(event, options, error) {
 		return options.handle_error(error, event);
 	}
 }
+
+/**
+ * @param {number} status
+ * @param {string} location
+ */
+export function redirect_response(status, location) {
+	return new Response(undefined, {
+		status,
+		headers: { location }
+	});
+}

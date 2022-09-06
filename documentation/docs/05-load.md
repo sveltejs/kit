@@ -18,7 +18,7 @@ export function load(event) {
 
 ### Input properties
 
-The argument to a `load` function is a `LoadEvent` (or, for server-only `load` functions, a `ServerLoadEvent` which inherits `clientAddress`, `locals`, `platform` and `request` from `RequestEvent`). All events have the following properties:
+The argument to a `load` function is a `LoadEvent` (or, for server-only `load` functions, a `ServerLoadEvent` which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`). All events have the following properties:
 
 #### data
 
@@ -143,7 +143,7 @@ export async function load({ depends }) {
 - it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request
 - it can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context)
 - internal requests (e.g. for `+server.js` routes) go direct to the handler function when running on the server, without the overhead of an HTTP call
-- during server-side rendering, the response will be captured and inlined into the rendered HTML
+- during server-side rendering, the response will be captured and inlined into the rendered HTML. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](/docs/hooks#handle)
 - during hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request
 
 > Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
@@ -221,6 +221,7 @@ export async function load({ parent, fetch }) {
 If you need to set headers for the response, you can do so using the `setHeaders` method. This is useful if you want the page to be cached, for example:
 
 ```js
+// @errors: 2322
 /// file: src/routes/blog/+page.js
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, setHeaders }) {
@@ -240,25 +241,7 @@ export async function load({ fetch, setHeaders }) {
 
 Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
 
-The exception is `set-cookie`, which can be set multiple times and can be passed an array of strings:
-
-```js
-/// file: src/routes/+layout.server.js
-/** @type {import('./$types').LayoutLoad} */
-export async function load({ setHeaders }) {
-	setHeaders({
-		'set-cookie': 'a=1; HttpOnly'
-	});
-
-	setHeaders({
-		'set-cookie': 'b=2; HttpOnly'
-	});
-
-	setHeaders({
-		'set-cookie': ['c=3; HttpOnly', 'd=4; HttpOnly']
-	});
-}
-```
+You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](/docs/types#sveltejs-kit-cookies) API in a server-only `load` function instead.
 
 ### Output
 

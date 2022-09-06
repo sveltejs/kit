@@ -1,5 +1,31 @@
 # @sveltejs/kit
 
+## 1.0.0-next.472
+
+### Patch Changes
+
+- [breaking] add API for interacting with cookies ([#6593](https://github.com/sveltejs/kit/pull/6593))
+
+* [breaking] Replace `POST`/`PUT`/`PATCH`/`DELETE` in `+page.server.js` with `export const actions` ([#6469](https://github.com/sveltejs/kit/pull/6469))
+
+## 1.0.0-next.471
+
+### Patch Changes
+
+- [breaking] Allow users to designate modules as server-only ([#6422](https://github.com/sveltejs/kit/pull/6422))
+
+* [breaking] exclude headers from serialized responses by default, add `filterSerializedResponseHeaders` `resolve` option ([#6569](https://github.com/sveltejs/kit/pull/6569))
+
+## 1.0.0-next.470
+
+### Patch Changes
+
+- Bump vite-plugin-svelte and required vite version ([#6583](https://github.com/sveltejs/kit/pull/6583))
+
+* [feat] Support for `$env/dynamic/*` in Vite ecosystem tools ([#6454](https://github.com/sveltejs/kit/pull/6454))
+
+- [breaking] Replace `externalFetch` with `handleFetch` ([#6565](https://github.com/sveltejs/kit/pull/6565))
+
 ## 1.0.0-next.469
 
 ### Patch Changes

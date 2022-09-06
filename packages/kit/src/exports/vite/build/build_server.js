@@ -72,7 +72,6 @@ export class Server {
 			},
 			hooks: null,
 			manifest,
-			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
 			public_env: {},
 			read,
@@ -108,10 +107,16 @@ export class Server {
 
 		if (!this.options.hooks) {
 			const module = await import(${s(hooks)});
+
+			// TODO remove this for 1.0
+			if (module.externalFetch) {
+				throw new Error('externalFetch has been removed — use handleFetch instead. See https://github.com/sveltejs/kit/pull/6565 for details');
+			}
+
 			this.options.hooks = {
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
 				handleError: module.handleError || (({ error }) => console.error(error.stack)),
-				externalFetch: module.externalFetch || fetch
+				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
 			};
 		}
 	}

@@ -3,3 +3,7 @@ export function load() {
 		foo: 'bar'
 	};
 }
+
+export const actions = {
+	default: () => ({ foo: 'bar' })
+};
