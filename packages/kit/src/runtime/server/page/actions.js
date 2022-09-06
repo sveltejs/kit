@@ -84,7 +84,7 @@ export function is_action_request(event, leaf_node) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSRNode['server']} server
- * @returns {Promise<import('$app/forms').SubmissionResult>}
+ * @returns {Promise<import('$app/forms').ActionResult>}
  */
 export async function handle_action_request(event, server) {
 	const actions = server.actions;

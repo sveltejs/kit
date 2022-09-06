@@ -50,22 +50,22 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 		let status = 200;
 
-		/** @type {import('$app/forms').SubmissionResult | undefined} */
-		let submission_result = undefined;
+		/** @type {import('$app/forms').ActionResult | undefined} */
+		let action_result = undefined;
 
 		if (is_action_request(event, leaf_node)) {
 			// for action requests, first call handler in +page.server.js
 			// (this also determines status code)
-			submission_result = await handle_action_request(event, leaf_node.server);
-			if (submission_result?.type === 'redirect') {
-				return redirect_response(303, submission_result.location);
+			action_result = await handle_action_request(event, leaf_node.server);
+			if (action_result?.type === 'redirect') {
+				return redirect_response(303, action_result.location);
 			}
-			if (submission_result?.type === 'error') {
-				const error = submission_result.error;
+			if (action_result?.type === 'error') {
+				const error = action_result.error;
 				status = error instanceof HttpError ? error.status : 500;
 			}
-			if (submission_result?.type === 'invalid') {
-				status = submission_result.status;
+			if (action_result?.type === 'invalid') {
+				status = action_result.status;
 			}
 		}
 
@@ -130,10 +130,10 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 			return Promise.resolve().then(async () => {
 				try {
-					if (node === leaf_node && submission_result?.type === 'error') {
+					if (node === leaf_node && action_result?.type === 'error') {
 						// we wait until here to throw the error so that we can use
 						// any nested +error.svelte components that were defined
-						throw submission_result.error;
+						throw action_result.error;
 					}
 
 					return await load_server_data({
@@ -287,7 +287,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			status,
 			error: null,
 			branch: compact(branch),
-			submission_result,
+			action_result,
 			fetched,
 			cookies
 		});

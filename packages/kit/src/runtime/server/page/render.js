@@ -28,7 +28,7 @@ const updated = {
  *   error: HttpError | Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   submission_result?: import('$app/forms').SubmissionResult;
+ *   action_result?: import('$app/forms').ActionResult;
  * }} opts
  */
 export async function render_response({
@@ -42,7 +42,7 @@ export async function render_response({
 	error = null,
 	event,
 	resolve_opts,
-	submission_result
+	action_result
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -75,8 +75,8 @@ export async function render_response({
 	}
 
 	const form_value =
-		submission_result?.type === 'success' || submission_result?.type === 'invalid'
-			? submission_result.data ?? null
+		action_result?.type === 'success' || action_result?.type === 'invalid'
+			? action_result.data ?? null
 			: null;
 
 	if (page_config.ssr) {

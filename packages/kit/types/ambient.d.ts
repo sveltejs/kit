@@ -88,7 +88,7 @@ declare module '$app/environment' {
 declare module '$app/forms' {
 	import { FormFetchResponse } from '@sveltejs/kit';
 
-	export type SubmissionResult<
+	export type ActionResult<
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	> =
@@ -125,7 +125,7 @@ declare module '$app/forms' {
 			data: FormData;
 			form: HTMLFormElement;
 			cancel: () => void;
-		}) => void | ((result: SubmissionResult<Success, Invalid>) => void)
+		}) => void | ((result: ActionResult<Success, Invalid>) => void)
 	): { destroy: () => void };
 
 	/**
@@ -135,7 +135,7 @@ declare module '$app/forms' {
 	export function applyAction<
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
-	>(result: SubmissionResult<Success, Invalid>): Promise<void>;
+	>(result: ActionResult<Success, Invalid>): Promise<void>;
 }
 
 /**

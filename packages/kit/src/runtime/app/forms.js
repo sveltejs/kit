@@ -17,7 +17,7 @@ export const applyAction = ssr ? guard('applyAction') : client.apply_action;
 
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
-	/** @param {import('$app/forms').SubmissionResult} result */
+	/** @param {import('$app/forms').ActionResult} result */
 	const fallback_callback = (result) => {
 		if (
 			(result.type === 'success' || result.type === 'invalid') &&
@@ -53,7 +53,7 @@ export function enhance(form, submit = () => {}) {
 			return;
 		}
 
-		/** @type {import('$app/forms').SubmissionResult} */
+		/** @type {import('$app/forms').ActionResult} */
 		let result;
 
 		try {
@@ -72,7 +72,7 @@ export function enhance(form, submit = () => {}) {
 			result = { type: 'error', error };
 		}
 
-		callback(/** @type {import('$app/forms').SubmissionResult<any, any>} */ (result));
+		callback(/** @type {import('$app/forms').ActionResult<any, any>} */ (result));
 	}
 
 	form.addEventListener('submit', handle_submit);
