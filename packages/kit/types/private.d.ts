@@ -193,9 +193,6 @@ export interface RequestOptions {
 	platform?: App.Platform;
 }
 
-/** `string[]` is only for set-cookie, everything else must be type of `string` */
-export type ResponseHeaders = Record<string, string | number | string[] | null>;
-
 export interface RouteDefinition {
 	id: string;
 	type: 'page' | 'endpoint';
