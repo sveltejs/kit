@@ -34,7 +34,10 @@ const config = {
 		},
 		files: {
 			assets: 'static',
-			hooks: 'src/hooks',
+			hooks: {
+				client: 'src/hooks.client',
+				server: 'src/hooks.server'
+			},
 			lib: 'src/lib',
 			params: 'src/params',
 			routes: 'src/routes',
@@ -184,7 +187,7 @@ Environment variable configuration:
 An object containing zero or more of the following `string` values:
 
 - `assets` — a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
-- `hooks` — the location of your hooks module (see [Hooks](/docs/hooks))
+- `hooks` — the location of your client and server hooks (see [Hooks](/docs/hooks))
 - `lib` — your app's internal library, accessible throughout the codebase as `$lib`
 - `params` — a directory containing [parameter matchers](/docs/routing#advanced-routing-matching)
 - `routes` — the files that define the structure of your app (see [Routing](/docs/routing))
