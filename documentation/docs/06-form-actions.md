@@ -46,7 +46,7 @@ We can also invoke the action from other pages (for example if there's a login w
 
 ### Named actions
 
-Instead of `default` actions, a page can have as many named actions as it needs:
+Instead of one `default` action, a page can have as many named actions as it needs:
 
 ```diff
 /// file: src/routes/login/+page.server.js
