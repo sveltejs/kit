@@ -133,7 +133,7 @@ const Sentry: any;
 export function handleError({ error, event }) {
 	// example integration with https://sentry.io/
 	Sentry.captureException(error, { event });
-	return { message: /** @type {Error} */(error) }
+	return { message: /** @type {Error} */(error).message }
 }
 ```
 
@@ -164,7 +164,7 @@ export async function handleFetch({ request, fetch }) {
 }
 ```
 
-##### Credentials
+**Credentials**
 
 For same-origin requests, SvelteKit's `fetch` implementation will forward `cookie` and `authorization` headers unless the `credentials` option is set to `"omit"`.
 
