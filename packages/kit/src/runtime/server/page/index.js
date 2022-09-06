@@ -3,7 +3,12 @@ import { DATA_SUFFIX } from '../../../constants.js';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
 import { HttpError, Redirect } from '../../control.js';
-import { get_option, redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
+import {
+	get_option,
+	redirect_response,
+	static_error_page,
+	handle_error_and_jsonify
+} from '../utils.js';
 import {
 	handle_action_json_request,
 	handle_action_request,
@@ -297,4 +302,3 @@ export async function render_page(event, route, page, options, state, resolve_op
 		});
 	}
 }
-<<<<<<< HEAD
