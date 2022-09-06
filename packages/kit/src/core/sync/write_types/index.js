@@ -191,7 +191,6 @@ function update_types(config, routes, route) {
 		if (route.leaf.server) {
 			exports.push(`export type Action = Kit.Action<RouteParams>`);
 			exports.push(`export type Actions = Kit.Actions<RouteParams>`);
-			exports.push(`export type ActionEvent = Kit.RequestEvent<RouteParams>`);
 		}
 	}
 
@@ -230,6 +229,9 @@ function update_types(config, routes, route) {
 
 	if (route.endpoint) {
 		exports.push(`export type RequestHandler = Kit.RequestHandler<RouteParams>;`);
+	}
+
+	if (route.leaf?.server || route.endpoint) {
 		exports.push(`export type RequestEvent = Kit.RequestEvent<RouteParams>;`);
 	}
 
@@ -598,7 +600,7 @@ export function tweak_types(content, is_server) {
 												: 'event';
 											code.prependRight(
 												rhs.pos,
-												`/** @param {import('./$types').ActionEvent} ${name} */ `
+												`/** @param {import('./$types').RequestEvent} ${name} */ `
 											);
 										}
 									}
@@ -637,7 +639,7 @@ export function tweak_types(content, is_server) {
 											if (arg && !arg.type) {
 												code.appendLeft(
 													arg.name.end,
-													`: import('./$types').ActionEvent` + (add_parens ? ')' : '')
+													`: import('./$types').RequestEvent` + (add_parens ? ')' : '')
 												);
 											}
 										}

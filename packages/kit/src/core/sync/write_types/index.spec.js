@@ -241,7 +241,7 @@ test('Rewrites action types for a JavaScript module', () => {
 		/** */
 		export const actions = {
 			a: () => {},
-			b:/** @param {import('./$types').ActionEvent} param */  (param) => {},
+			b:/** @param {import('./$types').RequestEvent} param */  (param) => {},
 			/** @param {Parameters<import('./$types').Action>[0]} param */
 			c: (param) => {},
 		}
@@ -251,11 +251,11 @@ test('Rewrites action types for a JavaScript module', () => {
 
 test('Rewrites action types for a TypeScript module', () => {
 	const source = `
-		import type { Actions, ActionEvent } from './$types';
+		import type { Actions, RequestEvent } from './$types';
 
 		export const actions: Actions = {
 			a: () => {},
-			b: (param: ActionEvent) => {},
+			b: (param: RequestEvent) => {},
 			c: (param) => {},
 		}
 	`;
@@ -267,12 +267,12 @@ test('Rewrites action types for a TypeScript module', () => {
 		rewritten?.code,
 		`// @ts-nocheck
 
-		import type { Actions, ActionEvent } from './$types';
+		import type { Actions, RequestEvent } from './$types';
 
 		export const actions = {
 			a: () => {},
-			b: (param: ActionEvent) => {},
-			c: (param: import('./$types').ActionEvent) => {},
+			b: (param: RequestEvent) => {},
+			c: (param: import('./$types').RequestEvent) => {},
 		}
 	;null as any as Actions;`
 	);
