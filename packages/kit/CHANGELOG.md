@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.474
+
+### Patch Changes
+
+- [breaking] disallow default and named actions next to each other ([#6615](https://github.com/sveltejs/kit/pull/6615))
+
 ## 1.0.0-next.473
 
 ### Patch Changes
