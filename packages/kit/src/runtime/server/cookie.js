@@ -28,7 +28,7 @@ export function get_cookies(request, url) {
 				}
 			}
 
-			return decode(initial_cookies[name]);
+			return name in initial_cookies ? decode(initial_cookies[name]) : undefined;
 		},
 		set(name, value, options = {}) {
 			new_cookies.push({
