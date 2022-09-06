@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.473
+
+### Patch Changes
+
+- [fix] pass `form` prop to pages ([#6611](https://github.com/sveltejs/kit/pull/6611))
+
 ## 1.0.0-next.472
 
 ### Patch Changes
