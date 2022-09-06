@@ -104,8 +104,6 @@ export function create_client({ target, base, trailing_slash }) {
 	/** @type {Promise<void> | null} */
 	let invalidating = null;
 	let force_invalidation = false;
-	/** @type {any} */
-	let forced_error = null;
 
 	/** @type {import('svelte').SvelteComponent} */
 	let root;
@@ -792,7 +790,6 @@ export function create_client({ target, base, trailing_slash }) {
 			if (loaders[i]) {
 				try {
 					branch.push(await branch_promises[i]);
-					if (forced_error && i === loaders.length - 1) throw forced_error;
 				} catch (e) {
 					const error = normalize_error(e);
 
@@ -1141,23 +1138,62 @@ export function create_client({ target, base, trailing_slash }) {
 		apply_action: async (result) => {
 			if (result.type === 'error') {
 				const url = new URL(location.href);
-				const intent = get_navigation_intent(url, true);
-				forced_error = result.error;
-				await update(intent, url, []);
-				forced_error = null;
+
+				const { branch, route } = current;
+				if (!route) return;
+
+				let i = current.branch.length;
+
+				while (i--) {
+					if (route.errors[i]) {
+						/** @type {import('./types').BranchNode | undefined} */
+						let error_loaded;
+
+						let j = i;
+						while (!branch[j]) j -= 1;
+						try {
+							error_loaded = {
+								node: await /** @type {import('types').CSRPageNodeLoader } */ (route.errors[i])(),
+								loader: /** @type {import('types').CSRPageNodeLoader } */ (route.errors[i]),
+								data: {},
+								server: null,
+								shared: null
+							};
+
+							const navigation_result = await get_navigation_result_from_branch({
+								url,
+								params: current.params,
+								branch: branch.slice(0, j + 1).concat(error_loaded),
+								status: 500, // TODO might not be 500?
+								error: result.error,
+								route
+							});
+
+							current = navigation_result.state;
+
+							const post_update = pre_update();
+							root.$set(navigation_result.props);
+							post_update();
+
+							return;
+						} catch (e) {
+							continue;
+						}
+					}
+				}
 			} else if (result.type === 'redirect') {
 				goto(result.location, {}, []);
 			} else {
 				/** @type {Record<string, any>} */
-				const props = {
-					form: result.data
-				};
+				const props = { form: result.data };
+
 				if (result.status !== page.status) {
 					props.page = {
 						...page,
 						status: result.status
 					};
 				}
+
 				const post_update = pre_update();
 				root.$set(props);
 				post_update();
