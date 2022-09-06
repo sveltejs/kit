@@ -56,6 +56,23 @@ You can also use `adapter-static` to generate single-page apps (SPAs) by specify
 
 > You must ensure [`trailingSlash`](configuration#trailingslash) is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
 
+#### Static sites on Apache
+
+For a Single Page Application on an `Apache` Server, you need a `.htaccess` to route all of the requests into the entry file for the routing to work, unless it will throw a 404 error once you refresh or visit a page that isn't compiled.
+
+```
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^app\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /app.html [L]
+</IfModule>
+```
+
+You can also create a `.htaccess` file in the static folder to automatically include the `.htaccess` on every build.
+
 #### Platform-specific context
 
 Some adapters may have access to additional information about the request. For example, Cloudflare Workers can access an `env` object containing KV namespaces etc. This can be passed to the `RequestEvent` used in [hooks](/docs/hooks) and [server routes](/docs/routing#server) as the `platform` property — consult each adapter's documentation to learn more.
