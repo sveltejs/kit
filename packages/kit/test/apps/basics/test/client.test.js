@@ -33,15 +33,15 @@ test.describe('a11y', () => {
 	});
 
 	test('applies autofocus after a navigation', async ({ page, clicknav }) => {
-		await page.goto('/accessibility/a');
+		await page.goto('/accessibility/autofocus/a');
 
-		await clicknav('[href="/accessibility/c"]');
-		expect(await page.innerHTML('h1')).toBe('c');
+		await clicknav('[href="/accessibility/autofocus/b"]');
+		expect(await page.innerHTML('h1')).toBe('b');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
 	});
 
 	test('applies autofocus after an enhanced form submit', async ({ page }) => {
-		await page.goto('/accessibility/c');
+		await page.goto('/accessibility/autofocus/b');
 
 		await page.click('#submit');
 		await page.waitForFunction(() => document.activeElement?.nodeName === 'INPUT', null, {
