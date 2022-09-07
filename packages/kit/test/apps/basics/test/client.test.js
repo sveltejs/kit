@@ -787,36 +787,35 @@ test.describe('data-sveltekit attributes', () => {
 });
 
 test.describe('Cookies API', () => {
-	test('sanity check for cookies', async({page}) => {
+	test('sanity check for cookies', async ({ page }) => {
 		await page.goto('/cookies');
-		const span = page.locator('#cookie-value')
-		expect(await span.innerText()).toContain('undefined');
-	})
-
-	test('set a cookie', async({page}) => {
-		await page.goto('/cookies/set');
-		const span = page.locator('#cookie-value')
-		expect(await span.innerText()).toContain('teapot');
-	})
-	test('delete a cookie', async({page}) => {
-		await page.goto('/cookies/set');
-		let span = page.locator('#cookie-value')
-		expect(await span.innerText()).toContain('teapot');
-		await page.goto('/cookies/delete')
-		span = page.locator('#cookie-value')
+		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 	});
 
-	test('cookies can be set with a path', async({page}) => {
+	test('set a cookie', async ({ page }) => {
+		await page.goto('/cookies/set');
+		const span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot');
+	});
+	test('delete a cookie', async ({ page }) => {
+		await page.goto('/cookies/set');
+		let span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot');
+		await page.goto('/cookies/delete');
+		span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('undefined');
+	});
+
+	test('cookies can be set with a path', async ({ page }) => {
 		await page.goto('/cookies/nested/a');
-		let span = page.locator('#cookie-value')
+		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
 		await page.goto('/cookies/nested/b');
-		span = page.locator('#cookie-value')
+		span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 		await page.goto('/cookies');
-		span = page.locator('#cookie-value')
+		span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
-	})
-
+	});
 });

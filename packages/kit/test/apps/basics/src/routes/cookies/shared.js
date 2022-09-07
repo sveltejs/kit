@@ -1,1 +1,1 @@
-export const COOKIE_NAME = 'cookiesAPITest'
+export const COOKIE_NAME = 'cookiesAPITest';
