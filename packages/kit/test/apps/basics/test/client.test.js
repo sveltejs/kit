@@ -7,6 +7,94 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 test.describe.configure({ mode: 'parallel' });
 
+test.describe('a11y', () => {
+	test('resets focus', async ({ page, clicknav, browserName }) => {
+		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+
+		await page.goto('/accessibility/a');
+
+		await clicknav('[href="/accessibility/b"]');
+		expect(await page.innerHTML('h1')).toBe('b');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		await page.keyboard.press(tab);
+
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BUTTON');
+		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('focus me');
+
+		await clicknav('[href="/accessibility/a"]');
+		expect(await page.innerHTML('h1')).toBe('a');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+
+		await page.keyboard.press(tab);
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BUTTON');
+		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('focus me');
+
+		expect(await page.evaluate(() => document.documentElement.getAttribute('tabindex'))).toBe(null);
+	});
+
+	test.only('applies autofocus after a navigation', async ({ page, clicknav }) => {
+		await page.goto('/accessibility/a');
+
+		await clicknav('[href="/accessibility/c"]');
+		expect(await page.innerHTML('h1')).toBe('c');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
+	});
+
+	test.only('applies autofocus after an enhanced form submit', async ({ page, clicknav }) => {
+		await page.goto('/accessibility/c');
+
+		await page.click('button');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
+	});
+
+	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {
+		await page.goto('/accessibility/a');
+
+		const has_live_region = (await page.innerHTML('body')).includes('aria-live');
+
+		if (javaScriptEnabled) {
+			expect(has_live_region).toBeTruthy();
+
+			// live region should exist, but be empty
+			expect(await page.innerHTML('[aria-live]')).toBe('');
+
+			await clicknav('[href="/accessibility/b"]');
+			expect(await page.innerHTML('[aria-live]')).toBe('b'); // TODO i18n
+		} else {
+			expect(has_live_region).toBeFalsy();
+		}
+	});
+
+	test('reset selection', async ({ page, clicknav }) => {
+		await page.goto('/selection/a');
+
+		expect(
+			await page.evaluate(() => {
+				const range = document.createRange();
+				range.selectNodeContents(document.body);
+				const selection = getSelection();
+				if (selection) {
+					selection.removeAllRanges();
+					selection.addRange(range);
+					return selection.rangeCount;
+				}
+				return -1;
+			})
+		).toBe(1);
+
+		await clicknav('[href="/selection/b"]');
+		expect(
+			await page.evaluate(() => {
+				const selection = getSelection();
+				if (selection) {
+					return selection.rangeCount;
+				}
+				return -1;
+			})
+		).toBe(0);
+	});
+});
+
 test.describe('beforeNavigate', () => {
 	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
