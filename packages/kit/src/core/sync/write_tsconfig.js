@@ -67,7 +67,11 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 				compilerOptions: {
 					// generated options
 					baseUrl: config_relative('.'),
-					paths: get_tsconfig_paths(config),
+					paths: {
+						// enables aliased import for generated types
+						"./$types": [".svelte-kit/types/src/routes/*"],
+						...get_tsconfig_paths(config)
+					},
 					rootDirs: [config_relative('.'), './types'],
 
 					// essential options
