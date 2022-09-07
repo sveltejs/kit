@@ -1502,7 +1502,7 @@ async function load_data(url, invalid) {
 
 /**
  * @param {unknown} error
- * @param {import('types').ClientRequestEvent} event
+ * @param {import('types').NavigationEvent} event
  * @returns {App.PageError}
  */
 function handle_error(error, event) {
