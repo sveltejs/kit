@@ -2,7 +2,7 @@ import { HttpError, Redirect } from '../../control.js';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
-import { data_response, error_to_pojo } from '../utils.js';
+import { data_response, handle_error_and_jsonify } from '../utils.js';
 import { normalize_path } from '../../../utils/url.js';
 import { DATA_SUFFIX } from '../../../constants.js';
 
@@ -93,9 +93,7 @@ export async function render_data(event, route, options, state) {
 		let length = promises.length;
 		const nodes = await Promise.all(
 			promises.map((p, i) =>
-				p.catch((e) => {
-					const error = normalize_error(e);
-
+				p.catch((error) => {
 					if (error instanceof Redirect) {
 						throw error;
 					}
@@ -103,18 +101,10 @@ export async function render_data(event, route, options, state) {
 					// Math.min because array isn't guaranteed to resolve in order
 					length = Math.min(length, i + 1);
 
-					if (error instanceof HttpError) {
-						return /** @type {import('types').ServerErrorNode} */ ({
-							type: 'error',
-							httperror: { ...error }
-						});
-					}
-
-					options.handle_error(error, event);
-
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
-						error: error_to_pojo(error, options.get_stack)
+						error: handle_error_and_jsonify(event, options, error),
+						status: error instanceof HttpError ? error.status : undefined
 					});
 				})
 			)
@@ -140,7 +130,7 @@ export async function render_data(event, route, options, state) {
 			return data_response(server_data);
 		} else {
 			// TODO make it clearer that this was an unexpected error
-			return data_response(error_to_pojo(error, options.get_stack));
+			return data_response(handle_error_and_jsonify(event, options, error));
 		}
 	}
 }

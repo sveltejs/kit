@@ -4,7 +4,7 @@ import {
 	Config,
 	ServerLoad,
 	Handle,
-	HandleError,
+	HandleServerError,
 	KitConfig,
 	Load,
 	RequestEvent,
@@ -14,7 +14,8 @@ import {
 	ServerInitOptions,
 	SSRManifest,
 	HandleFetch,
-	Actions
+	Actions,
+	HandleClientError
 } from './index.js';
 import {
 	HttpMethod,
@@ -89,10 +90,14 @@ export type CSRRoute = {
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
-export interface Hooks {
-	handle: Handle;
-	handleError: HandleError;
+export interface ServerHooks {
 	handleFetch: HandleFetch;
+	handle: Handle;
+	handleError: HandleServerError;
+}
+
+export interface ClientHooks {
+	handleError: HandleClientError;
 }
 
 export interface ImportNode {
@@ -227,9 +232,11 @@ export interface ServerDataSkippedNode {
  */
 export interface ServerErrorNode {
 	type: 'error';
-	// Either-or situation, but we don't want to have to do a type assertion
-	error?: Record<string, any>;
-	httperror?: { status: number; message: string };
+	error: App.PageError;
+	/**
+	 * Only set for HttpErrors
+	 */
+	status?: number;
 }
 
 export interface SSRComponent {
@@ -287,9 +294,8 @@ export interface SSROptions {
 		check_origin: boolean;
 	};
 	dev: boolean;
-	get_stack: (error: Error) => string | undefined;
-	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
-	hooks: Hooks;
+	handle_error(error: Error & { frame?: string }, event: RequestEvent): App.PageError;
+	hooks: ServerHooks;
 	manifest: SSRManifest;
 	paths: {
 		base: string;

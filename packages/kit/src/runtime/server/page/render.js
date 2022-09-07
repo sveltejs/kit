@@ -5,8 +5,6 @@ import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
-import { serialize_error } from '../utils.js';
-import { HttpError } from '../../control.js';
 
 // TODO rename this function/module
 
@@ -25,7 +23,7 @@ const updated = {
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
- *   error: HttpError | Error | null;
+ *   error: App.PageError | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('types').ActionResult;
@@ -67,12 +65,6 @@ export async function render_response({
 	const inline_styles = new Map();
 
 	let rendered;
-
-	const stack = error instanceof HttpError ? undefined : error?.stack;
-
-	if (error && options.dev && !(error instanceof HttpError)) {
-		error.stack = options.get_stack(error);
-	}
 
 	const form_value =
 		action_result?.type === 'success' || action_result?.type === 'invalid'
@@ -203,7 +195,7 @@ export async function render_response({
 			env: ${s(options.public_env)},
 			hydrate: ${page_config.ssr ? `{
 				status: ${status},
-				error: ${error && serialize_error(error, e => e.stack)},
+				error: ${s(error)},
 				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)},
@@ -345,11 +337,6 @@ export async function render_response({
 		if (link_header_preloads.size) {
 			headers.set('link', Array.from(link_header_preloads).join(', '));
 		}
-	}
-
-	if (error && options.dev && !(error instanceof HttpError)) {
-		// reset stack, otherwise it may be 'fixed' a second time
-		error.stack = stack;
 	}
 
 	return new Response(html, {

@@ -3,7 +3,12 @@ import { DATA_SUFFIX } from '../../../constants.js';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
 import { HttpError, Redirect } from '../../control.js';
-import { get_option, redirect_response, static_error_page } from '../utils.js';
+import {
+	get_option,
+	redirect_response,
+	static_error_page,
+	handle_error_and_jsonify
+} from '../utils.js';
 import {
 	handle_action_json_request,
 	handle_action_request,
@@ -197,13 +202,13 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 					branch.push({ node, server_data, data });
 				} catch (e) {
-					const error = normalize_error(e);
+					const err = normalize_error(e);
 
-					if (error instanceof Redirect) {
+					if (err instanceof Redirect) {
 						if (state.prerendering && should_prerender_data) {
 							const body = `window.__sveltekit_data = ${JSON.stringify({
 								type: 'redirect',
-								location: error.location
+								location: err.location
 							})}`;
 
 							state.prerendering.dependencies.set(data_pathname, {
@@ -212,14 +217,11 @@ export async function render_page(event, route, page, options, state, resolve_op
 							});
 						}
 
-						return redirect_response(error.status, error.location);
+						return redirect_response(err.status, err.location);
 					}
 
-					if (!(error instanceof HttpError)) {
-						options.handle_error(/** @type {Error} */ (error), event);
-					}
-
-					const status = error instanceof HttpError ? error.status : 500;
+					const status = err instanceof HttpError ? err.status : 500;
+					const error = handle_error_and_jsonify(event, options, err);
 
 					while (i--) {
 						if (page.errors[i]) {
@@ -250,11 +252,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 					// if we're still here, it means the error happened in the root layout,
 					// which means we have to fall back to error.html
-					return static_error_page(
-						options,
-						status,
-						/** @type {HttpError | Error} */ (error).message
-					);
+					return static_error_page(options, status, error.message);
 				}
 			} else {
 				// push an empty slot so we can rewind past gaps to the
@@ -294,14 +292,12 @@ export async function render_page(event, route, page, options, state, resolve_op
 	} catch (error) {
 		// if we end up here, it means the data loaded successfull
 		// but the page failed to render, or that a prerendering error occurred
-		options.handle_error(/** @type {Error} */ (error), event);
-
 		return await respond_with_error({
 			event,
 			options,
 			state,
 			status: 500,
-			error: /** @type {Error} */ (error),
+			error,
 			resolve_opts
 		});
 	}

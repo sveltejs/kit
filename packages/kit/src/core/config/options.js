@@ -141,7 +141,19 @@ const options = object(
 
 			files: object({
 				assets: string('static'),
-				hooks: string(join('src', 'hooks')),
+				hooks: (input, keypath) => {
+					// TODO remove this for the 1.0 release
+					if (typeof input === 'string') {
+						throw new Error(
+							`${keypath} is an object with { server: string, client: string } now. See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
+						);
+					}
+
+					return object({
+						client: string(join('src', 'hooks.client')),
+						server: string(join('src', 'hooks.server'))
+					})(input, keypath);
+				},
 				lib: string(join('src', 'lib')),
 				params: string(join('src', 'params')),
 				routes: string(join('src', 'routes')),

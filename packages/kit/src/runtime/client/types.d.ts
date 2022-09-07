@@ -9,8 +9,6 @@ import {
 	prefetchRoutes
 } from '$app/navigation';
 import { CSRPageNode, CSRPageNodeLoader, CSRRoute, Uses } from 'types';
-import { HttpError } from '../control.js';
-import { SerializedHttpError } from '../server/page/types.js';
 
 export interface Client {
 	// public API, exposed via $app/navigation
@@ -27,7 +25,7 @@ export interface Client {
 	// private API
 	_hydrate: (opts: {
 		status: number;
-		error: Error | SerializedHttpError;
+		error: App.PageError;
 		node_ids: number[];
 		params: Record<string, string>;
 		routeId: string | null;
@@ -79,7 +77,7 @@ export interface DataNode {
 
 export interface NavigationState {
 	branch: Array<BranchNode | undefined>;
-	error: HttpError | Error | null;
+	error: App.PageError | null;
 	params: Record<string, string>;
 	route: CSRRoute | null;
 	session_id: number;

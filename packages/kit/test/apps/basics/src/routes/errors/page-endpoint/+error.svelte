@@ -5,11 +5,7 @@
 <pre>{JSON.stringify(
 		{
 			status: $page.status,
-			name: $page.error.name,
-			message: $page.error.message,
-			stack: $page.error.stack,
-			// @ts-expect-error
-			fancy: $page.error.fancy
+			...$page.error
 		},
 		null,
 		'  '
