@@ -8,6 +8,8 @@ A typical SvelteKit project looks like this:
 my-project/
 ├ src/
 │ ├ lib/
+│ │ ├ server/
+│ │ │ └ [your server-only lib files]
 │ │ └ [your lib files]
 │ ├ params/
 │ │ └ [your param matchers]
@@ -35,6 +37,7 @@ You'll also find common files like `.gitignore` and `.npmrc` (and `.prettierrc` 
 The `src` directory contains the meat of your project.
 
 - `lib` contains your library code, which can be imported via the [`$lib`](/docs/modules#$lib) alias, or packaged up for distribution using [`svelte-package`](/docs/packaging)
+  - `server` contains your server-only library code. It can be imported by using the [`$lib/server`](/docs/server-only-modules) alias. SvelteKit will prevent you from importing these in client code.
 - `params` contains any [param matchers](/docs/advanced-routing#matching) your app needs
 - `routes` contains the [routes](/docs/routing) of your application
 - `app.html` is your page template — an HTML document containing the following placeholders:
