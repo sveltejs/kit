@@ -69,7 +69,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 					baseUrl: config_relative('.'),
 					paths: {
 						// enables import autocomplete for generated types aliased path
-						'./$types': [`${config.outDir}/types/src/routes/*`],
+						'./$types': [`${config.outDir}/types/src/routes/$types`],
 						...get_tsconfig_paths(config)
 					},
 					rootDirs: [config_relative('.'), './types'],
