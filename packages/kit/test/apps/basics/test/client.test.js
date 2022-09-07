@@ -32,7 +32,7 @@ test.describe('a11y', () => {
 		expect(await page.evaluate(() => document.documentElement.getAttribute('tabindex'))).toBe(null);
 	});
 
-	test.only('applies autofocus after a navigation', async ({ page, clicknav }) => {
+	test('applies autofocus after a navigation', async ({ page, clicknav }) => {
 		await page.goto('/accessibility/a');
 
 		await clicknav('[href="/accessibility/c"]');
@@ -40,11 +40,13 @@ test.describe('a11y', () => {
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
 	});
 
-	test.only('applies autofocus after an enhanced form submit', async ({ page, clicknav }) => {
+	test('applies autofocus after an enhanced form submit', async ({ page }) => {
 		await page.goto('/accessibility/c');
 
-		await page.click('button');
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
+		await page.click('#submit');
+		await page.waitForFunction(() => document.activeElement?.nodeName === 'INPUT', null, {
+			timeout: 1000
+		});
 	});
 
 	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {

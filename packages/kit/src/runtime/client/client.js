@@ -305,35 +305,7 @@ export function create_client({ target, base, trailing_slash }) {
 				}
 			}
 
-			if (!keepfocus) {
-				const autofocus = document.querySelector('[autofocus]');
-				if (autofocus) {
-					// @ts-ignore
-					autofocus.focus();
-				} else {
-					// Reset page selection and focus
-					// We try to mimic browsers' behaviour as closely as possible by targeting the
-					// first scrollable region, but unfortunately it's not a perfect match — e.g.
-					// shift-tabbing won't immediately cycle up from the end of the page on Chromium
-					// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-					const root = document.body;
-					const tabindex = root.getAttribute('tabindex');
-
-					root.tabIndex = -1;
-					root.focus({ preventScroll: true });
-
-					setTimeout(() => {
-						getSelection()?.removeAllRanges();
-					});
-
-					// restore `tabindex` as to prevent `root` from stealing input from elements
-					if (tabindex !== null) {
-						root.setAttribute('tabindex', tabindex);
-					} else {
-						root.removeAttribute('tabindex');
-					}
-				}
-			}
+			if (!keepfocus) reset_focus();
 		}
 
 		load_cache.promise = null;
@@ -1188,6 +1160,8 @@ export function create_client({ target, base, trailing_slash }) {
 							root.$set(navigation_result.props);
 							post_update();
 
+							tick().then(reset_focus);
+
 							return;
 						} catch (e) {
 							continue;
@@ -1195,7 +1169,7 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 				}
 			} else if (result.type === 'redirect') {
-				goto(result.location, {}, []);
+				await goto(result.location, {}, []);
 			} else {
 				/** @type {Record<string, any>} */
 				const props = { form: result.data };
@@ -1210,6 +1184,8 @@ export function create_client({ target, base, trailing_slash }) {
 				const post_update = pre_update();
 				root.$set(props);
 				post_update();
+
+				tick().then(reset_focus);
 			}
 		},
 
@@ -1569,4 +1545,34 @@ function pre_update() {
 	}
 
 	return () => {};
+}
+
+function reset_focus() {
+	const autofocus = document.querySelector('[autofocus]');
+	if (autofocus) {
+		// @ts-ignore
+		autofocus.focus();
+	} else {
+		// Reset page selection and focus
+		// We try to mimic browsers' behaviour as closely as possible by targeting the
+		// first scrollable region, but unfortunately it's not a perfect match — e.g.
+		// shift-tabbing won't immediately cycle up from the end of the page on Chromium
+		// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
+		const root = document.body;
+		const tabindex = root.getAttribute('tabindex');
+
+		root.tabIndex = -1;
+		root.focus({ preventScroll: true });
+
+		setTimeout(() => {
+			getSelection()?.removeAllRanges();
+		});
+
+		// restore `tabindex` as to prevent `root` from stealing input from elements
+		if (tabindex !== null) {
+			root.setAttribute('tabindex', tabindex);
+		} else {
+			root.removeAttribute('tabindex');
+		}
+	}
 }

@@ -9,5 +9,5 @@
 <h1>c</h1>
 
 <form method="POST" use:enhance>
-	<button>submit</button>
+	<button id="submit">submit</button>
 </form>
