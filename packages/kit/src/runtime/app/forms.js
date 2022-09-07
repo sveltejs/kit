@@ -83,6 +83,7 @@ export function enhance(element, submit = () => {}) {
 		callback({
 			element,
 			data,
+			// @ts-expect-error generic constraints stuff we don't care about
 			result,
 			// TODO remove for 1.0
 			get type() {
