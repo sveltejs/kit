@@ -326,7 +326,7 @@ export async function dev(vite, vite_config, svelte_config) {
 								path.relative(process.cwd(), old_file)
 							)} to ${posixify(
 								path.relative(process.cwd(), svelte_config.kit.files.hooks.server)
-							)}.${path.extname(
+							)}${path.extname(
 								old_file
 							)} (because there's also client hooks now). See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
 						);

@@ -167,7 +167,7 @@ export async function build_server(options, client) {
 					path.relative(process.cwd(), old_file)
 				)} to ${posixify(
 					path.relative(process.cwd(), config.kit.files.hooks.server)
-				)}.${path.extname(
+				)}${path.extname(
 					old_file
 				)} (because there's also client hooks now). See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
 			);
