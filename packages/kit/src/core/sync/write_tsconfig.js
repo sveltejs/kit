@@ -68,8 +68,8 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 					// generated options
 					baseUrl: config_relative('.'),
 					paths: {
-						// enables aliased import for generated types
-						"./$types": [".svelte-kit/types/src/routes/*"],
+						// enables import autocomplete for generated types aliased path
+						'./$types': [`${config.outDir}/types/src/routes/*`],
 						...get_tsconfig_paths(config)
 					},
 					rootDirs: [config_relative('.'), './types'],
