@@ -367,14 +367,6 @@ function escape_for_regexp(str) {
 }
 
 /**
- * @param {string} str
- * @param {number} times
- */
-function repeat(str, times) {
-	return new Array(times + 1).join(str);
-}
-
-/**
  * Load environment variables from process.env and .env files
  * @param {import('types').ValidatedKitConfig['env']} env_config
  * @param {string} mode
