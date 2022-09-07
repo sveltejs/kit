@@ -96,8 +96,9 @@ export interface Hooks {
 }
 
 export interface ImportNode {
-	name: string;
-	dynamic: boolean;
+	readonly name: string;
+	readonly dynamic: boolean;
+	readonly children: Generator<ImportNode>;
 }
 
 export class InternalServer extends Server {

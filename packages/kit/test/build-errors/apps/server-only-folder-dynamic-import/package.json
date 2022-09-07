@@ -1,5 +1,5 @@
 {
-	"name": "server-only-module-dynamic-import",
+	"name": "server-only-folder-dynamic-import",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
