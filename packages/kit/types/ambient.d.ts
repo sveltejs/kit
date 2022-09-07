@@ -88,6 +88,15 @@ declare module '$app/environment' {
 declare module '$app/forms' {
 	import type { ActionResult } from '@sveltejs/kit';
 
+	export type SubmitFunction<
+		Success extends Record<string, unknown> | undefined,
+		Invalid extends Record<string, unknown> | undefined
+	> = (input: {
+		data: FormData;
+		form: HTMLFormElement;
+		cancel: () => void;
+	}) => void | ((result: ActionResult<Success, Invalid>) => void);
+
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
 	 * @param form The form element
@@ -111,11 +120,7 @@ declare module '$app/forms' {
 		 * - redirects in case of a redirect response
 		 * - redirects to the nearest error page in case of an unexpected error
 		 */
-		submit?: (input: {
-			data: FormData;
-			form: HTMLFormElement;
-			cancel: () => void;
-		}) => void | ((result: ActionResult<Success, Invalid>) => void)
+		submit?: SubmitFunction<Success, Invalid>
 	): { destroy: () => void };
 
 	/**
