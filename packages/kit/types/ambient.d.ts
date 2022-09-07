@@ -116,7 +116,7 @@ declare module '$app/forms' {
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	>(
-		form: Element,
+		element: Element,
 		/**
 		 * Called upon submission with the given FormData.
 		 * If `cancel` is called, the form will not be submitted.
