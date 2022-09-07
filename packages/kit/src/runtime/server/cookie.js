@@ -34,6 +34,7 @@ export function get_cookies(request, url) {
 					httpOnly: true,
 					secure: true,
 					path: '/',
+					sameSite: 'lax',
 					...options
 				}
 			});
@@ -46,6 +47,7 @@ export function get_cookies(request, url) {
 					httpOnly: true,
 					secure: true,
 					path: '/',
+					sameSite: 'lax',
 					...options,
 					maxAge: 0
 				}
