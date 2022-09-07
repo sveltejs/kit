@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.476
+
+### Patch Changes
+
+- [breaking] change use:enhance signature to support `<button formaction>` ([#6633](https://github.com/sveltejs/kit/pull/6633))
+
 ## 1.0.0-next.475
 
 ### Patch Changes
