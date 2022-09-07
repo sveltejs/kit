@@ -231,7 +231,7 @@ export interface LoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>
-> extends NavigationEvent {
+> extends NavigationEvent<Params> {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	data: Data;
 	setHeaders: (headers: Record<string, string>) => void;
