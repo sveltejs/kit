@@ -284,36 +284,12 @@ export function create_client({ target, base, trailing_slash }) {
 			initialize(navigation_result);
 		}
 
+		// need to render the DOM before we can scroll to the rendered elements
+		await tick();
+
 		// opts must be passed if we're navigating
 		if (opts) {
 			const { scroll, keepfocus } = opts;
-
-			if (!keepfocus) {
-				// Reset page selection and focus
-				// We try to mimic browsers' behaviour as closely as possible by targeting the
-				// first scrollable region, but unfortunately it's not a perfect match — e.g.
-				// shift-tabbing won't immediately cycle up from the end of the page on Chromium
-				// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-				const root = document.body;
-				const tabindex = root.getAttribute('tabindex');
-
-				root.tabIndex = -1;
-				root.focus({ preventScroll: true });
-
-				setTimeout(() => {
-					getSelection()?.removeAllRanges();
-				});
-
-				// restore `tabindex` as to prevent `root` from stealing input from elements
-				if (tabindex !== null) {
-					root.setAttribute('tabindex', tabindex);
-				} else {
-					root.removeAttribute('tabindex');
-				}
-			}
-
-			// need to render the DOM before we can scroll to the rendered elements
-			await tick();
 
 			if (autoscroll) {
 				const deep_linked = url.hash && document.getElementById(url.hash.slice(1));
@@ -328,9 +304,36 @@ export function create_client({ target, base, trailing_slash }) {
 					scrollTo(0, 0);
 				}
 			}
-		} else {
-			// in this case we're simply invalidating
-			await tick();
+
+			if (!keepfocus) {
+				const autofocus = document.querySelector('[autofocus]');
+				if (autofocus) {
+					// @ts-ignore
+					autofocus.focus();
+				} else {
+					// Reset page selection and focus
+					// We try to mimic browsers' behaviour as closely as possible by targeting the
+					// first scrollable region, but unfortunately it's not a perfect match — e.g.
+					// shift-tabbing won't immediately cycle up from the end of the page on Chromium
+					// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
+					const root = document.body;
+					const tabindex = root.getAttribute('tabindex');
+
+					root.tabIndex = -1;
+					root.focus({ preventScroll: true });
+
+					setTimeout(() => {
+						getSelection()?.removeAllRanges();
+					});
+
+					// restore `tabindex` as to prevent `root` from stealing input from elements
+					if (tabindex !== null) {
+						root.setAttribute('tabindex', tabindex);
+					} else {
+						root.removeAttribute('tabindex');
+					}
+				}
+			}
 		}
 
 		load_cache.promise = null;
