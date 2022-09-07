@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.174
+
+### Patch Changes
+
+- Remove cookie package from demo app ([#6602](https://github.com/sveltejs/kit/pull/6602))
+
 ## 2.0.0-next.173
 
 ### Patch Changes

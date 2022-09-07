@@ -35,6 +35,8 @@ export async function handle_action_json_request(event, options, server) {
 		});
 	}
 
+	check_named_default_separate(actions);
+
 	try {
 		const data = await call_action(event, actions);
 
@@ -114,6 +116,8 @@ export async function handle_action_request(event, server) {
 		};
 	}
 
+	check_named_default_separate(actions);
+
 	try {
 		const data = await call_action(event, actions);
 
@@ -142,6 +146,17 @@ export async function handle_action_request(event, server) {
 }
 
 /**
+ * @param {import('types').Actions} actions
+ */
+function check_named_default_separate(actions) {
+	if (actions.default && Object.keys(actions).length > 1) {
+		throw new Error(
+			`When using named actions, the default action cannot be used. See the docs for more info: https://kit.svelte.dev/docs/form-actions#named-actions`
+		);
+	}
+}
+
+/**
  * @param {import('types').RequestEvent} event
  * @param {NonNullable<import('types').SSRNode['server']['actions']>} actions
  * @throws {Redirect | ValidationError | HttpError | Error}
@@ -153,6 +168,9 @@ export async function call_action(event, actions) {
 	for (const param of url.searchParams) {
 		if (param[0].startsWith('/')) {
 			name = param[0].slice(1);
+			if (name === 'default') {
+				throw new Error('Cannot use reserved action name "default"');
+			}
 			break;
 		}
 	}

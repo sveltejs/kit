@@ -1,5 +1,27 @@
 # @sveltejs/kit
 
+## 1.0.0-next.475
+
+### Patch Changes
+
+- cookies.delete fix #6609 ([#6622](https://github.com/sveltejs/kit/pull/6622))
+
+* [feat] provide `SubmitFunction` type ([#6613](https://github.com/sveltejs/kit/pull/6613))
+
+- [fix] address Vite warning when using base or asset path ([#6621](https://github.com/sveltejs/kit/pull/6621))
+
+## 1.0.0-next.474
+
+### Patch Changes
+
+- [breaking] disallow default and named actions next to each other ([#6615](https://github.com/sveltejs/kit/pull/6615))
+
+## 1.0.0-next.473
+
+### Patch Changes
+
+- [fix] pass `form` prop to pages ([#6611](https://github.com/sveltejs/kit/pull/6611))
+
 ## 1.0.0-next.472
 
 ### Patch Changes
