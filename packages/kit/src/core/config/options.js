@@ -142,7 +142,7 @@ const options = object(
 			files: object({
 				assets: string('static'),
 				hooks: (input, keypath) => {
-					// TOD remove this for the 1.0 release
+					// TODO remove this for the 1.0 release
 					if (typeof input === 'string') {
 						throw new Error(
 							`${keypath} is an object with { server: string, client: string } now. See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
