@@ -33,7 +33,7 @@ const app_template = ({ head, body, assets, nonce }) => ${s(template)
 
 const error_template = ({ status, message }) => ${s(error_page)
 	.replace(/%sveltekit\.status%/g, '" + status + "')
-	.replace(/%sveltekit\.message%/g, '" + message + "')};
+	.replace(/%sveltekit\.error\.message%/g, '" + message + "')};
 
 let read = null;
 
