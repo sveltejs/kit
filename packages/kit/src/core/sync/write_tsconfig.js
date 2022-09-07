@@ -60,6 +60,8 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 	include.push(config_relative(`${test_folder}/**/*.ts`));
 	include.push(config_relative(`${test_folder}/**/*.svelte`));
 
+	const types_folder = `${config.outDir}/types/src/routes`;
+
 	write_if_changed(
 		out,
 		JSON.stringify(
@@ -68,8 +70,8 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 					// generated options
 					baseUrl: config_relative('.'),
 					paths: {
-						// enables import autocomplete for generated types aliased path
-						'./$types': [`${config.outDir}/types/src/routes/$types`],
+						// enables shorter import suggestions for generated types
+						'./$types': [`${types_folder}/$types`, `${types_folder}/*/$types`],
 						...get_tsconfig_paths(config)
 					},
 					rootDirs: [config_relative('.'), './types'],
