@@ -4,10 +4,9 @@ import { make_trackable, decode_params, normalize_path } from '../../utils/url.j
 import { find_anchor, get_base_uri, scroll_state } from './utils.js';
 import { lock_fetch, unlock_fetch, initial_fetch, subsequent_fetch } from './fetcher.js';
 import { parse } from './parse.js';
-import { error } from '../../exports/index.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { nodes, server_loads, dictionary, matchers } from '__GENERATED__/client-manifest.js';
+import { nodes, server_loads, dictionary, matchers, hooks } from '__GENERATED__/client-manifest.js';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
@@ -386,7 +385,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   params: Record<string, string>;
 	 *   branch: Array<import('./types').BranchNode | undefined>;
 	 *   status: number;
-	 *   error: HttpError | Error | null;
+	 *   error: App.PageError | null;
 	 *   route: import('types').CSRRoute | null;
 	 *   form?: Record<string, any> | null;
 	 * }} opts
@@ -756,12 +755,8 @@ export function create_client({ target, base, trailing_slash }) {
 			parent_changed = true;
 
 			if (server_data_node?.type === 'error') {
-				if (server_data_node.httperror) {
-					// reconstruct as an HttpError
-					throw error(server_data_node.httperror.status, server_data_node.httperror.message);
-				} else {
-					throw server_data_node.error;
-				}
+				// rethrow and catch below
+				throw server_data_node;
 			}
 
 			return load_node({
@@ -790,17 +785,29 @@ export function create_client({ target, base, trailing_slash }) {
 			if (loaders[i]) {
 				try {
 					branch.push(await branch_promises[i]);
-				} catch (e) {
-					const error = normalize_error(e);
-
-					if (error instanceof Redirect) {
+				} catch (err) {
+					if (err instanceof Redirect) {
 						return {
 							type: 'redirect',
-							location: error.location
+							location: err.location
 						};
 					}
 
-					const status = e instanceof HttpError ? e.status : 500;
+					let status = 500;
+					/** @type {App.PageError} */
+					let error;
+
+					if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
+						// this is the server error rethrown above, reconstruct but don't invoke
+						// the client error handler; it should've already been handled on the server
+						status = /** @type {import('types').ServerErrorNode} */ (err).status ?? status;
+						error = /** @type {import('types').ServerErrorNode} */ (err).error;
+					} else if (err instanceof HttpError) {
+						status = err.status;
+						error = err.body;
+					} else {
+						error = handle_error(err, { params, url, routeId: route.id });
+					}
 
 					while (i--) {
 						if (errors[i]) {
@@ -920,7 +927,10 @@ export function create_client({ target, base, trailing_slash }) {
 			params,
 			branch: [root_layout, root_error],
 			status,
-			error,
+			error:
+				error instanceof HttpError
+					? error.body
+					: handle_error(error, { url, params, routeId: null }),
 			route: null
 		});
 	}
@@ -1395,7 +1405,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 		_hydrate: async ({
 			status,
-			error: original_error, // TODO get rid of this
+			error,
 			node_ids,
 			params,
 			routeId,
@@ -1432,15 +1442,7 @@ export function create_client({ target, base, trailing_slash }) {
 					params,
 					branch: await Promise.all(branch_promises),
 					status,
-					error: /** @type {import('../server/page/types').SerializedHttpError} */ (original_error)
-						?.__is_http_error
-						? new HttpError(
-								/** @type {import('../server/page/types').SerializedHttpError} */ (
-									original_error
-								).status,
-								original_error.message
-						  )
-						: original_error,
+					error,
 					form,
 					route: routes.find((route) => route.id === routeId) ?? null
 				});
@@ -1496,6 +1498,15 @@ async function load_data(url, invalid) {
 	delete window.__sveltekit_data;
 
 	return server_data;
+}
+
+/**
+ * @param {unknown} error
+ * @param {import('types').NavigationEvent} event
+ * @returns {App.PageError}
+ */
+function handle_error(error, event) {
+	return hooks.handleError({ error, event }) ?? /** @type {any} */ ({ error: 'Internal Error' });
 }
 
 // TODO remove for 1.0

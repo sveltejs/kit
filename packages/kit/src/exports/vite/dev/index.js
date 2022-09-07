@@ -6,12 +6,12 @@ import { URL } from 'url';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { posixify } from '../../../utils/filesystem.js';
+import { posixify, resolve_entry } from '../../../utils/filesystem.js';
 import { load_error_page, load_template } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
-import { prevent_illegal_vite_imports, resolve_entry } from '../utils.js';
+import { prevent_illegal_vite_imports } from '../utils.js';
 import { compact } from '../../../utils/array.js';
 import { normalizePath } from 'vite';
 
@@ -311,10 +311,27 @@ export async function dev(vite, vite_config, svelte_config) {
 					);
 				}
 
-				/** @type {Partial<import('types').Hooks>} */
-				const user_hooks = resolve_entry(svelte_config.kit.files.hooks)
-					? await vite.ssrLoadModule(`/${svelte_config.kit.files.hooks}`)
+				const hooks_file = svelte_config.kit.files.hooks.server;
+				/** @type {Partial<import('types').ServerHooks>} */
+				const user_hooks = resolve_entry(hooks_file)
+					? await vite.ssrLoadModule(`/${hooks_file}`)
 					: {};
+
+				// TODO remove for 1.0
+				if (!resolve_entry(hooks_file)) {
+					const old_file = resolve_entry(path.join(process.cwd(), 'src', 'hooks'));
+					if (old_file && fs.existsSync(old_file)) {
+						throw new Error(
+							`Rename your server hook file from ${posixify(
+								path.relative(process.cwd(), old_file)
+							)} to ${posixify(
+								path.relative(process.cwd(), svelte_config.kit.files.hooks.server)
+							)}.${path.extname(
+								old_file
+							)} (because there's also client hooks now). See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
+						);
+					}
+				}
 
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
 
@@ -326,12 +343,13 @@ export async function dev(vite, vite_config, svelte_config) {
 					);
 				}
 
-				/** @type {import('types').Hooks} */
+				/** @type {import('types').ServerHooks} */
 				const hooks = {
 					handle,
 					handleError:
 						user_hooks.handleError ||
-						(({ /** @type {Error & { frame?: string }} */ error }) => {
+						(({ error: e }) => {
+							const error = /** @type {Error & { frame?: string }} */ (e);
 							console.error(colors.bold().red(error.message));
 							if (error.frame) {
 								console.error(colors.gray(error.frame));
@@ -390,28 +408,29 @@ export async function dev(vite, vite_config, svelte_config) {
 							check_origin: svelte_config.kit.csrf.checkOrigin
 						},
 						dev: true,
-						get_stack: (error) => fix_stack_trace(error),
 						handle_error: (error, event) => {
-							hooks.handleError({
-								error: new Proxy(error, {
-									get: (target, property) => {
-										if (property === 'stack') {
-											return fix_stack_trace(error);
+							return (
+								hooks.handleError({
+									error: new Proxy(error, {
+										get: (target, property) => {
+											if (property === 'stack') {
+												return fix_stack_trace(error);
+											}
+
+											return Reflect.get(target, property, target);
 										}
+									}),
+									event,
 
-										return Reflect.get(target, property, target);
+									// TODO remove for 1.0
+									// @ts-expect-error
+									get request() {
+										throw new Error(
+											'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
+										);
 									}
-								}),
-								event,
-
-								// TODO remove for 1.0
-								// @ts-expect-error
-								get request() {
-									throw new Error(
-										'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
-									);
-								}
-							});
+								}) ?? { message: 'Internal Error' }
+							);
 						},
 						hooks,
 						manifest,
