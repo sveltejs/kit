@@ -8,9 +8,8 @@ import { HttpError } from '../../../../src/runtime/control';
  * serialized `cause` properties.
  *
  * @param {HttpError | Error } error
- * @param {(error: Error) => string | undefined} get_stack
  */
-export function error_to_pojo(error, get_stack) {
+export function error_to_pojo(error) {
 	if (error instanceof HttpError) {
 		return {
 			status: error.status,
@@ -19,18 +18,7 @@ export function error_to_pojo(error, get_stack) {
 	}
 
 	const { name, message, stack, cause, ...custom } = error;
-
-	/** @type {Record<string, any>} */
-	const object = { name, message, stack: get_stack(error) };
-
-	// @ts-ignore
-	if (cause) object.cause = error_to_pojo(cause, get_stack);
-
-	for (const key in custom) {
-		object[key] = custom[key];
-	}
-
-	return object;
+	return { name, message, stack, ...custom };
 }
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
@@ -43,7 +31,7 @@ export const handleError = ({ event, error: e }) => {
 	const errors = fs.existsSync('test/errors.json')
 		? JSON.parse(fs.readFileSync('test/errors.json', 'utf8'))
 		: {};
-	errors[event.url.pathname] = error_to_pojo(error, (error) => error.stack);
+	errors[event.url.pathname] = error_to_pojo(error);
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
 	return { message: error.message };
 };
