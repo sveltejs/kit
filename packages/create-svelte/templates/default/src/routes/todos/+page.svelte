@@ -22,10 +22,10 @@
 		class="new"
 		action="/todos?/add"
 		method="post"
-		use:enhance={({ form }) => {
-			return (result) => {
+		use:enhance={() => {
+			return ({ element, result }) => {
 				if (result.type === 'success') {
-					form.reset();
+					element.reset();
 					invalidateAll();
 				}
 			};

@@ -93,9 +93,15 @@ declare module '$app/forms' {
 		Invalid extends Record<string, unknown> | undefined
 	> = (input: {
 		data: FormData;
-		form: HTMLFormElement;
+		element: HTMLFormElement | HTMLInputElement | HTMLButtonElement;
 		cancel: () => void;
-	}) => void | ((result: ActionResult<Success, Invalid>) => void);
+	}) =>
+		| void
+		| ((opts: {
+				data: FormData;
+				element: HTMLFormElement | HTMLInputElement | HTMLButtonElement;
+				result: ActionResult<Success, Invalid>;
+		  }) => void);
 
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
@@ -106,7 +112,7 @@ declare module '$app/forms' {
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	>(
-		form: HTMLFormElement,
+		form: HTMLFormElement | HTMLButtonElement | HTMLInputElement,
 		/**
 		 * Called upon submission with the given FormData.
 		 * If `cancel` is called, the form will not be submitted.
