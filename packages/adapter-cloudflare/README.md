@@ -85,7 +85,7 @@ Functions contained in the `/functions` directory at the project's root will _no
 
 The [`_headers` and `_redirects`](config files) files specific to Cloudflare Pages can be used for static asset responses (like images) by putting them into the `/static` folder.
 
-However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [endpoints](https://kit.svelte.dev/docs/routing#endpoints) or with the [`handle`](https://kit.svelte.dev/docs/hooks#handle) hook.
+However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [endpoints](https://kit.svelte.dev/docs/routing#endpoints) or with the [`handle`](https://kit.svelte.dev/docs/hooks#hooks-server-js-handle) hook.
 
 ## Changelog
 

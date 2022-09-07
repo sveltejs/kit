@@ -33,9 +33,3 @@ export interface CspOpts {
 	dev: boolean;
 	prerender: boolean;
 }
-
-export interface SerializedHttpError extends Pick<HttpError, 'message' | 'status'> {
-	name: 'HttpError';
-	stack: '';
-	__is_http_error: true;
-}

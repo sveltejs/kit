@@ -21,57 +21,6 @@ export function is_pojo(body) {
 	return true;
 }
 
-/**
- * Serialize an error into a JSON string through `error_to_pojo`.
- * This is necessary because `JSON.stringify(error) === '{}'`
- *
- * @param {Error | HttpError} error
- * @param {(error: Error) => string | undefined} get_stack
- */
-export function serialize_error(error, get_stack) {
-	return JSON.stringify(error_to_pojo(error, get_stack));
-}
-
-/**
- * Transform an error into a POJO, by copying its `name`, `message`
- * and (in dev) `stack`, plus any custom properties, plus recursively
- * serialized `cause` properties.
- * Our own HttpError gets a meta property attached so we can identify it on the client.
- *
- * @param {HttpError | Error } error
- * @param {(error: Error) => string | undefined} get_stack
- */
-export function error_to_pojo(error, get_stack) {
-	if (error instanceof HttpError) {
-		return /** @type {import('./page/types').SerializedHttpError} */ ({
-			message: error.message,
-			status: error.status,
-			__is_http_error: true // TODO we should probably make this unnecessary
-		});
-	}
-
-	const {
-		name,
-		message,
-		stack,
-		// @ts-expect-error i guess typescript doesn't know about error.cause yet
-		cause,
-		...custom
-	} = error;
-
-	/** @type {Record<string, any>} */
-	const object = { name, message, stack: get_stack(error) };
-
-	if (cause) object.cause = error_to_pojo(cause, get_stack);
-
-	for (const key in custom) {
-		// @ts-expect-error
-		object[key] = custom[key];
-	}
-
-	return object;
-}
-
 // TODO: Remove for 1.0
 /** @param {Record<string, any>} mod */
 export function check_method_names(mod) {
@@ -181,16 +130,11 @@ export function static_error_page(options, status, message) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
- * @param {Error} error
+ * @param {Error | HttpError} error
  */
 export function handle_fatal_error(event, options, error) {
-	let status = 500;
-
-	if (error instanceof HttpError) {
-		status = error.status;
-	} else {
-		options.handle_error(error, event);
-	}
+	const status = error instanceof HttpError ? error.status : 500;
+	const body = handle_error_and_jsonify(event, options, error);
 
 	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
@@ -199,13 +143,27 @@ export function handle_fatal_error(event, options, error) {
 	]);
 
 	if (event.url.pathname.endsWith(DATA_SUFFIX) || type === 'application/json') {
-		return new Response(serialize_error(error, options.get_stack), {
+		return new Response(JSON.stringify(body), {
 			status,
 			headers: { 'content-type': 'application/json; charset=utf-8' }
 		});
 	}
 
-	return static_error_page(options, status, error.message);
+	return static_error_page(options, status, body.message);
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
+ * @param {any} error
+ * @returns {App.PageError}
+ */
+export function handle_error_and_jsonify(event, options, error) {
+	if (error instanceof HttpError) {
+		return error.body;
+	} else {
+		return options.handle_error(error, event);
+	}
 }
 
 /**
