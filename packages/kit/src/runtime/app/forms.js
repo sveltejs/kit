@@ -20,15 +20,16 @@ export function enhance(element, submit = () => {}) {
 	/**
 	 * @param {{
 	 *   element: HTMLFormElement | HTMLButtonElement | HTMLInputElement;
+	 *   form: HTMLFormElement;
 	 *   result: import('types').ActionResult;
 	 * }} opts
 	 */
-	const fallback_callback = async ({ element, result }) => {
+	const fallback_callback = async ({ element, form, result }) => {
 		if (result.type === 'success') {
 			await invalidateAll();
 		}
 
-		const action = element instanceof HTMLFormElement ? element.action : element.formAction;
+		const action = element.formAction ?? form.action;
 
 		if (location.origin + location.pathname === action.split('?')[0]) {
 			applyAction(result);
