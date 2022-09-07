@@ -94,12 +94,14 @@ declare module '$app/forms' {
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	> = (input: {
 		data: FormData;
+		form: HTMLFormElement;
 		element: Element;
 		cancel: () => void;
 	}) =>
 		| void
 		| ((opts: {
 				data: FormData;
+				form: HTMLFormElement;
 				element: Element;
 				result: ActionResult<Success, Invalid>;
 		  }) => void);

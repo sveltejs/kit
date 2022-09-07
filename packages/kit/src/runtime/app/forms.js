@@ -55,11 +55,7 @@ export function enhance(element, submit = () => {}) {
 				element,
 				data,
 				cancel,
-				// TODO remove for 1.0
-				// @ts-ignore
-				get form() {
-					throw new Error('The `form` argument is now `element`');
-				}
+				form
 			}) ?? fallback_callback;
 		if (cancelled) return;
 
@@ -83,6 +79,7 @@ export function enhance(element, submit = () => {}) {
 		callback({
 			element,
 			data,
+			form,
 			// @ts-expect-error generic constraints stuff we don't care about
 			result,
 			// TODO remove for 1.0

@@ -23,9 +23,9 @@
 		action="/todos?/add"
 		method="post"
 		use:enhance={() => {
-			return ({ element, result }) => {
+			return ({ form, result }) => {
 				if (result.type === 'success') {
-					element.reset();
+					form.reset();
 					invalidateAll();
 				}
 			};
