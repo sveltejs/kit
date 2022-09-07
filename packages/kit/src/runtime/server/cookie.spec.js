@@ -68,7 +68,7 @@ test('default values when set is called', () => {
 });
 test('overridden defaults when set is called', () => {
 	const { cookies, new_cookies } = cookiesSetup();
-	cookies.set('a', 'b', {secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c'});
+	cookies.set('a', 'b', { secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c' });
 	const entry = new_cookies.get('a')?.options;
 	assert.equal(entry?.secure, false);
 	assert.equal(entry?.httpOnly, false);
@@ -88,7 +88,7 @@ test('default values when delete is called', () => {
 });
 test('overridden defaults when delete is called', () => {
 	const { cookies, new_cookies } = cookiesSetup();
-	cookies.delete('a', {secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c'});
+	cookies.delete('a', { secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c' });
 	const entry = new_cookies.get('a')?.options;
 	assert.equal(entry?.secure, false);
 	assert.equal(entry?.httpOnly, false);
@@ -98,10 +98,9 @@ test('overridden defaults when delete is called', () => {
 });
 test('cannot override maxAge on delete', () => {
 	const { cookies, new_cookies } = cookiesSetup();
-	cookies.delete('a', {maxAge: 1234});
+	cookies.delete('a', { maxAge: 1234 });
 	const entry = new_cookies.get('a')?.options;
 	assert.equal(entry?.maxAge, 0);
-})
-
+});
 
 test.run();
