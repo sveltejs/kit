@@ -308,7 +308,7 @@ export function load({ locals }) {
 }
 ```
 
-If an _unexpected_ error is thrown, SvelteKit will invoke [`handleError`](/docs/hooks#hooks-server-js-handleerror) and treat it as a 500 Internal Server Error.
+If an _unexpected_ error is thrown, SvelteKit will invoke [`handleError`](/docs/hooks#hooks-server-js-handleerror) and treat it as a 500 Internal Error.
 
 > In development, stack traces for unexpected errors are visible as `$page.error.stack`. In production, stack traces are hidden.
 
