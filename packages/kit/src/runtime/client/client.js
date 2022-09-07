@@ -797,7 +797,7 @@ export function create_client({ target, base, trailing_slash }) {
 					/** @type {App.PageError} */
 					let error;
 
-					if (/** @type {any} */ (err)?.type === 'error') {
+					if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
 						// this is the server error rethrown above, reconstruct but don't invoke
 						// the client error handler; it should've already been handled on the server
 						status = /** @type {import('types').ServerErrorNode} */ (err).status ?? status;
