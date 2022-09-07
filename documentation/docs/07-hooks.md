@@ -32,7 +32,7 @@ export function handleError({ error }) {
 }
 ```
 
-If unimplemented or no error shape is returned, SvelteKit will use the default formatting `{ message: string }`.
+The default return value, if none is provided or `handleError` is not implemented, is `{ message: 'Internal Error' }`.
 
 > `handleError` is only called for _unexpected_ errors. It is not called for errors created with the [`error`](/docs/modules#sveltejs-kit-error) function imported from `@sveltejs/kit`, as these are _expected_ errors.
 
