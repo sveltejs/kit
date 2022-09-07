@@ -1,5 +1,43 @@
 # @sveltejs/kit
 
+## 1.0.0-next.475
+
+### Patch Changes
+
+- cookies.delete fix #6609 ([#6622](https://github.com/sveltejs/kit/pull/6622))
+
+* [feat] provide `SubmitFunction` type ([#6613](https://github.com/sveltejs/kit/pull/6613))
+
+- [fix] address Vite warning when using base or asset path ([#6621](https://github.com/sveltejs/kit/pull/6621))
+
+## 1.0.0-next.474
+
+### Patch Changes
+
+- [breaking] disallow default and named actions next to each other ([#6615](https://github.com/sveltejs/kit/pull/6615))
+
+## 1.0.0-next.473
+
+### Patch Changes
+
+- [fix] pass `form` prop to pages ([#6611](https://github.com/sveltejs/kit/pull/6611))
+
+## 1.0.0-next.472
+
+### Patch Changes
+
+- [breaking] add API for interacting with cookies ([#6593](https://github.com/sveltejs/kit/pull/6593))
+
+* [breaking] Replace `POST`/`PUT`/`PATCH`/`DELETE` in `+page.server.js` with `export const actions` ([#6469](https://github.com/sveltejs/kit/pull/6469))
+
+## 1.0.0-next.471
+
+### Patch Changes
+
+- [breaking] Allow users to designate modules as server-only ([#6422](https://github.com/sveltejs/kit/pull/6422))
+
+* [breaking] exclude headers from serialized responses by default, add `filterSerializedResponseHeaders` `resolve` option ([#6569](https://github.com/sveltejs/kit/pull/6569))
+
 ## 1.0.0-next.470
 
 ### Patch Changes

@@ -28,7 +28,7 @@ const updated = {
  *   error: HttpError | Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   validation_errors: Record<string, string> | undefined;
+ *   action_result?: import('types').ActionResult;
  * }} opts
  */
 export async function render_response({
@@ -42,7 +42,7 @@ export async function render_response({
 	error = null,
 	event,
 	resolve_opts,
-	validation_errors
+	action_result
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -75,6 +75,11 @@ export async function render_response({
 		error.stack = options.get_stack(error);
 	}
 
+	const form_value =
+		action_result?.type === 'success' || action_result?.type === 'invalid'
+			? action_result.data ?? null
+			: null;
+
 	if (page_config.ssr) {
 		/** @type {Record<string, any>} */
 		const props = {
@@ -83,7 +88,8 @@ export async function render_response({
 				navigating: writable(null),
 				updated
 			},
-			components: await Promise.all(branch.map(({ node }) => node.component()))
+			components: await Promise.all(branch.map(({ node }) => node.component())),
+			form: form_value
 		};
 
 		let data = {};
@@ -103,10 +109,6 @@ export async function render_response({
 			url: event.url,
 			data
 		};
-
-		if (validation_errors) {
-			props.errors = validation_errors;
-		}
 
 		// TODO remove this for 1.0
 		/**
@@ -175,7 +177,7 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
-	const serialized = { data: '', errors: 'null' };
+	const serialized = { data: '', form: 'null' };
 
 	try {
 		serialized.data = devalue(branch.map(({ server_data }) => server_data));
@@ -189,17 +191,10 @@ export async function render_response({
 		throw error;
 	}
 
-	if (validation_errors) {
-		try {
-			serialized.errors = devalue(validation_errors);
-		} catch (e) {
-			// If we're here, the data could not be serialized with devalue
-			const error = /** @type {any} */ (e);
-			if (error.path) throw new Error(`${error.message} (errors.${error.path})`);
-			throw error;
-		}
+	if (form_value) {
+		// no need to check it can be serialized, we already verified that it's JSON-friendly
+		serialized.form = devalue(form_value);
 	}
-
 	// we use an anonymous function instead of an arrow function to support
 	// older browsers (https://github.com/sveltejs/kit/pull/5417)
 	const init_service_worker = `
@@ -323,7 +318,7 @@ export async function render_response({
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)},
 				data: ${serialized.data},
-				errors: ${serialized.errors}
+				form: ${serialized.form}
 			}` : 'null'},
 			paths: ${s(options.paths)},
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
@@ -387,7 +382,11 @@ export async function render_response({
 	}
 
 	if (page_config.ssr && page_config.csr) {
-		body += `\n\t${fetched.map((item) => serialize_data(item, !!state.prerendering)).join('\n\t')}`;
+		body += `\n\t${fetched
+			.map((item) =>
+				serialize_data(item, resolve_opts.filterSerializedResponseHeaders, !!state.prerendering)
+			)
+			.join('\n\t')}`;
 	}
 
 	if (options.service_worker) {
@@ -424,6 +423,7 @@ export async function render_response({
 		})) || '';
 
 	const headers = new Headers({
+		'x-sveltekit-page': 'true',
 		'content-type': 'text/html',
 		etag: `"${hash(html)}"`
 	});

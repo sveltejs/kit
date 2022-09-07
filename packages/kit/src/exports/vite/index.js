@@ -105,9 +105,6 @@ function kit() {
 	/** @type {import('types').BuildData} */
 	let build_data;
 
-	/** @type {Set<string>} */
-	let illegal_imports;
-
 	/** @type {string | undefined} */
 	let deferred_warning;
 
@@ -233,13 +230,6 @@ function kit() {
 				output_dir: `${svelte_config.kit.outDir}/output`,
 				client_out_dir: `${svelte_config.kit.outDir}/output/client`
 			};
-
-			illegal_imports = new Set([
-				'/@id/__x00__$env/dynamic/private', //dev
-				'\0$env/dynamic/private', // prod
-				'/@id/__x00__$env/static/private', // dev
-				'\0$env/static/private' // prod
-			]);
 
 			if (is_build) {
 				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
@@ -390,7 +380,7 @@ function kit() {
 						prevent_illegal_rollup_imports(
 							this.getModuleInfo.bind(this),
 							module_node,
-							illegal_imports
+							vite.normalizePath(svelte_config.kit.files.lib)
 						);
 					}
 				});
@@ -546,7 +536,7 @@ function kit() {
 				if (deferred_warning) console.error('\n' + deferred_warning);
 			};
 
-			return await dev(vite, vite_config, svelte_config, illegal_imports);
+			return await dev(vite, vite_config, svelte_config);
 		},
 
 		/**

@@ -1,5 +1,17 @@
 # create-svelte
 
+## 2.0.0-next.174
+
+### Patch Changes
+
+- Remove cookie package from demo app ([#6602](https://github.com/sveltejs/kit/pull/6602))
+
+## 2.0.0-next.173
+
+### Patch Changes
+
+- [breaking] Replace `POST`/`PUT`/`PATCH`/`DELETE` in `+page.server.js` with `export const actions` ([#6469](https://github.com/sveltejs/kit/pull/6469))
+
 ## 2.0.0-next.172
 
 ### Patch Changes

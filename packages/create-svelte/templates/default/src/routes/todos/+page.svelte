@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { enhance } from '$lib/form';
+	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import type { PageData } from './$types';
 
 	/** @type {import('./$types').PageData} */
 	export let data: PageData;
+	$: todos = data.todos;
 </script>
 
 <svelte:head>
@@ -18,18 +20,21 @@
 
 	<form
 		class="new"
-		action="/todos"
+		action="/todos?/add"
 		method="post"
-		use:enhance={{
-			result: async ({ form }) => {
-				form.reset();
-			}
+		use:enhance={({ form }) => {
+			return (result) => {
+				if (result.type === 'success') {
+					form.reset();
+					invalidateAll();
+				}
+			};
 		}}
 	>
 		<input name="text" aria-label="Add todo" placeholder="+ tap to add a todo" />
 	</form>
 
-	{#each data.todos as todo (todo.uid)}
+	{#each todos as todo (todo.uid)}
 		<div
 			class="todo"
 			class:done={todo.done}
@@ -37,12 +42,10 @@
 			animate:flip={{ duration: 200 }}
 		>
 			<form
-				action="/todos?_method=PATCH"
+				action="/todos?/toggle"
 				method="post"
-				use:enhance={{
-					pending: ({ data }) => {
-						todo.done = !!data.get('done');
-					}
+				use:enhance={({ data }) => {
+					todo.done = !!data.get('done');
 				}}
 			>
 				<input type="hidden" name="uid" value={todo.uid} />
@@ -50,17 +53,17 @@
 				<button class="toggle" aria-label="Mark todo as {todo.done ? 'not done' : 'done'}" />
 			</form>
 
-			<form class="text" action="/todos?_method=PATCH" method="post" use:enhance>
+			<form class="text" action="/todos?/edit" method="post" use:enhance>
 				<input type="hidden" name="uid" value={todo.uid} />
 				<input aria-label="Edit todo" type="text" name="text" value={todo.text} />
 				<button class="save" aria-label="Save todo" />
 			</form>
 
 			<form
-				action="/todos?_method=DELETE"
+				action="/todos?/delete"
 				method="post"
-				use:enhance={{
-					pending: () => (todo.pending_delete = true)
+				use:enhance={() => {
+					todo.pending_delete = true;
 				}}
 			>
 				<input type="hidden" name="uid" value={todo.uid} />

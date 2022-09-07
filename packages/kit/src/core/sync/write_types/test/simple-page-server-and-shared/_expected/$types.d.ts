@@ -22,7 +22,7 @@ export type PageServerLoad<
 		| void
 > = Kit.ServerLoad<RouteParams, PageServerParentData, OutputData>;
 export type PageServerLoadEvent = Parameters<PageServerLoad>[0];
-export type Errors = null;
+export type ActionData = unknown;
 export type PageServerData = Kit.AwaitedProperties<
 	Awaited<ReturnType<typeof import('../../../../../../../../+page.server.js').load>>
 >;
@@ -40,5 +40,7 @@ export type PageData = Omit<
 		Awaited<ReturnType<typeof import('../../../../../../../../+page.js').load>>
 	>;
 export type Action = Kit.Action<RouteParams>;
+export type Actions = Kit.Actions<RouteParams>;
 export type LayoutServerData = null;
 export type LayoutData = LayoutParentData;
+export type RequestEvent = Kit.RequestEvent<RouteParams>;

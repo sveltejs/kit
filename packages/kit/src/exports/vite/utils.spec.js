@@ -1,7 +1,6 @@
 import path from 'path';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { normalizePath } from 'vite';
 import { validate_config } from '../../core/config/index.js';
 import { posixify } from '../../utils/filesystem.js';
 import {
@@ -11,6 +10,8 @@ import {
 	prevent_illegal_rollup_imports,
 	prevent_illegal_vite_imports
 } from './utils.js';
+
+const illegal_id = '/@id/__x00__$env/dynamic/private';
 
 test('basic test no conflicts', async () => {
 	const merged = deep_merge(
@@ -277,7 +278,7 @@ const rollup_node_getter = (id) => {
 		},
 		'/statically-imports/bad/module.js': {
 			id: '/statically-imports/bad/module.js',
-			importedIds: ['/illegal/boom.js'],
+			importedIds: [illegal_id],
 			dynamicallyImportedIds: ['/test/path2.js']
 		},
 		'/bad/dynamic.js': {
@@ -288,10 +289,10 @@ const rollup_node_getter = (id) => {
 		'/dynamically-imports/bad/module.js': {
 			id: '/dynamically-imports/bad/module.js',
 			importedIds: ['/test/path5.js'],
-			dynamicallyImportedIds: ['/test/path2.js', '/illegal/boom.js']
+			dynamicallyImportedIds: ['/test/path2.js', illegal_id]
 		},
-		'/illegal/boom.js': {
-			id: '/illegal/boom.js',
+		[illegal_id]: {
+			id: illegal_id,
 			importedIds: [],
 			dynamicallyImportedIds: []
 		}
@@ -299,32 +300,39 @@ const rollup_node_getter = (id) => {
 	return nodes[id] ?? null;
 };
 
-const illegal_imports = new Set([normalizePath('/illegal/boom.js')]);
 const ok_rollup_node = rollup_node_getter('/test/path1.js');
 const bad_rollup_node_static = rollup_node_getter('/bad/static.js');
 const bad_rollup_node_dynamic = rollup_node_getter('/bad/dynamic.js');
 
 test('allows ok rollup imports', () => {
 	assert.not.throws(() => {
-		// @ts-ignore
-		prevent_illegal_rollup_imports(rollup_node_getter, ok_rollup_node, illegal_imports, '');
+		prevent_illegal_rollup_imports(
+			// @ts-expect-error
+			rollup_node_getter,
+			ok_rollup_node,
+			'should_not_match_anything'
+		);
 	});
 });
 
 test('does not allow bad static rollup imports', () => {
 	assert.throws(() => {
-		// @ts-ignore
-		prevent_illegal_rollup_imports(rollup_node_getter, bad_rollup_node_static, illegal_imports, '');
+		prevent_illegal_rollup_imports(
+			// @ts-expect-error
+			rollup_node_getter,
+			bad_rollup_node_static,
+			'should_not_match_anything'
+		);
 	});
 });
 
 test('does not allow bad dynamic rollup imports', () => {
 	assert.throws(() => {
 		prevent_illegal_rollup_imports(
-			// @ts-ignore
+			// @ts-expect-error
 			rollup_node_getter,
 			bad_rollup_node_dynamic,
-			illegal_imports
+			'should_not_match_anything'
 		);
 	});
 });
@@ -359,7 +367,7 @@ const bad_vite_node = {
 					id: '/test/path2.js',
 					importedModules: new Set([
 						{
-							id: '/illegal/boom.js',
+							id: illegal_id,
 							importedModules: new Set()
 						}
 					])
@@ -372,15 +380,23 @@ const bad_vite_node = {
 
 test('allows ok vite imports', () => {
 	assert.not.throws(() => {
-		// @ts-ignore
-		prevent_illegal_vite_imports(ok_vite_node, illegal_imports, '');
+		prevent_illegal_vite_imports(
+			// @ts-expect-error
+			ok_vite_node,
+			'should_not_match_anything',
+			[]
+		);
 	});
 });
 
 test('does not allow bad static rollup imports', () => {
 	assert.throws(() => {
-		// @ts-ignore
-		prevent_illegal_vite_imports(bad_vite_node, illegal_imports, '');
+		prevent_illegal_vite_imports(
+			// @ts-expect-error
+			bad_vite_node,
+			'should_not_match_anything',
+			[]
+		);
 	});
 });
 

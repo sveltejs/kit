@@ -74,7 +74,6 @@ export class Server {
 			},
 			hooks: null,
 			manifest,
-			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
 			public_env: {},
 			read,

@@ -294,4 +294,5 @@ pre.language-diff code {
 	white-space: pre-wrap;
 	padding-left: calc(var(--indent) + 2ch);
 	text-indent: calc(-1 * var(--indent) - 2ch);
+	min-height: 1.35em;
 }

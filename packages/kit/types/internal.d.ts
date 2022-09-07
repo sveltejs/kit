@@ -1,7 +1,6 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import { SvelteComponent } from 'svelte/internal';
 import {
-	Action,
 	Config,
 	ServerLoad,
 	Handle,
@@ -14,7 +13,8 @@ import {
 	Server,
 	ServerInitOptions,
 	SSRManifest,
-	HandleFetch
+	HandleFetch,
+	Actions
 } from './index.js';
 import {
 	HttpMethod,
@@ -120,11 +120,6 @@ export interface ManifestData {
 	nodes: PageNode[];
 	routes: RouteData[];
 	matchers: Record<string, string>;
-}
-
-export interface MethodOverride {
-	parameter: string;
-	allowed: string[];
 }
 
 export interface PageNode {
@@ -281,10 +276,7 @@ export interface SSRNode {
 		prerender?: PrerenderOption;
 		ssr?: boolean;
 		csr?: boolean;
-		POST?: Action;
-		PATCH?: Action;
-		PUT?: Action;
-		DELETE?: Action;
+		actions?: Actions;
 	};
 
 	// store this in dev so we can print serialization errors
@@ -303,7 +295,6 @@ export interface SSROptions {
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;
 	manifest: SSRManifest;
-	method_override: MethodOverride;
 	paths: {
 		base: string;
 		assets: string;
