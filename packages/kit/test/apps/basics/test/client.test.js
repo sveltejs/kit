@@ -377,6 +377,11 @@ test.describe('Load', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 	});
 
+	test('server data is reused if client load is invalidated', async ({ page }) => {
+		await page.goto('/load/server-data-reuse/with-client-invalidation');
+		expect(await page.textContent('pre')).toBe(JSON.stringify({ server: true }));
+	});
+
 	test('load does not call fetch if max-age allows it', async ({ page, request }) => {
 		await request.get('/load/cache-control/reset');
 
