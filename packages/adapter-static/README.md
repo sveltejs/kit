@@ -119,6 +119,23 @@ export default {
 export const ssr = false;
 ```
 
+#### Apache Server
+
+For a Single Page Application on an `Apache` Server, you need an `.htaccess` to route all of the requests into the entry file for the routing to work, otherwise it will throw a 404 error once you refresh or visit a page that isn't compiled.
+
+```
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^app\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /app.html [L]
+</IfModule>
+```
+
+You can also create an `.htaccess` file in the static folder to automatically include the `.htaccess` on every build.
+
 ## GitHub Pages
 
 When building for GitHub Pages, make sure to update [`paths.base`](https://kit.svelte.dev/docs/configuration#paths) to match your repo name, since the site will be served from <https://your-username.github.io/your-repo-name> rather than from the root.
