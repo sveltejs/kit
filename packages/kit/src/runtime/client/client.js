@@ -656,10 +656,9 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/**
 	 * @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | null} node
-	 * @param {import('./types').DataNode | null} [previous]
 	 * @returns {import('./types').DataNode | null}
 	 */
-	function create_data_node(node, previous) {
+	function create_data_node(node) {
 		if (node?.type === 'data') {
 			return {
 				type: 'data',
@@ -671,8 +670,6 @@ export function create_client({ target, base, trailing_slash }) {
 					url: !!node.uses.url
 				}
 			};
-		} else if (node?.type === 'skip') {
-			return previous ?? null;
 		}
 		return null;
 	}
@@ -759,6 +756,8 @@ export function create_client({ target, base, trailing_slash }) {
 				throw server_data_node;
 			}
 
+			const prev_server_data_node = (!changed?.url && previous?.server) || null;
+
 			return load_node({
 				loader: loader[1],
 				url,
@@ -771,7 +770,7 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 					return data;
 				},
-				server_data_node: create_data_node(server_data_node, previous?.server)
+				server_data_node: create_data_node(server_data_node) ?? prev_server_data_node
 			});
 		});
 
