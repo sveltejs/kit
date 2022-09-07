@@ -137,7 +137,7 @@ export function handleError({ error, event }) {
 }
 ```
 
-If unimplemented or no error shape is returned, SvelteKit use the default formatting `{ message: string }`.
+The default return value, if none is provided or `handleError` is not implemented, is `{ message: 'Internal Error' }`.
 
 During development, if an error occurs because of a syntax error in your Svelte code, a `frame` property will be appended highlighting the location of the error.
 
