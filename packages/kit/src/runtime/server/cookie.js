@@ -1,5 +1,13 @@
 import * as cookie from 'cookie';
 
+/** @type {import('cookie').CookieSerializeOptions} */
+const DEFAULT_SERIALIZE_OPTIONS = {
+	httpOnly: true,
+	secure: true,
+	path: '/',
+	sameSite: 'lax'
+};
+
 /**
  * @param {Request} request
  * @param {URL} url
@@ -7,7 +15,7 @@ import * as cookie from 'cookie';
 export function get_cookies(request, url) {
 	const initial_cookies = cookie.parse(request.headers.get('cookie') ?? '');
 
-	/** @type {Map<string, { name: string, value: string, options: import('cookie').CookieSerializeOptions }>} */
+	/** @type {Map<string, {name: string; value: string; options: import('cookie').CookieSerializeOptions;}>} */
 	const new_cookies = new Map();
 
 	/** @type {import('types').Cookies} */
@@ -26,29 +34,30 @@ export function get_cookies(request, url) {
 			return name in initial_cookies ? decode(initial_cookies[name]) : undefined;
 		},
 
-		set(name, value, options = {}) {
+		/**
+		 *
+		 * @param {string} name
+		 * @param {string} value
+		 * @param {import('cookie').CookieSerializeOptions} opts 
+		 */
+		set(name, value, opts = {}) {
+			/** @type {import('cookie').CookieSerializeOptions} */
 			new_cookies.set(name, {
 				name,
 				value,
 				options: {
-					httpOnly: true,
-					secure: true,
-					path: '/',
-					sameSite: 'lax',
-					...options
+					...DEFAULT_SERIALIZE_OPTIONS,
+					...opts
 				}
 			});
 		},
-		delete(name, options = {}) {
+		delete(name, opts = {}) {
 			new_cookies.set(name, {
 				name,
 				value: '',
 				options: {
-					httpOnly: true,
-					secure: true,
-					path: '/',
-					sameSite: 'lax',
-					...options,
+					...DEFAULT_SERIALIZE_OPTIONS,
+					...opts,
 					maxAge: 0
 				}
 			});

@@ -136,7 +136,7 @@ export interface Cookies {
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 	 */
-	delete(name: string): void;
+	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
 }
 
 export interface KitConfig {
