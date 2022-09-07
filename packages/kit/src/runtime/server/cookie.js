@@ -7,42 +7,49 @@ import * as cookie from 'cookie';
 export function get_cookies(request, url) {
 	const initial_cookies = cookie.parse(request.headers.get('cookie') ?? '');
 
-	/** @type {Array<{ name: string, value: string, options: import('cookie').CookieSerializeOptions }>} */
-	const new_cookies = [];
+	/** @type {Map<string, { name: string, value: string, options: import('cookie').CookieSerializeOptions }>} */
+	const new_cookies = new Map();
 
 	/** @type {import('types').Cookies} */
 	const cookies = {
 		get(name, opts) {
 			const decode = opts?.decode || decodeURIComponent;
-
-			let i = new_cookies.length;
-			while (i--) {
-				const cookie = new_cookies[i];
-
-				if (
-					cookie.name === name &&
-					domain_matches(url.hostname, cookie.options.domain) &&
-					path_matches(url.pathname, cookie.options.path)
-				) {
-					return cookie.value;
-				}
+			const c = new_cookies.get(name);
+			if (
+				c &&
+				domain_matches(url.hostname, c.options.domain) &&
+				path_matches(url.pathname, c.options.path)
+			) {
+				return c.value;
 			}
 
 			return name in initial_cookies ? decode(initial_cookies[name]) : undefined;
 		},
+
 		set(name, value, options = {}) {
-			new_cookies.push({
+			new_cookies.set(name, {
 				name,
 				value,
 				options: {
 					httpOnly: true,
 					secure: true,
+					path: '/',
 					...options
 				}
 			});
 		},
-		delete(name) {
-			new_cookies.push({ name, value: '', options: { expires: new Date(0) } });
+		delete(name, options = {}) {
+			new_cookies.set(name, {
+				name,
+				value: '',
+				options: {
+					httpOnly: true,
+					secure: true,
+					path: '/',
+					...options,
+					maxAge: 0
+				}
+			});
 			delete initial_cookies[name];
 		}
 	};
