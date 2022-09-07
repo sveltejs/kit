@@ -284,12 +284,15 @@ export function create_client({ target, base, trailing_slash }) {
 			initialize(navigation_result);
 		}
 
-		// need to render the DOM before we can scroll to the rendered elements
-		await tick();
-
 		// opts must be passed if we're navigating
 		if (opts) {
 			const { scroll, keepfocus } = opts;
+
+			// reset focus first, so that manual focus management can override it
+			if (!keepfocus) reset_focus();
+
+			// need to render the DOM before we can scroll to the rendered elements
+			await tick();
 
 			if (autoscroll) {
 				const deep_linked = url.hash && document.getElementById(url.hash.slice(1));
@@ -304,8 +307,8 @@ export function create_client({ target, base, trailing_slash }) {
 					scrollTo(0, 0);
 				}
 			}
-
-			if (!keepfocus) reset_focus();
+		} else {
+			await tick();
 		}
 
 		load_cache.promise = null;
