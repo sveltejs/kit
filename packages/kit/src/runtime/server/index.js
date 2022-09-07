@@ -123,7 +123,7 @@ export async function respond(request, options, state) {
 
 				if (lower === 'set-cookie') {
 					throw new Error(
-						`Use \`event.cookie.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
+						`Use \`event.cookies.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
 					);
 				} else if (lower in headers) {
 					throw new Error(`"${key}" header is already set`);
