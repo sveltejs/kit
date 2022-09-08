@@ -455,7 +455,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						error_template: ({ status, message }) => {
 							return error_page
 								.replace(/%sveltekit\.status%/g, String(status))
-								.replace(/%sveltekit\.message%/g, message);
+								.replace(/%sveltekit\.error\.message%/g, message);
 						},
 						trailing_slash: svelte_config.kit.trailingSlash
 					},
