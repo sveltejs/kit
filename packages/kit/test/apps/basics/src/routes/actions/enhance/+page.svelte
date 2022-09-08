@@ -20,7 +20,7 @@
 <span class="count">{count}</span>
 <form
 	method="post"
-	action="?/login"
+	action="?/slow"
 	use:enhance={({ controller }) => {
 		previous?.abort();
 		previous = controller;

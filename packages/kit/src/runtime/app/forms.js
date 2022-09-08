@@ -37,9 +37,24 @@ export function enhance(form, submit = () => {}) {
 	async function handle_submit(event) {
 		event.preventDefault();
 
-		const action =
-			/** @type {HTMLButtonElement | HTMLInputElement | null} */ (event.submitter)?.formAction ??
-			form.action;
+		let action = form.action;
+		const element_action = /** @type {HTMLButtonElement | HTMLInputElement | null} */ (
+			event.submitter
+		)?.formAction;
+		// the browser will always set formAction - if not set, it defaults to the url;
+		// we therefore have to check that formAction is indeed set
+		if (action !== element_action && element_action) {
+			if (
+				// different urls
+				action.split('?')[0] !== element_action.split('?')[0] ||
+				// same url - formAction needs to be set to something or else we ignore it.
+				// we take advantage of the fact that there cannot be a default and named action
+				// at the same time.
+				element_action.includes('?')
+			) {
+				action = element_action;
+			}
+		}
 		const data = new FormData(form);
 		const controller = new AbortController();
 
@@ -71,6 +86,7 @@ export function enhance(form, submit = () => {}) {
 
 			result = await response.json();
 		} catch (error) {
+			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = { type: 'error', error };
 		}
 

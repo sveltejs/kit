@@ -18,5 +18,8 @@ export const actions = {
 		return {
 			result: 'register: ' + fields.get('username')
 		};
+	},
+	slow: async () => {
+		await new Promise((resolve) => setTimeout(resolve, 500));
 	}
 };
