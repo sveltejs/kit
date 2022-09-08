@@ -62,6 +62,7 @@ declare namespace App {
 	 */
 	export interface PageError {
 		message: string;
+		details?: string;
 	}
 }
 
