@@ -126,9 +126,11 @@ test('cookie names are case sensitive', () => {
 });
 
 test.skip('default encoding', () => {
-	// needs e2e test
+	// is e2e test
 });
 
-test('default decoding', () => {});
+test.skip('default decoding', () => {
+	// is e2e test
+});
 
 test.run();

@@ -1,4 +1,4 @@
-import * as cookie from 'cookie';
+import { parse } from 'cookie';
 
 /** @type {import('cookie').CookieSerializeOptions} */
 const DEFAULT_SERIALIZE_OPTIONS = {
@@ -18,6 +18,10 @@ export function get_cookies(request, url) {
 
 	/** @type {import('types').Cookies} */
 	const cookies = {
+		/**
+		 * @param {string} name
+		 * @param {import('cookie').CookieParseOptions} opts
+		 */
 		get(name, opts) {
 			const c = new_cookies.get(name);
 			if (
@@ -29,7 +33,7 @@ export function get_cookies(request, url) {
 			}
 
 			const decode = opts?.decode || decodeURIComponent;
-			const req_cookies = cookie.parse(request.headers.get('cookie') ?? '', { decode });
+			const req_cookies = parse(request.headers.get('cookie') ?? '', { decode });
 			return req_cookies[name]; // the decoded string or undefined
 		},
 
@@ -39,7 +43,6 @@ export function get_cookies(request, url) {
 		 * @param {import('cookie').CookieSerializeOptions} opts
 		 */
 		set(name, value, opts = {}) {
-			/** @type {import('cookie').CookieSerializeOptions} */
 			new_cookies.set(name, {
 				name,
 				value,
@@ -49,6 +52,10 @@ export function get_cookies(request, url) {
 				}
 			});
 		},
+		/**
+		 * @param {string} name
+		 * @param {import('cookie').CookieSerializeOptions} opts
+		 */
 		delete(name, opts = {}) {
 			new_cookies.set(name, {
 				name,

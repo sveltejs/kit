@@ -1811,6 +1811,7 @@ test.describe('Cookies API', () => {
 		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
 	});
+
 	test('delete a cookie', async ({ page }) => {
 		await page.goto('/cookies/set');
 		let span = page.locator('#cookie-value');
@@ -1830,5 +1831,18 @@ test.describe('Cookies API', () => {
 		await page.goto('/cookies');
 		span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
+	});
+
+	test('more than one cookie can be set in one request', async ({ page }) => {
+		await page.goto('/cookies/set-more-than-one');
+		const span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot');
+		expect(await span.innerText()).toContain('jane austen');
+	});
+
+	test('default encoding and decoding', async ({ page }) => {
+		await page.goto('/cookies/encoding/set');
+		const span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot, jane austen');
 	});
 });
