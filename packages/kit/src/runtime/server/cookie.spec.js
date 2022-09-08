@@ -96,6 +96,7 @@ test('overridden defaults when delete is called', () => {
 	assert.equal(entry?.sameSite, 'strict');
 	assert.equal(entry?.maxAge, 0);
 });
+
 test('cannot override maxAge on delete', () => {
 	const { cookies, new_cookies } = cookiesSetup();
 	cookies.delete('a', { maxAge: 1234 });
