@@ -19,7 +19,7 @@ export const applyAction = ssr ? guard('applyAction') : client.apply_action;
 export function enhance(form, submit = () => {}) {
 	/**
 	 * @param {{
-	 *   action: string;
+	 *   action: URL;
 	 *   result: import('types').ActionResult;
 	 * }} opts
 	 */
@@ -28,7 +28,7 @@ export function enhance(form, submit = () => {}) {
 			await invalidateAll();
 		}
 
-		if (location.origin + location.pathname === action.split('?')[0]) {
+		if (location.origin + location.pathname === action.origin + action.pathname) {
 			applyAction(result);
 		}
 	};
@@ -37,10 +37,13 @@ export function enhance(form, submit = () => {}) {
 	async function handle_submit(event) {
 		event.preventDefault();
 
-		// We can't do submitter.formAction directly because that property is always set
-		const action = event.submitter?.hasAttribute('formaction')
-			? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
-			: form.action;
+		const action = new URL(
+			// We can't do submitter.formAction directly because that property is always set
+			event.submitter?.hasAttribute('formaction')
+				? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
+				: form.action
+		);
+
 		const data = new FormData(form);
 		const controller = new AbortController();
 
