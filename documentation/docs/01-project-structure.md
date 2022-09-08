@@ -44,7 +44,7 @@ The `src` directory contains the meat of your project.
   - `%sveltekit.nonce%` — a [CSP](/docs/configuration#csp) nonce for manually included links and scripts, if used
 - `error.html` (optional) is the page that is rendered when everything else fails. It can contain the following placeholders:
   - `%sveltekit.status%` — the HTTP status
-  - `%sveltekit.message%` — the error message
+  - `%sveltekit.error.message%` — the error message
 - `hooks.js` (optional) contains your application's [hooks](/docs/hooks)
 - `service-worker.js` (optional) contains your [service worker](/docs/service-workers)
 

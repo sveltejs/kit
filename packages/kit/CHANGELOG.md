@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.477
+
+### Patch Changes
+
+- [breaking] prevent import of `$lib/server` modules in client-facing code ([#6623](https://github.com/sveltejs/kit/pull/6623))
+
+* [breaking] change sveltekit.message to sveltekit.error.message ([#6659](https://github.com/sveltejs/kit/pull/6659))
+
+- [breaking] apply 304 logic after handle, so handle receives original response from resolve ([#6639](https://github.com/sveltejs/kit/pull/6639))
+
 ## 1.0.0-next.476
 
 ### Patch Changes
