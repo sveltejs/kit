@@ -140,6 +140,18 @@ If an unexpected error is thrown during loading or rendering, this function will
 - you can log the error
 - you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value, which defaults to `{ message: 'Internal Error' }`, becomes the value of `$page.error`. To make this type-safe, you can customize the expected shape by declaring an `App.PageError` interface (which must include `message: string`, to guarantee sensible fallback behavior).
 
+The following code shows an example of typing the error shape as `{ message: string; code: string }` and returning it accordingly from the `handleError` functions:
+
+```ts
+/// file: src/app.d.ts
+declare namespace App {
+	interface PageError {
+		message: string;
+		code: string;
+	}
+}
+```
+
 ```js
 /// file: src/hooks.server.js
 // @errors: 2322 2571
@@ -160,8 +172,28 @@ export function handleError({ error, event }) {
 }
 ```
 
+```js
+/// file: src/hooks.client.js
+// @errors: 2322 2571
+// @filename: ambient.d.ts
+const Sentry: any;
+
+// @filename: index.js
+// ---cut---
+/** @type {import('@sveltejs/kit').HandleClientError} */
+export function handleError({ error, event }) {
+	// example integration with https://sentry.io/
+	Sentry.captureException(error, { event });
+
+	return {
+		message: 'Whoops!',
+		code: error.code ?? 'UNKNOWN'
+	};
+}
+```
+
 > In `src/hooks.client.js`, the type of `handleError` is `HandleClientError` instead of `HandleServerError`, and `event` is a `NavigationEvent` rather than a `RequestEvent`.
 
 This function is not called for _expected_ errors (those thrown with the [`error`](/docs/modules#sveltejs-kit-error) function imported from `@sveltejs/kit`).
 
-During development, if an error occurs because of a syntax error in your Svelte code, a `frame` property will be appended highlighting the location of the error.
+During development, if an error occurs because of a syntax error in your Svelte code, the passed in error has a `frame` property appended highlighting the location of the error.
