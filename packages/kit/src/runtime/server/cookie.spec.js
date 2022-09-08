@@ -66,6 +66,7 @@ test('default values when set is called', () => {
 	assert.equal(entry?.path, '/');
 	assert.equal(entry?.sameSite, 'lax');
 });
+
 test('overridden defaults when set is called', () => {
 	const { cookies, new_cookies } = cookiesSetup();
 	cookies.set('a', 'b', { secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c' });
