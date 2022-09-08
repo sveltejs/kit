@@ -1814,4 +1814,18 @@ test.describe('Actions', () => {
 			await expect(page.locator('span.count')).toHaveText('1');
 		}
 	});
+
+	test('use:enhance button with formAction', async ({ page, app }) => {
+		await page.goto('/actions/enhance');
+
+		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+
+		await page.type('input[name="username"]', 'foo');
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
+			page.click('button.form1-register')
+		]);
+
+		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'register: foo' }));
+	});
 });

@@ -16,35 +16,30 @@ const ssr = import.meta.env.SSR;
 export const applyAction = ssr ? guard('applyAction') : client.apply_action;
 
 /** @type {import('$app/forms').enhance} */
-export function enhance(element, submit = () => {}) {
+export function enhance(form, submit = () => {}) {
 	/**
 	 * @param {{
-	 *   element: HTMLFormElement | HTMLButtonElement | HTMLInputElement;
-	 *   form: HTMLFormElement;
+	 *   action: string;
 	 *   result: import('types').ActionResult;
 	 * }} opts
 	 */
-	const fallback_callback = async ({ element, form, result }) => {
+	const fallback_callback = async ({ action, result }) => {
 		if (result.type === 'success') {
 			await invalidateAll();
 		}
-
-		const action = element.formAction ?? form.action;
 
 		if (location.origin + location.pathname === action.split('?')[0]) {
 			applyAction(result);
 		}
 	};
 
-	const form =
-		element instanceof HTMLFormElement ? element : /** @type {HTMLFormElement} */ (element.form);
-	if (!form) throw new Error('Element is not associated with a form');
-
 	/** @param {SubmitEvent} event */
 	async function handle_submit(event) {
 		event.preventDefault();
 
-		const action = element.formAction ?? form.action;
+		const action =
+			/** @type {HTMLButtonElement | HTMLInputElement | null} */ (event.submitter)?.formAction ??
+			form.action;
 		const data = new FormData(form);
 		const controller = new AbortController();
 
@@ -53,11 +48,11 @@ export function enhance(element, submit = () => {}) {
 
 		const callback =
 			submit({
-				element,
-				data,
+				action,
 				cancel,
-				form,
-				controller
+				controller,
+				data,
+				form
 			}) ?? fallback_callback;
 		if (cancelled) return;
 
@@ -80,7 +75,7 @@ export function enhance(element, submit = () => {}) {
 		}
 
 		callback({
-			element,
+			action,
 			data,
 			form,
 			// @ts-expect-error generic constraints stuff we don't care about
