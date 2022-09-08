@@ -387,7 +387,9 @@ export function error(status: number, body: App.PageError): HttpError;
 export function error(
 	status: number,
 	// this overload ensures you can omit the argument or pass in a string if App.PageError is of type { message: string }
-	body?: { message: string, details?: string } extends App.PageError ? App.PageError | string | undefined : never
+	body?: { message: string; details?: string } extends App.PageError
+		? App.PageError | string | undefined
+		: never
 ): HttpError;
 
 /**
