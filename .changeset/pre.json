@@ -36,7 +36,10 @@
     "private-dynamic-env-dynamic-import": "0.0.1",
     "private-static-env": "0.0.1",
     "private-static-env-dynamic-import": "0.0.1",
-    "server-only-module": "0.0.1"
+    "server-only-module": "0.0.1",
+    "server-only-folder": "0.0.1",
+    "server-only-folder-dynamic-import": "0.0.1",
+    "server-only-module-dynamic-import": "0.0.1"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -68,6 +71,7 @@
     "blue-apes-type",
     "blue-bees-jump",
     "blue-bulldogs-visit",
+    "blue-buttons-march",
     "blue-cats-mate",
     "blue-jobs-laugh",
     "blue-llamas-exist",
@@ -320,6 +324,7 @@
     "forty-cycles-punch",
     "forty-lions-give",
     "forty-months-prove",
+    "forty-news-kiss",
     "forty-points-try",
     "forty-seahorses-rest",
     "forty-terms-peel",
@@ -899,6 +904,7 @@
     "seven-jars-argue",
     "seven-planes-fly",
     "shaggy-bugs-move",
+    "shaggy-cameras-sip",
     "shaggy-days-cheat",
     "shaggy-donkeys-run",
     "shaggy-elephants-sell",
