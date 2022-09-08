@@ -35,7 +35,6 @@ export function get_cookies(request, url) {
 		},
 
 		/**
-		 *
 		 * @param {string} name
 		 * @param {string} value
 		 * @param {import('cookie').CookieSerializeOptions} opts
