@@ -16,46 +16,43 @@ const ssr = import.meta.env.SSR;
 export const applyAction = ssr ? guard('applyAction') : client.apply_action;
 
 /** @type {import('$app/forms').enhance} */
-export function enhance(element, submit = () => {}) {
+export function enhance(form, submit = () => {}) {
 	/**
 	 * @param {{
-	 *   element: HTMLFormElement | HTMLButtonElement | HTMLInputElement;
-	 *   form: HTMLFormElement;
+	 *   action: string;
 	 *   result: import('types').ActionResult;
 	 * }} opts
 	 */
-	const fallback_callback = async ({ element, form, result }) => {
+	const fallback_callback = async ({ action, result }) => {
 		if (result.type === 'success') {
 			await invalidateAll();
 		}
-
-		const action = element.formAction ?? form.action;
 
 		if (location.origin + location.pathname === action.split('?')[0]) {
 			applyAction(result);
 		}
 	};
 
-	const form =
-		element instanceof HTMLFormElement ? element : /** @type {HTMLFormElement} */ (element.form);
-	if (!form) throw new Error('Element is not associated with a form');
-
 	/** @param {SubmitEvent} event */
 	async function handle_submit(event) {
 		event.preventDefault();
 
-		const action = element.formAction ?? form.action;
-
+		// We can't do submitter.formAction directly because that property is always set
+		const action = event.submitter?.hasAttribute('formaction')
+			? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
+			: form.action;
 		const data = new FormData(form);
+		const controller = new AbortController();
 
 		let cancelled = false;
 		const cancel = () => (cancelled = true);
 
 		const callback =
 			submit({
-				element,
-				data,
+				action,
 				cancel,
+				controller,
+				data,
 				form
 			}) ?? fallback_callback;
 		if (cancelled) return;
@@ -69,16 +66,18 @@ export function enhance(element, submit = () => {}) {
 				headers: {
 					accept: 'application/json'
 				},
-				body: data
+				body: data,
+				signal: controller.signal
 			});
 
 			result = await response.json();
 		} catch (error) {
+			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = { type: 'error', error };
 		}
 
 		callback({
-			element,
+			action,
 			data,
 			form,
 			// @ts-expect-error generic constraints stuff we don't care about

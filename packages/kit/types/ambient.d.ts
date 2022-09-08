@@ -96,20 +96,19 @@ declare module '$app/forms' {
 	import type { ActionResult } from '@sveltejs/kit';
 
 	export type SubmitFunction<
-		Element extends HTMLFormElement | HTMLInputElement | HTMLButtonElement = HTMLFormElement,
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	> = (input: {
+		action: string;
 		data: FormData;
 		form: HTMLFormElement;
-		element: Element;
+		controller: AbortController;
 		cancel: () => void;
 	}) =>
 		| void
 		| ((opts: {
-				data: FormData;
 				form: HTMLFormElement;
-				element: Element;
+				action: string;
 				result: ActionResult<Success, Invalid>;
 		  }) => void);
 
@@ -119,14 +118,14 @@ declare module '$app/forms' {
 	 * @param options Callbacks for different states of the form lifecycle
 	 */
 	export function enhance<
-		Element extends HTMLFormElement | HTMLInputElement | HTMLButtonElement = HTMLFormElement,
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	>(
-		element: Element,
+		form: HTMLFormElement,
 		/**
-		 * Called upon submission with the given FormData.
+		 * Called upon submission with the given FormData and the `action` that should be triggered.
 		 * If `cancel` is called, the form will not be submitted.
+		 * You can use the abort `controller` to cancel the submission in case another one starts.
 		 * If a function is returned, that function is called with the response from the server.
 		 * If nothing is returned, the fallback will be used.
 		 *
@@ -137,7 +136,7 @@ declare module '$app/forms' {
 		 * - redirects in case of a redirect response
 		 * - redirects to the nearest error page in case of an unexpected error
 		 */
-		submit?: SubmitFunction<Element, Success, Invalid>
+		submit?: SubmitFunction<Success, Invalid>
 	): { destroy: () => void };
 
 	/**
