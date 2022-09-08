@@ -60,50 +60,75 @@ test('a cookie should not be present after it is deleted', () => {
 test('default values when set is called', () => {
 	const { cookies, new_cookies } = cookiesSetup();
 	cookies.set('a', 'b');
-	const entry = new_cookies.get('a')?.options;
-	assert.equal(entry?.secure, true);
-	assert.equal(entry?.httpOnly, true);
-	assert.equal(entry?.path, '/');
-	assert.equal(entry?.sameSite, 'lax');
+	const opts = new_cookies.get('a')?.options;
+	assert.equal(opts?.secure, true);
+	assert.equal(opts?.httpOnly, true);
+	assert.equal(opts?.path, '/');
+	assert.equal(opts?.sameSite, 'lax');
 });
 
 test('overridden defaults when set is called', () => {
 	const { cookies, new_cookies } = cookiesSetup();
 	cookies.set('a', 'b', { secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c' });
-	const entry = new_cookies.get('a')?.options;
-	assert.equal(entry?.secure, false);
-	assert.equal(entry?.httpOnly, false);
-	assert.equal(entry?.path, '/a/b/c');
-	assert.equal(entry?.sameSite, 'strict');
+	const opts = new_cookies.get('a')?.options;
+	assert.equal(opts?.secure, false);
+	assert.equal(opts?.httpOnly, false);
+	assert.equal(opts?.path, '/a/b/c');
+	assert.equal(opts?.sameSite, 'strict');
 });
 
 test('default values when delete is called', () => {
 	const { cookies, new_cookies } = cookiesSetup();
 	cookies.delete('a');
-	const entry = new_cookies.get('a')?.options;
-	assert.equal(entry?.secure, true);
-	assert.equal(entry?.httpOnly, true);
-	assert.equal(entry?.path, '/');
-	assert.equal(entry?.sameSite, 'lax');
-	assert.equal(entry?.maxAge, 0);
+	const opts = new_cookies.get('a')?.options;
+	assert.equal(opts?.secure, true);
+	assert.equal(opts?.httpOnly, true);
+	assert.equal(opts?.path, '/');
+	assert.equal(opts?.sameSite, 'lax');
+	assert.equal(opts?.maxAge, 0);
 });
 
 test('overridden defaults when delete is called', () => {
 	const { cookies, new_cookies } = cookiesSetup();
 	cookies.delete('a', { secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c' });
-	const entry = new_cookies.get('a')?.options;
-	assert.equal(entry?.secure, false);
-	assert.equal(entry?.httpOnly, false);
-	assert.equal(entry?.path, '/a/b/c');
-	assert.equal(entry?.sameSite, 'strict');
-	assert.equal(entry?.maxAge, 0);
+	const opts = new_cookies.get('a')?.options;
+	assert.equal(opts?.secure, false);
+	assert.equal(opts?.httpOnly, false);
+	assert.equal(opts?.path, '/a/b/c');
+	assert.equal(opts?.sameSite, 'strict');
+	assert.equal(opts?.maxAge, 0);
 });
 
 test('cannot override maxAge on delete', () => {
 	const { cookies, new_cookies } = cookiesSetup();
 	cookies.delete('a', { maxAge: 1234 });
-	const entry = new_cookies.get('a')?.options;
-	assert.equal(entry?.maxAge, 0);
+	const opts = new_cookies.get('a')?.options;
+	assert.equal(opts?.maxAge, 0);
 });
+
+test('last cookie set with the same name wins', () => {
+	const { cookies, new_cookies } = cookiesSetup();
+	cookies.set('a', 'foo');
+	cookies.set('a', 'bar');
+	const entry = new_cookies.get('a');
+	assert.equal(entry?.value, 'bar');
+});
+
+test('cookie names are case sensitive', () => {
+	const { cookies, new_cookies } = cookiesSetup();
+	// not that one should do this, but we follow the spec...
+	cookies.set('a', 'foo');
+	cookies.set('A', 'bar');
+	const entrya = new_cookies.get('a');
+	const entryA = new_cookies.get('A');
+	assert.equal(entrya?.value, 'foo');
+	assert.equal(entryA?.value, 'bar');
+});
+
+test.skip('default encoding', () => {
+	// needs e2e test
+});
+
+test('default decoding', () => {});
 
 test.run();

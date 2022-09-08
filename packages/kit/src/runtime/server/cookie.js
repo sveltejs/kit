@@ -13,15 +13,12 @@ const DEFAULT_SERIALIZE_OPTIONS = {
  * @param {URL} url
  */
 export function get_cookies(request, url) {
-	const initial_cookies = cookie.parse(request.headers.get('cookie') ?? '');
-
 	/** @type {Map<string, {name: string; value: string; options: import('cookie').CookieSerializeOptions;}>} */
 	const new_cookies = new Map();
 
 	/** @type {import('types').Cookies} */
 	const cookies = {
 		get(name, opts) {
-			const decode = opts?.decode || decodeURIComponent;
 			const c = new_cookies.get(name);
 			if (
 				c &&
@@ -31,7 +28,9 @@ export function get_cookies(request, url) {
 				return c.value;
 			}
 
-			return name in initial_cookies ? decode(initial_cookies[name]) : undefined;
+			const decode = opts?.decode || decodeURIComponent;
+			const req_cookies = cookie.parse(request.headers.get('cookie') ?? '', { decode });
+			return req_cookies[name]; // the decoded string or undefined
 		},
 
 		/**
@@ -60,7 +59,6 @@ export function get_cookies(request, url) {
 					maxAge: 0
 				}
 			});
-			delete initial_cookies[name];
 		}
 	};
 
