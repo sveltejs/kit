@@ -40,16 +40,13 @@ export function enhance(element, submit = () => {}) {
 		element instanceof HTMLFormElement ? element : /** @type {HTMLFormElement} */ (element.form);
 	if (!form) throw new Error('Element is not associated with a form');
 
-	/** @type {AbortController} */
-	let abort_controller;
-
 	/** @param {SubmitEvent} event */
 	async function handle_submit(event) {
 		event.preventDefault();
 
 		const action = element.formAction ?? form.action;
-
 		const data = new FormData(form);
+		const controller = new AbortController();
 
 		let cancelled = false;
 		const cancel = () => (cancelled = true);
@@ -59,15 +56,10 @@ export function enhance(element, submit = () => {}) {
 				element,
 				data,
 				cancel,
-				form
+				form,
+				controller
 			}) ?? fallback_callback;
 		if (cancelled) return;
-
-		if (abort_controller) {
-			abort_controller.abort();
-		}
-
-		abort_controller = new AbortController();
 
 		/** @type {import('types').ActionResult} */
 		let result;
@@ -79,7 +71,7 @@ export function enhance(element, submit = () => {}) {
 					accept: 'application/json'
 				},
 				body: data,
-				signal: abort_controller.signal
+				signal: controller.signal
 			});
 
 			result = await response.json();

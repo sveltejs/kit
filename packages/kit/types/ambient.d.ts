@@ -103,6 +103,7 @@ declare module '$app/forms' {
 		data: FormData;
 		form: HTMLFormElement;
 		element: Element;
+		controller: AbortController;
 		cancel: () => void;
 	}) =>
 		| void
@@ -127,6 +128,7 @@ declare module '$app/forms' {
 		/**
 		 * Called upon submission with the given FormData.
 		 * If `cancel` is called, the form will not be submitted.
+		 * You can use the abort `controller` to cancel the submission in case another one starts.
 		 * If a function is returned, that function is called with the response from the server.
 		 * If nothing is returned, the fallback will be used.
 		 *
