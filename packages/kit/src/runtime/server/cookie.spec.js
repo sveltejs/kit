@@ -86,6 +86,7 @@ test('default values when delete is called', () => {
 	assert.equal(entry?.sameSite, 'lax');
 	assert.equal(entry?.maxAge, 0);
 });
+
 test('overridden defaults when delete is called', () => {
 	const { cookies, new_cookies } = cookiesSetup();
 	cookies.delete('a', { secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c' });
