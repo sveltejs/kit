@@ -37,24 +37,10 @@ export function enhance(form, submit = () => {}) {
 	async function handle_submit(event) {
 		event.preventDefault();
 
-		let action = form.action;
-		const element_action = /** @type {HTMLButtonElement | HTMLInputElement | null} */ (
-			event.submitter
-		)?.formAction;
-		// the browser will always set formAction - if not set, it defaults to the url;
-		// we therefore have to check that formAction is indeed set
-		if (action !== element_action && element_action) {
-			if (
-				// different urls
-				action.split('?')[0] !== element_action.split('?')[0] ||
-				// same url - formAction needs to be set to something or else we ignore it.
-				// we take advantage of the fact that there cannot be a default and named action
-				// at the same time.
-				element_action.includes('?')
-			) {
-				action = element_action;
-			}
-		}
+		// We can't do submitter.formAction directly because that property is always set
+		const action = event.submitter?.hasAttribute('formaction')
+			? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
+			: form.action;
 		const data = new FormData(form);
 		const controller = new AbortController();
 
