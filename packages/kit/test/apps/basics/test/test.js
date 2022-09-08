@@ -1857,4 +1857,31 @@ test.describe('Cookies API', () => {
 		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('i was set in the layout load');
 	});
+
+	test('works with basic enhance', async ({ page }) => {
+		// kinda straying off-topic here, but these are some of the
+		// things folks had issues with...
+		await page.goto('/cookies/enhanced/basic');
+		let span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('undefined');
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/cookies/enhanced/basic')),
+			page.click('button#teapot')
+		]);
+		// this is evil, but with js enabled we need a timeout
+		// to allow svelte to update the span before checking its
+		// contents and I don't know what else to do
+		await page.waitForTimeout(50);
+		span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot');
+
+		// setting a different value...
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/cookies/enhanced/basic')),
+			page.click('button#janeAusten')
+		]);
+		await page.waitForTimeout(50);
+		span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('Jane Austen');
+	});
 });
