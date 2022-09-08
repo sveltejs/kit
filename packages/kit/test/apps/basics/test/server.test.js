@@ -359,6 +359,7 @@ test.describe('Cookies API (no JS)', () => {
 		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
 	});
+
 	test('delete a cookie', async ({ page }) => {
 		await page.goto('/cookies/set');
 		let span = page.locator('#cookie-value');
