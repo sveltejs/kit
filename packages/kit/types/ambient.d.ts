@@ -411,6 +411,7 @@ declare module '@sveltejs/kit/node' {
 	export function getRequest(opts: {
 		base: string;
 		request: import('http').IncomingMessage;
+		bodySizeLimit?: number;
 	}): Promise<Request>;
 	export function setResponse(res: import('http').ServerResponse, response: Response): void;
 }

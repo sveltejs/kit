@@ -69,6 +69,10 @@ Instead, we read from the _right_, accounting for the number of trusted proxies.
 
 > If you need to read the left-most address instead (and don't care about spoofing) — for example, to offer a geolocation service, where it's more important for the IP address to be _real_ than _trusted_, you can do so by inspecting the `x-forwarded-for` header within your app.
 
+### `BODY_SIZE_LIMIT`
+
+The maximum request body size to accept in bytes. Defaults to 512kb. This option does not allow streaming. You can disable this option with a value of 0 and implement a custom check in [`handle`](https://kit.svelte.dev/docs/hooks#server-hooks-handle) if you need something more advanced.
+
 ## Options
 
 The adapter can be configured with various options:
