@@ -193,7 +193,7 @@ async function generate_lambda_functions({ builder, publish, split }) {
 					const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
 
 					writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
-					writeFileSync(`.netlify/functions-internal/${name}.json`, fnConfig);
+					writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
 
 					redirects.push(`${pattern} /.netlify/functions/${name} 200`);
 					redirects.push(`${pattern}/__data.js /.netlify/functions/${name} 200`);
