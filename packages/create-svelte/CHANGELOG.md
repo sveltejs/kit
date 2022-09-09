@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.175
+
+### Patch Changes
+
+- [breaking] update use:enhance usage ([#6697](https://github.com/sveltejs/kit/pull/6697))
+
+* [breaking] hooks file rename ([#6697](https://github.com/sveltejs/kit/pull/6697))
+
 ## 2.0.0-next.174
 
 ### Patch Changes
