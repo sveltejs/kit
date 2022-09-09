@@ -10,7 +10,7 @@ import { dist } from './utils.js';
 const disclaimer = `
 ${bold(cyan('Welcome to SvelteKit!'))}
 
-${bold(red('This is beta software; expect bugs and missing features.'))}
+${bold(red('This is release candidate software; expect bugs and missing features.'))}
 
 Problems? Open an issue on ${cyan('https://github.com/sveltejs/kit/issues')} if none exists already.
 `;
