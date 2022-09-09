@@ -210,7 +210,7 @@ async function generate_lambda_functions({ builder, publish, split }) {
 
 		const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
 
-		writeFileSync(`.netlify/functions-internal/render.json`, fnConfig);
+		writeFileSync(`.netlify/functions-internal/render.json`, fn_config);
 		writeFileSync('.netlify/functions-internal/render.mjs', fn);
 		redirects.push('* /.netlify/functions/render 200');
 	}
