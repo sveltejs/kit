@@ -248,6 +248,7 @@ export async function render_response({
 		}
 
 		attributes.unshift('rel="stylesheet"');
+		head += `\n\t<link rel="preload" href="${path}" as="style">`;
 		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
