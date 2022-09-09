@@ -99,7 +99,7 @@ declare module '$app/forms' {
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	> = (input: {
-		action: string;
+		action: URL;
 		data: FormData;
 		form: HTMLFormElement;
 		controller: AbortController;
@@ -108,7 +108,7 @@ declare module '$app/forms' {
 		| void
 		| ((opts: {
 				form: HTMLFormElement;
-				action: string;
+				action: URL;
 				result: ActionResult<Success, Invalid>;
 		  }) => void);
 
