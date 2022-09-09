@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.480
+
+### Patch Changes
+
+- [breaking] make action passed to enhance function a URL instead of a string ([#6678](https://github.com/sveltejs/kit/pull/6678))
+
 ## 1.0.0-next.479
 
 ### Patch Changes
