@@ -408,10 +408,10 @@ declare module '@sveltejs/kit/node/polyfills' {
  * Utilities used by adapters for Node-like environments.
  */
 declare module '@sveltejs/kit/node' {
-	export function getRequest(
-		base: string,
-		request: import('http').IncomingMessage
-	): Promise<Request>;
+	export function getRequest(opts: {
+		base: string;
+		request: import('http').IncomingMessage;
+	}): Promise<Request>;
 	export function setResponse(res: import('http').ServerResponse, response: Response): void;
 }
 

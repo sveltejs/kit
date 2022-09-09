@@ -49,7 +49,7 @@ const ssr = async (req, res) => {
 	let request;
 
 	try {
-		request = await getRequest(origin || get_origin(req.headers), req);
+		request = await getRequest({ base: origin || get_origin(req.headers), request: req });
 	} catch (err) {
 		res.statusCode = err.status || 400;
 		res.end(err.reason || 'Invalid request body');
