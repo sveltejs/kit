@@ -62,7 +62,7 @@ If your content is available in multiple languages, you should set the `lang` at
 ```
 
 ```js
-/// file: src/hooks.js
+/// file: src/hooks.server.js
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @returns {string}
