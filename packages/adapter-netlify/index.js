@@ -158,7 +158,7 @@ async function generate_lambda_functions({ builder, publish, split }) {
 	builder.copy(`${files}/esm`, '.netlify', { replace });
 
 	// Configuring the function to use ESM as the output format.
-	const fnConfig = JSON.stringify({ config: { nodeModuleFormat: 'esm' }, version: 1 });
+	const fn_config = JSON.stringify({ config: { nodeModuleFormat: 'esm' }, version: 1 });
 
 	if (split) {
 		builder.log.minor('Generating serverless functions...');
