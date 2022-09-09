@@ -2,8 +2,9 @@ import * as set_cookie_parser from 'set-cookie-parser';
 
 /**
  * @param {import('http').IncomingMessage} req
+ * @param {number} [body_size_limit]
  */
-function get_raw_body(req) {
+function get_raw_body(req, body_size_limit) {
 	const h = req.headers;
 
 	if (!h['content-type']) {
@@ -18,6 +19,19 @@ function get_raw_body(req) {
 		length === 0
 	) {
 		return null;
+	}
+
+	if (body_size_limit) {
+		if (!length) {
+			throw new Error(
+				`Received content-length of ${length}. content-length must be provided when body size limit is specified.`
+			);
+		}
+		if (length > body_size_limit) {
+			throw new Error(
+				`Received content-length of ${length}, but only accept up to ${body_size_limit} bytes.`
+			);
+		}
 	}
 
 	if (req.destroyed) {
@@ -69,7 +83,7 @@ function get_raw_body(req) {
 }
 
 /** @type {import('@sveltejs/kit/node').getRequest} */
-export async function getRequest({ request, base }) {
+export async function getRequest({ request, base, bodySizeLimit }) {
 	let headers = /** @type {Record<string, string>} */ (request.headers);
 	if (request.httpVersionMajor === 2) {
 		// we need to strip out the HTTP/2 pseudo-headers because node-fetch's
@@ -85,7 +99,7 @@ export async function getRequest({ request, base }) {
 	return new Request(base + request.url, {
 		method: request.method,
 		headers,
-		body: get_raw_body(request)
+		body: get_raw_body(request, bodySizeLimit)
 	});
 }
 
