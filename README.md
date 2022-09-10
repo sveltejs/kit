@@ -8,6 +8,7 @@ SvelteKit is still in (release candidate) RC1:
 - :heavy_check_mark: countdown to a stable release
 - :x: feature-complete
 - :x: documented
+
 Read more [here](https://svelte.dev/blog/sveltekit-beta), and track progress towards 1.0 [here](https://github.com/sveltejs/kit/issues?q=is%3Aopen+is%3Aissue+milestone%3A1.0).
 
 ## Overview
