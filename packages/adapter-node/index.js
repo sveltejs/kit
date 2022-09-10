@@ -32,7 +32,7 @@ export default function (opts = {}) {
 
 			if (precompress) {
 				builder.log.minor('Compressing assets');
-				await Promise.allSettled([
+				await Promise.all([
 					builder.compress(`${out}/client`),
 					builder.compress(`${out}/prerendered`)
 				]);

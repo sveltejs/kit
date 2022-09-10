@@ -68,7 +68,7 @@ export default function (options) {
 				if (pages === assets) {
 					await builder.compress(assets);
 				} else {
-					await Promise.allSettled([builder.compress(assets), builder.compress(pages)]);
+					await Promise.all([builder.compress(assets), builder.compress(pages)]);
 				}
 			}
 
