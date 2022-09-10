@@ -17,13 +17,18 @@ export const applyAction = ssr ? guard('applyAction') : client.apply_action;
 
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
-	/** @param {import('types').ActionResult} result */
-	const fallback_callback = async (result) => {
+	/**
+	 * @param {{
+	 *   action: URL;
+	 *   result: import('types').ActionResult;
+	 * }} opts
+	 */
+	const fallback_callback = async ({ action, result }) => {
 		if (result.type === 'success') {
 			await invalidateAll();
 		}
 
-		if (location.origin + location.pathname === form.action.split('?')[0]) {
+		if (location.origin + location.pathname === action.origin + action.pathname) {
 			applyAction(result);
 		}
 	};
@@ -32,27 +37,65 @@ export function enhance(form, submit = () => {}) {
 	async function handle_submit(event) {
 		event.preventDefault();
 
+		const action = new URL(
+			// We can't do submitter.formAction directly because that property is always set
+			event.submitter?.hasAttribute('formaction')
+				? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
+				: form.action
+		);
+
 		const data = new FormData(form);
+		const controller = new AbortController();
 
 		let cancelled = false;
 		const cancel = () => (cancelled = true);
 
-		const callback = submit({ form, data, cancel }) ?? fallback_callback;
+		const callback =
+			submit({
+				action,
+				cancel,
+				controller,
+				data,
+				form
+			}) ?? fallback_callback;
 		if (cancelled) return;
 
+		/** @type {import('types').ActionResult} */
+		let result;
+
 		try {
-			const response = await fetch(form.action, {
+			const response = await fetch(action, {
 				method: 'POST',
 				headers: {
 					accept: 'application/json'
 				},
-				body: data
+				body: data,
+				signal: controller.signal
 			});
 
-			callback(await response.json());
+			result = await response.json();
 		} catch (error) {
-			callback({ type: 'error', error });
+			if (/** @type {any} */ (error)?.name === 'AbortError') return;
+			result = { type: 'error', error };
 		}
+
+		callback({
+			action,
+			data,
+			form,
+			// @ts-expect-error generic constraints stuff we don't care about
+			result,
+			// TODO remove for 1.0
+			get type() {
+				throw new Error('(result) => {...} has changed to ({ result }) => {...}');
+			},
+			get location() {
+				throw new Error('(result) => {...} has changed to ({ result }) => {...}');
+			},
+			get error() {
+				throw new Error('(result) => {...} has changed to ({ result }) => {...}');
+			}
+		});
 	}
 
 	form.addEventListener('submit', handle_submit);

@@ -1,8 +1,29 @@
 import fs from 'fs';
 import { sequence } from '@sveltejs/kit/hooks';
+import { HttpError } from '../../../../src/runtime/control';
 
-/** @type {import('@sveltejs/kit').HandleError} */
-export const handleError = ({ event, error }) => {
+/**
+ * Transform an error into a POJO, by copying its `name`, `message`
+ * and (in dev) `stack`, plus any custom properties, plus recursively
+ * serialized `cause` properties.
+ *
+ * @param {HttpError | Error } error
+ */
+export function error_to_pojo(error) {
+	if (error instanceof HttpError) {
+		return {
+			status: error.status,
+			...error.body
+		};
+	}
+
+	const { name, message, stack, cause, ...custom } = error;
+	return { name, message, stack, ...custom };
+}
+
+/** @type {import('@sveltejs/kit').HandleServerError} */
+export const handleError = ({ event, error: e }) => {
+	const error = /** @type {Error} */ (e);
 	// TODO we do this because there's no other way (that i'm aware of)
 	// to communicate errors back to the test suite. even if we could
 	// capture stderr, attributing an error to a specific request
@@ -10,8 +31,9 @@ export const handleError = ({ event, error }) => {
 	const errors = fs.existsSync('test/errors.json')
 		? JSON.parse(fs.readFileSync('test/errors.json', 'utf8'))
 		: {};
-	errors[event.url.pathname] = error.stack || error.message;
+	errors[event.url.pathname] = error_to_pojo(error);
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
+	return { message: error.message };
 };
 
 export const handle = sequence(

@@ -1,7 +1,11 @@
 import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
-import { coalesce_to_error } from '../../../utils/error.js';
-import { GENERIC_ERROR, get_option, static_error_page } from '../utils.js';
+import {
+	handle_error_and_jsonify,
+	GENERIC_ERROR,
+	get_option,
+	static_error_page
+} from '../utils.js';
 import { create_fetch } from './fetch.js';
 
 /**
@@ -16,7 +20,7 @@ import { create_fetch } from './fetch.js';
  *   options: SSROptions;
  *   state: SSRState;
  *   status: number;
- *   error: Error;
+ *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts
  */
@@ -75,18 +79,14 @@ export async function respond_with_error({ event, options, state, status, error,
 				csr: get_option([default_layout], 'csr') ?? true
 			},
 			status,
-			error,
+			error: handle_error_and_jsonify(event, options, error),
 			branch,
 			fetched,
 			cookies,
 			event,
 			resolve_opts
 		});
-	} catch (err) {
-		const error = coalesce_to_error(err);
-
-		options.handle_error(error, event);
-
-		return static_error_page(options, 500, error.message);
+	} catch (error) {
+		return static_error_page(options, 500, handle_error_and_jsonify(event, options, error).message);
 	}
 }

@@ -2,7 +2,7 @@ import { error, json } from '../../../exports/index.js';
 import { normalize_error } from '../../../utils/error.js';
 import { negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ValidationError } from '../../control.js';
-import { error_to_pojo } from '../utils.js';
+import { handle_error_and_jsonify } from '../utils.js';
 
 /** @param {import('types').RequestEvent} event */
 export function is_action_json_request(event) {
@@ -69,7 +69,7 @@ export async function handle_action_json_request(event, options, server) {
 		return action_json(
 			{
 				type: 'error',
-				error: error_to_pojo(error, options.get_stack)
+				error: handle_error_and_jsonify(event, options, error)
 			},
 			{
 				status: error instanceof HttpError ? error.status : 500

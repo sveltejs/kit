@@ -10,6 +10,7 @@ import { exec } from '../../utils/routing.js';
 import { render_data } from './data/index.js';
 import { DATA_SUFFIX } from '../../constants.js';
 import { get_cookies } from './cookie.js';
+import { HttpError } from '../control.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -139,7 +140,7 @@ export async function respond(request, options, state) {
 
 				if (lower === 'set-cookie') {
 					throw new Error(
-						`Use \`event.cookie.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
+						`Use \`event.cookies.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
 					);
 				} else if (lower in headers) {
 					throw new Error(`"${key}" header is already set`);
@@ -269,33 +270,6 @@ export async function respond(request, options, state) {
 					);
 				}
 
-				// respond with 304 if etag matches
-				if (response.status === 200 && response.headers.has('etag')) {
-					let if_none_match_value = request.headers.get('if-none-match');
-
-					// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
-					if (if_none_match_value?.startsWith('W/"')) {
-						if_none_match_value = if_none_match_value.substring(2);
-					}
-
-					const etag = /** @type {string} */ (response.headers.get('etag'));
-
-					if (if_none_match_value === etag) {
-						const headers = new Headers({ etag });
-
-						// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
-						for (const key of ['cache-control', 'content-location', 'date', 'expires', 'vary']) {
-							const value = response.headers.get(key);
-							if (value) headers.set(key, value);
-						}
-
-						return new Response(undefined, {
-							status: 304,
-							headers
-						});
-					}
-				}
-
 				return response;
 			}
 
@@ -326,7 +300,8 @@ export async function respond(request, options, state) {
 			// so we need to make an actual HTTP request
 			return await fetch(request);
 		} catch (e) {
-			const error = coalesce_to_error(e);
+			// HttpError can come from endpoint - TODO should it be handled there instead?
+			const error = e instanceof HttpError ? e : coalesce_to_error(e);
 			return handle_fatal_error(event, options, error);
 		} finally {
 			event.cookies.set = () => {
@@ -340,7 +315,7 @@ export async function respond(request, options, state) {
 	}
 
 	try {
-		return await options.hooks.handle({
+		const response = await options.hooks.handle({
 			event,
 			resolve,
 			// TODO remove for 1.0
@@ -349,6 +324,35 @@ export async function respond(request, options, state) {
 				throw new Error('request in handle has been replaced with event' + details);
 			}
 		});
+
+		// respond with 304 if etag matches
+		if (response.status === 200 && response.headers.has('etag')) {
+			let if_none_match_value = request.headers.get('if-none-match');
+
+			// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
+			if (if_none_match_value?.startsWith('W/"')) {
+				if_none_match_value = if_none_match_value.substring(2);
+			}
+
+			const etag = /** @type {string} */ (response.headers.get('etag'));
+
+			if (if_none_match_value === etag) {
+				const headers = new Headers({ etag });
+
+				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
+				for (const key of ['cache-control', 'content-location', 'date', 'expires', 'vary']) {
+					const value = response.headers.get(key);
+					if (value) headers.set(key, value);
+				}
+
+				return new Response(undefined, {
+					status: 304,
+					headers
+				});
+			}
+		}
+
+		return response;
 	} catch (/** @type {unknown} */ e) {
 		const error = coalesce_to_error(e);
 		return handle_fatal_error(event, options, error);

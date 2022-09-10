@@ -498,6 +498,34 @@ importers:
       typescript: 4.8.2
       vite: 3.1.0
 
+  packages/kit/test/build-errors/apps/server-only-folder:
+    specifiers:
+      '@sveltejs/kit': workspace:*
+      svelte: ^3.44.0
+      svelte-check: ^2.7.1
+      typescript: ^4.8.2
+      vite: ^3.1.0-beta.1
+    devDependencies:
+      '@sveltejs/kit': link:../../../..
+      svelte: 3.48.0
+      svelte-check: 2.8.0_svelte@3.48.0
+      typescript: 4.8.2
+      vite: 3.1.0
+
+  packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
+    specifiers:
+      '@sveltejs/kit': workspace:*
+      svelte: ^3.44.0
+      svelte-check: ^2.7.1
+      typescript: ^4.8.2
+      vite: ^3.1.0-beta.1
+    devDependencies:
+      '@sveltejs/kit': link:../../../..
+      svelte: 3.48.0
+      svelte-check: 2.8.0_svelte@3.48.0
+      typescript: 4.8.2
+      vite: 3.1.0
+
   packages/kit/test/build-errors/apps/server-only-module:
     specifiers:
       '@sveltejs/kit': workspace:*

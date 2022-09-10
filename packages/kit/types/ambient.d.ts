@@ -56,6 +56,13 @@ declare namespace App {
 	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
 	 */
 	export interface Platform {}
+
+	/**
+	 * Defines the common shape of expected and unexpected errors. Expected errors are thrown using the `error` function. Unexpected errors are handled by the `handleError` hooks which should return this shape.
+	 */
+	export interface PageError {
+		message: string;
+	}
 }
 
 /**
@@ -89,13 +96,21 @@ declare module '$app/forms' {
 	import type { ActionResult } from '@sveltejs/kit';
 
 	export type SubmitFunction<
-		Success extends Record<string, unknown> | undefined,
-		Invalid extends Record<string, unknown> | undefined
+		Success extends Record<string, unknown> | undefined = Record<string, any>,
+		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	> = (input: {
+		action: URL;
 		data: FormData;
 		form: HTMLFormElement;
+		controller: AbortController;
 		cancel: () => void;
-	}) => void | ((result: ActionResult<Success, Invalid>) => void);
+	}) =>
+		| void
+		| ((opts: {
+				form: HTMLFormElement;
+				action: URL;
+				result: ActionResult<Success, Invalid>;
+		  }) => void);
 
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
@@ -108,8 +123,9 @@ declare module '$app/forms' {
 	>(
 		form: HTMLFormElement,
 		/**
-		 * Called upon submission with the given FormData.
+		 * Called upon submission with the given FormData and the `action` that should be triggered.
 		 * If `cancel` is called, the form will not be submitted.
+		 * You can use the abort `controller` to cancel the submission in case another one starts.
 		 * If a function is returned, that function is called with the response from the server.
 		 * If nothing is returned, the fallback will be used.
 		 *
@@ -392,10 +408,11 @@ declare module '@sveltejs/kit/node/polyfills' {
  * Utilities used by adapters for Node-like environments.
  */
 declare module '@sveltejs/kit/node' {
-	export function getRequest(
-		base: string,
-		request: import('http').IncomingMessage
-	): Promise<Request>;
+	export function getRequest(opts: {
+		base: string;
+		request: import('http').IncomingMessage;
+		bodySizeLimit?: number;
+	}): Promise<Request>;
 	export function setResponse(res: import('http').ServerResponse, response: Response): void;
 }
 
