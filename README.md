@@ -7,7 +7,7 @@ SvelteKit is in its release candidate phase:
 - :heavy_check_mark: no more planned breaking changes
 - :heavy_check_mark: countdown to a stable release
 - :x: feature-complete
-- :x: documented
+- :x: tutorials
 
 Watch [the announcement](https://www.youtube.com/watch?v=A8jkJTWacow&t=29628s) and track [progress towards 1.0](https://github.com/sveltejs/kit/issues?q=is%3Aopen+is%3Aissue+milestone%3A1.0) for more details.
 
