@@ -18,6 +18,7 @@
 		"custom-event-polyfill": "^1.0.7",
 		"flexsearch": "^0.7.21",
 		"marked": "^4.0.16",
+		"path-composedpath-polyfill": "^0.0.1",
 		"prism-svelte": "^0.5.0",
 		"prismjs": "^1.28.0",
 		"regenerator-runtime": "^0.13.9",

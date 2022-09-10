@@ -18,7 +18,8 @@ const config = {
 				// 'global-this' should be used so 'regenerator-runtime' wouldn't do CSP issues
 				'core-js/proposals/global-this',
 				'regenerator-runtime/runtime',
-				'unorm'
+				'unorm',
+				'path-composedpath-polyfill'
 			]
 		}),
 		sveltekit(),

@@ -24,33 +24,6 @@ export function scroll_state() {
 
 /** @param {Event} event */
 export function find_anchor(event) {
-	/** @param {Event} event */
-	function composedPath(event) {
-		if (event.composedPath) {
-			return event.composedPath();
-		}
-
-		/**
-		 * path-composedPath-polyfill.js v1.0.0
-		 * Polyfill de Event.path y Event.composedPath
-		 * [Back-compatibility: IE9+]
-		 * Copyright (c) 2021, Emanuel Rojas Vásquez
-		 * MIT License
-		 * https://github.com/erovas/path-composedPath-polyfill.js
-		 */
-
-		var target = event.target;
-		var path = [];
-		while (/** @type {any} */ (target).parentNode !== null) {
-			path.push(target);
-			target = /** @type {any} */ (target).parentNode;
-		}
-
-		path.push(document, window);
-
-		return path;
-	}
-
 	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
 	let a;
 
@@ -63,7 +36,7 @@ export function find_anchor(event) {
 	/** @type {boolean | null} */
 	let reload = null;
 
-	for (const element of composedPath(event)) {
+	for (const element of event.composedPath()) {
 		if (!(element instanceof Element)) continue;
 
 		if (!a && element.nodeName.toUpperCase() === 'A') {

@@ -690,6 +690,7 @@ importers:
       custom-event-polyfill: ^1.0.7
       flexsearch: ^0.7.21
       marked: ^4.0.16
+      path-composedpath-polyfill: ^0.0.1
       prism-svelte: ^0.5.0
       prismjs: ^1.28.0
       regenerator-runtime: ^0.13.9
@@ -712,6 +713,7 @@ importers:
       custom-event-polyfill: 1.0.7
       flexsearch: 0.7.21
       marked: 4.0.17
+      path-composedpath-polyfill: 0.0.1
       prism-svelte: 0.5.0
       prismjs: 1.28.0
       regenerator-runtime: 0.13.9
@@ -3640,6 +3642,10 @@ packages:
       no-case: 3.0.4
       tslib: 2.4.0
     dev: false
+
+  /path-composedpath-polyfill/0.0.1:
+    resolution: {integrity: sha512-50RvDPBSfteVH1aFl3yILmOQv/maotu9FgGhDFnB48eaK6BDna2+I8MdtZNAmy8+VdgZGAzMrj8LdAxXo1Zi/g==}
+    dev: true
 
   /path-exists/3.0.0:
     resolution: {integrity: sha512-bpC7GYwiDYQ4wYLe+FA8lhRjhQCMcQGuSgGGqDkg/QerRWw9CmGRT0iSOVRSZJ29NMLZgIzqaljJ63oaL4NIJQ==}
