@@ -78,10 +78,6 @@ A SvelteKit project is really just a [Vite](https://vitejs.dev) project that use
 
 ### Other files
 
-#### test
-
-If you choose to add tests during `npm create svelte@latest`, they will go in a `test` directory.
-
 #### .svelte-kit
 
 As you develop and build your project, SvelteKit will generate files in a `.svelte-kit` directory (configurable as [`outDir`](/docs/configuration#outdir)). You can ignore its contents, and delete them at any time (they will be regenerated when you next `dev` or `build`).
