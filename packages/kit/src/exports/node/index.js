@@ -59,7 +59,11 @@ function get_raw_body(req, body_size_limit) {
 				size += chunk.length;
 				if (size > length) {
 					req.destroy(
-						new Error(`request body size exceeded ${content_length ? "specified 'content-length'" : 'allowed by the server'}: ${length}`)
+						new Error(
+							`request body size exceeded ${
+								content_length ? "specified 'content-length'" : 'allowed by the server'
+							}: ${length}`
+						)
 					);
 					return;
 				}
