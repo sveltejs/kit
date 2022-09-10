@@ -11,15 +11,17 @@ function get_raw_body(req, body_size_limit) {
 		return null;
 	}
 
-	let length = Number(h['content-length']);
+	const content_length = Number(h['content-length']);
 
 	// check if no request body
 	if (
-		(req.httpVersionMajor === 1 && isNaN(length) && h['transfer-encoding'] == null) ||
-		length === 0
+		(req.httpVersionMajor === 1 && isNaN(content_length) && h['transfer-encoding'] == null) ||
+		content_length === 0
 	) {
 		return null;
 	}
+
+	let length = content_length;
 
 	if (body_size_limit) {
 		if (!length) {
@@ -56,7 +58,9 @@ function get_raw_body(req, body_size_limit) {
 
 				size += chunk.length;
 				if (size > length) {
-					req.destroy(new Error('request body size exceeded'));
+					req.destroy(
+						new Error(`request body size exceeded ${content_length ? "specified 'content-length'" : 'allowed by the server'}: ${length}`)
+					);
 					return;
 				}
 
