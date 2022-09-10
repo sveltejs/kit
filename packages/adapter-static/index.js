@@ -20,7 +20,7 @@ export default function (options) {
 					return {
 						id: '',
 						filter: () => false,
-						complete: () => { }
+						complete: () => {}
 					};
 				});
 
@@ -69,7 +69,7 @@ export default function (options) {
 					await builder.compress(assets);
 				} else {
 					builder.log.minor('Compressing assets and pages');
-					await Promise.allSettled([builder.compress(assets), builder.compress(pages)])
+					await Promise.allSettled([builder.compress(assets), builder.compress(pages)]);
 				}
 			}
 
