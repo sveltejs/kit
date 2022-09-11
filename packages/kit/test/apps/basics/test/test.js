@@ -1858,6 +1858,10 @@ test.describe('Cookies API', () => {
 		expect(await span.innerText()).toContain('i was set in the layout load');
 	});
 
+	test('works in handle hook', () => {
+		
+	})
+
 	// Skip this guy. Works, but needs timeouts to pass.
 	test.skip('works with basic enhance', async ({ page }) => {
 		// kinda straying off-topic, but these are some of the
