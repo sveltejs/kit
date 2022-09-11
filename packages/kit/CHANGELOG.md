@@ -1,5 +1,27 @@
 # @sveltejs/kit
 
+## 1.0.0-next.480
+
+### Patch Changes
+
+- [breaking] make action passed to enhance function a URL instead of a string ([#6678](https://github.com/sveltejs/kit/pull/6678))
+
+## 1.0.0-next.479
+
+### Patch Changes
+
+- [breaking] request creation cleanup ([#6681](https://github.com/sveltejs/kit/pull/6681))
+
+* [breaking] limit adapter-node request size ([#6684](https://github.com/sveltejs/kit/pull/6684))
+
+## 1.0.0-next.478
+
+### Patch Changes
+
+- [breaking] hooks file renames; error shape defined through handleError ([#6675](https://github.com/sveltejs/kit/pull/6675))
+
+* [breaking] remove element property; enhance can only be used on form elements ([#6662](https://github.com/sveltejs/kit/pull/6662))
+
 ## 1.0.0-next.477
 
 ### Patch Changes
