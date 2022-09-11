@@ -62,7 +62,7 @@ function get_raw_body(req, body_size_limit) {
 						new Error(
 							`request body size exceeded ${
 								content_length ? "'content-length'" : 'BODY_SIZE_LIMIT'
-							}: ${length}`
+							} of ${length}`
 						)
 					);
 					return;
