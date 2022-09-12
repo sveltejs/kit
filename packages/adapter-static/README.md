@@ -92,7 +92,7 @@ export default {
 };
 ```
 
-> How to configure this behaviour does however depend on your hosting solution and is not part of SvelteKit, it is recommended to search the host's documentation on how to redirect requests. 
+> How to configure this behaviour does however depend on your hosting solution and is not part of SvelteKit. It is recommended to search the host's documentation on how to redirect requests.
 
 When operating in SPA mode, you can omit the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option from your root layout (or set it to `false`, its default value), and only pages that have the `prerender` option set will be prerendered at build time.
 
