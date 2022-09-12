@@ -33,7 +33,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.14.48",
+		"esbuild": "^0.15.6",
 		"set-cookie-parser": "^2.4.8",
 		"tiny-glob": "^0.2.9"
 	},
