@@ -41,7 +41,7 @@ Your `webpack.config.js` or `rollup.config.js` should be replaced with a `svelte
 
 You will need to add an [adapter](/docs/adapters). `sapper build` is roughly equivalent to [adapter-node](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) while `sapper export` is roughly equivalent to [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), though you might prefer to use an adapter designed for the platform you're deploying to.
 
-If you were using plugins for filetypes that are not automatically handled by [Vite](https://vitejs.dev), you will need to find Vite equivalents and add them to the [Vite config](/docs/configuration#vite).
+If you were using plugins for filetypes that are not automatically handled by [Vite](https://vitejs.dev), you will need to find Vite equivalents and add them to the [Vite config](/docs/project-structure#project-files-vite-config-js).
 
 #### src/client.js
 
@@ -119,7 +119,7 @@ You access them differently in SvelteKit. `stores` is now `getStores`, but in mo
 
 #### Routing
 
-Regex routes are no longer supported. Instead, use [advanced route matching](/docs/routing#advanced-routing-matching).
+Regex routes are no longer supported. Instead, use [advanced route matching](/docs/advanced-routing#matching).
 
 #### Segments
 
@@ -150,7 +150,7 @@ See [the FAQ](/faq#integrations) for detailed information about integrations.
 
 #### HTML minifier
 
-Sapper includes `html-minifier` by default. SvelteKit does not include this, but it can be added as a [hook](/docs/hooks#hooks-server-js-handle):
+Sapper includes `html-minifier` by default. SvelteKit does not include this, but it can be added as a [hook](/docs/hooks#server-hooks-handle):
 
 ```js
 // @filename: ambient.d.ts

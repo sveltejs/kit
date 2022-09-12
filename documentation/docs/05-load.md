@@ -143,7 +143,7 @@ export async function load({ depends }) {
 - it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request
 - it can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context)
 - internal requests (e.g. for `+server.js` routes) go direct to the handler function when running on the server, without the overhead of an HTTP call
-- during server-side rendering, the response will be captured and inlined into the rendered HTML. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](/docs/hooks#hooks-server-js-handle)
+- during server-side rendering, the response will be captured and inlined into the rendered HTML. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](/docs/hooks#server-hooks-handle)
 - during hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request
 
 > Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
@@ -308,7 +308,7 @@ export function load({ locals }) {
 }
 ```
 
-If an _unexpected_ error is thrown, SvelteKit will invoke [`handleError`](/docs/hooks#hooks-server-js-handleerror) and treat it as a 500 Internal Error.
+If an _unexpected_ error is thrown, SvelteKit will invoke [`handleError`](/docs/hooks#shared-hooks-handleerror) and treat it as a 500 Internal Error.
 
 > In development, stack traces for unexpected errors are visible as `$page.error.stack`. In production, stack traces are hidden.
 
@@ -343,7 +343,7 @@ A `load` function will re-run in the following situations:
 - It references a property of `params` whose value has changed
 - It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed
 - It calls `await parent()` and a parent `load` function re-ran
-- It declared a dependency on a specific URL via [`fetch`](#fetch) or [`depends`](#depends), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
+- It declared a dependency on a specific URL via [`fetch`](#input-methods-fetch) or [`depends`](#input-methods-depends), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
 - All active `load` functions were forcibly re-run with [`invalidate()`](/docs/modules#$app-navigation-invalidate)
 
 If a `load` function is triggered to re-run, the page will not remount — instead, it will update with the new `data`. This means that components' internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
