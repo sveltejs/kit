@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[breaking] respect autofocus following navigation or enhanced form submit
+[fix] respect autofocus following navigation or enhanced form submit
