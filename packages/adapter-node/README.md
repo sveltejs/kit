@@ -45,7 +45,7 @@ PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
 
 ### `ADDRESS_HEADER` and `XFF_DEPTH`
 
-The [RequestEvent](https://kit.svelte.dev/docs/types#additional-types-requestevent) object passed to hooks and endpoints includes an `event.clientAddress` property representing the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
+The [RequestEvent](https://kit.svelte.dev/docs/types#sveltejs-kit-requestevent) object passed to hooks and endpoints includes an `event.clientAddress` property representing the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
 
 ```
 ADDRESS_HEADER=True-Client-IP node build

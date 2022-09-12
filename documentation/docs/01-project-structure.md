@@ -40,7 +40,7 @@ The `src` directory contains the meat of your project.
 - `app.html` is your page template — an HTML document containing the following placeholders:
   - `%sveltekit.head%` — `<link>` and `<script>` elements needed by the app, plus any `<svelte:head>` content
   - `%sveltekit.body%` — the markup for a rendered page. Typically this lives inside a `<div>` or other element, rather than directly inside `<body>`, to prevent bugs caused by browser extensions injecting elements that are then destroyed by the hydration process
-  - `%sveltekit.assets%` — either [`paths.assets`](/docs/configuration#paths), if specified, or a relative path to [`paths.base`](/docs/configuration#base)
+  - `%sveltekit.assets%` — either [`paths.assets`](/docs/configuration#paths), if specified, or a relative path to [`paths.base`](/docs/configuration#paths)
   - `%sveltekit.nonce%` — a [CSP](/docs/configuration#csp) nonce for manually included links and scripts, if used
 - `error.html` (optional) is the page that is rendered when everything else fails. It can contain the following placeholders:
   - `%sveltekit.status%` — the HTTP status
