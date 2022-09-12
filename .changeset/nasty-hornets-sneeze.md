@@ -2,4 +2,4 @@
 '@sveltejs/adapter-netlify': patch
 ---
 
-only generate ESM functions
+[feat] only generate ESM functions
