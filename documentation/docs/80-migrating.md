@@ -5,7 +5,7 @@ rank: 1
 
 SvelteKit is the successor to Sapper and shares many elements of its design.
 
-If you have an existing Sapper app that you plan to migrate to SvelteKit, there are a number of changes you will need to make. You may find it helpful to view [some examples](https://kit.svelte.dev/docs/additional-resources#examples) while migrating.
+If you have an existing Sapper app that you plan to migrate to SvelteKit, there are a number of changes you will need to make. You may find it helpful to view [some examples](/docs/additional-resources#examples) while migrating.
 
 ### package.json
 
@@ -81,7 +81,7 @@ Routes now are made up of the folder name exclusively to remove ambiguity, the f
 | routes/about/index.svelte | routes/about/+page.svelte |
 | routes/about.svelte       | routes/about/+page.svelte |
 
-Your custom error page component should be renamed from `_error.svelte` to `+error.svelte`. Any `_layout.svelte` files should likewise be renamed `+layout.svelte`. [Any other files are ignored](https://kit.svelte.dev/docs/routing#other-files).
+Your custom error page component should be renamed from `_error.svelte` to `+error.svelte`. Any `_layout.svelte` files should likewise be renamed `+layout.svelte`. [Any other files are ignored](/docs/routing#other-files).
 
 #### Imports
 
@@ -97,7 +97,7 @@ As before, pages and layouts can export a function that allows data to be loaded
 
 This function has been renamed from `preload` to [`load`](/docs/load), it now lives in a `+page.js` (or `+layout.js`) next to its `+page.svelte` (or `+layout.svelte`), and its API has changed. Instead of two arguments — `page` and `session` — there is a single `event` argument.
 
-There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead, you can get [`fetch`](https://kit.svelte.dev/docs/load#input-methods-fetch) from the input methods, and both [`error`](https://kit.svelte.dev/docs/load#errors) and [`redirect`](https://kit.svelte.dev/docs/load#redirects) are now thrown.
+There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead, you can get [`fetch`](/docs/load#input-methods-fetch) from the input methods, and both [`error`](/docs/load#errors) and [`redirect`](/docs/load#redirects) are now thrown.
 
 #### Stores
 
