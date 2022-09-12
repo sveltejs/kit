@@ -12,12 +12,11 @@ import {
 	Prerendered,
 	PrerenderOnErrorValue,
 	RequestOptions,
-	ResponseHeaders,
 	RouteDefinition,
 	TrailingSlash
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
-import { HttpError, Redirect } from '../src/runtime/control.js';
+import { HttpError, Redirect, ValidationError } from '../src/runtime/control.js';
 
 export { PrerenderOption } from './private.js';
 
@@ -36,11 +35,11 @@ export type AwaitedProperties<input extends Record<string, any> | void> = input 
 	? input
 	: unknown;
 
-export type AwaitedErrors<T extends (...args: any) => any> = Awaited<ReturnType<T>> extends {
-	errors?: any;
-}
-	? Awaited<ReturnType<T>>['errors']
-	: undefined;
+export type AwaitedActions<T extends Record<string, (...args: any) => any>> = {
+	[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
+}[keyof T];
+
+type UnpackValidationError<T> = T extends ValidationError<infer X> ? X : T;
 
 export interface Builder {
 	log: Logger;
@@ -119,6 +118,27 @@ export interface Config {
 	[key: string]: any;
 }
 
+export interface Cookies {
+	/**
+	 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
+	 */
+	get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
+
+	/**
+	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make
+	 * the cookie available via `cookies.get` during the current request.
+	 *
+	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly
+	 * disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP
+	 */
+	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
+
+	/**
+	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
+	 */
+	delete(name: string): void;
+}
+
 export interface KitConfig {
 	adapter?: Adapter;
 	alias?: Record<string, string>;
@@ -138,7 +158,10 @@ export interface KitConfig {
 	moduleExtensions?: string[];
 	files?: {
 		assets?: string;
-		hooks?: string;
+		hooks?: {
+			client?: string;
+			server?: string;
+		};
 		lib?: string;
 		params?: string;
 		routes?: string;
@@ -147,10 +170,6 @@ export interface KitConfig {
 		errorTemplate?: string;
 	};
 	inlineStyleThreshold?: number;
-	methodOverride?: {
-		parameter?: string;
-		allowed?: string[];
-	};
 	outDir?: string;
 	paths?: {
 		assets?: string;
@@ -183,8 +202,12 @@ export interface Handle {
 	}): MaybePromise<Response>;
 }
 
-export interface HandleError {
-	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
+export interface HandleServerError {
+	(input: { error: unknown; event: RequestEvent }): void | App.PageError;
+}
+
+export interface HandleClientError {
+	(input: { error: unknown; event: NavigationEvent }): void | App.PageError;
 }
 
 export interface HandleFetch {
@@ -208,15 +231,20 @@ export interface LoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>
-> {
+> extends NavigationEvent<Params> {
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
-	params: Params;
 	data: Data;
-	routeId: string | null;
-	setHeaders: (headers: ResponseHeaders) => void;
-	url: URL;
+	setHeaders: (headers: Record<string, string>) => void;
 	parent: () => Promise<ParentData>;
 	depends: (...deps: string[]) => void;
+}
+
+export interface NavigationEvent<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> {
+	params: Params;
+	routeId: string | null;
+	url: URL;
 }
 
 export interface NavigationTarget {
@@ -239,7 +267,7 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	params: Params;
 	routeId: string | null;
 	status: number;
-	error: HttpError | Error | null;
+	error: App.PageError | null;
 	data: App.PageData & Record<string, any>;
 }
 
@@ -250,13 +278,14 @@ export interface ParamMatcher {
 export interface RequestEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
 > {
+	cookies: Cookies;
 	getClientAddress: () => string;
 	locals: App.Locals;
 	params: Params;
 	platform: Readonly<App.Platform>;
 	request: Request;
 	routeId: string | null;
-	setHeaders: (headers: ResponseHeaders) => void;
+	setHeaders: (headers: Record<string, string>) => void;
 	url: URL;
 }
 
@@ -273,6 +302,7 @@ export interface RequestHandler<
 
 export interface ResolveOptions {
 	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
+	filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
 }
 
 export class Server {
@@ -323,26 +353,42 @@ export interface ServerLoadEvent<
 }
 
 export interface Action<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
 > {
-	(event: RequestEvent<Params>): MaybePromise<
-		| { status?: number; errors: Record<string, any>; location?: never }
-		| { status?: never; errors?: never; location: string }
-		| void
-	>;
+	(event: RequestEvent<Params>): MaybePromise<OutputData>;
 }
 
-// TODO figure out how to just re-export from '../src/index/index.js' without
-// breaking the site
+export type Actions<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
+> = Record<string, Action<Params, OutputData>>;
+
+/**
+ * When calling a form action via fetch, the response will be one of these shapes.
+ */
+export type ActionResult<
+	Success extends Record<string, unknown> | undefined = Record<string, any>,
+	Invalid extends Record<string, unknown> | undefined = Record<string, any>
+> =
+	| { type: 'success'; status: number; data?: Success }
+	| { type: 'invalid'; status: number; data?: Invalid }
+	| { type: 'redirect'; status: number; location: string }
+	| { type: 'error'; error: any };
 
 /**
  * Creates an `HttpError` object with an HTTP status code and an optional message.
  * This object, if thrown during request handling, will cause SvelteKit to
  * return an error response without invoking `handleError`
- * @param {number} status
- * @param {string | undefined} [message]
+ * @param status The HTTP status code
+ * @param body An object that conforms to the App.PageError type. If a string is passed, it will be used as the message property.
  */
-export function error(status: number, message?: string | undefined): HttpError;
+export function error(status: number, body: App.PageError): HttpError;
+export function error(
+	status: number,
+	// this overload ensures you can omit the argument or pass in a string if App.PageError is of type { message: string }
+	body?: { message: string } extends App.PageError ? App.PageError | string | undefined : never
+): HttpError;
 
 /**
  * Creates a `Redirect` object. If thrown during request handling, SvelteKit will
@@ -354,3 +400,11 @@ export function redirect(status: number, location: string): Redirect;
  * Generates a JSON `Response` object from the supplied data.
  */
 export function json(data: any, init?: ResponseInit): Response;
+
+/**
+ * Generates a `ValidationError` object.
+ */
+export function invalid<T extends Record<string, unknown> | undefined>(
+	status: number,
+	data?: T
+): ValidationError<T>;

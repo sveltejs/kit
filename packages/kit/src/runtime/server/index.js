@@ -1,3 +1,4 @@
+import * as cookie from 'cookie';
 import { render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
@@ -8,11 +9,15 @@ import { decode_params, disable_search, normalize_path } from '../../utils/url.j
 import { exec } from '../../utils/routing.js';
 import { render_data } from './data/index.js';
 import { DATA_SUFFIX } from '../../constants.js';
+import { get_cookies } from './cookie.js';
+import { HttpError } from '../control.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
 /** @param {{ html: string }} opts */
 const default_transform = ({ html }) => html;
+
+const default_filter = () => false;
 
 /** @type {import('types').Respond} */
 export async function respond(request, options, state) {
@@ -30,31 +35,6 @@ export async function respond(request, options, state) {
 			return new Response(`Cross-site ${request.method} form submissions are forbidden`, {
 				status: 403
 			});
-		}
-	}
-
-	const { parameter, allowed } = options.method_override;
-	const method_override = url.searchParams.get(parameter)?.toUpperCase();
-
-	if (method_override) {
-		if (request.method === 'POST') {
-			if (allowed.includes(method_override)) {
-				request = new Proxy(request, {
-					get: (target, property, _receiver) => {
-						if (property === 'method') return method_override;
-						return Reflect.get(target, property, target);
-					}
-				});
-			} else {
-				const verb = allowed.length === 0 ? 'enabled' : 'allowed';
-				const body = `${parameter}=${method_override} is not ${verb}. See https://kit.svelte.dev/docs/configuration#methodoverride`;
-
-				return new Response(body, {
-					status: 400
-				});
-			}
-		} else {
-			throw new Error(`${parameter}=${method_override} is only allowed with POST requests`);
 		}
 	}
 
@@ -114,16 +94,16 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	/** @type {import('types').ResponseHeaders} */
+	/** @type {Record<string, string>} */
 	const headers = {};
 
-	/** @type {string[]} */
-	const cookies = [];
+	const { cookies, new_cookies } = get_cookies(request, url);
 
 	if (state.prerendering) disable_search(url);
 
 	/** @type {import('types').RequestEvent} */
 	const event = {
+		cookies,
 		getClientAddress:
 			state.getClientAddress ||
 			(() => {
@@ -142,15 +122,9 @@ export async function respond(request, options, state) {
 				const value = new_headers[key];
 
 				if (lower === 'set-cookie') {
-					const new_cookies = /** @type {string[]} */ (Array.isArray(value) ? value : [value]);
-
-					for (const cookie of new_cookies) {
-						if (cookies.includes(cookie)) {
-							throw new Error(`"${key}" header already has cookie with same value`);
-						}
-
-						cookies.push(cookie);
-					}
+					throw new Error(
+						`Use \`event.cookies.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
+					);
 				} else if (lower in headers) {
 					throw new Error(`"${key}" header is already set`);
 				} else {
@@ -201,7 +175,8 @@ export async function respond(request, options, state) {
 
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
-		transformPageChunk: default_transform
+		transformPageChunk: default_transform,
+		filterSerializedResponseHeaders: default_filter
 	};
 
 	/**
@@ -226,7 +201,8 @@ export async function respond(request, options, state) {
 				}
 
 				resolve_opts = {
-					transformPageChunk: opts.transformPageChunk || default_transform
+					transformPageChunk: opts.transformPageChunk || default_transform,
+					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter
 				};
 			}
 
@@ -240,7 +216,6 @@ export async function respond(request, options, state) {
 					error: null,
 					branch: [],
 					fetched: [],
-					validation_errors: undefined,
 					cookies: [],
 					resolve_opts
 				});
@@ -271,35 +246,11 @@ export async function respond(request, options, state) {
 					}
 				}
 
-				for (const cookie of cookies) {
-					response.headers.append('set-cookie', cookie);
-				}
-
-				// respond with 304 if etag matches
-				if (response.status === 200 && response.headers.has('etag')) {
-					let if_none_match_value = request.headers.get('if-none-match');
-
-					// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
-					if (if_none_match_value?.startsWith('W/"')) {
-						if_none_match_value = if_none_match_value.substring(2);
-					}
-
-					const etag = /** @type {string} */ (response.headers.get('etag'));
-
-					if (if_none_match_value === etag) {
-						const headers = new Headers({ etag });
-
-						// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
-						for (const key of ['cache-control', 'content-location', 'date', 'expires', 'vary']) {
-							const value = response.headers.get(key);
-							if (value) headers.set(key, value);
-						}
-
-						return new Response(undefined, {
-							status: 304,
-							headers
-						});
-					}
+				for (const new_cookie of new_cookies) {
+					response.headers.append(
+						'set-cookie',
+						cookie.serialize(new_cookie.name, new_cookie.value, new_cookie.options)
+					);
 				}
 
 				return response;
@@ -332,13 +283,22 @@ export async function respond(request, options, state) {
 			// so we need to make an actual HTTP request
 			return await fetch(request);
 		} catch (e) {
-			const error = coalesce_to_error(e);
+			// HttpError can come from endpoint - TODO should it be handled there instead?
+			const error = e instanceof HttpError ? e : coalesce_to_error(e);
 			return handle_fatal_error(event, options, error);
+		} finally {
+			event.cookies.set = () => {
+				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
+			};
+
+			event.setHeaders = () => {
+				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+			};
 		}
 	}
 
 	try {
-		return await options.hooks.handle({
+		const response = await options.hooks.handle({
 			event,
 			resolve,
 			// TODO remove for 1.0
@@ -347,6 +307,35 @@ export async function respond(request, options, state) {
 				throw new Error('request in handle has been replaced with event' + details);
 			}
 		});
+
+		// respond with 304 if etag matches
+		if (response.status === 200 && response.headers.has('etag')) {
+			let if_none_match_value = request.headers.get('if-none-match');
+
+			// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
+			if (if_none_match_value?.startsWith('W/"')) {
+				if_none_match_value = if_none_match_value.substring(2);
+			}
+
+			const etag = /** @type {string} */ (response.headers.get('etag'));
+
+			if (if_none_match_value === etag) {
+				const headers = new Headers({ etag });
+
+				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
+				for (const key of ['cache-control', 'content-location', 'date', 'expires', 'vary']) {
+					const value = response.headers.get(key);
+					if (value) headers.set(key, value);
+				}
+
+				return new Response(undefined, {
+					status: 304,
+					headers
+				});
+			}
+		}
+
+		return response;
 	} catch (/** @type {unknown} */ e) {
 		const error = coalesce_to_error(e);
 		return handle_fatal_error(event, options, error);

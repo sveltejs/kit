@@ -8,12 +8,7 @@ const config = {
 	preprocess: preprocess(),
 
 	kit: {
-		adapter: adapter(),
-
-		// Override http methods in the Todo forms
-		methodOverride: {
-			allowed: ['PATCH', 'DELETE']
-		}
+		adapter: adapter()
 	}
 };
 

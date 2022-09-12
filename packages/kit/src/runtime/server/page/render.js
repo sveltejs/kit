@@ -5,8 +5,6 @@ import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
-import { serialize_error } from '../utils.js';
-import { HttpError } from '../../control.js';
 
 // TODO rename this function/module
 
@@ -25,10 +23,10 @@ const updated = {
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
- *   error: HttpError | Error | null;
+ *   error: App.PageError | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   validation_errors: Record<string, string> | undefined;
+ *   action_result?: import('types').ActionResult;
  * }} opts
  */
 export async function render_response({
@@ -42,7 +40,7 @@ export async function render_response({
 	error = null,
 	event,
 	resolve_opts,
-	validation_errors
+	action_result
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -68,11 +66,10 @@ export async function render_response({
 
 	let rendered;
 
-	const stack = error instanceof HttpError ? undefined : error?.stack;
-
-	if (error && options.dev && !(error instanceof HttpError)) {
-		error.stack = options.get_stack(error);
-	}
+	const form_value =
+		action_result?.type === 'success' || action_result?.type === 'invalid'
+			? action_result.data ?? null
+			: null;
 
 	if (page_config.ssr) {
 		/** @type {Record<string, any>} */
@@ -82,7 +79,8 @@ export async function render_response({
 				navigating: writable(null),
 				updated
 			},
-			components: await Promise.all(branch.map(({ node }) => node.component()))
+			components: await Promise.all(branch.map(({ node }) => node.component())),
+			form: form_value
 		};
 
 		let data = {};
@@ -102,10 +100,6 @@ export async function render_response({
 			url: event.url,
 			data
 		};
-
-		if (validation_errors) {
-			props.errors = validation_errors;
-		}
 
 		// TODO remove this for 1.0
 		/**
@@ -174,7 +168,7 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
-	const serialized = { data: '', errors: 'null' };
+	const serialized = { data: '', form: 'null' };
 
 	try {
 		serialized.data = devalue(branch.map(({ server_data }) => server_data));
@@ -188,15 +182,9 @@ export async function render_response({
 		throw error;
 	}
 
-	if (validation_errors) {
-		try {
-			serialized.errors = devalue(validation_errors);
-		} catch (e) {
-			// If we're here, the data could not be serialized with devalue
-			const error = /** @type {any} */ (e);
-			if (error.path) throw new Error(`${error.message} (errors.${error.path})`);
-			throw error;
-		}
+	if (form_value) {
+		// no need to check it can be serialized, we already verified that it's JSON-friendly
+		serialized.form = devalue(form_value);
 	}
 
 	// prettier-ignore
@@ -207,12 +195,12 @@ export async function render_response({
 			env: ${s(options.public_env)},
 			hydrate: ${page_config.ssr ? `{
 				status: ${status},
-				error: ${error && serialize_error(error, e => e.stack)},
+				error: ${s(error)},
 				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 				params: ${devalue(event.params)},
 				routeId: ${s(event.routeId)},
 				data: ${serialized.data},
-				errors: ${serialized.errors}
+				form: ${serialized.form}
 			}` : 'null'},
 			paths: ${s(options.paths)},
 			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
@@ -284,7 +272,11 @@ export async function render_response({
 	}
 
 	if (page_config.ssr && page_config.csr) {
-		body += `\n\t${fetched.map((item) => serialize_data(item, !!state.prerendering)).join('\n\t')}`;
+		body += `\n\t${fetched
+			.map((item) =>
+				serialize_data(item, resolve_opts.filterSerializedResponseHeaders, !!state.prerendering)
+			)
+			.join('\n\t')}`;
 	}
 
 	if (options.service_worker) {
@@ -321,6 +313,7 @@ export async function render_response({
 		})) || '';
 
 	const headers = new Headers({
+		'x-sveltekit-page': 'true',
 		'content-type': 'text/html',
 		etag: `"${hash(html)}"`
 	});
@@ -344,11 +337,6 @@ export async function render_response({
 		if (link_header_preloads.size) {
 			headers.set('link', Array.from(link_header_preloads).join(', '));
 		}
-	}
-
-	if (error && options.dev && !(error instanceof HttpError)) {
-		// reset stack, otherwise it may be 'fixed' a second time
-		error.stack = stack;
 	}
 
 	return new Response(html, {

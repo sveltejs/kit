@@ -1,16 +1,12 @@
-import { ResponseHeaders, SSRNode, CspDirectives } from 'types';
+import { SSRNode, CspDirectives } from 'types';
 import { HttpError } from '../../control.js';
 
 export interface Fetched {
 	url: string;
 	method: string;
-	body?: string | null;
-	response: {
-		status: number;
-		statusText: string;
-		headers: ResponseHeaders;
-		body: string;
-	};
+	request_body?: string | null;
+	response_body: string;
+	response: Response;
 }
 
 export interface FetchState {
@@ -36,10 +32,4 @@ export interface CspConfig {
 export interface CspOpts {
 	dev: boolean;
 	prerender: boolean;
-}
-
-export interface SerializedHttpError extends Pick<HttpError, 'message' | 'status'> {
-	name: 'HttpError';
-	stack: '';
-	__is_http_error: true;
 }

@@ -1,5 +1,8 @@
 import { FancyError } from '../_shared.js';
 
-export const POST = () => {
-	throw new FancyError('oops');
+/** @type {import('./$types').Actions} */
+export const actions = {
+	default: () => {
+		throw new FancyError('oops');
+	}
 };

@@ -4,7 +4,7 @@ import path from 'node:path';
 import colors from 'kleur';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import * as vite from 'vite';
-import { mkdirp, posixify, rimraf } from '../../utils/filesystem.js';
+import { mkdirp, posixify, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import * as sync from '../../core/sync/sync.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
@@ -14,7 +14,7 @@ import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { find_deps, get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import { get_aliases, resolve_entry, prevent_illegal_rollup_imports, get_env } from './utils.js';
+import { get_aliases, prevent_illegal_rollup_imports, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 
@@ -102,9 +102,6 @@ function kit() {
 
 	/** @type {import('types').BuildData} */
 	let build_data;
-
-	/** @type {Set<string>} */
-	let illegal_imports;
 
 	/** @type {string | undefined} */
 	let deferred_warning;
@@ -212,13 +209,6 @@ function kit() {
 				client_out_dir: `${svelte_config.kit.outDir}/output/client`
 			};
 
-			illegal_imports = new Set([
-				'/@id/__x00__$env/dynamic/private', //dev
-				'\0$env/dynamic/private', // prod
-				'/@id/__x00__$env/static/private', // dev
-				'\0$env/static/private' // prod
-			]);
-
 			if (is_build) {
 				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 
@@ -228,6 +218,21 @@ function kit() {
 				if (warning) console.error(warning + '\n');
 
 				return new_config;
+			}
+
+			const allow = new Set([
+				svelte_config.kit.files.lib,
+				svelte_config.kit.files.routes,
+				svelte_config.kit.outDir,
+				path.resolve(cwd, 'src'), // TODO this isn't correct if user changed all his files to sth else than src (like in test/options)
+				path.resolve(cwd, 'node_modules'),
+				path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
+			]);
+			// We can only add directories to the allow list, so we find out
+			// if there's a client hooks file and pass its directory
+			const client_hooks = resolve_entry(svelte_config.kit.files.hooks.client);
+			if (client_hooks) {
+				allow.add(path.dirname(client_hooks));
 			}
 
 			// dev and preview config can be shared
@@ -253,16 +258,7 @@ function kit() {
 				root: cwd,
 				server: {
 					fs: {
-						allow: [
-							...new Set([
-								svelte_config.kit.files.lib,
-								svelte_config.kit.files.routes,
-								svelte_config.kit.outDir,
-								path.resolve(cwd, 'src'),
-								path.resolve(cwd, 'node_modules'),
-								path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
-							])
-						]
+						allow: [...allow]
 					},
 					watch: {
 						ignored: [
@@ -361,7 +357,7 @@ function kit() {
 						prevent_illegal_rollup_imports(
 							this.getModuleInfo.bind(this),
 							module_node,
-							illegal_imports
+							vite.normalizePath(svelte_config.kit.files.lib)
 						);
 					}
 				});
@@ -517,7 +513,7 @@ function kit() {
 				if (deferred_warning) console.error('\n' + deferred_warning);
 			};
 
-			return await dev(vite, vite_config, svelte_config, illegal_imports);
+			return await dev(vite, vite_config, svelte_config);
 		},
 
 		/**

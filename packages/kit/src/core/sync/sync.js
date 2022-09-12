@@ -26,7 +26,7 @@ export async function create(config) {
 
 	const output = path.join(config.kit.outDir, 'generated');
 
-	write_client_manifest(manifest_data, output);
+	write_client_manifest(config, manifest_data, output);
 	write_root(manifest_data, output);
 	write_matchers(manifest_data, output);
 	await write_all_types(config, manifest_data);

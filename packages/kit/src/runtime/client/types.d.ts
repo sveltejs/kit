@@ -1,3 +1,4 @@
+import { applyAction } from '$app/forms';
 import {
 	afterNavigate,
 	beforeNavigate,
@@ -8,8 +9,6 @@ import {
 	prefetchRoutes
 } from '$app/navigation';
 import { CSRPageNode, CSRPageNodeLoader, CSRRoute, Uses } from 'types';
-import { HttpError } from '../control.js';
-import { SerializedHttpError } from '../server/page/types.js';
 
 export interface Client {
 	// public API, exposed via $app/navigation
@@ -21,36 +20,31 @@ export interface Client {
 	invalidateAll: typeof invalidateAll;
 	prefetch: typeof prefetch;
 	prefetch_routes: typeof prefetchRoutes;
+	apply_action: typeof applyAction;
 
 	// private API
 	_hydrate: (opts: {
 		status: number;
-		error: Error | SerializedHttpError;
+		error: App.PageError;
 		node_ids: number[];
 		params: Record<string, string>;
 		routeId: string | null;
 		data: Array<import('types').ServerDataNode | null>;
-		errors: Record<string, any> | null;
+		form: Record<string, any> | null;
 	}) => Promise<void>;
 	_start_router: () => void;
 }
 
 export type NavigationIntent = {
-	/**
-	 * `url.pathname + url.search`
-	 */
+	/** `url.pathname + url.search`  */
 	id: string;
-	/**
-	 * The route parameters
-	 */
+	/** Whether we are invalidating or navigating */
+	invalidating: boolean;
+	/** The route parameters */
 	params: Record<string, string>;
-	/**
-	 * The route that matches `path`
-	 */
+	/** The route that matches `path` */
 	route: CSRRoute;
-	/**
-	 * The destination URL
-	 */
+	/** The destination URL */
 	url: URL;
 };
 
@@ -83,7 +77,7 @@ export interface DataNode {
 
 export interface NavigationState {
 	branch: Array<BranchNode | undefined>;
-	error: HttpError | Error | null;
+	error: App.PageError | null;
 	params: Record<string, string>;
 	route: CSRRoute | null;
 	session_id: number;

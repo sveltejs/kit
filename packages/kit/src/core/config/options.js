@@ -141,7 +141,19 @@ const options = object(
 
 			files: object({
 				assets: string('static'),
-				hooks: string(join('src', 'hooks')),
+				hooks: (input, keypath) => {
+					// TODO remove this for the 1.0 release
+					if (typeof input === 'string') {
+						throw new Error(
+							`${keypath} is an object with { server: string, client: string } now. See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
+						);
+					}
+
+					return object({
+						client: string(join('src', 'hooks.client')),
+						server: string(join('src', 'hooks.server'))
+					})(input, keypath);
+				},
 				lib: string(join('src', 'lib')),
 				params: string(join('src', 'params')),
 				routes: string(join('src', 'routes')),
@@ -171,20 +183,10 @@ const options = object(
 
 			inlineStyleThreshold: number(0),
 
-			methodOverride: object({
-				parameter: string('_method'),
-				allowed: validate([], (input, keypath) => {
-					if (!Array.isArray(input) || !input.every((method) => typeof method === 'string')) {
-						throw new Error(`${keypath} must be an array of strings`);
-					}
-
-					if (input.map((i) => i.toUpperCase()).includes('GET')) {
-						throw new Error(`${keypath} cannot contain "GET"`);
-					}
-
-					return input;
-				})
-			}),
+			methodOverride: error(
+				() =>
+					'Method overrides have been removed in favor of actions. See the PR for more information: https://github.com/sveltejs/kit/pull/6469'
+			),
 
 			moduleExtensions: string_array(['.js', '.ts']),
 

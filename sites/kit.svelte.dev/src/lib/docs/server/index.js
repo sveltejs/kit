@@ -5,7 +5,7 @@ import 'prismjs/components/prism-bash.js';
 import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
 import 'prism-svelte';
-import { extract_frontmatter, transform } from './markdown';
+import { escape, extract_frontmatter, transform } from './markdown';
 import { modules } from '../../../../../../packages/kit/docs/types.js';
 import { render_modules } from './modules';
 import { error } from '@sveltejs/kit';
@@ -107,7 +107,8 @@ export async function read_file(dir, file) {
 							`export type LayoutLoad = Kit.Load<{${params}}>;`,
 							`export type LayoutServerLoad = Kit.ServerLoad<{${params}}>;`,
 							`export type RequestHandler = Kit.RequestHandler<{${params}}>;`,
-							`export type Action = Kit.Action<{${params}}>;`
+							`export type Action = Kit.Action<{${params}}>;`,
+							`export type Actions = Kit.Actions<{${params}}>;`
 						].join('\n');
 
 						if (source.includes('// @filename:')) {
@@ -164,7 +165,7 @@ export async function read_file(dir, file) {
 
 					return {
 						type,
-						content
+						content: escape(content)
 					};
 				});
 

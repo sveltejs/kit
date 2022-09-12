@@ -21,9 +21,6 @@ try {
 
 const cwd = process.cwd();
 
-const shared_names = new Set(['load']);
-const server_names = new Set(['load', 'POST', 'PUT', 'PATCH', 'DELETE']); // TODO replace with a single `action`
-
 /**
  * Creates types for the whole manifest
  * @param {import('types').ValidatedConfig} config
@@ -193,6 +190,7 @@ function update_types(config, routes, route) {
 
 		if (route.leaf.server) {
 			exports.push(`export type Action = Kit.Action<RouteParams>`);
+			exports.push(`export type Actions = Kit.Actions<RouteParams>`);
 		}
 	}
 
@@ -231,6 +229,9 @@ function update_types(config, routes, route) {
 
 	if (route.endpoint) {
 		exports.push(`export type RequestHandler = Kit.RequestHandler<RouteParams>;`);
+	}
+
+	if (route.leaf?.server || route.endpoint) {
 		exports.push(`export type RequestEvent = Kit.RequestEvent<RouteParams>;`);
 	}
 
@@ -270,7 +271,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 
 	if (node.server) {
 		const content = fs.readFileSync(node.server, 'utf8');
-		const proxy = tweak_types(content, server_names);
+		const proxy = tweak_types(content, true);
 		const basename = path.basename(node.server);
 		if (proxy?.modified) {
 			fs.writeFileSync(`${outdir}/proxy${basename}`, proxy.code);
@@ -295,23 +296,19 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 		exports.push(`export type ${prefix}ServerLoadEvent = Parameters<${prefix}ServerLoad>[0];`);
 
 		if (is_page) {
-			let errors = 'unknown';
+			let type = 'unknown';
 			if (proxy) {
-				const types = [];
-				for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
-					if (proxy.exports.includes(method)) {
-						// If the file wasn't tweaked, we can use the return type of the original file.
-						// The advantage is that type updates are reflected without saving.
-						const from = proxy.modified
-							? `./proxy${replace_ext_with_js(basename)}`
-							: path_to_original(outdir, node.server);
+				if (proxy.exports.includes('actions')) {
+					// If the file wasn't tweaked, we can use the return type of the original file.
+					// The advantage is that type updates are reflected without saving.
+					const from = proxy.modified
+						? `./proxy${replace_ext_with_js(basename)}`
+						: path_to_original(outdir, node.server);
 
-						types.push(`Kit.AwaitedErrors<typeof import('${from}').${method}>`);
-					}
+					type = `Kit.AwaitedActions<typeof import('${from}').actions>`;
 				}
-				errors = types.length ? types.join(' | ') : 'null';
 			}
-			exports.push(`export type Errors = ${errors};`);
+			exports.push(`export type ActionData = ${type};`);
 		}
 	} else {
 		server_data = 'null';
@@ -323,7 +320,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 
 	if (node.shared) {
 		const content = fs.readFileSync(node.shared, 'utf8');
-		const proxy = tweak_types(content, shared_names);
+		const proxy = tweak_types(content, false);
 		if (proxy?.modified) {
 			fs.writeFileSync(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code);
 			written_proxies.push(`proxy${path.basename(node.shared)}`);
@@ -426,10 +423,12 @@ function replace_ext_with_js(file_path) {
 
 /**
  * @param {string} content
- * @param {Set<string>} names
+ * @param {boolean} is_server
  * @returns {Proxy}
  */
-export function tweak_types(content, names) {
+export function tweak_types(content, is_server) {
+	const names = new Set(is_server ? ['load', 'actions'] : ['load']);
+
 	try {
 		let modified = false;
 
@@ -480,6 +479,7 @@ export function tweak_types(content, names) {
 		 * @param {import('typescript').Node} value
 		 */
 		function replace_jsdoc_type_tags(node, value) {
+			let _modified = false;
 			// @ts-ignore
 			if (node.jsDoc) {
 				// @ts-ignore
@@ -492,22 +492,27 @@ export function tweak_types(content, names) {
 								ts.isArrowFunction(value);
 
 							if (is_fn && value.parameters?.length > 0) {
+								const name = ts.isIdentifier(value.parameters[0].name)
+									? value.parameters[0].name.text
+									: 'event';
 								code.overwrite(tag.tagName.pos, tag.tagName.end, 'param');
 								code.prependRight(tag.typeExpression.pos + 1, 'Parameters<');
 								code.appendLeft(tag.typeExpression.end - 1, '>[0]');
-								code.appendLeft(tag.typeExpression.end, ' event');
+								code.appendLeft(tag.typeExpression.end, ` ${name}`);
 							} else {
 								code.overwrite(tag.pos, tag.end, '');
 							}
-							modified = true;
+							_modified = true;
 						}
 					}
 				}
 			}
+			modified ||= _modified;
+			return _modified;
 		}
 
 		ast.forEachChild((node) => {
-			if (ts.isFunctionDeclaration(node) && node.name?.text && names.has(node.name?.text)) {
+			if (ts.isFunctionDeclaration(node) && node.name?.text && node.name?.text === 'load') {
 				// remove JSDoc comment above `export function load ...`
 				replace_jsdoc_type_tags(node, node);
 			}
@@ -525,7 +530,7 @@ export function tweak_types(content, names) {
 				for (const declaration of node.declarationList.declarations) {
 					if (
 						ts.isIdentifier(declaration.name) &&
-						names.has(declaration.name.text) &&
+						declaration.name.text === 'load' &&
 						declaration.initializer
 					) {
 						// edge case — remove JSDoc comment above individual export
@@ -548,7 +553,6 @@ export function tweak_types(content, names) {
 								rhs.parameters.length
 							) {
 								const arg = rhs.parameters[0];
-
 								const add_parens = content[arg.pos - 1] !== '(';
 
 								if (add_parens) code.prependRight(arg.pos, '(');
@@ -568,6 +572,80 @@ export function tweak_types(content, names) {
 							}
 
 							modified = true;
+						}
+					} else if (
+						is_server &&
+						ts.isIdentifier(declaration.name) &&
+						declaration.name?.text === 'actions' &&
+						declaration.initializer
+					) {
+						// remove JSDoc comment from `export const actions = ..`
+						const removed = replace_jsdoc_type_tags(node, declaration.initializer);
+						// ... and move type to each individual action
+						if (removed) {
+							const rhs = declaration.initializer;
+							if (ts.isObjectLiteralExpression(rhs)) {
+								for (const prop of rhs.properties) {
+									if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
+										const rhs = prop.initializer;
+										const replaced = replace_jsdoc_type_tags(prop, rhs);
+										if (
+											!replaced &&
+											rhs &&
+											(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) &&
+											rhs.parameters?.[0]
+										) {
+											const name = ts.isIdentifier(rhs.parameters[0].name)
+												? rhs.parameters[0].name.text
+												: 'event';
+											code.prependRight(
+												rhs.pos,
+												`/** @param {import('./$types').RequestEvent} ${name} */ `
+											);
+										}
+									}
+								}
+							}
+						}
+
+						// remove type from `export const actions: Actions ...`
+						if (declaration.type) {
+							let a = declaration.type.pos;
+							let b = declaration.type.end;
+							while (/\s/.test(content[a])) a += 1;
+
+							const type = content.slice(a, b);
+							code.remove(declaration.name.end, declaration.type.end);
+							code.append(`;null as any as ${type};`);
+							modified = true;
+
+							// ... and move type to each individual action
+							const rhs = declaration.initializer;
+							if (ts.isObjectLiteralExpression(rhs)) {
+								for (const prop of rhs.properties) {
+									if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
+										const rhs = prop.initializer;
+
+										if (
+											rhs &&
+											(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) &&
+											rhs.parameters.length
+										) {
+											const arg = rhs.parameters[0];
+											const add_parens = content[arg.pos - 1] !== '(';
+
+											if (add_parens) code.prependRight(arg.pos, '(');
+
+											if (arg && !arg.type) {
+												code.appendLeft(
+													arg.name.end,
+													`: import('./$types').RequestEvent` + (add_parens ? ')' : '')
+												);
+											}
+										}
+									}
+								}
+							}
 						}
 					}
 				}
