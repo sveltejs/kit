@@ -265,7 +265,7 @@ To customise the behaviour, you can provide a function that runs immediately bef
 		// `data` is its `FormData` object
 		// `cancel()` will prevent the submission
 
-		return async (result) => {
+		return async ({ result }) => {
 			// `result` is an `ActionResult` object
 		};
 	}}
@@ -293,7 +293,7 @@ If you provide your own callbacks, you may need to reproduce part of the default
 		// `data` is its `FormData` object
 		// `cancel()` will prevent the submission
 
-		return async (result) => {
+		return async ({ result }) => {
 			// `result` is an `ActionResult` object
 +			if (result.type === 'error') {
 +				await applyAction(result);

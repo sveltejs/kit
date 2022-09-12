@@ -1,5 +1,21 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.90
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
+* Improve performance by compressing in parallel ([#6710](https://github.com/sveltejs/kit/pull/6710))
+
+## 1.0.0-next.89
+
+### Patch Changes
+
+- [breaking] request creation cleanup ([#6681](https://github.com/sveltejs/kit/pull/6681))
+
+* [breaking] limit adapter-node request size ([#6684](https://github.com/sveltejs/kit/pull/6684))
+
 ## 1.0.0-next.88
 
 ### Patch Changes

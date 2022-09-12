@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.55
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
 ## 1.0.0-next.54
 
 ### Patch Changes

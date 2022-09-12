@@ -391,10 +391,13 @@ export async function dev(vite, vite_config, svelte_config) {
 				let request;
 
 				try {
-					request = await getRequest(base, req);
+					request = await getRequest({
+						base,
+						request: req
+					});
 				} catch (/** @type {any} */ err) {
 					res.statusCode = err.status || 400;
-					return res.end(err.reason || 'Invalid request body');
+					return res.end(err.message || 'Invalid request body');
 				}
 
 				const template = load_template(cwd, svelte_config);
@@ -455,7 +458,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						error_template: ({ status, message }) => {
 							return error_page
 								.replace(/%sveltekit\.status%/g, String(status))
-								.replace(/%sveltekit\.message%/g, message);
+								.replace(/%sveltekit\.error\.message%/g, message);
 						},
 						trailing_slash: svelte_config.kit.trailingSlash
 					},

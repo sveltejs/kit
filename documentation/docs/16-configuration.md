@@ -184,7 +184,7 @@ An object containing zero or more of the following `string` values:
 - `assets` — a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
 - `hooks` — the location of your client and server hooks (see [Hooks](/docs/hooks))
 - `lib` — your app's internal library, accessible throughout the codebase as `$lib`
-- `params` — a directory containing [parameter matchers](/docs/routing#advanced-routing-matching)
+- `params` — a directory containing [parameter matchers](/docs/advanced-routing#matching)
 - `routes` — the files that define the structure of your app (see [Routing](/docs/routing))
 - `serviceWorker` — the location of your service worker's entry point (see [Service workers](/docs/service-workers))
 - `template` — the location of the template for HTML responses
@@ -299,7 +299,7 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs (note 
 
 This option also affects [prerendering](/docs/page-options#prerender). If `trailingSlash` is `always`, a route like `/about` will result in an `about/index.html` file, otherwise it will create `about.html`, mirroring static webserver conventions.
 
-> Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO. If you use this option, ensure that you implement logic for conditionally adding or removing trailing slashes from `request.path` inside your [`handle`](/docs/hooks#hooks-server-js-handle) function.
+> Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO. If you use this option, ensure that you implement logic for conditionally adding or removing trailing slashes from `request.path` inside your [`handle`](/docs/hooks#server-hooks-handle) function.
 
 ### version
 

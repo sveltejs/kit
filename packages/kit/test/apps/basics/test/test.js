@@ -1792,9 +1792,40 @@ test.describe('Actions', () => {
 		await page.type('input[name="username"]', 'foo');
 		await Promise.all([
 			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
-			page.click('button')
+			page.click('button.form1')
 		]);
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
+	});
+
+	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/enhance');
+
+		expect(await page.textContent('span.count')).toBe('0');
+
+		if (javaScriptEnabled) {
+			await Promise.all([
+				page.waitForRequest((request) => request.url().includes('/actions/enhance')),
+				page.click('button.form2'),
+				page.click('button.form2')
+			]);
+			await page.waitForTimeout(500); // to make sure locator doesn't run exactly between submission 1 and 2
+
+			await expect(page.locator('span.count')).toHaveText('1');
+		}
+	});
+
+	test('use:enhance button with formAction', async ({ page, app }) => {
+		await page.goto('/actions/enhance');
+
+		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+
+		await page.type('input[name="username"]', 'foo');
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
+			page.click('button.form1-register')
+		]);
+
+		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'register: foo' }));
 	});
 });
