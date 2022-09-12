@@ -9,6 +9,8 @@ There are two hooks files, both optional:
 - `src/hooks.server.js` — your app's server hooks
 - `src/hooks.client.js` — your app's client hooks
 
+Those files can also be used to run code that runs at the start of the application. This can be useful for running initialization code for database ORMs or various other libraries.
+
 > You can configure the location of these files with [`config.kit.files.hooks`](/docs/configuration#files).
 
 ### Server hooks
