@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.481
+
+### Patch Changes
+
+- [fix] docs links in generated and published types ([#6741](https://github.com/sveltejs/kit/pull/6741))
+
 ## 1.0.0-next.480
 
 ### Patch Changes

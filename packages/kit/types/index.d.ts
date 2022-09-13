@@ -16,7 +16,7 @@ import {
 	TrailingSlash
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
-import { HttpError, Redirect, ValidationError } from '../src/runtime/control.js';
+import { HttpError, Redirect } from '../src/runtime/control.js';
 
 export { PrerenderOption } from './private.js';
 
@@ -38,6 +38,12 @@ export type AwaitedProperties<input extends Record<string, any> | void> = input 
 export type AwaitedActions<T extends Record<string, (...args: any) => any>> = {
 	[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
 }[keyof T];
+
+// Needs to be here, else ActionData will be resolved to unknown - probably because of "d.ts file imports .js file" in combination with allowJs
+interface ValidationError<T extends Record<string, unknown> | undefined = undefined> {
+	status: number;
+	data: T;
+}
 
 type UnpackValidationError<T> = T extends ValidationError<infer X> ? X : T;
 
@@ -292,7 +298,7 @@ export interface RequestEvent<
 /**
  * A `(event: RequestEvent) => Response` function exported from a `+server.js` file that corresponds to an HTTP verb (`GET`, `PUT`, `PATCH`, etc) and handles requests with that method.
  *
- * It receives `Params` as the first generic argument, which you can skip by using [generated types](/docs/types#generated-types) instead.
+ * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://kit.svelte.dev/docs/types#generated-types) instead.
  */
 export interface RequestHandler<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>

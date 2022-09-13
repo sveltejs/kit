@@ -9,6 +9,8 @@ There are two hooks files, both optional:
 - `src/hooks.server.js` — your app's server hooks
 - `src/hooks.client.js` — your app's client hooks
 
+Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
+
 > You can configure the location of these files with [`config.kit.files.hooks`](/docs/configuration#files).
 
 ### Server hooks
@@ -90,7 +92,7 @@ export async function handle({ event, resolve }) {
 
 #### handleFetch
 
-This function allows you to modify (or replace) a `fetch` request for an external resource that happens inside a `load` function that runs on the server (or during pre-rendering).
+This function allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering).
 
 Or your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
 

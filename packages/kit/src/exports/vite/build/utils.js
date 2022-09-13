@@ -147,7 +147,7 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
  * @returns {string}
  */
 export function assets_base(config) {
-	return config.paths.assets + '/' || config.paths.base + '/' || './';
+	return (config.paths.assets || config.paths.base || '.') + '/';
 }
 
 const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH']);

@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.176
+
+### Patch Changes
+
+- SvelteKit 1.0 RC ([#6707](https://github.com/sveltejs/kit/pull/6707))
+
 ## 2.0.0-next.175
 
 ### Patch Changes
