@@ -272,11 +272,6 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		route_map.forEach((route) => {
 			if (!route.leaf) return;
 
-			if (route.leaf && route.endpoint) {
-				// TODO possibly relax this https://github.com/sveltejs/kit/issues/5896
-				throw new Error(`${route.endpoint.file} cannot share a directory with other route files`);
-			}
-
 			route.page = {
 				layouts: [],
 				errors: [],

@@ -349,3 +349,37 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	<!-- content -->
 </form>
 ```
+
+### Alternatives
+
+Form actions are specifically designed to also work without JavaScript, which means you need to use forms for it. If you don't need the page to work without JavaScript and/or you for example want to interact with an API through JSON, you can instead use `+server.js` files:
+
+```svelte
+/// file: src/routes/crud/+page.svelte
+<script>
+	let result;
+	async function update() {
+		const response = await fetch('/crud', {
+			method: 'PUT',
+			body: JSON.stringify({ new: 'value' }),
+			'content-type': 'application/json',
+			'accept': 'application/json'
+		});
+		result = await response.json();
+	}
+</script>
+
+<button on:click={update}>Update</button>
+<p>Result: {JSON.stringify(result)}</p>
+```
+
+```js
+/// file: src/routes/crud/+server.js
+import { json } from '@sveltejs/kit';
+
+/** @type {import('./$types').RequestHandler} */
+export function PUT() {
+	// ...
+	return json({ new: 'value' });
+}
+```

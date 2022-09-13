@@ -1,4 +1,5 @@
 import { json } from '../../exports/index.js';
+import { negotiate } from '../../utils/http.js';
 import { Redirect, ValidationError } from '../control.js';
 import { check_method_names, method_not_allowed } from './utils.js';
 
@@ -63,4 +64,25 @@ export async function render_endpoint(event, mod, state) {
 
 		throw error;
 	}
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ */
+export function is_endpoint_request(event) {
+	const result =
+		// These only exist for +server
+		['PUT', 'PATCH', 'DELETE'].includes(event.request.method) ||
+		// GET has accept text/html for pages
+		(event.request.method === 'GET' &&
+			negotiate(event.request.headers.get('accept') ?? '*/*', ['application/json', 'text/html']) ===
+				'application/json') ||
+		// POST with FormData is for actions
+		(event.request.method === 'POST' &&
+			!(event.request.headers.get('content-type') ?? '')
+				.split(';')
+				.some((part) =>
+					['multipart/form-data', 'application/x-www-form-urlencoded'].includes(part.trim())
+				));
+	return result;
 }
