@@ -100,12 +100,6 @@ export interface ClientHooks {
 	handleError: HandleClientError;
 }
 
-export interface ImportNode {
-	readonly name: string;
-	readonly dynamic: boolean;
-	readonly children: Generator<ImportNode>;
-}
-
 export class InternalServer extends Server {
 	init(options: ServerInitOptions): Promise<void>;
 	respond(
