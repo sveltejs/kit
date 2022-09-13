@@ -126,7 +126,7 @@ class IllegalModuleGuard {
 			)
 			.join('\n');
 
-		return `Cannot import ${stack.at(-1)?.name} into client-side code:\n${pyramid}`;
+		return `Cannot import ${stack.at(-1)?.name} into public-facing code:\n${pyramid}`;
 	}
 }
 
