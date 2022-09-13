@@ -701,8 +701,8 @@ export function create_client({ target, base, trailing_slash }) {
 		errors.forEach((loader) => loader?.().catch(() => {}));
 		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
 
-		/** @type {import('types').ServerData | null} */
-		let server_data = null;
+		/** @type {import('types').ServerData | undefined} */
+		let server_data = undefined;
 
 		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];
@@ -742,7 +742,7 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @type {import('./types').BranchNode | undefined} */
 			const previous = current.branch[i];
 
-			const server_data_node = server_data_nodes?.[i] ?? null;
+			const server_data_node = server_data_nodes?.[i];
 
 			const can_reuse_server_data = !server_data_node || server_data_node.type === 'skip';
 			// re-use data from previous load if it's still valid
@@ -771,7 +771,11 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 					return data;
 				},
-				server_data_node: create_data_node(server_data_node, previous?.server)
+				server_data_node: create_data_node(
+					// is undefined if wasn't reloaded from the server, in which case we want to reuse previous data.
+					// passing null in this case would result in the server data being null which is wrong
+					server_data_node === undefined ? { type: 'skip' } : server_data_node
+				)
 			});
 		});
 
