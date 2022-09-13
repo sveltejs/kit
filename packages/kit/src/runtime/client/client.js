@@ -774,7 +774,8 @@ export function create_client({ target, base, trailing_slash }) {
 				server_data_node: create_data_node(
 					// is undefined if wasn't reloaded from the server, in which case we want to reuse previous data.
 					// passing null in this case would result in the server data being null which is wrong
-					server_data_node === undefined ? { type: 'skip' } : server_data_node
+					server_data_node === undefined ? { type: 'skip' } : server_data_node,
+					previous?.server
 				)
 			});
 		});
