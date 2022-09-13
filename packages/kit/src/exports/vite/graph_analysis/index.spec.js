@@ -96,7 +96,7 @@ describe('IllegalImportGuard', (test) => {
 		});
 		assert.throws(
 			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$env\/static\/private into client-side code:.*/gs
+			/.*Cannot import \$env\/static\/private into public-facing code:.*/gs
 		);
 	});
 
@@ -108,7 +108,7 @@ describe('IllegalImportGuard', (test) => {
 		});
 		assert.throws(
 			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$env\/static\/private into client-side code:.*/gs
+			/.*Cannot import \$env\/static\/private into public-facing code:.*/gs
 		);
 	});
 
@@ -120,7 +120,7 @@ describe('IllegalImportGuard', (test) => {
 		});
 		assert.throws(
 			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$env\/dynamic\/private into client-side code:.*/gs
+			/.*Cannot import \$env\/dynamic\/private into public-facing code:.*/gs
 		);
 	});
 
@@ -132,7 +132,7 @@ describe('IllegalImportGuard', (test) => {
 		});
 		assert.throws(
 			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$env\/dynamic\/private into client-side code:.*/gs
+			/.*Cannot import \$env\/dynamic\/private into public-facing code:.*/gs
 		);
 	});
 
@@ -145,7 +145,7 @@ describe('IllegalImportGuard', (test) => {
 
 		assert.throws(
 			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$lib\/test.server.js into client-side code:.*/gs
+			/.*Cannot import \$lib\/test.server.js into public-facing code:.*/gs
 		);
 	});
 
@@ -158,7 +158,7 @@ describe('IllegalImportGuard', (test) => {
 
 		assert.throws(
 			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$lib\/server\/some\/nested\/path.js into client-side code:.*/gs
+			/.*Cannot import \$lib\/server\/some\/nested\/path.js into public-facing code:.*/gs
 		);
 	});
 
