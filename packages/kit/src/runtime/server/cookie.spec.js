@@ -125,12 +125,4 @@ test('cookie names are case sensitive', () => {
 	assert.equal(entryA?.value, 'bar');
 });
 
-test.skip('default encoding', () => {
-	// is e2e test
-});
-
-test.skip('default decoding', () => {
-	// is e2e test
-});
-
 test.run();
