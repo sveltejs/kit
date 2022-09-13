@@ -255,7 +255,7 @@ Without an argument, `use:enhance` will emulate the browser-native behaviour, ju
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
 
-> By default the `form` property is only updated for actions that belong to the page because in the native form submission case you would be redirected to the page the action is on
+> By default the `form` property is only updated for actions that are in `+page.server.js` alongside `+page.svelte` because in the native form submission case you would be redirected to the page the action is on
 
 To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`.
 
