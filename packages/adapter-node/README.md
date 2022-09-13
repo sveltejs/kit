@@ -71,7 +71,7 @@ Instead, we read from the _right_, accounting for the number of trusted proxies.
 
 ### `BODY_SIZE_LIMIT`
 
-The maximum request body size to accept in bytes. Defaults to 512kb. This option does not allow streaming. You can disable this option with a value of 0 and implement a custom check in [`handle`](https://kit.svelte.dev/docs/hooks#server-hooks-handle) if you need something more advanced.
+The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of 0 and implement a custom check in [`handle`](https://kit.svelte.dev/docs/hooks#server-hooks-handle) if you need something more advanced.
 
 ## Options
 
