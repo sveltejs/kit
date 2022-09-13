@@ -1,81 +1,54 @@
 ---
-title: Server-Only Modules
+title: Server-only modules
 ---
 
-Like a good friend, SvelteKit keeps your secrets. When writing your backend and frontend in the same repository, it can be easy to accidentally import sensitive data into your front-end code (environment variables containing API keys, for example). SvelteKit provides a way to prevent this entirely: Server-Only Modules. We export a few of these ourselves: See the private [`$env`](modules#$env-dynamic-private) modules.
+Like a good friend, SvelteKit keeps your secrets. When writing your backend and frontend in the same repository, it can be easy to accidentally import sensitive data into your front-end code (environment variables containing API keys, for example). SvelteKit provides a way to prevent this entirely: server-only modules.
 
-Thankfully, we don't keep all of this to ourselves. You can declare your module as server-only as well by placing it anywhere in project and naming it `*.server.js` (or `ts`, etc.) *or* by placing it somewhere under `$lib/server` (you can name it anything in this case). Then, no matter how many hops you jump through, importing it into client code...
+### Private environment variables
+
+The `$env/static/private` and `$env/dynamic/private` modules, which are covered in the [modules](/docs/modules) section, can only be imported into modules that only run on the server, such as [`hooks.server.js`](/docs/hooks#server-hooks) or [`+page.server.js`](/docs/routing#page-page-server-js).
+
+### Your modules
+
+You can make your own modules server-only in two ways:
+
+- adding `.server` to the filename, e.g. `secrets.server.js`
+- placing them in `$lib/server`, e.g. `$lib/server/secrets.js`
+
+### How it works
+
+Any time you have public-facing code that imports server-only code (whether directly or indirectly)...
 
 ```js
-/// file: $lib/bad.server.js
-
-export const shouldExplode = 'boom';
+// @errors: 7005
+/// file: $lib/server/secrets.js
+export const atlantisCoordinates = [/* redacted */];
 ```
 
 ```js
-/// file: $lib/hop-1.js
+// @errors: 2307 7006
+/// file: src/routes/utils.js
+export { atlantisCoordinates } from '$lib/server/secrets.js';
 
-// @filename: ambient.d.ts
-declare module '$lib/bad.server.js';
-
-// @filename: index.js
-// ---cut---
-export { shouldExplode } from '$lib/bad.server.js';
+export const add = (a, b) => a + b;
 ```
 
-```js
-/// file: $lib/hop-2.js
-
-// @filename: ambient.d.ts
-declare module '$lib/hop-1.js';
-
-// @filename: index.js
-// ---cut---
-export { shouldExplode } from '$lib/hop-1.js';
-```
-
-```js
-/// file: $lib/hop-3.js
-
-// @filename: ambient.d.ts
-declare module '$lib/hop-2.js';
-
-// @filename: index.js
-// ---cut---
-export { shouldExplode } from '$lib/hop-2.js';
-```
-
-```js
-/// file: $lib/hop-4.js
-
-// @filename: ambient.d.ts
-declare module '$lib/hop-3.js';
-
-// @filename: index.js
-// ---cut---
-export { shouldExplode } from '$lib/hop-3.js';
-```
-
-```svelte
+```html
 /// file: src/routes/+page.svelte
 <script>
-	import { shouldExplode } from '$lib/hop-4.js';
+	import { add } from './utils.js';
 </script>
-
-<p>{shouldExplode}</p>
 ```
 
-...will generate a helpful error.
+...SvelteKit will error:
 
-```bash
-[vite-plugin-svelte-kit] Cannot import $lib/bad.server.js into client-side code:
-- .svelte-kit/generated/nodes/2.js
-  - src/routes/+page.svelte
-    - $lib/hop-4.js
-      - $lib/hop-3.js
-        - $lib/hop-2.js
-          - $lib/hop-1.js
-            - $lib/bad.server.js
+```
+Cannot import $lib/server/secrets.js into public-facing code:
+- src/routes/+page.svelte
+	- src/routes/utils.js
+		- $lib/server/secrets.js
 ```
 
-Note: This feature works with simple dynamic imports (eg. `await import('$lib/bad.server.js')`), but it will not work with complex ones (``await import(`$lib/{myVar}`)``).
+Even though the public-facing code — `src/routes/+page.svelte` — only uses the `add` export and not the secret `atlantisCoordinates` export, the secret code could end up in JavaScript that the browser downloads, and so the import chain is considered unsafe.
+
+This feature also works with dynamic imports, even interpolated ones like ``await import(`./${foo}.js`)``, with one small caveat: during development, if there are two or more dynamic imports between the public-facing code and the server-only module, the illegal import will not be detected the first time the code is loaded.
