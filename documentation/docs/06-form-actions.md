@@ -249,8 +249,8 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
-- update the `form` property if the action belongs to the page and invalidate all data on a successful response
-- update the `form` property on a invalid response if the action belongs to the page
+- update the `form` property and invalidate all data on a successful response
+- update the `form` property on a invalid response
 - update `$page.status` on a successful or invalid response
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
