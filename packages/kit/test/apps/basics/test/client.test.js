@@ -377,6 +377,20 @@ test.describe('Load', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 	});
 
+	test('server data has no-store cache header and other headers appended to it', async ({
+		page
+	}) => {
+		await page.goto('/load');
+
+		const [request] = await Promise.all([
+			page.waitForRequest(/\/load\/server-data-headers\/__data\.js/),
+			page.click('a[href="/load/server-data-headers"]')
+		]);
+		const headers = await (await request.response()).allHeaders();
+		expect(headers['cache-control']).toBe('no-store');
+		expect(headers['x-server-data']).toBe('true');
+	});
+
 	test('load does not call fetch if max-age allows it', async ({ page, request }) => {
 		await request.get('/load/cache-control/reset');
 

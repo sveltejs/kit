@@ -237,13 +237,17 @@ export async function respond(request, options, state) {
 					throw new Error('This should never happen');
 				}
 
-				if (!is_data_request) {
-					// we only want to set cookies on __data.js requests, we don't
-					// want to cache stuff erroneously etc
-					for (const key in headers) {
-						const value = headers[key];
-						response.headers.set(key, /** @type {string} */ (value));
+				for (const key in headers) {
+					// on __data.js requests, we don't want to cache stuff erroneously
+					if (key === 'cache-control' && is_data_request) {
+						continue;
 					}
+					const value = headers[key];
+					response.headers.set(key, /** @type {string} */ (value));
+				}
+				if (is_data_request) {
+					// Ensure that __data.js requests are not cached, not rerunning them is ensured differently
+					response.headers.set('cache-control', 'no-store');
 				}
 
 				for (const new_cookie of new_cookies) {

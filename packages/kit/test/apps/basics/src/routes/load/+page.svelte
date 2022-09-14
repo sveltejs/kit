@@ -12,3 +12,4 @@
 <a href="/load/large-response">large response</a>
 <a href="/load/raw-body">raw body</a>
 <a href="/load/server-fetch-request">server fetch request</a>
+<a href="/load/server-data-headers">server data headers</a>
