@@ -1616,6 +1616,13 @@ test.describe('Routing', () => {
 		await page.goto('/static');
 		expect(await page.textContent('h1')).toBe('hello');
 	});
+
+	test('Respects symlinks', async ({ page, clicknav }) => {
+		await page.goto('/routing');
+		await clicknav('[href="/routing/symlink-from"]');
+
+		expect(await page.textContent('h1')).toBe('symlinked');
+	});
 });
 
 test.describe('Matchers', () => {
