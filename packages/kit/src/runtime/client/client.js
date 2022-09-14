@@ -43,6 +43,7 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
+// TODO remove for 1.0
 /** @type {Record<string, true>} */
 let warned_about_attributes = {};
 
@@ -1547,25 +1548,26 @@ function add_url_properties(type, target) {
 
 function pre_update() {
 	if (__SVELTEKIT_DEV__) {
-		// Nasty hack to silence harmless warnings the user can do nothing about
-		const warn = console.warn;
-		console.warn = (...args) => {
-			if (
-				args.length === 1 &&
-				/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
-					args[0]
-				)
-			) {
-				return;
-			}
-			warn(...args);
-		};
-
 		return () => {
-			tick().then(() => (console.warn = warn));
 			check_for_removed_attributes();
 		};
 	}
 
 	return () => {};
+}
+
+if (__SVELTEKIT_DEV__) {
+	// Nasty hack to silence harmless warnings the user can do nothing about
+	const warn = console.warn;
+	console.warn = (...args) => {
+		if (
+			args.length === 1 &&
+			/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
+				args[0]
+			)
+		) {
+			return;
+		}
+		warn(...args);
+	};
 }
