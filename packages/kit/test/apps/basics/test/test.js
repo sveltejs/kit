@@ -1894,31 +1894,16 @@ test.describe('Cookies API', () => {
 		expect(await span.innerText()).toContain('i was set in the layout load');
 	});
 
-	// Skip this guy. Works, but needs timeouts to pass.
-	test.skip('works with basic enhance', async ({ page }) => {
-		// kinda straying off-topic, but these are some of the
-		// things folks had issues with...
+	test('works with basic enhance', async ({ page }) => {
 		await page.goto('/cookies/enhanced/basic');
 		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/cookies/enhanced/basic')),
-			page.click('button#teapot')
-		]);
-		// this is evil, but with js enabled we need a timeout
-		// to allow svelte time to update the span before checking its
-		// contents and I don't know what else to do
-		await page.waitForTimeout(50);
-		span = page.locator('#cookie-value');
-		expect(await span.innerText()).toContain('teapot');
+
+		await page.click('button#teapot');
+		await expect(page.locator('#cookie-value')).toHaveText('teapot');
 
 		// setting a different value...
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/cookies/enhanced/basic')),
-			page.click('button#janeAusten')
-		]);
-		await page.waitForTimeout(50);
-		span = page.locator('#cookie-value');
-		expect(await span.innerText()).toContain('Jane Austen');
+		await page.click('button#janeAusten');
+		await expect(page.locator('#cookie-value')).toHaveText('Jane Austen');
 	});
 });
