@@ -405,14 +405,14 @@ function kit() {
 					})};\n`
 				);
 
-			const package_json_path = `${paths.output_dir}/package.json`;
-			fs.writeFileSync(
-				package_json_path,
-				generate_package_json({
-					build_data,
-					cwd,
-				})
-			);
+				const package_json_path = `${paths.output_dir}/package.json`;
+				fs.writeFileSync(
+					package_json_path,
+					generate_package_json({
+						build_data,
+						cwd,
+					})
+				);
 
 				log.info('Prerendering');
 				await new Promise((fulfil, reject) => {

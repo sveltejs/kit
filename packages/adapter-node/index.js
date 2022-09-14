@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import * as esbuild from 'esbuild';
 
@@ -45,13 +45,13 @@ export default function (opts = {}) {
 				`export const manifest = ${builder.generateManifest({ relativePath: './' })};`
 			);
 
-			const optimizedPackageJson = builder.generatePackageJson()
+			const optimized_package_json = builder.generatePackageJson();
 			writeFileSync(
 				`${out}/package.json`,
-				optimizedPackageJson,
+				optimized_package_json
 			);
 
-			const pkg = JSON.parse(optimizedPackageJson);
+			const pkg = JSON.parse(optimized_package_json);
 
 			await esbuild.build({
 				platform: 'node',
