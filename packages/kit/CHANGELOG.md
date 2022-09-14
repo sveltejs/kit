@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.0.0-next.482
+
+### Patch Changes
+
+- [fix] ActionData type ([#6748](https://github.com/sveltejs/kit/pull/6748))
+
+* [fix] reuse server data while not reusing client load ([#6778](https://github.com/sveltejs/kit/pull/6778))
+
+- [fix] update current.url on hashchange ([#6802](https://github.com/sveltejs/kit/pull/6802))
+
+* Change illegal import message to reference public-facing code rather than client-side code ([#6646](https://github.com/sveltejs/kit/pull/6646))
+
+- [fix] silence prop warnings ([#6798](https://github.com/sveltejs/kit/pull/6798))
+
+* [chore] Refactor graph analysis for better unit tests ([#6727](https://github.com/sveltejs/kit/pull/6727))
+
+- [fix] error when using `paths.base` and `import` assets ([#6769](https://github.com/sveltejs/kit/pull/6769))
+
 ## 1.0.0-next.481
 
 ### Patch Changes
