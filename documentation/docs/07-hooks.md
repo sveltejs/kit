@@ -51,11 +51,7 @@ declare namespace App {
 	}
 }
 
-const getUserInformation: (cookie: string | undefined) => Promise<User>;
-
-// declare global {
-// 	const getUserInformation: (cookie: string) => Promise<User>;
-// }
+const getUserInformation: (cookie: string | void) => Promise<User>;
 
 // @filename: index.js
 // ---cut---
