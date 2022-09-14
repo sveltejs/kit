@@ -53,7 +53,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		if (seen.has(current)) return;
 		seen.add(current);
 
-		const { chunk, file } = resolve_symlinks(manifest, current);
+		const { chunk } = resolve_symlinks(manifest, current);
 
 		if (add_js) imports.add(chunk.file);
 
