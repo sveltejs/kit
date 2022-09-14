@@ -22,7 +22,7 @@ The following hooks can be added to `src/hooks.server.js`:
 This function runs every time the SvelteKit server receives a [request](/docs/web-standards#fetch-apis-request) — whether that happens while the app is running, or during [prerendering](/docs/page-options#prerender) — and determines the [response](/docs/web-standards#fetch-apis-response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 
 ```js
-/// file: src/hooks.js
+/// file: src/hooks.server.js
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	if (event.url.pathname.startsWith('/custom')) {
@@ -39,7 +39,7 @@ export async function handle({ event, resolve }) {
 If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to handlers in `+server.js` and server-only `load` functions, populate the `event.locals` object, as shown below.
 
 ```js
-/// file: src/hooks.js
+/// file: src/hooks.server.js
 // @filename: ambient.d.ts
 type User = {
 	name: string;
@@ -78,7 +78,7 @@ You can add call multiple `handle` functions with [the `sequence` helper functio
 - `filterSerializedResponseHeaders(name: string, value: string): boolean` — determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`. By default, none will be included.
 
 ```js
-/// file: src/hooks.js
+/// file: src/hooks.server.js
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	const response = await resolve(event, {

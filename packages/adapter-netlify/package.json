@@ -40,7 +40,7 @@
 		"@netlify/functions": "^1.0.0",
 		"@rollup/plugin-commonjs": "^22.0.1",
 		"@rollup/plugin-json": "^4.1.0",
-		"@rollup/plugin-node-resolve": "^13.3.0",
+		"@rollup/plugin-node-resolve": "^14.1.0",
 		"@sveltejs/kit": "workspace:*",
 		"@types/node": "^16.11.36",
 		"@types/set-cookie-parser": "^2.4.2",

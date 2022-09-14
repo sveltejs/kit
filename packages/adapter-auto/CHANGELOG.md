@@ -1,5 +1,15 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.74
+
+### Patch Changes
+
+- [feat] support Azure SWA ([#6761](https://github.com/sveltejs/kit/pull/6761))
+
+- Updated dependencies [[`2040baee`](https://github.com/sveltejs/kit/commit/2040baee98cf85fe542e1e38a9fb60ede3f95f1d)]:
+  - @sveltejs/adapter-vercel@1.0.0-next.75
+  - @sveltejs/adapter-netlify@1.0.0-next.77
+
 ## 1.0.0-next.73
 
 ### Patch Changes
