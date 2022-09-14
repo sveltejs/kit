@@ -246,7 +246,7 @@ export async function respond(request, options, state) {
 					}
 				}
 
-				for (const new_cookie of new_cookies) {
+				for (const new_cookie of Array.from(new_cookies.values())) {
 					response.headers.append(
 						'set-cookie',
 						cookie.serialize(new_cookie.name, new_cookie.value, new_cookie.options)
