@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.483
+
+### Patch Changes
+
+- [fix] various `cookies` fixes and improvements ([#6811](https://github.com/sveltejs/kit/pull/6811))
+
 ## 1.0.0-next.482
 
 ### Patch Changes
