@@ -1834,28 +1834,21 @@ test.describe('Cookies API', () => {
 	// there's a problem running these tests in the CI with webkit,
 	// since AFAICT the browser is using http://localhost and webkit won't
 	// set a `Secure` cookie on that. So we bail...
-	test('sanity check for cookies', async ({ page, browserName }) => {
-		if (browserName === 'webkit') {
-			return;
-		}
+	test.skip(({ browserName }) => browserName === 'webkit');
+
+	test('sanity check for cookies', async ({ page }) => {
 		await page.goto('/cookies');
 		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 	});
 
-	test('set a cookie', async ({ page, browserName }) => {
-		if (browserName === 'webkit') {
-			return;
-		}
+	test('set a cookie', async ({ page }) => {
 		await page.goto('/cookies/set');
 		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
 	});
 
-	test('delete a cookie', async ({ page, browserName }) => {
-		if (browserName === 'webkit') {
-			return;
-		}
+	test('delete a cookie', async ({ page }) => {
 		await page.goto('/cookies/set');
 		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
@@ -1864,10 +1857,7 @@ test.describe('Cookies API', () => {
 		expect(await span.innerText()).toContain('undefined');
 	});
 
-	test('cookies can be set with a path', async ({ page, browserName }) => {
-		if (browserName === 'webkit') {
-			return;
-		}
+	test('cookies can be set with a path', async ({ page }) => {
 		await page.goto('/cookies/nested/a');
 		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
@@ -1879,48 +1869,33 @@ test.describe('Cookies API', () => {
 		expect(await span.innerText()).toContain('undefined');
 	});
 
-	test('more than one cookie can be set in one request', async ({ page, browserName }) => {
-		if (browserName === 'webkit') {
-			return;
-		}
+	test('more than one cookie can be set in one request', async ({ page }) => {
 		await page.goto('/cookies/set-more-than-one');
 		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
 		expect(await span.innerText()).toContain('jane austen');
 	});
 
-	test('default encoding and decoding', async ({ page, browserName }) => {
-		if (browserName === 'webkit') {
-			return;
-		}
+	test('default encoding and decoding', async ({ page }) => {
 		await page.goto('/cookies/encoding/set');
 		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot, jane austen');
 	});
 
-	test('not decoded twice', async ({ page, browserName }) => {
-		if (browserName === 'webkit') {
-			return;
-		}
+	test('not decoded twice', async ({ page }) => {
 		await page.goto('/cookies/encoding/not-decoded-twice');
 		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot%2C%20jane%20austen');
 	});
 
-	test('can be set in +layout.server.js', async ({ page, browserName }) => {
-		if (browserName === 'webkit') {
-			return;
-		}
+	test('can be set in +layout.server.js', async ({ page }) => {
 		await page.goto('/cookies/set-in-layout');
 		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('i was set in the layout load');
 	});
 
 	// Skip this guy. Works, but needs timeouts to pass.
-	test.skip('works with basic enhance', async ({ page, browserName }) => {
-		if (browserName === 'webkit') {
-			return;
-		}
+	test.skip('works with basic enhance', async ({ page }) => {
 		// kinda straying off-topic, but these are some of the
 		// things folks had issues with...
 		await page.goto('/cookies/enhanced/basic');
