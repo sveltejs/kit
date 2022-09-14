@@ -551,6 +551,9 @@ test.describe('Routing', () => {
 		await page.click('[href="#target"]');
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
+		await page.click('[href="/routing/hashes/pagestore"]');
+		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
+		await expect(page.locator('#page-url-hash')).toHaveText('');
 	});
 
 	test('does not normalize external path', async ({ page }) => {
