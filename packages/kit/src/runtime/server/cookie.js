@@ -4,7 +4,6 @@ import { parse } from 'cookie';
 const DEFAULT_SERIALIZE_OPTIONS = {
 	httpOnly: true,
 	secure: true,
-	path: '/',
 	sameSite: 'lax'
 };
 

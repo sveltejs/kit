@@ -1,6 +1,9 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
+import { installPolyfills } from '../../exports/node/polyfills.js';
+
+installPolyfills();
 
 const domains = {
 	positive: [
@@ -63,7 +66,7 @@ test('default values when set is called', () => {
 	const opts = new_cookies.get('a')?.options;
 	assert.equal(opts?.secure, true);
 	assert.equal(opts?.httpOnly, true);
-	assert.equal(opts?.path, '/');
+	assert.equal(opts?.path, undefined);
 	assert.equal(opts?.sameSite, 'lax');
 });
 
@@ -83,7 +86,7 @@ test('default values when delete is called', () => {
 	const opts = new_cookies.get('a')?.options;
 	assert.equal(opts?.secure, true);
 	assert.equal(opts?.httpOnly, true);
-	assert.equal(opts?.path, '/');
+	assert.equal(opts?.path, undefined);
 	assert.equal(opts?.sameSite, 'lax');
 	assert.equal(opts?.maxAge, 0);
 });
