@@ -118,7 +118,7 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 			return generate_package_json({
 				build_data,
 				cwd: process.cwd()
-			})
+			});
 		},
 
 		getBuildDirectory(name) {

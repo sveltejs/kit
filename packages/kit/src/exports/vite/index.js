@@ -410,7 +410,7 @@ function kit() {
 					package_json_path,
 					generate_package_json({
 						build_data,
-						cwd,
+						cwd
 					})
 				);
 

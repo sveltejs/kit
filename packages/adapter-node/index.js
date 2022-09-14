@@ -46,10 +46,7 @@ export default function (opts = {}) {
 			);
 
 			const optimized_package_json = builder.generatePackageJson();
-			writeFileSync(
-				`${out}/package.json`,
-				optimized_package_json
-			);
+			writeFileSync(`${out}/package.json`, optimized_package_json);
 
 			const pkg = JSON.parse(optimized_package_json);
 
