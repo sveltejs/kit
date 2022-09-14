@@ -39,7 +39,7 @@ paths.negative.forEach(([path, constraint]) => {
 	});
 });
 
-const cookiesSetup = () => {
+const cookies_setup = () => {
 	const url = new URL('https://example.com');
 	const request = new Request(url, {
 		headers: new Headers({
@@ -50,7 +50,7 @@ const cookiesSetup = () => {
 };
 
 test('a cookie should not be present after it is deleted', () => {
-	const { cookies } = cookiesSetup();
+	const { cookies } = cookies_setup();
 	cookies.set('a', 'b');
 	assert.equal(cookies.get('a'), 'b');
 	cookies.delete('a');
@@ -58,7 +58,7 @@ test('a cookie should not be present after it is deleted', () => {
 });
 
 test('default values when set is called', () => {
-	const { cookies, new_cookies } = cookiesSetup();
+	const { cookies, new_cookies } = cookies_setup();
 	cookies.set('a', 'b');
 	const opts = new_cookies.get('a')?.options;
 	assert.equal(opts?.secure, true);
@@ -68,7 +68,7 @@ test('default values when set is called', () => {
 });
 
 test('overridden defaults when set is called', () => {
-	const { cookies, new_cookies } = cookiesSetup();
+	const { cookies, new_cookies } = cookies_setup();
 	cookies.set('a', 'b', { secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c' });
 	const opts = new_cookies.get('a')?.options;
 	assert.equal(opts?.secure, false);
@@ -78,7 +78,7 @@ test('overridden defaults when set is called', () => {
 });
 
 test('default values when delete is called', () => {
-	const { cookies, new_cookies } = cookiesSetup();
+	const { cookies, new_cookies } = cookies_setup();
 	cookies.delete('a');
 	const opts = new_cookies.get('a')?.options;
 	assert.equal(opts?.secure, true);
@@ -89,7 +89,7 @@ test('default values when delete is called', () => {
 });
 
 test('overridden defaults when delete is called', () => {
-	const { cookies, new_cookies } = cookiesSetup();
+	const { cookies, new_cookies } = cookies_setup();
 	cookies.delete('a', { secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c' });
 	const opts = new_cookies.get('a')?.options;
 	assert.equal(opts?.secure, false);
@@ -100,14 +100,14 @@ test('overridden defaults when delete is called', () => {
 });
 
 test('cannot override maxAge on delete', () => {
-	const { cookies, new_cookies } = cookiesSetup();
+	const { cookies, new_cookies } = cookies_setup();
 	cookies.delete('a', { maxAge: 1234 });
 	const opts = new_cookies.get('a')?.options;
 	assert.equal(opts?.maxAge, 0);
 });
 
 test('last cookie set with the same name wins', () => {
-	const { cookies, new_cookies } = cookiesSetup();
+	const { cookies, new_cookies } = cookies_setup();
 	cookies.set('a', 'foo');
 	cookies.set('a', 'bar');
 	const entry = new_cookies.get('a');
@@ -115,7 +115,7 @@ test('last cookie set with the same name wins', () => {
 });
 
 test('cookie names are case sensitive', () => {
-	const { cookies, new_cookies } = cookiesSetup();
+	const { cookies, new_cookies } = cookies_setup();
 	// not that one should do this, but we follow the spec...
 	cookies.set('a', 'foo');
 	cookies.set('A', 'bar');
