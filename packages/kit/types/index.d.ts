@@ -131,11 +131,11 @@ export interface Cookies {
 	get(name: string, opts?: import('cookie').CookieParseOptions): string | void;
 
 	/**
-	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make
-	 * the cookie available via `cookies.get` during the current request.
+	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` during the current request.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly
-	 * disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP
+	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 *
+	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 */
 	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
 
