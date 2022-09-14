@@ -1,6 +1,6 @@
 <script>
-  /** @type {import('./$types').PageData} */
-  export let data;
+	/** @type {import('./$types').PageData} */
+	export let data;
 </script>
-Cookie: <span id="cookie-value">{ data.cookie }</span>
 
+Cookie: <span id="cookie-value">{data.cookie}</span>

@@ -1,8 +1,6 @@
 /** @type {import('./$types').PageServerLoad} */
 export function load(event) {
-	const data = {
+	return {
 		a: event.cookies.get('a')
 	};
-
-	return data;
 }
