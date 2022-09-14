@@ -391,6 +391,25 @@ test.describe('Load', () => {
 		expect(headers['x-server-data']).toBe('true');
 	});
 
+	test('keeps server data when valid while not reusing client load data', async ({ page }) => {
+		await page.goto('/load/url-query-param');
+
+		expect(await page.textContent('h1')).toBe('Hello ');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+
+		await page.click('a[href="/load/url-query-param?currentClientState=ABC"]');
+		expect(await page.textContent('h1')).toBe('Hello ABC');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+
+		await page.click('a[href="/load/url-query-param?currentClientState=DEF"]');
+		expect(await page.textContent('h1')).toBe('Hello DEF');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+
+		await page.click('a[href="/load/url-query-param"]');
+		expect(await page.textContent('h1')).toBe('Hello ');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+	});
+
 	test('load does not call fetch if max-age allows it', async ({ page, request }) => {
 		await request.get('/load/cache-control/reset');
 
@@ -565,6 +584,9 @@ test.describe('Routing', () => {
 		await page.click('[href="#target"]');
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
+		await page.click('[href="/routing/hashes/pagestore"]');
+		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
+		await expect(page.locator('#page-url-hash')).toHaveText('');
 	});
 
 	test('does not normalize external path', async ({ page }) => {

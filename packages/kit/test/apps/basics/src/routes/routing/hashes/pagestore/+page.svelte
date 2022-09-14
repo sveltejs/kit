@@ -17,5 +17,6 @@
 <h1 id="window-hash">{hash}</h1>
 <h1 id="page-url-hash">{$page.url.hash}</h1>
 
-<a href="#target">Nav to #ing with anchor tag</a>
+<a href="#target">Nav to hash</a>
+<a href="/routing/hashes/pagestore">Nav to page</a>
 <div id="target">Target</div>
