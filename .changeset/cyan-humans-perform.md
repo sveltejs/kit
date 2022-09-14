@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] correct headers for \_\_data.js requests
+[fix] correct headers for `__data.js` requests
