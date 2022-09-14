@@ -8,21 +8,21 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('beforeNavigate', () => {
-	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
+	test('prevents navigation triggered by link click', async ({ page, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 
 		await page.click('[href="/before-navigate/a"]');
 		await page.waitForLoadState('networkidle');
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('true');
+		expect(await page.innerHTML('pre')).toBe('true link');
 	});
 
 	test('prevents navigation triggered by goto', async ({ page, app, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 		await app.goto('/before-navigate/a');
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('true');
+		expect(await page.innerHTML('pre')).toBe('true goto');
 	});
 
 	test('prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
@@ -31,7 +31,19 @@ test.describe('beforeNavigate', () => {
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 
 		await page.goBack();
-		expect(await page.innerHTML('pre')).toBe('true');
+		expect(await page.innerHTML('pre')).toBe('true popstate');
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+	});
+
+	test('prevents navigation to external', async ({ page, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
+
+		page.on('dialog', (dialog) => dialog.dismiss());
+
+		page.click('a[href="https://google.de"]'); // do NOT await this, promise only resolves after successful navigation, which never happens
+		await page.waitForTimeout(500);
+		await expect(page.locator('pre')).toHaveText('true unload');
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 	});
 

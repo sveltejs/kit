@@ -10,6 +10,7 @@ import { nodes, server_loads, dictionary, matchers, hooks } from '__GENERATED__/
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
+import { get } from 'svelte/store';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -72,7 +73,7 @@ export function create_client({ target, base, trailing_slash }) {
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
-	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
+	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult> | null}} */
 	const load_cache = {
 		id: null,
 		promise: null
@@ -145,7 +146,12 @@ export function create_client({ target, base, trailing_slash }) {
 
 			invalidating = Promise.resolve().then(async () => {
 				const intent = get_navigation_intent(url, true);
-				await update(intent, url, []);
+				await update(
+					// We invalidate the current route, this can't be a native navigation
+					/** @type {import('./types').NavigationIntent | undefined} */ (intent),
+					url,
+					[]
+				);
 
 				invalidating = null;
 				force_invalidation = false;
@@ -679,7 +685,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/**
 	 * @param {import('./types').NavigationIntent} intent
-	 * @returns {Promise<import('./types').NavigationResult | undefined>}
+	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
 	async function load_route({ id, invalidating, url, params, route }) {
 		if (load_cache.id === id && load_cache.promise) {
@@ -842,6 +848,7 @@ export function create_client({ target, base, trailing_slash }) {
 					// if we get here, it's because the root `load` function failed,
 					// and we need to fall back to the server
 					await native_navigation(url);
+					// @ts-expect-error - this is unreachable
 					return;
 				}
 			} else {
@@ -938,9 +945,10 @@ export function create_client({ target, base, trailing_slash }) {
 	/**
 	 * @param {URL} url
 	 * @param {boolean} invalidating
+	 * @returns false when external url, undefined when no intent found, else the intent
 	 */
 	function get_navigation_intent(url, invalidating) {
-		if (is_external_url(url)) return;
+		if (is_external_url(url)) return false;
 
 		const path = decodeURI(url.pathname.slice(base.length) || '/');
 
@@ -994,6 +1002,13 @@ export function create_client({ target, base, trailing_slash }) {
 		let should_block = false;
 
 		const intent = get_navigation_intent(url, false);
+		if (intent === false) {
+			// Skip straight to native navigation, which calls the `beforeunload` handler
+			// which in turn calls beforeNavigate with the correct type.
+			accepted(); // needs to be called, else navigation is started twice on link click
+			await native_navigation(url);
+			return; // unnecessary, but TypeScript prefers it this way
+		}
 
 		/** @type {import('types').Navigation} */
 		const navigation = {
@@ -1220,19 +1235,23 @@ export function create_client({ target, base, trailing_slash }) {
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
 
-				/** @type {import('types').Navigation & { cancel: () => void }} */
-				const navigation = {
-					from: add_url_properties('from', {
-						params: current.params,
-						routeId: current.route?.id ?? null,
-						url: current.url
-					}),
-					to: null,
-					type: 'unload',
-					cancel: () => (should_block = true)
-				};
+				if (get(stores.navigating) === null) {
+					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
+					// it's due to a 404 or another error, for which we don't want to call the hook again.
+					/** @type {import('types').Navigation & { cancel: () => void }} */
+					const navigation = {
+						from: add_url_properties('from', {
+							params: current.params,
+							routeId: current.route?.id ?? null,
+							url: current.url
+						}),
+						to: null,
+						type: 'unload',
+						cancel: () => (should_block = true)
+					};
 
-				callbacks.before_navigate.forEach((fn) => fn(navigation));
+					callbacks.before_navigate.forEach((fn) => fn(navigation));
+				}
 
 				if (should_block) {
 					e.preventDefault();
