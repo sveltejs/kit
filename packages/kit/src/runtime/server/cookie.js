@@ -18,12 +18,10 @@ export function get_cookies(request, url) {
 
 	/** @type {import('types').Cookies} */
 	const cookies = {
-		/**
-		 * The JSDoc param annotations appearing below for get, set and delete
-		 * are necessary to expose the `cookie` library types to
-		 * typescript users. `@type {import('types').Cookies}` above is not
-		 * sufficient to do so.
-		 */
+		// The JSDoc param annotations appearing below for get, set and delete
+		// are necessary to expose the `cookie` library types to
+		// typescript users. `@type {import('types').Cookies}` above is not
+		// sufficient to do so.
 
 		/**
 		 * @param {string} name
@@ -59,6 +57,7 @@ export function get_cookies(request, url) {
 				}
 			});
 		},
+
 		/**
 		 * @param {string} name
 		 * @param {import('cookie').CookieSerializeOptions} opts
