@@ -310,8 +310,6 @@ export function load({ locals }) {
 
 If an _unexpected_ error is thrown, SvelteKit will invoke [`handleError`](/docs/hooks#shared-hooks-handleerror) and treat it as a 500 Internal Error.
 
-> In development, stack traces for unexpected errors are visible as `$page.error.stack`. In production, stack traces are hidden.
-
 ### Redirects
 
 To redirect users, use the `redirect` helper from `@sveltejs/kit` to specify the location to which they should be redirected alongside a `3xx` status code.
