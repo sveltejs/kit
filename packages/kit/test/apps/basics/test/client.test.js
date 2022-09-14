@@ -377,6 +377,25 @@ test.describe('Load', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 	});
 
+	test('keeps server data when valid while not reusing client load data', async ({ page }) => {
+		await page.goto('/load/url-query-param');
+
+		expect(await page.textContent('h1')).toBe('Hello ');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+
+		await page.click('a[href="/load/url-query-param?currentClientState=ABC"]');
+		expect(await page.textContent('h1')).toBe('Hello ABC');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+
+		await page.click('a[href="/load/url-query-param?currentClientState=DEF"]');
+		expect(await page.textContent('h1')).toBe('Hello DEF');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+
+		await page.click('a[href="/load/url-query-param"]');
+		expect(await page.textContent('h1')).toBe('Hello ');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+	});
+
 	test('load does not call fetch if max-age allows it', async ({ page, request }) => {
 		await request.get('/load/cache-control/reset');
 

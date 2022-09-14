@@ -743,12 +743,11 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @type {import('./types').BranchNode | undefined} */
 			const previous = current.branch[i];
 
-			const server_data_node = server_data_nodes?.[i] ?? null;
+			const server_data_node = server_data_nodes?.[i];
 
-			const can_reuse_server_data = !server_data_node || server_data_node.type === 'skip';
 			// re-use data from previous load if it's still valid
 			const valid =
-				can_reuse_server_data &&
+				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
 				!has_changed(changed, parent_changed, previous.shared?.uses);
 			if (valid) return previous;
@@ -772,7 +771,12 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 					return data;
 				},
-				server_data_node: create_data_node(server_data_node, previous?.server)
+				server_data_node: create_data_node(
+					// server_data_node is undefined if it wasn't reloaded from the server;
+					// and if current loader uses server data, we want to reuse previous data.
+					server_data_node === undefined && loader[0] ? { type: 'skip' } : server_data_node ?? null,
+					previous?.server
+				)
 			});
 		});
 
