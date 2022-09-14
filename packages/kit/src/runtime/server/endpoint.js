@@ -70,19 +70,21 @@ export async function render_endpoint(event, mod, state) {
  * @param {import('types').RequestEvent} event
  */
 export function is_endpoint_request(event) {
-	const result =
-		// These only exist for +server
-		['PUT', 'PATCH', 'DELETE'].includes(event.request.method) ||
-		// GET has accept text/html for pages
-		(event.request.method === 'GET' &&
-			negotiate(event.request.headers.get('accept') ?? '*/*', ['application/json', 'text/html']) ===
-				'application/json') ||
-		// POST with FormData is for actions
-		(event.request.method === 'POST' &&
-			!(event.request.headers.get('content-type') ?? '')
-				.split(';')
-				.some((part) =>
-					['multipart/form-data', 'application/x-www-form-urlencoded'].includes(part.trim())
-				));
-	return result;
+	const { method } = event.request;
+
+	if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+		return true;
+	}
+
+	if (method === 'GET') {
+		const accept = event.request.headers.get('accept') ?? '*/*';
+		return negotiate(accept, ['application/json', 'text/html']) === 'application/json';
+	}
+
+	if (method === 'POST') {
+		const type = (event.request.headers.get('content-type') ?? '').split(';')[0];
+		return type !== 'multipart/form-data' && type !== 'application/x-www-form-urlencoded';
+	}
+
+	return false;
 }
