@@ -43,6 +43,7 @@ export type AwaitedActions<T extends Record<string, (...args: any) => any>> = {
 interface ValidationError<T extends Record<string, unknown> | undefined = undefined> {
 	status: number;
 	data: T;
+	type: 'invalid';
 }
 
 type UnpackValidationError<T> = T extends ValidationError<infer X> ? X : T;
