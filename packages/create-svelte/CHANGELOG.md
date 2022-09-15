@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.177
+
+### Patch Changes
+
+- [chore] bump vite ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
 ## 2.0.0-next.176
 
 ### Patch Changes

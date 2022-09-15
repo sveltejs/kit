@@ -44,7 +44,7 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	({ event, resolve }) => {
-		event.locals.name = event.cookies.get('name');
+		event.locals.name = /** @type {string} */ (event.cookies.get('name'));
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {
