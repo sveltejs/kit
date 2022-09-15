@@ -154,7 +154,7 @@ export async function load({ depends }) {
 
 ```js
 /// file: src/routes/+layout.server.js
-/** @type {import('./$types').LayoutLoad} */
+/** @type {import('./$types').LayoutServerLoad} */
 export function load() {
 	return { a: 1 };
 }
@@ -163,11 +163,11 @@ export function load() {
 ```js
 /// file: src/routes/foo/+layout.server.js
 // @filename: $types.d.ts
-export type LayoutLoad = import('@sveltejs/kit').Load<{}, null, { a: number }>;
+export type LayoutServerLoad = import('@sveltejs/kit').Load<{}, null, { a: number }>;
 
 // @filename: index.js
 // ---cut---
-/** @type {import('./$types').LayoutLoad} */
+/** @type {import('./$types').LayoutServerLoad} */
 export async function load({ parent }) {
 	const { a } = await parent();
 	console.log(a); // `1`
@@ -179,11 +179,11 @@ export async function load({ parent }) {
 ```js
 /// file: src/routes/foo/+page.server.js
 // @filename: $types.d.ts
-export type PageLoad = import('@sveltejs/kit').Load<{}, null, { a: number, b: number }>;
+export type PageServerLoad = import('@sveltejs/kit').Load<{}, null, { a: number, b: number }>;
 
 // @filename: index.js
 // ---cut---
-/** @type {import('./$types').PageLoad} */
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ parent }) {
 	const { a, b } = await parent();
 	console.log(a, b); // `1`, `2`
@@ -199,11 +199,11 @@ Be careful not to introduce accidental waterfalls when using `await parent()`. I
 ```diff
 /// file: src/routes/foo/+page.server.js
 // @filename: $types.d.ts
-export type PageLoad = import('@sveltejs/kit').Load<{}, null, { a: number, b: number }>;
+export type PageServerLoad = import('@sveltejs/kit').Load<{}, null, { a: number, b: number }>;
 
 // @filename: index.js
 // ---cut---
-/** @type {import('./$types').PageLoad} */
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ parent, fetch }) {
 -	const parentData = await parent();
 	const data = await fetch('./some-api');
