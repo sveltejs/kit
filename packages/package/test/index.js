@@ -130,6 +130,10 @@ test('create package with emitTypes settings disabled', async () => {
 	await test_make_package('emitTypes-false');
 });
 
+test('create package with copyPackageJson settings disabled', async () => {
+	await test_make_package('copyPackageJson-false');
+});
+
 test('create package and properly merge exports map', async () => {
 	await test_make_package('exports-merge');
 });

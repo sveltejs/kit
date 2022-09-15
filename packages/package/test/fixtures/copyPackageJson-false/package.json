@@ -1,0 +1,7 @@
+{
+	"name": "copy-package-json",
+	"private": true,
+	"version": "1.0.0",
+	"description": "copyPackageJson settings disabled",
+	"type": "module"
+}
