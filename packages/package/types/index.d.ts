@@ -23,6 +23,10 @@ export interface PackageConfig {
 	 * Function that determines if the given file is part of the output.
 	 */
 	files?(filepath: string): boolean;
+	/**
+	 * Whether to copy `package.json` to the output directory. Defaults to `true`.
+	 */
+	copyPackageJson?: boolean;
 }
 
 export interface Config {
