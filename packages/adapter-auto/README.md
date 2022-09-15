@@ -9,6 +9,7 @@ The following environments are supported out-of-the-box, meaning a newly created
 - [Cloudflare Pages](https://developers.cloudflare.com/pages/) via [adapter-cloudflare](../adapter-cloudflare)
 - [Netlify](https://netlify.com/) via [adapter-netlify](../adapter-netlify)
 - [Vercel](https://vercel.com/) via [adapter-vercel](../adapter-vercel)
+- [Azure Static Web Apps](https://docs.microsoft.com/en-us/azure/static-web-apps/) via [svelte-adapter-azure-swa](https://github.com/geoffrich/svelte-adapter-azure-swa)
 
 ## Community adapters
 

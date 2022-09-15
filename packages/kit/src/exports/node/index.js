@@ -1,19 +1,36 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 
-/** @param {import('http').IncomingMessage} req */
-function get_raw_body(req) {
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {number} [body_size_limit]
+ */
+function get_raw_body(req, body_size_limit) {
 	const h = req.headers;
 
 	if (!h['content-type']) {
 		return null;
 	}
 
-	const length = Number(h['content-length']);
+	const content_length = Number(h['content-length']);
 
 	// check if no request body
-	// https://github.com/jshttp/type-is/blob/c1f4388c71c8a01f79934e68f630ca4a15fffcd6/index.js#L81-L95
-	if (isNaN(length) && h['transfer-encoding'] == null) {
+	if (
+		(req.httpVersionMajor === 1 && isNaN(content_length) && h['transfer-encoding'] == null) ||
+		content_length === 0
+	) {
 		return null;
+	}
+
+	let length = content_length;
+
+	if (body_size_limit) {
+		if (!length) {
+			length = body_size_limit;
+		} else if (length > body_size_limit) {
+			throw new Error(
+				`Received content-length of ${length}, but only accept up to ${body_size_limit} bytes.`
+			);
+		}
 	}
 
 	if (req.destroyed) {
@@ -41,7 +58,13 @@ function get_raw_body(req) {
 
 				size += chunk.length;
 				if (size > length) {
-					controller.error(new Error('content-length exceeded'));
+					req.destroy(
+						new Error(
+							`request body size exceeded ${
+								content_length ? "'content-length'" : 'BODY_SIZE_LIMIT'
+							} of ${length}`
+						)
+					);
 					return;
 				}
 
@@ -65,9 +88,9 @@ function get_raw_body(req) {
 }
 
 /** @type {import('@sveltejs/kit/node').getRequest} */
-export async function getRequest(base, req) {
-	let headers = /** @type {Record<string, string>} */ (req.headers);
-	if (req.httpVersionMajor === 2) {
+export async function getRequest({ request, base, bodySizeLimit }) {
+	let headers = /** @type {Record<string, string>} */ (request.headers);
+	if (request.httpVersionMajor === 2) {
 		// we need to strip out the HTTP/2 pseudo-headers because node-fetch's
 		// Request implementation doesn't like them
 		// TODO is this still true with Node 18
@@ -78,10 +101,10 @@ export async function getRequest(base, req) {
 		delete headers[':scheme'];
 	}
 
-	return new Request(base + req.url, {
-		method: req.method,
+	return new Request(base + request.url, {
+		method: request.method,
 		headers,
-		body: get_raw_body(req)
+		body: get_raw_body(request, bodySizeLimit)
 	});
 }
 
