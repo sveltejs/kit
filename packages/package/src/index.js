@@ -55,7 +55,9 @@ export async function build(config, cwd = process.cwd()) {
 		}
 	}
 
-	write(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
+	if (config.package.copyPackageJson) {
+		write(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
+	}
 
 	for (const file of files) {
 		await process_file(config, file);
@@ -154,7 +156,7 @@ export async function watch(config, cwd = process.cwd()) {
 				}
 			}
 
-			if (should_update_pkg) {
+			if (should_update_pkg && config.package.copyPackageJson) {
 				const pkg = generate_pkg(cwd, files);
 				write(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
 				console.log('Updated package.json');
