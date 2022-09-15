@@ -210,6 +210,7 @@ Options related to [creating a package](/docs/packaging).
 - `source` - library directory
 - `dir` - output directory
 - `emitTypes` - by default, `svelte-package` will automatically generate types for your package in the form of `.d.ts` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead)
+- `copyPackageJson` - by default, `svelte-package` will copy `package.json` from the project root to the output directory with a few necessary modifications to correctly publish a Svelte library (for example, including `"type: "module"` and specifying the `"svelte"` field). Please make sure you have a good reason when setting it to `false` (for example when you want to manage your project structure manually).
 - `exports` - a function with the type of `(filepath: string) => boolean`. When `true`, the filepath will be included in the `exports` field of the `package.json`. Any existing values in the `package.json` source will be merged with values from the original `exports` field taking precedence
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the file will be processed and copied over to the final output folder, specified in `dir`
 
