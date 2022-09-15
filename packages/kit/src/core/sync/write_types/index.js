@@ -69,7 +69,6 @@ export async function write_types(config, manifest_data, file) {
 	}
 
 	const id = path.relative(config.kit.files.routes, path.dirname(file));
-	//replace '\' with '/' to fix #6842, routes not being found under layout groups
 	const route = manifest_data.routes.find((route) => route.id === id || route.id === id.replace(/\\/g, '/'));
 	if (!route) return; // this shouldn't ever happen
 
