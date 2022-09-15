@@ -41,6 +41,7 @@ export class ValidationError {
 	constructor(status, data) {
 		this.status = status;
 		this.data = data;
+		this.type = 'invalid';
 	}
 }
 
