@@ -1,4 +1,3 @@
-import * as cookie from 'cookie';
 import { render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
@@ -9,7 +8,7 @@ import { decode_params, disable_search, normalize_path } from '../../utils/url.j
 import { exec } from '../../utils/routing.js';
 import { render_data } from './data/index.js';
 import { DATA_SUFFIX } from '../../constants.js';
-import { get_cookies } from './cookie.js';
+import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { HttpError } from '../control.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
@@ -246,12 +245,7 @@ export async function respond(request, options, state) {
 					}
 				}
 
-				for (const new_cookie of Array.from(new_cookies.values())) {
-					response.headers.append(
-						'set-cookie',
-						cookie.serialize(new_cookie.name, new_cookie.value, new_cookie.options)
-					);
-				}
+				add_cookies_to_headers(response.headers, Array.from(new_cookies.values()));
 
 				return response;
 			}

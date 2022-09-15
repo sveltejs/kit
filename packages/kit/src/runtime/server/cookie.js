@@ -1,4 +1,4 @@
-import { parse } from 'cookie';
+import { parse, serialize } from 'cookie';
 
 /** @type {import('cookie').CookieSerializeOptions} */
 const DEFAULT_SERIALIZE_OPTIONS = {
@@ -101,4 +101,16 @@ export function path_matches(path, constraint) {
 
 	if (path === normalized) return true;
 	return path.startsWith(normalized + '/');
+}
+
+/**
+ * @param {Headers} headers
+ * @param {import('set-cookie-parser').Cookie[]} cookies
+ */
+export function add_cookies_to_headers(headers, cookies) {
+	for (const new_cookie of cookies) {
+		const { name, value, ...options } = new_cookie;
+		// @ts-expect-error options type is string, something more specific is required
+		headers.append('set-cookie', serialize(name, value, options));
+	}
 }
