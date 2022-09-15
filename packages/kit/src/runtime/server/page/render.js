@@ -18,7 +18,7 @@ const updated = {
  * @param {{
  *   branch: Array<import('./types').Loaded>;
  *   fetched: Array<import('./types').Fetched>;
- *   cookies: import('set-cookie-parser').Cookie[];
+ *   cookies: import('./types').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };

@@ -12,7 +12,7 @@ const DEFAULT_SERIALIZE_OPTIONS = {
  * @param {URL} url
  */
 export function get_cookies(request, url) {
-	/** @type {Map<string, {name: string; value: string; options: import('cookie').CookieSerializeOptions;}>} */
+	/** @type {Map<string, import('./page/types').Cookie>} */
 	const new_cookies = new Map();
 
 	/** @type {import('types').Cookies} */
@@ -105,12 +105,11 @@ export function path_matches(path, constraint) {
 
 /**
  * @param {Headers} headers
- * @param {import('set-cookie-parser').Cookie[]} cookies
+ * @param {import('./page/types').Cookie[]} cookies
  */
 export function add_cookies_to_headers(headers, cookies) {
 	for (const new_cookie of cookies) {
-		const { name, value, ...options } = new_cookie;
-		// @ts-expect-error options type is string, something more specific is required
+		const { name, value, options } = new_cookie;
 		headers.append('set-cookie', serialize(name, value, options));
 	}
 }

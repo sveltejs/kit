@@ -170,7 +170,7 @@ export function handle_error_and_jsonify(event, options, error) {
 /**
  * @param {number} status
  * @param {string} location
- * @param {import('set-cookie-parser').Cookie[]} [cookies]
+ * @param {import('./page/types.js').Cookie[]} [cookies]
  */
 export function redirect_response(status, location, cookies = []) {
 	const response = new Response(undefined, {
