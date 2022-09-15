@@ -352,7 +352,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 
 ### Alternatives
 
-Form actions are specifically designed to also work without JavaScript, which means you need to use forms with them. If you don't need the page to work without JavaScript, you can instead use `+server.js` files, which also allows you to interact with an API through JSON for example:
+Form actions are specifically designed to also work without JavaScript, which means you need to use forms with them. If you don't need the page to work without JavaScript, you can instead use [`+server.js`](/docs/routing#server) files, which also allows you to interact with an API through JSON for example:
 
 ```svelte
 /// file: src/routes/crud/+page.svelte
