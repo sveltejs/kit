@@ -28,8 +28,8 @@ export function enhance(form, submit = () => {}) {
 			await invalidateAll();
 		}
 
-		// Don't apply action in case of success or invalid,
-		// because that updates the form prop which we don't want
+		// For success/invalid results, only apply action if it belongs to the
+		// current page, otherwise `form` will be updated erroneously
 		if (
 			location.origin + location.pathname === action.origin + action.pathname ||
 			result.type === 'redirect' ||
