@@ -267,6 +267,10 @@ The first argument to `Response` can be a [`ReadableStream`](https://developer.m
 
 You can use the `error`, `redirect` and `json` methods from `@sveltejs/kit` for convenience (but you don't have to). Note that `throw error(..)` only returns a plain text error response.
 
+`+server.js` files can be placed next to `+page` files. This creates an overlap since for example a `GET` to `/login` could mean both a page request or a `GET` request to `+server.js`. To distinguish, the following rules apply in this situation:
+- `PUT`/`PATCH`/`DELETE` always go to `+server.js` since the methods are only applicable there
+- `GET`/`POST` go to `+page.server.js` if the `accept` header is `text/html` (in other words, it's a browser page request), else they go to `+server.js`
+
 ### $types
 
 Throughout the examples above, we've been importing types from a `$types.d.ts` file. This is a file SvelteKit creates for you in a hidden directory if you're using TypeScript (or JavaScript with JSDoc type annotations) to give you type safety when working with your root files.

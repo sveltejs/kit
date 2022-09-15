@@ -73,18 +73,11 @@ export function is_endpoint_request(event) {
 	const { method } = event.request;
 
 	if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+		// These methods exist exclusively for endpoints
 		return true;
 	}
 
-	if (method === 'GET') {
-		const accept = event.request.headers.get('accept') ?? '*/*';
-		return negotiate(accept, ['application/json', 'text/html']) === 'application/json';
-	}
-
-	if (method === 'POST') {
-		const type = (event.request.headers.get('content-type') ?? '').split(';')[0];
-		return type !== 'multipart/form-data' && type !== 'application/x-www-form-urlencoded';
-	}
-
-	return false;
+	// GET/POST requests may be for endpoints or pages. We prefer endpoints if this isn't a text/html request
+	const accept = event.request.headers.get('accept') ?? '*/*';
+	return negotiate(accept, ['*', 'text/html']) !== 'text/html';
 }
