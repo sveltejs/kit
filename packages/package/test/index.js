@@ -130,6 +130,14 @@ test('create package with emitTypes settings disabled', async () => {
 	await test_make_package('emitTypes-false');
 });
 
+test('create package with no metadata', async () => {
+	await test_make_package('metadata-false');
+});
+
+test('create package with filtered metadata', async () => {
+	await test_make_package('metadata-readmeOnly');
+});
+
 test('create package and properly merge exports map', async () => {
 	await test_make_package('exports-merge');
 });
