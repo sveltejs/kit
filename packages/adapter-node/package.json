@@ -45,6 +45,6 @@
 		"uvu": "^0.5.3"
 	},
 	"dependencies": {
-		"esbuild": "^0.15.6"
+		"esbuild": "^0.15.7"
 	}
 }
