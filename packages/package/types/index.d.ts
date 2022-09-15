@@ -23,6 +23,10 @@ export interface PackageConfig {
 	 * Function that determines if the given file is part of the output.
 	 */
 	files?(filepath: string): boolean;
+	/**
+	 * Function that determines if the given metadata file is part of the output.
+	 */
+	metadata?(filepath: string): boolean;
 }
 
 export interface Config {

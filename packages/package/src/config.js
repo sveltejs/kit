@@ -32,7 +32,8 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 			dir: config.package?.dir ?? 'package',
 			exports: config.package?.exports ?? ((filepath) => !/^_|\/_|\.d\.ts$/.test(filepath)),
 			files: config.package?.files ?? (() => true),
-			emitTypes: config.package?.emitTypes ?? true
+			emitTypes: config.package?.emitTypes ?? true,
+			metadata: config.package?.metadata ?? (() => true)
 		},
 		preprocess: config.preprocess
 	};
