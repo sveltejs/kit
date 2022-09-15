@@ -28,7 +28,13 @@ export function enhance(form, submit = () => {}) {
 			await invalidateAll();
 		}
 
-		if (location.origin + location.pathname === action.origin + action.pathname) {
+		// Don't apply action in case of success or invalid,
+		// because that updates the form prop which we don't want
+		if (
+			location.origin + location.pathname === action.origin + action.pathname ||
+			result.type === 'redirect' ||
+			result.type === 'error'
+		) {
 			applyAction(result);
 		}
 	};
