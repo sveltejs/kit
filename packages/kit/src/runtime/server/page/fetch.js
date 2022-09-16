@@ -19,7 +19,7 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 
 	const initial_cookies = cookie.parse(event.request.headers.get('cookie') || '');
 
-	/** @type {import('./types').Cookie[]>} */
+	/** @type {import('./types').Cookie[]} */
 	const set_cookies = [];
 
 	/**
