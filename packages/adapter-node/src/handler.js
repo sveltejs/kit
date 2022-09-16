@@ -4,14 +4,15 @@ import path from 'path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
-import { Server } from 'SERVER';
-import { manifest } from 'MANIFEST';
-import { env } from 'ENV';
+import { Server } from '0SERVER';
+import { manifest } from '0MANIFEST';
+import { env } from '0ENV';
 
 /* global ENV_PREFIX */
 
 const server = new Server(manifest);
-await server.init({ env: process.env });
+const ready = server.init({ env: process.env });
+
 const origin = env('ORIGIN', undefined);
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -47,6 +48,8 @@ function serve(path, client = false) {
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
 	let request;
+
+	await ready;
 
 	try {
 		request = await getRequest({

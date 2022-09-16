@@ -55,21 +55,21 @@ export default function (opts = {}) {
 				target: 'es2022',
 				entryPoints: [`${tmp}/index.js`, `${tmp}/manifest.js`],
 				outdir: `${out}/server`,
-				splitting: true,
-				format: 'esm',
 				bundle: true,
 				external: [...Object.keys(pkg.dependencies || {})]
 			});
 
 			builder.copy(files, out, {
 				replace: {
-					ENV: './env.js',
-					HANDLER: './handler.js',
-					MANIFEST: './server/manifest.js',
-					SERVER: `./server/index.js`,
+					'0ENV': './env.js',
+					'0HANDLER': './handler.js',
+					'0MANIFEST': './server/manifest.js',
+					'0SERVER': `./server/index.js`,
 					ENV_PREFIX: JSON.stringify(envPrefix)
 				}
 			});
+
+			writeFileSync(`${out}/package.json`, JSON.stringify({ type: 'commonjs' }));
 		}
 	};
 }

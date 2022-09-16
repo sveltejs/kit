@@ -8,7 +8,7 @@ export default [
 		input: 'src/index.js',
 		output: {
 			file: 'files/index.js',
-			format: 'esm'
+			format: 'cjs'
 		},
 		plugins: [nodeResolve(), commonjs(), json()],
 		external: ['ENV', 'HANDLER', ...builtinModules]
@@ -17,7 +17,7 @@ export default [
 		input: 'src/env.js',
 		output: {
 			file: 'files/env.js',
-			format: 'esm'
+			format: 'cjs'
 		},
 		plugins: [nodeResolve(), commonjs(), json()],
 		external: ['HANDLER', ...builtinModules]
@@ -26,7 +26,7 @@ export default [
 		input: 'src/handler.js',
 		output: {
 			file: 'files/handler.js',
-			format: 'esm',
+			format: 'cjs',
 			inlineDynamicImports: true
 		},
 		plugins: [nodeResolve(), commonjs(), json()],

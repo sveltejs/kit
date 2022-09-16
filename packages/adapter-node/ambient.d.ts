@@ -1,16 +1,16 @@
-declare module 'ENV' {
+declare module '0ENV' {
 	export function env(key: string, fallback?: any): string;
 }
 
-declare module 'HANDLER' {
+declare module '0HANDLER' {
 	export const handler: import('polka').Middleware;
 }
 
-declare module 'MANIFEST' {
+declare module '0MANIFEST' {
 	import { SSRManifest } from '@sveltejs/kit';
 	export const manifest: SSRManifest;
 }
 
-declare module 'SERVER' {
+declare module '0SERVER' {
 	export { Server } from '@sveltejs/kit';
 }
