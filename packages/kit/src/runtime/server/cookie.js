@@ -1,4 +1,4 @@
-import { parse } from 'cookie';
+import { parse, serialize } from 'cookie';
 
 /** @type {import('cookie').CookieSerializeOptions} */
 const DEFAULT_SERIALIZE_OPTIONS = {
@@ -12,7 +12,7 @@ const DEFAULT_SERIALIZE_OPTIONS = {
  * @param {URL} url
  */
 export function get_cookies(request, url) {
-	/** @type {Map<string, {name: string; value: string; options: import('cookie').CookieSerializeOptions;}>} */
+	/** @type {Map<string, import('./page/types').Cookie>} */
 	const new_cookies = new Map();
 
 	/** @type {import('types').Cookies} */
@@ -101,4 +101,15 @@ export function path_matches(path, constraint) {
 
 	if (path === normalized) return true;
 	return path.startsWith(normalized + '/');
+}
+
+/**
+ * @param {Headers} headers
+ * @param {import('./page/types').Cookie[]} cookies
+ */
+export function add_cookies_to_headers(headers, cookies) {
+	for (const new_cookie of cookies) {
+		const { name, value, options } = new_cookie;
+		headers.append('set-cookie', serialize(name, value, options));
+	}
 }
