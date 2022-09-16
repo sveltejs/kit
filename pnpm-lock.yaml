@@ -295,6 +295,7 @@ importers:
       uvu: ^0.5.3
       vite: ^3.1.1
     dependencies:
+      '@types/cookie': 0.5.1
       '@sveltejs/vite-plugin-svelte': 1.0.5_svelte@3.48.0+vite@3.1.1
       cookie: 0.5.0
       devalue: 3.1.2
@@ -310,7 +311,6 @@ importers:
     devDependencies:
       '@playwright/test': 1.25.0
       '@types/connect': 3.4.35
-      '@types/cookie': 0.5.1
       '@types/marked': 4.0.3
       '@types/mime': 3.0.0
       '@types/node': 16.11.42
@@ -1179,7 +1179,7 @@ packages:
 
   /@types/cookie/0.5.1:
     resolution: {integrity: sha512-COUnqfB2+ckwXXSFInsFdOAWQzCCx+a5hq2ruyj+Vjund94RJQd4LG2u9hnvJrTgunKAaax7ancBYlDrNYxA0g==}
-    dev: true
+    dev: false
 
   /@types/estree/0.0.39:
     resolution: {integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==}
