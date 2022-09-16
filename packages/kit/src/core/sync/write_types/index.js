@@ -69,7 +69,8 @@ export async function write_types(config, manifest_data, file) {
 	}
 
 	const id = path.posix.relative(config.kit.files.routes, path.dirname(file));
-	const route = manifest_data.routes.find((route) => route.id === id || route.id === id.replace(/\\/g, '/'));
+
+	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return; // this shouldn't ever happen
 
 	update_types(config, create_routes_map(manifest_data), route);
