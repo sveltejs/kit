@@ -26,9 +26,9 @@ const overrides = { ...existing_workspace_overrides };
 
 try {
 	const kit_dir = fileURLToPath(new URL('../../../packages/kit', import.meta.url));
-	const ls_vite_result = execSync(`pnpm ls --json vite`,{cwd: kit_dir});
+	const ls_vite_result = execSync(`pnpm ls --json vite`, { cwd: kit_dir });
 	const vite_version = JSON.parse(ls_vite_result)[0].devDependencies.vite.version;
-	overrides.vite=vite_version;
+	overrides.vite = vite_version;
 } catch (e) {
 	console.error('failed to parse installed vite version from packages/kit');
 	throw e;
@@ -108,7 +108,7 @@ for (const template of fs.readdirSync('templates')) {
 
 			// not all templates have all scripts
 			console.group(`${template}-${types}`);
-			for (const script of scripts_to_test.filter(s => !!pkg.scripts[s])) {
+			for (const script of scripts_to_test.filter((s) => !!pkg.scripts[s])) {
 				try {
 					execSync(`pnpm run ${script}`, { cwd, stdio: 'pipe' });
 					console.log(`✅ ${script}`);
