@@ -36,8 +36,16 @@ export type AwaitedProperties<input extends Record<string, any> | void> = input 
 	: unknown;
 
 export type AwaitedActions<T extends Record<string, (...args: any) => any>> = {
-	[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
+	[Key in keyof T]: OptionalUnion<UnpackValidationError<Awaited<ReturnType<T[Key]>>>>;
 }[keyof T];
+
+type OptionalUnion<U, A = Partial<Record<keyof UnionToIntersection<U>, never>>> = U extends unknown
+	? Omit<A, keyof U> & U
+	: never;
+
+type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (x: infer R) => any
+	? R
+	: never;
 
 // Needs to be here, else ActionData will be resolved to unknown - probably because of "d.ts file imports .js file" in combination with allowJs
 interface ValidationError<T extends Record<string, unknown> | undefined = undefined> {
