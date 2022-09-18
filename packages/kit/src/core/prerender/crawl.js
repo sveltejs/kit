@@ -1,3 +1,5 @@
+import * as entities from 'entities';
+
 const DOCTYPE = 'DOCTYPE';
 const CDATA_OPEN = '[CDATA[';
 const CDATA_CLOSE = ']]>';
@@ -146,6 +148,8 @@ export function crawl(html) {
 
 								i -= 1;
 							}
+
+							value = entities.decodeHTML(value);
 
 							if (name === 'href') {
 								href = value;
