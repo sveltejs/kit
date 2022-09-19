@@ -781,7 +781,7 @@ export function create_client({ target, base, trailing_slash }) {
 		});
 
 		// if we don't do this, rejections will be unhandled
-		for (const p of branch_promises) p.catch(() => { });
+		for (const p of branch_promises) p.catch(() => {});
 
 		/** @type {Array<import('./types').BranchNode | undefined>} */
 		const branch = [];
