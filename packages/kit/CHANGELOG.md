@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.486
+
+### Patch Changes
+
+- [fix] handle jsdoc without tags while generating proxy types ([#6884](https://github.com/sveltejs/kit/pull/6884))
+
 ## 1.0.0-next.485
 
 ### Patch Changes
