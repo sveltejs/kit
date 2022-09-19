@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 1.0.0-next.4
+
+### Patch Changes
+
+- [fix] don't strip `type="application/.."` tags ([#6887](https://github.com/sveltejs/kit/pull/6887))
+
 ## 1.0.0-next.3
 
 ### Patch Changes
