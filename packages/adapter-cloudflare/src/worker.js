@@ -20,7 +20,7 @@ const worker = {
 		// static assets
 		if (pathname.startsWith(prefix)) {
 			res = await env.ASSETS.fetch(req);
-			if (!res.ok) return res
+			if (!res.ok) return res;
 
 			const cache_control = pathname.startsWith(prefix + 'immutable/')
 				? 'public, immutable, max-age=31536000'
