@@ -1,4 +1,4 @@
-import * as entities from 'entities';
+import { decode } from './entities.js';
 
 const DOCTYPE = 'DOCTYPE';
 const CDATA_OPEN = '[CDATA[';
@@ -149,7 +149,7 @@ export function crawl(html) {
 								i -= 1;
 							}
 
-							value = entities.decodeHTML(value);
+							value = decode(value);
 
 							if (name === 'href') {
 								href = value;
