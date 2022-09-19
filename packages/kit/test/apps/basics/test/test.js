@@ -171,6 +171,23 @@ test.describe('Shadowed pages', () => {
 		);
 	});
 
+	test('Handles GET redirects with cookies from fetch response', async ({
+		page,
+		context,
+		clicknav
+	}) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/redirect-get-with-cookie-from-fetch"]');
+		expect(await page.textContent('h1')).toBe('Redirection was successful');
+
+		const cookies = await context.cookies();
+		expect(cookies).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ name: 'shadow-redirect-fetch', value: 'happy' })
+			])
+		);
+	});
+
 	test('Handles POST redirects', async ({ page }) => {
 		await page.goto('/shadowed');
 		await Promise.all([page.waitForNavigation(), page.click('#redirect-post')]);
