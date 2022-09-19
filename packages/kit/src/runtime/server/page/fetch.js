@@ -68,6 +68,13 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 
 				const url = new URL(request.url);
 
+				if (
+					!request.headers.get('origin') &&
+					(url.origin !== event.url.origin || request.method !== 'GET')
+				) {
+					request.headers.set('origin', event.url.origin);
+				}
+
 				if (url.origin !== event.url.origin) {
 					// allow cookie passthrough for "same-origin"
 					// if SvelteKit is serving my.domain.com:
@@ -83,11 +90,6 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 					) {
 						const cookie = get_cookie_header(url, request.headers.get('cookie'));
 						if (cookie) request.headers.set('cookie', cookie);
-					}
-
-					// Add request origin header in case it is missing
-					if (!request.headers.get('origin')) {
-						request.headers.set('origin', event.url.origin);
 					}
 
 					let response = await fetch(request);
