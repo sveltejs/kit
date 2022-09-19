@@ -120,7 +120,6 @@ importers:
       '@sveltejs/kit': workspace:*
       '@types/node': ^16.11.36
       c8: ^7.11.3
-      esbuild: ^0.15.7
       node-fetch: ^3.2.4
       polka: ^1.0.0-next.22
       rimraf: ^3.0.2
@@ -131,7 +130,6 @@ importers:
     dependencies:
       '@rollup/plugin-commonjs': 22.0.1_rollup@2.78.1
       '@rollup/plugin-node-resolve': 14.1.0_rollup@2.78.1
-      esbuild: 0.15.7
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.78.1
       '@sveltejs/kit': link:../kit
