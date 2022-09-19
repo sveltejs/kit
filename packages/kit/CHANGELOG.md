@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.489
+
+### Patch Changes
+
+- [fix] tighten up handling and documentation around 404 ([#6897](https://github.com/sveltejs/kit/pull/6897))
+
 ## 1.0.0-next.488
 
 ### Patch Changes
