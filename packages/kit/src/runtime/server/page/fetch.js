@@ -85,6 +85,11 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 						if (cookie) request.headers.set('cookie', cookie);
 					}
 
+					// Add request origin header in case it is missing
+					if (!request.headers.get('origin')) {
+						request.headers.set('origin', event.url.origin);
+					}
+
 					let response = await fetch(request);
 
 					if (request.mode === 'no-cors') {
