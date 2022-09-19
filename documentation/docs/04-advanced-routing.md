@@ -47,7 +47,7 @@ src/routes/
 └ +error.svelte
 ```
 
-> `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#advanced-routing-matching).
+> `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#matching).
 
 ### Matching
 
@@ -88,7 +88,7 @@ SvelteKit needs to know which route is being requested. To do so, it sorts them 
 
 - More specific routes are higher priority (e.g. a route with no parameters is more specific than a route with one dynamic parameter, and so on)
 - `+server` files have higher priority than `+page` files
-- Parameters with [matchers](#advanced-routing-matching) (`[name=type]`) are higher priority than those without (`[name]`)
+- Parameters with [matchers](#matching) (`[name=type]`) are higher priority than those without (`[name]`)
 - Rest parameters have lowest priority
 - Ties are resolved alphabetically
 

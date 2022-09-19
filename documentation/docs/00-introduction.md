@@ -4,7 +4,7 @@ title: Introduction
 
 ### Before we begin
 
-> SvelteKit is in early development, and some things may change before we hit version 1.0. This document is a work-in-progress. If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
+> SvelteKit is in release candidate phase for 1.0 while we address reported issues and add polish. If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
 >
 > See the [migration guides](/docs/migrating) for help upgrading from Sapper.
 
@@ -12,7 +12,7 @@ title: Introduction
 
 SvelteKit is a framework for building extremely high-performance web apps.
 
-Building an app with all the modern best practices is fiendishly complicated. Those practices include [build optimizations](https://vitejs.dev/guide/features.html#build-optimizations), so that you load only the minimal required code; [offline support](/docs/service-workers); [prefetching](/docs/link-options#data-sveltekit-prefetch) pages before the user initiates navigation; and [configurable rendering](/docs/page-options) that allows you to render your app [on the server](/docs/appendix#ssr) or [in the browser](/docs/appendix#csr) at runtime or [at build-time](/docs/page-options#prerender). SvelteKit does all the boring stuff for you so that you can get on with the creative part.
+Building an app with all the modern best practices is fiendishly complicated. Those practices include [build optimizations](https://vitejs.dev/guide/features.html#build-optimizations), so that you load only the minimal required code; [offline support](/docs/service-workers); [prefetching](/docs/link-options#data-sveltekit-prefetch) pages before the user initiates navigation; and [configurable rendering](/docs/page-options) that allows you to render your app [on the server](/docs/appendix#ssr) or [in the browser](/docs/appendix#csr-and-spa) at runtime or [at build-time](/docs/appendix#prerendering). SvelteKit does all the boring stuff for you so that you can get on with the creative part.
 
 It uses [Vite](https://vitejs.dev/) with a [Svelte plugin](https://github.com/sveltejs/vite-plugin-svelte) to provide a lightning-fast and feature-rich development experience with [Hot Module Replacement (HMR)](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#hot), where changes to your code are reflected in the browser instantly.
 
@@ -29,7 +29,7 @@ npm install
 npm run dev
 ```
 
-The first command will scaffold a new project in the `my-app` directory asking you if you'd like to set up some basic tooling such as TypeScript. See the FAQ for [pointers on setting up additional tooling](https://kit.svelte.dev/faq#integrations). The subsequent commands will then install its dependencies and start a server on [localhost:5173](http://localhost:5173).
+The first command will scaffold a new project in the `my-app` directory asking you if you'd like to set up some basic tooling such as TypeScript. See the FAQ for [pointers on setting up additional tooling](/faq#integrations). The subsequent commands will then install its dependencies and start a server on [localhost:5173](http://localhost:5173).
 
 There are two basic concepts:
 
