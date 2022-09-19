@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.178
+
+### Patch Changes
+
+- [fix] prettier not formatting svelte files ([#6866](https://github.com/sveltejs/kit/pull/6866))
+
 ## 2.0.0-next.177
 
 ### Patch Changes

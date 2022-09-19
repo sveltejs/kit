@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.485
+
+### Patch Changes
+
+- fix to ActionData type generation ([#6869](https://github.com/sveltejs/kit/pull/6869))
+
+* The return type of cookies.get is string|undefined #6865 ([#6867](https://github.com/sveltejs/kit/pull/6867))
+
 ## 1.0.0-next.484
 
 ### Patch Changes
