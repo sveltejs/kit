@@ -350,7 +350,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						user_hooks.handleError ||
 						(({ error: e }) => {
 							const error = /** @type {Error & { frame?: string }} */ (e);
-							console.error(colors.bold().red(error.message));
+							console.error(colors.bold().red(error.message ?? error)); // Could be anything
 							if (error.frame) {
 								console.error(colors.gray(error.frame));
 							}
