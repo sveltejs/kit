@@ -170,7 +170,7 @@ If we create pages for `/`, `/about` and `/settings`...
 
 ```html
 /// file: src/routes/settings/+page.svelte
-<h1>Settings</h1>
+<h1>Settings Index</h1>
 ```
 
 ...the nav will always be visible, and clicking between the three pages will only result in the `<h1>` being replaced.
@@ -190,7 +190,7 @@ We can create a layout that only applies to pages below `/settings` (while inher
 
 <div class="submenu">
 	{#each data.sections as section}
-		<a href="/settings/{section.slug}">{section.title}</a>
+		<a href="/settings/{section.slug}">{section.title}</a>&nbsp;
 	{/each}
 </div>
 
