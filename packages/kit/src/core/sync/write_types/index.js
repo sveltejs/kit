@@ -159,6 +159,9 @@ function update_types(config, routes, route) {
 	/** @type {string[]} */
 	const exports = [];
 
+	// add 'Expand' helper
+	// Makes sure a type is "repackaged" and therefore more readable
+	declarations.push('type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;');
 	declarations.push(
 		`type RouteParams = { ${route.names.map((param) => `${param}: string`).join('; ')} }`
 	);
@@ -278,7 +281,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 			written_proxies.push(`proxy${basename}`);
 		}
 
-		server_data = get_data_type(node.server, 'null', proxy);
+		server_data = get_data_type(node.server, 'null', proxy, true);
 
 		const parent_type = `${prefix}ServerParentData`;
 
@@ -305,7 +308,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 						? `./proxy${replace_ext_with_js(basename)}`
 						: path_to_original(outdir, node.server);
 
-					type = `Kit.AwaitedActions<typeof import('${from}').actions>`;
+					type = `Expand<Kit.AwaitedActions<typeof import('${from}').actions>>`;
 				}
 			}
 			exports.push(`export type ActionData = ${type};`);
@@ -328,7 +331,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 
 		const type = get_data_type(node.shared, `${parent_type} & ${prefix}ServerData`, proxy);
 
-		data = `Omit<${parent_type}, keyof ${type}> & ${type}`;
+		data = `Expand<Omit<${parent_type}, keyof ${type}> & ${type}>`;
 
 		const output_data_shape =
 			!is_page && all_pages_have_load
@@ -340,9 +343,9 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 
 		exports.push(`export type ${prefix}LoadEvent = Parameters<${prefix}Load>[0];`);
 	} else if (server_data === 'null') {
-		data = parent_type;
+		data = `Expand<${parent_type}>`;
 	} else {
-		data = `Omit<${parent_type}, keyof ${prefix}ServerData> & ${prefix}ServerData`;
+		data = `Expand<Omit<${parent_type}, keyof ${prefix}ServerData> & ${prefix}ServerData>`;
 	}
 
 	exports.push(`export type ${prefix}Data = ${data};`);
@@ -353,8 +356,9 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 	 * @param {string} file_path
 	 * @param {string} fallback
 	 * @param {Proxy} proxy
+	 * @param {boolean} expand
 	 */
-	function get_data_type(file_path, fallback, proxy) {
+	function get_data_type(file_path, fallback, proxy, expand = false) {
 		if (proxy) {
 			if (proxy.exports.includes('load')) {
 				// If the file wasn't tweaked, we can use the return type of the original file.
@@ -362,7 +366,8 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 				const from = proxy.modified
 					? `./proxy${replace_ext_with_js(path.basename(file_path))}`
 					: path_to_original(outdir, file_path);
-				return `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('${from}').load>>>`;
+				const type = `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('${from}').load>>>`;
+				return expand ? `Expand<${type}>` : type;
 			} else {
 				return fallback;
 			}

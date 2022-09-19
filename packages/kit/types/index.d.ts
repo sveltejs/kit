@@ -25,7 +25,7 @@ export interface Adapter {
 	adapt(builder: Builder): MaybePromise<void>;
 }
 
-export type AwaitedProperties<input extends Record<string, any> | void> = input extends void
+type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
 	: input extends Record<string, any>
 	? {
@@ -35,14 +35,15 @@ export type AwaitedProperties<input extends Record<string, any> | void> = input 
 	? input
 	: unknown;
 
-export type AwaitedActions<T extends Record<string, (...args: any) => any>> = Expand<
-	{
-		[Key in keyof T]: OptionalUnion<UnpackValidationError<Awaited<ReturnType<T[Key]>>>>;
-	}[keyof T]
->;
+export type AwaitedProperties<input extends Record<string, any> | void> =
+	AwaitedPropertiesUnion<input> extends Record<string, any>
+		? OptionalUnion<AwaitedPropertiesUnion<input>>
+		: AwaitedPropertiesUnion<input>;
 
-// Makes sure a type is "repackaged" and therefore more readable
-type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
+export type AwaitedActions<T extends Record<string, (...args: any) => any>> = {
+	[Key in keyof T]: OptionalUnion<UnpackValidationError<Awaited<ReturnType<T[Key]>>>>;
+}[keyof T];
+
 // Takes a union type and returns a union type where each type also has all properties
 // of all possible types (typed as undefined), making accessing them more ergonomic
 type OptionalUnion<
