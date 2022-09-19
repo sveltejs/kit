@@ -1513,7 +1513,10 @@ async function load_data(url, invalid) {
  * @returns {App.PageError}
  */
 function handle_error(error, event) {
-	return hooks.handleError({ error, event }) ?? /** @type {any} */ ({ message: 'Internal Error' });
+	return (
+		hooks.handleError({ error, event }) ??
+		/** @type {any} */ ({ message: event.routeId ? 'Internal Error' : 'Not Found' })
+	);
 }
 
 // TODO remove for 1.0
