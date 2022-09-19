@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Fix the problem HTML attribute parsing does not take HTML reference into account.
+Decode HTML entities in `href` attributes when crawling
