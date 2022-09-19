@@ -20,12 +20,14 @@ export type LayoutLoad<
 	OutputData extends OutputDataShape<LayoutParentData> = OutputDataShape<LayoutParentData>
 > = Kit.Load<LayoutParams, LayoutServerData, LayoutParentData, OutputData>;
 export type LayoutLoadEvent = Parameters<LayoutLoad>[0];
-export type LayoutData = Expand<Omit<
-	LayoutParentData,
-	keyof Kit.AwaitedProperties<
-		Awaited<ReturnType<typeof import('../../../../../../../../+layout.js').load>>
-	>
-> &
-	Kit.AwaitedProperties<
-		Awaited<ReturnType<typeof import('../../../../../../../../+layout.js').load>>
-	>>;
+export type LayoutData = Expand<
+	Omit<
+		LayoutParentData,
+		keyof Kit.AwaitedProperties<
+			Awaited<ReturnType<typeof import('../../../../../../../../+layout.js').load>>
+		>
+	> &
+		Kit.AwaitedProperties<
+			Awaited<ReturnType<typeof import('../../../../../../../../+layout.js').load>>
+		>
+>;

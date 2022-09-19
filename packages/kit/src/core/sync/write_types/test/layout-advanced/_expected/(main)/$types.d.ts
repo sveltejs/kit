@@ -22,22 +22,26 @@ export type PageLoad<
 	OutputData extends OutputDataShape<PageParentData> = OutputDataShape<PageParentData>
 > = Kit.Load<RouteParams, PageServerData, PageParentData, OutputData>;
 export type PageLoadEvent = Parameters<PageLoad>[0];
-export type PageData = Expand<Omit<
-	PageParentData,
-	keyof Kit.AwaitedProperties<
-		Awaited<ReturnType<typeof import('../../../../../../../../../(main)/+page.js').load>>
-	>
-> &
-	Kit.AwaitedProperties<
-		Awaited<ReturnType<typeof import('../../../../../../../../../(main)/+page.js').load>>
-	>>;
+export type PageData = Expand<
+	Omit<
+		PageParentData,
+		keyof Kit.AwaitedProperties<
+			Awaited<ReturnType<typeof import('../../../../../../../../../(main)/+page.js').load>>
+		>
+	> &
+		Kit.AwaitedProperties<
+			Awaited<ReturnType<typeof import('../../../../../../../../../(main)/+page.js').load>>
+		>
+>;
 export type LayoutServerLoad<
 	OutputData extends (Partial<App.PageData> & Record<string, any>) | void =
 		| (Partial<App.PageData> & Record<string, any>)
 		| void
 > = Kit.ServerLoad<LayoutParams, LayoutServerParentData, OutputData>;
 export type LayoutServerLoadEvent = Parameters<LayoutServerLoad>[0];
-export type LayoutServerData = Expand<Kit.AwaitedProperties<
-	Awaited<ReturnType<typeof import('../../../../../../../../../(main)/+layout.server.js').load>>
->>;
+export type LayoutServerData = Expand<
+	Kit.AwaitedProperties<
+		Awaited<ReturnType<typeof import('../../../../../../../../../(main)/+layout.server.js').load>>
+	>
+>;
 export type LayoutData = Expand<Omit<LayoutParentData, keyof LayoutServerData> & LayoutServerData>;
