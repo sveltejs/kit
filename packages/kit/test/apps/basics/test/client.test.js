@@ -8,7 +8,7 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('beforeNavigate', () => {
-	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
+	test('prevents navigation triggered by link click', async ({ page, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 
 		await page.click('[href="/before-navigate/a"]');
@@ -806,4 +806,24 @@ test.describe('data-sveltekit attributes', () => {
 		await clicknav('#three');
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	});
+});
+
+test('+server.js next to +page.svelte works', async ({ page }) => {
+	await page.goto('/routing/endpoint-next-to-page');
+	expect(await page.textContent('p')).toBe('Hi');
+
+	await page.click('button:has-text("GET")');
+	await expect(page.locator('pre')).toHaveText('GET');
+
+	await page.click('button:has-text("PUT")');
+	await expect(page.locator('pre')).toHaveText('PUT');
+
+	await page.click('button:has-text("PATCH")');
+	await expect(page.locator('pre')).toHaveText('PATCH');
+
+	await page.click('button:has-text("POST")');
+	await expect(page.locator('pre')).toHaveText('POST');
+
+	await page.click('button:has-text("DELETE")');
+	await expect(page.locator('pre')).toHaveText('DELETE');
 });

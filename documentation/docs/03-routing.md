@@ -267,6 +267,57 @@ The first argument to `Response` can be a [`ReadableStream`](https://developer.m
 
 You can use the `error`, `redirect` and `json` methods from `@sveltejs/kit` for convenience (but you don't have to). Note that `throw error(..)` only returns a plain text error response.
 
+#### Receiving data
+
+By exporting `POST`/`PUT`/`PATCH`/`DELETE` handlers, `+server.js` files can be used to create a complete API:
+
+```svelte
+/// file: src/routes/add/+page.svelte
+<script>
+	let a = 0;
+	let b = 0;
+	let total = 0;
+
+	async function add() {
+		const response = await fetch('/api/add', {
+			method: 'POST',
+			body: JSON.stringify({ a, b }),
+			headers: {
+				'content-type': 'application/json'
+			}
+		});
+
+		total = await response.json();
+	}
+</script>
+
+<input type="number" bind:value={a}> +
+<input type="number" bind:value={b}> =
+{total}
+
+<button on:click={add}>Calculate</button>
+```
+
+```js
+/// file: src/routes/api/add/+server.js
+import { json } from '@sveltejs/kit';
+
+/** @type {import('./$types').RequestHandler} */
+export async function POST({ request }) {
+	const { a, b } = await request.json();
+	return json(a + b);
+}
+```
+
+> In general, [form actions](/docs/form-actions) are a better way to submit data from the browser to the server.
+
+#### Content negotiation
+
+`+server.js` files can be placed in the same directory as `+page` files, allowing the same route to be either a page or an API endpoint. To determine which, SvelteKit applies the following rules:
+
+- `PUT`/`PATCH`/`DELETE` requests are always handled by `+server.js` since they do not apply to pages
+- `GET`/`POST` requests are treated as page requests if the `accept` header prioritises `text/html` (in other words, it's a browser page request), else they are handled by `+server.js`
+
 ### $types
 
 Throughout the examples above, we've been importing types from a `$types.d.ts` file. This is a file SvelteKit creates for you in a hidden directory if you're using TypeScript (or JavaScript with JSDoc type annotations) to give you type safety when working with your root files.
