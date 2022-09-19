@@ -489,7 +489,7 @@ export function tweak_types(content, is_server) {
 			if (node.jsDoc) {
 				// @ts-ignore
 				for (const comment of node.jsDoc) {
-					for (const tag of comment.tags) {
+					for (const tag of comment.tags ?? []) {
 						if (ts.isJSDocTypeTag(tag)) {
 							const is_fn =
 								ts.isFunctionDeclaration(value) ||
