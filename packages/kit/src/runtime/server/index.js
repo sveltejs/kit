@@ -97,7 +97,6 @@ export async function respond(request, options, state) {
 	let headers = {};
 
 	const { cookies, new_cookies } = get_cookies(request, url);
-	let includeCookies = false;
 
 	if (state.prerendering) disable_search(url);
 
@@ -179,15 +178,13 @@ export async function respond(request, options, state) {
 		filterSerializedResponseHeaders: default_filter
 	};
 
-	let resolveCalled = false;
-
 	/**
 	 *
 	 * @param {import('types').RequestEvent} event
 	 * @param {import('types').ResolveOptions} [opts]
 	 */
 	async function resolve(event, opts) {
-		resolveCalled = true;
+		let includeCookies = false;
 		try {
 			if (opts) {
 				// TODO remove for 1.0
@@ -246,7 +243,7 @@ export async function respond(request, options, state) {
 					add_headers_to_response(response, headers);
 				}
 				// only mark the cookies to be included
-				// if we add them to the headers it´s hard to delete them inside the handle hook
+				// if we add them to the headers it´s harder to delete them inside the handle hook
 				includeCookies = true;
 
 				return response;
@@ -285,6 +282,10 @@ export async function respond(request, options, state) {
 		} finally {
 			// reset headers
 			headers = {};
+			// clear the cookies if no valid route is found
+			if (!includeCookies) {
+				new_cookies.clear();
+			}
 		}
 	}
 
@@ -309,6 +310,7 @@ export async function respond(request, options, state) {
 
 		// allows for `cookies` and `setHeaders` beeing used after and without the use `resolve(event)`
 		add_headers_to_response(response, headers);
+		add_cookies_to_headers(response.headers, Array.from(new_cookies.values()));
 
 		// respond with 304 if etag matches
 		if (response.status === 200 && response.headers.has('etag')) {
@@ -335,10 +337,6 @@ export async function respond(request, options, state) {
 					headers
 				});
 			}
-		}
-
-		if (!resolveCalled || includeCookies) {
-			add_cookies_to_headers(response.headers, Array.from(new_cookies.values()));
 		}
 
 		return response;
