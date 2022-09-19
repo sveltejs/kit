@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.487
+
+### Patch Changes
+
+- [feat] allow +server.js files next to +page files ([#6773](https://github.com/sveltejs/kit/pull/6773))
+
 ## 1.0.0-next.486
 
 ### Patch Changes
