@@ -2,4 +2,4 @@
 'create-svelte': patch
 ---
 
-fix prettier not formatting svelte files
+[fix] prettier not formatting svelte files
