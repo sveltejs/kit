@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 
 let should_fail = '';
 /**
@@ -13,9 +13,12 @@ export async function load() {
 		if (should_fail === 'expected') {
 			set_should_fail('');
 			throw error(401, 'Not allowed');
-		} else {
+		} else if (should_fail === 'unexpected') {
 			set_should_fail('');
 			throw new Error('Failed to load');
+		} else {
+			set_should_fail('');
+			throw redirect(307, '/load');
 		}
 	}
 	// Do NOT make this load function depend on something which would cause it to rerun

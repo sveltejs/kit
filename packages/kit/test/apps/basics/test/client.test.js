@@ -319,6 +319,12 @@ test.describe.serial('Errors', () => {
 			'This is the static error page with the following message: Not allowed'
 		);
 	});
+
+	test('Root 404 redirects somewhere due to root layout', async ({ page, baseURL }) => {
+		await page.goto('/errors/error-html');
+		await Promise.all([page.waitForNavigation(), page.click('button:text-is("Redirect")')]);
+		expect(page.url()).toBe(baseURL + '/load');
+	});
 });
 
 test.describe('Load', () => {

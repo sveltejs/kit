@@ -4,10 +4,11 @@ import {
 	handle_error_and_jsonify,
 	GENERIC_ERROR,
 	get_option,
-	static_error_page
+	static_error_page,
+	redirect_response
 } from '../utils.js';
 import { create_fetch } from './fetch.js';
-import { HttpError } from '../../control.js';
+import { HttpError, Redirect } from '../../control.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -88,6 +89,12 @@ export async function respond_with_error({ event, options, state, status, error,
 			resolve_opts
 		});
 	} catch (error) {
+		// Edge case: If route is a 404 and the user redirects to somewhere from the root layout,
+		// we end up here.
+		if (error instanceof Redirect) {
+			return redirect_response(error.status, error.location, cookies);
+		}
+
 		return static_error_page(
 			options,
 			error instanceof HttpError ? error.status : 500,
