@@ -52,7 +52,7 @@ type OptionalUnion<
 > = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 
 // Needs to be here, else ActionData will be resolved to unknown - probably because of "d.ts file imports .js file" in combination with allowJs
-interface ValidationError<T extends Record<string, unknown> | undefined = undefined> {
+export interface ValidationError<T extends Record<string, unknown> | undefined = undefined> {
 	status: number;
 	data: T;
 }
