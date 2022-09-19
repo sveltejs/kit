@@ -61,16 +61,6 @@ export function load(event) {
 }
 ```
 
-Alternatively, you could also `throw` a `redirect` to get back to an existing page.
-
-If you don't want to invoke `+error.svelte` in this case, you could instead create a `+page.svelte` file with your custom 404 content:
-
-```html
-/// file: src/routes/marx-brothers/[...path]/+page.svelte
-<h1>Not Found</h1>
-<p>This Marx brother never lived</p>
-```
-
 > If you don't handle 404 cases, they will appear in [`handleError`](/docs/hooks#shared-hooks-handleerror)
 
 ### Matching
