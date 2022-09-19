@@ -7,6 +7,7 @@ import {
 	static_error_page
 } from '../utils.js';
 import { create_fetch } from './fetch.js';
+import { HttpError } from '../../control.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -87,6 +88,10 @@ export async function respond_with_error({ event, options, state, status, error,
 			resolve_opts
 		});
 	} catch (error) {
-		return static_error_page(options, 500, handle_error_and_jsonify(event, options, error).message);
+		return static_error_page(
+			options,
+			error instanceof HttpError ? error.status : 500,
+			handle_error_and_jsonify(event, options, error).message
+		);
 	}
 }

@@ -1,8 +1,10 @@
 <script>
-	async function fail() {
-		await fetch('./error-html/make-root-fail');
+	/** @param {boolean} expected */
+	async function fail(expected) {
+		await fetch(`/errors/error-html/make-root-fail?expected=${expected}`);
 		location.reload();
 	}
 </script>
 
-<button on:click={fail}>Let's fail catastrophically</button>
+<button on:click={() => fail(false)}>Unexpected</button>
+<button on:click={() => fail(true)}>Expected</button>

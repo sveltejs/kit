@@ -263,7 +263,7 @@ test.describe('Endpoints', () => {
 	});
 });
 
-test.describe('Errors', () => {
+test.describe.serial('Errors', () => {
 	test('client-side load errors', async ({ page }) => {
 		await page.goto('/errors/load-client');
 
@@ -302,12 +302,21 @@ test.describe('Errors', () => {
 		expect(await page.innerHTML('h1')).toBe('401');
 	});
 
-	test('Root error falls back to error.html', async ({ page }) => {
+	test('Root error falls back to error.html (unexpected error)', async ({ page }) => {
 		await page.goto('/errors/error-html');
-		await page.click('button');
+		await page.click('button:text-is("Unexpected")');
 		expect(await page.textContent('h1')).toBe('Error - 500');
 		expect(await page.textContent('p')).toBe(
 			'This is the static error page with the following message: Failed to load'
+		);
+	});
+
+	test('Root error falls back to error.html (expected error)', async ({ page }) => {
+		await page.goto('/errors/error-html');
+		await page.click('button:text-is("Expected")');
+		expect(await page.textContent('h1')).toBe('Error - 401');
+		expect(await page.textContent('p')).toBe(
+			'This is the static error page with the following message: Not allowed'
 		);
 	});
 });
