@@ -46,7 +46,7 @@ type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
 // Takes a union type and returns a union type where each type also has all properties
 // of all possible types (typed as undefined), making accessing them more ergonomic
 type OptionalUnion<
-	U extends Record<string, unknown>,
+	U extends Record<string, any>, // not unknown, else interfaces don't satisfy this constraint
 	A extends keyof U = U extends U ? keyof U : never
 > = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 
