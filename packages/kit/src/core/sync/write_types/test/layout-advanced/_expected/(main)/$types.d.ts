@@ -1,5 +1,6 @@
 import type * as Kit from '@sveltejs/kit';
 
+type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
 type RouteParams = {};
 type MaybeWithVoid<T> = {} extends T ? T | void : T;
 export type RequiredKeys<T> = {
@@ -21,7 +22,7 @@ export type PageLoad<
 	OutputData extends OutputDataShape<PageParentData> = OutputDataShape<PageParentData>
 > = Kit.Load<RouteParams, PageServerData, PageParentData, OutputData>;
 export type PageLoadEvent = Parameters<PageLoad>[0];
-export type PageData = Omit<
+export type PageData = Expand<Omit<
 	PageParentData,
 	keyof Kit.AwaitedProperties<
 		Awaited<ReturnType<typeof import('../../../../../../../../../(main)/+page.js').load>>
@@ -29,14 +30,14 @@ export type PageData = Omit<
 > &
 	Kit.AwaitedProperties<
 		Awaited<ReturnType<typeof import('../../../../../../../../../(main)/+page.js').load>>
-	>;
+	>>;
 export type LayoutServerLoad<
 	OutputData extends (Partial<App.PageData> & Record<string, any>) | void =
 		| (Partial<App.PageData> & Record<string, any>)
 		| void
 > = Kit.ServerLoad<LayoutParams, LayoutServerParentData, OutputData>;
 export type LayoutServerLoadEvent = Parameters<LayoutServerLoad>[0];
-export type LayoutServerData = Kit.AwaitedProperties<
+export type LayoutServerData = Expand<Kit.AwaitedProperties<
 	Awaited<ReturnType<typeof import('../../../../../../../../../(main)/+layout.server.js').load>>
->;
-export type LayoutData = Omit<LayoutParentData, keyof LayoutServerData> & LayoutServerData;
+>>;
+export type LayoutData = Expand<Omit<LayoutParentData, keyof LayoutServerData> & LayoutServerData>;

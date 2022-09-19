@@ -1,5 +1,6 @@
 import type * as Kit from '@sveltejs/kit';
 
+type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
 type RouteParams = {};
 type MaybeWithVoid<T> = {} extends T ? T | void : T;
 export type RequiredKeys<T> = {
@@ -21,7 +22,7 @@ export type LayoutLoad<
 		| void
 > = Kit.Load<LayoutParams, LayoutServerData, LayoutParentData, OutputData>;
 export type LayoutLoadEvent = Parameters<LayoutLoad>[0];
-export type LayoutData = Omit<
+export type LayoutData = Expand<Omit<
 	LayoutParentData,
 	keyof Kit.AwaitedProperties<
 		Awaited<ReturnType<typeof import('../../../../../../../../../nested/+layout.js').load>>
@@ -29,4 +30,4 @@ export type LayoutData = Omit<
 > &
 	Kit.AwaitedProperties<
 		Awaited<ReturnType<typeof import('../../../../../../../../../nested/+layout.js').load>>
-	>;
+	>>;
