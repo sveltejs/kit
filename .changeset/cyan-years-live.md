@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Prevent caching of \_\_data.js files
+Prevent caching of `__data.js` files
