@@ -47,6 +47,32 @@ export const handle = sequence(
 		event.locals.name = /** @type {string} */ (event.cookies.get('name'));
 		return resolve(event);
 	},
+	({ event, resolve }) => {
+		if (event.url.pathname === '/headers/set-in-handle') {
+			event.setHeaders({ 'x-handle': 'SvelteKit' });
+			return new Response('test', { status: 200 });
+		}
+		if (event.url.pathname === '/headers/set-in-handle-resolve') {
+			event.setHeaders({ 'x-handle1': 'before' });
+			const response = resolve(event);
+			event.setHeaders({ 'x-handle2': 'after' });
+			return response;
+		}
+		return resolve(event);
+	},
+	({ event, resolve }) => {
+		if (event.url.pathname === '/cookies/set-in-handle') {
+			event.cookies.set('cookie1', 'value1');
+			return new Response('test', { status: 200 });
+		}
+		if (event.url.pathname === '/cookies/set-in-handle-resolve') {
+			event.cookies.set('cookie1', 'before');
+			const response = resolve(event);
+			event.cookies.set('cookie2', 'after');
+			return response;
+		}
+		return resolve(event);
+	},
 	async ({ event, resolve }) => {
 		if (event.url.pathname === '/errors/error-in-handle') {
 			throw new Error('Error in handle');

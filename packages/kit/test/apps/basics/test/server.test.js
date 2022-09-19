@@ -334,6 +334,40 @@ test.describe('setHeaders', () => {
 		const cookies = (await response?.allHeaders())['set-cookie'];
 		expect(cookies.includes('cookie1=value1') && cookies.includes('cookie2=value2')).toBe(true);
 	});
+
+	test('setHeaders in handle hook without resolve', async ({ page }) => {
+		const response = await page.goto('/headers/set-in-handle');
+
+		const headers = await response.allHeaders();
+		expect(headers['x-handle']).toBe('SvelteKit');
+	});
+
+	test('setHeaders in handle hook after resolve', async ({ page }) => {
+		const response = await page.goto('/headers/set-in-handle-resolve');
+
+		const headers = await response.allHeaders();
+		expect(headers['x-handle1']).toBe('before');
+		expect(headers['x-handle2']).toBe('after');
+		expect(headers['x-endpoint']).toBe('SvelteKit');
+	});
+});
+
+test.describe('Cookies API in handle', () => {
+	test('allows set-cookie headers from handle without resolve', async ({ page }) => {
+		const response = await page.goto('/cookies/set-in-handle');
+		const cookies = (await response?.allHeaders())['set-cookie'];
+		expect(cookies.includes('cookie1=value1')).toBe(true);
+	});
+
+	test('allows set-cookie headers from handle after resolve', async ({ page }) => {
+		const response = await page.goto('/cookies/set-in-handle-resolve');
+		const cookies = await response.headerValue('set-cookie');
+		expect(
+			cookies.includes('cookie1=before') &&
+				cookies.includes('cookie2=after') &&
+				cookies.includes('endpoint=SvelteKit')
+		).toBe(true);
+	});
 });
 
 test.describe('Miscellaneous', () => {
