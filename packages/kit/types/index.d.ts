@@ -25,7 +25,7 @@ export interface Adapter {
 	adapt(builder: Builder): MaybePromise<void>;
 }
 
-export type AwaitedProperties<input extends Record<string, any> | void> = input extends void
+type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
 	: input extends Record<string, any>
 	? {
@@ -35,9 +35,21 @@ export type AwaitedProperties<input extends Record<string, any> | void> = input 
 	? input
 	: unknown;
 
+export type AwaitedProperties<input extends Record<string, any> | void> =
+	AwaitedPropertiesUnion<input> extends Record<string, any>
+		? OptionalUnion<AwaitedPropertiesUnion<input>>
+		: AwaitedPropertiesUnion<input>;
+
 export type AwaitedActions<T extends Record<string, (...args: any) => any>> = {
-	[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
+	[Key in keyof T]: OptionalUnion<UnpackValidationError<Awaited<ReturnType<T[Key]>>>>;
 }[keyof T];
+
+// Takes a union type and returns a union type where each type also has all properties
+// of all possible types (typed as undefined), making accessing them more ergonomic
+type OptionalUnion<
+	U extends Record<string, any>, // not unknown, else interfaces don't satisfy this constraint
+	A extends keyof U = U extends U ? keyof U : never
+> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 
 // Needs to be here, else ActionData will be resolved to unknown - probably because of "d.ts file imports .js file" in combination with allowJs
 interface ValidationError<T extends Record<string, unknown> | undefined = undefined> {
@@ -131,18 +143,18 @@ export interface Cookies {
 	get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
 
 	/**
-	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make
-	 * the cookie available via `cookies.get` during the current request.
+	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` during the current request.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly
-	 * disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP
+	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 *
+	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 */
 	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 	 */
-	delete(name: string): void;
+	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
 }
 
 export interface KitConfig {

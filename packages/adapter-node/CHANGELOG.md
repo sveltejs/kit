@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.92
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.91
+
+### Patch Changes
+
+- Allow streaming when `BODY_SIZE_LIMIT` is set ([#6702](https://github.com/sveltejs/kit/pull/6702))
+
 ## 1.0.0-next.90
 
 ### Patch Changes

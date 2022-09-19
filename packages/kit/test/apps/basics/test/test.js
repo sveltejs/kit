@@ -171,6 +171,23 @@ test.describe('Shadowed pages', () => {
 		);
 	});
 
+	test('Handles GET redirects with cookies from fetch response', async ({
+		page,
+		context,
+		clicknav
+	}) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/redirect-get-with-cookie-from-fetch"]');
+		expect(await page.textContent('h1')).toBe('Redirection was successful');
+
+		const cookies = await context.cookies();
+		expect(cookies).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ name: 'shadow-redirect-fetch', value: 'happy' })
+			])
+		);
+	});
+
 	test('Handles POST redirects', async ({ page }) => {
 		await page.goto('/shadowed');
 		await Promise.all([page.waitForNavigation(), page.click('#redirect-post')]);
@@ -1834,5 +1851,83 @@ test.describe('Actions', () => {
 		]);
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'register: foo' }));
+	});
+});
+
+test.describe('Cookies API', () => {
+	// there's a problem running these tests in the CI with webkit,
+	// since AFAICT the browser is using http://localhost and webkit won't
+	// set a `Secure` cookie on that. So we bail...
+	test.skip(({ browserName }) => browserName === 'webkit');
+
+	test('sanity check for cookies', async ({ page }) => {
+		await page.goto('/cookies');
+		const span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('undefined');
+	});
+
+	test('set a cookie', async ({ page }) => {
+		await page.goto('/cookies/set');
+		const span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot');
+	});
+
+	test('delete a cookie', async ({ page }) => {
+		await page.goto('/cookies/set');
+		let span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot');
+		await page.goto('/cookies/delete');
+		span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('undefined');
+	});
+
+	test('cookies can be set with a path', async ({ page }) => {
+		await page.goto('/cookies/nested/a');
+		let span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot');
+		await page.goto('/cookies/nested/b');
+		span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('undefined');
+		await page.goto('/cookies');
+		span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('undefined');
+	});
+
+	test('more than one cookie can be set in one request', async ({ page }) => {
+		await page.goto('/cookies/set-more-than-one');
+		const span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot');
+		expect(await span.innerText()).toContain('jane austen');
+	});
+
+	test('default encoding and decoding', async ({ page }) => {
+		await page.goto('/cookies/encoding/set');
+		const span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot, jane austen');
+	});
+
+	test('not decoded twice', async ({ page }) => {
+		await page.goto('/cookies/encoding/not-decoded-twice');
+		const span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot%2C%20jane%20austen');
+	});
+
+	test('can be set in +layout.server.js', async ({ page }) => {
+		await page.goto('/cookies/set-in-layout');
+		const span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('i was set in the layout load');
+	});
+
+	test('works with basic enhance', async ({ page }) => {
+		await page.goto('/cookies/enhanced/basic');
+		let span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('undefined');
+
+		await page.click('button#teapot');
+		await expect(page.locator('#cookie-value')).toHaveText('teapot');
+
+		// setting a different value...
+		await page.click('button#janeAusten');
+		await expect(page.locator('#cookie-value')).toHaveText('Jane Austen');
 	});
 });
