@@ -41,7 +41,10 @@ export type AwaitedActions<T extends Record<string, (...args: any) => any>> = Ex
 	}[keyof T]
 >;
 
+// Makes sure a type is "repackaged" and therefore more readable
 type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
+// Takes a union type and returns a union type where each type also has all properties
+// of all possible types (typed as undefined), making accessing them more ergonomic
 type OptionalUnion<
 	U extends Record<string, unknown>,
 	A extends keyof U = U extends U ? keyof U : never
