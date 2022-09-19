@@ -32,7 +32,6 @@
 		"prepublishOnly": "npm run build"
 	},
 	"devDependencies": {
-		"@rollup/plugin-json": "^4.1.0",
 		"@sveltejs/kit": "workspace:*",
 		"@types/node": "^16.11.36",
 		"c8": "^7.11.3",
@@ -46,6 +45,7 @@
 	},
 	"dependencies": {
 		"@rollup/plugin-commonjs": "^22.0.1",
+		"@rollup/plugin-json": "^4.1.0",
 		"@rollup/plugin-node-resolve": "^14.1.0"
 	}
 }

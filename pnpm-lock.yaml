@@ -129,9 +129,9 @@ importers:
       uvu: ^0.5.3
     dependencies:
       '@rollup/plugin-commonjs': 22.0.1_rollup@2.78.1
+      '@rollup/plugin-json': 4.1.0_rollup@2.78.1
       '@rollup/plugin-node-resolve': 14.1.0_rollup@2.78.1
     devDependencies:
-      '@rollup/plugin-json': 4.1.0_rollup@2.78.1
       '@sveltejs/kit': link:../kit
       '@types/node': 16.11.42
       c8: 7.11.3
@@ -1097,7 +1097,6 @@ packages:
     dependencies:
       '@rollup/pluginutils': 3.1.0_rollup@2.78.1
       rollup: 2.78.1
-    dev: true
 
   /@rollup/plugin-node-resolve/14.1.0_rollup@2.78.1:
     resolution: {integrity: sha512-5G2niJroNCz/1zqwXtk0t9+twOSDlG00k1Wfd7bkbbXmwg8H8dvgHdIWAun53Ps/rckfvOC7scDBjuGFg5OaWw==}
