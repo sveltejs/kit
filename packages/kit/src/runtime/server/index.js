@@ -94,9 +94,10 @@ export async function respond(request, options, state) {
 	}
 
 	/** @type {Record<string, string>} */
-	const headers = {};
+	let headers = {};
 
 	const { cookies, new_cookies } = get_cookies(request, url);
+	let includeCookies = false;
 
 	if (state.prerendering) disable_search(url);
 
@@ -178,12 +179,15 @@ export async function respond(request, options, state) {
 		filterSerializedResponseHeaders: default_filter
 	};
 
+	let resolveCalled = false;
+
 	/**
 	 *
 	 * @param {import('types').RequestEvent} event
 	 * @param {import('types').ResolveOptions} [opts]
 	 */
 	async function resolve(event, opts) {
+		resolveCalled = true;
 		try {
 			if (opts) {
 				// TODO remove for 1.0
@@ -239,13 +243,11 @@ export async function respond(request, options, state) {
 				if (!is_data_request) {
 					// we only want to set cookies on __data.js requests, we don't
 					// want to cache stuff erroneously etc
-					for (const key in headers) {
-						const value = headers[key];
-						response.headers.set(key, /** @type {string} */ (value));
-					}
+					add_headers_to_response(response, headers);
 				}
-
-				add_cookies_to_headers(response.headers, Array.from(new_cookies.values()));
+				// only mark the cookies to be included
+				// if we add them to the headers it´s hard to delete them inside the handle hook
+				includeCookies = true;
 
 				return response;
 			}
@@ -281,13 +283,8 @@ export async function respond(request, options, state) {
 			const error = e instanceof HttpError ? e : coalesce_to_error(e);
 			return handle_fatal_error(event, options, error);
 		} finally {
-			event.cookies.set = () => {
-				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
-			};
-
-			event.setHeaders = () => {
-				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
-			};
+			// reset headers
+			headers = {};
 		}
 	}
 
@@ -301,6 +298,17 @@ export async function respond(request, options, state) {
 				throw new Error('request in handle has been replaced with event' + details);
 			}
 		});
+
+		event.cookies.set = () => {
+			throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
+		};
+
+		event.setHeaders = () => {
+			throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+		};
+
+		// allows for `cookies` and `setHeaders` beeing used after and without the use `resolve(event)`
+		add_headers_to_response(response, headers);
 
 		// respond with 304 if etag matches
 		if (response.status === 200 && response.headers.has('etag')) {
@@ -329,9 +337,24 @@ export async function respond(request, options, state) {
 			}
 		}
 
+		if (!resolveCalled || includeCookies) {
+			add_cookies_to_headers(response.headers, Array.from(new_cookies.values()));
+		}
+
 		return response;
 	} catch (/** @type {unknown} */ e) {
 		const error = coalesce_to_error(e);
 		return handle_fatal_error(event, options, error);
+	}
+}
+
+/**
+ * @param {Response} response
+ * @param {Record<string, string>} headers
+ */
+export function add_headers_to_response(response, headers) {
+	for (const key in headers) {
+		const value = headers[key];
+		response.headers.set(key, /** @type {string} */ (value));
 	}
 }
