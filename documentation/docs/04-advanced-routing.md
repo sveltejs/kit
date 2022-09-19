@@ -71,6 +71,8 @@ If you don't want to invoke `+error.svelte` in this case, you could instead crea
 <p>This Marx brother never lived</p>
 ```
 
+> If you don't handle 404 cases, they will appear in [`handleError`](/docs/hooks#shared-hooks-handleerror)
+
 ### Matching
 
 A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](/docs/configuration#files) directory...
