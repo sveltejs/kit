@@ -1,5 +1,31 @@
 # create-svelte
 
+## 2.0.0-next.178
+
+### Patch Changes
+
+- [fix] prettier not formatting svelte files ([#6866](https://github.com/sveltejs/kit/pull/6866))
+
+## 2.0.0-next.177
+
+### Patch Changes
+
+- [chore] bump vite ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 2.0.0-next.176
+
+### Patch Changes
+
+- SvelteKit 1.0 RC ([#6707](https://github.com/sveltejs/kit/pull/6707))
+
+## 2.0.0-next.175
+
+### Patch Changes
+
+- [breaking] update use:enhance usage ([#6697](https://github.com/sveltejs/kit/pull/6697))
+
+* [breaking] hooks file rename ([#6697](https://github.com/sveltejs/kit/pull/6697))
+
 ## 2.0.0-next.174
 
 ### Patch Changes

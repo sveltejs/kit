@@ -1,5 +1,19 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.78
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.77
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
+* [feat] only generate ESM functions ([#6760](https://github.com/sveltejs/kit/pull/6760))
+
 ## 1.0.0-next.76
 
 ### Patch Changes

@@ -8,7 +8,7 @@ The most important aspect of SEO is to create high-quality content that is widel
 
 #### SSR
 
-While search engines have got better in recent years at indexing content that was rendered with client-side JavaScript, server-side rendered content is indexed more frequently and reliably. SvelteKit employs SSR by default, and while you can disable it in [`handle`](/docs/hooks#hooks-server-js-handle), you should leave it on unless you have a good reason not to.
+While search engines have got better in recent years at indexing content that was rendered with client-side JavaScript, server-side rendered content is indexed more frequently and reliably. SvelteKit employs SSR by default, and while you can disable it in [`handle`](/docs/hooks#server-hooks-handle), you should leave it on unless you have a good reason not to.
 
 > SvelteKit's rendering is highly configurable and you can implement [dynamic rendering](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering) if necessary. It's not generally recommended, since SSR has other benefits beyond SEO.
 
@@ -18,7 +18,7 @@ Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impac
 
 #### Normalized URLs
 
-SvelteKit redirects pathnames with trailing slashes to ones without (or vice versa depending on your [configuration](configuration#trailingslash)), as duplicate URLs are bad for SEO.
+SvelteKit redirects pathnames with trailing slashes to ones without (or vice versa depending on your [configuration](/docs/configuration#trailingslash)), as duplicate URLs are bad for SEO.
 
 ### Manual setup
 

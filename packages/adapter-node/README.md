@@ -45,7 +45,7 @@ PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
 
 ### `ADDRESS_HEADER` and `XFF_DEPTH`
 
-The [RequestEvent](https://kit.svelte.dev/docs/types#additional-types-requestevent) object passed to hooks and endpoints includes an `event.clientAddress` property representing the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
+The [RequestEvent](https://kit.svelte.dev/docs/types#sveltejs-kit-requestevent) object passed to hooks and endpoints includes an `event.clientAddress` property representing the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
 
 ```
 ADDRESS_HEADER=True-Client-IP node build
@@ -68,6 +68,10 @@ Some guides will tell you to read the left-most address, but this leaves you [vu
 Instead, we read from the _right_, accounting for the number of trusted proxies. In this case, we would use `XFF_DEPTH=3`.
 
 > If you need to read the left-most address instead (and don't care about spoofing) — for example, to offer a geolocation service, where it's more important for the IP address to be _real_ than _trusted_, you can do so by inspecting the `x-forwarded-for` header within your app.
+
+### `BODY_SIZE_LIMIT`
+
+The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of 0 and implement a custom check in [`handle`](https://kit.svelte.dev/docs/hooks#server-hooks-handle) if you need something more advanced.
 
 ## Options
 

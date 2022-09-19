@@ -1,5 +1,41 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.75
+
+### Patch Changes
+
+- Updated dependencies [[`fc1834b7`](https://github.com/sveltejs/kit/commit/fc1834b79ac85066ccb0f995958276628f944147)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.34
+  - @sveltejs/adapter-netlify@1.0.0-next.78
+  - @sveltejs/adapter-vercel@1.0.0-next.76
+
+## 1.0.0-next.74
+
+### Patch Changes
+
+- [feat] support Azure SWA ([#6761](https://github.com/sveltejs/kit/pull/6761))
+
+- Updated dependencies [[`2040baee`](https://github.com/sveltejs/kit/commit/2040baee98cf85fe542e1e38a9fb60ede3f95f1d)]:
+  - @sveltejs/adapter-vercel@1.0.0-next.75
+  - @sveltejs/adapter-netlify@1.0.0-next.77
+
+## 1.0.0-next.73
+
+### Patch Changes
+
+- Updated dependencies [[`b32b3ac9`](https://github.com/sveltejs/kit/commit/b32b3ac9c05efebfab5651de9bf5cdd0d4d54c12), [`ee5777e3`](https://github.com/sveltejs/kit/commit/ee5777e33695d2ddf1742a5e1d0144674d48d2d3)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.33
+  - @sveltejs/adapter-netlify@1.0.0-next.77
+  - @sveltejs/adapter-vercel@1.0.0-next.74
+
+## 1.0.0-next.72
+
+### Patch Changes
+
+- Updated dependencies [[`f1e762bf`](https://github.com/sveltejs/kit/commit/f1e762bff16acc56b0d1e10c9cadeada0d25017d)]:
+  - @sveltejs/adapter-vercel@1.0.0-next.73
+  - @sveltejs/adapter-netlify@1.0.0-next.76
+
 ## 1.0.0-next.71
 
 ### Patch Changes
