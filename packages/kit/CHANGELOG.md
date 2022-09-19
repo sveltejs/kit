@@ -1,5 +1,37 @@
 # @sveltejs/kit
 
+## 1.0.0-next.489
+
+### Patch Changes
+
+- [fix] tighten up handling and documentation around 404 ([#6897](https://github.com/sveltejs/kit/pull/6897))
+
+## 1.0.0-next.488
+
+### Patch Changes
+
+- Decode HTML entities in `href` attributes when crawling ([#6891](https://github.com/sveltejs/kit/pull/6891))
+
+## 1.0.0-next.487
+
+### Patch Changes
+
+- [feat] allow +server.js files next to +page files ([#6773](https://github.com/sveltejs/kit/pull/6773))
+
+## 1.0.0-next.486
+
+### Patch Changes
+
+- [fix] handle jsdoc without tags while generating proxy types ([#6884](https://github.com/sveltejs/kit/pull/6884))
+
+## 1.0.0-next.485
+
+### Patch Changes
+
+- fix to ActionData type generation ([#6869](https://github.com/sveltejs/kit/pull/6869))
+
+* The return type of cookies.get is string|undefined #6865 ([#6867](https://github.com/sveltejs/kit/pull/6867))
+
 ## 1.0.0-next.484
 
 ### Patch Changes

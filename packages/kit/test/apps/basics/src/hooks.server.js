@@ -33,7 +33,7 @@ export const handleError = ({ event, error: e }) => {
 		: {};
 	errors[event.url.pathname] = error_to_pojo(error);
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
-	return { message: error.message };
+	return event.url.pathname.endsWith('404-fallback') ? undefined : { message: error.message };
 };
 
 export const handle = sequence(

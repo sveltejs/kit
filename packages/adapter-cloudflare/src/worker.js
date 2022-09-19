@@ -20,6 +20,7 @@ const worker = {
 		// static assets
 		if (pathname.startsWith(prefix)) {
 			res = await env.ASSETS.fetch(req);
+			if (!res.ok) return res;
 
 			const cache_control = pathname.startsWith(prefix + 'immutable/')
 				? 'public, immutable, max-age=31536000'
@@ -65,7 +66,7 @@ const worker = {
 
 		// Writes to Cache only if allowed & specified
 		pragma = res.headers.get('cache-control');
-		return pragma ? Cache.save(req, res, context) : res;
+		return pragma && res.ok ? Cache.save(req, res, context) : res;
 	}
 };
 
