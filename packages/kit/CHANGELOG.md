@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.488
+
+### Patch Changes
+
+- Decode HTML entities in `href` attributes when crawling ([#6891](https://github.com/sveltejs/kit/pull/6891))
+
 ## 1.0.0-next.487
 
 ### Patch Changes
