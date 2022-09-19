@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 1.0.0-next.486
+
+### Patch Changes
+
+- [fix] handle jsdoc without tags while generating proxy types ([#6884](https://github.com/sveltejs/kit/pull/6884))
+
+## 1.0.0-next.485
+
+### Patch Changes
+
+- fix to ActionData type generation ([#6869](https://github.com/sveltejs/kit/pull/6869))
+
+* The return type of cookies.get is string|undefined #6865 ([#6867](https://github.com/sveltejs/kit/pull/6867))
+
+## 1.0.0-next.484
+
+### Patch Changes
+
+- [fix] forward cookies from fetch on redirect response ([#6833](https://github.com/sveltejs/kit/pull/6833))
+
+* adding missing `@types/cookie` dependency ([#6818](https://github.com/sveltejs/kit/pull/6818))
+
+- fix `write_types` on windows ([#6843](https://github.com/sveltejs/kit/pull/6843))
+
 ## 1.0.0-next.483
 
 ### Patch Changes

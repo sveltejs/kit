@@ -1,5 +1,5 @@
+import { CookieSerializeOptions } from 'cookie';
 import { SSRNode, CspDirectives } from 'types';
-import { HttpError } from '../../control.js';
 
 export interface Fetched {
 	url: string;
@@ -32,4 +32,10 @@ export interface CspConfig {
 export interface CspOpts {
 	dev: boolean;
 	prerender: boolean;
+}
+
+export interface Cookie {
+	name: string;
+	value: string;
+	options: CookieSerializeOptions;
 }

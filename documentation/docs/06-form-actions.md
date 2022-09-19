@@ -148,12 +148,13 @@ export const actions = {
 		const email = data.get('email');
 		const password = data.get('password');
 
-		const user = await db.getUser(email);
-+		if (!user) {
++		if (!email) {
 +			return invalid(400, { email, missing: true });
 +		}
-+
-+		if (user.password !== hash(password)) {
+
+		const user = await db.getUser(email);
+
++		if (!user || user.password !== hash(password)) {
 +			return invalid(400, { email, incorrect: true });
 +		}
 
@@ -173,11 +174,10 @@ export const actions = {
 /// file: src/routes/login/+page.svelte
 <form method="POST" action="?/login">
 -	<input name="email" type="email">
-+	{#if form?.missing}<p class="error">No user found with this email</p>{/if}
++	{#if form?.missing}<p class="error">The email field is required</p>{/if}
++	{#if form?.incorrect}<p class="error">Invalid credentials!</p>{/if}
 +	<input name="email" type="email" value={form?.email ?? ''}>
 
--	<input name="password" type="password">
-+	{#if form?.incorrect}<p class="error">Wrong password!</p>{/if}
 	<input name="password" type="password">
 	<button>Log in</button>
 	<button formaction="?/register">Register</button>

@@ -1,5 +1,6 @@
 import type * as Kit from '@sveltejs/kit';
 
+type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
 type RouteParams = { rest: string };
 type MaybeWithVoid<T> = {} extends T ? T | void : T;
 export type RequiredKeys<T> = {
@@ -18,12 +19,14 @@ export type PageLoad<
 	OutputData extends OutputDataShape<PageParentData> = OutputDataShape<PageParentData>
 > = Kit.Load<RouteParams, PageServerData, PageParentData, OutputData>;
 export type PageLoadEvent = Parameters<PageLoad>[0];
-export type PageData = Omit<
-	PageParentData,
-	keyof Kit.AwaitedProperties<
-		Awaited<ReturnType<typeof import('../../../../../../../../../[...rest]/+page.js').load>>
-	>
-> &
-	Kit.AwaitedProperties<
-		Awaited<ReturnType<typeof import('../../../../../../../../../[...rest]/+page.js').load>>
-	>;
+export type PageData = Expand<
+	Omit<
+		PageParentData,
+		keyof Kit.AwaitedProperties<
+			Awaited<ReturnType<typeof import('../../../../../../../../../[...rest]/+page.js').load>>
+		>
+	> &
+		Kit.AwaitedProperties<
+			Awaited<ReturnType<typeof import('../../../../../../../../../[...rest]/+page.js').load>>
+		>
+>;

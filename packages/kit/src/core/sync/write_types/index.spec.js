@@ -138,6 +138,33 @@ test('Rewrites types for a TypeScript module without param', () => {
 	);
 });
 
+test('Rewrites types for a TypeScript module without param and jsdoc without types', () => {
+	const source = `
+		/** test */
+		export const load: Get = () => {
+			return {
+				a: 1
+			};
+		};
+	`;
+
+	const rewritten = tweak_types(source, false);
+
+	assert.equal(rewritten?.exports, ['load']);
+	assert.equal(
+		rewritten?.code,
+		`// @ts-nocheck
+
+		/** test */
+		export const load = () => {
+			return {
+				a: 1
+			};
+		};
+	;null as any as Get;`
+	);
+});
+
 test('Rewrites types for a JavaScript module with `function`', () => {
 	const source = `
 		/** @type {import('./$types').Get} */
