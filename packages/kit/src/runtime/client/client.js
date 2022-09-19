@@ -179,8 +179,8 @@ export function create_client({ target, base, trailing_slash }) {
 				state,
 				replaceState
 			},
-			accepted: () => {},
-			blocked: () => {},
+			accepted: () => { },
+			blocked: () => { },
 			type: 'goto'
 		});
 	}
@@ -574,7 +574,7 @@ export function create_client({ target, base, trailing_slash }) {
 						? subsequent_fetch(resolved, init)
 						: initial_fetch(requested, resolved, init);
 				},
-				setHeaders: () => {}, // noop
+				setHeaders: () => { }, // noop
 				depends,
 				parent() {
 					uses.parent = true;
@@ -699,8 +699,8 @@ export function create_client({ target, base, trailing_slash }) {
 		// preload modules to avoid waterfall, but handle rejections
 		// so they don't get reported to Sentry et al (we don't need
 		// to act on the failures at this point)
-		errors.forEach((loader) => loader?.().catch(() => {}));
-		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
+		errors.forEach((loader) => loader?.().catch(() => { }));
+		loaders.forEach((loader) => loader?.[1]().catch(() => { }));
 
 		/** @type {import('types').ServerData | null} */
 		let server_data = null;
@@ -714,7 +714,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 			acc.push(invalid);
 			return acc;
-		}, /** @type {boolean[]} */ ([]));
+		}, /** @type {boolean[]} */([]));
 
 		if (invalid_server_nodes.some(Boolean)) {
 			try {
@@ -781,7 +781,7 @@ export function create_client({ target, base, trailing_slash }) {
 		});
 
 		// if we don't do this, rejections will be unhandled
-		for (const p of branch_promises) p.catch(() => {});
+		for (const p of branch_promises) p.catch(() => { });
 
 		/** @type {Array<import('./types').BranchNode | undefined>} */
 		const branch = [];
@@ -802,7 +802,7 @@ export function create_client({ target, base, trailing_slash }) {
 					/** @type {App.PageError} */
 					let error;
 
-					if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
+					if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */(err))) {
 						// this is the server error rethrown above, reconstruct but don't invoke
 						// the client error handler; it should've already been handled on the server
 						status = /** @type {import('types').ServerErrorNode} */ (err).status ?? status;
@@ -1065,7 +1065,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 */
 	function native_navigation(url) {
 		location.href = url.href;
-		return new Promise(() => {});
+		return new Promise(() => { });
 	}
 
 	if (import.meta.hot) {
@@ -1459,7 +1459,7 @@ export function create_client({ target, base, trailing_slash }) {
 				if (error instanceof Redirect) {
 					// this is a real edge case — `load` would need to return
 					// a redirect but only in the browser
-					await native_navigation(new URL(/** @type {Redirect} */ (e).location, location.href));
+					await native_navigation(new URL(/** @type {Redirect} */(e).location, location.href));
 					return;
 				}
 
@@ -1486,6 +1486,7 @@ let data_id = 1;
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname = url.pathname.replace(/\/$/, '') + DATA_SUFFIX;
+	data_url.searchParams.set('__a', new Date().getTime().toString());
 	data_url.searchParams.set('__invalid', invalid.map((x) => (x ? 'y' : 'n')).join(''));
 	data_url.searchParams.set('__id', String(data_id++));
 
@@ -1557,7 +1558,7 @@ function pre_update() {
 		};
 	}
 
-	return () => {};
+	return () => { };
 }
 
 if (__SVELTEKIT_DEV__) {
