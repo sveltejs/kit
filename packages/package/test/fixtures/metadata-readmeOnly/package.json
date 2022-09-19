@@ -1,5 +1,5 @@
 {
-	"name": "copy-package-json",
+	"name": "metadata-readme-only",
 	"private": true,
 	"version": "1.0.0",
 	"description": "metadata copy readme only",
