@@ -139,7 +139,7 @@ export interface Cookies {
 	/**
 	 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
 	 */
-	get(name: string, opts?: import('cookie').CookieParseOptions): string | void;
+	get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
 
 	/**
 	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` during the current request.
