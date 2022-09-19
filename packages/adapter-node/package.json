@@ -45,6 +45,8 @@
 		"uvu": "^0.5.3"
 	},
 	"dependencies": {
+		"@rollup/plugin-commonjs": "^22.0.1",
+		"@rollup/plugin-node-resolve": "^14.1.0",
 		"esbuild": "^0.15.7"
 	}
 }
