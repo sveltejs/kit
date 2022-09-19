@@ -184,7 +184,6 @@ export async function respond(request, options, state) {
 	 * @param {import('types').ResolveOptions} [opts]
 	 */
 	async function resolve(event, opts) {
-		let includeCookies = false;
 		try {
 			if (opts) {
 				// TODO remove for 1.0
@@ -242,9 +241,6 @@ export async function respond(request, options, state) {
 					// want to cache stuff erroneously etc
 					add_headers_to_response(response, headers);
 				}
-				// only mark the cookies to be included
-				// if we add them to the headers it´s harder to delete them inside the handle hook
-				includeCookies = true;
 
 				return response;
 			}
@@ -282,10 +278,6 @@ export async function respond(request, options, state) {
 		} finally {
 			// reset headers
 			headers = {};
-			// clear the cookies if no valid route is found
-			if (!includeCookies) {
-				new_cookies.clear();
-			}
 		}
 	}
 
