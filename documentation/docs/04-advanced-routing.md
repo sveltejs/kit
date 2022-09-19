@@ -22,7 +22,11 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 }
 ```
 
-This also allows you to render custom 404s. Given these routes...
+> `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#matching).
+
+#### 404 pages
+
+Rest parameters also allow you to render custom 404s. Given these routes...
 
 ```
 src/routes/
@@ -47,7 +51,25 @@ src/routes/
 └ +error.svelte
 ```
 
-> `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#matching).
+```js
+/// file: src/routes/marx-brothers/[...path]/+page.js
+import { error } from '@sveltejs/kit';
+
+/** @type {import('./$types').PageLoad} */
+export function load(event) {
+	throw error(404, 'Not Found');
+}
+```
+
+Alternatively, you could also `throw` a `redirect` to get back to an existing page.
+
+If you don't want to invoke `+error.svelte` in this case, you could instead create a `+page.svelte` file with your custom 404 content:
+
+```html
+/// file: src/routes/marx-brothers/[...path]/+page.svelte
+<h1>Not Found</h1>
+<p>This Marx brother never lived</p>
+```
 
 ### Matching
 
