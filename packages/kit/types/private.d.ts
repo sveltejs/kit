@@ -195,7 +195,6 @@ export interface RequestOptions {
 
 export interface RouteDefinition {
 	id: string;
-	type: 'page' | 'endpoint' | 'both';
 	pattern: RegExp;
 	segments: RouteSegment[];
 	methods: HttpMethod[];
