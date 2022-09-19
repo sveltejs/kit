@@ -52,6 +52,9 @@ export default function (opts = {}) {
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 
+			// we bundle the Vite output so that deployments only need
+			// their production dependencies. Anything in devDependencies
+			// will get included in the bundled code
 			const bundle = await rollup({
 				input: {
 					index: `${tmp}/index.js`,
