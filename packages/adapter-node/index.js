@@ -1,6 +1,5 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
-import * as esbuild from 'esbuild';
 import { rollup } from 'rollup';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
