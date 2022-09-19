@@ -2,7 +2,6 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 import path from 'path';
 import { test } from 'uvu';
-import { Writable } from 'stream';
 import * as assert from 'uvu/assert';
 import { create } from '../index.js';
 import { fileURLToPath } from 'url';
@@ -24,6 +23,16 @@ const overrides = { ...existing_workspace_overrides };
 	const name = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).name;
 	overrides[name] = path.dirname(path.resolve(pkgPath));
 });
+
+try {
+	const kit_dir = fileURLToPath(new URL('../../../packages/kit', import.meta.url));
+	const ls_vite_result = execSync(`pnpm ls --json vite`, { cwd: kit_dir });
+	const vite_version = JSON.parse(ls_vite_result)[0].devDependencies.vite.version;
+	overrides.vite = vite_version;
+} catch (e) {
+	console.error('failed to parse installed vite version from packages/kit');
+	throw e;
+}
 
 test.before(() => {
 	try {
@@ -90,7 +99,7 @@ for (const template of fs.readdirSync('templates')) {
 			execSync('pnpm install --no-frozen-lockfile', { cwd, stdio: 'ignore' });
 
 			// run provided scripts that are non-blocking. All of them should exit with 0
-			const scripts_to_test = ['prepare', 'check', 'lint', 'build', 'sync'];
+			const scripts_to_test = ['sync', 'format', 'lint', 'check', 'build'];
 
 			// package script requires lib dir
 			if (fs.existsSync(path.join(cwd, 'src', 'lib'))) {
@@ -99,7 +108,7 @@ for (const template of fs.readdirSync('templates')) {
 
 			// not all templates have all scripts
 			console.group(`${template}-${types}`);
-			for (const script of Object.keys(pkg.scripts).filter((s) => scripts_to_test.includes(s))) {
+			for (const script of scripts_to_test.filter((s) => !!pkg.scripts[s])) {
 				try {
 					execSync(`pnpm run ${script}`, { cwd, stdio: 'pipe' });
 					console.log(`✅ ${script}`);

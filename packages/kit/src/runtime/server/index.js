@@ -1,5 +1,4 @@
-import * as cookie from 'cookie';
-import { render_endpoint } from './endpoint.js';
+import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
@@ -9,7 +8,7 @@ import { decode_params, disable_search, normalize_path } from '../../utils/url.j
 import { exec } from '../../utils/routing.js';
 import { render_data } from './data/index.js';
 import { DATA_SUFFIX } from '../../constants.js';
-import { get_cookies } from './cookie.js';
+import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { HttpError } from '../control.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
@@ -123,7 +122,7 @@ export async function respond(request, options, state) {
 
 				if (lower === 'set-cookie') {
 					throw new Error(
-						`Use \`event.cookie.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
+						`Use \`event.cookies.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
 					);
 				} else if (lower in headers) {
 					throw new Error(`"${key}" header is already set`);
@@ -227,10 +226,10 @@ export async function respond(request, options, state) {
 
 				if (is_data_request) {
 					response = await render_data(event, route, options, state);
+				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
+					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page) {
 					response = await render_page(event, route, route.page, options, state, resolve_opts);
-				} else if (route.endpoint) {
-					response = await render_endpoint(event, await route.endpoint(), state);
 				} else {
 					// a route will always have a page or an endpoint, but TypeScript
 					// doesn't know that
@@ -246,12 +245,7 @@ export async function respond(request, options, state) {
 					}
 				}
 
-				for (const new_cookie of new_cookies) {
-					response.headers.append(
-						'set-cookie',
-						cookie.serialize(new_cookie.name, new_cookie.value, new_cookie.options)
-					);
-				}
+				add_cookies_to_headers(response.headers, Array.from(new_cookies.values()));
 
 				return response;
 			}

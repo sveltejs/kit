@@ -1,5 +1,103 @@
 # @sveltejs/kit
 
+## 1.0.0-next.488
+
+### Patch Changes
+
+- Decode HTML entities in `href` attributes when crawling ([#6891](https://github.com/sveltejs/kit/pull/6891))
+
+## 1.0.0-next.487
+
+### Patch Changes
+
+- [feat] allow +server.js files next to +page files ([#6773](https://github.com/sveltejs/kit/pull/6773))
+
+## 1.0.0-next.486
+
+### Patch Changes
+
+- [fix] handle jsdoc without tags while generating proxy types ([#6884](https://github.com/sveltejs/kit/pull/6884))
+
+## 1.0.0-next.485
+
+### Patch Changes
+
+- fix to ActionData type generation ([#6869](https://github.com/sveltejs/kit/pull/6869))
+
+* The return type of cookies.get is string|undefined #6865 ([#6867](https://github.com/sveltejs/kit/pull/6867))
+
+## 1.0.0-next.484
+
+### Patch Changes
+
+- [fix] forward cookies from fetch on redirect response ([#6833](https://github.com/sveltejs/kit/pull/6833))
+
+* adding missing `@types/cookie` dependency ([#6818](https://github.com/sveltejs/kit/pull/6818))
+
+- fix `write_types` on windows ([#6843](https://github.com/sveltejs/kit/pull/6843))
+
+## 1.0.0-next.483
+
+### Patch Changes
+
+- [fix] various `cookies` fixes and improvements ([#6811](https://github.com/sveltejs/kit/pull/6811))
+
+## 1.0.0-next.482
+
+### Patch Changes
+
+- [fix] ActionData type ([#6748](https://github.com/sveltejs/kit/pull/6748))
+
+* [fix] reuse server data while not reusing client load ([#6778](https://github.com/sveltejs/kit/pull/6778))
+
+- [fix] update current.url on hashchange ([#6802](https://github.com/sveltejs/kit/pull/6802))
+
+* Change illegal import message to reference public-facing code rather than client-side code ([#6646](https://github.com/sveltejs/kit/pull/6646))
+
+- [fix] silence prop warnings ([#6798](https://github.com/sveltejs/kit/pull/6798))
+
+* [chore] Refactor graph analysis for better unit tests ([#6727](https://github.com/sveltejs/kit/pull/6727))
+
+- [fix] error when using `paths.base` and `import` assets ([#6769](https://github.com/sveltejs/kit/pull/6769))
+
+## 1.0.0-next.481
+
+### Patch Changes
+
+- [fix] docs links in generated and published types ([#6741](https://github.com/sveltejs/kit/pull/6741))
+
+## 1.0.0-next.480
+
+### Patch Changes
+
+- [breaking] make action passed to enhance function a URL instead of a string ([#6678](https://github.com/sveltejs/kit/pull/6678))
+
+## 1.0.0-next.479
+
+### Patch Changes
+
+- [breaking] request creation cleanup ([#6681](https://github.com/sveltejs/kit/pull/6681))
+
+* [breaking] limit adapter-node request size ([#6684](https://github.com/sveltejs/kit/pull/6684))
+
+## 1.0.0-next.478
+
+### Patch Changes
+
+- [breaking] hooks file renames; error shape defined through handleError ([#6675](https://github.com/sveltejs/kit/pull/6675))
+
+* [breaking] remove element property; enhance can only be used on form elements ([#6662](https://github.com/sveltejs/kit/pull/6662))
+
+## 1.0.0-next.477
+
+### Patch Changes
+
+- [breaking] prevent import of `$lib/server` modules in client-facing code ([#6623](https://github.com/sveltejs/kit/pull/6623))
+
+* [breaking] change sveltekit.message to sveltekit.error.message ([#6659](https://github.com/sveltejs/kit/pull/6659))
+
+- [breaking] apply 304 logic after handle, so handle receives original response from resolve ([#6639](https://github.com/sveltejs/kit/pull/6639))
+
 ## 1.0.0-next.476
 
 ### Patch Changes

@@ -148,12 +148,13 @@ export const actions = {
 		const email = data.get('email');
 		const password = data.get('password');
 
-		const user = await db.getUser(email);
-+		if (!user) {
++		if (!email) {
 +			return invalid(400, { email, missing: true });
 +		}
-+
-+		if (user.password !== hash(password)) {
+
+		const user = await db.getUser(email);
+
++		if (!user || user.password !== hash(password)) {
 +			return invalid(400, { email, incorrect: true });
 +		}
 
@@ -173,11 +174,10 @@ export const actions = {
 /// file: src/routes/login/+page.svelte
 <form method="POST" action="?/login">
 -	<input name="email" type="email">
-+	{#if form?.missing}<p class="error">No user found with this email</p>{/if}
++	{#if form?.missing}<p class="error">The email field is required</p>{/if}
++	{#if form?.incorrect}<p class="error">Invalid credentials!</p>{/if}
 +	<input name="email" type="email" value={form?.email ?? ''}>
 
--	<input name="password" type="password">
-+	{#if form?.incorrect}<p class="error">Wrong password!</p>{/if}
 	<input name="password" type="password">
 	<button>Log in</button>
 	<button formaction="?/register">Register</button>
@@ -255,6 +255,8 @@ Without an argument, `use:enhance` will emulate the browser-native behaviour, ju
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
 
+> By default the `form` property is only updated for actions that are in a `+page.server.js` alongside the `+page.svelte` because in the native form submission case you would be redirected to the page the action is on
+
 To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`.
 
 ```svelte
@@ -265,7 +267,7 @@ To customise the behaviour, you can provide a function that runs immediately bef
 		// `data` is its `FormData` object
 		// `cancel()` will prevent the submission
 
-		return async (result) => {
+		return async ({ result }) => {
 			// `result` is an `ActionResult` object
 		};
 	}}
@@ -293,7 +295,7 @@ If you provide your own callbacks, you may need to reproduce part of the default
 		// `data` is its `FormData` object
 		// `cancel()` will prevent the submission
 
-		return async (result) => {
+		return async ({ result }) => {
 			// `result` is an `ActionResult` object
 +			if (result.type === 'error') {
 +				await applyAction(result);
@@ -349,3 +351,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	<!-- content -->
 </form>
 ```
+
+### Alternatives
+
+Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](/docs/routing#server) files to expose (for example) a JSON API.

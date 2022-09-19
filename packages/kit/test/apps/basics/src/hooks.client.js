@@ -1,4 +1,6 @@
 /** @type{import("@sveltejs/kit").HandleClientError} */
-export function handleError({ error }) {
-	return { message: /** @type {Error} */ (error).message };
+export function handleError({ error, event }) {
+	return event.url.pathname.endsWith('404-fallback')
+		? undefined
+		: { message: /** @type {Error} */ (error).message };
 }

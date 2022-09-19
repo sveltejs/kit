@@ -33,7 +33,7 @@ const app_template = ({ head, body, assets, nonce }) => ${s(template)
 
 const error_template = ({ status, message }) => ${s(error_page)
 	.replace(/%sveltekit\.status%/g, '" + status + "')
-	.replace(/%sveltekit\.message%/g, '" + message + "')};
+	.replace(/%sveltekit\.error\.message%/g, '" + message + "')};
 
 let read = null;
 
@@ -68,7 +68,7 @@ export class Server {
 					get request() {
 						throw new Error('request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details');
 					}
-				}) ?? { message: 'Internal Error' };
+				}) ?? { message: event.routeId ? 'Internal Error' : 'Not Found' };
 			},
 			hooks: null,
 			manifest,
@@ -167,7 +167,7 @@ export async function build_server(options, client) {
 					path.relative(process.cwd(), old_file)
 				)} to ${posixify(
 					path.relative(process.cwd(), config.kit.files.hooks.server)
-				)}.${path.extname(
+				)}${path.extname(
 					old_file
 				)} (because there's also client hooks now). See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
 			);

@@ -43,6 +43,7 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
+// TODO remove for 1.0
 /** @type {Record<string, true>} */
 let warned_about_attributes = {};
 
@@ -720,12 +721,11 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @type {import('./types').BranchNode | undefined} */
 			const previous = current.branch[i];
 
-			const server_data_node = server_data_nodes?.[i] ?? null;
+			const server_data_node = server_data_nodes?.[i];
 
-			const can_reuse_server_data = !server_data_node || server_data_node.type === 'skip';
 			// re-use data from previous load if it's still valid
 			const valid =
-				can_reuse_server_data &&
+				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
 				!has_changed(changed, parent_changed, previous.shared?.uses);
 			if (valid) return previous;
@@ -749,7 +749,12 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 					return data;
 				},
-				server_data_node: create_data_node(server_data_node, previous?.server)
+				server_data_node: create_data_node(
+					// server_data_node is undefined if it wasn't reloaded from the server;
+					// and if current loader uses server data, we want to reuse previous data.
+					server_data_node === undefined && loader[0] ? { type: 'skip' } : server_data_node ?? null,
+					previous?.server
+				)
 			});
 		});
 
@@ -1303,10 +1308,12 @@ export function create_client({ target, base, trailing_slash }) {
 				if (hash !== undefined && base === location.href.split('#')[0]) {
 					// set this flag to distinguish between navigations triggered by
 					// clicking a hash link and those triggered by popstate
+					// TODO why not update history here directly?
 					hash_navigating = true;
 
 					update_scroll_positions(current_history_index);
 
+					current.url = url;
 					stores.page.set({ ...page, url });
 					stores.page.notify();
 
@@ -1488,7 +1495,10 @@ async function load_data(url, invalid) {
  * @returns {App.PageError}
  */
 function handle_error(error, event) {
-	return hooks.handleError({ error, event }) ?? /** @type {any} */ ({ error: 'Internal Error' });
+	return (
+		hooks.handleError({ error, event }) ??
+		/** @type {any} */ ({ message: event.routeId ? 'Internal Error' : 'Not Found' })
+	);
 }
 
 // TODO remove for 1.0
@@ -1527,22 +1537,7 @@ function add_url_properties(type, target) {
 
 function pre_update() {
 	if (__SVELTEKIT_DEV__) {
-		// Nasty hack to silence harmless warnings the user can do nothing about
-		const warn = console.warn;
-		console.warn = (...args) => {
-			if (
-				args.length === 1 &&
-				/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
-					args[0]
-				)
-			) {
-				return;
-			}
-			warn(...args);
-		};
-
 		return () => {
-			tick().then(() => (console.warn = warn));
 			check_for_removed_attributes();
 		};
 	}
@@ -1578,4 +1573,20 @@ function reset_focus() {
 			root.removeAttribute('tabindex');
 		}
 	}
+}
+
+if (__SVELTEKIT_DEV__) {
+	// Nasty hack to silence harmless warnings the user can do nothing about
+	const warn = console.warn;
+	console.warn = (...args) => {
+		if (
+			args.length === 1 &&
+			/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
+				args[0]
+			)
+		) {
+			return;
+		}
+		warn(...args);
+	};
 }

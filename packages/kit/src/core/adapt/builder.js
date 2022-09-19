@@ -46,7 +46,6 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 
 				return {
 					id: route.id,
-					type: route.page ? 'page' : 'endpoint', // TODO change this if support pages+endpoints
 					segments: route.id.split('/').map((segment) => ({
 						dynamic: segment.includes('['),
 						rest: segment.includes('[...'),
