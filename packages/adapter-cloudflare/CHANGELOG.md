@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.35
+
+### Patch Changes
+
+- [fix] return 404 instead of 200 for missing assets ([#6879](https://github.com/sveltejs/kit/pull/6879))
+
 ## 1.0.0-next.34
 
 ### Patch Changes
