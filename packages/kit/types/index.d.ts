@@ -259,6 +259,13 @@ export interface NavigationTarget {
 	url: URL;
 }
 
+/**
+ * - `load`: Initial navigation is complete
+ * - `unload`: The page is about to be unloaded, but not due to a navigation
+ * - `link`: The page is about to change due to a navigation link. If it causes a page reload can be determined through `to.routeId` being `null`
+ * - `goto`: The page is about to change due to calling `goto` or due to a redirect
+ * - `popstate`: The page is about to change due to a browser back/forward navigation
+ */
 export type NavigationType = 'load' | 'unload' | 'link' | 'goto' | 'popstate';
 
 export interface Navigation {
