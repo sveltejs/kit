@@ -682,11 +682,6 @@ export function create_client({ target, base, trailing_slash }) {
 
 		const { errors, layouts, leaf } = route;
 
-		const changed = current.url && {
-			url: id !== current.url.pathname + current.url.search,
-			params: Object.keys(params).filter((key) => current.params[key] !== params[key])
-		};
-
 		const loaders = [...layouts, leaf];
 
 		// preload modules to avoid waterfall, but handle rejections
@@ -700,6 +695,16 @@ export function create_client({ target, base, trailing_slash }) {
 
 		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];
+
+			const changed = current.url && {
+				url: id !== current.url.pathname + current.url.search,
+				params: previous?.server?.uses.params
+					? Array.from(previous.server.uses.params).filter(
+							(key) => current.params[key] !== params[key]
+					  )
+					: []
+			};
+
 			const invalid =
 				!!loader?.[0] &&
 				(previous?.loader !== loader[1] ||
@@ -735,6 +740,15 @@ export function create_client({ target, base, trailing_slash }) {
 
 			/** @type {import('./types').BranchNode | undefined} */
 			const previous = current.branch[i];
+
+			const changed = current.url && {
+				url: id !== current.url.pathname + current.url.search,
+				params: previous?.shared?.uses.params
+					? Array.from(previous.shared.uses.params).filter(
+							(key) => current.params[key] !== params[key]
+					  )
+					: []
+			};
 
 			const server_data_node = server_data_nodes?.[i];
 
