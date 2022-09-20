@@ -164,13 +164,16 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			const dir = path.join(cwd, routes_base, id);
 
-			const files = fs.readdirSync(dir, {
-				withFileTypes: true
-			});
+			// We can't use withFileTypes because of a NodeJs bug which returns wrong results
+			// with isDirectory() in case of symlinks: https://github.com/nodejs/node/issues/30646
+			const files = fs.readdirSync(dir).map((name) => ({
+				is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
+				name
+			}));
 
 			// process files first
 			for (const file of files) {
-				if (file.isDirectory()) continue;
+				if (file.is_dir) continue;
 				if (!file.name.startsWith('+')) continue;
 				if (!valid_extensions.find((ext) => file.name.endsWith(ext))) continue;
 
@@ -213,7 +216,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			// then handle children
 			for (const file of files) {
-				if (file.isDirectory()) {
+				if (file.is_dir) {
 					walk(depth + 1, path.posix.join(id, file.name), file.name, route);
 				}
 			}
