@@ -431,6 +431,17 @@ test.describe('Load', () => {
 		await expect(page.locator('p')).toHaveText('Count is 2');
 	});
 
+	test('__data.js has cache-control: private, no-store', async ({ page, clicknav }) => {
+		await page.goto('/load/server-data-nostore?x=1');
+
+		const [response] = await Promise.all([
+			page.waitForResponse((response) => /__data\.js/.test(response.url())),
+			clicknav('[href="/load/server-data-nostore?x=2"]')
+		]);
+
+		expect(response.headers()['cache-control']).toBe('private, no-store');
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page }) => {
 			const port = 5173;
