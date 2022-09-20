@@ -513,22 +513,15 @@ export function create_client({ target, base, trailing_slash }) {
 				}
 			}
 
-			/** @type {Record<string, string>} */
-			const uses_params = {};
-			for (const key in params) {
-				Object.defineProperty(uses_params, key, {
-					get() {
-						uses.params.add(key);
-						return params[key];
-					},
-					enumerable: true
-				});
-			}
-
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
-				params: uses_params,
+				params: new Proxy(params, {
+					get: (target, key) => {
+						uses.params.add(/** @type {string} */ (key));
+						return target[/** @type {string} */ (key)];
+					}
+				}),
 				data: server_data_node?.data ?? null,
 				url: make_trackable(url, () => {
 					uses.url = true;
