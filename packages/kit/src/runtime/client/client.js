@@ -91,7 +91,6 @@ export function create_client({ target, base, trailing_slash }) {
 	let current = {
 		branch: [],
 		error: null,
-		session_id: 0,
 		// @ts-ignore - we need the initial value to be null
 		url: null
 	};
@@ -99,10 +98,6 @@ export function create_client({ target, base, trailing_slash }) {
 	let started = false;
 	let autoscroll = true;
 	let updating = false;
-	let session_id = 1;
-
-	/** @type {Promise<void> | null} */
-	let invalidating = null;
 	let force_invalidation = false;
 
 	/** @type {import('svelte').SvelteComponent} */
@@ -140,20 +135,20 @@ export function create_client({ target, base, trailing_slash }) {
 	/** @type {{}} */
 	let token;
 
-	function invalidate() {
-		if (!invalidating) {
-			const url = new URL(location.href);
+	async function invalidate() {
+		// Accept all invalidations as they come, don't swallow any while another invalidation
+		// is running because subsequent invalidations may make earlier ones outdated.
+		const url = new URL(location.href);
 
-			invalidating = Promise.resolve().then(async () => {
-				const intent = get_navigation_intent(url, true);
-				await update(intent, url, []);
-
-				invalidating = null;
-				force_invalidation = false;
-			});
-		}
-
-		return invalidating;
+		await Promise.resolve();
+		// Clear prefetch, it might be affected by the invalidation.
+		// Also solves an edge case where a prefetch is triggered, the navigation for it
+		// was then triggered and is still running while the invalidation kicks in,
+		// at which point the invalidation should take over and "win".
+		load_cache.promise = null;
+		load_cache.id = null;
+		const intent = get_navigation_intent(url, true);
+		await update(intent, url, []);
 	}
 
 	/**
@@ -208,7 +203,10 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @param {() => void} [callback]
 	 */
 	async function update(intent, url, redirect_chain, opts, callback) {
-		const current_token = (token = {});
+		// Do not update the token during a redirect, it belongs to a ongoing navigation; if a new one
+		// is started, it will should take precedence. If we don't do this, a race condition could
+		// make the old navigation the one that wins due to redirects.
+		const current_token = (token = redirect_chain.length ? token : {});
 		let navigation_result = intent && (await load_route(intent));
 
 		if (
@@ -241,8 +239,6 @@ export function create_client({ target, base, trailing_slash }) {
 		// abort if user navigated during update
 		if (token !== current_token) return false;
 
-		invalidated.length = 0;
-
 		if (navigation_result.type === 'redirect') {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
 				navigation_result = await load_root_error_page({
@@ -261,6 +257,11 @@ export function create_client({ target, base, trailing_slash }) {
 				await native_navigation(url);
 			}
 		}
+
+		// reset invalidation only after a finished navigation. If there are redirects or
+		// additional invalidations, they should get the same invalidation treatment
+		invalidated.length = 0;
+		force_invalidation = false;
 
 		updating = true;
 
@@ -410,8 +411,7 @@ export function create_client({ target, base, trailing_slash }) {
 				params,
 				branch,
 				error,
-				route,
-				session_id
+				route
 			},
 			props: {
 				components: filtered.map((branch_node) => branch_node.node.component)
