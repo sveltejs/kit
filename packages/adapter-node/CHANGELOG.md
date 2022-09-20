@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.93
+
+### Patch Changes
+
+- Bundle with rollup instead of esbuild ([#6896](https://github.com/sveltejs/kit/pull/6896))
+
 ## 1.0.0-next.92
 
 ### Patch Changes
