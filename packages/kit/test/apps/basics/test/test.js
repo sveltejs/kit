@@ -1634,12 +1634,14 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('hello');
 	});
 
-	test('Respects symlinks', async ({ page, clicknav }) => {
-		await page.goto('/routing');
-		await clicknav('[href="/routing/symlink-from"]');
+	if (process.platform !== 'win32') {
+		test('Respects symlinks', async ({ page, clicknav }) => {
+			await page.goto('/routing');
+			await clicknav('[href="/routing/symlink-from"]');
 
-		expect(await page.textContent('h1')).toBe('symlinked');
-	});
+			expect(await page.textContent('h1')).toBe('symlinked');
+		});
+	}
 });
 
 test.describe('Matchers', () => {
