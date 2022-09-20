@@ -131,6 +131,7 @@ importers:
       '@rollup/plugin-commonjs': 22.0.1_rollup@2.78.1
       '@rollup/plugin-json': 4.1.0_rollup@2.78.1
       '@rollup/plugin-node-resolve': 14.1.0_rollup@2.78.1
+      rollup: 2.78.1
     devDependencies:
       '@sveltejs/kit': link:../kit
       '@types/node': 16.11.42
@@ -138,7 +139,6 @@ importers:
       node-fetch: 3.2.6
       polka: 1.0.0-next.22
       rimraf: 3.0.2
-      rollup: 2.78.1
       sirv: 2.0.2
       typescript: 4.8.2
       uvu: 0.5.4
