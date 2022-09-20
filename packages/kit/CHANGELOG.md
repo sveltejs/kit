@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.490
+
+### Patch Changes
+
+- fix `write_types` on windows using posixify() ([#6913](https://github.com/sveltejs/kit/pull/6913))
+
+* Prevent caching of `__data.js` files ([#6904](https://github.com/sveltejs/kit/pull/6904))
+
+- Make url property getters non-enumerable ([#6909](https://github.com/sveltejs/kit/pull/6909))
+
 ## 1.0.0-next.489
 
 ### Patch Changes
