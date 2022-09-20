@@ -19,6 +19,7 @@
 	"main": "index.js",
 	"types": "index.d.ts",
 	"files": [
+		"ambient.d.ts",
 		"files",
 		"index.d.ts"
 	],
