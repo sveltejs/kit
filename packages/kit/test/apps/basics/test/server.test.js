@@ -336,6 +336,18 @@ test.describe('setHeaders', () => {
 	});
 });
 
+test.describe('cookies', () => {
+	test('cookie.serialize created correct cookie header string', async ({ page }) => {
+		const response = await page.goto('/cookies/serialize');
+		const cookies = await response.headerValue('set-cookie');
+		expect(
+			cookies.includes('before=before') &&
+				cookies.includes('after=after') &&
+				cookies.includes('endpoint=endpoint')
+		).toBe(true);
+	});
+});
+
 test.describe('Miscellaneous', () => {
 	test('does not serve version.json with an immutable cache header', async ({ request }) => {
 		// this isn't actually a great test, because caching behaviour is down to adapters.
