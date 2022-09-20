@@ -71,6 +71,18 @@ export function get_cookies(request, url) {
 					maxAge: 0
 				}
 			});
+		},
+
+		/**
+		 * @param {string} name
+		 * @param {string} value
+		 * @param {import('cookie').CookieSerializeOptions} opts
+		 */
+		serialize(name, value, opts) {
+			return serialize(name, value, {
+				...DEFAULT_SERIALIZE_OPTIONS,
+				...opts
+			});
 		}
 	};
 
