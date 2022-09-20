@@ -1,4 +1,5 @@
 import { json } from '../../exports/index.js';
+import { negotiate } from '../../utils/http.js';
 import { Redirect, ValidationError } from '../control.js';
 import { check_method_names, method_not_allowed } from './utils.js';
 
@@ -63,4 +64,20 @@ export async function render_endpoint(event, mod, state) {
 
 		throw error;
 	}
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ */
+export function is_endpoint_request(event) {
+	const { method } = event.request;
+
+	if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+		// These methods exist exclusively for endpoints
+		return true;
+	}
+
+	// GET/POST requests may be for endpoints or pages. We prefer endpoints if this isn't a text/html request
+	const accept = event.request.headers.get('accept') ?? '*/*';
+	return negotiate(accept, ['*', 'text/html']) !== 'text/html';
 }

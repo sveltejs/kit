@@ -1634,6 +1634,12 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('hello');
 	});
 
+	test('shows "Not Found" in 404 case', async ({ page }) => {
+		await page.goto('/404-fallback');
+		expect(await page.textContent('h1')).toBe('404');
+		expect(await page.textContent('p')).toBe('This is your custom error page saying: "Not Found"');
+	});
+
 	if (process.platform !== 'win32') {
 		test('Respects symlinks', async ({ page, clicknav }) => {
 			await page.goto('/routing');

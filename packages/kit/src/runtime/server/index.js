@@ -1,4 +1,4 @@
-import { render_endpoint } from './endpoint.js';
+import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
@@ -226,10 +226,10 @@ export async function respond(request, options, state) {
 
 				if (is_data_request) {
 					response = await render_data(event, route, options, state);
+				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
+					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page) {
 					response = await render_page(event, route, route.page, options, state, resolve_opts);
-				} else if (route.endpoint) {
-					response = await render_endpoint(event, await route.endpoint(), state);
 				} else {
 					// a route will always have a page or an endpoint, but TypeScript
 					// doesn't know that
