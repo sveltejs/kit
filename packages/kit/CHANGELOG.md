@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.491
+
+### Patch Changes
+
+- [fix] symlink routes ([#6796](https://github.com/sveltejs/kit/pull/6796))
+
 ## 1.0.0-next.490
 
 ### Patch Changes
