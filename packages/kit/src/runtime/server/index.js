@@ -236,17 +236,6 @@ export async function respond(request, options, state) {
 					throw new Error('This should never happen');
 				}
 
-				if (!is_data_request) {
-					// we only want to set cookies on __data.js requests, we don't
-					// want to cache stuff erroneously etc
-					for (const key in headers) {
-						const value = headers[key];
-						response.headers.set(key, /** @type {string} */ (value));
-					}
-				}
-
-				add_cookies_to_headers(response.headers, Array.from(new_cookies.values()));
-
 				return response;
 			}
 
@@ -291,10 +280,27 @@ export async function respond(request, options, state) {
 		}
 	}
 
+	/**
+	 * wrapper to apply headers and cookies to the response
+	 * @param {Response} response
+	 */
+	function with_headers_and_cookies(response) {
+		if (!is_data_request) {
+			// we only want to set cookies on __data.js requests, we don't
+			// want to cache stuff erroneously etc
+			for (const key in headers) {
+				const value = headers[key];
+				response.headers.set(key, /** @type {string} */ (value));
+			}
+		}
+		add_cookies_to_headers(response.headers, Array.from(new_cookies.values()));
+		return response;
+	}
+
 	try {
 		const response = await options.hooks.handle({
 			event,
-			resolve,
+			resolve: (event, opts) => resolve(event, opts).then(with_headers_and_cookies),
 			// TODO remove for 1.0
 			// @ts-expect-error
 			get request() {
