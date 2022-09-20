@@ -99,6 +99,8 @@ export function create_client({ target, base, trailing_slash }) {
 	let started = false;
 	let autoscroll = true;
 	let updating = false;
+	let navigating = false;
+	let hash_navigating = false;
 	let session_id = 1;
 
 	/** @type {Promise<void> | null} */
@@ -131,8 +133,6 @@ export function create_client({ target, base, trailing_slash }) {
 		history.scrollRestoration = 'manual';
 		scrollTo(scroll.x, scroll.y);
 	}
-
-	let hash_navigating = false;
 
 	/** @type {import('types').Page} */
 	let page;
@@ -945,10 +945,9 @@ export function create_client({ target, base, trailing_slash }) {
 	/**
 	 * @param {URL} url
 	 * @param {boolean} invalidating
-	 * @returns false when external url, undefined when no intent found, else the intent
 	 */
 	function get_navigation_intent(url, invalidating) {
-		if (is_external_url(url)) return false;
+		if (is_external_url(url)) return;
 
 		const path = decodeURI(url.pathname.slice(base.length) || '/');
 
@@ -975,40 +974,13 @@ export function create_client({ target, base, trailing_slash }) {
 	/**
 	 * @param {{
 	 *   url: URL;
-	 *   scroll: { x: number, y: number } | null;
-	 *   keepfocus: boolean;
-	 *   redirect_chain: string[];
-	 *   details: {
-	 *     replaceState: boolean;
-	 *     state: any;
-	 *   } | null;
 	 *   type: import('types').NavigationType;
+	 *   intent?: import('./types').NavigationIntent;
 	 *   delta?: number;
-	 *   accepted: () => void;
-	 *   blocked: () => void;
 	 * }} opts
 	 */
-	async function navigate({
-		url,
-		scroll,
-		keepfocus,
-		redirect_chain,
-		details,
-		type,
-		delta,
-		accepted,
-		blocked
-	}) {
+	function before_navigate({ url, type, intent, delta }) {
 		let should_block = false;
-
-		const intent = get_navigation_intent(url, false);
-		if (intent === false) {
-			// Skip straight to native navigation, which calls the `beforeunload` handler
-			// which in turn calls beforeNavigate with the correct type.
-			accepted(); // needs to be called, else navigation is started twice on link click
-			await native_navigation(url);
-			return; // unnecessary, but TypeScript prefers it this way
-		}
 
 		/** @type {import('types').Navigation} */
 		const navigation = {
@@ -1038,7 +1010,40 @@ export function create_client({ target, base, trailing_slash }) {
 
 		callbacks.before_navigate.forEach((fn) => fn(cancellable));
 
-		if (should_block) {
+		return should_block ? null : navigation;
+	}
+
+	/**
+	 * @param {{
+	 *   url: URL;
+	 *   scroll: { x: number, y: number } | null;
+	 *   keepfocus: boolean;
+	 *   redirect_chain: string[];
+	 *   details: {
+	 *     replaceState: boolean;
+	 *     state: any;
+	 *   } | null;
+	 *   type: import('types').NavigationType;
+	 *   delta?: number;
+	 *   accepted: () => void;
+	 *   blocked: () => void;
+	 * }} opts
+	 */
+	async function navigate({
+		url,
+		scroll,
+		keepfocus,
+		redirect_chain,
+		details,
+		type,
+		delta,
+		accepted,
+		blocked
+	}) {
+		const intent = get_navigation_intent(url, false);
+		const navigation = before_navigate({ url, type, delta, intent });
+
+		if (!navigation) {
 			blocked();
 			return;
 		}
@@ -1046,6 +1051,8 @@ export function create_client({ target, base, trailing_slash }) {
 		update_scroll_positions(current_history_index);
 
 		accepted();
+
+		navigating = true;
 
 		if (started) {
 			stores.navigating.set(navigation);
@@ -1061,6 +1068,7 @@ export function create_client({ target, base, trailing_slash }) {
 				details
 			},
 			() => {
+				navigating = false;
 				callbacks.after_navigate.forEach((fn) => fn(navigation));
 				stores.navigating.set(null);
 			}
@@ -1235,9 +1243,9 @@ export function create_client({ target, base, trailing_slash }) {
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
 
-				if (get(stores.navigating) === null) {
+				if (!navigating) {
 					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
-					// it's due to a 404 or another error, for which we don't want to call the hook again.
+					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
 					/** @type {import('types').Navigation & { cancel: () => void }} */
 					const navigation = {
 						from: add_url_properties('from', {
@@ -1321,17 +1329,22 @@ export function create_client({ target, base, trailing_slash }) {
 				// - https://github.com/sveltejs/kit/issues/5725
 				if (!is_svg_a_element && !(url.protocol === 'https:' || url.protocol === 'http:')) return;
 
-				// Ignore if tag has
-				// 1. 'download' attribute
-				// 2. 'rel' attribute includes external
-				const rel = (a.getAttribute('rel') || '').split(/\s+/);
+				if (a.hasAttribute('download')) return;
 
-				if (a.hasAttribute('download') || rel.includes('external') || options.reload) {
+				// Ignore the following but fire beforeNavigate
+				const rel = (a.getAttribute('rel') || '').split(/\s+/);
+				if (
+					rel.includes('external') ||
+					options.reload ||
+					(is_svg_a_element ? a.target.baseVal : a.target)
+				) {
+					const navigation = before_navigate({ url, type: 'link' });
+					if (!navigation) {
+						event.preventDefault();
+					}
+					navigating = true;
 					return;
 				}
-
-				// Ignore if <a> has a target
-				if (is_svg_a_element ? a.target.baseVal : a.target) return;
 
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired

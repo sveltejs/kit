@@ -43,7 +43,7 @@ test.describe('beforeNavigate', () => {
 
 		page.click('a[href="https://google.de"]'); // do NOT await this, promise only resolves after successful navigation, which never happens
 		await page.waitForTimeout(500);
-		await expect(page.locator('pre')).toHaveText('true unload');
+		await expect(page.locator('pre')).toHaveText('true link');
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 	});
 
