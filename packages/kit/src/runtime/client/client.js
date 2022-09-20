@@ -10,7 +10,6 @@ import { nodes, server_loads, dictionary, matchers, hooks } from '__GENERATED__/
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
-import { get } from 'svelte/store';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
