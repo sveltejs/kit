@@ -767,7 +767,7 @@ test.describe.serial('Invalidation', () => {
 		expect(server_data).toBeDefined();
 		const count = parseInt(server_data);
 
-		await page.click('[data-testid="invalidateServerLoad"]');
+		await page.click('[data-testid="invalidate-server-load"]');
 		await page.waitForLoadState('networkidle');
 		await page.waitForTimeout(200);
 		const next_server_data = await page.textContent('[data-testid="server-response"]');

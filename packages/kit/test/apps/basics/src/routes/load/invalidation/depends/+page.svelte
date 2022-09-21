@@ -23,7 +23,7 @@
 </pre>
 <button
 	type="button"
-	data-testid="invalidateServerLoad"
+	data-testid="invalidate-server-load"
 	on:click={() => invalidate('app://invalidate/server_count')}
 >
 	invalidate('app://invalidate/server_count')
