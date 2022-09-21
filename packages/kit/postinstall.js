@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import glob from 'tiny-glob/sync.js';
 import { load_config } from './src/core/config/index.js';
 import * as sync from './src/core/sync/sync.js';
 
@@ -9,20 +10,7 @@ const directories = [];
 
 if (pkg.workspaces) {
 	for (const directory of pkg.workspaces) {
-		const parts = directory.split('/');
-		let found = ['.'];
-
-		for (const part of parts) {
-			if (part === '*') {
-				found = found
-					.map((dir) => fs.readdirSync(dir).map((subdir) => path.join(dir, subdir)))
-					.flat();
-			} else {
-				found = found.map((dir) => path.join(dir, part));
-			}
-		}
-
-		directories.push(...found);
+		directories.push(...glob(directory));
 	}
 } else {
 	directories.push('.');
