@@ -51,6 +51,10 @@ type OptionalUnion<
 	A extends keyof U = U extends U ? keyof U : never
 > = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 
+/** 
+ * ### DO NOT USE
+ * This doesn't actually exist, it's a way to better distinguish the type
+ */
 declare const validationErrorSymbol: unique symbol;
 // Needs to be here, else ActionData will be resolved to unknown - probably because of "d.ts file imports .js file" in combination with allowJs
 export interface ValidationError<T extends Record<string, unknown> | undefined = undefined> {
