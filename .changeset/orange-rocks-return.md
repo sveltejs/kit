@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare': patch
 ---
 
-Ensure all routes start with /
+Ensure all excluded paths in `_routes.json` start with /
