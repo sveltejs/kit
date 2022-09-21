@@ -760,6 +760,36 @@ test.describe.serial('Invalidation', () => {
 		await page.waitForTimeout(200);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
 	});
+
+	test('+layout(.server).js is re-run when server dep is invalidated', async ({ page }) => {
+		await page.goto('/load/invalidation/depends');
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
+
+		await Promise.all([page.click('button.server'), page.waitForLoadState('networkidle')]);
+		await page.waitForTimeout(200);
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(server).not.toBe(next_server);
+		expect(shared).not.toBe(next_shared);
+	});
+
+	test('+layout.js is re-run when shared dep is invalidated', async ({ page }) => {
+		await page.goto('/load/invalidation/depends');
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
+
+		await Promise.all([page.click('button.shared'), page.waitForLoadState('networkidle')]);
+		await page.waitForTimeout(200);
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(server).toBe(next_server);
+		expect(shared).not.toBe(next_shared);
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {
