@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 1.0.0-next.492
+
+### Patch Changes
+
+- [fix] add missing depends function to ServerLoadEvent type ([#6935](https://github.com/sveltejs/kit/pull/6935))
+
+* Redact error message if `getRequest` fails ([#6936](https://github.com/sveltejs/kit/pull/6936))
+
+- Add cookies.serialize method ([#6925](https://github.com/sveltejs/kit/pull/6925))
+
+* Always apply cookies, not just for matched routes ([#6925](https://github.com/sveltejs/kit/pull/6925))
+
+- [fix] tighten up navigation and invalidation logic ([#6924](https://github.com/sveltejs/kit/pull/6924))
+
+* Respond with 413 if request body is too large ([#6936](https://github.com/sveltejs/kit/pull/6936))
+
 ## 1.0.0-next.491
 
 ### Patch Changes
