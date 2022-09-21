@@ -110,7 +110,7 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 
 	return {
 		appType: 'custom',
-		base: ssr ? assets_base(config.kit) : './',
+		base: ssr ? assets_base(config.kit) : config.kit.rootRelativeAssets === true ? '/' : './',
 		build: {
 			cssCodeSplit: true,
 			// don't use the default name to avoid collisions with 'static/manifest.json'
@@ -165,7 +165,9 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
  * @returns {string}
  */
 export function assets_base(config) {
-	return (config.paths.assets || config.paths.base || '.') + '/';
+	return (
+		(config.paths.assets || config.paths.base) + (config.rootRelativeAssets === true ? '/' : '.')
+	);
 }
 
 const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH']);

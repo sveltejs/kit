@@ -304,6 +304,8 @@ const options = object(
 					`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
 			),
 
+			rootRelativeAssets: boolean(true),
+
 			// TODO remove for 1.0
 			router: error((keypath) => `${keypath} has been moved to config.kit.browser.router`),
 
