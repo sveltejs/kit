@@ -1,4 +1,5 @@
 import * as set_cookie_parser from 'set-cookie-parser';
+import { error } from '../index.js';
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -27,7 +28,8 @@ function get_raw_body(req, body_size_limit) {
 		if (!length) {
 			length = body_size_limit;
 		} else if (length > body_size_limit) {
-			throw new Error(
+			throw error(
+				413,
 				`Received content-length of ${length}, but only accept up to ${body_size_limit} bytes.`
 			);
 		}
@@ -45,6 +47,7 @@ function get_raw_body(req, body_size_limit) {
 	return new ReadableStream({
 		start(controller) {
 			req.on('error', (error) => {
+				cancelled = true;
 				controller.error(error);
 			});
 
@@ -58,8 +61,10 @@ function get_raw_body(req, body_size_limit) {
 
 				size += chunk.length;
 				if (size > length) {
-					req.destroy(
-						new Error(
+					cancelled = true;
+					controller.error(
+						error(
+							413,
 							`request body size exceeded ${
 								content_length ? "'content-length'" : 'BODY_SIZE_LIMIT'
 							} of ${length}`

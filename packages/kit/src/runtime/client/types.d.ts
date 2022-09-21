@@ -80,6 +80,5 @@ export interface NavigationState {
 	error: App.PageError | null;
 	params: Record<string, string>;
 	route: CSRRoute | null;
-	session_id: number;
 	url: URL;
 }
