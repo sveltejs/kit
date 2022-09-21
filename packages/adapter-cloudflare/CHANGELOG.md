@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.38
+
+### Patch Changes
+
+- Ensure all excluded paths in `_routes.json` start with / ([#6952](https://github.com/sveltejs/kit/pull/6952))
+
 ## 1.0.0-next.37
 
 ### Patch Changes
