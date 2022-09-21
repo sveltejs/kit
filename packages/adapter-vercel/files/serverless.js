@@ -23,7 +23,7 @@ export default async (req, res) => {
 		request = await getRequest({ base: `https://${req.headers.host}`, request: req });
 	} catch (err) {
 		res.statusCode = err.status || 400;
-		return res.end(err.reason || 'Invalid request body');
+		return res.end('Invalid request body');
 	}
 
 	setResponse(
