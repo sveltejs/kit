@@ -155,11 +155,13 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @param {string | URL} url
 	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
 	 * @param {string[]} redirect_chain
+	 * @param {{}} [nav_token]
 	 */
 	async function goto(
 		url,
 		{ noscroll = false, replaceState = false, keepfocus = false, state = {} },
-		redirect_chain
+		redirect_chain,
+		nav_token
 	) {
 		if (typeof url === 'string') {
 			url = new URL(url, get_base_uri(document));
@@ -174,6 +176,7 @@ export function create_client({ target, base, trailing_slash }) {
 				state,
 				replaceState
 			},
+			nav_token,
 			accepted: () => {},
 			blocked: () => {},
 			type: 'goto'
@@ -200,13 +203,11 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
 	 * @param {() => void} [callback]
 	 */
-	async function update(intent, url, redirect_chain, opts, callback) {
-		// Do not update the token during a redirect, it belongs to a ongoing navigation; if a new one
-		// is started, it will should take precedence. If we don't do this, a race condition could
-		// make the old navigation the one that wins due to redirects.
-		const current_token = (token = redirect_chain.length ? token : {});
+	async function update(intent, url, redirect_chain, opts, nav_token = {}, callback) {
+		const current_token = (token = nav_token);
 		let navigation_result = intent && (await load_route(intent));
 
 		if (
@@ -248,7 +249,12 @@ export function create_client({ target, base, trailing_slash }) {
 					routeId: null
 				});
 			} else {
-				goto(new URL(navigation_result.location, url).href, {}, [...redirect_chain, url.pathname]);
+				goto(
+					new URL(navigation_result.location, url).href,
+					{},
+					[...redirect_chain, url.pathname],
+					nav_token
+				);
 				return false;
 			}
 		} else if (navigation_result.props?.page?.status >= 400) {
@@ -981,6 +987,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   } | null;
 	 *   type: import('types').NavigationType;
 	 *   delta?: number;
+	 *   nav_token?: {};
 	 *   accepted: () => void;
 	 *   blocked: () => void;
 	 * }} opts
@@ -993,6 +1000,7 @@ export function create_client({ target, base, trailing_slash }) {
 		details,
 		type,
 		delta,
+		nav_token,
 		accepted,
 		blocked
 	}) {
@@ -1050,6 +1058,7 @@ export function create_client({ target, base, trailing_slash }) {
 				keepfocus,
 				details
 			},
+			nav_token,
 			() => {
 				callbacks.after_navigate.forEach((fn) => fn(navigation));
 				stores.navigating.set(null);
