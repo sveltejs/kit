@@ -235,6 +235,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			}
 		}
 	} else {
+		// If there's no routes directory, we'll just create a single empty route. This ensures the root layout and
+		// error components are included in the manifest, which is needed for subsequent build/dev commands to work
 		route_map.set('', {
 			id: '',
 			segment: '',
