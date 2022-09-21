@@ -3,4 +3,4 @@
 '@sveltejs/kit': patch
 ---
 
-Support Cloudflare Pages \_routes.json specification
+Support Cloudflare Pages `_routes.json` specification
