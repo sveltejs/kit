@@ -155,6 +155,19 @@ export interface Cookies {
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 	 */
 	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
+
+	/**
+	 * Serialize a cookie name-value pair into a Set-Cookie header string.
+	 *
+	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 *
+	 * By default, the `path` of a cookie is the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+	 *
+	 * @param name the name for the cookie
+	 * @param value value to set the cookie to
+	 * @param options object containing serialization options
+	 */
+	serialize(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): string;
 }
 
 export interface KitConfig {
