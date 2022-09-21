@@ -3,7 +3,7 @@
 	import { redirect_state } from '../state';
 
 	function redirect() {
-        redirect_state.set('start');
+		redirect_state.set('start');
 		invalidateAll();
 	}
 </script>
