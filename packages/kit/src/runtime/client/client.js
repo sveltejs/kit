@@ -208,7 +208,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @param {() => void} [callback]
 	 */
 	async function update(intent, url, redirect_chain, opts, nav_token = {}, callback) {
-		const current_token = (token = nav_token);
+		token = nav_token;
 		let navigation_result = intent && (await load_route(intent));
 
 		if (
@@ -239,7 +239,7 @@ export function create_client({ target, base, trailing_slash }) {
 		url = intent?.url || url;
 
 		// abort if user navigated during update
-		if (token !== current_token) return false;
+		if (token !== nav_token) return false;
 
 		if (navigation_result.type === 'redirect') {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
