@@ -760,6 +760,34 @@ test.describe.serial('Invalidation', () => {
 		await page.waitForTimeout(200);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
 	});
+
+	test('+layout.server.js is re-run when its dependency is invalidated', async ({ page }) => {
+		await page.goto('/load/invalidation/depends');
+		const serverData = await page.textContent('[data-testid="serverResponse"]');
+		expect(serverData).toBeDefined();
+		const count = parseInt(serverData);
+
+		await page.click('[data-testid="invalidateServerLoad"]');
+		await page.waitForLoadState('networkidle');
+		await page.waitForTimeout(200);
+		const nextServerData = await page.textContent('[data-testid="serverResponse"]');
+		expect(nextServerData).toBeDefined();
+		const nextCount = parseInt(nextServerData);
+		expect(nextCount - count).toBe(1);
+	});
+
+	test('+layout.js is re-run when +layout.server.js dependency is invalidated', async ({
+		page
+	}) => {
+		await page.goto('/load/invalidation/depends');
+		await page.click('[data-testid="invalidateSharedLoad"]');
+		await page.waitForLoadState('networkidle');
+		await page.waitForTimeout(200);
+		const nextServerData = await page.textContent('[data-testid="serverResponse"]');
+		const nextSharedData = await page.textContent('[data-testid="sharedResponse"]');
+		expect(nextServerData).toBeDefined();
+		expect(nextSharedData).toBe(nextServerData);
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {

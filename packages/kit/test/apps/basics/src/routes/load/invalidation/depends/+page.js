@@ -2,7 +2,8 @@
 export function load({ data, depends }) {
 	depends('app://invalidate/load');
 	return {
-		load: new Date().toString(),
+		loadTimestamp: new Date().toString(),
+		load: data.serverLoad,
 		...data
 	};
 }
