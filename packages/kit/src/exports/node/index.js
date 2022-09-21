@@ -1,5 +1,5 @@
 import * as set_cookie_parser from 'set-cookie-parser';
-import { HttpError } from '../../runtime/control.js';
+import { error } from '../index.js';
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -28,7 +28,7 @@ function get_raw_body(req, body_size_limit) {
 		if (!length) {
 			length = body_size_limit;
 		} else if (length > body_size_limit) {
-			throw new HttpError(
+			throw error(
 				413,
 				`Received content-length of ${length}, but only accept up to ${body_size_limit} bytes.`
 			);
@@ -63,7 +63,7 @@ function get_raw_body(req, body_size_limit) {
 				if (size > length) {
 					cancelled = true;
 					controller.error(
-						new HttpError(
+						error(
 							413,
 							`request body size exceeded ${
 								content_length ? "'content-length'" : 'BODY_SIZE_LIMIT'
