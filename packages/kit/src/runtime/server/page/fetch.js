@@ -172,20 +172,20 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 					state.prerendering.dependencies.set(url.pathname, dependency);
 				}
 
+				const set_cookie = response.headers.get('set-cookie');
+				if (set_cookie) {
+					set_cookies.push(
+						...set_cookie_parser.splitCookiesString(set_cookie).map((str) => {
+							const { name, value, ...options } = set_cookie_parser.parseString(str);
+							// options.sameSite is string, something more specific is required - type cast is safe
+							return /** @type{import('./types').Cookie} */ ({ name, value, options });
+						})
+					);
+				}
+
 				return response;
 			}
 		});
-
-		const set_cookie = response.headers.get('set-cookie');
-		if (set_cookie) {
-			set_cookies.push(
-				...set_cookie_parser.splitCookiesString(set_cookie).map((str) => {
-					const { name, value, ...options } = set_cookie_parser.parseString(str);
-					// options.sameSite is string, something more specific is required - type cast is safe
-					return /** @type{import('./types').Cookie} */ ({ name, value, options });
-				})
-			);
-		}
 
 		const proxy = new Proxy(response, {
 			get(response, key, _receiver) {
