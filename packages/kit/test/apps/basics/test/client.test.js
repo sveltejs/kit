@@ -810,6 +810,22 @@ test.describe.serial('Invalidation', () => {
 		expect(server).toBe(next_server);
 		expect(shared).not.toBe(next_shared);
 	});
+
+	test('Parameter use is tracked even for routes that do not use the parameters', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/params');
+
+		await clicknav('[href="/load/invalidation/params/1"]');
+		expect(await page.textContent('pre')).toBe('{"a":"1"}');
+
+		await clicknav('[href="/load/invalidation/params/1/x"]');
+		expect(await page.textContent('pre')).toBe('{"a":"1","b":"x"}');
+
+		await page.goBack();
+		expect(await page.textContent('pre')).toBe('{"a":"1"}');
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {

@@ -521,22 +521,15 @@ export function create_client({ target, base, trailing_slash }) {
 				}
 			}
 
-			/** @type {Record<string, string>} */
-			const uses_params = {};
-			for (const key in params) {
-				Object.defineProperty(uses_params, key, {
-					get() {
-						uses.params.add(key);
-						return params[key];
-					},
-					enumerable: true
-				});
-			}
-
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
-				params: uses_params,
+				params: new Proxy(params, {
+					get: (target, key) => {
+						uses.params.add(/** @type {string} */ (key));
+						return target[/** @type {string} */ (key)];
+					}
+				}),
 				data: server_data_node?.data ?? null,
 				url: make_trackable(url, () => {
 					uses.url = true;
@@ -640,20 +633,21 @@ export function create_client({ target, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('types').Uses | undefined} uses
+	 * @param {boolean} url_changed
 	 * @param {boolean} parent_changed
-	 * @param {{ url: boolean, params: string[] }} changed
+	 * @param {import('types').Uses | undefined} uses
+	 * @param {Record<string, string>} params
 	 */
-	function has_changed(changed, parent_changed, uses) {
+	function has_changed(url_changed, parent_changed, uses, params) {
 		if (force_invalidation) return true;
 
 		if (!uses) return false;
 
 		if (uses.parent && parent_changed) return true;
-		if (changed.url && uses.url) return true;
+		if (uses.url && url_changed) return true;
 
-		for (const param of changed.params) {
-			if (uses.params.has(param)) return true;
+		for (const param of uses.params) {
+			if (params[param] !== current.params[param]) return true;
 		}
 
 		for (const href of uses.dependencies) {
@@ -697,11 +691,6 @@ export function create_client({ target, base, trailing_slash }) {
 
 		const { errors, layouts, leaf } = route;
 
-		const changed = current.url && {
-			url: id !== current.url.pathname + current.url.search,
-			params: Object.keys(params).filter((key) => current.params[key] !== params[key])
-		};
-
 		const loaders = [...layouts, leaf];
 
 		// preload modules to avoid waterfall, but handle rejections
@@ -713,12 +702,15 @@ export function create_client({ target, base, trailing_slash }) {
 		/** @type {import('types').ServerData | null} */
 		let server_data = null;
 
+		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
+
 		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];
+
 			const invalid =
 				!!loader?.[0] &&
 				(previous?.loader !== loader[1] ||
-					has_changed(changed, acc.some(Boolean), previous.server?.uses));
+					has_changed(url_changed, acc.some(Boolean), previous.server?.uses, params));
 
 			acc.push(invalid);
 			return acc;
@@ -757,7 +749,7 @@ export function create_client({ target, base, trailing_slash }) {
 			const valid =
 				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
-				!has_changed(changed, parent_changed, previous.shared?.uses);
+				!has_changed(url_changed, parent_changed, previous.shared?.uses, params);
 			if (valid) return previous;
 
 			parent_changed = true;
