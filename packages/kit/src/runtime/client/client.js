@@ -92,6 +92,8 @@ export function create_client({ target, base, trailing_slash }) {
 		url: null
 	};
 
+	/** this being true means we SSR'd */
+	let hydrated = false;
 	let started = false;
 	let autoscroll = true;
 	let updating = false;
@@ -211,27 +213,8 @@ export function create_client({ target, base, trailing_slash }) {
 		token = nav_token;
 		let navigation_result = intent && (await load_route(intent));
 
-		if (
-			!navigation_result &&
-			url.origin === location.origin &&
-			url.pathname === location.pathname
-		) {
-			// this could happen in SPA fallback mode if the user navigated to
-			// `/non-existent-page`. if we fall back to reloading the page, it
-			// will create an infinite loop. so whereas we normally handle
-			// unknown routes by going to the server, in this special case
-			// we render a client-side error page instead
-			navigation_result = await load_root_error_page({
-				status: 404,
-				error: new Error(`Not found: ${url.pathname}`),
-				url,
-				routeId: null
-			});
-		}
-
 		if (!navigation_result) {
-			await native_navigation(url);
-			return false; // unnecessary, but TypeScript prefers it this way
+			navigation_result = await server_fallback(url, new Error(`Not found: ${url.pathname}`));
 		}
 
 		// if this is an internal navigation intent, use the normalized
@@ -854,8 +837,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 					// if we get here, it's because the root `load` function failed,
 					// and we need to fall back to the server
-					await native_navigation(url);
-					return;
+					return await server_fallback(url, /** @type {Error} */ (err));
 				}
 			} else {
 				// push an empty slot so we can rewind past gaps to the
@@ -910,10 +892,7 @@ export function create_client({ target, base, trailing_slash }) {
 				server_data_node = server_data.nodes[0] ?? null;
 			} catch {
 				// at this point we have no choice but to fall back to the server
-				await native_navigation(url);
-
-				// @ts-expect-error
-				return;
+				await server_fallback(url, error, false);
 			}
 		}
 
@@ -1066,6 +1045,34 @@ export function create_client({ target, base, trailing_slash }) {
 				stores.navigating.set(null);
 			}
 		);
+	}
+
+	/**
+	 * Does a full page reload if it wouldn't result in an endless loop in the SPA case
+	 * @param {URL} url
+	 * @param {Error | HttpError} error
+	 * @param {boolean} [return_spa_fallback]
+	 * @returns {Promise<import('./types').NavigationFinished>}
+	 */
+	async function server_fallback(url, error, return_spa_fallback = true) {
+		console.trace(error);
+		if (url.origin === location.origin && url.pathname === location.pathname && !hydrated) {
+			if (return_spa_fallback) {
+				// We would reload the same page we're currently on, which isn't hydrated,
+				// which means no SSR, which means we would end up in an endless loop
+				return await load_root_error_page({
+					status: 404,
+					error,
+					url,
+					routeId: null
+				});
+			}
+			// @ts-expect-error limitation of JSDoc - would love to type this as a function overload,
+			// but that's not possible, so we just have to be careful to only call the function
+			// and using the return type when we know that `return_spa_fallback` is `true`
+			return;
+		}
+		return await native_navigation(url);
 	}
 
 	/**
@@ -1430,6 +1437,8 @@ export function create_client({ target, base, trailing_slash }) {
 			data: server_data_nodes,
 			form
 		}) => {
+			hydrated = true;
+
 			const url = new URL(location.href);
 
 			/** @type {import('./types').NavigationFinished | undefined} */
