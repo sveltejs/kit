@@ -73,11 +73,8 @@ export function create_client({ target, base, trailing_slash }) {
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
-	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
-	const load_cache = {
-		id: null,
-		promise: null
-	};
+	/** @type {{id: string, promise: Promise<import('./types').NavigationResult | undefined>} | null} */
+	let load_cache = null;
 
 	const callbacks = {
 		/** @type {Array<(navigation: import('types').Navigation & { cancel: () => void }) => void>} */
@@ -152,8 +149,7 @@ export function create_client({ target, base, trailing_slash }) {
 		// Also solves an edge case where a prefetch is triggered, the navigation for it
 		// was then triggered and is still running while the invalidation kicks in,
 		// at which point the invalidation should take over and "win".
-		load_cache.promise = null;
-		load_cache.id = null;
+		load_cache = null;
 		await update(intent, url, []);
 	}
 
@@ -197,8 +193,7 @@ export function create_client({ target, base, trailing_slash }) {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
 
-		load_cache.promise = load_route(intent);
-		load_cache.id = intent.id;
+		load_cache = { id: intent.id, promise: load_route(intent) };
 
 		return load_cache.promise;
 	}
@@ -284,6 +279,9 @@ export function create_client({ target, base, trailing_slash }) {
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 
+		// reset prefetch synchronously after the history state has been set to avoid race conditions
+		load_cache = null;
+
 		if (started) {
 			current = navigation_result.state;
 
@@ -347,8 +345,6 @@ export function create_client({ target, base, trailing_slash }) {
 			await tick();
 		}
 
-		load_cache.promise = null;
-		load_cache.id = null;
 		autoscroll = true;
 
 		if (navigation_result.props.page) {
@@ -695,7 +691,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
 	async function load_route({ id, invalidating, url, params, route }) {
-		if (load_cache.id === id && load_cache.promise) {
+		if (load_cache?.id === id) {
 			return load_cache.promise;
 		}
 
