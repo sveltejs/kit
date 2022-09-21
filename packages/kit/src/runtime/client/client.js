@@ -135,19 +135,25 @@ export function create_client({ target, base, trailing_slash }) {
 	/** @type {{}} */
 	let token;
 
+	/** @type {Promise<void> | null} */
+	let pending_invalidate;
+
 	async function invalidate() {
 		// Accept all invalidations as they come, don't swallow any while another invalidation
-		// is running because subsequent invalidations may make earlier ones outdated.
-		const url = new URL(location.href);
+		// is running because subsequent invalidations may make earlier ones outdated,
+		// but batch multiple synchronous invalidations.
+		pending_invalidate = pending_invalidate || Promise.resolve();
+		await pending_invalidate;
+		pending_invalidate = null;
 
-		await Promise.resolve();
+		const url = new URL(location.href);
+		const intent = get_navigation_intent(url, true);
 		// Clear prefetch, it might be affected by the invalidation.
 		// Also solves an edge case where a prefetch is triggered, the navigation for it
 		// was then triggered and is still running while the invalidation kicks in,
 		// at which point the invalidation should take over and "win".
 		load_cache.promise = null;
 		load_cache.id = null;
-		const intent = get_navigation_intent(url, true);
 		await update(intent, url, []);
 	}
 
