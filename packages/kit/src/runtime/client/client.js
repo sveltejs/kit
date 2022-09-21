@@ -1214,10 +1214,8 @@ export function create_client({ target, base, trailing_slash }) {
 				const props = { form: result.data };
 
 				if (result.status !== page.status) {
-					props.page = {
-						...page,
-						status: result.status
-					};
+					page = { ...page, status: result.status };
+					props.page = page;
 				}
 
 				const post_update = pre_update();
