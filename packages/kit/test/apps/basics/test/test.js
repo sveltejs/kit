@@ -1849,13 +1849,12 @@ test.describe('Actions', () => {
 	test('redirect', async ({ page }) => {
 		await page.goto('/actions/redirect');
 
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/redirect')),
-			page.click('button')
-		]);
+		page.click('button');
 
-		await page.waitForTimeout(500);
-		expect(page.url().endsWith('/actions/enhance')).toBe(true);
+		await page.waitForResponse('/actions/redirect');
+		await page.waitForTimeout(50);
+
+		expect(page.url()).toContain('/actions/enhance');
 	});
 });
 
