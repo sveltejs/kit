@@ -763,32 +763,32 @@ test.describe.serial('Invalidation', () => {
 
 	test('+layout(.server).js is re-run when server dep is invalidated', async ({ page }) => {
 		await page.goto('/load/invalidation/depends');
-		const serverData = await page.textContent('p.server');
-		const sharedData = await page.textContent('p.shared');
-		expect(serverData).toBeDefined();
-		expect(sharedData).toBeDefined();
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
 
 		await Promise.all([page.click('button.server'), page.waitForLoadState('networkidle')]);
 		await page.waitForTimeout(200);
-		const nextServerData = await page.textContent('p.server');
-		const nextSharedData = await page.textContent('p.shared');
-		expect(serverData).not.toBe(nextServerData);
-		expect(sharedData).not.toBe(nextSharedData);
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(server).not.toBe(next_server);
+		expect(shared).not.toBe(next_shared);
 	});
 
 	test('+layout.js is re-run when shared dep is invalidated', async ({ page }) => {
 		await page.goto('/load/invalidation/depends');
-		const serverData = await page.textContent('p.server');
-		const sharedData = await page.textContent('p.shared');
-		expect(serverData).toBeDefined();
-		expect(sharedData).toBeDefined();
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
 
 		await Promise.all([page.click('button.shared'), page.waitForLoadState('networkidle')]);
 		await page.waitForTimeout(200);
-		const nextServerData = await page.textContent('p.server');
-		const nextSharedData = await page.textContent('p.shared');
-		expect(serverData).toBe(nextServerData);
-		expect(sharedData).not.toBe(nextSharedData);
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(server).toBe(next_server);
+		expect(shared).not.toBe(next_shared);
 	});
 });
 
