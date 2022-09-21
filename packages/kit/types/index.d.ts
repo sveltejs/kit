@@ -13,7 +13,8 @@ import {
 	PrerenderOnErrorValue,
 	RequestOptions,
 	RouteDefinition,
-	TrailingSlash
+	TrailingSlash,
+	UniqueInterface
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 import { HttpError, Redirect } from '../src/runtime/control.js';
@@ -52,7 +53,8 @@ type OptionalUnion<
 > = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 
 // Needs to be here, else ActionData will be resolved to unknown - probably because of "d.ts file imports .js file" in combination with allowJs
-interface ValidationError<T extends Record<string, unknown> | undefined = undefined> {
+export interface ValidationError<T extends Record<string, unknown> | undefined = undefined>
+	extends UniqueInterface {
 	status: number;
 	data: T;
 }

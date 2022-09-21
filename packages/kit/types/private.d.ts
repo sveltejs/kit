@@ -207,3 +207,12 @@ export interface RouteSegment {
 }
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+
+/**
+ * This doesn't actually exist, it's a way to better distinguish the type
+ */
+declare const uniqueSymbol: unique symbol;
+
+export interface UniqueInterface {
+	readonly [uniqueSymbol]: unknown;
+}
