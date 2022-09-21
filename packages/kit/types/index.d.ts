@@ -368,6 +368,7 @@ export interface ServerLoadEvent<
 	ParentData extends Record<string, any> = Record<string, any>
 > extends RequestEvent<Params> {
 	parent: () => Promise<ParentData>;
+	depends: (...deps: string[]) => void;
 }
 
 export interface Action<
