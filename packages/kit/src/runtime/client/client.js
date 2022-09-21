@@ -73,11 +73,8 @@ export function create_client({ target, base, trailing_slash }) {
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
-	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
-	const load_cache = {
-		id: null,
-		promise: null
-	};
+	/** @type {{id: string, promise: Promise<import('./types').NavigationResult | undefined>} | null} */
+	let load_cache = null;
 
 	const callbacks = {
 		/** @type {Array<(navigation: import('types').Navigation & { cancel: () => void }) => void>} */
@@ -91,7 +88,6 @@ export function create_client({ target, base, trailing_slash }) {
 	let current = {
 		branch: [],
 		error: null,
-		session_id: 0,
 		// @ts-ignore - we need the initial value to be null
 		url: null
 	};
@@ -99,10 +95,6 @@ export function create_client({ target, base, trailing_slash }) {
 	let started = false;
 	let autoscroll = true;
 	let updating = false;
-	let session_id = 1;
-
-	/** @type {Promise<void> | null} */
-	let invalidating = null;
 	let force_invalidation = false;
 
 	/** @type {import('svelte').SvelteComponent} */
@@ -140,31 +132,38 @@ export function create_client({ target, base, trailing_slash }) {
 	/** @type {{}} */
 	let token;
 
-	function invalidate() {
-		if (!invalidating) {
-			const url = new URL(location.href);
+	/** @type {Promise<void> | null} */
+	let pending_invalidate;
 
-			invalidating = Promise.resolve().then(async () => {
-				const intent = get_navigation_intent(url, true);
-				await update(intent, url, []);
+	async function invalidate() {
+		// Accept all invalidations as they come, don't swallow any while another invalidation
+		// is running because subsequent invalidations may make earlier ones outdated,
+		// but batch multiple synchronous invalidations.
+		pending_invalidate = pending_invalidate || Promise.resolve();
+		await pending_invalidate;
+		pending_invalidate = null;
 
-				invalidating = null;
-				force_invalidation = false;
-			});
-		}
-
-		return invalidating;
+		const url = new URL(location.href);
+		const intent = get_navigation_intent(url, true);
+		// Clear prefetch, it might be affected by the invalidation.
+		// Also solves an edge case where a prefetch is triggered, the navigation for it
+		// was then triggered and is still running while the invalidation kicks in,
+		// at which point the invalidation should take over and "win".
+		load_cache = null;
+		await update(intent, url, []);
 	}
 
 	/**
 	 * @param {string | URL} url
 	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
 	 * @param {string[]} redirect_chain
+	 * @param {{}} [nav_token]
 	 */
 	async function goto(
 		url,
 		{ noscroll = false, replaceState = false, keepfocus = false, state = {} },
-		redirect_chain
+		redirect_chain,
+		nav_token
 	) {
 		if (typeof url === 'string') {
 			url = new URL(url, get_base_uri(document));
@@ -179,6 +178,7 @@ export function create_client({ target, base, trailing_slash }) {
 				state,
 				replaceState
 			},
+			nav_token,
 			accepted: () => {},
 			blocked: () => {},
 			type: 'goto'
@@ -193,8 +193,7 @@ export function create_client({ target, base, trailing_slash }) {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
 
-		load_cache.promise = load_route(intent);
-		load_cache.id = intent.id;
+		load_cache = { id: intent.id, promise: load_route(intent) };
 
 		return load_cache.promise;
 	}
@@ -205,10 +204,11 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
 	 * @param {() => void} [callback]
 	 */
-	async function update(intent, url, redirect_chain, opts, callback) {
-		const current_token = (token = {});
+	async function update(intent, url, redirect_chain, opts, nav_token = {}, callback) {
+		token = nav_token;
 		let navigation_result = intent && (await load_route(intent));
 
 		if (
@@ -239,9 +239,7 @@ export function create_client({ target, base, trailing_slash }) {
 		url = intent?.url || url;
 
 		// abort if user navigated during update
-		if (token !== current_token) return false;
-
-		invalidated.length = 0;
+		if (token !== nav_token) return false;
 
 		if (navigation_result.type === 'redirect') {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
@@ -252,7 +250,12 @@ export function create_client({ target, base, trailing_slash }) {
 					routeId: null
 				});
 			} else {
-				goto(new URL(navigation_result.location, url).href, {}, [...redirect_chain, url.pathname]);
+				goto(
+					new URL(navigation_result.location, url).href,
+					{},
+					[...redirect_chain, url.pathname],
+					nav_token
+				);
 				return false;
 			}
 		} else if (navigation_result.props?.page?.status >= 400) {
@@ -262,6 +265,11 @@ export function create_client({ target, base, trailing_slash }) {
 			}
 		}
 
+		// reset invalidation only after a finished navigation. If there are redirects or
+		// additional invalidations, they should get the same invalidation treatment
+		invalidated.length = 0;
+		force_invalidation = false;
+
 		updating = true;
 
 		if (opts && opts.details) {
@@ -270,6 +278,9 @@ export function create_client({ target, base, trailing_slash }) {
 			details.state[INDEX_KEY] = current_history_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
+
+		// reset prefetch synchronously after the history state has been set to avoid race conditions
+		load_cache = null;
 
 		if (started) {
 			current = navigation_result.state;
@@ -334,8 +345,6 @@ export function create_client({ target, base, trailing_slash }) {
 			await tick();
 		}
 
-		load_cache.promise = null;
-		load_cache.id = null;
 		autoscroll = true;
 
 		if (navigation_result.props.page) {
@@ -410,8 +419,7 @@ export function create_client({ target, base, trailing_slash }) {
 				params,
 				branch,
 				error,
-				route,
-				session_id
+				route
 			},
 			props: {
 				components: filtered.map((branch_node) => branch_node.node.component)
@@ -683,7 +691,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
 	async function load_route({ id, invalidating, url, params, route }) {
-		if (load_cache.id === id && load_cache.promise) {
+		if (load_cache?.id === id) {
 			return load_cache.promise;
 		}
 
@@ -981,6 +989,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   } | null;
 	 *   type: import('types').NavigationType;
 	 *   delta?: number;
+	 *   nav_token?: {};
 	 *   accepted: () => void;
 	 *   blocked: () => void;
 	 * }} opts
@@ -993,6 +1002,7 @@ export function create_client({ target, base, trailing_slash }) {
 		details,
 		type,
 		delta,
+		nav_token,
 		accepted,
 		blocked
 	}) {
@@ -1050,6 +1060,7 @@ export function create_client({ target, base, trailing_slash }) {
 				keepfocus,
 				details
 			},
+			nav_token,
 			() => {
 				callbacks.after_navigate.forEach((fn) => fn(navigation));
 				stores.navigating.set(null);

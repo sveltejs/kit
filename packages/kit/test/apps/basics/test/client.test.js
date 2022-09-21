@@ -761,6 +761,26 @@ test.describe.serial('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
 	});
 
+	test('multiple invalidations run concurrently', async ({ page, request }) => {
+		await page.goto('/load/invalidation/multiple');
+		expect(await page.textContent('p')).toBe('layout: 0, page: 0');
+
+		await page.click('button.layout');
+		await page.click('button.layout');
+		await page.click('button.page');
+		await page.click('button.page');
+		await page.click('button.layout');
+		await page.click('button.page');
+		await page.click('button.all');
+		await expect(page.locator('p')).toHaveText('layout: 4, page: 4');
+	});
+
+	test('invalidateAll persists through redirects', async ({ page }) => {
+		await page.goto('/load/invalidation/multiple/redirect');
+		await page.click('button.redirect');
+		await expect(page.locator('p.redirect-state')).toHaveText('Redirect state: done');
+	});
+
 	test('+layout(.server).js is re-run when server dep is invalidated', async ({ page }) => {
 		await page.goto('/load/invalidation/depends');
 		const server = await page.textContent('p.server');
