@@ -4,7 +4,13 @@ import { mkdirp, posixify, resolve_entry } from '../../../utils/filesystem.js';
 import { get_vite_config, merge_vite_configs } from '../utils.js';
 import { load_error_page, load_template } from '../../../core/config/index.js';
 import { runtime_directory } from '../../../core/utils.js';
-import { create_build, find_deps, get_default_build_config, is_http_method } from './utils.js';
+import {
+	create_build,
+	find_deps,
+	get_default_build_config,
+	is_http_method,
+	resolve_symlinks
+} from './utils.js';
 import { s } from '../../../utils/misc.js';
 
 /**
@@ -285,7 +291,7 @@ export async function build_server(options, client) {
 
 			exports.push(
 				`export const component = async () => (await import('../${
-					vite_manifest[node.component].file
+					resolve_symlinks(vite_manifest, node.component).chunk.file
 				}')).default;`,
 				`export const file = '${entry.file}';` // TODO what is this?
 			);

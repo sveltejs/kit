@@ -56,7 +56,7 @@ const ssr = async (req, res) => {
 		});
 	} catch (err) {
 		res.statusCode = err.status || 400;
-		res.end(err.reason || 'Invalid request body');
+		res.end('Invalid request body');
 		return;
 	}
 

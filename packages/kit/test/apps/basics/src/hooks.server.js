@@ -48,6 +48,15 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {
+		if (event.url.pathname === '/cookies/serialize') {
+			event.cookies.set('before', 'before');
+			const response = await resolve(event);
+			response.headers.append('set-cookie', event.cookies.serialize('after', 'after'));
+			return response;
+		}
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
 		if (event.url.pathname === '/errors/error-in-handle') {
 			throw new Error('Error in handle');
 		}

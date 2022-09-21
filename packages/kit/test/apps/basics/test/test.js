@@ -1639,6 +1639,15 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('404');
 		expect(await page.textContent('p')).toBe('This is your custom error page saying: "Not Found"');
 	});
+
+	if (process.platform !== 'win32') {
+		test('Respects symlinks', async ({ page, clicknav }) => {
+			await page.goto('/routing');
+			await clicknav('[href="/routing/symlink-from"]');
+
+			expect(await page.textContent('h1')).toBe('symlinked');
+		});
+	}
 });
 
 test.describe('Matchers', () => {
