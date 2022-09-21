@@ -54,6 +54,7 @@
 		"!src/core/**/test",
 		"types",
 		"svelte-kit.js",
+		"postinstall.js",
 		"scripts/special-types"
 	],
 	"scripts": {
@@ -67,7 +68,7 @@
 		"test:integration": "pnpm run -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"types": "node scripts/extract-types.js",
-		"postinstall": "node svelte-kit.js sync"
+		"postinstall": "node postinstall.js"
 	},
 	"exports": {
 		"./package.json": "./package.json",

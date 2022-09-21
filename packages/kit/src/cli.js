@@ -41,10 +41,6 @@ prog
 			return;
 		}
 
-		if (event === 'postinstall' && process.env.INIT_CWD) {
-			process.chdir(process.env.INIT_CWD);
-		}
-
 		if (!fs.existsSync('svelte.config.js')) {
 			console.warn(`Missing ${path.resolve('svelte.config.js')} — skipping`);
 			return;
