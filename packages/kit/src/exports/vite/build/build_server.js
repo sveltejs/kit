@@ -82,7 +82,7 @@ export class Server {
 			public_env: {},
 			read,
 			root,
-			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
+			service_worker: ${has_service_worker},
 			app_template,
 			app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			error_template,
