@@ -633,20 +633,21 @@ export function create_client({ target, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('types').Uses | undefined} uses
+	 * @param {boolean} url_changed
 	 * @param {boolean} parent_changed
-	 * @param {{ url: boolean, params: string[] }} changed
+	 * @param {import('types').Uses | undefined} uses
+	 * @param {Record<string, string>} params
 	 */
-	function has_changed(changed, parent_changed, uses) {
+	function has_changed(url_changed, parent_changed, uses, params) {
 		if (force_invalidation) return true;
 
 		if (!uses) return false;
 
 		if (uses.parent && parent_changed) return true;
-		if (changed.url && uses.url) return true;
+		if (uses.url && url_changed) return true;
 
-		for (const param of changed.params) {
-			if (uses.params.has(param)) return true;
+		for (const param of uses.params) {
+			if (params[param] !== current.params[param]) return true;
 		}
 
 		for (const href of uses.dependencies) {
@@ -701,22 +702,15 @@ export function create_client({ target, base, trailing_slash }) {
 		/** @type {import('types').ServerData | null} */
 		let server_data = null;
 
+		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
+
 		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];
-
-			const changed = current.url && {
-				url: id !== current.url.pathname + current.url.search,
-				params: previous?.server?.uses.params
-					? Array.from(previous.server.uses.params).filter(
-							(key) => current.params[key] !== params[key]
-					  )
-					: []
-			};
 
 			const invalid =
 				!!loader?.[0] &&
 				(previous?.loader !== loader[1] ||
-					has_changed(changed, acc.some(Boolean), previous.server?.uses));
+					has_changed(url_changed, acc.some(Boolean), previous.server?.uses, params));
 
 			acc.push(invalid);
 			return acc;
@@ -749,22 +743,13 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @type {import('./types').BranchNode | undefined} */
 			const previous = current.branch[i];
 
-			const changed = current.url && {
-				url: id !== current.url.pathname + current.url.search,
-				params: previous?.shared?.uses.params
-					? Array.from(previous.shared.uses.params).filter(
-							(key) => current.params[key] !== params[key]
-					  )
-					: []
-			};
-
 			const server_data_node = server_data_nodes?.[i];
 
 			// re-use data from previous load if it's still valid
 			const valid =
 				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
-				!has_changed(changed, parent_changed, previous.shared?.uses);
+				!has_changed(url_changed, parent_changed, previous.shared?.uses, params);
 			if (valid) return previous;
 
 			parent_changed = true;
