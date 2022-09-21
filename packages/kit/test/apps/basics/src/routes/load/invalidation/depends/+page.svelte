@@ -5,26 +5,20 @@
 	export let data;
 </script>
 
-<pre>shared_count:
-	<span data-testid="shared-response">{data.shared_count}</span>
-	({data.shared_timestamp})
-</pre>
+<p class="shared">{data.shared}</p>
 <button
 	type="button"
-	data-testid="invalidate-shared-load"
-	on:click={() => invalidate('app://invalidate/shared_count')}
+	class="shared"
+	on:click={() => invalidate('invalidate-depends:shared')}
 >
-	invalidate('app://invalidate/shared_count')
+	invalidate shared
 </button>
 
-<pre>server_count:
-	<span data-testid="server-response">{data.server_count}</span>
-	({data.server_timestamp})
-</pre>
+<p class="server">{data.server}</p>
 <button
 	type="button"
-	data-testid="invalidate-server-load"
-	on:click={() => invalidate('app://invalidate/server_count')}
+	class="server"
+	on:click={() => invalidate('invalidate-depends:server')}
 >
-	invalidate('app://invalidate/server_count')
+	invalidate server
 </button>

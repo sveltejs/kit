@@ -761,32 +761,34 @@ test.describe.serial('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
 	});
 
-	test('+layout.server.js is re-run when its dependency is invalidated', async ({ page }) => {
+	test('+layout(.server).js is re-run when server dep is invalidated', async ({ page }) => {
 		await page.goto('/load/invalidation/depends');
-		const server_data = await page.textContent('[data-testid="server-response"]');
-		expect(server_data).toBeDefined();
-		const count = parseInt(server_data);
+		const serverData = await page.textContent('p.server');
+		const sharedData = await page.textContent('p.shared');
+		expect(serverData).toBeDefined();
+		expect(sharedData).toBeDefined();
 
-		await page.click('[data-testid="invalidate-server-load"]');
-		await page.waitForLoadState('networkidle');
+		await Promise.all([page.click('button.server'), page.waitForLoadState('networkidle')]);
 		await page.waitForTimeout(200);
-		const next_server_data = await page.textContent('[data-testid="server-response"]');
-		expect(next_server_data).toBeDefined();
-		const next_count = parseInt(next_server_data);
-		expect(next_count - count).toBe(1);
+		const nextServerData = await page.textContent('p.server');
+		const nextSharedData = await page.textContent('p.shared');
+		expect(serverData).not.toBe(nextServerData);
+		expect(sharedData).not.toBe(nextSharedData);
 	});
 
-	test('+layout.js is re-run when +layout.server.js dependency is invalidated', async ({
-		page
-	}) => {
+	test('+layout.js is re-run when shared dep is invalidated', async ({ page }) => {
 		await page.goto('/load/invalidation/depends');
-		await page.click('[data-testid="invalidate-shared-load"]');
-		await page.waitForLoadState('networkidle');
+		const serverData = await page.textContent('p.server');
+		const sharedData = await page.textContent('p.shared');
+		expect(serverData).toBeDefined();
+		expect(sharedData).toBeDefined();
+
+		await Promise.all([page.click('button.shared'), page.waitForLoadState('networkidle')]);
 		await page.waitForTimeout(200);
-		const next_server_data = await page.textContent('[data-testid="server-response"]');
-		const next_shared_data = await page.textContent('[data-testid="shared-response"]');
-		expect(next_server_data).toBeDefined();
-		expect(next_shared_data).toBe(next_server_data);
+		const nextServerData = await page.textContent('p.server');
+		const nextSharedData = await page.textContent('p.shared');
+		expect(serverData).toBe(nextServerData);
+		expect(sharedData).not.toBe(nextSharedData);
 	});
 });
 

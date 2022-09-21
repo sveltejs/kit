@@ -1,10 +1,7 @@
-let count = 0;
-
 /** @type {import('./$types').PageServerLoad} */
 export function load({ depends }) {
-	depends('app://invalidate/server_count');
+	depends('invalidate-depends:server');
 	return {
-		server_timestamp: new Date().toString(),
-		server_count: ++count
+		server: new Date().getTime()
 	};
 }

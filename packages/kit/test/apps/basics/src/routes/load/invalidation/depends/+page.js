@@ -1,9 +1,8 @@
 /** @type {import('./$types').PageLoad} */
 export function load({ data, depends }) {
-	depends('app://invalidate/shared_count');
+	depends('invalidate-depends:shared');
 	return {
-		shared_timestamp: new Date().toString(),
-		shared_count: data.server_count,
+		shared: new Date().getTime(),
 		...data
 	};
 }
