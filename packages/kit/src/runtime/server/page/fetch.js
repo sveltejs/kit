@@ -68,6 +68,19 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 
 				const url = new URL(request.url);
 
+				if (!request.headers.has('origin')) {
+					request.headers.set('origin', event.url.origin);
+				}
+
+				// Remove Origin, according to https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin#description
+				if (
+					(request.method === 'GET' || request.method === 'HEAD') &&
+					((request.mode === 'no-cors' && url.origin !== event.url.origin) ||
+						url.origin === event.url.origin)
+				) {
+					request.headers.delete('origin');
+				}
+
 				if (url.origin !== event.url.origin) {
 					// allow cookie passthrough for "same-origin"
 					// if SvelteKit is serving my.domain.com:
