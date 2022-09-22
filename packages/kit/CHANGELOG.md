@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.496
+
+### Patch Changes
+
+- [fix] update page status when applying action ([#6942](https://github.com/sveltejs/kit/pull/6942))
+
+* [fix] apply redirect/error logic for `use:enhance` ([#6828](https://github.com/sveltejs/kit/pull/6828))
+
 ## 1.0.0-next.495
 
 ### Patch Changes
