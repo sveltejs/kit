@@ -90,7 +90,14 @@ export const test = base.extend({
 			page[fn] = async function (...args) {
 				const res = await page_fn.call(page, ...args);
 				if (javaScriptEnabled) {
-					await page.waitForSelector('body.started', { timeout: 5000 });
+					/**
+					 * @type {Promise<any>[]}
+					 */
+					const page_ready_conditions = [page.waitForSelector('body.started', { timeout: 5000 })];
+					if (process.env.DEV && fn !== 'goBack') { // if it is an spa back, there is no new connect
+						page_ready_conditions.push(waitForViteConnected(page, 5000))
+					}
+					await Promise.all(page_ready_conditions);
 				}
 				return res;
 			};
@@ -99,6 +106,7 @@ export const test = base.extend({
 		await use(page);
 	},
 
+	// eslint-disable-next-line
 	read_errors: ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
@@ -194,4 +202,46 @@ export async function start_server(handler) {
 			});
 		}
 	};
+}
+
+/**
+ * wait for the vite client to log "[vite] connected." on browser console
+ *
+ * @param page {import('@playwright/test').Page}
+ * @param timeout {number}
+ * @returns {Promise<void>}
+ */
+async function waitForViteConnected(page, timeout) {
+
+	/**
+     * @type { NodeJS.Timeout }
+     */
+	let timer;
+	/**
+	 * @type {Function}
+	 */
+	let console_listener;
+	const timeout_promise = new Promise(
+		// eslint-disable-next-line no-unused-vars
+		(_, reject) =>
+			(timer = setTimeout(() => {
+				reject(`timeout, vite client not connected after ${timeout}ms`);
+			}, timeout))
+	);
+	const connected_promise = /** @type {Promise<void>} */(new Promise((resolve) => {
+		console_listener = (/** @type {{ text: () => string; }} */ data) => {
+			const text = data.text();
+			if (text.indexOf('[vite] connected.') > -1) {
+				resolve();
+			}
+		};
+		// @ts-ignore
+		page.on('console', console_listener);
+	}));
+
+	return Promise.race([connected_promise, timeout_promise]).finally(() => {
+		// @ts-ignore
+		page.off('console', console_listener);
+		clearTimeout(timer);
+	});
 }
