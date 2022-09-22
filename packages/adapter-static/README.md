@@ -119,9 +119,9 @@ export default {
 export const ssr = false;
 ```
 
-#### Apache Server
+#### Apache
 
-For a Single Page Application on an `Apache` Server, you need an `.htaccess` to route all of the requests into the entry file for the routing to work, otherwise it will throw a 404 error once you refresh or visit a page that isn't compiled.
+To run an SPA on [Apache](https://httpd.apache.org/), you need a `static/.htaccess` file to route requests to the fallback page:
 
 ```
 <IfModule mod_rewrite.c>
