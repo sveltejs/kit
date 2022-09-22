@@ -1,11 +1,11 @@
-/** @param {Record<string, any>} object */
+/** 
+ * Given an object, return a new object where all top level values are awaited
+ * 
+ * @param {Record<string, any>} object
+ * @returns {Promise<Record<string, any>>} 
+ */
 export async function unwrap_promises(object) {
-	/** @type {Record<string, any>} */
-	const unwrapped = {};
-
-	for (const key in object) {
-		unwrapped[key] = await object[key];
-	}
-
-	return unwrapped;
+	return Object.fromEntries(
+		await Promise.all(Object.entries(object).map(async ([key, value]) => [key, await value]))
+	);
 }
