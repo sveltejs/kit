@@ -134,8 +134,6 @@ To run an SPA on [Apache](https://httpd.apache.org/), you need a `static/.htacce
 </IfModule>
 ```
 
-You can also create an `.htaccess` file in the static folder to automatically include the `.htaccess` on every build.
-
 ## GitHub Pages
 
 When building for GitHub Pages, make sure to update [`paths.base`](https://kit.svelte.dev/docs/configuration#paths) to match your repo name, since the site will be served from <https://your-username.github.io/your-repo-name> rather than from the root.
