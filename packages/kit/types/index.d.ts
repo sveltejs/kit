@@ -265,7 +265,7 @@ export interface LoadEvent<
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>
 > extends NavigationEvent<Params> {
-	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
+	fetch: typeof fetch;
 	data: Data;
 	setHeaders: (headers: Record<string, string>) => void;
 	parent: () => Promise<ParentData>;

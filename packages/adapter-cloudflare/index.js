@@ -87,7 +87,8 @@ function get_routes_json(app_dir, assets) {
 				// We do want to show an example of a _routes.json that
 				// excludes more than just /_app/immutable/*, and favicons
 				// are a reasonable choice
-				.filter((filePath) => filePath.includes('favicon'))
+				.filter((file) => file.startsWith('favicon'))
+				.map((file) => `/${file}`)
 		]
 	};
 }

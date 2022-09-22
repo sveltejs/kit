@@ -298,7 +298,7 @@ export interface SSROptions {
 	public_env: Record<string, string>;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
-	service_worker?: string;
+	service_worker: boolean;
 	app_template({
 		head,
 		body,
