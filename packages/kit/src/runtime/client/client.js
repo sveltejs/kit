@@ -622,7 +622,7 @@ export function create_client({ target, base, trailing_slash }) {
 			} else {
 				data = (await node.shared.load.call(null, load_input)) ?? null;
 			}
-			data = data ? await unwrap_promises(data) : data;
+			data = data ? await unwrap_promises(data) : null;
 		}
 
 		return {
