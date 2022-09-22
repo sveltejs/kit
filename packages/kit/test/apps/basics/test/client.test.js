@@ -905,8 +905,10 @@ test('+server.js next to +page.svelte works', async ({ page }) => {
 	expect(await page.textContent('p')).toBe('Hi');
 
 	for (const method of ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']) {
-		page.click(`button:has-text("${method}")`);
-		await page.waitForResponse('/routing/endpoint-next-to-page');
-		expect(await page.textContent('pre')).toBe(method);
+		await page.click(`button:has-text("${method}")`);
+		await page.waitForFunction(
+			(method) => document.querySelector('pre').textContent === method,
+			method
+		);
 	}
 });
