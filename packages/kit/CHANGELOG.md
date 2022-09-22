@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.498
+
+### Patch Changes
+
+- chdir before attempting postinstall ([#6969](https://github.com/sveltejs/kit/pull/6969))
+
 ## 1.0.0-next.497
 
 ### Patch Changes
