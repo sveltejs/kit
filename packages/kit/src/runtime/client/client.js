@@ -891,8 +891,11 @@ export function create_client({ target, base, trailing_slash }) {
 
 				server_data_node = server_data.nodes[0] ?? null;
 			} catch {
-				// at this point we have no choice but to fall back to the server
-				await server_fallback(url, error, false);
+				// at this point we have no choice but to fall back to the server, if it wouldn't
+				// bring us right back here, turning this into an endless loop
+				if (url.origin !== location.origin || url.pathname !== location.pathname || hydrated) {
+					await native_navigation(url);
+				}
 			}
 		}
 
@@ -1051,26 +1054,18 @@ export function create_client({ target, base, trailing_slash }) {
 	 * Does a full page reload if it wouldn't result in an endless loop in the SPA case
 	 * @param {URL} url
 	 * @param {Error | HttpError} error
-	 * @param {boolean} [return_spa_fallback]
 	 * @returns {Promise<import('./types').NavigationFinished>}
 	 */
-	async function server_fallback(url, error, return_spa_fallback = true) {
-		console.trace(error);
+	async function server_fallback(url, error) {
 		if (url.origin === location.origin && url.pathname === location.pathname && !hydrated) {
-			if (return_spa_fallback) {
-				// We would reload the same page we're currently on, which isn't hydrated,
-				// which means no SSR, which means we would end up in an endless loop
-				return await load_root_error_page({
-					status: 404,
-					error,
-					url,
-					routeId: null
-				});
-			}
-			// @ts-expect-error limitation of JSDoc - would love to type this as a function overload,
-			// but that's not possible, so we just have to be careful to only call the function
-			// and using the return type when we know that `return_spa_fallback` is `true`
-			return;
+			// We would reload the same page we're currently on, which isn't hydrated,
+			// which means no SSR, which means we would end up in an endless loop
+			return await load_root_error_page({
+				status: 404,
+				error,
+				url,
+				routeId: null
+			});
 		}
 		return await native_navigation(url);
 	}
