@@ -6,10 +6,9 @@
 		"module": "esnext",
 		"moduleResolution": "node",
 		"paths": {
-			"@sveltejs/kit": ["../../../types"],
+			"@sveltejs/kit": ["../../../../types"],
 			"$lib": ["./src/lib"],
-			"$lib/*": ["./src/lib/*"],
-			"types": ["../../../types/internal"]
+			"$lib/*": ["./src/lib/*"]
 		}
 	},
 	"extends": "./.svelte-kit/tsconfig.json"
