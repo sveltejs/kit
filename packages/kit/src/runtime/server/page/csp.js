@@ -1,5 +1,5 @@
 import { escape_html_attr } from '../../../utils/escape.js';
-import { sha256, base64 } from './crypto.js';
+import { base64, sha256 } from './crypto.js';
 
 const array = new Uint8Array(16);
 
@@ -15,7 +15,8 @@ const quoted = new Set([
 	'unsafe-inline',
 	'none',
 	'strict-dynamic',
-	'report-sample'
+	'report-sample',
+	'wasm-unsafe-eval'
 ]);
 
 const crypto_pattern = /^(nonce|sha\d\d\d)-/;
