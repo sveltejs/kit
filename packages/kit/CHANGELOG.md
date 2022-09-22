@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.497
+
+### Patch Changes
+
+- Add origin header for non-GET and external requests made with server-side fetch ([#6901](https://github.com/sveltejs/kit/pull/6901))
+
 ## 1.0.0-next.496
 
 ### Patch Changes
