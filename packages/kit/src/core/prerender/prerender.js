@@ -85,6 +85,9 @@ export async function prerender() {
 	/** @type {import('types').PrerenderMap} */
 	const prerender_map = new Map();
 
+	/** @type {Set<string>} */
+	const prerendered_routes = new Set();
+
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config()).kit;
 
@@ -357,6 +360,9 @@ export async function prerender() {
 			}
 
 			prerendered.paths.push(decoded);
+
+			const route_id = response.headers.get('x-sveltekit-routeid');
+			if (route_id) prerendered_routes.add(route_id);
 		} else if (response_type !== OK) {
 			error({ status: response.status, path: decoded, referrer, referenceType });
 		}
@@ -409,6 +415,14 @@ export async function prerender() {
 	}
 
 	await q.done();
+
+	for (const [route_id, prerender] of prerender_map) {
+		if (prerender === true && !prerendered_routes.has(route_id)) {
+			throw new Error(
+				`Route ${route_id} is marked as prerenderable, but was not prerendered. See https://kit.svelte.dev/docs/page-options#prerender-troubleshooting for more info`
+			);
+		}
+	}
 
 	const rendered = await server.respond(new Request(config.prerender.origin + '/[fallback]'), {
 		getClientAddress,

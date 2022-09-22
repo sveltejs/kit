@@ -47,7 +47,6 @@ export async function render_endpoint(event, mod, state) {
 		}
 
 		if (state.prerendering) {
-			response.headers.set('x-sveltekit-routeid', /** @type {string} */ (event.routeId));
 			response.headers.set('x-sveltekit-prerender', String(prerender));
 		}
 
