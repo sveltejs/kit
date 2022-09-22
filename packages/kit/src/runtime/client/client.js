@@ -537,9 +537,7 @@ export function create_client({ target, base, trailing_slash }) {
 				async fetch(resource, init) {
 					let requested;
 
-					if (typeof resource === 'string') {
-						requested = resource;
-					} else {
+					if (resource instanceof Request) {
 						requested = resource.url;
 
 						// we're not allowed to modify the received `Request` object, so in order
@@ -564,6 +562,8 @@ export function create_client({ target, base, trailing_slash }) {
 							signal: resource.signal,
 							...init
 						};
+					} else {
+						requested = resource;
 					}
 
 					// we must fixup relative urls so they are resolved from the target page
