@@ -62,12 +62,12 @@ const cache = new Map();
 /**
  * Should be called on the initial run of load functions that hydrate the page.
  * Saves any requests with cache-control max-age to the cache.
- * @param {RequestInfo} resource
+ * @param {RequestInfo | URL} resource
  * @param {string} resolved
  * @param {RequestInit} [opts]
  */
 export function initial_fetch(resource, resolved, opts) {
-	const url = JSON.stringify(typeof resource === 'string' ? resource : resource.url);
+	const url = JSON.stringify(resource instanceof Request ? resource.url : resource);
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 

@@ -13,7 +13,8 @@ import {
 	PrerenderOnErrorValue,
 	RequestOptions,
 	RouteDefinition,
-	TrailingSlash
+	TrailingSlash,
+	UniqueInterface
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 import { HttpError, Redirect } from '../src/runtime/control.js';
@@ -52,7 +53,8 @@ type OptionalUnion<
 > = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 
 // Needs to be here, else ActionData will be resolved to unknown - probably because of "d.ts file imports .js file" in combination with allowJs
-interface ValidationError<T extends Record<string, unknown> | undefined = undefined> {
+export interface ValidationError<T extends Record<string, unknown> | undefined = undefined>
+	extends UniqueInterface {
 	status: number;
 	data: T;
 }
@@ -234,11 +236,11 @@ export interface Handle {
 }
 
 export interface HandleServerError {
-	(input: { error: unknown; event: RequestEvent }): void | App.PageError;
+	(input: { error: unknown; event: RequestEvent }): void | App.Error;
 }
 
 export interface HandleClientError {
-	(input: { error: unknown; event: NavigationEvent }): void | App.PageError;
+	(input: { error: unknown; event: NavigationEvent }): void | App.Error;
 }
 
 export interface HandleFetch {
@@ -263,7 +265,7 @@ export interface LoadEvent<
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>
 > extends NavigationEvent<Params> {
-	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
+	fetch: typeof fetch;
 	data: Data;
 	setHeaders: (headers: Record<string, string>) => void;
 	parent: () => Promise<ParentData>;
@@ -298,7 +300,7 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	params: Params;
 	routeId: string | null;
 	status: number;
-	error: App.PageError | null;
+	error: App.Error | null;
 	data: App.PageData & Record<string, any>;
 }
 
@@ -413,13 +415,13 @@ export type ActionResult<
  * This object, if thrown during request handling, will cause SvelteKit to
  * return an error response without invoking `handleError`
  * @param status The HTTP status code
- * @param body An object that conforms to the App.PageError type. If a string is passed, it will be used as the message property.
+ * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  */
-export function error(status: number, body: App.PageError): HttpError;
+export function error(status: number, body: App.Error): HttpError;
 export function error(
 	status: number,
-	// this overload ensures you can omit the argument or pass in a string if App.PageError is of type { message: string }
-	body?: { message: string } extends App.PageError ? App.PageError | string | undefined : never
+	// this overload ensures you can omit the argument or pass in a string if App.Error is of type { message: string }
+	body?: { message: string } extends App.Error ? App.Error | string | undefined : never
 ): HttpError;
 
 /**

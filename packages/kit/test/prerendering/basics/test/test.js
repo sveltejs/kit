@@ -225,4 +225,9 @@ test('prerenders a page in a (group)', () => {
 	assert.ok(content.includes('<h1>grouped</h1>'));
 });
 
+test('injects relative service worker', () => {
+	const content = read('index.html');
+	assert.ok(content.includes(`navigator.serviceWorker.register('./service-worker.js')`));
+});
+
 test.run();

@@ -1816,7 +1816,7 @@ test.describe('Actions', () => {
 		}
 	});
 
-	test('use:enhance', async ({ page, app }) => {
+	test('use:enhance', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
@@ -1859,6 +1859,17 @@ test.describe('Actions', () => {
 		]);
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'register: foo' }));
+	});
+
+	test('redirect', async ({ page }) => {
+		await page.goto('/actions/redirect');
+
+		page.click('button');
+
+		await page.waitForResponse('/actions/redirect');
+		await page.waitForTimeout(50);
+
+		expect(page.url()).toContain('/actions/enhance');
 	});
 });
 

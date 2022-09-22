@@ -154,7 +154,7 @@ export function handle_fatal_error(event, options, error) {
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {any} error
- * @returns {App.PageError}
+ * @returns {App.Error}
  */
 export function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {

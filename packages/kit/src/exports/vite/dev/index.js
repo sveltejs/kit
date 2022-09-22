@@ -460,6 +460,7 @@ export async function dev(vite, vite_config, svelte_config) {
 								.replace(/%sveltekit\.status%/g, String(status))
 								.replace(/%sveltekit\.error\.message%/g, message);
 						},
+						service_worker: false,
 						trailing_slash: svelte_config.kit.trailingSlash
 					},
 					{

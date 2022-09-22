@@ -53,7 +53,13 @@ export interface AdapterEntry {
 
 export namespace Csp {
 	type ActionSource = 'strict-dynamic' | 'report-sample';
-	type BaseSource = 'self' | 'unsafe-eval' | 'unsafe-hashes' | 'unsafe-inline' | 'none';
+	type BaseSource =
+		| 'self'
+		| 'unsafe-eval'
+		| 'unsafe-hashes'
+		| 'unsafe-inline'
+		| 'wasm-unsafe-eval'
+		| 'none';
 	type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 	type FrameSource = HostSource | SchemeSource | 'self' | 'none';
 	type HostNameScheme = `${string}.${string}` | 'localhost';
@@ -207,3 +213,12 @@ export interface RouteSegment {
 }
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+
+/**
+ * This doesn't actually exist, it's a way to better distinguish the type
+ */
+declare const uniqueSymbol: unique symbol;
+
+export interface UniqueInterface {
+	readonly [uniqueSymbol]: unknown;
+}

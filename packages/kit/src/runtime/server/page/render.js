@@ -23,7 +23,7 @@ const updated = {
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
- *   error: App.PageError | null;
+ *   error: App.Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('types').ActionResult;
@@ -187,37 +187,6 @@ export async function render_response({
 		serialized.form = devalue(form_value);
 	}
 
-	// prettier-ignore
-	const init_app = `
-		import { start } from ${s(prefixed(entry.file))};
-
-		start({
-			env: ${s(options.public_env)},
-			hydrate: ${page_config.ssr ? `{
-				status: ${status},
-				error: ${s(error)},
-				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
-				params: ${devalue(event.params)},
-				routeId: ${s(event.routeId)},
-				data: ${serialized.data},
-				form: ${serialized.form}
-			}` : 'null'},
-			paths: ${s(options.paths)},
-			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-			trailing_slash: ${s(options.trailing_slash)}
-		});
-	`;
-
-	// we use an anonymous function instead of an arrow function to support
-	// older browsers (https://github.com/sveltejs/kit/pull/5417)
-	const init_service_worker = `
-		if ('serviceWorker' in navigator) {
-			addEventListener('load', function () {
-				navigator.serviceWorker.register('${options.service_worker}');
-			});
-		}
-	`;
-
 	if (inline_styles.size > 0) {
 		const content = Array.from(inline_styles.values()).join('\n');
 
@@ -248,15 +217,36 @@ export async function render_response({
 		}
 
 		attributes.unshift('rel="stylesheet"');
-		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
+		head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
 	if (page_config.csr) {
+		// prettier-ignore
+		const init_app = `
+			import { start } from ${s(prefixed(entry.file))};
+
+			start({
+				env: ${s(options.public_env)},
+				hydrate: ${page_config.ssr ? `{
+					status: ${status},
+					error: ${s(error)},
+					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
+					params: ${devalue(event.params)},
+					routeId: ${s(event.routeId)},
+					data: ${serialized.data},
+					form: ${serialized.form}
+				}` : 'null'},
+				paths: ${s(options.paths)},
+				target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
+				trailing_slash: ${s(options.trailing_slash)}
+			});
+		`;
+
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
 			if (state.prerendering) {
-				head += `\n\t<link rel="modulepreload" href="${path}">`;
+				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
 			}
 		}
 
@@ -280,11 +270,21 @@ export async function render_response({
 	}
 
 	if (options.service_worker) {
+		// we use an anonymous function instead of an arrow function to support
+		// older browsers (https://github.com/sveltejs/kit/pull/5417)
+		const init_service_worker = `
+			if ('serviceWorker' in navigator) {
+				addEventListener('load', function () {
+					navigator.serviceWorker.register('${prefixed('service-worker.js')}');
+				});
+			}
+		`;
+
 		// always include service worker unless it's turned off explicitly
 		csp.add_script(init_service_worker);
 
 		head += `
-			<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
+		<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
 	}
 
 	if (state.prerendering) {

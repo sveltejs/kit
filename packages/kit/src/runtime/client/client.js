@@ -378,7 +378,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   params: Record<string, string>;
 	 *   branch: Array<import('./types').BranchNode | undefined>;
 	 *   status: number;
-	 *   error: App.PageError | null;
+	 *   error: App.Error | null;
 	 *   route: import('types').CSRRoute | null;
 	 *   form?: Record<string, any> | null;
 	 * }} opts
@@ -504,22 +504,15 @@ export function create_client({ target, base, trailing_slash }) {
 				}
 			}
 
-			/** @type {Record<string, string>} */
-			const uses_params = {};
-			for (const key in params) {
-				Object.defineProperty(uses_params, key, {
-					get() {
-						uses.params.add(key);
-						return params[key];
-					},
-					enumerable: true
-				});
-			}
-
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
-				params: uses_params,
+				params: new Proxy(params, {
+					get: (target, key) => {
+						uses.params.add(/** @type {string} */ (key));
+						return target[/** @type {string} */ (key)];
+					}
+				}),
 				data: server_data_node?.data ?? null,
 				url: make_trackable(url, () => {
 					uses.url = true;
@@ -527,9 +520,7 @@ export function create_client({ target, base, trailing_slash }) {
 				async fetch(resource, init) {
 					let requested;
 
-					if (typeof resource === 'string') {
-						requested = resource;
-					} else {
+					if (resource instanceof Request) {
 						requested = resource.url;
 
 						// we're not allowed to modify the received `Request` object, so in order
@@ -554,6 +545,8 @@ export function create_client({ target, base, trailing_slash }) {
 							signal: resource.signal,
 							...init
 						};
+					} else {
+						requested = resource;
 					}
 
 					// we must fixup relative urls so they are resolved from the target page
@@ -623,20 +616,21 @@ export function create_client({ target, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('types').Uses | undefined} uses
+	 * @param {boolean} url_changed
 	 * @param {boolean} parent_changed
-	 * @param {{ url: boolean, params: string[] }} changed
+	 * @param {import('types').Uses | undefined} uses
+	 * @param {Record<string, string>} params
 	 */
-	function has_changed(changed, parent_changed, uses) {
+	function has_changed(url_changed, parent_changed, uses, params) {
 		if (force_invalidation) return true;
 
 		if (!uses) return false;
 
 		if (uses.parent && parent_changed) return true;
-		if (changed.url && uses.url) return true;
+		if (uses.url && url_changed) return true;
 
-		for (const param of changed.params) {
-			if (uses.params.has(param)) return true;
+		for (const param of uses.params) {
+			if (params[param] !== current.params[param]) return true;
 		}
 
 		for (const href of uses.dependencies) {
@@ -680,11 +674,6 @@ export function create_client({ target, base, trailing_slash }) {
 
 		const { errors, layouts, leaf } = route;
 
-		const changed = current.url && {
-			url: id !== current.url.pathname + current.url.search,
-			params: Object.keys(params).filter((key) => current.params[key] !== params[key])
-		};
-
 		const loaders = [...layouts, leaf];
 
 		// preload modules to avoid waterfall, but handle rejections
@@ -696,12 +685,15 @@ export function create_client({ target, base, trailing_slash }) {
 		/** @type {import('types').ServerData | null} */
 		let server_data = null;
 
+		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
+
 		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];
+
 			const invalid =
 				!!loader?.[0] &&
 				(previous?.loader !== loader[1] ||
-					has_changed(changed, acc.some(Boolean), previous.server?.uses));
+					has_changed(url_changed, acc.some(Boolean), previous.server?.uses, params));
 
 			acc.push(invalid);
 			return acc;
@@ -740,7 +732,7 @@ export function create_client({ target, base, trailing_slash }) {
 			const valid =
 				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
-				!has_changed(changed, parent_changed, previous.shared?.uses);
+				!has_changed(url_changed, parent_changed, previous.shared?.uses, params);
 			if (valid) return previous;
 
 			parent_changed = true;
@@ -790,7 +782,7 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 
 					let status = 500;
-					/** @type {App.PageError} */
+					/** @type {App.Error} */
 					let error;
 
 					if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
@@ -805,39 +797,21 @@ export function create_client({ target, base, trailing_slash }) {
 						error = handle_error(err, { params, url, routeId: route.id });
 					}
 
-					while (i--) {
-						if (errors[i]) {
-							/** @type {import('./types').BranchNode | undefined} */
-							let error_loaded;
-
-							let j = i;
-							while (!branch[j]) j -= 1;
-							try {
-								error_loaded = {
-									node: await /** @type {import('types').CSRPageNodeLoader } */ (errors[i])(),
-									loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
-									data: {},
-									server: null,
-									shared: null
-								};
-
-								return await get_navigation_result_from_branch({
-									url,
-									params,
-									branch: branch.slice(0, j + 1).concat(error_loaded),
-									status,
-									error,
-									route
-								});
-							} catch (e) {
-								continue;
-							}
-						}
+					const error_load = await load_nearest_error_page(i, branch, errors);
+					if (error_load) {
+						return await get_navigation_result_from_branch({
+							url,
+							params,
+							branch: branch.slice(0, error_load.idx).concat(error_load.node),
+							status,
+							error,
+							route
+						});
+					} else {
+						// if we get here, it's because the root `load` function failed,
+						// and we need to fall back to the server
+						return await server_fallback(url, /** @type {Error} */ (err));
 					}
-
-					// if we get here, it's because the root `load` function failed,
-					// and we need to fall back to the server
-					return await server_fallback(url, /** @type {Error} */ (err));
 				}
 			} else {
 				// push an empty slot so we can rewind past gaps to the
@@ -856,6 +830,35 @@ export function create_client({ target, base, trailing_slash }) {
 			// Reset `form` on navigation, but not invalidation
 			form: invalidating ? undefined : null
 		});
+	}
+
+	/**
+	 * @param {number} i Start index to backtrack from
+	 * @param {Array<import('./types').BranchNode | undefined>} branch Branch to backtrack
+	 * @param {Array<import('types').CSRPageNodeLoader | undefined>} errors All error pages for this branch
+	 * @returns {Promise<{idx: number; node: import('./types').BranchNode} | undefined>}
+	 */
+	async function load_nearest_error_page(i, branch, errors) {
+		while (i--) {
+			if (errors[i]) {
+				let j = i;
+				while (!branch[j]) j -= 1;
+				try {
+					return {
+						idx: j + 1,
+						node: {
+							node: await /** @type {import('types').CSRPageNodeLoader } */ (errors[i])(),
+							loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
+							data: {},
+							server: null,
+							shared: null
+						}
+					};
+				} catch (e) {
+					continue;
+				}
+			}
+		}
 	}
 
 	/**
@@ -1170,44 +1173,26 @@ export function create_client({ target, base, trailing_slash }) {
 				const { branch, route } = current;
 				if (!route) return;
 
-				let i = current.branch.length;
+				const error_load = await load_nearest_error_page(
+					current.branch.length,
+					branch,
+					route.errors
+				);
+				if (error_load) {
+					const navigation_result = await get_navigation_result_from_branch({
+						url,
+						params: current.params,
+						branch: branch.slice(0, error_load.idx).concat(error_load.node),
+						status: 500, // TODO might not be 500?
+						error: result.error,
+						route
+					});
 
-				while (i--) {
-					if (route.errors[i]) {
-						/** @type {import('./types').BranchNode | undefined} */
-						let error_loaded;
+					current = navigation_result.state;
 
-						let j = i;
-						while (!branch[j]) j -= 1;
-						try {
-							error_loaded = {
-								node: await /** @type {import('types').CSRPageNodeLoader } */ (route.errors[i])(),
-								loader: /** @type {import('types').CSRPageNodeLoader } */ (route.errors[i]),
-								data: {},
-								server: null,
-								shared: null
-							};
-
-							const navigation_result = await get_navigation_result_from_branch({
-								url,
-								params: current.params,
-								branch: branch.slice(0, j + 1).concat(error_loaded),
-								status: 500, // TODO might not be 500?
-								error: result.error,
-								route
-							});
-
-							current = navigation_result.state;
-
-							const post_update = pre_update();
-							root.$set(navigation_result.props);
-							post_update();
-
-							return;
-						} catch (e) {
-							continue;
-						}
-					}
+					const post_update = pre_update();
+					root.$set(navigation_result.props);
+					post_update();
 				}
 			} else if (result.type === 'redirect') {
 				goto(result.location, {}, []);
@@ -1216,10 +1201,8 @@ export function create_client({ target, base, trailing_slash }) {
 				const props = { form: result.data };
 
 				if (result.status !== page.status) {
-					props.page = {
-						...page,
-						status: result.status
-					};
+					page = { ...page, status: result.status };
+					props.page = page;
 				}
 
 				const post_update = pre_update();
@@ -1525,7 +1508,7 @@ async function load_data(url, invalid) {
 /**
  * @param {unknown} error
  * @param {import('types').NavigationEvent} event
- * @returns {App.PageError}
+ * @returns {App.Error}
  */
 function handle_error(error, event) {
 	return (

@@ -28,7 +28,13 @@ export function enhance(form, submit = () => {}) {
 			await invalidateAll();
 		}
 
-		if (location.origin + location.pathname === action.origin + action.pathname) {
+		// For success/invalid results, only apply action if it belongs to the
+		// current page, otherwise `form` will be updated erroneously
+		if (
+			location.origin + location.pathname === action.origin + action.pathname ||
+			result.type === 'redirect' ||
+			result.type === 'error'
+		) {
 			applyAction(result);
 		}
 	};

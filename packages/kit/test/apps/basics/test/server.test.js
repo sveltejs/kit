@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { start_server, test } from '../../../utils.js';
 import { fetch } from 'undici';
 import { createHash, randomBytes } from 'node:crypto';
 
@@ -20,6 +20,29 @@ test.describe('Content-Type', () => {
 	test('sets Content-Type on page', async ({ request }) => {
 		const response = await request.get('/content-type-header');
 		expect(response.headers()['content-type']).toBe('text/html');
+	});
+});
+
+test.describe('Cookies', () => {
+	test('does not forward cookies from external domains', async ({ request }) => {
+		const { close, port } = await start_server(async (req, res) => {
+			if (req.url === '/') {
+				res.writeHead(200, {
+					'set-cookie': 'external=true',
+					'access-control-allow-origin': '*'
+				});
+
+				res.end('ok');
+			} else {
+				res.writeHead(404);
+				res.end('not found');
+			}
+		});
+
+		const response = await request.get(`/load/fetch-external-no-cookies?port=${port}`);
+		expect(response.headers()['set-cookie']).not.toContain('external=true');
+
+		close();
 	});
 });
 
@@ -248,6 +271,32 @@ test.describe('Load', () => {
 	test('fetch does not load a file with a # character', async ({ request }) => {
 		const response = await request.get('/load/static-file-with-hash');
 		expect(await response.text()).toContain('status: 404');
+	});
+
+	test('includes origin header on non-GET internal request', async ({ page, baseURL }) => {
+		await page.goto('/load/fetch-origin-internal');
+		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
+	});
+
+	test('includes origin header on external request', async ({ page, baseURL }) => {
+		const { port, close } = await start_server((req, res) => {
+			if (req.url === '/') {
+				res.writeHead(200, {
+					'content-type': 'application/json',
+					'access-control-allow-origin': '*'
+				});
+
+				res.end(JSON.stringify({ origin: req.headers.origin }));
+			} else {
+				res.writeHead(404);
+				res.end('not found');
+			}
+		});
+
+		await page.goto(`/load/fetch-origin-external?port=${port}`);
+		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
+
+		close();
 	});
 });
 

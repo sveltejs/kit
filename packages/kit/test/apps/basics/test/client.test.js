@@ -810,6 +810,22 @@ test.describe.serial('Invalidation', () => {
 		expect(server).toBe(next_server);
 		expect(shared).not.toBe(next_shared);
 	});
+
+	test('Parameter use is tracked even for routes that do not use the parameters', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/params');
+
+		await clicknav('[href="/load/invalidation/params/1"]');
+		expect(await page.textContent('pre')).toBe('{"a":"1"}');
+
+		await clicknav('[href="/load/invalidation/params/1/x"]');
+		expect(await page.textContent('pre')).toBe('{"a":"1","b":"x"}');
+
+		await page.goBack();
+		expect(await page.textContent('pre')).toBe('{"a":"1"}');
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {
@@ -888,18 +904,9 @@ test('+server.js next to +page.svelte works', async ({ page }) => {
 	await page.goto('/routing/endpoint-next-to-page');
 	expect(await page.textContent('p')).toBe('Hi');
 
-	await page.click('button:has-text("GET")');
-	await expect(page.locator('pre')).toHaveText('GET');
-
-	await page.click('button:has-text("PUT")');
-	await expect(page.locator('pre')).toHaveText('PUT');
-
-	await page.click('button:has-text("PATCH")');
-	await expect(page.locator('pre')).toHaveText('PATCH');
-
-	await page.click('button:has-text("POST")');
-	await expect(page.locator('pre')).toHaveText('POST');
-
-	await page.click('button:has-text("DELETE")');
-	await expect(page.locator('pre')).toHaveText('DELETE');
+	for (const method of ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']) {
+		page.click(`button:has-text("${method}")`);
+		await page.waitForResponse('/routing/endpoint-next-to-page');
+		expect(await page.textContent('pre')).toBe(method);
+	}
 });
