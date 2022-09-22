@@ -132,7 +132,8 @@ const get_defaults = (prefix = '') => ({
 		},
 		// TODO cleanup for 1.0
 		vite: undefined,
-		package: undefined
+		package: undefined,
+		rootRelativeAssets: true
 	}
 });
 
