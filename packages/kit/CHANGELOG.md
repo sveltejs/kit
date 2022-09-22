@@ -1,12 +1,22 @@
 # @sveltejs/kit
 
+## 1.0.0-next.494
+
+### Patch Changes
+
+- Fix fetch type ([#6955](https://github.com/sveltejs/kit/pull/6955))
+
+* Add csp wasm-unsafe-eval keyword ([#6958](https://github.com/sveltejs/kit/pull/6958))
+
+- Register service worker with relative URL ([#6954](https://github.com/sveltejs/kit/pull/6954))
+
 ## 1.0.0-next.493
 
 ### Patch Changes
 
-* [fix] allow missing routes folder ([#6944](https://github.com/sveltejs/kit/pull/6944))
+- [fix] allow missing routes folder ([#6944](https://github.com/sveltejs/kit/pull/6944))
 
-- Only forward set-cookie headers for internal fetches ([#6923](https://github.com/sveltejs/kit/pull/6923))
+* Only forward set-cookie headers for internal fetches ([#6923](https://github.com/sveltejs/kit/pull/6923))
 
 ## 1.0.0-next.492
 
