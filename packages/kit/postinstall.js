@@ -19,9 +19,14 @@ if (pkg.workspaces) {
 }
 
 for (const cwd of directories) {
-	if (fs.existsSync(path.join(cwd, 'svelte.config.js'))) {
-		process.chdir(cwd);
-		const config = await load_config();
-		await sync.all(config, 'development');
-	}
+	process.chdir(cwd);
+
+	if (!fs.existsSync('package.json')) continue;
+	if (!fs.existsSync('svelte.config.js')) continue;
+
+	const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+	if (!pkg.dependencies?.['@sveltejs/kit'] && !pkg.devDependencies?.['@sveltejs/kit']) continue;
+
+	const config = await load_config();
+	await sync.all(config, 'development');
 }
