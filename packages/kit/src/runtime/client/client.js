@@ -395,7 +395,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   params: Record<string, string>;
 	 *   branch: Array<import('./types').BranchNode | undefined>;
 	 *   status: number;
-	 *   error: App.PageError | null;
+	 *   error: App.Error | null;
 	 *   route: import('types').CSRRoute | null;
 	 *   form?: Record<string, any> | null;
 	 * }} opts
@@ -799,7 +799,7 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 
 					let status = 500;
-					/** @type {App.PageError} */
+					/** @type {App.Error} */
 					let error;
 
 					if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
@@ -1504,7 +1504,7 @@ async function load_data(url, invalid) {
 /**
  * @param {unknown} error
  * @param {import('types').NavigationEvent} event
- * @returns {App.PageError}
+ * @returns {App.Error}
  */
 function handle_error(error, event) {
 	return (

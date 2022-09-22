@@ -226,7 +226,7 @@ export interface ServerDataSkippedNode {
  */
 export interface ServerErrorNode {
 	type: 'error';
-	error: App.PageError;
+	error: App.Error;
 	/**
 	 * Only set for HttpErrors
 	 */
@@ -288,7 +288,7 @@ export interface SSROptions {
 		check_origin: boolean;
 	};
 	dev: boolean;
-	handle_error(error: Error & { frame?: string }, event: RequestEvent): App.PageError;
+	handle_error(error: Error & { frame?: string }, event: RequestEvent): App.Error;
 	hooks: ServerHooks;
 	manifest: SSRManifest;
 	paths: {
