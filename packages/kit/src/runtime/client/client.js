@@ -214,7 +214,7 @@ export function create_client({ target, base, trailing_slash }) {
 		let navigation_result = intent && (await load_route(intent));
 
 		if (!navigation_result) {
-			navigation_result = await server_fallback(url, new Error(`Not found: ${url.pathname}`));
+			navigation_result = await server_fallback(url, new Error(`Not found: ${url.pathname}`), 404);
 		}
 
 		// if this is an internal navigation intent, use the normalized
@@ -810,7 +810,7 @@ export function create_client({ target, base, trailing_slash }) {
 					} else {
 						// if we get here, it's because the root `load` function failed,
 						// and we need to fall back to the server
-						return await server_fallback(url, /** @type {Error} */ (err));
+						return await server_fallback(url, /** @type {Error} */ (err), status);
 					}
 				}
 			} else {
@@ -1057,14 +1057,15 @@ export function create_client({ target, base, trailing_slash }) {
 	 * Does a full page reload if it wouldn't result in an endless loop in the SPA case
 	 * @param {URL} url
 	 * @param {Error | HttpError} error
+	 * @param {number} status
 	 * @returns {Promise<import('./types').NavigationFinished>}
 	 */
-	async function server_fallback(url, error) {
+	async function server_fallback(url, error, status) {
 		if (url.origin === location.origin && url.pathname === location.pathname && !hydrated) {
 			// We would reload the same page we're currently on, which isn't hydrated,
 			// which means no SSR, which means we would end up in an endless loop
 			return await load_root_error_page({
-				status: 404,
+				status,
 				error,
 				url,
 				routeId: null
