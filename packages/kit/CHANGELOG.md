@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.495
+
+### Patch Changes
+
+- Run `svelte-kit sync` in all workspace directories during postinstall ([#6949](https://github.com/sveltejs/kit/pull/6949))
+
 ## 1.0.0-next.494
 
 ### Patch Changes
