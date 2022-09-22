@@ -362,7 +362,7 @@ export async function prerender() {
 			prerendered.paths.push(decoded);
 
 			const route_id = response.headers.get('x-sveltekit-routeid');
-			if (route_id) prerendered_routes.add(route_id);
+			if (route_id !== null) prerendered_routes.add(route_id);
 		} else if (response_type !== OK) {
 			error({ status: response.status, path: decoded, referrer, referenceType });
 		}
