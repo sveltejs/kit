@@ -21,7 +21,12 @@ if (pkg.workspaces) {
 for (const cwd of directories) {
 	if (fs.existsSync(path.join(cwd, 'svelte.config.js'))) {
 		process.chdir(cwd);
-		const config = await load_config();
-		await sync.all(config, 'development');
+		try {
+			const config = await load_config();
+			await sync.all(config, 'development');
+		} catch (e) {
+			console.log('Error while trying to sync SvelteKit config');
+			console.log(e);
+		}
 	}
 }
