@@ -127,10 +127,10 @@ To run an SPA on [Apache](https://httpd.apache.org/), you need a `static/.htacce
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-  RewriteRule ^app\.html$ - [L]
+  RewriteRule ^200\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /app.html [L]
+  RewriteRule . /200.html [L]
 </IfModule>
 ```
 
