@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.179
+
+### Patch Changes
+
+- [breaking] rename App.PageError to App.Error ([#6963](https://github.com/sveltejs/kit/pull/6963))
+
 ## 2.0.0-next.178
 
 ### Patch Changes
