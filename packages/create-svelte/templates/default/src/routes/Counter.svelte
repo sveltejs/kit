@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
 	import { spring } from 'svelte/motion';
 
 	let count = 0;
@@ -11,7 +11,7 @@
 	 * @param {number} n
 	 * @param {number} m
 	 */
-	function modulo(n: number, m: number) {
+	function modulo(n, m) {
 		// handle negative numbers
 		return ((n % m) + m) % m;
 	}

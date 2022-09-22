@@ -242,6 +242,7 @@ importers:
     specifiers:
       '@fontsource/fira-mono': ^4.5.8
       '@lukeed/uuid': ^2.0.0
+      '@neoconfetti/svelte': ^1.0.0
       '@sveltejs/adapter-auto': workspace:*
       '@sveltejs/kit': workspace:*
       cookie: ^0.5.0
@@ -254,6 +255,7 @@ importers:
       '@lukeed/uuid': 2.0.0
       cookie: 0.5.0
     devDependencies:
+      '@neoconfetti/svelte': 1.0.0
       '@sveltejs/adapter-auto': link:../../../adapter-auto
       '@sveltejs/kit': link:../../../kit
       svelte: 3.48.0
@@ -1034,6 +1036,10 @@ packages:
       - encoding
       - supports-color
     dev: false
+
+  /@neoconfetti/svelte/1.0.0:
+    resolution: {integrity: sha512-SmksyaJAdSlMa9cTidVSIqYo1qti+WTsviNDwgjNVm+KQ3DRP2Df9umDIzC4vCcpEYY+chQe0i2IKnLw03AT8Q==}
+    dev: true
 
   /@netlify/functions/1.0.0:
     resolution: {integrity: sha512-7fnJv3vr8uyyyOYPChwoec6MjzsCw1CoRUO2DhQ1BD6bOyJRlD4DUaOOGlMILB2LCT8P24p5LexEGx8AJb7xdA==}

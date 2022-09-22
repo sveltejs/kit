@@ -1,5 +1,7 @@
-<script lang="ts">
-	import Counter from '$lib/Counter.svelte';
+<script>
+	import Counter from './Counter.svelte';
+	import welcome from './svelte-welcome.webp';
+	import welcome_fallback from './svelte-welcome.png';
 </script>
 
 <svelte:head>
@@ -11,8 +13,8 @@
 	<h1>
 		<span class="welcome">
 			<picture>
-				<source srcset="svelte-welcome.webp" type="image/webp" />
-				<img src="svelte-welcome.png" alt="Welcome" />
+				<source srcset={welcome} type="image/webp" />
+				<img src={welcome_fallback} alt="Welcome" />
 			</picture>
 		</span>
 
