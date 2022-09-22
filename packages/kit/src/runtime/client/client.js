@@ -814,40 +814,22 @@ export function create_client({ target, base, trailing_slash }) {
 						error = handle_error(err, { params, url, routeId: route.id });
 					}
 
-					while (i--) {
-						if (errors[i]) {
-							/** @type {import('./types').BranchNode | undefined} */
-							let error_loaded;
-
-							let j = i;
-							while (!branch[j]) j -= 1;
-							try {
-								error_loaded = {
-									node: await /** @type {import('types').CSRPageNodeLoader } */ (errors[i])(),
-									loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
-									data: {},
-									server: null,
-									shared: null
-								};
-
-								return await get_navigation_result_from_branch({
-									url,
-									params,
-									branch: branch.slice(0, j + 1).concat(error_loaded),
-									status,
-									error,
-									route
-								});
-							} catch (e) {
-								continue;
-							}
-						}
+					const error_load = await load_nearest_error_page(i, branch, errors);
+					if (error_load) {
+						return await get_navigation_result_from_branch({
+							url,
+							params,
+							branch: branch.slice(0, error_load.idx).concat(error_load.node),
+							status,
+							error,
+							route
+						});
+					} else {
+						// if we get here, it's because the root `load` function failed,
+						// and we need to fall back to the server
+						await native_navigation(url);
+						return;
 					}
-
-					// if we get here, it's because the root `load` function failed,
-					// and we need to fall back to the server
-					await native_navigation(url);
-					return;
 				}
 			} else {
 				// push an empty slot so we can rewind past gaps to the
@@ -866,6 +848,35 @@ export function create_client({ target, base, trailing_slash }) {
 			// Reset `form` on navigation, but not invalidation
 			form: invalidating ? undefined : null
 		});
+	}
+
+	/**
+	 * @param {number} i Start index to backtrack from
+	 * @param {Array<import('./types').BranchNode | undefined>} branch Branch to backtrack
+	 * @param {Array<import('types').CSRPageNodeLoader | undefined>} errors All error pages for this branch
+	 * @returns {Promise<{idx: number; node: import('./types').BranchNode} | undefined>}
+	 */
+	async function load_nearest_error_page(i, branch, errors) {
+		while (i--) {
+			if (errors[i]) {
+				let j = i;
+				while (!branch[j]) j -= 1;
+				try {
+					return {
+						idx: j + 1,
+						node: {
+							node: await /** @type {import('types').CSRPageNodeLoader } */ (errors[i])(),
+							loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
+							data: {},
+							server: null,
+							shared: null
+						}
+					};
+				} catch (e) {
+					continue;
+				}
+			}
+		}
 	}
 
 	/**
@@ -1160,44 +1171,26 @@ export function create_client({ target, base, trailing_slash }) {
 				const { branch, route } = current;
 				if (!route) return;
 
-				let i = current.branch.length;
+				const error_load = await load_nearest_error_page(
+					current.branch.length,
+					branch,
+					route.errors
+				);
+				if (error_load) {
+					const navigation_result = await get_navigation_result_from_branch({
+						url,
+						params: current.params,
+						branch: branch.slice(0, error_load.idx).concat(error_load.node),
+						status: 500, // TODO might not be 500?
+						error: result.error,
+						route
+					});
 
-				while (i--) {
-					if (route.errors[i]) {
-						/** @type {import('./types').BranchNode | undefined} */
-						let error_loaded;
+					current = navigation_result.state;
 
-						let j = i;
-						while (!branch[j]) j -= 1;
-						try {
-							error_loaded = {
-								node: await /** @type {import('types').CSRPageNodeLoader } */ (route.errors[i])(),
-								loader: /** @type {import('types').CSRPageNodeLoader } */ (route.errors[i]),
-								data: {},
-								server: null,
-								shared: null
-							};
-
-							const navigation_result = await get_navigation_result_from_branch({
-								url,
-								params: current.params,
-								branch: branch.slice(0, j + 1).concat(error_loaded),
-								status: 500, // TODO might not be 500?
-								error: result.error,
-								route
-							});
-
-							current = navigation_result.state;
-
-							const post_update = pre_update();
-							root.$set(navigation_result.props);
-							post_update();
-
-							return;
-						} catch (e) {
-							continue;
-						}
-					}
+					const post_update = pre_update();
+					root.$set(navigation_result.props);
+					post_update();
 				}
 			} else if (result.type === 'redirect') {
 				goto(result.location, {}, []);
@@ -1206,10 +1199,8 @@ export function create_client({ target, base, trailing_slash }) {
 				const props = { form: result.data };
 
 				if (result.status !== page.status) {
-					props.page = {
-						...page,
-						status: result.status
-					};
+					page = { ...page, status: result.status };
+					props.page = page;
 				}
 
 				const post_update = pre_update();
