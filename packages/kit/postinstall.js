@@ -27,6 +27,11 @@ for (const cwd of directories) {
 	const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 	if (!pkg.dependencies?.['@sveltejs/kit'] && !pkg.devDependencies?.['@sveltejs/kit']) continue;
 
-	const config = await load_config();
-	await sync.all(config, 'development');
+	try {
+		const config = await load_config();
+		await sync.all(config, 'development');
+	} catch (e) {
+		console.log('Error while trying to sync SvelteKit config');
+		console.log(e);
+	}
 }
