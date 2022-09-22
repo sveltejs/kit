@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.499
+
+### Patch Changes
+
+- [breaking] rename App.PageError to App.Error ([#6963](https://github.com/sveltejs/kit/pull/6963))
+
 ## 1.0.0-next.498
 
 ### Patch Changes
