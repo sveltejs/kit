@@ -1794,7 +1794,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 	});
 
-	test.only('form page prop and store prop have the same value', async ({ page }) => {
+	test('form page prop and store prop have the same value', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
 		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
