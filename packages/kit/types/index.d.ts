@@ -217,7 +217,7 @@ export interface KitConfig {
 		onError?: PrerenderOnErrorValue;
 		origin?: string;
 	};
-	rootRelativeAssets?: boolean;
+	relativeAssets?: boolean;
 	serviceWorker?: {
 		register?: boolean;
 		files?: (filepath: string) => boolean;

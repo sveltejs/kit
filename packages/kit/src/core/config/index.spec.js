@@ -121,6 +121,7 @@ const get_defaults = (prefix = '') => ({
 			pages: undefined
 		},
 		protocol: undefined,
+		relativeAssets: false,
 		router: undefined,
 		routes: undefined,
 		ssr: undefined,
@@ -132,8 +133,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		// TODO cleanup for 1.0
 		vite: undefined,
-		package: undefined,
-		rootRelativeAssets: true
+		package: undefined
 	}
 });
 
