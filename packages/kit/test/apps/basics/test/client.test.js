@@ -900,7 +900,7 @@ test.describe('data-sveltekit attributes', () => {
 	});
 });
 
-test.describe.only('Content negotiation', () => {
+test.describe('Content negotiation', () => {
 	test('+server.js next to +page.svelte works', async ({ page }) => {
 		await page.goto('/routing/content-negotiation');
 		expect(await page.textContent('p')).toBe('Hi');
@@ -908,7 +908,7 @@ test.describe.only('Content negotiation', () => {
 		for (const method of ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']) {
 			await page.click(`button:has-text("${method}")`);
 			await page.waitForFunction(
-				(method) => document.querySelector('pre').textContent === method,
+				(method) => document.querySelector('pre')?.textContent === method,
 				method
 			);
 		}
@@ -919,6 +919,6 @@ test.describe.only('Content negotiation', () => {
 
 		page.click('button:has-text("Submit")');
 		await page.waitForResponse('/routing/content-negotiation');
-		expect(await page.textContent('[data-testid="form-result"]')).toBe('true');
+		await expect(page.locator('[data-testid="form-result"]')).toHaveText('form.submitted: true');
 	});
 });

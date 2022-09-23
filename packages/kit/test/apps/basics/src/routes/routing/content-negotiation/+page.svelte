@@ -9,7 +9,7 @@
 	/** @param {string} method */
 	async function request(method) {
 		result = 'loading';
-		const response = await fetch('/routing/endpoint-next-to-page', { method });
+		const response = await fetch('/routing/content-negotiation', { method });
 		result = await response.text();
 	}
 </script>
