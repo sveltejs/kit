@@ -7,7 +7,7 @@ import * as sync from './src/core/sync/sync.js';
 const cwd = process.env.INIT_CWD ?? process.cwd();
 process.chdir(cwd);
 
-if (fs.readFileSync('package.json')) {
+if (fs.existsSync('package.json')) {
 	const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
 	const directories = [];
