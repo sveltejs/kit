@@ -14,7 +14,10 @@ try {
 		const directories = [];
 
 		if (pkg.workspaces) {
-			for (const directory of pkg.workspaces) {
+			// we have to do this because of https://classic.yarnpkg.com/blog/2018/02/15/nohoist/
+			const packages = Array.isArray(pkg.workspaces) ? pkg.workspaces : pkg.workspaces.packages;
+
+			for (const directory of packages) {
 				directories.push(...glob(directory, { cwd }).map((dir) => path.resolve(cwd, dir)));
 			}
 		} else {
