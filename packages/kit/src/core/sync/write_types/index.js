@@ -308,7 +308,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 						? `./proxy${replace_ext_with_js(basename)}`
 						: path_to_original(outdir, node.server);
 
-					type = `Expand<Kit.AwaitedActions<typeof import('${from}').actions>>`;
+					type = `Expand<Kit.AwaitedActions<typeof import('${from}').actions>> | undefined`;
 				}
 			}
 			exports.push(`export type ActionData = ${type};`);
