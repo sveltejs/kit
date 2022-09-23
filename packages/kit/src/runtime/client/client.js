@@ -1,5 +1,4 @@
 import { onMount, tick } from 'svelte';
-import { normalize_error } from '../../utils/error.js';
 import { make_trackable, decode_params, normalize_path } from '../../utils/url.js';
 import { find_anchor, get_base_uri, scroll_state } from './utils.js';
 import { lock_fetch, unlock_fetch, initial_fetch, subsequent_fetch } from './fetcher.js';
@@ -92,6 +91,8 @@ export function create_client({ target, base, trailing_slash }) {
 		url: null
 	};
 
+	/** this being true means we SSR'd */
+	let hydrated = false;
 	let started = false;
 	let autoscroll = true;
 	let updating = false;
@@ -211,27 +212,13 @@ export function create_client({ target, base, trailing_slash }) {
 		token = nav_token;
 		let navigation_result = intent && (await load_route(intent));
 
-		if (
-			!navigation_result &&
-			url.origin === location.origin &&
-			url.pathname === location.pathname
-		) {
-			// this could happen in SPA fallback mode if the user navigated to
-			// `/non-existent-page`. if we fall back to reloading the page, it
-			// will create an infinite loop. so whereas we normally handle
-			// unknown routes by going to the server, in this special case
-			// we render a client-side error page instead
-			navigation_result = await load_root_error_page({
-				status: 404,
-				error: new Error(`Not found: ${url.pathname}`),
-				url,
-				routeId: null
-			});
-		}
-
 		if (!navigation_result) {
-			await native_navigation(url);
-			return false; // unnecessary, but TypeScript prefers it this way
+			navigation_result = await server_fallback(
+				url,
+				null,
+				handle_error(new Error(`Not found: ${url.pathname}`), { url, params: {}, routeId: null }),
+				404
+			);
 		}
 
 		// if this is an internal navigation intent, use the normalized
@@ -245,7 +232,7 @@ export function create_client({ target, base, trailing_slash }) {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
 				navigation_result = await load_root_error_page({
 					status: 500,
-					error: new Error('Redirect loop'),
+					error: handle_error(new Error('Redirect loop'), { url, params: {}, routeId: null }),
 					url,
 					routeId: null
 				});
@@ -722,7 +709,7 @@ export function create_client({ target, base, trailing_slash }) {
 			} catch (error) {
 				return load_root_error_page({
 					status: 500,
-					error: /** @type {Error} */ (error),
+					error: handle_error(error, { url, params, routeId: route.id }),
 					url,
 					routeId: route.id
 				});
@@ -827,8 +814,7 @@ export function create_client({ target, base, trailing_slash }) {
 					} else {
 						// if we get here, it's because the root `load` function failed,
 						// and we need to fall back to the server
-						await native_navigation(url);
-						return;
+						return await server_fallback(url, route.id, error, status);
 					}
 				}
 			} else {
@@ -882,7 +868,7 @@ export function create_client({ target, base, trailing_slash }) {
 	/**
 	 * @param {{
 	 *   status: number;
-	 *   error: HttpError | Error;
+	 *   error: App.Error;
 	 *   url: URL;
 	 *   routeId: string | null
 	 * }} opts
@@ -912,11 +898,11 @@ export function create_client({ target, base, trailing_slash }) {
 
 				server_data_node = server_data.nodes[0] ?? null;
 			} catch {
-				// at this point we have no choice but to fall back to the server
-				await native_navigation(url);
-
-				// @ts-expect-error
-				return;
+				// at this point we have no choice but to fall back to the server, if it wouldn't
+				// bring us right back here, turning this into an endless loop
+				if (url.origin !== location.origin || url.pathname !== location.pathname || hydrated) {
+					await native_navigation(url);
+				}
 			}
 		}
 
@@ -943,10 +929,7 @@ export function create_client({ target, base, trailing_slash }) {
 			params,
 			branch: [root_layout, root_error],
 			status,
-			error:
-				error instanceof HttpError
-					? error.body
-					: handle_error(error, { url, params, routeId: null }),
+			error,
 			route: null
 		});
 	}
@@ -1069,6 +1052,28 @@ export function create_client({ target, base, trailing_slash }) {
 				stores.navigating.set(null);
 			}
 		);
+	}
+
+	/**
+	 * Does a full page reload if it wouldn't result in an endless loop in the SPA case
+	 * @param {URL} url
+	 * @param {string | null} routeId
+	 * @param {App.Error} error
+	 * @param {number} status
+	 * @returns {Promise<import('./types').NavigationFinished>}
+	 */
+	async function server_fallback(url, routeId, error, status) {
+		if (url.origin === location.origin && url.pathname === location.pathname && !hydrated) {
+			// We would reload the same page we're currently on, which isn't hydrated,
+			// which means no SSR, which means we would end up in an endless loop
+			return await load_root_error_page({
+				status,
+				error,
+				url,
+				routeId
+			});
+		}
+		return await native_navigation(url);
 	}
 
 	/**
@@ -1413,6 +1418,8 @@ export function create_client({ target, base, trailing_slash }) {
 			data: server_data_nodes,
 			form
 		}) => {
+			hydrated = true;
+
 			const url = new URL(location.href);
 
 			/** @type {import('./types').NavigationFinished | undefined} */
@@ -1447,19 +1454,17 @@ export function create_client({ target, base, trailing_slash }) {
 					form,
 					route: routes.find((route) => route.id === routeId) ?? null
 				});
-			} catch (e) {
-				const error = normalize_error(e);
-
+			} catch (error) {
 				if (error instanceof Redirect) {
 					// this is a real edge case — `load` would need to return
 					// a redirect but only in the browser
-					await native_navigation(new URL(/** @type {Redirect} */ (e).location, location.href));
+					await native_navigation(new URL(error.location, location.href));
 					return;
 				}
 
 				result = await load_root_error_page({
 					status: error instanceof HttpError ? error.status : 500,
-					error,
+					error: handle_error(error, { url, params, routeId }),
 					url,
 					routeId
 				});
@@ -1507,9 +1512,12 @@ async function load_data(url, invalid) {
  * @returns {App.Error}
  */
 function handle_error(error, event) {
+	if (error instanceof HttpError) {
+		return error.body;
+	}
 	return (
 		hooks.handleError({ error, event }) ??
-		/** @type {any} */ ({ message: event.routeId ? 'Internal Error' : 'Not Found' })
+		/** @type {any} */ ({ message: event.routeId != null ? 'Internal Error' : 'Not Found' })
 	);
 }
 
