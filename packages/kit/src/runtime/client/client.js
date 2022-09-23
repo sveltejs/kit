@@ -459,6 +459,7 @@ export function create_client({ target, base, trailing_slash }) {
 				routeId: route && route.id,
 				status,
 				url,
+				form,
 				// The whole page store is updated, but this way the object reference stays the same
 				data: data_changed ? data : page.data
 			};
