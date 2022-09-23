@@ -22,12 +22,14 @@ const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.me
 async function main() {
 	console.log(gray(`\ncreate-svelte version ${version}`));
 	console.log(disclaimer);
-	const args = await yargs(hideBin(process.argv)).argv;
+
+	const args = await yargs(hideBin(process.argv)).coerce('types', (arg) =>
+		arg === 'none' ? null : arg
+	).argv;
 	prompts.override({
 		...args,
 		dir: args._[0]?.toString()
 	});
-	console.log(args);
 
 	const { dir } = await prompts([
 		{
