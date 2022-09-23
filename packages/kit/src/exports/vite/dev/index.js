@@ -432,7 +432,7 @@ export async function dev(vite, vite_config, svelte_config) {
 											'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
 										);
 									}
-								}) ?? { message: event.routeId ? 'Internal Error' : 'Not Found' }
+								}) ?? { message: event.routeId != null ? 'Internal Error' : 'Not Found' }
 							);
 						},
 						hooks,

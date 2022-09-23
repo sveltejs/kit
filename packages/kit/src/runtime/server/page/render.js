@@ -23,7 +23,7 @@ const updated = {
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
- *   error: App.PageError | null;
+ *   error: App.Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('types').ActionResult;

@@ -1873,8 +1873,7 @@ test.describe('Actions', () => {
 
 		page.click('button');
 
-		await page.waitForResponse('/actions/redirect');
-		await page.waitForTimeout(50);
+		await Promise.all([page.waitForResponse('/actions/redirect'), page.waitForNavigation()]);
 
 		expect(page.url()).toContain('/actions/enhance');
 	});

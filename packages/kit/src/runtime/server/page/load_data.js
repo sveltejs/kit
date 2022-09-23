@@ -1,5 +1,5 @@
 import { disable_search, make_trackable } from '../../../utils/url.js';
-
+import { unwrap_promises } from '../../../utils/promises.js';
 /**
  * Calls the user's `load` function.
  * @param {{
@@ -109,16 +109,4 @@ export async function load_data({ event, fetcher, node, parent, server_data_prom
 	const data = await node.shared.load.call(null, load_event);
 
 	return data ? unwrap_promises(data) : null;
-}
-
-/** @param {Record<string, any>} object */
-async function unwrap_promises(object) {
-	/** @type {Record<string, any>} */
-	const unwrapped = {};
-
-	for (const key in object) {
-		unwrapped[key] = await object[key];
-	}
-
-	return unwrapped;
 }
