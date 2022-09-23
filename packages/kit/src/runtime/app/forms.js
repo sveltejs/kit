@@ -73,7 +73,8 @@ export function enhance(form, submit = () => {}) {
 			const response = await fetch(action, {
 				method: 'POST',
 				headers: {
-					accept: 'application/json'
+					accept: 'application/json',
+					'x-sveltekit-action': 'true'
 				},
 				body: data,
 				signal: controller.signal

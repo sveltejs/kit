@@ -900,15 +900,25 @@ test.describe('data-sveltekit attributes', () => {
 	});
 });
 
-test('+server.js next to +page.svelte works', async ({ page }) => {
-	await page.goto('/routing/endpoint-next-to-page');
-	expect(await page.textContent('p')).toBe('Hi');
+test.describe('Content negotiation', () => {
+	test('+server.js next to +page.svelte works', async ({ page }) => {
+		await page.goto('/routing/content-negotiation');
+		expect(await page.textContent('p')).toBe('Hi');
 
-	for (const method of ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']) {
-		await page.click(`button:has-text("${method}")`);
-		await page.waitForFunction(
-			(method) => document.querySelector('pre').textContent === method,
-			method
-		);
-	}
+		for (const method of ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']) {
+			await page.click(`button:has-text("${method}")`);
+			await page.waitForFunction(
+				(method) => document.querySelector('pre')?.textContent === method,
+				method
+			);
+		}
+	});
+
+	test('use:enhance uses action, not POST handler', async ({ page }) => {
+		await page.goto('/routing/content-negotiation');
+
+		page.click('button:has-text("Submit")');
+		await page.waitForResponse('/routing/content-negotiation');
+		await expect(page.locator('[data-testid="form-result"]')).toHaveText('form.submitted: true');
+	});
 });

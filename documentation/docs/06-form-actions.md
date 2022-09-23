@@ -352,6 +352,18 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 </form>
 ```
 
+If you have a `+server.js` alongside your `+page.server.js`, `fetch` requests will be routed there by default. To `POST` to an action in `+page.server.js` instead, use the custom `x-sveltekit-action` header:
+
+```diff
+const response = await fetch(this.action, {
+	method: 'POST',
+	body: data,
++	headers: {
++		'x-sveltekit-action': 'true'
++	}
+});
+```
+
 ### Alternatives
 
 Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](/docs/routing#server) files to expose (for example) a JSON API.
