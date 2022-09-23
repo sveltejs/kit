@@ -13,7 +13,7 @@ npm create svelte@latest
 Some or all of the prompts can be skipped by supplying arguments directly to the CLI:
 
 ```bash
-npm create svelte@latest my-directory \
+npm create svelte@latest my-app \
   --name=my-new-app \
   --template=default|skeleton|skeletonlib \
   --types=checkjs|typescript|none \
