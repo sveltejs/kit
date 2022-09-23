@@ -98,7 +98,8 @@ export async function render_response({
 			routeId: event.routeId,
 			status,
 			url: event.url,
-			data
+			data,
+			form: form_value
 		};
 
 		// TODO remove this for 1.0

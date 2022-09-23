@@ -55,7 +55,7 @@ export function write_root(manifest_data, output) {
 					setContext('__svelte__', stores);
 				}
 
-				$: stores.page.set({...page, form});
+				$: stores.page.set(page);
 				afterUpdate(stores.page.notify);
 
 				let mounted = false;
