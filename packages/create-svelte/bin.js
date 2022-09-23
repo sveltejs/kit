@@ -5,6 +5,8 @@ import { bold, cyan, gray, green, red } from 'kleur/colors';
 import prompts from 'prompts';
 import { create } from './index.js';
 import { dist } from './utils.js';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 // prettier-ignore
 const disclaimer = `
@@ -20,33 +22,32 @@ const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.me
 async function main() {
 	console.log(gray(`\ncreate-svelte version ${version}`));
 	console.log(disclaimer);
+	const args = await yargs(hideBin(process.argv)).argv;
+	prompts.override({
+		...args,
+		dir: args._[0]?.toString()
+	});
+	console.log(args);
 
-	let cwd = process.argv[2] || '.';
-
-	if (cwd === '.') {
-		const opts = await prompts([
-			{
-				type: 'text',
-				name: 'dir',
-				message: 'Where should we create your project?\n  (leave blank to use current directory)'
-			}
-		]);
-
-		if (opts.dir) {
-			cwd = opts.dir;
+	const { dir } = await prompts([
+		{
+			type: 'text',
+			name: 'dir',
+			message: 'Where should we create your project?\n  (leave blank to use current directory)'
 		}
-	}
+	]);
+	const cwd = dir || '.';
 
 	if (fs.existsSync(cwd)) {
 		if (fs.readdirSync(cwd).length > 0) {
 			const response = await prompts({
 				type: 'confirm',
-				name: 'value',
+				name: 'overwrite',
 				message: 'Directory not empty. Continue?',
 				initial: false
 			});
 
-			if (!response.value) {
+			if (!response.overwrite) {
 				process.exit(1);
 			}
 		}

@@ -20,6 +20,7 @@
 		"@types/gitignore-parser": "^0.0.0",
 		"@types/prettier": "^2.6.3",
 		"@types/prompts": "^2.0.14",
+		"@types/yargs": "^17.0.12",
 		"gitignore-parser": "^0.0.2",
 		"prettier": "^2.6.2",
 		"prettier-plugin-svelte": "^2.7.0",
@@ -27,7 +28,8 @@
 		"svelte": "^3.48.0",
 		"svelte-preprocess": "^4.10.6",
 		"tiny-glob": "^0.2.9",
-		"uvu": "^0.5.3"
+		"uvu": "^0.5.3",
+		"yargs": "^17.5.1"
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",

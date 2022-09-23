@@ -210,6 +210,7 @@ importers:
       '@types/gitignore-parser': ^0.0.0
       '@types/prettier': ^2.6.3
       '@types/prompts': ^2.0.14
+      '@types/yargs': ^17.0.12
       gitignore-parser: ^0.0.2
       kleur: ^4.1.4
       prettier: ^2.6.2
@@ -220,6 +221,7 @@ importers:
       svelte-preprocess: ^4.10.6
       tiny-glob: ^0.2.9
       uvu: ^0.5.3
+      yargs: ^17.5.1
     dependencies:
       kleur: 4.1.5
       prompts: 2.4.2
@@ -229,6 +231,7 @@ importers:
       '@types/gitignore-parser': 0.0.0
       '@types/prettier': 2.6.3
       '@types/prompts': 2.0.14
+      '@types/yargs': 17.0.12
       gitignore-parser: 0.0.2
       prettier: 2.7.1
       prettier-plugin-svelte: 2.7.0_nakrehnrzdf7fdea5k3a4dfy4m
@@ -237,6 +240,7 @@ importers:
       svelte-preprocess: 4.10.7_svelte@3.48.0
       tiny-glob: 0.2.9
       uvu: 0.5.4
+      yargs: 17.5.1
 
   packages/create-svelte/templates/default:
     specifiers:
@@ -1275,6 +1279,16 @@ packages:
     resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
     dependencies:
       '@types/node': 16.11.42
+    dev: true
+
+  /@types/yargs-parser/21.0.0:
+    resolution: {integrity: sha512-iO9ZQHkZxHn4mSakYV0vFHAVDyEOIJQrV2uZ06HxEPcx+mt8swXoZHIbaaJ2crJYFfErySgktuTZ3BeLz+XmFA==}
+    dev: true
+
+  /@types/yargs/17.0.12:
+    resolution: {integrity: sha512-Nz4MPhecOFArtm81gFQvQqdV7XYCrWKx5uUt6GNHredFHn1i2mtWqXTON7EPXMtNi1qjtjEM/VCHDhcHsAMLXQ==}
+    dependencies:
+      '@types/yargs-parser': 21.0.0
     dev: true
 
   /@typescript/twoslash/3.1.0:
