@@ -31,6 +31,8 @@ async function generate_templates(shared) {
 	const templates = fs.readdirSync('templates');
 
 	for (const template of templates) {
+		if (template[0] === '.') continue;
+
 		const dir = `dist/templates/${template}`;
 		const assets = `${dir}/assets`;
 		mkdirp(assets);
@@ -38,7 +40,10 @@ async function generate_templates(shared) {
 		const cwd = path.resolve('templates', template);
 
 		const gitignore_file = path.join(cwd, '.gitignore');
-		if (!fs.existsSync(gitignore_file)) throw new Error('Template must have a .gitignore file');
+		if (!fs.existsSync(gitignore_file)) {
+			throw new Error(`"${template}" template must have a .gitignore file`);
+		}
+
 		const gitignore = parser.compile(fs.readFileSync(gitignore_file, 'utf-8'));
 
 		const ignore_file = path.join(cwd, '.ignore');

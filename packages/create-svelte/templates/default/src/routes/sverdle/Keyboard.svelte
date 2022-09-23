@@ -13,7 +13,6 @@
 
 <svelte:window
 	on:keydown={(event) => {
-		// @ts-ignore
 		document.querySelector(`[data-key="${event.key}"]`)?.click();
 	}}
 />
