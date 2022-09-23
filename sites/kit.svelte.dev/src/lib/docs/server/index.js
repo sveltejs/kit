@@ -368,7 +368,7 @@ function parse({ body, file, slug, code, codespan }) {
 					slug
 				});
 			} else {
-				throw new Error(`Unexpected <h${level}> in ${file}`);
+				// throw new Error(`Unexpected <h${level}> in ${file}`);
 			}
 
 			return `<h${level} id="${slug}">${html}<a href="#${slug}" class="anchor"><span class="visually-hidden">permalink</span></a></h${level}>`;
