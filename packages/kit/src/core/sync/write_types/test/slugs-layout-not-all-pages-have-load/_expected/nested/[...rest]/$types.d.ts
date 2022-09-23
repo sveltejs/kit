@@ -11,12 +11,12 @@ type OutputDataShape<T> = MaybeWithVoid<
 		Partial<Pick<App.PageData, keyof T & keyof App.PageData>> &
 		Record<string, any>
 >;
-type EnsureParentData<T> = T extends null | undefined ? {} : T;
+type EnsureDefined<T> = T extends null | undefined ? {} : T;
 type PageParentData = Omit<
-	EnsureParentData<import('../../$types.js').LayoutData>,
+	EnsureDefined<import('../../$types.js').LayoutData>,
 	keyof import('../$types.js').LayoutData
 > &
-	EnsureParentData<import('../$types.js').LayoutData>;
+	EnsureDefined<import('../$types.js').LayoutData>;
 
 export type PageServerData = null;
 export type PageLoad<
@@ -32,9 +32,11 @@ export type PageData = Expand<
 			>
 		>
 	> &
-		Kit.AwaitedProperties<
-			Awaited<
-				ReturnType<typeof import('../../../../../../../../../../nested/[...rest]/+page.js').load>
+		EnsureDefined<
+			Kit.AwaitedProperties<
+				Awaited<
+					ReturnType<typeof import('../../../../../../../../../../nested/[...rest]/+page.js').load>
+				>
 			>
 		>
 >;
