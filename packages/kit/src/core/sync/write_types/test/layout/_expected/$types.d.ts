@@ -11,12 +11,12 @@ type OutputDataShape<T> = MaybeWithVoid<
 		Partial<Pick<App.PageData, keyof T & keyof App.PageData>> &
 		Record<string, any>
 >;
-type EnsureParentData<T> = T extends null | undefined ? {} : T;
-type PageServerParentData = EnsureParentData<LayoutServerData>;
-type PageParentData = EnsureParentData<LayoutData>;
+type EnsureDefined<T> = T extends null | undefined ? {} : T;
+type PageServerParentData = EnsureDefined<LayoutServerData>;
+type PageParentData = EnsureDefined<LayoutData>;
 type LayoutParams = RouteParams & {};
-type LayoutServerParentData = EnsureParentData<{}>;
-type LayoutParentData = EnsureParentData<{}>;
+type LayoutServerParentData = EnsureDefined<{}>;
+type LayoutParentData = EnsureDefined<{}>;
 
 export type PageServerLoad<
 	OutputData extends (Partial<App.PageData> & Record<string, any>) | void =
@@ -41,8 +41,10 @@ export type PageData = Expand<
 			Awaited<ReturnType<typeof import('../../../../../../../../+page.js').load>>
 		>
 	> &
-		Kit.AwaitedProperties<
-			Awaited<ReturnType<typeof import('../../../../../../../../+page.js').load>>
+		EnsureDefined<
+			Kit.AwaitedProperties<
+				Awaited<ReturnType<typeof import('../../../../../../../../+page.js').load>>
+			>
 		>
 >;
 export type Action = Kit.Action<RouteParams>;
@@ -71,8 +73,10 @@ export type LayoutData = Expand<
 			Awaited<ReturnType<typeof import('../../../../../../../../+layout.js').load>>
 		>
 	> &
-		Kit.AwaitedProperties<
-			Awaited<ReturnType<typeof import('../../../../../../../../+layout.js').load>>
+		EnsureDefined<
+			Kit.AwaitedProperties<
+				Awaited<ReturnType<typeof import('../../../../../../../../+layout.js').load>>
+			>
 		>
 >;
 export type RequestEvent = Kit.RequestEvent<RouteParams>;
