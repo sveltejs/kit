@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.500
+
+### Patch Changes
+
+- Allow prerendered pages to link to non-prerenderable endpoints ([#6977](https://github.com/sveltejs/kit/pull/6977))
+
+* [fix] handle SPA root data loading error ([#6918](https://github.com/sveltejs/kit/pull/6918))
+
 ## 1.0.0-next.499
 
 ### Patch Changes
