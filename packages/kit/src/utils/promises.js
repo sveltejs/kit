@@ -5,7 +5,13 @@
  * @returns {Promise<Record<string, any>>}
  */
 export async function unwrap_promises(object) {
-	return Object.fromEntries(
-		await Promise.all(Object.entries(object).map(async ([key, value]) => [key, await value]))
-	);
+	for (const key in object) {
+		if (typeof object[key]?.then === 'function') {
+			return Object.fromEntries(
+				await Promise.all(Object.entries(object).map(async ([key, value]) => [key, await value]))
+			);
+		}
+	}
+
+	return object;
 }
