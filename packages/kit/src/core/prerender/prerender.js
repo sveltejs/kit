@@ -416,12 +416,21 @@ export async function prerender() {
 
 	await q.done();
 
+	/** @type {string[]} */
+	const not_prerendered = [];
+
 	for (const [route_id, prerender] of prerender_map) {
 		if (prerender === true && !prerendered_routes.has(route_id)) {
-			throw new Error(
-				`Route "${route_id}" is marked as prerenderable, but was not prerendered. See https://kit.svelte.dev/docs/page-options#prerender-troubleshooting for more info`
-			);
+			not_prerendered.push(route_id);
 		}
+	}
+
+	if (not_prerendered.length > 0) {
+		throw new Error(
+			`The following routes were marked as prerenderable, but were not prerendered:\n${not_prerendered.map(
+				(id) => `  - ${id}`
+			)}\n\nSee https://kit.svelte.dev/docs/page-options#prerender-troubleshooting for more info`
+		);
 	}
 
 	const rendered = await server.respond(new Request(config.prerender.origin + '/[fallback]'), {
