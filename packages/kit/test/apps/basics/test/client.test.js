@@ -906,13 +906,11 @@ test.describe.only('Content negotiation', () => {
 		expect(await page.textContent('p')).toBe('Hi');
 
 		for (const method of ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']) {
-			page.click(`button:has-text("${method}")`);
+			await page.click(`button:has-text("${method}")`);
 			await page.waitForFunction(
 				(method) => document.querySelector('pre').textContent === method,
-				method,
-				{ timeout: 1000 }
+				method
 			);
-			expect(await page.textContent('pre')).toBe(method);
 		}
 	});
 

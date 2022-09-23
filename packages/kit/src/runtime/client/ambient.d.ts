@@ -24,3 +24,7 @@ declare module '__GENERATED__/client-manifest.js' {
 
 	export const hooks: ClientHooks;
 }
+
+declare module '__GENERATED__/root.svelte' {
+	export { SvelteComponent as default } from 'svelte';
+}
