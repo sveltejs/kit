@@ -214,7 +214,12 @@ export function create_client({ target, base, trailing_slash }) {
 		let navigation_result = intent && (await load_route(intent));
 
 		if (!navigation_result) {
-			navigation_result = await server_fallback(url, new Error(`Not found: ${url.pathname}`), 404);
+			navigation_result = await server_fallback(
+				url,
+				null,
+				new Error(`Not found: ${url.pathname}`),
+				404
+			);
 		}
 
 		// if this is an internal navigation intent, use the normalized
@@ -810,7 +815,7 @@ export function create_client({ target, base, trailing_slash }) {
 					} else {
 						// if we get here, it's because the root `load` function failed,
 						// and we need to fall back to the server
-						return await server_fallback(url, /** @type {Error} */ (err), status);
+						return await server_fallback(url, route.id, /** @type {Error} */ (err), status);
 					}
 				}
 			} else {
@@ -926,9 +931,7 @@ export function create_client({ target, base, trailing_slash }) {
 			branch: [root_layout, root_error],
 			status,
 			error:
-				error instanceof HttpError
-					? error.body
-					: handle_error(error, { url, params, routeId: null }),
+				error instanceof HttpError ? error.body : handle_error(error, { url, params, routeId }),
 			route: null
 		});
 	}
@@ -1056,11 +1059,12 @@ export function create_client({ target, base, trailing_slash }) {
 	/**
 	 * Does a full page reload if it wouldn't result in an endless loop in the SPA case
 	 * @param {URL} url
+	 * @param {string | null} routeId
 	 * @param {Error | HttpError} error
 	 * @param {number} status
 	 * @returns {Promise<import('./types').NavigationFinished>}
 	 */
-	async function server_fallback(url, error, status) {
+	async function server_fallback(url, routeId, error, status) {
 		if (url.origin === location.origin && url.pathname === location.pathname && !hydrated) {
 			// We would reload the same page we're currently on, which isn't hydrated,
 			// which means no SSR, which means we would end up in an endless loop
@@ -1068,7 +1072,7 @@ export function create_client({ target, base, trailing_slash }) {
 				status,
 				error,
 				url,
-				routeId: null
+				routeId
 			});
 		}
 		return await native_navigation(url);
@@ -1514,7 +1518,7 @@ async function load_data(url, invalid) {
 function handle_error(error, event) {
 	return (
 		hooks.handleError({ error, event }) ??
-		/** @type {any} */ ({ message: event.routeId ? 'Internal Error' : 'Not Found' })
+		/** @type {any} */ ({ message: event.routeId != null ? 'Internal Error' : 'Not Found' })
 	);
 }
 
