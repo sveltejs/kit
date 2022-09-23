@@ -450,7 +450,11 @@ export function create_client({ target, base, trailing_slash }) {
 		}
 
 		const page_changed =
-			!current.url || url.href !== current.url.href || current.error !== error || data_changed;
+			!current.url ||
+			url.href !== current.url.href ||
+			current.error !== error ||
+			form !== undefined ||
+			data_changed;
 
 		if (page_changed) {
 			result.props.page = {

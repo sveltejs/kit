@@ -1,5 +1,6 @@
 <script>
 	import { enhance } from '$app/forms';
+	import FormStorePrinter from './FormStorePrinter.svelte';
 
 	/** @type {import('./$types').ActionData} */
 	export let form;
@@ -9,7 +10,8 @@
 	let count = 0;
 </script>
 
-<pre>{JSON.stringify(form)}</pre>
+<pre class="formdata1">{JSON.stringify(form)}</pre>
+<FormStorePrinter />
 
 <form method="post" action="?/login" use:enhance>
 	<input name="username" type="text" />
