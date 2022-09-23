@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.501
+
+### Patch Changes
+
+- [fix] unwrap promises for load function data on the client ([#6972](https://github.com/sveltejs/kit/pull/6972))
+
 ## 1.0.0-next.500
 
 ### Patch Changes
