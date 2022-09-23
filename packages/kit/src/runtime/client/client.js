@@ -9,6 +9,7 @@ import { nodes, server_loads, dictionary, matchers, hooks } from '__GENERATED__/
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
+import { unwrap_promises } from '../../utils/promises.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -608,6 +609,7 @@ export function create_client({ target, base, trailing_slash }) {
 			} else {
 				data = (await node.shared.load.call(null, load_input)) ?? null;
 			}
+			data = data ? await unwrap_promises(data) : null;
 		}
 
 		return {
