@@ -72,7 +72,7 @@ Note that this will disable client-side routing for any navigation from this pag
 
 #### Troubleshooting
 
-If you encounter an error like 'Route ... is marked as prerenderable, but was not prerendered' it's because the route in question (or a parent layout, if it's a page) has `export const prerender = true` but the page wasn't actually prerendered.
+If you encounter an error like 'The following routes were marked as prerenderable, but were not prerendered' it's because the route in question (or a parent layout, if it's a page) has `export const prerender = true` but the page wasn't actually prerendered.
 
 Since these routes cannot be dynamically server-rendered, this will cause errors when people try to access the route in question. There are two ways to fix it:
 
