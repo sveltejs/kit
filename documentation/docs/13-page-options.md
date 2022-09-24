@@ -70,6 +70,15 @@ For _pages_, we skirt around this problem by writing `foo/index.html` instead of
 
 Note that this will disable client-side routing for any navigation from this page, regardless of whether the router is already active.
 
+#### Troubleshooting
+
+If you encounter an error like 'The following routes were marked as prerenderable, but were not prerendered' it's because the route in question (or a parent layout, if it's a page) has `export const prerender = true` but the page wasn't actually prerendered.
+
+Since these routes cannot be dynamically server-rendered, this will cause errors when people try to access the route in question. There are two ways to fix it:
+
+* Ensure that SvelteKit can find the route by following links from [`config.kit.prerender.entries`](/docs/configuration#prerender). The pages containing the links (e.g. your `/` page) must _themselves_ be prerenderable, or they will be ignored
+* Change `export const prerender = true` to `export const prerender = 'auto'`. Routes with `'auto'` can be dynamically server rendered
+
 ### ssr
 
 Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's hydrated. If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server, but in most situations it's not recommended ([see appendix](/docs/appendix#ssr)).
