@@ -10,9 +10,14 @@ env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: svelte
 
+permissions: {}
 jobs:
   release:
     # prevents this action from running on forks
+    permissions:
+      contents: write # to create release (changesets/action)
+      pull-requests: write # to create pull request (changesets/action)
+
     if: github.repository == 'sveltejs/kit'
     name: Release
     runs-on: ubuntu-latest
