@@ -1794,22 +1794,6 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 	});
 
-	test('form page prop and store prop have the same value', async ({ page }) => {
-		await page.goto('/actions/enhance');
-
-		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
-		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
-
-		await page.type('input[name="username"]', 'foo');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
-			page.click('button.form1')
-		]);
-
-		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'foo' }));
-		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ result: 'foo' }));
-	});
-
 	test('applyAction redirects', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/update-form');
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
@@ -1836,6 +1820,7 @@ test.describe('Actions', () => {
 		await page.goto('/actions/enhance');
 
 		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
 
 		await page.type('input[name="username"]', 'foo');
 		await Promise.all([
@@ -1844,6 +1829,7 @@ test.describe('Actions', () => {
 		]);
 
 		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'foo' }));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ result: 'foo' }));
 	});
 
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {

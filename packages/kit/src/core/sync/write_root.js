@@ -14,8 +14,10 @@ export function write_root(manifest_data, output) {
 		1
 	);
 
-	// Create an array with the numbers in the range of [0, max_depth]
-	const levels = Array.from(Array(max_depth + 1).keys());
+	const levels = [];
+	for (let i = 0; i <= max_depth; i += 1) {
+		levels.push(i);
+	}
 
 	let l = max_depth;
 
