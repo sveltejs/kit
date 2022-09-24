@@ -1201,13 +1201,10 @@ export function create_client({ target, base, trailing_slash }) {
 				goto(result.location, {}, []);
 			} else {
 				/** @type {Record<string, any>} */
-				const props = { form: result.data };
-
-				if (result.status !== page.status) {
-					page = { ...page, status: result.status };
-					props.page = page;
-				}
-
+				const props = {
+					form: result.data,
+					page: { ...page, form: result.data, status: result.status }
+				};
 				const post_update = pre_update();
 				root.$set(props);
 				post_update();
