@@ -39,7 +39,8 @@
     "server-only-module": "0.0.1",
     "server-only-folder": "0.0.1",
     "server-only-folder-dynamic-import": "0.0.1",
-    "server-only-module-dynamic-import": "0.0.1"
+    "server-only-module-dynamic-import": "0.0.1",
+    "prerenderable-not-prerendered": "0.0.1"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -455,6 +456,7 @@
     "happy-pumas-thank",
     "healthy-carrots-cross",
     "healthy-cows-walk",
+    "healthy-lions-attend",
     "healthy-mangos-nail",
     "healthy-moons-attend",
     "healthy-pandas-pull",
@@ -708,6 +710,7 @@
     "nervous-trees-listen",
     "nervous-wolves-end",
     "new-birds-march",
+    "new-comics-admire",
     "new-geckos-vanish",
     "new-rules-vanish",
     "new-walls-prove",
