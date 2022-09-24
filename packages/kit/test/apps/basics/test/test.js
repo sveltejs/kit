@@ -1865,6 +1865,21 @@ test.describe('Actions', () => {
 		);
 	});
 
+	test('use:enhance button with name', async ({ page, app }) => {
+		await page.goto('/actions/enhance');
+
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
+			page.click('button.form1-submitter')
+		]);
+
+		await expect(page.locator('pre.formdata1')).toHaveText(
+			JSON.stringify({ result: 'submitter: foo' })
+		);
+	});
+
 	test('redirect', async ({ page }) => {
 		await page.goto('/actions/redirect');
 

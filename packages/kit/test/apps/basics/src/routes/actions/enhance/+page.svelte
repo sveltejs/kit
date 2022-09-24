@@ -17,6 +17,7 @@
 	<input name="username" type="text" />
 	<button class="form1">Submit</button>
 	<button class="form1-register" formAction="?/register">Submit</button>
+	<button class="form1-submitter" formAction="?/submitter" name="submitter" value="foo">Submit</button>
 </form>
 
 <span class="count">{count}</span>
