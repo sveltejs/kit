@@ -51,6 +51,12 @@ export function enhance(form, submit = () => {}) {
 		);
 
 		const data = new FormData(form);
+
+		const submitter_name = event.submitter?.getAttribute('name');
+		if (submitter_name) {
+			data.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
+		}
+
 		const controller = new AbortController();
 
 		let cancelled = false;
