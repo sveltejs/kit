@@ -295,13 +295,37 @@ export interface Navigation {
 	delta?: number;
 }
 
+/**
+ * The shape of the `$page` store
+ */
 export interface Page<Params extends Record<string, string> = Record<string, string>> {
+	/**
+	 * The URL of the current page
+	 */
 	url: URL;
+	/**
+	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, the `slug` parameter
+	 */
 	params: Params;
+	/**
+	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 */
 	routeId: string | null;
+	/**
+	 * Http status code of the current page
+	 */
 	status: number;
+	/**
+	 * The error object of the current page, if any. Filled from the `handleError` hooks.
+	 */
 	error: App.Error | null;
+	/**
+	 * The merged result of all data from all `load` functions on the current page. You can type a common denominator through `App.PageData`.
+	 */
 	data: App.PageData & Record<string, any>;
+	/**
+	 * Filled only after a form submission. See form actions for more info.
+	 */
 	form: any;
 }
 
