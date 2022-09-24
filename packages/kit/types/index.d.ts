@@ -302,6 +302,7 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	status: number;
 	error: App.Error | null;
 	data: App.PageData & Record<string, any>;
+	form: any;
 }
 
 export interface ParamMatcher {

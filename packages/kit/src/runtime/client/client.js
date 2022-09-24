@@ -438,7 +438,11 @@ export function create_client({ target, base, trailing_slash }) {
 		}
 
 		const page_changed =
-			!current.url || url.href !== current.url.href || current.error !== error || data_changed;
+			!current.url ||
+			url.href !== current.url.href ||
+			current.error !== error ||
+			form !== undefined ||
+			data_changed;
 
 		if (page_changed) {
 			result.props.page = {
@@ -447,6 +451,7 @@ export function create_client({ target, base, trailing_slash }) {
 				routeId: route && route.id,
 				status,
 				url,
+				form,
 				// The whole page store is updated, but this way the object reference stays the same
 				data: data_changed ? data : page.data
 			};
@@ -1203,13 +1208,10 @@ export function create_client({ target, base, trailing_slash }) {
 				goto(result.location, {}, []);
 			} else {
 				/** @type {Record<string, any>} */
-				const props = { form: result.data };
-
-				if (result.status !== page.status) {
-					page = { ...page, status: result.status };
-					props.page = page;
-				}
-
+				const props = {
+					form: result.data,
+					page: { ...page, form: result.data, status: result.status }
+				};
 				const post_update = pre_update();
 				root.$set(props);
 				post_update();
