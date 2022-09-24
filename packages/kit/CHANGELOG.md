@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.503
+
+### Patch Changes
+
+- Added form property to \$page store ([#6986](https://github.com/sveltejs/kit/pull/6986))
+
+* Throw an error if prerenderable routes are not prerendered ([#6974](https://github.com/sveltejs/kit/pull/6974))
+
 ## 1.0.0-next.502
 
 ### Patch Changes
