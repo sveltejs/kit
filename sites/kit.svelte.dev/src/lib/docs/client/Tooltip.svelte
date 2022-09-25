@@ -31,7 +31,7 @@
 
 <style>
 	.tooltip-container {
-		--bg: var(--second);
+		--bg: var(--back-api);
 		--arrow-size: 0.4rem;
 		position: absolute;
 		transform: translate(var(--offset), calc(2rem + var(--arrow-size)));
@@ -40,7 +40,7 @@
 	.tooltip {
 		margin: 0 2rem 0 0;
 		background-color: var(--bg);
-		color: #fff;
+		color: var(--text);
 		text-align: left;
 		padding: 0.4rem 0.6rem;
 		border-radius: var(--border-r);
