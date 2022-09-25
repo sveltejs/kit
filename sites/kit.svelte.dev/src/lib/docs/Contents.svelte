@@ -232,7 +232,6 @@
 			left: 0;
 			bottom: 0;
 			width: var(--sidebar-w);
-			height: 2em;
 			pointer-events: none;
 			height: var(--top-offset);
 			background: linear-gradient(
@@ -240,6 +239,15 @@
 				rgba(103, 103, 120, 0) 0%,
 				rgba(103, 103, 120, 0.7) 50%,
 				rgba(103, 103, 120, 1) 100%
+			);
+		}
+
+		:global(html.theme-dark) nav::after {
+			background: linear-gradient(
+				to bottom,
+				rgba(60, 60, 60, 0) 0%,
+				rgba(60, 60, 60, 0.7) 50%,
+				rgba(60, 60, 60, 1) 100%
 			);
 		}
 	}

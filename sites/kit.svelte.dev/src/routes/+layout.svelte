@@ -250,7 +250,7 @@
 		color: #ffcc00;
 	}
 
-	:global(nav) {
+	:global(html.theme-dark nav) {
 		background-color: var(--back) !important;
 	}
 

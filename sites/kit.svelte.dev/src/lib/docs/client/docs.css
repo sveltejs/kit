@@ -180,6 +180,10 @@
 	padding: 1rem;
 }
 
+html.theme-dark .content blockquote {
+	color: var(--text);
+}
+
 .content blockquote :first-child {
 	margin-top: 0;
 }
@@ -190,6 +194,10 @@
 
 .content blockquote code {
 	background: #d5e2ea;
+}
+
+html.theme-dark .content blockquote code {
+	background: var(--back-api);
 }
 
 .content blockquote pre code {
