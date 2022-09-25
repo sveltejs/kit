@@ -1,4 +1,5 @@
 <script>
+	import '$lib/styles/theme-dark.css';
 	import '@sveltejs/site-kit/base.css';
 	import { browser } from '$app/environment';
 	import { page, navigating } from '$app/stores';
@@ -6,6 +7,41 @@
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
 	import StopWar from './stopwar.svg';
+	import { onMount } from 'svelte';
+
+	let currentTheme = 'theme-default';
+
+	function getCurrentTheme() {
+		if (browser) {
+			const theme = localStorage.getItem('theme');
+			if (!theme) {
+				const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				if (prefersDarkMode) {
+					localStorage.setItem('theme', 'theme-dark');
+					return 'theme-dark';
+				}
+			}
+			return theme;
+		}
+		return 'theme-default';
+	}
+
+	function setTheme (theme) {
+		document.documentElement.classList.remove('theme-default', 'theme-dark');
+		document.documentElement.classList.add(theme);
+		localStorage.setItem('theme', theme);
+		currentTheme = theme;
+	}
+
+	function toggleTheme () {
+		let theme = currentTheme === 'theme-default' ? 'theme-dark' : 'theme-default';
+		setTheme(theme);
+	}
+
+	onMount(() => {
+		currentTheme = getCurrentTheme();
+		setTheme(currentTheme);
+	});
 </script>
 
 <Icons />
@@ -41,6 +77,46 @@
 		<NavItem external="https://github.com/sveltejs/kit" title="GitHub Repo">
 			<span class="small">GitHub</span>
 			<span class="large"><Icon name="github" /></span>
+		</NavItem>
+
+		<li aria-hidden="true"><span class="separator" /></li>
+
+		<NavItem title="Dark Mode toggle">
+			<span on:click={toggleTheme}>
+			{#if currentTheme === 'theme-default'}
+				<span class="small">Dark mode</span>
+				<span class="large">
+					<svg
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						class="icon"
+					>
+							<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+					</svg>
+				</span>
+			{:else}
+				<span class="small">Light mode</span>
+				<span class="large">
+					<svg
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						class="icon"
+					>
+						<circle cx="12" cy="12" r="5" />
+						<line x1="12" y1="1" x2="12" y2="3" />
+						<line x1="12" y1="21" x2="12" y2="23" />
+						<line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+						<line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+						<line x1="1" y1="12" x2="3" y2="12" />
+						<line x1="21" y1="12" x2="23" y2="12" />
+						<line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+						<line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+					</svg>
+				</span>
+			{/if}
+		</span>
 		</NavItem>
 	</svelte:fragment>
 </Nav>
@@ -169,7 +245,31 @@
 			z-index: 9999 !important;
 		}
 	}
+
 	.ukr strong {
 		color: #ffcc00;
+	}
+
+	:global(nav) {
+		background-color: var(--back) !important;
+	}
+
+	:global(body) {
+		transition: background-color 0.5s;
+	}
+
+	.icon {
+		position: relative;
+		overflow: hidden;
+		vertical-align: middle;
+		-o-object-fit: contain;
+		object-fit: contain;
+		-webkit-transform-origin: center center;
+		transform-origin: center center;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		fill: none;
 	}
 </style>

@@ -300,7 +300,7 @@
 	}
 
 	.results-container {
-		background: white;
+		background: var(--back);
 		border-radius: 0 0 var(--border-r) var(--border-r);
 		pointer-events: all;
 	}

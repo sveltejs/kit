@@ -1,0 +1,18 @@
+/*	dark theme vars */
+.theme-dark {
+	--back: #1D1D1E;
+	--back-light: #2D2D2D;
+	--back-api: #e5eef5;
+	--prime: #ff3e00;
+	--second: #AAA;
+	--flash: #0086df;
+	--highlight: #ffff82;
+	--heading: #AAA;
+	--text: #EEE;
+	--second-text: #CCC;
+	--sidebar-text: rgba(255, 255, 255, 0.90);
+}
+
+code {
+	color: var(--second) !important;
+}

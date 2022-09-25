@@ -16,7 +16,7 @@
 		<div class="hero-image">
 			<picture sizes="(min-width: 480px) 800px, (min-width: 1024px) 480px, 600px">
 				{#each Object.entries(background.sources) as [format, images]}
-					<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} /> 
+					<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} />
 				{/each}
 				<img src={background.fallback.src} {alt} />
 			</picture>
@@ -39,11 +39,14 @@ linear-gradient(0deg, #DBE7EF, #DBE7EF);
 		overflow: hidden;
 	}
 
+	:global(html.theme-dark) .hero-banner {
+		background: var(--back-light);
+	}
+
 	.hero-container {
 		width: 100%;
 		max-width: 90rem;
 		margin: 0 auto;
-		/* display: flex; */
 		justify-content: center;
 	}
 
@@ -52,6 +55,9 @@ linear-gradient(0deg, #DBE7EF, #DBE7EF);
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
+	}
+
+	:global(html.theme-default) .hero-text {
 		mix-blend-mode: multiply;
 	}
 
