@@ -183,7 +183,11 @@ src/routes/
 └ +layout.svelte
 ```
 
-Ordinarily, this would inherit the root layout, the `(app)` layout, the `item` layout and the `[id]` layout. We can reset to one of those layouts by appending `@` followed by the segment name — or, for the root layout, the empty string. In this example, we can choose from `+page@.svelte`, `+page@(app).svelte`, `+page@item.svelte` or `+page@[id].svelte`:
+Ordinarily, this would inherit the root layout, the `(app)` layout, the `item` layout and the `[id]` layout. We can reset to one of those layouts by appending `@` followed by the segment name — or, for the root layout, the empty string. In this example, we can choose from the following options:
+- `+page@[id].svelte` - inherits from `src/routes/(app)/item/[id]/+layout.svelte`
+- `+page@item.svelte` - inherits from `src/routes/(app)/item/+layout.svelte`
+- `+page@(app).svelte` - inherits from `src/routes/(app)/+layout.svelte`
+- `+page@.svelte` - inherits from `src/routes/+layout.svelte`
 
 ```diff
 src/routes/
@@ -198,9 +202,25 @@ src/routes/
 └ +layout.svelte
 ```
 
+There is no way to break out of the root layout. You can be sure that it's always present in your app and for example put app-wide UI or behavior in it.
+
 #### +layout@
 
 Like pages, layouts can _themselves_ break out of their parent layout hierarchy, using the same technique. For example, a `+layout@.svelte` component would reset the hierarchy for all its child routes.
+
+```
+src/routes/
+├ (app)/
+│ ├ item/
+│ │ ├ [id]/
+│ │ │ ├ embed/
+│ │ │ │ └ +page.svelte  // uses (app)/item/[id]/+layout.svelte
+│ │ │ └ +layout.svelte  // inherits from (app)/item/+layout@.svelte
+│ │ │ └ +page.svelte    // uses (app)/item/+layout@.svelte
+│ │ └ +layout@.svelte   // inherits from root layout, skipping (app)/+layout.svelte
+│ └ +layout.svelte
+└ +layout.svelte
+```
 
 #### When to use layout groups
 
