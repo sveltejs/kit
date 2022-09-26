@@ -18,7 +18,7 @@ const config = {
 			format: 'esm'
 		}
 	],
-	plugins: [nodeResolve(), commonjs(), json()],
+	plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()],
 	external: (id) => id === '0SERVER' || id.startsWith('node:'),
 	preserveEntrySignatures: 'exports-only'
 };

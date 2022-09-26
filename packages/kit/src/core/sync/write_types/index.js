@@ -46,11 +46,82 @@ export async function write_all_types(config, manifest_data) {
 		}
 	}
 
+	// Read/write meta data on each invocation, not once per node process,
+	// it could be invoked by another process in the meantime.
+	const meta_data_file = `${types_dir}/route_meta_data.json`;
+	const has_meta_data = fs.existsSync(meta_data_file);
+	let meta_data = has_meta_data
+		? /** @type {Record<string, string[]>} */ (JSON.parse(fs.readFileSync(meta_data_file, 'utf-8')))
+		: {};
 	const routes_map = create_routes_map(manifest_data);
 	// For each directory, write $types.d.ts
 	for (const route of manifest_data.routes) {
-		update_types(config, routes_map, route);
+		if (!route.leaf && !route.layout && !route.endpoint) continue; // nothing to do
+
+		const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
+
+		// check if the types are out of date
+		/** @type {string[]} */
+		const input_files = [];
+
+		/** @type {import('types').PageNode | null} */
+		let node = route.leaf;
+		while (node) {
+			if (node.shared) input_files.push(node.shared);
+			if (node.server) input_files.push(node.server);
+			node = node.parent ?? null;
+		}
+
+		/** @type {import('types').PageNode | null} */
+		node = route.layout;
+		while (node) {
+			if (node.shared) input_files.push(node.shared);
+			if (node.server) input_files.push(node.server);
+			node = node.parent ?? null;
+		}
+
+		if (route.endpoint) {
+			input_files.push(route.endpoint.file);
+		}
+
+		try {
+			fs.mkdirSync(outdir, { recursive: true });
+		} catch {}
+
+		const output_files = compact(
+			fs.readdirSync(outdir).map((name) => {
+				const stats = fs.statSync(path.join(outdir, name));
+				if (stats.isDirectory()) return;
+				return {
+					name,
+					updated: stats.mtimeMs
+				};
+			})
+		);
+
+		const source_last_updated = Math.max(
+			// ctimeMs includes move operations whereas mtimeMs does not
+			...input_files.map((file) => fs.statSync(file).ctimeMs)
+		);
+		const types_last_updated = Math.max(...output_files.map((file) => file.updated));
+
+		const should_generate =
+			// source files were generated more recently than the types
+			source_last_updated > types_last_updated ||
+			// no meta data file exists yet
+			!has_meta_data ||
+			// some file was deleted
+			!meta_data[route.id]?.every((file) => input_files.includes(file));
+
+		if (should_generate) {
+			// track which old files end up being surplus to requirements
+			const to_delete = new Set(output_files.map((file) => file.name));
+			update_types(config, routes_map, route, to_delete);
+			meta_data[route.id] = input_files;
+		}
 	}
+
+	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 
 /**
@@ -72,6 +143,7 @@ export async function write_types(config, manifest_data, file) {
 
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return; // this shouldn't ever happen
+	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
 
 	update_types(config, create_routes_map(manifest_data), route);
 }
@@ -96,59 +168,11 @@ function create_routes_map(manifest_data) {
  * @param {import('types').ValidatedConfig} config
  * @param {Map<import('types').PageNode, import('types').RouteData>} routes
  * @param {import('types').RouteData} route
+ * @param {Set<string>} [to_delete]
  */
-function update_types(config, routes, route) {
-	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
-
+function update_types(config, routes, route, to_delete = new Set()) {
 	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
 	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
-
-	// first, check if the types are out of date
-	const input_files = [];
-
-	/** @type {import('types').PageNode | null} */
-	let node = route.leaf;
-	while (node) {
-		if (node.shared) input_files.push(node.shared);
-		if (node.server) input_files.push(node.server);
-		node = node.parent ?? null;
-	}
-
-	/** @type {import('types').PageNode | null} */
-	node = route.layout;
-	while (node) {
-		if (node.shared) input_files.push(node.shared);
-		if (node.server) input_files.push(node.server);
-		node = node.parent ?? null;
-	}
-
-	if (route.endpoint) {
-		input_files.push(route.endpoint.file);
-	}
-
-	try {
-		fs.mkdirSync(outdir, { recursive: true });
-	} catch {}
-
-	const output_files = compact(
-		fs.readdirSync(outdir).map((name) => {
-			const stats = fs.statSync(path.join(outdir, name));
-			if (stats.isDirectory()) return;
-			return {
-				name,
-				updated: stats.mtimeMs
-			};
-		})
-	);
-
-	const source_last_updated = Math.max(...input_files.map((file) => fs.statSync(file).mtimeMs));
-	const types_last_updated = Math.max(...output_files.map((file) => file?.updated));
-
-	// types were generated more recently than the source files, so don't regenerate
-	if (types_last_updated > source_last_updated) return;
-
-	// track which old files end up being surplus to requirements
-	const to_delete = new Set(output_files.map((file) => file.name));
 
 	// now generate new types
 	const imports = [`import type * as Kit from '@sveltejs/kit';`];
@@ -180,7 +204,7 @@ function update_types(config, routes, route) {
 			`type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any>>`
 		);
 		// null & {} == null, we need to prevent that in some situations
-		declarations.push(`type EnsureParentData<T> = T extends null | undefined ? {} : T;`);
+		declarations.push(`type EnsureDefined<T> = T extends null | undefined ? {} : T;`);
 	}
 
 	if (route.leaf) {
@@ -308,7 +332,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 						? `./proxy${replace_ext_with_js(basename)}`
 						: path_to_original(outdir, node.server);
 
-					type = `Expand<Kit.AwaitedActions<typeof import('${from}').actions>>`;
+					type = `Expand<Kit.AwaitedActions<typeof import('${from}').actions>> | undefined`;
 				}
 			}
 			exports.push(`export type ActionData = ${type};`);
@@ -329,9 +353,13 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 			written_proxies.push(`proxy${path.basename(node.shared)}`);
 		}
 
-		const type = get_data_type(node.shared, `${parent_type} & ${prefix}ServerData`, proxy);
+		const type = get_data_type(
+			node.shared,
+			`${parent_type} & EnsureDefined<${prefix}ServerData>`,
+			proxy
+		);
 
-		data = `Expand<Omit<${parent_type}, keyof ${type}> & ${type}>`;
+		data = `Expand<Omit<${parent_type}, keyof ${type}> & EnsureDefined<${type}>>`;
 
 		const output_data_shape =
 			!is_page && all_pages_have_load
@@ -345,7 +373,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 	} else if (server_data === 'null') {
 		data = `Expand<${parent_type}>`;
 	} else {
-		data = `Expand<Omit<${parent_type}, keyof ${prefix}ServerData> & ${prefix}ServerData>`;
+		data = `Expand<Omit<${parent_type}, keyof ${prefix}ServerData> & EnsureDefined<${prefix}ServerData>>`;
 	}
 
 	exports.push(`export type ${prefix}Data = ${data};`);
@@ -396,14 +424,14 @@ function get_parent_type(node, type) {
 		parent = parent.parent;
 	}
 
-	let parent_str = `EnsureParentData<${parent_imports[0] || '{}'}>`;
+	let parent_str = `EnsureDefined<${parent_imports[0] || '{}'}>`;
 	for (let i = 1; i < parent_imports.length; i++) {
 		// Omit is necessary because a parent could have a property with the same key which would
 		// cause a type conflict. At runtime the child overwrites the parent property in this case,
 		// so reflect that in the type definition.
-		// EnsureParentData is necessary because {something: string} & null becomes null.
+		// EnsureDefined is necessary because {something: string} & null becomes null.
 		// Output types of server loads can be null but when passed in through the `parent` parameter they are the empty object instead.
-		parent_str = `Omit<${parent_str}, keyof ${parent_imports[i]}> & EnsureParentData<${parent_imports[i]}>`;
+		parent_str = `Omit<${parent_str}, keyof ${parent_imports[i]}> & EnsureDefined<${parent_imports[i]}>`;
 	}
 	return parent_str;
 }

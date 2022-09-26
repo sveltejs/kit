@@ -11,25 +11,27 @@ type OutputDataShape<T> = MaybeWithVoid<
 		Partial<Pick<App.PageData, keyof T & keyof App.PageData>> &
 		Record<string, any>
 >;
-type EnsureParentData<T> = T extends null | undefined ? {} : T;
-type PageServerParentData = EnsureParentData<LayoutServerData>;
-type PageParentData = EnsureParentData<LayoutData>;
+type EnsureDefined<T> = T extends null | undefined ? {} : T;
+type PageServerParentData = EnsureDefined<LayoutServerData>;
+type PageParentData = EnsureDefined<LayoutData>;
 type LayoutParams = RouteParams & {};
-type LayoutParentData = EnsureParentData<{}>;
+type LayoutParentData = EnsureDefined<{}>;
 
 export type PageServerLoad<
 	OutputData extends OutputDataShape<PageServerParentData> = OutputDataShape<PageServerParentData>
 > = Kit.ServerLoad<RouteParams, PageServerParentData, OutputData>;
 export type PageServerLoadEvent = Parameters<PageServerLoad>[0];
-export type ActionData = Expand<
-	Kit.AwaitedActions<typeof import('../../../../../../../../+page.server.js').actions>
->;
+export type ActionData =
+	| Expand<Kit.AwaitedActions<typeof import('../../../../../../../../+page.server.js').actions>>
+	| undefined;
 export type PageServerData = Expand<
 	Kit.AwaitedProperties<
 		Awaited<ReturnType<typeof import('../../../../../../../../+page.server.js').load>>
 	>
 >;
-export type PageData = Expand<Omit<PageParentData, keyof PageServerData> & PageServerData>;
+export type PageData = Expand<
+	Omit<PageParentData, keyof PageServerData> & EnsureDefined<PageServerData>
+>;
 export type Action = Kit.Action<RouteParams>;
 export type Actions = Kit.Actions<RouteParams>;
 export type LayoutServerData = null;

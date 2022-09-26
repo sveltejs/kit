@@ -92,7 +92,7 @@ As well as the `action` attribute, we can use the `formaction` attribute on a bu
 
 ### Anatomy of an action
 
-Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available as `form` until the next update.
+Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available through the `form` property on the corresponding page and through `$page.form` app-wide until the next update.
 
 ```js
 // @errors: 2339 2304
@@ -249,13 +249,13 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
-- update the `form` property and invalidate all data on a successful response
-- update the `form` property on a invalid response
+- update the `form` property and `$page.form` and invalidate all data on a successful response
+- update the `form` property and `$page.form` on a invalid response
 - update `$page.status` on a successful or invalid response
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
 
-> By default the `form` property is only updated for actions that are in a `+page.server.js` alongside the `+page.svelte` because in the native form submission case you would be redirected to the page the action is on
+> By default the `form` property and `$page.form` is only updated for actions that are in a `+page.server.js` alongside the `+page.svelte` because in the native form submission case you would be redirected to the page the action is on
 
 To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`.
 
@@ -307,7 +307,7 @@ If you provide your own callbacks, you may need to reproduce part of the default
 
 The behaviour of `applyAction(result)` depends on `result.type`:
 
-- `success`, `invalid` — sets `$page.status` to `result.status` and updates `form` to `result.data`
+- `success`, `invalid` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data`
 - `redirect` — calls `goto(result.location)`
 - `error` — renders the nearest `+error` boundary with `result.error`
 
@@ -350,6 +350,18 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 <form method="POST" on:submit|preventDefault={handleSubmit}>
 	<!-- content -->
 </form>
+```
+
+If you have a `+server.js` alongside your `+page.server.js`, `fetch` requests will be routed there by default. To `POST` to an action in `+page.server.js` instead, use the custom `x-sveltekit-action` header:
+
+```diff
+const response = await fetch(this.action, {
+	method: 'POST',
+	body: data,
++	headers: {
++		'x-sveltekit-action': 'true'
++	}
+});
 ```
 
 ### Alternatives

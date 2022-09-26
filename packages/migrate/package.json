@@ -1,6 +1,6 @@
 {
 	"name": "svelte-migrate",
-	"version": "1.0.0-next.12",
+	"version": "1.0.0-next.13",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",

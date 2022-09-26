@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.96
+
+### Patch Changes
+
+- Disable builtin modules warning ([#7031](https://github.com/sveltejs/kit/pull/7031))
+
 ## 1.0.0-next.95
 
 ### Patch Changes

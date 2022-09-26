@@ -46,7 +46,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const server = new Server(manifest);
 	await server.init({
-		env: loadEnv(vite_config.mode, process.cwd(), '')
+		env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, '')
 	});
 
 	return () => {

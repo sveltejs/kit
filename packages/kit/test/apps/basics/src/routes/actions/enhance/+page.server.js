@@ -21,5 +21,11 @@ export const actions = {
 	},
 	slow: async () => {
 		await new Promise((resolve) => setTimeout(resolve, 500));
+	},
+	submitter: async ({ request }) => {
+		const fields = await request.formData();
+		return {
+			result: 'submitter: ' + fields.get('submitter')
+		};
 	}
 };

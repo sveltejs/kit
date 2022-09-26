@@ -1,5 +1,47 @@
 # @sveltejs/kit
 
+## 1.0.0-next.504
+
+### Patch Changes
+
+- Add the submitter value with name to formData for use:enhance ([#7012](https://github.com/sveltejs/kit/pull/7012))
+
+## 1.0.0-next.503
+
+### Patch Changes
+
+- Added form property to \$page store ([#6986](https://github.com/sveltejs/kit/pull/6986))
+
+* Throw an error if prerenderable routes are not prerendered ([#6974](https://github.com/sveltejs/kit/pull/6974))
+
+## 1.0.0-next.502
+
+### Patch Changes
+
+- [fix] prevent data types from becoming type `never`, notice moved/deleted files ([#7002](https://github.com/sveltejs/kit/pull/7002))
+
+* Allow ActionData to be undefined ([#6994](https://github.com/sveltejs/kit/pull/6994))
+
+- Respect `config.kit.env.dir` when running `vite preview` ([#7001](https://github.com/sveltejs/kit/pull/7001))
+
+* Only run postinstall script if package.json exists ([#6998](https://github.com/sveltejs/kit/pull/6998))
+
+- Use custom x-sveltekit-action header to route enhanced form submissions to +page.server.js over +server.js ([#6997](https://github.com/sveltejs/kit/pull/6997))
+
+## 1.0.0-next.501
+
+### Patch Changes
+
+- [fix] unwrap promises for load function data on the client ([#6972](https://github.com/sveltejs/kit/pull/6972))
+
+## 1.0.0-next.500
+
+### Patch Changes
+
+- Allow prerendered pages to link to non-prerenderable endpoints ([#6977](https://github.com/sveltejs/kit/pull/6977))
+
+* [fix] handle SPA root data loading error ([#6918](https://github.com/sveltejs/kit/pull/6918))
+
 ## 1.0.0-next.499
 
 ### Patch Changes
