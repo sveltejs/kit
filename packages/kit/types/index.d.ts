@@ -324,7 +324,7 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	 */
 	data: App.PageData & Record<string, any>;
 	/**
-	 * Filled only after a form submission. See form actions for more info.
+	 * Filled only after a form submission. See [form actions](https://kit.svelte.dev/docs/form-actions) for more info.
 	 */
 	form: any;
 }
