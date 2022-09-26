@@ -73,7 +73,7 @@
 	}
 
 	button.exact {
-		background: #40b3ff;
+		background: var(--color-theme-2);
 		color: white;
 	}
 
@@ -82,11 +82,11 @@
 	}
 
 	button.close {
-		border: 2px solid #40b3ff;
+		border: 2px solid var(--color-theme-2);
 	}
 
 	button:focus {
-		background: #ff3e00;
+		background: var(--color-theme-1);
 		color: white;
 		outline: none;
 	}

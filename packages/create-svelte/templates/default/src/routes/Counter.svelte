@@ -87,7 +87,7 @@
 		width: 100%;
 		height: 100%;
 		font-weight: 400;
-		color: var(--color-accent);
+		color: var(--color-theme-1);
 		font-size: 4rem;
 		align-items: center;
 		justify-content: center;

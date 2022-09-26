@@ -106,7 +106,7 @@
 		top: 0;
 		left: calc(50% - var(--size));
 		border: var(--size) solid transparent;
-		border-top: var(--size) solid var(--color-accent);
+		border-top: var(--size) solid var(--color-theme-1);
 	}
 
 	nav a {
@@ -124,6 +124,6 @@
 	}
 
 	a:hover {
-		color: var(--color-accent);
+		color: var(--color-theme-1);
 	}
 </style>

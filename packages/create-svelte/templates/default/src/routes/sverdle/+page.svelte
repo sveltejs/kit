@@ -196,26 +196,25 @@
 	}
 
 	input.exact {
-		background: #40b3ff;
+		background: var(--color-theme-2);
 		color: white;
 	}
 
 	input.close {
-		border: 2px solid #40b3ff;
+		border: 2px solid var(--color-theme-2);
 	}
 
 	input:focus {
-		/* outline: 2px solid #ff3e00; */
 		outline: none;
 	}
 
 	input.selected {
-		outline: 2px solid #ff3e00;
+		outline: 2px solid var(--color-theme-1);
 	}
 
 	input:not(:disabled)::selection {
 		background: transparent;
-		color: #ff3e00;
+		color: var(--color-theme-1);
 	}
 
 	.current {
@@ -232,7 +231,7 @@
 
 	button:focus,
 	button:hover {
-		background: #ff3e00;
+		background: var(--color-theme-1);
 		color: white;
 		outline: none;
 	}
