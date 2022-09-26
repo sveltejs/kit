@@ -78,11 +78,6 @@
 		{/each}
 	</form>
 
-	<div class="info">
-		<span class="exact"> = right letter, right square</span>
-		<span class="close"> = right letter, wrong square</span>
-	</div>
-
 	<div class="controls">
 		{#if won || data.answers.length >= 6}
 			<form method="POST" action="?/restart" use:enhance>
@@ -145,9 +140,6 @@
 
 	#game {
 		justify-content: end;
-	}
-
-	.info {
 	}
 
 	.controls {
@@ -226,16 +218,6 @@
 		background: #ff3e00;
 		color: white;
 		outline: none;
-	}
-
-	span::before {
-		content: '';
-		width: 1em;
-		height: 1em;
-	}
-
-	span.exact::before {
-		background: #40b3ff;
 	}
 
 	@keyframes wiggle {
