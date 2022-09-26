@@ -208,6 +208,20 @@ There is no way to break out of the root layout. You can be sure that it's alway
 
 Like pages, layouts can _themselves_ break out of their parent layout hierarchy, using the same technique. For example, a `+layout@.svelte` component would reset the hierarchy for all its child routes.
 
+```
+src/routes/
+├ (app)/
+│ ├ item/
+│ │ ├ [id]/
+│ │ │ ├ embed/
+│ │ │ │ └ +page.svelte  // uses (app)/item/[id]/+layout.svelte
+│ │ │ └ +layout.svelte  // inherits from (app)/item/+layout@.svelte
+│ │ │ └ +page.svelte    // uses (app)/item/+layout@.svelte
+│ │ └ +layout@.svelte   // inherits from root layout, skipping (app)/+layout.svelte
+│ └ +layout.svelte
+└ +layout.svelte
+```
+
 #### When to use layout groups
 
 Not all use cases are suited for layout grouping, nor should you feel compelled to use them. It might be that your use case would result in complex `(group)` nesting, or that you don't want to introduce a `(group)` for a single outlier. It's perfectly fine to use other means such as composition (reusable `load` functions or Svelte components) or if-statements to achieve what you want. The following example shows a layout that rewinds to the root layout and reuses components and functions that other layouts can also use:
