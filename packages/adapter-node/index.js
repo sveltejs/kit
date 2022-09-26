@@ -61,7 +61,7 @@ export default function (opts = {}) {
 					manifest: `${tmp}/manifest.js`
 				},
 				external: [...Object.keys(pkg.dependencies || {})],
-				plugins: [nodeResolve(), commonjs(), json()]
+				plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()]
 			});
 
 			await bundle.write({
