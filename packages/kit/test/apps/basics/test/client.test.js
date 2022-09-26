@@ -304,7 +304,8 @@ test.describe.serial('Errors', () => {
 
 	test('Root error falls back to error.html (unexpected error)', async ({ page }) => {
 		await page.goto('/errors/error-html');
-		await page.click('button:text-is("Unexpected")');
+		await Promise.all([page.waitForNavigation(), page.click('button:text-is("Unexpected")')]);
+
 		expect(await page.textContent('h1')).toBe('Error - 500');
 		expect(await page.textContent('p')).toBe(
 			'This is the static error page with the following message: Failed to load'
@@ -313,7 +314,8 @@ test.describe.serial('Errors', () => {
 
 	test('Root error falls back to error.html (expected error)', async ({ page }) => {
 		await page.goto('/errors/error-html');
-		await page.click('button:text-is("Expected")');
+		await Promise.all([page.waitForNavigation(), page.click('button:text-is("Expected")')]);
+
 		expect(await page.textContent('h1')).toBe('Error - 401');
 		expect(await page.textContent('p')).toBe(
 			'This is the static error page with the following message: Not allowed'
@@ -917,8 +919,11 @@ test.describe('Content negotiation', () => {
 	test('use:enhance uses action, not POST handler', async ({ page }) => {
 		await page.goto('/routing/content-negotiation');
 
-		page.click('button:has-text("Submit")');
-		await page.waitForResponse('/routing/content-negotiation');
+		await Promise.all([
+			page.waitForResponse('/routing/content-negotiation'),
+			page.click('button:has-text("Submit")')
+		]);
+
 		await expect(page.locator('[data-testid="form-result"]')).toHaveText('form.submitted: true');
 	});
 });
