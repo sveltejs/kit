@@ -108,6 +108,7 @@ URLs can be absolute or relative to the page being loaded, and must be [encoded]
 Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html)
 
 ```js
+/// file: src/routes/+page.js
 // @filename: ambient.d.ts
 declare module '$lib/api' {
 	interface Data{}
@@ -118,7 +119,6 @@ declare module '$lib/api' {
 }
 
 // @filename: index.js
-/// file: src/routes/+page.js
 // ---cut---
 import * as api from '$lib/api';
 
