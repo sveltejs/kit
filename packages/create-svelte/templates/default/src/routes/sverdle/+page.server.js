@@ -5,8 +5,6 @@ import { invalid } from '@sveltejs/kit';
 export function load({ cookies }) {
 	const game = new Game(cookies.get('sverdle'));
 
-	console.log(game.answer);
-
 	return {
 		guesses: game.guesses,
 		answers: game.answers
@@ -21,15 +19,11 @@ export const actions = {
 
 		const current_row = game.answers.length;
 
-		console.error({ key });
-
 		if (key === 'Backspace') {
 			game.guesses[current_row] = game.guesses[current_row].slice(0, -1);
 		} else {
 			game.guesses[current_row] += key;
 		}
-
-		console.log(game.guesses);
 
 		cookies.set('sverdle', game.toString());
 	},
