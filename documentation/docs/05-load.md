@@ -140,13 +140,13 @@ export async function load({ depends }) {
 ```svelte
 /// file: src/routes/+page.svelte
 <script>
-	import { invalidate } from '$app/navigation'
+	import { invalidate } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
-  export let data
+	export let data;
 
 	const pageRefresh = async () => {
-		await invalidate('my-stuff:foo')
+		await invalidate('my-stuff:foo');
 	}
 </script>
 
@@ -361,7 +361,7 @@ A `load` function will re-run in the following situations:
 - It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed
 - It calls `await parent()` and a parent `load` function re-ran
 - It declared a dependency on a specific URL via [`fetch`](#input-methods-fetch) or [`depends`](#input-methods-depends), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
-- All active `load` functions were forcibly re-run with [`invalidateAll()`](/docs/modules#$app-navigation-invalidate)
+- All active `load` functions were forcibly re-run with [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall)
 
 If a `load` function is triggered to re-run, the page will not remount — instead, it will update with the new `data`. This means that components' internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
 
