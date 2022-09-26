@@ -11,9 +11,6 @@
 	/** @type {import('./$types').ActionData} */
 	export let form: ActionData;
 
-	const rows = Array(6);
-	const columns = Array(5);
-
 	$: i = data.answers.length;
 	$: won = data.answers.at(-1) === 'xxxxx';
 
@@ -57,11 +54,11 @@
 	<a class="how-to-play" href="/sverdle/how-to-play">How to play</a>
 
 	<form id="game" method="POST" action="?/enter" use:enhance>
-		{#each rows as _, r}
+		{#each Array(6) as _, r}
 			{@const current = r === i}
 
 			<div class="row" class:current class:illegal={current && form?.illegal}>
-				{#each columns as _, c}
+				{#each Array(5) as _, c}
 					{@const answer = data.answers[r]?.[c] ?? '-'}
 
 					<input
