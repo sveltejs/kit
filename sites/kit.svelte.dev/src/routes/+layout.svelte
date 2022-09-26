@@ -33,7 +33,7 @@
 		currentTheme = theme;
 	}
 
-	function toggleTheme () {
+	function toggleTheme() {
 		let theme = currentTheme === 'theme-default' ? 'theme-dark' : 'theme-default';
 		setTheme(theme);
 	}
