@@ -5,12 +5,16 @@ const words = words_raw.split('\n').filter(Boolean);
 const allowed = new Set([...words, ...words_allowed_raw.split('\n').filter(Boolean)]);
 
 export class Game {
+	index: number;
+	guesses: string[];
+	answers: string[];
+	answer: string;
+
 	/** @param {string | undefined} serialized */
-	constructor(serialized) {
+	constructor(serialized: string | undefined) {
 		if (serialized) {
-			const [index, guesses, answers] = /** @type {[string, string, string]} */ (
-				serialized.split('-')
-			);
+			const [index, guesses, answers] =
+				/** @type {[string, string, string]} */ serialized.split('-');
 
 			this.index = +index;
 			this.guesses = guesses ? guesses.split(' ') : [];
@@ -18,14 +22,14 @@ export class Game {
 		} else {
 			this.index = Math.floor(Math.random() * words.length);
 			this.guesses = ['', '', '', '', '', ''];
-			this.answers = /** @type {string[]} */ ([]);
+			this.answers = /** @type {string[]} */ [];
 		}
 
 		this.answer = words[this.index];
 	}
 
 	/** @param {string[]} letters */
-	enter(letters) {
+	enter(letters: string[]) {
 		const word = letters.join('');
 		const valid = allowed.has(word);
 

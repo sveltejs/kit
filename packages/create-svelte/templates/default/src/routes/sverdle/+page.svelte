@@ -41,7 +41,7 @@
 	function handleKey(key: string) {
 		const guess = data.guesses[i];
 
-		if (key === 'Backspace') {
+		if (key === 'backspace') {
 			data.guesses[i] = guess.slice(0, -1);
 			if (form?.illegal) form.illegal = false;
 		} else if (/^[a-z]$/.test(key) && guess.length < 5) {

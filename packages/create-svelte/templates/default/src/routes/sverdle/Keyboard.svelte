@@ -10,7 +10,9 @@
 
 	/** @param {KeyboardEvent} event */
 	function handleKeydown(event: KeyboardEvent) {
-		document.querySelector(`[data-key="${event.key}"]`)?.dispatchEvent(new MouseEvent('click'));
+		document
+			.querySelector(`[data-key="${event.key.toLowerCase()}"]`)
+			?.dispatchEvent(new MouseEvent('click'));
 	}
 
 	const dispatch = createEventDispatcher();
@@ -25,8 +27,8 @@
 		cancel();
 	}}
 >
-	<button data-key="Enter" form="game" disabled={!canSubmit}>⏎</button>
-	<button data-key="Backspace" formaction="?/keyboard&key=Backspace">⤆</button>
+	<button data-key="enter" form="game" disabled={!canSubmit}>⏎</button>
+	<button data-key="backspace" formaction="?/keyboard&key=backspace">⤆</button>
 
 	{#each ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'] as row}
 		<div class="row">
@@ -91,23 +93,23 @@
 		outline: none;
 	}
 
-	[data-key='Enter'],
-	[data-key='Backspace'] {
+	[data-key='enter'],
+	[data-key='backspace'] {
 		position: absolute;
 		bottom: 0;
 		width: calc(1.5 * var(--size));
 		height: calc(1 / 3 * (100% - 2 * var(--gap)));
 	}
 
-	[data-key='Enter'] {
+	[data-key='enter'] {
 		right: calc(50% + 3.5 * var(--size) + 0.8rem);
 	}
 
-	[data-key='Backspace'] {
+	[data-key='backspace'] {
 		left: calc(50% + 3.5 * var(--size) + 0.8rem);
 	}
 
-	[data-key='Enter']:disabled {
+	[data-key='enter']:disabled {
 		opacity: 0.5;
 	}
 </style>
