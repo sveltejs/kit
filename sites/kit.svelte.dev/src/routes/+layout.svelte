@@ -26,7 +26,7 @@
 		return 'theme-default';
 	}
 
-	function setTheme (theme) {
+	function setTheme(theme) {
 		document.documentElement.classList.remove('theme-default', 'theme-dark');
 		document.documentElement.classList.add(theme);
 		localStorage.setItem('theme', theme);
