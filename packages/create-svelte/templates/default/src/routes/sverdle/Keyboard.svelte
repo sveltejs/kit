@@ -19,17 +19,14 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <form
-	class="keyboard"
 	method="POST"
 	use:enhance={({ action, cancel }) => {
-		if (action.searchParams.has('/keyboard')) {
-			dispatch('key', action.searchParams.get('key'));
-			cancel();
-		}
+		dispatch('key', action.searchParams.get('key'));
+		cancel();
 	}}
 >
-	<button id="enter" data-key="Enter" form="game" disabled={!canSubmit}>⏎</button>
-	<button id="backspace" data-key="Backspace" formaction="?/keyboard&key=Backspace">⤆</button>
+	<button data-key="Enter" form="game" disabled={!canSubmit}>⏎</button>
+	<button data-key="Backspace" formaction="?/keyboard&key=Backspace">⤆</button>
 
 	{#each ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'] as row}
 		<div class="row">
@@ -48,7 +45,7 @@
 </form>
 
 <style>
-	.keyboard {
+	form {
 		--gap: 0.2rem;
 		position: relative;
 		display: flex;
@@ -66,13 +63,13 @@
 
 	button,
 	button:disabled {
-		--size: min(1vw, 0.5vh, 5px);
+		--size: min(8vw, 4vh, 40px);
 		background-color: white;
 		color: black;
-		width: calc(8 * var(--size));
+		width: var(--size);
 		border: none;
 		border-radius: 2px;
-		font-size: calc(var(--size) * 5);
+		font-size: calc(var(--size) * 0.5);
 	}
 
 	button.exact {
@@ -94,23 +91,23 @@
 		outline: none;
 	}
 
-	#enter,
-	#backspace {
+	[data-key='Enter'],
+	[data-key='Backspace'] {
 		position: absolute;
 		bottom: 0;
-		width: calc(12 * var(--size));
+		width: calc(1.5 * var(--size));
 		height: calc(1 / 3 * (100% - 2 * var(--gap)));
 	}
 
-	#enter {
-		right: calc(50% + 28 * var(--size) + 0.8rem);
+	[data-key='Enter'] {
+		right: calc(50% + 3.5 * var(--size) + 0.8rem);
 	}
 
-	#backspace {
-		left: calc(50% + 28 * var(--size) + 0.8rem);
+	[data-key='Backspace'] {
+		left: calc(50% + 3.5 * var(--size) + 0.8rem);
 	}
 
-	#enter:disabled {
+	[data-key='Enter']:disabled {
 		opacity: 0.5;
 	}
 </style>
