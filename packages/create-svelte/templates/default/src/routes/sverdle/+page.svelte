@@ -33,10 +33,8 @@
 
 				if (answer[i] === 'x') {
 					keys[letter] = 'exact';
-				} else if (answer[i] === 'c' && !keys[letter]) {
-					keys[letter] = 'close';
-				} else {
-					keys[letter] = 'missing';
+				} else if (!keys[letter]) {
+					keys[letter] = answer[i] === 'c' ? 'close' : 'missing';
 				}
 			}
 		});
