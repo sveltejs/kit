@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/stores';
-	import logo from './svelte-logo.svg';
+	import logo from '$lib/images/svelte-logo.svg';
+	import github from '$lib/images/github.svg';
 </script>
 
 <header>
@@ -31,7 +32,9 @@
 	</nav>
 
 	<div class="corner">
-		<!-- TODO put something else here? github link? -->
+		<a href="https://kit.svelte.dev">
+			<img src={github} alt="GitHub" />
+		</a>
 	</div>
 </header>
 
@@ -110,7 +113,7 @@
 		display: flex;
 		height: 100%;
 		align-items: center;
-		padding: 0 1em;
+		padding: 0 0.5rem;
 		color: var(--color-text);
 		font-weight: 700;
 		font-size: 0.8rem;
