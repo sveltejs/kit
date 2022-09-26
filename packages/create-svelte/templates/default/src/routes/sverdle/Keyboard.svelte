@@ -22,9 +22,8 @@
 	class="keyboard"
 	method="POST"
 	use:enhance={({ action, cancel }) => {
-		const url = new URL(action);
-		if (url.searchParams.has('/keyboard')) {
-			dispatch('key', url.searchParams.get('key'));
+		if (action.searchParams.has('/keyboard')) {
+			dispatch('key', action.searchParams.get('key'));
 			cancel();
 		}
 	}}
