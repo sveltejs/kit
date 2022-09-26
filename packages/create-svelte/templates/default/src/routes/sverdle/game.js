@@ -48,10 +48,12 @@ export class Game {
 		// in a second step, otherwise an early close
 		// match can prevent a later exact match)
 		for (let i = 0; i < 5; i += 1) {
-			const index = available.indexOf(letters[i]);
-			if (index !== -1) {
-				answer[i] = 'c';
-				available[index] = ' ';
+			if (answer[i] === '_') {
+				const index = available.indexOf(letters[i]);
+				if (index !== -1) {
+					answer[i] = 'c';
+					available[index] = ' ';
+				}
 			}
 		}
 
