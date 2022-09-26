@@ -1,21 +1,22 @@
-<script>
+<script lang="ts">
 	import { enhance } from '$app/forms';
 	import { createEventDispatcher } from 'svelte';
 
 	/** @type {Record<string, 'exact' | 'close' | 'missing'>}*/
-	export let keys;
+	export let keys: Record<string, 'exact' | 'close' | 'missing'>;
 
 	/** @type {boolean} */
-	export let canSubmit;
+	export let canSubmit: boolean;
+
+	/** @param {KeyboardEvent} event */
+	function handleKeydown(event: KeyboardEvent) {
+		document.querySelector(`[data-key="${event.key}"]`)?.dispatchEvent(new MouseEvent('click'));
+	}
 
 	const dispatch = createEventDispatcher();
 </script>
 
-<svelte:window
-	on:keydown={(event) => {
-		document.querySelector(`[data-key="${event.key}"]`)?.click();
-	}}
-/>
+<svelte:window on:keydown={handleKeydown} />
 
 <form
 	class="keyboard"

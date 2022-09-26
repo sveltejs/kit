@@ -1,14 +1,15 @@
-<script>
+<script lang="ts">
 	import Keyboard from './Keyboard.svelte';
 	import { confetti } from '@neoconfetti/svelte';
 	import { enhance } from '$app/forms';
 	import { browser } from '$app/environment';
+	import type { PageData, ActionData } from './$types';
 
 	/** @type {import('./$types').PageData} */
-	export let data;
+	export let data: PageData;
 
 	/** @type {import('./$types').ActionData} */
-	export let form;
+	export let form: ActionData;
 
 	const rows = Array(6);
 	const columns = Array(5);
@@ -17,7 +18,7 @@
 	$: won = data.answers.at(-1) === 'xxxxx';
 
 	/** @type {Record<string, 'exact' | 'close' | 'missing'>}*/
-	let keys = {};
+	let keys: Record<string, 'exact' | 'close' | 'missing'> = {};
 
 	$: {
 		keys = {};
@@ -42,12 +43,12 @@
 	}
 
 	/** @param {string} key */
-	function handleKey(key) {
+	function handleKey(key: string) {
 		const guess = data.guesses[current_guess];
 
 		if (key === 'Backspace') {
 			data.guesses[current_guess] = guess.slice(0, -1);
-			if (form) form.illegal = false;
+			if (form?.illegal) form.illegal = false;
 		} else if (/^[a-z]$/.test(key) && guess.length < 5) {
 			data.guesses[current_guess] = guess + key;
 		}

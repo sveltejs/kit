@@ -9,7 +9,8 @@ import { mkdirp, rimraf } from '../utils.js';
 /** @param {string} content */
 function convert_typescript(content) {
 	const transformed = transform(content, {
-		transforms: ['typescript']
+		transforms: ['typescript'],
+		disableESTransforms: true
 	});
 
 	return prettier.format(transformed.code, {
@@ -127,7 +128,8 @@ async function generate_templates(shared) {
 							const suffix = `\n${imports.join(',')}`;
 
 							const transformed = transform(typescript + suffix, {
-								transforms: ['typescript']
+								transforms: ['typescript'],
+								disableESTransforms: true
 							}).code.slice(0, -suffix.length);
 
 							const contents = prettier
