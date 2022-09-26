@@ -93,23 +93,23 @@
 		outline: none;
 	}
 
-	[data-key='enter'],
-	[data-key='backspace'] {
+	button[data-key='enter'],
+	button[data-key='backspace'] {
 		position: absolute;
 		bottom: 0;
 		width: calc(1.5 * var(--size));
 		height: calc(1 / 3 * (100% - 2 * var(--gap)));
 	}
 
-	[data-key='enter'] {
+	button[data-key='enter'] {
 		right: calc(50% + 3.5 * var(--size) + 0.8rem);
 	}
 
-	[data-key='backspace'] {
+	button[data-key='backspace'] {
 		left: calc(50% + 3.5 * var(--size) + 0.8rem);
 	}
 
-	[data-key='enter']:disabled {
+	button[data-key='enter']:disabled {
 		opacity: 0.5;
 	}
 </style>
