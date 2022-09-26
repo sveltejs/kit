@@ -29,12 +29,6 @@ body {
 		linear-gradient(180deg, var(--color-bg-0) 0%, var(--color-bg-1) 15%, var(--color-bg-2) 50%);
 }
 
-#svelte {
-	min-height: 100vh;
-	display: flex;
-	flex-direction: column;
-}
-
 h1,
 h2,
 p {
