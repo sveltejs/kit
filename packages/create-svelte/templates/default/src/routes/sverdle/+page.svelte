@@ -80,10 +80,10 @@
 		{/each}
 	</form>
 
-	<!-- <div class="info">
-		<span class="exact"> = right letter, right place</span>
-		<span class="close"> = right letter, wrong place</span>
-	</div> -->
+	<div class="info">
+		<span class="exact"> = right letter, right square</span>
+		<span class="close"> = right letter, wrong square</span>
+	</div>
 
 	<div class="controls">
 		{#if won || data.answers.length >= 6}
@@ -125,7 +125,7 @@
 		width: 100%;
 		height: 100%;
 		display: grid;
-		grid-template-rows: 2fr 1fr;
+		grid-template-rows: 2fr 4rem 1fr;
 		flex-direction: column;
 		justify-content: center;
 		gap: 1rem;
@@ -147,6 +147,9 @@
 
 	#game {
 		justify-content: end;
+	}
+
+	.info {
 	}
 
 	.controls {

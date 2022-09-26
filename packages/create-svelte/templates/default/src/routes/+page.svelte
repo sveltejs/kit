@@ -34,7 +34,7 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
-		flex: 1;
+		flex: 0.6;
 	}
 
 	h1 {

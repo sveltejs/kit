@@ -103,7 +103,7 @@
 		top: 0;
 		left: calc(50% - var(--size));
 		border: var(--size) solid transparent;
-		border-top: var(--size) solid var(--accent-color);
+		border-top: var(--size) solid var(--color-accent);
 	}
 
 	nav a {
@@ -111,7 +111,7 @@
 		height: 100%;
 		align-items: center;
 		padding: 0 1em;
-		color: var(--heading-color);
+		color: var(--color-text);
 		font-weight: 700;
 		font-size: 0.8rem;
 		text-transform: uppercase;
@@ -121,6 +121,6 @@
 	}
 
 	a:hover {
-		color: var(--accent-color);
+		color: var(--color-accent);
 	}
 </style>
