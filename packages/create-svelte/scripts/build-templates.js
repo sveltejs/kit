@@ -8,12 +8,18 @@ import { mkdirp, rimraf } from '../utils.js';
 
 /** @param {string} content */
 function convert_typescript(content) {
-	const transformed = transform(content, {
+	let { code } = transform(content, {
 		transforms: ['typescript'],
 		disableESTransforms: true
 	});
 
-	return prettier.format(transformed.code, {
+	// sucrase leaves invalid class fields intact
+	code = code.replace(/^\s*[a-z]+;$/gm, '');
+
+	// Prettier strips 'unnecessary' parens from .ts files, we need to hack them back in
+	code = code.replace(/(\/\*\* @type.+? \*\/) (.+?) \/\*\*\*\//, '$1($2)');
+
+	return prettier.format(code, {
 		parser: 'babel',
 		useTabs: true,
 		singleQuote: true,
@@ -24,7 +30,7 @@ function convert_typescript(content) {
 
 /** @param {string} content */
 function strip_jsdoc(content) {
-	return content.replace(/\/\*\*[\s\S]+?\*\/[\s\n]+/g, '');
+	return content.replace(/\/\*\*\*\//g, '').replace(/\/\*\*[\s\S]+?\*\/[\s\n]+/g, '');
 }
 
 /** @param {Set<string>} shared */

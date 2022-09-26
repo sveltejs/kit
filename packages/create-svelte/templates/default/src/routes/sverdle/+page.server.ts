@@ -33,7 +33,7 @@ export const actions: Actions = {
 		const game = new Game(cookies.get('sverdle'));
 
 		const data = await request.formData();
-		const guess = /** @type {string[]} */ data.getAll('guess') as string[];
+		const guess = /** @type {string[]} */ data.getAll('guess') /***/ as string[];
 
 		if (!game.enter(guess)) {
 			return invalid(400, {
