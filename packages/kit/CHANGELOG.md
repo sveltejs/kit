@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.504
+
+### Patch Changes
+
+- Add the submitter value with name to formData for use:enhance ([#7012](https://github.com/sveltejs/kit/pull/7012))
+
 ## 1.0.0-next.503
 
 ### Patch Changes
