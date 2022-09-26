@@ -14,7 +14,7 @@
 	const rows = Array(6);
 	const columns = Array(5);
 
-	$: current_guess = data.answers.length;
+	$: i = data.answers.length;
 	$: won = data.answers.at(-1) === 'xxxxx';
 
 	/** @type {Record<string, 'exact' | 'close' | 'missing'>}*/
@@ -42,13 +42,13 @@
 
 	/** @param {string} key */
 	function handleKey(key: string) {
-		const guess = data.guesses[current_guess];
+		const guess = data.guesses[i];
 
 		if (key === 'Backspace') {
-			data.guesses[current_guess] = guess.slice(0, -1);
+			data.guesses[i] = guess.slice(0, -1);
 			if (form?.illegal) form.illegal = false;
 		} else if (/^[a-z]$/.test(key) && guess.length < 5) {
-			data.guesses[current_guess] = guess + key;
+			data.guesses[i] = guess + key;
 		}
 	}
 </script>
@@ -57,12 +57,12 @@
 	<a class="how-to-play" href="/sverdle/how-to-play">How to play</a>
 
 	<form id="game" method="POST" action="?/enter" use:enhance>
-		{#each rows as _, i}
-			{@const current = i === current_guess}
+		{#each rows as _, r}
+			{@const current = r === i}
 
 			<div class="row" class:current class:illegal={current && form?.illegal}>
-				{#each columns as _, j}
-					{@const answer = data.answers[i]?.[j] ?? '-'}
+				{#each columns as _, c}
+					{@const answer = data.answers[r]?.[c] ?? '-'}
 
 					<input
 						name={current ? 'guess' : undefined}
@@ -71,9 +71,9 @@
 						class:exact={answer === 'x'}
 						class:close={answer === 'c'}
 						class:selected={!won &&
-							(current ? j === Math.min(4, data.guesses[i].length) : undefined)}
+							(current ? c === Math.min(4, data.guesses[r].length) : undefined)}
 						required
-						value={data.guesses[i]?.[j] ?? ''}
+						value={data.guesses[r]?.[c] ?? ''}
 					/>
 				{/each}
 			</div>
@@ -90,7 +90,7 @@
 		{:else}
 			<Keyboard
 				{keys}
-				canSubmit={data.guesses[current_guess].length === 5}
+				canSubmit={data.guesses[i].length === 5}
 				on:key={(event) => handleKey(event.detail)}
 			/>
 		{/if}
@@ -222,7 +222,7 @@
 	}
 
 	.current {
-		filter: drop-shadow(3px 3px 10px rgba(0, 0, 0, 0.1));
+		filter: drop-shadow(3px 3px 10px var(--color-bg-0));
 	}
 
 	button {
