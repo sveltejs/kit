@@ -105,7 +105,9 @@ Most of the time you won't need this, as `fetch` calls `depends` on your behalf 
 
 URLs can be absolute or relative to the page being loaded, and must be [encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding).
 
-Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html)
+Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html).
+
+The following example shows how to use `depends` to register a dependency on the URLs to a custom API client as well as a custom identifier, which is `invalidate`d after a button click, making the `load` function rerun.
 
 ```js
 /// file: src/routes/+page.js
