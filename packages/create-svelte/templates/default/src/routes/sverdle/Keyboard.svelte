@@ -50,25 +50,27 @@
 
 <style>
 	.keyboard {
+		--gap: 0.2rem;
 		position: relative;
 		display: flex;
 		flex-direction: column;
-		gap: 0.2rem;
+		gap: var(--gap);
+		height: 100%;
 	}
 
 	.row {
 		display: flex;
 		justify-content: center;
 		gap: 0.2rem;
+		flex: 1;
 	}
 
 	button,
 	button:disabled {
-		--size: min(1vw, 5px);
+		--size: min(1vw, 0.5vh, 5px);
 		background-color: white;
 		color: black;
 		width: calc(8 * var(--size));
-		height: calc(12 * var(--size));
 		border: none;
 		border-radius: 2px;
 		font-size: calc(var(--size) * 5);
@@ -98,6 +100,7 @@
 		position: absolute;
 		bottom: 0;
 		width: calc(12 * var(--size));
+		height: calc(1 / 3 * (100% - 2 * var(--gap)));
 	}
 
 	#enter {

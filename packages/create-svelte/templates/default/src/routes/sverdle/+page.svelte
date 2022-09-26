@@ -54,6 +54,8 @@
 </script>
 
 <div class="game">
+	<a class="how-to-play" href="/sverdle/how-to-play">How to play</a>
+
 	<form id="game" method="POST" action="?/enter" use:enhance>
 		{#each rows as _, i}
 			{@const current = i === current_guess}
@@ -93,8 +95,6 @@
 			/>
 		{/if}
 	</div>
-
-	<!-- <p><a href="/sverdle/how-to-play">How to play</a></p> -->
 </div>
 
 {#if browser && won}
@@ -117,16 +117,37 @@
 	.game {
 		width: 100%;
 		height: 100%;
-		display: grid;
-		grid-template-rows: 2fr 4rem 1fr;
+		display: flex;
 		flex-direction: column;
+		align-items: center;
 		justify-content: center;
 		gap: 1rem;
 		flex: 1;
 	}
 
+	.how-to-play {
+		color: var(--color-text);
+	}
+
+	.how-to-play::before {
+		content: 'i';
+		display: inline-block;
+		font-size: 0.8em;
+		font-weight: 900;
+		width: 1em;
+		height: 1em;
+		padding: 0.2em;
+		line-height: 1;
+		border: 1.5px solid var(--color-text);
+		border-radius: 50%;
+		text-align: center;
+		margin: 0 0.5em 0 0;
+		position: relative;
+		top: -0.05em;
+	}
+
 	form {
-		--width: min(100vw, 380px);
+		--width: min(100vw, 40vh, 380px);
 		max-width: var(--width);
 		align-self: center;
 		justify-self: center;
@@ -135,7 +156,6 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: start;
-		flex: 2;
 	}
 
 	#game {
@@ -144,7 +164,7 @@
 
 	.controls {
 		justify-content: center;
-		flex: 1;
+		height: min(18vh, 10rem);
 	}
 
 	.row {
