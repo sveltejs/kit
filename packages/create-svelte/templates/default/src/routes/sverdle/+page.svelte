@@ -68,6 +68,8 @@
 	 * @param {KeyboardEvent} event
 	 */
 	function keydown(event: KeyboardEvent) {
+		if (event.metaKey) return;
+
 		document
 			.querySelector(`[data-key="${event.key}" i]`)
 			?.dispatchEvent(new MouseEvent('click', { cancelable: true }));
