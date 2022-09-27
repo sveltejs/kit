@@ -104,12 +104,12 @@
 
 	<div class="controls">
 		{#if won || data.answers.length >= 6}
-			<button class="restart" formaction="?/restart">
+			<button data-key="enter" aria-selected="true" class="restart" formaction="?/restart">
 				{won ? 'you won :)' : 'Game over :('} play again?
 			</button>
 		{:else}
 			<div class="keyboard">
-				<button data-key="enter" aria-selected={submittable} disabled={!submittable}>⏎</button>
+				<button data-key="enter" aria-selected={submittable} disabled={!submittable}>enter</button>
 
 				<button
 					on:click|preventDefault={update}
@@ -118,7 +118,7 @@
 					name="key"
 					value="backspace"
 				>
-					⤆
+					back
 				</button>
 
 				{#each ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'] as row}
@@ -314,6 +314,9 @@
 		bottom: 0;
 		width: calc(1.5 * var(--size));
 		height: calc(1 / 3 * (100% - 2 * var(--gap)));
+		text-transform: uppercase;
+		font-size: calc(0.3 * var(--size));
+		padding-top: calc(0.1 * var(--size));
 	}
 
 	.keyboard button[data-key='enter'] {
