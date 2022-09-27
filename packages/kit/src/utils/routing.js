@@ -46,15 +46,20 @@ export function parse_route_id(id) {
 											throw new Error(
 												`Invalid param: ${content}. Params and matcher names can only have underscores and alphanumeric characters.`
 											);
-										} else if ((match[1] && !match[5]) || (!match[1] && match[5])) {
+										}
+
+										const [, optional, rest, name, type, optional_end] = match;
+
+										if ((optional && !optional_end) || (!optional && optional_end)) {
 											throw new Error(`Invalid param: ${content}. Unbalanced square brackets.`);
-										} else if (match[1] && match[2]) {
+										} else if (optional && rest) {
 											throw new Error(
-												`Invalid param: ${content}. Rest routes are always optional. Remove the outer square brackets.`
+												`Invalid param: ${content}. Did you mean [...${name}${
+													type ? `=${type}` : ''
+												}]?`
 											);
 										}
 
-										const [, optional, rest, name, type] = match;
 										is_optional = is_optional || !!optional;
 										names.push(name);
 										types.push(type);
@@ -62,8 +67,8 @@ export function parse_route_id(id) {
 											? '(.*?)'
 											: optional
 											? dynamic_only
-												? '(/[^/]+)?' // optional param makes up the whole segment
-												: '([^/]*)?' // optional param accompanied by other text
+												? '(/[^/]+)?' // regex includes the leading slash, which we need to remove in the exec function
+												: '([^/]*)?'
 											: '([^/]+?)';
 									}
 
@@ -123,7 +128,10 @@ export function exec(match, names, types, matchers) {
 	for (let i = 0; i < names.length; i += 1) {
 		const name = names[i];
 		const type = types[i];
-		const value = match[i + 1] || '';
+		let value = match[i + 1] || '';
+		// Regex of optional params can result in a leading slash.
+		// It's safe to remove it because a slash coming from the user needs to be encoded.
+		if (value.startsWith('/')) value = value.slice(1);
 
 		if (type) {
 			const matcher = matchers[type];

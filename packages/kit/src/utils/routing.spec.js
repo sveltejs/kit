@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { parse_route_id } from './routing.js';
+import { exec, parse_route_id } from './routing.js';
 
 const tests = {
 	'': {
@@ -25,6 +25,21 @@ const tests = {
 	},
 	'blog/[slug].json': {
 		pattern: /^\/blog\/([^/]+?)\.json$/,
+		names: ['slug'],
+		types: [undefined]
+	},
+	'blog/[[slug]]': {
+		pattern: /^\/blog(\/[^/]+)?\/?$/,
+		names: ['slug'],
+		types: [undefined]
+	},
+	'blog/[[slug=type]]/sub': {
+		pattern: /^\/blog(\/[^/]+)?\/sub\/?$/,
+		names: ['slug'],
+		types: ['type']
+	},
+	'blog/[[slug]].json': {
+		pattern: /^\/blog\/([^/]*)?\.json$/,
 		names: ['slug'],
 		types: [undefined]
 	},
@@ -64,6 +79,20 @@ for (const [key, expected] of Object.entries(tests)) {
 		assert.equal(actual.types, expected.types);
 	});
 }
+
+test('exec extracts params correctly', () => {
+	const route_regex = /^\/blog(\/[^/]+)?\/sub([^/]+?)\/?$/;
+	{
+		const match = route_regex.exec('/blog/123/subparam');
+		if (!match) throw new Error('failed to match, test setup is borked');
+		assert.equal(exec(match, ['slug', 'param'], [], {}), { slug: '123', param: 'param' });
+	}
+	{
+		const match = route_regex.exec('/blog/subparam');
+		if (!match) throw new Error('failed to match, test setup is borked');
+		assert.equal(exec(match, ['slug', 'param'], [], {}), { slug: '', param: 'param' });
+	}
+});
 
 test('errors on bad param name', () => {
 	assert.throws(() => parse_route_id('abc/[b-c]'), /Invalid param: b-c/);
