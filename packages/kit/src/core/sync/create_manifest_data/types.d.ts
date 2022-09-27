@@ -1,7 +1,6 @@
 import { PageNode } from 'types';
 
 interface Part {
-	content: string;
 	dynamic: boolean;
 	rest: boolean;
 	type: string | null;

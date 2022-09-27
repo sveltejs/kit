@@ -320,6 +320,53 @@ test('allows rest parameters inside segments', () => {
 	]);
 });
 
+test('optional parameters', () => {
+	const { nodes, routes } = create('samples/optional');
+
+	assert.equal(nodes.map(simplify_node), [
+		default_layout,
+		default_error,
+		{
+			component: 'samples/optional/nested/[[optional]]/sub/+page.svelte'
+		},
+		{
+			component: 'samples/optional/prefix[[suffix]]/+page.svelte'
+		},
+		{
+			component: 'samples/optional/[[optional]]/+page.svelte'
+		}
+	]);
+
+	assert.equal(routes.map(simplify_route), [
+		{
+			id: '',
+			pattern: '/^/$/'
+		},
+		{ id: 'nested', pattern: '/^/nested/?$/' },
+		{ id: 'nested/[[optional]]', pattern: '/^/nested(/[^/]+)?/?$/' },
+		{
+			id: 'nested/[[optional]]/sub',
+			pattern: '/^/nested(/[^/]+)?/sub/?$/',
+			page: { layouts: [0], errors: [1], leaf: 2 }
+		},
+		{
+			id: 'prefix[[suffix]]',
+			pattern: '/^/prefix([^/]*)?/?$/',
+			page: { layouts: [0], errors: [1], leaf: 3 }
+		},
+		{
+			id: '[[foo]]bar',
+			pattern: '/^/([^/]*)?bar/?$/',
+			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js' }
+		},
+		{
+			id: '[[optional]]',
+			pattern: '/^(/[^/]+)?/?$/',
+			page: { layouts: [0], errors: [1], leaf: 4 }
+		}
+	]);
+});
+
 test('ignores files and directories with leading underscores', () => {
 	const { routes } = create('samples/hidden-underscore');
 

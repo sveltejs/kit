@@ -128,7 +128,6 @@ function create_routes_and_nodes(cwd, config, fallback) {
 							if (!content) return;
 
 							parts.push({
-								content,
 								dynamic,
 								rest: dynamic && content.startsWith('...'),
 								type: (dynamic && content.split('=')[1]) || null
