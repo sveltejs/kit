@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Keyboard from './Keyboard.svelte';
 	import { confetti } from '@neoconfetti/svelte';
 	import { enhance } from '$app/forms';
 	import type { PageData, ActionData } from './$types';
@@ -10,33 +9,81 @@
 	/** @type {import('./$types').ActionData} */
 	export let form: ActionData;
 
-	/** The index of the current guess */
-	$: i = data.answers.length;
-
 	/** Whether or not the user has won */
 	$: won = data.answers.at(-1) === 'xxxxx';
 
-	/** @param {string} key */
-	function handleKey(key: string) {
+	/** The index of the current guess */
+	$: i = won ? -1 : data.answers.length;
+
+	/** Whether the current guess can be submitted */
+	$: submittable = data.guesses[i]?.length === 5;
+
+	/**
+	 * A map of classnames for all letters that have been guessed,
+	 * used for styling the keyboard
+	 * @type {Record<string, 'exact' | 'close' | 'missing'>}
+	 */
+	let classnames: Record<string, 'exact' | 'close' | 'missing'>;
+
+	$: {
+		classnames = {};
+
+		data.answers.forEach((answer, i) => {
+			const guess = data.guesses[i];
+
+			for (let i = 0; i < 5; i += 1) {
+				const letter = guess[i];
+
+				if (answer[i] === 'x') {
+					classnames[letter] = 'exact';
+				} else if (!classnames[letter]) {
+					classnames[letter] = answer[i] === 'c' ? 'close' : 'missing';
+				}
+			}
+		});
+	}
+
+	/**
+	 * Modify the game state without making a trip to the server,
+	 * if client-side JavaScript is enabled
+	 * @param {MouseEvent} event
+	 */
+	function update(event: MouseEvent) {
 		const guess = data.guesses[i];
+		const key = /** @type {HTMLButtonElement} */ (event.target as HTMLButtonElement).getAttribute(
+			'data-key'
+		);
 
 		if (key === 'backspace') {
 			data.guesses[i] = guess.slice(0, -1);
 			if (form?.illegal) form.illegal = false;
-		} else if (/^[a-z]$/.test(key) && guess.length < 5) {
-			data.guesses[i] = guess + key;
+		} else if (guess.length < 5) {
+			data.guesses[i] += key;
 		}
+	}
+
+	/**
+	 * Trigger form logic in response to a keydown event, so that
+	 * desktop users can use the keyboard to play the game
+	 * @param {KeyboardEvent} event
+	 */
+	function keydown(event: KeyboardEvent) {
+		document
+			.querySelector(`[data-key="${event.key}" i]`)
+			?.dispatchEvent(new MouseEvent('click', { cancelable: true }));
 	}
 </script>
 
-<div class="game">
+<svelte:window on:keydown={keydown} />
+
+<form class="game" method="POST" action="?/enter" use:enhance>
 	<a class="how-to-play" href="/sverdle/how-to-play">How to play</a>
 
-	<form id="game" method="POST" action="?/enter" use:enhance>
+	<div class="grid" class:playing={!won} class:illegal={form?.illegal}>
 		{#each Array(6) as _, row}
 			{@const current = row === i}
 
-			<div class="row" class:current class:illegal={current && form?.illegal}>
+			<div class="row" class:current>
 				{#each Array(5) as _, column}
 					{@const answer = data.answers[row]?.[column] ?? '-'}
 
@@ -46,32 +93,55 @@
 						readonly
 						class:exact={answer === 'x'}
 						class:close={answer === 'c'}
-						class:selected={!won &&
-							(current ? column === Math.min(4, data.guesses[row].length) : undefined)}
+						aria-selected={current && column === data.guesses[row].length}
 						required
 						value={data.guesses[row]?.[column] ?? ''}
 					/>
 				{/each}
 			</div>
 		{/each}
-	</form>
+	</div>
 
 	<div class="controls">
 		{#if won || data.answers.length >= 6}
-			<form method="POST" action="?/restart" use:enhance>
-				<button>
-					{won ? 'you won :)' : 'Game over :('} play again?
-				</button>
-			</form>
+			<button class="restart" formaction="?/restart">
+				{won ? 'you won :)' : 'Game over :('} play again?
+			</button>
 		{:else}
-			<Keyboard
-				{data}
-				canSubmit={data.guesses[i].length === 5}
-				on:key={(event) => handleKey(event.detail)}
-			/>
+			<div class="keyboard">
+				<button data-key="enter" aria-selected={submittable} disabled={!submittable}>⏎</button>
+
+				<button
+					on:click|preventDefault={update}
+					data-key="backspace"
+					formaction="?/keyboard"
+					name="key"
+					value="backspace"
+				>
+					⤆
+				</button>
+
+				{#each ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'] as row}
+					<div class="row">
+						{#each row as letter}
+							<button
+								on:click|preventDefault={update}
+								data-key={letter}
+								class={classnames[letter]}
+								disabled={data.guesses[i].length === 5}
+								formaction="?/keyboard"
+								name="key"
+								value={letter}
+							>
+								{letter}
+							</button>
+						{/each}
+					</div>
+				{/each}
+			</div>
 		{/if}
 	</div>
-</div>
+</form>
 
 {#if won}
 	<div
@@ -118,7 +188,7 @@
 		top: -0.05em;
 	}
 
-	form {
+	.grid {
 		--width: min(100vw, 40vh, 380px);
 		max-width: var(--width);
 		align-self: center;
@@ -130,24 +200,19 @@
 		justify-content: start;
 	}
 
-	#game {
-		justify-content: end;
-	}
-
-	.controls {
-		justify-content: center;
-		height: min(18vh, 10rem);
-	}
-
-	.row {
+	.grid .row {
 		display: grid;
 		grid-template-columns: repeat(5, 1fr);
 		grid-gap: 0.2rem;
 		margin: 0 0 0.2rem 0;
 	}
 
-	.illegal {
+	.grid.illegal .row.current {
 		animation: wiggle 0.5s;
+	}
+
+	.grid.playing .row.current {
+		filter: drop-shadow(3px 3px 10px var(--color-bg-0));
 	}
 
 	input {
@@ -183,7 +248,7 @@
 		outline: none;
 	}
 
-	input.selected {
+	[aria-selected='true'] {
 		outline: 2px solid var(--color-theme-1);
 	}
 
@@ -192,11 +257,78 @@
 		color: var(--color-theme-1);
 	}
 
-	.current {
-		filter: drop-shadow(3px 3px 10px var(--color-bg-0));
+	.controls {
+		justify-content: center;
+		height: min(18vh, 10rem);
 	}
 
-	button {
+	.keyboard {
+		--gap: 0.2rem;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: var(--gap);
+		height: 100%;
+	}
+
+	.keyboard .row {
+		display: flex;
+		justify-content: center;
+		gap: 0.2rem;
+		flex: 1;
+	}
+
+	.keyboard button,
+	.keyboard button:disabled {
+		--size: min(8vw, 4vh, 40px);
+		background-color: white;
+		color: black;
+		width: var(--size);
+		border: none;
+		border-radius: 2px;
+		font-size: calc(var(--size) * 0.5);
+	}
+
+	.keyboard button.exact {
+		background: var(--color-theme-2);
+		color: white;
+	}
+
+	.keyboard button.missing {
+		opacity: 0.5;
+	}
+
+	.keyboard button.close {
+		border: 2px solid var(--color-theme-2);
+	}
+
+	.keyboard button:focus {
+		background: var(--color-theme-1);
+		color: white;
+		outline: none;
+	}
+
+	.keyboard button[data-key='enter'],
+	.keyboard button[data-key='backspace'] {
+		position: absolute;
+		bottom: 0;
+		width: calc(1.5 * var(--size));
+		height: calc(1 / 3 * (100% - 2 * var(--gap)));
+	}
+
+	.keyboard button[data-key='enter'] {
+		right: calc(50% + 3.5 * var(--size) + 0.8rem);
+	}
+
+	.keyboard button[data-key='backspace'] {
+		left: calc(50% + 3.5 * var(--size) + 0.8rem);
+	}
+
+	.keyboard button[data-key='enter']:disabled {
+		opacity: 0.5;
+	}
+
+	.restart {
 		width: 100%;
 		padding: 1rem;
 		background: rgba(255, 255, 255, 0.5);
@@ -204,8 +336,8 @@
 		border: none;
 	}
 
-	button:focus,
-	button:hover {
+	.restart:focus,
+	.restart:hover {
 		background: var(--color-theme-1);
 		color: white;
 		outline: none;

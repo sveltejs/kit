@@ -14,9 +14,11 @@ export const load: PageServerLoad = ({ cookies }) => {
 
 /** @type {import('./$types').Actions} */
 export const actions: Actions = {
-	keyboard: async ({ url, cookies }) => {
+	keyboard: async ({ request, cookies }) => {
 		const game = new Game(cookies.get('sverdle'));
-		const key = url.searchParams.get('key');
+
+		const data = await request.formData();
+		const key = data.get('key');
 
 		const i = game.answers.length;
 
