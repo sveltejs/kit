@@ -54,12 +54,12 @@
 	<a class="how-to-play" href="/sverdle/how-to-play">How to play</a>
 
 	<form id="game" method="POST" action="?/enter" use:enhance>
-		{#each Array(6) as _, r}
-			{@const current = r === i}
+		{#each Array(6) as _, row}
+			{@const current = row === i}
 
 			<div class="row" class:current class:illegal={current && form?.illegal}>
-				{#each Array(5) as _, c}
-					{@const answer = data.answers[r]?.[c] ?? '-'}
+				{#each Array(5) as _, column}
+					{@const answer = data.answers[row]?.[column] ?? '-'}
 
 					<input
 						name={current ? 'guess' : undefined}
@@ -68,9 +68,9 @@
 						class:exact={answer === 'x'}
 						class:close={answer === 'c'}
 						class:selected={!won &&
-							(current ? c === Math.min(4, data.guesses[r].length) : undefined)}
+							(current ? column === Math.min(4, data.guesses[row].length) : undefined)}
 						required
-						value={data.guesses[r]?.[c] ?? ''}
+						value={data.guesses[row]?.[column] ?? ''}
 					/>
 				{/each}
 			</div>
