@@ -1,13 +1,6 @@
 import { invalid } from '@sveltejs/kit';
-import words_raw from './words.txt?raw';
-import words_allowed_raw from './words_allowed.txt?raw';
+import { answers, allowed } from './words.server';
 import type { PageServerLoad, Actions } from './$types';
-
-/** The list of possible answers */
-const words = words_raw.split('\n');
-
-/** The list of valid guesses, of which the list of possible answers is a subset */
-const allowed = new Set([...words, ...words_allowed_raw.split('\n')]);
 
 /** @type {import('./$types').PageServerLoad} */
 export const load: PageServerLoad = ({ cookies }) => {
@@ -76,12 +69,12 @@ class Game {
 			this.guesses = guesses ? guesses.split(' ') : [];
 			this.answers = answers ? answers.split(' ') : [];
 		} else {
-			this.index = Math.floor(Math.random() * words.length);
+			this.index = Math.floor(Math.random() * answers.length);
 			this.guesses = ['', '', '', '', '', ''];
 			this.answers = /** @type {string[]} */ [] /***/;
 		}
 
-		this.answer = words[this.index];
+		this.answer = answers[this.index];
 	}
 
 	/**
