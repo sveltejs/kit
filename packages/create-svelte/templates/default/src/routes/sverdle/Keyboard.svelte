@@ -24,13 +24,11 @@
 	$: {
 		classnames = {};
 
-		data.guesses.forEach((word, i) => {
-			const answer = data.answers[i];
-
-			if (!answer) return;
+		data.answers.forEach((answer, i) => {
+			const guess = data.guesses[i];
 
 			for (let i = 0; i < 5; i += 1) {
-				const letter = word[i];
+				const letter = guess[i];
 
 				if (answer[i] === 'x') {
 					classnames[letter] = 'exact';
