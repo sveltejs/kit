@@ -14,29 +14,6 @@
 	$: i = data.answers.length;
 	$: won = data.answers.at(-1) === 'xxxxx';
 
-	/** @type {Record<string, 'exact' | 'close' | 'missing'>}*/
-	let keys: Record<string, 'exact' | 'close' | 'missing'> = {};
-
-	$: {
-		keys = {};
-
-		data.guesses.forEach((word, i) => {
-			const answer = data.answers[i];
-
-			if (!answer) return;
-
-			for (let i = 0; i < 5; i += 1) {
-				const letter = word[i];
-
-				if (answer[i] === 'x') {
-					keys[letter] = 'exact';
-				} else if (!keys[letter]) {
-					keys[letter] = answer[i] === 'c' ? 'close' : 'missing';
-				}
-			}
-		});
-	}
-
 	/** @param {string} key */
 	function handleKey(key: string) {
 		const guess = data.guesses[i];
@@ -86,7 +63,7 @@
 			</form>
 		{:else}
 			<Keyboard
-				{keys}
+				{data}
 				canSubmit={data.guesses[i].length === 5}
 				on:key={(event) => handleKey(event.detail)}
 			/>

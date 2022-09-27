@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { createEventDispatcher } from 'svelte';
+	import type { PageData } from './$types';
 
-	/** @type {Record<string, 'exact' | 'close' | 'missing'>}*/
-	export let keys: Record<string, 'exact' | 'close' | 'missing'>;
+	/** @type {import('./$types').PageData} */
+	export let data: PageData;
 
 	/** @type {boolean} */
 	export let canSubmit: boolean;
+
+	const dispatch = createEventDispatcher();
 
 	/** @param {KeyboardEvent} event */
 	function handleKeydown(event: KeyboardEvent) {
@@ -15,7 +18,28 @@
 			?.dispatchEvent(new MouseEvent('click'));
 	}
 
-	const dispatch = createEventDispatcher();
+	/** @type {Record<string, 'exact' | 'close' | 'missing'>}*/
+	let classnames: Record<string, 'exact' | 'close' | 'missing'> = {};
+
+	$: {
+		classnames = {};
+
+		data.guesses.forEach((word, i) => {
+			const answer = data.answers[i];
+
+			if (!answer) return;
+
+			for (let i = 0; i < 5; i += 1) {
+				const letter = word[i];
+
+				if (answer[i] === 'x') {
+					classnames[letter] = 'exact';
+				} else if (!classnames[letter]) {
+					classnames[letter] = answer[i] === 'c' ? 'close' : 'missing';
+				}
+			}
+		});
+	}
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -35,7 +59,7 @@
 			{#each row as letter}
 				<button
 					data-key={letter}
-					class={keys[letter]}
+					class={classnames[letter]}
 					disabled={canSubmit}
 					formaction="?/keyboard&key={letter}"
 				>
