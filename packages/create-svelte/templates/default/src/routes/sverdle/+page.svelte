@@ -2,7 +2,6 @@
 	import Keyboard from './Keyboard.svelte';
 	import { confetti } from '@neoconfetti/svelte';
 	import { enhance } from '$app/forms';
-	import { browser } from '$app/environment';
 	import type { PageData, ActionData } from './$types';
 
 	/** @type {import('./$types').PageData} */
@@ -71,20 +70,16 @@
 	</div>
 </div>
 
-{#if browser && won}
+{#if won}
 	<div
-		style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; pointer-events: none"
-	>
-		<div
-			style="position: absolute; left: 50%; top: 30%"
-			use:confetti={{
-				force: 0.7,
-				stageWidth: window.innerWidth,
-				stageHeight: window.innerHeight,
-				colors: ['#ff3e00', '#40b3ff', '#676778']
-			}}
-		/>
-	</div>
+		style="position: absolute; left: 50%; top: 30%"
+		use:confetti={{
+			force: 0.7,
+			stageWidth: window.innerWidth,
+			stageHeight: window.innerHeight,
+			colors: ['#ff3e00', '#40b3ff', '#676778']
+		}}
+	/>
 {/if}
 
 <style>
