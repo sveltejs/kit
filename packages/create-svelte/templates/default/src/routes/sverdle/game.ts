@@ -13,7 +13,10 @@ export class Game {
 	answers: string[];
 	answer: string;
 
-	/** @param {string | undefined} serialized */
+	/**
+	 * Create a game object from the user's cookie, or initialise a new game
+	 * @param {string | undefined} serialized
+	 */
 	constructor(serialized: string | undefined) {
 		if (serialized) {
 			const [index, guesses, answers] = serialized.split('-');
@@ -30,7 +33,10 @@ export class Game {
 		this.answer = words[this.index];
 	}
 
-	/** @param {string[]} letters */
+	/**
+	 * Update game state based on a guess of a five-letter word
+	 * @param {string[]} letters
+	 */
 	enter(letters: string[]) {
 		const word = letters.join('');
 		const valid = allowed.has(word);
@@ -68,6 +74,9 @@ export class Game {
 		return true;
 	}
 
+	/**
+	 * Serialize game state so it can be set as a cookie
+	 */
 	toString() {
 		return `${this.index}-${this.guesses.join(' ')}-${this.answers.join(' ')}`;
 	}

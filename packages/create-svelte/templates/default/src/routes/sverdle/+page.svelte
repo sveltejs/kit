@@ -10,7 +10,10 @@
 	/** @type {import('./$types').ActionData} */
 	export let form: ActionData;
 
+	/** The index of the current guess */
 	$: i = data.answers.length;
+
+	/** Whether or not the user has won */
 	$: won = data.answers.at(-1) === 'xxxxx';
 
 	/** @param {string} key */
@@ -38,7 +41,7 @@
 					{@const answer = data.answers[row]?.[column] ?? '-'}
 
 					<input
-						name={current ? 'guess' : undefined}
+						name="guess"
 						disabled={!current || won}
 						readonly
 						class:exact={answer === 'x'}

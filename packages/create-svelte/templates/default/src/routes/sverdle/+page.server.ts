@@ -18,12 +18,12 @@ export const actions: Actions = {
 		const game = new Game(cookies.get('sverdle'));
 		const key = url.searchParams.get('key');
 
-		const current_row = game.answers.length;
+		const i = game.answers.length;
 
 		if (key === 'backspace') {
-			game.guesses[current_row] = game.guesses[current_row].slice(0, -1);
+			game.guesses[i] = game.guesses[i].slice(0, -1);
 		} else {
-			game.guesses[current_row] += key;
+			game.guesses[i] += key;
 		}
 
 		cookies.set('sverdle', game.toString());
