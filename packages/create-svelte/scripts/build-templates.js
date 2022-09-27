@@ -17,7 +17,7 @@ function convert_typescript(content) {
 	code = code.replace(/^\s*[a-z]+;$/gm, '');
 
 	// Prettier strips 'unnecessary' parens from .ts files, we need to hack them back in
-	code = code.replace(/(\/\*\* @type.+? \*\/) (.+?) \/\*\*\*\//, '$1($2)');
+	code = code.replace(/(\/\*\* @type.+? \*\/) (.+?) \/\*\*\*\//g, '$1($2)');
 
 	return prettier.format(code, {
 		parser: 'babel',
