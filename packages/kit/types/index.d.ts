@@ -59,7 +59,11 @@ export interface ValidationError<T extends Record<string, unknown> | undefined =
 	data: T;
 }
 
-type UnpackValidationError<T> = T extends ValidationError<infer X> ? X : T;
+type UnpackValidationError<T> = T extends ValidationError<infer X>
+	? X
+	: T extends void
+	? undefined // needs to be undefined, because void will corrupt union type
+	: T;
 
 export interface Builder {
 	log: Logger;
