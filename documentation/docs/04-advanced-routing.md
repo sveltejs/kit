@@ -63,6 +63,10 @@ export function load(event) {
 
 > If you don't handle 404 cases, they will appear in [`handleError`](/docs/hooks#shared-hooks-handleerror)
 
+### Optional parameters
+
+A route like `[lang]/home` contains a parameter named `lang` which is required. Sometimes it's benefitial to make these parameters optional, so that in this example both `home` and `en/home` point to the same page. You can do that by wrapping the parameter in another bracket pair: `[[lang]]/home`
+
 ### Matching
 
 A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](/docs/configuration#files) directory...
