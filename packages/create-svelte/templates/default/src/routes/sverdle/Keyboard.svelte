@@ -19,7 +19,7 @@
 	}
 
 	/** @type {Record<string, 'exact' | 'close' | 'missing'>}*/
-	let classnames: Record<string, 'exact' | 'close' | 'missing'> = {};
+	let classnames: Record<string, 'exact' | 'close' | 'missing'>;
 
 	$: {
 		classnames = {};
