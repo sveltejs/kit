@@ -114,7 +114,7 @@
 				<button
 					on:click|preventDefault={update}
 					data-key="backspace"
-					formaction="?/keyboard"
+					formaction="?/update"
 					name="key"
 					value="backspace"
 				>
@@ -129,7 +129,7 @@
 								data-key={letter}
 								class={classnames[letter]}
 								disabled={data.guesses[i].length === 5}
-								formaction="?/keyboard"
+								formaction="?/update"
 								name="key"
 								value={letter}
 							>

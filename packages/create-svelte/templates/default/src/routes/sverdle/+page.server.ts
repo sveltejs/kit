@@ -14,7 +14,11 @@ export const load: PageServerLoad = ({ cookies }) => {
 
 /** @type {import('./$types').Actions} */
 export const actions: Actions = {
-	keyboard: async ({ request, cookies }) => {
+	/**
+	 * Modify game state in reaction to a keypress. If client-side JavaScript
+	 * is available, this will happen in the browser instead of here
+	 */
+	update: async ({ request, cookies }) => {
 		const game = new Game(cookies.get('sverdle'));
 
 		const data = await request.formData();
@@ -31,6 +35,10 @@ export const actions: Actions = {
 		cookies.set('sverdle', game.toString());
 	},
 
+	/**
+	 * Modify game state in reaction to a guessed word. This logic always runs on
+	 * the server, so that people can't cheat by peeking at the JavaScript
+	 */
 	enter: async ({ request, cookies }) => {
 		const game = new Game(cookies.get('sverdle'));
 
