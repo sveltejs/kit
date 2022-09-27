@@ -30,7 +30,15 @@ function convert_typescript(content) {
 
 /** @param {string} content */
 function strip_jsdoc(content) {
-	return content.replace(/\/\*\*\*\//g, '').replace(/\/\*\*[\s\S]+?\*\/[\s\n]+/g, '');
+	return content
+		.replace(/\/\*\*\*\//g, '')
+		.replace(/\/\*\*([\s\S]+?)(@[\s\S]+?)?\*\/[\s\n]+/g, (match, description, tags) => {
+			if (/^\s+(\*\s*)?$/.test(description)) {
+				return '';
+			}
+
+			return `/**${description}*/\n`;
+		});
 }
 
 /** @param {Set<string>} shared */

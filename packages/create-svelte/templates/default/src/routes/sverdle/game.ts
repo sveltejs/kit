@@ -1,8 +1,11 @@
 import words_raw from './words.txt?raw';
 import words_allowed_raw from './words_allowed.txt?raw';
 
-const words = words_raw.split('\n').filter(Boolean);
-const allowed = new Set([...words, ...words_allowed_raw.split('\n').filter(Boolean)]);
+/** The list of possible answers */
+const words = words_raw.split('\n');
+
+/** The list of valid guesses, of which the list of possible answers is a subset */
+const allowed = new Set([...words, ...words_allowed_raw.split('\n')]);
 
 export class Game {
 	index: number;
