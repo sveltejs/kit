@@ -56,7 +56,7 @@
 
 		if (key === 'backspace') {
 			data.guesses[i] = guess.slice(0, -1);
-			if (form?.illegal) form.illegal = false;
+			if (form?.badGuess) form.badGuess = false;
 		} else if (guess.length < 5) {
 			data.guesses[i] += key;
 		}
@@ -81,22 +81,21 @@
 <form class="game" method="POST" action="?/enter" use:enhance>
 	<a class="how-to-play" href="/sverdle/how-to-play">How to play</a>
 
-	<div class="grid" class:playing={!won} class:illegal={form?.illegal}>
+	<div class="grid" class:playing={!won} class:bad-guess={form?.badGuess}>
 		{#each Array(6) as _, row}
 			{@const current = row === i}
 
 			<div class="row" class:current>
 				{#each Array(5) as _, column}
-					{@const answer = data.answers[row]?.[column] ?? '-'}
+					{@const answer = data.answers[row]?.[column]}
 
 					<input
 						name="guess"
-						disabled={!current || won}
+						disabled={!current}
 						readonly
 						class:exact={answer === 'x'}
 						class:close={answer === 'c'}
 						aria-selected={current && column === data.guesses[row].length}
-						required
 						value={data.guesses[row]?.[column] ?? ''}
 					/>
 				{/each}
@@ -212,7 +211,7 @@
 		margin: 0 0 0.2rem 0;
 	}
 
-	.grid.illegal .row.current {
+	.grid.bad-guess .row.current {
 		animation: wiggle 0.5s;
 	}
 

@@ -49,9 +49,7 @@ export const actions: Actions = {
 		const guess = /** @type {string[]} */ data.getAll('guess') /***/ as string[];
 
 		if (!game.enter(guess)) {
-			return invalid(400, {
-				illegal: true
-			});
+			return invalid(400, { badGuess: true });
 		}
 
 		cookies.set('sverdle', game.toString());
@@ -89,7 +87,8 @@ class Game {
 	}
 
 	/**
-	 * Update game state based on a guess of a five-letter word
+	 * Update game state based on a guess of a five-letter word. Returns
+	 * true if the guess was valid, false otherwise
 	 * @param {string[]} letters
 	 */
 	enter(letters: string[]) {
