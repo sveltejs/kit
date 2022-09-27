@@ -6,10 +6,18 @@ import { compact } from '../../../utils/array.js';
 
 /**
  *  @typedef {{
+ *   file_name: string;
  *   modified: boolean;
  *   code: string;
  *   exports: any[];
  *  } | null} Proxy
+ *
+ *  @typedef {{
+ *   server: Proxy,
+ *   shared: Proxy
+ *  }} Proxies
+ *
+ *  @typedef {Map<import('types').PageNode, {route: import('types').RouteData, proxies: Proxies}>} RoutesMap
  */
 
 /** @type {import('typescript')} */
@@ -153,11 +161,11 @@ export async function write_types(config, manifest_data, file) {
  * @param {import('types').ManifestData} manifest_data
  */
 function create_routes_map(manifest_data) {
-	/** @type {Map<import('types').PageNode, import('types').RouteData>} */
+	/** @type {RoutesMap} */
 	const map = new Map();
 	for (const route of manifest_data.routes) {
 		if (route.leaf) {
-			map.set(route.leaf, route);
+			map.set(route.leaf, { route, proxies: { server: null, shared: null } });
 		}
 	}
 	return map;
@@ -166,7 +174,7 @@ function create_routes_map(manifest_data) {
 /**
  * Update types for a specific route
  * @param {import('types').ValidatedConfig} config
- * @param {Map<import('types').PageNode, import('types').RouteData>} routes
+ * @param {RoutesMap} routes
  * @param {import('types').RouteData} route
  * @param {Set<string>} [to_delete]
  */
@@ -208,12 +216,30 @@ function update_types(config, routes, route, to_delete = new Set()) {
 	}
 
 	if (route.leaf) {
-		const { declarations: d, exports: e, written_proxies } = process_node(route.leaf, outdir, true);
+		let route_info = routes.get(route.leaf);
+		if (!route_info) {
+			// This should be defined, but belts and braces
+			route_info = { route, proxies: { server: null, shared: null } };
+			routes.set(route.leaf, route_info);
+		}
+
+		const {
+			declarations: d,
+			exports: e,
+			proxies
+		} = process_node(route.leaf, outdir, true, route_info.proxies);
 
 		exports.push(...e);
 		declarations.push(...d);
 
-		for (const file of written_proxies) to_delete.delete(file);
+		if (proxies.server) {
+			route_info.proxies.server = proxies.server;
+			if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
+		}
+		if (proxies.shared) {
+			route_info.proxies.shared = proxies.shared;
+			if (proxies.shared?.modified) to_delete.delete(proxies.shared.file_name);
+		}
 
 		if (route.leaf.server) {
 			exports.push(`export type Action = Kit.Action<RouteParams>`);
@@ -227,8 +253,19 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		route.layout.child_pages?.forEach((page) => {
 			const leaf = routes.get(page);
 			if (leaf) {
-				for (const name of leaf.names) {
+				for (const name of leaf.route.names) {
 					layout_params.add(name);
+				}
+
+				ensureProxies(page, leaf.proxies);
+
+				if (
+					// Be defensive - if a proxy doesn't exist (because it couldn't be created), assume a load function exists.
+					// If we didn't and it's a false negative, the user could wrongfully get a type error on layouts.
+					(leaf.proxies.server && !leaf.proxies.server.exports.includes('load')) ||
+					(leaf.proxies.shared && !leaf.proxies.shared.exports.includes('load'))
+				) {
+					all_pages_have_load = false;
 				}
 			}
 			if (!page.server && !page.shared) {
@@ -245,13 +282,20 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		const {
 			exports: e,
 			declarations: d,
-			written_proxies
-		} = process_node(route.layout, outdir, false, all_pages_have_load);
+			proxies
+		} = process_node(
+			route.layout,
+			outdir,
+			false,
+			{ server: null, shared: null },
+			all_pages_have_load
+		);
 
 		exports.push(...e);
 		declarations.push(...d);
 
-		for (const file of written_proxies) to_delete.delete(file);
+		if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
+		if (proxies.shared?.modified) to_delete.delete(proxies.shared.file_name);
 	}
 
 	if (route.endpoint) {
@@ -278,14 +322,13 @@ function update_types(config, routes, route, to_delete = new Set()) {
  * @param {import('types').PageNode} node
  * @param {string} outdir
  * @param {boolean} is_page
+ * @param {Proxies} proxies
  * @param {boolean} [all_pages_have_load]
  */
-function process_node(node, outdir, is_page, all_pages_have_load = true) {
+function process_node(node, outdir, is_page, proxies, all_pages_have_load = true) {
 	const params = `${is_page ? 'Route' : 'Layout'}Params`;
 	const prefix = is_page ? 'Page' : 'Layout';
 
-	/** @type {string[]} */
-	let written_proxies = [];
 	/** @type {string[]} */
 	const declarations = [];
 	/** @type {string[]} */
@@ -296,13 +339,13 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 	/** @type {string} */
 	let data;
 
+	ensureProxies(node, proxies);
+
 	if (node.server) {
-		const content = fs.readFileSync(node.server, 'utf8');
-		const proxy = tweak_types(content, true);
 		const basename = path.basename(node.server);
+		const proxy = proxies.server;
 		if (proxy?.modified) {
 			fs.writeFileSync(`${outdir}/proxy${basename}`, proxy.code);
-			written_proxies.push(`proxy${basename}`);
 		}
 
 		server_data = get_data_type(node.server, 'null', proxy, true);
@@ -346,11 +389,9 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 	declarations.push(`type ${parent_type} = ${get_parent_type(node, 'LayoutData')};`);
 
 	if (node.shared) {
-		const content = fs.readFileSync(node.shared, 'utf8');
-		const proxy = tweak_types(content, false);
+		const proxy = proxies.shared;
 		if (proxy?.modified) {
 			fs.writeFileSync(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code);
-			written_proxies.push(`proxy${path.basename(node.shared)}`);
 		}
 
 		const type = get_data_type(
@@ -378,7 +419,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 
 	exports.push(`export type ${prefix}Data = ${data};`);
 
-	return { declarations, exports, written_proxies };
+	return { declarations, exports, proxies };
 
 	/**
 	 * @param {string} file_path
@@ -402,6 +443,42 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 		} else {
 			return 'unknown';
 		}
+	}
+}
+
+/**
+ * This function populates the proxies object, if necessary and not already done.
+ * Proxies are used to tweak the code of a file before it's typechecked.
+ * They are needed in two places - when generating the types for a page or layout.
+ * To not do the same work twice, we generate the proxies once and pass them around.
+ *
+ * @param {import('types').PageNode} node
+ * @param {Proxies} proxies
+ */
+function ensureProxies(node, proxies) {
+	if (node.server && !proxies.server) {
+		proxies.server = createProxy(node.server, true);
+	}
+
+	if (node.shared && !proxies.shared) {
+		proxies.shared = createProxy(node.shared, false);
+	}
+}
+
+/**
+ * @param {string} file_path
+ * @param {boolean} is_server
+ * @returns {Proxy}
+ */
+function createProxy(file_path, is_server) {
+	const proxy = tweak_types(fs.readFileSync(file_path, 'utf8'), is_server);
+	if (proxy) {
+		return {
+			...proxy,
+			file_name: `proxy${path.basename(file_path)}`
+		};
+	} else {
+		return null;
 	}
 }
 
@@ -457,7 +534,7 @@ function replace_ext_with_js(file_path) {
 /**
  * @param {string} content
  * @param {boolean} is_server
- * @returns {Proxy}
+ * @returns {Omit<NonNullable<Proxy>, 'file_name'> | null}
  */
 export function tweak_types(content, is_server) {
 	const names = new Set(is_server ? ['load', 'actions'] : ['load']);
