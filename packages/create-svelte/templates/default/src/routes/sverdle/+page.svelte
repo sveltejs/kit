@@ -232,6 +232,7 @@
 		font-size: calc(0.08 * var(--width));
 		border-radius: 2px;
 		background: white;
+		margin: 0;
 	}
 
 	input:disabled:not(.exact):not(.close) {
@@ -292,6 +293,7 @@
 		border: none;
 		border-radius: 2px;
 		font-size: calc(var(--size) * 0.5);
+		margin: 0;
 	}
 
 	.keyboard button.exact {
