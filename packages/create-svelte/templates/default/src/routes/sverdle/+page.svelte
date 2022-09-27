@@ -321,7 +321,7 @@
 		height: calc(1 / 3 * (100% - 2 * var(--gap)));
 		text-transform: uppercase;
 		font-size: calc(0.3 * var(--size));
-		padding-top: calc(0.1 * var(--size));
+		padding-top: calc(0.15 * var(--size));
 	}
 
 	.keyboard button[data-key='enter'] {
