@@ -106,8 +106,11 @@
 
 	<div class="controls">
 		{#if won || data.answers.length >= 6}
+			{#if data.answer}
+				<p>the answer was "{data.answer}"</p>
+			{/if}
 			<button data-key="enter" aria-selected="true" class="restart" formaction="?/restart">
-				{won ? 'you won :)' : 'Game over :('} play again?
+				{won ? 'you won :)' : `game over :(`} play again?
 			</button>
 		{:else}
 			<div class="keyboard">
@@ -260,6 +263,7 @@
 	}
 
 	.controls {
+		text-align: center;
 		justify-content: center;
 		height: min(18vh, 10rem);
 	}

@@ -8,7 +8,10 @@ export const load: PageServerLoad = ({ cookies }) => {
 
 	return {
 		guesses: game.guesses,
-		answers: game.answers
+		answers: game.answers,
+
+		// reveal the answer if the game is over
+		answer: game.answers.length >= 6 ? game.answer : null
 	};
 };
 
