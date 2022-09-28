@@ -40,3 +40,4 @@ export type LayoutServerData = Expand<
 export type LayoutData = Expand<
 	Omit<LayoutParentData, keyof LayoutServerData> & EnsureDefined<LayoutServerData>
 >;
+export type RequestEvent = Kit.RequestEvent<RouteParams>;
