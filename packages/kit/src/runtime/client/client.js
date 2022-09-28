@@ -1303,13 +1303,20 @@ export function create_client({ target, base, trailing_slash }) {
 
 				const is_svg_a_element = a instanceof SVGAElement;
 
-				// Ignore URL protocols that differ to the current one (e.g. `mailto:`, `tel:`, `myapp:`, etc.)
+				// Ignore URL protocols that differ to the current one and are not http(s) (e.g. `mailto:`, `tel:`, `myapp:`, etc.)
+				// This may be wrong when the protocol is x: and the link goes to y:.. which should be treated as an external
+				// navigation, but it's not clear how to handle that case and it's not likely to come up in practice.
 				// MEMO: Without this condition, firefox will open mailer twice.
 				// See:
 				// - https://github.com/sveltejs/kit/issues/4045
 				// - https://github.com/sveltejs/kit/issues/5725
 				// - https://github.com/sveltejs/kit/issues/6496
-				if (!is_svg_a_element && url.protocol !== location.protocol) return;
+				if (
+					!is_svg_a_element &&
+					url.protocol !== location.protocol &&
+					!(url.protocol === 'https:' || url.protocol === 'http:')
+				)
+					return;
 
 				// Ignore if tag has
 				// 1. 'download' attribute
