@@ -78,7 +78,7 @@
 
 <svelte:window on:keydown={keydown} />
 
-<form class="game" method="POST" action="?/enter" use:enhance>
+<form method="POST" action="?/enter" use:enhance>
 	<a class="how-to-play" href="/sverdle/how-to-play">How to play</a>
 
 	<div class="grid" class:playing={!won} class:bad-guess={form?.badGuess}>
@@ -105,7 +105,7 @@
 
 	<div class="controls">
 		{#if won || data.answers.length >= 6}
-			{#if data.answer}
+			{#if !won && data.answer}
 				<p>the answer was "{data.answer}"</p>
 			{/if}
 			<button data-key="enter" aria-selected="true" class="restart" formaction="?/restart">
@@ -160,7 +160,7 @@
 {/if}
 
 <style>
-	.game {
+	form {
 		width: 100%;
 		height: 100%;
 		display: flex;
