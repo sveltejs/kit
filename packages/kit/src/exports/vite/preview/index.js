@@ -46,7 +46,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const server = new Server(manifest);
 	await server.init({
-		env: loadEnv(vite_config.mode, process.cwd(), '')
+		env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, '')
 	});
 
 	return () => {
@@ -137,7 +137,7 @@ export async function preview(vite, vite_config, svelte_config) {
 				});
 			} catch (/** @type {any} */ err) {
 				res.statusCode = err.status || 400;
-				return res.end(err.message || 'Invalid request body');
+				return res.end('Invalid request body');
 			}
 
 			setResponse(

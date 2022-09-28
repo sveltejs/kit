@@ -105,9 +105,12 @@ Most of the time you won't need this, as `fetch` calls `depends` on your behalf 
 
 URLs can be absolute or relative to the page being loaded, and must be [encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding).
 
-Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html)
+Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html).
+
+The following example shows how to use `depends` to register a dependency on the URLs to a custom API client as well as a custom identifier, which is `invalidate`d after a button click, making the `load` function rerun.
 
 ```js
+/// file: src/routes/+page.js
 // @filename: ambient.d.ts
 declare module '$lib/api' {
 	interface Data{}
@@ -136,6 +139,24 @@ export async function load({ depends }) {
 }
 ```
 
+```svelte
+/// file: src/routes/+page.svelte
+<script>
+	import { invalidate } from '$app/navigation';
+
+	/** @type {import('./$types').PageData} */
+	export let data;
+
+	const pageRefresh = async () => {
+		await invalidate('my-stuff:foo');
+	}
+</script>
+
+<p>{data.foo}<p>
+<p>{data.bar}</p>
+<button on:click={pageRefresh}>Refresh my stuff</button>
+```
+
 #### fetch
 
 `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
@@ -154,7 +175,7 @@ export async function load({ depends }) {
 
 ```js
 /// file: src/routes/+layout.server.js
-/** @type {import('./$types').LayoutLoad} */
+/** @type {import('./$types').LayoutServerLoad} */
 export function load() {
 	return { a: 1 };
 }
@@ -163,11 +184,11 @@ export function load() {
 ```js
 /// file: src/routes/foo/+layout.server.js
 // @filename: $types.d.ts
-export type LayoutLoad = import('@sveltejs/kit').Load<{}, null, { a: number }>;
+export type LayoutServerLoad = import('@sveltejs/kit').Load<{}, null, { a: number }>;
 
 // @filename: index.js
 // ---cut---
-/** @type {import('./$types').LayoutLoad} */
+/** @type {import('./$types').LayoutServerLoad} */
 export async function load({ parent }) {
 	const { a } = await parent();
 	console.log(a); // `1`
@@ -179,11 +200,11 @@ export async function load({ parent }) {
 ```js
 /// file: src/routes/foo/+page.server.js
 // @filename: $types.d.ts
-export type PageLoad = import('@sveltejs/kit').Load<{}, null, { a: number, b: number }>;
+export type PageServerLoad = import('@sveltejs/kit').Load<{}, null, { a: number, b: number }>;
 
 // @filename: index.js
 // ---cut---
-/** @type {import('./$types').PageLoad} */
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ parent }) {
 	const { a, b } = await parent();
 	console.log(a, b); // `1`, `2`
@@ -199,11 +220,11 @@ Be careful not to introduce accidental waterfalls when using `await parent()`. I
 ```diff
 /// file: src/routes/foo/+page.server.js
 // @filename: $types.d.ts
-export type PageLoad = import('@sveltejs/kit').Load<{}, null, { a: number, b: number }>;
+export type PageServerLoad = import('@sveltejs/kit').Load<{}, null, { a: number, b: number }>;
 
 // @filename: index.js
 // ---cut---
-/** @type {import('./$types').PageLoad} */
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ parent, fetch }) {
 -	const parentData = await parent();
 	const data = await fetch('./some-api');
@@ -310,8 +331,6 @@ export function load({ locals }) {
 
 If an _unexpected_ error is thrown, SvelteKit will invoke [`handleError`](/docs/hooks#shared-hooks-handleerror) and treat it as a 500 Internal Error.
 
-> In development, stack traces for unexpected errors are visible as `$page.error.stack`. In production, stack traces are hidden.
-
 ### Redirects
 
 To redirect users, use the `redirect` helper from `@sveltejs/kit` to specify the location to which they should be redirected alongside a `3xx` status code.
@@ -344,7 +363,7 @@ A `load` function will re-run in the following situations:
 - It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed
 - It calls `await parent()` and a parent `load` function re-ran
 - It declared a dependency on a specific URL via [`fetch`](#input-methods-fetch) or [`depends`](#input-methods-depends), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
-- All active `load` functions were forcibly re-run with [`invalidate()`](/docs/modules#$app-navigation-invalidate)
+- All active `load` functions were forcibly re-run with [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall)
 
 If a `load` function is triggered to re-run, the page will not remount — instead, it will update with the new `data`. This means that components' internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
 

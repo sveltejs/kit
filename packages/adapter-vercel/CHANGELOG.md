@@ -1,5 +1,23 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.77
+
+### Patch Changes
+
+- Redact error message if `getRequest` fails ([#6936](https://github.com/sveltejs/kit/pull/6936))
+
+## 1.0.0-next.76
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.75
+
+### Patch Changes
+
+- Ignore warnings when traced file fails to parse ([#6810](https://github.com/sveltejs/kit/pull/6810))
+
 ## 1.0.0-next.74
 
 ### Patch Changes

@@ -173,8 +173,16 @@ test('creates routes with layout', () => {
 
 test('succeeds when routes does not exist', () => {
 	const { nodes, routes } = create('samples/basic/routes');
-	assert.equal(nodes, []);
-	assert.equal(routes, []);
+	assert.equal(nodes.map(simplify_node), [
+		{ component: 'layout.svelte' },
+		{ component: 'error.svelte' }
+	]);
+	assert.equal(routes.map(simplify_route), [
+		{
+			id: '',
+			pattern: '/^$/'
+		}
+	]);
 });
 
 // TODO some characters will need to be URL-encoded in the filename

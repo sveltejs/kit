@@ -1,10 +1,10 @@
 import { devalue } from 'devalue';
 import { readable, writable } from 'svelte/store';
-import * as cookie from 'cookie';
 import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
+import { add_cookies_to_headers } from '../cookie.js';
 
 // TODO rename this function/module
 
@@ -18,12 +18,12 @@ const updated = {
  * @param {{
  *   branch: Array<import('./types').Loaded>;
  *   fetched: Array<import('./types').Fetched>;
- *   cookies: import('set-cookie-parser').Cookie[];
+ *   cookies: import('./types').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
- *   error: App.PageError | null;
+ *   error: App.Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('types').ActionResult;
@@ -98,7 +98,8 @@ export async function render_response({
 			routeId: event.routeId,
 			status,
 			url: event.url,
-			data
+			data,
+			form: form_value
 		};
 
 		// TODO remove this for 1.0
@@ -187,37 +188,6 @@ export async function render_response({
 		serialized.form = devalue(form_value);
 	}
 
-	// prettier-ignore
-	const init_app = `
-		import { start } from ${s(prefixed(entry.file))};
-
-		start({
-			env: ${s(options.public_env)},
-			hydrate: ${page_config.ssr ? `{
-				status: ${status},
-				error: ${s(error)},
-				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
-				params: ${devalue(event.params)},
-				routeId: ${s(event.routeId)},
-				data: ${serialized.data},
-				form: ${serialized.form}
-			}` : 'null'},
-			paths: ${s(options.paths)},
-			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-			trailing_slash: ${s(options.trailing_slash)}
-		});
-	`;
-
-	// we use an anonymous function instead of an arrow function to support
-	// older browsers (https://github.com/sveltejs/kit/pull/5417)
-	const init_service_worker = `
-		if ('serviceWorker' in navigator) {
-			addEventListener('load', function () {
-				navigator.serviceWorker.register('${options.service_worker}');
-			});
-		}
-	`;
-
 	if (inline_styles.size > 0) {
 		const content = Array.from(inline_styles.values()).join('\n');
 
@@ -248,15 +218,36 @@ export async function render_response({
 		}
 
 		attributes.unshift('rel="stylesheet"');
-		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
+		head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
 	if (page_config.csr) {
+		// prettier-ignore
+		const init_app = `
+			import { start } from ${s(prefixed(entry.file))};
+
+			start({
+				env: ${s(options.public_env)},
+				hydrate: ${page_config.ssr ? `{
+					status: ${status},
+					error: ${s(error)},
+					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
+					params: ${devalue(event.params)},
+					routeId: ${s(event.routeId)},
+					data: ${serialized.data},
+					form: ${serialized.form}
+				}` : 'null'},
+				paths: ${s(options.paths)},
+				target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
+				trailing_slash: ${s(options.trailing_slash)}
+			});
+		`;
+
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
 			if (state.prerendering) {
-				head += `\n\t<link rel="modulepreload" href="${path}">`;
+				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
 			}
 		}
 
@@ -280,11 +271,21 @@ export async function render_response({
 	}
 
 	if (options.service_worker) {
+		// we use an anonymous function instead of an arrow function to support
+		// older browsers (https://github.com/sveltejs/kit/pull/5417)
+		const init_service_worker = `
+			if ('serviceWorker' in navigator) {
+				addEventListener('load', function () {
+					navigator.serviceWorker.register('${prefixed('service-worker.js')}');
+				});
+			}
+		`;
+
 		// always include service worker unless it's turned off explicitly
 		csp.add_script(init_service_worker);
 
 		head += `
-			<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
+		<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
 	}
 
 	if (state.prerendering) {
@@ -328,11 +329,7 @@ export async function render_response({
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
 
-		for (const new_cookie of cookies) {
-			const { name, value, ...options } = new_cookie;
-			// @ts-expect-error
-			headers.append('set-cookie', cookie.serialize(name, value, options));
-		}
+		add_cookies_to_headers(headers, cookies);
 
 		if (link_header_preloads.size) {
 			headers.set('link', Array.from(link_header_preloads).join(', '));

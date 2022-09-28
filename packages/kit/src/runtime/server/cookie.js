@@ -1,49 +1,88 @@
-import * as cookie from 'cookie';
+import { parse, serialize } from 'cookie';
+
+/** @type {import('cookie').CookieSerializeOptions} */
+const DEFAULT_SERIALIZE_OPTIONS = {
+	httpOnly: true,
+	secure: true,
+	sameSite: 'lax'
+};
 
 /**
  * @param {Request} request
  * @param {URL} url
  */
 export function get_cookies(request, url) {
-	const initial_cookies = cookie.parse(request.headers.get('cookie') ?? '');
-
-	/** @type {Array<{ name: string, value: string, options: import('cookie').CookieSerializeOptions }>} */
-	const new_cookies = [];
+	/** @type {Map<string, import('./page/types').Cookie>} */
+	const new_cookies = new Map();
 
 	/** @type {import('types').Cookies} */
 	const cookies = {
+		// The JSDoc param annotations appearing below for get, set and delete
+		// are necessary to expose the `cookie` library types to
+		// typescript users. `@type {import('types').Cookies}` above is not
+		// sufficient to do so.
+
+		/**
+		 * @param {string} name
+		 * @param {import('cookie').CookieParseOptions} opts
+		 */
 		get(name, opts) {
-			const decode = opts?.decode || decodeURIComponent;
-
-			let i = new_cookies.length;
-			while (i--) {
-				const cookie = new_cookies[i];
-
-				if (
-					cookie.name === name &&
-					domain_matches(url.hostname, cookie.options.domain) &&
-					path_matches(url.pathname, cookie.options.path)
-				) {
-					return cookie.value;
-				}
+			const c = new_cookies.get(name);
+			if (
+				c &&
+				domain_matches(url.hostname, c.options.domain) &&
+				path_matches(url.pathname, c.options.path)
+			) {
+				return c.value;
 			}
 
-			return name in initial_cookies ? decode(initial_cookies[name]) : undefined;
+			const decode = opts?.decode || decodeURIComponent;
+			const req_cookies = parse(request.headers.get('cookie') ?? '', { decode });
+			return req_cookies[name]; // the decoded string or undefined
 		},
-		set(name, value, options = {}) {
-			new_cookies.push({
+
+		/**
+		 * @param {string} name
+		 * @param {string} value
+		 * @param {import('cookie').CookieSerializeOptions} opts
+		 */
+		set(name, value, opts = {}) {
+			new_cookies.set(name, {
 				name,
 				value,
 				options: {
-					httpOnly: true,
-					secure: true,
-					...options
+					...DEFAULT_SERIALIZE_OPTIONS,
+					...opts
 				}
 			});
 		},
-		delete(name) {
-			new_cookies.push({ name, value: '', options: { expires: new Date(0) } });
-			delete initial_cookies[name];
+
+		/**
+		 * @param {string} name
+		 * @param {import('cookie').CookieSerializeOptions} opts
+		 */
+		delete(name, opts = {}) {
+			new_cookies.set(name, {
+				name,
+				value: '',
+				options: {
+					...DEFAULT_SERIALIZE_OPTIONS,
+					...opts,
+					maxAge: 0
+				}
+			});
+		},
+
+		/**
+		 * @param {string} name
+		 * @param {string} value
+		 * @param {import('cookie').CookieSerializeOptions} opts
+		 */
+		serialize(name, value, opts) {
+			return serialize(name, value, {
+				...DEFAULT_SERIALIZE_OPTIONS,
+				...opts
+			});
 		}
 	};
 
@@ -74,4 +113,15 @@ export function path_matches(path, constraint) {
 
 	if (path === normalized) return true;
 	return path.startsWith(normalized + '/');
+}
+
+/**
+ * @param {Headers} headers
+ * @param {import('./page/types').Cookie[]} cookies
+ */
+export function add_cookies_to_headers(headers, cookies) {
+	for (const new_cookie of cookies) {
+		const { name, value, options } = new_cookie;
+		headers.append('set-cookie', serialize(name, value, options));
+	}
 }

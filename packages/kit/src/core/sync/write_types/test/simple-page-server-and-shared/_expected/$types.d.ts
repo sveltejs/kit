@@ -1,5 +1,6 @@
 import type * as Kit from '@sveltejs/kit';
 
+type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
 type RouteParams = {};
 type MaybeWithVoid<T> = {} extends T ? T | void : T;
 export type RequiredKeys<T> = {
@@ -10,11 +11,11 @@ type OutputDataShape<T> = MaybeWithVoid<
 		Partial<Pick<App.PageData, keyof T & keyof App.PageData>> &
 		Record<string, any>
 >;
-type EnsureParentData<T> = T extends null | undefined ? {} : T;
-type PageServerParentData = EnsureParentData<LayoutServerData>;
-type PageParentData = EnsureParentData<LayoutData>;
+type EnsureDefined<T> = T extends null | undefined ? {} : T;
+type PageServerParentData = EnsureDefined<LayoutServerData>;
+type PageParentData = EnsureDefined<LayoutData>;
 type LayoutParams = RouteParams & {};
-type LayoutParentData = EnsureParentData<{}>;
+type LayoutParentData = EnsureDefined<{}>;
 
 export type PageServerLoad<
 	OutputData extends (Partial<App.PageData> & Record<string, any>) | void =
@@ -23,24 +24,30 @@ export type PageServerLoad<
 > = Kit.ServerLoad<RouteParams, PageServerParentData, OutputData>;
 export type PageServerLoadEvent = Parameters<PageServerLoad>[0];
 export type ActionData = unknown;
-export type PageServerData = Kit.AwaitedProperties<
-	Awaited<ReturnType<typeof import('../../../../../../../../+page.server.js').load>>
+export type PageServerData = Expand<
+	Kit.AwaitedProperties<
+		Awaited<ReturnType<typeof import('../../../../../../../../+page.server.js').load>>
+	>
 >;
 export type PageLoad<
 	OutputData extends OutputDataShape<PageParentData> = OutputDataShape<PageParentData>
 > = Kit.Load<RouteParams, PageServerData, PageParentData, OutputData>;
 export type PageLoadEvent = Parameters<PageLoad>[0];
-export type PageData = Omit<
-	PageParentData,
-	keyof Kit.AwaitedProperties<
-		Awaited<ReturnType<typeof import('../../../../../../../../+page.js').load>>
-	>
-> &
-	Kit.AwaitedProperties<
-		Awaited<ReturnType<typeof import('../../../../../../../../+page.js').load>>
-	>;
+export type PageData = Expand<
+	Omit<
+		PageParentData,
+		keyof Kit.AwaitedProperties<
+			Awaited<ReturnType<typeof import('../../../../../../../../+page.js').load>>
+		>
+	> &
+		EnsureDefined<
+			Kit.AwaitedProperties<
+				Awaited<ReturnType<typeof import('../../../../../../../../+page.js').load>>
+			>
+		>
+>;
 export type Action = Kit.Action<RouteParams>;
 export type Actions = Kit.Actions<RouteParams>;
 export type LayoutServerData = null;
-export type LayoutData = LayoutParentData;
+export type LayoutData = Expand<LayoutParentData>;
 export type RequestEvent = Kit.RequestEvent<RouteParams>;

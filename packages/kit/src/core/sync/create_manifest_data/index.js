@@ -164,13 +164,16 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			const dir = path.join(cwd, routes_base, id);
 
-			const files = fs.readdirSync(dir, {
-				withFileTypes: true
-			});
+			// We can't use withFileTypes because of a NodeJs bug which returns wrong results
+			// with isDirectory() in case of symlinks: https://github.com/nodejs/node/issues/30646
+			const files = fs.readdirSync(dir).map((name) => ({
+				is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
+				name
+			}));
 
 			// process files first
 			for (const file of files) {
-				if (file.isDirectory()) continue;
+				if (file.is_dir) continue;
 				if (!file.name.startsWith('+')) continue;
 				if (!valid_extensions.find((ext) => file.name.endsWith(ext))) continue;
 
@@ -213,7 +216,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			// then handle children
 			for (const file of files) {
-				if (file.isDirectory()) {
+				if (file.is_dir) {
 					walk(depth + 1, path.posix.join(id, file.name), file.name, route);
 				}
 			}
@@ -222,102 +225,115 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		walk(0, '', '', null);
 
 		const root = /** @type {import('types').RouteData} */ (route_map.get(''));
-
-		// TODO remove for 1.0
 		if (route_map.size === 1) {
 			if (!root.leaf && !root.error && !root.layout && !root.endpoint) {
 				throw new Error(
+					// TODO adjust this error message for 1.0
+					// 'No routes found. If you are using a custom src/routes directory, make sure it is specified in svelte.config.js'
 					'The filesystem router API has changed, see https://github.com/sveltejs/kit/discussions/5774 for details'
 				);
 			}
 		}
-
-		if (!root.layout?.component) {
-			if (!root.layout) root.layout = { depth: 0, child_pages: [] };
-			root.layout.component = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
-		}
-
-		if (!root.error?.component) {
-			if (!root.error) root.error = { depth: 0 };
-			root.error.component = posixify(path.relative(cwd, `${fallback}/error.svelte`));
-		}
-
-		// we do layouts/errors first as they are more likely to be reused,
-		// and smaller indexes take fewer bytes. also, this guarantees that
-		// the default error/layout are 0/1
-		route_map.forEach((route) => {
-			if (route.layout) nodes.push(route.layout);
-			if (route.error) nodes.push(route.error);
-		});
-
-		/** @type {Map<string, string>} */
-		const conflicts = new Map();
-
-		route_map.forEach((route) => {
-			if (!route.leaf) return;
-
-			nodes.push(route.leaf);
-
-			const normalized = route.id.split('/').filter(affects_path).join('/');
-
-			if (conflicts.has(normalized)) {
-				throw new Error(`${conflicts.get(normalized)} and ${route.id} occupy the same route`);
-			}
-
-			conflicts.set(normalized, route.id);
-		});
-
-		const indexes = new Map(nodes.map((node, i) => [node, i]));
-
-		route_map.forEach((route) => {
-			if (!route.leaf) return;
-
-			if (route.leaf && route.endpoint) {
-				// TODO possibly relax this https://github.com/sveltejs/kit/issues/5896
-				throw new Error(`${route.endpoint.file} cannot share a directory with other route files`);
-			}
-
-			route.page = {
-				layouts: [],
-				errors: [],
-				leaf: /** @type {number} */ (indexes.get(route.leaf))
-			};
-
-			/** @type {import('types').RouteData | null} */
-			let current_route = route;
-			let current_node = route.leaf;
-			let parent_id = route.leaf.parent_id;
-
-			while (current_route) {
-				if (parent_id === undefined || current_route.segment === parent_id) {
-					if (current_route.layout || current_route.error) {
-						route.page.layouts.unshift(
-							current_route.layout ? indexes.get(current_route.layout) : undefined
-						);
-						route.page.errors.unshift(
-							current_route.error ? indexes.get(current_route.error) : undefined
-						);
-					}
-
-					if (current_route.layout) {
-						/** @type {import('types').PageNode[]} */ (current_route.layout.child_pages).push(
-							route.leaf
-						);
-						current_node.parent = current_node = current_route.layout;
-						parent_id = current_node.parent_id;
-					} else {
-						parent_id = undefined;
-					}
-				}
-
-				current_route = current_route.parent;
-			}
-
-			if (parent_id !== undefined) {
-				throw new Error(`${current_node.component} references missing segment "${parent_id}"`);
-			}
+	} else {
+		// If there's no routes directory, we'll just create a single empty route. This ensures the root layout and
+		// error components are included in the manifest, which is needed for subsequent build/dev commands to work
+		route_map.set('', {
+			id: '',
+			segment: '',
+			pattern: /^$/,
+			names: [],
+			types: [],
+			parent: null,
+			layout: null,
+			error: null,
+			leaf: null,
+			page: null,
+			endpoint: null
 		});
 	}
+
+	const root = /** @type {import('types').RouteData} */ (route_map.get(''));
+
+	if (!root.layout?.component) {
+		if (!root.layout) root.layout = { depth: 0, child_pages: [] };
+		root.layout.component = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
+	}
+
+	if (!root.error?.component) {
+		if (!root.error) root.error = { depth: 0 };
+		root.error.component = posixify(path.relative(cwd, `${fallback}/error.svelte`));
+	}
+
+	// we do layouts/errors first as they are more likely to be reused,
+	// and smaller indexes take fewer bytes. also, this guarantees that
+	// the default error/layout are 0/1
+	route_map.forEach((route) => {
+		if (route.layout) nodes.push(route.layout);
+		if (route.error) nodes.push(route.error);
+	});
+
+	/** @type {Map<string, string>} */
+	const conflicts = new Map();
+
+	route_map.forEach((route) => {
+		if (!route.leaf) return;
+
+		nodes.push(route.leaf);
+
+		const normalized = route.id.split('/').filter(affects_path).join('/');
+
+		if (conflicts.has(normalized)) {
+			throw new Error(`${conflicts.get(normalized)} and ${route.id} occupy the same route`);
+		}
+
+		conflicts.set(normalized, route.id);
+	});
+
+	const indexes = new Map(nodes.map((node, i) => [node, i]));
+
+	route_map.forEach((route) => {
+		if (!route.leaf) return;
+
+		route.page = {
+			layouts: [],
+			errors: [],
+			leaf: /** @type {number} */ (indexes.get(route.leaf))
+		};
+
+		/** @type {import('types').RouteData | null} */
+		let current_route = route;
+		let current_node = route.leaf;
+		let parent_id = route.leaf.parent_id;
+
+		while (current_route) {
+			if (parent_id === undefined || current_route.segment === parent_id) {
+				if (current_route.layout || current_route.error) {
+					route.page.layouts.unshift(
+						current_route.layout ? indexes.get(current_route.layout) : undefined
+					);
+					route.page.errors.unshift(
+						current_route.error ? indexes.get(current_route.error) : undefined
+					);
+				}
+
+				if (current_route.layout) {
+					/** @type {import('types').PageNode[]} */ (current_route.layout.child_pages).push(
+						route.leaf
+					);
+					current_node.parent = current_node = current_route.layout;
+					parent_id = current_node.parent_id;
+				} else {
+					parent_id = undefined;
+				}
+			}
+
+			current_route = current_route.parent;
+		}
+
+		if (parent_id !== undefined) {
+			throw new Error(`${current_node.component} references missing segment "${parent_id}"`);
+		}
+	});
 
 	const routes = Array.from(route_map.values()).sort((a, b) => compare(a, b, segment_map));
 

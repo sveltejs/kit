@@ -1,5 +1,6 @@
 import type * as Kit from '@sveltejs/kit';
 
+type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
 type RouteParams = { slug: string };
 type MaybeWithVoid<T> = {} extends T ? T | void : T;
 export type RequiredKeys<T> = {
@@ -10,8 +11,8 @@ type OutputDataShape<T> = MaybeWithVoid<
 		Partial<Pick<App.PageData, keyof T & keyof App.PageData>> &
 		Record<string, any>
 >;
-type EnsureParentData<T> = T extends null | undefined ? {} : T;
-type PageParentData = EnsureParentData<import('../../$types.js').LayoutData>;
+type EnsureDefined<T> = T extends null | undefined ? {} : T;
+type PageParentData = EnsureDefined<import('../../$types.js').LayoutData>;
 
 export type PageServerData = null;
-export type PageData = PageParentData;
+export type PageData = Expand<PageParentData>;

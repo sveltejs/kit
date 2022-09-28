@@ -127,7 +127,7 @@ If an error occurs during `load`, SvelteKit will render a default error page. Yo
 <h1>{$page.status}: {$page.error.message}</h1>
 ```
 
-SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and `src/routes/+error.svelte` before rendering the default error page. If _that_ fails, SvelteKit will bail out and render a static fallback error page, which you can customise by creating a `src/error.html` file.
+SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and `src/routes/+error.svelte` before rendering the default error page. If _that_ fails (or if the error was thrown from the `load` function of the root `+layout`, which sits 'above' the root `+error`), SvelteKit will bail out and render a static fallback error page, which you can customise by creating a `src/error.html` file.
 
 ### +layout
 
@@ -266,6 +266,57 @@ export function GET({ url }) {
 The first argument to `Response` can be a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream), making it possible to stream large amounts of data or create server-sent events (unless deploying to platforms that buffer responses, like AWS Lambda).
 
 You can use the `error`, `redirect` and `json` methods from `@sveltejs/kit` for convenience (but you don't have to). Note that `throw error(..)` only returns a plain text error response.
+
+#### Receiving data
+
+By exporting `POST`/`PUT`/`PATCH`/`DELETE` handlers, `+server.js` files can be used to create a complete API:
+
+```svelte
+/// file: src/routes/add/+page.svelte
+<script>
+	let a = 0;
+	let b = 0;
+	let total = 0;
+
+	async function add() {
+		const response = await fetch('/api/add', {
+			method: 'POST',
+			body: JSON.stringify({ a, b }),
+			headers: {
+				'content-type': 'application/json'
+			}
+		});
+
+		total = await response.json();
+	}
+</script>
+
+<input type="number" bind:value={a}> +
+<input type="number" bind:value={b}> =
+{total}
+
+<button on:click={add}>Calculate</button>
+```
+
+```js
+/// file: src/routes/api/add/+server.js
+import { json } from '@sveltejs/kit';
+
+/** @type {import('./$types').RequestHandler} */
+export async function POST({ request }) {
+	const { a, b } = await request.json();
+	return json(a + b);
+}
+```
+
+> In general, [form actions](/docs/form-actions) are a better way to submit data from the browser to the server.
+
+#### Content negotiation
+
+`+server.js` files can be placed in the same directory as `+page` files, allowing the same route to be either a page or an API endpoint. To determine which, SvelteKit applies the following rules:
+
+- `PUT`/`PATCH`/`DELETE` requests are always handled by `+server.js` since they do not apply to pages
+- `GET`/`POST` requests are treated as page requests if the `accept` header prioritises `text/html` (in other words, it's a browser page request), else they are handled by `+server.js`
 
 ### $types
 

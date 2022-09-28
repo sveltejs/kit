@@ -1,6 +1,9 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
-import * as esbuild from 'esbuild';
+import { rollup } from 'rollup';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
@@ -49,16 +52,23 @@ export default function (opts = {}) {
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 
-			await esbuild.build({
-				platform: 'node',
-				sourcemap: 'linked',
-				target: 'es2022',
-				entryPoints: [`${tmp}/index.js`, `${tmp}/manifest.js`],
-				outdir: `${out}/server`,
-				splitting: true,
+			// we bundle the Vite output so that deployments only need
+			// their production dependencies. Anything in devDependencies
+			// will get included in the bundled code
+			const bundle = await rollup({
+				input: {
+					index: `${tmp}/index.js`,
+					manifest: `${tmp}/manifest.js`
+				},
+				external: [...Object.keys(pkg.dependencies || {})],
+				plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()]
+			});
+
+			await bundle.write({
+				dir: `${out}/server`,
 				format: 'esm',
-				bundle: true,
-				external: [...Object.keys(pkg.dependencies || {})]
+				sourcemap: true,
+				chunkFileNames: `chunks/[name]-[hash].js`
 			});
 
 			builder.copy(files, out, {

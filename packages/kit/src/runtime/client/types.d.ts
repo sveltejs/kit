@@ -25,7 +25,7 @@ export interface Client {
 	// private API
 	_hydrate: (opts: {
 		status: number;
-		error: App.PageError;
+		error: App.Error;
 		node_ids: number[];
 		params: Record<string, string>;
 		routeId: string | null;
@@ -77,9 +77,8 @@ export interface DataNode {
 
 export interface NavigationState {
 	branch: Array<BranchNode | undefined>;
-	error: App.PageError | null;
+	error: App.Error | null;
 	params: Record<string, string>;
 	route: CSRRoute | null;
-	session_id: number;
 	url: URL;
 }

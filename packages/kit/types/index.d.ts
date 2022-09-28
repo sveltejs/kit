@@ -13,7 +13,8 @@ import {
 	PrerenderOnErrorValue,
 	RequestOptions,
 	RouteDefinition,
-	TrailingSlash
+	TrailingSlash,
+	UniqueInterface
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 import { HttpError, Redirect } from '../src/runtime/control.js';
@@ -25,7 +26,7 @@ export interface Adapter {
 	adapt(builder: Builder): MaybePromise<void>;
 }
 
-export type AwaitedProperties<input extends Record<string, any> | void> = input extends void
+type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
 	: input extends Record<string, any>
 	? {
@@ -35,17 +36,34 @@ export type AwaitedProperties<input extends Record<string, any> | void> = input 
 	? input
 	: unknown;
 
+export type AwaitedProperties<input extends Record<string, any> | void> =
+	AwaitedPropertiesUnion<input> extends Record<string, any>
+		? OptionalUnion<AwaitedPropertiesUnion<input>>
+		: AwaitedPropertiesUnion<input>;
+
 export type AwaitedActions<T extends Record<string, (...args: any) => any>> = {
-	[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
+	[Key in keyof T]: OptionalUnion<UnpackValidationError<Awaited<ReturnType<T[Key]>>>>;
 }[keyof T];
 
+// Takes a union type and returns a union type where each type also has all properties
+// of all possible types (typed as undefined), making accessing them more ergonomic
+type OptionalUnion<
+	U extends Record<string, any>, // not unknown, else interfaces don't satisfy this constraint
+	A extends keyof U = U extends U ? keyof U : never
+> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
+
 // Needs to be here, else ActionData will be resolved to unknown - probably because of "d.ts file imports .js file" in combination with allowJs
-interface ValidationError<T extends Record<string, unknown> | undefined = undefined> {
+export interface ValidationError<T extends Record<string, unknown> | undefined = undefined>
+	extends UniqueInterface {
 	status: number;
 	data: T;
 }
 
-type UnpackValidationError<T> = T extends ValidationError<infer X> ? X : T;
+type UnpackValidationError<T> = T extends ValidationError<infer X>
+	? X
+	: T extends void
+	? undefined // needs to be undefined, because void will corrupt union type
+	: T;
 
 export interface Builder {
 	log: Logger;
@@ -131,18 +149,31 @@ export interface Cookies {
 	get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
 
 	/**
-	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make
-	 * the cookie available via `cookies.get` during the current request.
+	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` during the current request.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly
-	 * disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP
+	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 *
+	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 */
 	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 	 */
-	delete(name: string): void;
+	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
+
+	/**
+	 * Serialize a cookie name-value pair into a Set-Cookie header string.
+	 *
+	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 *
+	 * By default, the `path` of a cookie is the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+	 *
+	 * @param name the name for the cookie
+	 * @param value value to set the cookie to
+	 * @param options object containing serialization options
+	 */
+	serialize(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): string;
 }
 
 export interface KitConfig {
@@ -209,11 +240,11 @@ export interface Handle {
 }
 
 export interface HandleServerError {
-	(input: { error: unknown; event: RequestEvent }): void | App.PageError;
+	(input: { error: unknown; event: RequestEvent }): void | App.Error;
 }
 
 export interface HandleClientError {
-	(input: { error: unknown; event: NavigationEvent }): void | App.PageError;
+	(input: { error: unknown; event: NavigationEvent }): void | App.Error;
 }
 
 export interface HandleFetch {
@@ -238,7 +269,7 @@ export interface LoadEvent<
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>
 > extends NavigationEvent<Params> {
-	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
+	fetch: typeof fetch;
 	data: Data;
 	setHeaders: (headers: Record<string, string>) => void;
 	parent: () => Promise<ParentData>;
@@ -275,13 +306,38 @@ export interface Navigation {
 	delta?: number;
 }
 
+/**
+ * The shape of the `$page` store
+ */
 export interface Page<Params extends Record<string, string> = Record<string, string>> {
+	/**
+	 * The URL of the current page
+	 */
 	url: URL;
+	/**
+	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, the `slug` parameter
+	 */
 	params: Params;
+	/**
+	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 */
 	routeId: string | null;
+	/**
+	 * Http status code of the current page
+	 */
 	status: number;
-	error: App.PageError | null;
+	/**
+	 * The error object of the current page, if any. Filled from the `handleError` hooks.
+	 */
+	error: App.Error | null;
+	/**
+	 * The merged result of all data from all `load` functions on the current page. You can type a common denominator through `App.PageData`.
+	 */
 	data: App.PageData & Record<string, any>;
+	/**
+	 * Filled only after a form submission. See [form actions](https://kit.svelte.dev/docs/form-actions) for more info.
+	 */
+	form: any;
 }
 
 export interface ParamMatcher {
@@ -363,6 +419,7 @@ export interface ServerLoadEvent<
 	ParentData extends Record<string, any> = Record<string, any>
 > extends RequestEvent<Params> {
 	parent: () => Promise<ParentData>;
+	depends: (...deps: string[]) => void;
 }
 
 export interface Action<
@@ -394,13 +451,13 @@ export type ActionResult<
  * This object, if thrown during request handling, will cause SvelteKit to
  * return an error response without invoking `handleError`
  * @param status The HTTP status code
- * @param body An object that conforms to the App.PageError type. If a string is passed, it will be used as the message property.
+ * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  */
-export function error(status: number, body: App.PageError): HttpError;
+export function error(status: number, body: App.Error): HttpError;
 export function error(
 	status: number,
-	// this overload ensures you can omit the argument or pass in a string if App.PageError is of type { message: string }
-	body?: { message: string } extends App.PageError ? App.PageError | string | undefined : never
+	// this overload ensures you can omit the argument or pass in a string if App.Error is of type { message: string }
+	body?: { message: string } extends App.Error ? App.Error | string | undefined : never
 ): HttpError;
 
 /**

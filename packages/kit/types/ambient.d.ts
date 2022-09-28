@@ -41,6 +41,13 @@
  */
 declare namespace App {
 	/**
+	 * Defines the common shape of expected and unexpected errors. Expected errors are thrown using the `error` function. Unexpected errors are handled by the `handleError` hooks which should return this shape.
+	 */
+	export interface Error {
+		message: string;
+	}
+
+	/**
 	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://kit.svelte.dev/docs/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
 	export interface Locals {}
@@ -56,13 +63,6 @@ declare namespace App {
 	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
 	 */
 	export interface Platform {}
-
-	/**
-	 * Defines the common shape of expected and unexpected errors. Expected errors are thrown using the `error` function. Unexpected errors are handled by the `handleError` hooks which should return this shape.
-	 */
-	export interface PageError {
-		message: string;
-	}
 }
 
 /**
