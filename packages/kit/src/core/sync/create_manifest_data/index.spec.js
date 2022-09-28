@@ -347,10 +347,10 @@ test('optional parameters', () => {
 			pattern: '/^/$/'
 		},
 		{ id: 'nested', pattern: '/^/nested/?$/' },
-		{ id: 'nested/[[optional]]', pattern: '/^/nested(/[^/]+)?/?$/' },
+		{ id: 'nested/[[optional]]', pattern: '/^/nested(?:/([^/]+))?/?$/' },
 		{
 			id: 'nested/[[optional]]/sub',
-			pattern: '/^/nested(/[^/]+)?/sub/?$/',
+			pattern: '/^/nested(?:/([^/]+))?/sub/?$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 		{
@@ -365,7 +365,7 @@ test('optional parameters', () => {
 		},
 		{
 			id: '[[optional]]',
-			pattern: '/^(/[^/]+)?/?$/',
+			pattern: '/^(?:/([^/]+))?/?$/',
 			page: { layouts: [0], errors: [1], leaf: 4 }
 		}
 	]);

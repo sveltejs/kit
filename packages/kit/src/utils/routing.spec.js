@@ -29,12 +29,12 @@ const tests = {
 		types: [undefined]
 	},
 	'blog/[[slug]]': {
-		pattern: /^\/blog(\/[^/]+)?\/?$/,
+		pattern: /^\/blog(?:\/([^/]+))?\/?$/,
 		names: ['slug'],
 		types: [undefined]
 	},
 	'blog/[[slug=type]]/sub': {
-		pattern: /^\/blog(\/[^/]+)?\/sub\/?$/,
+		pattern: /^\/blog(?:\/([^/]+))?\/sub\/?$/,
 		names: ['slug'],
 		types: ['type']
 	},

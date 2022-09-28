@@ -60,7 +60,7 @@ export function parse_route_id(id) {
 											? '(.*?)'
 											: optional
 											? dynamic_only
-												? '(/[^/]+)?' // regex includes the leading slash, which we need to remove in the exec function
+												? '(?:/([^/]+))?'
 												: '([^/]*)?'
 											: '([^/]+?)';
 									}
@@ -122,9 +122,6 @@ export function exec(match, names, types, matchers) {
 		const name = names[i];
 		const type = types[i];
 		let value = match[i + 1] || '';
-		// Regex of optional params can result in a leading slash.
-		// It's safe to remove it because a slash coming from the user needs to be encoded.
-		if (value.startsWith('/')) value = value.slice(1);
 
 		if (type) {
 			const matcher = matchers[type];
