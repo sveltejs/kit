@@ -11,7 +11,7 @@ test('prerenderable routes must be prerendered', () => {
 				stdio: 'pipe',
 				timeout: 15000
 			}),
-		/The following routes were marked as prerenderable, but were not prerendered:\n  - \[x\]/gs
+		/The following routes were marked as prerenderable, but were not prerendered:\r?\n  - \[x\]/gs
 	);
 });
 
