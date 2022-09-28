@@ -1,7 +1,7 @@
-import { fetch, Response, Request, Headers } from 'undici';
+import { fetch, Response, Request, Headers, FormData } from 'undici';
 import { ReadableStream, TransformStream, WritableStream } from 'stream/web';
 import { Readable } from 'stream';
-import { Request as NodeFetchRequest, FormData } from 'node-fetch';
+import { Request as NodeFetchRequest } from 'node-fetch';
 import { webcrypto as crypto } from 'crypto';
 
 /** @type {Record<string, any>} */
@@ -13,12 +13,18 @@ const globals = {
 	// https://github.com/nodejs/undici/issues/974
 	Request: class extends Request {
 		// @ts-expect-error
-		formData() {
-			return new NodeFetchRequest(this.url, {
+		async formData() {
+			const nodeFetchFormData = await new NodeFetchRequest(this.url, {
 				method: this.method,
 				headers: this.headers,
 				body: this.body && Readable.from(this.body)
 			}).formData();
+
+			const formData = new FormData();
+			for (const [name, value] of nodeFetchFormData.entries()) {
+				formData.append(name, value);
+			}
+			return formData;
 		}
 	},
 	Headers,
