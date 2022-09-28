@@ -7,7 +7,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "npm run build"
+		"test": "svelte-kit sync && npm run build"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
