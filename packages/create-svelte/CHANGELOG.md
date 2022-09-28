@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.180
+
+### Patch Changes
+
+- Replace /todos page in demo app with /sverdle ([#6979](https://github.com/sveltejs/kit/pull/6979))
+
 ## 2.0.0-next.179
 
 ### Patch Changes
