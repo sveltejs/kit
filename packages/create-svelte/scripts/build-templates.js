@@ -32,13 +32,16 @@ function convert_typescript(content) {
 function strip_jsdoc(content) {
 	return content
 		.replace(/\/\*\*\*\//g, '')
-		.replace(/\/\*\*([\s\S]+?)(@[\s\S]+?)?\*\/[\s\n]+/g, (match, description, tags) => {
-			if (/^\s+(\*\s*)?$/.test(description)) {
-				return '';
-			}
+		.replace(
+			/\/\*\*([\s\S]+?)(@[\s\S]+?)?\*\/([\s\n]+)/g,
+			(match, description, tags, whitespace) => {
+				if (/^\s+(\*\s*)?$/.test(description)) {
+					return '';
+				}
 
-			return `/**${description}*/\n`;
-		});
+				return `/**${description.replace(/\*\ $/, '')}*/${whitespace}`;
+			}
+		);
 }
 
 /** @param {Set<string>} shared */
