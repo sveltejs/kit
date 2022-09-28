@@ -327,19 +327,25 @@ test('allows rest parameters inside segments', () => {
 test('optional parameters', () => {
 	const { nodes, routes } = create('samples/optional');
 
-	assert.equal(nodes.map(simplify_node), [
-		default_layout,
-		default_error,
-		{
-			component: 'samples/optional/nested/[[optional]]/sub/+page.svelte'
-		},
-		{
-			component: 'samples/optional/prefix[[suffix]]/+page.svelte'
-		},
-		{
-			component: 'samples/optional/[[optional]]/+page.svelte'
-		}
-	]);
+	assert.equal(
+		nodes
+			.map(simplify_node)
+			// for some reason linux and windows have a different order
+			.sort(),
+		[
+			default_layout,
+			default_error,
+			{
+				component: 'samples/optional/nested/[[optional]]/sub/+page.svelte'
+			},
+			{
+				component: 'samples/optional/prefix[[suffix]]/+page.svelte'
+			},
+			{
+				component: 'samples/optional/[[optional]]/+page.svelte'
+			}
+		]
+	);
 
 	assert.equal(routes.map(simplify_route), [
 		{
