@@ -330,19 +330,21 @@ test('optional parameters', () => {
 	assert.equal(
 		nodes
 			.map(simplify_node)
-			// for some reason linux and windows have a different order
-			.sort(),
+			// for some reason linux and windows have a different order, which is why
+			// we need sort the nodes using a sort function (doesn't work either without),
+			// resulting in the following expected node order
+			.sort((a, b) => a.component?.localeCompare(b.component ?? '') ?? 1),
 		[
-			default_layout,
 			default_error,
+			default_layout,
+			{
+				component: 'samples/optional/[[optional]]/+page.svelte'
+			},
 			{
 				component: 'samples/optional/nested/[[optional]]/sub/+page.svelte'
 			},
 			{
 				component: 'samples/optional/prefix[[suffix]]/+page.svelte'
-			},
-			{
-				component: 'samples/optional/[[optional]]/+page.svelte'
 			}
 		]
 	);
