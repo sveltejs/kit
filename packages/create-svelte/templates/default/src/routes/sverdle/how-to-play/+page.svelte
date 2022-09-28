@@ -33,7 +33,8 @@
 
 	<p>
 		Unlike the original Wordle, Sverdle runs on the server instead of in the browser, making it
-		impossible to cheat. You can even play with JavaScript disabled.
+		impossible to cheat. It uses <code>&lt;form&gt;</code> and cookies to submit data, meaning you can
+		even play with JavaScript disabled!
 	</p>
 </div>
 
