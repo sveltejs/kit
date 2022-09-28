@@ -64,15 +64,11 @@ export default function (options) {
 			builder.writePrerendered(pages, { fallback });
 
 			if (precompress) {
+				builder.log.minor('Compressing assets and pages');
 				if (pages === assets) {
-					builder.log.minor('Compressing assets and pages');
 					await builder.compress(assets);
 				} else {
-					builder.log.minor('Compressing assets');
-					await builder.compress(assets);
-
-					builder.log.minor('Compressing pages');
-					await builder.compress(pages);
+					await Promise.all([builder.compress(assets), builder.compress(pages)]);
 				}
 			}
 

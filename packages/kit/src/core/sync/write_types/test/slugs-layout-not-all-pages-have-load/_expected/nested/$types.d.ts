@@ -1,5 +1,6 @@
 import type * as Kit from '@sveltejs/kit';
 
+type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
 type RouteParams = {};
 type MaybeWithVoid<T> = {} extends T ? T | void : T;
 export type RequiredKeys<T> = {
@@ -10,9 +11,9 @@ type OutputDataShape<T> = MaybeWithVoid<
 		Partial<Pick<App.PageData, keyof T & keyof App.PageData>> &
 		Record<string, any>
 >;
-type EnsureParentData<T> = T extends null | undefined ? {} : T;
+type EnsureDefined<T> = T extends null | undefined ? {} : T;
 type LayoutParams = RouteParams & { rest?: string };
-type LayoutParentData = EnsureParentData<import('../$types.js').LayoutData>;
+type LayoutParentData = EnsureDefined<import('../$types.js').LayoutData>;
 
 export type LayoutServerData = null;
 export type LayoutLoad<
@@ -21,12 +22,16 @@ export type LayoutLoad<
 		| void
 > = Kit.Load<LayoutParams, LayoutServerData, LayoutParentData, OutputData>;
 export type LayoutLoadEvent = Parameters<LayoutLoad>[0];
-export type LayoutData = Omit<
-	LayoutParentData,
-	keyof Kit.AwaitedProperties<
-		Awaited<ReturnType<typeof import('../../../../../../../../../nested/+layout.js').load>>
-	>
-> &
-	Kit.AwaitedProperties<
-		Awaited<ReturnType<typeof import('../../../../../../../../../nested/+layout.js').load>>
-	>;
+export type LayoutData = Expand<
+	Omit<
+		LayoutParentData,
+		keyof Kit.AwaitedProperties<
+			Awaited<ReturnType<typeof import('../../../../../../../../../nested/+layout.js').load>>
+		>
+	> &
+		EnsureDefined<
+			Kit.AwaitedProperties<
+				Awaited<ReturnType<typeof import('../../../../../../../../../nested/+layout.js').load>>
+			>
+		>
+>;

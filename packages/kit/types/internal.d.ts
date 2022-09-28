@@ -105,12 +105,6 @@ export interface ClientHooks {
 	handleError: HandleClientError;
 }
 
-export interface ImportNode {
-	readonly name: string;
-	readonly dynamic: boolean;
-	readonly children: Generator<ImportNode>;
-}
-
 export class InternalServer extends Server {
 	init(options: ServerInitOptions): Promise<void>;
 	respond(
@@ -237,7 +231,7 @@ export interface ServerDataSkippedNode {
  */
 export interface ServerErrorNode {
 	type: 'error';
-	error: App.PageError;
+	error: App.Error;
 	/**
 	 * Only set for HttpErrors
 	 */
@@ -299,7 +293,7 @@ export interface SSROptions {
 		check_origin: boolean;
 	};
 	dev: boolean;
-	handle_error(error: Error & { frame?: string }, event: RequestEvent): App.PageError;
+	handle_error(error: Error & { frame?: string }, event: RequestEvent): App.Error;
 	hooks: ServerHooks;
 	manifest: SSRManifest;
 	paths: {
@@ -309,7 +303,7 @@ export interface SSROptions {
 	public_env: Record<string, string>;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
-	service_worker?: string;
+	service_worker: boolean;
 	app_template({
 		head,
 		body,

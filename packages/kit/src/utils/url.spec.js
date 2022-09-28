@@ -1,17 +1,6 @@
-import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
+import { describe } from './unit_test.js';
 import { resolve, normalize_path, make_trackable, disable_search } from './url.js';
-
-/**
- *
- * @param {string} name
- * @param {(suite: import('uvu').Test<import('uvu').Context>) => void} fn
- */
-function describe(name, fn) {
-	const s = suite(name);
-	fn(s);
-	s.run();
-}
 
 describe('resolve', (test) => {
 	test('resolves a root-relative path', () => {

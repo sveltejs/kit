@@ -2,6 +2,7 @@ import { devalue } from 'devalue';
 import { DATA_SUFFIX } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { HttpError } from '../control.js';
+import { add_cookies_to_headers } from './cookie.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -69,21 +70,18 @@ export function allowed_methods(mod) {
 
 /** @param {any} data */
 export function data_response(data) {
+	const headers = {
+		'content-type': 'application/javascript',
+		'cache-control': 'private, no-store'
+	};
+
 	try {
-		return new Response(`window.__sveltekit_data = ${devalue(data)}`, {
-			headers: {
-				'content-type': 'application/javascript'
-			}
-		});
+		return new Response(`window.__sveltekit_data = ${devalue(data)}`, { headers });
 	} catch (e) {
 		const error = /** @type {any} */ (e);
 		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
 		const message = match ? `${error.message} (data.${match[2]})` : error.message;
-		return new Response(`throw new Error(${JSON.stringify(message)})`, {
-			headers: {
-				'content-type': 'application/javascript'
-			}
-		});
+		return new Response(`throw new Error(${JSON.stringify(message)})`, { headers });
 	}
 }
 
@@ -156,7 +154,7 @@ export function handle_fatal_error(event, options, error) {
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {any} error
- * @returns {App.PageError}
+ * @returns {App.Error}
  */
 export function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {
@@ -169,10 +167,13 @@ export function handle_error_and_jsonify(event, options, error) {
 /**
  * @param {number} status
  * @param {string} location
+ * @param {import('./page/types.js').Cookie[]} [cookies]
  */
-export function redirect_response(status, location) {
-	return new Response(undefined, {
+export function redirect_response(status, location, cookies = []) {
+	const response = new Response(undefined, {
 		status,
 		headers: { location }
 	});
+	add_cookies_to_headers(response.headers, cookies);
+	return response;
 }

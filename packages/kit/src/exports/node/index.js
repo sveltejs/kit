@@ -1,4 +1,5 @@
 import * as set_cookie_parser from 'set-cookie-parser';
+import { error } from '../index.js';
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -11,24 +12,24 @@ function get_raw_body(req, body_size_limit) {
 		return null;
 	}
 
-	const length = Number(h['content-length']);
+	const content_length = Number(h['content-length']);
 
 	// check if no request body
 	if (
-		(req.httpVersionMajor === 1 && isNaN(length) && h['transfer-encoding'] == null) ||
-		length === 0
+		(req.httpVersionMajor === 1 && isNaN(content_length) && h['transfer-encoding'] == null) ||
+		content_length === 0
 	) {
 		return null;
 	}
 
+	let length = content_length;
+
 	if (body_size_limit) {
 		if (!length) {
-			throw new Error(
-				`Received content-length of ${length}. content-length must be provided when body size limit is specified.`
-			);
-		}
-		if (length > body_size_limit) {
-			throw new Error(
+			length = body_size_limit;
+		} else if (length > body_size_limit) {
+			throw error(
+				413,
 				`Received content-length of ${length}, but only accept up to ${body_size_limit} bytes.`
 			);
 		}
@@ -46,6 +47,7 @@ function get_raw_body(req, body_size_limit) {
 	return new ReadableStream({
 		start(controller) {
 			req.on('error', (error) => {
+				cancelled = true;
 				controller.error(error);
 			});
 
@@ -59,7 +61,15 @@ function get_raw_body(req, body_size_limit) {
 
 				size += chunk.length;
 				if (size > length) {
-					controller.error(new Error('content-length exceeded'));
+					cancelled = true;
+					controller.error(
+						error(
+							413,
+							`request body size exceeded ${
+								content_length ? "'content-length'" : 'BODY_SIZE_LIMIT'
+							} of ${length}`
+						)
+					);
 					return;
 				}
 

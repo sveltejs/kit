@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "1.0.0-next.42",
+	"version": "1.0.0-next.43",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -31,6 +31,6 @@
 		"svelte": "^3.48.0",
 		"typescript": "^4.8.2",
 		"uvu": "^0.5.3",
-		"vite": "^3.1.0"
+		"vite": "^3.1.1"
 	}
 }

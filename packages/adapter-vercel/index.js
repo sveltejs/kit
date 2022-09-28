@@ -308,6 +308,11 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 		// pending https://github.com/vercel/nft/issues/284
 		if (error.message.startsWith('Failed to resolve dependency node:')) return;
 
+		// parse errors are likely not js and can safely be ignored,
+		// such as this html file in "main" meant for nw instead of node:
+		// https://github.com/vercel/nft/issues/311
+		if (error.message.startsWith('Failed to parse')) return;
+
 		if (error.message.startsWith('Failed to resolve dependency')) {
 			const match = /Cannot find module '(.+?)' loaded from (.+)/;
 			const [, module, importer] = match.exec(error.message);

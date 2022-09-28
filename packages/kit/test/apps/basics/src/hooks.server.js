@@ -33,7 +33,7 @@ export const handleError = ({ event, error: e }) => {
 		: {};
 	errors[event.url.pathname] = error_to_pojo(error);
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
-	return { message: error.message };
+	return event.url.pathname.endsWith('404-fallback') ? undefined : { message: error.message };
 };
 
 export const handle = sequence(
@@ -44,7 +44,16 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	({ event, resolve }) => {
-		event.locals.name = event.cookies.get('name');
+		event.locals.name = /** @type {string} */ (event.cookies.get('name'));
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname === '/cookies/serialize') {
+			event.cookies.set('before', 'before');
+			const response = await resolve(event);
+			response.headers.append('set-cookie', event.cookies.serialize('after', 'after'));
+			return response;
+		}
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {

@@ -1,5 +1,23 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.57
+
+### Patch Changes
+
+- Include ambient.d.ts files in adapter packages. ([#6917](https://github.com/sveltejs/kit/pull/6917))
+
+## 1.0.0-next.56
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.55
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
 ## 1.0.0-next.54
 
 ### Patch Changes

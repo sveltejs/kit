@@ -6,10 +6,18 @@ import { compact } from '../../../utils/array.js';
 
 /**
  *  @typedef {{
+ *   file_name: string;
  *   modified: boolean;
  *   code: string;
  *   exports: any[];
  *  } | null} Proxy
+ *
+ *  @typedef {{
+ *   server: Proxy,
+ *   shared: Proxy
+ *  }} Proxies
+ *
+ *  @typedef {Map<import('types').PageNode, {route: import('types').RouteData, proxies: Proxies}>} RoutesMap
  */
 
 /** @type {import('typescript')} */
@@ -46,11 +54,82 @@ export async function write_all_types(config, manifest_data) {
 		}
 	}
 
+	// Read/write meta data on each invocation, not once per node process,
+	// it could be invoked by another process in the meantime.
+	const meta_data_file = `${types_dir}/route_meta_data.json`;
+	const has_meta_data = fs.existsSync(meta_data_file);
+	let meta_data = has_meta_data
+		? /** @type {Record<string, string[]>} */ (JSON.parse(fs.readFileSync(meta_data_file, 'utf-8')))
+		: {};
 	const routes_map = create_routes_map(manifest_data);
 	// For each directory, write $types.d.ts
 	for (const route of manifest_data.routes) {
-		update_types(config, routes_map, route);
+		if (!route.leaf && !route.layout && !route.endpoint) continue; // nothing to do
+
+		const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
+
+		// check if the types are out of date
+		/** @type {string[]} */
+		const input_files = [];
+
+		/** @type {import('types').PageNode | null} */
+		let node = route.leaf;
+		while (node) {
+			if (node.shared) input_files.push(node.shared);
+			if (node.server) input_files.push(node.server);
+			node = node.parent ?? null;
+		}
+
+		/** @type {import('types').PageNode | null} */
+		node = route.layout;
+		while (node) {
+			if (node.shared) input_files.push(node.shared);
+			if (node.server) input_files.push(node.server);
+			node = node.parent ?? null;
+		}
+
+		if (route.endpoint) {
+			input_files.push(route.endpoint.file);
+		}
+
+		try {
+			fs.mkdirSync(outdir, { recursive: true });
+		} catch {}
+
+		const output_files = compact(
+			fs.readdirSync(outdir).map((name) => {
+				const stats = fs.statSync(path.join(outdir, name));
+				if (stats.isDirectory()) return;
+				return {
+					name,
+					updated: stats.mtimeMs
+				};
+			})
+		);
+
+		const source_last_updated = Math.max(
+			// ctimeMs includes move operations whereas mtimeMs does not
+			...input_files.map((file) => fs.statSync(file).ctimeMs)
+		);
+		const types_last_updated = Math.max(...output_files.map((file) => file.updated));
+
+		const should_generate =
+			// source files were generated more recently than the types
+			source_last_updated > types_last_updated ||
+			// no meta data file exists yet
+			!has_meta_data ||
+			// some file was deleted
+			!meta_data[route.id]?.every((file) => input_files.includes(file));
+
+		if (should_generate) {
+			// track which old files end up being surplus to requirements
+			const to_delete = new Set(output_files.map((file) => file.name));
+			update_types(config, routes_map, route, to_delete);
+			meta_data[route.id] = input_files;
+		}
 	}
+
+	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 
 /**
@@ -68,10 +147,11 @@ export async function write_types(config, manifest_data, file) {
 		return;
 	}
 
-	const id = path.relative(config.kit.files.routes, path.dirname(file));
+	const id = posixify(path.relative(config.kit.files.routes, path.dirname(file)));
 
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return; // this shouldn't ever happen
+	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
 
 	update_types(config, create_routes_map(manifest_data), route);
 }
@@ -81,11 +161,11 @@ export async function write_types(config, manifest_data, file) {
  * @param {import('types').ManifestData} manifest_data
  */
 function create_routes_map(manifest_data) {
-	/** @type {Map<import('types').PageNode, import('types').RouteData>} */
+	/** @type {RoutesMap} */
 	const map = new Map();
 	for (const route of manifest_data.routes) {
 		if (route.leaf) {
-			map.set(route.leaf, route);
+			map.set(route.leaf, { route, proxies: { server: null, shared: null } });
 		}
 	}
 	return map;
@@ -94,61 +174,13 @@ function create_routes_map(manifest_data) {
 /**
  * Update types for a specific route
  * @param {import('types').ValidatedConfig} config
- * @param {Map<import('types').PageNode, import('types').RouteData>} routes
+ * @param {RoutesMap} routes
  * @param {import('types').RouteData} route
+ * @param {Set<string>} [to_delete]
  */
-function update_types(config, routes, route) {
-	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
-
+function update_types(config, routes, route, to_delete = new Set()) {
 	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
 	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
-
-	// first, check if the types are out of date
-	const input_files = [];
-
-	/** @type {import('types').PageNode | null} */
-	let node = route.leaf;
-	while (node) {
-		if (node.shared) input_files.push(node.shared);
-		if (node.server) input_files.push(node.server);
-		node = node.parent ?? null;
-	}
-
-	/** @type {import('types').PageNode | null} */
-	node = route.layout;
-	while (node) {
-		if (node.shared) input_files.push(node.shared);
-		if (node.server) input_files.push(node.server);
-		node = node.parent ?? null;
-	}
-
-	if (route.endpoint) {
-		input_files.push(route.endpoint.file);
-	}
-
-	try {
-		fs.mkdirSync(outdir, { recursive: true });
-	} catch {}
-
-	const output_files = compact(
-		fs.readdirSync(outdir).map((name) => {
-			const stats = fs.statSync(path.join(outdir, name));
-			if (stats.isDirectory()) return;
-			return {
-				name,
-				updated: stats.mtimeMs
-			};
-		})
-	);
-
-	const source_last_updated = Math.max(...input_files.map((file) => fs.statSync(file).mtimeMs));
-	const types_last_updated = Math.max(...output_files.map((file) => file?.updated));
-
-	// types were generated more recently than the source files, so don't regenerate
-	if (types_last_updated > source_last_updated) return;
-
-	// track which old files end up being surplus to requirements
-	const to_delete = new Set(output_files.map((file) => file.name));
 
 	// now generate new types
 	const imports = [`import type * as Kit from '@sveltejs/kit';`];
@@ -159,6 +191,9 @@ function update_types(config, routes, route) {
 	/** @type {string[]} */
 	const exports = [];
 
+	// add 'Expand' helper
+	// Makes sure a type is "repackaged" and therefore more readable
+	declarations.push('type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;');
 	declarations.push(
 		`type RouteParams = { ${route.names.map((param) => `${param}: string`).join('; ')} }`
 	);
@@ -177,16 +212,34 @@ function update_types(config, routes, route) {
 			`type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any>>`
 		);
 		// null & {} == null, we need to prevent that in some situations
-		declarations.push(`type EnsureParentData<T> = T extends null | undefined ? {} : T;`);
+		declarations.push(`type EnsureDefined<T> = T extends null | undefined ? {} : T;`);
 	}
 
 	if (route.leaf) {
-		const { declarations: d, exports: e, written_proxies } = process_node(route.leaf, outdir, true);
+		let route_info = routes.get(route.leaf);
+		if (!route_info) {
+			// This should be defined, but belts and braces
+			route_info = { route, proxies: { server: null, shared: null } };
+			routes.set(route.leaf, route_info);
+		}
+
+		const {
+			declarations: d,
+			exports: e,
+			proxies
+		} = process_node(route.leaf, outdir, true, route_info.proxies);
 
 		exports.push(...e);
 		declarations.push(...d);
 
-		for (const file of written_proxies) to_delete.delete(file);
+		if (proxies.server) {
+			route_info.proxies.server = proxies.server;
+			if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
+		}
+		if (proxies.shared) {
+			route_info.proxies.shared = proxies.shared;
+			if (proxies.shared?.modified) to_delete.delete(proxies.shared.file_name);
+		}
 
 		if (route.leaf.server) {
 			exports.push(`export type Action = Kit.Action<RouteParams>`);
@@ -200,8 +253,19 @@ function update_types(config, routes, route) {
 		route.layout.child_pages?.forEach((page) => {
 			const leaf = routes.get(page);
 			if (leaf) {
-				for (const name of leaf.names) {
+				for (const name of leaf.route.names) {
 					layout_params.add(name);
+				}
+
+				ensureProxies(page, leaf.proxies);
+
+				if (
+					// Be defensive - if a proxy doesn't exist (because it couldn't be created), assume a load function exists.
+					// If we didn't and it's a false negative, the user could wrongfully get a type error on layouts.
+					(leaf.proxies.server && !leaf.proxies.server.exports.includes('load')) ||
+					(leaf.proxies.shared && !leaf.proxies.shared.exports.includes('load'))
+				) {
+					all_pages_have_load = false;
 				}
 			}
 			if (!page.server && !page.shared) {
@@ -218,13 +282,20 @@ function update_types(config, routes, route) {
 		const {
 			exports: e,
 			declarations: d,
-			written_proxies
-		} = process_node(route.layout, outdir, false, all_pages_have_load);
+			proxies
+		} = process_node(
+			route.layout,
+			outdir,
+			false,
+			{ server: null, shared: null },
+			all_pages_have_load
+		);
 
 		exports.push(...e);
 		declarations.push(...d);
 
-		for (const file of written_proxies) to_delete.delete(file);
+		if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
+		if (proxies.shared?.modified) to_delete.delete(proxies.shared.file_name);
 	}
 
 	if (route.endpoint) {
@@ -251,14 +322,13 @@ function update_types(config, routes, route) {
  * @param {import('types').PageNode} node
  * @param {string} outdir
  * @param {boolean} is_page
+ * @param {Proxies} proxies
  * @param {boolean} [all_pages_have_load]
  */
-function process_node(node, outdir, is_page, all_pages_have_load = true) {
+function process_node(node, outdir, is_page, proxies, all_pages_have_load = true) {
 	const params = `${is_page ? 'Route' : 'Layout'}Params`;
 	const prefix = is_page ? 'Page' : 'Layout';
 
-	/** @type {string[]} */
-	let written_proxies = [];
 	/** @type {string[]} */
 	const declarations = [];
 	/** @type {string[]} */
@@ -269,16 +339,16 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 	/** @type {string} */
 	let data;
 
+	ensureProxies(node, proxies);
+
 	if (node.server) {
-		const content = fs.readFileSync(node.server, 'utf8');
-		const proxy = tweak_types(content, true);
 		const basename = path.basename(node.server);
+		const proxy = proxies.server;
 		if (proxy?.modified) {
 			fs.writeFileSync(`${outdir}/proxy${basename}`, proxy.code);
-			written_proxies.push(`proxy${basename}`);
 		}
 
-		server_data = get_data_type(node.server, 'null', proxy);
+		server_data = get_data_type(node.server, 'null', proxy, true);
 
 		const parent_type = `${prefix}ServerParentData`;
 
@@ -305,7 +375,7 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 						? `./proxy${replace_ext_with_js(basename)}`
 						: path_to_original(outdir, node.server);
 
-					type = `Kit.AwaitedActions<typeof import('${from}').actions>`;
+					type = `Expand<Kit.AwaitedActions<typeof import('${from}').actions>> | undefined`;
 				}
 			}
 			exports.push(`export type ActionData = ${type};`);
@@ -319,16 +389,18 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 	declarations.push(`type ${parent_type} = ${get_parent_type(node, 'LayoutData')};`);
 
 	if (node.shared) {
-		const content = fs.readFileSync(node.shared, 'utf8');
-		const proxy = tweak_types(content, false);
+		const proxy = proxies.shared;
 		if (proxy?.modified) {
 			fs.writeFileSync(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code);
-			written_proxies.push(`proxy${path.basename(node.shared)}`);
 		}
 
-		const type = get_data_type(node.shared, `${parent_type} & ${prefix}ServerData`, proxy);
+		const type = get_data_type(
+			node.shared,
+			`${parent_type} & EnsureDefined<${prefix}ServerData>`,
+			proxy
+		);
 
-		data = `Omit<${parent_type}, keyof ${type}> & ${type}`;
+		data = `Expand<Omit<${parent_type}, keyof ${type}> & EnsureDefined<${type}>>`;
 
 		const output_data_shape =
 			!is_page && all_pages_have_load
@@ -340,21 +412,22 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 
 		exports.push(`export type ${prefix}LoadEvent = Parameters<${prefix}Load>[0];`);
 	} else if (server_data === 'null') {
-		data = parent_type;
+		data = `Expand<${parent_type}>`;
 	} else {
-		data = `Omit<${parent_type}, keyof ${prefix}ServerData> & ${prefix}ServerData`;
+		data = `Expand<Omit<${parent_type}, keyof ${prefix}ServerData> & EnsureDefined<${prefix}ServerData>>`;
 	}
 
 	exports.push(`export type ${prefix}Data = ${data};`);
 
-	return { declarations, exports, written_proxies };
+	return { declarations, exports, proxies };
 
 	/**
 	 * @param {string} file_path
 	 * @param {string} fallback
 	 * @param {Proxy} proxy
+	 * @param {boolean} expand
 	 */
-	function get_data_type(file_path, fallback, proxy) {
+	function get_data_type(file_path, fallback, proxy, expand = false) {
 		if (proxy) {
 			if (proxy.exports.includes('load')) {
 				// If the file wasn't tweaked, we can use the return type of the original file.
@@ -362,13 +435,50 @@ function process_node(node, outdir, is_page, all_pages_have_load = true) {
 				const from = proxy.modified
 					? `./proxy${replace_ext_with_js(path.basename(file_path))}`
 					: path_to_original(outdir, file_path);
-				return `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('${from}').load>>>`;
+				const type = `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('${from}').load>>>`;
+				return expand ? `Expand<${type}>` : type;
 			} else {
 				return fallback;
 			}
 		} else {
 			return 'unknown';
 		}
+	}
+}
+
+/**
+ * This function populates the proxies object, if necessary and not already done.
+ * Proxies are used to tweak the code of a file before it's typechecked.
+ * They are needed in two places - when generating the types for a page or layout.
+ * To not do the same work twice, we generate the proxies once and pass them around.
+ *
+ * @param {import('types').PageNode} node
+ * @param {Proxies} proxies
+ */
+function ensureProxies(node, proxies) {
+	if (node.server && !proxies.server) {
+		proxies.server = createProxy(node.server, true);
+	}
+
+	if (node.shared && !proxies.shared) {
+		proxies.shared = createProxy(node.shared, false);
+	}
+}
+
+/**
+ * @param {string} file_path
+ * @param {boolean} is_server
+ * @returns {Proxy}
+ */
+function createProxy(file_path, is_server) {
+	const proxy = tweak_types(fs.readFileSync(file_path, 'utf8'), is_server);
+	if (proxy) {
+		return {
+			...proxy,
+			file_name: `proxy${path.basename(file_path)}`
+		};
+	} else {
+		return null;
 	}
 }
 
@@ -391,14 +501,14 @@ function get_parent_type(node, type) {
 		parent = parent.parent;
 	}
 
-	let parent_str = `EnsureParentData<${parent_imports[0] || '{}'}>`;
+	let parent_str = `EnsureDefined<${parent_imports[0] || '{}'}>`;
 	for (let i = 1; i < parent_imports.length; i++) {
 		// Omit is necessary because a parent could have a property with the same key which would
 		// cause a type conflict. At runtime the child overwrites the parent property in this case,
 		// so reflect that in the type definition.
-		// EnsureParentData is necessary because {something: string} & null becomes null.
+		// EnsureDefined is necessary because {something: string} & null becomes null.
 		// Output types of server loads can be null but when passed in through the `parent` parameter they are the empty object instead.
-		parent_str = `Omit<${parent_str}, keyof ${parent_imports[i]}> & EnsureParentData<${parent_imports[i]}>`;
+		parent_str = `Omit<${parent_str}, keyof ${parent_imports[i]}> & EnsureDefined<${parent_imports[i]}>`;
 	}
 	return parent_str;
 }
@@ -424,7 +534,7 @@ function replace_ext_with_js(file_path) {
 /**
  * @param {string} content
  * @param {boolean} is_server
- * @returns {Proxy}
+ * @returns {Omit<NonNullable<Proxy>, 'file_name'> | null}
  */
 export function tweak_types(content, is_server) {
 	const names = new Set(is_server ? ['load', 'actions'] : ['load']);
@@ -484,7 +594,7 @@ export function tweak_types(content, is_server) {
 			if (node.jsDoc) {
 				// @ts-ignore
 				for (const comment of node.jsDoc) {
-					for (const tag of comment.tags) {
+					for (const tag of comment.tags ?? []) {
 						if (ts.isJSDocTypeTag(tag)) {
 							const is_fn =
 								ts.isFunctionDeclaration(value) ||

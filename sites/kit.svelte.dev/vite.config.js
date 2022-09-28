@@ -19,7 +19,8 @@ const config = {
 				'core-js/proposals/global-this',
 				'regenerator-runtime/runtime',
 				'unorm',
-				'path-composedpath-polyfill'
+				'path-composedpath-polyfill',
+				'proxy-polyfill/proxy.min.js'
 			]
 		}),
 		sveltekit(),

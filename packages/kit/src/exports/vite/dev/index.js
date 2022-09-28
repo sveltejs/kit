@@ -11,7 +11,7 @@ import { load_error_page, load_template } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
-import { prevent_illegal_vite_imports } from '../utils.js';
+import { prevent_illegal_vite_imports } from '../graph_analysis/index.js';
 import { compact } from '../../../utils/array.js';
 import { normalizePath } from 'vite';
 
@@ -356,7 +356,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						user_hooks.handleError ||
 						(({ error: e }) => {
 							const error = /** @type {Error & { frame?: string }} */ (e);
-							console.error(colors.bold().red(error.message));
+							console.error(colors.bold().red(error.message ?? error)); // Could be anything
 							if (error.frame) {
 								console.error(colors.gray(error.frame));
 							}
@@ -403,7 +403,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					});
 				} catch (/** @type {any} */ err) {
 					res.statusCode = err.status || 400;
-					return res.end(err.message || 'Invalid request body');
+					return res.end('Invalid request body');
 				}
 
 				const template = load_template(cwd, svelte_config);
@@ -438,7 +438,7 @@ export async function dev(vite, vite_config, svelte_config) {
 											'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
 										);
 									}
-								}) ?? { message: 'Internal Error' }
+								}) ?? { message: event.routeId != null ? 'Internal Error' : 'Not Found' }
 							);
 						},
 						hooks,
@@ -466,6 +466,7 @@ export async function dev(vite, vite_config, svelte_config) {
 								.replace(/%sveltekit\.status%/g, String(status))
 								.replace(/%sveltekit\.error\.message%/g, message);
 						},
+						service_worker: false,
 						trailing_slash: svelte_config.kit.trailingSlash
 					},
 					{

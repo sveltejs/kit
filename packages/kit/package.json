@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.480",
+	"version": "1.0.0-next.504",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -11,6 +11,7 @@
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^1.0.5",
+		"@types/cookie": "^0.5.1",
 		"cookie": "^0.5.0",
 		"devalue": "^3.1.2",
 		"kleur": "^4.1.4",
@@ -26,7 +27,6 @@
 	"devDependencies": {
 		"@playwright/test": "^1.25.0",
 		"@types/connect": "^3.4.35",
-		"@types/cookie": "^0.5.1",
 		"@types/marked": "^4.0.3",
 		"@types/mime": "^3.0.0",
 		"@types/node": "^16.11.36",
@@ -38,7 +38,7 @@
 		"svelte-preprocess": "^4.10.6",
 		"typescript": "^4.8.2",
 		"uvu": "^0.5.3",
-		"vite": "^3.1.0"
+		"vite": "^3.1.1"
 	},
 	"peerDependencies": {
 		"svelte": "^3.44.0",
@@ -54,6 +54,7 @@
 		"!src/core/**/test",
 		"types",
 		"svelte-kit.js",
+		"postinstall.js",
 		"scripts/special-types"
 	],
 	"scripts": {
@@ -67,7 +68,7 @@
 		"test:integration": "pnpm run -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"types": "node scripts/extract-types.js",
-		"postinstall": "node svelte-kit.js sync"
+		"postinstall": "node postinstall.js"
 	},
 	"exports": {
 		"./package.json": "./package.json",

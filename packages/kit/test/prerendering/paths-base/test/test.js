@@ -18,4 +18,9 @@ test('prerenders /path-base/dynamic/foo', () => {
 	assert.ok(content.includes('<h1>foo</h1>'));
 });
 
+test('prerenders /path-base/assets', () => {
+	const content = read('assets.html');
+	assert.match(content, /<img[^>]+src="\/path-base\//u);
+});
+
 test.run();

@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import * as vite from 'vite';
 import { get_aliases } from '../utils.js';
 
@@ -44,14 +46,14 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 	const stylesheets = new Set();
 
 	/**
-	 * @param {string} file
+	 * @param {string} current
 	 * @param {boolean} add_js
 	 */
-	function traverse(file, add_js) {
-		if (seen.has(file)) return;
-		seen.add(file);
+	function traverse(current, add_js) {
+		if (seen.has(current)) return;
+		seen.add(current);
 
-		const chunk = manifest[file];
+		const { chunk } = resolve_symlinks(manifest, current);
 
 		if (add_js) imports.add(chunk.file);
 
@@ -68,13 +70,29 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		}
 	}
 
-	traverse(entry, true);
+	const { chunk, file } = resolve_symlinks(manifest, entry);
+
+	traverse(file, true);
 
 	return {
-		file: manifest[entry].file,
+		file: chunk.file,
 		imports: Array.from(imports),
 		stylesheets: Array.from(stylesheets)
 	};
+}
+
+/**
+ * @param {import('vite').Manifest} manifest
+ * @param {string} file
+ */
+export function resolve_symlinks(manifest, file) {
+	while (!manifest[file]) {
+		file = path.relative('.', fs.realpathSync(file));
+	}
+
+	const chunk = manifest[file];
+
+	return { chunk, file };
 }
 
 /**
@@ -147,7 +165,7 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
  * @returns {string}
  */
 export function assets_base(config) {
-	return config.paths.assets + '/' || config.paths.base + '/' || './';
+	return (config.paths.assets || config.paths.base || '.') + '/';
 }
 
 const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH']);
