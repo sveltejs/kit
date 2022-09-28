@@ -233,6 +233,7 @@
 		border-radius: 2px;
 		background: white;
 		margin: 0;
+		color: rgba(0, 0, 0, 0.7);
 	}
 
 	input:disabled:not(.exact):not(.close) {

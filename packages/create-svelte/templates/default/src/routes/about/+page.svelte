@@ -3,7 +3,7 @@
 	<meta name="description" content="About this app" />
 </svelte:head>
 
-<div class="content">
+<div class="text-column">
 	<h1>About this app</h1>
 
 	<p>
@@ -24,13 +24,3 @@
 		using it with JavaScript disabled!
 	</p>
 </div>
-
-<style>
-	.content {
-		display: flex;
-		width: 100%;
-		flex: 0.6;
-		flex-direction: column;
-		justify-content: center;
-	}
-</style>
