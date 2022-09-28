@@ -111,7 +111,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				throw new Error(`Invalid route ${id} — brackets are unbalanced`);
 			}
 
-			if (/\]\]\/\[\.\.\./.test(id)) {
+			if (/\[\.\.\.\w+\]\/\[\[/.test(id)) {
 				throw new Error(
 					`Invalid route ${id} — an optional route segment cannot follow a rest route segment`
 				);
