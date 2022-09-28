@@ -359,12 +359,22 @@ test('optional parameters', () => {
 		{
 			id: 'nested/[[optional]]/sub',
 			pattern: '/^/nested(?:/([^/]+))?/sub/?$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: {
+				layouts: [0],
+				errors: [1],
+				// see above, linux/windows difference -> find the index dynamically
+				leaf: nodes.findIndex((node) => node.component?.includes('nested/[[optional]]'))
+			}
 		},
 		{
 			id: 'prefix[[suffix]]',
 			pattern: '/^/prefix([^/]*)?/?$/',
-			page: { layouts: [0], errors: [1], leaf: 3 }
+			page: {
+				layouts: [0],
+				errors: [1],
+				// see above, linux/windows difference -> find the index dynamically
+				leaf: nodes.findIndex((node) => node.component?.includes('prefix[[suffix]]'))
+			}
 		},
 		{
 			id: '[[foo]]bar',
@@ -374,7 +384,12 @@ test('optional parameters', () => {
 		{
 			id: '[[optional]]',
 			pattern: '/^(?:/([^/]+))?/?$/',
-			page: { layouts: [0], errors: [1], leaf: 4 }
+			page: {
+				layouts: [0],
+				errors: [1],
+				// see above, linux/windows difference -> find the index dynamically
+				leaf: nodes.findIndex((node) => node.component?.includes('optional/[[optional]]'))
+			}
 		}
 	]);
 });
