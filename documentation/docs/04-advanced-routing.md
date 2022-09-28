@@ -67,6 +67,8 @@ export function load(event) {
 
 A route like `[lang]/home` contains a parameter named `lang` which is required. Sometimes it's benefitial to make these parameters optional, so that in this example both `home` and `en/home` point to the same page. You can do that by wrapping the parameter in another bracket pair: `[[lang]]/home`
 
+Note that an optional route parameter cannot follow a rest parameter (`[...rest]/[[optional]]`), as it's impossible to know which way to match the route.
+
 ### Matching
 
 A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](/docs/configuration#files) directory...
@@ -97,7 +99,8 @@ It's possible for multiple routes to match a given path. For example each of the
 ```bash
 src/routes/[...catchall]/+page.svelte
 src/routes/[a]/+server.js
-src/routes/[b]/+page.svelte
+src/routes/[[b]]/sub/+page.svelte
+src/routes/[c]/+page.svelte
 src/routes/foo-[c]/+page.svelte
 src/routes/foo-abc/+page.svelte
 ```
@@ -107,6 +110,7 @@ SvelteKit needs to know which route is being requested. To do so, it sorts them 
 - More specific routes are higher priority (e.g. a route with no parameters is more specific than a route with one dynamic parameter, and so on)
 - `+server` files have higher priority than `+page` files
 - Parameters with [matchers](#matching) (`[name=type]`) are higher priority than those without (`[name]`)
+- `[required]` parameters are higher priority than `[[optional]]` parameters
 - Rest parameters have lowest priority
 - Ties are resolved alphabetically
 
@@ -116,7 +120,8 @@ SvelteKit needs to know which route is being requested. To do so, it sorts them 
 src/routes/foo-abc/+page.svelte
 src/routes/foo-[c]/+page.svelte
 src/routes/[a]/+server.js
-src/routes/[b]/+page.svelte
+src/routes/[c]/+page.svelte
+src/routes/[[b]]/sub/+page.svelte
 src/routes/[...catchall]/+page.svelte
 ```
 

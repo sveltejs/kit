@@ -111,6 +111,18 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				throw new Error(`Invalid route ${id} — brackets are unbalanced`);
 			}
 
+			if (/\]\]\/\[\.\.\./.test(id)) {
+				throw new Error(
+					`Invalid route ${id} — an optional route segment cannot follow a rest route segment`
+				);
+			}
+
+			if (/\[\[\.\.\./.test(id)) {
+				throw new Error(
+					`Invalid route ${id} — a rest route segment is always optional, remove the outer square brackets`
+				);
+			}
+
 			const { pattern, names, types } = parse_route_id(id);
 
 			const segments = id.split('/');
@@ -129,8 +141,9 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 							parts.push({
 								dynamic,
+								optional: dynamic && content.startsWith('['),
 								rest: dynamic && content.startsWith('...'),
-								type: (dynamic && content.split('=')[1]) || null
+								type: (dynamic && content.split('=')[1]?.split(']')[0]) || null
 							});
 						});
 						return parts;
@@ -440,6 +453,11 @@ function compare(a, b, segment_map) {
 				// [x=type] < [x]
 				if (!!pa.type !== !!pb.type) {
 					return pa.type ? -1 : +1;
+				}
+
+				// [x] < [[x]]
+				if (pa.optional !== pb.optional) {
+					return pa.optional ? +1 : -1;
 				}
 			}
 		}

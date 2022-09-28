@@ -80,19 +80,73 @@ for (const [key, expected] of Object.entries(tests)) {
 	});
 }
 
-test('exec extracts params correctly', () => {
-	const route_regex = /^\/blog(\/[^/]+)?\/sub([^/]+?)\/?$/;
+const exec_tests = [
 	{
-		const match = route_regex.exec('/blog/123/subparam');
-		if (!match) throw new Error('failed to match, test setup is borked');
-		assert.equal(exec(match, ['slug', 'param'], [], {}), { slug: '123', param: 'param' });
-	}
+		route: 'blog/[[slug]]/sub[[param]]',
+		path: '/blog/sub',
+		expected: { slug: '', param: '' }
+	},
 	{
-		const match = route_regex.exec('/blog/subparam');
-		if (!match) throw new Error('failed to match, test setup is borked');
-		assert.equal(exec(match, ['slug', 'param'], [], {}), { slug: '', param: 'param' });
+		route: 'blog/[[slug]]/sub[[param]]',
+		path: '/blog/slug/sub',
+		expected: { slug: 'slug', param: '' }
+	},
+	{
+		route: 'blog/[[slug]]/sub[[param]]',
+		path: '/blog/slug/subparam',
+		expected: { slug: 'slug', param: 'param' }
+	},
+	{
+		route: 'blog/[[slug]]/sub[[param]]',
+		path: '/blog/subparam',
+		expected: { slug: '', param: 'param' }
+	},
+	{
+		route: '[[slug]]/[...rest]',
+		path: '/slug/rest/sub',
+		expected: { slug: 'slug', rest: 'rest/sub' }
+	},
+	{
+		route: '[[slug]]/[...rest]',
+		path: '/slug/rest',
+		expected: { slug: 'slug', rest: 'rest' }
+	},
+	{
+		route: '[[slug]]/[...rest]',
+		path: '/slug',
+		expected: { slug: 'slug', rest: '' }
+	},
+	{
+		route: '[[slug]]/[...rest]',
+		path: '/',
+		expected: { slug: '', rest: '' }
+	},
+	{
+		route: '[...rest]/path',
+		path: '/rest/path',
+		expected: { rest: 'rest' }
+	},
+	{
+		route: '[[slug1]]/[[slug2]]',
+		path: '/slug1/slug2',
+		expected: { slug1: 'slug1', slug2: 'slug2' }
+	},
+	{
+		route: '[[slug1]]/[[slug2]]',
+		path: '/slug1',
+		expected: { slug1: 'slug1', slug2: '' }
 	}
-});
+];
+
+for (const { path, route, expected } of exec_tests) {
+	test(`exec extracts params correctly for ${path}`, () => {
+		const { pattern, names, types } = parse_route_id(route);
+		const match = pattern.exec(path);
+		if (!match) throw new Error(`Failed to match ${path}`);
+		const actual = exec(match, names, types, {});
+		assert.equal(actual, expected);
+	});
+}
 
 test('errors on bad param name', () => {
 	assert.throws(() => parse_route_id('abc/[b-c]'), /Invalid param: b-c/);

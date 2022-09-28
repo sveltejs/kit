@@ -48,17 +48,10 @@ export function parse_route_id(id) {
 											);
 										}
 
-										const [, optional, rest, name, type, optional_end] = match;
-
-										if ((optional && !optional_end) || (!optional && optional_end)) {
-											throw new Error(`Invalid param: ${content}. Unbalanced square brackets.`);
-										} else if (optional && rest) {
-											throw new Error(
-												`Invalid param: ${content}. Did you mean [...${name}${
-													type ? `=${type}` : ''
-												}]?`
-											);
-										}
+										const [, optional, rest, name, type] = match;
+										// It's assumed that the following invalid route id cases are already checked
+										// - unbalanced brackets
+										// - optional param following rest param
 
 										is_optional = is_optional || !!optional;
 										names.push(name);
