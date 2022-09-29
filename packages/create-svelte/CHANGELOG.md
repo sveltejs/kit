@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.181
+
+### Patch Changes
+
+- Fix template description for SvelteKit demo app ([#7076](https://github.com/sveltejs/kit/pull/7076))
+
 ## 2.0.0-next.180
 
 ### Patch Changes
