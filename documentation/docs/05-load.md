@@ -378,7 +378,7 @@ declare function doStuffWith(arg: any): void;
 // @filename: index.js
 // ---cut---
 /** @type {import('./$types').PageLoad} */
-export function load({ url, params, parent, fetch, depends }) {
+export async function load({ url, params, parent, fetch, depends }) {
 	const response = await fetch('https://some-api.com'); // load reruns when invalidate('https://some-api.com') is called
 	depends('custom:key'); // load reruns when invalidate('custom:key') is called
 	doStuffWith(url.pathname); // load reruns when the URL changes
