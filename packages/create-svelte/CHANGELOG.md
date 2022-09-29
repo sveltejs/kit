@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.182
+
+### Patch Changes
+
+- Work around SSR transform bug ([#7088](https://github.com/sveltejs/kit/pull/7088))
+
 ## 2.0.0-next.181
 
 ### Patch Changes
