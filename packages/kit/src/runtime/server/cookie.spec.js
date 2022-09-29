@@ -42,8 +42,9 @@ paths.negative.forEach(([path, constraint]) => {
 	});
 });
 
-const cookies_setup = () => {
-	const url = new URL('https://example.com');
+/** @param {boolean} localhost */
+const cookies_setup = (localhost = false) => {
+	const url = new URL(localhost ? 'http://localhost:1234' : 'https://example.com');
 	const request = new Request(url, {
 		headers: new Headers({
 			cookie: 'a=b;'
@@ -68,6 +69,13 @@ test('default values when set is called', () => {
 	assert.equal(opts?.httpOnly, true);
 	assert.equal(opts?.path, undefined);
 	assert.equal(opts?.sameSite, 'lax');
+});
+
+test('default values when on localhost', () => {
+	const { cookies, new_cookies } = cookies_setup(true);
+	cookies.set('a', 'b');
+	const opts = new_cookies.get('a')?.options;
+	assert.equal(opts?.secure, false);
 });
 
 test('overridden defaults when set is called', () => {
