@@ -781,18 +781,14 @@ test.describe.serial('Invalidation', () => {
 		await expect(page.locator('p.redirect-state')).toHaveText('Redirect state: done');
 	});
 
-	test('+layout(.server).js is re-run when server dep is invalidated', async ({
-		page,
-		clicknav
-	}) => {
+	test('+layout(.server).js is re-run when server dep is invalidated', async ({ page }) => {
 		await page.goto('/load/invalidation/depends');
 		const server = await page.textContent('p.server');
 		const shared = await page.textContent('p.shared');
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
-		await clicknav('button.server');
-		await page.waitForLoadState('networkidle');
+		await Promise.all([page.click('button.server'), page.waitForLoadState('networkidle')]);
 		await page.waitForTimeout(200);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
@@ -807,8 +803,7 @@ test.describe.serial('Invalidation', () => {
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
-		await clicknav('button.shared');
-		await page.waitForLoadState('networkidle');
+		await Promise.all([page.click('button.shared'), page.waitForLoadState('networkidle')]);
 		await page.waitForTimeout(200);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
