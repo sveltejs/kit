@@ -371,7 +371,7 @@ A `load` function will re-run in the following situations:
 - All active `load` functions were forcibly re-run with [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall)
 
 ```js
-/// file: +page.js
+/// file: src/routes/items/[id]/+page.js
 // @filename: ambient.d.ts
 declare function doStuffWith(arg: any): void;
 
@@ -382,7 +382,7 @@ export async function load({ url, params, parent, fetch, depends }) {
 	const response = await fetch('https://some-api.com'); // load reruns when invalidate('https://some-api.com') is called
 	depends('custom:key'); // load reruns when invalidate('custom:key') is called
 	doStuffWith(url.pathname); // load reruns when the URL changes
-	doStuffWith(params.foo); // load reruns when the foo parameter changes
+	doStuffWith(params.id); // load reruns when the foo parameter changes
 	await parent(); // load reruns when any parent load function reruns
 }
 ```
