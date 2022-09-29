@@ -338,7 +338,7 @@ export interface ParamMatcher {
 }
 
 /**
- * The `RequestEvent` is the common interface for various types of function parameters on the server.
+ * The interface representing an incoming request, used in `hooks.server.js`, `+page.server.js` and `+server.js` files
  */
 export interface RequestEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>

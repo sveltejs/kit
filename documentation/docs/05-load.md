@@ -381,7 +381,7 @@ declare function doStuffWith(arg: any): void;
 export function load({ url, params, parent, fetch, depends }) {
 	const response = await fetch('https://some-api.com'); // load reruns when invalidate('https://some-api.com') is called
 	depends('custom:key'); // load reruns when invalidate('custom:key') is called
-	doStuffWith(url); // load reruns when URL changes
+	doStuffWith(url.pathname); // load reruns when the URL changes
 	doStuffWith(params.foo); // load reruns when the foo parameter changes
 	await parent(); // load reruns when any parent load function reruns
 }
