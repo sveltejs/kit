@@ -566,7 +566,7 @@ export function create_client({ target, base, trailing_slash }) {
 					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
 					return started
 						? subsequent_fetch(resolved, init)
-						: await initial_fetch(requested, resolved, init);
+						: initial_fetch(requested, resolved, init);
 				},
 				setHeaders: () => {}, // noop
 				depends,
