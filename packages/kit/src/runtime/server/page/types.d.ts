@@ -4,8 +4,7 @@ import { SSRNode, CspDirectives } from 'types';
 export interface Fetched {
 	url: string;
 	method: string;
-	request_body?: BodyInit | null;
-	request_body_hash?: string;
+	request_body?: string | ArrayBufferView | null;
 	response_body: string;
 	response: Response;
 }

@@ -353,7 +353,7 @@ export interface SSRState {
 	prerender_default?: PrerenderOption;
 }
 
-export type StrictBody = string | BufferSource;
+export type StrictBody = string | ArrayBufferView;
 
 export interface Uses {
 	dependencies: Set<string>;

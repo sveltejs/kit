@@ -3,7 +3,6 @@ import { ReadableStream, TransformStream, WritableStream } from 'stream/web';
 import { Readable } from 'stream';
 import { Request as NodeFetchRequest } from 'node-fetch';
 import { webcrypto as crypto } from 'crypto';
-import { Blob } from 'buffer';
 
 /** @type {Record<string, any>} */
 const globals = {
@@ -32,8 +31,7 @@ const globals = {
 	ReadableStream,
 	TransformStream,
 	WritableStream,
-	FormData,
-	Blob
+	FormData
 };
 
 // exported for dev/preview and node environments

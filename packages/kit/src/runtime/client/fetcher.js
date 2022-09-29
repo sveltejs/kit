@@ -1,4 +1,4 @@
-import { hash, hash_formdata } from '../hash.js';
+import { hash } from '../hash.js';
 
 let loading = 0;
 
@@ -66,19 +66,13 @@ const cache = new Map();
  * @param {string} resolved
  * @param {RequestInit} [opts]
  */
-export async function initial_fetch(resource, resolved, opts) {
+export function initial_fetch(resource, resolved, opts) {
 	const url = JSON.stringify(resource instanceof Request ? resource.url : resource);
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
-	const request = new Request(resource, opts);
-
-	if (opts?.body) {
-		const request_body_hash =
-			opts.body?.constructor.name === 'FormData'
-				? await hash_formdata(/** @type {FormData} */ (opts.body))
-				: hash(await request.clone().arrayBuffer());
-		selector += `[data-hash="${request_body_hash}"]`;
+	if (opts?.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
+		selector += `[data-hash="${hash(opts.body)}"]`;
 	}
 
 	const script = document.querySelector(selector);
@@ -91,7 +85,7 @@ export async function initial_fetch(resource, resolved, opts) {
 		return Promise.resolve(new Response(body, init));
 	}
 
-	return native_fetch(request);
+	return native_fetch(resource, opts);
 }
 
 /**
