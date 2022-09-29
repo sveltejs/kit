@@ -377,8 +377,6 @@ declare function doStuffWith(arg: any): void;
 
 // @filename: index.js
 // ---cut---
-import { error } from '@sveltejs/kit';
-
 /** @type {import('./$types').LayoutServerLoad} */
 export function load({ url, params, parent, fetch, depends }) {
 	const response = await fetch('https://some-api.com'); // load reruns when invalidate('https://some-api.com') is called
