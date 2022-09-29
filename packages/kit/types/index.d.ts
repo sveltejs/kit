@@ -337,17 +337,52 @@ export interface ParamMatcher {
 	(param: string): boolean;
 }
 
+/**
+ * The `RequestEvent` is the common interface for various types of function parameters on the server.
+ */
 export interface RequestEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
 > {
+	/**
+	 * An object for retrieving and modifying cookies. See [Cookies](https://kit.svelte.dev/docs/types#sveltejs-kit-cookies) for more info.
+	 */
 	cookies: Cookies;
+	/**
+	 * Gets the client's IP address.
+	 */
 	getClientAddress: () => string;
+	/**
+	 * Contains data populated from the [handle](https://kit.svelte.dev/docs/hooks#server-hooks-handle) hook.
+	 */
 	locals: App.Locals;
+	/**
+	 * An object of key-value pairs where each key is the name of a route parameter and each value is the value of that route parameter.
+	 * Example: If you access the route `src/routes/blog/[slug]/+page.svelte` through the URL `blog/hello-world`, `params` would be `{ slug: 'hello-world' }`
+	 */
 	params: Params;
+	/**
+	 * Contains [platform-specific context](https://kit.svelte.dev/docs/adapters#supported-environments-platform-specific-context).
+	 */
 	platform: Readonly<App.Platform>;
+	/**
+	 * The raw request object.
+	 */
 	request: Request;
+	/**
+	 * The route id of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`.
+	 */
 	routeId: string | null;
+	/**
+	 * If you need to set headers for the response, you can do so using the `setHeaders` method. This is useful for example if you want the page to be cached.
+	 *
+	 * Setting the same header multiple times is an error — you can only set a given header once.
+	 *
+	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](/docs/types#sveltejs-kit-cookies) API instead.
+	 */
 	setHeaders: (headers: Record<string, string>) => void;
+	/**
+	 * The URL of the request.
+	 */
 	url: URL;
 }
 

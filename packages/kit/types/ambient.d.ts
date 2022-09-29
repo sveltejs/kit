@@ -174,6 +174,10 @@ declare module '$app/navigation' {
 	/**
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
 	 *
+	 * Note that navigating to another page that reuses the current `+page.svelte` will not remount the component.
+	 * Also note that not all `load` functions might be run again.
+	 * See [the load docs on invalidation](https://kit.svelte.dev/docs/load#invalidation) for more information.
+	 *
 	 * @param url Where to navigate to
 	 * @param opts.replaceState If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
 	 * @param opts.noscroll If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
@@ -197,11 +201,16 @@ declare module '$app/navigation' {
 	 * // Example: Match '/path' regardless of the query parameters
 	 * invalidate((url) => url.pathname === '/path');
 	 * ```
+	 *
+	 * Also see [the load docs on invalidation](https://kit.svelte.dev/docs/load#invalidation).
+	 *
 	 * @param url The invalidated URL
 	 */
 	export function invalidate(url: string | URL | ((url: URL) => boolean)): Promise<void>;
 	/**
 	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+	 *
+	 * Also see [the load docs on invalidation](https://kit.svelte.dev/docs/load#invalidation).
 	 */
 	export function invalidateAll(): Promise<void>;
 	/**

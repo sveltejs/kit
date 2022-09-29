@@ -16,51 +16,10 @@ export function load(event) {
 }
 ```
 
-### Input properties
 
-The argument to a `load` function is a `LoadEvent` (or, for server-only `load` functions, a `ServerLoadEvent` which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`). All events have the following properties:
+### Common inputs
 
-#### data
-
-Very rarely, you might need both a `+page.js` and a `+page.server.js` (or the `+layout` equivalent). In these cases, the `data` for `+page.svelte` comes from `+page.js`, which in turn receives `data` from the server:
-
-```js
-/// file: src/routes/my-route/+page.server.js
-/** @type {import('./$types').PageServerLoad} */
-export function load() {
-	return {
-		a: 1
-	};
-}
-```
-
-```js
-/// file: src/routes/my-route/+page.js
-// @filename: $types.d.ts
-export type PageLoad = import('@sveltejs/kit').Load<{}, { a: number }>;
-
-// @filename: index.js
-// ---cut---
-/** @type {import('./$types').PageLoad} */
-export function load({ data }) {
-	return {
-		b: data.a * 2
-	};
-}
-```
-
-```svelte
-/// file: src/routes/my-route/+page.svelte
-<script>
-	/** @type {import('./$types').PageData} */
-	export let data;
-
-	console.log(data.a); // `undefined`, it wasn't passed through in +page.js
-	console.log(data.b); // `2`
-</script>
-```
-
-In other words `+page.server.js` passes `data` along to `+page.js`, which passes `data` along to `+page.svelte`.
+The argument to a `load` function inside `+page.js` or `+layout.js` is a `LoadEvent`. The argument to a `load` function inside `+page.server.js` or `+layout.server.js` is a `ServerLoadEvent`. They share mostly the same inputs, which are as follows:
 
 #### params
 
@@ -92,10 +51,6 @@ export function load({ routeId }) {
 An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams` (which contains the parsed query string as a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) object). `url.hash` cannot be accessed during `load`, since it is unavailable on the server.
 
 > In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node](/docs/adapters#supported-environments-node-js), for example, you may need to configure the adapter in order for the URL to be correct.
-
-### Input methods
-
-`LoadEvent` also has the following methods:
 
 #### depends
 
@@ -264,6 +219,56 @@ Setting the same header multiple times (even in separate `load` functions) is an
 
 You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](/docs/types#sveltejs-kit-cookies) API in a server-only `load` function instead.
 
+### Inputs exclusive to shared load functions
+
+In addition to the common inputs, a `load` function that runs on both the server and the client has the following inputs:
+
+#### data
+
+Very rarely, you might need both a `+page.js` and a `+page.server.js` (or the `+layout` equivalent). In these cases, the `data` for `+page.svelte` comes from `+page.js`, which in turn receives `data` from the server:
+
+```js
+/// file: src/routes/my-route/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
+export function load() {
+	return {
+		a: 1
+	};
+}
+```
+
+```js
+/// file: src/routes/my-route/+page.js
+// @filename: $types.d.ts
+export type PageLoad = import('@sveltejs/kit').Load<{}, { a: number }>;
+
+// @filename: index.js
+// ---cut---
+/** @type {import('./$types').PageLoad} */
+export function load({ data }) {
+	return {
+		b: data.a * 2
+	};
+}
+```
+
+```svelte
+/// file: src/routes/my-route/+page.svelte
+<script>
+	/** @type {import('./$types').PageData} */
+	export let data;
+
+	console.log(data.a); // `undefined`, it wasn't passed through in +page.js
+	console.log(data.b); // `2`
+</script>
+```
+
+In other words `+page.server.js` passes `data` along to `+page.js`, which passes `data` along to `+page.svelte`.
+
+### Inputs exclusive to server-only load functions
+
+In addition to the common inputs, the server-only `load` function provides a few more arguments which it inherits from `RequestEvent`. Namely these are `getClientAddress`, `cookies`, `locals`, `platform` and `request`. See the `RequestEvent` docs for more info.
+
 ### Output
 
 The returned `data`, if any, must be an object of values. For a server-only `load` function, these values must be serializable with [devalue](https://github.com/rich-harris/devalue). Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
@@ -362,8 +367,27 @@ A `load` function will re-run in the following situations:
 - It references a property of `params` whose value has changed
 - It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed
 - It calls `await parent()` and a parent `load` function re-ran
-- It declared a dependency on a specific URL via [`fetch`](#input-methods-fetch) or [`depends`](#input-methods-depends), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
+- It declared a dependency on a specific URL via [`fetch`](#common-inputs-fetch) or [`depends`](#common-inputs-depends), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
 - All active `load` functions were forcibly re-run with [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall)
+
+```js
+/// file: +page.js
+// @filename: ambient.d.ts
+declare function doStuffWith(arg: any): void;
+
+// @filename: index.js
+// ---cut---
+import { error } from '@sveltejs/kit';
+
+/** @type {import('./$types').LayoutServerLoad} */
+export function load({ url, params, parent, fetch, depends }) {
+	const response = await fetch('https://some-api.com'); // load reruns when invalidate('https://some-api.com') is called
+	depends('custom:key'); // load reruns when invalidate('custom:key') is called
+	doStuffWith(url); // load reruns when URL changes
+	doStuffWith(params.foo); // load reruns when the foo parameter changes
+	await parent(); // load reruns when any parent load function reruns
+}
+```
 
 If a `load` function is triggered to re-run, the page will not remount — instead, it will update with the new `data`. This means that components' internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
 
