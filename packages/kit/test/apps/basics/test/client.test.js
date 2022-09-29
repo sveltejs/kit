@@ -302,7 +302,7 @@ test.describe.serial('Errors', () => {
 		expect(await page.innerHTML('h1')).toBe('401');
 	});
 
-	test('Root error falls back to error.html (unexpected error)', async ({ page }) => {
+	test('Root error falls back to error.html (unexpected error)', async ({ page, clicknav }) => {
 		await page.goto('/errors/error-html');
 		await clicknav('button:text-is("Unexpected")');
 
@@ -312,7 +312,7 @@ test.describe.serial('Errors', () => {
 		);
 	});
 
-	test('Root error falls back to error.html (expected error)', async ({ page }) => {
+	test('Root error falls back to error.html (expected error)', async ({ page, clicknav }) => {
 		await page.goto('/errors/error-html');
 		await clicknav('button:text-is("Expected")');
 
