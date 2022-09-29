@@ -320,9 +320,9 @@ test.describe.serial('Errors', () => {
 		);
 	});
 
-	test('Root 404 redirects somewhere due to root layout', async ({ page, baseURL }) => {
+	test('Root 404 redirects somewhere due to root layout', async ({ page, baseURL, clicknav }) => {
 		await page.goto('/errors/error-html');
-		await Promise.all([page.waitForNavigation(), page.click('button:text-is("Redirect")')]);
+		await clicknav('button:text-is("Redirect")');
 		expect(page.url()).toBe(baseURL + '/load');
 	});
 });
@@ -781,14 +781,18 @@ test.describe.serial('Invalidation', () => {
 		await expect(page.locator('p.redirect-state')).toHaveText('Redirect state: done');
 	});
 
-	test('+layout(.server).js is re-run when server dep is invalidated', async ({ page }) => {
+	test('+layout(.server).js is re-run when server dep is invalidated', async ({
+		page,
+		clicknav
+	}) => {
 		await page.goto('/load/invalidation/depends');
 		const server = await page.textContent('p.server');
 		const shared = await page.textContent('p.shared');
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
-		await Promise.all([page.click('button.server'), page.waitForLoadState('networkidle')]);
+		await clicknav('button.server');
+		await page.waitForLoadState('networkidle');
 		await page.waitForTimeout(200);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
@@ -796,14 +800,15 @@ test.describe.serial('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 	});
 
-	test('+layout.js is re-run when shared dep is invalidated', async ({ page }) => {
+	test('+layout.js is re-run when shared dep is invalidated', async ({ page, clicknav }) => {
 		await page.goto('/load/invalidation/depends');
 		const server = await page.textContent('p.server');
 		const shared = await page.textContent('p.shared');
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
-		await Promise.all([page.click('button.shared'), page.waitForLoadState('networkidle')]);
+		await clicknav('button.shared');
+		await page.waitForLoadState('networkidle');
 		await page.waitForTimeout(200);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');

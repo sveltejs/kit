@@ -188,15 +188,15 @@ test.describe('Shadowed pages', () => {
 		);
 	});
 
-	test('Handles POST redirects', async ({ page }) => {
+	test('Handles POST redirects', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
-		await Promise.all([page.waitForNavigation(), page.click('#redirect-post')]);
+		await clicknav('#redirect-post');
 		expect(await page.textContent('h1')).toBe('Redirection was successful');
 	});
 
-	test('Handles POST redirects with cookies', async ({ page, context }) => {
+	test('Handles POST redirects with cookies', async ({ page, context, clicknav }) => {
 		await page.goto('/shadowed');
-		await Promise.all([page.waitForNavigation(), page.click('#redirect-post-with-cookie')]);
+		await clicknav('#redirect-post-with-cookie');
 		expect(await page.textContent('h1')).toBe('Redirection was successful');
 
 		const cookies = await context.cookies();
@@ -205,9 +205,9 @@ test.describe('Shadowed pages', () => {
 		);
 	});
 
-	test('Handles POST success with returned location', async ({ page }) => {
+	test('Handles POST success with returned location', async ({ page, clicknav }) => {
 		await page.goto('/shadowed/post-success-redirect');
-		await Promise.all([page.waitForNavigation(), page.click('button')]);
+		await clicknav('button');
 		expect(await page.textContent('h1')).toBe('POST was successful');
 	});
 
@@ -606,12 +606,13 @@ test.describe('Errors', () => {
 
 	test('page endpoint POST unexpected error message is preserved', async ({
 		page,
+		clicknav,
 		read_errors
 	}) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
-		await Promise.all([page.waitForNavigation(), page.click('#post-implicit')]);
+		await clicknav('#post-implicit');
 
 		expect(await page.textContent('pre')).toBe(
 			JSON.stringify({ status: 500, message: 'oops' }, null, '  ')
@@ -631,11 +632,15 @@ test.describe('Errors', () => {
 		}
 	});
 
-	test('page endpoint POST HttpError error message is preserved', async ({ page, read_errors }) => {
+	test('page endpoint POST HttpError error message is preserved', async ({
+		page,
+		clicknav,
+		read_errors
+	}) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
-		await Promise.all([page.waitForNavigation(), page.click('#post-explicit')]);
+		await clicknav('#post-explicit');
 
 		expect(await page.textContent('pre')).toBe(
 			JSON.stringify({ status: 400, message: 'oops' }, null, '  ')
@@ -1390,7 +1395,8 @@ test.describe('Routing', () => {
 
 	test('does not attempt client-side navigation to links with data-sveltekit-reload', async ({
 		baseURL,
-		page
+		page,
+		clicknav
 	}) => {
 		await page.goto('/routing');
 
@@ -1398,7 +1404,7 @@ test.describe('Routing', () => {
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
-		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/b"]')]);
+		await clicknav('[href="/routing/b"]');
 		expect(await page.textContent('h1')).toBe('b');
 		expect(requests).toContain(`${baseURL}/routing/b`);
 	});
