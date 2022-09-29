@@ -219,7 +219,7 @@ Setting the same header multiple times (even in separate `load` functions) is an
 
 You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](/docs/types#sveltejs-kit-cookies) API in a server-only `load` function instead.
 
-### Inputs exclusive to shared load functions
+### Shared-only inputs
 
 In addition to the common inputs, a `load` function that runs on both the server and the client has the following inputs:
 
