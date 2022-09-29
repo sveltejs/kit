@@ -1,5 +1,4 @@
 import { escape_html_attr } from '../../../utils/escape.js';
-import { hash } from '../../hash.js';
 
 /**
  * Inside a script element, only `</script` and `<!--` hold special meaning to the HTML parser.
@@ -71,8 +70,8 @@ export function serialize_data(fetched, filter, prerendering = false) {
 		`data-url=${escape_html_attr(fetched.url)}`
 	];
 
-	if (fetched.request_body) {
-		attrs.push(`data-hash=${escape_html_attr(hash(fetched.request_body))}`);
+	if (fetched.request_body_hash) {
+		attrs.push(`data-hash=${escape_html_attr(fetched.request_body_hash)}`);
 	}
 
 	if (!prerendering && fetched.method === 'GET' && cache_control) {

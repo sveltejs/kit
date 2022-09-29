@@ -4,12 +4,20 @@
  */
 export function hash(value) {
 	let hash = 5381;
-	let i = value.length;
 
 	if (typeof value === 'string') {
+		let i = value.length;
 		while (i) hash = (hash * 33) ^ value.charCodeAt(--i);
+	} else if (value instanceof ArrayBuffer) {
+		const buffer = new Uint8Array(value);
+		let i = buffer.byteLength;
+		while (i) hash = (hash * 33) ^ buffer[--i];
+	} else if (ArrayBuffer.isView(value)) {
+		const buffer = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+		let i = buffer.byteLength;
+		while (i) hash = (hash * 33) ^ buffer[--i];
 	} else {
-		while (i) hash = (hash * 33) ^ value[--i];
+		throw new TypeError('value must be a string, ArrayBuffer, DataView or TypedArray');
 	}
 
 	return (hash >>> 0).toString(36);

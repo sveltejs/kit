@@ -5,6 +5,7 @@ export interface Fetched {
 	url: string;
 	method: string;
 	request_body?: BodyInit | null;
+	request_body_hash?: string;
 	response_body: string;
 	response: Response;
 }
