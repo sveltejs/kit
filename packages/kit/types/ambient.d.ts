@@ -110,7 +110,7 @@ declare module '$app/forms' {
 				form: HTMLFormElement;
 				action: URL;
 				result: ActionResult<Success, Invalid>;
-				defaultBehavior: () => Promise<void>;
+				update: () => Promise<void>;
 		  }) => void);
 
 	/**
@@ -137,7 +137,7 @@ declare module '$app/forms' {
 		 * - redirects in case of a redirect response
 		 * - redirects to the nearest error page in case of an unexpected error
 		 *
-		 * If you provide a custom function with a callback and want to use the default behavior, invoke `defaultBehavior` in your callback.
+		 * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
 		 */
 		submit?: SubmitFunction<Success, Invalid>
 	): { destroy: () => void };

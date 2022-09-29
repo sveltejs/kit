@@ -257,7 +257,7 @@ Without an argument, `use:enhance` will emulate the browser-native behaviour, ju
 
 > By default the `form` property and `$page.form` is only updated for actions that are in a `+page.server.js` alongside the `+page.svelte` because in the native form submission case you would be redirected to the page the action is on
 
-To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `defaultBehavior`.
+To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
 
 ```svelte
 <form
@@ -268,9 +268,9 @@ To customise the behaviour, you can provide a function that runs immediately bef
 		// `action` is the URL to which the form is posted
 		// `cancel()` will prevent the submission
 
-		return async ({ result, defaultBehavior }) => {
+		return async ({ result, update }) => {
 			// `result` is an `ActionResult` object
-			// `defaultBehavior` is a function which triggers the logic that would be triggered if this callback wasn't set
+			// `update` is a function which triggers the logic that would be triggered if this callback wasn't set
 		};
 	}}
 >
@@ -280,7 +280,7 @@ You can use these functions to show and hide loading UI, and so on.
 
 #### applyAction
 
-If you provide our own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. Most of the time, calling `defaultBehavior` passed to the callback is enough. If you need more customization you can do so with `applyAction`:
+If you provide our own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. Most of the time, calling `update` passed to the callback is enough. If you need more customization you can do so with `applyAction`:
 
 ```diff
 <script>
@@ -310,7 +310,7 @@ If you provide our own callbacks, you may need to reproduce part of the default 
 
 The behaviour of `applyAction(result)` depends on `result.type`:
 
-- `success`, `invalid` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data`
+- `success`, `invalid` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data` (no exceptions in contrast to `update` from `enhance`)
 - `redirect` — calls `goto(result.location)`
 - `error` — renders the nearest `+error` boundary with `result.error`
 

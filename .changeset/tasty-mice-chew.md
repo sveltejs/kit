@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[feat] provide `defaultBehavior` to `use:enhance` callback
+[feat] provide `update` to `use:enhance` callback
