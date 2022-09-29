@@ -304,7 +304,7 @@ test.describe.serial('Errors', () => {
 
 	test('Root error falls back to error.html (unexpected error)', async ({ page }) => {
 		await page.goto('/errors/error-html');
-		await Promise.all([page.waitForNavigation(), page.click('button:text-is("Unexpected")')]);
+		await clicknav('button:text-is("Unexpected")');
 
 		expect(await page.textContent('h1')).toBe('Error - 500');
 		expect(await page.textContent('p')).toBe(
