@@ -382,7 +382,7 @@ export async function load({ url, params, parent, fetch, depends }) {
 	const response = await fetch('https://some-api.com'); // load reruns when invalidate('https://some-api.com') is called
 	depends('custom:key'); // load reruns when invalidate('custom:key') is called
 	doStuffWith(url.pathname); // load reruns when the URL changes
-	doStuffWith(params.id); // load reruns when the foo parameter changes
+	doStuffWith(params.id); // load reruns when the id parameter changes
 	await parent(); // load reruns when any parent load function reruns
 }
 ```
