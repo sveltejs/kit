@@ -314,7 +314,7 @@ test.describe.serial('Errors', () => {
 
 	test('Root error falls back to error.html (expected error)', async ({ page }) => {
 		await page.goto('/errors/error-html');
-		await Promise.all([page.waitForNavigation(), page.click('button:text-is("Expected")')]);
+		await clicknav('button:text-is("Expected")');
 
 		expect(await page.textContent('h1')).toBe('Error - 401');
 		expect(await page.textContent('p')).toBe(
