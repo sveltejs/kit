@@ -22,11 +22,18 @@ export function parse_route_id(id) {
 						.map((segment, i, segments) => {
 							const decoded_segment = decodeURIComponent(segment);
 							// special case — /[...rest]/ could contain zero segments
-							const match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(decoded_segment);
-							if (match) {
-								names.push(match[1]);
-								types.push(match[2]);
+							const rest_match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(decoded_segment);
+							if (rest_match) {
+								names.push(rest_match[1]);
+								types.push(rest_match[2]);
 								return '(?:/(.*))?';
+							}
+							// special case — /[[optional]]/ could contain zero segments
+							const optional_match = /^\[\[(\w+)(?:=(\w+))?\]\]$/.exec(decoded_segment);
+							if (optional_match) {
+								names.push(optional_match[1]);
+								types.push(optional_match[2]);
+								return '(?:/([^/]+))?';
 							}
 
 							const is_last = i === segments.length - 1;
@@ -35,9 +42,7 @@ export function parse_route_id(id) {
 								return;
 							}
 
-							let is_optional = false;
 							const parts = decoded_segment.split(/\[(.+?)\](?!\])/);
-							const dynamic_only = parts.length === 3 && !parts[0] && !parts[2];
 							const result = parts
 								.map((content, i) => {
 									if (i % 2) {
@@ -53,16 +58,9 @@ export function parse_route_id(id) {
 										// - unbalanced brackets
 										// - optional param following rest param
 
-										is_optional = is_optional || !!optional;
 										names.push(name);
 										types.push(type);
-										return rest
-											? '(.*?)'
-											: optional
-											? dynamic_only
-												? '(?:/([^/]+))?'
-												: '([^/]*)?'
-											: '([^/]+?)';
+										return rest ? '(.*?)' : optional ? '([^/]*)?' : '([^/]+?)';
 									}
 
 									if (is_last && content.includes('.')) add_trailing_slash = false;
@@ -87,12 +85,7 @@ export function parse_route_id(id) {
 								})
 								.join('');
 
-							if (is_optional && dynamic_only) {
-								// optional param makes up the whole segment, the slash is part of the regex
-								return result;
-							} else {
-								return '/' + result;
-							}
+							return '/' + result;
 						})
 						.join('')}${add_trailing_slash ? '/?' : ''}$`
 			  );
