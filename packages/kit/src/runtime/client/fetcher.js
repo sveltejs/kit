@@ -1,4 +1,4 @@
-import { hash } from '../hash.js';
+import { hash, hash_formdata } from '../hash.js';
 
 let loading = 0;
 
@@ -73,8 +73,11 @@ export async function initial_fetch(resource, resolved, opts) {
 
 	const request = new Request(resource, opts);
 
-	if (opts?.body && opts.body.constructor.name !== 'FormData') {
-		const request_body_hash = hash(await request.clone().arrayBuffer());
+	if (opts?.body) {
+		const request_body_hash =
+			opts.body?.constructor.name === 'FormData'
+				? await hash_formdata(/** @type {FormData} */ (opts.body))
+				: hash(await request.clone().arrayBuffer());
 		selector += `[data-hash="${request_body_hash}"]`;
 	}
 

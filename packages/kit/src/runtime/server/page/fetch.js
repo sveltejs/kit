@@ -2,7 +2,7 @@ import * as cookie from 'cookie';
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from '../index.js';
 import { domain_matches, path_matches } from '../cookie.js';
-import { hash } from '../../hash.js';
+import { hash, hash_formdata } from '../../hash.js';
 
 /**
  * @param {{
@@ -57,10 +57,17 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 		const request = normalize_fetch_input(info, init, event.url);
 
 		const request_body = init?.body;
-		const request_body_hash =
-			request_body && request_body.constructor.name !== 'FormData'
-				? hash(await request.clone().arrayBuffer())
-				: undefined;
+
+		/** @type {string} */
+		let request_body_hash;
+
+		if (request_body) {
+			if (request_body?.constructor.name === 'FormData') {
+				request_body_hash = await hash_formdata(/** @type {FormData} */ (request_body));
+			} else {
+				request_body_hash = hash(await request.clone().arrayBuffer());
+			}
+		}
 
 		/** @type {import('types').PrerenderDependency} */
 		let dependency;

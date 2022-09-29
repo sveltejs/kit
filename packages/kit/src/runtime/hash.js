@@ -22,3 +22,14 @@ export function hash(value) {
 
 	return (hash >>> 0).toString(36);
 }
+
+/**
+ * @param {FormData} formData;
+ */
+export async function hash_formdata(formData) {
+	const data = [];
+	for (const [name, value] of formData.entries()) {
+		data.push(name, typeof value === 'string' ? value : value.arrayBuffer());
+	}
+	return hash((await Promise.all(data)).map(hash).join(''));
+}
