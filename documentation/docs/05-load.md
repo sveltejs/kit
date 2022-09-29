@@ -265,7 +265,7 @@ export function load({ data }) {
 
 In other words `+page.server.js` passes `data` along to `+page.js`, which passes `data` along to `+page.svelte`.
 
-### Inputs exclusive to server-only load functions
+### Server-only inputs
 
 In addition to the common inputs, the server-only `load` function provides a few more arguments which it inherits from `RequestEvent`. Namely these are `getClientAddress`, `cookies`, `locals`, `platform` and `request`. See the `RequestEvent` docs for more info.
 
