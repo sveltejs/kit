@@ -65,7 +65,7 @@ export function load(event) {
 
 ### Optional parameters
 
-A route like `[lang]/home` contains a parameter named `lang` which is required. Sometimes it's benefitial to make these parameters optional, so that in this example both `home` and `en/home` point to the same page. You can do that by wrapping the parameter in another bracket pair: `[[lang]]/home`
+A route like `[lang]/home` contains a parameter named `lang` which is required. Sometimes it's beneficial to make these parameters optional, so that in this example both `home` and `en/home` point to the same page. You can do that by wrapping the parameter in another bracket pair: `[[lang]]/home`
 
 Note that an optional route parameter cannot follow a rest parameter (`[...rest]/[[optional]]`), as it's impossible to know which way to match the route.
 
