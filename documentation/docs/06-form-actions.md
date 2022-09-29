@@ -257,18 +257,20 @@ Without an argument, `use:enhance` will emulate the browser-native behaviour, ju
 
 > By default the `form` property and `$page.form` is only updated for actions that are in a `+page.server.js` alongside the `+page.svelte` because in the native form submission case you would be redirected to the page the action is on
 
-To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`.
+To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `defaultBehavior`.
 
 ```svelte
 <form
 	method="POST"
-	use:enhance={({ form, data, cancel }) => {
+	use:enhance={({ form, data, action cancel }) => {
 		// `form` is the `<form>` element
 		// `data` is its `FormData` object
+		// `action` is the URL to which the form is posted
 		// `cancel()` will prevent the submission
 
-		return async ({ result }) => {
+		return async ({ result, defaultBehavior }) => {
 			// `result` is an `ActionResult` object
+			// `defaultBehavior` is a function which triggers the logic that would be triggered if this callback wasn't set
 		};
 	}}
 >
@@ -278,7 +280,7 @@ You can use these functions to show and hide loading UI, and so on.
 
 #### applyAction
 
-If you provide your own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. We can do this with `applyAction`:
+If you provide our own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. Most of the time, calling `defaultBehavior` passed to the callback is enough. If you need more customization you can do so with `applyAction`:
 
 ```diff
 <script>
@@ -290,9 +292,10 @@ If you provide your own callbacks, you may need to reproduce part of the default
 
 <form
 	method="POST"
-	use:enhance={({ form, data, cancel }) => {
+	use:enhance={({ form, data, action, cancel }) => {
 		// `form` is the `<form>` element
 		// `data` is its `FormData` object
+		// `action` is the URL to which the form is posted
 		// `cancel()` will prevent the submission
 
 		return async ({ result }) => {

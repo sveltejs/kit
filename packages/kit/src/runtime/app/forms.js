@@ -96,6 +96,7 @@ export function enhance(form, submit = () => {}) {
 			action,
 			data,
 			form,
+			defaultBehavior: () => fallback_callback({ action, result }),
 			// @ts-expect-error generic constraints stuff we don't care about
 			result,
 			// TODO remove for 1.0
