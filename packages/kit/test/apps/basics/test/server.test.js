@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { start_server, test } from '../../../utils.js';
+import { fetch } from 'undici';
 import { createHash, randomBytes } from 'node:crypto';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -19,6 +20,43 @@ test.describe('Content-Type', () => {
 	test('sets Content-Type on page', async ({ request }) => {
 		const response = await request.get('/content-type-header');
 		expect(response.headers()['content-type']).toBe('text/html');
+	});
+});
+
+test.describe('Cookies', () => {
+	test('does not forward cookies from external domains', async ({ request }) => {
+		const { close, port } = await start_server(async (req, res) => {
+			if (req.url === '/') {
+				res.writeHead(200, {
+					'set-cookie': 'external=true',
+					'access-control-allow-origin': '*'
+				});
+
+				res.end('ok');
+			} else {
+				res.writeHead(404);
+				res.end('not found');
+			}
+		});
+
+		const response = await request.get(`/load/fetch-external-no-cookies?port=${port}`);
+		expect(response.headers()['set-cookie']).not.toContain('external=true');
+
+		close();
+	});
+});
+
+test.describe('CSRF', () => {
+	test('Blocks requests with incorrect origin', async ({ baseURL }) => {
+		const res = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded'
+			}
+		});
+
+		expect(res.status).toBe(403);
+		expect(await res.text()).toBe('Cross-site POST form submissions are forbidden');
 	});
 });
 
@@ -124,40 +162,6 @@ test.describe('Errors', () => {
 		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
 	});
 
-	test('page endpoint thrown error respects `accept: application/json`', async ({ request }) => {
-		const response = await request.get('/errors/page-endpoint/get-implicit', {
-			headers: {
-				accept: 'application/json'
-			}
-		});
-
-		const { message, name, stack, fancy } = await response.json();
-
-		expect(response.status()).toBe(500);
-		expect(name).toBe('FancyError');
-		expect(message).toBe('oops');
-		expect(fancy).toBe(true);
-
-		if (process.env.DEV) {
-			expect(stack.split('\n').length).toBeGreaterThan(1);
-		} else {
-			expect(stack.split('\n').length).toBe(1);
-		}
-	});
-
-	test('page endpoint returned error respects `accept: application/json`', async ({ request }) => {
-		const response = await request.get('/errors/page-endpoint/get-explicit', {
-			headers: {
-				accept: 'application/json'
-			}
-		});
-
-		const { message } = await response.json();
-
-		expect(response.status()).toBe(400);
-		expect(message).toBe('oops');
-	});
-
 	test('returns 400 when accessing a malformed URI', async ({ page }) => {
 		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
 		if (process.env.DEV) {
@@ -181,6 +185,79 @@ test.describe('Errors', () => {
 			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
 		);
 	});
+
+	test('throw error(...) in endpoint', async ({ request, read_errors }) => {
+		// HTML
+		{
+			const res = await request.get('/errors/endpoint-throw-error', {
+				headers: {
+					accept: 'text/html'
+				}
+			});
+
+			const error = read_errors('/errors/endpoint-throw-error');
+			expect(error).toBe(undefined);
+
+			expect(res.status()).toBe(401);
+			expect(await res.text()).toContain(
+				'This is the static error page with the following message: You shall not pass'
+			);
+		}
+
+		// JSON (default)
+		{
+			const res = await request.get('/errors/endpoint-throw-error');
+
+			const error = read_errors('/errors/endpoint-throw-error');
+			expect(error).toBe(undefined);
+
+			expect(res.status()).toBe(401);
+			expect(await res.json()).toEqual({
+				message: 'You shall not pass'
+			});
+		}
+	});
+
+	test('throw redirect(...) in endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-throw-redirect');
+		expect(res?.status()).toBe(200); // redirects are opaque to the browser
+
+		const error = read_errors('/errors/endpoint-throw-redirect');
+		expect(error).toBe(undefined);
+
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+	});
+
+	test('error thrown in handle results in a rendered error page or JSON response', async ({
+		request
+	}) => {
+		// HTML
+		{
+			const res = await request.get('/errors/error-in-handle', {
+				headers: {
+					accept: 'text/html'
+				}
+			});
+
+			expect(res.status()).toBe(500);
+			expect(await res.text()).toContain(
+				'This is the static error page with the following message: Error in handle'
+			);
+		}
+
+		// JSON (default)
+		{
+			const res = await request.get('/errors/error-in-handle');
+
+			const error = await res.json();
+
+			expect(error.stack).toBe(undefined);
+			expect(res.status()).toBe(500);
+			expect(error).toEqual({
+				message: 'Error in handle'
+			});
+		}
+	});
 });
 
 test.describe('Load', () => {
@@ -188,7 +265,38 @@ test.describe('Load', () => {
 		request
 	}) => {
 		const response = await request.get('/errors/error-in-layout');
-		expect(await response.text()).toContain('Error: 500');
+		expect(await response.text()).toContain('Error: 404');
+	});
+
+	test('fetch does not load a file with a # character', async ({ request }) => {
+		const response = await request.get('/load/static-file-with-hash');
+		expect(await response.text()).toContain('status: 404');
+	});
+
+	test('includes origin header on non-GET internal request', async ({ page, baseURL }) => {
+		await page.goto('/load/fetch-origin-internal');
+		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
+	});
+
+	test('includes origin header on external request', async ({ page, baseURL }) => {
+		const { port, close } = await start_server((req, res) => {
+			if (req.url === '/') {
+				res.writeHead(200, {
+					'content-type': 'application/json',
+					'access-control-allow-origin': '*'
+				});
+
+				res.end(JSON.stringify({ origin: req.headers.origin }));
+			} else {
+				res.writeHead(404);
+				res.end('not found');
+			}
+		});
+
+		await page.goto(`/load/fetch-origin-external?port=${port}`);
+		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
+
+		close();
 	});
 });
 
@@ -211,62 +319,17 @@ test.describe('Routing', () => {
 });
 
 test.describe('Shadowed pages', () => {
-	test('responds to HEAD requests from endpoint', async ({ request }) => {
-		const url = '/shadowed/simple';
-
-		const opts = {
-			headers: {
-				accept: 'application/json'
-			}
-		};
-
-		const responses = {
-			head: await request.head(url, opts),
-			get: await request.get(url, opts)
-		};
-
-		const headers = {
-			head: responses.head.headers(),
-			get: responses.get.headers()
-		};
-
-		expect(responses.head.status()).toBe(200);
-		expect(responses.get.status()).toBe(200);
-		expect(await responses.head.text()).toBe('');
-		expect(await responses.get.json()).toEqual({ answer: 42 });
-
-		['date', 'transfer-encoding'].forEach((name) => {
-			delete headers.head[name];
-			delete headers.get[name];
-		});
-
-		expect(headers.get).toEqual({
-			...headers.head,
-			'content-type': 'application/json'
-		});
-	});
-
-	test('Responds from endpoint if Accept includes application/json but not text/html', async ({
-		request
-	}) => {
-		const response = await request.get('/shadowed/simple', {
-			headers: {
-				accept: 'application/json'
-			}
-		});
-
-		expect(await response.json()).toEqual({ answer: 42 });
-	});
-
-	test('Action can return undefined', async ({ request }) => {
+	test('Action can return undefined', async ({ baseURL, request }) => {
 		const response = await request.post('/shadowed/simple/post', {
+			form: {},
 			headers: {
-				accept: 'application/json'
+				accept: 'application/json',
+				origin: new URL(baseURL).origin
 			}
 		});
 
-		expect(response.status()).toBe(204);
-		expect(await response.text()).toEqual('');
+		expect(response.status()).toBe(200);
+		expect(await response.json()).toEqual({ type: 'success', status: 204 });
 	});
 });
 
@@ -311,6 +374,26 @@ test.describe('Static files', () => {
 		const response = await request.get('/symlink-from/hello.txt');
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('hello');
+	});
+});
+
+test.describe('setHeaders', () => {
+	test('allows multiple set-cookie headers with different values', async ({ page }) => {
+		const response = await page.goto('/headers/set-cookie/sub');
+		const cookies = (await response?.allHeaders())['set-cookie'];
+		expect(cookies.includes('cookie1=value1') && cookies.includes('cookie2=value2')).toBe(true);
+	});
+});
+
+test.describe('cookies', () => {
+	test('cookie.serialize created correct cookie header string', async ({ page }) => {
+		const response = await page.goto('/cookies/serialize');
+		const cookies = await response.headerValue('set-cookie');
+		expect(
+			cookies.includes('before=before') &&
+				cookies.includes('after=after') &&
+				cookies.includes('endpoint=endpoint')
+		).toBe(true);
 	});
 });
 

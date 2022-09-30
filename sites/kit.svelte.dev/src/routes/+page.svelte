@@ -1,6 +1,8 @@
 <script>
-	import Machine from '$img/svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&meta';
-	import { Hero, Blurb } from '@sveltejs/site-kit';
+	import { Blurb } from '@sveltejs/site-kit';
+	import Hero from './Hero.svelte';
+	import Logotype from './svelte-kit-logotype.svg';
+	import Machine from './svelte-kit-machine.webp?w=1440;800;600;480&format=avif;webp;png&picture';
 </script>
 
 <svelte:head>
@@ -14,11 +16,10 @@
 <h1 class="visually-hidden">SvelteKit</h1>
 <Hero
 	title="SvelteKit"
-	logotype="images/svelte-kit-logotype.svg"
+	logotype={Logotype}
 	tagline="The fastest way to build svelte apps"
 	background={Machine}
 	alt="SvelteKit illustration"
-	width={800}
 />
 
 <div class="blurb-shifter">
@@ -40,7 +41,7 @@
 				of an SPA
 			</p>
 
-			<a sveltekit:prefetch href="/docs" class="cta">read the docs</a>
+			<a data-sveltekit-prefetch href="/docs" class="cta">read the docs</a>
 		</div>
 
 		<div slot="three">
@@ -50,7 +51,7 @@
 				support and more
 			</p>
 
-			<a sveltekit:prefetch href="/docs" class="cta">read the docs</a>
+			<a data-sveltekit-prefetch href="/docs" class="cta">read the docs</a>
 		</div>
 
 		<div class="description" slot="what">
@@ -77,7 +78,7 @@ cd my-app
 npm install
 npm run dev -- --open</code
 				></pre>
-			<a sveltekit:prefetch href="/docs" class="cta">get started</a>
+			<a data-sveltekit-prefetch href="/docs" class="cta">get started</a>
 		</div>
 	</Blurb>
 </div>

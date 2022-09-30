@@ -10,7 +10,7 @@ In particular, you'll get comfortable with the following:
 
 ### Fetch APIs
 
-SvelteKit uses [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch) for getting data from the network. It's available in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints) as well as in the browser.
+SvelteKit uses [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch) for getting data from the network. It's available in [hooks](/docs/hooks) and [server routes](/docs/routing#server) as well as in the browser.
 
 > A special version of `fetch` is available in [`load`](/docs/load) functions for invoking endpoints directly during server-side rendering, without making an HTTP call, while preserving credentials. (To make credentialled fetches in server-side code outside `load`, you must explicitly pass `cookie` and/or `authorization` headers.) It also allows you to make relative requests, whereas server-side `fetch` normally requires a fully qualified URL.
 
@@ -18,7 +18,7 @@ Besides `fetch` itself, the [Fetch API](https://developer.mozilla.org/en-US/docs
 
 #### Request
 
-An instance of [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) is accessible in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints) as `event.request`. It contains useful methods like `request.json()` and `request.formData()` for e.g. getting data that was posted to an endpoint.
+An instance of [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) is accessible in [hooks](/docs/hooks) and [server routes](/docs/routing#server) as `event.request`. It contains useful methods like `request.json()` and `request.formData()` for e.g. getting data that was posted to an endpoint.
 
 #### Response
 
@@ -51,7 +51,7 @@ Most of the time, your endpoints will return complete data, as in the `userAgent
 
 ### URL APIs
 
-URLs are represented by the [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) interface, which includes useful properties like `origin` and `pathname` (and, in the browser, `hash`). This interface shows up in various places — `event.url` in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints), [`$page.url`](/docs/modules#$app-stores) in [pages](/docs/routing#pages), `from` and `to` in [`beforeNavigate` and `afterNavigate`](/docs/modules#$app-navigation) and so on.
+URLs are represented by the [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) interface, which includes useful properties like `origin` and `pathname` (and, in the browser, `hash`). This interface shows up in various places — `event.url` in [hooks](/docs/hooks) and [server routes](/docs/routing#server), [`$page.url`](/docs/modules#$app-stores) in [pages](/docs/routing#page), `from` and `to` in [`beforeNavigate` and `afterNavigate`](/docs/modules#$app-navigation) and so on.
 
 #### URLSearchParams
 

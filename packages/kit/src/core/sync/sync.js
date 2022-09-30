@@ -1,10 +1,11 @@
+import fs from 'fs';
 import path from 'path';
 import create_manifest_data from './create_manifest_data/index.js';
 import { write_client_manifest } from './write_client_manifest.js';
 import { write_matchers } from './write_matchers.js';
 import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
-import { write_type, write_types } from './write_types.js';
+import { write_types, write_all_types } from './write_types/index.js';
 import { write_ambient } from './write_ambient.js';
 
 /**
@@ -13,6 +14,16 @@ import { write_ambient } from './write_ambient.js';
  * @param {string} mode
  */
 export function init(config, mode) {
+	// TODO remove for 1.0
+	if (fs.existsSync('src/app.d.ts')) {
+		const content = fs.readFileSync('src/app.d.ts', 'utf-8');
+		if (content.includes('PageError')) {
+			throw new Error(
+				'App.PageError has been renamed to App.Error — please update your src/app.d.ts'
+			);
+		}
+	}
+
 	write_tsconfig(config.kit);
 	write_ambient(config.kit, mode);
 }
@@ -26,10 +37,10 @@ export async function create(config) {
 
 	const output = path.join(config.kit.outDir, 'generated');
 
-	write_client_manifest(manifest_data, output);
+	write_client_manifest(config, manifest_data, output);
 	write_root(manifest_data, output);
 	write_matchers(manifest_data, output);
-	await write_types(config, manifest_data);
+	await write_all_types(config, manifest_data);
 
 	return { manifest_data };
 }
@@ -43,7 +54,7 @@ export async function create(config) {
  * @param {string} file
  */
 export async function update(config, manifest_data, file) {
-	await write_type(config, manifest_data, file);
+	await write_types(config, manifest_data, file);
 
 	return { manifest_data };
 }

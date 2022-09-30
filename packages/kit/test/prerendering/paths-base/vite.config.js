@@ -6,8 +6,13 @@ const config = {
 	build: {
 		minify: false
 	},
+
 	clearScreen: false,
+
+	logLevel: 'silent',
+
 	plugins: [sveltekit()],
+
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

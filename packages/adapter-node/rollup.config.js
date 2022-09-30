@@ -1,19 +1,35 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
+import { builtinModules } from 'module';
 
 export default [
 	{
-		input: {
-			index: 'src/index.js',
-			handler: 'src/handler.js',
-			shims: 'src/shims.js'
-		},
+		input: 'src/index.js',
 		output: {
-			dir: 'files',
+			file: 'files/index.js',
+			format: 'esm'
+		},
+		plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()],
+		external: ['ENV', 'HANDLER', ...builtinModules]
+	},
+	{
+		input: 'src/env.js',
+		output: {
+			file: 'files/env.js',
 			format: 'esm'
 		},
 		plugins: [nodeResolve(), commonjs(), json()],
-		external: ['SERVER', 'MANIFEST', ...require('module').builtinModules]
+		external: ['HANDLER', ...builtinModules]
+	},
+	{
+		input: 'src/handler.js',
+		output: {
+			file: 'files/handler.js',
+			format: 'esm',
+			inlineDynamicImports: true
+		},
+		plugins: [nodeResolve(), commonjs(), json()],
+		external: ['ENV', 'MANIFEST', 'SERVER', ...builtinModules]
 	}
 ];

@@ -21,6 +21,20 @@ test('renders a redirect', () => {
 	);
 });
 
+test('renders a server-side redirect', () => {
+	const html = read('redirect-server.html');
+	assert.equal(html, '<meta http-equiv="refresh" content="0;url=https://example.com/redirected">');
+
+	const code = read('redirect-server/__data.js');
+	const window = {};
+	new Function('window', code)(window);
+
+	assert.equal(window.__sveltekit_data, {
+		type: 'redirect',
+		location: 'https://example.com/redirected'
+	});
+});
+
 test('does not double-encode redirect locations', () => {
 	const content = read('redirect-encoded.html');
 	assert.equal(
@@ -63,26 +77,39 @@ test('loads a file with spaces in the filename', () => {
 	assert.ok(content.includes('<h1>answer: 42</h1>'), content);
 });
 
-test('generates __data.json file for shadow endpoints', () => {
-	assert.equal(
-		read('__data.json'),
-		JSON.stringify({
-			type: 'data',
-			nodes: [{ data: null }, { data: { message: 'hello' } }]
-		})
-	);
-	assert.equal(
-		read('shadowed-get/__data.json'),
-		JSON.stringify({
-			type: 'data',
-			nodes: [{ data: null }, { data: { answer: 42 } }]
-		})
-	);
+test('generates __data.js file for shadow endpoints', () => {
+	const window = {};
+
+	new Function('window', read('__data.js'))(window);
+	assert.equal(window.__sveltekit_data, {
+		type: 'data',
+		nodes: [
+			null,
+			{
+				type: 'data',
+				data: { message: 'hello' },
+				uses: { dependencies: undefined, params: undefined, parent: undefined, url: undefined }
+			}
+		]
+	});
+
+	new Function('window', read('shadowed-get/__data.js'))(window);
+	assert.equal(window.__sveltekit_data, {
+		type: 'data',
+		nodes: [
+			null,
+			{
+				type: 'data',
+				data: { answer: 42 },
+				uses: { dependencies: undefined, params: undefined, parent: undefined, url: undefined }
+			}
+		]
+	});
 });
 
 test('does not prerender page with shadow endpoint with non-load handler', () => {
 	assert.ok(!fs.existsSync(`${build}/shadowed-post.html`));
-	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
+	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.js`));
 });
 
 test('decodes paths when writing files', () => {
@@ -156,19 +183,51 @@ test('prerenders binary data', async () => {
 });
 
 test('fetches data from local endpoint', () => {
-	assert.equal(
-		read('origin/__data.json'),
-		JSON.stringify({
-			type: 'data',
-			nodes: [{ data: null }, { data: { message: 'hello' } }]
-		})
-	);
+	const window = {};
+	new Function('window', read('origin/__data.js'))(window);
+
+	assert.equal(window.__sveltekit_data, {
+		type: 'data',
+		nodes: [
+			null,
+			{
+				type: 'data',
+				data: { message: 'hello' },
+				uses: { dependencies: undefined, params: undefined, parent: undefined, url: undefined }
+			}
+		]
+	});
 	assert.equal(read('origin/message.json'), JSON.stringify({ message: 'hello' }));
 });
 
 test('respects config.prerender.origin', () => {
 	const content = read('origin.html');
 	assert.ok(content.includes('<h2>http://example.com</h2>'));
+});
+
+test('$env - includes environment variables', () => {
+	const content = read('env.html');
+
+	assert.match(
+		content,
+		/.*PRIVATE_STATIC: accessible to server-side code\/replaced at build time.*/gs
+	);
+	assert.match(
+		content,
+		/.*PRIVATE_DYNAMIC: accessible to server-side code\/evaluated at run time.*/gs
+	);
+	assert.match(content, /.*PUBLIC_STATIC: accessible anywhere\/replaced at build time.*/gs);
+	assert.match(content, /.*PUBLIC_DYNAMIC: accessible anywhere\/evaluated at run time.*/gs);
+});
+
+test('prerenders a page in a (group)', () => {
+	const content = read('grouped.html');
+	assert.ok(content.includes('<h1>grouped</h1>'));
+});
+
+test('injects relative service worker', () => {
+	const content = read('index.html');
+	assert.ok(content.includes(`navigator.serviceWorker.register('./service-worker.js')`));
 });
 
 test.run();

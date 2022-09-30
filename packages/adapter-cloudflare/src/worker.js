@@ -9,7 +9,7 @@ const prefix = `/${manifest.appDir}/`;
 /** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
 const worker = {
 	async fetch(req, env, context) {
-		server.init({ env });
+		await server.init({ env });
 		// skip cache if "cache-control: no-cache" in request
 		let pragma = req.headers.get('cache-control') || '';
 		let res = !pragma.includes('no-cache') && (await Cache.lookup(req));
@@ -20,6 +20,7 @@ const worker = {
 		// static assets
 		if (pathname.startsWith(prefix)) {
 			res = await env.ASSETS.fetch(req);
+			if (!res.ok) return res;
 
 			const cache_control = pathname.startsWith(prefix + 'immutable/')
 				? 'public, immutable, max-age=31536000'
@@ -65,7 +66,7 @@ const worker = {
 
 		// Writes to Cache only if allowed & specified
 		pragma = res.headers.get('cache-control');
-		return pragma ? Cache.save(req, res, context) : res;
+		return pragma && res.ok ? Cache.save(req, res, context) : res;
 	}
 };
 

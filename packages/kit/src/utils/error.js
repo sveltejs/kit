@@ -1,4 +1,4 @@
-import { HttpError, Redirect } from '../index/private.js';
+import { HttpError, Redirect } from '../runtime/control.js';
 
 /**
  * @param {unknown} err

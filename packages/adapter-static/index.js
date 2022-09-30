@@ -1,3 +1,4 @@
+import path from 'path';
 import { platforms } from './platforms.js';
 
 /** @type {import('.').default} */
@@ -6,10 +7,33 @@ export default function (options) {
 		name: '@sveltejs/adapter-static',
 
 		async adapt(builder) {
-			if (!options?.fallback && !builder.config.kit.prerender.default) {
-				throw Error(
-					'adapter-static requires `config.kit.prerender.default` to be `true` unless you set the `fallback: true` option to create a single-page app. See https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode for more information'
-				);
+			if (!options?.fallback) {
+				/** @type {string[]} */
+				const dynamic_routes = [];
+
+				// this is a bit of a hack — it allows us to know whether there are dynamic
+				// (i.e. prerender = false/'auto') routes without having dedicated API
+				// surface area for it
+				builder.createEntries((route) => {
+					dynamic_routes.push(route.id);
+
+					return {
+						id: '',
+						filter: () => false,
+						complete: () => {}
+					};
+				});
+
+				if (dynamic_routes.length > 0) {
+					const prefix = path.relative('.', builder.config.kit.files.routes);
+					builder.log.error(
+						`@sveltejs/adapter-static: all routes must be fully prerenderable (unless using the 'fallback' option — see https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode). Try adding \`export const prerender = true\` to your root layout.js — see https://kit.svelte.dev/docs/page-options#prerender for more details`
+					);
+					builder.log.error(
+						dynamic_routes.map((id) => `  - ${path.posix.join(prefix, id)}`).join('\n')
+					);
+					throw new Error('Encountered dynamic routes');
+				}
 			}
 
 			const platform = platforms.find((platform) => platform.test());
@@ -40,15 +64,11 @@ export default function (options) {
 			builder.writePrerendered(pages, { fallback });
 
 			if (precompress) {
+				builder.log.minor('Compressing assets and pages');
 				if (pages === assets) {
-					builder.log.minor('Compressing assets and pages');
 					await builder.compress(assets);
 				} else {
-					builder.log.minor('Compressing assets');
-					await builder.compress(assets);
-
-					builder.log.minor('Compressing pages');
-					await builder.compress(pages);
+					await Promise.all([builder.compress(assets), builder.compress(pages)]);
 				}
 			}
 

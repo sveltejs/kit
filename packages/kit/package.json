@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.415",
+	"version": "1.0.0-next.505",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -10,10 +10,10 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.1",
-		"chokidar": "^3.5.3",
+		"@sveltejs/vite-plugin-svelte": "^1.0.5",
+		"@types/cookie": "^0.5.1",
 		"cookie": "^0.5.0",
-		"devalue": "^2.0.1",
+		"devalue": "^3.1.2",
 		"kleur": "^4.1.4",
 		"magic-string": "^0.26.2",
 		"mime": "^3.0.0",
@@ -27,24 +27,22 @@
 	"devDependencies": {
 		"@playwright/test": "^1.25.0",
 		"@types/connect": "^3.4.35",
-		"@types/cookie": "^0.5.1",
 		"@types/marked": "^4.0.3",
 		"@types/mime": "^3.0.0",
 		"@types/node": "^16.11.36",
 		"@types/sade": "^1.7.4",
 		"@types/set-cookie-parser": "^2.4.2",
 		"marked": "^4.0.16",
-		"rollup": "^2.75.7",
+		"rollup": "^2.78.1",
 		"svelte": "^3.48.0",
 		"svelte-preprocess": "^4.10.6",
-		"svelte2tsx": "~0.5.10",
-		"typescript": "^4.7.4",
+		"typescript": "^4.8.2",
 		"uvu": "^0.5.3",
-		"vite": "^3.0.0"
+		"vite": "^3.1.1"
 	},
 	"peerDependencies": {
 		"svelte": "^3.44.0",
-		"vite": "^3.0.0"
+		"vite": "^3.1.0"
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit.js"
@@ -52,48 +50,47 @@
 	"files": [
 		"src",
 		"!src/**/*.spec.js",
-		"!src/packaging/test",
 		"!src/core/**/fixtures",
-		"!src/core/sync/create_manifest_data/test",
+		"!src/core/**/test",
 		"types",
-		"svelte-kit.js"
+		"svelte-kit.js",
+		"postinstall.js",
+		"scripts/special-types"
 	],
 	"scripts": {
 		"build": "npm run types",
-		"dev": "rollup -cw",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
 		"format": "npm run lint -- --write",
 		"prepublishOnly": "npm run build",
-		"test": "npm run test:unit && npm run test:packaging && npm run test:integration",
+		"test": "npm run test:unit && npm run test:integration",
 		"test:integration": "pnpm run -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\" -i packaging",
-		"test:packaging": "uvu src/packaging \"(spec\\.js|test[\\\\/]index\\.js)\"",
+		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"types": "node scripts/extract-types.js",
-		"postinstall": "node svelte-kit.js sync"
+		"postinstall": "node postinstall.js"
 	},
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
-			"import": "./src/index/index.js",
-			"types": "./types/index.d.ts"
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/index.js"
 		},
 		"./node": {
-			"import": "./src/node/index.js"
+			"import": "./src/exports/node/index.js"
 		},
 		"./node/polyfills": {
-			"import": "./src/node/polyfills.js"
+			"import": "./src/exports/node/polyfills.js"
 		},
 		"./hooks": {
-			"import": "./src/hooks.js"
+			"import": "./src/exports/hooks/index.js"
 		},
 		"./vite": {
-			"import": "./src/vite/index.js"
+			"import": "./src/exports/vite/index.js"
 		}
 	},
 	"types": "types/index.d.ts",
 	"engines": {
-		"node": ">=16.9"
+		"node": ">=16.14"
 	}
 }

@@ -8,12 +8,15 @@ A typical SvelteKit project looks like this:
 my-project/
 ├ src/
 │ ├ lib/
+│ │ ├ server/
+│ │ │ └ [your server-only lib files]
 │ │ └ [your lib files]
 │ ├ params/
 │ │ └ [your param matchers]
 │ ├ routes/
 │ │ └ [your routes]
 │ ├ app.html
+│ ├ error.html
 │ └ hooks.js
 ├ static/
 │ └ [your static assets]
@@ -33,14 +36,18 @@ You'll also find common files like `.gitignore` and `.npmrc` (and `.prettierrc` 
 
 The `src` directory contains the meat of your project.
 
-- `lib` contains your library code, which can be imported via the [`$lib`](/docs/modules#$lib) alias, or packaged up for distribution using [`svelte-kit package`](/docs/packaging)
+- `lib` contains your library code, which can be imported via the [`$lib`](/docs/modules#$lib) alias, or packaged up for distribution using [`svelte-package`](/docs/packaging)
+  - `server` contains your server-only library code. It can be imported by using the [`$lib/server`](/docs/server-only-modules) alias. SvelteKit will prevent you from importing these in client code.
 - `params` contains any [param matchers](/docs/advanced-routing#matching) your app needs
 - `routes` contains the [routes](/docs/routing) of your application
 - `app.html` is your page template — an HTML document containing the following placeholders:
   - `%sveltekit.head%` — `<link>` and `<script>` elements needed by the app, plus any `<svelte:head>` content
-  - `%sveltekit.body%` — the markup for a rendered page
-  - `%sveltekit.assets%` — a relative path from the page to [`paths.assets`](/docs/configuration#paths)
+  - `%sveltekit.body%` — the markup for a rendered page. Typically this lives inside a `<div>` or other element, rather than directly inside `<body>`, to prevent bugs caused by browser extensions injecting elements that are then destroyed by the hydration process
+  - `%sveltekit.assets%` — either [`paths.assets`](/docs/configuration#paths), if specified, or a relative path to [`paths.base`](/docs/configuration#paths)
   - `%sveltekit.nonce%` — a [CSP](/docs/configuration#csp) nonce for manually included links and scripts, if used
+- `error.html` (optional) is the page that is rendered when everything else fails. It can contain the following placeholders:
+  - `%sveltekit.status%` — the HTTP status
+  - `%sveltekit.error.message%` — the error message
 - `hooks.js` (optional) contains your application's [hooks](/docs/hooks)
 - `service-worker.js` (optional) contains your [service worker](/docs/service-workers)
 
@@ -73,10 +80,6 @@ This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts`
 A SvelteKit project is really just a [Vite](https://vitejs.dev) project that uses the [`@sveltejs/kit/vite`](/docs/modules#sveltejs-kit-vite) plugin, along with any other [Vite configuration](https://vitejs.dev/config/).
 
 ### Other files
-
-#### test
-
-If you choose to add tests during `npm create svelte@latest`, they will go in a `test` directory.
 
 #### .svelte-kit
 

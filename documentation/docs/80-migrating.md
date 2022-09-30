@@ -5,7 +5,7 @@ rank: 1
 
 SvelteKit is the successor to Sapper and shares many elements of its design.
 
-If you have an existing Sapper app that you plan to migrate to SvelteKit, there are a number of changes you will need to make. You may find it helpful to view [some examples](https://kit.svelte.dev/docs/additional-resources#examples) while migrating.
+If you have an existing Sapper app that you plan to migrate to SvelteKit, there are a number of changes you will need to make. You may find it helpful to view [some examples](/docs/additional-resources#examples) while migrating.
 
 ### package.json
 
@@ -41,11 +41,11 @@ Your `webpack.config.js` or `rollup.config.js` should be replaced with a `svelte
 
 You will need to add an [adapter](/docs/adapters). `sapper build` is roughly equivalent to [adapter-node](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) while `sapper export` is roughly equivalent to [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), though you might prefer to use an adapter designed for the platform you're deploying to.
 
-If you were using plugins for filetypes that are not automatically handled by [Vite](https://vitejs.dev), you will need to find Vite equivalents and add them to the [Vite config](/docs/configuration#vite).
+If you were using plugins for filetypes that are not automatically handled by [Vite](https://vitejs.dev), you will need to find Vite equivalents and add them to the [Vite config](/docs/project-structure#project-files-vite-config-js).
 
 #### src/client.js
 
-This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start(...)`) should be expressed in your `__layout.svelte` file, inside an `onMount` callback.
+This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start(...)`) should be expressed in your `+layout.svelte` file, inside an `onMount` callback.
 
 #### src/server.js
 
@@ -81,7 +81,7 @@ Routes now are made up of the folder name exclusively to remove ambiguity, the f
 | routes/about/index.svelte | routes/about/+page.svelte |
 | routes/about.svelte       | routes/about/+page.svelte |
 
-Your custom error page component should be renamed from `_error.svelte` to `+error.svelte`. Any `_layout.svelte` files should likewise be renamed `+layout.svelte`. The double underscore prefix is reserved for SvelteKit; your own [private modules](/docs/routing#private-modules) are still denoted with a single `_` prefix (configurable via [`routes`](/docs/configuration#routes) config).
+Your custom error page component should be renamed from `_error.svelte` to `+error.svelte`. Any `_layout.svelte` files should likewise be renamed `+layout.svelte`. [Any other files are ignored](/docs/routing#other-files).
 
 #### Imports
 
@@ -97,9 +97,7 @@ As before, pages and layouts can export a function that allows data to be loaded
 
 This function has been renamed from `preload` to [`load`](/docs/load), it now lives in a `+page.js` (or `+layout.js`) next to its `+page.svelte` (or `+layout.svelte`), and its API has changed. Instead of two arguments — `page` and `session` — there is a single `event` argument.
 
-There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead of returning props directly, `load` now returns an object that _contains_ `props`, alongside various other things.
-
-Lastly, if your page has a `load` method, make sure to return something otherwise you will get `Not found`.
+There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead, you can get [`fetch`](/docs/load#input-methods-fetch) from the input methods, and both [`error`](/docs/load#errors) and [`redirect`](/docs/load#redirects) are now thrown.
 
 #### Stores
 
@@ -121,7 +119,7 @@ You access them differently in SvelteKit. `stores` is now `getStores`, but in mo
 
 #### Routing
 
-Regex routes are no longer supported. Instead, use [advanced route matching](/docs/routing#advanced-routing-matching).
+Regex routes are no longer supported. Instead, use [advanced route matching](/docs/advanced-routing#matching).
 
 #### Segments
 
@@ -135,12 +133,12 @@ This caused problems and is no longer the case in SvelteKit. Instead, relative U
 
 #### &lt;a&gt; attributes
 
-- `sapper:prefetch` is now `sveltekit:prefetch`
-- `sapper:noscroll` is now `sveltekit:noscroll`
+- `sapper:prefetch` is now `data-sveltekit-prefetch`
+- `sapper:noscroll` is now `data-sveltekit-noscroll`
 
 ### Endpoints
 
-In Sapper, 'server routes' — now referred to as [endpoints](/docs/routing#endpoints) — received the `req` and `res` objects exposed by Node's `http` module (or the augmented versions provided by frameworks like Polka and Express).
+In Sapper, [server routes](/docs/routing#server) received the `req` and `res` objects exposed by Node's `http` module (or the augmented versions provided by frameworks like Polka and Express).
 
 SvelteKit is designed to be agnostic as to where the app is running — it could be running on a Node server, but could equally be running on a serverless platform or in a Cloudflare Worker. For that reason, you no longer interact directly with `req` and `res`. Your endpoints will need to be updated to match the new signature.
 
@@ -152,7 +150,7 @@ See [the FAQ](/faq#integrations) for detailed information about integrations.
 
 #### HTML minifier
 
-Sapper includes `html-minifier` by default. SvelteKit does not include this, but it can be added as a [hook](/docs/hooks#handle):
+Sapper includes `html-minifier` by default. SvelteKit does not include this, but it can be added as a [hook](/docs/hooks#server-hooks-handle):
 
 ```js
 // @filename: ambient.d.ts
@@ -162,7 +160,7 @@ declare module 'html-minifier';
 // @filename: index.js
 // ---cut---
 import { minify } from 'html-minifier';
-import { prerendering } from '$app/env';
+import { prerendering } from '$app/environment';
 
 const minification_options = {
 	collapseBooleanAttributes: true,

@@ -26,15 +26,6 @@ export interface AdapterEntry {
 	}) => MaybePromise<void>;
 }
 
-// TODO is this still used?
-export type BodyValidator<T> = {
-	[P in keyof T]: T[P] extends { [k: string]: unknown }
-		? BodyValidator<T[P]> // recurse when T[P] is an object
-		: T[P] extends BigInt | Function | Symbol
-		? never
-		: T[P];
-};
-
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
 //
 // MIT License
@@ -62,7 +53,13 @@ export type BodyValidator<T> = {
 
 export namespace Csp {
 	type ActionSource = 'strict-dynamic' | 'report-sample';
-	type BaseSource = 'self' | 'unsafe-eval' | 'unsafe-hashes' | 'unsafe-inline' | 'none';
+	type BaseSource =
+		| 'self'
+		| 'unsafe-eval'
+		| 'unsafe-hashes'
+		| 'unsafe-inline'
+		| 'wasm-unsafe-eval'
+		| 'none';
 	type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 	type FrameSource = HostSource | SchemeSource | 'self' | 'none';
 	type HostNameScheme = `${string}.${string}` | 'localhost';
@@ -145,20 +142,6 @@ export interface CspDirectives {
 
 export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
-export interface JSONObject {
-	[key: string]: JSONValue;
-}
-
-export type JSONValue =
-	| string
-	| number
-	| boolean
-	| null
-	| undefined
-	| ToJSON
-	| JSONValue[]
-	| JSONObject;
-
 export interface Logger {
 	(msg: string): void;
 	success(msg: string): void;
@@ -207,17 +190,17 @@ export interface PrerenderErrorHandler {
 
 export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
+export type PrerenderOption = boolean | 'auto';
+
+export type PrerenderMap = Map<string, PrerenderOption>;
+
 export interface RequestOptions {
 	getClientAddress: () => string;
 	platform?: App.Platform;
 }
 
-/** `string[]` is only for set-cookie, everything else must be type of `string` */
-export type ResponseHeaders = Record<string, string | number | string[] | null>;
-
 export interface RouteDefinition {
 	id: string;
-	type: 'page' | 'endpoint';
 	pattern: RegExp;
 	segments: RouteSegment[];
 	methods: HttpMethod[];
@@ -229,8 +212,13 @@ export interface RouteSegment {
 	rest: boolean;
 }
 
-export interface ToJSON {
-	toJSON(...args: any[]): Exclude<JSONValue, ToJSON>;
-}
-
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+
+/**
+ * This doesn't actually exist, it's a way to better distinguish the type
+ */
+declare const uniqueSymbol: unique symbol;
+
+export interface UniqueInterface {
+	readonly [uniqueSymbol]: unknown;
+}

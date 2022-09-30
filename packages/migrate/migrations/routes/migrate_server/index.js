@@ -2,6 +2,7 @@ import ts from 'typescript';
 import {
 	automigration,
 	dedent,
+	uppercase_migration,
 	error,
 	get_function_node,
 	get_object_nodes,
@@ -16,9 +17,12 @@ import {
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
 
-const give_up = `${error('Update +page.server.js', TASKS.STANDALONE_ENDPOINT)}\n\n`;
+const give_up = `${error('Update +server.js', TASKS.STANDALONE_ENDPOINT)}\n\n`;
 
-/** @param {string} content */
+/**
+ * @param {string} content
+ * @returns {string}
+ */
 export function migrate_server(content) {
 	const file = parse(content);
 	if (!file) return give_up + content;
@@ -28,6 +32,14 @@ export function migrate_server(content) {
 	const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].filter((name) =>
 		file.exports.map.has(name)
 	);
+
+	// If user didn't do the uppercase verbs migration yet, do it here on the fly.
+	const uppercased = uppercase_migration(methods, file);
+	if (!uppercased) {
+		return give_up + content;
+	} else if (uppercased !== content) {
+		return migrate_server(uppercased);
+	}
 
 	const unmigrated = new Set(methods);
 

@@ -1,14 +1,14 @@
+import { applyAction } from '$app/forms';
 import {
 	afterNavigate,
 	beforeNavigate,
 	goto,
 	invalidate,
+	invalidateAll,
 	prefetch,
 	prefetchRoutes
 } from '$app/navigation';
-import { CSRPageNode, CSRRoute, JSONObject } from 'types';
-import { HttpError } from '../../index/private.js';
-import { SerializedHttpError } from '../server/page/types.js';
+import { CSRPageNode, CSRPageNodeLoader, CSRRoute, Uses } from 'types';
 
 export interface Client {
 	// public API, exposed via $app/navigation
@@ -17,36 +17,34 @@ export interface Client {
 	disable_scroll_handling: () => void;
 	goto: typeof goto;
 	invalidate: typeof invalidate;
+	invalidateAll: typeof invalidateAll;
 	prefetch: typeof prefetch;
 	prefetch_routes: typeof prefetchRoutes;
+	apply_action: typeof applyAction;
 
 	// private API
 	_hydrate: (opts: {
 		status: number;
-		error: Error | SerializedHttpError;
+		error: App.Error;
 		node_ids: number[];
 		params: Record<string, string>;
 		routeId: string | null;
+		data: Array<import('types').ServerDataNode | null>;
+		form: Record<string, any> | null;
 	}) => Promise<void>;
 	_start_router: () => void;
 }
 
 export type NavigationIntent = {
-	/**
-	 * `url.pathname + url.search`
-	 */
+	/** `url.pathname + url.search`  */
 	id: string;
-	/**
-	 * The route parameters
-	 */
+	/** Whether we are invalidating or navigating */
+	invalidating: boolean;
+	/** The route parameters */
 	params: Record<string, string>;
-	/**
-	 * The route that matches `path`
-	 */
+	/** The route that matches `path` */
 	route: CSRRoute;
-	/**
-	 * The destination URL
-	 */
+	/** The destination URL */
 	url: URL;
 };
 
@@ -65,41 +63,22 @@ export type NavigationFinished = {
 
 export type BranchNode = {
 	node: CSRPageNode;
+	loader: CSRPageNodeLoader;
+	server: DataNode | null;
+	shared: DataNode | null;
 	data: Record<string, any> | null;
-	uses: {
-		params: Set<string>;
-		url: boolean; // TODO make more granular?
-		dependencies: Set<string>;
-		parent: boolean;
-	};
 };
 
-export type NavigationState = {
-	branch: Array<BranchNode | undefined>;
-	error: HttpError | Error | null;
-	params: Record<string, string>;
-	session_id: number;
-	url: URL;
-};
-
-export type ServerDataPayload = ServerDataRedirected | ServerDataLoaded;
-
-export interface ServerDataRedirected {
-	type: 'redirect';
-	location: string;
+export interface DataNode {
+	type: 'data';
+	data: Record<string, any> | null;
+	uses: Uses;
 }
 
-export interface ServerDataLoaded {
-	type: 'data';
-	nodes: Array<{
-		data?: JSONObject | null; // TODO or `-1` to indicate 'reuse cached data'?
-		status?: number;
-		message?: string;
-		error?: {
-			name: string;
-			message: string;
-			stack: string;
-			[key: string]: any;
-		};
-	}>;
+export interface NavigationState {
+	branch: Array<BranchNode | undefined>;
+	error: App.Error | null;
+	params: Record<string, string>;
+	route: CSRRoute | null;
+	url: URL;
 }

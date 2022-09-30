@@ -69,9 +69,11 @@ This function runs alongside `+page.svelte`, which means it runs on the server d
 
 As well as `load`, `page.js` can export values that configure the page's behaviour:
 
-- `export const prerender = true` or `false` overrides [`config.kit.prerender.default`](/docs/configuration#prerender)
-- `export const hydrate = true` or `false` overrides [`config.kit.browser.hydrate`](/docs/configuration#browser)
-- `export const router = true` or `false` overrides [`config.kit.browser.router`](/docs/configuration#browser)
+- `export const prerender = true` or `false` or `'auto'`
+- `export const ssr = true` or `false`
+- `export const csr = true` or `false`
+
+You can find more information about these in [page options](/docs/page-options).
 
 #### +page.server.js
 
@@ -106,76 +108,11 @@ export async function load({ params }) {
 }
 ```
 
-During client-side navigation, SvelteKit will load this data using `fetch`, which means that the returned value must be serializable as JSON.
+During client-side navigation, SvelteKit will load this data from the server, which means that the returned value must be serializable using [devalue](https://github.com/rich-harris/devalue).
 
-#### Actions
+Like `+page.js`, `+page.server.js` can export [page options](/docs/page-options) — `prerender`, `ssr` and `csr`.
 
-`+page.server.js` can also declare _actions_, which correspond to the `POST`, `PATCH`, `PUT` and `DELETE` HTTP methods. A request made to the page with one of these methods will invoke the corresponding action before rendering the page.
-
-An action can return a `{ status?, errors }` object if there are validation errors (`status` defaults to `400`), or an optional `{ location }` object to redirect the user to another page:
-
-```js
-/// file: src/routes/login/+page.server.js
-
-// @filename: ambient.d.ts
-declare global {
-	const createSessionCookie: (userid: string) => string;
-	const hash: (content: string) => string;
-	const db: {
-		findUser: (name: string) => Promise<{
-			id: string;
-			username: string;
-			password: string;
-		}>
-	}
-}
-
-export {};
-
-// @filename: index.js
-// ---cut---
-import { error } from '@sveltejs/kit';
-
-/** @type {import('./$types').Action} */
-export async function POST({ request, setHeaders, url }) {
-	const values = await request.formData();
-
-	const username = /** @type {string} */ (values.get('username'));
-	const password = /** @type {string} */ (values.get('password'));
-
-	const user = await db.findUser(username);
-
-	if (!user) {
-		return {
-			status: 403,
-			errors: {
-				username: 'No user with this username'
-			}
-		};
-	}
-
-	if (user.password !== hash(password)) {
-		return {
-			status: 403,
-			errors: {
-				password: 'Incorrect password'
-			}
-		};
-	}
-
-	setHeaders({
-		'set-cookie': createSessionCookie(user.id)
-	});
-
-	return {
-		location: url.searchParams.get('redirectTo') ?? '/'
-	};
-}
-```
-
-If validation `errors` are returned, they will be available inside `+page.svelte` as `export let errors`.
-
-> The actions API will likely change in the near future: https://github.com/sveltejs/kit/discussions/5875
+A `+page.server.js` file can also export _actions_. If `load` lets you read data from the server, `actions` let you write data _to_ the server using the `<form>` element. To learn how to use them, see the [form actions](/docs/form-actions) section.
 
 ### +error
 
@@ -190,7 +127,7 @@ If an error occurs during `load`, SvelteKit will render a default error page. Yo
 <h1>{$page.status}: {$page.error.message}</h1>
 ```
 
-SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and `src/routes/+error.svelte` before rendering the default error page.
+SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and `src/routes/+error.svelte` before rendering the default error page. If _that_ fails (or if the error was thrown from the `load` function of the root `+layout`, which sits 'above' the root `+error`), SvelteKit will bail out and render a static fallback error page, which you can customise by creating a `src/error.html` file.
 
 ### +layout
 
@@ -277,13 +214,27 @@ export function load() {
 }
 ```
 
-Unlike `+page.js`, `+layout.js` cannot export `prerender`, `hydrate` and `router`, as these are page-level options.
+If a `+layout.js` exports [page options](/docs/page-options) — `prerender`, `ssr` and `csr` — they will be used as defaults for child pages.
+
+Data returned from a layout's `load` function is also available to all its child pages:
+
+```svelte
+/// file: src/routes/settings/profile/+page.svelte
+<script>
+	/** @type {import('./$types').PageData} */
+	export let data;
+
+	console.log(data.sections); // [{ slug: 'profile', title: 'Profile' }, ...]
+</script>
+```
 
 > Often, layout data is unchanged when navigating between pages. SvelteKit will intelligently re-run [`load`](/docs/load) functions when necessary.
 
 #### +layout.server.js
 
 To run your layout's `load` function on the server, move it to `+layout.server.js`, and change the `LayoutLoad` type to `LayoutServerLoad`.
+
+Like `+layout.js`, `+layout.server.js` can export [page options](/docs/page-options) — `prerender`, `ssr` and `csr`.
 
 ### +server
 
@@ -313,6 +264,59 @@ export function GET({ url }) {
 ```
 
 The first argument to `Response` can be a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream), making it possible to stream large amounts of data or create server-sent events (unless deploying to platforms that buffer responses, like AWS Lambda).
+
+You can use the `error`, `redirect` and `json` methods from `@sveltejs/kit` for convenience (but you don't have to). Note that `throw error(..)` only returns a plain text error response.
+
+#### Receiving data
+
+By exporting `POST`/`PUT`/`PATCH`/`DELETE` handlers, `+server.js` files can be used to create a complete API:
+
+```svelte
+/// file: src/routes/add/+page.svelte
+<script>
+	let a = 0;
+	let b = 0;
+	let total = 0;
+
+	async function add() {
+		const response = await fetch('/api/add', {
+			method: 'POST',
+			body: JSON.stringify({ a, b }),
+			headers: {
+				'content-type': 'application/json'
+			}
+		});
+
+		total = await response.json();
+	}
+</script>
+
+<input type="number" bind:value={a}> +
+<input type="number" bind:value={b}> =
+{total}
+
+<button on:click={add}>Calculate</button>
+```
+
+```js
+/// file: src/routes/api/add/+server.js
+import { json } from '@sveltejs/kit';
+
+/** @type {import('./$types').RequestHandler} */
+export async function POST({ request }) {
+	const { a, b } = await request.json();
+	return json(a + b);
+}
+```
+
+> In general, [form actions](/docs/form-actions) are a better way to submit data from the browser to the server.
+
+#### Content negotiation
+
+`+server.js` files can be placed in the same directory as `+page` files, allowing the same route to be either a page or an API endpoint. To determine which, SvelteKit applies the following rules:
+
+- `PUT`/`PATCH`/`DELETE` requests are always handled by `+server.js` since they do not apply to pages
+- `GET`/`POST` requests are treated as page requests if the `accept` header prioritises `text/html` (in other words, it's a browser page request), else they are handled by `+server.js`
 
 ### $types
 

@@ -1,5 +1,43 @@
 # svelte-migrate
 
+## 1.0.0-next.13
+
+### Patch Changes
+
+- [fix] more robust uppercase migration ([#7033](https://github.com/sveltejs/kit/pull/7033))
+
+## 1.0.0-next.12
+
+### Patch Changes
+
+- [feat] do uppercase http verbs migration on the fly ([#6371](https://github.com/sveltejs/kit/pull/6371))
+
+## 1.0.0-next.11
+
+### Patch Changes
+
+- [fix] git mv files correctly when they contain \$ characters ([#6129](https://github.com/sveltejs/kit/pull/6129))
+
+## 1.0.0-next.10
+
+### Patch Changes
+
+- Revert change to suggest props destructuring ([#6099](https://github.com/sveltejs/kit/pull/6099))
+
+## 1.0.0-next.9
+
+### Patch Changes
+
+- Handle Error without message, handle status 200, handle missing body ([#6096](https://github.com/sveltejs/kit/pull/6096))
+
+## 1.0.0-next.8
+
+### Patch Changes
+
+- Suggest props destructuring if possible ([#6069](https://github.com/sveltejs/kit/pull/6069))
+
+* Fix typo in migration task ([#6070](https://github.com/sveltejs/kit/pull/6070))
+
 ## 1.0.0-next.7
 
 ### Patch Changes

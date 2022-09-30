@@ -6,55 +6,20 @@ import { promisify } from 'util';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 
+const pipe = promisify(pipeline);
+
 /**
  * Creates the Builder which is passed to adapters for building the application.
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   build_data: import('types').BuildData;
+ *   routes: import('types').RouteData[];
  *   prerendered: import('types').Prerendered;
  *   log: import('types').Logger;
  * }} opts
  * @returns {import('types').Builder}
  */
-export function create_builder({ config, build_data, prerendered, log }) {
-	/** @type {Set<string>} */
-	const prerendered_paths = new Set(prerendered.paths);
-
-	/** @param {import('types').RouteData} route */
-	// TODO routes should come pre-filtered
-	function not_prerendered(route) {
-		const path = route.type === 'page' && !route.id.includes('[') && `/${route.id}`;
-		if (path) {
-			return !prerendered_paths.has(path) && !prerendered_paths.has(path + '/');
-		}
-
-		return true;
-	}
-
-	const pipe = promisify(pipeline);
-
-	/**
-	 * @param {string} file
-	 * @param {'gz' | 'br'} format
-	 */
-	async function compress_file(file, format = 'gz') {
-		const compress =
-			format == 'br'
-				? zlib.createBrotliCompress({
-						params: {
-							[zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
-							[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
-							[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
-						}
-				  })
-				: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
-
-		const source = createReadStream(file);
-		const destination = createWriteStream(`${file}.${format}`);
-
-		await pipe(source, compress, destination);
-	}
-
+export function create_builder({ config, build_data, routes, prerendered, log }) {
 	return {
 		log,
 		rimraf,
@@ -65,20 +30,31 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		prerendered,
 
 		async createEntries(fn) {
-			const { routes } = build_data.manifest_data;
-
 			/** @type {import('types').RouteDefinition[]} */
-			const facades = routes.map((route) => ({
-				id: route.id,
-				type: route.type,
-				segments: route.id.split('/').map((segment) => ({
-					dynamic: segment.includes('['),
-					rest: segment.includes('[...'),
-					content: segment
-				})),
-				pattern: route.pattern,
-				methods: route.type === 'page' ? ['GET'] : build_data.server.methods[route.file]
-			}));
+			const facades = routes.map((route) => {
+				const methods = new Set();
+
+				if (route.page) {
+					methods.add('SET');
+				}
+
+				if (route.endpoint) {
+					for (const method of build_data.server.methods[route.endpoint.file]) {
+						methods.add(method);
+					}
+				}
+
+				return {
+					id: route.id,
+					segments: route.id.split('/').map((segment) => ({
+						dynamic: segment.includes('['),
+						rest: segment.includes('[...'),
+						content: segment
+					})),
+					pattern: route.pattern,
+					methods: Array.from(methods)
+				};
+			});
 
 			const seen = new Set();
 
@@ -98,12 +74,13 @@ export function create_builder({ config, build_data, prerendered, log }) {
 					}
 				}
 
-				const filtered = new Set(group.filter(not_prerendered));
+				const filtered = new Set(group);
 
 				// heuristic: if /foo/[bar] is included, /foo/[bar].json should
 				// also be included, since the page likely needs the endpoint
+				// TODO is this still necessary, given the new way of doing things?
 				filtered.forEach((route) => {
-					if (route.type === 'page') {
+					if (route.page) {
 						const endpoint = routes.find((candidate) => candidate.id === route.id + '.json');
 
 						if (endpoint) {
@@ -130,7 +107,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 			return generate_manifest({
 				build_data,
 				relative_path: relativePath,
-				routes: build_data.manifest_data.routes.filter(not_prerendered),
+				routes,
 				format
 			});
 		},
@@ -204,4 +181,26 @@ export function create_builder({ config, build_data, prerendered, log }) {
 			);
 		}
 	};
+}
+
+/**
+ * @param {string} file
+ * @param {'gz' | 'br'} format
+ */
+async function compress_file(file, format = 'gz') {
+	const compress =
+		format == 'br'
+			? zlib.createBrotliCompress({
+					params: {
+						[zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
+						[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
+						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
+					}
+			  })
+			: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
+
+	const source = createReadStream(file);
+	const destination = createWriteStream(`${file}.${format}`);
+
+	await pipe(source, compress, destination);
 }

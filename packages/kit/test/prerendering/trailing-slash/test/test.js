@@ -11,7 +11,7 @@ const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
 test('prerendered.paths omits trailing slashes for endpoints', () => {
 	const content = read('service-worker.js');
 
-	for (const path of ['/page/', '/page/__data.json', '/standalone-endpoint.json']) {
+	for (const path of ['/page/', '/page/__data.js', '/standalone-endpoint.json']) {
 		assert.ok(content.includes(`"${path}"`), `Missing ${path}`);
 	}
 });

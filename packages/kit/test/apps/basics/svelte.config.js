@@ -3,9 +3,6 @@ const config = {
 	kit: {
 		prerender: {
 			onError: 'continue'
-		},
-		methodOverride: {
-			allowed: ['PUT', 'PATCH', 'DELETE']
 		}
 	}
 };

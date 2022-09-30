@@ -7,26 +7,26 @@ import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
 	CspDirectives,
-	JSONObject,
-	JSONValue,
 	Logger,
 	MaybePromise,
 	Prerendered,
 	PrerenderOnErrorValue,
 	RequestOptions,
-	ResponseHeaders,
 	RouteDefinition,
-	TrailingSlash
+	TrailingSlash,
+	UniqueInterface
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
-import { HttpError, Redirect } from '../src/index/private.js';
+import { HttpError, Redirect } from '../src/runtime/control.js';
+
+export { PrerenderOption } from './private.js';
 
 export interface Adapter {
 	name: string;
 	adapt(builder: Builder): MaybePromise<void>;
 }
 
-export type AwaitedProperties<input extends Record<string, any> | void> = input extends void
+type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
 	: input extends Record<string, any>
 	? {
@@ -36,11 +36,34 @@ export type AwaitedProperties<input extends Record<string, any> | void> = input 
 	? input
 	: unknown;
 
-export type AwaitedErrors<T extends (...args: any) => any> = Awaited<ReturnType<T>> extends {
-	errors?: any;
+export type AwaitedProperties<input extends Record<string, any> | void> =
+	AwaitedPropertiesUnion<input> extends Record<string, any>
+		? OptionalUnion<AwaitedPropertiesUnion<input>>
+		: AwaitedPropertiesUnion<input>;
+
+export type AwaitedActions<T extends Record<string, (...args: any) => any>> = {
+	[Key in keyof T]: OptionalUnion<UnpackValidationError<Awaited<ReturnType<T[Key]>>>>;
+}[keyof T];
+
+// Takes a union type and returns a union type where each type also has all properties
+// of all possible types (typed as undefined), making accessing them more ergonomic
+type OptionalUnion<
+	U extends Record<string, any>, // not unknown, else interfaces don't satisfy this constraint
+	A extends keyof U = U extends U ? keyof U : never
+> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
+
+// Needs to be here, else ActionData will be resolved to unknown - probably because of "d.ts file imports .js file" in combination with allowJs
+export interface ValidationError<T extends Record<string, unknown> | undefined = undefined>
+	extends UniqueInterface {
+	status: number;
+	data: T;
 }
-	? Awaited<ReturnType<T>>['errors']
-	: undefined;
+
+type UnpackValidationError<T> = T extends ValidationError<infer X>
+	? X
+	: T extends void
+	? undefined // needs to be undefined, because void will corrupt union type
+	: T;
 
 export interface Builder {
 	log: Logger;
@@ -101,54 +124,90 @@ export interface Builder {
 	/**
 	 * @param {string} directory Path to the directory containing the files to be compressed
 	 */
-	compress(directory: string): void;
+	compress(directory: string): Promise<void>;
 }
 
 export interface Config {
 	compilerOptions?: CompileOptions;
 	extensions?: string[];
 	kit?: KitConfig;
+	package?: {
+		source?: string;
+		dir?: string;
+		emitTypes?: boolean;
+		exports?: (filepath: string) => boolean;
+		files?: (filepath: string) => boolean;
+	};
 	preprocess?: any;
+	[key: string]: any;
+}
+
+export interface Cookies {
+	/**
+	 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
+	 */
+	get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
+
+	/**
+	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` during the current request.
+	 *
+	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 *
+	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+	 */
+	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
+
+	/**
+	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
+	 */
+	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
+
+	/**
+	 * Serialize a cookie name-value pair into a Set-Cookie header string.
+	 *
+	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 *
+	 * By default, the `path` of a cookie is the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+	 *
+	 * @param name the name for the cookie
+	 * @param value value to set the cookie to
+	 * @param options object containing serialization options
+	 */
+	serialize(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): string;
 }
 
 export interface KitConfig {
 	adapter?: Adapter;
 	alias?: Record<string, string>;
 	appDir?: string;
-	browser?: {
-		hydrate?: boolean;
-		router?: boolean;
-	};
 	csp?: {
 		mode?: 'hash' | 'nonce' | 'auto';
 		directives?: CspDirectives;
 		reportOnly?: CspDirectives;
 	};
+	csrf?: {
+		checkOrigin?: boolean;
+	};
 	env?: {
-		publicPrefix: string;
+		dir?: string;
+		publicPrefix?: string;
 	};
 	moduleExtensions?: string[];
 	files?: {
 		assets?: string;
-		hooks?: string;
+		hooks?: {
+			client?: string;
+			server?: string;
+		};
 		lib?: string;
 		params?: string;
 		routes?: string;
 		serviceWorker?: string;
-		template?: string;
+		appTemplate?: string;
+		errorTemplate?: string;
 	};
 	inlineStyleThreshold?: number;
-	methodOverride?: {
-		parameter?: string;
-		allowed?: string[];
-	};
 	outDir?: string;
-	package?: {
-		dir?: string;
-		emitTypes?: boolean;
-		exports?(filepath: string): boolean;
-		files?(filepath: string): boolean;
-	};
 	paths?: {
 		assets?: string;
 		base?: string;
@@ -173,10 +232,6 @@ export interface KitConfig {
 	};
 }
 
-export interface ExternalFetch {
-	(req: Request): Promise<Response>;
-}
-
 export interface Handle {
 	(input: {
 		event: RequestEvent;
@@ -184,8 +239,16 @@ export interface Handle {
 	}): MaybePromise<Response>;
 }
 
-export interface HandleError {
-	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
+export interface HandleServerError {
+	(input: { error: unknown; event: RequestEvent }): void | App.Error;
+}
+
+export interface HandleClientError {
+	(input: { error: unknown; event: NavigationEvent }): void | App.Error;
+}
+
+export interface HandleFetch {
+	(input: { event: RequestEvent; request: Request; fetch: typeof fetch }): MaybePromise<Response>;
 }
 
 /**
@@ -193,77 +256,120 @@ export interface HandleError {
  * rather than using `Load` directly.
  */
 export interface Load<
-	Params extends Record<string, string> = Record<string, string>,
-	InputData extends JSONObject | null = JSONObject | null,
-	ParentData extends Record<string, any> | null = Record<string, any> | null,
-	OutputData extends Record<string, any> = Record<string, any>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	InputData extends Record<string, unknown> | null = Record<string, any> | null,
+	ParentData extends Record<string, unknown> = Record<string, any>,
+	OutputData extends Record<string, unknown> | void = Record<string, any> | void
 > {
-	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData | void>;
+	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData>;
 }
 
 export interface LoadEvent<
-	Params extends Record<string, string> = Record<string, string>,
-	Data extends JSONObject | null = JSONObject | null,
-	ParentData extends Record<string, any> | null = Record<string, any> | null
-> {
-	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
-	params: Params;
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	Data extends Record<string, unknown> | null = Record<string, any> | null,
+	ParentData extends Record<string, unknown> = Record<string, any>
+> extends NavigationEvent<Params> {
+	fetch: typeof fetch;
 	data: Data;
-	routeId: string | null;
-	setHeaders: (headers: ResponseHeaders) => void;
-	url: URL;
+	setHeaders: (headers: Record<string, string>) => void;
 	parent: () => Promise<ParentData>;
 	depends: (...deps: string[]) => void;
 }
 
-export interface Navigation {
-	from: URL;
-	to: URL;
-}
-
-export interface Page<Params extends Record<string, string> = Record<string, string>> {
-	url: URL;
+export interface NavigationEvent<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> {
 	params: Params;
 	routeId: string | null;
+	url: URL;
+}
+
+export interface NavigationTarget {
+	params: Record<string, string> | null;
+	routeId: string | null;
+	url: URL;
+}
+
+export type NavigationType = 'load' | 'unload' | 'link' | 'goto' | 'popstate';
+
+export interface Navigation {
+	from: NavigationTarget | null;
+	to: NavigationTarget | null;
+	type: NavigationType;
+	delta?: number;
+}
+
+/**
+ * The shape of the `$page` store
+ */
+export interface Page<Params extends Record<string, string> = Record<string, string>> {
+	/**
+	 * The URL of the current page
+	 */
+	url: URL;
+	/**
+	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, the `slug` parameter
+	 */
+	params: Params;
+	/**
+	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 */
+	routeId: string | null;
+	/**
+	 * Http status code of the current page
+	 */
 	status: number;
-	error: HttpError | Error | null;
-	data: Record<string, any>;
+	/**
+	 * The error object of the current page, if any. Filled from the `handleError` hooks.
+	 */
+	error: App.Error | null;
+	/**
+	 * The merged result of all data from all `load` functions on the current page. You can type a common denominator through `App.PageData`.
+	 */
+	data: App.PageData & Record<string, any>;
+	/**
+	 * Filled only after a form submission. See [form actions](https://kit.svelte.dev/docs/form-actions) for more info.
+	 */
+	form: any;
 }
 
 export interface ParamMatcher {
 	(param: string): boolean;
 }
 
-export interface RequestEvent<Params extends Record<string, string> = Record<string, string>> {
-	clientAddress: string;
+export interface RequestEvent<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> {
+	cookies: Cookies;
+	getClientAddress: () => string;
 	locals: App.Locals;
 	params: Params;
 	platform: Readonly<App.Platform>;
 	request: Request;
 	routeId: string | null;
-	setHeaders: (headers: ResponseHeaders) => void;
+	setHeaders: (headers: Record<string, string>) => void;
 	url: URL;
 }
 
 /**
- * A `(event: RequestEvent) => Response` function exported from a +server.js file that corresponds to an HTTP verb (`GET`, `PUT`, `PATCH`, etc) and handles requests with that method.
+ * A `(event: RequestEvent) => Response` function exported from a `+server.js` file that corresponds to an HTTP verb (`GET`, `PUT`, `PATCH`, etc) and handles requests with that method.
  *
- * It receives `Params` as the first generic argument, which you can skip by using [generated types](/docs/types#generated-types) instead.
+ * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://kit.svelte.dev/docs/types#generated-types) instead.
  */
-export interface RequestHandler<Params extends Record<string, string> = Record<string, string>> {
+export interface RequestHandler<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+> {
 	(event: RequestEvent<Params>): MaybePromise<Response>;
 }
 
 export interface ResolveOptions {
-	ssr?: boolean;
 	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
+	filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
 }
-
-export type ResponseBody = JSONValue | Uint8Array | ReadableStream | Error;
 
 export class Server {
 	constructor(manifest: SSRManifest);
-	init(options: ServerInitOptions): void;
+	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
 }
 
@@ -294,39 +400,58 @@ export interface SSRManifest {
  * rather than using `ServerLoad` directly.
  */
 export interface ServerLoad<
-	Params extends Record<string, string> = Record<string, string>,
-	ParentData extends JSONObject | null = JSONObject | null,
-	OutputData extends JSONObject | void = JSONObject | void
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	ParentData extends Record<string, any> = Record<string, any>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
 > {
-	(event: ServerLoadEvent<Params, ParentData>): MaybePromise<OutputData | void>;
+	(event: ServerLoadEvent<Params, ParentData>): MaybePromise<OutputData>;
 }
 
 export interface ServerLoadEvent<
-	Params extends Record<string, string> = Record<string, string>,
-	ParentData extends JSONObject | null = JSONObject | null
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	ParentData extends Record<string, any> = Record<string, any>
 > extends RequestEvent<Params> {
 	parent: () => Promise<ParentData>;
+	depends: (...deps: string[]) => void;
 }
 
-export interface Action<Params extends Record<string, string> = Record<string, string>> {
-	(event: RequestEvent<Params>): MaybePromise<
-		| { status?: number; errors: Record<string, string>; location?: never }
-		| { status?: never; errors?: never; location: string }
-		| void
-	>;
+export interface Action<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
+> {
+	(event: RequestEvent<Params>): MaybePromise<OutputData>;
 }
 
-// TODO figure out how to just re-export from '../src/index/index.js' without
-// breaking the site
+export type Actions<
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	OutputData extends Record<string, any> | void = Record<string, any> | void
+> = Record<string, Action<Params, OutputData>>;
+
+/**
+ * When calling a form action via fetch, the response will be one of these shapes.
+ */
+export type ActionResult<
+	Success extends Record<string, unknown> | undefined = Record<string, any>,
+	Invalid extends Record<string, unknown> | undefined = Record<string, any>
+> =
+	| { type: 'success'; status: number; data?: Success }
+	| { type: 'invalid'; status: number; data?: Invalid }
+	| { type: 'redirect'; status: number; location: string }
+	| { type: 'error'; error: any };
 
 /**
  * Creates an `HttpError` object with an HTTP status code and an optional message.
  * This object, if thrown during request handling, will cause SvelteKit to
  * return an error response without invoking `handleError`
- * @param {number} status
- * @param {string | undefined} [message]
+ * @param status The HTTP status code
+ * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  */
-export function error(status: number, message?: string | undefined): HttpError;
+export function error(status: number, body: App.Error): HttpError;
+export function error(
+	status: number,
+	// this overload ensures you can omit the argument or pass in a string if App.Error is of type { message: string }
+	body?: { message: string } extends App.Error ? App.Error | string | undefined : never
+): HttpError;
 
 /**
  * Creates a `Redirect` object. If thrown during request handling, SvelteKit will
@@ -338,3 +463,11 @@ export function redirect(status: number, location: string): Redirect;
  * Generates a JSON `Response` object from the supplied data.
  */
 export function json(data: any, init?: ResponseInit): Response;
+
+/**
+ * Generates a `ValidationError` object.
+ */
+export function invalid<T extends Record<string, unknown> | undefined>(
+	status: number,
+	data?: T
+): ValidationError<T>;

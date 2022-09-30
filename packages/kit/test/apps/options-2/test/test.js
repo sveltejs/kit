@@ -5,6 +5,14 @@ import { test } from '../../../utils.js';
 
 test.describe.configure({ mode: 'parallel' });
 
+test.describe('env', () => {
+	test('resolves upwards', async ({ page }) => {
+		await page.goto('/basepath/env');
+		expect(await page.textContent('[data-testid="static"]')).toBe('static: resolves upwards!');
+		expect(await page.textContent('[data-testid="dynamic"]')).toBe('dynamic: resolves upwards!');
+	});
+});
+
 test.describe('paths.base', () => {
 	test('serves /basepath', async ({ page }) => {
 		await page.goto('/basepath');

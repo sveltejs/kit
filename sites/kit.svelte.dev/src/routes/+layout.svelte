@@ -1,10 +1,11 @@
 <script>
 	import '@sveltejs/site-kit/base.css';
-	import { browser } from '$app/env';
+	import { browser } from '$app/environment';
 	import { page, navigating } from '$app/stores';
 	import { Icon, Icons, Nav, NavItem, PreloadingIndicator, SkipLink } from '@sveltejs/site-kit';
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
+	import StopWar from './stopwar.svg';
 </script>
 
 <Icons />
@@ -14,7 +15,7 @@
 {/if}
 
 <SkipLink href="#main" />
-<Nav {page} logo="/stopwar.svg">
+<Nav {page} logo={StopWar}>
 	<svelte:fragment slot="nav-center">
 		{#if $page.url.pathname !== '/search'}
 			<!-- the <Nav> component renders this content inside a <ul>, so

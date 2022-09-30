@@ -54,7 +54,7 @@ function write_common_files(cwd, options, name) {
 	const pkg_file = path.join(cwd, 'package.json');
 	const pkg = /** @type {any} */ (JSON.parse(fs.readFileSync(pkg_file, 'utf-8')));
 
-	files.forEach((file) => {
+	sort_files(files).forEach((file) => {
 		const include = file.include.every((condition) => matches_condition(condition, options));
 		const exclude = file.exclude.some((condition) => matches_condition(condition, options));
 
@@ -83,7 +83,7 @@ function write_common_files(cwd, options, name) {
  * @returns {boolean}
  */
 function matches_condition(condition, options) {
-	if (condition === 'default' || condition === 'skeleton') {
+	if (condition === 'default' || condition === 'skeleton' || condition === 'skeletonlib') {
 		return options.template === condition;
 	}
 	if (condition === 'typescript' || condition === 'checkjs') {
@@ -133,6 +133,26 @@ function sort_keys(obj) {
 		});
 
 	return sorted;
+}
+
+/**
+ * Sort files so that those which apply more generically come first so they
+ * can be overwritten by files for more precise cases later.
+ *
+ * @param files {import('./types/internal').Common['files']}
+ *  */
+function sort_files(files) {
+	return files.sort((f1, f2) => {
+		const f1_more_generic =
+			f1.include.every((include) => f2.include.includes(include)) &&
+			f1.exclude.every((exclude) => f2.exclude.includes(exclude));
+		const f2_more_generic =
+			f2.include.every((include) => f1.include.includes(include)) &&
+			f2.exclude.every((exclude) => f1.exclude.includes(exclude));
+		const same = f1_more_generic && f2_more_generic;
+		const different = !f1_more_generic && !f2_more_generic;
+		return same || different ? 0 : f1_more_generic ? -1 : 1;
+	});
 }
 
 /** @param {string} name */

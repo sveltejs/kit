@@ -5,7 +5,7 @@ import 'prismjs/components/prism-bash.js';
 import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
 import 'prism-svelte';
-import { extract_frontmatter, transform } from './markdown';
+import { escape, extract_frontmatter, transform } from './markdown';
 import { modules } from '../../../../../../packages/kit/docs/types.js';
 import { render_modules } from './modules';
 import { error } from '@sveltejs/kit';
@@ -95,7 +95,7 @@ export async function read_file(dir, file) {
 			if (language === 'js') {
 				try {
 					if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
-						const params = parse_route_id(options.file || '+page.js')
+						const params = parse_route_id(options.file || `+page.${language}`)
 							.names.map((name) => `${name}: string`)
 							.join(', ');
 
@@ -107,7 +107,8 @@ export async function read_file(dir, file) {
 							`export type LayoutLoad = Kit.Load<{${params}}>;`,
 							`export type LayoutServerLoad = Kit.ServerLoad<{${params}}>;`,
 							`export type RequestHandler = Kit.RequestHandler<{${params}}>;`,
-							`export type Action = Kit.Action<{${params}}>;`
+							`export type Action = Kit.Action<{${params}}>;`,
+							`export type Actions = Kit.Actions<{${params}}>;`
 						].join('\n');
 
 						if (source.includes('// @filename:')) {
@@ -115,7 +116,7 @@ export async function read_file(dir, file) {
 						} else {
 							source = source.replace(
 								/^(?!\/\/ @)/m,
-								`${injected}\n\n// @filename: index.js\n// ---cut---\n`
+								`${injected}\n\n// @filename: index.${language}\n// ---cut---\n`
 							);
 						}
 					}
@@ -153,9 +154,7 @@ export async function read_file(dir, file) {
 				);
 
 				// preserve blank lines in output (maybe there's a more correct way to do this?)
-				html = `<div class="code-block">${
-					options.file ? `<h5>${options.file}</h5>` : ''
-				}${html.replace(/<div class='line'><\/div>/g, '<div class="line"> </div>')}</div>`;
+				html = html.replace(/<div class='line'><\/div>/g, '<div class="line"> </div>');
 			} else if (language === 'diff') {
 				const lines = source.split('\n').map((content) => {
 					let type = null;
@@ -166,26 +165,28 @@ export async function read_file(dir, file) {
 
 					return {
 						type,
-						content
+						content: escape(content)
 					};
 				});
 
-				html = `<div class="code-block"><pre class="language-diff"><code>${lines
+				html = `<pre class="language-diff"><code>${lines
 					.map((line) => {
 						if (line.type) return `<span class="${line.type}">${line.content}\n</span>`;
 						return line.content + '\n';
 					})
-					.join('')}</code></pre></div>`;
+					.join('')}</code></pre>`;
 			} else {
 				const plang = languages[language];
 				const highlighted = plang
 					? PrismJS.highlight(source, PrismJS.languages[plang], language)
 					: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
-				html = `<div class="code-block">${
-					options.file ? `<h5>${options.file}</h5>` : ''
-				}<pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
+				html = `<pre class='language-${plang}'><code>${highlighted}</code></pre>`;
 			}
+
+			html = `<div class="code-block">${
+				options.file ? `<h5>${options.file}</h5>` : ''
+			}${html}</div>`;
 
 			type_regex.lastIndex = 0;
 

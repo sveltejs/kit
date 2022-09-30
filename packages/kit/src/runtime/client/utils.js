@@ -24,17 +24,63 @@ export function scroll_state() {
 
 /** @param {Event} event */
 export function find_anchor(event) {
-	const node = event
-		.composedPath()
-		.find((e) => e instanceof Node && e.nodeName.toUpperCase() === 'A'); // SVG <a> elements have a lowercase name
-	return /** @type {HTMLAnchorElement | SVGAElement | undefined} */ (node);
+	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
+	let a;
+
+	/** @type {boolean | null} */
+	let noscroll = null;
+
+	/** @type {boolean | null} */
+	let prefetch = null;
+
+	/** @type {boolean | null} */
+	let reload = null;
+
+	for (const element of event.composedPath()) {
+		if (!(element instanceof Element)) continue;
+
+		if (!a && element.nodeName.toUpperCase() === 'A') {
+			// SVG <a> elements have a lowercase name
+			a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
+		}
+
+		if (noscroll === null) noscroll = get_link_option(element, 'data-sveltekit-noscroll');
+		if (prefetch === null) prefetch = get_link_option(element, 'data-sveltekit-prefetch');
+		if (reload === null) reload = get_link_option(element, 'data-sveltekit-reload');
+	}
+
+	const url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
+
+	return {
+		a,
+		url,
+		options: {
+			noscroll,
+			prefetch,
+			reload
+		}
+	};
 }
 
-/** @param {HTMLAnchorElement | SVGAElement} node */
-export function get_href(node) {
-	return node instanceof SVGAElement
-		? new URL(node.href.baseVal, document.baseURI)
-		: new URL(node.href);
+const warned = new WeakSet();
+
+/**
+ * @param {Element} element
+ * @param {string} attribute
+ */
+function get_link_option(element, attribute) {
+	const value = element.getAttribute(attribute);
+	if (value === null) return value;
+
+	if (value === '') return true;
+	if (value === 'off') return false;
+
+	if (__SVELTEKIT_DEV__ && !warned.has(element)) {
+		console.error(`Unexpected value for ${attribute} — should be "" or "off"`, element);
+		warned.add(element);
+	}
+
+	return false;
 }
 
 /** @param {any} value */

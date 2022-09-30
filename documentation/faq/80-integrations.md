@@ -6,7 +6,7 @@ Make sure you've read the [documentation section on integrations](/docs/addition
 
 ### How do I setup a database?
 
-Put the code to query your database in [endpoints](/docs/routing#endpoints) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
+Put the code to query your database in a [server route](/docs/routing#server) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
 
 ### How do I use middleware?
 
@@ -48,7 +48,7 @@ If you need access to the `document` or `window` variables or otherwise need cod
 ```js
 /// <reference types="@sveltejs/kit" />
 // ---cut---
-import { browser } from '$app/env';
+import { browser } from '$app/environment';
 
 if (browser) {
 	// client-only code here

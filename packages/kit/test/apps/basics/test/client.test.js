@@ -8,15 +8,11 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('beforeNavigate', () => {
-	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
+	test('prevents navigation triggered by link click', async ({ page, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 
-		try {
-			await clicknav('[href="/before-navigate/a"]', { timeout: 1000 });
-			expect(false).toBe(true);
-		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('page.waitForNavigation: Timeout 1000ms exceeded');
-		}
+		await page.click('[href="/before-navigate/a"]');
+		await page.waitForLoadState('networkidle');
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('true');
@@ -267,7 +263,7 @@ test.describe('Endpoints', () => {
 	});
 });
 
-test.describe('Errors', () => {
+test.describe.serial('Errors', () => {
 	test('client-side load errors', async ({ page }) => {
 		await page.goto('/errors/load-client');
 
@@ -304,6 +300,30 @@ test.describe('Errors', () => {
 			'This is your custom error page saying: "Error: 401"'
 		);
 		expect(await page.innerHTML('h1')).toBe('401');
+	});
+
+	test('Root error falls back to error.html (unexpected error)', async ({ page }) => {
+		await page.goto('/errors/error-html');
+		await page.click('button:text-is("Unexpected")');
+		expect(await page.textContent('h1')).toBe('Error - 500');
+		expect(await page.textContent('p')).toBe(
+			'This is the static error page with the following message: Failed to load'
+		);
+	});
+
+	test('Root error falls back to error.html (expected error)', async ({ page }) => {
+		await page.goto('/errors/error-html');
+		await page.click('button:text-is("Expected")');
+		expect(await page.textContent('h1')).toBe('Error - 401');
+		expect(await page.textContent('p')).toBe(
+			'This is the static error page with the following message: Not allowed'
+		);
+	});
+
+	test('Root 404 redirects somewhere due to root layout', async ({ page, baseURL, clicknav }) => {
+		await page.goto('/errors/error-html');
+		await clicknav('button:text-is("Redirect")');
+		expect(page.url()).toBe(baseURL + '/load');
 	});
 });
 
@@ -351,7 +371,7 @@ test.describe('Load', () => {
 	test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
 		await page.goto('/load/url-hash#please-dont-send-me-to-load');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component."'
+			'This is your custom error page saying: "Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead"'
 		);
 	});
 
@@ -360,11 +380,66 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe("I didn't break!");
 	});
 
-	test("layout props don't cause rerender when unchanged", async ({ page, clicknav }) => {
-		await page.goto('/load/layout-props/a');
-		expect(await page.textContent('h1')).toBe('1');
-		await clicknav('[href="/load/layout-props/b"]');
-		expect(await page.textContent('h1')).toBe('1');
+	test('server data from previous is not reused if next page has no load function', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/load/server-data-reuse/with-server-load');
+		expect(await page.textContent('pre')).toBe(
+			JSON.stringify({ foo: { bar: 'Custom layout' }, server: true })
+		);
+		await app.goto('/load/server-data-reuse/no-load');
+		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
+	});
+
+	test('keeps server data when valid while not reusing client load data', async ({ page }) => {
+		await page.goto('/load/url-query-param');
+
+		expect(await page.textContent('h1')).toBe('Hello ');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+
+		await page.click('a[href="/load/url-query-param?currentClientState=ABC"]');
+		expect(await page.textContent('h1')).toBe('Hello ABC');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+
+		await page.click('a[href="/load/url-query-param?currentClientState=DEF"]');
+		expect(await page.textContent('h1')).toBe('Hello DEF');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+
+		await page.click('a[href="/load/url-query-param"]');
+		expect(await page.textContent('h1')).toBe('Hello ');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+	});
+
+	test('load does not call fetch if max-age allows it', async ({ page, request }) => {
+		await request.get('/load/cache-control/reset');
+
+		page.addInitScript(`
+			window.now = 0;
+			window.performance.now = () => now;
+		`);
+
+		await page.goto('/load/cache-control');
+		expect(await page.textContent('p')).toBe('Count is 0');
+		await page.waitForTimeout(500);
+		await page.click('button');
+		await page.waitForTimeout(500);
+		expect(await page.textContent('p')).toBe('Count is 0');
+
+		await page.evaluate(() => (window.now = 2500));
+		await page.click('button');
+		await expect(page.locator('p')).toHaveText('Count is 2');
+	});
+
+	test('__data.js has cache-control: private, no-store', async ({ page, clicknav }) => {
+		await page.goto('/load/server-data-nostore?x=1');
+
+		const [response] = await Promise.all([
+			page.waitForResponse((response) => /__data\.js/.test(response.url())),
+			clicknav('[href="/load/server-data-nostore?x=2"]')
+		]);
+
+		expect(response.headers()['cache-control']).toBe('private, no-store');
 	});
 
 	if (process.env.DEV) {
@@ -400,31 +475,6 @@ test.describe('Load', () => {
 });
 
 test.describe('Page options', () => {
-	test('disables router if router=false', async ({ page, clicknav }) => {
-		await page.goto('/no-router/a');
-
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-		expect(await page.textContent('button')).toBe('clicks: 0');
-
-		// wait until hydration before interacting with button
-		await page.waitForSelector('body.started');
-
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		// wait until hydration before attempting backwards client-side navigation
-		await page.waitForSelector('body.started');
-
-		await clicknav('[href="/no-router/a"]');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-		expect(await page.textContent('button')).toBe('clicks: 0');
-	});
-
 	test('applies generated component styles with ssr=false (hides announcer)', async ({
 		page,
 		clicknav
@@ -546,6 +596,9 @@ test.describe('Routing', () => {
 		await page.click('[href="#target"]');
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
+		await page.click('[href="/routing/hashes/pagestore"]');
+		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
+		await expect(page.locator('#page-url-hash')).toHaveText('');
 	});
 
 	test('does not normalize external path', async ({ page }) => {
@@ -583,12 +636,289 @@ test.describe('Shadow DOM', () => {
 		await clicknav('div[id="clickme"]');
 		expect(await page.textContent('h1')).toBe('a');
 
-		expect(requests).toEqual([]);
+		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
 	});
 });
 
-test('Can use browser-only global on client-only page', async ({ page, read_errors }) => {
-	await page.goto('/no-ssr/browser-only-global');
-	await expect(page.locator('p')).toHaveText('Works');
-	expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
+test.describe('SPA mode / no SSR', () => {
+	test('Can use browser-only global on client-only page through ssr config in handle', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/browser-only-global');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
+	});
+
+	test('Can use browser-only global on client-only page through ssr config in layout.js', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/ssr-page-config')).toBe(undefined);
+	});
+
+	test('Can use browser-only global on client-only page through ssr config in page.js', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config/layout/inherit');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/ssr-page-config/layout/inherit')).toBe(undefined);
+	});
+
+	test('Cannot use browser-only global on page because of ssr config in page.js', async ({
+		page
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
+		await expect(page.locator('p')).toHaveText(
+			'This is your custom error page saying: "document is not defined"'
+		);
+	});
+});
+
+test.describe('$app/stores', () => {
+	test('can use $app/stores from anywhere on client', async ({ page }) => {
+		await page.goto('/store/client-access');
+		await expect(page.locator('h1')).toHaveText('undefined');
+		await page.click('button');
+		await expect(page.locator('h1')).toHaveText('/store/client-access');
+	});
+
+	test('$page.data does not update if data is unchanged', async ({ page, app }) => {
+		await page.goto('/store/data/unchanged/a');
+		await app.goto('/store/data/unchanged/b');
+		await expect(page.locator('p')).toHaveText('$page.data was updated 0 time(s)');
+	});
+});
+
+test.describe.serial('Invalidation', () => {
+	test('+layout.server.js does not re-run when downstream load functions are invalidated', async ({
+		page,
+		request,
+		clicknav
+	}) => {
+		await request.get('/load/unchanged/reset');
+
+		await page.goto('/load/unchanged/isolated/a');
+		expect(await page.textContent('h1')).toBe('slug: a');
+		expect(await page.textContent('h2')).toBe('count: 0');
+
+		await clicknav('[href="/load/unchanged/isolated/b"]');
+		expect(await page.textContent('h1')).toBe('slug: b');
+		expect(await page.textContent('h2')).toBe('count: 0');
+	});
+
+	test('+layout.server.js re-runs when await parent() is called from downstream load function', async ({
+		page,
+		request,
+		clicknav
+	}) => {
+		await request.get('/load/unchanged/reset');
+
+		await page.goto('/load/unchanged/uses-parent/a');
+		expect(await page.textContent('h1')).toBe('slug: a');
+		expect(await page.textContent('h2')).toBe('count: 0');
+		expect(await page.textContent('h3')).toBe('doubled: 0');
+
+		await clicknav('[href="/load/unchanged/uses-parent/b"]');
+		expect(await page.textContent('h1')).toBe('slug: b');
+		expect(await page.textContent('h2')).toBe('count: 0');
+
+		// this looks wrong, but is actually the intended behaviour (the increment side-effect in a GET would be a bug in a real app)
+		expect(await page.textContent('h3')).toBe('doubled: 2');
+	});
+
+	test('load function re-runs when searchParams change', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/url?a=1');
+		expect(await page.textContent('h1')).toBe('1');
+
+		await clicknav('[href="?a=2"]');
+		expect(await page.textContent('h1')).toBe('2');
+
+		await clicknav('[href="?a=3"]');
+		expect(await page.textContent('h1')).toBe('3');
+	});
+
+	test('server-only load functions are re-run following forced invalidation', async ({
+		page,
+		request
+	}) => {
+		await request.get('/load/invalidation/forced/reset');
+
+		await page.goto('/load/invalidation/forced');
+		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+
+		await page.click('button');
+		await page.waitForLoadState('networkidle');
+		await page.waitForTimeout(200); // apparently necessary
+		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
+
+		await page.click('button');
+		await page.waitForLoadState('networkidle');
+		await page.waitForTimeout(200);
+		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
+	});
+
+	test('multiple invalidations run concurrently', async ({ page, request }) => {
+		await page.goto('/load/invalidation/multiple');
+		expect(await page.textContent('p')).toBe('layout: 0, page: 0');
+
+		await page.click('button.layout');
+		await page.click('button.layout');
+		await page.click('button.page');
+		await page.click('button.page');
+		await page.click('button.layout');
+		await page.click('button.page');
+		await page.click('button.all');
+		await expect(page.locator('p')).toHaveText('layout: 4, page: 4');
+	});
+
+	test('invalidateAll persists through redirects', async ({ page }) => {
+		await page.goto('/load/invalidation/multiple/redirect');
+		await page.click('button.redirect');
+		await expect(page.locator('p.redirect-state')).toHaveText('Redirect state: done');
+	});
+
+	test('+layout(.server).js is re-run when server dep is invalidated', async ({ page }) => {
+		await page.goto('/load/invalidation/depends');
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
+
+		await Promise.all([page.click('button.server'), page.waitForLoadState('networkidle')]);
+		await page.waitForTimeout(200);
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(server).not.toBe(next_server);
+		expect(shared).not.toBe(next_shared);
+	});
+
+	test('+layout.js is re-run when shared dep is invalidated', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/depends');
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
+
+		await Promise.all([page.click('button.shared'), page.waitForLoadState('networkidle')]);
+		await page.waitForTimeout(200);
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(server).toBe(next_server);
+		expect(shared).not.toBe(next_shared);
+	});
+
+	test('Parameter use is tracked even for routes that do not use the parameters', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/params');
+
+		await clicknav('[href="/load/invalidation/params/1"]');
+		expect(await page.textContent('pre')).toBe('{"a":"1"}');
+
+		await clicknav('[href="/load/invalidation/params/1/x"]');
+		expect(await page.textContent('pre')).toBe('{"a":"1","b":"x"}');
+
+		await page.goBack();
+		expect(await page.textContent('pre')).toBe('{"a":"1"}');
+	});
+});
+
+test.describe('data-sveltekit attributes', () => {
+	test('data-sveltekit-prefetch', async ({ baseURL, page }) => {
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		const module = process.env.DEV
+			? `${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`
+			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/prefetch/target/_page`;
+
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#two').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/prefetch');
+		await page.locator('#three').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for prefetching to start
+			page.waitForLoadState('networkidle') // wait for prefetching to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeUndefined();
+	});
+
+	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await page.goto('/data-sveltekit/reload');
+		await page.click('#one');
+		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/reload');
+		await page.click('#two');
+		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/reload');
+		await clicknav('#three');
+		expect(requests).not.toContain(`${baseURL}/data-sveltekit/reload/target`);
+	});
+
+	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
+		await page.goto('/data-sveltekit/noscroll');
+		// await page.evaluate(() => window.scrollTo(0, 1000));
+		await clicknav('#one');
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+		await page.goto('/data-sveltekit/noscroll');
+		await clicknav('#two');
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+		await page.goto('/data-sveltekit/noscroll');
+		// await page.evaluate(() => window.scrollTo(0, 1000));
+		await clicknav('#three');
+		expect(await page.evaluate(() => window.scrollY)).toBe(0);
+	});
+});
+
+test.describe('Content negotiation', () => {
+	test('+server.js next to +page.svelte works', async ({ page }) => {
+		await page.goto('/routing/content-negotiation');
+		expect(await page.textContent('p')).toBe('Hi');
+
+		for (const method of ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']) {
+			await page.click(`button:has-text("${method}")`);
+			await page.waitForFunction(
+				(method) => document.querySelector('pre')?.textContent === method,
+				method
+			);
+		}
+	});
+
+	test('use:enhance uses action, not POST handler', async ({ page }) => {
+		await page.goto('/routing/content-negotiation');
+
+		page.click('button:has-text("Submit")');
+		await page.waitForResponse('/routing/content-negotiation');
+		await expect(page.locator('[data-testid="form-result"]')).toHaveText('form.submitted: true');
+	});
 });

@@ -1,2 +1,4 @@
-/** @type {import('./$types').Action} */
-export function POST() {}
+/** @type {import('./$types').Actions} */
+export const actions = {
+	default: () => {}
+};

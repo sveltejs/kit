@@ -2,4 +2,4 @@
 
 <div style="height: 200vh; background: teal" />
 
-<a href="/scroll/cross-document/b">b</a>
+<a data-sveltekit-reload href="/scroll/cross-document/b">b</a>

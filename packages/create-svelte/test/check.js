@@ -24,6 +24,16 @@ const overrides = { ...existing_workspace_overrides };
 	overrides[name] = path.dirname(path.resolve(pkgPath));
 });
 
+try {
+	const kit_dir = fileURLToPath(new URL('../../../packages/kit', import.meta.url));
+	const ls_vite_result = execSync(`pnpm ls --json vite`, { cwd: kit_dir });
+	const vite_version = JSON.parse(ls_vite_result)[0].devDependencies.vite.version;
+	overrides.vite = vite_version;
+} catch (e) {
+	console.error('failed to parse installed vite version from packages/kit');
+	throw e;
+}
+
 test.before(() => {
 	try {
 		// prepare test pnpm workspace
@@ -43,7 +53,8 @@ test.before(() => {
 		fs.writeFileSync(path.join(test_workspace_dir, 'pnpm-workspace.yaml'), 'packages:\n  - ./*\n');
 
 		// force creation of pnpm-lock.yaml in test workspace
-		execSync('pnpm install --no-frozen-lockfile', { dir: test_workspace_dir, stdio: 'inherit' });
+		console.log(`running pnpm install in .test-tmp/create-svelte`);
+		execSync('pnpm install --no-frozen-lockfile', { dir: test_workspace_dir, stdio: 'ignore' });
 	} catch (e) {
 		console.error('failed to setup create-svelte test workspace', e);
 		throw e;
@@ -51,6 +62,8 @@ test.before(() => {
 });
 
 for (const template of fs.readdirSync('templates')) {
+	if (template[0] === '.') continue;
+
 	for (const types of ['checkjs', 'typescript']) {
 		test(`${template}: ${types}`, () => {
 			const cwd = path.join(test_workspace_dir, `${template}-${types}`);
@@ -84,10 +97,11 @@ for (const template of fs.readdirSync('templates')) {
 			fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(pkg, null, '\t') + '\n');
 
 			// this pnpm install works in the test workspace, which redirects to our local packages again
-			execSync('pnpm install --no-frozen-lockfile', { cwd, stdio: 'inherit' });
+			console.log(`running pnpm install in ${cwd}`);
+			execSync('pnpm install --no-frozen-lockfile', { cwd, stdio: 'ignore' });
 
 			// run provided scripts that are non-blocking. All of them should exit with 0
-			const scripts_to_test = ['prepare', 'check', 'lint', 'build', 'sync'];
+			const scripts_to_test = ['sync', 'format', 'lint', 'check', 'build'];
 
 			// package script requires lib dir
 			if (fs.existsSync(path.join(cwd, 'src', 'lib'))) {
@@ -95,17 +109,20 @@ for (const template of fs.readdirSync('templates')) {
 			}
 
 			// not all templates have all scripts
-			for (const script of Object.keys(pkg.scripts).filter((s) => scripts_to_test.includes(s))) {
-				const command = `pnpm run ${script}`;
+			console.group(`${template}-${types}`);
+			for (const script of scripts_to_test.filter((s) => !!pkg.scripts[s])) {
 				try {
-					console.log(`executing ${command} in ${cwd}`);
-					execSync(command, { cwd, stdio: 'inherit' });
+					execSync(`pnpm run ${script}`, { cwd, stdio: 'pipe' });
+					console.log(`✅ ${script}`);
 				} catch (e) {
-					const msg = `${command} failed in ${cwd}`;
-					console.error(msg, e);
-					assert.unreachable(msg);
+					console.error(`❌ ${script}`);
+					console.error(`---\nstdout:\n${e.stdout}`);
+					console.error(`---\nstderr:\n${e.stderr}`);
+					console.groupEnd();
+					assert.unreachable(e.message);
 				}
 			}
+			console.groupEnd();
 		});
 	}
 }

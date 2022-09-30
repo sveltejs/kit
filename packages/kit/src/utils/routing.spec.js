@@ -42,6 +42,16 @@ const tests = {
 		pattern: /^\/matched\/([^/]+?)\/?$/,
 		names: ['id'],
 		types: ['uuid']
+	},
+	'%23hash-encoded': {
+		pattern: /^\/%23hash-encoded\/?$/,
+		names: [],
+		types: []
+	},
+	'%40at-encoded/[id]': {
+		pattern: /^\/@at-encoded\/([^/]+?)\/?$/,
+		names: ['id'],
+		types: [undefined]
 	}
 };
 

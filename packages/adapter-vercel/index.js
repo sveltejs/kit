@@ -186,10 +186,11 @@ export default function ({ external = [], edge, split } = {}) {
 					outfile: `${dirs.functions}/${name}.func/index.js`,
 					target: 'es2020', // TODO verify what the edge runtime supports
 					bundle: true,
-					platform: 'node',
+					platform: 'browser',
 					format: 'esm',
 					external,
-					sourcemap: 'linked'
+					sourcemap: 'linked',
+					banner: { js: 'globalThis.global = globalThis;' }
 				});
 
 				write(
@@ -224,7 +225,7 @@ export default function ({ external = [], edge, split } = {}) {
 								sliced_pattern = '^/?';
 							}
 
-							const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
+							const src = `${sliced_pattern}(?:/__data.js)?$`; // TODO adding /__data.js is a temporary workaround — those endpoints should be treated as distinct routes
 
 							await generate_function(route.id || 'index', src, entry.generateManifest);
 						}
@@ -306,6 +307,11 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 	traced.warnings.forEach((error) => {
 		// pending https://github.com/vercel/nft/issues/284
 		if (error.message.startsWith('Failed to resolve dependency node:')) return;
+
+		// parse errors are likely not js and can safely be ignored,
+		// such as this html file in "main" meant for nw instead of node:
+		// https://github.com/vercel/nft/issues/311
+		if (error.message.startsWith('Failed to parse')) return;
 
 		if (error.message.startsWith('Failed to resolve dependency')) {
 			const match = /Cannot find module '(.+?)' loaded from (.+)/;

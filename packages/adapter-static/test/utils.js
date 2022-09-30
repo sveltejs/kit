@@ -1,10 +1,27 @@
-import child_process from 'child_process';
+import { execSync } from 'child_process';
 import fs from 'fs';
 import http from 'http';
 import { fileURLToPath } from 'url';
 import sirv from 'sirv';
-import { chromium } from 'playwright-chromium';
+import { chromium, webkit, firefox } from 'playwright';
 import * as uvu from 'uvu';
+
+const known_browsers = {
+	chromium: chromium,
+	firefox: firefox,
+	webkit: webkit
+};
+const test_browser_name = /** @type {keyof typeof } */ (process.env.KIT_E2E_BROWSER ?? 'chromium');
+
+const test_browser = known_browsers[test_browser_name];
+
+if (!test_browser) {
+	throw new Error(
+		`invalid test browser specified: KIT_E2E_BROWSER=${
+			process.env.KIT_E2E_BROWSER
+		}. Allowed values: ${Object.keys().join(', ')}`
+	);
+}
 
 /**
  * @typedef {{
@@ -30,11 +47,15 @@ export function run(app, callback) {
 
 			rimraf(`${cwd}/build`);
 
-			await spawn('npm run build', {
-				cwd,
-				stdio: 'inherit',
-				shell: true
-			});
+			try {
+				execSync(`npm run build`, { cwd, stdio: 'pipe' });
+				console.log(`✅ build successful`);
+			} catch (e) {
+				console.error(`❌ failed to build ${app}`);
+				console.error(`---\nstdout:\n${e.stdout}`);
+				console.error(`---\nstderr:\n${e.stderr}`);
+				console.groupEnd();
+			}
 
 			context.cwd = cwd;
 			const handler = sirv(`${cwd}/build`, {
@@ -51,7 +72,7 @@ export function run(app, callback) {
 
 			context.port = port;
 			context.base = `http://localhost:${context.port}`;
-			context.browser = await chromium.launch();
+			context.browser = await test_browser.launch();
 			context.page = await context.browser.newPage();
 		} catch (e) {
 			// TODO remove unnecessary try-catch https://github.com/lukeed/uvu/pull/61
@@ -60,33 +81,25 @@ export function run(app, callback) {
 	});
 
 	suite.after(async (context) => {
-		context.server.close();
-		context.browser.close();
+		if (context.browser) {
+			try {
+				await context.browser.close();
+			} catch (e) {
+				console.error('failed to close test browser', e);
+			}
+		}
+		if (context.server) {
+			try {
+				await context.server.close();
+			} catch (e) {
+				console.error('failed to close test server', e);
+			}
+		}
 	});
 
 	callback(suite);
 
 	suite.run();
-}
-
-const parameterRegex = new RegExp('"[^"]+"|[\\S]+', 'g');
-
-/**
- * @param {string} str
- * @param {child_process.SpawnOptions} opts
- */
-function spawn(str, opts) {
-	return new Promise((fulfil, reject) => {
-		const [cmd, ...args] = str.match(parameterRegex);
-
-		const child = child_process.spawn(cmd, args, opts);
-
-		child.on('error', reject);
-
-		child.on('exit', () => {
-			fulfil();
-		});
-	});
 }
 
 /**

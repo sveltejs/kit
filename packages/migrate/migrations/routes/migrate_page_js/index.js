@@ -61,8 +61,12 @@ export function migrate_page(content, filename) {
 						return; // nothing to do
 					}
 
-					if (keys === 'props') {
-						automigration(value, file.code, dedent(nodes.props.getText()));
+					if (
+						keys === 'props' ||
+						((keys === 'status' || keys === 'props status') &&
+							Number(nodes.status.getText()) === 200)
+					) {
+						automigration(value, file.code, dedent(nodes.props?.getText() || ''));
 						return;
 					}
 
@@ -85,10 +89,16 @@ export function migrate_page(content, filename) {
 						if (nodes.error) {
 							const message = is_string_like(nodes.error)
 								? nodes.error.getText()
-								: is_new(nodes.error, 'Error') && nodes.error.arguments[0].getText();
+								: is_new(nodes.error, 'Error')
+								? /** @type {string | undefined} */ (nodes.error.arguments[0]?.getText())
+								: false;
 
-							if (message) {
-								automigration(node, file.code, `throw error(${status || 500}, ${message});`);
+							if (message !== false) {
+								automigration(
+									node,
+									file.code,
+									`throw error(${status || 500}${message ? `, ${message}` : ''});`
+								);
 								imports.add('error');
 								return;
 							}

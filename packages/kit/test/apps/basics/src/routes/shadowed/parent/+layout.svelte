@@ -1,5 +1,5 @@
 <script>
-    export let data;
+	export let data;
 </script>
 
 <h2>Layout data: {JSON.stringify(data)}</h2>

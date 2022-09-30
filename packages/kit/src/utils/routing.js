@@ -16,11 +16,13 @@ export function parse_route_id(id) {
 		id === ''
 			? /^\/$/
 			: new RegExp(
-					`^${decodeURIComponent(id)
-						.split(/(?:@[a-zA-Z0-9_-]+)?(?:\/|$)/)
+					`^${id
+						.split(/(?:\/|$)/)
+						.filter(affects_path)
 						.map((segment, i, segments) => {
+							const decoded_segment = decodeURIComponent(segment);
 							// special case — /[...rest]/ could contain zero segments
-							const match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(segment);
+							const match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(decoded_segment);
 							if (match) {
 								names.push(match[1]);
 								types.push(match[2]);
@@ -30,9 +32,9 @@ export function parse_route_id(id) {
 							const is_last = i === segments.length - 1;
 
 							return (
-								segment &&
+								decoded_segment &&
 								'/' +
-									segment
+									decoded_segment
 										.split(/\[(.+?)\]/)
 										.map((content, i) => {
 											if (i % 2) {
@@ -76,6 +78,14 @@ export function parse_route_id(id) {
 			  );
 
 	return { pattern, names, types };
+}
+
+/**
+ * Returns `false` for `(group)` segments
+ * @param {string} segment
+ */
+export function affects_path(segment) {
+	return !/^\([^)]+\)$/.test(segment);
 }
 
 /**

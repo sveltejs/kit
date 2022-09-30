@@ -25,17 +25,6 @@ export function write(file, code) {
 	fs.writeFileSync(file, code);
 }
 
-/**
- * @param {(file: string) => boolean} should_remove
- */
-export function remove_from_previous(should_remove) {
-	for (const key of previous_contents.keys()) {
-		if (should_remove(key)) {
-			previous_contents.delete(key);
-		}
-	}
-}
-
 /** @param {string} str */
 export function trim(str) {
 	const indentation = /** @type {RegExpExecArray} */ (/\n?(\s*)/.exec(str))[1];

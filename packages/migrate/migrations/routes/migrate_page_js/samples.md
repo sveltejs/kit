@@ -157,6 +157,29 @@ export function load({ session }) {
 }
 ```
 
+## Error constructor with no arguments
+
+```js before
+export function load({ session }) {
+	if (!session.user?.admin) {
+		return {
+			status: 403,
+			error: new Error()
+		};
+	}
+}
+```
+
+```js after
+import { error } from '@sveltejs/kit';
+
+export function load({ session }) {
+	if (!session.user?.admin) {
+		throw error(403);
+	}
+}
+```
+
 ## Error status with no error
 
 ```js before
@@ -320,5 +343,38 @@ export function load() {
 ```js after
 export function load() {
 	return;
+}
+```
+
+## A load function that returns props and status 200
+
+```js before
+export function load() {
+	return {
+		status: 200,
+		props: {}
+	};
+}
+```
+
+```js after
+export function load() {
+	return {};
+}
+```
+
+## A load function that returns status 200
+
+```js before
+export function load() {
+	return {
+		status: 200 
+	};
+}
+```
+
+```js after
+export function load() {
+	return ;
 }
 ```

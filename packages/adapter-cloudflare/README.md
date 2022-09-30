@@ -49,7 +49,7 @@ When configuring your project settings, you must use the following settings:
 - **Environment variables**
   - `NODE_VERSION`: `16`
 
-> **Important:** You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `16.9` or later, so you should use `16` as the `NODE_VERSION` value.
+> **Important:** You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `16.14` or later, so you should use `16` as the `NODE_VERSION` value.
 
 ## Environment variables
 
@@ -81,11 +81,11 @@ declare namespace App {
 
 ## Notes
 
-Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [endpoints](https://kit.svelte.dev/docs/routing#endpoints) in your SvelteKit app.
+Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [server endpoints](https://kit.svelte.dev/docs/routing#server) in your SvelteKit app.
 
 The [`_headers` and `_redirects`](config files) files specific to Cloudflare Pages can be used for static asset responses (like images) by putting them into the `/static` folder.
 
-However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [endpoints](https://kit.svelte.dev/docs/routing#endpoints) or with the [`handle`](https://kit.svelte.dev/docs/hooks#handle) hook.
+However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](https://kit.svelte.dev/docs/routing#server) or with the [`handle`](https://kit.svelte.dev/docs/hooks#server-hooks-handle) hook.
 
 ## Changelog
 

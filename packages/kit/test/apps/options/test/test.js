@@ -24,15 +24,13 @@ test.describe('base path', () => {
 		);
 	});
 
-	// TODO re-enable these once we upgrade to Vite 3
-	// https://github.com/sveltejs/kit/pull/4891#issuecomment-1125471630
-	test.skip('sets_paths', async ({ page }) => {
+	test('sets_paths', async ({ page }) => {
 		await page.goto('/path-base/base/');
 		expect(await page.textContent('[data-source="base"]')).toBe('/path-base');
 		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets');
 	});
 
-	test.skip('loads javascript', async ({ page, javaScriptEnabled }) => {
+	test('loads javascript', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
 		expect(await page.textContent('button')).toBe('clicks: 0');
 
@@ -42,7 +40,7 @@ test.describe('base path', () => {
 		}
 	});
 
-	test.skip('loads CSS', async ({ page }) => {
+	test('loads CSS', async ({ page }) => {
 		await page.goto('/path-base/base/');
 		expect(
 			await page.evaluate(() => {
@@ -52,7 +50,7 @@ test.describe('base path', () => {
 		).toBe('rgb(255, 0, 0)');
 	});
 
-	test.skip('inlines CSS', async ({ page, javaScriptEnabled }) => {
+	test('inlines CSS', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
 		if (process.env.DEV) {
 			const ssr_style = await page.evaluate(() => document.querySelector('style[data-sveltekit]'));
@@ -78,7 +76,7 @@ test.describe('base path', () => {
 		}
 	});
 
-	test.skip('sets params correctly', async ({ page, clicknav }) => {
+	test('sets params correctly', async ({ page, clicknav }) => {
 		await page.goto('/path-base/base/one');
 
 		expect(await page.textContent('h2')).toBe('one');
@@ -134,6 +132,13 @@ test.describe('Custom extensions', () => {
 	});
 });
 
+test.describe('env', () => {
+	test('resolves downwards', async ({ page }) => {
+		await page.goto('/path-base/env');
+		expect(await page.textContent('p')).toBe('and thank you');
+	});
+});
+
 test.describe('trailingSlash', () => {
 	test('adds trailing slash', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/path-base/slash');
@@ -156,12 +161,16 @@ test.describe('trailingSlash', () => {
 		expect(await r2.text()).toBe('hi');
 	});
 
-	test('can fetch data from page-endpoint', async ({ request, baseURL }) => {
-		const r = await request.get('/path-base/page-endpoint/__data.json');
-		expect(r.url()).toBe(`${baseURL}/path-base/page-endpoint/__data.json`);
-		expect(await r.json()).toEqual({
+	test('can fetch data from page-endpoint', async ({ request }) => {
+		const r = await request.get('/path-base/page-endpoint/__data.js');
+		const code = await r.text();
+
+		const window = {};
+		new Function('window', code)(window);
+
+		expect(window.__sveltekit_data).toEqual({
 			type: 'data',
-			nodes: [{ data: null }, { data: { message: 'hi' } }]
+			nodes: [null, { type: 'data', data: { message: 'hi' }, uses: {} }]
 		});
 	});
 
@@ -177,7 +186,7 @@ test.describe('trailingSlash', () => {
 
 		/** @type {string[]} */
 		let requests = [];
-		page.on('request', (r) => requests.push(r.url()));
+		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
@@ -190,7 +199,7 @@ test.describe('trailingSlash', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/path-base/prefetching/prefetched/__data.json`)).toBe(true);
+		expect(requests.includes(`/path-base/prefetching/prefetched/__data.js`)).toBe(true);
 
 		requests = [];
 		await app.goto('/path-base/prefetching/prefetched');

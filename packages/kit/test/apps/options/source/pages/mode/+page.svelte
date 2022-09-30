@@ -1,5 +1,5 @@
 <script>
-	import { dev } from '$app/env';
+	import { dev } from '$app/environment';
 
 	/** @type {import('./$types').PageData} */
 	export let data;

@@ -1,8 +1,14 @@
 import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
-import { coalesce_to_error } from '../../../utils/error.js';
-import { GENERIC_ERROR } from '../utils.js';
+import {
+	handle_error_and_jsonify,
+	GENERIC_ERROR,
+	get_option,
+	static_error_page,
+	redirect_response
+} from '../utils.js';
 import { create_fetch } from './fetch.js';
+import { HttpError, Redirect } from '../../control.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -16,7 +22,7 @@ import { create_fetch } from './fetch.js';
  *   options: SSROptions;
  *   state: SSRState;
  *   status: number;
- *   error: Error;
+ *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts
  */
@@ -25,17 +31,19 @@ export async function respond_with_error({ event, options, state, status, error,
 		event,
 		options,
 		state,
-		route: GENERIC_ERROR
+		route: GENERIC_ERROR,
+		resolve_opts
 	});
 
 	try {
 		const branch = [];
+		const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
+		const ssr = get_option([default_layout], 'ssr') ?? true;
 
-		if (resolve_opts.ssr) {
-			const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
-
+		if (ssr) {
 			const server_data_promise = load_server_data({
 				event,
+				state,
 				node: default_layout,
 				parent: async () => ({})
 			});
@@ -69,25 +77,28 @@ export async function respond_with_error({ event, options, state, status, error,
 			options,
 			state,
 			page_config: {
-				hydrate: options.hydrate,
-				router: options.router
+				ssr,
+				csr: get_option([default_layout], 'csr') ?? true
 			},
 			status,
-			error,
+			error: handle_error_and_jsonify(event, options, error),
 			branch,
 			fetched,
 			cookies,
 			event,
-			resolve_opts,
-			validation_errors: undefined
+			resolve_opts
 		});
-	} catch (err) {
-		const error = coalesce_to_error(err);
+	} catch (error) {
+		// Edge case: If route is a 404 and the user redirects to somewhere from the root layout,
+		// we end up here.
+		if (error instanceof Redirect) {
+			return redirect_response(error.status, error.location, cookies);
+		}
 
-		options.handle_error(error, event);
-
-		return new Response(error.stack, {
-			status: 500
-		});
+		return static_error_page(
+			options,
+			error instanceof HttpError ? error.status : 500,
+			handle_error_and_jsonify(event, options, error).message
+		);
 	}
 }

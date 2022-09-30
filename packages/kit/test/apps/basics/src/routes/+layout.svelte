@@ -1,26 +1,10 @@
 <script>
-	import {
-		goto,
-		invalidate,
-		prefetch,
-		prefetchRoutes,
-		beforeNavigate,
-		afterNavigate
-	} from '$app/navigation';
-
-	if (typeof window !== 'undefined') {
-		Object.assign(window, {
-			goto,
-			invalidate,
-			prefetch,
-			prefetchRoutes,
-			beforeNavigate,
-			afterNavigate
-		});
-	}
+	import { setup } from '../../../../setup.js';
 
 	/** @type {import('./$types').LayoutData} */
 	export let data;
+
+	setup();
 </script>
 
 <slot />

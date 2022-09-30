@@ -37,4 +37,8 @@ test('populates fallback 200.html file', () => {
 	assert.ok(content !== '');
 });
 
+test('does not prerender linked +server.js route', () => {
+	assert.ok(!fs.existsSync(`${build}/rss.xml`));
+});
+
 test.run();

@@ -37,12 +37,12 @@
 	{#each results as result, i}
 		<li>
 			<a
-				sveltekit:prefetch
+				data-sveltekit-prefetch
 				href={result.href}
 				on:click={() => dispatch('select', { href: result.href })}
 				data-has-node={result.node ? true : undefined}
 			>
-				<strong>{@html excerpt(result.breadcrumbs.at(-1), query)}</strong>
+				<strong>{@html excerpt(result.breadcrumbs[result.breadcrumbs.length - 1], query)}</strong>
 
 				{#if result.node?.content}
 					<span>{@html excerpt(result.node.content, query)}</span>

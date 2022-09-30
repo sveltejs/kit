@@ -22,7 +22,10 @@ export const test: TestType<
 			};
 			clicknav: (selector: string, options?: { timeout?: number }) => Promise<void>;
 			in_view: (selector: string) => Promise<boolean>;
-			read_errors: (href: string) => string;
+			/**
+			 * `handleError` defines the shape
+			 */
+			read_errors: (href: string) => Record<string, any>;
 		},
 	PlaywrightWorkerArgs & PlaywrightWorkerOptions
 >;

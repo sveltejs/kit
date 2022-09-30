@@ -1,5 +1,49 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.78
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.77
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
+* [feat] only generate ESM functions ([#6760](https://github.com/sveltejs/kit/pull/6760))
+
+## 1.0.0-next.76
+
+### Patch Changes
+
+- Update adapter to only glob files ([#6492](https://github.com/sveltejs/kit/pull/6492))
+
+## 1.0.0-next.75
+
+### Patch Changes
+
+- Use devalue to serialize server-only `load` return values ([#6318](https://github.com/sveltejs/kit/pull/6318))
+
+## 1.0.0-next.74
+
+### Patch Changes
+
+- Don't use top-level-await, as it is not supported right now ([#6360](https://github.com/sveltejs/kit/pull/6360))
+
+## 1.0.0-next.73
+
+### Patch Changes
+
+- Run `server.init()` for edge functions ([#6327](https://github.com/sveltejs/kit/pull/6327))
+
+## 1.0.0-next.72
+
+### Patch Changes
+
+- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+
 ## 1.0.0-next.71
 
 ### Patch Changes

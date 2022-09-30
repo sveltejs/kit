@@ -1,5 +1,5 @@
 <script context="module">
-	import { browser } from '$app/env';
+	import { browser } from '$app/environment';
 
 	if (browser) {
 		window.mounted = window.mounted || 0;

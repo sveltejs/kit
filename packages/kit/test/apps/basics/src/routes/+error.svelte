@@ -10,8 +10,6 @@
 
 <p id="message">This is your custom error page saying: "<b>{$page.error.message}</b>"</p>
 
-<pre id="stack">{$page.error.stack}</pre>
-
 <style>
 	h1,
 	p {

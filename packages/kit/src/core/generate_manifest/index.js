@@ -1,6 +1,6 @@
 import { s } from '../../utils/misc.js';
-import { parse_route_id } from '../../utils/routing.js';
 import { get_mime_lookup } from '../utils.js';
+import { resolve_symlinks } from '../../exports/vite/build/utils.js';
 
 /**
  * Generates the data used to write the server-side manifest.js file. This data is used in the Vite
@@ -38,12 +38,11 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 		assets.push(build_data.service_worker);
 	}
 
-	/** @param {import('types').PageNode | undefined} id */
-	const get_index = (id) => id && /** @type {LookupEntry} */ (bundled_nodes.get(id)).index;
-
 	const matchers = new Set();
 
 	// prettier-ignore
+	// String representation of
+	/** @type {import('types').SSRManifest} */
 	return `{
 		appDir: ${s(build_data.app_dir)},
 		assets: new Set(${s(assets)}),
@@ -55,39 +54,20 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 			],
 			routes: [
 				${routes.map(route => {
-					const { pattern, names, types } = parse_route_id(route.id);
-
-					types.forEach(type => {
+					route.types.forEach(type => {
 						if (type) matchers.add(type);
 					});
 
-					if (route.type === 'page') {
-						return `{
-							type: 'page',
-							id: ${s(route.id)},
-							pattern: ${pattern},
-							names: ${s(names)},
-							types: ${s(types)},
-							errors: ${s(route.errors.map(get_index))},
-							layouts: ${s(route.layouts.map(get_index))},
-							leaf: ${s(get_index(route.leaf))}
-						}`.replace(/^\t\t/gm, '');
-					} else {
-						if (!build_data.server.vite_manifest[route.file]) {
-							// this is necessary in cases where a .css file snuck in —
-							// perhaps it would be better to disallow these (and others?)
-							return null;
-						}
+					if (!route.page && !route.endpoint) return;
 
-						return `{
-							type: 'endpoint',
-							id: ${s(route.id)},
-							pattern: ${pattern},
-							names: ${s(names)},
-							types: ${s(types)},
-							load: ${loader(`${relative_path}/${build_data.server.vite_manifest[route.file].file}`)}
-						}`.replace(/^\t\t/gm, '');
-					}
+					return `{
+					id: ${s(route.id)},
+					pattern: ${route.pattern},
+					names: ${s(route.names)},
+					types: ${s(route.types)},
+					page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${route.page.leaf} }` : 'null'},
+					endpoint: ${route.endpoint ? loader(`${relative_path}/${resolve_symlinks(build_data.server.vite_manifest, route.endpoint.file).chunk.file}`) : 'null'}
+				}`;
 				}).filter(Boolean).join(',\n\t\t\t\t')}
 			],
 			matchers: async () => {
@@ -96,4 +76,18 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 			}
 		}
 	}`.replace(/^\t/gm, '');
+}
+
+/** @param {Array<number | undefined>} indexes */
+function get_nodes(indexes) {
+	let string = indexes.map((n) => n ?? '').join(',');
+
+	if (indexes.at(-1) === undefined) {
+		// since JavaScript ignores trailing commas, we need to insert a dummy
+		// comma so that the array has the correct length if the last item
+		// is undefined
+		string += ',';
+	}
+
+	return `[${string}]`;
 }

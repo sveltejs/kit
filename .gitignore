@@ -4,8 +4,9 @@ dist
 test-results/
 package-lock.json
 yarn.lock
+vite.config.js.timestamp-*
 /packages/create-svelte/template/CHANGELOG.md
-/packages/kit/src/packaging/test/watch/package
+/packages/package/test/**/package
 /documentation/types.js
 .env
 .vercel_build_output
@@ -16,3 +17,4 @@ yarn.lock
 .turbo
 .vercel
 .test-tmp
+symlink-from

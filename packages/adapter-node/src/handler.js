@@ -6,20 +6,20 @@ import { fileURLToPath } from 'url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
-import { env } from './env.js';
+import { env } from 'ENV';
 
 /* global ENV_PREFIX */
 
 const server = new Server(manifest);
-server.init({ env: process.env });
+await server.init({ env: process.env });
 const origin = env('ORIGIN', undefined);
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
-
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
 const host_header = env('HOST_HEADER', 'host').toLowerCase();
+const body_size_limit = parseInt(env('BODY_SIZE_LIMIT', '524288'));
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const dir = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * @param {string} path
@@ -49,10 +49,14 @@ const ssr = async (req, res) => {
 	let request;
 
 	try {
-		request = await getRequest(origin || get_origin(req.headers), req);
+		request = await getRequest({
+			base: origin || get_origin(req.headers),
+			request: req,
+			bodySizeLimit: body_size_limit
+		});
 	} catch (err) {
 		res.statusCode = err.status || 400;
-		res.end(err.reason || 'Invalid request body');
+		res.end('Invalid request body');
 		return;
 	}
 
@@ -132,9 +136,9 @@ function get_origin(headers) {
 
 export const handler = sequence(
 	[
-		serve(path.join(__dirname, '/client'), true),
-		serve(path.join(__dirname, '/static')),
-		serve(path.join(__dirname, '/prerendered')),
+		serve(path.join(dir, 'client'), true),
+		serve(path.join(dir, 'static')),
+		serve(path.join(dir, 'prerendered')),
 		ssr
 	].filter(Boolean)
 );
