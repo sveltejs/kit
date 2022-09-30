@@ -10,7 +10,7 @@ export class Game {
 	 * Create a game object from the player's cookie, or initialise a new game
 	 * @param {string | undefined} serialized
 	 */
-	constructor(serialized: string | undefined) {
+	constructor(serialized: string | undefined = undefined) {
 		if (serialized) {
 			const [index, guesses, answers] = serialized.split('-');
 
