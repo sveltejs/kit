@@ -248,7 +248,7 @@ export async function render_response({
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
 		}
 
-		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
+		const attributes = ['type="module"'];
 
 		csp.add_script(init_app);
 
@@ -257,6 +257,7 @@ export async function render_response({
 		}
 
 		head += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
+		body += `\n\t\t<div data-sveltekit-hydrate="${target}"></div>`
 	}
 
 	if (page_config.ssr && page_config.csr) {
