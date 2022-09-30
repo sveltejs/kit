@@ -255,7 +255,9 @@ declare module '$app/navigation' {
  */
 declare module '$app/paths' {
 	/**
-	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths). It must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string.
+	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths).
+	 *
+	 * Example usage: `<a href={base}/your-page>Link</a>`
 	 */
 	export const base: `/${string}`;
 	/**

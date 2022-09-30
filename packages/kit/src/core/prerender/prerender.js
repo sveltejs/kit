@@ -28,7 +28,7 @@ prerender();
 function format_error({ status, path, referrer, referenceType }, config) {
 	const message =
 		status === 404 && !path.startsWith(config.paths.base)
-			? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\``
+			? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\` - see https://kit.svelte.dev/docs/configuration#paths for more info`
 			: path;
 
 	return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;

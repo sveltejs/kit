@@ -243,7 +243,7 @@ export default config;
 An object containing zero or more of the following `string` values:
 
 - `assets` — an absolute path that your app's files are served from. This is useful if your files are served from a storage bucket of some kind
-- `base` — a root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path
+- `base` — a root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`base` from `$app/paths`](/docs/modules#$app-paths-base) for that: `<a href={base}/your-page>Link</a>`. If you find yourself writing this often, it may make sense to extract this into a `Link` component.
 
 ### prerender
 
