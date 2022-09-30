@@ -262,7 +262,7 @@ To customise the behaviour, you can provide a function that runs immediately bef
 ```svelte
 <form
 	method="POST"
-	use:enhance={({ form, data, action cancel }) => {
+	use:enhance={({ form, data, action, cancel }) => {
 		// `form` is the `<form>` element
 		// `data` is its `FormData` object
 		// `action` is the URL to which the form is posted
@@ -280,7 +280,7 @@ You can use these functions to show and hide loading UI, and so on.
 
 #### applyAction
 
-If you provide our own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. Most of the time, calling `update` passed to the callback is enough. If you need more customization you can do so with `applyAction`:
+If you provide your own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. Most of the time, calling `update` passed to the callback is enough. If you need more customization you can do so with `applyAction`:
 
 ```diff
 <script>
