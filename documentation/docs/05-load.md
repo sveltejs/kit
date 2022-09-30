@@ -221,7 +221,7 @@ You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](
 
 ### Shared-only inputs
 
-In addition to the common inputs, a `load` function in `+page.js` that runs on both the server and the client has the following inputs:
+In addition to the common inputs, a `load` function in `+page.js` or `+layout.js` that runs on both the server and the client has the following inputs:
 
 #### data
 
@@ -267,7 +267,7 @@ In other words `+page.server.js` passes `data` along to `+page.js`, which passes
 
 ### Server-only inputs
 
-In addition to the common inputs, the server-only `load` function in `+page.server.js` provides a few more arguments which it inherits from `RequestEvent`. Namely these are `getClientAddress`, `cookies`, `locals`, `platform` and `request`. See the `RequestEvent` docs for more info.
+In addition to the common inputs, the server-only `load` function in `+page.server.js` or `+layout.server.js` provides a few more arguments which it inherits from `RequestEvent`. Namely these are `getClientAddress`, `cookies`, `locals`, `platform` and `request`. See the `RequestEvent` docs for more info.
 
 ### Output
 
