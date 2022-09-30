@@ -90,7 +90,9 @@ function validate_config(builder, configFile) {
 		let wrangler_config;
 
 		try {
-			wrangler_config = /** @type {WranglerConfig} */ (toml.parse(readFileSync(configFile, 'utf-8')));
+			wrangler_config = /** @type {WranglerConfig} */ (
+				toml.parse(readFileSync(configFile, 'utf-8'))
+			);
 		} catch (err) {
 			err.message = `Error parsing ${configFile}: ${err.message}`;
 			throw err;
