@@ -175,7 +175,7 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
 	 *
 	 * Note that navigating to another page that reuses the current `+page.svelte` will not remount the component.
-	 * Also note that not all `load` functions might be run again.
+	 * Also note that some `load` functions might not be re-run after a navigation.
 	 * See [the load docs on invalidation](https://kit.svelte.dev/docs/load#invalidation) for more information.
 	 *
 	 * @param url Where to navigate to
