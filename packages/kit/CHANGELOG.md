@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.507
+
+### Patch Changes
+
+- Allow TypedArray request bodies in `fetch` in `load` ([#7065](https://github.com/sveltejs/kit/pull/7065))
+
+* Use `FormData` polyfill from `undici` rather than `node-fetch` ([#7065](https://github.com/sveltejs/kit/pull/7065))
+
 ## 1.0.0-next.506
 
 ### Patch Changes
