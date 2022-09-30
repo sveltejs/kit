@@ -69,6 +69,20 @@ Then, you can build your app and deploy it:
 wrangler publish
 ```
 
+## Custom config
+
+If you would like to use a config file other than `wrangler.toml`, you can do like so:
+
+```js
+import adapter from '@sveltejs/adapter-cloudflare-workers';
+
+export default {
+  kit: {
+    adapter: adapter({ config: '<your-wrangler-name>.toml' })
+  }
+};
+```
+
 ## Environment variables
 
 The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV/DO namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
