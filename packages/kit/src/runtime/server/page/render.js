@@ -246,6 +246,9 @@ export async function render_response({
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			if (state.prerendering) {
+				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+			}
 		}
 
 		const attributes = ['type="module"'];
