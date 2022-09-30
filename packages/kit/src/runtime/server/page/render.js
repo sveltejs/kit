@@ -246,9 +246,6 @@ export async function render_response({
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-			if (state.prerendering) {
-				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
-			}
 		}
 
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
@@ -259,7 +256,7 @@ export async function render_response({
 			attributes.push(`nonce="${csp.nonce}"`);
 		}
 
-		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
+		head += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 	}
 
 	if (page_config.ssr && page_config.csr) {
