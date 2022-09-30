@@ -219,11 +219,11 @@ Setting the same header multiple times (even in separate `load` functions) is an
 
 You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](/docs/types#sveltejs-kit-cookies) API in a server-only `load` function instead.
 
-### Shared-only inputs
+### Server-only inputs
 
-In addition to the common inputs, a `load` function in `+page.js` or `+layout.js` that runs on both the server and the client has the following inputs:
+A server-only `load` function — i.e. one in [`+page.server.js`](/docs/routing#page-page-server-js) or [`+layout.server.js`](/docs/routing#layout-layout-server-js) — receives a `ServerLoadEvent`, which extends `RequestEvent`, meaning it inherits a number of other properties in addition to the common inputs: `getClientAddress`, `cookies`, `locals`, `platform` and `request`. See the `RequestEvent` docs for more info.
 
-#### data
+### Shared data
 
 Very rarely, you might need both a `+page.js` and a `+page.server.js` (or the `+layout` equivalent). In these cases, the `data` for `+page.svelte` comes from `+page.js`, which in turn receives `data` from the server:
 
@@ -264,10 +264,6 @@ export function load({ data }) {
 ```
 
 In other words `+page.server.js` passes `data` along to `+page.js`, which passes `data` along to `+page.svelte`.
-
-### Server-only inputs
-
-In addition to the common inputs, the server-only `load` function in `+page.server.js` or `+layout.server.js` provides a few more arguments which it inherits from `RequestEvent`. Namely these are `getClientAddress`, `cookies`, `locals`, `platform` and `request`. See the `RequestEvent` docs for more info.
 
 ### Output
 
