@@ -1,7 +1,5 @@
-import * as cookie from 'cookie';
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './index.js';
-import { domain_matches, path_matches } from './cookie.js';
 
 /**
  * @param {{
@@ -11,45 +9,20 @@ import { domain_matches, path_matches } from './cookie.js';
  *   route: import('types').SSRRoute | import('types').SSRErrorPage;
  *   prerender_default?: import('types').PrerenderOption;
  *   resolve_opts: import('types').RequiredResolveOptions;
+ *   get_cookie_header: (url: URL, header: string | null) => string;
  * }} opts
  */
-export function create_fetch({ event, options, state, route, prerender_default, resolve_opts }) {
+export function create_fetch({
+	event,
+	options,
+	state,
+	route,
+	prerender_default,
+	resolve_opts,
+	get_cookie_header
+}) {
 	/** @type {import('./page/types').Fetched[]} */
 	const fetched = [];
-
-	const initial_cookies = cookie.parse(event.request.headers.get('cookie') || '');
-
-	/** @type {import('./page/types').Cookie[]} */
-	const set_cookies = [];
-
-	/**
-	 * @param {URL} url
-	 * @param {string | null} header
-	 */
-	function get_cookie_header(url, header) {
-		/** @type {Record<string, string>} */
-		const new_cookies = {};
-
-		for (const cookie of set_cookies) {
-			if (!domain_matches(url.hostname, cookie.options.domain)) continue;
-			if (!path_matches(url.pathname, cookie.options.path)) continue;
-
-			new_cookies[cookie.name] = cookie.value;
-		}
-
-		// cookies from explicit `cookie` header take precedence over cookies previously set
-		// during this load with `set-cookie`, which take precedence over the cookies
-		// sent by the user agent
-		const combined_cookies = {
-			...initial_cookies,
-			...new_cookies,
-			...cookie.parse(header ?? '')
-		};
-
-		return Object.entries(combined_cookies)
-			.map(([name, value]) => `${name}=${value}`)
-			.join('; ');
-	}
 
 	/** @type {typeof fetch} */
 	const fetcher = async (info, init) => {
@@ -187,13 +160,16 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 
 				const set_cookie = response.headers.get('set-cookie');
 				if (set_cookie) {
-					set_cookies.push(
-						...set_cookie_parser.splitCookiesString(set_cookie).map((str) => {
-							const { name, value, ...options } = set_cookie_parser.parseString(str);
-							// options.sameSite is string, something more specific is required - type cast is safe
-							return /** @type{import('./page/types').Cookie} */ ({ name, value, options });
-						})
-					);
+					for (const str of set_cookie_parser.splitCookiesString(set_cookie)) {
+						const { name, value, ...options } = set_cookie_parser.parseString(str);
+
+						// options.sameSite is string, something more specific is required - type cast is safe
+						event.cookies.set(
+							name,
+							value,
+							/** @type {import('cookie').CookieSerializeOptions} */ (options)
+						);
+					}
 				}
 
 				return response;
@@ -284,7 +260,7 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 		return proxy;
 	};
 
-	return { fetcher, fetched, cookies: set_cookies };
+	return { fetcher, fetched };
 }
 
 /**

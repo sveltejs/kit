@@ -809,7 +809,12 @@ test.describe('Load', () => {
 		}
 	});
 
-	test('makes credentialed fetches to endpoints by default', async ({ page, clicknav }) => {
+	test('makes credentialed fetches to endpoints by default', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) return;
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-credentialed"]');
 		expect(await page.textContent('h1')).toBe('Hello SvelteKit!');

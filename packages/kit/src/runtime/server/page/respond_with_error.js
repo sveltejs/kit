@@ -24,15 +24,25 @@ import { HttpError, Redirect } from '../../control.js';
  *   status: number;
  *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
+ *   get_cookie_header: (url: URL, header: string | null) => string; // TODO tidy this up
  * }} opts
  */
-export async function respond_with_error({ event, options, state, status, error, resolve_opts }) {
-	const { fetcher, fetched, cookies } = create_fetch({
+export async function respond_with_error({
+	event,
+	options,
+	state,
+	status,
+	error,
+	resolve_opts,
+	get_cookie_header
+}) {
+	const { fetcher, fetched } = create_fetch({
 		event,
 		options,
 		state,
 		route: GENERIC_ERROR,
-		resolve_opts
+		resolve_opts,
+		get_cookie_header
 	});
 
 	try {
@@ -84,7 +94,6 @@ export async function respond_with_error({ event, options, state, status, error,
 			error: handle_error_and_jsonify(event, options, error),
 			branch,
 			fetched,
-			cookies,
 			event,
 			resolve_opts
 		});
@@ -92,7 +101,7 @@ export async function respond_with_error({ event, options, state, status, error,
 		// Edge case: If route is a 404 and the user redirects to somewhere from the root layout,
 		// we end up here.
 		if (error instanceof Redirect) {
-			return redirect_response(error.status, error.location, cookies);
+			return redirect_response(error.status, error.location);
 		}
 
 		return static_error_page(

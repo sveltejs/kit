@@ -2,7 +2,6 @@ import { devalue } from 'devalue';
 import { DATA_SUFFIX } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { HttpError } from '../control.js';
-import { add_cookies_to_headers } from './cookie.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -167,13 +166,11 @@ export function handle_error_and_jsonify(event, options, error) {
 /**
  * @param {number} status
  * @param {string} location
- * @param {import('./page/types.js').Cookie[]} [cookies]
  */
-export function redirect_response(status, location, cookies = []) {
+export function redirect_response(status, location) {
 	const response = new Response(undefined, {
 		status,
 		headers: { location }
 	});
-	add_cookies_to_headers(response.headers, cookies);
 	return response;
 }

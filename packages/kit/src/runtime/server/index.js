@@ -96,7 +96,7 @@ export async function respond(request, options, state) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
-	const { cookies, new_cookies } = get_cookies(request, url);
+	const { cookies, new_cookies, get_cookie_header } = get_cookies(request, url);
 
 	if (state.prerendering) disable_search(url);
 
@@ -215,7 +215,6 @@ export async function respond(request, options, state) {
 					error: null,
 					branch: [],
 					fetched: [],
-					cookies: [],
 					resolve_opts
 				});
 			}
@@ -229,7 +228,15 @@ export async function respond(request, options, state) {
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page) {
-					response = await render_page(event, route, route.page, options, state, resolve_opts);
+					response = await render_page(
+						event,
+						route,
+						route.page,
+						options,
+						state,
+						resolve_opts,
+						get_cookie_header
+					);
 				} else {
 					// a route will always have a page or an endpoint, but TypeScript
 					// doesn't know that
@@ -254,7 +261,8 @@ export async function respond(request, options, state) {
 					state,
 					status: 404,
 					error: new Error(`Not found: ${event.url.pathname}`),
-					resolve_opts
+					resolve_opts,
+					get_cookie_header
 				});
 			}
 
@@ -295,7 +303,7 @@ export async function respond(request, options, state) {
 							response.headers.set(key, /** @type {string} */ (value));
 						}
 					}
-					add_cookies_to_headers(response.headers, Array.from(new_cookies.values()));
+					add_cookies_to_headers(response.headers, Array.from(Object.values(new_cookies)));
 
 					if (state.prerendering && event.routeId !== null) {
 						response.headers.set('x-sveltekit-routeid', encodeURI(event.routeId));

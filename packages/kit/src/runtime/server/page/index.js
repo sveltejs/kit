@@ -27,9 +27,18 @@ import { respond_with_error } from './respond_with_error.js';
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRState} state
  * @param {import('types').RequiredResolveOptions} resolve_opts
+ * @param {(url: URL, header: string | null) => string} get_cookie_header // TODO tidy this up
  * @returns {Promise<Response>}
  */
-export async function render_page(event, route, page, options, state, resolve_opts) {
+export async function render_page(
+	event,
+	route,
+	page,
+	options,
+	state,
+	resolve_opts,
+	get_cookie_header
+) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return new Response(`Not found: ${event.url.pathname}`, {
@@ -93,20 +102,20 @@ export async function render_page(event, route, page, options, state, resolve_op
 			});
 		}
 
-		const { fetcher, fetched, cookies } = create_fetch({
+		const { fetcher, fetched } = create_fetch({
 			event,
 			options,
 			state,
 			route,
 			prerender_default: should_prerender,
-			resolve_opts
+			resolve_opts,
+			get_cookie_header
 		});
 
 		if (get_option(nodes, 'ssr') === false) {
 			return await render_response({
 				branch: [],
 				fetched,
-				cookies,
 				page_config: {
 					ssr: false,
 					csr: get_option(nodes, 'csr') ?? true
@@ -217,7 +226,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 							});
 						}
 
-						return redirect_response(err.status, err.location, cookies);
+						return redirect_response(err.status, err.location);
 					}
 
 					const status = err instanceof HttpError ? err.status : 500;
@@ -244,8 +253,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 									data: null,
 									server_data: null
 								}),
-								fetched,
-								cookies
+								fetched
 							});
 						}
 					}
@@ -286,8 +294,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			error: null,
 			branch: compact(branch),
 			action_result,
-			fetched,
-			cookies
+			fetched
 		});
 	} catch (error) {
 		// if we end up here, it means the data loaded successfull
@@ -298,7 +305,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 			state,
 			status: 500,
 			error,
-			resolve_opts
+			resolve_opts,
+			get_cookie_header
 		});
 	}
 }
