@@ -7,7 +7,7 @@ import {
 	static_error_page,
 	redirect_response
 } from '../utils.js';
-import { create_fetch } from './fetch.js';
+import { create_fetch } from '../fetch.js';
 import { HttpError, Redirect } from '../../control.js';
 
 /**

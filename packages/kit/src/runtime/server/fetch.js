@@ -1,7 +1,7 @@
 import * as cookie from 'cookie';
 import * as set_cookie_parser from 'set-cookie-parser';
-import { respond } from '../index.js';
-import { domain_matches, path_matches } from '../cookie.js';
+import { respond } from './index.js';
+import { domain_matches, path_matches } from './cookie.js';
 
 /**
  * @param {{
@@ -14,12 +14,12 @@ import { domain_matches, path_matches } from '../cookie.js';
  * }} opts
  */
 export function create_fetch({ event, options, state, route, prerender_default, resolve_opts }) {
-	/** @type {import('./types').Fetched[]} */
+	/** @type {import('./page/types').Fetched[]} */
 	const fetched = [];
 
 	const initial_cookies = cookie.parse(event.request.headers.get('cookie') || '');
 
-	/** @type {import('./types').Cookie[]} */
+	/** @type {import('./page/types').Cookie[]} */
 	const set_cookies = [];
 
 	/**
@@ -191,7 +191,7 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 						...set_cookie_parser.splitCookiesString(set_cookie).map((str) => {
 							const { name, value, ...options } = set_cookie_parser.parseString(str);
 							// options.sameSite is string, something more specific is required - type cast is safe
-							return /** @type{import('./types').Cookie} */ ({ name, value, options });
+							return /** @type{import('./page/types').Cookie} */ ({ name, value, options });
 						})
 					);
 				}

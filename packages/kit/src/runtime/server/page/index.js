@@ -15,7 +15,7 @@ import {
 	is_action_json_request,
 	is_action_request
 } from './actions.js';
-import { create_fetch } from './fetch.js';
+import { create_fetch } from '../fetch.js';
 import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
