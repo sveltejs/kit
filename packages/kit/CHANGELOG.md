@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.506
+
+### Patch Changes
+
+- Default to insecure cookies when serving on http://localhost ([#7090](https://github.com/sveltejs/kit/pull/7090))
+
+* [docs] explain ramifications of base path ([#7095](https://github.com/sveltejs/kit/pull/7095))
+
+- [fix] decode routeIds in headers for prerendering ([#7097](https://github.com/sveltejs/kit/pull/7097))
+
+* [feat] provide `update` to `use:enhance` callback ([#7083](https://github.com/sveltejs/kit/pull/7083))
+
 ## 1.0.0-next.505
 
 ### Patch Changes
