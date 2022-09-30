@@ -110,6 +110,7 @@ declare module '$app/forms' {
 				form: HTMLFormElement;
 				action: URL;
 				result: ActionResult<Success, Invalid>;
+				update: () => Promise<void>;
 		  }) => void);
 
 	/**
@@ -135,6 +136,8 @@ declare module '$app/forms' {
 		 * - invalidates all data in case of successful submission with no redirect response
 		 * - redirects in case of a redirect response
 		 * - redirects to the nearest error page in case of an unexpected error
+		 *
+		 * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
 		 */
 		submit?: SubmitFunction<Success, Invalid>
 	): { destroy: () => void };
