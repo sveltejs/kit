@@ -257,7 +257,7 @@ declare module '$app/paths' {
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths).
 	 *
-	 * Example usage: `<a href={base}/your-page>Link</a>`
+	 * Example usage: `<a href="{base}/your-page">Link</a>`
 	 */
 	export const base: `/${string}`;
 	/**
