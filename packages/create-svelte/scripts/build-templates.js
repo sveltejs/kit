@@ -206,8 +206,8 @@ async function generate_shared() {
 		}
 
 		if (name.endsWith('.ts') && !include.includes('typescript')) {
-			// file includes types in TypeScript and JSDoc —
-			// create .js file, with and without JSDoc
+			// contents includes types in TypeScript and JSDoc
+			// we will transform it to a version appropriate for each type checking option
 			const js = convert_typescript(contents);
 			const js_name = name.replace(/\.ts$/, '.js');
 
