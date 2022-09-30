@@ -249,26 +249,25 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
-- update the `form` property and `$page.form` and invalidate all data on a successful response
-- update the `form` property and `$page.form` on a invalid response
-- update `$page.status` on a successful or invalid response
+- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. So for example if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on.
+- invalidate all data using `invalidateAll` on a successful response
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
 
-> By default the `form` property and `$page.form` is only updated for actions that are in a `+page.server.js` alongside the `+page.svelte` because in the native form submission case you would be redirected to the page the action is on
-
-To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`.
+To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
 
 ```svelte
 <form
 	method="POST"
-	use:enhance={({ form, data, cancel }) => {
+	use:enhance={({ form, data, action, cancel }) => {
 		// `form` is the `<form>` element
 		// `data` is its `FormData` object
+		// `action` is the URL to which the form is posted
 		// `cancel()` will prevent the submission
 
-		return async ({ result }) => {
+		return async ({ result, update }) => {
 			// `result` is an `ActionResult` object
+			// `update` is a function which triggers the logic that would be triggered if this callback wasn't set
 		};
 	}}
 >
@@ -278,7 +277,7 @@ You can use these functions to show and hide loading UI, and so on.
 
 #### applyAction
 
-If you provide your own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. We can do this with `applyAction`:
+If you provide your own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. Most of the time, calling `update` passed to the callback is enough. If you need more customization you can do so with `applyAction`:
 
 ```diff
 <script>
@@ -290,9 +289,10 @@ If you provide your own callbacks, you may need to reproduce part of the default
 
 <form
 	method="POST"
-	use:enhance={({ form, data, cancel }) => {
+	use:enhance={({ form, data, action, cancel }) => {
 		// `form` is the `<form>` element
 		// `data` is its `FormData` object
+		// `action` is the URL to which the form is posted
 		// `cancel()` will prevent the submission
 
 		return async ({ result }) => {
@@ -307,7 +307,7 @@ If you provide your own callbacks, you may need to reproduce part of the default
 
 The behaviour of `applyAction(result)` depends on `result.type`:
 
-- `success`, `invalid` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data`
+- `success`, `invalid` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data` (regardless of where you are submitting from, in contrast to `update` from `enhance`)
 - `redirect` — calls `goto(result.location)`
 - `error` — renders the nearest `+error` boundary with `result.error`
 

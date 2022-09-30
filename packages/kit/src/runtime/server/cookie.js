@@ -1,12 +1,5 @@
 import { parse, serialize } from 'cookie';
 
-/** @type {import('cookie').CookieSerializeOptions} */
-const DEFAULT_SERIALIZE_OPTIONS = {
-	httpOnly: true,
-	secure: true,
-	sameSite: 'lax'
-};
-
 /**
  * @param {Request} request
  * @param {URL} url
@@ -14,6 +7,13 @@ const DEFAULT_SERIALIZE_OPTIONS = {
 export function get_cookies(request, url) {
 	/** @type {Map<string, import('./page/types').Cookie>} */
 	const new_cookies = new Map();
+
+	/** @type {import('cookie').CookieSerializeOptions} */
+	const defaults = {
+		httpOnly: true,
+		sameSite: 'lax',
+		secure: url.hostname === 'localhost' && url.protocol === 'http:' ? false : true
+	};
 
 	/** @type {import('types').Cookies} */
 	const cookies = {
@@ -51,7 +51,7 @@ export function get_cookies(request, url) {
 				name,
 				value,
 				options: {
-					...DEFAULT_SERIALIZE_OPTIONS,
+					...defaults,
 					...opts
 				}
 			});
@@ -66,7 +66,7 @@ export function get_cookies(request, url) {
 				name,
 				value: '',
 				options: {
-					...DEFAULT_SERIALIZE_OPTIONS,
+					...defaults,
 					...opts,
 					maxAge: 0
 				}
@@ -80,7 +80,7 @@ export function get_cookies(request, url) {
 		 */
 		serialize(name, value, opts) {
 			return serialize(name, value, {
-				...DEFAULT_SERIALIZE_OPTIONS,
+				...defaults,
 				...opts
 			});
 		}

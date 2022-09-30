@@ -1,5 +1,5 @@
-/** The list of possible answers */
-export const answers = [
+/** The list of possible words */
+export const words = [
 	'aback',
 	'abase',
 	'abate',
@@ -2317,9 +2317,9 @@ export const answers = [
 	'zonal'
 ];
 
-/** The list of valid guesses, of which the list of possible answers is a subset */
+/** The list of valid guesses, of which the list of possible words is a subset */
 export const allowed = new Set([
-	...answers,
+	...words,
 	'aahed',
 	'aalii',
 	'aargh',

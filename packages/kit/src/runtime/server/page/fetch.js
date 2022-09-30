@@ -165,13 +165,13 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 					}
 				}
 
-				if (request_body && typeof request_body !== 'string') {
+				if (request_body && typeof request_body !== 'string' && !ArrayBuffer.isView(request_body)) {
 					// TODO is this still necessary? we just bail out below
 					// per https://developer.mozilla.org/en-US/docs/Web/API/Request/Request, this can be a
 					// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object.
 					// non-string bodies are irksome to deal with, but luckily aren't particularly useful
 					// in this context anyway, so we take the easy route and ban them
-					throw new Error('Request body must be a string');
+					throw new Error('Request body must be a string or TypedArray');
 				}
 
 				response = await respond(request, options, {
@@ -220,7 +220,7 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 								? request.url.slice(event.url.origin.length)
 								: request.url,
 							method: request.method,
-							request_body: /** @type {string | undefined} */ (request_body),
+							request_body: /** @type {string | ArrayBufferView | undefined} */ (request_body),
 							response_body: body,
 							response: response
 						});

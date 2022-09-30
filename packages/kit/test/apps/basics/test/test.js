@@ -844,9 +844,25 @@ test.describe('Load', () => {
 		}
 	});
 
-	test('exposes rawBody to endpoints', async ({ page, clicknav }) => {
-		await page.goto('/load');
-		await clicknav('[href="/load/raw-body"]');
+	test('exposes rawBody as a DataView to endpoints', async ({ page, clicknav }) => {
+		await page.goto('/load/raw-body');
+		await clicknav('[href="/load/raw-body/dataview"]');
+
+		expect(await page.innerHTML('.parsed')).toBe('{"oddly":{"formatted":"json"}}');
+		expect(await page.innerHTML('.raw')).toBe('{ "oddly" : { "formatted" : "json" } }');
+	});
+
+	test('exposes rawBody as a string to endpoints', async ({ page, clicknav }) => {
+		await page.goto('/load/raw-body');
+		await clicknav('[href="/load/raw-body/string"]');
+
+		expect(await page.innerHTML('.parsed')).toBe('{"oddly":{"formatted":"json"}}');
+		expect(await page.innerHTML('.raw')).toBe('{ "oddly" : { "formatted" : "json" } }');
+	});
+
+	test('exposes rawBody as a Uint8Array to endpoints', async ({ page, clicknav }) => {
+		await page.goto('/load/raw-body');
+		await clicknav('[href="/load/raw-body/uint8array"]');
 
 		expect(await page.innerHTML('.parsed')).toBe('{"oddly":{"formatted":"json"}}');
 		expect(await page.innerHTML('.raw')).toBe('{ "oddly" : { "formatted" : "json" } }');
