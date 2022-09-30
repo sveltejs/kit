@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
  */
 
 /** @type {import('.').default} */
-export default function () {
+export default function ({ config = 'wrangler.toml' } = {}) {
 	// TODO remove for 1.0
 	if (arguments.length > 0) {
 		throw new Error(
@@ -27,7 +27,7 @@ export default function () {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
 		async adapt(builder) {
-			const { main, site } = validate_config(builder);
+			const { main, site } = validate_config(builder, config);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
@@ -81,31 +81,30 @@ export default function () {
 
 /**
  * @param {import('@sveltejs/kit').Builder} builder
+ * @param {string} configFile
  * @returns {WranglerConfig}
  */
-function validate_config(builder) {
-	if (existsSync('wrangler.toml')) {
+function validate_config(builder, configFile) {
+	if (existsSync(configFile)) {
 		/** @type {WranglerConfig} */
 		let wrangler_config;
 
 		try {
-			wrangler_config = /** @type {WranglerConfig} */ (
-				toml.parse(readFileSync('wrangler.toml', 'utf-8'))
-			);
+			wrangler_config = /** @type {WranglerConfig} */ (toml.parse(readFileSync(configFile, 'utf-8')));
 		} catch (err) {
-			err.message = `Error parsing wrangler.toml: ${err.message}`;
+			err.message = `Error parsing ${configFile}: ${err.message}`;
 			throw err;
 		}
 
 		if (!wrangler_config.site?.bucket) {
 			throw new Error(
-				'You must specify site.bucket in wrangler.toml. Consult https://developers.cloudflare.com/workers/platform/sites/configuration'
+				`You must specify site.bucket in ${configFile}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
 			);
 		}
 
 		if (!wrangler_config.main) {
 			throw new Error(
-				'You must specify main option in wrangler.toml. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers'
+				`You must specify main option in ${configFile}. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers`
 			);
 		}
 
@@ -134,5 +133,5 @@ function validate_config(builder) {
 			.trim()
 	);
 
-	throw new Error('Missing a wrangler.toml file');
+	throw new Error(`Missing a ${configFile} file`);
 }
