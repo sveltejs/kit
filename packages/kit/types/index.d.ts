@@ -377,7 +377,7 @@ export interface RequestEvent<
 	 *
 	 * Setting the same header multiple times is an error — you can only set a given header once.
 	 *
-	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](/docs/types#sveltejs-kit-cookies) API instead.
+	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#sveltejs-kit-cookies) API instead.
 	 */
 	setHeaders: (headers: Record<string, string>) => void;
 	/**
