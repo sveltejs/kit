@@ -1,6 +1,6 @@
 {
 	"devDependencies": {
-		"vitest": "^0.19.1"
+		"vitest": "^0.23.4"
 	},
 	"scripts": {
 		"test:unit": "vitest"
