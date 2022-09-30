@@ -260,7 +260,7 @@ export async function render_response({
 		}
 
 		head += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
-		body += `\n\t\t<div data-sveltekit-hydrate="${target}"></div>`
+		body += `\n<div data-sveltekit-hydrate="${target}"></div>`
 	}
 
 	if (page_config.ssr && page_config.csr) {
