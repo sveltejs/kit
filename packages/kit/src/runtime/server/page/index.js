@@ -26,24 +26,17 @@ import { respond_with_error } from './respond_with_error.js';
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRState} state
  * @param {import('types').RequiredResolveOptions} resolve_opts
- * @param {(url: URL, header: string | null) => string} get_cookie_header // TODO tidy this up
  * @returns {Promise<Response>}
  */
-export async function render_page(
-	event,
-	route,
-	page,
-	options,
-	state,
-	resolve_opts,
-	get_cookie_header
-) {
+export async function render_page(event, route, page, options, state, resolve_opts) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return new Response(`Not found: ${event.url.pathname}`, {
 			status: 404
 		});
 	}
+
+	state.initiator = route;
 
 	if (is_action_json_request(event)) {
 		const node = await options.manifest._.nodes[page.leaf]();

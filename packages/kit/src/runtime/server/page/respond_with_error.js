@@ -4,7 +4,8 @@ import {
 	handle_error_and_jsonify,
 	get_option,
 	static_error_page,
-	redirect_response
+	redirect_response,
+	GENERIC_ERROR
 } from '../utils.js';
 import { HttpError, Redirect } from '../../control.js';
 
@@ -34,6 +35,8 @@ export async function respond_with_error({ event, options, state, status, error,
 		const ssr = get_option([default_layout], 'ssr') ?? true;
 
 		if (ssr) {
+			state.initiator = GENERIC_ERROR;
+
 			const server_data_promise = load_server_data({
 				event,
 				state,

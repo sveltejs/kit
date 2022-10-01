@@ -134,10 +134,7 @@ export function create_fetch({ event, options, state, route, get_cookie_header }
 					throw new Error('Request body must be a string or TypedArray');
 				}
 
-				response = await respond(request, options, {
-					...state,
-					initiator: route ?? undefined
-				});
+				response = await respond(request, options, state);
 
 				if (state.prerendering) {
 					dependency = { response, body: null };
