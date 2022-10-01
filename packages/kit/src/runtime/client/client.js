@@ -1513,6 +1513,7 @@ async function load_data(url, invalid) {
 					}
 
 					const script = document.createElement('script');
+					script.type = 'text/javascript';
 					script.src = url;
 
 					const remove = () => {
