@@ -10,7 +10,7 @@ export default [
 			file: 'files/index.js',
 			format: 'esm'
 		},
-		plugins: [nodeResolve(), commonjs(), json()],
+		plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()],
 		external: ['ENV', 'HANDLER', ...builtinModules]
 	},
 	{

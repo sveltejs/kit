@@ -4,7 +4,13 @@ import { mkdirp, posixify, resolve_entry } from '../../../utils/filesystem.js';
 import { get_vite_config, merge_vite_configs } from '../utils.js';
 import { load_error_page, load_template } from '../../../core/config/index.js';
 import { runtime_directory } from '../../../core/utils.js';
-import { create_build, find_deps, get_default_build_config, is_http_method } from './utils.js';
+import {
+	create_build,
+	find_deps,
+	get_default_build_config,
+	is_http_method,
+	resolve_symlinks
+} from './utils.js';
 import { s } from '../../../utils/misc.js';
 
 /**
@@ -68,7 +74,7 @@ export class Server {
 					get request() {
 						throw new Error('request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details');
 					}
-				}) ?? { message: 'Internal Error' };
+				}) ?? { message: event.routeId != null ? 'Internal Error' : 'Not Found' };
 			},
 			hooks: null,
 			manifest,
@@ -76,7 +82,7 @@ export class Server {
 			public_env: {},
 			read,
 			root,
-			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
+			service_worker: ${has_service_worker},
 			app_template,
 			app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			error_template,
@@ -285,7 +291,7 @@ export async function build_server(options, client) {
 
 			exports.push(
 				`export const component = async () => (await import('../${
-					vite_manifest[node.component].file
+					resolve_symlinks(vite_manifest, node.component).chunk.file
 				}')).default;`,
 				`export const file = '${entry.file}';` // TODO what is this?
 			);

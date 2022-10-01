@@ -1,5 +1,6 @@
 import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
+import { resolve_symlinks } from '../../exports/vite/build/utils.js';
 
 /**
  * Generates the data used to write the server-side manifest.js file. This data is used in the Vite
@@ -65,7 +66,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 					names: ${s(route.names)},
 					types: ${s(route.types)},
 					page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${route.page.leaf} }` : 'null'},
-					endpoint: ${route.endpoint ? loader(`${relative_path}/${build_data.server.vite_manifest[route.endpoint.file].file}`) : 'null'}
+					endpoint: ${route.endpoint ? loader(`${relative_path}/${resolve_symlinks(build_data.server.vite_manifest, route.endpoint.file).chunk.file}`) : 'null'}
 				}`;
 				}).filter(Boolean).join(',\n\t\t\t\t')}
 			],

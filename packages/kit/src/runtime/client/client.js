@@ -1,5 +1,4 @@
 import { onMount, tick } from 'svelte';
-import { normalize_error } from '../../utils/error.js';
 import { make_trackable, decode_params, normalize_path } from '../../utils/url.js';
 import { find_anchor, get_base_uri, scroll_state } from './utils.js';
 import { lock_fetch, unlock_fetch, initial_fetch, subsequent_fetch } from './fetcher.js';
@@ -10,6 +9,7 @@ import { nodes, server_loads, dictionary, matchers, hooks } from '__GENERATED__/
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
+import { unwrap_promises } from '../../utils/promises.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -43,6 +43,7 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
+// TODO remove for 1.0
 /** @type {Record<string, true>} */
 let warned_about_attributes = {};
 
@@ -72,11 +73,8 @@ export function create_client({ target, base, trailing_slash }) {
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
-	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
-	const load_cache = {
-		id: null,
-		promise: null
-	};
+	/** @type {{id: string, promise: Promise<import('./types').NavigationResult | undefined>} | null} */
+	let load_cache = null;
 
 	const callbacks = {
 		/** @type {Array<(navigation: import('types').Navigation & { cancel: () => void }) => void>} */
@@ -90,18 +88,15 @@ export function create_client({ target, base, trailing_slash }) {
 	let current = {
 		branch: [],
 		error: null,
-		session_id: 0,
 		// @ts-ignore - we need the initial value to be null
 		url: null
 	};
 
+	/** this being true means we SSR'd */
+	let hydrated = false;
 	let started = false;
 	let autoscroll = true;
 	let updating = false;
-	let session_id = 1;
-
-	/** @type {Promise<void> | null} */
-	let invalidating = null;
 	let force_invalidation = false;
 
 	/** @type {import('svelte').SvelteComponent} */
@@ -139,31 +134,38 @@ export function create_client({ target, base, trailing_slash }) {
 	/** @type {{}} */
 	let token;
 
-	function invalidate() {
-		if (!invalidating) {
-			const url = new URL(location.href);
+	/** @type {Promise<void> | null} */
+	let pending_invalidate;
 
-			invalidating = Promise.resolve().then(async () => {
-				const intent = get_navigation_intent(url, true);
-				await update(intent, url, []);
+	async function invalidate() {
+		// Accept all invalidations as they come, don't swallow any while another invalidation
+		// is running because subsequent invalidations may make earlier ones outdated,
+		// but batch multiple synchronous invalidations.
+		pending_invalidate = pending_invalidate || Promise.resolve();
+		await pending_invalidate;
+		pending_invalidate = null;
 
-				invalidating = null;
-				force_invalidation = false;
-			});
-		}
-
-		return invalidating;
+		const url = new URL(location.href);
+		const intent = get_navigation_intent(url, true);
+		// Clear prefetch, it might be affected by the invalidation.
+		// Also solves an edge case where a prefetch is triggered, the navigation for it
+		// was then triggered and is still running while the invalidation kicks in,
+		// at which point the invalidation should take over and "win".
+		load_cache = null;
+		await update(intent, url, []);
 	}
 
 	/**
 	 * @param {string | URL} url
 	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
 	 * @param {string[]} redirect_chain
+	 * @param {{}} [nav_token]
 	 */
 	async function goto(
 		url,
 		{ noscroll = false, replaceState = false, keepfocus = false, state = {} },
-		redirect_chain
+		redirect_chain,
+		nav_token
 	) {
 		if (typeof url === 'string') {
 			url = new URL(url, get_base_uri(document));
@@ -178,6 +180,7 @@ export function create_client({ target, base, trailing_slash }) {
 				state,
 				replaceState
 			},
+			nav_token,
 			accepted: () => {},
 			blocked: () => {},
 			type: 'goto'
@@ -192,8 +195,7 @@ export function create_client({ target, base, trailing_slash }) {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
 
-		load_cache.promise = load_route(intent);
-		load_cache.id = intent.id;
+		load_cache = { id: intent.id, promise: load_route(intent) };
 
 		return load_cache.promise;
 	}
@@ -204,33 +206,20 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
 	 * @param {() => void} [callback]
 	 */
-	async function update(intent, url, redirect_chain, opts, callback) {
-		const current_token = (token = {});
+	async function update(intent, url, redirect_chain, opts, nav_token = {}, callback) {
+		token = nav_token;
 		let navigation_result = intent && (await load_route(intent));
 
-		if (
-			!navigation_result &&
-			url.origin === location.origin &&
-			url.pathname === location.pathname
-		) {
-			// this could happen in SPA fallback mode if the user navigated to
-			// `/non-existent-page`. if we fall back to reloading the page, it
-			// will create an infinite loop. so whereas we normally handle
-			// unknown routes by going to the server, in this special case
-			// we render a client-side error page instead
-			navigation_result = await load_root_error_page({
-				status: 404,
-				error: new Error(`Not found: ${url.pathname}`),
-				url,
-				routeId: null
-			});
-		}
-
 		if (!navigation_result) {
-			await native_navigation(url);
-			return false; // unnecessary, but TypeScript prefers it this way
+			navigation_result = await server_fallback(
+				url,
+				null,
+				handle_error(new Error(`Not found: ${url.pathname}`), { url, params: {}, routeId: null }),
+				404
+			);
 		}
 
 		// if this is an internal navigation intent, use the normalized
@@ -238,20 +227,23 @@ export function create_client({ target, base, trailing_slash }) {
 		url = intent?.url || url;
 
 		// abort if user navigated during update
-		if (token !== current_token) return false;
-
-		invalidated.length = 0;
+		if (token !== nav_token) return false;
 
 		if (navigation_result.type === 'redirect') {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
 				navigation_result = await load_root_error_page({
 					status: 500,
-					error: new Error('Redirect loop'),
+					error: handle_error(new Error('Redirect loop'), { url, params: {}, routeId: null }),
 					url,
 					routeId: null
 				});
 			} else {
-				goto(new URL(navigation_result.location, url).href, {}, [...redirect_chain, url.pathname]);
+				goto(
+					new URL(navigation_result.location, url).href,
+					{},
+					[...redirect_chain, url.pathname],
+					nav_token
+				);
 				return false;
 			}
 		} else if (navigation_result.props?.page?.status >= 400) {
@@ -261,6 +253,11 @@ export function create_client({ target, base, trailing_slash }) {
 			}
 		}
 
+		// reset invalidation only after a finished navigation. If there are redirects or
+		// additional invalidations, they should get the same invalidation treatment
+		invalidated.length = 0;
+		force_invalidation = false;
+
 		updating = true;
 
 		if (opts && opts.details) {
@@ -269,6 +266,9 @@ export function create_client({ target, base, trailing_slash }) {
 			details.state[INDEX_KEY] = current_history_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
+
+		// reset prefetch synchronously after the history state has been set to avoid race conditions
+		load_cache = null;
 
 		if (started) {
 			current = navigation_result.state;
@@ -333,8 +333,6 @@ export function create_client({ target, base, trailing_slash }) {
 			await tick();
 		}
 
-		load_cache.promise = null;
-		load_cache.id = null;
 		autoscroll = true;
 
 		if (navigation_result.props.page) {
@@ -385,7 +383,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   params: Record<string, string>;
 	 *   branch: Array<import('./types').BranchNode | undefined>;
 	 *   status: number;
-	 *   error: App.PageError | null;
+	 *   error: App.Error | null;
 	 *   route: import('types').CSRRoute | null;
 	 *   form?: Record<string, any> | null;
 	 * }} opts
@@ -409,8 +407,7 @@ export function create_client({ target, base, trailing_slash }) {
 				params,
 				branch,
 				error,
-				route,
-				session_id
+				route
 			},
 			props: {
 				components: filtered.map((branch_node) => branch_node.node.component)
@@ -441,7 +438,11 @@ export function create_client({ target, base, trailing_slash }) {
 		}
 
 		const page_changed =
-			!current.url || url.href !== current.url.href || current.error !== error || data_changed;
+			!current.url ||
+			url.href !== current.url.href ||
+			current.error !== error ||
+			form !== undefined ||
+			data_changed;
 
 		if (page_changed) {
 			result.props.page = {
@@ -450,6 +451,7 @@ export function create_client({ target, base, trailing_slash }) {
 				routeId: route && route.id,
 				status,
 				url,
+				form,
 				// The whole page store is updated, but this way the object reference stays the same
 				data: data_changed ? data : page.data
 			};
@@ -512,22 +514,15 @@ export function create_client({ target, base, trailing_slash }) {
 				}
 			}
 
-			/** @type {Record<string, string>} */
-			const uses_params = {};
-			for (const key in params) {
-				Object.defineProperty(uses_params, key, {
-					get() {
-						uses.params.add(key);
-						return params[key];
-					},
-					enumerable: true
-				});
-			}
-
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
 				routeId,
-				params: uses_params,
+				params: new Proxy(params, {
+					get: (target, key) => {
+						uses.params.add(/** @type {string} */ (key));
+						return target[/** @type {string} */ (key)];
+					}
+				}),
 				data: server_data_node?.data ?? null,
 				url: make_trackable(url, () => {
 					uses.url = true;
@@ -535,9 +530,7 @@ export function create_client({ target, base, trailing_slash }) {
 				async fetch(resource, init) {
 					let requested;
 
-					if (typeof resource === 'string') {
-						requested = resource;
-					} else {
+					if (resource instanceof Request) {
 						requested = resource.url;
 
 						// we're not allowed to modify the received `Request` object, so in order
@@ -562,6 +555,8 @@ export function create_client({ target, base, trailing_slash }) {
 							signal: resource.signal,
 							...init
 						};
+					} else {
+						requested = resource;
 					}
 
 					// we must fixup relative urls so they are resolved from the target page
@@ -619,6 +614,7 @@ export function create_client({ target, base, trailing_slash }) {
 			} else {
 				data = (await node.shared.load.call(null, load_input)) ?? null;
 			}
+			data = data ? await unwrap_promises(data) : null;
 		}
 
 		return {
@@ -631,20 +627,21 @@ export function create_client({ target, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('types').Uses | undefined} uses
+	 * @param {boolean} url_changed
 	 * @param {boolean} parent_changed
-	 * @param {{ url: boolean, params: string[] }} changed
+	 * @param {import('types').Uses | undefined} uses
+	 * @param {Record<string, string>} params
 	 */
-	function has_changed(changed, parent_changed, uses) {
+	function has_changed(url_changed, parent_changed, uses, params) {
 		if (force_invalidation) return true;
 
 		if (!uses) return false;
 
 		if (uses.parent && parent_changed) return true;
-		if (changed.url && uses.url) return true;
+		if (uses.url && url_changed) return true;
 
-		for (const param of changed.params) {
-			if (uses.params.has(param)) return true;
+		for (const param of uses.params) {
+			if (params[param] !== current.params[param]) return true;
 		}
 
 		for (const href of uses.dependencies) {
@@ -682,16 +679,11 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
 	async function load_route({ id, invalidating, url, params, route }) {
-		if (load_cache.id === id && load_cache.promise) {
+		if (load_cache?.id === id) {
 			return load_cache.promise;
 		}
 
 		const { errors, layouts, leaf } = route;
-
-		const changed = current.url && {
-			url: id !== current.url.pathname + current.url.search,
-			params: Object.keys(params).filter((key) => current.params[key] !== params[key])
-		};
 
 		const loaders = [...layouts, leaf];
 
@@ -704,12 +696,15 @@ export function create_client({ target, base, trailing_slash }) {
 		/** @type {import('types').ServerData | null} */
 		let server_data = null;
 
+		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
+
 		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];
+
 			const invalid =
 				!!loader?.[0] &&
 				(previous?.loader !== loader[1] ||
-					has_changed(changed, acc.some(Boolean), previous.server?.uses));
+					has_changed(url_changed, acc.some(Boolean), previous.server?.uses, params));
 
 			acc.push(invalid);
 			return acc;
@@ -721,7 +716,7 @@ export function create_client({ target, base, trailing_slash }) {
 			} catch (error) {
 				return load_root_error_page({
 					status: 500,
-					error: /** @type {Error} */ (error),
+					error: handle_error(error, { url, params, routeId: route.id }),
 					url,
 					routeId: route.id
 				});
@@ -742,14 +737,13 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @type {import('./types').BranchNode | undefined} */
 			const previous = current.branch[i];
 
-			const server_data_node = server_data_nodes?.[i] ?? null;
+			const server_data_node = server_data_nodes?.[i];
 
-			const can_reuse_server_data = !server_data_node || server_data_node.type === 'skip';
 			// re-use data from previous load if it's still valid
 			const valid =
-				can_reuse_server_data &&
+				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
-				!has_changed(changed, parent_changed, previous.shared?.uses);
+				!has_changed(url_changed, parent_changed, previous.shared?.uses, params);
 			if (valid) return previous;
 
 			parent_changed = true;
@@ -771,7 +765,12 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 					return data;
 				},
-				server_data_node: create_data_node(server_data_node, previous?.server)
+				server_data_node: create_data_node(
+					// server_data_node is undefined if it wasn't reloaded from the server;
+					// and if current loader uses server data, we want to reuse previous data.
+					server_data_node === undefined && loader[0] ? { type: 'skip' } : server_data_node ?? null,
+					previous?.server
+				)
 			});
 		});
 
@@ -794,7 +793,7 @@ export function create_client({ target, base, trailing_slash }) {
 					}
 
 					let status = 500;
-					/** @type {App.PageError} */
+					/** @type {App.Error} */
 					let error;
 
 					if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
@@ -809,40 +808,21 @@ export function create_client({ target, base, trailing_slash }) {
 						error = handle_error(err, { params, url, routeId: route.id });
 					}
 
-					while (i--) {
-						if (errors[i]) {
-							/** @type {import('./types').BranchNode | undefined} */
-							let error_loaded;
-
-							let j = i;
-							while (!branch[j]) j -= 1;
-							try {
-								error_loaded = {
-									node: await /** @type {import('types').CSRPageNodeLoader } */ (errors[i])(),
-									loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
-									data: {},
-									server: null,
-									shared: null
-								};
-
-								return await get_navigation_result_from_branch({
-									url,
-									params,
-									branch: branch.slice(0, j + 1).concat(error_loaded),
-									status,
-									error,
-									route
-								});
-							} catch (e) {
-								continue;
-							}
-						}
+					const error_load = await load_nearest_error_page(i, branch, errors);
+					if (error_load) {
+						return await get_navigation_result_from_branch({
+							url,
+							params,
+							branch: branch.slice(0, error_load.idx).concat(error_load.node),
+							status,
+							error,
+							route
+						});
+					} else {
+						// if we get here, it's because the root `load` function failed,
+						// and we need to fall back to the server
+						return await server_fallback(url, route.id, error, status);
 					}
-
-					// if we get here, it's because the root `load` function failed,
-					// and we need to fall back to the server
-					await native_navigation(url);
-					return;
 				}
 			} else {
 				// push an empty slot so we can rewind past gaps to the
@@ -864,9 +844,38 @@ export function create_client({ target, base, trailing_slash }) {
 	}
 
 	/**
+	 * @param {number} i Start index to backtrack from
+	 * @param {Array<import('./types').BranchNode | undefined>} branch Branch to backtrack
+	 * @param {Array<import('types').CSRPageNodeLoader | undefined>} errors All error pages for this branch
+	 * @returns {Promise<{idx: number; node: import('./types').BranchNode} | undefined>}
+	 */
+	async function load_nearest_error_page(i, branch, errors) {
+		while (i--) {
+			if (errors[i]) {
+				let j = i;
+				while (!branch[j]) j -= 1;
+				try {
+					return {
+						idx: j + 1,
+						node: {
+							node: await /** @type {import('types').CSRPageNodeLoader } */ (errors[i])(),
+							loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
+							data: {},
+							server: null,
+							shared: null
+						}
+					};
+				} catch (e) {
+					continue;
+				}
+			}
+		}
+	}
+
+	/**
 	 * @param {{
 	 *   status: number;
-	 *   error: HttpError | Error;
+	 *   error: App.Error;
 	 *   url: URL;
 	 *   routeId: string | null
 	 * }} opts
@@ -896,11 +905,11 @@ export function create_client({ target, base, trailing_slash }) {
 
 				server_data_node = server_data.nodes[0] ?? null;
 			} catch {
-				// at this point we have no choice but to fall back to the server
-				await native_navigation(url);
-
-				// @ts-expect-error
-				return;
+				// at this point we have no choice but to fall back to the server, if it wouldn't
+				// bring us right back here, turning this into an endless loop
+				if (url.origin !== location.origin || url.pathname !== location.pathname || hydrated) {
+					await native_navigation(url);
+				}
 			}
 		}
 
@@ -927,10 +936,7 @@ export function create_client({ target, base, trailing_slash }) {
 			params,
 			branch: [root_layout, root_error],
 			status,
-			error:
-				error instanceof HttpError
-					? error.body
-					: handle_error(error, { url, params, routeId: null }),
+			error,
 			route: null
 		});
 	}
@@ -976,6 +982,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   } | null;
 	 *   type: import('types').NavigationType;
 	 *   delta?: number;
+	 *   nav_token?: {};
 	 *   accepted: () => void;
 	 *   blocked: () => void;
 	 * }} opts
@@ -988,6 +995,7 @@ export function create_client({ target, base, trailing_slash }) {
 		details,
 		type,
 		delta,
+		nav_token,
 		accepted,
 		blocked
 	}) {
@@ -1045,11 +1053,34 @@ export function create_client({ target, base, trailing_slash }) {
 				keepfocus,
 				details
 			},
+			nav_token,
 			() => {
 				callbacks.after_navigate.forEach((fn) => fn(navigation));
 				stores.navigating.set(null);
 			}
 		);
+	}
+
+	/**
+	 * Does a full page reload if it wouldn't result in an endless loop in the SPA case
+	 * @param {URL} url
+	 * @param {string | null} routeId
+	 * @param {App.Error} error
+	 * @param {number} status
+	 * @returns {Promise<import('./types').NavigationFinished>}
+	 */
+	async function server_fallback(url, routeId, error, status) {
+		if (url.origin === location.origin && url.pathname === location.pathname && !hydrated) {
+			// We would reload the same page we're currently on, which isn't hydrated,
+			// which means no SSR, which means we would end up in an endless loop
+			return await load_root_error_page({
+				status,
+				error,
+				url,
+				routeId
+			});
+		}
+		return await native_navigation(url);
 	}
 
 	/**
@@ -1152,58 +1183,35 @@ export function create_client({ target, base, trailing_slash }) {
 				const { branch, route } = current;
 				if (!route) return;
 
-				let i = current.branch.length;
+				const error_load = await load_nearest_error_page(
+					current.branch.length,
+					branch,
+					route.errors
+				);
+				if (error_load) {
+					const navigation_result = await get_navigation_result_from_branch({
+						url,
+						params: current.params,
+						branch: branch.slice(0, error_load.idx).concat(error_load.node),
+						status: 500, // TODO might not be 500?
+						error: result.error,
+						route
+					});
 
-				while (i--) {
-					if (route.errors[i]) {
-						/** @type {import('./types').BranchNode | undefined} */
-						let error_loaded;
+					current = navigation_result.state;
 
-						let j = i;
-						while (!branch[j]) j -= 1;
-						try {
-							error_loaded = {
-								node: await /** @type {import('types').CSRPageNodeLoader } */ (route.errors[i])(),
-								loader: /** @type {import('types').CSRPageNodeLoader } */ (route.errors[i]),
-								data: {},
-								server: null,
-								shared: null
-							};
-
-							const navigation_result = await get_navigation_result_from_branch({
-								url,
-								params: current.params,
-								branch: branch.slice(0, j + 1).concat(error_loaded),
-								status: 500, // TODO might not be 500?
-								error: result.error,
-								route
-							});
-
-							current = navigation_result.state;
-
-							const post_update = pre_update();
-							root.$set(navigation_result.props);
-							post_update();
-
-							return;
-						} catch (e) {
-							continue;
-						}
-					}
+					const post_update = pre_update();
+					root.$set(navigation_result.props);
+					post_update();
 				}
 			} else if (result.type === 'redirect') {
 				goto(result.location, {}, []);
 			} else {
 				/** @type {Record<string, any>} */
-				const props = { form: result.data };
-
-				if (result.status !== page.status) {
-					props.page = {
-						...page,
-						status: result.status
-					};
-				}
-
+				const props = {
+					form: result.data,
+					page: { ...page, form: result.data, status: result.status }
+				};
 				const post_update = pre_update();
 				root.$set(props);
 				post_update();
@@ -1321,10 +1329,12 @@ export function create_client({ target, base, trailing_slash }) {
 				if (hash !== undefined && base === location.href.split('#')[0]) {
 					// set this flag to distinguish between navigations triggered by
 					// clicking a hash link and those triggered by popstate
+					// TODO why not update history here directly?
 					hash_navigating = true;
 
 					update_scroll_positions(current_history_index);
 
+					current.url = url;
 					stores.page.set({ ...page, url });
 					stores.page.notify();
 
@@ -1412,6 +1422,8 @@ export function create_client({ target, base, trailing_slash }) {
 			data: server_data_nodes,
 			form
 		}) => {
+			hydrated = true;
+
 			const url = new URL(location.href);
 
 			/** @type {import('./types').NavigationFinished | undefined} */
@@ -1446,19 +1458,17 @@ export function create_client({ target, base, trailing_slash }) {
 					form,
 					route: routes.find((route) => route.id === routeId) ?? null
 				});
-			} catch (e) {
-				const error = normalize_error(e);
-
+			} catch (error) {
 				if (error instanceof Redirect) {
 					// this is a real edge case — `load` would need to return
 					// a redirect but only in the browser
-					await native_navigation(new URL(/** @type {Redirect} */ (e).location, location.href));
+					await native_navigation(new URL(error.location, location.href));
 					return;
 				}
 
 				result = await load_root_error_page({
 					status: error instanceof HttpError ? error.status : 500,
-					error,
+					error: handle_error(error, { url, params, routeId }),
 					url,
 					routeId
 				});
@@ -1503,10 +1513,16 @@ async function load_data(url, invalid) {
 /**
  * @param {unknown} error
  * @param {import('types').NavigationEvent} event
- * @returns {App.PageError}
+ * @returns {App.Error}
  */
 function handle_error(error, event) {
-	return hooks.handleError({ error, event }) ?? /** @type {any} */ ({ message: 'Internal Error' });
+	if (error instanceof HttpError) {
+		return error.body;
+	}
+	return (
+		hooks.handleError({ error, event }) ??
+		/** @type {any} */ ({ message: event.routeId != null ? 'Internal Error' : 'Not Found' })
+	);
 }
 
 // TODO remove for 1.0
@@ -1536,7 +1552,8 @@ function add_url_properties(type, target) {
 				throw new Error(
 					`The navigation shape changed - ${type}.${prop} should now be ${type}.url.${prop}`
 				);
-			}
+			},
+			enumerable: false
 		});
 	}
 
@@ -1545,25 +1562,26 @@ function add_url_properties(type, target) {
 
 function pre_update() {
 	if (__SVELTEKIT_DEV__) {
-		// Nasty hack to silence harmless warnings the user can do nothing about
-		const warn = console.warn;
-		console.warn = (...args) => {
-			if (
-				args.length === 1 &&
-				/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
-					args[0]
-				)
-			) {
-				return;
-			}
-			warn(...args);
-		};
-
 		return () => {
-			tick().then(() => (console.warn = warn));
 			check_for_removed_attributes();
 		};
 	}
 
 	return () => {};
+}
+
+if (__SVELTEKIT_DEV__) {
+	// Nasty hack to silence harmless warnings the user can do nothing about
+	const warn = console.warn;
+	console.warn = (...args) => {
+		if (
+			args.length === 1 &&
+			/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
+				args[0]
+			)
+		) {
+			return;
+		}
+		warn(...args);
+	};
 }

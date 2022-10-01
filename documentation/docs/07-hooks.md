@@ -9,6 +9,8 @@ There are two hooks files, both optional:
 - `src/hooks.server.js` — your app's server hooks
 - `src/hooks.client.js` — your app's client hooks
 
+Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
+
 > You can configure the location of these files with [`config.kit.files.hooks`](/docs/configuration#files).
 
 ### Server hooks
@@ -20,7 +22,7 @@ The following hooks can be added to `src/hooks.server.js`:
 This function runs every time the SvelteKit server receives a [request](/docs/web-standards#fetch-apis-request) — whether that happens while the app is running, or during [prerendering](/docs/page-options#prerender) — and determines the [response](/docs/web-standards#fetch-apis-response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 
 ```js
-/// file: src/hooks.js
+/// file: src/hooks.server.js
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	if (event.url.pathname.startsWith('/custom')) {
@@ -37,7 +39,7 @@ export async function handle({ event, resolve }) {
 If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to handlers in `+server.js` and server-only `load` functions, populate the `event.locals` object, as shown below.
 
 ```js
-/// file: src/hooks.js
+/// file: src/hooks.server.js
 // @filename: ambient.d.ts
 type User = {
 	name: string;
@@ -49,11 +51,7 @@ declare namespace App {
 	}
 }
 
-const getUserInformation: (cookie: string | undefined) => Promise<User>;
-
-// declare global {
-// 	const getUserInformation: (cookie: string) => Promise<User>;
-// }
+const getUserInformation: (cookie: string | void) => Promise<User>;
 
 // @filename: index.js
 // ---cut---
@@ -76,7 +74,7 @@ You can add call multiple `handle` functions with [the `sequence` helper functio
 - `filterSerializedResponseHeaders(name: string, value: string): boolean` — determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`. By default, none will be included.
 
 ```js
-/// file: src/hooks.js
+/// file: src/hooks.server.js
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	const response = await resolve(event, {
@@ -138,14 +136,14 @@ The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
 If an unexpected error is thrown during loading or rendering, this function will be called with the `error` and the `event`. This allows for two things:
 
 - you can log the error
-- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value, which defaults to `{ message: 'Internal Error' }`, becomes the value of `$page.error`. To make this type-safe, you can customize the expected shape by declaring an `App.PageError` interface (which must include `message: string`, to guarantee sensible fallback behavior).
+- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value becomes the value of `$page.error`. It defaults to `{ message: 'Not Found' }` in case of a 404 (you can detect them through `event.routeId` being `null`) and to `{ message: 'Internal Error' }` for everything else. To make this type-safe, you can customize the expected shape by declaring an `App.Error` interface (which must include `message: string`, to guarantee sensible fallback behavior).
 
 The following code shows an example of typing the error shape as `{ message: string; code: string }` and returning it accordingly from the `handleError` functions:
 
 ```ts
 /// file: src/app.d.ts
 declare namespace App {
-	interface PageError {
+	interface Error {
 		message: string;
 		code: string;
 	}

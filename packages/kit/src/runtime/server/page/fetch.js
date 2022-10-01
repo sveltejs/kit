@@ -19,7 +19,7 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 
 	const initial_cookies = cookie.parse(event.request.headers.get('cookie') || '');
 
-	/** @type {import('set-cookie-parser').Cookie[]} */
+	/** @type {import('./types').Cookie[]} */
 	const set_cookies = [];
 
 	/**
@@ -31,8 +31,8 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 		const new_cookies = {};
 
 		for (const cookie of set_cookies) {
-			if (!domain_matches(url.hostname, cookie.domain)) continue;
-			if (!path_matches(url.pathname, cookie.path)) continue;
+			if (!domain_matches(url.hostname, cookie.options.domain)) continue;
+			if (!path_matches(url.pathname, cookie.options.path)) continue;
 
 			new_cookies[cookie.name] = cookie.value;
 		}
@@ -67,6 +67,19 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 				const request = normalize_fetch_input(info, init, event.url);
 
 				const url = new URL(request.url);
+
+				if (!request.headers.has('origin')) {
+					request.headers.set('origin', event.url.origin);
+				}
+
+				// Remove Origin, according to https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin#description
+				if (
+					(request.method === 'GET' || request.method === 'HEAD') &&
+					((request.mode === 'no-cors' && url.origin !== event.url.origin) ||
+						url.origin === event.url.origin)
+				) {
+					request.headers.delete('origin');
+				}
 
 				if (url.origin !== event.url.origin) {
 					// allow cookie passthrough for "same-origin"
@@ -152,13 +165,13 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 					}
 				}
 
-				if (request_body && typeof request_body !== 'string') {
+				if (request_body && typeof request_body !== 'string' && !ArrayBuffer.isView(request_body)) {
 					// TODO is this still necessary? we just bail out below
 					// per https://developer.mozilla.org/en-US/docs/Web/API/Request/Request, this can be a
 					// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object.
 					// non-string bodies are irksome to deal with, but luckily aren't particularly useful
 					// in this context anyway, so we take the easy route and ban them
-					throw new Error('Request body must be a string');
+					throw new Error('Request body must be a string or TypedArray');
 				}
 
 				response = await respond(request, options, {
@@ -172,18 +185,20 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 					state.prerendering.dependencies.set(url.pathname, dependency);
 				}
 
+				const set_cookie = response.headers.get('set-cookie');
+				if (set_cookie) {
+					set_cookies.push(
+						...set_cookie_parser.splitCookiesString(set_cookie).map((str) => {
+							const { name, value, ...options } = set_cookie_parser.parseString(str);
+							// options.sameSite is string, something more specific is required - type cast is safe
+							return /** @type{import('./types').Cookie} */ ({ name, value, options });
+						})
+					);
+				}
+
 				return response;
 			}
 		});
-
-		const set_cookie = response.headers.get('set-cookie');
-		if (set_cookie) {
-			set_cookies.push(
-				...set_cookie_parser
-					.splitCookiesString(set_cookie)
-					.map((str) => set_cookie_parser.parseString(str))
-			);
-		}
 
 		const proxy = new Proxy(response, {
 			get(response, key, _receiver) {
@@ -205,7 +220,7 @@ export function create_fetch({ event, options, state, route, prerender_default, 
 								? request.url.slice(event.url.origin.length)
 								: request.url,
 							method: request.method,
-							request_body: /** @type {string | undefined} */ (request_body),
+							request_body: /** @type {string | ArrayBufferView | undefined} */ (request_body),
 							response_body: body,
 							response: response
 						});

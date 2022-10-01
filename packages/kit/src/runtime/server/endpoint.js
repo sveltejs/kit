@@ -1,4 +1,5 @@
 import { json } from '../../exports/index.js';
+import { negotiate } from '../../utils/http.js';
 import { Redirect, ValidationError } from '../control.js';
 import { check_method_names, method_not_allowed } from './utils.js';
 
@@ -31,7 +32,14 @@ export async function render_endpoint(event, mod, state) {
 	}
 
 	if (state.prerendering && !prerender) {
-		throw new Error(`${event.routeId} is not prerenderable`);
+		if (state.initiator) {
+			// if request came from a prerendered page, bail
+			throw new Error(`${event.routeId} is not prerenderable`);
+		} else {
+			// if request came direct from the crawler, signal that
+			// this route cannot be prerendered, but don't bail
+			return new Response(undefined, { status: 204 });
+		}
 	}
 
 	try {
@@ -46,7 +54,6 @@ export async function render_endpoint(event, mod, state) {
 		}
 
 		if (state.prerendering) {
-			response.headers.set('x-sveltekit-routeid', /** @type {string} */ (event.routeId));
 			response.headers.set('x-sveltekit-prerender', String(prerender));
 		}
 
@@ -63,4 +70,23 @@ export async function render_endpoint(event, mod, state) {
 
 		throw error;
 	}
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ */
+export function is_endpoint_request(event) {
+	const { method, headers } = event.request;
+
+	if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+		// These methods exist exclusively for endpoints
+		return true;
+	}
+
+	// use:enhance uses a custom header to disambiguate
+	if (method === 'POST' && headers.get('x-sveltekit-action') === 'true') return false;
+
+	// GET/POST requests may be for endpoints or pages. We prefer endpoints if this isn't a text/html request
+	const accept = event.request.headers.get('accept') ?? '*/*';
+	return negotiate(accept, ['*', 'text/html']) !== 'text/html';
 }

@@ -1,6 +1,9 @@
 import { set_should_fail } from '../../../+layout.server';
 
-export function GET() {
-	set_should_fail(true);
+/**
+ * @type {import('./$types').RequestHandler} param0
+ */
+export function GET({ url }) {
+	set_should_fail(url.searchParams.get('type'));
 	return new Response();
 }

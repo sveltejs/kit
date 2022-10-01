@@ -217,7 +217,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 							});
 						}
 
-						return redirect_response(err.status, err.location);
+						return redirect_response(err.status, err.location, cookies);
 					}
 
 					const status = err instanceof HttpError ? err.status : 500;

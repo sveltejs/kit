@@ -92,7 +92,7 @@ As well as the `action` attribute, we can use the `formaction` attribute on a bu
 
 ### Anatomy of an action
 
-Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available as `form` until the next update.
+Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available through the `form` property on the corresponding page and through `$page.form` app-wide until the next update.
 
 ```js
 // @errors: 2339 2304
@@ -148,12 +148,13 @@ export const actions = {
 		const email = data.get('email');
 		const password = data.get('password');
 
-		const user = await db.getUser(email);
-+		if (!user) {
++		if (!email) {
 +			return invalid(400, { email, missing: true });
 +		}
-+
-+		if (user.password !== hash(password)) {
+
+		const user = await db.getUser(email);
+
++		if (!user || user.password !== hash(password)) {
 +			return invalid(400, { email, incorrect: true });
 +		}
 
@@ -173,11 +174,10 @@ export const actions = {
 /// file: src/routes/login/+page.svelte
 <form method="POST" action="?/login">
 -	<input name="email" type="email">
-+	{#if form?.missing}<p class="error">No user found with this email</p>{/if}
++	{#if form?.missing}<p class="error">The email field is required</p>{/if}
++	{#if form?.incorrect}<p class="error">Invalid credentials!</p>{/if}
 +	<input name="email" type="email" value={form?.email ?? ''}>
 
--	<input name="password" type="password">
-+	{#if form?.incorrect}<p class="error">Wrong password!</p>{/if}
 	<input name="password" type="password">
 	<button>Log in</button>
 	<button formaction="?/register">Register</button>
@@ -249,24 +249,25 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
-- update the `form` property and invalidate all data on a successful response
-- update the `form` property on a invalid response
-- update `$page.status` on a successful or invalid response
+- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. So for example if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on.
+- invalidate all data using `invalidateAll` on a successful response
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
 
-To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`.
+To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
 
 ```svelte
 <form
 	method="POST"
-	use:enhance={({ form, data, cancel }) => {
+	use:enhance={({ form, data, action, cancel }) => {
 		// `form` is the `<form>` element
 		// `data` is its `FormData` object
+		// `action` is the URL to which the form is posted
 		// `cancel()` will prevent the submission
 
-		return async ({ result }) => {
+		return async ({ result, update }) => {
 			// `result` is an `ActionResult` object
+			// `update` is a function which triggers the logic that would be triggered if this callback wasn't set
 		};
 	}}
 >
@@ -276,7 +277,7 @@ You can use these functions to show and hide loading UI, and so on.
 
 #### applyAction
 
-If you provide your own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. We can do this with `applyAction`:
+If you provide your own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. Most of the time, calling `update` passed to the callback is enough. If you need more customization you can do so with `applyAction`:
 
 ```diff
 <script>
@@ -288,9 +289,10 @@ If you provide your own callbacks, you may need to reproduce part of the default
 
 <form
 	method="POST"
-	use:enhance={({ form, data, cancel }) => {
+	use:enhance={({ form, data, action, cancel }) => {
 		// `form` is the `<form>` element
 		// `data` is its `FormData` object
+		// `action` is the URL to which the form is posted
 		// `cancel()` will prevent the submission
 
 		return async ({ result }) => {
@@ -305,7 +307,7 @@ If you provide your own callbacks, you may need to reproduce part of the default
 
 The behaviour of `applyAction(result)` depends on `result.type`:
 
-- `success`, `invalid` — sets `$page.status` to `result.status` and updates `form` to `result.data`
+- `success`, `invalid` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data` (regardless of where you are submitting from, in contrast to `update` from `enhance`)
 - `redirect` — calls `goto(result.location)`
 - `error` — renders the nearest `+error` boundary with `result.error`
 
@@ -349,3 +351,19 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	<!-- content -->
 </form>
 ```
+
+If you have a `+server.js` alongside your `+page.server.js`, `fetch` requests will be routed there by default. To `POST` to an action in `+page.server.js` instead, use the custom `x-sveltekit-action` header:
+
+```diff
+const response = await fetch(this.action, {
+	method: 'POST',
+	body: data,
++	headers: {
++		'x-sveltekit-action': 'true'
++	}
+});
+```
+
+### Alternatives
+
+Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](/docs/routing#server) files to expose (for example) a JSON API.
