@@ -2,12 +2,10 @@ import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
 import {
 	handle_error_and_jsonify,
-	GENERIC_ERROR,
 	get_option,
 	static_error_page,
 	redirect_response
 } from '../utils.js';
-import { create_fetch } from '../fetch.js';
 import { HttpError, Redirect } from '../../control.js';
 
 /**
@@ -24,26 +22,9 @@ import { HttpError, Redirect } from '../../control.js';
  *   status: number;
  *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   get_cookie_header: (url: URL, header: string | null) => string; // TODO tidy this up
  * }} opts
  */
-export async function respond_with_error({
-	event,
-	options,
-	state,
-	status,
-	error,
-	resolve_opts,
-	get_cookie_header
-}) {
-	const fetcher = create_fetch({
-		event,
-		options,
-		state,
-		route: GENERIC_ERROR,
-		get_cookie_header
-	});
-
+export async function respond_with_error({ event, options, state, status, error, resolve_opts }) {
 	/** @type {import('./types').Fetched[]} */
 	const fetched = [];
 
@@ -64,7 +45,6 @@ export async function respond_with_error({
 
 			const data = await load_data({
 				event,
-				fetcher,
 				fetched,
 				node: default_layout,
 				parent: async () => ({}),

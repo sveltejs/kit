@@ -10,6 +10,7 @@ import { render_data } from './data/index.js';
 import { DATA_SUFFIX } from '../../constants.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { HttpError } from '../control.js';
+import { create_fetch } from './fetch.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -103,6 +104,8 @@ export async function respond(request, options, state) {
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		cookies,
+		// @ts-expect-error this is added in the next step, because `create_fetch` needs a reference to `event`
+		fetch: null,
 		getClientAddress:
 			state.getClientAddress ||
 			(() => {
@@ -137,6 +140,14 @@ export async function respond(request, options, state) {
 		},
 		url
 	};
+
+	event.fetch = create_fetch({
+		event,
+		options,
+		state,
+		route,
+		get_cookie_header
+	});
 
 	// TODO remove this for 1.0
 	/**
@@ -261,8 +272,7 @@ export async function respond(request, options, state) {
 					state,
 					status: 404,
 					error: new Error(`Not found: ${event.url.pathname}`),
-					resolve_opts,
-					get_cookie_header
+					resolve_opts
 				});
 			}
 

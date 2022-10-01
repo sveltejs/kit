@@ -68,7 +68,6 @@ export async function load_server_data({ event, state, node, parent }) {
  * Calls the user's `load` function.
  * @param {{
  *   event: import('types').RequestEvent;
- *   fetcher: typeof fetch;
  *   fetched: import('./types').Fetched[];
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
@@ -80,7 +79,6 @@ export async function load_server_data({ event, state, node, parent }) {
  */
 export async function load_data({
 	event,
-	fetcher,
 	fetched,
 	node,
 	parent,
@@ -101,7 +99,7 @@ export async function load_data({
 		data: server_data_node?.data ?? null,
 		routeId: event.routeId,
 		fetch: async (input, init) => {
-			const response = await fetcher(input, init);
+			const response = await event.fetch(input, init);
 
 			const url = new URL(input instanceof Request ? input.url : input, event.url);
 			const same_origin = url.origin === event.url.origin;

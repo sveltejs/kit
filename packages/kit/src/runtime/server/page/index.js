@@ -15,7 +15,6 @@ import {
 	is_action_json_request,
 	is_action_request
 } from './actions.js';
-import { create_fetch } from '../fetch.js';
 import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
@@ -102,14 +101,9 @@ export async function render_page(
 			});
 		}
 
-		const fetcher = create_fetch({
-			event,
-			options,
-			state,
-			route,
-			prerender_default: should_prerender,
-			get_cookie_header
-		});
+		// if we fetch any endpoints while loading data for this page, they should
+		// inherit the prerender option of the page
+		state.prerender_default = should_prerender;
 
 		/** @type {import('./types').Fetched[]} */
 		const fetched = [];
@@ -180,7 +174,6 @@ export async function render_page(
 				try {
 					return await load_data({
 						event,
-						fetcher,
 						fetched,
 						node,
 						parent: async () => {
@@ -309,8 +302,7 @@ export async function render_page(
 			state,
 			status: 500,
 			error,
-			resolve_opts,
-			get_cookie_header
+			resolve_opts
 		});
 	}
 }

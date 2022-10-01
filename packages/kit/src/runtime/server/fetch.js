@@ -6,20 +6,12 @@ import { respond } from './index.js';
  *   event: import('types').RequestEvent;
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
- *   route: import('types').SSRRoute | import('types').SSRErrorPage;
- *   prerender_default?: import('types').PrerenderOption;
+ *   route: import('types').SSRRoute | import('types').SSRErrorPage | null;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  * }} opts
  * @returns {typeof fetch}
  */
-export function create_fetch({
-	event,
-	options,
-	state,
-	route,
-	prerender_default,
-	get_cookie_header
-}) {
+export function create_fetch({ event, options, state, route, get_cookie_header }) {
 	return async (info, init) => {
 		const request = normalize_fetch_input(info, init, event.url);
 
@@ -143,9 +135,8 @@ export function create_fetch({
 				}
 
 				response = await respond(request, options, {
-					prerender_default,
 					...state,
-					initiator: route
+					initiator: route ?? undefined
 				});
 
 				if (state.prerendering) {
