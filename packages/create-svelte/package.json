@@ -42,7 +42,9 @@
 		"index.js",
 		"dist",
 		"bin.js",
-		"utils.js"
+		"utils.js",
+		"types"
 	],
+	"types": "types/index.d.ts",
 	"type": "module"
 }

@@ -2,12 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { mkdirp, copy, dist } from './utils.js';
 
-/**
- * Create a new SvelteKit project.
- *
- * @param {string} cwd - Path to the directory to create
- * @param {import('./types/internal').Options} options
- */
+/** @type {import('./types/index').create} */
 export async function create(cwd, options) {
 	mkdirp(cwd);
 
