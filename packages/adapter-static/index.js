@@ -27,7 +27,7 @@ export default function (options) {
 				if (dynamic_routes.length > 0) {
 					const prefix = path.relative('.', builder.config.kit.files.routes);
 					builder.log.error(
-						`@sveltejs/adapter-static: all routes must be fully prerenderable (unless using the 'fallback' option — see https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode). Try adding \`export const prerender = true\` to your root +layout.js (+layout.ts if your project is using TypeScript) — see https://kit.svelte.dev/docs/page-options#prerender for more details`
+						`@sveltejs/adapter-static: all routes must be fully prerenderable (unless using the 'fallback' option — see https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode). Try adding \`export const prerender = true\` to your root +layout.js/.ts file — see https://kit.svelte.dev/docs/page-options#prerender for more details`
 					);
 					builder.log.error(
 						dynamic_routes.map((id) => `  - ${path.posix.join(prefix, id)}`).join('\n')
