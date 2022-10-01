@@ -141,13 +141,7 @@ export async function respond(request, options, state) {
 		url
 	};
 
-	event.fetch = create_fetch({
-		event,
-		options,
-		state,
-		route,
-		get_cookie_header
-	});
+	event.fetch = create_fetch({ event, options, state, get_cookie_header });
 
 	// TODO remove this for 1.0
 	/**
