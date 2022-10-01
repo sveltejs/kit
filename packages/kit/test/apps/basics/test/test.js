@@ -669,7 +669,7 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('bar == bar?');
 	});
 
-	test.only('GET fetches are serialized', async ({ page, javaScriptEnabled }) => {
+	test('GET fetches are serialized', async ({ page, javaScriptEnabled }) => {
 		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
