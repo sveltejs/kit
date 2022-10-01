@@ -102,7 +102,7 @@ export async function render_page(
 			});
 		}
 
-		const { fetcher, fetched } = create_fetch({
+		const fetcher = create_fetch({
 			event,
 			options,
 			state,
@@ -110,6 +110,9 @@ export async function render_page(
 			prerender_default: should_prerender,
 			get_cookie_header
 		});
+
+		/** @type {import('./types').Fetched[]} */
+		const fetched = [];
 
 		if (get_option(nodes, 'ssr') === false) {
 			return await render_response({

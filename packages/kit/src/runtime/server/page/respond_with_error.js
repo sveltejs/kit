@@ -36,13 +36,16 @@ export async function respond_with_error({
 	resolve_opts,
 	get_cookie_header
 }) {
-	const { fetcher, fetched } = create_fetch({
+	const fetcher = create_fetch({
 		event,
 		options,
 		state,
 		route: GENERIC_ERROR,
 		get_cookie_header
 	});
+
+	/** @type {import('./types').Fetched[]} */
+	const fetched = [];
 
 	try {
 		const branch = [];

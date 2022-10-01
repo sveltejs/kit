@@ -10,6 +10,7 @@ import { respond } from './index.js';
  *   prerender_default?: import('types').PrerenderOption;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  * }} opts
+ * @returns {typeof fetch}
  */
 export function create_fetch({
 	event,
@@ -19,11 +20,7 @@ export function create_fetch({
 	prerender_default,
 	get_cookie_header
 }) {
-	/** @type {import('./page/types').Fetched[]} */
-	const fetched = [];
-
-	/** @type {typeof fetch} */
-	const fetcher = async (info, init) => {
+	return async (info, init) => {
 		const request = normalize_fetch_input(info, init, event.url);
 
 		const request_body = init?.body;
@@ -174,8 +171,6 @@ export function create_fetch({
 			}
 		});
 	};
-
-	return { fetcher, fetched };
 }
 
 /**
