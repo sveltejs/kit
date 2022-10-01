@@ -8,7 +8,6 @@ import { respond } from './index.js';
  *   state: import('types').SSRState;
  *   route: import('types').SSRRoute | import('types').SSRErrorPage;
  *   prerender_default?: import('types').PrerenderOption;
- *   resolve_opts: import('types').RequiredResolveOptions;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  * }} opts
  */
@@ -18,7 +17,6 @@ export function create_fetch({
 	state,
 	route,
 	prerender_default,
-	resolve_opts,
 	get_cookie_header
 }) {
 	/** @type {import('./page/types').Fetched[]} */
@@ -33,7 +31,7 @@ export function create_fetch({
 		/** @type {import('types').PrerenderDependency} */
 		let dependency;
 
-		const response = await options.hooks.handleFetch({
+		return await options.hooks.handleFetch({
 			event,
 			request,
 			fetch: async (info, init) => {
@@ -175,89 +173,6 @@ export function create_fetch({
 				return response;
 			}
 		});
-
-		const proxy = new Proxy(response, {
-			get(response, key, _receiver) {
-				async function text() {
-					const body = await response.text();
-
-					if (!body || typeof body === 'string') {
-						const status_number = Number(response.status);
-						if (isNaN(status_number)) {
-							throw new Error(
-								`response.status is not a number. value: "${
-									response.status
-								}" type: ${typeof response.status}`
-							);
-						}
-
-						fetched.push({
-							url: request.url.startsWith(event.url.origin)
-								? request.url.slice(event.url.origin.length)
-								: request.url,
-							method: request.method,
-							request_body: /** @type {string | ArrayBufferView | undefined} */ (request_body),
-							response_body: body,
-							response: response
-						});
-
-						// ensure that excluded headers can't be read
-						const get = response.headers.get;
-						response.headers.get = (key) => {
-							const lower = key.toLowerCase();
-							const value = get.call(response.headers, lower);
-							if (value && !lower.startsWith('x-sveltekit-')) {
-								const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
-								if (!included) {
-									throw new Error(
-										`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#handle`
-									);
-								}
-							}
-
-							return value;
-						};
-					}
-
-					if (dependency) {
-						dependency.body = body;
-					}
-
-					return body;
-				}
-
-				if (key === 'arrayBuffer') {
-					return async () => {
-						const buffer = await response.arrayBuffer();
-
-						if (dependency) {
-							dependency.body = new Uint8Array(buffer);
-						}
-
-						// TODO should buffer be inlined into the page (albeit base64'd)?
-						// any conditions in which it shouldn't be?
-
-						return buffer;
-					};
-				}
-
-				if (key === 'text') {
-					return text;
-				}
-
-				if (key === 'json') {
-					return async () => {
-						return JSON.parse(await text());
-					};
-				}
-
-				// TODO arrayBuffer?
-
-				return Reflect.get(response, key, response);
-			}
-		});
-
-		return proxy;
 	};
 
 	return { fetcher, fetched };

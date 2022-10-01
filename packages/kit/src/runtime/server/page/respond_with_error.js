@@ -41,7 +41,6 @@ export async function respond_with_error({
 		options,
 		state,
 		route: GENERIC_ERROR,
-		resolve_opts,
 		get_cookie_header
 	});
 
@@ -63,8 +62,10 @@ export async function respond_with_error({
 			const data = await load_data({
 				event,
 				fetcher,
+				fetched,
 				node: default_layout,
 				parent: async () => ({}),
+				resolve_opts,
 				server_data_promise,
 				state
 			});

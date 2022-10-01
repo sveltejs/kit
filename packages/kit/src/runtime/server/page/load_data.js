@@ -69,26 +69,127 @@ export async function load_server_data({ event, state, node, parent }) {
  * @param {{
  *   event: import('types').RequestEvent;
  *   fetcher: typeof fetch;
+ *   fetched: import('./types').Fetched[];
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
+ *   resolve_opts: import('types').RequiredResolveOptions;
  *   server_data_promise: Promise<import('types').ServerDataNode | null>;
  *   state: import('types').SSRState;
  * }} opts
  * @returns {Promise<Record<string, any> | null>}
  */
-export async function load_data({ event, fetcher, node, parent, server_data_promise }) {
+export async function load_data({
+	event,
+	fetcher,
+	fetched,
+	node,
+	parent,
+	server_data_promise,
+	state,
+	resolve_opts
+}) {
 	const server_data_node = await server_data_promise;
 
 	if (!node?.shared?.load) {
 		return server_data_node?.data ?? null;
 	}
 
+	/** @type {import('types').LoadEvent} */
 	const load_event = {
 		url: event.url,
 		params: event.params,
 		data: server_data_node?.data ?? null,
 		routeId: event.routeId,
-		fetch: fetcher,
+		fetch: async (input, init) => {
+			const response = await fetcher(input, init);
+
+			const url = new URL(input instanceof Request ? input.url : input, event.url);
+			const same_origin = url.origin === event.url.origin;
+
+			const request_body = init?.body;
+			const dependency = same_origin && state.prerendering?.dependencies.get(url.pathname);
+
+			const proxy = new Proxy(response, {
+				get(response, key, _receiver) {
+					async function text() {
+						const body = await response.text();
+
+						if (!body || typeof body === 'string') {
+							const status_number = Number(response.status);
+							if (isNaN(status_number)) {
+								throw new Error(
+									`response.status is not a number. value: "${
+										response.status
+									}" type: ${typeof response.status}`
+								);
+							}
+
+							fetched.push({
+								url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
+								method: event.request.method,
+								request_body: /** @type {string | ArrayBufferView | undefined} */ (request_body),
+								response_body: body,
+								response: response
+							});
+
+							// ensure that excluded headers can't be read
+							const get = response.headers.get;
+							response.headers.get = (key) => {
+								const lower = key.toLowerCase();
+								const value = get.call(response.headers, lower);
+								if (value && !lower.startsWith('x-sveltekit-')) {
+									const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
+									if (!included) {
+										throw new Error(
+											`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#handle`
+										);
+									}
+								}
+
+								return value;
+							};
+						}
+
+						if (dependency) {
+							dependency.body = body;
+						}
+
+						return body;
+					}
+
+					if (key === 'arrayBuffer') {
+						return async () => {
+							const buffer = await response.arrayBuffer();
+
+							if (dependency) {
+								dependency.body = new Uint8Array(buffer);
+							}
+
+							// TODO should buffer be inlined into the page (albeit base64'd)?
+							// any conditions in which it shouldn't be?
+
+							return buffer;
+						};
+					}
+
+					if (key === 'text') {
+						return text;
+					}
+
+					if (key === 'json') {
+						return async () => {
+							return JSON.parse(await text());
+						};
+					}
+
+					// TODO arrayBuffer?
+
+					return Reflect.get(response, key, response);
+				}
+			});
+
+			return proxy;
+		},
 		setHeaders: event.setHeaders,
 		depends: () => {},
 		parent

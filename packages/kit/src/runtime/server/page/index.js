@@ -108,7 +108,6 @@ export async function render_page(
 			state,
 			route,
 			prerender_default: should_prerender,
-			resolve_opts,
 			get_cookie_header
 		});
 
@@ -179,6 +178,7 @@ export async function render_page(
 					return await load_data({
 						event,
 						fetcher,
+						fetched,
 						node,
 						parent: async () => {
 							const data = {};
@@ -187,6 +187,7 @@ export async function render_page(
 							}
 							return data;
 						},
+						resolve_opts,
 						server_data_promise: server_promises[i],
 						state
 					});
