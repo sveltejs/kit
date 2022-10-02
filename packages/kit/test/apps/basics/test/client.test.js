@@ -302,18 +302,20 @@ test.describe.serial('Errors', () => {
 		expect(await page.innerHTML('h1')).toBe('401');
 	});
 
-	test('Root error falls back to error.html (unexpected error)', async ({ page }) => {
+	test('Root error falls back to error.html (unexpected error)', async ({ page, clicknav }) => {
 		await page.goto('/errors/error-html');
-		await page.click('button:text-is("Unexpected")');
+		await clicknav('button:text-is("Unexpected")');
+
 		expect(await page.textContent('h1')).toBe('Error - 500');
 		expect(await page.textContent('p')).toBe(
 			'This is the static error page with the following message: Failed to load'
 		);
 	});
 
-	test('Root error falls back to error.html (expected error)', async ({ page }) => {
+	test('Root error falls back to error.html (expected error)', async ({ page, clicknav }) => {
 		await page.goto('/errors/error-html');
-		await page.click('button:text-is("Expected")');
+		await clicknav('button:text-is("Expected")');
+
 		expect(await page.textContent('h1')).toBe('Error - 401');
 		expect(await page.textContent('p')).toBe(
 			'This is the static error page with the following message: Not allowed'
@@ -392,21 +394,24 @@ test.describe('Load', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 	});
 
-	test('keeps server data when valid while not reusing client load data', async ({ page }) => {
+	test('keeps server data when valid while not reusing client load data', async ({
+		page,
+		clicknav
+	}) => {
 		await page.goto('/load/url-query-param');
 
 		expect(await page.textContent('h1')).toBe('Hello ');
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 
-		await page.click('a[href="/load/url-query-param?currentClientState=ABC"]');
+		await clicknav('a[href="/load/url-query-param?currentClientState=ABC"]');
 		expect(await page.textContent('h1')).toBe('Hello ABC');
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 
-		await page.click('a[href="/load/url-query-param?currentClientState=DEF"]');
+		await clicknav('a[href="/load/url-query-param?currentClientState=DEF"]');
 		expect(await page.textContent('h1')).toBe('Hello DEF');
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 
-		await page.click('a[href="/load/url-query-param"]');
+		await clicknav('a[href="/load/url-query-param"]');
 		expect(await page.textContent('h1')).toBe('Hello ');
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 	});
@@ -917,8 +922,11 @@ test.describe('Content negotiation', () => {
 	test('use:enhance uses action, not POST handler', async ({ page }) => {
 		await page.goto('/routing/content-negotiation');
 
-		page.click('button:has-text("Submit")');
-		await page.waitForResponse('/routing/content-negotiation');
+		await Promise.all([
+			page.waitForResponse('/routing/content-negotiation'),
+			page.click('button:has-text("Submit")')
+		]);
+
 		await expect(page.locator('[data-testid="form-result"]')).toHaveText('form.submitted: true');
 	});
 });
