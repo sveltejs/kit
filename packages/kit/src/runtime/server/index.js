@@ -299,7 +299,7 @@ export async function respond(request, options, state) {
 							response.headers.set(key, /** @type {string} */ (value));
 						}
 					}
-					add_cookies_to_headers(response.headers, Array.from(Object.values(new_cookies)));
+					add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
 					if (state.prerendering && event.routeId !== null) {
 						response.headers.set('x-sveltekit-routeid', encodeURI(event.routeId));
