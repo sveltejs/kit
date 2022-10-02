@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.44
+
+### Patch Changes
+
+- fix error message ([#7108](https://github.com/sveltejs/kit/pull/7108))
+
 ## 1.0.0-next.43
 
 ### Patch Changes
