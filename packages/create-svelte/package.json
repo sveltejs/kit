@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-next.182",
+	"version": "2.0.0-next.183",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",

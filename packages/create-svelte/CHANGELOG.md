@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.183
+
+### Patch Changes
+
+- [feat] extract and export types from create-svelte ([#7111](https://github.com/sveltejs/kit/pull/7111))
+
 ## 2.0.0-next.182
 
 ### Patch Changes
