@@ -79,6 +79,8 @@ You can find more information about these in [page options](/docs/page-options).
 
 If your `load` function can only run on the server — for example, if it needs to fetch data from a database or you need to access private [environment variables](/docs/modules#$env-static-private) like API keys — then you can rename `+page.js` to `+page.server.js` and change the `PageLoad` type to `PageServerLoad`.
 
+> note: make sure to add `+page.svelte` together with `+page.server.js` or it will throw error.
+
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
 
@@ -235,6 +237,8 @@ Data returned from a layout's `load` function is also available to all its child
 To run your layout's `load` function on the server, move it to `+layout.server.js`, and change the `LayoutLoad` type to `LayoutServerLoad`.
 
 Like `+layout.js`, `+layout.server.js` can export [page options](/docs/page-options) — `prerender`, `ssr` and `csr`.
+
+> note: make sure to add `+layout.svelte` together with `+layout.server.js` or it will throw error.
 
 ### +server
 
