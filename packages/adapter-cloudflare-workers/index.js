@@ -81,32 +81,32 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 
 /**
  * @param {import('@sveltejs/kit').Builder} builder
- * @param {string} configFile
+ * @param {string} config_file
  * @returns {WranglerConfig}
  */
-function validate_config(builder, configFile) {
-	if (existsSync(configFile)) {
+function validate_config(builder, config_file) {
+	if (existsSync(config_file)) {
 		/** @type {WranglerConfig} */
 		let wrangler_config;
 
 		try {
 			wrangler_config = /** @type {WranglerConfig} */ (
-				toml.parse(readFileSync(configFile, 'utf-8'))
+				toml.parse(readFileSync(config_file, 'utf-8'))
 			);
 		} catch (err) {
-			err.message = `Error parsing ${configFile}: ${err.message}`;
+			err.message = `Error parsing ${config_file}: ${err.message}`;
 			throw err;
 		}
 
 		if (!wrangler_config.site?.bucket) {
 			throw new Error(
-				`You must specify site.bucket in ${configFile}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
+				`You must specify site.bucket in ${config_file}. Consult https://developers.cloudflare.com/workers/platform/sites/configuration`
 			);
 		}
 
 		if (!wrangler_config.main) {
 			throw new Error(
-				`You must specify main option in ${configFile}. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers`
+				`You must specify main option in ${config_file}. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers`
 			);
 		}
 
@@ -135,5 +135,5 @@ function validate_config(builder, configFile) {
 			.trim()
 	);
 
-	throw new Error(`Missing a ${configFile} file`);
+	throw new Error(`Missing a ${config_file} file`);
 }
