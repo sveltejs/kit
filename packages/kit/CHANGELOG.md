@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.508
+
+### Patch Changes
+
+- [chore] Upgrade undici so that we can use its multipart form data parsing instead of node-fetch's ([#7131](https://github.com/sveltejs/kit/pull/7131))
+
 ## 1.0.0-next.507
 
 ### Patch Changes
