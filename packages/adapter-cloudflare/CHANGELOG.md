@@ -80,7 +80,7 @@
 
 ## 1.0.0-next.25
 
-### Minor Changes
+### Patch Changes
 
 - Expose Cloudflare Worker Cache API through `caches` in Platform ([#5081](https://github.com/sveltejs/kit/pull/5081))
 

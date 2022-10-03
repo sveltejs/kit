@@ -64,7 +64,7 @@
 
 ## 1.0.0-next.68
 
-### Minor Changes
+### Patch Changes
 
 - feat: get client IP from Context object rather than the request header ([#5473](https://github.com/sveltejs/kit/pull/5473))
 

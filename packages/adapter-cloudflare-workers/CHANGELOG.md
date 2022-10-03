@@ -2,7 +2,7 @@
 
 ## 1.0.0-next.58
 
-### Minor Changes
+### Patch Changes
 
 - Add config option to set custom `wrangler.toml` file name ([#7104](https://github.com/sveltejs/kit/pull/7104))
 
