@@ -17,12 +17,11 @@
 		"kleur": "^4.1.4",
 		"magic-string": "^0.26.2",
 		"mime": "^3.0.0",
-		"node-fetch": "^3.2.4",
 		"sade": "^1.8.1",
 		"set-cookie-parser": "^2.4.8",
 		"sirv": "^2.0.2",
 		"tiny-glob": "^0.2.9",
-		"undici": "^5.8.1"
+		"undici": "^5.11.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.25.0",
