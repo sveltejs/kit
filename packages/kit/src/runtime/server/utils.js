@@ -1,4 +1,4 @@
-import { devalue } from 'devalue';
+import * as devalue from 'devalue';
 import { DATA_SUFFIX } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { HttpError } from '../control.js';
@@ -76,7 +76,7 @@ export function data_response(data) {
 	};
 
 	try {
-		return new Response(`window.__sveltekit_data = ${devalue(data)}`, { headers });
+		return new Response(`window.__sveltekit_data = ${devalue.uneval(data)}`, { headers });
 	} catch (e) {
 		const error = /** @type {any} */ (e);
 		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);

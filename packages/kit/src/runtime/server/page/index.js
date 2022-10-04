@@ -1,4 +1,4 @@
-import { devalue } from 'devalue';
+import * as devalue from 'devalue';
 import { DATA_SUFFIX } from '../../../constants.js';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
@@ -262,7 +262,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 
 		if (state.prerendering && should_prerender_data) {
-			const body = `window.__sveltekit_data = ${devalue({
+			const body = `window.__sveltekit_data = ${devalue.uneval({
 				type: 'data',
 				nodes: branch.map((branch_node) => branch_node?.server_data)
 			})}`;

@@ -1,4 +1,4 @@
-import { devalue } from 'devalue';
+import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
@@ -172,7 +172,7 @@ export async function render_response({
 	const serialized = { data: '', form: 'null' };
 
 	try {
-		serialized.data = devalue(branch.map(({ server_data }) => server_data));
+		serialized.data = devalue.uneval(branch.map(({ server_data }) => server_data));
 	} catch (e) {
 		// If we're here, the data could not be serialized with devalue
 		// TODO if we wanted to get super fancy we could track down the origin of the `load`
@@ -185,7 +185,7 @@ export async function render_response({
 
 	if (form_value) {
 		// no need to check it can be serialized, we already verified that it's JSON-friendly
-		serialized.form = devalue(form_value);
+		serialized.form = devalue.uneval(form_value);
 	}
 
 	if (inline_styles.size > 0) {
@@ -232,7 +232,7 @@ export async function render_response({
 					status: ${status},
 					error: ${s(error)},
 					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
-					params: ${devalue(event.params)},
+					params: ${devalue.uneval(event.params)},
 					routeId: ${s(event.routeId)},
 					data: ${serialized.data},
 					form: ${serialized.form}
