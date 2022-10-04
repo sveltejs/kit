@@ -230,4 +230,9 @@ test('injects relative service worker', () => {
 	assert.ok(content.includes(`navigator.serviceWorker.register('./service-worker.js')`));
 });
 
+test('define service worker variables', () => {
+	const content = read('service-worker.js');
+	assert.ok(content.includes(`MY_ENV DEFINED`));
+});
+
 test.run();
