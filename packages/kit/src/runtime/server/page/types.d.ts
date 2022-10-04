@@ -9,12 +9,6 @@ export interface Fetched {
 	response: Response;
 }
 
-export interface FetchState {
-	fetched: Fetched[];
-	cookies: string[];
-	new_cookies: string[];
-}
-
 export type Loaded = {
 	node: SSRNode;
 	data: Record<string, any> | null;

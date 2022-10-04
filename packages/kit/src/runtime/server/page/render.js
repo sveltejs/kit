@@ -4,7 +4,6 @@ import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
-import { add_cookies_to_headers } from '../cookie.js';
 
 // TODO rename this function/module
 
@@ -18,7 +17,6 @@ const updated = {
  * @param {{
  *   branch: Array<import('./types').Loaded>;
  *   fetched: Array<import('./types').Fetched>;
- *   cookies: import('./types').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
@@ -32,7 +30,6 @@ const updated = {
 export async function render_response({
 	branch,
 	fetched,
-	cookies,
 	options,
 	state,
 	page_config,
@@ -328,8 +325,6 @@ export async function render_response({
 		if (report_only_header) {
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
-
-		add_cookies_to_headers(headers, cookies);
 
 		if (link_header_preloads.size) {
 			headers.set('link', Array.from(link_header_preloads).join(', '));

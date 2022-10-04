@@ -15,7 +15,6 @@ import {
 	is_action_json_request,
 	is_action_request
 } from './actions.js';
-import { create_fetch } from './fetch.js';
 import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
@@ -36,6 +35,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 			status: 404
 		});
 	}
+
+	state.initiator = route;
 
 	if (is_action_json_request(event)) {
 		const node = await options.manifest._.nodes[page.leaf]();
@@ -93,20 +94,17 @@ export async function render_page(event, route, page, options, state, resolve_op
 			});
 		}
 
-		const { fetcher, fetched, cookies } = create_fetch({
-			event,
-			options,
-			state,
-			route,
-			prerender_default: should_prerender,
-			resolve_opts
-		});
+		// if we fetch any endpoints while loading data for this page, they should
+		// inherit the prerender option of the page
+		state.prerender_default = should_prerender;
+
+		/** @type {import('./types').Fetched[]} */
+		const fetched = [];
 
 		if (get_option(nodes, 'ssr') === false) {
 			return await render_response({
 				branch: [],
 				fetched,
-				cookies,
 				page_config: {
 					ssr: false,
 					csr: get_option(nodes, 'csr') ?? true
@@ -169,7 +167,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 				try {
 					return await load_data({
 						event,
-						fetcher,
+						fetched,
 						node,
 						parent: async () => {
 							const data = {};
@@ -178,6 +176,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 							}
 							return data;
 						},
+						resolve_opts,
 						server_data_promise: server_promises[i],
 						state
 					});
@@ -217,7 +216,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 							});
 						}
 
-						return redirect_response(err.status, err.location, cookies);
+						return redirect_response(err.status, err.location);
 					}
 
 					const status = err instanceof HttpError ? err.status : 500;
@@ -244,8 +243,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 									data: null,
 									server_data: null
 								}),
-								fetched,
-								cookies
+								fetched
 							});
 						}
 					}
@@ -286,8 +284,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			error: null,
 			branch: compact(branch),
 			action_result,
-			fetched,
-			cookies
+			fetched
 		});
 	} catch (error) {
 		// if we end up here, it means the data loaded successfull

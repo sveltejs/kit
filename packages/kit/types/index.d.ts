@@ -341,6 +341,7 @@ export interface RequestEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
 > {
 	cookies: Cookies;
+	fetch: typeof fetch;
 	getClientAddress: () => string;
 	locals: App.Locals;
 	params: Params;

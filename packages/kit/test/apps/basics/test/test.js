@@ -680,12 +680,14 @@ test.describe('Load', () => {
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents = await page.innerHTML('script[data-sveltekit-fetched]');
 
-			const payload = '{"status":200,"statusText":"","headers":{},"body":"{\\"answer\\":42}"}';
+			const payload = '{"status":200,"statusText":"","headers":{},"body":"{\\"b\\":2}"}';
 
 			expect(script_contents).toBe(payload);
 		}
 
-		expect(requests.some((r) => r.endsWith('/load/serialization.json'))).toBe(false);
+		expect(requests.some((r) => r.endsWith('/load/serialization/fetched-from-shared.json'))).toBe(
+			false
+		);
 	});
 
 	test('POST fetches are serialized', async ({ page, javaScriptEnabled }) => {
@@ -809,7 +811,12 @@ test.describe('Load', () => {
 		}
 	});
 
-	test('makes credentialed fetches to endpoints by default', async ({ page, clicknav }) => {
+	test('makes credentialed fetches to endpoints by default', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) return;
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-credentialed"]');
 		expect(await page.textContent('h1')).toBe('Hello SvelteKit!');
