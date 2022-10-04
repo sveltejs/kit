@@ -392,59 +392,59 @@ function analyze(project_relative, file, component_extensions, module_extensions
 
 /** @param {string} id */
 function get_score(id) {
-	const normalized = id.replace(/\(\w+?\)\/?/g, '');
-
-	const parts = [];
-	let i = 0;
-
 	let total = 0;
 	let count = 0;
 
-	while (i < normalized.length) {
-		const start = normalized.indexOf('[', i);
-		if (start === -1) {
-			total += 1;
-			count += 1;
+	for (const segment of id.split('/')) {
+		if (segment.startsWith('(') && segment.endsWith(')')) continue;
 
-			parts.push(normalized.slice(i));
-			break;
+		let i = 0;
+
+		while (i < segment.length) {
+			const start = segment.indexOf('[', i);
+			if (start === -1) {
+				total += 1;
+				count += 1;
+
+				break;
+			}
+
+			let end = segment.indexOf(']', start);
+			if (segment[end + 1] === ']') end += 1;
+
+			const static_part = segment.slice(i, start);
+			const dynamic_part = segment.slice(start, end + 1);
+
+			if (static_part) {
+				total += 1;
+				count += 1;
+			}
+
+			let part_score = 0;
+			if (dynamic_part.startsWith('[...')) {
+				// rest params have lowest rank
+				part_score = 0.001;
+				count += 1.5;
+			} else if (dynamic_part.startsWith('[[')) {
+				// followed by optional params
+				part_score += 0.01;
+				count += 1;
+			} else {
+				// followed by required params
+				part_score += 0.1;
+				count += 1;
+			}
+
+			// params with matchers are worth more than those without
+			if (dynamic_part.includes('=')) {
+				part_score += 0.1;
+			}
+
+			total += part_score;
+			// count += 1;
+
+			i = end + 1;
 		}
-
-		parts.push(normalized.slice(i, start));
-
-		let end = normalized.indexOf(']', start);
-		if (normalized[end + 1] === ']') end += 1;
-		parts.push(normalized.slice(start, end + 1));
-
-		const static_part = normalized.slice(i, start);
-		const dynamic_part = normalized.slice(start, end + 1);
-
-		if (static_part) {
-			total += 1;
-			count += 1;
-		}
-
-		let part_score = 0;
-		if (dynamic_part.startsWith('[...')) {
-			// rest params have lowest rank
-			part_score = 0.001;
-		} else if (dynamic_part.startsWith('[[')) {
-			// followed by optional params
-			part_score += 0.01;
-		} else {
-			// followed by required params
-			part_score += 0.1;
-		}
-
-		// params with matchers are worth more than those without
-		if (dynamic_part.includes('=')) {
-			part_score *= 2;
-		}
-
-		total += part_score;
-		count += 1;
-
-		i = end + 1;
 	}
 
 	return count ? total / count : Infinity;
