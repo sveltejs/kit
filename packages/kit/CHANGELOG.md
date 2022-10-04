@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.509
+
+### Patch Changes
+
+- Apply define config to service worker ([#7140](https://github.com/sveltejs/kit/pull/7140))
+
+* [chore] Skip removing HTTP/2 pseudo-headers, which is no longer necessary with undici ([#7142](https://github.com/sveltejs/kit/pull/7142))
+
+- bump devalue to version 4 ([#7147](https://github.com/sveltejs/kit/pull/7147))
+
 ## 1.0.0-next.508
 
 ### Patch Changes
