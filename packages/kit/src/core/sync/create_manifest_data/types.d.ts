@@ -1,12 +1,5 @@
 import { PageNode } from 'types';
 
-interface Part {
-	dynamic: boolean;
-	optional: boolean;
-	rest: boolean;
-	type: string | null;
-}
-
 interface RouteTreeNode {
 	error: PageNode | undefined;
 	layout: PageNode | undefined;

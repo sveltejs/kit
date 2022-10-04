@@ -163,6 +163,7 @@ export interface Respond {
 export interface RouteData {
 	id: string;
 	parent: RouteData | null;
+	score: number;
 
 	segment: string;
 	pattern: RegExp;
