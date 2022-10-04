@@ -120,8 +120,8 @@ SvelteKit needs to know which route is being requested. To do so, it sorts them 
 src/routes/foo-abc/+page.svelte
 src/routes/foo-[c]/+page.svelte
 src/routes/[a]/+server.js
-src/routes/[c]/+page.svelte
 src/routes/[[b]]/sub/+page.svelte
+src/routes/[c]/+page.svelte
 src/routes/[...catchall]/+page.svelte
 ```
 
