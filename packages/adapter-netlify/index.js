@@ -45,6 +45,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			const publish = get_publish_directory(netlify_config, builder) || 'build';
 
 			// empty out existing build directories
+			builder.rimraf(publish);
 			builder.rimraf('.netlify/edge-functions');
 			builder.rimraf('.netlify/functions-internal');
 			builder.rimraf('.netlify/server');
