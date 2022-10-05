@@ -85,9 +85,6 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	/** @type {Map<string, import('types').RouteData>} */
 	const route_map = new Map();
 
-	/** @type {Map<string, import('./types').Part[][]>} */
-	const segment_map = new Map();
-
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
 
 	const valid_extensions = [...config.extensions, ...config.kit.moduleExtensions];
@@ -124,31 +121,6 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			}
 
 			const { pattern, names, types } = parse_route_id(id);
-
-			const segments = id.split('/');
-
-			segment_map.set(
-				id,
-				segments
-					.filter((segment) => segment !== '' && affects_path(segment))
-					.map((segment) => {
-						/** @type {import('./types').Part[]} */
-						const parts = [];
-						segment.split(/\[(.+?)\]/).map((content, i) => {
-							const dynamic = !!(i % 2);
-
-							if (!content) return;
-
-							parts.push({
-								dynamic,
-								optional: dynamic && content.startsWith('['),
-								rest: dynamic && content.startsWith('...'),
-								type: (dynamic && content.split('=')[1]?.split(']')[0]) || null
-							});
-						});
-						return parts;
-					})
-			);
 
 			/** @type {import('types').RouteData} */
 			const route = {
@@ -347,7 +319,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		}
 	});
 
-	const routes = Array.from(route_map.values()).sort((a, b) => compare(a, b, segment_map));
+	const routes = sort_routes(route_map);
 
 	return { nodes, routes };
 }
@@ -412,62 +384,89 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	throw new Error(`Files and directories prefixed with + are reserved (saw ${project_relative})`);
 }
 
-/**
- * @param {import('types').RouteData} a
- * @param {import('types').RouteData} b
- * @param {Map<string, import('./types').Part[][]>} segment_map
- */
-function compare(a, b, segment_map) {
-	const a_segments = /** @type {import('./types').Part[][]} */ (segment_map.get(a.id));
-	const b_segments = /** @type {import('./types').Part[][]} */ (segment_map.get(b.id));
+/** @param {Map<string, import('types').RouteData>} route_map */
+function sort_routes(route_map) {
+	/** @type {Map<string, import('./types').Part[][]>} */
+	const segment_map = new Map();
 
-	const max_segments = Math.max(a_segments.length, b_segments.length);
-	for (let i = 0; i < max_segments; i += 1) {
-		const sa = a_segments[i];
-		const sb = b_segments[i];
+	route_map.forEach((route) => {
+		segment_map.set(
+			route.id,
+			route.id
+				.split('/')
+				.filter((segment) => segment !== '' && affects_path(segment))
+				.map((segment) => {
+					/** @type {import('./types').Part[]} */
+					const parts = [];
+					segment.split(/\[(.+?)\]/).map((content, i) => {
+						const dynamic = !!(i % 2);
 
-		// /x < /x/y, but /[...x]/y < /[...x]
-		if (!sa) return a.id.includes('[...') ? +1 : -1;
-		if (!sb) return b.id.includes('[...') ? -1 : +1;
+						if (!content) return;
 
-		const max_parts = Math.max(sa.length, sb.length);
-		for (let i = 0; i < max_parts; i += 1) {
-			const pa = sa[i];
-			const pb = sb[i];
+						parts.push({
+							dynamic,
+							optional: dynamic && content.startsWith('['),
+							rest: dynamic && content.startsWith('...'),
+							type: (dynamic && content.split('=')[1]?.split(']')[0]) || null
+						});
+					});
+					return parts;
+				})
+		);
+	});
 
-			// xy < x[y], but [x].json < [x]
-			if (pa === undefined) return pb.dynamic ? -1 : +1;
-			if (pb === undefined) return pa.dynamic ? +1 : -1;
+	return Array.from(route_map.values()).sort((a, b) => {
+		const a_segments = /** @type {import('./types').Part[][]} */ (segment_map.get(a.id));
+		const b_segments = /** @type {import('./types').Part[][]} */ (segment_map.get(b.id));
 
-			// x < [x]
-			if (pa.dynamic !== pb.dynamic) {
-				return pa.dynamic ? +1 : -1;
-			}
+		const max_segments = Math.max(a_segments.length, b_segments.length);
+		for (let i = 0; i < max_segments; i += 1) {
+			const sa = a_segments[i];
+			const sb = b_segments[i];
 
-			if (pa.dynamic) {
-				// [x] < [...x]
-				if (pa.rest !== pb.rest) {
-					return pa.rest ? +1 : -1;
+			// /x < /x/y, but /[...x]/y < /[...x]
+			if (!sa) return a.id.includes('[...') ? +1 : -1;
+			if (!sb) return b.id.includes('[...') ? -1 : +1;
+
+			const max_parts = Math.max(sa.length, sb.length);
+			for (let i = 0; i < max_parts; i += 1) {
+				const pa = sa[i];
+				const pb = sb[i];
+
+				// xy < x[y], but [x].json < [x]
+				if (pa === undefined) return pb.dynamic ? -1 : +1;
+				if (pb === undefined) return pa.dynamic ? +1 : -1;
+
+				// x < [x]
+				if (pa.dynamic !== pb.dynamic) {
+					return pa.dynamic ? +1 : -1;
 				}
 
-				// [x=type] < [x]
-				if (!!pa.type !== !!pb.type) {
-					return pa.type ? -1 : +1;
-				}
+				if (pa.dynamic) {
+					// [x] < [...x]
+					if (pa.rest !== pb.rest) {
+						return pa.rest ? +1 : -1;
+					}
 
-				// [x] < [[x]]
-				if (pa.optional !== pb.optional) {
-					return pa.optional ? +1 : -1;
+					// [x=type] < [x]
+					if (!!pa.type !== !!pb.type) {
+						return pa.type ? -1 : +1;
+					}
+
+					// [x] < [[x]]
+					if (pa.optional !== pb.optional) {
+						return pa.optional ? +1 : -1;
+					}
 				}
 			}
 		}
-	}
 
-	if (!!a.endpoint !== !!b.endpoint) {
-		return a.endpoint ? -1 : +1;
-	}
+		if (!!a.endpoint !== !!b.endpoint) {
+			return a.endpoint ? -1 : +1;
+		}
 
-	return a < b ? -1 : 1;
+		return a < b ? -1 : 1;
+	});
 }
 
 /** @param {string} dir */
