@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.510
+
+### Patch Changes
+
+- Add `fetch` to `RequestEvent` ([#7113](https://github.com/sveltejs/kit/pull/7113))
+
 ## 1.0.0-next.509
 
 ### Patch Changes
