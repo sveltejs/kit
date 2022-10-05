@@ -424,7 +424,7 @@ function get_score(id) {
 			if (dynamic_part.startsWith('[...')) {
 				// rest params have lowest rank
 				part_score = 0.001;
-				count += 1.5;
+				count += 1;
 			} else if (dynamic_part.startsWith('[[')) {
 				// followed by optional params
 				part_score += 0.01;
