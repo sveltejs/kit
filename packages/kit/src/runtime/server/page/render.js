@@ -135,7 +135,8 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
-	let { head, html: body } = rendered;
+	let head = '';
+	let body = rendered.html;
 
 	const csp = new Csp(options.csp, {
 		dev: options.dev,
@@ -302,6 +303,9 @@ export async function render_response({
 			head = http_equiv.join('\n') + head;
 		}
 	}
+
+	// add the content after the script/css links so the link elements are parsed first
+	head += rendered.head;
 
 	// TODO flush chunks as early as we can
 	const html =
