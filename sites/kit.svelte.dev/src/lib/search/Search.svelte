@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment';
 	import { searching, query } from './stores.js';
 
-	const has_search_support = !browser || ('serviceWorker' in navigator);
+	const has_search_support = !browser || (!import.meta.env.LEGACY && 'Worker' in window);
 
 	export let q = '';
 </script>

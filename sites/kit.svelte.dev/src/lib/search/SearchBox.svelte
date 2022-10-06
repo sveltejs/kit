@@ -20,7 +20,7 @@
 	let has_pending = false;
 
 	onMount(async () => {
-		if (!('serviceWorker' in navigator)) {
+		if (!(!import.meta.env.LEGACY && 'Worker' in window)) {
 			console.warn("The search web worker can't be initialized in this platform, searching wouldn't work.");
 			return;
 		}
@@ -98,7 +98,7 @@
 
 <svelte:window
 	on:keydown={(e) => {
-		if (!('serviceWorker' in navigator)) {
+		if (!(!import.meta.env.LEGACY && 'Worker' in window)) {
 			return;
 		}
 		
