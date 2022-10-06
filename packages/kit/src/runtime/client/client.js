@@ -10,7 +10,6 @@ import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
 import { unwrap_promises } from '../../utils/promises.js';
-import { legacy } from '../legacy.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -1499,7 +1498,7 @@ async function load_data(url, invalid) {
 	 * @returns {Promise<void>}
 	 */
 	const safeRemoteImport = (url) =>
-		legacy
+		!!import.meta.env.LEGACY
 			? new Promise((resolve, reject) => {
 					const time_arg = `__svelte_kit_legacy_time=${new Date().getTime()}`;
 

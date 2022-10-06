@@ -285,13 +285,8 @@ export async function render_response({
 			add_nomodule_script('', `src=${s(prefixed(legacy_polyfills_file))}`);
 		}
 
-		/**
-		 *
-		 * @param {boolean} detectLegacy If to detect whether we're in legacy, using a global variable.
-		 * @returns
-		 */
 		// prettier-ignore
-		const getStartupContent = (detectLegacy) => `
+		const startupContent = `
 			start({
 				env: ${s(options.public_env)},
 				hydrate: ${page_config.ssr ? `{
@@ -305,15 +300,12 @@ export async function render_response({
 				}` : 'null'},
 				paths: ${s(options.paths)},
 				target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-				trailing_slash: ${s(options.trailing_slash)},
-				legacy: ${detectLegacy ? `!window.${detectModernBrowserVarName}` : 'false'}
+				trailing_slash: ${s(options.trailing_slash)}
 			});
 		`;
 
 		if (legacy_entry_file) {
-			const startup_script_js = `window.${startup_script_var_name} = function (m) { var start = m.start; ${getStartupContent(
-				true
-			)} };`;
+			const startup_script_js = `window.${startup_script_var_name} = function (m) { var start = m.start; ${startupContent} };`;
 			body += `\n\t\t<script${
 				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
 			}>${startup_script_js}</script>`;
@@ -352,7 +344,7 @@ export async function render_response({
 		}
 		` : `
 		import { start } from ${s(prefixed(entry.file))};
-		${getStartupContent(false)}`;
+		${startupContent}`;
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
 
 		csp.add_script(init_app);
