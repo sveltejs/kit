@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.511
+
+### Patch Changes
+
+- [perf] render head links before other content ([#7160](https://github.com/sveltejs/kit/pull/7160))
+
 ## 1.0.0-next.510
 
 ### Patch Changes
