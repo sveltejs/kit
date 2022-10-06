@@ -71,7 +71,7 @@ export function initial_fetch(resource, resolved, opts) {
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
-	if (opts && typeof opts.body === 'string') {
+	if (opts?.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
 		selector += `[data-hash="${hash(opts.body)}"]`;
 	}
 

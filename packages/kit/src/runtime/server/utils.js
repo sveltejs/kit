@@ -1,8 +1,7 @@
-import { devalue } from 'devalue';
+import * as devalue from 'devalue';
 import { DATA_SUFFIX } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { HttpError } from '../control.js';
-import { add_cookies_to_headers } from './cookie.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -76,7 +75,7 @@ export function data_response(data) {
 	};
 
 	try {
-		return new Response(`window.__sveltekit_data = ${devalue(data)}`, { headers });
+		return new Response(`window.__sveltekit_data = ${devalue.uneval(data)}`, { headers });
 	} catch (e) {
 		const error = /** @type {any} */ (e);
 		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
@@ -167,13 +166,11 @@ export function handle_error_and_jsonify(event, options, error) {
 /**
  * @param {number} status
  * @param {string} location
- * @param {import('./page/types.js').Cookie[]} [cookies]
  */
-export function redirect_response(status, location, cookies = []) {
+export function redirect_response(status, location) {
 	const response = new Response(undefined, {
 		status,
 		headers: { location }
 	});
-	add_cookies_to_headers(response.headers, cookies);
 	return response;
 }

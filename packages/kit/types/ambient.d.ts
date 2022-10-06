@@ -110,6 +110,7 @@ declare module '$app/forms' {
 				form: HTMLFormElement;
 				action: URL;
 				result: ActionResult<Success, Invalid>;
+				update: () => Promise<void>;
 		  }) => void);
 
 	/**
@@ -135,6 +136,8 @@ declare module '$app/forms' {
 		 * - invalidates all data in case of successful submission with no redirect response
 		 * - redirects in case of a redirect response
 		 * - redirects to the nearest error page in case of an unexpected error
+		 *
+		 * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
 		 */
 		submit?: SubmitFunction<Success, Invalid>
 	): { destroy: () => void };
@@ -174,7 +177,7 @@ declare module '$app/navigation' {
 	/**
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
 	 *
-	 * @param url Where to navigate to
+	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param opts.replaceState If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
 	 * @param opts.noscroll If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
 	 * @param opts.keepfocus If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
@@ -255,7 +258,9 @@ declare module '$app/navigation' {
  */
 declare module '$app/paths' {
 	/**
-	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths). It must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string.
+	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths).
+	 *
+	 * Example usage: `<a href="{base}/your-page">Link</a>`
 	 */
 	export const base: `/${string}`;
 	/**

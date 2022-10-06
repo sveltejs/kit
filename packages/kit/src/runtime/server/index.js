@@ -10,6 +10,7 @@ import { render_data } from './data/index.js';
 import { DATA_SUFFIX } from '../../constants.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { HttpError } from '../control.js';
+import { create_fetch } from './fetch.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -113,13 +114,15 @@ export async function respond(request, options, state) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
-	const { cookies, new_cookies } = get_cookies(request, url);
+	const { cookies, new_cookies, get_cookie_header } = get_cookies(request, url);
 
 	if (state.prerendering) disable_search(url);
 
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		cookies,
+		// @ts-expect-error this is added in the next step, because `create_fetch` needs a reference to `event`
+		fetch: null,
 		getClientAddress:
 			state.getClientAddress ||
 			(() => {
@@ -154,6 +157,8 @@ export async function respond(request, options, state) {
 		},
 		url
 	};
+
+	event.fetch = create_fetch({ event, options, state, get_cookie_header });
 
 	// TODO remove this for 1.0
 	/**
@@ -232,7 +237,6 @@ export async function respond(request, options, state) {
 					error: null,
 					branch: [],
 					fetched: [],
-					cookies: [],
 					resolve_opts
 				});
 			}
@@ -312,10 +316,10 @@ export async function respond(request, options, state) {
 							response.headers.set(key, /** @type {string} */ (value));
 						}
 					}
-					add_cookies_to_headers(response.headers, Array.from(new_cookies.values()));
+					add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
 					if (state.prerendering && event.routeId !== null) {
-						response.headers.set('x-sveltekit-routeid', event.routeId);
+						response.headers.set('x-sveltekit-routeid', encodeURI(event.routeId));
 					}
 
 					return response;

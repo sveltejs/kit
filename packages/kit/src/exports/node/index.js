@@ -94,21 +94,9 @@ function get_raw_body(req, body_size_limit) {
 
 /** @type {import('@sveltejs/kit/node').getRequest} */
 export async function getRequest({ request, base, bodySizeLimit }) {
-	let headers = /** @type {Record<string, string>} */ (request.headers);
-	if (request.httpVersionMajor === 2) {
-		// we need to strip out the HTTP/2 pseudo-headers because node-fetch's
-		// Request implementation doesn't like them
-		// TODO is this still true with Node 18
-		headers = Object.assign({}, headers);
-		delete headers[':method'];
-		delete headers[':path'];
-		delete headers[':authority'];
-		delete headers[':scheme'];
-	}
-
 	return new Request(base + request.url, {
 		method: request.method,
-		headers,
+		headers: /** @type {Record<string, string>} */ (request.headers),
 		body: get_raw_body(request, bodySizeLimit)
 	});
 }

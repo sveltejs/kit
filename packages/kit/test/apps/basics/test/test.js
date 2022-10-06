@@ -188,15 +188,15 @@ test.describe('Shadowed pages', () => {
 		);
 	});
 
-	test('Handles POST redirects', async ({ page }) => {
+	test('Handles POST redirects', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
-		await Promise.all([page.waitForNavigation(), page.click('#redirect-post')]);
+		await clicknav('#redirect-post');
 		expect(await page.textContent('h1')).toBe('Redirection was successful');
 	});
 
-	test('Handles POST redirects with cookies', async ({ page, context }) => {
+	test('Handles POST redirects with cookies', async ({ page, context, clicknav }) => {
 		await page.goto('/shadowed');
-		await Promise.all([page.waitForNavigation(), page.click('#redirect-post-with-cookie')]);
+		await clicknav('#redirect-post-with-cookie');
 		expect(await page.textContent('h1')).toBe('Redirection was successful');
 
 		const cookies = await context.cookies();
@@ -205,9 +205,9 @@ test.describe('Shadowed pages', () => {
 		);
 	});
 
-	test('Handles POST success with returned location', async ({ page }) => {
+	test('Handles POST success with returned location', async ({ page, clicknav }) => {
 		await page.goto('/shadowed/post-success-redirect');
-		await Promise.all([page.waitForNavigation(), page.click('button')]);
+		await clicknav('button');
 		expect(await page.textContent('h1')).toBe('POST was successful');
 	});
 
@@ -606,12 +606,13 @@ test.describe('Errors', () => {
 
 	test('page endpoint POST unexpected error message is preserved', async ({
 		page,
+		clicknav,
 		read_errors
 	}) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
-		await Promise.all([page.waitForNavigation(), page.click('#post-implicit')]);
+		await clicknav('#post-implicit');
 
 		expect(await page.textContent('pre')).toBe(
 			JSON.stringify({ status: 500, message: 'oops' }, null, '  ')
@@ -631,11 +632,15 @@ test.describe('Errors', () => {
 		}
 	});
 
-	test('page endpoint POST HttpError error message is preserved', async ({ page, read_errors }) => {
+	test('page endpoint POST HttpError error message is preserved', async ({
+		page,
+		clicknav,
+		read_errors
+	}) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
-		await Promise.all([page.waitForNavigation(), page.click('#post-explicit')]);
+		await clicknav('#post-explicit');
 
 		expect(await page.textContent('pre')).toBe(
 			JSON.stringify({ status: 400, message: 'oops' }, null, '  ')
@@ -675,12 +680,14 @@ test.describe('Load', () => {
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents = await page.innerHTML('script[data-sveltekit-fetched]');
 
-			const payload = '{"status":200,"statusText":"","headers":{},"body":"{\\"answer\\":42}"}';
+			const payload = '{"status":200,"statusText":"","headers":{},"body":"{\\"b\\":2}"}';
 
 			expect(script_contents).toBe(payload);
 		}
 
-		expect(requests.some((r) => r.endsWith('/load/serialization.json'))).toBe(false);
+		expect(requests.some((r) => r.endsWith('/load/serialization/fetched-from-shared.json'))).toBe(
+			false
+		);
 	});
 
 	test('POST fetches are serialized', async ({ page, javaScriptEnabled }) => {
@@ -804,7 +811,12 @@ test.describe('Load', () => {
 		}
 	});
 
-	test('makes credentialed fetches to endpoints by default', async ({ page, clicknav }) => {
+	test('makes credentialed fetches to endpoints by default', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) return;
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-credentialed"]');
 		expect(await page.textContent('h1')).toBe('Hello SvelteKit!');
@@ -839,9 +851,25 @@ test.describe('Load', () => {
 		}
 	});
 
-	test('exposes rawBody to endpoints', async ({ page, clicknav }) => {
-		await page.goto('/load');
-		await clicknav('[href="/load/raw-body"]');
+	test('exposes rawBody as a DataView to endpoints', async ({ page, clicknav }) => {
+		await page.goto('/load/raw-body');
+		await clicknav('[href="/load/raw-body/dataview"]');
+
+		expect(await page.innerHTML('.parsed')).toBe('{"oddly":{"formatted":"json"}}');
+		expect(await page.innerHTML('.raw')).toBe('{ "oddly" : { "formatted" : "json" } }');
+	});
+
+	test('exposes rawBody as a string to endpoints', async ({ page, clicknav }) => {
+		await page.goto('/load/raw-body');
+		await clicknav('[href="/load/raw-body/string"]');
+
+		expect(await page.innerHTML('.parsed')).toBe('{"oddly":{"formatted":"json"}}');
+		expect(await page.innerHTML('.raw')).toBe('{ "oddly" : { "formatted" : "json" } }');
+	});
+
+	test('exposes rawBody as a Uint8Array to endpoints', async ({ page, clicknav }) => {
+		await page.goto('/load/raw-body');
+		await clicknav('[href="/load/raw-body/uint8array"]');
 
 		expect(await page.innerHTML('.parsed')).toBe('{"oddly":{"formatted":"json"}}');
 		expect(await page.innerHTML('.raw')).toBe('{ "oddly" : { "formatted" : "json" } }');
@@ -1390,7 +1418,8 @@ test.describe('Routing', () => {
 
 	test('does not attempt client-side navigation to links with data-sveltekit-reload', async ({
 		baseURL,
-		page
+		page,
+		clicknav
 	}) => {
 		await page.goto('/routing');
 
@@ -1398,7 +1427,7 @@ test.describe('Routing', () => {
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
-		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/b"]')]);
+		await clicknav('[href="/routing/b"]');
 		expect(await page.textContent('h1')).toBe('b');
 		expect(requests).toContain(`${baseURL}/routing/b`);
 	});

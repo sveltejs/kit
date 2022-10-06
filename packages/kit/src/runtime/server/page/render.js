@@ -1,10 +1,9 @@
-import { devalue } from 'devalue';
+import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
-import { add_cookies_to_headers } from '../cookie.js';
 
 // TODO rename this function/module
 
@@ -18,7 +17,6 @@ const updated = {
  * @param {{
  *   branch: Array<import('./types').Loaded>;
  *   fetched: Array<import('./types').Fetched>;
- *   cookies: import('./types').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
@@ -32,7 +30,6 @@ const updated = {
 export async function render_response({
 	branch,
 	fetched,
-	cookies,
 	options,
 	state,
 	page_config,
@@ -139,7 +136,8 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
-	let { head, html: body } = rendered;
+	let head = '';
+	let body = rendered.html;
 
 	const csp = new Csp(options.csp, {
 		dev: options.dev,
@@ -173,7 +171,7 @@ export async function render_response({
 	const serialized = { data: '', form: 'null' };
 
 	try {
-		serialized.data = devalue(branch.map(({ server_data }) => server_data));
+		serialized.data = devalue.uneval(branch.map(({ server_data }) => server_data));
 	} catch (e) {
 		// If we're here, the data could not be serialized with devalue
 		// TODO if we wanted to get super fancy we could track down the origin of the `load`
@@ -186,7 +184,7 @@ export async function render_response({
 
 	if (form_value) {
 		// no need to check it can be serialized, we already verified that it's JSON-friendly
-		serialized.form = devalue(form_value);
+		serialized.form = devalue.uneval(form_value);
 	}
 
 	if (inline_styles.size > 0) {
@@ -300,7 +298,7 @@ export async function render_response({
 					status: ${status},
 					error: ${s(error)},
 					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
-					params: ${devalue(event.params)},
+					params: ${devalue.uneval(event.params)},
 					routeId: ${s(event.routeId)},
 					data: ${serialized.data},
 					form: ${serialized.form}
@@ -410,6 +408,9 @@ export async function render_response({
 		}
 	}
 
+	// add the content after the script/css links so the link elements are parsed first
+	head += rendered.head;
+
 	// TODO flush chunks as early as we can
 	const html =
 		(await resolve_opts.transformPageChunk({
@@ -432,8 +433,6 @@ export async function render_response({
 		if (report_only_header) {
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
-
-		add_cookies_to_headers(headers, cookies);
 
 		if (link_header_preloads.size) {
 			headers.set('link', Array.from(link_header_preloads).join(', '));

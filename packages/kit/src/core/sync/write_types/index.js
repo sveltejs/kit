@@ -302,7 +302,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		exports.push(`export type RequestHandler = Kit.RequestHandler<RouteParams>;`);
 	}
 
-	if (route.leaf?.server || route.endpoint) {
+	if (route.leaf?.server || route.layout?.server || route.endpoint) {
 		exports.push(`export type RequestEvent = Kit.RequestEvent<RouteParams>;`);
 	}
 

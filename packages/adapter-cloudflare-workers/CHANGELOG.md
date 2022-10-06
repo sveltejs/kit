@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.58
+
+### Patch Changes
+
+- Add config option to set custom `wrangler.toml` file name ([#7104](https://github.com/sveltejs/kit/pull/7104))
+
 ## 1.0.0-next.57
 
 ### Patch Changes

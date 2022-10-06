@@ -60,7 +60,7 @@ async function run_test(dir, config = {}) {
 	}
 }
 
-test('Create $types for page.js', async () => {
+test('Create $types for +page.js', async () => {
 	await run_test('simple-page-shared-only');
 });
 

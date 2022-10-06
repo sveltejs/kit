@@ -1,5 +1,29 @@
 # create-svelte
 
+## 2.0.0-next.183
+
+### Patch Changes
+
+- [feat] extract and export types from create-svelte ([#7111](https://github.com/sveltejs/kit/pull/7111))
+
+## 2.0.0-next.182
+
+### Patch Changes
+
+- Work around SSR transform bug ([#7088](https://github.com/sveltejs/kit/pull/7088))
+
+## 2.0.0-next.181
+
+### Patch Changes
+
+- Fix template description for SvelteKit demo app ([#7076](https://github.com/sveltejs/kit/pull/7076))
+
+## 2.0.0-next.180
+
+### Patch Changes
+
+- Replace /todos page in demo app with /sverdle ([#6979](https://github.com/sveltejs/kit/pull/6979))
+
 ## 2.0.0-next.179
 
 ### Patch Changes
