@@ -576,7 +576,7 @@ test.describe('Errors', () => {
 		);
 
 		const { status, name, message, stack, fancy } = read_errors(
-			'/errors/page-endpoint/get-implicit/__data.js'
+			'/errors/page-endpoint/get-implicit/__data.json'
 		);
 		expect(status).toBe(undefined);
 		expect(name).toBe('FancyError');

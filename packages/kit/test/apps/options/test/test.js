@@ -162,7 +162,7 @@ test.describe('trailingSlash', () => {
 	});
 
 	test('can fetch data from page-endpoint', async ({ request }) => {
-		const r = await request.get('/path-base/page-endpoint/__data.js');
+		const r = await request.get('/path-base/page-endpoint/__data.json');
 		const code = await r.text();
 
 		const window = {};
@@ -199,7 +199,7 @@ test.describe('trailingSlash', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`/path-base/prefetching/prefetched/__data.js`)).toBe(true);
+		expect(requests.includes(`/path-base/prefetching/prefetched/__data.json`)).toBe(true);
 
 		requests = [];
 		await app.goto('/path-base/prefetching/prefetched');

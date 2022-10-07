@@ -25,7 +25,7 @@ test('renders a server-side redirect', () => {
 	const html = read('redirect-server.html');
 	assert.equal(html, '<meta http-equiv="refresh" content="0;url=https://example.com/redirected">');
 
-	const code = read('redirect-server/__data.js');
+	const code = read('redirect-server/__data.json');
 	const window = {};
 	new Function('window', code)(window);
 
@@ -77,10 +77,10 @@ test('loads a file with spaces in the filename', () => {
 	assert.ok(content.includes('<h1>answer: 42</h1>'), content);
 });
 
-test('generates __data.js file for shadow endpoints', () => {
+test('generates __data.json file for shadow endpoints', () => {
 	const window = {};
 
-	new Function('window', read('__data.js'))(window);
+	new Function('window', read('__data.json'))(window);
 	assert.equal(window.__sveltekit_data, {
 		type: 'data',
 		nodes: [
@@ -93,7 +93,7 @@ test('generates __data.js file for shadow endpoints', () => {
 		]
 	});
 
-	new Function('window', read('shadowed-get/__data.js'))(window);
+	new Function('window', read('shadowed-get/__data.json'))(window);
 	assert.equal(window.__sveltekit_data, {
 		type: 'data',
 		nodes: [
@@ -109,7 +109,7 @@ test('generates __data.js file for shadow endpoints', () => {
 
 test('does not prerender page with shadow endpoint with non-load handler', () => {
 	assert.ok(!fs.existsSync(`${build}/shadowed-post.html`));
-	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.js`));
+	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 
 test('decodes paths when writing files', () => {
@@ -184,7 +184,7 @@ test('prerenders binary data', async () => {
 
 test('fetches data from local endpoint', () => {
 	const window = {};
-	new Function('window', read('origin/__data.js'))(window);
+	new Function('window', read('origin/__data.json'))(window);
 
 	assert.equal(window.__sveltekit_data, {
 		type: 'data',
