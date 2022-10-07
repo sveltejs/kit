@@ -697,6 +697,7 @@ importers:
       '@sveltejs/site-kit': ^2.1.2
       '@types/node': ^16.11.36
       flexsearch: ^0.7.21
+      magic-string: ^0.26.2
       marked: ^4.0.16
       prism-svelte: ^0.5.0
       prismjs: ^1.28.0
@@ -713,6 +714,7 @@ importers:
       '@sveltejs/site-kit': 2.1.2
       '@types/node': 16.11.42
       flexsearch: 0.7.21
+      magic-string: 0.26.3
       marked: 4.0.17
       prism-svelte: 0.5.0
       prismjs: 1.28.0

@@ -73,12 +73,23 @@
 			{ once: true }
 		);
 	}
+
+	function toggle() {
+		const value = localStorage.getItem('prefers-ts') === 'true' ? 'false' : 'true';
+		localStorage.setItem('prefers-ts', value);
+		if (value === 'true') {
+			document.documentElement.classList.add('prefers-ts');
+		} else {
+			document.documentElement.classList.remove('prefers-ts');
+		}
+	}
 </script>
 
 <svelte:window on:scroll={highlight} on:resize={update} on:hashchange={() => select($page.url)} />
 
 <nav>
 	<ul class="sidebar">
+	<li><button on:click={toggle}>Toggle script language</button></li>
 		{#each contents as section}
 			<li>
 				<a

@@ -10,6 +10,8 @@ import { modules } from '../../../../../../packages/kit/docs/types.js';
 import { render_modules } from './modules';
 import { error } from '@sveltejs/kit';
 import { parse_route_id } from '../../../../../../packages/kit/src/utils/routing.js';
+import ts from 'typescript';
+import MagicString from 'magic-string';
 
 const languages = {
 	bash: 'bash',
@@ -65,7 +67,7 @@ export async function read_file(dir, file) {
 	const { metadata, body } = extract_frontmatter(markdown);
 
 	const { content } = parse({
-		body,
+		body: generate_ts_from_js(body),
 		file,
 		// gross hack to accommodate FAQ
 		slug: dir === 'faq' ? slug : undefined,
@@ -92,7 +94,15 @@ export async function read_file(dir, file) {
 				})
 				.replace(/\*\\\//g, '*/');
 
-			if (language === 'js') {
+			let language_version = 'none';
+			if (language === 'generated-ts' || language === 'generated-svelte') {
+				language = language.replace('generated-', '');
+				language_version = 'generated';
+			} else if (language === 'js' || language === 'svelte') {
+				language_version = 'original';
+			}
+
+			if (language === 'js' || language === 'ts') {
 				try {
 					if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
 						const params = parse_route_id(options.file || `+page.${language}`)
@@ -100,6 +110,8 @@ export async function read_file(dir, file) {
 							.join(', ');
 
 						let injected = [
+							`// @filename: ambient-kit.d.ts`,
+							`/// <reference types="@sveltejs/kit" />`,
 							`// @filename: $types.d.ts`,
 							`import type * as Kit from '@sveltejs/kit';`,
 							`export type PageLoad = Kit.Load<{${params}}>;`,
@@ -184,9 +196,13 @@ export async function read_file(dir, file) {
 				html = `<pre class='language-${plang}'><code>${highlighted}</code></pre>`;
 			}
 
-			html = `<div class="code-block">${
-				options.file ? `<h5>${options.file}</h5>` : ''
-			}${html}</div>`;
+			html = `<div class="code-block${
+				language_version === 'generated'
+					? ' ts-version'
+					: language_version === 'original'
+					? ' non-ts-version'
+					: ''
+			}">${options.file ? `<h5>${options.file}</h5>` : ''}${html}</div>`;
 
 			type_regex.lastIndex = 0;
 
@@ -391,4 +407,154 @@ export function slugify(title) {
 		.replace(/-{2,}/g, '-')
 		.replace(/^-/, '')
 		.replace(/-$/, '');
+}
+
+/**
+ * Appends a JS->TS / Svelte->Svelte-TS code block after each JS/Svelte code block.
+ * The language is `generated-js`/`generated-svelte` which can be used to detect this in later steps.
+ *
+ * @param {string} markdown
+ */
+function generate_ts_from_js(markdown) {
+	return markdown
+		.replaceAll(/```js\n([\s\S]+?)\n```/g, (match, code) => {
+			const ts = convert_to_ts(code);
+			return match + '\n```generated-ts\n' + ts + '\n```';
+		})
+		.replaceAll(/```svelte\n([\s\S]+?)\n```/g, (match, code) => {
+			// Assumption: no context="module" blocks
+			const script = code.match(/<script>([\s\S]+?)<\/script>/);
+			if (!script) return match;
+
+			const [outer, inner] = script;
+			const ts = convert_to_ts(inner, '\t', '\n');
+			return (
+				match +
+				'\n```generated-svelte\n' +
+				code.replace(outer, `<script lang="ts">${ts}</script>`) +
+				'\n```'
+			);
+		});
+}
+
+/**
+ * Transforms a JS code block into a TS code block by turning JSDoc into type annotations.
+ * Due to pragmatism only the cases currently used in the docs are implemented.
+ *
+ * @param {string} js_code
+ * @param {string} [indent]
+ * @param {string} [offset]
+ *  */
+function convert_to_ts(js_code, indent = '', offset = '') {
+	js_code = js_code
+		.replaceAll('// @filename: index.js', '// @filename: index.ts')
+		.replace(/(\/\/\/ .+?\.)js/, '$1ts')
+		// *\/ appears in some JsDoc comments in d.ts files due to the JSDoc-in-jSDoc problem
+		.replace(/\*\\\//g, '*/');
+
+	const ast = ts.createSourceFile(
+		'filename.ts',
+		js_code,
+		ts.ScriptTarget.Latest,
+		true,
+		ts.ScriptKind.TS
+	);
+	const code = new MagicString(js_code);
+	const imports = new Map();
+
+	function walk(node) {
+		// @ts-ignore
+		if (node.jsDoc) {
+			// @ts-ignore
+			for (const comment of node.jsDoc) {
+				let modified = false;
+
+				for (const tag of comment.tags ?? []) {
+					if (ts.isJSDocTypeTag(tag)) {
+						const name = get_type_name(tag);
+
+						if (ts.isFunctionDeclaration(node)) {
+							const is_export = node.modifiers?.some(
+								(modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
+							)
+								? 'export '
+								: '';
+							const is_async = node.modifiers?.some(
+								(modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword
+							);
+							code.overwrite(
+								node.getStart(),
+								node.name.getEnd(),
+								`${is_export ? 'export ' : ''}const ${node.name.getText()}: ${name} = ${
+									is_async ? 'async ' : ''
+								}`
+							);
+							code.appendLeft(node.body.getStart(), '=> ');
+
+							modified = true;
+						} else if (
+							ts.isVariableStatement(node) &&
+							node.declarationList.declarations.length === 1
+						) {
+							code.appendLeft(node.declarationList.declarations[0].name.getEnd(), `: ${name}`);
+
+							modified = true;
+						} else {
+							throw new Error('Unhandled @type JsDoc->TS conversion: ' + js_code);
+						}
+					} else if (ts.isJSDocParameterTag(tag) && ts.isFunctionDeclaration(node)) {
+						if (node.parameters.length !== 1) {
+							throw new Error(
+								'Unhandled @type JsDoc->TS conversion; needs more params logic: ' + node.getText()
+							);
+						}
+						const name = get_type_name(tag);
+						code.appendLeft(node.parameters[0].getEnd(), `: ${name}`);
+
+						modified = true;
+					}
+				}
+
+				if (modified) {
+					code.overwrite(comment.getStart(), comment.getEnd(), '');
+				}
+			}
+		}
+
+		ts.forEachChild(node, walk);
+	}
+
+	walk(ast);
+
+	const import_statements = Array.from(imports.entries())
+		.map(([from, names]) => {
+			return `${indent}import type { ${Array.from(names).join(', ')} } from '${from}';`;
+		})
+		.join('\n');
+	const insertion_point = Math.max(
+		js_code.includes('---cut---') ? js_code.indexOf('---cut---') + 10 : 0,
+		js_code.startsWith('///') ? js_code.split('\n')[0].length + 1 : 0
+	);
+	code.appendLeft(insertion_point, offset + import_statements + '\n');
+
+	return code.toString().replace(/\n\s*\n\s*\n/g, '\n\n');
+
+	/** @param {ts.JSDocTypeTag | ts.JSDocParameterTag} tag */
+	function get_type_name(tag) {
+		const type_text = tag.typeExpression.getText();
+		let name = type_text.slice(1, -1); // remove { }
+
+		const import_match = /import\('(.+?)'\)\.(\w+)/.exec(type_text);
+		if (import_match) {
+			const [, from, _name] = import_match;
+			name = _name;
+			const existing = imports.get(from);
+			if (existing) {
+				existing.add(name);
+			} else {
+				imports.set(from, new Set([name]));
+			}
+		}
+		return name;
+	}
 }

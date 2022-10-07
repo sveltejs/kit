@@ -65,7 +65,6 @@ If your content is available in multiple languages, you should set the `lang` at
 /// file: src/hooks.server.js
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @returns {string}
  */
 function get_lang(event) {
 	return 'en';

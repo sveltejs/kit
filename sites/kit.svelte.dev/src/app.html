@@ -14,6 +14,23 @@
 		<meta name="twitter:image" content="/images/twitter-thumbnail.jpg" />
 		<meta name="og:image" content="/images/twitter-thumbnail.jpg" />
 
+		<!-- add inline style and blocking script to prevent content flash/jump -->
+		<style>
+			.code-block.ts-version {
+				display: none;
+			}
+			.prefers-ts .code-block.non-ts-version {
+				display: none;
+			}
+			.prefers-ts .code-block.ts-version {
+				display: block;
+			}
+		</style>
+		<script>
+			localStorage.getItem('prefers-ts') === 'true' &&
+				document.documentElement.classList.add('prefers-ts');
+		</script>
+
 		%sveltekit.head%
 	</head>
 	<body>
