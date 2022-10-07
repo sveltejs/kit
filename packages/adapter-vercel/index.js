@@ -98,7 +98,7 @@ export default function ({ external = [], edge, split } = {}) {
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 			const dirs = {
-				static: `${dir}/static`,
+				static: `${dir}/static${builder.config.kit.paths.base}`,
 				functions: `${dir}/functions`
 			};
 
