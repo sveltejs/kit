@@ -113,7 +113,7 @@ The `load` functions related to a certain page run in parallel by default, avoid
 
 ### Using URL data
 
-Often the `load` function depends on the URL in one way or the other. For this, the `load` function provides you with `params`, `routeId` and `url`.
+Often the `load` function depends on the URL in one way or another. For this, the `load` function provides you with `params`, `routeId` and `url`.
 
 #### params
 
@@ -150,7 +150,7 @@ An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), co
 
 The `load` function is available in both `+page.js`/`+layout.js` and `+page.server.js`/`+layout.server.js` files. They share the same name because they do the same - providing data to a layout or page. Their capabalities differ in some ways though, and it makes sense to use one or the other depending on the situation - sometimes even both.
 
-If the `load` function is defined in `+page.server.js` or `+layout.server.js` ("server-only `load` function") it will only run on the server, in which case it can (for example) make database calls and access private [environment variables](/docs/modules#$env-static-private), but can only return data that can be serialized with [devalue](https://github.com/rich-harris/devalue).
+If the `load` function is defined in `+page.server.js` or `+layout.server.js` ("server-only `load` function") it will only run on the server, in which case it can (for example) make database calls and access private [environment variables](/docs/modules#$env-static-private). However, it can only return data that can be serialized with [devalue](https://github.com/rich-harris/devalue).
 
 ```js
 /// file: src/routes/blog/+page.server.js
@@ -200,7 +200,7 @@ export async function load() {
 }
 ```
 
-Sometimes it's even benefitial to use both `load` functions. For example you could first return some data from your database, and use that to create an object that is nonserializable and therefore couldn't be returned from the server `load` function. To access the server data in the shared `load` function, use the `data` input:
+Sometimes it's even beneficial to use both `load` functions. For example you could first return some data from your database, and use that to create an object that is non-serializable (so therefore couldn't be returned directly from the server `load` function). To access the server data in the shared `load` function, use the `data` input:
 
 ```js
 /// file: src/routes/blog/+page.server.js
@@ -255,11 +255,11 @@ To summarize:
 	- you want to avoid a network hop when the resource is on a different server
 	- you need to return non-serializable data
 	- you are building an SPA served from a static file server
-- use both `load` functions in case you have a combination of requirements
+- use both `load` functions when you have a combination of requirements
 
 ### Making fetch requests
 
-Inside server-only `load` functions you can directly query your data base. Inside shared `load` functions you can't, as they also may run on the client. Also sometimes your data base may not be on the same server as your app. For these reasons it is often necessary to make `fetch` requests.
+Inside server-only `load` functions you can directly query your database. Inside shared `load` functions you can't, as they also may run on the client. Also sometimes your data base may not be on the same server as your app. For these reasons it is often necessary to make `fetch` requests.
 
 The `load` function provides a `fetch` method which is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 
