@@ -387,6 +387,8 @@ function parse({ body, file, slug, code, codespan }) {
 export function slugify(title) {
 	return title
 		.toLowerCase()
+		.replace(/&lt;/g, '')
+		.replace(/&gt;/g, '')
 		.replace(/[^a-z0-9-$]/g, '-')
 		.replace(/-{2,}/g, '-')
 		.replace(/^-/, '')
