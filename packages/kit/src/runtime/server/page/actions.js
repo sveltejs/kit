@@ -180,7 +180,7 @@ export async function call_action(event, actions) {
 		throw new Error(`No action with name '${name}' found`);
 	}
 
-	const type = event.request.headers.get('content-type')?.split('; ')[0];
+	const type = event.request.headers.get('content-type')?.split(';', 1)[0].trim();
 	if (type !== 'application/x-www-form-urlencoded' && type !== 'multipart/form-data') {
 		throw new Error(`Actions expect form-encoded data (received ${type})`);
 	}

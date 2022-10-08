@@ -1773,7 +1773,7 @@ test.describe('Actions', () => {
 		}
 	});
 
-	test('Success data is returned', async ({ page }) => {
+	test('Success data as form-data is returned', async ({ page }) => {
 		await page.goto('/actions/success-data');
 
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
@@ -1781,10 +1781,24 @@ test.describe('Actions', () => {
 		await page.type('input[name="username"]', 'foo');
 		await Promise.all([
 			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
-			page.click('button')
+			page.click('button[formenctype="multipart/form-data"]')
 		]);
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
+	});
+
+	test('Success data as form-urlencoded is returned', async ({ page }) => {
+		await page.goto('/actions/success-data');
+
+		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+
+		await page.type('input[name="username"]', 'bar');
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
+			page.click('button[formenctype="application/x-www-form-urlencoded"]')
+		]);
+
+		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'bar' }));
 	});
 
 	test('applyAction updates form prop', async ({ page, javaScriptEnabled }) => {
