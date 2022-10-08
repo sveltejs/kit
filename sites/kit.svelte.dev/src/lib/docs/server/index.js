@@ -98,20 +98,26 @@ export async function read_file(dir, file) {
 			if (language === 'generated-ts' || language === 'generated-svelte') {
 				language = language.replace('generated-', '');
 				language_version = 'generated';
-			} else if (language === 'js' || language === 'svelte') {
+			} else if (language === 'original-js' || language === 'original-svelte') {
+				language = language.replace('original-', '');
 				language_version = 'original';
 			}
 
 			if (language === 'js' || language === 'ts') {
 				try {
+					const injected = [];
+					if (source.includes('$app/')) {
+						injected.push(
+							`// @filename: ambient-kit.d.ts`,
+							`/// <reference types="@sveltejs/kit" />`
+						);
+					}
 					if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
 						const params = parse_route_id(options.file || `+page.${language}`)
 							.names.map((name) => `${name}: string`)
 							.join(', ');
 
-						let injected = [
-							`// @filename: ambient-kit.d.ts`,
-							`/// <reference types="@sveltejs/kit" />`,
+						injected.push(
 							`// @filename: $types.d.ts`,
 							`import type * as Kit from '@sveltejs/kit';`,
 							`export type PageLoad = Kit.Load<{${params}}>;`,
@@ -121,14 +127,21 @@ export async function read_file(dir, file) {
 							`export type RequestHandler = Kit.RequestHandler<{${params}}>;`,
 							`export type Action = Kit.Action<{${params}}>;`,
 							`export type Actions = Kit.Actions<{${params}}>;`
-						].join('\n');
-
+						);
+					}
+					if (!options.file) {
+						// No named file -> assume that the code is not meant to be type checked
+						// If we don't do this, twoslash would throw errors for e.g. some snippets in `types/ambient.d.ts`
+						injected.push('// @noErrors');
+					}
+					if (injected.length) {
+						const injected_str = injected.join('\n');
 						if (source.includes('// @filename:')) {
-							source = source.replace('// @filename:', `${injected}\n\n// @filename:`);
+							source = source.replace('// @filename:', `${injected_str}\n\n// @filename:`);
 						} else {
 							source = source.replace(
 								/^(?!\/\/ @)/m,
-								`${injected}\n\n// @filename: index.${language}\n// ---cut---\n`
+								`${injected_str}\n\n// @filename: index.${language}\n// ---cut---\n`
 							);
 						}
 					}
@@ -412,24 +425,45 @@ export function slugify(title) {
 /**
  * Appends a JS->TS / Svelte->Svelte-TS code block after each JS/Svelte code block.
  * The language is `generated-js`/`generated-svelte` which can be used to detect this in later steps.
- *
  * @param {string} markdown
  */
 function generate_ts_from_js(markdown) {
 	return markdown
 		.replaceAll(/```js\n([\s\S]+?)\n```/g, (match, code) => {
+			if (!code.includes('/// file:')) {
+				// No named file -> assume that the code is not meant to be shown in two versions
+				return match;
+			}
+
 			const ts = convert_to_ts(code);
-			return match + '\n```generated-ts\n' + ts + '\n```';
+
+			if (!ts) {
+				// No changes -> don't show TS version
+				return match;
+			}
+
+			return match.replace('js', 'original-js') + '\n```generated-ts\n' + ts + '\n```';
 		})
 		.replaceAll(/```svelte\n([\s\S]+?)\n```/g, (match, code) => {
+			if (!code.includes('/// file:')) {
+				// No named file -> assume that the code is not meant to be shown in two versions
+				return match;
+			}
+
 			// Assumption: no context="module" blocks
 			const script = code.match(/<script>([\s\S]+?)<\/script>/);
 			if (!script) return match;
 
 			const [outer, inner] = script;
 			const ts = convert_to_ts(inner, '\t', '\n');
+
+			if (!ts) {
+				// No changes -> don't show TS version
+				return match;
+			}
+
 			return (
-				match +
+				match.replace('svelte', 'original-svelte') +
 				'\n```generated-svelte\n' +
 				code.replace(outer, `<script lang="ts">${ts}</script>`) +
 				'\n```'
@@ -440,7 +474,6 @@ function generate_ts_from_js(markdown) {
 /**
  * Transforms a JS code block into a TS code block by turning JSDoc into type annotations.
  * Due to pragmatism only the cases currently used in the docs are implemented.
- *
  * @param {string} js_code
  * @param {string} [indent]
  * @param {string} [offset]
@@ -449,7 +482,7 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 	js_code = js_code
 		.replaceAll('// @filename: index.js', '// @filename: index.ts')
 		.replace(/(\/\/\/ .+?\.)js/, '$1ts')
-		// *\/ appears in some JsDoc comments in d.ts files due to the JSDoc-in-jSDoc problem
+		// *\/ appears in some JsDoc comments in d.ts files due to the JSDoc-in-JSDoc problem
 		.replace(/\*\\\//g, '*/');
 
 	const ast = ts.createSourceFile(
@@ -526,18 +559,22 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 
 	walk(ast);
 
-	const import_statements = Array.from(imports.entries())
-		.map(([from, names]) => {
-			return `${indent}import type { ${Array.from(names).join(', ')} } from '${from}';`;
-		})
-		.join('\n');
-	const insertion_point = Math.max(
-		js_code.includes('---cut---') ? js_code.indexOf('---cut---') + 10 : 0,
-		js_code.startsWith('///') ? js_code.split('\n')[0].length + 1 : 0
-	);
-	code.appendLeft(insertion_point, offset + import_statements + '\n');
+	if (imports.size) {
+		const import_statements = Array.from(imports.entries())
+			.map(([from, names]) => {
+				return `${indent}import type { ${Array.from(names).join(', ')} } from '${from}';`;
+			})
+			.join('\n');
+		const insertion_point = js_code.includes('---cut---')
+			? js_code.indexOf('\n', js_code.indexOf('---cut---')) + 1
+			: js_code.includes('/// file:')
+			? js_code.indexOf('/// file:', js_code.indexOf('\n')) + 1
+			: 0;
+		code.appendLeft(insertion_point, offset + import_statements + '\n');
+	}
 
-	return code.toString().replace(/\n\s*\n\s*\n/g, '\n\n');
+	const transformed = code.toString();
+	return transformed === js_code ? undefined : transformed.replace(/\n\s*\n\s*\n/g, '\n\n');
 
 	/** @param {ts.JSDocTypeTag | ts.JSDocParameterTag} tag */
 	function get_type_name(tag) {
