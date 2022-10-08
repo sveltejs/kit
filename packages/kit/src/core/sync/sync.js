@@ -18,9 +18,13 @@ export function init(config, mode) {
 	if (fs.existsSync('src/app.d.ts')) {
 		const content = fs.readFileSync('src/app.d.ts', 'utf-8');
 		if (content.includes('PageError')) {
-			throw new Error(
-				'App.PageError has been renamed to App.Error — please update your src/app.d.ts'
-			);
+			if (content.includes('// interface PageError')) {
+				fs.writeFileSync('src/app.d.ts', content.replace(/\/\/ interface PageError/g, '// Error'));
+			} else {
+				throw new Error(
+					'App.PageError has been renamed to App.Error — please update your src/app.d.ts'
+				);
+			}
 		}
 	}
 
