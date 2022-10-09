@@ -165,9 +165,9 @@ export async function call_action(event, actions) {
 	const url = new URL(event.request.url);
 
 	let name = 'default';
-	for (const param of url.searchParams) {
-		if (param[0].startsWith('/')) {
-			name = param[0].slice(1);
+	for (const param of url.searchParams.keys()) {
+		if (param[0] === '/' || param[0] === '.') {
+			name = param.slice(1);
 			if (name === 'default') {
 				throw new Error('Cannot use reserved action name "default"');
 			}

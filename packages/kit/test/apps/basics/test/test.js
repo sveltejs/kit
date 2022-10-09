@@ -1894,6 +1894,20 @@ test.describe('Actions', () => {
 		);
 	});
 
+	test('use:enhance with alternative prefix', async ({ page }) => {
+		await page.goto('/actions/enhance');
+
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+
+		await page.type('input[name="username"]', 'bar');
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
+			page.click('button.form1-prefix')
+		]);
+
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'bar' }));
+	});
+
 	test('use:enhance button with name', async ({ page, app }) => {
 		await page.goto('/actions/enhance');
 
