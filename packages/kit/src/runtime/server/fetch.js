@@ -34,7 +34,8 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 				// Remove Origin, according to https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin#description
 				if (
 					(request.method === 'GET' || request.method === 'HEAD') &&
-					((request.mode === 'no-cors' && url.origin !== event.url.origin) ||
+					((('cf' in request ? 'cors' : request.mode) === 'no-cors' &&
+						url.origin !== event.url.origin) ||
 						url.origin === event.url.origin)
 				) {
 					request.headers.delete('origin');
@@ -51,7 +52,7 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 					// leading dot prevents mydomain.com matching domain.com
 					if (
 						`.${url.hostname}`.endsWith(`.${event.url.hostname}`) &&
-						request.credentials !== 'omit'
+						('cf' in request ? 'same-origin' : request.credentials) !== 'omit'
 					) {
 						const cookie = get_cookie_header(url, request.headers.get('cookie'));
 						if (cookie) request.headers.set('cookie', cookie);
@@ -59,7 +60,7 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 
 					let response = await fetch(request);
 
-					if (request.mode === 'no-cors') {
+					if (('cf' in request ? 'cors' : request.mode) === 'no-cors') {
 						response = new Response('', {
 							status: response.status,
 							statusText: response.statusText,
@@ -112,7 +113,7 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 					return await fetch(request);
 				}
 
-				if (request.credentials !== 'omit') {
+				if (('cf' in request ? 'same-origin' : request.credentials) !== 'omit') {
 					const cookie = get_cookie_header(url, request.headers.get('cookie'));
 					if (cookie) {
 						request.headers.set('cookie', cookie);
