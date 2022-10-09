@@ -5,7 +5,7 @@ importers:
   .:
     specifiers:
       '@changesets/cli': ^2.22.0
-      '@rollup/plugin-commonjs': ^22.0.1
+      '@rollup/plugin-commonjs': ^23.0.0
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^14.1.0
       '@svitejs/changesets-changelog-github-compact': ^0.1.1
@@ -18,7 +18,7 @@ importers:
       typescript: ^4.8.2
     devDependencies:
       '@changesets/cli': 2.23.0
-      '@rollup/plugin-commonjs': 22.0.1_rollup@2.78.1
+      '@rollup/plugin-commonjs': 23.0.0_rollup@2.78.1
       '@rollup/plugin-json': 4.1.0_rollup@2.78.1
       '@rollup/plugin-node-resolve': 14.1.0_rollup@2.78.1
       '@svitejs/changesets-changelog-github-compact': 0.1.1
@@ -83,7 +83,7 @@ importers:
     specifiers:
       '@iarna/toml': ^2.2.5
       '@netlify/functions': ^1.0.0
-      '@rollup/plugin-commonjs': ^22.0.1
+      '@rollup/plugin-commonjs': ^23.0.0
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^14.1.0
       '@sveltejs/kit': workspace:*
@@ -101,7 +101,7 @@ importers:
       set-cookie-parser: 2.5.0
     devDependencies:
       '@netlify/functions': 1.0.0
-      '@rollup/plugin-commonjs': 22.0.1_rollup@2.78.1
+      '@rollup/plugin-commonjs': 23.0.0_rollup@2.78.1
       '@rollup/plugin-json': 4.1.0_rollup@2.78.1
       '@rollup/plugin-node-resolve': 14.1.0_rollup@2.78.1
       '@sveltejs/kit': link:../kit
@@ -114,7 +114,7 @@ importers:
 
   packages/adapter-node:
     specifiers:
-      '@rollup/plugin-commonjs': ^22.0.1
+      '@rollup/plugin-commonjs': ^23.0.0
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^14.1.0
       '@sveltejs/kit': workspace:*
@@ -127,7 +127,7 @@ importers:
       typescript: ^4.8.2
       uvu: ^0.5.3
     dependencies:
-      '@rollup/plugin-commonjs': 22.0.1_rollup@2.78.1
+      '@rollup/plugin-commonjs': 23.0.0_rollup@2.78.1
       '@rollup/plugin-json': 4.1.0_rollup@2.78.1
       '@rollup/plugin-node-resolve': 14.1.0_rollup@2.78.1
       rollup: 2.78.1
@@ -1077,19 +1077,21 @@ packages:
   /@polka/url/1.0.0-next.21:
     resolution: {integrity: sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==}
 
-  /@rollup/plugin-commonjs/22.0.1_rollup@2.78.1:
-    resolution: {integrity: sha512-dGfEZvdjDHObBiP5IvwTKMVeq/tBZGMBHZFMdIV1ClMM/YoWS34xrHFGfag9SN2ZtMgNZRFruqvxZQEa70O6nQ==}
-    engines: {node: '>= 12.0.0'}
+  /@rollup/plugin-commonjs/23.0.0_rollup@2.78.1:
+    resolution: {integrity: sha512-JbrTRyDNtLQj/rhl7RFUuYXwQ2fac+33oLDAu2k++WD95zweyo28UAomLVA0JMGx4vmCa7Nw4T6k/1F6lelExg==}
+    engines: {node: '>=14.0.0'}
     peerDependencies:
-      rollup: ^2.68.0
+      rollup: ^2.68.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.78.1
+      '@rollup/pluginutils': 4.2.1
       commondir: 1.0.1
       estree-walker: 2.0.2
-      glob: 7.2.3
+      glob: 8.0.3
       is-reference: 1.2.1
-      magic-string: 0.25.9
-      resolve: 1.22.1
+      magic-string: 0.26.6
       rollup: 2.78.1
 
   /@rollup/plugin-json/4.1.0_rollup@2.78.1:
@@ -1473,6 +1475,11 @@ packages:
     dependencies:
       balanced-match: 1.0.2
       concat-map: 0.0.1
+
+  /brace-expansion/2.0.1:
+    resolution: {integrity: sha512-XnAIvQ8eM+kC6aULx6wuQiwVsnzsi9d3WxzV3FpWTGA19F621kwdbsAcFKXgKUHZWsy+mY6iL1sHTxWEFCytDA==}
+    dependencies:
+      balanced-match: 1.0.2
 
   /braces/3.0.2:
     resolution: {integrity: sha512-b8um+L1RzM3WDSzvhm6gIz1yfTbBt6YTlcEKAvsmqCZZFw46z626lVj9j1yEPW33H5H+lBQpZMP1k8l+78Ha0A==}
@@ -2411,6 +2418,16 @@ packages:
       once: 1.4.0
       path-is-absolute: 1.0.1
 
+  /glob/8.0.3:
+    resolution: {integrity: sha512-ull455NHSHI/Y1FqGaaYFaLGkNMMJbavMrEGFXG/PGrg6y7sutWHUHrz6gy6WEBH6akM1M414dWKCNs+IhKdiQ==}
+    engines: {node: '>=12'}
+    dependencies:
+      fs.realpath: 1.0.0
+      inflight: 1.0.6
+      inherits: 2.0.4
+      minimatch: 5.1.0
+      once: 1.4.0
+
   /globalyzer/0.1.0:
     resolution: {integrity: sha512-40oNTM9UfG6aBmuKxk/giHn5nQ8RVz/SS4Ir6zgzOv9/qC3kKZ9v4etGTcJbEl/NyVQH7FGU7d+X1egr57Md2Q==}
 
@@ -2896,6 +2913,7 @@ packages:
     resolution: {integrity: sha512-RmF0AsMzgt25qzqqLc1+MbHmhdx0ojF2Fvs4XnOqz2ZOBXzzkEwc/dJQZCYHAn7v1jbVOjAZfK8msRn4BxO4VQ==}
     dependencies:
       sourcemap-codec: 1.4.8
+    dev: true
 
   /magic-string/0.26.2:
     resolution: {integrity: sha512-NzzlXpclt5zAbmo6h6jNc8zl2gNRGHvmsZW4IvZhTC4W7k4OlLP+S5YLussa/r3ixNT66KOQfNORlXHSOy/X4A==}
@@ -2906,6 +2924,12 @@ packages:
 
   /magic-string/0.26.3:
     resolution: {integrity: sha512-u1Po0NDyFcwdg2nzHT88wSK0+Rih0N1M+Ph1Sp08k8yvFFU3KR72wryS7e1qMPJypt99WB7fIFVCA92mQrMjrg==}
+    engines: {node: '>=12'}
+    dependencies:
+      sourcemap-codec: 1.4.8
+
+  /magic-string/0.26.6:
+    resolution: {integrity: sha512-6d+3bFybzyQFJYSoRsl9ZC0wheze8M1LrQC7tNMRqXR4izUTDOLMd9BtSuExK9iAukFh+s5K0WAhc/dlQ+HKYA==}
     engines: {node: '>=12'}
     dependencies:
       sourcemap-codec: 1.4.8
@@ -2992,6 +3016,12 @@ packages:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
     dependencies:
       brace-expansion: 1.1.11
+
+  /minimatch/5.1.0:
+    resolution: {integrity: sha512-9TPBGGak4nHfGZsPBohm9AWg6NoT7QTCehS3BIJABslyZbzxfV78QM2Y6+i741OPZIafFAaiiEMh5OyIrJPgtg==}
+    engines: {node: '>=10'}
+    dependencies:
+      brace-expansion: 2.0.1
 
   /minimist-options/4.1.0:
     resolution: {integrity: sha512-Q4r8ghd80yhO/0j1O3B2BjweX3fiHg9cdOwjJd2J76Q135c+NDxGCqdYKQ1SKBuFfgWbAUzBfvYjPUEeNgqN1A==}
