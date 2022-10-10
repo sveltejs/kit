@@ -1873,6 +1873,7 @@ test.describe('Actions', () => {
 
 		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'foo' }));
 		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ result: 'foo' }));
+		await expect(page.locator('input[name=username]')).toHaveValue('');
 	});
 
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {
