@@ -568,7 +568,7 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 		const insertion_point = js_code.includes('---cut---')
 			? js_code.indexOf('\n', js_code.indexOf('---cut---')) + 1
 			: js_code.includes('/// file:')
-			? js_code.indexOf('/// file:', js_code.indexOf('\n')) + 1
+			? js_code.indexOf('\n', js_code.indexOf('/// file:')) + 1
 			: 0;
 		code.appendLeft(insertion_point, offset + import_statements + '\n');
 	}
