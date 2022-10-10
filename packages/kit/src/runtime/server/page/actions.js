@@ -1,6 +1,6 @@
 import { error, json } from '../../../exports/index.js';
 import { normalize_error } from '../../../utils/error.js';
-import { negotiate } from '../../../utils/http.js';
+import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ValidationError } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
 
@@ -180,9 +180,10 @@ export async function call_action(event, actions) {
 		throw new Error(`No action with name '${name}' found`);
 	}
 
-	const type = event.request.headers.get('content-type')?.split('; ')[0];
-	if (type !== 'application/x-www-form-urlencoded' && type !== 'multipart/form-data') {
-		throw new Error(`Actions expect form-encoded data (received ${type})`);
+	if (!is_form_content_type(event.request)) {
+		throw new Error(
+			`Actions expect form-encoded data (received ${event.request.headers.get('content-type')}`
+		);
 	}
 
 	return action(event);
