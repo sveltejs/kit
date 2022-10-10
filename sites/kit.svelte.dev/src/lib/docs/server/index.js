@@ -5,9 +5,9 @@ import 'prismjs/components/prism-bash.js';
 import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
 import 'prism-svelte';
-import { escape, extract_frontmatter, transform } from './markdown';
+import { escape, extract_frontmatter, transform } from './markdown.js';
 import { modules } from '../../../../../../packages/kit/docs/types.js';
-import { render_modules } from './modules';
+import { render_modules } from './modules.js';
 import { error } from '@sveltejs/kit';
 import { parse_route_id } from '../../../../../../packages/kit/src/utils/routing.js';
 import ts from 'typescript';
@@ -427,7 +427,7 @@ export function slugify(title) {
  * The language is `generated-js`/`generated-svelte` which can be used to detect this in later steps.
  * @param {string} markdown
  */
-function generate_ts_from_js(markdown) {
+export function generate_ts_from_js(markdown) {
 	return markdown
 		.replaceAll(/```js\n([\s\S]+?)\n```/g, (match, code) => {
 			if (!code.includes('/// file:')) {
