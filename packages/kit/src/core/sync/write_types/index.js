@@ -617,9 +617,7 @@ export function tweak_types(content, is_server) {
 					}
 				}
 			}
-			if (!modified) {
-				modified = _modified;
-			}
+			modified = modified || _modified;
 			return _modified;
 		}
 
