@@ -25,6 +25,7 @@ export function enhance(form, submit = () => {}) {
 	 */
 	const fallback_callback = async ({ action, result }) => {
 		if (result.type === 'success') {
+			form.reset();
 			await invalidateAll();
 		}
 
