@@ -94,13 +94,13 @@ export async function read_file(dir, file) {
 				})
 				.replace(/\*\\\//g, '*/');
 
-			let language_version = 'none';
+			let version_class = '';
 			if (language === 'generated-ts' || language === 'generated-svelte') {
 				language = language.replace('generated-', '');
-				language_version = 'generated';
+				version_class = ' ts-version';
 			} else if (language === 'original-js' || language === 'original-svelte') {
 				language = language.replace('original-', '');
-				language_version = 'original';
+				version_class = ' js-version';
 			}
 
 			if (language === 'js' || language === 'ts') {
@@ -209,13 +209,9 @@ export async function read_file(dir, file) {
 				html = `<pre class='language-${plang}'><code>${highlighted}</code></pre>`;
 			}
 
-			html = `<div class="code-block${
-				language_version === 'generated'
-					? ' ts-version'
-					: language_version === 'original'
-					? ' non-ts-version'
-					: ''
-			}">${options.file ? `<h5>${options.file}</h5>` : ''}${html}</div>`;
+			html = `<div class="code-block${version_class}">${
+				options.file ? `<h5>${options.file}</h5>` : ''
+			}${html}</div>`;
 
 			type_regex.lastIndex = 0;
 
