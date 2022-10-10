@@ -53,3 +53,20 @@ export function negotiate(accept, types) {
 
 	return accepted;
 }
+
+/**
+ * Returns `true` if the request contains a `content-type` header with the given type
+ * @param {Request} request 
+ * @param  {...string[]} types 
+ */
+export function is_content_type(request, ...types) {
+	const type = request.headers.get('content-type')?.split(';', 1)[0].trim() ?? '';
+	return types.includes(type);
+}
+
+/**
+ * @param {Request} request
+ */
+export function is_form_content_type(request) {
+	return is_content_type(request, 'application/x-www-form-urlencoded', 'multipart/form-data');
+}
