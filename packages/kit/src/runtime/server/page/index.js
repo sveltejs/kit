@@ -205,10 +205,10 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 					if (err instanceof Redirect) {
 						if (state.prerendering && should_prerender_data) {
-							const body = `window.__sveltekit_data = ${JSON.stringify({
+							const body = devalue.stringify({
 								type: 'redirect',
 								location: err.location
-							})}`;
+							});
 
 							state.prerendering.dependencies.set(data_pathname, {
 								response: new Response(body),

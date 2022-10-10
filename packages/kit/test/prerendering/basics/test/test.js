@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
+import { parse } from 'devalue';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 
@@ -25,11 +26,9 @@ test('renders a server-side redirect', () => {
 	const html = read('redirect-server.html');
 	assert.equal(html, '<meta http-equiv="refresh" content="0;url=https://example.com/redirected">');
 
-	const code = read('redirect-server/__data.json');
-	const window = {};
-	new Function('window', code)(window);
+	const data = parse(read('redirect-server/__data.json'));
 
-	assert.equal(window.__sveltekit_data, {
+	assert.equal(data, {
 		type: 'redirect',
 		location: 'https://example.com/redirected'
 	});
@@ -78,10 +77,8 @@ test('loads a file with spaces in the filename', () => {
 });
 
 test('generates __data.json file for shadow endpoints', () => {
-	const window = {};
-
-	new Function('window', read('__data.json'))(window);
-	assert.equal(window.__sveltekit_data, {
+	let data = parse(read('__data.json'));
+	assert.equal(data, {
 		type: 'data',
 		nodes: [
 			null,
@@ -93,8 +90,8 @@ test('generates __data.json file for shadow endpoints', () => {
 		]
 	});
 
-	new Function('window', read('shadowed-get/__data.json'))(window);
-	assert.equal(window.__sveltekit_data, {
+	data = parse(read('shadowed-get/__data.json'));
+	assert.equal(data, {
 		type: 'data',
 		nodes: [
 			null,
@@ -183,10 +180,9 @@ test('prerenders binary data', async () => {
 });
 
 test('fetches data from local endpoint', () => {
-	const window = {};
-	new Function('window', read('origin/__data.json'))(window);
+	const data = parse(read('origin/__data.json'));
 
-	assert.equal(window.__sveltekit_data, {
+	assert.equal(data, {
 		type: 'data',
 		nodes: [
 			null,
