@@ -16,7 +16,7 @@ import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
 import { unwrap_promises } from '../../utils/promises.js';
-import { parse as devalue_parse } from 'devalue';
+import * as devalue from 'devalue';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -1507,7 +1507,7 @@ async function load_data(url, invalid) {
 		throw new Error(JSON.parse(server_data));
 	}
 
-	return devalue_parse(server_data);
+	return devalue.parse(server_data);
 }
 
 /**
