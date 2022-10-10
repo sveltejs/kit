@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.512
+
+### Patch Changes
+
+- Fix parsing content-type header for actions ([#7195](https://github.com/sveltejs/kit/pull/7195))
+
+* [fix] reset form in use:enhance after successful submit ([#7207](https://github.com/sveltejs/kit/pull/7207))
+
+- [fix] auto-update commented PageError ([#7189](https://github.com/sveltejs/kit/pull/7189))
+
 ## 1.0.0-next.511
 
 ### Patch Changes
