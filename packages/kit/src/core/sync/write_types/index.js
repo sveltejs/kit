@@ -617,7 +617,7 @@ export function tweak_types(content, is_server) {
 					}
 				}
 			}
-			modified ||= _modified;
+			modified = modified || _modified;
 			return _modified;
 		}
 
