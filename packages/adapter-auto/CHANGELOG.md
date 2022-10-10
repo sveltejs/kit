@@ -1,5 +1,13 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.81
+
+### Patch Changes
+
+- Updated dependencies [[`2555e64b`](https://github.com/sveltejs/kit/commit/2555e64be5ca8433c623e7838dc9c570ad024aed)]:
+  - @sveltejs/adapter-netlify@1.0.0-next.79
+  - @sveltejs/adapter-vercel@1.0.0-next.77
+
 ## 1.0.0-next.80
 
 ### Patch Changes
