@@ -205,10 +205,10 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 					if (err instanceof Redirect) {
 						if (state.prerendering && should_prerender_data) {
-							const body = `window.__sveltekit_data = ${JSON.stringify({
+							const body = devalue.stringify({
 								type: 'redirect',
 								location: err.location
-							})}`;
+							});
 
 							state.prerendering.dependencies.set(data_pathname, {
 								response: new Response(body),
@@ -260,10 +260,10 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 
 		if (state.prerendering && should_prerender_data) {
-			const body = `window.__sveltekit_data = ${devalue.uneval({
+			const body = devalue.stringify({
 				type: 'data',
 				nodes: branch.map((branch_node) => branch_node?.server_data)
-			})}`;
+			});
 
 			state.prerendering.dependencies.set(data_pathname, {
 				response: new Response(body),

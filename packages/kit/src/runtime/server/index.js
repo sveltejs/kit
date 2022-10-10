@@ -291,7 +291,7 @@ export async function respond(request, options, state) {
 					// add headers/cookies here, rather than inside `resolve`, so that we
 					// can do it once for all responses instead of once per `return`
 					if (!is_data_request) {
-						// we only want to set cookies on __data.js requests, we don't
+						// we only want to set cookies on __data.json requests, we don't
 						// want to cache stuff erroneously etc
 						for (const key in headers) {
 							const value = headers[key];
