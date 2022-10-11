@@ -129,23 +129,6 @@ export async function load_data({
 								response_body: body,
 								response: response
 							});
-
-							// ensure that excluded headers can't be read
-							const get = response.headers.get;
-							response.headers.get = (key) => {
-								const lower = key.toLowerCase();
-								const value = get.call(response.headers, lower);
-								if (value && !lower.startsWith('x-sveltekit-')) {
-									const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
-									if (!included) {
-										throw new Error(
-											`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#handle`
-										);
-									}
-								}
-
-								return value;
-							};
 						}
 
 						if (dependency) {
@@ -185,6 +168,23 @@ export async function load_data({
 					return Reflect.get(response, key, response);
 				}
 			});
+
+			// ensure that excluded headers can't be read
+			const get = response.headers.get;
+			response.headers.get = (key) => {
+				const lower = key.toLowerCase();
+				const value = get.call(response.headers, lower);
+				if (value && !lower.startsWith('x-sveltekit-')) {
+					const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
+					if (!included) {
+						throw new Error(
+							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#handle`
+						);
+					}
+				}
+
+				return value;
+			};
 
 			return proxy;
 		},
