@@ -78,7 +78,7 @@ Adapters packages must implement the following API, which creates an `Adapter`:
 
 ```js
 // @filename: ambient.d.ts
-const AdapterSpecificOptions = any;
+type AdapterSpecificOptions = any;
 
 // @filename: index.js
 // ---cut---
