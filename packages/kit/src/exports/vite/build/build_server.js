@@ -121,6 +121,7 @@ export class Server {
 
 			this.options.hooks = {
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
+				getSharedState: module.getSharedState || (() => ({})),
 				handleError: module.handleError || (({ error }) => console.error(error.stack)),
 				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
 			};

@@ -26,6 +26,7 @@ export interface Client {
 	_hydrate: (opts: {
 		status: number;
 		error: App.Error;
+		state: App.SharedState;
 		node_ids: number[];
 		params: Record<string, string>;
 		routeId: string | null;

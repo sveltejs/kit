@@ -26,9 +26,10 @@ import { respond_with_error } from './respond_with_error.js';
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRState} state
  * @param {import('types').RequiredResolveOptions} resolve_opts
+ * @param {App.SharedState} sharedState
  * @returns {Promise<Response>}
  */
-export async function render_page(event, route, page, options, state, resolve_opts) {
+export async function render_page(event, route, page, options, state, resolve_opts, sharedState) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return new Response(`Not found: ${event.url.pathname}`, {
@@ -114,7 +115,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 				event,
 				options,
 				state,
-				resolve_opts
+				resolve_opts,
+				sharedState
 			});
 		}
 
@@ -178,7 +180,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 						},
 						resolve_opts,
 						server_data_promise: server_promises[i],
-						state
+						state,
+						sharedState
 					});
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);
@@ -243,7 +246,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 									data: null,
 									server_data: null
 								}),
-								fetched
+								fetched,
+								sharedState
 							});
 						}
 					}
@@ -284,7 +288,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 			error: null,
 			branch: compact(branch),
 			action_result,
-			fetched
+			fetched,
+			sharedState
 		});
 	} catch (error) {
 		// if we end up here, it means the data loaded successfull
@@ -295,7 +300,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 			state,
 			status: 500,
 			error,
-			resolve_opts
+			resolve_opts,
+			sharedState
 		});
 	}
 }

@@ -334,6 +334,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				}
 
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
+				const getSharedState = user_hooks.getSharedState || (() => ({}));
 
 				// TODO remove for 1.0
 				// @ts-expect-error
@@ -346,6 +347,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				/** @type {import('types').ServerHooks} */
 				const hooks = {
 					handle,
+					getSharedState,
 					handleError:
 						user_hooks.handleError ||
 						(({ error: e }) => {

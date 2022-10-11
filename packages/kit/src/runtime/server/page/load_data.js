@@ -74,6 +74,7 @@ export async function load_server_data({ event, state, node, parent }) {
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   server_data_promise: Promise<import('types').ServerDataNode | null>;
  *   state: import('types').SSRState;
+ *   sharedState: App.SharedState;
  * }} opts
  * @returns {Promise<Record<string, any> | null>}
  */
@@ -84,7 +85,8 @@ export async function load_data({
 	parent,
 	server_data_promise,
 	state,
-	resolve_opts
+	resolve_opts,
+	sharedState
 }) {
 	const server_data_node = await server_data_promise;
 
@@ -96,6 +98,7 @@ export async function load_data({
 	const load_event = {
 		url: event.url,
 		params: event.params,
+		state: sharedState,
 		data: server_data_node?.data ?? null,
 		routeId: event.routeId,
 		fetch: async (input, init) => {

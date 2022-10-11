@@ -13,7 +13,7 @@ import { parse } from './parse.js';
 import Root from '__GENERATED__/root.svelte';
 import { nodes, server_loads, dictionary, matchers, hooks } from '__GENERATED__/client-manifest.js';
 import { HttpError, Redirect } from '../control.js';
-import { stores } from './singletons.js';
+import { client, stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
@@ -98,6 +98,9 @@ export function create_client({ target, base, trailing_slash }) {
 		// @ts-ignore - we need the initial value to be null
 		url: null
 	};
+
+	/** @type {App.SharedState} */
+	let currentStateValue;
 
 	/** this being true means we SSR'd */
 	let hydrated = false;
@@ -530,6 +533,10 @@ export function create_client({ target, base, trailing_slash }) {
 						return target[/** @type {string} */ (key)];
 					}
 				}),
+				get state() {
+					depends('sveltekit-internal:state');
+					return currentStateValue;
+				},
 				data: server_data_node?.data ?? null,
 				url: make_trackable(url, () => {
 					uses.url = true;
@@ -1423,6 +1430,7 @@ export function create_client({ target, base, trailing_slash }) {
 		_hydrate: async ({
 			status,
 			error,
+			state,
 			node_ids,
 			params,
 			routeId,
@@ -1430,6 +1438,16 @@ export function create_client({ target, base, trailing_slash }) {
 			form
 		}) => {
 			hydrated = true;
+
+			currentStateValue = state;
+			stores.state.set(state);
+
+			const setState = stores.state.set;
+			stores.state.set = async (value) => {
+				currentStateValue = value;
+				await client.invalidate('sveltekit-internal:state');
+				setState(currentStateValue);
+			};
 
 			const url = new URL(location.href);
 

@@ -22,6 +22,7 @@ const updated = {
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
+ *   sharedState: App.SharedState;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('types').ActionResult;
@@ -36,6 +37,7 @@ export async function render_response({
 	status,
 	error = null,
 	event,
+	sharedState,
 	resolve_opts,
 	action_result
 }) {
@@ -74,6 +76,7 @@ export async function render_response({
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
+				state: writable(sharedState),
 				updated
 			},
 			components: await Promise.all(branch.map(({ node }) => node.component())),
@@ -167,10 +170,11 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
-	const serialized = { data: '', form: 'null' };
+	const serialized = { data: '', form: 'null', state: '{}' };
 
 	try {
 		serialized.data = devalue.uneval(branch.map(({ server_data }) => server_data));
+		serialized.state = devalue.uneval(sharedState);
 	} catch (e) {
 		// If we're here, the data could not be serialized with devalue
 		// TODO if we wanted to get super fancy we could track down the origin of the `load`
@@ -180,7 +184,6 @@ export async function render_response({
 		if (match) throw new Error(`${error.message} (data.${match[2]})`);
 		throw error;
 	}
-
 	if (form_value) {
 		// no need to check it can be serialized, we already verified that it's JSON-friendly
 		serialized.form = devalue.uneval(form_value);
@@ -233,7 +236,8 @@ export async function render_response({
 					params: ${devalue.uneval(event.params)},
 					routeId: ${s(event.routeId)},
 					data: ${serialized.data},
-					form: ${serialized.form}
+					form: ${serialized.form},
+					state: ${serialized.state}
 				}` : 'null'},
 				paths: ${s(options.paths)},
 				target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,

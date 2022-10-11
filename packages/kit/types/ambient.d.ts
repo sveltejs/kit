@@ -7,6 +7,8 @@
  * declare namespace App {
  * 	interface Locals {}
  *
+ * 	interface LoadState {}
+ *
  * 	interface PageData {}
  *
  * 	interface Platform {}
@@ -51,6 +53,11 @@ declare namespace App {
 	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://kit.svelte.dev/docs/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
 	export interface Locals {}
+
+	/**
+	 * The interface that defines `event.state`, which can be accessed in all `load` functions.
+	 */
+	export interface SharedState {}
 
 	/**
 	 * Defines the common shape of the [$page.data store](https://kit.svelte.dev/docs/modules#$app-stores-page) - that is, the data that is shared between all pages.
@@ -283,13 +290,17 @@ declare module '$app/paths' {
  * In the browser, we don't need to worry about this, and stores can be accessed from anywhere. Code that will only ever run on the browser can refer to (or subscribe to) any of these stores at any time.
  */
 declare module '$app/stores' {
-	import { Readable } from 'svelte/store';
+	import { Readable, Writable } from 'svelte/store';
 	import { Navigation, Page } from '@sveltejs/kit';
 
 	/**
 	 * A readable store whose value contains page data.
 	 */
 	export const page: Readable<Page>;
+	/**
+	 * A writable store.
+	 */
+	export const state: Writable<App.SharedState>;
 	/**
 	 * A readable store.
 	 * When navigating starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
@@ -309,6 +320,7 @@ declare module '$app/stores' {
 		navigating: typeof navigating;
 		page: typeof page;
 		updated: typeof updated;
+		state: typeof state;
 	};
 }
 

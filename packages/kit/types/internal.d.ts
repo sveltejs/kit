@@ -4,6 +4,7 @@ import {
 	Config,
 	ServerLoad,
 	Handle,
+	GetSharedState,
 	HandleServerError,
 	KitConfig,
 	Load,
@@ -93,6 +94,7 @@ export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 export interface ServerHooks {
 	handleFetch: HandleFetch;
 	handle: Handle;
+	getSharedState: GetSharedState;
 	handleError: HandleServerError;
 }
 

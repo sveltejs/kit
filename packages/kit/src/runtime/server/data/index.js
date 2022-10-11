@@ -36,7 +36,7 @@ export async function render_data(event, route, options, state) {
 			options.trailing_slash
 		);
 
-		const new_event = { ...event, url };
+		const new_event = { ...event, url, state };
 
 		const functions = node_ids.map((n, i) => {
 			return once(async () => {

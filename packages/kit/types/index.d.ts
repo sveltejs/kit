@@ -239,6 +239,10 @@ export interface Handle {
 	}): MaybePromise<Response>;
 }
 
+export interface GetSharedState {
+	(event: RequestEvent): MaybePromise<App.SharedState>;
+}
+
 export interface HandleServerError {
 	(input: { error: unknown; event: RequestEvent }): void | App.Error;
 }
@@ -274,6 +278,7 @@ export interface LoadEvent<
 	setHeaders: (headers: Record<string, string>) => void;
 	parent: () => Promise<ParentData>;
 	depends: (...deps: string[]) => void;
+	state: App.SharedState;
 }
 
 export interface NavigationEvent<

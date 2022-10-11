@@ -209,6 +209,8 @@ export async function respond(request, options, state) {
 				};
 			}
 
+			const sharedState = await options.hooks.getSharedState(event);
+
 			if (state.prerendering?.fallback) {
 				return await render_response({
 					event,
@@ -219,7 +221,8 @@ export async function respond(request, options, state) {
 					error: null,
 					branch: [],
 					fetched: [],
-					resolve_opts
+					resolve_opts,
+					sharedState
 				});
 			}
 
@@ -232,7 +235,15 @@ export async function respond(request, options, state) {
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page) {
-					response = await render_page(event, route, route.page, options, state, resolve_opts);
+					response = await render_page(
+						event,
+						route,
+						route.page,
+						options,
+						state,
+						resolve_opts,
+						sharedState
+					);
 				} else {
 					// a route will always have a page or an endpoint, but TypeScript
 					// doesn't know that
@@ -257,7 +268,8 @@ export async function respond(request, options, state) {
 					state,
 					status: 404,
 					error: new Error(`Not found: ${event.url.pathname}`),
-					resolve_opts
+					resolve_opts,
+					sharedState
 				});
 			}
 

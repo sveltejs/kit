@@ -25,7 +25,8 @@ export const getStores = () => {
 		navigating: {
 			subscribe: stores.navigating.subscribe
 		},
-		updated: stores.updated
+		updated: stores.updated,
+		state: stores.state
 	};
 
 	// TODO remove this for 1.0
@@ -57,6 +58,23 @@ export const page = {
 	subscribe(fn) {
 		const store = getStores().page;
 		return store.subscribe(fn);
+	}
+};
+
+/** @type {typeof import('$app/stores').state} */
+export const state = {
+	/** @param {(value: any) => void} fn */
+	subscribe(fn) {
+		const store = getStores().state;
+		return store.subscribe(fn);
+	},
+	set(value) {
+		const store = getStores().state;
+		return store.set(value);
+	},
+	update(updater) {
+		const store = getStores().state;
+		return store.update(updater);
 	}
 };
 
