@@ -6,12 +6,8 @@
 
 	function toggle(checked) {
 		try {
+			document.documentElement.classList.toggle('prefers-ts', checked);
 			localStorage.setItem('prefers-ts', checked);
-			if (checked) {
-				document.documentElement.classList.add('prefers-ts');
-			} else {
-				document.documentElement.classList.remove('prefers-ts');
-			}
 		} catch (e) {
 			// localStorage not available or we are on the server
 		}
