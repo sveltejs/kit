@@ -54,6 +54,10 @@ export async function handle_action_json_request(event, options, server) {
 	} catch (e) {
 		const error = normalize_error(e);
 
+		if (error instanceof ValidationError) {
+			throw new Error(`Cannot "throw invalid()". Use "return invalid()"`);
+		}
+
 		if (error instanceof Redirect) {
 			return action_json({
 				type: 'redirect',
