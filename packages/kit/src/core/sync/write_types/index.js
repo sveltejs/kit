@@ -67,7 +67,8 @@ export async function write_all_types(config, manifest_data) {
 		if (!route.leaf && !route.layout && !route.endpoint) continue; // nothing to do
 
 		const outdir = path.join(
-			config.kit.outDir, 'types',
+			config.kit.outDir,
+			'types',
 			routes_dir.replace(/\.\.\//g, ''),
 			route.id
 		);
@@ -184,12 +185,7 @@ function create_routes_map(manifest_data) {
  */
 function update_types(config, routes, route, to_delete = new Set()) {
 	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
-	const outdir = path.join(
-		config.kit.outDir,
-		'types',
-		routes_dir.replace(/\.\.\//g, ''),
-		route.id
-	);
+	const outdir = path.join(config.kit.outDir, 'types', routes_dir.replace(/\.\.\//g, ''), route.id);
 
 	// now generate new types
 	const imports = [`import type * as Kit from '@sveltejs/kit';`];
