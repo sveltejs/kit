@@ -62,20 +62,25 @@ export async function handle_action_json_request(event, options, server) {
 			});
 		}
 
-		if (!(error instanceof HttpError)) {
-			options.handle_error(error, event);
-		}
-
 		return action_json(
 			{
 				type: 'error',
-				error: handle_error_and_jsonify(event, options, error)
+				error: handle_error_and_jsonify(event, options, check_incorrect_invalid_use(error))
 			},
 			{
 				status: error instanceof HttpError ? error.status : 500
 			}
 		);
 	}
+}
+
+/**
+ * @param {HttpError | Error} error
+ */
+function check_incorrect_invalid_use(error) {
+	return error instanceof ValidationError
+		? new Error(`Cannot "throw invalid()". Use "return invalid()"`)
+		: error;
 }
 
 /**
@@ -141,7 +146,10 @@ export async function handle_action_request(event, server) {
 			};
 		}
 
-		return { type: 'error', error };
+		return {
+			type: 'error',
+			error: check_incorrect_invalid_use(error)
+		};
 	}
 }
 
