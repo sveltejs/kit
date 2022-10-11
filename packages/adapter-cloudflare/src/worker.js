@@ -18,7 +18,7 @@ const worker = {
 		let { pathname } = new URL(req.url);
 
 		// static assets
-		if (pathname.startsWith(appPath)) {
+		if (pathname.startsWith(app_path)) {
 			res = await env.ASSETS.fetch(req);
 			if (!res.ok) return res;
 
