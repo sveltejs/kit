@@ -18,7 +18,7 @@ Besides `fetch` itself, the [Fetch API](https://developer.mozilla.org/en-US/docs
 
 #### Request
 
-An instance of [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) is accessible in [hooks](/docs/hooks) and [server routes](/docs/routing#server) as `event.request`. It contains useful methods like `request.json()` and `request.formData()` for e.g. getting data that was posted to an endpoint.
+An instance of [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) is accessible in [hooks](/docs/hooks) and [server routes](/docs/routing#server) as `event.request`. It contains useful methods like `request.json()` and `request.formData()` for getting data that was posted to an endpoint.
 
 #### Response
 

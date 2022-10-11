@@ -70,17 +70,17 @@ export function allowed_methods(mod) {
 /** @param {any} data */
 export function data_response(data) {
 	const headers = {
-		'content-type': 'application/javascript',
+		'content-type': 'application/json',
 		'cache-control': 'private, no-store'
 	};
 
 	try {
-		return new Response(`window.__sveltekit_data = ${devalue.uneval(data)}`, { headers });
+		return new Response(devalue.stringify(data), { headers });
 	} catch (e) {
 		const error = /** @type {any} */ (e);
 		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
 		const message = match ? `${error.message} (data.${match[2]})` : error.message;
-		return new Response(`throw new Error(${JSON.stringify(message)})`, { headers });
+		return new Response(JSON.stringify(message), { headers, status: 500 });
 	}
 }
 

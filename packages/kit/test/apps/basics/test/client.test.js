@@ -436,7 +436,7 @@ test.describe('Load', () => {
 		await expect(page.locator('p')).toHaveText('Count is 2');
 	});
 
-	test('__data.js has cache-control: private, no-store', async ({ page, clicknav }) => {
+	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
 		await page.goto('/load/server-data-nostore?x=1');
 
 		const [response] = await Promise.all([

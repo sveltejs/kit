@@ -3,6 +3,7 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
+import { is_form_content_type } from '../../utils/http.js';
 import { GENERIC_ERROR, handle_fatal_error } from './utils.js';
 import { decode_params, disable_search, normalize_path } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
@@ -24,12 +25,10 @@ export async function respond(request, options, state) {
 	let url = new URL(request.url);
 
 	if (options.csrf.check_origin) {
-		const type = request.headers.get('content-type')?.split(';')[0];
-
 		const forbidden =
 			request.method === 'POST' &&
 			request.headers.get('origin') !== url.origin &&
-			(type === 'application/x-www-form-urlencoded' || type === 'multipart/form-data');
+			is_form_content_type(request);
 
 		if (forbidden) {
 			return new Response(`Cross-site ${request.method} form submissions are forbidden`, {
@@ -292,7 +291,7 @@ export async function respond(request, options, state) {
 					// add headers/cookies here, rather than inside `resolve`, so that we
 					// can do it once for all responses instead of once per `return`
 					if (!is_data_request) {
-						// we only want to set cookies on __data.js requests, we don't
+						// we only want to set cookies on __data.json requests, we don't
 						// want to cache stuff erroneously etc
 						for (const key in headers) {
 							const value = headers[key];

@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.79
+
+### Patch Changes
+
+- [fix] clear out build directory when running `adapter-netlify` ([#7159](https://github.com/sveltejs/kit/pull/7159))
+
 ## 1.0.0-next.78
 
 ### Patch Changes
