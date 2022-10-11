@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
+	import TSToggle from './TSToggle.svelte';
 
 	export let contents = [];
 
@@ -74,22 +75,38 @@
 		);
 	}
 
-	function toggle() {
-		const value = localStorage.getItem('prefers-ts') === 'true' ? 'false' : 'true';
-		localStorage.setItem('prefers-ts', value);
-		if (value === 'true') {
-			document.documentElement.classList.add('prefers-ts');
-		} else {
-			document.documentElement.classList.remove('prefers-ts');
+	let ts_enabled = prefers_ts();
+	$: toggle(ts_enabled);
+
+	function toggle(ts_enabled) {
+		try {
+			localStorage.setItem('prefers-ts', ts_enabled);
+			if (ts_enabled) {
+				document.documentElement.classList.add('prefers-ts');
+			} else {
+				document.documentElement.classList.remove('prefers-ts');
+			}
+		} catch (e) {
+			// localStorage not available or we are on the server
+		}
+	}
+
+	function prefers_ts() {
+		try {
+			return localStorage.getItem('prefers-ts') === 'true' ? true : false;
+		} catch (e) {
+			return false;
 		}
 	}
 </script>
 
 <svelte:window on:scroll={highlight} on:resize={update} on:hashchange={() => select($page.url)} />
 
+<div class="ts-toggle">
+	<TSToggle bind:checked={ts_enabled} />
+</div>
 <nav>
 	<ul class="sidebar">
-	<li><button on:click={toggle}>Toggle script language</button></li>
 		{#each contents as section}
 			<li>
 				<a
@@ -252,6 +269,21 @@
 				rgba(103, 103, 120, 0.7) 50%,
 				rgba(103, 103, 120, 1) 100%
 			);
+		}
+	}
+
+	.ts-toggle {
+		background-color: white;
+		padding: 0.5em;
+		margin-right: 3.2rem;
+	}
+
+	@media (min-width: 832px) {
+		.ts-toggle {
+			position: sticky;
+			top: var(--nav-h);
+			z-index: 1;
+			margin-right: 0;
 		}
 	}
 </style>
