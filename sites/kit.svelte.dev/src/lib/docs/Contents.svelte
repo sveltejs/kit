@@ -74,30 +74,6 @@
 			{ once: true }
 		);
 	}
-
-	let ts_enabled = prefers_ts();
-	$: toggle(ts_enabled);
-
-	function toggle(ts_enabled) {
-		try {
-			localStorage.setItem('prefers-ts', ts_enabled);
-			if (ts_enabled) {
-				document.documentElement.classList.add('prefers-ts');
-			} else {
-				document.documentElement.classList.remove('prefers-ts');
-			}
-		} catch (e) {
-			// localStorage not available or we are on the server
-		}
-	}
-
-	function prefers_ts() {
-		try {
-			return localStorage.getItem('prefers-ts') === 'true' ? true : false;
-		} catch (e) {
-			return false;
-		}
-	}
 </script>
 
 <svelte:window on:scroll={highlight} on:resize={update} on:hashchange={() => select($page.url)} />
@@ -155,7 +131,7 @@
 </nav>
 
 <div class="ts-toggle">
-	<TSToggle bind:checked={ts_enabled} />
+	<TSToggle />
 </div>
 
 <style>
