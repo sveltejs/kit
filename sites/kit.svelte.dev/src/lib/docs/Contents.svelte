@@ -102,9 +102,6 @@
 
 <svelte:window on:scroll={highlight} on:resize={update} on:hashchange={() => select($page.url)} />
 
-<div class="ts-toggle">
-	<TSToggle bind:checked={ts_enabled} />
-</div>
 <nav>
 	<ul class="sidebar">
 		{#each contents as section}
@@ -156,6 +153,10 @@
 		{/each}
 	</ul>
 </nav>
+
+<div class="ts-toggle">
+	<TSToggle bind:checked={ts_enabled} />
+</div>
 
 <style>
 	nav {
@@ -239,6 +240,12 @@
 		color: white;
 	}
 
+	.ts-toggle {
+		background-color: white;
+		padding: 0.5em;
+		margin-right: 3.2rem;
+	}
+
 	@media (min-width: 600px) {
 		.sidebar {
 			columns: 2;
@@ -270,18 +277,11 @@
 				rgba(103, 103, 120, 1) 100%
 			);
 		}
-	}
 
-	.ts-toggle {
-		background-color: white;
-		padding: 0.5em;
-		margin-right: 3.2rem;
-	}
-
-	@media (min-width: 832px) {
 		.ts-toggle {
-			position: sticky;
-			top: var(--nav-h);
+			position: fixed;
+			width: var(--sidebar-w);
+			bottom: var(--ukr-footer-height);
 			z-index: 1;
 			margin-right: 0;
 		}
