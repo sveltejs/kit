@@ -269,7 +269,7 @@ importers:
       '@sveltejs/vite-plugin-svelte': ^1.0.5
       '@types/connect': ^3.4.35
       '@types/cookie': ^0.5.1
-      '@types/marked': ^4.0.3
+      '@types/marked': ^4.0.7
       '@types/mime': ^3.0.0
       '@types/node': ^16.11.36
       '@types/sade': ^1.7.4
@@ -278,7 +278,7 @@ importers:
       devalue: ^4.0.0
       kleur: ^4.1.4
       magic-string: ^0.26.2
-      marked: ^4.0.16
+      marked: ^4.1.1
       mime: ^3.0.0
       rollup: ^2.78.1
       sade: ^1.8.1
@@ -307,12 +307,12 @@ importers:
     devDependencies:
       '@playwright/test': 1.25.0
       '@types/connect': 3.4.35
-      '@types/marked': 4.0.3
+      '@types/marked': 4.0.7
       '@types/mime': 3.0.0
       '@types/node': 16.11.42
       '@types/sade': 1.7.4
       '@types/set-cookie-parser': 2.4.2
-      marked: 4.0.17
+      marked: 4.1.1
       rollup: 2.78.1
       svelte: 3.48.0
       svelte-preprocess: 4.10.7_rzeu6t3zqu2xw2nsnbtx3gkaoe
@@ -696,15 +696,15 @@ importers:
       '@sveltejs/kit': workspace:*
       '@sveltejs/site-kit': ^2.1.2
       '@types/node': ^16.11.36
-      flexsearch: ^0.7.21
-      marked: ^4.0.16
+      flexsearch: ^0.7.31
+      marked: ^4.1.1
       prism-svelte: ^0.5.0
-      prismjs: ^1.28.0
-      shiki-twoslash: ^3.0.2
+      prismjs: ^1.29.0
+      shiki-twoslash: ^3.1.0
       svelte: ^3.48.0
       typescript: ^4.8.2
       vite: ^3.1.1
-      vite-imagetools: ^4.0.9
+      vite-imagetools: ^4.0.10
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
       '@sveltejs/adapter-static': link:../../packages/adapter-static
@@ -712,15 +712,15 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': 2.1.2
       '@types/node': 16.11.42
-      flexsearch: 0.7.21
-      marked: 4.0.17
+      flexsearch: 0.7.31
+      marked: 4.1.1
       prism-svelte: 0.5.0
-      prismjs: 1.28.0
+      prismjs: 1.29.0
       shiki-twoslash: 3.1.0
       svelte: 3.48.0
       typescript: 4.8.2
       vite: 3.1.1
-      vite-imagetools: 4.0.9
+      vite-imagetools: 4.0.10
 
 packages:
 
@@ -1130,6 +1130,19 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.1
 
+  /@rollup/pluginutils/5.0.0:
+    resolution: {integrity: sha512-LJAlpJhSH4cAoNrh5G4mQ7VJJgmGVN1A91Skwpd6uMT4CGmDbrZ59RQWwNB08WkLtKOzTHFj6pKgVn18zlDFrQ==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      estree-walker: 2.0.2
+      picomatch: 2.3.1
+    dev: true
+
   /@sveltejs/site-kit/2.1.2:
     resolution: {integrity: sha512-VB5JhdvO1299lgR0ZU1MUdKNPb0TZMq4ck8cxg7p/o3TXFTLwbgwF/aV4ei9I/p11bpWFh9FKGzGUUGxWgJxSg==}
     dependencies:
@@ -1196,8 +1209,8 @@ packages:
     resolution: {integrity: sha512-z/QT1XN4K4KYuslS23k62yDIDLwLFkzxOuMplDtObz0+y7VqJCaO2o+SPwHCvLFZh7xazvvoor2tA/hPz9ee7g==}
     dev: true
 
-  /@types/marked/4.0.3:
-    resolution: {integrity: sha512-HnMWQkLJEf/PnxZIfbm0yGJRRZYYMhb++O9M36UCTA9z53uPvVoSlAwJr3XOpDEryb7Hwl1qAx/MV6YIW1RXxg==}
+  /@types/marked/4.0.7:
+    resolution: {integrity: sha512-eEAhnz21CwvKVW+YvRvcTuFKNU9CV1qH+opcgVK3pIMI6YZzDm6gc8o2vHjldFk6MGKt5pueSB7IOpvpx5Qekw==}
     dev: true
 
   /@types/mime/3.0.0:
@@ -2253,8 +2266,8 @@ packages:
       pkg-dir: 4.2.0
     dev: true
 
-  /flexsearch/0.7.21:
-    resolution: {integrity: sha512-W7cHV7Hrwjid6lWmy0IhsWDFQboWSng25U3VVywpHOTJnnAZNPScog67G+cVpeX9f7yDD21ih0WDrMMT+JoaYg==}
+  /flexsearch/0.7.31:
+    resolution: {integrity: sha512-XGozTsMPYkm+6b5QL3Z9wQcJjNYxp0CYn3U1gO7dwD6PAqU1SVWZxI9CCg3z+ml3YfqdPnrBehaBrnH2AGKbNA==}
     dev: true
 
   /foreground-child/2.0.0:
@@ -2531,8 +2544,8 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
-  /imagetools-core/3.2.1:
-    resolution: {integrity: sha512-cTa1cQqGUhw1eqBpz6Jdby7aYP4d18v1hLG9j3mS/223+gx/fmRv+B/E/zDYlX7NoZ5gh4Tvft6mcxek7suE/A==}
+  /imagetools-core/3.2.2:
+    resolution: {integrity: sha512-qnqdKbavy712ZJoalZHzCqaSNGpXG5EUh90NNV27nWUxTXziX5E9cmgaSqt1X3ZhVOEDm980pVnUxJVVAcBQ4g==}
     engines: {node: '>=12.0.0'}
     dependencies:
       sharp: 0.31.0
@@ -2916,6 +2929,7 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       sourcemap-codec: 1.4.8
+    dev: false
 
   /magic-string/0.26.6:
     resolution: {integrity: sha512-6d+3bFybzyQFJYSoRsl9ZC0wheze8M1LrQC7tNMRqXR4izUTDOLMd9BtSuExK9iAukFh+s5K0WAhc/dlQ+HKYA==}
@@ -2939,8 +2953,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /marked/4.0.17:
-    resolution: {integrity: sha512-Wfk0ATOK5iPxM4ptrORkFemqroz0ZDxp5MWfYA7H/F+wO17NRWV5Ypxi6p3g2Xmw2bKeiYOl6oVnLHKxBA0VhA==}
+  /marked/4.1.1:
+    resolution: {integrity: sha512-0cNMnTcUJPxbA6uWmCmjWz4NJRe/0Xfk2NhXCUHjew9qJzFN20krFnsUe7QynwqOwa5m1fZ4UDg0ycKFVC0ccw==}
     engines: {node: '>= 12'}
     hasBin: true
     dev: true
@@ -3466,8 +3480,8 @@ packages:
     resolution: {integrity: sha512-db91Bf3pRGKDPz1lAqLFSJXeW13mulUJxhycysFpfXV5MIK7RgWWK2E5aPAa71s8TCzQUXxF5JOV42/iOs6QkA==}
     dev: true
 
-  /prismjs/1.28.0:
-    resolution: {integrity: sha512-8aaXdYvl1F7iC7Xm1spqSaY/OJBpYW3v+KJ+F17iYxvdc8sfjW194COK5wVhMZX45tGteiBQgdvD/nhxcRwylw==}
+  /prismjs/1.29.0:
+    resolution: {integrity: sha512-Kx/1w86q/epKcmte75LNrEoT+lX8pBpavuAbvJWRXar7Hz8jrtF+e3vY751p0R8H9HdArwaCTNDDzHg/ScJK1Q==}
     engines: {node: '>=6'}
     dev: true
 
@@ -4587,13 +4601,14 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-imagetools/4.0.9:
-    resolution: {integrity: sha512-MQZWqYH/dbliA1IC7jiARgzpn+NCT3LEGgmln+IIj2WJiVX/Ry+KgmJoIK1OvA6tUsGXNpQSLhAqBQKRA9NuGQ==}
+  /vite-imagetools/4.0.10:
+    resolution: {integrity: sha512-ZA9kvPq3HqSM7gKYQxN2wPoRXZ6rVr5pySvG7LBiZ12mRg6k8YlBKCoPAMBAwKiwubXdwoPlHtzwUzujwrZavg==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      '@rollup/pluginutils': 4.2.1
-      imagetools-core: 3.2.1
-      magic-string: 0.26.3
+      '@rollup/pluginutils': 5.0.0
+      imagetools-core: 3.2.2
+    transitivePeerDependencies:
+      - rollup
     dev: true
 
   /vite/3.1.1:
