@@ -4,6 +4,7 @@
 	import '$lib/docs/client/docs.css';
 	import '$lib/docs/client/shiki.css';
 	import * as hovers from '$lib/docs/client/hovers.js';
+	import FlowPlayground from './FlowPlayground.svelte';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -28,6 +29,8 @@
 	>
 		<Icon size={50} name="edit" /> Edit this page on GitHub
 	</a>
+
+	<FlowPlayground />
 
 	<section>
 		{@html data.section.content}
