@@ -6,7 +6,7 @@ const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
 const server = new Server(manifest);
 
-const appPath = `/${manifest.appPath}/`;
+const app_path = `/${manifest.appPath}/`;
 
 export default {
 	/**
