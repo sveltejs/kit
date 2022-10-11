@@ -40,7 +40,7 @@ export async function write_all_types(config, manifest_data) {
 	const types_dir = `${config.kit.outDir}/types`;
 
 	// empty out files that no longer need to exist
-	const routes_dir = path.relative('.', config.kit.files.routes);
+	const routes_dir = posixify(path.relative('.', config.kit.files.routes)).replace(/\.\.\//g, '');
 	const expected_directories = new Set(
 		manifest_data.routes.map((route) => path.join(routes_dir, route.id))
 	);
@@ -66,12 +66,7 @@ export async function write_all_types(config, manifest_data) {
 	for (const route of manifest_data.routes) {
 		if (!route.leaf && !route.layout && !route.endpoint) continue; // nothing to do
 
-		const outdir = path.join(
-			config.kit.outDir,
-			'types',
-			routes_dir.replace(/\.\.\//g, ''),
-			route.id
-		);
+		const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
 
 		// check if the types are out of date
 		/** @type {string[]} */
@@ -184,8 +179,8 @@ function create_routes_map(manifest_data) {
  * @param {Set<string>} [to_delete]
  */
 function update_types(config, routes, route, to_delete = new Set()) {
-	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
-	const outdir = path.join(config.kit.outDir, 'types', routes_dir.replace(/\.\.\//g, ''), route.id);
+	const routes_dir = posixify(path.relative('.', config.kit.files.routes)).replace(/\.\.\//g, '');
+	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
 
 	// now generate new types
 	const imports = [`import type * as Kit from '@sveltejs/kit';`];
