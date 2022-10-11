@@ -3,9 +3,9 @@
 	import Checkbox from './Checkbox.svelte';
 </script>
 
-<span class="header active">Code snippets</span>
 <!-- svelte-ignore a11y-label-has-associated-control -->
 <label class="input-output-toggle">
+	<span>Code:</span>
 	<span class:active={!checked} style="text-align: right">JS</span>
 	<Checkbox bind:checked />
 	<span class:active={checked}>TS</span>
@@ -14,27 +14,21 @@
 <style>
 	.input-output-toggle {
 		position: relative;
-		display: grid;
+		display: flex;
+		gap: 0.5em;
 		user-select: none;
-		flex: 0;
-		grid-template-columns: 1fr 40px 1fr;
-		grid-gap: 0.5em;
 		align-items: center;
 		width: 100%;
 		height: 42px;
 		z-index: 2;
+		padding: 0 3.2rem;
 	}
 
 	span {
 		color: #ccc;
 	}
+
 	.active {
 		color: #555;
-	}
-
-	.header {
-		display: block;
-		padding-top: 0.5em;
-		text-align: center;
 	}
 </style>
