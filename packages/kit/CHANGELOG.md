@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.514
+
+### Patch Changes
+
+- add helpful error message for `throw invalid()` in form actions ([#7225](https://github.com/sveltejs/kit/pull/7225))
+
 ## 1.0.0-next.513
 
 ### Patch Changes
