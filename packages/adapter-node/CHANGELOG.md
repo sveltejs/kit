@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.97
+
+### Patch Changes
+
+- [chore] update dependency @rollup/plugin-json to v5 ([#7204](https://github.com/sveltejs/kit/pull/7204))
+
 ## 1.0.0-next.96
 
 ### Patch Changes

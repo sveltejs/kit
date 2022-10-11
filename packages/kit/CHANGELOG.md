@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.513
+
+### Patch Changes
+
+- Transfer server data as devalue-encoded JSON ([#7177](https://github.com/sveltejs/kit/pull/7177))
+
+* [fix] remove groups from segments for adapters ([#7222](https://github.com/sveltejs/kit/pull/7222))
+
 ## 1.0.0-next.512
 
 ### Patch Changes
