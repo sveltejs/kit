@@ -1,14 +1,12 @@
 <script>
-	export let checked;
 	import Checkbox from './Checkbox.svelte';
+
+	export let checked;
 </script>
 
 <!-- svelte-ignore a11y-label-has-associated-control -->
 <label class="input-output-toggle">
-	<span>Code:</span>
-	<span class:active={!checked} style="text-align: right">JS</span>
-	<Checkbox bind:checked />
-	<span class:active={checked}>TS</span>
+	JavaScript <Checkbox bind:checked /> TypeScript
 </label>
 
 <style>
@@ -22,13 +20,5 @@
 		height: 42px;
 		z-index: 2;
 		padding: 0 3.2rem;
-	}
-
-	span {
-		color: #ccc;
-	}
-
-	.active {
-		color: #555;
 	}
 </style>

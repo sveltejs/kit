@@ -6,18 +6,21 @@
 
 <style>
 	input[type='checkbox'] {
-		/* display: block; */
+		--size: 1.2em;
+		--bg: rgba(255, 255, 255, 0.2);
+		--fg: white;
+		--bg-active: var(--bg);
+		--fg-active: var(--fg);
 		position: relative;
-		height: 1em;
+		height: var(--size);
 		width: calc(100% - 0.6em);
-		max-width: 2em;
+		max-width: calc(2 * var(--size));
 		top: -2px;
 		border-radius: 0.5em;
 		-webkit-appearance: none;
 		appearance: none;
 		outline: none;
 		border: transparent;
-		margin: 0 0.6em 0 0;
 	}
 
 	input[type='checkbox']::before {
@@ -27,33 +30,34 @@
 		height: 100%;
 		width: 100%;
 		padding: 2px;
-		border-radius: 1em;
+		border-radius: var(--size);
 		top: 0;
 		left: 0;
-		background: var(--second);
-		/* box-sizing: border-box; */
-		box-sizing: content-box;
+		background: var(--bg);
+		box-sizing: border-box;
 	}
 
 	input[type='checkbox']:checked::before {
-		background: var(--prime);
+		background: var(--bg-active);
 	}
 
 	input[type='checkbox']::after {
 		content: '';
 		position: absolute;
 		display: block;
-		height: 1em;
-		width: 1em;
+		width: calc(var(--size) - 4px);
+		height: calc(var(--size) - 4px);
+		aspect-ratio: 1;
 		top: 2px;
 		left: 2px;
-		border-radius: 1em;
-		background: white;
+		border-radius: 50%;
+		background: var(--fg);
 		box-shadow: 0 0px 1px rgba(0, 0, 0, 0.4), 0 4px 2px rgba(0, 0, 0, 0.1);
 		transition: background 0.2s ease-out, left 0.2s ease-out;
 	}
 
 	input[type='checkbox']:checked::after {
-		left: calc(100% - 1em + 2px);
+		background: var(--fg-active);
+		left: calc(100% - var(--size) + 2px);
 	}
 </style>

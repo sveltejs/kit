@@ -241,9 +241,9 @@
 	}
 
 	.ts-toggle {
-		background-color: white;
-		padding: 0.5em;
-		margin-right: 3.2rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.2);
+		background-color: var(--second);
+		color: white;
 	}
 
 	@media (min-width: 600px) {
@@ -265,11 +265,10 @@
 			content: '';
 			position: fixed;
 			left: 0;
-			bottom: 0;
+			bottom: calc(42px + var(--ukr-footer-height));
 			width: var(--sidebar-w);
 			height: 2em;
 			pointer-events: none;
-			height: var(--top-offset);
 			background: linear-gradient(
 				to bottom,
 				rgba(103, 103, 120, 0) 0%,
