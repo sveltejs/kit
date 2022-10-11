@@ -54,10 +54,6 @@ export async function handle_action_json_request(event, options, server) {
 	} catch (e) {
 		const error = normalize_error(e);
 
-		if (error instanceof ValidationError) {
-			throw new Error(`Cannot "throw invalid()". Use "return invalid()"`);
-		}
-
 		if (error instanceof Redirect) {
 			return action_json({
 				type: 'redirect',
@@ -73,7 +69,13 @@ export async function handle_action_json_request(event, options, server) {
 		return action_json(
 			{
 				type: 'error',
-				error: handle_error_and_jsonify(event, options, error)
+				error: handle_error_and_jsonify(
+					event,
+					options,
+					error instanceof ValidationError
+						? new Error(`Cannot "throw invalid()". Use "return invalid()"`)
+						: error
+				)
 			},
 			{
 				status: error instanceof HttpError ? error.status : 500
@@ -137,10 +139,6 @@ export async function handle_action_request(event, server) {
 	} catch (e) {
 		const error = normalize_error(e);
 
-		if (error instanceof ValidationError) {
-			throw new Error(`Cannot "throw invalid()". Use "return invalid()"`);
-		}
-
 		if (error instanceof Redirect) {
 			return {
 				type: 'redirect',
@@ -149,7 +147,13 @@ export async function handle_action_request(event, server) {
 			};
 		}
 
-		return { type: 'error', error };
+		return {
+			type: 'error',
+			error:
+				error instanceof ValidationError
+					? new Error(`Cannot "throw invalid()". Use "return invalid()"`)
+					: error
+		};
 	}
 }
 
