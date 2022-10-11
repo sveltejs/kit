@@ -133,6 +133,10 @@ export async function handle_action_request(event, server) {
 	} catch (e) {
 		const error = normalize_error(e);
 
+		if (error instanceof ValidationError) {
+			throw new Error(`Cannot "throw invalid()". Use "return invalid()"`);
+		}
+
 		if (error instanceof Redirect) {
 			return {
 				type: 'redirect',
