@@ -62,10 +62,6 @@ export async function handle_action_json_request(event, options, server) {
 			});
 		}
 
-		if (!(error instanceof HttpError)) {
-			options.handle_error(error, event);
-		}
-
 		return action_json(
 			{
 				type: 'error',
