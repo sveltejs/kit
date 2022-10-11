@@ -23,9 +23,9 @@ export default function () {
 			builder.rimraf(tmp);
 			builder.mkdirp(tmp);
 
-			const prefixedDest = `${dest}${builder.config.kit.paths.base}`;
-			const written_files = builder.writeClient(prefixedDest);
-			builder.writePrerendered(prefixedDest);
+			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
+			const written_files = builder.writeClient(dest_dir);
+			builder.writePrerendered(dest_dir);
 
 			const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
