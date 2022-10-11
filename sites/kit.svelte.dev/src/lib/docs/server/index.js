@@ -561,11 +561,18 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 				return `${indent}import type { ${Array.from(names).join(', ')} } from '${from}';`;
 			})
 			.join('\n');
-		const insertion_point = js_code.includes('---cut---')
-			? js_code.indexOf('\n', js_code.indexOf('---cut---')) + 1
-			: js_code.includes('/// file:')
-			? js_code.indexOf('\n', js_code.indexOf('/// file:')) + 1
-			: 0;
+		const idxOfLastImport = [...ast.statements]
+			.reverse()
+			.find((statement) => ts.isImportDeclaration(statement))
+			?.getEnd();
+		const insertion_point = Math.max(
+			idxOfLastImport ? idxOfLastImport + 1 : 0,
+			js_code.includes('---cut---')
+				? js_code.indexOf('\n', js_code.indexOf('---cut---')) + 1
+				: js_code.includes('/// file:')
+				? js_code.indexOf('\n', js_code.indexOf('/// file:')) + 1
+				: 0
+		);
 		code.appendLeft(insertion_point, offset + import_statements + '\n');
 	}
 
