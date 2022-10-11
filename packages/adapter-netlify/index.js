@@ -54,9 +54,9 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.log.minor(`Publishing to "${publish}"`);
 
 			builder.log.minor('Copying assets...');
-			const prefixedPublish = `${publish}${builder.config.kit.paths.base}`;
-			builder.writeClient(prefixedPublish);
-			builder.writePrerendered(prefixedPublish);
+			const publish_dir = `${publish}${builder.config.kit.paths.base}`;
+			builder.writeClient(publish_dir);
+			builder.writePrerendered(publish_dir);
 
 			builder.log.minor('Writing custom headers...');
 			const headers_file = join(publish, '_headers');
