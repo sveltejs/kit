@@ -22,7 +22,7 @@ const worker = {
 			res = await env.ASSETS.fetch(req);
 			if (!res.ok) return res;
 
-			const cache_control = pathname.startsWith(appPath + 'immutable/')
+			const cache_control = pathname.startsWith(app_path + 'immutable/')
 				? 'public, immutable, max-age=31536000'
 				: 'no-cache';
 
