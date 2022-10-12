@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.98
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
 ## 1.0.0-next.97
 
 ### Patch Changes

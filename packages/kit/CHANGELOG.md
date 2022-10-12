@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.515
+
+### Patch Changes
+
+- Account for relative path to routes in `config.kit.files.routes` ([#7223](https://github.com/sveltejs/kit/pull/7223))
+
+* Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
 ## 1.0.0-next.514
 
 ### Patch Changes
