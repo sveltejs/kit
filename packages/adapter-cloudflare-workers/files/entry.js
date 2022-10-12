@@ -25,7 +25,7 @@ export default {
 			const res = await get_asset_from_kv(req, env, context);
 			if (is_error(res.status)) return res;
 
-			const cache_control = url.pathname.startsWith(appPath + 'immutable/')
+			const cache_control = url.pathname.startsWith(app_path + 'immutable/')
 				? 'public, immutable, max-age=31536000'
 				: 'no-cache';
 
