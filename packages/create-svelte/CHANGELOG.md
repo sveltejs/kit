@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.184
+
+### Patch Changes
+
+- fix sverdle guesses incorrectly cleared by form `enhance` ([#7241](https://github.com/sveltejs/kit/pull/7241))
+
 ## 2.0.0-next.183
 
 ### Patch Changes
