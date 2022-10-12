@@ -30,8 +30,8 @@ export default function (opts = {}) {
 			builder.mkdirp(tmp);
 
 			builder.log.minor('Copying assets');
-			builder.writeClient(`${out}/client`);
-			builder.writePrerendered(`${out}/prerendered`);
+			builder.writeClient(`${out}/client${builder.config.kit.paths.base}`);
+			builder.writePrerendered(`${out}/prerendered${builder.config.kit.paths.base}`);
 
 			if (precompress) {
 				builder.log.minor('Compressing assets');

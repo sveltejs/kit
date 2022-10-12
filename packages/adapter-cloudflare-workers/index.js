@@ -73,8 +73,9 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 			});
 
 			builder.log.minor('Copying assets...');
-			builder.writeClient(site.bucket);
-			builder.writePrerendered(site.bucket);
+			const bucket_dir = `${site.bucket}${builder.config.kit.paths.base}`;
+			builder.writeClient(bucket_dir);
+			builder.writePrerendered(bucket_dir);
 		}
 	};
 }
