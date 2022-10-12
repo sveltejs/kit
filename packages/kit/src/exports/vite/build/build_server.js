@@ -354,9 +354,7 @@ function get_methods(cwd, output, manifest_data) {
 	const lookup = {};
 	output.forEach((chunk) => {
 		if (!chunk.facadeModuleId) return;
-		const relative = path.relative(cwd, chunk.facadeModuleId);
-		// in case it's on windows - replace backslash with forward slash
-		const id = relative.replace(/\\/g, '/');
+		const id = posixify(path.relative(cwd, chunk.facadeModuleId));
 		lookup[id] = chunk.exports;
 	});
 
