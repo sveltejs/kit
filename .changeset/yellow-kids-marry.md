@@ -1,5 +1,5 @@
 ---
-'create-svelte': minor
+'create-svelte': patch
 ---
 
 fix sverdle guesses incorrectly cleared by form `enhance`
