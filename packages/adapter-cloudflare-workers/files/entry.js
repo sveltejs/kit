@@ -20,7 +20,7 @@ export default {
 		const url = new URL(req.url);
 
 		// static assets
-		if (url.pathname.startsWith(appPath)) {
+		if (url.pathname.startsWith(app_path)) {
 			/** @type {Response} */
 			const res = await get_asset_from_kv(req, env, context);
 			if (is_error(res.status)) return res;
