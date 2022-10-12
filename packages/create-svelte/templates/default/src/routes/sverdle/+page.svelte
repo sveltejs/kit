@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { confetti } from '@neoconfetti/svelte';
-	import { enhance } from '$app/forms';
+	import { applyAction, enhance } from '$app/forms';
 	import type { PageData, ActionData } from './$types';
+	import { invalidateAll } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data: PageData;
@@ -78,7 +79,19 @@
 
 <svelte:window on:keydown={keydown} />
 
-<form method="POST" action="?/enter" use:enhance>
+<form
+	method="POST"
+	action="?/enter"
+	use:enhance={() => {
+		// prevent default callback from resetting the form
+		return async ({ result }) => {
+			if (result.type === 'success') {
+				await invalidateAll();
+			}
+			await applyAction(result);
+		};
+	}}
+>
 	<a class="how-to-play" href="/sverdle/how-to-play">How to play</a>
 
 	<div class="grid" class:playing={!won} class:bad-guess={form?.badGuess}>
