@@ -46,6 +46,7 @@ export function GET(event) {
 ```
 
 ### FormData
+
 When dealing with HTML native form submissions you'll be working with [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) objects.
 
 ```js
