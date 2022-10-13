@@ -45,6 +45,29 @@ export function GET(event) {
 }
 ```
 
+### FormData
+
+When dealing with HTML native form submissions you'll be working with [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) objects.
+
+```js
+// @errors: 2461
+/// file: src/routes/hello/+server.js
+import { json } from '@sveltejs/kit';
+
+/** @type {import('./$types').RequestHandler} */
+export async function POST(event) {
+	const body = await event.request.formData();
+
+	// log all fields
+	console.log([...body]);
+
+	return json({
+		// get a specific field's value
+		name: body.get('name') ?? 'world'
+	});
+}
+```
+
 ### Stream APIs
 
 Most of the time, your endpoints will return complete data, as in the `userAgent` example above. Sometimes, you may need to return a response that's too large to fit in memory in one go, or is delivered in chunks, and for this the platform provides [streams](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API) — [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream), [WritableStream](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream) and [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream).
