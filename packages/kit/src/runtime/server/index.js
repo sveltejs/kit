@@ -327,8 +327,15 @@ export async function respond(request, options, state) {
 			if (if_none_match_value === etag) {
 				const headers = new Headers({ etag });
 
-				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
-				for (const key of ['cache-control', 'content-location', 'date', 'expires', 'vary']) {
+				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
+				for (const key of [
+					'cache-control',
+					'content-location',
+					'date',
+					'expires',
+					'vary',
+					'set-cookie'
+				]) {
 					const value = response.headers.get(key);
 					if (value) headers.set(key, value);
 				}

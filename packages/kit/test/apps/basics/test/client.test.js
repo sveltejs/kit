@@ -930,3 +930,12 @@ test.describe('Content negotiation', () => {
 		await expect(page.locator('[data-testid="form-result"]')).toHaveText('form.submitted: true');
 	});
 });
+
+test.describe('cookies', () => {
+	test('etag forwards cookies', async ({ page }) => {
+		await page.goto('/cookies/forwarded-in-etag');
+		await expect(page.locator('p')).toHaveText('foo=bar');
+		await Promise.all([page.waitForNavigation(), page.click('button')]);
+		await expect(page.locator('p')).toHaveText('foo=bar');
+	});
+});
