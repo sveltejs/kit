@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.516
+
+### Patch Changes
+
+- [fix] better navigation protocol check ([#7067](https://github.com/sveltejs/kit/pull/7067))
+
+* [fix] forward cookie headers on etag response ([#7256](https://github.com/sveltejs/kit/pull/7256))
+
+- Properly resolve absolute paths to relative on server build ([#7252](https://github.com/sveltejs/kit/pull/7252))
+
 ## 1.0.0-next.515
 
 ### Patch Changes
