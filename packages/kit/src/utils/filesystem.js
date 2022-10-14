@@ -6,7 +6,12 @@ export function mkdirp(dir) {
 	try {
 		fs.mkdirSync(dir, { recursive: true });
 	} catch (/** @type {any} */ e) {
-		if (e.code === 'EEXIST') return;
+		if (e.code === 'EEXIST') {
+			if (!fs.statSync(dir).isDirectory()) {
+				throw new Error(`Cannot create directory ${dir}, a file already exists at this position`);
+			}
+			return;
+		}
 		throw e;
 	}
 }

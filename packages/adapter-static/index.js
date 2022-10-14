@@ -26,11 +26,27 @@ export default function (options) {
 
 				if (dynamic_routes.length > 0) {
 					const prefix = path.relative('.', builder.config.kit.files.routes);
+					const has_routes_with_params = dynamic_routes.some((route) => route.includes('['));
+					const config_option =
+						JSON.stringify(builder.config.kit.prerender.entries) === '["*"]' &&
+						!has_routes_with_params
+							? ''
+							: `  - adjust the \`prerender.entries\` config option ${
+									has_routes_with_params
+										? `(routes with parameters are not part of entry points by default)`
+										: ''
+							  } — see https://kit.svelte.dev/docs/configuration#prerender for more info\n`;
 					builder.log.error(
-						`@sveltejs/adapter-static: all routes must be fully prerenderable (unless using the 'fallback' option — see https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode). Try adding \`export const prerender = true\` to your root +layout.js/.ts file — see https://kit.svelte.dev/docs/page-options#prerender for more details`
-					);
-					builder.log.error(
-						dynamic_routes.map((id) => `  - ${path.posix.join(prefix, id)}`).join('\n')
+						`@sveltejs/adapter-static: all routes must be fully prerenderable, but found the following routes that are dynamic:
+${dynamic_routes.map((id) => `  - ${path.posix.join(prefix, id)}`).join('\n')}
+
+You have the following options:
+  - set the 'fallback' option — see https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode for more info
+  - add \`export const prerender = true\` to your root \`+layout.js/.ts\` or \`+layout.server.js/.ts\` file. This will try to prerender all pages.
+  - add \`export const prerender = true\` to your \`+server.js/ts\` files (if any) that are not called through pages (else these are not prerendered).
+${config_option}
+If this doesn't help, you may need to use a different adapter. @sveltejs/adapter-static can only be used for sites that don't need a backend (i.e. a static file server is enough).
+See https://kit.svelte.dev/docs/page-options#prerender for more details`
 					);
 					throw new Error('Encountered dynamic routes');
 				}
