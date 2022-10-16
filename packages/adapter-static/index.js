@@ -29,13 +29,10 @@ export default function (options) {
 					const has_routes_with_params = dynamic_routes.some((route) => route.includes('['));
 					const config_option =
 						JSON.stringify(builder.config.kit.prerender.entries) === '["*"]' &&
-						!has_routes_with_params
-							? ''
-							: `  - adjust the \`prerender.entries\` config option ${
-									has_routes_with_params
-										? `(routes with parameters are not part of entry points by default)`
-										: ''
-							  } — see https://kit.svelte.dev/docs/configuration#prerender for more info\n`;
+						has_routes_with_params
+							? `  - adjust the \`prerender.entries\` config option (routes with parameters are not part of entry points by default) — see https://kit.svelte.dev/docs/configuration#prerender for more info\n`
+							: '';
+
 					builder.log.error(
 						`@sveltejs/adapter-static: all routes must be fully prerenderable, but found the following routes that are dynamic:
 ${dynamic_routes.map((id) => `  - ${path.posix.join(prefix, id)}`).join('\n')}
