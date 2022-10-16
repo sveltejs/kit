@@ -98,9 +98,8 @@ It's possible for multiple routes to match a given path. For example each of the
 
 ```bash
 src/routes/[...catchall]/+page.svelte
-src/routes/[a]/+server.js
-src/routes/[[b]]/sub/+page.svelte
-src/routes/[c]/+page.svelte
+src/routes/[[a]]/foo/+page.svelte
+src/routes/[b]/+page.svelte
 src/routes/foo-[c]/+page.svelte
 src/routes/foo-abc/+page.svelte
 ```
@@ -108,10 +107,8 @@ src/routes/foo-abc/+page.svelte
 SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
 
 - More specific routes are higher priority (e.g. a route with no parameters is more specific than a route with one dynamic parameter, and so on)
-- `+server` files have higher priority than `+page` files
 - Parameters with [matchers](#matching) (`[name=type]`) are higher priority than those without (`[name]`)
-- `[required]` parameters are higher priority than `[[optional]]` parameters
-- Rest parameters have lowest priority
+- `[[optional]]` and `[...rest]` parameters are ignored unless they are the final part of the route, in which case they are treated with lowest priority
 - Ties are resolved alphabetically
 
 ...resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-abc/+page.svelte`, and `/foo-def` will invoke `src/routes/foo-[c]/+page.svelte` rather than less specific routes:
@@ -119,9 +116,8 @@ SvelteKit needs to know which route is being requested. To do so, it sorts them 
 ```bash
 src/routes/foo-abc/+page.svelte
 src/routes/foo-[c]/+page.svelte
-src/routes/[a]/+server.js
-src/routes/[c]/+page.svelte
-src/routes/[[b]]/sub/+page.svelte
+src/routes/[[a]]/foo/+page.svelte
+src/routes/[b]/+page.svelte
 src/routes/[...catchall]/+page.svelte
 ```
 
