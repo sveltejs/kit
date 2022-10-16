@@ -79,7 +79,7 @@ Since these routes cannot be dynamically server-rendered, this will cause errors
 * Ensure that SvelteKit can find the route by following links from [`config.kit.prerender.entries`](/docs/configuration#prerender). Add links to dynamic routes (i.e. pages with `[parameters]` ) to this option if they are not found through crawling the other entry points, else they are not prerendered because SvelteKit doesn't know what value the parameters should have. The pages containing the links (e.g. your `/` page) must _themselves_ be prerenderable, or they will be ignored.
 * Change `export const prerender = true` to `export const prerender = 'auto'`. Routes with `'auto'` can be dynamically server rendered
 
-If you are using `@sveltejs/adapter-static`, _all_ pages (and endpoints, if any) must be prerendered, else you need to use a different adapter.
+If you are using `@sveltejs/adapter-static`, _all_ pages (and endpoints, if any) must be prerendered, otherwise you need to use a different adapter.
 
 ### ssr
 
