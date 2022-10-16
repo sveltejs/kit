@@ -223,6 +223,8 @@ test('sorts routes correctly', () => {
 		'c/foo',
 		'd/e',
 		'd/e[...rest]',
+		'e/f',
+		'e/[...rest]/f',
 		'[...rest]/x',
 		'[...rest]/x/[...deep_rest]/y',
 		'[...rest]/x/[...deep_rest]',
