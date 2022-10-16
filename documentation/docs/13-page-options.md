@@ -79,9 +79,9 @@ Since these routes cannot be dynamically server-rendered, this will cause errors
 * Ensure that SvelteKit can find the route by following links from [`config.kit.prerender.entries`](/docs/configuration#prerender). The pages containing the links (e.g. your `/` page) must _themselves_ be prerenderable, or they will be ignored
 * Change `export const prerender = true` to `export const prerender = 'auto'`. Routes with `'auto'` can be dynamically server rendered
 
-### ssr
+### ssr and spa
 
-Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's hydrated. If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server, but in most situations it's not recommended ([see appendix](/docs/appendix#ssr)).
+Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's hydrated. If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server - like when you need the app to be a full SPA. But in most situations it's not recommended ([see appendix on SSR](/docs/appendix#ssr) and [see appendix on SPA](/docs/appendix#CSR and SPA)).
 
 ```js
 /// file: +page.js
