@@ -232,12 +232,9 @@ test('sorts routes correctly', () => {
 		'[...rest]'
 	];
 
-	const map = new Map();
-	for (const id of expected) {
-		map.set(id, { id });
-	}
+	const routes = /** @type {import('types').RouteData[]} */ (expected.map((id) => ({ id })));
 
-	const actual = sort_routes(map).map((route) => route.id);
+	const actual = sort_routes(routes).map((route) => route.id);
 
 	assert.equal(actual, expected);
 });

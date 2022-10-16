@@ -12,8 +12,8 @@ import { affects_path } from '../../../utils/routing.js';
  * @typedef {Part[]} Segment
  */
 
-/** @param {Map<string, import('types').RouteData>} route_map */
-export function sort_routes(route_map) {
+/** @param {import('types').RouteData[]} routes */
+export function sort_routes(routes) {
 	/** @type {Map<string, Part[]>} */
 	const segment_cache = new Map();
 
@@ -61,7 +61,7 @@ export function sort_routes(route_map) {
 		return parts;
 	}
 
-	return Array.from(route_map.values()).sort((route_a, route_b) => {
+	return routes.sort((route_a, route_b) => {
 		const segments_a = split_route_id(route_a.id).map(get_parts);
 		const segments_b = split_route_id(route_b.id).map(get_parts);
 

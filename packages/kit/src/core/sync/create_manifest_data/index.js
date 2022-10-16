@@ -83,8 +83,8 @@ function create_matchers(config, cwd) {
  * @param {string} fallback
  */
 function create_routes_and_nodes(cwd, config, fallback) {
-	/** @type {Map<string, import('types').RouteData>} */
-	const route_map = new Map();
+	/** @type {import('types').RouteData[]} */
+	const routes = [];
 
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
 
@@ -142,7 +142,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			// important to do this before walking children, so that child
 			// routes appear later
-			route_map.set(id, route);
+			routes.push(route);
 
 			// if we don't do this, the route map becomes unwieldy to console.log
 			Object.defineProperty(route, 'parent', { enumerable: false });
@@ -209,8 +209,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 		walk(0, '', '', null);
 
-		const root = /** @type {import('types').RouteData} */ (route_map.get(''));
-		if (route_map.size === 1) {
+		if (routes.length === 1) {
+			const root = routes[0];
 			if (!root.leaf && !root.error && !root.layout && !root.endpoint) {
 				throw new Error(
 					// TODO adjust this error message for 1.0
@@ -222,7 +222,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	} else {
 		// If there's no routes directory, we'll just create a single empty route. This ensures the root layout and
 		// error components are included in the manifest, which is needed for subsequent build/dev commands to work
-		route_map.set('', {
+		routes.push({
 			id: '',
 			segment: '',
 			pattern: /^$/,
@@ -237,7 +237,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		});
 	}
 
-	const root = /** @type {import('types').RouteData} */ (route_map.get(''));
+	const root = routes[0];
 
 	if (!root.layout?.component) {
 		if (!root.layout) root.layout = { depth: 0, child_pages: [] };
@@ -252,15 +252,15 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	// we do layouts/errors first as they are more likely to be reused,
 	// and smaller indexes take fewer bytes. also, this guarantees that
 	// the default error/layout are 0/1
-	route_map.forEach((route) => {
+	for (const route of routes) {
 		if (route.layout) nodes.push(route.layout);
 		if (route.error) nodes.push(route.error);
-	});
+	}
 
 	/** @type {Map<string, string>} */
 	const conflicts = new Map();
 
-	route_map.forEach((route) => {
+	routes.forEach((route) => {
 		if (!route.leaf) return;
 
 		nodes.push(route.leaf);
@@ -276,8 +276,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	const indexes = new Map(nodes.map((node, i) => [node, i]));
 
-	route_map.forEach((route) => {
-		if (!route.leaf) return;
+	for (const route of routes) {
+		if (!route.leaf) continue;
 
 		route.page = {
 			layouts: [],
@@ -318,11 +318,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		if (parent_id !== undefined) {
 			throw new Error(`${current_node.component} references missing segment "${parent_id}"`);
 		}
-	});
+	}
 
-	const routes = sort_routes(route_map);
-
-	return { nodes, routes };
+	return {
+		nodes,
+		routes: sort_routes(routes)
+	};
 }
 
 /**
