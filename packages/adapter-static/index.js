@@ -30,7 +30,7 @@ export default function (options) {
 					const config_option =
 						JSON.stringify(builder.config.kit.prerender.entries) === '["*"]' &&
 						has_routes_with_params
-							? `  - adjust the \`prerender.entries\` config option (routes with parameters are not part of entry points by default) — see https://kit.svelte.dev/docs/configuration#prerender for more info\n`
+							? '  - adjust the `prerender.entries` config option (routes with parameters are not part of entry points by default) — see https://kit.svelte.dev/docs/configuration#prerender for more info.\n'
 							: '';
 
 					builder.log.error(
