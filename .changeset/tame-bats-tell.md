@@ -3,4 +3,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] more info about prerendering errors
+[feat] more info about prerendering errors, add strict option to adapter-static
