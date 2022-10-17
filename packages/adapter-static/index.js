@@ -26,10 +26,14 @@ export default function (options) {
 
 				if (dynamic_routes.length > 0) {
 					const prefix = path.relative('.', builder.config.kit.files.routes);
+					const has_param_routes = dynamic_routes.some((route) => route.includes('['));
 					const config_option =
-						dynamic_routes.some((route) => route.includes('[')) &&
-						JSON.stringify(builder.config.kit.prerender.entries) === '["*"]'
-							? '  - adjust the `prerender.entries` config option (routes with parameters are not part of entry points by default) — see https://kit.svelte.dev/docs/configuration#prerender for more info.\n'
+						has_param_routes || JSON.stringify(builder.config.kit.prerender.entries) !== '["*"]'
+							? `  - adjust the \`prerender.entries\` config option ${
+									has_param_routes
+										? '(routes with parameters are not part of entry points by default)'
+										: ''
+							  } — see https://kit.svelte.dev/docs/configuration#prerender for more info.\n`
 							: '';
 
 					builder.log.error(
