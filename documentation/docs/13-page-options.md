@@ -72,11 +72,11 @@ Note that this will disable client-side routing for any navigation from this pag
 
 #### Troubleshooting
 
-If you encounter an error like 'The following routes were marked as prerenderable, but were not prerendered' it's because the route in question (or a parent layout, if it's a page) has `export const prerender = true` but the page wasn't actually prerendered (because they were not reached by the prerendering crawler).
+If you encounter an error like 'The following routes were marked as prerenderable, but were not prerendered' it's because the route in question (or a parent layout, if it's a page) has `export const prerender = true` but the page wasn't actually prerendered, because it wasn't reached by the prerendering crawler.
 
 Since these routes cannot be dynamically server-rendered, this will cause errors when people try to access the route in question. There are two ways to fix it:
 
-* Ensure that SvelteKit can find the route by following links from [`config.kit.prerender.entries`](/docs/configuration#prerender). Add links to dynamic routes (i.e. pages with `[parameters]` ) to this option if they are not found through crawling the other entry points, else they are not prerendered because SvelteKit doesn't know what value the parameters should have. The pages containing the links (e.g. your `/` page) must _themselves_ be prerenderable, or they will be ignored.
+* Ensure that SvelteKit can find the route by following links from [`config.kit.prerender.entries`](/docs/configuration#prerender). Add links to dynamic routes (i.e. pages with `[parameters]` ) to this option if they are not found through crawling the other entry points, else they are not prerendered because SvelteKit doesn't know what value the parameters should have. Pages not marked as prerenderable will be ignored and their links to other pages will not be crawled, even if some of them would be prerenderable.
 * Change `export const prerender = true` to `export const prerender = 'auto'`. Routes with `'auto'` can be dynamically server rendered
 
 If you are using `@sveltejs/adapter-static`, _all_ pages (and endpoints, if any) must be prerendered, otherwise you need to use a different adapter.
