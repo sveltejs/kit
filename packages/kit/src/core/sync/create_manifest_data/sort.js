@@ -27,6 +27,21 @@ export function sort_routes(routes) {
 	}
 
 	/** @param {string} id */
+	function split_route_id(id) {
+		return [
+			id
+				// remove all [[optional]]/[...rest] parts unless they're at the very end
+				.replace(/\[(\[[^\]]+\]|\.\.\.[^\]]+)\](?!$)/g, ''),
+			id
+		].map((id) =>
+			id
+				.split('/')
+				.filter((segment) => segment !== '' && affects_path(segment))
+				.map(get_parts)
+		);
+	}
+
+	/** @param {string} id */
 	function split(id) {
 		/** @type {Part[]} */
 		const parts = [];
@@ -62,10 +77,8 @@ export function sort_routes(routes) {
 	}
 
 	return routes.sort((route_a, route_b) => {
-		const segments_a = split_route_id(route_a.id).map(get_parts);
-		const segments_a_all = split_route_id(route_a.id, true).map(get_parts);
-		const segments_b = split_route_id(route_b.id).map(get_parts);
-		const segments_b_all = split_route_id(route_b.id, true).map(get_parts);
+		const [segments_a, segments_a_all] = split_route_id(route_a.id);
+		const [segments_b, segments_b_all] = split_route_id(route_b.id);
 
 		const result = compare_segments(segments_a, segments_b, segments_a_all, segments_b_all);
 		if (result !== undefined) return result;
@@ -77,20 +90,6 @@ export function sort_routes(routes) {
 			? +1
 			: -1; // TODO error on conflicts?
 	});
-}
-
-/**
- * @param {string} id
- * @param {boolean} [keep_optional]
- */
-function split_route_id(id, keep_optional = false) {
-	if (!keep_optional) {
-		id = id
-			// remove all [[optional]]/[...rest] parts unless they're at the very end
-			.replace(/\[(\[[^\]]+\]|\.\.\.[^\]]+)\](?!$)/g, '');
-	}
-
-	return id.split('/').filter((segment) => segment !== '' && affects_path(segment));
 }
 
 /**
