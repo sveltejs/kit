@@ -69,7 +69,6 @@ export class IllegalModuleGuard {
 	 * @returns {boolean}
 	 */
 	#is_illegal(module_id) {
-		if (this.#allow_server_import_from_client(module_id)) return false;
 		if (this.#is_kit_illegal(module_id) || this.#is_user_illegal(module_id)) return true;
 		return false;
 	}
