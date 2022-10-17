@@ -3,7 +3,7 @@ import path from 'path';
 import mime from 'mime';
 import { runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
-import { parse_route_id, affects_path } from '../../../utils/routing.js';
+import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
 
 /**
@@ -237,6 +237,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		});
 	}
 
+	prevent_conflicts(routes);
+
 	const root = routes[0];
 
 	if (!root.layout?.component) {
@@ -257,22 +259,9 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		if (route.error) nodes.push(route.error);
 	}
 
-	/** @type {Map<string, string>} */
-	const conflicts = new Map();
-
-	routes.forEach((route) => {
-		if (!route.leaf) return;
-
-		nodes.push(route.leaf);
-
-		const normalized = route.id.split('/').filter(affects_path).join('/');
-
-		if (conflicts.has(normalized)) {
-			throw new Error(`${conflicts.get(normalized)} and ${route.id} occupy the same route`);
-		}
-
-		conflicts.set(normalized, route.id);
-	});
+	for (const route of routes) {
+		if (route.leaf) nodes.push(route.leaf);
+	}
 
 	const indexes = new Map(nodes.map((node, i) => [node, i]));
 
@@ -418,4 +407,57 @@ function count_occurrences(needle, haystack) {
 		if (haystack[i] === needle) count += 1;
 	}
 	return count;
+}
+
+/** @param {import('types').RouteData[]} routes */
+function prevent_conflicts(routes) {
+	/** @param {Map<string, string>} */
+	const lookup = new Map();
+
+	for (const route of routes) {
+		if (!route.leaf && !route.endpoint) continue;
+
+		const normalized = route.id
+			// remove groups
+			.replace(/(?<=^|\/)\(.+?\)(?=$|\/)/g, '')
+
+			// replace `[param]` with `<*>`, `[param=x]` with `<x>`, and `[[param]]` with `<?*>`
+			.replace(
+				/\[(\[)?.+?(=.+?)?\]\]?/g,
+				(_, optional, matcher) => `<${optional ? '?' : ''}${matcher ?? '*'}>`
+			);
+
+		// find all permutations created by optional parameters
+		const split = normalized.split(/<\?(.+?)\>/g);
+
+		let permutations = [/** @type {string} */ (split[0])];
+
+		// turn `x/[[optional]]/y` into `x/y` and `x/[required]/y`
+		for (let i = 1; i < split.length; i += 2) {
+			const matcher = split[i];
+			const next = split[i + 1];
+
+			permutations = [
+				...permutations.map((x) => x + next),
+				...permutations.map((x) => x + `<${matcher}>${next}`)
+			];
+		}
+
+		for (const permutation of permutations) {
+			// remove leading/trailing/duplicated slashes caused by prior
+			// manipulation of optional parameters and (groups)
+			const key = permutation
+				.replace(/\/{2,}/, '/')
+				.replace(/^\//, '')
+				.replace(/\/$/, '');
+
+			const existing = lookup.get(key);
+
+			if (existing) {
+				throw new Error(`${existing} and ${route.id} occupy the same route`);
+			}
+
+			lookup.set(key, route.id);
+		}
+	}
 }
