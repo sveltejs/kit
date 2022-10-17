@@ -454,7 +454,7 @@ function prevent_conflicts(routes) {
 			const existing = lookup.get(key);
 
 			if (existing) {
-				throw new Error(`${existing} and ${route.id} occupy the same route`);
+				throw new Error(`The "${existing}" and "${route.id}" routes conflict with each other`);
 			}
 
 			lookup.set(key, route.id);

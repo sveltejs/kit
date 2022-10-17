@@ -715,7 +715,7 @@ test('errors on duplicate matchers', () => {
 test('prevents route conflicts between groups', () => {
 	assert.throws(
 		() => create('samples/conflicting-groups'),
-		/\(x\)\/a and \(y\)\/a occupy the same route/
+		/The "\(x\)\/a" and "\(y\)\/a" routes conflict with each other/
 	);
 });
 
