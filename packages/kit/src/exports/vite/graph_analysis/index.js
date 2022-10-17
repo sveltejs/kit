@@ -47,13 +47,18 @@ export class IllegalModuleGuard {
 	assert_legal(node) {
 		this.#chain.push(node);
 		for (const child of node.children) {
-			if (this.#is_illegal(child.id)) {
-				this.#chain.push(child);
-				const error = this.#format_illegal_import_chain(this.#chain);
-				this.#chain = []; // Reset the chain in case we want to reuse this guard
-				throw new Error(error);
+			if (this.#allow_server_import_from_client(child.id)) {
+				// Do not assert child nodes if module is allowed by user config
+				continue;
+			} else {
+				if (this.#is_illegal(child.id)) {
+					this.#chain.push(child);
+					const error = this.#format_illegal_import_chain(this.#chain);
+					this.#chain = []; // Reset the chain in case we want to reuse this guard
+					throw new Error(error);
+				}
+				this.assert_legal(child);
 			}
-			this.assert_legal(child);
 		}
 		this.#chain.pop();
 	}
