@@ -62,65 +62,87 @@ export function sort_routes(routes) {
 	}
 
 	return routes.sort((route_a, route_b) => {
-		const segments_a = split_route_id(route_a.id).map(get_parts);
-		const segments_b = split_route_id(route_b.id).map(get_parts);
+		const result = compare_segments(
+			split_route_id(route_a.id).map(get_parts),
+			split_route_id(route_b.id).map(get_parts)
+		);
+		if (result !== undefined) return result;
 
-		for (let i = 0; i < Math.max(segments_a.length, segments_b.length); i += 1) {
-			const segment_a = segments_a[i];
-			const segment_b = segments_b[i];
-
-			// shallower path outranks deeper path
-			if (!segment_a) return -1;
-			if (!segment_b) return +1;
-
-			// compare two segments
-			for (let j = 0; j < Math.max(segment_a.length, segment_b.length); j += 1) {
-				const a = segment_a[j];
-				const b = segment_b[j];
-
-				// first part of each segment is always static
-				// (though it may be the empty string), then
-				// it alternates between dynamic and static
-				// (i.e. [foo][bar] is disallowed)
-				const dynamic = j % 2 === 1;
-
-				if (dynamic) {
-					if (a === undefined) return -1;
-					if (b === undefined) return +1;
-
-					// part with matcher outranks one without
-					if (a.matched !== b.matched) {
-						return a.matched ? -1 : +1;
-					}
-
-					if (a.type !== b.type) {
-						// [required] outranks [[optional]] or [...rest]
-						if (a.type === 'required') return -1;
-						if (b.type === 'required') return +1;
-
-						// [[optional]] outranks [...rest]
-						if (a.type === 'optional') return -1;
-						if (b.type === 'optional') return +1;
-					}
-				} else if (a.content !== b.content) {
-					return sort_static(a.content, b.content);
-				}
-			}
-		}
-
-		return route_a.id < route_b.id ? +1 : -1; // TODO error on conflicts?
+		// If the routes are identical up to this point, we try again, this time keeping
+		// rest and optional routes, so we can take into account their matchers etc.
+		return compare_segments(
+			split_route_id(route_a.id, true).map(get_parts),
+			split_route_id(route_b.id, true).map(get_parts)
+		) ?? route_a.id < route_b.id
+			? +1
+			: -1; // TODO error on conflicts?
 	});
 }
 
-/** @param {string} id */
-function split_route_id(id) {
-	return (
-		id
+/**
+ * @param {string} id
+ * @param {boolean} [keep_optional]
+ */
+function split_route_id(id, keep_optional = false) {
+	if (!keep_optional) {
+		id = id
 			// remove all [[optional]]/[...rest] parts unless they're at the very end
-			.replace(/\[(\[[^\]]+\]|\.\.\.[^\]]+)\](?!$)/g, '')
-			.split('/')
-			.filter((segment) => segment !== '' && affects_path(segment))
-	);
+			.replace(/\[(\[[^\]]+\]|\.\.\.[^\]]+)\](?!$)/g, '');
+	}
+
+	return id.split('/').filter((segment) => segment !== '' && affects_path(segment));
+}
+
+/**
+ * @param {Array<Part[] | undefined>} segments_a
+ * @param {Array<Part[] | undefined>} segments_b
+ * @returns
+ */
+function compare_segments(segments_a, segments_b) {
+	for (let i = 0; i < Math.max(segments_a.length, segments_b.length); i += 1) {
+		const segment_a = segments_a[i];
+		const segment_b = segments_b[i];
+
+		// shallower path outranks deeper path
+		if (!segment_a) return -1;
+		if (!segment_b) return +1;
+
+		// compare two segments
+		for (let j = 0; j < Math.max(segment_a.length, segment_b.length); j += 1) {
+			const a = segment_a[j];
+			const b = segment_b[j];
+
+			// first part of each segment is always static
+			// (though it may be the empty string), then
+			// it alternates between dynamic and static
+			// (i.e. [foo][bar] is disallowed)
+			const dynamic = j % 2 === 1;
+
+			if (dynamic) {
+				if (a === undefined) return -1;
+				if (b === undefined) return +1;
+
+				// part with matcher outranks one without
+				if (a.matched !== b.matched) {
+					return a.matched ? -1 : +1;
+				}
+
+				if (a.type !== b.type) {
+					// [required] outranks [[optional]] or [...rest]
+					if (a.type === 'required') return -1;
+					if (b.type === 'required') return +1;
+
+					// [[optional]] outranks [...rest]
+					if (a.type === 'optional') return -1;
+					if (b.type === 'optional') return +1;
+				}
+			}
+
+			if (a.content !== b.content) {
+				return sort_static(a.content, b.content);
+			}
+		}
+	}
 }
 
 /**
