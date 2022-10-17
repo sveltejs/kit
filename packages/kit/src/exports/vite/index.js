@@ -249,8 +249,9 @@ function kit() {
 					}
 				},
 				define: {
-					__SVELTEKIT_DEV__: 'true',
-					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0'
+					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
+					__SVELTEKIT_BROWSER__: !config_env.ssrBuild,
+					__SVELTEKIT_DEV__: 'true'
 				},
 				publicDir: svelte_config.kit.files.assets,
 				resolve: {

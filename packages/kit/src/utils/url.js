@@ -103,10 +103,12 @@ export function make_trackable(url, callback) {
 		});
 	}
 
-	// @ts-ignore
-	tracked[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
-		return inspect(url, opts);
-	};
+	if (!__SVELTEKIT_BROWSER__) {
+		// @ts-ignore
+		tracked[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+			return inspect(url, opts);
+		};
+	}
 
 	disable_hash(tracked);
 
