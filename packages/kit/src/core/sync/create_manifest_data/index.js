@@ -423,8 +423,8 @@ function prevent_conflicts(routes) {
 
 			// replace `[param]` with `<*>`, `[param=x]` with `<x>`, and `[[param]]` with `<?*>`
 			.replace(
-				/\[(\[)?.+?(=.+?)?\]\]?/g,
-				(_, optional, matcher) => `<${optional ? '?' : ''}${matcher ?? '*'}>`
+				/\[(?:(\[)|(\.\.\.))?.+?(=.+?)?\]\]?/g,
+				(_, optional, rest, matcher) => `<${optional ? '?' : ''}${rest ?? ''}${matcher ?? '*'}>`
 			);
 
 		// find all permutations created by optional parameters
