@@ -240,10 +240,10 @@ Like `+layout.js`, `+layout.server.js` can export [page options](/docs/page-opti
 
 As well as pages, you can define routes with a `+server.js` file (sometimes referred to as an 'API route' or an 'endpoint'), which gives you full control over the response. Your `+server.js` file (or `+server.ts`) exports functions corresponding to HTTP verbs like `GET`, `POST`, `PATCH`, `PUT` and `DELETE` that take a `RequestEvent` argument and return a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object.
 
-For example we could create an `/api/random-number` route with a `GET` handler:
+For example we could create an `/api/random-number.xml` route with a `GET` handler:
 
 ```js
-/// file: src/routes/api/random-number/+server.js
+/// file: src/routes/api/random-number.xml/+server.js
 import { error } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
@@ -257,9 +257,12 @@ export function GET({ url }) {
 		throw error(400, 'min and max must be numbers, and min must be less than max');
 	}
 
-	const random = min + Math.random() * d;
+	const random = String(min + Math.random() * d);
 
-	return new Response(String(random));
+	return new Response(
+		`<?xml version="1.0" encoding="UTF-8"?><number>${random}</number>`,
+		{ headers: { 'Content-Type': 'application/xml' }}
+	);
 }
 ```
 
