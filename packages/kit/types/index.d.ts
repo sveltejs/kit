@@ -232,6 +232,7 @@ export interface KitConfig {
 		name?: string;
 		pollInterval?: number;
 	};
+	allowServerImportFromClient?: (filepath: string) => boolean;
 }
 
 export interface Handle {

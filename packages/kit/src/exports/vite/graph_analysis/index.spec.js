@@ -181,6 +181,20 @@ describe('IllegalImportGuard', (test) => {
 
 		assert.not.throws(() => guard.assert_legal(module_graph));
 	});
+
+	test('assert ignores illegal server-only modules when allowed by user config', () => {
+		const guard = new IllegalModuleGuard(FAKE_LIB_DIR, {
+			allow_server_import_from_client: (moduleId) => moduleId === USER_SERVER_FOLDER_ID
+		});
+
+		const module_graph = get_module_graph({
+			id: USER_SERVER_FOLDER_ID,
+			dynamic: false,
+			children: generator_from_array([])
+		});
+
+		assert.not.throws(() => guard.assert_legal(module_graph));
+	});
 });
 
 /*

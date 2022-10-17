@@ -358,7 +358,8 @@ function kit() {
 						prevent_illegal_rollup_imports(
 							this.getModuleInfo.bind(this),
 							module_node,
-							vite.normalizePath(svelte_config.kit.files.lib)
+							vite.normalizePath(svelte_config.kit.files.lib),
+							{ allow_server_import_from_client: svelte_config.kit.allowServerImportFromClient }
 						);
 					}
 				});

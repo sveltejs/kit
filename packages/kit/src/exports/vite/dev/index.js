@@ -94,7 +94,8 @@ export async function dev(vite, vite_config, svelte_config) {
 								prevent_illegal_vite_imports(
 									module_node,
 									normalizePath(svelte_config.kit.files.lib),
-									extensions
+									extensions,
+									{ allow_server_import_from_client: svelte_config.kit.allowServerImportFromClient }
 								);
 
 								return module.default;
@@ -111,7 +112,8 @@ export async function dev(vite, vite_config, svelte_config) {
 							prevent_illegal_vite_imports(
 								module_node,
 								normalizePath(svelte_config.kit.files.lib),
-								extensions
+								extensions,
+								{ allow_server_import_from_client: svelte_config.kit.allowServerImportFromClient }
 							);
 						}
 

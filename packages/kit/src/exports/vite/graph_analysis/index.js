@@ -3,6 +3,7 @@ import { normalizePath } from 'vite';
 import { remove_query_from_id, get_module_types } from './utils.js';
 
 /** @typedef {import('./types').ImportGraph} ImportGraph */
+/** @typedef {import('./types').IllegalModuleGuardOptions} IllegalModuleGuardOptions */
 
 const CWD_ID = normalizePath(process.cwd());
 const NODE_MODULES_ID = normalizePath(path.resolve(process.cwd(), 'node_modules'));
@@ -24,12 +25,18 @@ export class IllegalModuleGuard {
 	/** @type {Array<ImportGraph>} */
 	#chain = [];
 
+	/** @type {(filepath: string) => boolean} */
+	#allow_server_import_from_client;
+
 	/**
 	 * @param {string} lib_dir
+	 * @param {IllegalModuleGuardOptions} [options]
 	 */
-	constructor(lib_dir) {
+	constructor(lib_dir, options) {
 		this.#lib_dir = normalizePath(lib_dir);
 		this.#server_dir = normalizePath(path.resolve(lib_dir, 'server'));
+		this.#allow_server_import_from_client =
+			options?.allow_server_import_from_client ?? (() => false);
 	}
 
 	/**
@@ -57,6 +64,7 @@ export class IllegalModuleGuard {
 	 * @returns {boolean}
 	 */
 	#is_illegal(module_id) {
+		if (this.#allow_server_import_from_client(module_id)) return false;
 		if (this.#is_kit_illegal(module_id) || this.#is_user_illegal(module_id)) return true;
 		return false;
 	}
@@ -255,11 +263,12 @@ export class ViteImportGraph {
  * @param {(id: string) => import('rollup').ModuleInfo | null} node_getter
  * @param {import('rollup').ModuleInfo} node
  * @param {string} lib_dir
+ * @param {IllegalModuleGuardOptions} [options]
  * @returns {void}
  */
-export function prevent_illegal_rollup_imports(node_getter, node, lib_dir) {
+export function prevent_illegal_rollup_imports(node_getter, node, lib_dir, options) {
 	const graph = new RollupImportGraph(node_getter, node);
-	const guard = new IllegalModuleGuard(lib_dir);
+	const guard = new IllegalModuleGuard(lib_dir, options);
 	guard.assert_legal(graph);
 }
 
@@ -268,10 +277,11 @@ export function prevent_illegal_rollup_imports(node_getter, node, lib_dir) {
  * @param {import('vite').ModuleNode} node
  * @param {string} lib_dir
  * @param {Iterable<string>} module_types File extensions to analyze in addition to the defaults: `.ts`, `.js`, etc.
+ * @param {IllegalModuleGuardOptions} [options]
  * @returns {void}
  */
-export function prevent_illegal_vite_imports(node, lib_dir, module_types) {
+export function prevent_illegal_vite_imports(node, lib_dir, module_types, options) {
 	const graph = new ViteImportGraph(get_module_types(module_types), node);
-	const guard = new IllegalModuleGuard(lib_dir);
+	const guard = new IllegalModuleGuard(lib_dir, options);
 	guard.assert_legal(graph);
 }
