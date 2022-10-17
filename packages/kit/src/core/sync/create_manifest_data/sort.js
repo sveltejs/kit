@@ -62,18 +62,18 @@ export function sort_routes(routes) {
 	}
 
 	return routes.sort((route_a, route_b) => {
-		const result = compare_segments(
-			split_route_id(route_a.id).map(get_parts),
-			split_route_id(route_b.id).map(get_parts)
-		);
+		const segments_a = split_route_id(route_a.id).map(get_parts);
+		const segments_a_all = split_route_id(route_a.id, true).map(get_parts);
+		const segments_b = split_route_id(route_b.id).map(get_parts);
+		const segments_b_all = split_route_id(route_b.id, true).map(get_parts);
+
+		const result = compare_segments(segments_a, segments_b, segments_a_all, segments_b_all);
 		if (result !== undefined) return result;
 
 		// If the routes are identical up to this point, we try again, this time keeping
 		// rest and optional routes, so we can take into account their matchers etc.
-		return compare_segments(
-			split_route_id(route_a.id, true).map(get_parts),
-			split_route_id(route_b.id, true).map(get_parts)
-		) ?? route_a.id < route_b.id
+		return compare_segments(segments_a_all, segments_b_all, segments_a_all, segments_b_all) ??
+			route_a.id < route_b.id
 			? +1
 			: -1; // TODO error on conflicts?
 	});
@@ -96,16 +96,32 @@ function split_route_id(id, keep_optional = false) {
 /**
  * @param {Array<Part[] | undefined>} segments_a
  * @param {Array<Part[] | undefined>} segments_b
+ * @param {Array<Part[] | undefined>} segments_a_all
+ * @param {Array<Part[] | undefined>} segments_b_all
  * @returns
  */
-function compare_segments(segments_a, segments_b) {
+function compare_segments(segments_a, segments_b, segments_a_all, segments_b_all) {
 	for (let i = 0; i < Math.max(segments_a.length, segments_b.length); i += 1) {
 		const segment_a = segments_a[i];
 		const segment_b = segments_b[i];
 
-		// shallower path outranks deeper path
-		if (!segment_a) return -1;
-		if (!segment_b) return +1;
+		// shallower path outranks deeper path, unless the last segment is optional and their length is equal if optional segments are kept,
+		// which means they have the same amount of optional segments, so the one with more of them on the left is more specific.
+		if (!segment_a || !segment_b) {
+			if (segments_a_all.length === segments_b_all.length) {
+				const segment_a_optional =
+					segment_a?.length === 3 &&
+					(segment_a[1].type === 'optional' || segment_a[1].type === 'rest');
+				const segment_b_optional =
+					segment_b?.length === 3 &&
+					(segment_b[1].type === 'optional' || segment_b[1].type === 'rest');
+				if (segment_a_optional) return -1;
+				if (segment_b_optional) return +1;
+			}
+
+			if (!segment_a) return -1;
+			if (!segment_b) return +1;
+		}
 
 		// compare two segments
 		for (let j = 0; j < Math.max(segment_a.length, segment_b.length); j += 1) {
