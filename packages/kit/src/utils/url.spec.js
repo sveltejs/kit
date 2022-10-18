@@ -2,7 +2,7 @@ import * as assert from 'uvu/assert';
 import { describe } from './unit_test.js';
 import { resolve, normalize_path, make_trackable, disable_search } from './url.js';
 
-// define global required in url.js
+// @ts-expect-error define global required in url.js
 globalThis.__SVELTEKIT_BROWSER__ = false;
 
 describe('resolve', (test) => {
