@@ -239,7 +239,9 @@ test('sorts routes correctly', () => {
 
 	const routes = /** @type {import('types').RouteData[]} */ (expected.map((id) => ({ id })));
 
-	const actual = sort_routes(routes).map((route) => route.id);
+	const actual = sort_routes(routes.sort(() => (Math.random() > 0.5 ? 1 : -1))).map(
+		(route) => route.id
+	);
 
 	assert.equal(actual, expected);
 });
