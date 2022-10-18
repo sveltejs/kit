@@ -177,7 +177,10 @@ export async function render_response({
 		// function, but it would mean passing more stuff around than we currently do
 		const error = /** @type {any} */ (e);
 		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		if (match) throw new Error(`${error.message} (data.${match[2]})`);
+		if (match)
+			throw new Error(
+				`Returned data from a load function related to routeId ${event.routeId} is not serializable: ${error.message} (data.${match[2]})`
+			);
 		throw error;
 	}
 
