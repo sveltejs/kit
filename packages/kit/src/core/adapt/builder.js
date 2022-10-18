@@ -33,10 +33,11 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 		async createEntries(fn) {
 			/** @type {import('types').RouteDefinition[]} */
 			const facades = routes.map((route) => {
+				/** @type {Set<import('types').HttpMethod>} */
 				const methods = new Set();
 
 				if (route.page) {
-					methods.add('SET');
+					methods.add('GET');
 				}
 
 				if (route.endpoint) {

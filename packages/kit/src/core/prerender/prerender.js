@@ -431,9 +431,9 @@ export async function prerender() {
 
 	if (not_prerendered.length > 0) {
 		throw new Error(
-			`The following routes were marked as prerenderable, but were not prerendered:\n${not_prerendered.map(
+			`The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${not_prerendered.map(
 				(id) => `  - ${id}`
-			)}\n\nSee https://kit.svelte.dev/docs/page-options#prerender-troubleshooting for more info`
+			)}\n\nSee https://kit.svelte.dev/docs/page-options#prerender-troubleshooting for info on how to solve this`
 		);
 	}
 
