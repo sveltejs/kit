@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.517
+
+### Patch Changes
+
+- [fix] more informative serialization error messages ([#7303](https://github.com/sveltejs/kit/pull/7303))
+
+* [fix] add `$types` to includes for better DX ([#7301](https://github.com/sveltejs/kit/pull/7301))
+
 ## 1.0.0-next.516
 
 ### Patch Changes
