@@ -1,4 +1,5 @@
 import { affects_path } from '../../../utils/routing.js';
+import { normalize_route_id } from './index.js';
 
 /**
  * @typedef {{
@@ -11,6 +12,8 @@ import { affects_path } from '../../../utils/routing.js';
 /**
  * @typedef {Part[]} Segment
  */
+
+const EMPTY = { type: 'static', content: '', matched: false };
 
 /** @param {import('types').RouteData[]} routes */
 export function sort_routes(routes) {
@@ -66,12 +69,8 @@ export function sort_routes(routes) {
 		const segments_b = split_route_id(route_b.id).map(get_parts);
 
 		for (let i = 0; i < Math.max(segments_a.length, segments_b.length); i += 1) {
-			const segment_a = segments_a[i];
-			const segment_b = segments_b[i];
-
-			// shallower path outranks deeper path
-			if (!segment_a) return -1;
-			if (!segment_b) return +1;
+			const segment_a = segments_a[i] ?? [EMPTY];
+			const segment_b = segments_b[i] ?? [EMPTY];
 
 			// compare two segments
 			for (let j = 0; j < Math.max(segment_a.length, segment_b.length); j += 1) {
@@ -85,8 +84,34 @@ export function sort_routes(routes) {
 				const dynamic = j % 2 === 1;
 
 				if (dynamic) {
-					if (a === undefined) return -1;
-					if (b === undefined) return +1;
+					if (!a || !b) {
+						const part = a ?? b;
+						if (part.type === 'rest' || part.type === 'optional') {
+							// special case — `x/[...rest]` outranks `[...rest]/x`.
+							const normalized_a = normalize_route_id(route_a.id);
+							const normalized_b = normalize_route_id(route_b.id);
+							let start = 0;
+
+							// downrank the route with the first [...rest] part
+							while (true) {
+								const a_index = normalized_a.indexOf('<...', start);
+								const b_index = normalized_b.indexOf('<...', start);
+
+								if (a_index !== b_index) {
+									if (a_index === -1) return -1;
+									if (b_index === -1) return +1;
+
+									return b_index - a_index;
+								}
+
+								if (a_index === -1) break;
+
+								start = a_index + 1;
+							}
+						}
+
+						return a ? +1 : -1;
+					}
 
 					// part with matcher outranks one without
 					if (a.matched !== b.matched) {
@@ -103,6 +128,10 @@ export function sort_routes(routes) {
 						if (b.type === 'optional') return +1;
 					}
 				} else if (a.content !== b.content) {
+					// shallower path outranks deeper path
+					if (a === EMPTY) return -1;
+					if (b === EMPTY) return +1;
+
 					return sort_static(a.content, b.content);
 				}
 			}

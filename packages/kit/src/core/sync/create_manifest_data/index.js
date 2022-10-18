@@ -417,15 +417,7 @@ function prevent_conflicts(routes) {
 	for (const route of routes) {
 		if (!route.leaf && !route.endpoint) continue;
 
-		const normalized = route.id
-			// remove groups
-			.replace(/(?<=^|\/)\(.+?\)(?=$|\/)/g, '')
-
-			// replace `[param]` with `<*>`, `[param=x]` with `<x>`, and `[[param]]` with `<?*>`
-			.replace(
-				/\[(?:(\[)|(\.\.\.))?.+?(=.+?)?\]\]?/g,
-				(_, optional, rest, matcher) => `<${optional ? '?' : ''}${rest ?? ''}${matcher ?? '*'}>`
-			);
+		const normalized = normalize_route_id(route.id);
 
 		// find all permutations created by optional parameters
 		const split = normalized.split(/<\?(.+?)\>/g);
@@ -460,4 +452,19 @@ function prevent_conflicts(routes) {
 			lookup.set(key, route.id);
 		}
 	}
+}
+
+/** @param {string} id */
+export function normalize_route_id(id) {
+	return (
+		id
+			// remove groups
+			.replace(/(?<=^|\/)\(.+?\)(?=$|\/)/g, '')
+
+			// replace `[param]` with `<*>`, `[param=x]` with `<x>`, and `[[param]]` with `<?*>`
+			.replace(
+				/\[(?:(\[)|(\.\.\.))?.+?(=.+?)?\]\]?/g,
+				(_, optional, rest, matcher) => `<${optional ? '?' : ''}${rest ?? ''}${matcher ?? '*'}>`
+			)
+	);
 }
