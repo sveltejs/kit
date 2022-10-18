@@ -30,6 +30,9 @@ const cwd = process.cwd();
 export async function dev(vite, vite_config, svelte_config) {
 	installPolyfills();
 
+	// @ts-expect-error
+	globalThis.__SVELTEKIT_BROWSER__ = false;
+
 	sync.init(svelte_config, vite_config.mode);
 
 	/** @type {import('types').Respond} */
