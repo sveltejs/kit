@@ -443,10 +443,10 @@ function prevent_conflicts(routes) {
 				.replace(/^\//, '')
 				.replace(/\/$/, '');
 
-			const existing = lookup.get(key);
-
-			if (existing) {
-				throw new Error(`The "${existing}" and "${route.id}" routes conflict with each other`);
+			if (lookup.has(key)) {
+				throw new Error(
+					`The "${lookup.get(key)}" and "${route.id}" routes conflict with each other`
+				);
 			}
 
 			lookup.set(key, route.id);
