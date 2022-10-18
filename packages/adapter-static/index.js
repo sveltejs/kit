@@ -43,11 +43,11 @@ ${dynamic_routes.map((id) => `  - ${path.posix.join(prefix, id)}`).join('\n')}
 You have the following options:
   - set the \`fallback\` option — see https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode for more info.
   - add \`export const prerender = true\` to your root \`+layout.js/.ts\` or \`+layout.server.js/.ts\` file. This will try to prerender all pages.
-  - add \`export const prerender = true\` to your \`+server.js/ts\` files (if any) that are not called through pages (else these are not prerendered).
+  - add \`export const prerender = true\` to any \`+server.js/ts\` files that are not fetched by page \`load\` functions.
 ${config_option}
-  - set the \`strict\` option to \`false\` to ignore this error. Only do this if you are sure you don't need the routes in question in your final app, they can't be accessed — see https://github.com/sveltejs/kit/tree/master/packages/adapter-static#strict for more info.
+  - pass \`strict: false\` to \`adapter-static\` to ignore this error. Only do this if you are sure you don't need the routes in question in your final app, as they will be unavailable. See https://github.com/sveltejs/kit/tree/master/packages/adapter-static#strict for more info.
 
-If this doesn't help, you may need to use a different adapter. @sveltejs/adapter-static can only be used for sites that don't need their own backend (i.e. a static file server is enough).
+If this doesn't help, you may need to use a different adapter. @sveltejs/adapter-static can only be used for sites that don't need a server for dynamic rendering, and can run on just a static file server.
 See https://kit.svelte.dev/docs/page-options#prerender for more details`
 					);
 					throw new Error('Encountered dynamic routes');
