@@ -249,7 +249,7 @@ function check_serializability(value, id, path) {
 	}
 
 	throw new Error(
-		`${path} returned from action in ${id} cannot be serialized as JSON without loosing its original type` +
+		`${path} returned from action in ${id} cannot be serialized as JSON without losing its original type` +
 			// probably the most common case, so let's give a hint
 			(value instanceof Date ? ' (Date objects are serialized to strings)' : '')
 	);
