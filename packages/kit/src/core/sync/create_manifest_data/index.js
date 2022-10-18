@@ -411,7 +411,7 @@ function count_occurrences(needle, haystack) {
 
 /** @param {import('types').RouteData[]} routes */
 function prevent_conflicts(routes) {
-	/** @param {Map<string, string>} */
+	/** @type {Map<string, string>} */
 	const lookup = new Map();
 
 	for (const route of routes) {
