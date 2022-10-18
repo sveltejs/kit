@@ -210,7 +210,7 @@ test('encodes invalid characters', () => {
 	);
 });
 
-test('sorts routes correctly', () => {
+test.only('sorts routes correctly', () => {
 	const expected = [
 		'',
 		'a',
@@ -227,12 +227,13 @@ test('sorts routes correctly', () => {
 		'e/[...rest]/f',
 		'f/static[...rest]',
 		'f/[...rest]static',
+		'g/[[optional]]/static',
+		'g/[required]',
 		'x/[...rest]',
 		'[...rest]/x',
 		'[...rest]/x/[...deep_rest]/y',
 		'[...rest]/x/[...deep_rest]',
 		'[required=matcher]',
-		'[[optional=matcher]]',
 		'[required]',
 		'[...rest]'
 	];
