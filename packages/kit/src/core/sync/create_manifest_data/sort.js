@@ -137,7 +137,7 @@ export function sort_routes(routes) {
 			}
 		}
 
-		return route_a.id < route_b.id ? +1 : -1; // TODO error on conflicts?
+		return route_a.id < route_b.id ? +1 : -1;
 	});
 }
 
