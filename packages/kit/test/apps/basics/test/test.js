@@ -308,7 +308,7 @@ test.describe('Shadowed pages', () => {
 
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Cannot stringify arbitrary non-POJOs (data.nope)"'
+				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope)"'
 			);
 		});
 	}

@@ -111,7 +111,7 @@ export async function render_data(event, route, options, state) {
 			nodes: nodes.slice(0, length)
 		};
 
-		return data_response(server_data);
+		return data_response(server_data, event);
 	} catch (e) {
 		const error = normalize_error(e);
 
@@ -122,10 +122,10 @@ export async function render_data(event, route, options, state) {
 				location: error.location
 			};
 
-			return data_response(server_data);
+			return data_response(server_data, event);
 		} else {
 			// TODO make it clearer that this was an unexpected error
-			return data_response(handle_error_and_jsonify(event, options, error));
+			return data_response(handle_error_and_jsonify(event, options, error), event);
 		}
 	}
 }
