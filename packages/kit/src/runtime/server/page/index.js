@@ -160,6 +160,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 			});
 		});
 
+		const csr = get_option(nodes, 'csr') ?? true;
+
 		/** @type {Array<Promise<Record<string, any> | null>>} */
 		const load_promises = nodes.map((node, i) => {
 			if (load_error) throw load_error;
@@ -178,7 +180,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 						},
 						resolve_opts,
 						server_data_promise: server_promises[i],
-						state
+						state,
+						csr
 					});
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);

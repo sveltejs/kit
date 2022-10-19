@@ -74,6 +74,7 @@ export async function load_server_data({ event, state, node, parent }) {
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   server_data_promise: Promise<import('types').ServerDataNode | null>;
  *   state: import('types').SSRState;
+ *   csr: boolean;
  * }} opts
  * @returns {Promise<Record<string, any> | null>}
  */
@@ -84,7 +85,8 @@ export async function load_data({
 	parent,
 	server_data_promise,
 	state,
-	resolve_opts
+	resolve_opts,
+	csr
 }) {
 	const server_data_node = await server_data_promise;
 
@@ -129,23 +131,6 @@ export async function load_data({
 								response_body: body,
 								response: response
 							});
-
-							// ensure that excluded headers can't be read
-							const get = response.headers.get;
-							response.headers.get = (key) => {
-								const lower = key.toLowerCase();
-								const value = get.call(response.headers, lower);
-								if (value && !lower.startsWith('x-sveltekit-')) {
-									const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
-									if (!included) {
-										throw new Error(
-											`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#handle`
-										);
-									}
-								}
-
-								return value;
-							};
 						}
 
 						if (dependency) {
@@ -185,6 +170,25 @@ export async function load_data({
 					return Reflect.get(response, key, response);
 				}
 			});
+
+			if (csr) {
+				// ensure that excluded headers can't be read
+				const get = response.headers.get;
+				response.headers.get = (key) => {
+					const lower = key.toLowerCase();
+					const value = get.call(response.headers, lower);
+					if (value && !lower.startsWith('x-sveltekit-')) {
+						const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
+						if (!included) {
+							throw new Error(
+								`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#handle (at ${event.routeId})`
+							);
+						}
+					}
+
+					return value;
+				};
+			}
 
 			return proxy;
 		},

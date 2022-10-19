@@ -851,6 +851,17 @@ test.describe('Load', () => {
 		}
 	});
 
+	test('errors when trying to access non-serialized request headers on the server', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/load/fetch-request-headers-invalid-access');
+
+		expect(read_errors(`/load/fetch-request-headers-invalid-access`).message).toContain(
+			'Failed to get response header "content-type" — it must be included by the `filterSerializedResponseHeaders` option'
+		);
+	});
+
 	test('exposes rawBody as a DataView to endpoints', async ({ page, clicknav }) => {
 		await page.goto('/load/raw-body');
 		await clicknav('[href="/load/raw-body/dataview"]');
