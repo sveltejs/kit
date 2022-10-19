@@ -13,7 +13,6 @@ import { set_public_env } from '../env-public.js';
  *   },
  *   target: Element;
  *   trailing_slash: import('types').TrailingSlash;
- *   legacy: boolean;
  * }} opts
  */
 export async function start({ env, hydrate, paths, target, trailing_slash }) {
