@@ -13,7 +13,7 @@ import { parse } from './parse.js';
 import Root from '__GENERATED__/root.svelte';
 import { nodes, server_loads, dictionary, matchers, hooks } from '__GENERATED__/client-manifest.js';
 import { HttpError, Redirect } from '../control.js';
-import { client, stores } from './singletons.js';
+import { stores } from './singletons.js';
 import { DATA_SUFFIX } from '../../constants.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
@@ -163,6 +163,8 @@ export function create_client({ target, base, trailing_slash }) {
 		// at which point the invalidation should take over and "win".
 		load_cache = null;
 		await update(intent, url, []);
+
+		stores.session.set(currentSession);
 	}
 
 	/**
