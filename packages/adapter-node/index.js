@@ -60,7 +60,10 @@ export default function (opts = {}) {
 					index: `${tmp}/index.js`,
 					manifest: `${tmp}/manifest.js`
 				},
-				external: [...Object.keys(pkg.dependencies || {})],
+				external: [
+					// dependencies could have deep exports, so we need a regex
+					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
+				],
 				plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()]
 			});
 
