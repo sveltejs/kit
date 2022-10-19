@@ -45,6 +45,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			const publish = get_publish_directory(netlify_config, builder) || 'build';
 
 			// empty out existing build directories
+			builder.rimraf(publish);
 			builder.rimraf('.netlify/edge-functions');
 			builder.rimraf('.netlify/functions-internal');
 			builder.rimraf('.netlify/server');
@@ -54,15 +55,16 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.log.minor(`Publishing to "${publish}"`);
 
 			builder.log.minor('Copying assets...');
-			builder.writeClient(publish);
-			builder.writePrerendered(publish);
+			const publish_dir = `${publish}${builder.config.kit.paths.base}`;
+			builder.writeClient(publish_dir);
+			builder.writePrerendered(publish_dir);
 
 			builder.log.minor('Writing custom headers...');
 			const headers_file = join(publish, '_headers');
 			builder.copy('_headers', headers_file);
 			appendFileSync(
 				headers_file,
-				`\n\n/${builder.config.kit.appDir}/immutable/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
+				`\n\n/${builder.getAppPath()}/immutable/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
 			);
 
 			if (edge) {
@@ -196,7 +198,7 @@ async function generate_lambda_functions({ builder, publish, split }) {
 					writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
 
 					redirects.push(`${pattern} /.netlify/functions/${name} 200`);
-					redirects.push(`${pattern}/__data.js /.netlify/functions/${name} 200`);
+					redirects.push(`${pattern}/__data.json /.netlify/functions/${name} 200`);
 				}
 			};
 		});

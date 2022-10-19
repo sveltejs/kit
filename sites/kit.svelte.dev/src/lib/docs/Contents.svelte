@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
+	import TSToggle from './TSToggle.svelte';
 
 	export let contents = [];
 
@@ -131,6 +132,10 @@
 	</ul>
 </nav>
 
+<div class="ts-toggle">
+	<TSToggle />
+</div>
+
 <style>
 	nav {
 		top: 0;
@@ -213,6 +218,12 @@
 		color: white;
 	}
 
+	.ts-toggle {
+		border-top: 1px solid rgba(255, 255, 255, 0.2);
+		background-color: var(--second);
+		color: white;
+	}
+
 	@media (min-width: 600px) {
 		.sidebar {
 			columns: 2;
@@ -232,17 +243,24 @@
 			content: '';
 			position: fixed;
 			left: 0;
-			bottom: 0;
+			bottom: calc(42px + var(--ukr-footer-height));
 			width: var(--sidebar-w);
 			height: 2em;
 			pointer-events: none;
-			height: var(--top-offset);
 			background: linear-gradient(
 				to bottom,
 				rgba(103, 103, 120, 0) 0%,
 				rgba(103, 103, 120, 0.7) 50%,
 				rgba(103, 103, 120, 1) 100%
 			);
+		}
+
+		.ts-toggle {
+			position: fixed;
+			width: var(--sidebar-w);
+			bottom: var(--ukr-footer-height);
+			z-index: 1;
+			margin-right: 0;
 		}
 	}
 </style>

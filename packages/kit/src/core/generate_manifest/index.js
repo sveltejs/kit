@@ -45,6 +45,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 	/** @type {import('types').SSRManifest} */
 	return `{
 		appDir: ${s(build_data.app_dir)},
+		appPath: ${s(build_data.app_path)},
 		assets: new Set(${s(assets)}),
 		mimeTypes: ${s(get_mime_lookup(build_data.manifest_data))},
 		_: {

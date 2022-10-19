@@ -5,7 +5,8 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"prebuild": "test \"$CI\" = true && npx pnpm install --store=node_modules/.pnpm-store || echo skipping pnpm install",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\""
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",
@@ -16,20 +17,22 @@
 		"@types/node": "^16.11.36",
 		"@vitejs/plugin-legacy": "^2.2.0",
 		"custom-event-polyfill": "^1.0.7",
-		"flexsearch": "^0.7.21",
-		"marked": "^4.0.16",
+		"flexsearch": "^0.7.31",
+		"magic-string": "^0.26.2",
+		"marked": "^4.1.1",
 		"path-composedpath-polyfill": "^0.0.1",
 		"prism-svelte": "^0.5.0",
-		"prismjs": "^1.28.0",
+		"prismjs": "^1.29.0",
 		"proxy-polyfill": "^0.3.2",
 		"regenerator-runtime": "^0.13.9",
-		"shiki-twoslash": "^3.0.2",
+		"shiki-twoslash": "^3.1.0",
 		"svelte": "^3.50.0",
 		"terser": ">=5.4.0 <6.0.0",
 		"typescript": "^4.8.2",
 		"unorm": "^1.6.0",
+		"uvu": "^0.5.3",
 		"vite": "^3.1.1",
-		"vite-imagetools": "^4.0.9",
+		"vite-imagetools": "^4.0.10",
 		"whatwg-fetch": "^3.6.2"
 	},
 	"type": "module"

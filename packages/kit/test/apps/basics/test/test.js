@@ -308,7 +308,7 @@ test.describe('Shadowed pages', () => {
 
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Cannot stringify arbitrary non-POJOs (data.nope)"'
+				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope)"'
 			);
 		});
 	}
@@ -576,7 +576,7 @@ test.describe('Errors', () => {
 		);
 
 		const { status, name, message, stack, fancy } = read_errors(
-			'/errors/page-endpoint/get-implicit/__data.js'
+			'/errors/page-endpoint/get-implicit/__data.json'
 		);
 		expect(status).toBe(undefined);
 		expect(name).toBe('FancyError');
@@ -849,6 +849,17 @@ test.describe('Load', () => {
 		} else {
 			expect(headers).toEqual({});
 		}
+	});
+
+	test('errors when trying to access non-serialized request headers on the server', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/load/fetch-request-headers-invalid-access');
+
+		expect(read_errors(`/load/fetch-request-headers-invalid-access`).message).toContain(
+			'Failed to get response header "content-type" — it must be included by the `filterSerializedResponseHeaders` option'
+		);
 	});
 
 	test('exposes rawBody as a DataView to endpoints', async ({ page, clicknav }) => {
@@ -1773,7 +1784,7 @@ test.describe('Actions', () => {
 		}
 	});
 
-	test('Success data is returned', async ({ page }) => {
+	test('Success data as form-data is returned', async ({ page }) => {
 		await page.goto('/actions/success-data');
 
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
@@ -1781,10 +1792,24 @@ test.describe('Actions', () => {
 		await page.type('input[name="username"]', 'foo');
 		await Promise.all([
 			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
-			page.click('button')
+			page.click('button[formenctype="multipart/form-data"]')
 		]);
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
+	});
+
+	test('Success data as form-urlencoded is returned', async ({ page }) => {
+		await page.goto('/actions/success-data');
+
+		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+
+		await page.type('input[name="username"]', 'bar');
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
+			page.click('button[formenctype="application/x-www-form-urlencoded"]')
+		]);
+
+		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'bar' }));
 	});
 
 	test('applyAction updates form prop', async ({ page, javaScriptEnabled }) => {
@@ -1859,6 +1884,7 @@ test.describe('Actions', () => {
 
 		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'foo' }));
 		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ result: 'foo' }));
+		await expect(page.locator('input[name=username]')).toHaveValue('');
 	});
 
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {

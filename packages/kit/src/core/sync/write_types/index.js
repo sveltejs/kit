@@ -40,7 +40,7 @@ export async function write_all_types(config, manifest_data) {
 	const types_dir = `${config.kit.outDir}/types`;
 
 	// empty out files that no longer need to exist
-	const routes_dir = path.relative('.', config.kit.files.routes);
+	const routes_dir = posixify(path.relative('.', config.kit.files.routes)).replace(/\.\.\//g, '');
 	const expected_directories = new Set(
 		manifest_data.routes.map((route) => path.join(routes_dir, route.id))
 	);
@@ -179,7 +179,7 @@ function create_routes_map(manifest_data) {
  * @param {Set<string>} [to_delete]
  */
 function update_types(config, routes, route, to_delete = new Set()) {
-	const routes_dir = posixify(path.relative('.', config.kit.files.routes));
+	const routes_dir = posixify(path.relative('.', config.kit.files.routes)).replace(/\.\.\//g, '');
 	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
 
 	// now generate new types
@@ -617,7 +617,7 @@ export function tweak_types(content, is_server) {
 					}
 				}
 			}
-			modified ||= _modified;
+			modified = modified || _modified;
 			return _modified;
 		}
 

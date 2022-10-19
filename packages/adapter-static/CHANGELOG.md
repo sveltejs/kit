@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.45
+
+### Patch Changes
+
+- [feat] more info about prerendering errors, add strict option to adapter-static ([#7264](https://github.com/sveltejs/kit/pull/7264))
+
 ## 1.0.0-next.44
 
 ### Patch Changes
