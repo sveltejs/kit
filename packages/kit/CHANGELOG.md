@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.520
+
+### Patch Changes
+
+- [fix] ensure serialized headers check is always applied ([#7221](https://github.com/sveltejs/kit/pull/7221))
+
 ## 1.0.0-next.519
 
 ### Patch Changes
