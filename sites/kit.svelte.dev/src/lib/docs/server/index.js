@@ -78,7 +78,7 @@ export async function read_file(dir, file) {
 			let html = '';
 
 			source = source
-				.replace(/\/\/\/ (.+?): (.+)\n/gm, (match, key, value) => {
+				.replace(/^\/\/\/ (.+?): (.+)\n/gm, (match, key, value) => {
 					options[key] = value;
 					return '';
 				})
