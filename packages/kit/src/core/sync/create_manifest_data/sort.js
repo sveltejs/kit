@@ -1,5 +1,4 @@
 import { affects_path } from '../../../utils/routing.js';
-import { normalize_route_id } from './index.js';
 
 /**
  * @typedef {{
@@ -72,7 +71,6 @@ export function sort_routes(routes) {
 			const segment_a = segments_a[i] ?? [EMPTY];
 			const segment_b = segments_b[i] ?? [EMPTY];
 
-			// compare two segments
 			for (let j = 0; j < Math.max(segment_a.length, segment_b.length); j += 1) {
 				const a = segment_a[j];
 				const b = segment_b[j];
@@ -84,33 +82,28 @@ export function sort_routes(routes) {
 				const dynamic = j % 2 === 1;
 
 				if (dynamic) {
-					if (!a || !b) {
-						const part = a ?? b;
-						if (part.type === 'rest' || part.type === 'optional') {
-							// special case — `x/[...rest]` outranks `[...rest]/x`.
-							const normalized_a = normalize_route_id(route_a.id);
-							const normalized_b = normalize_route_id(route_b.id);
-							let start = 0;
+					if (!a) return -1;
+					if (!b) return +1;
 
-							// downrank the route with the first [...rest] part
-							while (true) {
-								const a_index = normalized_a.indexOf('<...', start);
-								const b_index = normalized_b.indexOf('<...', start);
+					// get the next static chunk, so we can handle [...rest] edge cases
+					const next_a = segment_a[j + 1].content || segments_a[i + 1]?.[0].content;
+					const next_b = segment_b[j + 1].content || segments_b[i + 1]?.[0].content;
 
-								if (a_index !== b_index) {
-									if (a_index === -1) return -1;
-									if (b_index === -1) return +1;
+					// `[...rest]/x` outranks `[...rest]`
+					if (a.type === 'rest' && b.type === 'rest') {
+						if (next_a && next_b) continue;
+						if (next_a) return -1;
+						if (next_b) return +1;
+					}
 
-									return b_index - a_index;
-								}
+					// `[...rest]/x` outranks `[required]` or `[required]/[required]`
+					// but not `[required]/x`
+					if (a.type === 'rest') {
+						return next_a && !next_b ? -1 : +1;
+					}
 
-								if (a_index === -1) break;
-
-								start = a_index + 1;
-							}
-						}
-
-						return a ? +1 : -1;
+					if (b.type === 'rest') {
+						return next_b && !next_a ? +1 : -1;
 					}
 
 					// part with matcher outranks one without
@@ -119,13 +112,10 @@ export function sort_routes(routes) {
 					}
 
 					if (a.type !== b.type) {
-						// [required] outranks [[optional]] or [...rest]
+						// `[...rest]` has already been accounted for, so here
+						// we're comparing between `[required]` and `[[optional]]`
 						if (a.type === 'required') return -1;
 						if (b.type === 'required') return +1;
-
-						// [[optional]] outranks [...rest]
-						if (a.type === 'optional') return -1;
-						if (b.type === 'optional') return +1;
 					}
 				} else if (a.content !== b.content) {
 					// shallower path outranks deeper path
@@ -145,8 +135,8 @@ export function sort_routes(routes) {
 function split_route_id(id) {
 	return (
 		id
-			// remove all [[optional]]/[...rest] parts unless they're at the very end
-			.replace(/\[(\[[^\]]+\]|\.\.\.[^\]]+)\](?!$)/g, '')
+			// remove all [[optional]] parts unless they're at the very end
+			.replace(/\[\[[^\]]+\]\](?!$)/g, '')
 			.split('/')
 			.filter((segment) => segment !== '' && affects_path(segment))
 	);

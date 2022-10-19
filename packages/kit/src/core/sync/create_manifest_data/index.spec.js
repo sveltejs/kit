@@ -210,7 +210,7 @@ test('encodes invalid characters', () => {
 	);
 });
 
-test.only('sorts routes correctly', () => {
+test('sorts routes correctly', () => {
 	const expected = [
 		'',
 		'a',
@@ -310,16 +310,16 @@ test('allows rest parameters inside segments', () => {
 			pattern: '/^/$/'
 		},
 		{
+			id: 'prefix-[...rest]',
+			pattern: '/^/prefix-(.*?)/?$/',
+			page: { layouts: [0], errors: [1], leaf: 2 }
+		},
+		{
 			id: '[...rest].json',
 			pattern: '/^/(.*?).json$/',
 			endpoint: {
 				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
 			}
-		},
-		{
-			id: 'prefix-[...rest]',
-			pattern: '/^/prefix-(.*?)/?$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
 		}
 	]);
 });

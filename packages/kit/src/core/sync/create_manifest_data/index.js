@@ -455,7 +455,7 @@ function prevent_conflicts(routes) {
 }
 
 /** @param {string} id */
-export function normalize_route_id(id) {
+function normalize_route_id(id) {
 	return (
 		id
 			// remove groups
