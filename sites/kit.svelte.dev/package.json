@@ -5,7 +5,8 @@
 		"dev": "node ../../scripts/check-doc-links.js && vite dev",
 		"build": "node ../../scripts/check-doc-links.js && vite build",
 		"prebuild": "test \"$CI\" = true && npx pnpm install --store=node_modules/.pnpm-store || echo skipping pnpm install",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\""
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",
@@ -14,15 +15,17 @@
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/site-kit": "^2.1.2",
 		"@types/node": "^16.11.36",
-		"flexsearch": "^0.7.21",
-		"marked": "^4.0.16",
+		"flexsearch": "^0.7.31",
+		"magic-string": "^0.26.2",
+		"marked": "^4.1.1",
 		"prism-svelte": "^0.5.0",
-		"prismjs": "^1.28.0",
-		"shiki-twoslash": "^3.0.2",
+		"prismjs": "^1.29.0",
+		"shiki-twoslash": "^3.1.0",
 		"svelte": "^3.48.0",
 		"typescript": "^4.8.2",
+		"uvu": "^0.5.3",
 		"vite": "^3.1.1",
-		"vite-imagetools": "^4.0.9"
+		"vite-imagetools": "^4.0.10"
 	},
 	"type": "module"
 }

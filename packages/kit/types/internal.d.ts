@@ -47,6 +47,7 @@ export interface Asset {
 
 export interface BuildData {
 	app_dir: string;
+	app_path: string;
 	manifest_data: ManifestData;
 	service_worker: string | null;
 	client: {
@@ -374,5 +375,6 @@ declare global {
 	const __SVELTEKIT_APP_VERSION__: string;
 	const __SVELTEKIT_APP_VERSION_FILE__: string;
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+	const __SVELTEKIT_BROWSER__: boolean;
 	const __SVELTEKIT_DEV__: boolean;
 }

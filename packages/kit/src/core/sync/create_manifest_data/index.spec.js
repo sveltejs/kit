@@ -5,6 +5,7 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import create_manifest_data from './index.js';
 import options from '../../config/options.js';
+import { sort_routes } from './sort.js';
 
 const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
@@ -79,25 +80,21 @@ test('creates routes', () => {
 			pattern: '/^/$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
-
-		{
-			id: 'blog.json',
-			pattern: '/^/blog.json$/',
-			endpoint: { file: 'samples/basic/blog.json/+server.js' }
-		},
-
 		{
 			id: 'about',
 			pattern: '/^/about/?$/',
 			page: { layouts: [0], errors: [1], leaf: 3 }
 		},
-
+		{
+			id: 'blog.json',
+			pattern: '/^/blog.json$/',
+			endpoint: { file: 'samples/basic/blog.json/+server.js' }
+		},
 		{
 			id: 'blog',
 			pattern: '/^/blog/?$/',
 			page: { layouts: [0], errors: [1], leaf: 4 }
 		},
-
 		{
 			id: 'blog/[slug].json',
 			pattern: '/^/blog/([^/]+?).json$/',
@@ -105,7 +102,6 @@ test('creates routes', () => {
 				file: 'samples/basic/blog/[slug].json/+server.ts'
 			}
 		},
-
 		{
 			id: 'blog/[slug]',
 			pattern: '/^/blog/([^/]+?)/?$/',
@@ -215,36 +211,44 @@ test('encodes invalid characters', () => {
 });
 
 test('sorts routes correctly', () => {
-	const { routes } = create('samples/sorting');
+	const expected = [
+		'',
+		'a',
+		'b',
+		'b/[required]',
+		'c',
+		'c/bar',
+		'c/b[x].json',
+		'c/b[x]',
+		'c/foo',
+		'd/e',
+		'd/e[...rest]',
+		'e/f',
+		'e/[...rest]/f',
+		'f/static[...rest]',
+		'f/[...rest]static',
+		'g/[[optional]]/static',
+		'g/[required]',
+		'g/[...rest]/[required]',
+		'h/a/b',
+		'h/a/[required]/b',
+		'h/a/[...rest]/b',
+		'x/[...rest]',
+		'[...rest]/x',
+		'[...rest]/x/[...deep_rest]/y',
+		'[...rest]/x/[...deep_rest]',
+		'[required=matcher]',
+		'[required]',
+		'[...rest]'
+	];
 
-	assert.equal(
-		routes.map((p) => p.id),
-		[
-			'',
-			'(foo)',
-			'(foo)/(bar)',
-			'about',
-			'foo',
-			'post',
-			'post/bar',
-			'post/foo',
-			'post/f[yy].json',
-			'post/f[zz]',
-			'post/f[xx]',
-			'post/f[yy]',
-			'foo/[bar]',
-			'post/[id]',
-			'[endpoint]',
-			'[wildcard]',
-			'[...rest]/deep/[...deep_rest]/xyz',
-			'[...rest]/deep/[...deep_rest]',
-			'[...rest]/abc',
-			'[...rest]/deep',
-			'(foo)/(bar)/[...all]',
-			'[...anotherrest]',
-			'[...rest]'
-		]
+	const routes = /** @type {import('types').RouteData[]} */ (expected.map((id) => ({ id })));
+
+	const actual = sort_routes(routes.sort(() => (Math.random() > 0.5 ? 1 : -1))).map(
+		(route) => route.id
 	);
+
+	assert.equal(actual, expected);
 });
 
 test('sorts routes with rest correctly', () => {
@@ -273,13 +277,13 @@ test('sorts routes with rest correctly', () => {
 			pattern: '/^/a/?$/'
 		},
 		{
-			id: 'b',
-			pattern: '/^/b/?$/'
-		},
-		{
 			id: 'a/[...rest]',
 			pattern: '/^/a(?:/(.*))?/?$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
+		},
+		{
+			id: 'b',
+			pattern: '/^/b/?$/'
 		},
 		{
 			id: 'b/[...rest]',
@@ -315,6 +319,76 @@ test('allows rest parameters inside segments', () => {
 			pattern: '/^/(.*?).json$/',
 			endpoint: {
 				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
+			}
+		}
+	]);
+});
+
+test('optional parameters', () => {
+	const { nodes, routes } = create('samples/optional');
+
+	assert.equal(
+		nodes
+			.map(simplify_node)
+			// for some reason linux and windows have a different order, which is why
+			// we need sort the nodes using a sort function (doesn't work either without),
+			// resulting in the following expected node order
+			.sort((a, b) => a.component?.localeCompare(b.component ?? '') ?? 1),
+		[
+			default_error,
+			default_layout,
+			{
+				component: 'samples/optional/[[optional]]/+page.svelte'
+			},
+			{
+				component: 'samples/optional/nested/[[optional]]/sub/+page.svelte'
+			},
+			{
+				component: 'samples/optional/prefix[[suffix]]/+page.svelte'
+			}
+		]
+	);
+
+	assert.equal(routes.map(simplify_route), [
+		{
+			id: '',
+			pattern: '/^/$/'
+		},
+		{
+			id: '[[foo]]bar',
+			pattern: '/^/([^/]*)?bar/?$/',
+			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js' }
+		},
+		{ id: 'nested', pattern: '/^/nested/?$/' },
+		{
+			id: 'nested/[[optional]]/sub',
+			pattern: '/^/nested(?:/([^/]+))?/sub/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				// see above, linux/windows difference -> find the index dynamically
+				leaf: nodes.findIndex((node) => node.component?.includes('nested/[[optional]]'))
+			}
+		},
+		{ id: 'nested/[[optional]]', pattern: '/^/nested(?:/([^/]+))?/?$/' },
+		{
+			id: 'prefix[[suffix]]',
+			pattern: '/^/prefix([^/]*)?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				// see above, linux/windows difference -> find the index dynamically
+				leaf: nodes.findIndex((node) => node.component?.includes('prefix[[suffix]]'))
+			}
+		},
+		{
+			id: '[[optional]]',
+			pattern: '/^(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				// see above, linux/windows difference -> find the index dynamically
+				leaf: nodes.findIndex((node) => node.component?.includes('optional/[[optional]]'))
 			}
 		}
 	]);
@@ -394,7 +468,11 @@ test('works with custom extensions', () => {
 			pattern: '/^/$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
-
+		{
+			id: 'about',
+			pattern: '/^/about/?$/',
+			page: { layouts: [0], errors: [1], leaf: 3 }
+		},
 		{
 			id: 'blog.json',
 			pattern: '/^/blog.json$/',
@@ -402,19 +480,11 @@ test('works with custom extensions', () => {
 				file: 'samples/custom-extension/blog.json/+server.js'
 			}
 		},
-
-		{
-			id: 'about',
-			pattern: '/^/about/?$/',
-			page: { layouts: [0], errors: [1], leaf: 3 }
-		},
-
 		{
 			id: 'blog',
 			pattern: '/^/blog/?$/',
 			page: { layouts: [0], errors: [1], leaf: 4 }
 		},
-
 		{
 			id: 'blog/[slug].json',
 			pattern: '/^/blog/([^/]+?).json$/',
@@ -422,7 +492,6 @@ test('works with custom extensions', () => {
 				file: 'samples/custom-extension/blog/[slug].json/+server.js'
 			}
 		},
-
 		{
 			id: 'blog/[slug]',
 			pattern: '/^/blog/([^/]+?)/?$/',
@@ -516,19 +585,14 @@ test('creates routes with named layouts', () => {
 
 	assert.equal(routes.filter((route) => route.page).map(simplify_route), [
 		{
-			id: '(special)/a/a2',
-			pattern: '/^/a/a2/?$/',
-			page: { layouts: [0, 2], errors: [1, undefined], leaf: 9 }
-		},
-		{
 			id: 'a/a1',
 			pattern: '/^/a/a1/?$/',
 			page: { layouts: [0, 4], errors: [1, undefined], leaf: 10 }
 		},
 		{
-			id: 'b/d/(special)',
-			pattern: '/^/b/d/?$/',
-			page: { layouts: [0, 6], errors: [1, undefined], leaf: 12 }
+			id: '(special)/a/a2',
+			pattern: '/^/a/a2/?$/',
+			page: { layouts: [0, 2], errors: [1, undefined], leaf: 9 }
 		},
 		{
 			id: '(special)/(alsospecial)/b/c/c1',
@@ -541,6 +605,16 @@ test('creates routes with named layouts', () => {
 			page: { layouts: [0], errors: [1], leaf: 11 }
 		},
 		{
+			id: 'b/d/(special)',
+			pattern: '/^/b/d/?$/',
+			page: { layouts: [0, 6], errors: [1, undefined], leaf: 12 }
+		},
+		{
+			id: 'b/d/d1',
+			pattern: '/^/b/d/d1/?$/',
+			page: { layouts: [0], errors: [1], leaf: 15 }
+		},
+		{
 			id: 'b/d/(special)/(extraspecial)/d2',
 			pattern: '/^/b/d/d2/?$/',
 			page: { layouts: [0, 6, 7], errors: [1, undefined, undefined], leaf: 13 }
@@ -549,11 +623,6 @@ test('creates routes with named layouts', () => {
 			id: 'b/d/(special)/(extraspecial)/d3',
 			pattern: '/^/b/d/d3/?$/',
 			page: { layouts: [0, 6], errors: [1, undefined], leaf: 14 }
-		},
-		{
-			id: 'b/d/d1',
-			pattern: '/^/b/d/d1/?$/',
-			page: { layouts: [0], errors: [1], leaf: 15 }
 		}
 	]);
 });
@@ -583,6 +652,11 @@ test('handles pages without .svelte file', () => {
 			pattern: '/^/error/?$/'
 		},
 		{
+			id: 'error/[...path]',
+			pattern: '/^/error(?:/(.*))?/?$/',
+			page: { layouts: [0, undefined], errors: [1, 2], leaf: 5 }
+		},
+		{
 			id: 'layout',
 			pattern: '/^/layout/?$/'
 		},
@@ -595,11 +669,6 @@ test('handles pages without .svelte file', () => {
 			id: 'layout/redirect',
 			pattern: '/^/layout/redirect/?$/',
 			page: { layouts: [0, 3], errors: [1, undefined], leaf: 7 }
-		},
-		{
-			id: 'error/[...path]',
-			pattern: '/^/error(?:/(.*))?/?$/',
-			page: { layouts: [0, undefined], errors: [1, 2], leaf: 5 }
 		}
 	]);
 });
@@ -656,7 +725,7 @@ test('errors on duplicate matchers', () => {
 test('prevents route conflicts between groups', () => {
 	assert.throws(
 		() => create('samples/conflicting-groups'),
-		/\(x\)\/a and \(y\)\/a occupy the same route/
+		/The "\(x\)\/a" and "\(y\)\/a" routes conflict with each other/
 	);
 });
 

@@ -10,7 +10,7 @@ The `RequestHandler` and `Load` types both accept a `Params` argument allowing y
 
 ```js
 /// file: src/routes/[foo]/[bar]/[baz]/+page.server.js
-// @errors: 2355
+// @errors: 2355 2322
 /** @type {import('@sveltejs/kit').RequestHandler<{
  *   foo: string;
  *   bar: string;
@@ -30,7 +30,7 @@ To solve this problem, SvelteKit generates `.d.ts` files for each of your endpoi
 /// link: false
 import type * as Kit from '@sveltejs/kit';
 
-interface RouteParams {
+type RouteParams = {
 	foo: string;
 	bar: string;
 	baz: string;
@@ -47,7 +47,7 @@ These files can be imported into your endpoints and pages as siblings, thanks to
 // @filename: $types.d.ts
 import type * as Kit from '@sveltejs/kit';
 
-interface RouteParams {
+type RouteParams = {
 	foo: string;
 	bar: string;
 	baz: string;
@@ -69,7 +69,7 @@ export async function GET({ params }) {
 // @filename: $types.d.ts
 import type * as Kit from '@sveltejs/kit';
 
-interface RouteParams {
+type RouteParams = {
 	foo: string;
 	bar: string;
 	baz: string;

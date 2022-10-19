@@ -30,6 +30,9 @@ const cwd = process.cwd();
 export async function dev(vite, vite_config, svelte_config) {
 	installPolyfills();
 
+	// @ts-expect-error
+	globalThis.__SVELTEKIT_BROWSER__ = false;
+
 	sync.init(svelte_config, vite_config.mode);
 
 	/** @type {import('types').Respond} */
@@ -59,6 +62,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
+			appPath: svelte_config.kit.appDir,
 			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {

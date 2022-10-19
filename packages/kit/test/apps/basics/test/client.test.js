@@ -436,7 +436,7 @@ test.describe('Load', () => {
 		await expect(page.locator('p')).toHaveText('Count is 2');
 	});
 
-	test('__data.js has cache-control: private, no-store', async ({ page, clicknav }) => {
+	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
 		await page.goto('/load/server-data-nostore?x=1');
 
 		const [response] = await Promise.all([
@@ -928,5 +928,14 @@ test.describe('Content negotiation', () => {
 		]);
 
 		await expect(page.locator('[data-testid="form-result"]')).toHaveText('form.submitted: true');
+	});
+});
+
+test.describe('cookies', () => {
+	test('etag forwards cookies', async ({ page }) => {
+		await page.goto('/cookies/forwarded-in-etag');
+		await expect(page.locator('p')).toHaveText('foo=bar');
+		await Promise.all([page.waitForNavigation(), page.click('button')]);
+		await expect(page.locator('p')).toHaveText('foo=bar');
 	});
 });

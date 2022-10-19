@@ -33,6 +33,7 @@ export async function respond_with_error({ event, options, state, status, error,
 		const branch = [];
 		const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
 		const ssr = get_option([default_layout], 'ssr') ?? true;
+		const csr = get_option([default_layout], 'csr') ?? true;
 
 		if (ssr) {
 			state.initiator = GENERIC_ERROR;
@@ -53,7 +54,8 @@ export async function respond_with_error({ event, options, state, status, error,
 				parent: async () => ({}),
 				resolve_opts,
 				server_data_promise,
-				state
+				state,
+				csr
 			});
 
 			branch.push(

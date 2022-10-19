@@ -5,11 +5,13 @@ import 'prismjs/components/prism-bash.js';
 import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
 import 'prism-svelte';
-import { escape, extract_frontmatter, transform } from './markdown';
+import { escape, extract_frontmatter, transform } from './markdown.js';
 import { modules } from '../../../../../../packages/kit/docs/types.js';
-import { render_modules } from './modules';
+import { render_modules } from './modules.js';
 import { error } from '@sveltejs/kit';
 import { parse_route_id } from '../../../../../../packages/kit/src/utils/routing.js';
+import ts from 'typescript';
+import MagicString from 'magic-string';
 
 const languages = {
 	bash: 'bash',
@@ -65,7 +67,7 @@ export async function read_file(dir, file) {
 	const { metadata, body } = extract_frontmatter(markdown);
 
 	const { content } = parse({
-		body,
+		body: generate_ts_from_js(body),
 		file,
 		// gross hack to accommodate FAQ
 		slug: dir === 'faq' ? slug : undefined,
@@ -92,14 +94,30 @@ export async function read_file(dir, file) {
 				})
 				.replace(/\*\\\//g, '*/');
 
-			if (language === 'js') {
+			let version_class = '';
+			if (language === 'generated-ts' || language === 'generated-svelte') {
+				language = language.replace('generated-', '');
+				version_class = ' ts-version';
+			} else if (language === 'original-js' || language === 'original-svelte') {
+				language = language.replace('original-', '');
+				version_class = ' js-version';
+			}
+
+			if (language === 'js' || language === 'ts') {
 				try {
+					const injected = [];
+					if (source.includes('$app/')) {
+						injected.push(
+							`// @filename: ambient-kit.d.ts`,
+							`/// <reference types="@sveltejs/kit" />`
+						);
+					}
 					if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
 						const params = parse_route_id(options.file || `+page.${language}`)
 							.names.map((name) => `${name}: string`)
 							.join(', ');
 
-						let injected = [
+						injected.push(
 							`// @filename: $types.d.ts`,
 							`import type * as Kit from '@sveltejs/kit';`,
 							`export type PageLoad = Kit.Load<{${params}}>;`,
@@ -109,14 +127,21 @@ export async function read_file(dir, file) {
 							`export type RequestHandler = Kit.RequestHandler<{${params}}>;`,
 							`export type Action = Kit.Action<{${params}}>;`,
 							`export type Actions = Kit.Actions<{${params}}>;`
-						].join('\n');
-
+						);
+					}
+					if (!options.file) {
+						// No named file -> assume that the code is not meant to be type checked
+						// If we don't do this, twoslash would throw errors for e.g. some snippets in `types/ambient.d.ts`
+						injected.push('// @noErrors');
+					}
+					if (injected.length) {
+						const injected_str = injected.join('\n');
 						if (source.includes('// @filename:')) {
-							source = source.replace('// @filename:', `${injected}\n\n// @filename:`);
+							source = source.replace('// @filename:', `${injected_str}\n\n// @filename:`);
 						} else {
 							source = source.replace(
 								/^(?!\/\/ @)/m,
-								`${injected}\n\n// @filename: index.${language}\n// ---cut---\n`
+								`${injected_str}\n\n// @filename: index.${language}\n// ---cut---\n`
 							);
 						}
 					}
@@ -184,7 +209,7 @@ export async function read_file(dir, file) {
 				html = `<pre class='language-${plang}'><code>${highlighted}</code></pre>`;
 			}
 
-			html = `<div class="code-block">${
+			html = `<div class="code-block${version_class}">${
 				options.file ? `<h5>${options.file}</h5>` : ''
 			}${html}</div>`;
 
@@ -393,4 +418,185 @@ export function slugify(title) {
 		.replace(/-{2,}/g, '-')
 		.replace(/^-/, '')
 		.replace(/-$/, '');
+}
+
+/**
+ * Appends a JS->TS / Svelte->Svelte-TS code block after each JS/Svelte code block.
+ * The language is `generated-js`/`generated-svelte` which can be used to detect this in later steps.
+ * @param {string} markdown
+ */
+export function generate_ts_from_js(markdown) {
+	return markdown
+		.replaceAll(/```js\n([\s\S]+?)\n```/g, (match, code) => {
+			if (!code.includes('/// file:')) {
+				// No named file -> assume that the code is not meant to be shown in two versions
+				return match;
+			}
+
+			const ts = convert_to_ts(code);
+
+			if (!ts) {
+				// No changes -> don't show TS version
+				return match;
+			}
+
+			return match.replace('js', 'original-js') + '\n```generated-ts\n' + ts + '\n```';
+		})
+		.replaceAll(/```svelte\n([\s\S]+?)\n```/g, (match, code) => {
+			if (!code.includes('/// file:')) {
+				// No named file -> assume that the code is not meant to be shown in two versions
+				return match;
+			}
+
+			// Assumption: no context="module" blocks
+			const script = code.match(/<script>([\s\S]+?)<\/script>/);
+			if (!script) return match;
+
+			const [outer, inner] = script;
+			const ts = convert_to_ts(inner, '\t', '\n');
+
+			if (!ts) {
+				// No changes -> don't show TS version
+				return match;
+			}
+
+			return (
+				match.replace('svelte', 'original-svelte') +
+				'\n```generated-svelte\n' +
+				code.replace(outer, `<script lang="ts">${ts}</script>`) +
+				'\n```'
+			);
+		});
+}
+
+/**
+ * Transforms a JS code block into a TS code block by turning JSDoc into type annotations.
+ * Due to pragmatism only the cases currently used in the docs are implemented.
+ * @param {string} js_code
+ * @param {string} [indent]
+ * @param {string} [offset]
+ *  */
+function convert_to_ts(js_code, indent = '', offset = '') {
+	js_code = js_code
+		.replaceAll('// @filename: index.js', '// @filename: index.ts')
+		.replace(/(\/\/\/ .+?\.)js/, '$1ts')
+		// *\/ appears in some JsDoc comments in d.ts files due to the JSDoc-in-JSDoc problem
+		.replace(/\*\\\//g, '*/');
+
+	const ast = ts.createSourceFile(
+		'filename.ts',
+		js_code,
+		ts.ScriptTarget.Latest,
+		true,
+		ts.ScriptKind.TS
+	);
+	const code = new MagicString(js_code);
+	const imports = new Map();
+
+	function walk(node) {
+		// @ts-ignore
+		if (node.jsDoc) {
+			// @ts-ignore
+			for (const comment of node.jsDoc) {
+				let modified = false;
+
+				for (const tag of comment.tags ?? []) {
+					if (ts.isJSDocTypeTag(tag)) {
+						const name = get_type_name(tag);
+
+						if (ts.isFunctionDeclaration(node)) {
+							const is_export = node.modifiers?.some(
+								(modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
+							)
+								? 'export '
+								: '';
+							const is_async = node.modifiers?.some(
+								(modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword
+							);
+							code.overwrite(
+								node.getStart(),
+								node.name.getEnd(),
+								`${is_export ? 'export ' : ''}const ${node.name.getText()}: ${name} = ${
+									is_async ? 'async ' : ''
+								}`
+							);
+							code.appendLeft(node.body.getStart(), '=> ');
+
+							modified = true;
+						} else if (
+							ts.isVariableStatement(node) &&
+							node.declarationList.declarations.length === 1
+						) {
+							code.appendLeft(node.declarationList.declarations[0].name.getEnd(), `: ${name}`);
+
+							modified = true;
+						} else {
+							throw new Error('Unhandled @type JsDoc->TS conversion: ' + js_code);
+						}
+					} else if (ts.isJSDocParameterTag(tag) && ts.isFunctionDeclaration(node)) {
+						if (node.parameters.length !== 1) {
+							throw new Error(
+								'Unhandled @type JsDoc->TS conversion; needs more params logic: ' + node.getText()
+							);
+						}
+						const name = get_type_name(tag);
+						code.appendLeft(node.parameters[0].getEnd(), `: ${name}`);
+
+						modified = true;
+					}
+				}
+
+				if (modified) {
+					code.overwrite(comment.getStart(), comment.getEnd(), '');
+				}
+			}
+		}
+
+		ts.forEachChild(node, walk);
+	}
+
+	walk(ast);
+
+	if (imports.size) {
+		const import_statements = Array.from(imports.entries())
+			.map(([from, names]) => {
+				return `${indent}import type { ${Array.from(names).join(', ')} } from '${from}';`;
+			})
+			.join('\n');
+		const idxOfLastImport = [...ast.statements]
+			.reverse()
+			.find((statement) => ts.isImportDeclaration(statement))
+			?.getEnd();
+		const insertion_point = Math.max(
+			idxOfLastImport ? idxOfLastImport + 1 : 0,
+			js_code.includes('---cut---')
+				? js_code.indexOf('\n', js_code.indexOf('---cut---')) + 1
+				: js_code.includes('/// file:')
+				? js_code.indexOf('\n', js_code.indexOf('/// file:')) + 1
+				: 0
+		);
+		code.appendLeft(insertion_point, offset + import_statements + '\n');
+	}
+
+	const transformed = code.toString();
+	return transformed === js_code ? undefined : transformed.replace(/\n\s*\n\s*\n/g, '\n\n');
+
+	/** @param {ts.JSDocTypeTag | ts.JSDocParameterTag} tag */
+	function get_type_name(tag) {
+		const type_text = tag.typeExpression.getText();
+		let name = type_text.slice(1, -1); // remove { }
+
+		const import_match = /import\('(.+?)'\)\.(\w+)/.exec(type_text);
+		if (import_match) {
+			const [, from, _name] = import_match;
+			name = _name;
+			const existing = imports.get(from);
+			if (existing) {
+				existing.add(name);
+			} else {
+				imports.set(from, new Set([name]));
+			}
+		}
+		return name;
+	}
 }

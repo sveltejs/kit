@@ -2,7 +2,7 @@ import { hash } from '../hash.js';
 
 let loading = 0;
 
-const native_fetch = window.fetch;
+export const native_fetch = window.fetch;
 
 export function lock_fetch() {
 	loading += 1;

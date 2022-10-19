@@ -249,8 +249,9 @@ function kit() {
 					}
 				},
 				define: {
-					__SVELTEKIT_DEV__: 'true',
-					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0'
+					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
+					__SVELTEKIT_BROWSER__: config_env.ssrBuild ? 'false' : 'true',
+					__SVELTEKIT_DEV__: 'true'
 				},
 				publicDir: svelte_config.kit.files.assets,
 				resolve: {
@@ -379,6 +380,7 @@ function kit() {
 				);
 
 				log.info('Building server');
+
 				const options = {
 					cwd,
 					config: svelte_config,
@@ -395,6 +397,9 @@ function kit() {
 				/** @type {import('types').BuildData} */
 				build_data = {
 					app_dir: svelte_config.kit.appDir,
+					app_path: `${svelte_config.kit.paths.base.slice(1)}${
+						svelte_config.kit.paths.base ? '/' : ''
+					}${svelte_config.kit.appDir}`,
 					manifest_data,
 					service_worker: options.service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client,
