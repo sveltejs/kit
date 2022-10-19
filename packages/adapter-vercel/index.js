@@ -315,7 +315,7 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 
 		if (error.message.startsWith('Failed to resolve dependency')) {
 			const match = /Cannot find module '(.+?)' loaded from (.+)/;
-			const [, module, importer] = match.exec(error.message);
+			const [, module, importer] = match.exec(error.message) ?? [, error.message, '(unknown)'];
 
 			if (!resolution_failures.has(importer)) {
 				resolution_failures.set(importer, []);
