@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.518
+
+### Patch Changes
+
+- Enable removal of non-browser code from client builds ([#7296](https://github.com/sveltejs/kit/pull/7296))
+
+* [feat] more info about prerendering errors, add strict option to adapter-static ([#7264](https://github.com/sveltejs/kit/pull/7264))
+
 ## 1.0.0-next.517
 
 ### Patch Changes
