@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Improve error message when prerendering fails
+Improve error message when prefetching fails
