@@ -729,7 +729,7 @@ export function create_client({ target, base, trailing_slash }) {
 				});
 			}
 
-			if (server_data.type === 'redirect') {
+			if (server_data?.type === 'redirect') {
 				return server_data;
 			}
 		}
