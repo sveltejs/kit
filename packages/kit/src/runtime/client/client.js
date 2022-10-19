@@ -1434,7 +1434,11 @@ export function create_client({ target, base, trailing_slash }) {
 
 			hydrated = true;
 
-			currentSession = session;
+			const setSession = stores.session.set;
+			stores.session.set = (value) => {
+				currentSession = value;
+				setSession(currentSession);
+			};
 			stores.session.set(session);
 
 			const url = new URL(location.href);
