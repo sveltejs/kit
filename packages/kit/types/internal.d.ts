@@ -4,7 +4,6 @@ import {
 	Config,
 	ServerLoad,
 	Handle,
-	GetSharedState,
 	HandleServerError,
 	KitConfig,
 	Load,
@@ -16,7 +15,9 @@ import {
 	SSRManifest,
 	HandleFetch,
 	Actions,
-	HandleClientError
+	HandleClientError,
+	GetClientSession,
+	GetServerSession
 } from './index.js';
 import {
 	HttpMethod,
@@ -94,12 +95,13 @@ export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 export interface ServerHooks {
 	handleFetch: HandleFetch;
 	handle: Handle;
-	getSharedState: GetSharedState;
 	handleError: HandleServerError;
+	getServerSession: GetServerSession;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
+	getClientSession: GetClientSession;
 }
 
 export class InternalServer extends Server {

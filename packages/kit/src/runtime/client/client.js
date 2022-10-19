@@ -99,8 +99,8 @@ export function create_client({ target, base, trailing_slash }) {
 		url: null
 	};
 
-	/** @type {App.SharedState} */
-	let currentStateValue;
+	/** @type {App.Session} */
+	let currentSession;
 
 	/** this being true means we SSR'd */
 	let hydrated = false;
@@ -533,9 +533,8 @@ export function create_client({ target, base, trailing_slash }) {
 						return target[/** @type {string} */ (key)];
 					}
 				}),
-				get state() {
-					depends('sveltekit-internal:state');
-					return currentStateValue;
+				get session() {
+					return currentSession;
 				},
 				data: server_data_node?.data ?? null,
 				url: make_trackable(url, () => {
@@ -596,14 +595,6 @@ export function create_client({ target, base, trailing_slash }) {
 					get() {
 						throw new Error(
 							'@migration task: Replace `props` with `data` stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
-						);
-					},
-					enumerable: false
-				},
-				session: {
-					get() {
-						throw new Error(
-							'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
 						);
 					},
 					enumerable: false
@@ -1430,24 +1421,21 @@ export function create_client({ target, base, trailing_slash }) {
 		_hydrate: async ({
 			status,
 			error,
-			state,
+			session,
 			node_ids,
 			params,
 			routeId,
 			data: server_data_nodes,
 			form
 		}) => {
+			session = await hooks.getClientSession({
+				session
+			});
+
 			hydrated = true;
 
-			currentStateValue = state;
-			stores.state.set(state);
-
-			const setState = stores.state.set;
-			stores.state.set = async (value) => {
-				currentStateValue = value;
-				await client.invalidate('sveltekit-internal:state');
-				setState(currentStateValue);
-			};
+			currentSession = session;
+			stores.session.set(session);
 
 			const url = new URL(location.href);
 

@@ -23,7 +23,7 @@ import { HttpError, Redirect } from '../../control.js';
  *   status: number;
  *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   sharedState: App.SharedState;
+ *   session: App.Session;
  * }} opts
  */
 export async function respond_with_error({
@@ -33,7 +33,7 @@ export async function respond_with_error({
 	status,
 	error,
 	resolve_opts,
-	sharedState
+	session
 }) {
 	/** @type {import('./types').Fetched[]} */
 	const fetched = [];
@@ -63,7 +63,7 @@ export async function respond_with_error({
 				resolve_opts,
 				server_data_promise,
 				state,
-				sharedState
+				session
 			});
 
 			branch.push(
@@ -93,7 +93,7 @@ export async function respond_with_error({
 			fetched,
 			event,
 			resolve_opts,
-			sharedState
+			session
 		});
 	} catch (error) {
 		// Edge case: If route is a 404 and the user redirects to somewhere from the root layout,

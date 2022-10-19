@@ -57,7 +57,7 @@ declare namespace App {
 	/**
 	 * The interface that defines `event.state`, which can be accessed in all `load` functions.
 	 */
-	export interface SharedState {}
+	export interface Session {}
 
 	/**
 	 * Defines the common shape of the [$page.data store](https://kit.svelte.dev/docs/modules#$app-stores-page) - that is, the data that is shared between all pages.
@@ -300,7 +300,7 @@ declare module '$app/stores' {
 	/**
 	 * A writable store.
 	 */
-	export const state: Writable<App.SharedState>;
+	export const session: Writable<App.Session>;
 	/**
 	 * A readable store.
 	 * When navigating starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
@@ -320,7 +320,7 @@ declare module '$app/stores' {
 		navigating: typeof navigating;
 		page: typeof page;
 		updated: typeof updated;
-		state: typeof state;
+		session: typeof session;
 	};
 }
 

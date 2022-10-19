@@ -16,7 +16,7 @@ export function init(opts) {
 export const stores = {
 	url: notifiable_store({}),
 	page: notifiable_store({}),
-	state: writable({}),
+	session: writable({}),
 	navigating: writable(/** @type {import('types').Navigation | null} */ (null)),
 	updated: create_updated_store()
 };

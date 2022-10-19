@@ -100,6 +100,9 @@ export function write_client_manifest(config, manifest_data, output) {
 				handleError: ${
 					hooks_file ? 'client_hooks.handleError || ' : ''
 				}(({ error }) => { console.error(error) }),
+				getClientSession: ${
+					hooks_file ? 'client_hooks.getClientSession || ' : ''
+				}(({ session }) => session),
 			};
 		`)
 	);

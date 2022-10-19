@@ -239,8 +239,11 @@ export interface Handle {
 	}): MaybePromise<Response>;
 }
 
-export interface GetSharedState {
-	(event: RequestEvent): MaybePromise<App.SharedState>;
+export interface GetServerSession {
+	(event: RequestEvent): MaybePromise<App.Session>;
+}
+export interface GetClientSession {
+	(event: { session: App.Session }): MaybePromise<App.Session>;
 }
 
 export interface HandleServerError {
@@ -278,7 +281,7 @@ export interface LoadEvent<
 	setHeaders: (headers: Record<string, string>) => void;
 	parent: () => Promise<ParentData>;
 	depends: (...deps: string[]) => void;
-	state: App.SharedState;
+	session: App.Session;
 }
 
 export interface NavigationEvent<

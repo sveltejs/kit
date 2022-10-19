@@ -74,7 +74,7 @@ export async function load_server_data({ event, state, node, parent }) {
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   server_data_promise: Promise<import('types').ServerDataNode | null>;
  *   state: import('types').SSRState;
- *   sharedState: App.SharedState;
+ *   session: App.Session;
  * }} opts
  * @returns {Promise<Record<string, any> | null>}
  */
@@ -86,7 +86,7 @@ export async function load_data({
 	server_data_promise,
 	state,
 	resolve_opts,
-	sharedState
+	session
 }) {
 	const server_data_node = await server_data_promise;
 
@@ -98,7 +98,7 @@ export async function load_data({
 	const load_event = {
 		url: event.url,
 		params: event.params,
-		state: sharedState,
+		session: session,
 		data: server_data_node?.data ?? null,
 		routeId: event.routeId,
 		fetch: async (input, init) => {
@@ -195,18 +195,6 @@ export async function load_data({
 		depends: () => {},
 		parent
 	};
-
-	// TODO remove this for 1.0
-	Object.defineProperties(load_event, {
-		session: {
-			get() {
-				throw new Error(
-					'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
-				);
-			},
-			enumerable: false
-		}
-	});
 
 	const data = await node.shared.load.call(null, load_event);
 

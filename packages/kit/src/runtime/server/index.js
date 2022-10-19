@@ -209,7 +209,7 @@ export async function respond(request, options, state) {
 				};
 			}
 
-			const sharedState = await options.hooks.getSharedState(event);
+			const session = await options.hooks.getServerSession(event);
 
 			if (state.prerendering?.fallback) {
 				return await render_response({
@@ -222,7 +222,7 @@ export async function respond(request, options, state) {
 					branch: [],
 					fetched: [],
 					resolve_opts,
-					sharedState
+					session
 				});
 			}
 
@@ -242,7 +242,7 @@ export async function respond(request, options, state) {
 						options,
 						state,
 						resolve_opts,
-						sharedState
+						session
 					);
 				} else {
 					// a route will always have a page or an endpoint, but TypeScript
@@ -269,7 +269,7 @@ export async function respond(request, options, state) {
 					status: 404,
 					error: new Error(`Not found: ${event.url.pathname}`),
 					resolve_opts,
-					sharedState
+					session
 				});
 			}
 
