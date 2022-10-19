@@ -6,7 +6,7 @@ A [`+page.svelte`](/docs/routing#page-page-svelte) or [`+layout.svelte`](/docs/r
 
 ### Basics
 
-A very common task is to load data prior to showing a page. For this task, use the `load` function. The following shows an example of fetching a list of all blog posts from a data base inside a `+page.server.js` file which is then available through the `data` prop inside `+page.svelte`:
+A very common task is to load data prior to showing a page. For this task, use the `load` function. The following shows an example of fetching a list of all blog posts from a database inside a `+page.server.js` file which is then available through the `data` prop inside `+page.svelte`:
 
 ```js
 /// file: src/routes/blog/+page.server.js
@@ -247,7 +247,7 @@ export async function load({ data }) {
 
 To summarize:
 - use server-only `load` in `+page.server.js`/`+layout.server.js` when
-	- you want to access your data base directly
+	- you want to access your database directly
 	- you access private environment variables
 	- the returned data is serializable
 - use shared `load` in `+page.js`/`+layout.js` when
@@ -259,7 +259,7 @@ To summarize:
 
 ### Making fetch requests
 
-Inside server-only `load` functions you can directly query your database. Inside shared `load` functions you can't, as they also may run on the client. Also sometimes your data base may not be on the same server as your app. For these reasons it is often necessary to make `fetch` requests.
+Inside server-only `load` functions you can directly query your database. Inside shared `load` functions you can't, as they also may run on the client. Also sometimes your database may not be on the same server as your app. For these reasons it is often necessary to make `fetch` requests.
 
 The `load` function provides a `fetch` method which is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 
