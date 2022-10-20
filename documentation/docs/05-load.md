@@ -163,7 +163,7 @@ Conceptually, they're the same thing, but there are some important differences t
 
 #### Input
 
-Both shared and server-only `load` functions have access to properties describing the request — `params`, `routeId` and `url` — and various functions — `depends`, `fetch` and `parent`. These are described in the following sections.
+Both shared and server-only `load` functions have access to properties describing the request (`params`, `routeId` and `url`) and various functions (`depends`, `fetch` and `parent`). These are described in the following sections.
 
 Server-only `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
 
