@@ -137,7 +137,7 @@ export const config = {
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
+		command: process.env.DEV ? 'pnpm dev' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 4173
 	},
 	retries: process.env.CI ? 5 : 0,
