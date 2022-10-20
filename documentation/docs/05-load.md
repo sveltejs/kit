@@ -292,78 +292,56 @@ Setting the same header multiple times (even in separate `load` functions) is an
 
 ### Using parent data
 
-Sometimes it's useful to access the data of a parent layout `load` function, for example when you load the user data in the root layout and want to access it in different pages. For this, the `parent` method comes in handy. `await parent()` returns data from parent layout `load` functions. In `+page.server.js` or `+layout.server.js` it will return data from `load` functions in parent `+layout.server.js` files:
+Occasionally it's useful for a `load` function to access data from a parent `load` function, which can be done with the `parent` function:
 
 ```js
-/// file: src/routes/+layout.server.js
-/** @type {import('./$types').LayoutServerLoad} */
-export function load() {
-	return { a: 1 };
-}
-```
-
-```js
-/// file: src/routes/foo/+layout.server.js
-/** @type {import('./$types').LayoutServerLoad} */
-export async function load({ parent }) {
-	const { a } = await parent();
-	console.log(a); // `1`
-
-	return { b: 2 };
-}
-```
-
-```js
-/// file: src/routes/foo/+page.server.js
-/** @type {import('./$types').PageServerLoad} */
-export async function load({ parent }) {
-	const { a, b } = await parent();
-	console.log(a, b); // `1`, `2`
-
-	return { c: 3 };
-}
-```
-
-In `+page.js` or `+layout.js` it will return data from `load` functions in parent `+layout.js` files. Implicitly, a missing `+layout.js` is treated as a `({ data }) => data` function, meaning that it will also return data from parent `+layout.server.js` files.
-
-```js
-/// file: src/routes/+layout.server.js
-/** @type {import('./$types').LayoutServerLoad} */
-export function load() {
-	return { a: 1 };
-}
-```
-
-```js
-/// file: src/routes/foo/+layout.js
+/// file: src/routes/+layout.js
 /** @type {import('./$types').LayoutLoad} */
-export async function load({ parent }) {
-	const { a } = await parent();
-	console.log(a); // `1`
-
-	return { b: 2 };
+export function load() {
+	return { a: 1 };
 }
 ```
 
 ```js
-/// file: src/routes/foo/+page.js
+/// file: src/routes/abc/+layout.js
+/** @type {import('./$types').LayoutServerLoad} */
+export async function load({ parent }) {
+	const { a } = await parent();
+	return { b: a + 1 };
+}
+```
+
+```js
+/// file: src/routes/abc/+page.js
 /** @type {import('./$types').PageLoad} */
 export async function load({ parent }) {
 	const { a, b } = await parent();
-	console.log(a, b); // `1`, `2`
-
-	return { c: 3 };
+	return { c: a + b };
 }
 ```
 
-Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
+```svelte
+<script>
+	/** @type {import('./$types').PageData} */
+	export let data;
+</script>
+
+<!-- renders `1 + 2 = 3` -->
+<p>{data.a} + {data.b} = {data.c}</p>
+```
+
+Notice that the `load` function in `+page.js` receives the merged data from both layout `load` functions, not just the immediate parent.
+
+Inside `+page.server.js` and `+layout.server.js`, `parent` returns data from parent `+layout.server.js` files. In `+page.js` or `+layout.js` it will return data from parent `+layout.js` files. However, a missing `+layout.js` is treated as a `({ data }) => data` function, meaning that it will also return data from parent `+layout.server.js` files that are not 'shadowed' by a `+layout.js` file
+
+Take care not to introduce waterfalls when using `await parent()`. Here, for example, `getData(params)` does not depend on the result of calling `parent()`, so we should call it first to avoid a delayed render.
 
 ```diff
-/// file: src/routes/foo/+page.server.js
-/** @type {import('./$types').PageServerLoad} */
-export async function load({ parent, fetch }) {
+/// file: +page.js
+/** @type {import('./$types').PageLoad} */
+export async function load({ params, parent }) {
 -	const parentData = await parent();
-	const data = await fetch('./some-api');
+	const data = await getData(params);
 +	const parentData = await parent();
 
 	return {
