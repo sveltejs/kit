@@ -67,7 +67,7 @@ Your `+layout.svelte` files can also load data, via `+layout.js` or `+layout.ser
 /// file: src/routes/blog/[slug]/+layout.server.js
 // @filename: ambient.d.ts
 declare module '$lib/server/database' {
-	export function getPosts(): Promise<Array<{ title: string, slug: string }>>
+	export function getPostSummaries(): Promise<Array<{ title: string, slug: string }>>
 }
 
 // @filename: index.js
@@ -77,7 +77,7 @@ import * as db from '$lib/server/database';
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load() {
 	return {
-		posts: await db.getPosts()
+		posts: await db.getPostSummaries()
 	};
 }
 ```
@@ -228,15 +228,13 @@ To get data from an external API or a `+server.js` handler, you can use the prov
 - during server-side rendering, the response will be captured and inlined into the rendered HTML. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](/docs/hooks#server-hooks-handle). Then, during hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request - if you got a warning in your browser console when using the browser `fetch` instead of the `load` `fetch`, this is why.
 
 ```js
-/// file: +page.js
+/// file: src/routes/items/[id]/+page.js
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, params }) {
 	const res = await fetch(`/api/items/${params.id}`);
 	const item = await res.json();
 
-	return {
-		item
-	};
+	return { item };
 }
 ```
 
@@ -250,7 +248,7 @@ A server-only `load` function can get and set [`cookies`](/docs/types#sveltejs-k
 /// file: src/routes/+layout.server.js
 // @filename: ambient.d.ts
 declare module '$lib/server/database' {
-	export function getUser(sessionid: string): Promise<{ name: string, avatar: string }>
+	export function getUser(sessionid: string | undefined): Promise<{ name: string, avatar: string }>
 }
 
 // @filename: index.js
@@ -304,7 +302,7 @@ export function load() {
 
 ```js
 /// file: src/routes/abc/+layout.js
-/** @type {import('./$types').LayoutServerLoad} */
+/** @type {import('./$types').LayoutLoad} */
 export async function load({ parent }) {
 	const { a } = await parent();
 	return { b: a + 1 };
@@ -330,9 +328,11 @@ export async function load({ parent }) {
 <p>{data.a} + {data.b} = {data.c}</p>
 ```
 
-Notice that the `load` function in `+page.js` receives the merged data from both layout `load` functions, not just the immediate parent.
+> Notice that the `load` function in `+page.js` receives the merged data from both layout `load` functions, not just the immediate parent.
 
-Inside `+page.server.js` and `+layout.server.js`, `parent` returns data from parent `+layout.server.js` files. In `+page.js` or `+layout.js` it will return data from parent `+layout.js` files. However, a missing `+layout.js` is treated as a `({ data }) => data` function, meaning that it will also return data from parent `+layout.server.js` files that are not 'shadowed' by a `+layout.js` file
+Inside `+page.server.js` and `+layout.server.js`, `parent` returns data from parent `+layout.server.js` files.
+
+In `+page.js` or `+layout.js` it will return data from parent `+layout.js` files. However, a missing `+layout.js` is treated as a `({ data }) => data` function, meaning that it will also return data from parent `+layout.server.js` files that are not 'shadowed' by a `+layout.js` file
 
 Take care not to introduce waterfalls when using `await parent()`. Here, for example, `getData(params)` does not depend on the result of calling `parent()`, so we should call it first to avoid a delayed render.
 
@@ -447,42 +447,94 @@ When rendering (or navigating to) a page, SvelteKit runs all `load` functions co
 
 ### Invalidation
 
-SvelteKit tracks the dependencies of each `load` function to avoid re-running it unnecessarily during navigation. For example, a `load` function in a root `+layout.js` doesn't need to re-run when you navigate from one page to another unless it references `url` or a member of `params` that changed since the last navigation. `load` functions also take into account parent `load` functions, if you reference them through `await parent()` - in this case, if an upper `load` function is rerun, so is the `load` function that does `await parent()`.
+SvelteKit tracks the dependencies of each `load` function to avoid re-running it unnecessarily during navigation.
 
-`load` functions do not only run when you navigate, they can also be triggered to rerun by `invalidate` or `invalidateAll` (which we get to in the next paragraph). `invalidate` is closely connected to `fetch` and `depends`, which are both methods passed to `load`. Making a `fetch` request automatically registers the fetched URL as a dependency of the load function. `depends` does the same in a manual way and registers the specified URL as a dependency. You can then use `invalidate` and pass one of the registered URLs (or a function, if you need to decide based on a pattern rather than the full URL) to it to rerun the `load` function:
+For example, given a pair of `load` functions like these...
 
 ```js
-/// file: src/routes/items/[id]/+page.js
+/// file: src/routes/blog/[slug]/+page.server.js
+// @filename: ambient.d.ts
+declare module '$lib/server/database' {
+	export function getPost(slug: string): Promise<{ title: string, content: string }>
+}
+
+// @filename: index.js
+// ---cut---
+import * as db from '$lib/server/database';
+
+/** @type {import('./$types').PageServerLoad} */
+export async function load({ params }) {
+	return {
+		post: await db.getPost(params.slug)
+	};
+}
+```
+
+```js
+/// file: src/routes/blog/[slug]/+layout.server.js
+// @filename: ambient.d.ts
+declare module '$lib/server/database' {
+	export function getPostSummaries(): Promise<Array<{ title: string, slug: string }>>
+}
+
+// @filename: index.js
+// ---cut---
+import * as db from '$lib/server/database';
+
+/** @type {import('./$types').LayoutServerLoad} */
+export async function load() {
+	return {
+		posts: await db.getPostSummaries()
+	};
+}
+```
+
+...the one in `+page.server.js` will re-run if we navigate from `/blog/trying-the-raw-meat-diet` to `/blog/i-regret-my-choices` because `params.slug` has changed. The one in `+layout.server.js` will not, because the data is still valid. In other words, we won't call `db.getPostSummaries()` a second time.
+
+`load` functions also take into account parent `load` functions, if you reference them through `await parent()` - in this case, if an upper `load` function is rerun, so is the `load` function that calls `await parent()`.
+
+#### Manual invalidation
+
+You can also re-run `load` functions that apply to the current page using [`invalidate(url)`](/docs/modules#$app-navigation-invalidate), which re-runs all `load` functions that apply depend on `url`, and [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall) which re-runs every `load` function.
+
+A `load` function depends on `url` if it calls `fetch(url)` or `depends(url)`. Note that `url` can be a custom identifier that starts with `[a-z]:`:
+
+```js
+/// file: src/routes/random-number/+page.js
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, depends }) {
-	const response = await fetch('https://some-api.com'); // load reruns when invalidate('https://some-api.com') is called
-	depends('custom:key'); // load reruns when invalidate('custom:key') is called
-	return response;
+	// load reruns when `invalidate('https://api.example.com/random-number')` is called...
+	const response = await fetch('https://api.example.com/random-number');
+
+	// ...or when `invalidate('app:random')` is called
+	depends('app:random');
+
+	return {
+		number: await response.json()
+	};
 }
 ```
 
 ```svelte
-/// file: src/routes/items/[id]/+page.svelte
+/// file: src/routes/random-number/+page.svelte
 <script>
-	import { invalidate } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
+
 	/** @type {import('./$types').PageData} */
 	export let data;
 
 	function rerunLoadFunction() {
-		invalidate('custom:key');
-		// or
-		invalidate('https://some-api.com');
-		// or
-		invalidate(url => url.href.includes('some-api'));
+		// any of these will cause the `load` function to re-run
+		invalidate('app:random');
+		invalidate('https://api.example.com/random-number');
+		invalidate(url => url.href.includes('random-number'));
+		invalidateAll();
 	}
 </script>
 
-<button on:click={rerunLoadFunction}>Rerun load function</button>
+<p>random number: {data.number}</p>
+<button on:click={rerunLoadFunction}>Update random number</button>
 ```
-
-If you want to force a rerun of _every_ `load` function regardless of what they use, use `invalidateAll` from `$app/navigation`. This is useful for example after an update to app-wide important data like the login state.
-
-> `invalidate(() => true)` and `invalidateAll` are _not_ the same. `invalidate(() => true)` only reruns `load` functions that have a dependency at all, `invalidateAll` also reruns `load` functions without any dependency.
 
 To summarize, a `load` function will re-run in the following situations:
 
@@ -492,23 +544,7 @@ To summarize, a `load` function will re-run in the following situations:
 - It declared a dependency on a specific URL via [`fetch`](#making-fetch-requests) or [`depends`](/docs/types#sveltejs-kit-loadevent), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
 - All active `load` functions were forcibly re-run with [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall)
 
-```js
-/// file: src/routes/items/[id]/+page.js
-// @filename: ambient.d.ts
-declare function doStuffWith(arg: any): void;
-// @filename: index.js
-// ---cut---
-/** @type {import('./$types').PageLoad} */
-export async function load({ url, params, parent, fetch, depends }) {
-	const response = await fetch('https://some-api.com'); // load reruns when invalidate('https://some-api.com') is called
-	depends('custom:key'); // load reruns when invalidate('custom:key') is called
-	doStuffWith(url.pathname); // load reruns when the URL changes
-	doStuffWith(params.id); // load reruns when the id parameter changes
-	await parent(); // load reruns when any parent load function reruns
-}
-```
-
-If a `load` function is triggered to re-run and you stay on the same `+page.svelte`, the page will not remount — instead, it will update with the new `data`. This means that components' internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
+Note that re-running a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
 
 ### Shared state
 
