@@ -2,66 +2,138 @@
 title: Loading data
 ---
 
-A [`+page.svelte`](/docs/routing#page-page-svelte) or [`+layout.svelte`](/docs/routing#layout-layout-svelte) gets its `data` from a `load` function. This `load` function can be placed in `+layout.js`, `+page.js`, `+layout.server.js` or `+page.server.js`.
+Before a [`+page.svelte`](/docs/routing#page-page-svelte) component (and its containing [`+layout.svelte`](/docs/routing#layout-layout-svelte) components) can be rendered, we often need to get some data. This is done by defining `load` functions.
 
-### Basics
+### Page data
 
-A very common task is to load data prior to showing a page. For this task, use the `load` function. The following shows an example of fetching a list of all blog posts from a database inside a `+page.server.js` file which is then available through the `data` prop inside `+page.svelte`:
+A `+page.svelte` file can have a sibling `+page.js` (or `+page.ts`) that exports a `load` function, the return value of which is available to the page via the `data` prop:
 
 ```js
-/// file: src/routes/blog/+page.server.js
-// @filename: ambient.d.ts
-declare const db: { getAllBlogPosts: () => Promise<any[]> }
-
-// @filename: index.js
-// ---cut---
-/** @type {import('./$types').PageServerLoad} */
-export async function load() {
+/// file: src/routes/blog/[slug]/+page.js
+/** @type {import('./$types').PageLoad} */
+export function load({ params }) {
 	return {
-		posts: await db.getAllBlogPosts()
+		post: {
+			title: `Title for ${params.slug} goes here`,
+			content: `Content for ${params.slug} goes here`
+		}
 	};
 }
 ```
 
 ```svelte
-/// file: src/routes/blog/+page.svelte
+/// file: src/routes/blog/[slug]/+page.svelte
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 
-{#each data.posts as post}
-	...
-{/each}
+<h1>{data.post.title}</h1>
+<div>{@html data.post.content}</div>
 ```
 
-You can do the same for layouts:
+Thanks to the generated `$types` module, we get full type safety.
+
+A `load` function in a `+page.js` file runs both on the server and in the browser. If your `load` function should _always_ run on the server (because it uses private environment variables, for example, or accesses a database) then you can put it in a `+page.server.js` instead.
+
+A more realistic version of your blog post's `load` function, that pulls data from a database, might look like this:
 
 ```js
-/// file: src/routes/blog/+layout.server.js
+/// file: src/routes/blog/[slug]/+page.server.js
 // @filename: ambient.d.ts
-declare const db: { getBlogPostsCount: () => Promise<any[]> }
+declare module '$lib/server/database' {
+	export function getPost(slug: string): Promise<{ title: string, content: string }>
+}
 
 // @filename: index.js
 // ---cut---
+import * as db from '$lib/server/database';
+
+/** @type {import('./$types').PageServerLoad} */
+export async function load({ params }) {
+	return {
+		post: await db.getPost(params.slug)
+	};
+}
+```
+
+Notice that the type changed from `PageLoad` to `PageServerLoad`, because server-only `load` functions can access additional arguments. To understand when to use `+page.js` and when to use `+page.server.js`, see [Shared vs server](/docs/load#shared-vs-server).
+
+### Layout data
+
+Your `+layout.svelte` files can also load data, via `+layout.js` or `+layout.server.js`.
+
+```js
+/// file: src/routes/blog/[slug]/+layout.server.js
+// @filename: ambient.d.ts
+declare module '$lib/server/database' {
+	export function getPosts(): Promise<Array<{ title: string, slug: string }>>
+}
+
+// @filename: index.js
+// ---cut---
+import * as db from '$lib/server/database';
+
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load() {
 	return {
-		postsCount: await db.getBlogPostsCount()
+		posts: await db.getPosts()
 	};
 }
 ```
 
 ```svelte
-/// file: src/routes/blog/+layout.svelte
+/// file: src/routes/blog/[slug]/+layout.svelte
 <script>
 	/** @type {import('./$types').LayoutData} */
 	export let data;
 </script>
 
-<span>{data.postsCount} blog posts available</span>
-<slot />
+<main>
+	<slot />
+</main>
+
+<aside>
+	<h2>More posts</h2>
+	<ul>
+		{#each data.posts as post}
+			<li>
+				<a href="/blog/{post.slug}">
+					{post.title}
+				</a>
+			</li>
+		{/each}
+	</ul>
+</aside>
 ```
+
+Data returned from layout `load` functions is available to child `+layout.svelte` components and the `+page.svelte` component as well as the layout that it 'belongs' to.
+
+```diff
+/// file: src/routes/blog/[slug]/+page.svelte
+<script>
++	import { page } from '$app/stores';
+
+	/** @type {import('./$types').PageData} */
+	export let data;
+
++	// we can access `data.posts` because it's returned from
++	// the parent layout `load` function
++	$: index = data.posts.findIndex(post => post.slug === page.params.slug);
++	$: next = data.posts[index - 1];
+</script>
+
+<h1>{data.post.title}</h1>
+<div>{@html data.post.content}</div>
+
++{#if next}
++	<p>Next post: <a href="/blog/{next.slug}">{next.title}</a></p>
++{/if}
+```
+
+> If multiple `load` functions return data with the same key, the last one 'wins'.
+
+### Promise unwrapping
 
 Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
 
@@ -90,36 +162,56 @@ export function load() {
 </script>
 ```
 
-The `load` functions related to a certain page run in parallel by default, avoiding a waterfall of requests. Once all `load` functions have returned, rendering starts. This allows layouts and pages to access data from upper layouts. In the above example, the `data` prop in `blog/+page.svelte` _also_ has access to the `postsCount` returned from `blog/+layout.server.js`. Additionally, you can access the merged data of _all_ `load` functions through `$page.data`.
+### Parallel loading
+
+When rendering (or navigating to) a page, SvelteKit runs all `load` functions concurrently, avoiding a waterfall of requests. (During client-side navigation, the result of calling multiple server-only `load` functions are grouped into a single response.) Once all `load` functions have returned, the page is rendered.
+
+### $page.data
+
+The `+page.svelte` component, and each `+layout.svelte` component above it, has access to its own data plus all the data from its parents.
+
+In some cases, a parent layout might need to access page data or data from a child layout — for example, the root layout might want to access a `title` property returned from a `load` function in `+page.js` or `+page.server.js`. This can be done with `$page.data`:
 
 ```svelte
-/// file: src/routes/blog/+page.svelte
+/// file: src/routes/+layout.svelte
 <script>
 	import { page } from '$app/stores';
-
-	/** @type {import('./$types').PageData} */
-	export let data;
 </script>
 
-{#each data.posts as post, idx}
-	<span>Post {idx + 1} of {data.postsCount}</span>
-	<!-- or -->
-	<span>Post {idx + 1} of {$page.data.postsCount}</span>
-	...
-{/each}
+<svelte:head>
+	<title>{$page.data.title}</title>
+</svelte:head>
 ```
 
-> In case `load` functions return data with the same key, the last `load` function wins.
+Type information for `$page.data` is provided by `App.PageData`.
 
 ### Using URL data
 
-Often the `load` function depends on the URL in one way or another. For this, the `load` function provides you with `params`, `routeId` and `url`.
+Often the `load` function depends on the URL in one way or another. For this, the `load` function provides you with `url`, `routeId` and `params`.
+
+#### url
+
+An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams` (which contains the parsed query string as a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) object). `url.hash` cannot be accessed during `load`, since it is unavailable on the server.
+
+> In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node](/docs/adapters#supported-environments-node-js), for example, you may need to configure the adapter in order for the URL to be correct.
+
+#### routeId
+
+The name of the current route directory, relative to `src/routes`:
+
+```js
+/// file: src/routes/a/[b]/[...c]/+page.js
+/** @type {import('./$types').PageLoad} */
+export function load({ routeId }) {
+	console.log(routeId); // 'a/[b]/[...c]'
+}
+```
 
 #### params
 
-`params` is derived from `url.pathname` and the route filename.
+`params` is derived from `url.pathname` and `routeId`.
 
-For a route filename example like `src/routes/a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `params` object would look like this:
+Given a `routeId` of `a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `params` object would look like this:
 
 ```json
 {
@@ -128,25 +220,7 @@ For a route filename example like `src/routes/a/[b]/[...c]` and a `url.pathname`
 }
 ```
 
-#### routeId
-
-The name of the current route directory, relative to `src/routes`:
-
-```js
-/// file: src/routes/blog/[slug]/+page.js
-/** @type {import('./$types').PageLoad} */
-export function load({ routeId }) {
-	console.log(routeId); // 'blog/[slug]'
-}
-```
-
-#### url
-
-An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams` (which contains the parsed query string as a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) object). `url.hash` cannot be accessed during `load`, since it is unavailable on the server.
-
-> In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node](/docs/adapters#supported-environments-node-js), for example, you may need to configure the adapter in order for the URL to be correct.
-
-### Which load function to use
+### Shared vs server
 
 The `load` function is available in both `+page.js`/`+layout.js` and `+page.server.js`/`+layout.server.js` files. They share the same name because they do the same - providing data to a layout or page. Their capabalities differ in some ways though, and it makes sense to use one or the other depending on the situation - sometimes even both.
 
