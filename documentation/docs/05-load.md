@@ -183,43 +183,6 @@ Shared `load` functions are useful when you need to `fetch` data from an externa
 
 In rare cases, you might need to use both together — for example, you might need to return an instance of a custom class that was initialised with data from your server.
 
-### Shared state
-
-In many server environments, a single instance of your app will serve multiple users. For that reason, per-request or per-user state must not be stored in shared variables outside your `load` functions, but should instead be stored in `event.locals`.
-
-### Promise unwrapping
-
-Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
-
-```js
-/// file: src/routes/+page.server.js
-/** @type {import('./$types').PageServerLoad} */
-export function load() {
-	return {
-		a: Promise.resolve('a'),
-		b: Promise.resolve('b'),
-		c: {
-			value: Promise.resolve('c')
-		}
-	};
-}
-```
-
-```svelte
-<script>
-	/** @type {import('./$types').PageData} */
-	export let data;
-
-	console.log(data.a); // 'a'
-	console.log(data.b); // 'b'
-	console.log(data.c.value); // `Promise {...}`
-</script>
-```
-
-### Parallel loading
-
-When rendering (or navigating to) a page, SvelteKit runs all `load` functions concurrently, avoiding a waterfall of requests. (During client-side navigation, the result of calling multiple server-only `load` functions are grouped into a single response.) Once all `load` functions have returned, the page is rendered.
-
 ### Using URL data
 
 Often the `load` function depends on the URL in one way or another. For this, the `load` function provides you with `url`, `routeId` and `params`.
@@ -455,6 +418,39 @@ export function load({ locals }) {
 }
 ```
 
+### Promise unwrapping
+
+Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
+
+```js
+/// file: src/routes/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
+export function load() {
+	return {
+		a: Promise.resolve('a'),
+		b: Promise.resolve('b'),
+		c: {
+			value: Promise.resolve('c')
+		}
+	};
+}
+```
+
+```svelte
+<script>
+	/** @type {import('./$types').PageData} */
+	export let data;
+
+	console.log(data.a); // 'a'
+	console.log(data.b); // 'b'
+	console.log(data.c.value); // `Promise {...}`
+</script>
+```
+
+### Parallel loading
+
+When rendering (or navigating to) a page, SvelteKit runs all `load` functions concurrently, avoiding a waterfall of requests. (During client-side navigation, the result of calling multiple server-only `load` functions are grouped into a single response.) Once all `load` functions have returned, the page is rendered.
+
 ### Invalidation
 
 SvelteKit tracks the dependencies of each `load` function to avoid re-running it unnecessarily during navigation. For example, a `load` function in a root `+layout.js` doesn't need to re-run when you navigate from one page to another unless it references `url` or a member of `params` that changed since the last navigation. `load` functions also take into account parent `load` functions, if you reference them through `await parent()` - in this case, if an upper `load` function is rerun, so is the `load` function that does `await parent()`.
@@ -519,3 +515,7 @@ export async function load({ url, params, parent, fetch, depends }) {
 ```
 
 If a `load` function is triggered to re-run and you stay on the same `+page.svelte`, the page will not remount — instead, it will update with the new `data`. This means that components' internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
+
+### Shared state
+
+In many server environments, a single instance of your app will serve multiple users. For that reason, per-request or per-user state must not be stored in shared variables outside your `load` functions, but should instead be stored in `event.locals`.
