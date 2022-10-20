@@ -21,7 +21,7 @@
 	"scripts": {
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
-		"format": "npm run lint -- --write",
+		"format": "pnpm lint --write",
 		"test": "uvu test test.js"
 	},
 	"devDependencies": {

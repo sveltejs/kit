@@ -28,8 +28,8 @@
 		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"format": "npm run lint -- --write",
-		"prepublishOnly": "npm run build"
+		"format": "pnpm lint --write",
+		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
