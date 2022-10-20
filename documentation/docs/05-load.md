@@ -36,7 +36,7 @@ Thanks to the generated `$types` module, we get full type safety.
 
 A `load` function in a `+page.js` file runs both on the server and in the browser. If your `load` function should _always_ run on the server (because it uses private environment variables, for example, or accesses a database) then you can put it in a `+page.server.js` instead.
 
-A more realistic version of your blog post's `load` function, that pulls data from a database, might look like this:
+A more realistic version of your blog post's `load` function, that only runs on the server and pulls data from a database, might look like this:
 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
@@ -90,6 +90,7 @@ export async function load() {
 </script>
 
 <main>
+	<!-- +page.svelte is rendered here -->
 	<slot />
 </main>
 
@@ -119,7 +120,7 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 
 +	// we can access `data.posts` because it's returned from
 +	// the parent layout `load` function
-+	$: index = data.posts.findIndex(post => post.slug === page.params.slug);
++	$: index = data.posts.findIndex(post => post.slug === $page.params.slug);
 +	$: next = data.posts[index - 1];
 </script>
 
@@ -137,7 +138,7 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 
 The `+page.svelte` component, and each `+layout.svelte` component above it, has access to its own data plus all the data from its parents.
 
-In some cases, a parent layout might need to access page data or data from a child layout — for example, the root layout might want to access a `title` property returned from a `load` function in `+page.js` or `+page.server.js`. This can be done with `$page.data`:
+In some cases, we might need the opposite — a parent layout might need to access page data or data from a child layout. For example, the root layout might want to access a `title` property returned from a `load` function in `+page.js` or `+page.server.js`. This can be done with `$page.data`:
 
 ```svelte
 /// file: src/routes/+layout.svelte
@@ -269,10 +270,10 @@ Both server-only and shared `load` functions have access to a `setHeaders` funct
 
 ```js
 // @errors: 2322
-/// file: src/routes/blog/+page.js
+/// file: src/routes/products/+page.js
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, setHeaders }) {
-	const url = `https://cms.example.com/articles.json`;
+	const url = `https://cms.example.com/products.json`;
 	const response = await fetch(url);
 
 	// cache the page for the same length of time
@@ -290,7 +291,7 @@ Setting the same header multiple times (even in separate `load` functions) is an
 
 ### Using parent data
 
-Occasionally it's useful for a `load` function to access data from a parent `load` function, which can be done with the `parent` function:
+Occasionally it's useful for a `load` function to access data from a parent `load` function, which can be done with `await parent()`:
 
 ```js
 /// file: src/routes/+layout.js
@@ -491,11 +492,11 @@ export async function load() {
 
 ...the one in `+page.server.js` will re-run if we navigate from `/blog/trying-the-raw-meat-diet` to `/blog/i-regret-my-choices` because `params.slug` has changed. The one in `+layout.server.js` will not, because the data is still valid. In other words, we won't call `db.getPostSummaries()` a second time.
 
-`load` functions also take into account parent `load` functions, if you reference them through `await parent()` - in this case, if an upper `load` function is rerun, so is the `load` function that calls `await parent()`.
+A `load` function that calls `await parent()` will also re-run if a parent `load` function is re-run.
 
 #### Manual invalidation
 
-You can also re-run `load` functions that apply to the current page using [`invalidate(url)`](/docs/modules#$app-navigation-invalidate), which re-runs all `load` functions that apply depend on `url`, and [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall) which re-runs every `load` function.
+You can also re-run `load` functions that apply to the current page using [`invalidate(url)`](/docs/modules#$app-navigation-invalidate), which re-runs all `load` functions that depend on `url`, and [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall), which re-runs every `load` function.
 
 A `load` function depends on `url` if it calls `fetch(url)` or `depends(url)`. Note that `url` can be a custom identifier that starts with `[a-z]:`:
 
