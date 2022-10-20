@@ -4,7 +4,9 @@ import prettier from 'prettier';
 import { mkdirp } from '../src/utils/filesystem.js';
 import { fileURLToPath } from 'url';
 
-/** @typedef {{ name: string, comment: string, snippet: string }} Extracted */
+/** @typedef {{ snippet: string; params: Array<[string, string]>; returns: string; content: string}} Part */
+
+/** @typedef {{ name: string, comment: string, snippet: string; parts: Part[] }} Extracted */
 
 /** @type {Array<{ name: string, comment: string, exports: Extracted[], types: Extracted[], exempt?: boolean }>} */
 const modules = [];
@@ -56,7 +58,43 @@ function get_types(code, statements) {
 				const i = code.indexOf('export', start);
 				start = i + 6;
 
-				const snippet = prettier.format(code.slice(start, statement.end).trim(), {
+				/** @type {Part[]} */
+				const parts = [];
+
+				if (ts.isInterfaceDeclaration(statement)) {
+					for (const member of statement.members) {
+						const snippet = member.getText();
+						// @ts-ignore
+						const doc = member.jsDoc?.[0];
+						const content = doc?.comment ?? '';
+						/** @type {Array<[string, string]>} */
+						const params = [];
+						let returns = '';
+
+						for (const param of doc?.tags ?? []) {
+							if (param.tagName.escapedText === 'param') {
+								params.push([param.name.getText(), param.comment]);
+							} else if (param.tagName.escapedText === 'returns') {
+								returns = param.comment;
+							}
+						}
+
+						parts.push({ snippet, content, params, returns });
+					}
+				}
+
+				// If none of the interface members have comments, the resulting docs
+				// look rather sparse, so we'll just use the interface comment for all
+				// in that case
+				if (parts.every((part) => !part.content)) {
+					parts.length = 0;
+				}
+
+				let snippet_unformatted = code.slice(start, statement.end).trim();
+				if (parts.length) {
+					snippet_unformatted = snippet_unformatted.replace(/\/\*\*[\s\S]+?\*\//g, '');
+				}
+				const snippet = prettier.format(snippet_unformatted, {
 					parser: 'typescript',
 					printWidth: 80,
 					useTabs: true,
@@ -69,7 +107,7 @@ function get_types(code, statements) {
 						? exports
 						: types;
 
-				collection.push({ name, comment, snippet });
+				collection.push({ name, comment, snippet, parts });
 			}
 		}
 
@@ -93,7 +131,7 @@ function strip_origin(str) {
 
 {
 	const code = fs.readFileSync('types/index.d.ts', 'utf-8');
-	const node = ts.createSourceFile('index.d.ts', code, ts.ScriptTarget.Latest);
+	const node = ts.createSourceFile('index.d.ts', code, ts.ScriptTarget.Latest, true);
 
 	modules.push({
 		name: '@sveltejs/kit',
@@ -104,7 +142,7 @@ function strip_origin(str) {
 
 {
 	const code = fs.readFileSync('types/private.d.ts', 'utf-8');
-	const node = ts.createSourceFile('private.d.ts', code, ts.ScriptTarget.Latest);
+	const node = ts.createSourceFile('private.d.ts', code, ts.ScriptTarget.Latest, true);
 
 	modules.push({
 		name: 'Additional types',
@@ -131,7 +169,7 @@ for (const file of fs.readdirSync(dir)) {
 
 {
 	const code = fs.readFileSync('types/ambient.d.ts', 'utf-8');
-	const node = ts.createSourceFile('ambient.d.ts', code, ts.ScriptTarget.Latest);
+	const node = ts.createSourceFile('ambient.d.ts', code, ts.ScriptTarget.Latest, true);
 
 	for (const statement of node.statements) {
 		if (ts.isModuleDeclaration(statement)) {

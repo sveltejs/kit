@@ -253,6 +253,10 @@
 	text-decoration: none !important;
 }
 
+.code-block.border {
+	border-left: 5px solid var(--second);
+}
+
 /** TODO another thing that belongs in site-kit */
 pre.language-diff code {
 	color: rgba(0, 0, 0, 0.4);

@@ -209,7 +209,7 @@ export async function read_file(dir, file) {
 				html = `<pre class='language-${plang}'><code>${highlighted}</code></pre>`;
 			}
 
-			html = `<div class="code-block${version_class}">${
+			html = `<div class="code-block${version_class} ${options.style ?? ''}">${
 				options.file ? `<h5>${options.file}</h5>` : ''
 			}${html}</div>`;
 
