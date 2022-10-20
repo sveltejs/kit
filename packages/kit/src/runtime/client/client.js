@@ -199,9 +199,7 @@ export function create_client({ target, base, trailing_slash }) {
 		const intent = get_navigation_intent(url, false);
 
 		if (!intent) {
-			throw new Error(
-				`Attempted to prefetch "${url}", a URL that does not belong to this app. To disable prefetching add data-sveltekit-prefetch="off" to a parent. See https://kit.svelte.dev/docs/link-options#data-sveltekit-prefetch for more information.`
-			);
+			throw new Error(`Attempted to prefetch a URL that does not belong to this app: ${url}`);
 		}
 
 		load_cache = { id: intent.id, promise: load_route(intent) };
