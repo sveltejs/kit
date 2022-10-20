@@ -242,20 +242,43 @@ export async function load({ fetch, params }) {
 
 > Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
 
-### Headers and cookies
+### Cookies and headers
 
-A `load` function can set headers and cookies on the server.
+A server-only `load` function can get and set [`cookies`](/docs/types#sveltejs-kit-cookies).
 
-If you need to set headers for the response, you can do so using the `setHeaders` method. This is useful if you want the page to be cached, for example:
+```js
+/// file: src/routes/+layout.server.js
+// @filename: ambient.d.ts
+declare module '$lib/server/database' {
+	export function getUser(sessionid: string): Promise<{ name: string, avatar: string }>
+}
+
+// @filename: index.js
+// ---cut---
+import * as db from '$lib/server/database';
+
+/** @type {import('./$types').LayoutServerLoad} */
+export async function load({ cookies }) {
+	const sessionid = cookies.get('sessionid');
+
+	return {
+		user: await db.getUser(sessionid)
+	};
+}
+```
+
+Both server-only and shared `load` functions have access to a `setHeaders` function that, when running on the server, can set headers for the response. (When running in the browser, `setHeaders` has no effect.) This is useful if you want the page to be cached, for example:
 
 ```js
 // @errors: 2322
-/// file: src/routes/blog/+page.server.js
-/** @type {import('./$types').PageServerLoad} */
+/// file: src/routes/blog/+page.js
+/** @type {import('./$types').PageLoad} */
 export async function load({ fetch, setHeaders }) {
 	const url = `https://cms.example.com/articles.json`;
 	const response = await fetch(url);
 
+	// cache the page for the same length of time
+	// as the underlying data
 	setHeaders({
 		age: response.headers.get('age'),
 		'cache-control': response.headers.get('cache-control')
@@ -265,25 +288,7 @@ export async function load({ fetch, setHeaders }) {
 }
 ```
 
-Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
-
-You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](/docs/types#sveltejs-kit-cookies) API in a server-only `load` function instead:
-
-```js
-// @errors: 2322
-/// file: src/routes/blog/+page.server.js
-/** @type {import('./$types').PageServerLoad} */
-export async function load({ fetch, cookies }) {
-	const url = `https://cms.example.com/articles.json`;
-	const response = await fetch(url);
-
-	cookies.set('key', 'value');
-
-	return response.json();
-}
-```
-
-`setHeaders` has no effect when a `load` function runs in the browser, and `cookies` can only be used inside a server-only `load` function.
+Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once. You cannot add a `set-cookie` header with `setHeaders` — use `cookies` instead.
 
 ### Using parent data
 
