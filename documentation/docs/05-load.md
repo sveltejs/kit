@@ -133,6 +133,25 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 
 > If multiple `load` functions return data with the same key, the last one 'wins'.
 
+### $page.data
+
+The `+page.svelte` component, and each `+layout.svelte` component above it, has access to its own data plus all the data from its parents.
+
+In some cases, a parent layout might need to access page data or data from a child layout — for example, the root layout might want to access a `title` property returned from a `load` function in `+page.js` or `+page.server.js`. This can be done with `$page.data`:
+
+```svelte
+/// file: src/routes/+layout.svelte
+<script>
+	import { page } from '$app/stores';
+</script>
+
+<svelte:head>
+	<title>{$page.data.title}</title>
+</svelte:head>
+```
+
+Type information for `$page.data` is provided by `App.PageData`.
+
 ### Promise unwrapping
 
 Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
@@ -165,25 +184,6 @@ export function load() {
 ### Parallel loading
 
 When rendering (or navigating to) a page, SvelteKit runs all `load` functions concurrently, avoiding a waterfall of requests. (During client-side navigation, the result of calling multiple server-only `load` functions are grouped into a single response.) Once all `load` functions have returned, the page is rendered.
-
-### $page.data
-
-The `+page.svelte` component, and each `+layout.svelte` component above it, has access to its own data plus all the data from its parents.
-
-In some cases, a parent layout might need to access page data or data from a child layout — for example, the root layout might want to access a `title` property returned from a `load` function in `+page.js` or `+page.server.js`. This can be done with `$page.data`:
-
-```svelte
-/// file: src/routes/+layout.svelte
-<script>
-	import { page } from '$app/stores';
-</script>
-
-<svelte:head>
-	<title>{$page.data.title}</title>
-</svelte:head>
-```
-
-Type information for `$page.data` is provided by `App.PageData`.
 
 ### Using URL data
 
