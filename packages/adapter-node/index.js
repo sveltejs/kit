@@ -30,8 +30,8 @@ export default function (opts = {}) {
 			builder.mkdirp(tmp);
 
 			builder.log.minor('Copying assets');
-			builder.writeClient(`${out}/client`);
-			builder.writePrerendered(`${out}/prerendered`);
+			builder.writeClient(`${out}/client${builder.config.kit.paths.base}`);
+			builder.writePrerendered(`${out}/prerendered${builder.config.kit.paths.base}`);
 
 			if (precompress) {
 				builder.log.minor('Compressing assets');
@@ -60,8 +60,11 @@ export default function (opts = {}) {
 					index: `${tmp}/index.js`,
 					manifest: `${tmp}/manifest.js`
 				},
-				external: [...Object.keys(pkg.dependencies || {})],
-				plugins: [nodeResolve(), commonjs(), json()]
+				external: [
+					// dependencies could have deep exports, so we need a regex
+					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
+				],
+				plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()]
 			});
 
 			await bundle.write({

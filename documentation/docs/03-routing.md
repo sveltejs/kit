@@ -67,7 +67,7 @@ export function load({ params }) {
 
 This function runs alongside `+page.svelte`, which means it runs on the server during server-side rendering and in the browser during client-side navigation. See [`load`](/docs/load) for full details of the API.
 
-As well as `load`, `page.js` can export values that configure the page's behaviour:
+As well as `load`, `+page.js` can export values that configure the page's behaviour:
 
 - `export const prerender = true` or `false` or `'auto'`
 - `export const ssr = true` or `false`

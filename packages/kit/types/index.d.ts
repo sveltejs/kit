@@ -59,7 +59,11 @@ export interface ValidationError<T extends Record<string, unknown> | undefined =
 	data: T;
 }
 
-type UnpackValidationError<T> = T extends ValidationError<infer X> ? X : T;
+type UnpackValidationError<T> = T extends ValidationError<infer X>
+	? X
+	: T extends void
+	? undefined // needs to be undefined, because void will corrupt union type
+	: T;
 
 export interface Builder {
 	log: Logger;
@@ -81,6 +85,8 @@ export interface Builder {
 	getClientDirectory(): string;
 	getServerDirectory(): string;
 	getStaticDirectory(): string;
+	/** The application path including any configured base path */
+	getAppPath(): string;
 
 	/**
 	 * @param dest the destination folder to which files should be copied
@@ -147,7 +153,7 @@ export interface Cookies {
 	/**
 	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` during the current request.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *
 	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 */
@@ -161,7 +167,7 @@ export interface Cookies {
 	/**
 	 * Serialize a cookie name-value pair into a Set-Cookie header string.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *
 	 * By default, the `path` of a cookie is the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 *
@@ -295,13 +301,38 @@ export interface Navigation {
 	delta?: number;
 }
 
+/**
+ * The shape of the `$page` store
+ */
 export interface Page<Params extends Record<string, string> = Record<string, string>> {
+	/**
+	 * The URL of the current page
+	 */
 	url: URL;
+	/**
+	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, the `slug` parameter
+	 */
 	params: Params;
+	/**
+	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 */
 	routeId: string | null;
+	/**
+	 * Http status code of the current page
+	 */
 	status: number;
+	/**
+	 * The error object of the current page, if any. Filled from the `handleError` hooks.
+	 */
 	error: App.Error | null;
+	/**
+	 * The merged result of all data from all `load` functions on the current page. You can type a common denominator through `App.PageData`.
+	 */
 	data: App.PageData & Record<string, any>;
+	/**
+	 * Filled only after a form submission. See [form actions](https://kit.svelte.dev/docs/form-actions) for more info.
+	 */
+	form: any;
 }
 
 export interface ParamMatcher {
@@ -312,6 +343,7 @@ export interface RequestEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
 > {
 	cookies: Cookies;
+	fetch: typeof fetch;
 	getClientAddress: () => string;
 	locals: App.Locals;
 	params: Params;
@@ -350,6 +382,7 @@ export interface ServerInitOptions {
 
 export interface SSRManifest {
 	appDir: string;
+	appPath: string;
 	assets: Set<string>;
 	mimeTypes: Record<string, string>;
 

@@ -25,6 +25,7 @@ export function enhance(form, submit = () => {}) {
 	 */
 	const fallback_callback = async ({ action, result }) => {
 		if (result.type === 'success') {
+			form.reset();
 			await invalidateAll();
 		}
 
@@ -51,6 +52,12 @@ export function enhance(form, submit = () => {}) {
 		);
 
 		const data = new FormData(form);
+
+		const submitter_name = event.submitter?.getAttribute('name');
+		if (submitter_name) {
+			data.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
+		}
+
 		const controller = new AbortController();
 
 		let cancelled = false;
@@ -90,6 +97,7 @@ export function enhance(form, submit = () => {}) {
 			action,
 			data,
 			form,
+			update: () => fallback_callback({ action, result }),
 			// @ts-expect-error generic constraints stuff we don't care about
 			result,
 			// TODO remove for 1.0

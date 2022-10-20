@@ -62,6 +62,8 @@ test.before(() => {
 });
 
 for (const template of fs.readdirSync('templates')) {
+	if (template[0] === '.') continue;
+
 	for (const types of ['checkjs', 'typescript']) {
 		test(`${template}: ${types}`, () => {
 			const cwd = path.join(test_workspace_dir, `${template}-${types}`);

@@ -2,7 +2,7 @@ import { hash } from '../hash.js';
 
 let loading = 0;
 
-const native_fetch = window.fetch;
+export const native_fetch = window.fetch;
 
 export function lock_fetch() {
 	loading += 1;
@@ -71,7 +71,7 @@ export function initial_fetch(resource, resolved, opts) {
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
-	if (opts && typeof opts.body === 'string') {
+	if (opts?.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
 		selector += `[data-hash="${hash(opts.body)}"]`;
 	}
 

@@ -63,6 +63,12 @@ export function load(event) {
 
 > If you don't handle 404 cases, they will appear in [`handleError`](/docs/hooks#shared-hooks-handleerror)
 
+### Optional parameters
+
+A route like `[lang]/home` contains a parameter named `lang` which is required. Sometimes it's beneficial to make these parameters optional, so that in this example both `home` and `en/home` point to the same page. You can do that by wrapping the parameter in another bracket pair: `[[lang]]/home`
+
+Note that an optional route parameter cannot follow a rest parameter (`[...rest]/[[optional]]`), since parameters are matched 'greedily' and the optional parameter would always be unused.
+
 ### Matching
 
 A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](/docs/configuration#files) directory...
@@ -92,7 +98,7 @@ It's possible for multiple routes to match a given path. For example each of the
 
 ```bash
 src/routes/[...catchall]/+page.svelte
-src/routes/[a]/+server.js
+src/routes/[[a]]/foo/+page.svelte
 src/routes/[b]/+page.svelte
 src/routes/foo-[c]/+page.svelte
 src/routes/foo-abc/+page.svelte
@@ -101,9 +107,8 @@ src/routes/foo-abc/+page.svelte
 SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
 
 - More specific routes are higher priority (e.g. a route with no parameters is more specific than a route with one dynamic parameter, and so on)
-- `+server` files have higher priority than `+page` files
 - Parameters with [matchers](#matching) (`[name=type]`) are higher priority than those without (`[name]`)
-- Rest parameters have lowest priority
+- `[[optional]]` and `[...rest]` parameters are ignored unless they are the final part of the route, in which case they are treated with lowest priority. In other words `x/[[y]]/z` is treated equivalently to `x/z` for the purposes of sorting
 - Ties are resolved alphabetically
 
 ...resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-abc/+page.svelte`, and `/foo-def` will invoke `src/routes/foo-[c]/+page.svelte` rather than less specific routes:
@@ -111,7 +116,7 @@ SvelteKit needs to know which route is being requested. To do so, it sorts them 
 ```bash
 src/routes/foo-abc/+page.svelte
 src/routes/foo-[c]/+page.svelte
-src/routes/[a]/+server.js
+src/routes/[[a]]/foo/+page.svelte
 src/routes/[b]/+page.svelte
 src/routes/[...catchall]/+page.svelte
 ```
@@ -183,7 +188,11 @@ src/routes/
 └ +layout.svelte
 ```
 
-Ordinarily, this would inherit the root layout, the `(app)` layout, the `item` layout and the `[id]` layout. We can reset to one of those layouts by appending `@` followed by the segment name — or, for the root layout, the empty string. In this example, we can choose from `+page@.svelte`, `+page@(app).svelte`, `+page@item.svelte` or `+page@[id].svelte`:
+Ordinarily, this would inherit the root layout, the `(app)` layout, the `item` layout and the `[id]` layout. We can reset to one of those layouts by appending `@` followed by the segment name — or, for the root layout, the empty string. In this example, we can choose from the following options:
+- `+page@[id].svelte` - inherits from `src/routes/(app)/item/[id]/+layout.svelte`
+- `+page@item.svelte` - inherits from `src/routes/(app)/item/+layout.svelte`
+- `+page@(app).svelte` - inherits from `src/routes/(app)/+layout.svelte`
+- `+page@.svelte` - inherits from `src/routes/+layout.svelte`
 
 ```diff
 src/routes/
@@ -198,9 +207,25 @@ src/routes/
 └ +layout.svelte
 ```
 
+There is no way to break out of the root layout. You can be sure that it's always present in your app and for example put app-wide UI or behavior in it.
+
 #### +layout@
 
 Like pages, layouts can _themselves_ break out of their parent layout hierarchy, using the same technique. For example, a `+layout@.svelte` component would reset the hierarchy for all its child routes.
+
+```
+src/routes/
+├ (app)/
+│ ├ item/
+│ │ ├ [id]/
+│ │ │ ├ embed/
+│ │ │ │ └ +page.svelte  // uses (app)/item/[id]/+layout.svelte
+│ │ │ └ +layout.svelte  // inherits from (app)/item/+layout@.svelte
+│ │ │ └ +page.svelte    // uses (app)/item/+layout@.svelte
+│ │ └ +layout@.svelte   // inherits from root layout, skipping (app)/+layout.svelte
+│ └ +layout.svelte
+└ +layout.svelte
+```
 
 #### When to use layout groups
 

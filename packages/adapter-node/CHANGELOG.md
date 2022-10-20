@@ -1,5 +1,29 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.99
+
+### Patch Changes
+
+- [fix] take into account deep exports for external packages ([#7311](https://github.com/sveltejs/kit/pull/7311))
+
+## 1.0.0-next.98
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
+## 1.0.0-next.97
+
+### Patch Changes
+
+- [chore] update dependency @rollup/plugin-json to v5 ([#7204](https://github.com/sveltejs/kit/pull/7204))
+
+## 1.0.0-next.96
+
+### Patch Changes
+
+- Disable builtin modules warning ([#7031](https://github.com/sveltejs/kit/pull/7031))
+
 ## 1.0.0-next.95
 
 ### Patch Changes

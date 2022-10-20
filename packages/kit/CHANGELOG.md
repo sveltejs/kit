@@ -1,5 +1,147 @@
 # @sveltejs/kit
 
+## 1.0.0-next.520
+
+### Patch Changes
+
+- [fix] ensure serialized headers check is always applied ([#7221](https://github.com/sveltejs/kit/pull/7221))
+
+## 1.0.0-next.519
+
+### Patch Changes
+
+- [breaking] throw error when routes conflict ([#7051](https://github.com/sveltejs/kit/pull/7051))
+
+* [feat] implement optional route params ([#7051](https://github.com/sveltejs/kit/pull/7051))
+
+## 1.0.0-next.518
+
+### Patch Changes
+
+- Enable removal of non-browser code from client builds ([#7296](https://github.com/sveltejs/kit/pull/7296))
+
+* [feat] more info about prerendering errors, add strict option to adapter-static ([#7264](https://github.com/sveltejs/kit/pull/7264))
+
+## 1.0.0-next.517
+
+### Patch Changes
+
+- [fix] more informative serialization error messages ([#7303](https://github.com/sveltejs/kit/pull/7303))
+
+* [fix] add `$types` to includes for better DX ([#7301](https://github.com/sveltejs/kit/pull/7301))
+
+## 1.0.0-next.516
+
+### Patch Changes
+
+- [fix] better navigation protocol check ([#7067](https://github.com/sveltejs/kit/pull/7067))
+
+* [fix] forward cookie headers on etag response ([#7256](https://github.com/sveltejs/kit/pull/7256))
+
+- Properly resolve absolute paths to relative on server build ([#7252](https://github.com/sveltejs/kit/pull/7252))
+
+## 1.0.0-next.515
+
+### Patch Changes
+
+- Account for relative path to routes in `config.kit.files.routes` ([#7223](https://github.com/sveltejs/kit/pull/7223))
+
+* Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
+## 1.0.0-next.514
+
+### Patch Changes
+
+- add helpful error message for `throw invalid()` in form actions ([#7225](https://github.com/sveltejs/kit/pull/7225))
+
+## 1.0.0-next.513
+
+### Patch Changes
+
+- Transfer server data as devalue-encoded JSON ([#7177](https://github.com/sveltejs/kit/pull/7177))
+
+* [fix] remove groups from segments for adapters ([#7222](https://github.com/sveltejs/kit/pull/7222))
+
+## 1.0.0-next.512
+
+### Patch Changes
+
+- Fix parsing content-type header for actions ([#7195](https://github.com/sveltejs/kit/pull/7195))
+
+* [fix] reset form in use:enhance after successful submit ([#7207](https://github.com/sveltejs/kit/pull/7207))
+
+- [fix] auto-update commented PageError ([#7189](https://github.com/sveltejs/kit/pull/7189))
+
+## 1.0.0-next.511
+
+### Patch Changes
+
+- [perf] render head links before other content ([#7160](https://github.com/sveltejs/kit/pull/7160))
+
+## 1.0.0-next.510
+
+### Patch Changes
+
+- Add `fetch` to `RequestEvent` ([#7113](https://github.com/sveltejs/kit/pull/7113))
+
+## 1.0.0-next.509
+
+### Patch Changes
+
+- Apply define config to service worker ([#7140](https://github.com/sveltejs/kit/pull/7140))
+
+* [chore] Skip removing HTTP/2 pseudo-headers, which is no longer necessary with undici ([#7142](https://github.com/sveltejs/kit/pull/7142))
+
+- bump devalue to version 4 ([#7147](https://github.com/sveltejs/kit/pull/7147))
+
+## 1.0.0-next.508
+
+### Patch Changes
+
+- [chore] Upgrade undici so that we can use its multipart form data parsing instead of node-fetch's ([#7131](https://github.com/sveltejs/kit/pull/7131))
+
+## 1.0.0-next.507
+
+### Patch Changes
+
+- Allow TypedArray request bodies in `fetch` in `load` ([#7065](https://github.com/sveltejs/kit/pull/7065))
+
+* Use `FormData` polyfill from `undici` rather than `node-fetch` ([#7065](https://github.com/sveltejs/kit/pull/7065))
+
+## 1.0.0-next.506
+
+### Patch Changes
+
+- Default to insecure cookies when serving on http://localhost ([#7090](https://github.com/sveltejs/kit/pull/7090))
+
+* [docs] explain ramifications of base path ([#7095](https://github.com/sveltejs/kit/pull/7095))
+
+- [fix] decode routeIds in headers for prerendering ([#7097](https://github.com/sveltejs/kit/pull/7097))
+
+* [feat] provide `update` to `use:enhance` callback ([#7083](https://github.com/sveltejs/kit/pull/7083))
+
+## 1.0.0-next.505
+
+### Patch Changes
+
+- [fix] handle form action returning nothing; handle page.(server).js without load functions ([#7050](https://github.com/sveltejs/kit/pull/7050))
+
+* [fix] add `RequestEvent` to `$types` when `+layout.server.js` present ([#7063](https://github.com/sveltejs/kit/pull/7063))
+
+## 1.0.0-next.504
+
+### Patch Changes
+
+- Add the submitter value with name to formData for use:enhance ([#7012](https://github.com/sveltejs/kit/pull/7012))
+
+## 1.0.0-next.503
+
+### Patch Changes
+
+- Added form property to \$page store ([#6986](https://github.com/sveltejs/kit/pull/6986))
+
+* Throw an error if prerenderable routes are not prerendered ([#6974](https://github.com/sveltejs/kit/pull/6974))
+
 ## 1.0.0-next.502
 
 ### Patch Changes

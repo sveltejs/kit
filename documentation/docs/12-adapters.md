@@ -52,7 +52,7 @@ Most adapters will generate static HTML for any [prerenderable](/docs/page-optio
 +import adapter from '@sveltejs/adapter-static';
 ```
 
-You can also use `adapter-static` to generate single-page apps (SPAs) by specifying a [fallback page](https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode).
+You can also use `adapter-static` to generate single-page apps (SPAs) by specifying a [fallback page and disabling SSR](https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode).
 
 > You must ensure [`trailingSlash`](/docs/configuration#trailingslash) is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
 
@@ -78,7 +78,7 @@ Adapters packages must implement the following API, which creates an `Adapter`:
 
 ```js
 // @filename: ambient.d.ts
-const AdapterSpecificOptions = any;
+type AdapterSpecificOptions = any;
 
 // @filename: index.js
 // ---cut---
@@ -96,7 +96,7 @@ export default function (options) {
 }
 ```
 
-The types for `Adapter` and its parameters are available in [types/config.d.ts](https://github.com/sveltejs/kit/blob/master/packages/kit/types/config.d.ts).
+The types for `Adapter` and its parameters are available in [types/index.d.ts](https://github.com/sveltejs/kit/blob/master/packages/kit/types/index.d.ts).
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 

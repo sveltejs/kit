@@ -8,6 +8,6 @@ In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker
 
 > You can change the [location of your service worker](/docs/configuration#files) and [disable automatic registration](/docs/configuration#serviceworker) in your project configuration.
 
-Inside the service worker you have access to the [`$service-worker` module](/docs/modules#$service-worker).
+Inside the service worker you have access to the [`$service-worker` module](/docs/modules#$service-worker). If your Vite config specifies `define`, this will be applied to service workers as well as your server/client builds.
 
 Because it needs to be bundled (since browsers don't yet support `import` in this context), and depends on the client-side app's build manifest, **service workers only work in the production build, not in development**. To test it locally, use `vite preview`.

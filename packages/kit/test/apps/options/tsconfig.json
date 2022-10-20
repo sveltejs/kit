@@ -5,8 +5,8 @@
 		"noEmit": true,
 		"paths": {
 			"@sveltejs/kit": ["../../../types"],
-			"$lib": ["source/components"],
-			"$lib/*": ["source/components/*"],
+			"$lib": ["./source/components"],
+			"$lib/*": ["./source/components/*"],
 			"types": ["../../../types/internal"]
 		}
 	},

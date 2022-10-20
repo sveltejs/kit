@@ -105,9 +105,12 @@ Most of the time you won't need this, as `fetch` calls `depends` on your behalf 
 
 URLs can be absolute or relative to the page being loaded, and must be [encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding).
 
-Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html)
+Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html).
+
+The following example shows how to use `depends` to register a dependency on the URLs to a custom API client as well as a custom identifier, which is `invalidate`d after a button click, making the `load` function rerun.
 
 ```js
+/// file: src/routes/+page.js
 // @filename: ambient.d.ts
 declare module '$lib/api' {
 	interface Data{}
@@ -134,6 +137,24 @@ export async function load({ depends }) {
 		bar: api.client.get('/bar')
 	};
 }
+```
+
+```svelte
+/// file: src/routes/+page.svelte
+<script>
+	import { invalidate } from '$app/navigation';
+
+	/** @type {import('./$types').PageData} */
+	export let data;
+
+	const pageRefresh = async () => {
+		await invalidate('my-stuff:foo');
+	}
+</script>
+
+<p>{data.foo}<p>
+<p>{data.bar}</p>
+<button on:click={pageRefresh}>Refresh my stuff</button>
 ```
 
 #### fetch
@@ -342,7 +363,7 @@ A `load` function will re-run in the following situations:
 - It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed
 - It calls `await parent()` and a parent `load` function re-ran
 - It declared a dependency on a specific URL via [`fetch`](#input-methods-fetch) or [`depends`](#input-methods-depends), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
-- All active `load` functions were forcibly re-run with [`invalidate()`](/docs/modules#$app-navigation-invalidate)
+- All active `load` functions were forcibly re-run with [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall)
 
 If a `load` function is triggered to re-run, the page will not remount — instead, it will update with the new `data`. This means that components' internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
 

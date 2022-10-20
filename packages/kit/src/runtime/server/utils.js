@@ -1,8 +1,7 @@
-import { devalue } from 'devalue';
+import * as devalue from 'devalue';
 import { DATA_SUFFIX } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { HttpError } from '../control.js';
-import { add_cookies_to_headers } from './cookie.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -68,20 +67,25 @@ export function allowed_methods(mod) {
 	return allowed;
 }
 
-/** @param {any} data */
-export function data_response(data) {
+/**
+ * @param {any} data
+ * @param {import('types').RequestEvent} event
+ */
+export function data_response(data, event) {
 	const headers = {
-		'content-type': 'application/javascript',
+		'content-type': 'application/json',
 		'cache-control': 'private, no-store'
 	};
 
 	try {
-		return new Response(`window.__sveltekit_data = ${devalue(data)}`, { headers });
+		return new Response(devalue.stringify(data), { headers });
 	} catch (e) {
 		const error = /** @type {any} */ (e);
 		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		const message = match ? `${error.message} (data.${match[2]})` : error.message;
-		return new Response(`throw new Error(${JSON.stringify(message)})`, { headers });
+		const message = match
+			? `Data returned from \`load\` while rendering /${event.routeId} is not serializable: ${error.message} (data.${match[2]})`
+			: error.message;
+		return new Response(JSON.stringify(message), { headers, status: 500 });
 	}
 }
 
@@ -167,13 +171,11 @@ export function handle_error_and_jsonify(event, options, error) {
 /**
  * @param {number} status
  * @param {string} location
- * @param {import('./page/types.js').Cookie[]} [cookies]
  */
-export function redirect_response(status, location, cookies = []) {
+export function redirect_response(status, location) {
 	const response = new Response(undefined, {
 		status,
 		headers: { location }
 	});
-	add_cookies_to_headers(response.headers, cookies);
 	return response;
 }

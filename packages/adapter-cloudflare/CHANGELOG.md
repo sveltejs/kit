@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.39
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
 ## 1.0.0-next.38
 
 ### Patch Changes
@@ -80,7 +86,7 @@
 
 ## 1.0.0-next.25
 
-### Minor Changes
+### Patch Changes
 
 - Expose Cloudflare Worker Cache API through `caches` in Platform ([#5081](https://github.com/sveltejs/kit/pull/5081))
 

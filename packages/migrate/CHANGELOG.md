@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.0.0-next.13
+
+### Patch Changes
+
+- [fix] more robust uppercase migration ([#7033](https://github.com/sveltejs/kit/pull/7033))
+
 ## 1.0.0-next.12
 
 ### Patch Changes

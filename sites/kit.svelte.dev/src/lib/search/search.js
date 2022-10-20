@@ -17,10 +17,7 @@ export function init(blocks) {
 	// we have multiple indexes, so we can rank sections (migration guide comes last)
 	const max_rank = Math.max(...blocks.map((block) => block.rank ?? 0));
 
-	indexes = Array.from(
-		{ length: max_rank + 1 },
-		() => new flexsearch.Index({ tokenize: 'forward' })
-	);
+	indexes = Array.from({ length: max_rank + 1 }, () => new flexsearch({ tokenize: 'forward' }));
 
 	for (const block of blocks) {
 		const title = block.breadcrumbs[block.breadcrumbs.length - 1];

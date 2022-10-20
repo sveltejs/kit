@@ -302,27 +302,29 @@ test.describe.serial('Errors', () => {
 		expect(await page.innerHTML('h1')).toBe('401');
 	});
 
-	test('Root error falls back to error.html (unexpected error)', async ({ page }) => {
+	test('Root error falls back to error.html (unexpected error)', async ({ page, clicknav }) => {
 		await page.goto('/errors/error-html');
-		await page.click('button:text-is("Unexpected")');
+		await clicknav('button:text-is("Unexpected")');
+
 		expect(await page.textContent('h1')).toBe('Error - 500');
 		expect(await page.textContent('p')).toBe(
 			'This is the static error page with the following message: Failed to load'
 		);
 	});
 
-	test('Root error falls back to error.html (expected error)', async ({ page }) => {
+	test('Root error falls back to error.html (expected error)', async ({ page, clicknav }) => {
 		await page.goto('/errors/error-html');
-		await page.click('button:text-is("Expected")');
+		await clicknav('button:text-is("Expected")');
+
 		expect(await page.textContent('h1')).toBe('Error - 401');
 		expect(await page.textContent('p')).toBe(
 			'This is the static error page with the following message: Not allowed'
 		);
 	});
 
-	test('Root 404 redirects somewhere due to root layout', async ({ page, baseURL }) => {
+	test('Root 404 redirects somewhere due to root layout', async ({ page, baseURL, clicknav }) => {
 		await page.goto('/errors/error-html');
-		await Promise.all([page.waitForNavigation(), page.click('button:text-is("Redirect")')]);
+		await clicknav('button:text-is("Redirect")');
 		expect(page.url()).toBe(baseURL + '/load');
 	});
 });
@@ -392,21 +394,24 @@ test.describe('Load', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 	});
 
-	test('keeps server data when valid while not reusing client load data', async ({ page }) => {
+	test('keeps server data when valid while not reusing client load data', async ({
+		page,
+		clicknav
+	}) => {
 		await page.goto('/load/url-query-param');
 
 		expect(await page.textContent('h1')).toBe('Hello ');
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 
-		await page.click('a[href="/load/url-query-param?currentClientState=ABC"]');
+		await clicknav('a[href="/load/url-query-param?currentClientState=ABC"]');
 		expect(await page.textContent('h1')).toBe('Hello ABC');
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 
-		await page.click('a[href="/load/url-query-param?currentClientState=DEF"]');
+		await clicknav('a[href="/load/url-query-param?currentClientState=DEF"]');
 		expect(await page.textContent('h1')).toBe('Hello DEF');
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 
-		await page.click('a[href="/load/url-query-param"]');
+		await clicknav('a[href="/load/url-query-param"]');
 		expect(await page.textContent('h1')).toBe('Hello ');
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 	});
@@ -431,7 +436,7 @@ test.describe('Load', () => {
 		await expect(page.locator('p')).toHaveText('Count is 2');
 	});
 
-	test('__data.js has cache-control: private, no-store', async ({ page, clicknav }) => {
+	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
 		await page.goto('/load/server-data-nostore?x=1');
 
 		const [response] = await Promise.all([
@@ -650,7 +655,7 @@ test.describe('SPA mode / no SSR', () => {
 		expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
 	});
 
-	test('Can use browser-only global on client-only page through ssr config in layout.js', async ({
+	test('Can use browser-only global on client-only page through ssr config in +layout.js', async ({
 		page,
 		read_errors
 	}) => {
@@ -659,7 +664,7 @@ test.describe('SPA mode / no SSR', () => {
 		expect(read_errors('/no-ssr/ssr-page-config')).toBe(undefined);
 	});
 
-	test('Can use browser-only global on client-only page through ssr config in page.js', async ({
+	test('Can use browser-only global on client-only page through ssr config in +page.js', async ({
 		page,
 		read_errors
 	}) => {
@@ -668,7 +673,7 @@ test.describe('SPA mode / no SSR', () => {
 		expect(read_errors('/no-ssr/ssr-page-config/layout/inherit')).toBe(undefined);
 	});
 
-	test('Cannot use browser-only global on page because of ssr config in page.js', async ({
+	test('Cannot use browser-only global on page because of ssr config in +page.js', async ({
 		page
 	}) => {
 		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
@@ -796,7 +801,7 @@ test.describe.serial('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 	});
 
-	test('+layout.js is re-run when shared dep is invalidated', async ({ page }) => {
+	test('+layout.js is re-run when shared dep is invalidated', async ({ page, clicknav }) => {
 		await page.goto('/load/invalidation/depends');
 		const server = await page.textContent('p.server');
 		const shared = await page.textContent('p.shared');
@@ -917,8 +922,20 @@ test.describe('Content negotiation', () => {
 	test('use:enhance uses action, not POST handler', async ({ page }) => {
 		await page.goto('/routing/content-negotiation');
 
-		page.click('button:has-text("Submit")');
-		await page.waitForResponse('/routing/content-negotiation');
+		await Promise.all([
+			page.waitForResponse('/routing/content-negotiation'),
+			page.click('button:has-text("Submit")')
+		]);
+
 		await expect(page.locator('[data-testid="form-result"]')).toHaveText('form.submitted: true');
+	});
+});
+
+test.describe('cookies', () => {
+	test('etag forwards cookies', async ({ page }) => {
+		await page.goto('/cookies/forwarded-in-etag');
+		await expect(page.locator('p')).toHaveText('foo=bar');
+		await Promise.all([page.waitForNavigation(), page.click('button')]);
+		await expect(page.locator('p')).toHaveText('foo=bar');
 	});
 });

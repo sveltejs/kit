@@ -188,15 +188,15 @@ test.describe('Shadowed pages', () => {
 		);
 	});
 
-	test('Handles POST redirects', async ({ page }) => {
+	test('Handles POST redirects', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
-		await Promise.all([page.waitForNavigation(), page.click('#redirect-post')]);
+		await clicknav('#redirect-post');
 		expect(await page.textContent('h1')).toBe('Redirection was successful');
 	});
 
-	test('Handles POST redirects with cookies', async ({ page, context }) => {
+	test('Handles POST redirects with cookies', async ({ page, context, clicknav }) => {
 		await page.goto('/shadowed');
-		await Promise.all([page.waitForNavigation(), page.click('#redirect-post-with-cookie')]);
+		await clicknav('#redirect-post-with-cookie');
 		expect(await page.textContent('h1')).toBe('Redirection was successful');
 
 		const cookies = await context.cookies();
@@ -205,9 +205,9 @@ test.describe('Shadowed pages', () => {
 		);
 	});
 
-	test('Handles POST success with returned location', async ({ page }) => {
+	test('Handles POST success with returned location', async ({ page, clicknav }) => {
 		await page.goto('/shadowed/post-success-redirect');
-		await Promise.all([page.waitForNavigation(), page.click('button')]);
+		await clicknav('button');
 		expect(await page.textContent('h1')).toBe('POST was successful');
 	});
 
@@ -308,7 +308,7 @@ test.describe('Shadowed pages', () => {
 
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Cannot stringify arbitrary non-POJOs (data.nope)"'
+				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope)"'
 			);
 		});
 	}
@@ -576,7 +576,7 @@ test.describe('Errors', () => {
 		);
 
 		const { status, name, message, stack, fancy } = read_errors(
-			'/errors/page-endpoint/get-implicit/__data.js'
+			'/errors/page-endpoint/get-implicit/__data.json'
 		);
 		expect(status).toBe(undefined);
 		expect(name).toBe('FancyError');
@@ -606,12 +606,13 @@ test.describe('Errors', () => {
 
 	test('page endpoint POST unexpected error message is preserved', async ({
 		page,
+		clicknav,
 		read_errors
 	}) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
-		await Promise.all([page.waitForNavigation(), page.click('#post-implicit')]);
+		await clicknav('#post-implicit');
 
 		expect(await page.textContent('pre')).toBe(
 			JSON.stringify({ status: 500, message: 'oops' }, null, '  ')
@@ -631,11 +632,15 @@ test.describe('Errors', () => {
 		}
 	});
 
-	test('page endpoint POST HttpError error message is preserved', async ({ page, read_errors }) => {
+	test('page endpoint POST HttpError error message is preserved', async ({
+		page,
+		clicknav,
+		read_errors
+	}) => {
 		// The case where we're submitting a POST request via a form.
 		// It should show the __error template with our message.
 		await page.goto('/errors/page-endpoint');
-		await Promise.all([page.waitForNavigation(), page.click('#post-explicit')]);
+		await clicknav('#post-explicit');
 
 		expect(await page.textContent('pre')).toBe(
 			JSON.stringify({ status: 400, message: 'oops' }, null, '  ')
@@ -675,12 +680,14 @@ test.describe('Load', () => {
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents = await page.innerHTML('script[data-sveltekit-fetched]');
 
-			const payload = '{"status":200,"statusText":"","headers":{},"body":"{\\"answer\\":42}"}';
+			const payload = '{"status":200,"statusText":"","headers":{},"body":"{\\"b\\":2}"}';
 
 			expect(script_contents).toBe(payload);
 		}
 
-		expect(requests.some((r) => r.endsWith('/load/serialization.json'))).toBe(false);
+		expect(requests.some((r) => r.endsWith('/load/serialization/fetched-from-shared.json'))).toBe(
+			false
+		);
 	});
 
 	test('POST fetches are serialized', async ({ page, javaScriptEnabled }) => {
@@ -804,7 +811,12 @@ test.describe('Load', () => {
 		}
 	});
 
-	test('makes credentialed fetches to endpoints by default', async ({ page, clicknav }) => {
+	test('makes credentialed fetches to endpoints by default', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) return;
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-credentialed"]');
 		expect(await page.textContent('h1')).toBe('Hello SvelteKit!');
@@ -839,9 +851,36 @@ test.describe('Load', () => {
 		}
 	});
 
-	test('exposes rawBody to endpoints', async ({ page, clicknav }) => {
-		await page.goto('/load');
-		await clicknav('[href="/load/raw-body"]');
+	test('errors when trying to access non-serialized request headers on the server', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/load/fetch-request-headers-invalid-access');
+
+		expect(read_errors(`/load/fetch-request-headers-invalid-access`).message).toContain(
+			'Failed to get response header "content-type" — it must be included by the `filterSerializedResponseHeaders` option'
+		);
+	});
+
+	test('exposes rawBody as a DataView to endpoints', async ({ page, clicknav }) => {
+		await page.goto('/load/raw-body');
+		await clicknav('[href="/load/raw-body/dataview"]');
+
+		expect(await page.innerHTML('.parsed')).toBe('{"oddly":{"formatted":"json"}}');
+		expect(await page.innerHTML('.raw')).toBe('{ "oddly" : { "formatted" : "json" } }');
+	});
+
+	test('exposes rawBody as a string to endpoints', async ({ page, clicknav }) => {
+		await page.goto('/load/raw-body');
+		await clicknav('[href="/load/raw-body/string"]');
+
+		expect(await page.innerHTML('.parsed')).toBe('{"oddly":{"formatted":"json"}}');
+		expect(await page.innerHTML('.raw')).toBe('{ "oddly" : { "formatted" : "json" } }');
+	});
+
+	test('exposes rawBody as a Uint8Array to endpoints', async ({ page, clicknav }) => {
+		await page.goto('/load/raw-body');
+		await clicknav('[href="/load/raw-body/uint8array"]');
 
 		expect(await page.innerHTML('.parsed')).toBe('{"oddly":{"formatted":"json"}}');
 		expect(await page.innerHTML('.raw')).toBe('{ "oddly" : { "formatted" : "json" } }');
@@ -1390,7 +1429,8 @@ test.describe('Routing', () => {
 
 	test('does not attempt client-side navigation to links with data-sveltekit-reload', async ({
 		baseURL,
-		page
+		page,
+		clicknav
 	}) => {
 		await page.goto('/routing');
 
@@ -1398,7 +1438,7 @@ test.describe('Routing', () => {
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
-		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/b"]')]);
+		await clicknav('[href="/routing/b"]');
 		expect(await page.textContent('h1')).toBe('b');
 		expect(requests).toContain(`${baseURL}/routing/b`);
 	});
@@ -1744,7 +1784,7 @@ test.describe('Actions', () => {
 		}
 	});
 
-	test('Success data is returned', async ({ page }) => {
+	test('Success data as form-data is returned', async ({ page }) => {
 		await page.goto('/actions/success-data');
 
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
@@ -1752,10 +1792,24 @@ test.describe('Actions', () => {
 		await page.type('input[name="username"]', 'foo');
 		await Promise.all([
 			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
-			page.click('button')
+			page.click('button[formenctype="multipart/form-data"]')
 		]);
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
+	});
+
+	test('Success data as form-urlencoded is returned', async ({ page }) => {
+		await page.goto('/actions/success-data');
+
+		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+
+		await page.type('input[name="username"]', 'bar');
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
+			page.click('button[formenctype="application/x-www-form-urlencoded"]')
+		]);
+
+		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'bar' }));
 	});
 
 	test('applyAction updates form prop', async ({ page, javaScriptEnabled }) => {
@@ -1819,7 +1873,8 @@ test.describe('Actions', () => {
 	test('use:enhance', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
 
 		await page.type('input[name="username"]', 'foo');
 		await Promise.all([
@@ -1827,7 +1882,9 @@ test.describe('Actions', () => {
 			page.click('button.form1')
 		]);
 
-		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'foo' }));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ result: 'foo' }));
+		await expect(page.locator('input[name=username]')).toHaveValue('');
 	});
 
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {
@@ -1850,7 +1907,7 @@ test.describe('Actions', () => {
 	test('use:enhance button with formAction', async ({ page, app }) => {
 		await page.goto('/actions/enhance');
 
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
 
 		await page.type('input[name="username"]', 'foo');
 		await Promise.all([
@@ -1858,7 +1915,24 @@ test.describe('Actions', () => {
 			page.click('button.form1-register')
 		]);
 
-		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'register: foo' }));
+		await expect(page.locator('pre.formdata1')).toHaveText(
+			JSON.stringify({ result: 'register: foo' })
+		);
+	});
+
+	test('use:enhance button with name', async ({ page, app }) => {
+		await page.goto('/actions/enhance');
+
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
+			page.click('button.form1-submitter')
+		]);
+
+		await expect(page.locator('pre.formdata1')).toHaveText(
+			JSON.stringify({ result: 'submitter: foo' })
+		);
 	});
 
 	test('redirect', async ({ page }) => {
