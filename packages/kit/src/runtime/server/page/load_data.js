@@ -106,8 +106,13 @@ export async function load_data({
 			const url = new URL(input instanceof Request ? input.url : input, event.url);
 			const same_origin = url.origin === event.url.origin;
 
-			const request_body = init?.body;
-			const dependency = same_origin && state.prerendering?.dependencies.get(url.pathname);
+			/** @type {import('types').PrerenderDependency} */
+			let dependency;
+
+			if (same_origin && state.prerendering) {
+				dependency = { response, body: null };
+				state.prerendering.dependencies.set(url.pathname, dependency);
+			}
 
 			const proxy = new Proxy(response, {
 				get(response, key, _receiver) {
@@ -127,7 +132,7 @@ export async function load_data({
 							fetched.push({
 								url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
 								method: event.request.method,
-								request_body: /** @type {string | ArrayBufferView | undefined} */ (request_body),
+								request_body: /** @type {string | ArrayBufferView | undefined} */ (init?.body),
 								response_body: body,
 								response: response
 							});
@@ -164,8 +169,6 @@ export async function load_data({
 							return JSON.parse(await text());
 						};
 					}
-
-					// TODO arrayBuffer?
 
 					return Reflect.get(response, key, response);
 				}

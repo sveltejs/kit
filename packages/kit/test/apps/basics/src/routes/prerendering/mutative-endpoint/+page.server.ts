@@ -1,3 +1,1 @@
-export const actions = () => {
-	return {};
-};
+export const actions = {};
