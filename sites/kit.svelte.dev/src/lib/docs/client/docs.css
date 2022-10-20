@@ -13,6 +13,13 @@
 	}
 }
 
+@media (min-width: 1300px) {
+	/* can't use vars in @media :( */
+	.content {
+		padding-right: calc(var(--sidebar-w) + var(--side-nav));
+	}
+}
+
 .content h1 {
 	font-size: 3.2rem;
 	margin: 0;

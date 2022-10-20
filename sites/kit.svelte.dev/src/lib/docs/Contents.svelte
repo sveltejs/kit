@@ -1,62 +1,10 @@
 <script>
-	import { onMount } from 'svelte';
-	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import TSToggle from './TSToggle.svelte';
 
 	export let contents = [];
 
 	let path = null;
-
-	/** @type {HTMLElement} */
-	let content;
-
-	/** @type {NodeListOf<HTMLElement>} */
-	let headings;
-
-	/** @type {number[]} */
-	let positions = [];
-
-	onMount(async () => {
-		await document.fonts.ready;
-
-		update();
-		highlight();
-	});
-
-	afterNavigate(() => {
-		update();
-		highlight();
-	});
-
-	function update() {
-		content = document.querySelector('.content');
-		const { top } = content.getBoundingClientRect();
-
-		// don't update `selected` for headings above level 4, see _sections.js
-		headings = content.querySelectorAll('[id]:not([data-scrollignore])');
-
-		positions = Array.from(headings).map((heading) => {
-			const style = getComputedStyle(heading);
-			return heading.getBoundingClientRect().top - parseFloat(style.scrollMarginTop) - top;
-		});
-	}
-
-	function highlight() {
-		const { top } = content.getBoundingClientRect();
-
-		let i = headings.length;
-
-		while (i--) {
-			if (positions[i] + top < 10) {
-				const heading = headings[i];
-				path = `${$page.url.pathname}#${heading.id}`;
-				return;
-			}
-		}
-
-		path = $page.url.pathname;
-	}
 
 	/** @param {URL} url */
 	function select(url) {
@@ -76,21 +24,15 @@
 	}
 </script>
 
-<svelte:window on:scroll={highlight} on:resize={update} on:hashchange={() => select($page.url)} />
+<svelte:window on:hashchange={() => select($page.url)} />
 
 <nav>
 	<ul class="sidebar">
 		{#each contents as section}
 			<li>
-				<a
-					data-sveltekit-prefetch
-					class="section"
-					class:active={section.path === path}
-					href={section.path}
-					on:click={(e) => select(new URL(e.currentTarget.href))}
-				>
+				<span class="section">
 					{section.title}
-				</a>
+				</span>
 
 				<ul>
 					{#each section.sections as subsection}
@@ -104,24 +46,6 @@
 							>
 								{subsection.title}
 							</a>
-
-							{#if section.path === $page.url.pathname}
-								<ul>
-									{#each subsection.sections as subsection}
-										<li>
-											<a
-												data-sveltekit-prefetch
-												class="nested subsection"
-												class:active={subsection.path === path}
-												href={subsection.path}
-												on:click={(e) => select(new URL(e.currentTarget.href))}
-											>
-												{subsection.title}
-											</a>
-										</li>
-									{/each}
-								</ul>
-							{/if}
 						</li>
 					{/each}
 				</ul>
@@ -198,10 +122,6 @@
 		height: 0;
 		border: 6px solid transparent;
 		border-right-color: white;
-	}
-
-	.nested {
-		padding-left: 1.2rem;
 	}
 
 	ul ul,

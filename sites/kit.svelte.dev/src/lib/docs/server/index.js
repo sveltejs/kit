@@ -302,37 +302,193 @@ export async function read_all(dir) {
 
 /** @param {string} dir */
 export function read_headings(dir) {
+	// TODO create folders with md files for each section once we decided on a structure
+	return [
+		{
+			slug: '',
+			title: 'Getting Started',
+			sections: [
+				{
+					slug: 'introduction',
+					title: 'Introduction'
+				},
+				{
+					slug: 'project-structure',
+					title: 'Project Structure'
+				},
+				{
+					slug: 'web-standards',
+					title: 'Web Standards'
+				}
+			]
+		},
+		{
+			slug: '',
+			title: 'Core Concepts',
+			sections: [
+				{
+					slug: 'routing',
+					title: 'Routing'
+				},
+				{
+					slug: 'load',
+					title: 'Loading Data'
+				},
+				{
+					slug: 'form-actions',
+					title: 'Form Actions'
+				},
+				{
+					slug: 'page-options',
+					title: 'Render Options'
+				},
+				{
+					slug: 'adapters',
+					title: 'Adapters'
+				}
+			]
+		},
+		{
+			slug: '',
+			title: 'Advanced',
+			sections: [
+				{
+					slug: 'advanced-routing',
+					title: 'Advanced Routing'
+				},
+				{
+					slug: 'hooks',
+					title: 'Hooks'
+				},
+				{
+					slug: 'link-options',
+					title: 'Link Options'
+				},
+				{
+					slug: 'service-workers',
+					title: 'Service Workers'
+				},
+				{
+					slug: 'server-only-modules',
+					title: 'Server-only Modules'
+				},
+				{
+					slug: 'assets',
+					title: 'Assets'
+				}
+			]
+		},
+		{
+			slug: '',
+			title: 'Best Practices',
+			sections: [
+				{
+					slug: 'accessibility',
+					title: 'Accessibility'
+				},
+				{
+					slug: 'seo',
+					title: 'SEO'
+				}
+			]
+		},
+		{
+			slug: '',
+			title: 'API Reference',
+			sections: [
+				{
+					slug: 'configuration',
+					title: 'Configuration'
+				},
+				{
+					slug: 'cli',
+					title: 'CLI'
+				},
+				{
+					slug: 'modules',
+					title: 'Modules'
+				},
+				{
+					slug: 'types',
+					title: 'Types'
+				}
+			]
+		},
+		{
+			slug: '',
+			title: 'Appendix',
+			sections: [
+				{
+					slug: 'migrating',
+					title: 'Migrating from Sapper'
+				},
+				{
+					slug: 'additional-resources',
+					title: 'Additional Resources'
+				},
+				{
+					slug: 'appendix',
+					title: 'Glossary'
+				}
+			]
+		}
+	];
 	return fs
 		.readdirSync(`${base}/${dir}`)
 		.map((file) => {
 			const match = /\d{2}-(.+)\.md/.exec(file);
 			if (!match) return null;
 
-			const slug = match[1];
-
 			const markdown = fs
 				.readFileSync(`${base}/${dir}/${file}`, 'utf-8')
 				.replace('**TYPES**', () => render_modules('types'))
 				.replace('**EXPORTS**', () => render_modules('exports'));
 
-			const { body, metadata } = extract_frontmatter(markdown);
+			const { metadata } = extract_frontmatter(markdown);
 
-			const { sections } = parse({
-				body,
-				file,
-				// gross hack to accommodate FAQ
-				slug: dir === 'faq' ? slug : undefined,
-				code: () => '',
-				codespan: () => ''
-			});
+			// Getting Started
+			// Core Concepts
+			// Advanced
+			// Miscellaneous
+			// API Reference
 
 			return {
 				slug: match[1],
 				title: metadata.title,
-				sections
+				sections: []
 			};
 		})
 		.filter(Boolean);
+}
+
+export function read_headings_on_page(dir, page) {
+	const file = fs.readdirSync(`${base}/${dir}`).find((file) => {
+		const match = /\d{2}-(.+)\.md/.exec(file);
+		return match && match[1] === page;
+	});
+
+	if (!file) {
+		// could happen on /docs site (which will be redirected anyway)
+		return;
+	}
+
+	const markdown = fs
+		.readFileSync(`${base}/${dir}/${file}`, 'utf-8')
+		.replace('**TYPES**', () => render_modules('types'))
+		.replace('**EXPORTS**', () => render_modules('exports'));
+
+	const { body } = extract_frontmatter(markdown);
+
+	const { sections } = parse({
+		body,
+		file,
+		// gross hack to accommodate FAQ
+		slug: dir === 'faq' ? page : undefined,
+		code: () => '',
+		codespan: () => ''
+	});
+
+	return sections;
 }
 
 /**
