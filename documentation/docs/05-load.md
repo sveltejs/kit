@@ -152,6 +152,42 @@ In some cases, a parent layout might need to access page data or data from a chi
 
 Type information for `$page.data` is provided by `App.PageData`.
 
+### Shared vs server
+
+As we've seen, there are two types of `load` function:
+
+* `+page.js` and `+layout.js` files export `load` functions that are _shared_ between server and browser
+* `+page.server.js` and `+layout.server.js` files export `load` functions that are _server-only_
+
+Conceptually, they're the same thing, but there are some important differences to be aware of.
+
+#### Input
+
+Both shared and server-only `load` functions have access to `depends`, `fetch`, `params`, `parent`, `routeId` and `url`.
+
+Server-only `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
+
+Shared `load` functions are called with a `LoadEvent`, which has a `data` property. If you have `load` functions in both `+page.js` and `+page.server.js` (or `+layout.js` and `+layout.server.js`), the return value of the server-only `load` function is the `data` property of the shared `load` function's argument.
+
+#### Output
+
+A shared `load` function can return an object containing any values, including things like custom classes and component constructors.
+
+A server-only `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network.
+
+#### When to use which
+
+Server-only `load` functions are convenient when you need to access data directly from a database or filesystem, or need to use private environment variables.
+
+Shared `load` functions are useful when you need to `fetch` data from an external API and don't need private credentials, since SvelteKit can get the data directly from the API rather than going via your server. They are also useful when you need to return something that can't be serialized, such as a Svelte component constructor.
+
+In rare cases, you might need to use both together — for example, you might need to return an instance of a custom class that was initialised with data from your server.
+
+### Shared state
+
+In many server environments, a single instance of your app will serve multiple users. For that reason, per-request state must not be stored in shared variables outside your `load` functions, but should instead be stored in `event.locals`. Similarly, per-user state must not be stored in global variables, but should instead make use of `$page.data` (which contains the combined data of all `load` functions) or use Svelte's [context feature](https://svelte.dev/docs#run-time-svelte-setcontext) to create scoped state.
+
+
 ### Promise unwrapping
 
 Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
@@ -484,38 +520,3 @@ export async function load({ url, params, parent, fetch, depends }) {
 ```
 
 If a `load` function is triggered to re-run and you stay on the same `+page.svelte`, the page will not remount — instead, it will update with the new `data`. This means that components' internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
-
-### Shared vs server
-
-As we've seen, there are two types of `load` function:
-
-* `+page.js` and `+layout.js` files export `load` functions that are _shared_ between server and browser
-* `+page.server.js` and `+layout.server.js` files export `load` functions that are _server-only_
-
-Conceptually, they're the same thing, but there are some important differences to be aware of.
-
-#### Input
-
-Both shared and server-only `load` functions have access to `depends`, `fetch`, `params`, `parent`, `routeId` and `url`.
-
-Server-only `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
-
-Shared `load` functions are called with a `LoadEvent`, which has a `data` property. If you have `load` functions in both `+page.js` and `+page.server.js` (or `+layout.js` and `+layout.server.js`), the return value of the server-only `load` function is the `data` property of the shared `load` function's argument.
-
-#### Output
-
-A shared `load` function can return an object containing any values, including things like custom classes and component constructors.
-
-A server-only `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network.
-
-#### When to use which
-
-Server-only `load` functions are convenient when you need to access data directly from a database or filesystem, or need to use private environment variables.
-
-Shared `load` functions are useful when you need to `fetch` data from an external API and don't need private credentials, since SvelteKit can get the data directly from the API rather than going via your server. They are also useful when you need to return something that can't be serialized, such as a Svelte component constructor.
-
-In rare cases, you might need to use both together — for example, you might need to return an instance of a custom class that was initialised with data from your server.
-
-### Shared state
-
-In many server environments, a single instance of your app will serve multiple users. For that reason, per-request state must not be stored in shared variables outside your `load` functions, but should instead be stored in `event.locals`. Similarly, per-user state must not be stored in global variables, but should instead make use of `$page.data` (which contains the combined data of all `load` functions) or use Svelte's [context feature](https://svelte.dev/docs#run-time-svelte-setcontext) to create scoped state.
