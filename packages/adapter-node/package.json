@@ -28,8 +28,8 @@
 		"test": "echo \"tests temporarily disabled\" # c8 uvu tests",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"format": "npm run lint -- --write",
-		"prepublishOnly": "npm run build"
+		"format": "pnpm lint --write",
+		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",

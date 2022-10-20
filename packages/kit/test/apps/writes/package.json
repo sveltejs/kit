@@ -7,7 +7,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "npm run test:dev && npm run test:build",
+		"test": "pnpm test:dev && pnpm test:build",
 		"test:dev": "rimraf test/errors.json && cross-env DEV=true playwright test",
 		"test:build": "rimraf test/errors.json && playwright test"
 	},
