@@ -199,7 +199,7 @@ export function create_client({ target, base, trailing_slash }) {
 		const intent = get_navigation_intent(url, false);
 
 		if (!intent) {
-			throw new Error('Attempted to prefetch a URL that does not belong to this app');
+			throw new Error(`Attempted to prefetch a URL that does not belong to this app: ${url}`);
 		}
 
 		load_cache = { id: intent.id, promise: load_route(intent) };
