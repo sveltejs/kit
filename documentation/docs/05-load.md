@@ -220,14 +220,25 @@ Given a `routeId` of `a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `par
 
 ### Making fetch requests
 
-Inside server-only `load` functions you can directly query your database. Inside shared `load` functions you can't, as they also may run on the client. Also sometimes your database may not be on the same server as your app. For these reasons it is often necessary to make `fetch` requests.
-
-The `load` function provides a `fetch` method which is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
+To get data from an external API or a `+server.js` handler, you can use the provided `fetch` function, which behaves identically to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch) with a few additional features:
 
 - it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request
 - it can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context)
 - internal requests (e.g. for `+server.js` routes) go direct to the handler function when running on the server, without the overhead of an HTTP call
 - during server-side rendering, the response will be captured and inlined into the rendered HTML. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](/docs/hooks#server-hooks-handle). Then, during hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request - if you got a warning in your browser console when using the browser `fetch` instead of the `load` `fetch`, this is why.
+
+```js
+/// file: +page.js
+/** @type {import('./$types').PageLoad} */
+export async function load({ fetch, params }) {
+	const res = await fetch(`/api/items/${params.id}`);
+	const item = await res.json();
+
+	return {
+		item
+	};
+}
+```
 
 > Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
 
