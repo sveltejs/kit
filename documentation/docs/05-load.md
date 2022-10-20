@@ -220,117 +220,6 @@ Given a `routeId` of `a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `par
 }
 ```
 
-### Shared vs server
-
-The `load` function is available in both `+page.js`/`+layout.js` and `+page.server.js`/`+layout.server.js` files. They share the same name because they do the same - providing data to a layout or page. Their capabalities differ in some ways though, and it makes sense to use one or the other depending on the situation - sometimes even both.
-
-If the `load` function is defined in `+page.server.js` or `+layout.server.js` ("server-only `load` function") it will only run on the server, in which case it can (for example) make database calls and access private [environment variables](/docs/modules#$env-static-private). However, it can only return data that can be serialized with [devalue](https://github.com/rich-harris/devalue).
-
-```js
-/// file: src/routes/blog/+page.server.js
-// @filename: ambient.d.ts
-declare const db: { getAllBlogPosts: () => Promise<any[]> }
-
-// @filename: index.js
-// ---cut---
-/** @type {import('./$types').PageServerLoad} */
-export async function load() {
-	return {
-		posts: await db.getAllBlogPosts()
-	};
-}
-```
-
-If the `load` function is defined in `+page.js` or `+layout.js` it will by default run both on the server and in the browser ("shared `load` function"). On the initial request, the `load` function runs on the server, and again on the client during hydration with the same inputs. That way the returned data can be of any shape you like, even component constructors or class instances. For this reason (and others, see [fetch](#making-fetch-requests) for more details), if you're making a fetch request, you should use the `fetch` method that is provided to the `load` function. That way, during server-side rendering, the response will be captured and inlined into the rendered HTML. During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
-
-```js
-/// file: src/routes/blog/+page.js
-/** @type {import('./$types').PageLoad} */
-export async function load({ fetch }) {
-	const response = await fetch('/blog.json');
-	return response.json();
-}
-```
-
-You can also make `load` run on the client only by [disabling server side rendering](/docs/page-options#ssr) - so if you are building an SPA served from a static file server, you only want to use this function.
-
-Using the shared `load` function gives you more freedom when it's run on the client as you don't have to worry about isolation of requests and can use shared variables from outside (also see [shared state](#shared-state)). It's also easier to fine-tune when the `load` function reruns and avoid network requests altogether if a `load` function doesn't need to rerun or doesn't access anything that results in a network request. At the same time you have to take the isomorphic nature of the `load` function into account. If you have things you only want to do on the client or the server, use the `browser` import from `$app/environment`.
-
-```js
-/// file: src/routes/blog/+page.js
-import { browser } from '$app/environment';
-
-// this shared variable is safe to modify on the browser, as it only affects the current user
-let count = 0;
-
-/** @type {import('./$types').PageLoad} */
-export async function load() {
-	// Increase count each time the load function is run, but only in the browser
-	const returnedCount = count;
-	if (browser) {
-		count++;
-	}
-	return { count: returnedCount };
-}
-```
-
-Sometimes it's even beneficial to use both `load` functions. For example you could first return some data from your database, and use that to create an object that is non-serializable (so therefore couldn't be returned directly from the server `load` function). To access the server data in the shared `load` function, use the `data` input:
-
-```js
-/// file: src/routes/blog/+page.server.js
-// @filename: ambient.d.ts
-declare const db: { getAllBlogPosts: () => Promise<any[]> }
-
-// @filename: index.js
-// ---cut---
-/** @type {import('./$types').PageServerLoad} */
-export async function load() {
-	return {
-		posts: await db.getAllBlogPosts()
-	};
-}
-```
-
-```js
-/// file: src/routes/blog/+page.js
-// @filename: ambient.d.ts
-declare const Post: any;
-
-// @filename: index.js
-// @errors: 2531 7006
-// ---cut---
-/** @type {import('./$types').PageLoad} */
-export async function load({ data }) {
-	return {
-		posts: data.posts.map(post => new Post(post))
-	};
-}
-```
-
-```svelte
-/// file: src/routes/blog/+page.svelte
-<script>
-	/** @type {import('./$types').PageData} */
-	export let data;
-</script>
-
-{#each data.posts as post}
-	...
-{/each}
-```
-
-To summarize:
-- use server-only `load` in `+page.server.js`/`+layout.server.js` when
-	- you want to access your database directly
-	- you access private environment variables
-	- the returned data is serializable
-- use shared `load` in `+page.js`/`+layout.js` when
-	- you want more control over the `load` function
-	- you want to avoid a network hop when the resource is on a different server
-	- you need to return non-serializable data
-	- you are building an SPA served from a static file server
-- use both `load` functions when you have a combination of requirements
-
 ### Making fetch requests
 
 Inside server-only `load` functions you can directly query your database. Inside shared `load` functions you can't, as they also may run on the client. Also sometimes your database may not be on the same server as your app. For these reasons it is often necessary to make `fetch` requests.
@@ -595,6 +484,37 @@ export async function load({ url, params, parent, fetch, depends }) {
 ```
 
 If a `load` function is triggered to re-run and you stay on the same `+page.svelte`, the page will not remount — instead, it will update with the new `data`. This means that components' internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
+
+### Shared vs server
+
+As we've seen, there are two types of `load` function:
+
+* `+page.js` and `+layout.js` files export `load` functions that are _shared_ between server and browser
+* `+page.server.js` and `+layout.server.js` files export `load` functions that are _server-only_
+
+Conceptually, they're the same thing, but there are some important differences to be aware of.
+
+#### Input
+
+Both shared and server-only `load` functions have access to `depends`, `fetch`, `params`, `parent`, `routeId` and `url`.
+
+Server-only `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
+
+Shared `load` functions are called with a `LoadEvent`, which has a `data` property. If you have `load` functions in both `+page.js` and `+page.server.js` (or `+layout.js` and `+layout.server.js`), the return value of the server-only `load` function is the `data` property of the shared `load` function's argument.
+
+#### Output
+
+A shared `load` function can return an object containing any values, including things like custom classes and component constructors.
+
+A server-only `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network.
+
+#### When to use which
+
+Server-only `load` functions are convenient when you need to access data directly from a database or filesystem, or need to use private environment variables.
+
+Shared `load` functions are useful when you need to `fetch` data from an external API and don't need private credentials, since SvelteKit can get the data directly from the API rather than going via your server. They are also useful when you need to return something that can't be serialized, such as a Svelte component constructor.
+
+In rare cases, you might need to use both together — for example, you might need to return an instance of a custom class that was initialised with data from your server.
 
 ### Shared state
 
