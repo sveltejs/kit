@@ -375,6 +375,10 @@ export function read_headings(dir) {
 				{
 					slug: 'assets',
 					title: 'Assets'
+				},
+				{
+					slug: 'packaging',
+					title: 'Packaging'
 				}
 			]
 		},
