@@ -370,7 +370,7 @@ export async function prerender() {
 			for (const [id, prerender] of prerender_map) {
 				if (prerender) {
 					if (id.includes('[')) continue;
-					const path = `/${id.split('/').filter(affects_path).join('/')}`;
+					const path = `${id.split('/').filter(affects_path).join('/')}`;
 					enqueue(null, config.paths.base + path);
 				}
 			}
