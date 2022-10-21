@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.46
+
+### Patch Changes
+
+- Make options object optional ([#7341](https://github.com/sveltejs/kit/pull/7341))
+
 ## 1.0.0-next.45
 
 ### Patch Changes
