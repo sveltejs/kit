@@ -36,7 +36,7 @@
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
-		"format": "npm run lint -- --write",
+		"format": "pnpm lint --write",
 		"test": "uvu test \"^index.js$\""
 	},
 	"exports": {

@@ -88,7 +88,7 @@ const options = object(
 			// TODO: remove this for the 1.0 release
 			amp: error(
 				(keypath) =>
-					`${keypath} has been removed. See https://kit.svelte.dev/docs/seo#amp for details on how to support AMP`
+					`${keypath} has been removed. See https://kit.svelte.dev/docs/seo#manual-setup-amp for details on how to support AMP`
 			),
 
 			appDir: validate('_app', (input, keypath) => {
@@ -321,7 +321,7 @@ const options = object(
 			// TODO remove this for 1.0
 			ssr: error(
 				(keypath) =>
-					`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle`
+					`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#server-hooks-handle`
 			),
 
 			// TODO remove this for 1.0

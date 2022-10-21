@@ -207,7 +207,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			}
 		};
 
-		walk(0, '', '', null);
+		walk(0, '/', '', null);
 
 		if (routes.length === 1) {
 			const root = routes[0];
@@ -223,7 +223,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		// If there's no routes directory, we'll just create a single empty route. This ensures the root layout and
 		// error components are included in the manifest, which is needed for subsequent build/dev commands to work
 		routes.push({
-			id: '',
+			id: '/',
 			segment: '',
 			pattern: /^$/,
 			names: [],

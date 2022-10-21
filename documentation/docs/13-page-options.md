@@ -60,7 +60,7 @@ The basic rule is this: for a page to be prerenderable, any two users hitting it
 
 Note that you can still prerender pages that load data based on the page's parameters, such as a `src/routes/blog/[slug]/+page.svelte` route.
 
-Accessing [`url.searchParams`](/docs/load#input-properties-url) during prerendering is forbidden. If you need to use it, ensure you are only doing so in the browser (for example in `onMount`).
+Accessing [`url.searchParams`](/docs/load#using-url-data-url) during prerendering is forbidden. If you need to use it, ensure you are only doing so in the browser (for example in `onMount`).
 
 #### Route conflicts
 
@@ -83,7 +83,7 @@ Since these routes cannot be dynamically server-rendered, this will cause errors
 
 ### ssr
 
-Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's hydrated. If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](/docs/appendix#ssr)).
+Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's hydrated. If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](/docs/appendix#ssr)). If you put this into your root `+layout.js`, you create an SPA (all pages are client-side rendered only).
 
 ```js
 /// file: +page.js

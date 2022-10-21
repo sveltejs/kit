@@ -1,7 +1,7 @@
 export const prerender = true;
 
-export async function load({ url }) {
-	const res = await fetch(new URL('/origin/message.json', url.origin).href);
+export async function load({ fetch }) {
+	const res = await fetch('/origin/message.json');
 	const { message } = await res.json();
 
 	return {

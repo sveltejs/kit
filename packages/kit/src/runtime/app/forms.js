@@ -21,11 +21,14 @@ export function enhance(form, submit = () => {}) {
 	 * @param {{
 	 *   action: URL;
 	 *   result: import('types').ActionResult;
+	 *   reset?: boolean
 	 * }} opts
 	 */
-	const fallback_callback = async ({ action, result }) => {
+	const fallback_callback = async ({ action, result, reset }) => {
 		if (result.type === 'success') {
-			form.reset();
+			if (reset !== false) {
+				form.reset();
+			}
 			await invalidateAll();
 		}
 
@@ -97,7 +100,7 @@ export function enhance(form, submit = () => {}) {
 			action,
 			data,
 			form,
-			update: () => fallback_callback({ action, result }),
+			update: (opts) => fallback_callback({ action, result, reset: opts?.reset }),
 			// @ts-expect-error generic constraints stuff we don't care about
 			result,
 			// TODO remove for 1.0

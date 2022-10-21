@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.186
+
+### Patch Changes
+
+- [feat] add reset option to update method of enhance ([#7326](https://github.com/sveltejs/kit/pull/7326))
+
 ## 2.0.0-next.185
 
 ### Patch Changes
