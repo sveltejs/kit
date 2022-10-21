@@ -83,7 +83,7 @@ export function data_response(data, event) {
 		const error = /** @type {any} */ (e);
 		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
 		const message = match
-			? `Data returned from \`load\` while rendering /${event.routeId} is not serializable: ${error.message} (data.${match[2]})`
+			? `Data returned from \`load\` while rendering ${event.routeId} is not serializable: ${error.message} (data.${match[2]})`
 			: error.message;
 		return new Response(JSON.stringify(message), { headers, status: 500 });
 	}

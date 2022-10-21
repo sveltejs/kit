@@ -13,11 +13,12 @@ export function parse_route_id(id) {
 	let add_trailing_slash = true;
 
 	const pattern =
-		id === ''
+		id === '/'
 			? /^\/$/
 			: new RegExp(
 					`^${id
 						.split(/(?:\/|$)/)
+						.slice(1)
 						.filter(affects_path)
 						.map((segment, i, segments) => {
 							const decoded_segment = decodeURIComponent(segment);
