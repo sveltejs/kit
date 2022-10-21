@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.522
+
+### Patch Changes
+
+- [docs] rewrite load docs ([#7174](https://github.com/sveltejs/kit/pull/7174))
+
+* [breaking] Prefix all route IDs with / ([#7338](https://github.com/sveltejs/kit/pull/7338))
+
 ## 1.0.0-next.521
 
 ### Patch Changes
