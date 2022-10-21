@@ -94,7 +94,8 @@ function get_raw_body(req, body_size_limit) {
 
 /** @type {import('@sveltejs/kit/node').getRequest} */
 export async function getRequest({ request, base, bodySizeLimit }) {
-	return new Request(base + request.url, {
+	// @ts-expect-error - the request may be a connect request
+	return new Request(base + (request.originalUrl || request.url), {
 		method: request.method,
 		headers: /** @type {Record<string, string>} */ (request.headers),
 		body: get_raw_body(request, bodySizeLimit)

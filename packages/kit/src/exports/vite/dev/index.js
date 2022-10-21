@@ -258,7 +258,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				req.headers[':authority'] || req.headers.host
 			}`;
 
-			const decoded = decodeURI(new URL(base + req.url).pathname);
+			const decoded = decodeURI(new URL(base + req.originalUrl).pathname);
 
 			if (decoded.startsWith(assets)) {
 				const pathname = decoded.slice(assets.length);
@@ -295,7 +295,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					req.headers[':authority'] || req.headers.host
 				}`;
 
-				const decoded = decodeURI(new URL(base + req.url).pathname);
+				const decoded = decodeURI(new URL(base + req.originalUrl).pathname);
 				const file = posixify(path.resolve(decoded.slice(1)));
 				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
 				const allowed =
@@ -311,7 +311,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				if (!decoded.startsWith(svelte_config.kit.paths.base)) {
 					return not_found(
 						res,
-						`Not found (did you mean ${svelte_config.kit.paths.base + req.url}?)`
+						`Not found (did you mean ${svelte_config.kit.paths.base + req.originalUrl}?)`
 					);
 				}
 
