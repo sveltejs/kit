@@ -60,7 +60,6 @@
 			right: 0;
 			top: 0;
 			padding: var(--top-offset) 3.2rem;
-			background-color: var(--code-bg);
 		}
 	}
 </style>

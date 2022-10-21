@@ -84,7 +84,7 @@
 
 <svelte:window on:scroll={highlight} on:resize={update} on:hashchange={() => select($page.url)} />
 
-<div>On This Page</div>
+<div class="otp">On This Page</div>
 <nav>
 	{#each page_contents as { title, anchor }}
 		<a href={`#${anchor}`} class:active={`#${anchor}` === hash}>{title}</a>
@@ -92,14 +92,17 @@
 </nav>
 
 <style>
-	nav {
-		margin-top: 1rem;
+	.otp {
+		padding: 1rem;
 	}
 	a {
 		display: block;
-		margin-bottom: 0.5rem;
+		padding: 0.25rem 1rem;
+		color: var(--second);
+		border-left: 2px solid var(--back-api);
 	}
 	a.active {
 		font-weight: bold;
+		border-color: var(--second);
 	}
 </style>
