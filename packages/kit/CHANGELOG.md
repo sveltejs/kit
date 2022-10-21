@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.521
+
+### Patch Changes
+
+- [feat] add reset option to update method of enhance ([#7326](https://github.com/sveltejs/kit/pull/7326))
+
+* [breaking] remove global fetch override when prerendering ([#7318](https://github.com/sveltejs/kit/pull/7318))
+
+- Improve error message when prefetching fails ([#7314](https://github.com/sveltejs/kit/pull/7314))
+
 ## 1.0.0-next.520
 
 ### Patch Changes
