@@ -444,7 +444,7 @@ export function load() {
 
 ### Parallel loading
 
-When rendering (or navigating to) a page, SvelteKit runs all `load` functions concurrently, avoiding a waterfall of requests. (During client-side navigation, the result of calling multiple server-only `load` functions are grouped into a single response.) Once all `load` functions have returned, the page is rendered.
+When rendering (or navigating to) a page, SvelteKit runs all `load` functions concurrently, avoiding a waterfall of requests. During client-side navigation, the result of calling multiple server-only `load` functions are grouped into a single response. Once all `load` functions have returned, the page is rendered.
 
 ### Invalidation
 
