@@ -202,7 +202,7 @@ The name of the current route directory, relative to `src/routes`:
 /// file: src/routes/a/[b]/[...c]/+page.js
 /** @type {import('./$types').PageLoad} */
 export function load({ routeId }) {
-	console.log(routeId); // 'a/[b]/[...c]'
+	console.log(routeId); // '/a/[b]/[...c]'
 }
 ```
 
