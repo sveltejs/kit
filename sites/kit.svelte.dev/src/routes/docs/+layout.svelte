@@ -59,7 +59,7 @@
 			position: fixed;
 			right: 0;
 			top: 0;
-			padding: var(--top-offset) 3.2rem;
+			padding-top: var(--top-offset);
 		}
 	}
 </style>
