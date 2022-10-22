@@ -59,8 +59,8 @@ export function GET(event) {
 \`\`\`generated-ts
 // @errors: 2461
 /// file: src/routes/what-is-my-user-agent/+server.ts
-import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = (event) => {
 	// log all headers
