@@ -9,10 +9,10 @@
 		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\""
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "workspace:1.0.0-next.84",
-		"@sveltejs/adapter-static": "workspace:1.0.0-next.46",
-		"@sveltejs/amp": "workspace:1.0.0-next.2",
-		"@sveltejs/kit": "workspace:1.0.0-next.522",
+		"@sveltejs/adapter-auto": "workspace:*",
+		"@sveltejs/adapter-static": "workspace:*",
+		"@sveltejs/amp": "workspace:*",
+		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/site-kit": "^2.1.2",
 		"@types/node": "^16.11.68",
 		"flexsearch": "^0.7.31",
