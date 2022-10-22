@@ -328,7 +328,7 @@ export async function render_response({
 			csp.add_script(detectModernBrowserCode);
 
 			const dynamicFallbackInlineCode =
-				`!function(){if(window.${detectModernBrowserVarName})return;console.warn("vite: loading legacy build because dynamic import or import.meta.url is unsupported, syntax error above should be ignored");` +
+				`!function(){if(window.${detectModernBrowserVarName})return;console.warn("kit: loading legacy build because dynamic import or import.meta.url is unsupported, syntax error above should be ignored");` +
 				(legacy_polyfills_file
 					? `var n=document.createElement("script");n.src=${s(
 							prefixed(legacy_polyfills_file)

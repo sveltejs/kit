@@ -30,8 +30,10 @@ function is_origin_match(request, origin) {
 		return req_origin === origin;
 	}
 
-	// In some legacy browsers (such as IE/Edge<79 and Firefox<58), the origin header aren't sent on POST requests.
+	// In some legacy browsers (such as IE/Edge<79 and Firefox<58), the origin header isn't sent on POST requests.
 	// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin#browser_compatibility
+	// Therefore, we accept the request also if the `referer` header has the same origin,
+	//  in the case that the `origin` header is null, since this is enough for CSRF protection.
 
 	const referer = request.headers.get('referer');
 	return referer && new URL(referer).origin === origin;
