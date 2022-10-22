@@ -135,15 +135,48 @@ const exec_tests = [
 		route: '/[[slug1]]/[[slug2]]',
 		path: '/slug1',
 		expected: { slug1: 'slug1', slug2: '' }
+	},
+	{
+		route: '/[[slug1=matches]]',
+		path: '/',
+		expected: { slug1: '' }
+	},
+	{
+		route: '/[[slug1=doesntmatch]]',
+		path: '/',
+		expected: { slug1: '' }
+	},
+	{
+		route: '/[[slug1=matches]]/[[slug2=doesntmatch]]',
+		path: '/foo',
+		expected: { slug1: 'foo', slug2: '' }
+	},
+	{
+		route: '/[[slug1=doesntmatch]]/[[slug2=doesntmatch]]',
+		path: '/foo',
+		expected: undefined
+	},
+	{
+		route: '/[...slug1=matches]',
+		path: '/',
+		expected: { slug1: '' }
+	},
+	{
+		route: '/[...slug1=doesntmatch]',
+		path: '/',
+		expected: undefined
 	}
 ];
 
 for (const { path, route, expected } of exec_tests) {
-	test(`exec extracts params correctly for ${path}`, () => {
+	test(`exec extracts params correctly for ${path} from ${route}`, () => {
 		const { pattern, names, types } = parse_route_id(route);
 		const match = pattern.exec(path);
 		if (!match) throw new Error(`Failed to match ${path}`);
-		const actual = exec(match, names, types, {});
+		const actual = exec(match, route, names, types, {
+			matches: () => true,
+			doesntmatch: () => false
+		});
 		assert.equal(actual, expected);
 	});
 }
