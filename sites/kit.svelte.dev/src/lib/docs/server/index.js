@@ -139,10 +139,12 @@ export async function read_file(dir, file) {
 						if (source.includes('// @filename:')) {
 							source = source.replace('// @filename:', `${injected_str}\n\n// @filename:`);
 						} else {
-							source = source.replace(
-								/^(?!\/\/ @)/m,
-								`${injected_str}\n\n// @filename: index.${language}\n// ---cut---\n`
-							);
+							source = source
+								.replace(
+									/^(?!\/\/ @)/m,
+									`${injected_str}\n\n// @filename: index.${language}\n// ---cut---\n`
+								)
+								.replace(/\n$/, '');
 						}
 					}
 
