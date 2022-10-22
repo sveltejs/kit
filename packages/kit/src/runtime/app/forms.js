@@ -86,6 +86,7 @@ export function enhance(form, submit = () => {}) {
 					accept: 'application/json',
 					'x-sveltekit-action': 'true'
 				},
+				cache: 'no-cache',
 				body: data,
 				signal: controller.signal
 			});
