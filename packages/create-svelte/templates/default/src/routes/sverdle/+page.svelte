@@ -210,7 +210,7 @@
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		justify-content: start;
+		justify-content: flex-start;
 	}
 
 	.grid .row {

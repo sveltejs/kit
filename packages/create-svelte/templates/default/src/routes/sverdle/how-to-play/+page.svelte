@@ -70,7 +70,7 @@
 
 	.example {
 		display: flex;
-		justify-content: start;
+		justify-content: flex-start;
 		margin: 1rem 0;
 		gap: 0.2rem;
 	}
