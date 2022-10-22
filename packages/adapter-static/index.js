@@ -24,7 +24,7 @@ export default function (options) {
 					};
 				});
 
-				if (dynamic_routes.length > 0 && options.strict) {
+				if (dynamic_routes.length > 0 && options?.strict !== false) {
 					const prefix = path.relative('.', builder.config.kit.files.routes);
 					const has_param_routes = dynamic_routes.some((route) => route.includes('['));
 					const config_option =

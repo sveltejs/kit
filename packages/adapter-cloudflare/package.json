@@ -27,9 +27,9 @@
 	"scripts": {
 		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --format=esm",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"format": "npm run lint -- --write",
+		"format": "pnpm lint --write",
 		"check": "tsc --skipLibCheck",
-		"prepublishOnly": "npm run build"
+		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^3.14.0",

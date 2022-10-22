@@ -7,7 +7,7 @@
 		"build": "vite build -c vite.custom.config.js --mode custom",
 		"preview": "vite preview -c vite.custom.config.js",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "npm run test:dev && npm run test:build",
+		"test": "pnpm test:dev && pnpm test:build",
 		"test:dev": "cross-env DEV=true playwright test",
 		"test:build": "playwright test"
 	},

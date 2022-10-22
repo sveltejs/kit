@@ -108,7 +108,7 @@ export async function load({ params }) {
 }
 ```
 
-During client-side navigation, SvelteKit will load this data from the server, which means that the returned value must be serializable using [devalue](https://github.com/rich-harris/devalue).
+During client-side navigation, SvelteKit will load this data from the server, which means that the returned value must be serializable using [devalue](https://github.com/rich-harris/devalue). See [`load`](/docs/load) for full details of the API.
 
 Like `+page.js`, `+page.server.js` can export [page options](/docs/page-options) — `prerender`, `ssr` and `csr`.
 
@@ -196,6 +196,8 @@ We can create a layout that only applies to pages below `/settings` (while inher
 
 <slot></slot>
 ```
+
+By default, each layout inherits the next layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](/docs/advanced-routing#advanced-layouts) can help you.
 
 #### +layout.js
 

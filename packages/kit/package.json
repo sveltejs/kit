@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.519",
+	"version": "1.0.0-next.522",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -57,14 +57,14 @@
 		"scripts/special-types"
 	],
 	"scripts": {
-		"build": "npm run types",
+		"build": "pnpm types",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
-		"format": "npm run lint -- --write",
-		"prepublishOnly": "npm run build",
-		"test": "npm run test:unit && npm run test:integration",
-		"test:integration": "pnpm run -r --workspace-concurrency 1 --filter=\"./test/**\" test",
+		"format": "pnpm lint --write",
+		"prepublishOnly": "pnpm build",
+		"test": "pnpm test:unit && pnpm test:integration",
+		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"types": "node scripts/extract-types.js",
 		"postinstall": "node postinstall.js"

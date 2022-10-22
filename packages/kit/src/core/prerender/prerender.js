@@ -102,54 +102,15 @@ export async function prerender() {
 	});
 
 	installPolyfills();
+
+	// TODO remove this for 1.0
 	const { fetch } = globalThis;
 	globalThis.fetch = async (info, init) => {
-		/** @type {string} */
-		let url;
-
-		/** @type {RequestInit} */
-		let opts = {};
-
-		if (info instanceof Request) {
-			url = info.url;
-
-			opts = {
-				method: info.method,
-				headers: info.headers,
-				body: info.body,
-				mode: info.mode,
-				credentials: info.credentials,
-				cache: info.cache,
-				redirect: info.redirect,
-				referrer: info.referrer,
-				integrity: info.integrity
-			};
-		} else {
-			url = info.toString();
-		}
+		const url = info instanceof Request ? info.url : info.toString();
 
 		if (url.startsWith(config.prerender.origin + '/')) {
-			const request = new Request(url, opts);
-			const response = await server.respond(request, {
-				getClientAddress,
-				prerendering: {
-					dependencies: new Map()
-				}
-			});
-
-			const decoded = new URL(url).pathname;
-
-			save(
-				'dependencies',
-				response,
-				Buffer.from(await response.clone().arrayBuffer()),
-				decoded,
-				encodeURI(decoded),
-				null,
-				'fetched'
-			);
-
-			return response;
+			const sliced = url.slice(config.prerender.origin.length);
+			throw new Error(`Use \`event.fetch('${sliced}')\` instead of the global \`fetch('${url}')\``);
 		}
 
 		return fetch(info, init);
@@ -409,7 +370,7 @@ export async function prerender() {
 			for (const [id, prerender] of prerender_map) {
 				if (prerender) {
 					if (id.includes('[')) continue;
-					const path = `/${id.split('/').filter(affects_path).join('/')}`;
+					const path = `${id.split('/').filter(affects_path).join('/')}`;
 					enqueue(null, config.paths.base + path);
 				}
 			}
