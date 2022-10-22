@@ -79,8 +79,8 @@
 <svelte:window on:keydown={keydown} />
 
 <svelte:head>
-	<title>Sverlde</title>
-	<meta name="description" content="Sverlde game" />
+	<title>Sverdle</title>
+	<meta name="description" content="A Wordle clone written in SvelteKit" />
 </svelte:head>
 
 <form
