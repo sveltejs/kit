@@ -35,7 +35,7 @@
 		"@sveltejs/adapter-vercel": "workspace:*"
 	},
 	"devDependencies": {
-		"@types/node": "^16.11.36",
-		"typescript": "^4.8.2"
+		"@types/node": "^16.11.68",
+		"typescript": "^4.8.4"
 	}
 }

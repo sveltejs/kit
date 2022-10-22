@@ -9,23 +9,23 @@
 		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\""
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "workspace:*",
-		"@sveltejs/adapter-static": "workspace:*",
-		"@sveltejs/amp": "workspace:*",
-		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/adapter-auto": "workspace:1.0.0-next.84",
+		"@sveltejs/adapter-static": "workspace:1.0.0-next.46",
+		"@sveltejs/amp": "workspace:1.0.0-next.2",
+		"@sveltejs/kit": "workspace:1.0.0-next.522",
 		"@sveltejs/site-kit": "^2.1.2",
-		"@types/node": "^16.11.36",
+		"@types/node": "^16.11.68",
 		"flexsearch": "^0.7.31",
-		"magic-string": "^0.26.2",
+		"magic-string": "^0.26.7",
 		"marked": "^4.1.1",
 		"prism-svelte": "^0.5.0",
 		"prismjs": "^1.29.0",
 		"shiki-twoslash": "^3.1.0",
-		"svelte": "^3.48.0",
-		"typescript": "^4.8.2",
-		"uvu": "^0.5.3",
-		"vite": "^3.1.1",
-		"vite-imagetools": "^4.0.10"
+		"svelte": "^3.52.0",
+		"typescript": "^4.8.4",
+		"uvu": "^0.5.6",
+		"vite": "^3.1.8",
+		"vite-imagetools": "^4.0.11"
 	},
 	"type": "module"
 }
