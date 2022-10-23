@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.187
+
+### Patch Changes
+
+- Add missing titles and descriptions to the Sverdle pages ([#7351](https://github.com/sveltejs/kit/pull/7351))
+
+* Use `justify-content: flex-start;` on Sverdle CSS to avoid compatibility issues ([#7352](https://github.com/sveltejs/kit/pull/7352))
+
 ## 2.0.0-next.186
 
 ### Patch Changes
