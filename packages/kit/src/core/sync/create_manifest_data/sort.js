@@ -1,4 +1,4 @@
-import { affects_path } from '../../../utils/routing.js';
+import { get_route_segments } from '../../../utils/routing.js';
 
 /**
  * @typedef {{
@@ -133,13 +133,11 @@ export function sort_routes(routes) {
 
 /** @param {string} id */
 function split_route_id(id) {
-	return (
+	return get_route_segments(
 		id
 			// remove all [[optional]] parts unless they're at the very end
 			.replace(/\[\[[^\]]+\]\](?!$)/g, '')
-			.split('/')
-			.filter((segment) => segment !== '' && affects_path(segment))
-	);
+	).filter(Boolean);
 }
 
 /**

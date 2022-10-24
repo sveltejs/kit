@@ -95,7 +95,7 @@ export function parse_route_id(id) {
  * Returns `false` for `(group)` segments
  * @param {string} segment
  */
-export function affects_path(segment) {
+function affects_path(segment) {
 	return !/^\([^)]+\)$/.test(segment);
 }
 
