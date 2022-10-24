@@ -1,5 +1,5 @@
 ---
-title: Project Structure
+title: Project structure
 ---
 
 A typical SvelteKit project looks like this:

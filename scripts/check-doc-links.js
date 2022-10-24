@@ -1,18 +1,21 @@
 import fs from 'fs';
 import path from 'path';
+import glob from 'tiny-glob/sync.js';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const doc_filenames = fs.readdirSync(path.join(__dirname, '../documentation/docs'));
-const doc_urls = new Map();
+const cwd = path.join(__dirname, '../documentation/docs');
+
+const doc_filenames = glob('**/*.md', { cwd });
+const doc_urls = new Set();
 
 // 1. collect all doc links and hashes
 
 for (const doc of doc_filenames) {
-	doc_urls.set(doc_name_to_link(doc));
+	doc_urls.add(doc_name_to_link(doc));
 
-	const content = fs.readFileSync(path.join(__dirname, `../documentation/docs/${doc}`), 'utf-8');
+	const content = fs.readFileSync(`${cwd}/${doc}`, 'utf-8');
 
 	const headlines = content.matchAll(/### .+/g);
 	if (!headlines) continue;
@@ -26,7 +29,7 @@ for (const doc of doc_filenames) {
 		} else {
 			last_headline = hash;
 		}
-		doc_urls.set(doc_name_to_link(doc) + '#' + hash);
+		doc_urls.add(doc_name_to_link(doc) + '#' + hash);
 	}
 }
 
@@ -35,7 +38,7 @@ let bad = false;
 // 2. check docs for broken links
 
 for (const doc of doc_filenames) {
-	const content = fs.readFileSync(path.join(__dirname, `../documentation/docs/${doc}`), 'utf-8');
+	const content = fs.readFileSync(`${cwd}/${doc}`, 'utf-8');
 
 	const links = content.match(/\]\(([^)]+)\)/g);
 	if (!links) continue;
@@ -112,7 +115,7 @@ function walk_kit_dir(cwd) {
 }
 
 function doc_name_to_link(file) {
-	return file.replace(/\.md$/, '').replace(/^\d+-/, '');
+	return file.split(path.sep).pop().slice(3, -3);
 }
 
 function slugify(title) {
