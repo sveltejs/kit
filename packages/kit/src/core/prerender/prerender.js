@@ -155,6 +155,12 @@ export async function prerender() {
 	const seen = new Set();
 	const written = new Set();
 
+	/** @type {Map<string, string[]>} */
+	const expected_deeplinks = new Map();
+
+	/** @type {Map<string, string[]>} */
+	const actual_deeplinks = new Map();
+
 	/**
 	 * @param {string | null} referrer
 	 * @param {string} decoded
@@ -231,16 +237,30 @@ export async function prerender() {
 		const headers = Object.fromEntries(response.headers);
 
 		if (config.prerender.crawl && headers['content-type'] === 'text/html') {
-			for (const href of crawl(body.toString())) {
+			const { ids, hrefs } = crawl(body.toString());
+
+			actual_deeplinks.set(decoded, ids);
+
+			for (const href of hrefs) {
 				if (href.startsWith('data:') || href.startsWith('#')) continue;
 
 				const resolved = resolve(encoded, href);
 				if (!is_root_relative(resolved)) continue;
 
-				const { pathname, search } = new URL(resolved, 'http://localhost');
+				const { pathname, search, hash } = new URL(resolved, 'http://localhost');
 
 				if (search) {
 					// TODO warn that query strings have no effect on statically-exported pages
+				}
+
+				if (hash) {
+					if (!expected_deeplinks.has(pathname + hash)) {
+						expected_deeplinks.set(pathname + hash, []);
+					}
+
+					/** @type {string[]} */ (expected_deeplinks.get(pathname + hash)).push(
+						response.headers.get('x-sveltekit-routeid') ?? decoded
+					);
 				}
 
 				enqueue(decoded, decodeURI(pathname), pathname);
@@ -380,6 +400,22 @@ export async function prerender() {
 	}
 
 	await q.done();
+
+	for (const [key, linkers] of expected_deeplinks) {
+		const [pathname, id] = key.split('#');
+
+		// ignore any pages that weren't prerendered
+		const actual_ids = actual_deeplinks.get(pathname);
+		if (!actual_ids) continue;
+
+		if (!actual_ids.includes(id)) {
+			const message =
+				`The following pages contain links to ${key}, but no element with id="${id}" exists on ${pathname}:` +
+				linkers.map((l) => `\n  - ${l}`).join('');
+
+			throw new Error(message);
+		}
+	}
 
 	/** @type {string[]} */
 	const not_prerendered = [];

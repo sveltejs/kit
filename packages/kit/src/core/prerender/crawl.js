@@ -15,6 +15,9 @@ const WHITESPACE = /[\s\n\r]/;
 /** @param {string} html */
 export function crawl(html) {
 	/** @type {string[]} */
+	const ids = [];
+
+	/** @type {string[]} */
 	const hrefs = [];
 
 	let i = 0;
@@ -153,6 +156,8 @@ export function crawl(html) {
 
 							if (name === 'href') {
 								href = value;
+							} else if (name === 'id') {
+								ids.push(value);
 							} else if (name === 'rel') {
 								rel = value;
 							} else if (name === 'src') {
@@ -194,5 +199,5 @@ export function crawl(html) {
 		i += 1;
 	}
 
-	return hrefs;
+	return { ids, hrefs };
 }
