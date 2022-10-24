@@ -155,7 +155,7 @@ export async function prerender() {
 	const seen = new Set();
 	const written = new Set();
 
-	/** @type {Map<string, string[]>} */
+	/** @type {Map<string, Set<string>>} */
 	const expected_deeplinks = new Map();
 
 	/** @type {Map<string, string[]>} */
@@ -255,12 +255,10 @@ export async function prerender() {
 
 				if (hash) {
 					if (!expected_deeplinks.has(pathname + hash)) {
-						expected_deeplinks.set(pathname + hash, []);
+						expected_deeplinks.set(pathname + hash, new Set());
 					}
 
-					/** @type {string[]} */ (expected_deeplinks.get(pathname + hash)).push(
-						response.headers.get('x-sveltekit-routeid') ?? decoded
-					);
+					/** @type {Set<string>} */ (expected_deeplinks.get(pathname + hash)).add(decoded);
 				}
 
 				enqueue(decoded, decodeURI(pathname), pathname);
@@ -411,7 +409,9 @@ export async function prerender() {
 		if (!actual_ids.includes(id)) {
 			const message =
 				`The following pages contain links to ${key}, but no element with id="${id}" exists on ${pathname}:` +
-				linkers.map((l) => `\n  - ${l}`).join('');
+				Array.from(linkers)
+					.map((l) => `\n  - ${l}`)
+					.join('');
 
 			throw new Error(message);
 		}
