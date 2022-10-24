@@ -16,10 +16,7 @@ export function parse_route_id(id) {
 		id === '/'
 			? /^\/$/
 			: new RegExp(
-					`^${id
-						.split(/(?:\/|$)/)
-						.slice(1)
-						.filter(affects_path)
+					`^${get_route_segments(id)
 						.map((segment, i, segments) => {
 							const decoded_segment = decodeURIComponent(segment);
 							// special case — /[...rest]/ could contain zero segments
@@ -98,8 +95,19 @@ export function parse_route_id(id) {
  * Returns `false` for `(group)` segments
  * @param {string} segment
  */
-export function affects_path(segment) {
+function affects_path(segment) {
 	return !/^\([^)]+\)$/.test(segment);
+}
+
+/**
+ * Splits a route id into its segments, removing segments that
+ * don't affect the path (i.e. groups). The root route is represented by `/`
+ * and will be returned as `['']`.
+ * @param {string} route
+ * @returns string[]
+ */
+export function get_route_segments(route) {
+	return route.slice(1).split('/').filter(affects_path);
 }
 
 /**

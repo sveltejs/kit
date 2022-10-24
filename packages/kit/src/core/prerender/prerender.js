@@ -9,7 +9,7 @@ import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { load_config } from '../config/index.js';
-import { affects_path } from '../../utils/routing.js';
+import { get_route_segments } from '../../utils/routing.js';
 import { get_option } from '../../runtime/server/utils.js';
 
 /**
@@ -370,7 +370,7 @@ export async function prerender() {
 			for (const [id, prerender] of prerender_map) {
 				if (prerender) {
 					if (id.includes('[')) continue;
-					const path = `${id.split('/').filter(affects_path).join('/')}`;
+					const path = `/${get_route_segments(id).join('/')}`;
 					enqueue(null, config.paths.base + path);
 				}
 			}
