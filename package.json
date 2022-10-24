@@ -28,7 +28,7 @@
 		"@rollup/plugin-json": "^5.0.1",
 		"@rollup/plugin-node-resolve": "^15.0.1",
 		"@svitejs/changesets-changelog-github-compact": "^0.1.1",
-		"playwright": "^1.27.1",
+		"playwright": "1.25.0",
 		"prettier": "^2.7.1",
 		"rollup": "^2.79.1",
 		"svelte": "^3.52.0",

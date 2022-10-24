@@ -9,7 +9,7 @@ importers:
       '@rollup/plugin-json': ^5.0.1
       '@rollup/plugin-node-resolve': ^15.0.1
       '@svitejs/changesets-changelog-github-compact': ^0.1.1
-      playwright: ^1.27.1
+      playwright: 1.25.0
       prettier: ^2.7.1
       rollup: ^2.79.1
       svelte: ^3.52.0
@@ -22,7 +22,7 @@ importers:
       '@rollup/plugin-json': 5.0.1_rollup@2.79.1
       '@rollup/plugin-node-resolve': 15.0.1_rollup@2.79.1
       '@svitejs/changesets-changelog-github-compact': 0.1.1
-      playwright: 1.27.1
+      playwright: 1.25.0
       prettier: 2.7.1
       rollup: 2.79.1
       svelte: 3.52.0
@@ -203,7 +203,7 @@ importers:
 
   packages/create-svelte:
     specifiers:
-      '@playwright/test': ^1.27.1
+      '@playwright/test': 1.25.0
       '@sveltejs/kit': workspace:*
       '@types/gitignore-parser': ^0.0.0
       '@types/prettier': ^2.7.1
@@ -222,7 +222,7 @@ importers:
       kleur: 4.1.5
       prompts: 2.4.2
     devDependencies:
-      '@playwright/test': 1.27.1
+      '@playwright/test': 1.25.0
       '@sveltejs/kit': link:../kit
       '@types/gitignore-parser': 0.0.0
       '@types/prettier': 2.7.1
@@ -265,7 +265,7 @@ importers:
 
   packages/kit:
     specifiers:
-      '@playwright/test': ^1.27.1
+      '@playwright/test': 1.25.0
       '@sveltejs/vite-plugin-svelte': ^1.0.9
       '@types/connect': ^3.4.35
       '@types/cookie': ^0.5.1
@@ -305,7 +305,7 @@ importers:
       tiny-glob: 0.2.9
       undici: 5.11.0
     devDependencies:
-      '@playwright/test': 1.27.1
+      '@playwright/test': 1.25.0
       '@types/connect': 3.4.35
       '@types/marked': 4.0.7
       '@types/mime': 3.0.1
@@ -1077,13 +1077,13 @@ packages:
       fastq: 1.13.0
     dev: true
 
-  /@playwright/test/1.27.1:
-    resolution: {integrity: sha512-mrL2q0an/7tVqniQQF6RBL2saskjljXzqNcCOVMUjRIgE6Y38nCNaP+Dc2FBW06bcpD3tqIws/HT9qiMHbNU0A==}
+  /@playwright/test/1.25.0:
+    resolution: {integrity: sha512-j4EZhTTQI3dBeWblE21EV//swwmBtOpIrLdOIJIRv4uqsLdHgBg1z+JtTg+AeC5o2bAXIE26kDNW5A0TimG8Bg==}
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
       '@types/node': 18.11.3
-      playwright-core: 1.27.1
+      playwright-core: 1.25.0
     dev: true
 
   /@polka/url/1.0.0-next.21:
@@ -3417,19 +3417,19 @@ packages:
       find-up: 4.1.0
     dev: true
 
-  /playwright-core/1.27.1:
-    resolution: {integrity: sha512-9EmeXDncC2Pmp/z+teoVYlvmPWUC6ejSSYZUln7YaP89Z6lpAaiaAnqroUt/BoLo8tn7WYShcfaCh+xofZa44Q==}
+  /playwright-core/1.25.0:
+    resolution: {integrity: sha512-kZ3Jwaf3wlu0GgU0nB8UMQ+mXFTqBIFz9h1svTlNduNKjnbPXFxw7mJanLVjqxHJRn62uBfmgBj93YHidk2N5Q==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
 
-  /playwright/1.27.1:
-    resolution: {integrity: sha512-xXYZ7m36yTtC+oFgqH0eTgullGztKSRMb4yuwLPl8IYSmgBM88QiB+3IWb1mRIC9/NNwcgbG0RwtFlg+EAFQHQ==}
+  /playwright/1.25.0:
+    resolution: {integrity: sha512-Z+pQNWI17Qx/tHhnmgMmPsptsisXpKgAnUvYv98kctlHUJaqMt2400P8kTw9vEPoC0xdxqu0JhxO7pDTmaaIKw==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.27.1
+      playwright-core: 1.25.0
     dev: true
 
   /polka/1.0.0-next.22:

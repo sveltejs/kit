@@ -448,7 +448,7 @@ test.describe('Load', () => {
 	});
 
 	if (process.env.DEV) {
-		test('using window.fetch causes a warning', async ({ page }) => {
+		test.only('using window.fetch causes a warning', async ({ page }) => {
 			const port = 5173;
 
 			/** @type {string[]} */
