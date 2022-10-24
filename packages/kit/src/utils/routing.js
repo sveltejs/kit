@@ -16,10 +16,7 @@ export function parse_route_id(id) {
 		id === '/'
 			? /^\/$/
 			: new RegExp(
-					`^${id
-						.split(/(?:\/|$)/)
-						.slice(1)
-						.filter(affects_path)
+					`^${get_route_segments(id)
 						.map((segment, i, segments) => {
 							const decoded_segment = decodeURIComponent(segment);
 							// special case — /[...rest]/ could contain zero segments
@@ -98,19 +95,32 @@ export function parse_route_id(id) {
  * Returns `false` for `(group)` segments
  * @param {string} segment
  */
-export function affects_path(segment) {
+function affects_path(segment) {
 	return !/^\([^)]+\)$/.test(segment);
 }
 
 /**
+ * Splits a route id into its segments, removing segments that
+ * don't affect the path (i.e. groups). The root route is represented by `/`
+ * and will be returned as `['']`.
+ * @param {string} route
+ * @returns string[]
+ */
+export function get_route_segments(route) {
+	return route.slice(1).split('/').filter(affects_path);
+}
+
+/**
  * @param {RegExpMatchArray} match
+ * @param {string} routeId
  * @param {string[]} names
  * @param {string[]} types
  * @param {Record<string, import('types').ParamMatcher>} matchers
  */
-export function exec(match, names, types, matchers) {
+export function exec(match, routeId, names, types, matchers) {
 	/** @type {Record<string, string>} */
 	const params = {};
+	let last_type_idx = -1;
 
 	for (let i = 0; i < names.length; i += 1) {
 		const name = names[i];
@@ -121,7 +131,12 @@ export function exec(match, names, types, matchers) {
 			const matcher = matchers[type];
 			if (!matcher) throw new Error(`Missing "${type}" param matcher`); // TODO do this ahead of time?
 
-			if (!matcher(value)) return;
+			last_type_idx = routeId.indexOf(`=${type}`, last_type_idx + 1);
+			const is_empty_optional_param =
+				!value &&
+				// a param without a value can only be an optional or rest param
+				routeId.lastIndexOf('[[', last_type_idx) > routeId.lastIndexOf('[...', last_type_idx);
+			if (!is_empty_optional_param && !matcher(value)) return;
 		}
 
 		params[name] = value;

@@ -3,25 +3,12 @@
 
 	/** @type {import('./$types').LayoutData} */
 	export let data;
-
-	$: contents = data.sections.map((section) => ({
-		path: `/docs/${section.slug}`,
-		title: section.title,
-		sections: section.sections.map((subsection) => ({
-			path: `/docs/${section.slug}#${subsection.slug}`,
-			title: subsection.title,
-			sections: subsection.sections.map((subsection) => ({
-				path: `/docs/${section.slug}#${subsection.slug}`,
-				title: subsection.title
-			}))
-		}))
-	}));
 </script>
 
 <div class="grid">
 	<slot />
 	<div class="toc-container">
-		<Contents {contents} />
+		<Contents contents={data.sections} />
 	</div>
 </div>
 

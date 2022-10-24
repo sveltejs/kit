@@ -1,5 +1,25 @@
 # @sveltejs/kit
 
+## 1.0.0-next.525
+
+### Patch Changes
+
+- Always avoid caching form submission on enhanced forms ([#7350](https://github.com/sveltejs/kit/pull/7350))
+
+## 1.0.0-next.524
+
+### Patch Changes
+
+- [fix] get type gen working again ([#7370](https://github.com/sveltejs/kit/pull/7370))
+
+* [fix] don't run matchers for empty optional params ([#7346](https://github.com/sveltejs/kit/pull/7346))
+
+## 1.0.0-next.523
+
+### Patch Changes
+
+- [fix] split route ids into correct segments ([#7367](https://github.com/sveltejs/kit/pull/7367))
+
 ## 1.0.0-next.522
 
 ### Patch Changes
