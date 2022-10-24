@@ -3,9 +3,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
 
-	/**
-	 * @type {Array<{title: string; anchor:string}>}
-	 */
+	/** @type {Array<{ title: string; slug:string }>} */
 	export let sections;
 
 	/** @type {string} */

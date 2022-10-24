@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import { renderCodeToHTML, runTwoSlash, createShikiHighlighter } from 'shiki-twoslash';
 import PrismJS from 'prismjs';
 import 'prismjs/components/prism-bash.js';
@@ -50,7 +51,7 @@ modules.forEach((module) => {
  * @param {string} file
  */
 export async function read_file(file) {
-	const match = /\d{2}-(.+)\.md/.exec(file);
+	const match = /\d{2}-(.+)\.md/.exec(file.split(path.sep).pop());
 	if (!match) return null;
 
 	const slug = match[1];
@@ -271,7 +272,7 @@ export async function read_file(file) {
  * }} opts
  */
 function parse({ body, file, slug, code, codespan }) {
-	const headings = slug ? [slug] : [];
+	const headings = [];
 
 	/** @type {import('./types').Section[]} */
 	const sections = [];
