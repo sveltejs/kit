@@ -18,7 +18,7 @@ export function parse(nodes, server_loads, dictionary, matchers) {
 			/** @param {string} path */
 			exec: (path) => {
 				const match = pattern.exec(path);
-				if (match) return exec(match, names, types, matchers);
+				if (match) return exec(match, id, names, types, matchers);
 			},
 			errors: [1, ...(errors || [])].map((n) => nodes[n]),
 			layouts: [0, ...(layouts || [])].map(create_layout_loader),
