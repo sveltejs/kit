@@ -5,7 +5,7 @@ export async function load() {
 	const sections = [];
 
 	for (const file of fs.readdirSync(`../../documentation/faq`)) {
-		const section = await read_file('faq', file);
+		const section = await read_file(`faq/${file}`);
 		if (section) sections.push(section);
 	}
 

@@ -8,7 +8,6 @@ import 'prism-svelte';
 import { escape, extract_frontmatter, transform } from './markdown.js';
 import { modules } from '../../../../../../packages/kit/docs/types.js';
 import { render_modules } from './modules.js';
-import { error } from '@sveltejs/kit';
 import { parse_route_id } from '../../../../../../packages/kit/src/utils/routing.js';
 import ts from 'typescript';
 import MagicString from 'magic-string';
@@ -48,17 +47,16 @@ modules.forEach((module) => {
 });
 
 /**
- * @param {string} dir
  * @param {string} file
  */
-export async function read_file(dir, file) {
+export async function read_file(file) {
 	const match = /\d{2}-(.+)\.md/.exec(file);
 	if (!match) return null;
 
 	const slug = match[1];
 
 	const markdown = fs
-		.readFileSync(`${base}/${dir}/${file}`, 'utf-8')
+		.readFileSync(`${base}/${file}`, 'utf-8')
 		.replace('**TYPES**', () => render_modules('types'))
 		.replace('**EXPORTS**', () => render_modules('exports'));
 
@@ -69,8 +67,7 @@ export async function read_file(dir, file) {
 	const { content, sections } = parse({
 		body: generate_ts_from_js(body),
 		file,
-		// gross hack to accommodate FAQ
-		slug: dir === 'faq' ? slug : undefined,
+		slug,
 		code: (source, language, current) => {
 			/** @type {Record<string, string>} */
 			const options = {};
@@ -163,7 +160,7 @@ export async function read_file(dir, file) {
 						twoslash
 					);
 				} catch (e) {
-					console.error(`Error compiling snippet in ${dir}/${file}`);
+					console.error(`Error compiling snippet in ${file}`);
 					console.error(e.code);
 					throw e;
 				}
@@ -256,7 +253,7 @@ export async function read_file(dir, file) {
 	});
 
 	return {
-		file: `${dir}/${file}`,
+		file,
 		slug: match[1],
 		title: metadata.title,
 		content,

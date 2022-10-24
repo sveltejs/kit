@@ -12,7 +12,7 @@ export async function load({ params }) {
 		for (const file of fs.readdirSync(`${base}/${subdir}`)) {
 			if (file.slice(3, -3) === params.slug) {
 				return {
-					page: await read_file(`docs/${subdir}`, file)
+					page: await read_file(`docs/${subdir}/${file}`)
 				};
 			}
 		}
