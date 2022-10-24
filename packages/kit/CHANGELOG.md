@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.525
+
+### Patch Changes
+
+- Always avoid caching form submission on enhanced forms ([#7350](https://github.com/sveltejs/kit/pull/7350))
+
 ## 1.0.0-next.524
 
 ### Patch Changes
