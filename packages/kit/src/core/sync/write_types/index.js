@@ -147,7 +147,7 @@ export async function write_types(config, manifest_data, file) {
 		return;
 	}
 
-	const id = posixify(path.relative(config.kit.files.routes, path.dirname(file)));
+	const id = '/' + posixify(path.relative(config.kit.files.routes, path.dirname(file)));
 
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return; // this shouldn't ever happen
