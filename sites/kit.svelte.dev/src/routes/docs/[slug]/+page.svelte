@@ -41,14 +41,14 @@
 		<div>
 			<span class:faded={!prev}>previous</span>
 			{#if prev}
-				<a href="/docs/{prev.slug}">{prev.title}</a>
+				<a href={prev.path}>{prev.title}</a>
 			{/if}
 		</div>
 
 		<div>
 			<span class:faded={!next}>next</span>
 			{#if next}
-				<a href="/docs/{next.slug}">{next.title}</a>
+				<a href={next.path}>{next.title}</a>
 			{/if}
 		</div>
 	</div>
