@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.524
+
+### Patch Changes
+
+- [fix] get type gen working again ([#7370](https://github.com/sveltejs/kit/pull/7370))
+
+* [fix] don't run matchers for empty optional params ([#7346](https://github.com/sveltejs/kit/pull/7346))
+
 ## 1.0.0-next.523
 
 ### Patch Changes
