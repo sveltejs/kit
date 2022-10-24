@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.523
+
+### Patch Changes
+
+- [fix] split route ids into correct segments ([#7367](https://github.com/sveltejs/kit/pull/7367))
+
 ## 1.0.0-next.522
 
 ### Patch Changes
