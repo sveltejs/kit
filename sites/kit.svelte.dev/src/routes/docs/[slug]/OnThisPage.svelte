@@ -3,8 +3,8 @@
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
 
-	/** @type {Array<{ title: string; slug:string }>} */
-	export let sections;
+	/** @type {import('./$types').PageData['page']} */
+	export let details;
 
 	/** @type {string} */
 	let hash = '';
@@ -86,7 +86,8 @@
 	<h2>On this page</h2>
 	<nav>
 		<ul>
-			{#each sections as { title, slug }}
+			<li><a href="/docs/{details.slug}" class:active={hash === ''}>{details.title}</a></li>
+			{#each details.sections as { title, slug }}
 				<li><a href={`#${slug}`} class:active={`#${slug}` === hash}>{title}</a></li>
 			{/each}
 		</ul>
