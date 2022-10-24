@@ -6,7 +6,7 @@
 	/**
 	 * @type {Array<{title: string; anchor:string}>}
 	 */
-	export let page_contents;
+	export let sections;
 
 	/** @type {string} */
 	let hash = '';
@@ -84,25 +84,70 @@
 
 <svelte:window on:scroll={highlight} on:resize={update} on:hashchange={() => select($page.url)} />
 
-<div class="otp">On This Page</div>
-<nav>
-	{#each page_contents as { title, anchor }}
-		<a href={`#${anchor}`} class:active={`#${anchor}` === hash}>{title}</a>
-	{/each}
-</nav>
+<aside class="on-this-page">
+	<h2>On this page</h2>
+	<nav>
+		<ul>
+			{#each sections as { title, slug }}
+				<li><a href={`#${slug}`} class:active={`#${slug}` === hash}>{title}</a></li>
+			{/each}
+		</ul>
+	</nav>
+</aside>
 
 <style>
-	.otp {
-		padding: 1rem;
+	.on-this-page {
+		display: none;
 	}
+
+	h2 {
+		text-transform: uppercase;
+		font-size: 1.4rem;
+		font-weight: 400;
+		margin: 0 0 1rem 0;
+		padding: 0 0 0 0.6rem;
+		color: var(--second);
+	}
+
+	ul {
+		list-style: none;
+	}
+
 	a {
 		display: block;
-		padding: 0.25rem 1rem;
+		padding: 0.3rem 0.5rem;
 		color: var(--second);
-		border-left: 2px solid var(--back-api);
+		border-left: 2px solid transparent;
 	}
+
+	a:hover {
+		text-decoration: none;
+		background: var(--back-light);
+	}
+
 	a.active {
-		font-weight: bold;
-		border-color: var(--second);
+		background: var(--back-light);
+		border-left-color: var(--prime);
+	}
+
+	/* a.active::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: 4px;
+		width: 2px;
+		height: calc(100% - 8px);
+		background-color: var(--prime);
+	} */
+
+	@media (min-width: 1300px) {
+		.on-this-page {
+			display: block;
+			padding: 0 var(--side-nav);
+			width: calc(var(--sidebar-w) - 15px); /* substract scrollbar */
+			position: fixed;
+			top: calc(var(--top-offset) + var(--nav-h));
+			left: calc(var(--sidebar-w) + var(--side-nav) + var(--linemax));
+		}
 	}
 </style>

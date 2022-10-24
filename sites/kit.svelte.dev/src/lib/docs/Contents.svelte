@@ -3,28 +3,7 @@
 	import TSToggle from './TSToggle.svelte';
 
 	export let contents = [];
-
-	let path = null;
-
-	/** @param {URL} url */
-	function select(url) {
-		// belt...
-		setTimeout(() => {
-			path = url.pathname + url.hash;
-		});
-
-		// ...and braces
-		window.addEventListener(
-			'scroll',
-			() => {
-				path = url.pathname + url.hash;
-			},
-			{ once: true }
-		);
-	}
 </script>
-
-<svelte:window on:hashchange={() => select($page.url)} />
 
 <nav>
 	<ul class="sidebar">
@@ -35,16 +14,15 @@
 				</span>
 
 				<ul>
-					{#each section.sections as subsection}
+					{#each section.pages as { title, path }}
 						<li>
 							<a
 								data-sveltekit-prefetch
-								class="subsection"
-								class:active={subsection.path === path}
-								href={subsection.path}
-								on:click={(e) => select(new URL(e.currentTarget.href))}
+								class="page"
+								class:active={path === $page.url.pathname}
+								href={path}
 							>
-								{subsection.title}
+								{title}
 							</a>
 						</li>
 					{/each}
@@ -65,6 +43,7 @@
 		overflow: hidden;
 		background-color: var(--second);
 		color: white;
+		min-height: 100vh;
 	}
 
 	.sidebar {
@@ -102,7 +81,7 @@
 		font-weight: 600;
 	}
 
-	.subsection {
+	.page {
 		display: block;
 		font-size: 1.6rem;
 		font-family: var(--font);
@@ -131,7 +110,7 @@
 
 	a:hover,
 	.section:hover,
-	.subsection:hover,
+	.page:hover,
 	.active {
 		color: white;
 	}
