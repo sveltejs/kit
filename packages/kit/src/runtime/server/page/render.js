@@ -249,7 +249,6 @@ export async function render_response({
 					status: ${status},
 					error: ${devalue.uneval(error)},
 					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
-					params: ${devalue.uneval(event.params)},
 					route: ${s(event.route)},
 					data: ${serialized.data},
 					form: ${serialized.form}

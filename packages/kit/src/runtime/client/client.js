@@ -1507,10 +1507,11 @@ export function create_client({ target, base, trailing_slash }) {
 			});
 		},
 
-		_hydrate: async ({ status, error, node_ids, params, route, data: server_data_nodes, form }) => {
+		_hydrate: async ({ status, error, node_ids, route, data: server_data_nodes, form }) => {
 			hydrated = true;
 
 			const url = new URL(location.href);
+			const params = get_navigation_intent(url, false)?.params || {};
 
 			/** @type {import('./types').NavigationFinished | undefined} */
 			let result;
