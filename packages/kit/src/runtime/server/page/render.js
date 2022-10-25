@@ -182,6 +182,19 @@ export async function render_response({
 				`Data returned from \`load\` while rendering ${event.routeId} is not serializable: ${error.message} (data.${match[2]})`
 			);
 		}
+
+		const nonPojoError = /pojo/i.exec(error.message);
+
+		if (nonPojoError) {
+			const constructorName = branch[0]?.server_data?.data?.constructor?.name;
+
+			throw new Error(
+				`Data returned from \`load\` must be a plain object${
+					constructorName ? ` rather than ${constructorName} constructor` : ''
+				}`
+			);
+		}
+
 		throw error;
 	}
 
