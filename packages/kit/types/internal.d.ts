@@ -169,6 +169,7 @@ export interface RouteData {
 	pattern: RegExp;
 	names: string[];
 	types: string[];
+	optional: boolean[];
 
 	layout: PageNode | null;
 	error: PageNode | null;
@@ -335,6 +336,7 @@ export interface SSRRoute {
 	pattern: RegExp;
 	names: string[];
 	types: string[];
+	optional: boolean[];
 
 	page: PageNodeIndexes | null;
 
