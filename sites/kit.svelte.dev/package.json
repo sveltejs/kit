@@ -14,7 +14,7 @@
 		"@sveltejs/amp": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/site-kit": "^2.1.2",
-		"@types/node": "^16.11.36",
+		"@types/node": "^18.0.0",
 		"flexsearch": "^0.7.31",
 		"magic-string": "^0.26.2",
 		"marked": "^4.1.1",
