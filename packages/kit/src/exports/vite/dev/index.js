@@ -290,6 +290,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res) => {
+			// Vite's base middleware strips out the base path. Restore it
+			req.url = req.originalUrl;
 			try {
 				const base = `${vite.config.server.https ? 'https' : 'http'}://${
 					req.headers[':authority'] || req.headers.host
