@@ -83,7 +83,7 @@ export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
  */
 export type CSRRoute = {
 	id: string;
-	exec: (path: string) => undefined | Record<string, string>;
+	exec(path: string): undefined | Record<string, string>;
 	errors: Array<CSRPageNodeLoader | undefined>;
 	layouts: Array<[boolean, CSRPageNodeLoader] | undefined>;
 	leaf: [boolean, CSRPageNodeLoader];
@@ -260,7 +260,7 @@ export interface SSRNode {
 	/** external CSS files */
 	stylesheets: string[];
 	/** inlined styles */
-	inline_styles?: () => MaybePromise<Record<string, string>>;
+	inline_styles?(): MaybePromise<Record<string, string>>;
 
 	shared: {
 		load?: Load;
@@ -343,7 +343,7 @@ export interface SSRRoute {
 
 export interface SSRState {
 	fallback?: string;
-	getClientAddress: () => string;
+	getClientAddress(): string;
 	initiator?: SSRRoute | SSRErrorPage;
 	platform?: any;
 	prerendering?: PrerenderOptions;
