@@ -1,5 +1,5 @@
 import './shims';
-import { Server } from 'SERVER';
+import { Server } from '0SERVER';
 import { split_headers } from './headers';
 
 /**

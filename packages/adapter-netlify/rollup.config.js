@@ -15,7 +15,7 @@ const config = {
 		}
 	],
 	plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()],
-	external: (id) => id === 'SERVER' || id.startsWith('node:'),
+	external: (id) => id === '0SERVER' || id.startsWith('node:'),
 	preserveEntrySignatures: 'exports-only'
 };
 
