@@ -25,7 +25,7 @@
 		"tiny-glob": "^0.2.9",
 		"typescript": "^4.8.2",
 		"uvu": "^0.5.3",
-		"vite": "^3.1.1",
+		"vite": "^3.2.0",
 		"vite-imagetools": "^4.0.10"
 	},
 	"type": "module"
