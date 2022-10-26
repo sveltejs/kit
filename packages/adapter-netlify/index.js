@@ -154,7 +154,7 @@ async function generate_lambda_functions({ builder, publish, split }) {
 	builder.writeServer('.netlify/server');
 
 	const replace = {
-		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
+		'SERVER': './server/index.js'
 	};
 
 	builder.copy(`${files}/esm`, '.netlify', { replace });

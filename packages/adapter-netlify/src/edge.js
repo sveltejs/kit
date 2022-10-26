@@ -1,4 +1,4 @@
-import { Server } from '0SERVER';
+import { Server } from 'SERVER';
 import { manifest, prerendered } from 'MANIFEST';
 
 const server = new Server(manifest);
