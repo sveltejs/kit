@@ -56,10 +56,11 @@ export const test = base.extend({
 		 * @param {{ timeout: number }} options
 		 */
 		async function clicknav(selector, options) {
+			const element = page.locator(selector);
 			if (javaScriptEnabled) {
-				await Promise.all([page.waitForNavigation(options), page.click(selector)]);
+				await Promise.all([page.waitForNavigation(options), element.click()]);
 			} else {
-				await page.click(selector);
+				await element.click();
 			}
 		}
 

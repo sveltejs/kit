@@ -103,7 +103,7 @@ declare module '$app/forms' {
 		data: FormData;
 		form: HTMLFormElement;
 		controller: AbortController;
-		cancel: () => void;
+		cancel(): void;
 	}) =>
 		| void
 		| ((opts: {
@@ -114,7 +114,7 @@ declare module '$app/forms' {
 				 * Call this to get the default behavior of a form submission response.
 				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
 				 */
-				update: (options?: { reset: boolean }) => Promise<void>;
+				update(options?: { reset: boolean }): Promise<void>;
 		  }) => void);
 
 	/**
@@ -144,7 +144,7 @@ declare module '$app/forms' {
 		 * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
 		 */
 		submit?: SubmitFunction<Success, Invalid>
-	): { destroy: () => void };
+	): { destroy(): void };
 
 	/**
 	 * This action updates the `form` property of the current page with the given data and updates `$page.status`.
@@ -244,7 +244,7 @@ declare module '$app/navigation' {
 	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */
 	export function beforeNavigate(
-		callback: (navigation: Navigation & { cancel: () => void }) => void
+		callback: (navigation: Navigation & { cancel(): void }) => void
 	): void;
 
 	/**
@@ -303,7 +303,7 @@ declare module '$app/stores' {
 	/**
 	 *  A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 */
-	export const updated: Readable<boolean> & { check: () => boolean };
+	export const updated: Readable<boolean> & { check(): boolean };
 
 	/**
 	 * A function that returns all of the contextual stores. On the server, this must be called during component initialization.

@@ -61,7 +61,7 @@ const enforced_config = {
 
 /** @return {import('vite').Plugin[]} */
 export function sveltekit() {
-	return [...svelte(), kit()];
+	return [...svelte({ prebundleSvelteLibraries: true }), kit()];
 }
 
 /**

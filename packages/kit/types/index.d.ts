@@ -79,7 +79,7 @@ export interface Builder {
 	 */
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
-	generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
+	generateManifest(opts: { relativePath: string; format?: 'esm' | 'cjs' }): string;
 
 	getBuildDirectory(name: string): string;
 	getClientDirectory(): string;
@@ -118,7 +118,7 @@ export interface Builder {
 		from: string,
 		to: string,
 		opts?: {
-			filter?: (basename: string) => boolean;
+			filter?(basename: string): boolean;
 			replace?: Record<string, string>;
 		}
 	): string[];
@@ -137,8 +137,8 @@ export interface Config {
 		source?: string;
 		dir?: string;
 		emitTypes?: boolean;
-		exports?: (filepath: string) => boolean;
-		files?: (filepath: string) => boolean;
+		exports?(filepath: string): boolean;
+		files?(filepath: string): boolean;
 	};
 	preprocess?: any;
 	[key: string]: any;
@@ -225,7 +225,7 @@ export interface KitConfig {
 	};
 	serviceWorker?: {
 		register?: boolean;
-		files?: (filepath: string) => boolean;
+		files?(filepath: string): boolean;
 	};
 	trailingSlash?: TrailingSlash;
 	version?: {
@@ -311,14 +311,14 @@ export interface LoadEvent<
 	 *
 	 * `setHeaders` has no effect when a `load` function runs in the browser.
 	 */
-	setHeaders: (headers: Record<string, string>) => void;
+	setHeaders(headers: Record<string, string>): void;
 	/**
 	 * `await parent()` returns data from parent `+layout.js` `load` functions.
 	 * Implicitly, a missing `+layout.js` is treated as a `({ data }) => data` function, meaning that it will return and forward data from parent `+layout.server.js` files.
 	 *
 	 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
 	 */
-	parent: () => Promise<ParentData>;
+	parent(): Promise<ParentData>;
 	/**
 	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
 	 *
@@ -356,7 +356,7 @@ export interface LoadEvent<
 	 * <button on:click={increase}>Increase Count</button>
 	 * ```
 	 */
-	depends: (...deps: string[]) => void;
+	depends(...deps: string[]): void;
 }
 
 export interface NavigationEvent<
@@ -449,7 +449,7 @@ export interface RequestEvent<
 	/**
 	 * The client's IP address, set by the adapter.
 	 */
-	getClientAddress: () => string;
+	getClientAddress(): string;
 	/**
 	 * Contains custom data that was added to the request within the [`handle hook`](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
 	 */
@@ -492,7 +492,7 @@ export interface RequestEvent<
 	 *
 	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#sveltejs-kit-cookies) API instead.
 	 */
-	setHeaders: (headers: Record<string, string>) => void;
+	setHeaders(headers: Record<string, string>): void;
 	/**
 	 * The URL of the current page or endpoint
 	 */
@@ -511,8 +511,8 @@ export interface RequestHandler<
 }
 
 export interface ResolveOptions {
-	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
-	filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
+	transformPageChunk?(input: { html: string; done: boolean }): MaybePromise<string | undefined>;
+	filterSerializedResponseHeaders?(name: string, value: string): boolean;
 }
 
 export class Server {
@@ -540,7 +540,7 @@ export interface SSRManifest {
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
-		matchers: () => Promise<Record<string, ParamMatcher>>;
+		matchers(): Promise<Record<string, ParamMatcher>>;
 	};
 }
 
@@ -565,7 +565,7 @@ export interface ServerLoadEvent<
 	 *
 	 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
 	 */
-	parent: () => Promise<ParentData>;
+	parent(): Promise<ParentData>;
 	/**
 	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
 	 *
@@ -603,7 +603,7 @@ export interface ServerLoadEvent<
 	 * <button on:click={increase}>Increase Count</button>
 	 * ```
 	 */
-	depends: (...deps: string[]) => void;
+	depends(...deps: string[]): void;
 }
 
 export interface Action<
