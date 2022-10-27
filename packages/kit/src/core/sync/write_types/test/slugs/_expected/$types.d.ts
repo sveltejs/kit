@@ -12,7 +12,7 @@ type OutputDataShape<T> = MaybeWithVoid<
 		Record<string, any>
 >;
 type EnsureDefined<T> = T extends null | undefined ? {} : T;
-type LayoutParams = RouteParams & { rest?: string; slug?: string; optional?: string | void };
+type LayoutParams = RouteParams & { optional?: string; rest?: string; slug?: string };
 type LayoutParentData = EnsureDefined<{}>;
 
 export type LayoutServerData = null;
