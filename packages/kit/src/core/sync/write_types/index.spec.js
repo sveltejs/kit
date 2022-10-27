@@ -12,6 +12,19 @@ import { tweak_types, write_all_types } from './index.js';
 
 const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
+function format_dts(file) {
+	// format with the same settings we use in this monorepo so
+	// the output is the same as visible when opening the $types.d.ts
+	// files in the editor
+	return format(fs.readFileSync(file, 'utf-8'), {
+		parser: 'typescript',
+		useTabs: true,
+		singleQuote: true,
+		trailingComma: 'none',
+		printWidth: 100
+	});
+}
+
 /**
  * @param {string} dir
  * @param {(code: string) => string} [prepare_expected]
@@ -49,12 +62,8 @@ async function run_test(dir, prepare_expected = (code) => code) {
 			continue;
 		}
 
-		const expected = format(fs.readFileSync(expected_file, 'utf-8'), {
-			parser: 'typescript'
-		});
-		const actual = format(fs.readFileSync(actual_file, 'utf-8'), {
-			parser: 'typescript'
-		});
+		const expected = format_dts(expected_file);
+		const actual = format_dts(actual_file);
 		const err_msg = `Expected equal file contents for ${file} in ${dir}`;
 		assert.fixture(actual, prepare_expected(expected), err_msg);
 	}
