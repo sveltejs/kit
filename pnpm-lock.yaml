@@ -694,7 +694,7 @@ importers:
       '@sveltejs/adapter-static': workspace:*
       '@sveltejs/amp': workspace:*
       '@sveltejs/kit': workspace:*
-      '@sveltejs/site-kit': ^2.1.2
+      '@sveltejs/site-kit': ^2.1.4
       '@types/node': ^16.11.36
       flexsearch: ^0.7.31
       magic-string: ^0.26.2
@@ -713,7 +713,7 @@ importers:
       '@sveltejs/adapter-static': link:../../packages/adapter-static
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': 2.1.2
+      '@sveltejs/site-kit': 2.1.4
       '@types/node': 16.11.42
       flexsearch: 0.7.31
       magic-string: 0.26.3
@@ -1149,8 +1149,8 @@ packages:
       picomatch: 2.3.1
     dev: true
 
-  /@sveltejs/site-kit/2.1.2:
-    resolution: {integrity: sha512-VB5JhdvO1299lgR0ZU1MUdKNPb0TZMq4ck8cxg7p/o3TXFTLwbgwF/aV4ei9I/p11bpWFh9FKGzGUUGxWgJxSg==}
+  /@sveltejs/site-kit/2.1.4:
+    resolution: {integrity: sha512-PxpbiCWYXJ320abc6ucp3AXhh6YCggf6ea+EVA6W+wCBe45UFoChfoeQYeD6sQxPZN25XntoS4clZeYnt9H93Q==}
     dependencies:
       golden-fleece: 1.0.9
     dev: true
