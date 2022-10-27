@@ -8,12 +8,10 @@ const config = {
 		serverless: 'src/serverless.js',
 		shims: 'src/shims.js'
 	},
-	output: [
-		{
-			dir: 'files/esm',
-			format: 'esm'
-		}
-	],
+	output: {
+		dir: 'files/esm',
+		format: 'esm'
+	},
 	plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()],
 	external: (id) => id === '0SERVER' || id.startsWith('node:'),
 	preserveEntrySignatures: 'exports-only'
