@@ -21,7 +21,7 @@
 		"set-cookie-parser": "^2.4.8",
 		"sirv": "^2.0.2",
 		"tiny-glob": "^0.2.9",
-		"undici": "^5.11.0"
+		"undici": "5.12.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.25.0",
