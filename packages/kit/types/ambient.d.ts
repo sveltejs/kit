@@ -189,7 +189,13 @@ declare module '$app/navigation' {
 	 */
 	export function goto(
 		url: string | URL,
-		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
+		opts?: {
+			replaceState?: boolean;
+			noscroll?: boolean;
+			keepfocus?: boolean;
+			state?: any;
+			invalidateAll?: boolean;
+		}
 	): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
