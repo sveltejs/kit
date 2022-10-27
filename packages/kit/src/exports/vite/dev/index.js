@@ -172,6 +172,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							pattern: route.pattern,
 							names: route.names,
 							types: route.types,
+							optional: route.optional,
 							page: route.page,
 							endpoint: endpoint
 								? async () => {

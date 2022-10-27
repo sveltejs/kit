@@ -8,6 +8,9 @@ export function parse_route_id(id) {
 	/** @type {string[]} */
 	const types = [];
 
+	/** @type {boolean[]} */
+	const optional = [];
+
 	// `/foo` should get an optional trailing slash, `/foo.json` should not
 	// const add_trailing_slash = !/\.[a-z]+$/.test(key);
 	let add_trailing_slash = true;
@@ -24,6 +27,7 @@ export function parse_route_id(id) {
 							if (rest_match) {
 								names.push(rest_match[1]);
 								types.push(rest_match[2]);
+								optional.push(false);
 								return '(?:/(.*))?';
 							}
 							// special case — /[[optional]]/ could contain zero segments
@@ -31,6 +35,7 @@ export function parse_route_id(id) {
 							if (optional_match) {
 								names.push(optional_match[1]);
 								types.push(optional_match[2]);
+								optional.push(true);
 								return '(?:/([^/]+))?';
 							}
 
@@ -51,14 +56,15 @@ export function parse_route_id(id) {
 											);
 										}
 
-										const [, optional, rest, name, type] = match;
+										const [, is_optional, is_rest, name, type] = match;
 										// It's assumed that the following invalid route id cases are already checked
 										// - unbalanced brackets
 										// - optional param following rest param
 
 										names.push(name);
 										types.push(type);
-										return rest ? '(.*?)' : optional ? '([^/]*)?' : '([^/]+?)';
+										optional.push(!!is_optional);
+										return is_rest ? '(.*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
 									}
 
 									if (is_last && content.includes('.')) add_trailing_slash = false;
@@ -88,7 +94,7 @@ export function parse_route_id(id) {
 						.join('')}${add_trailing_slash ? '/?' : ''}$`
 			  );
 
-	return { pattern, names, types };
+	return { pattern, names, types, optional };
 }
 
 /**
@@ -112,34 +118,32 @@ export function get_route_segments(route) {
 
 /**
  * @param {RegExpMatchArray} match
- * @param {string} routeId
- * @param {string[]} names
- * @param {string[]} types
+ * @param {{
+ *   names: string[];
+ *   types: string[];
+ *   optional: boolean[];
+ * }} candidate
  * @param {Record<string, import('types').ParamMatcher>} matchers
  */
-export function exec(match, routeId, names, types, matchers) {
+export function exec(match, { names, types, optional }, matchers) {
 	/** @type {Record<string, string>} */
 	const params = {};
-	let last_type_idx = -1;
 
 	for (let i = 0; i < names.length; i += 1) {
 		const name = names[i];
 		const type = types[i];
-		let value = match[i + 1] || '';
+		let value = match[i + 1];
 
-		if (type) {
-			const matcher = matchers[type];
-			if (!matcher) throw new Error(`Missing "${type}" param matcher`); // TODO do this ahead of time?
+		if (value || !optional[i]) {
+			if (type) {
+				const matcher = matchers[type];
+				if (!matcher) throw new Error(`Missing "${type}" param matcher`); // TODO do this ahead of time?
 
-			last_type_idx = routeId.indexOf(`=${type}`, last_type_idx + 1);
-			const is_empty_optional_param =
-				!value &&
-				// a param without a value can only be an optional or rest param
-				routeId.lastIndexOf('[[', last_type_idx) > routeId.lastIndexOf('[...', last_type_idx);
-			if (!is_empty_optional_param && !matcher(value)) return;
+				if (!matcher(value)) return;
+			}
+
+			params[name] = value ?? '';
 		}
-
-		params[name] = value;
 	}
 
 	return params;

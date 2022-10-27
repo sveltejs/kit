@@ -121,7 +121,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				);
 			}
 
-			const { pattern, names, types } = parse_route_id(id);
+			const { pattern, names, types, optional } = parse_route_id(id);
 
 			/** @type {import('types').RouteData} */
 			const route = {
@@ -132,6 +132,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				pattern,
 				names,
 				types,
+				optional,
 
 				layout: null,
 				error: null,
@@ -228,6 +229,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			pattern: /^$/,
 			names: [],
 			types: [],
+			optional: [],
 			parent: null,
 			layout: null,
 			error: null,
