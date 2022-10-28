@@ -189,7 +189,7 @@ export interface PrerenderHttpErrorHandler {
 }
 
 export interface PrerenderMissingIdHandler {
-	(details: { pathname: string; id: string; referrers: string[] }): void;
+	(details: { path: string; id: string; referrers: string[] }): void;
 }
 
 export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;

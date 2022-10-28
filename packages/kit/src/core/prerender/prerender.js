@@ -135,9 +135,9 @@ export async function prerender() {
 	const handle_missing_id = normalise_error_handler(
 		log,
 		config.prerender.handleMissingId,
-		({ pathname, id, referrers }) => {
+		({ path, id, referrers }) => {
 			return (
-				`The following pages contain links to ${pathname}#${id}, but no element with id="${id}" exists on ${pathname}:` +
+				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path}:` +
 				referrers.map((l) => `\n  - ${l}`).join('')
 			);
 		}
@@ -409,12 +409,12 @@ export async function prerender() {
 
 	// handle invalid fragment links
 	for (const [key, referrers] of expected_deeplinks) {
-		const [pathname, id] = key.split('#');
+		const [path, id] = key.split('#');
 
-		const actual_ids = actual_deeplinks.get(pathname);
+		const actual_ids = actual_deeplinks.get(path);
 
 		if (actual_ids?.includes(id)) {
-			handle_missing_id({ id, pathname, referrers: Array.from(referrers) });
+			handle_missing_id({ id, path, referrers: Array.from(referrers) });
 		}
 	}
 
