@@ -128,7 +128,9 @@ export function crawl(html) {
 								let escaped = false;
 
 								while (i < html.length) {
-									if (!escaped) {
+									if (escaped) {
+										escaped = false;
+									} else {
 										const char = html[i];
 
 										if (html[i] === quote) {
