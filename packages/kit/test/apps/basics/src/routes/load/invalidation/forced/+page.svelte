@@ -7,9 +7,16 @@
 
 <h1>a: {data.a}, b: {data.b}</h1>
 
-<button class="invalidateall" on:click={invalidateAll}>invalidate</button>
+<button
+	class="invalidateall"
+	on:click={() => {
+		window.promise = invalidateAll();
+	}}>invalidate</button
+>
 
 <button
 	class="goto"
-	on:click={() => goto('/load/invalidation/forced?test', { invalidateAll: true })}>goto</button
+	on:click={() => {
+		window.promise = goto('/load/invalidation/forced?test', { invalidateAll: true });
+	}}>goto</button
 >

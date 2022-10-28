@@ -756,13 +756,11 @@ test.describe.serial('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
 		await page.click('button.invalidateall');
-		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(200); // apparently necessary
+		await page.evaluate(() => window.promise);
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 
 		await page.click('button.invalidateall');
-		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(200);
+		await page.evaluate(() => window.promise);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
 	});
 
@@ -776,8 +774,7 @@ test.describe.serial('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
 		await page.click('button.goto');
-		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(200); // apparently necessary
+		await page.evaluate(() => window.promise);
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 	});
 
