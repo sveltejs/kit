@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.82
+
+### Patch Changes
+
+- Drop CJS version of adapter-netlify ([#7401](https://github.com/sveltejs/kit/pull/7401))
+
 ## 1.0.0-next.81
 
 ### Patch Changes

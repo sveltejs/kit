@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.188
+
+### Patch Changes
+
+- Use aria-current instead of active class in nav ([#7376](https://github.com/sveltejs/kit/pull/7376))
+
 ## 2.0.0-next.187
 
 ### Patch Changes
