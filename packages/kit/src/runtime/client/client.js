@@ -164,13 +164,19 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/**
 	 * @param {string | URL} url
-	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
+	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any; invalidateAll?: boolean }} opts
 	 * @param {string[]} redirect_chain
 	 * @param {{}} [nav_token]
 	 */
 	async function goto(
 		url,
-		{ noscroll = false, replaceState = false, keepfocus = false, state = {} },
+		{
+			noscroll = false,
+			replaceState = false,
+			keepfocus = false,
+			state = {},
+			invalidateAll = false
+		},
 		redirect_chain,
 		nav_token
 	) {
@@ -188,7 +194,11 @@ export function create_client({ target, base, trailing_slash }) {
 				replaceState
 			},
 			nav_token,
-			accepted: () => {},
+			accepted: () => {
+				if (invalidateAll) {
+					force_invalidation = true;
+				}
+			},
 			blocked: () => {},
 			type: 'goto'
 		});
@@ -1212,7 +1222,7 @@ export function create_client({ target, base, trailing_slash }) {
 					post_update();
 				}
 			} else if (result.type === 'redirect') {
-				goto(result.location, {}, []);
+				goto(result.location, { invalidateAll: true }, []);
 			} else {
 				/** @type {Record<string, any>} */
 				const props = {
