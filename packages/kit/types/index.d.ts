@@ -161,6 +161,8 @@ export interface Cookies {
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
+	 *
+	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 */
 	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
 
