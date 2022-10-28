@@ -1,6 +1,6 @@
 import * as devalue from 'devalue';
-import { DATA_SUFFIX } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
+import { has_data_suffix } from '../../utils/url.js';
 import { HttpError } from '../control.js';
 
 /** @param {any} body */
@@ -144,7 +144,7 @@ export function handle_fatal_error(event, options, error) {
 		'text/html'
 	]);
 
-	if (event.url.pathname.endsWith(DATA_SUFFIX) || type === 'application/json') {
+	if (has_data_suffix(event.url.pathname) || type === 'application/json') {
 		return new Response(JSON.stringify(body), {
 			status,
 			headers: { 'content-type': 'application/json; charset=utf-8' }

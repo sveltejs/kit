@@ -755,15 +755,30 @@ test.describe.serial('Invalidation', () => {
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
-		await page.click('button');
+		await page.click('button.invalidateall');
 		await page.waitForLoadState('networkidle');
 		await page.waitForTimeout(200); // apparently necessary
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 
-		await page.click('button');
+		await page.click('button.invalidateall');
 		await page.waitForLoadState('networkidle');
 		await page.waitForTimeout(200);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
+	});
+
+	test('server-only load functions are re-run following goto with forced invalidation', async ({
+		page,
+		request
+	}) => {
+		await request.get('/load/invalidation/forced/reset');
+
+		await page.goto('/load/invalidation/forced');
+		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+
+		await page.click('button.goto');
+		await page.waitForLoadState('networkidle');
+		await page.waitForTimeout(200); // apparently necessary
+		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 	});
 
 	test('multiple invalidations run concurrently', async ({ page, request }) => {
