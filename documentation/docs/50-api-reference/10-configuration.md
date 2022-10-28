@@ -263,9 +263,9 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
 
 - `handleMissingId`
 
-  - `'fail'` — fails the build when a prerendered page links to another prerendered page with a `#` fragment that doesn't correspond to an `id`
+  - `'fail'` — (default) fails the build when a prerendered page links to another prerendered page with a `#` fragment that doesn't correspond to an `id`
   - `'ignore'` - silently ignore the failure and continue
-  - `'warn'` — (default) continue, but print a warning
+  - `'warn'` — continue, but print a warning
   - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id` and `referrers` properties
 
 - `origin` — the value of `url.origin` during prerendering; useful if it is included in rendered content

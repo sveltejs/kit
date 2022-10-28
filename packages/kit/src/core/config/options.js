@@ -274,7 +274,7 @@ const options = object(
 					throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
 				}),
 
-				handleMissingId: validate('warn', (input, keypath) => {
+				handleMissingId: validate('fail', (input, keypath) => {
 					if (typeof input === 'function') return input;
 					if (['fail', 'warn', 'ignore'].includes(input)) return input;
 					throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);

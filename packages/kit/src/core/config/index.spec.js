@@ -117,7 +117,7 @@ const get_defaults = (prefix = '') => ({
 			entries: ['*'],
 			force: undefined,
 			handleHttpError: 'fail',
-			handleMissingId: 'warn',
+			handleMissingId: 'fail',
 			onError: undefined,
 			origin: 'http://sveltekit-prerender',
 			pages: undefined
