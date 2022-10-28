@@ -149,7 +149,7 @@ importers:
       svelte: ^3.48.0
       typescript: ^4.8.2
       uvu: ^0.5.3
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../kit
       '@types/node': 16.11.42
@@ -157,17 +157,17 @@ importers:
       svelte: 3.48.0
       typescript: 4.8.2
       uvu: 0.5.4
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/adapter-static/test/apps/prerendered:
     specifiers:
       '@sveltejs/kit': workspace:*
       svelte: ^3.48.0
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../../../kit
       svelte: 3.48.0
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/adapter-static/test/apps/spa:
     specifiers:
@@ -175,13 +175,13 @@ importers:
       '@sveltejs/kit': workspace:*
       sirv-cli: ^2.0.2
       svelte: ^3.48.0
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/adapter-node': link:../../../../adapter-node
       '@sveltejs/kit': link:../../../../kit
       sirv-cli: 2.0.2
       svelte: 3.48.0
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/adapter-vercel:
     specifiers:
@@ -245,7 +245,7 @@ importers:
       svelte: ^3.48.0
       svelte-preprocess: ^4.10.6
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     dependencies:
       '@fontsource/fira-mono': 4.5.8
     devDependencies:
@@ -255,7 +255,7 @@ importers:
       svelte: 3.48.0
       svelte-preprocess: 4.10.7_rzeu6t3zqu2xw2nsnbtx3gkaoe
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/create-svelte/templates/skeleton:
     specifiers:
@@ -290,9 +290,9 @@ importers:
       typescript: ^4.8.2
       undici: ^5.11.0
       uvu: ^0.5.3
-      vite: ^3.2.0
+      vite: ^3.2.1
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.5_svelte@3.48.0+vite@3.2.0
+      '@sveltejs/vite-plugin-svelte': 1.0.5_svelte@3.48.0+vite@3.2.1
       '@types/cookie': 0.5.1
       cookie: 0.5.0
       devalue: 4.0.0
@@ -318,7 +318,7 @@ importers:
       svelte-preprocess: 4.10.7_rzeu6t3zqu2xw2nsnbtx3gkaoe
       typescript: 4.8.2
       uvu: 0.5.4
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/apps/amp:
     specifiers:
@@ -329,7 +329,7 @@ importers:
       svelte: ^3.48.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/amp': link:../../../../amp
       '@sveltejs/kit': link:../../..
@@ -338,7 +338,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/apps/basics:
     specifiers:
@@ -348,7 +348,7 @@ importers:
       svelte: ^3.48.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
@@ -356,7 +356,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/apps/dev-only:
     specifiers:
@@ -366,7 +366,7 @@ importers:
       svelte: ^3.48.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
@@ -374,7 +374,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/apps/options:
     specifiers:
@@ -383,14 +383,14 @@ importers:
       svelte: ^3.48.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/apps/options-2:
     specifiers:
@@ -400,7 +400,7 @@ importers:
       svelte: ^3.48.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/adapter-node': link:../../../../adapter-node
       '@sveltejs/kit': link:../../..
@@ -408,7 +408,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/apps/writes:
     specifiers:
@@ -418,7 +418,7 @@ importers:
       svelte: ^3.48.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
@@ -426,7 +426,7 @@ importers:
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/build-errors:
     specifiers:
@@ -441,14 +441,14 @@ importers:
       svelte: ^3.48.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/adapter-auto': link:../../../../../adapter-auto
       '@sveltejs/kit': link:../../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
     specifiers:
@@ -456,13 +456,13 @@ importers:
       svelte: ^3.44.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
     specifiers:
@@ -470,13 +470,13 @@ importers:
       svelte: ^3.44.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/build-errors/apps/private-static-env:
     specifiers:
@@ -485,14 +485,14 @@ importers:
       svelte: ^3.44.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../../..
       cross-env: 7.0.3
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
     specifiers:
@@ -500,13 +500,13 @@ importers:
       svelte: ^3.44.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/build-errors/apps/server-only-folder:
     specifiers:
@@ -514,13 +514,13 @@ importers:
       svelte: ^3.44.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     specifiers:
@@ -528,13 +528,13 @@ importers:
       svelte: ^3.44.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/build-errors/apps/server-only-module:
     specifiers:
@@ -542,13 +542,13 @@ importers:
       svelte: ^3.44.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     specifiers:
@@ -556,13 +556,13 @@ importers:
       svelte: ^3.44.0
       svelte-check: ^2.7.1
       typescript: ^4.8.2
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/prerendering/basics:
     specifiers:
@@ -571,14 +571,14 @@ importers:
       svelte-check: ^2.7.1
       typescript: ^4.8.2
       uvu: ^0.5.3
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
       uvu: 0.5.4
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/prerendering/fallback:
     specifiers:
@@ -587,14 +587,14 @@ importers:
       svelte-check: ^2.7.1
       typescript: ^4.8.2
       uvu: ^0.5.3
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
       uvu: 0.5.4
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/prerendering/options:
     specifiers:
@@ -603,14 +603,14 @@ importers:
       svelte-check: ^2.7.1
       typescript: ^4.8.2
       uvu: ^0.5.3
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
       uvu: 0.5.4
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/prerendering/paths-base:
     specifiers:
@@ -619,14 +619,14 @@ importers:
       svelte-check: ^2.7.1
       typescript: ^4.8.2
       uvu: ^0.5.3
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
       uvu: 0.5.4
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/kit/test/prerendering/trailing-slash:
     specifiers:
@@ -635,14 +635,14 @@ importers:
       svelte-check: ^2.7.1
       typescript: ^4.8.2
       uvu: ^0.5.4
-      vite: ^3.2.0
+      vite: ^3.2.1
     devDependencies:
       '@sveltejs/kit': link:../../..
       svelte: 3.48.0
       svelte-check: 2.8.0_svelte@3.48.0
       typescript: 4.8.2
       uvu: 0.5.4
-      vite: 3.2.0
+      vite: 3.2.1
 
   packages/migrate:
     specifiers:
@@ -706,7 +706,7 @@ importers:
       tiny-glob: ^0.2.9
       typescript: ^4.8.2
       uvu: ^0.5.3
-      vite: ^3.2.0
+      vite: ^3.2.1
       vite-imagetools: ^4.0.10
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
@@ -725,7 +725,7 @@ importers:
       tiny-glob: 0.2.9
       typescript: 4.8.2
       uvu: 0.5.6
-      vite: 3.2.0
+      vite: 3.2.1
       vite-imagetools: 4.0.10
 
 packages:
@@ -1172,7 +1172,7 @@ packages:
       golden-fleece: 1.0.9
     dev: true
 
-  /@sveltejs/vite-plugin-svelte/1.0.5_svelte@3.48.0+vite@3.2.0:
+  /@sveltejs/vite-plugin-svelte/1.0.5_svelte@3.48.0+vite@3.2.1:
     resolution: {integrity: sha512-CmSdSow0Dr5ua1A11BQMtreWnE0JZmkVIcRU/yG3PKbycKUpXjNdgYTWFSbStLB0vdlGnBbm2+Y4sBVj+C+TIw==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
@@ -1190,7 +1190,7 @@ packages:
       magic-string: 0.26.3
       svelte: 3.48.0
       svelte-hmr: 0.14.12_svelte@3.48.0
-      vite: 3.2.0
+      vite: 3.2.1
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -4850,8 +4850,8 @@ packages:
       - rollup
     dev: true
 
-  /vite/3.2.0:
-    resolution: {integrity: sha512-Ovj7+cqIdM1I0LPCk2CWxzgADXMix3NLXpUT6g7P7zg/a9grk/TaC3qn9YMg7w7M0POIVCBOp1aBANJW+RH7oA==}
+  /vite/3.2.1:
+    resolution: {integrity: sha512-ADtMkfHuWq4tskJsri2n2FZkORO8ZyhI+zIz7zTrDAgDEtct1jdxOg3YsZBfHhKjmMoWLOSCr+64qrEDGo/DbQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
