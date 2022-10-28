@@ -8,7 +8,7 @@ You can use SvelteKit to build apps as well as component libraries, using the `@
 
 When you're creating an app, the contents of `src/routes` is the public-facing stuff; [`src/lib`](/docs/modules#$lib) contains your app's internal library.
 
-A SvelteKit component library has the exact same structure as a SvelteKit app, except that `src/lib` is the public-facing bit. `src/routes` might be a documentation or demo site that accompanies the library, or it might just be a sandbox you use during development.
+A component library has the exact same structure as a SvelteKit app, except that `src/lib` is the public-facing bit. `src/routes` might be a documentation or demo site that accompanies the library, or it might just be a sandbox you use during development.
 
 Running the `svelte-package` command from `@sveltejs/package` will take the contents of `src/lib` and generate a `package` directory (which can be [configured](/docs/configuration#package)) containing the following:
 
@@ -37,6 +37,8 @@ declare module 'your-library/Foo.svelte';
 // ---cut---
 import Foo from 'your-library/Foo.svelte';
 ```
+
+> You should avoid using [SvelteKit-specific modules](/docs/modules) like `$app` in your packages unless you intend for them to only be consumable by other SvelteKit projects. E.g. rather than using `import { browser } from '$app/environment';` you could use [`import.meta.env.SSR`](https://vitejs.dev/guide/env-and-mode.html#env-variables) to make the library available to all Vite-based projects or better yet use [Node conditional exports](https://nodejs.org/api/packages.html#conditional-exports) to make it work for all bundlers. You may also wish to pass in things like the current URL or a navigation action as a prop rather than relying directly on `$app/stores`, `$app/navigation`, etc. Writing your app in this more generic fashion will also make it easier to setup tools for testing, UI demos, etc.
 
 ### Options
 
