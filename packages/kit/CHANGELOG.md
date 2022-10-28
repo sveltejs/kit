@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.527
+
+### Patch Changes
+
+- [fix] harmonize cookie path and add dev time warnings ([#7416](https://github.com/sveltejs/kit/pull/7416))
+
+* [feat] add invalidateAll option to goto ([#7407](https://github.com/sveltejs/kit/pull/7407))
+
 ## 1.0.0-next.526
 
 ### Patch Changes
