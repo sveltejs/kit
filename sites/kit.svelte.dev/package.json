@@ -13,7 +13,7 @@
 		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/amp": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"@sveltejs/site-kit": "^2.1.2",
+		"@sveltejs/site-kit": "^2.1.4",
 		"@types/node": "^16.11.36",
 		"flexsearch": "^0.7.31",
 		"magic-string": "^0.26.2",
