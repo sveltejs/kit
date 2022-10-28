@@ -10,7 +10,8 @@ import {
 	Logger,
 	MaybePromise,
 	Prerendered,
-	PrerenderOnErrorValue,
+	PrerenderHttpErrorHandlerValue,
+	PrerenderMissingIdHandlerValue,
 	RequestOptions,
 	RouteDefinition,
 	TrailingSlash,
@@ -222,7 +223,8 @@ export interface KitConfig {
 		default?: boolean;
 		enabled?: boolean;
 		entries?: Array<'*' | `/${string}`>;
-		onError?: PrerenderOnErrorValue;
+		handleHttpError?: PrerenderHttpErrorHandlerValue;
+		handleMissingId?: PrerenderMissingIdHandlerValue;
 		origin?: string;
 	};
 	serviceWorker?: {

@@ -12,45 +12,31 @@ import { load_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { get_option } from '../../runtime/server/utils.js';
 
-/**
- * @typedef {import('types').PrerenderErrorHandler} PrerenderErrorHandler
- * @typedef {import('types').Logger} Logger
- */
-
 const [, , client_out_dir, results_path, verbose, env] = process.argv;
 
 prerender();
 
 /**
- * @param {Parameters<PrerenderErrorHandler>[0]} details
- * @param {import('types').ValidatedKitConfig} config
+ * @template T
+ * @param {import('types').Logger} log
+ * @param {'fail' | 'warn' | 'ignore' | ((details: T) => void)} input
+ * @param {(details: T) => string} format
+ * @returns {(details: T) => void}
  */
-function format_error({ status, path, referrer, referenceType }, config) {
-	const message =
-		status === 404 && !path.startsWith(config.paths.base)
-			? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\` - see https://kit.svelte.dev/docs/configuration#paths for more info`
-			: path;
-
-	return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
-}
-
-/**
- * @param {Logger} log
- * @param {import('types').ValidatedKitConfig} config
- * @returns {PrerenderErrorHandler}
- */
-function normalise_error_handler(log, config) {
-	switch (config.prerender.onError) {
-		case 'continue':
-			return (details) => {
-				log.error(format_error(details, config));
-			};
+function normalise_error_handler(log, input, format) {
+	switch (input) {
 		case 'fail':
 			return (details) => {
-				throw new Error(format_error(details, config));
+				throw new Error(format(details));
 			};
+		case 'warn':
+			return (details) => {
+				log.error(format(details));
+			};
+		case 'ignore':
+			return () => {};
 		default:
-			return config.prerender.onError;
+			return input;
 	}
 }
 
@@ -133,7 +119,29 @@ export async function prerender() {
 	const server = new Server(manifest);
 	await server.init({ env: JSON.parse(env) });
 
-	const error = normalise_error_handler(log, config);
+	const handle_http_error = normalise_error_handler(
+		log,
+		config.prerender.handleHttpError,
+		({ status, path, referrer, referenceType }) => {
+			const message =
+				status === 404 && !path.startsWith(config.paths.base)
+					? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\` - see https://kit.svelte.dev/docs/configuration#paths for more info`
+					: path;
+
+			return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
+		}
+	);
+
+	const handle_missing_id = normalise_error_handler(
+		log,
+		config.prerender.handleMissingId,
+		({ pathname, id, referrers }) => {
+			return (
+				`The following pages contain links to ${pathname}#${id}, but no element with id="${id}" exists on ${pathname}:` +
+				referrers.map((l) => `\n  - ${l}`).join('')
+			);
+		}
+	);
 
 	const q = queue(config.prerender.concurrency);
 
@@ -183,7 +191,7 @@ export async function prerender() {
 	 */
 	async function visit(decoded, encoded, referrer) {
 		if (!decoded.startsWith(config.paths.base)) {
-			error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
+			handle_http_error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
 			return;
 		}
 
@@ -347,7 +355,7 @@ export async function prerender() {
 
 			prerendered.paths.push(decoded);
 		} else if (response_type !== OK) {
-			error({ status: response.status, path: decoded, referrer, referenceType });
+			handle_http_error({ status: response.status, path: decoded, referrer, referenceType });
 		}
 	}
 
@@ -399,21 +407,14 @@ export async function prerender() {
 
 	await q.done();
 
-	for (const [key, linkers] of expected_deeplinks) {
+	// handle invalid fragment links
+	for (const [key, referrers] of expected_deeplinks) {
 		const [pathname, id] = key.split('#');
 
-		// ignore any pages that weren't prerendered
 		const actual_ids = actual_deeplinks.get(pathname);
-		if (!actual_ids) continue;
 
-		if (!actual_ids.includes(id)) {
-			const message =
-				`The following pages contain links to ${key}, but no element with id="${id}" exists on ${pathname}:` +
-				Array.from(linkers)
-					.map((l) => `\n  - ${l}`)
-					.join('');
-
-			throw new Error(message);
+		if (actual_ids?.includes(id)) {
+			handle_missing_id({ id, pathname, referrers: Array.from(referrers) });
 		}
 	}
 
