@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.528
+
+### Patch Changes
+
+- Restore `req.url` to `req.originalUrl` in dev and preview ([#7343](https://github.com/sveltejs/kit/pull/7343))
+
 ## 1.0.0-next.527
 
 ### Patch Changes
