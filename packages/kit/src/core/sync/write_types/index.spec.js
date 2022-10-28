@@ -12,14 +12,27 @@ import { tweak_types, write_all_types } from './index.js';
 
 const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
+function format_dts(file) {
+	// format with the same settings we use in this monorepo so
+	// the output is the same as visible when opening the $types.d.ts
+	// files in the editor
+	return format(fs.readFileSync(file, 'utf-8'), {
+		parser: 'typescript',
+		useTabs: true,
+		singleQuote: true,
+		trailingComma: 'none',
+		printWidth: 100
+	});
+}
+
 /**
  * @param {string} dir
- * @param {import('types').Config} config
+ * @param {(code: string) => string} [prepare_expected]
  */
-async function run_test(dir, config = {}) {
+async function run_test(dir, prepare_expected = (code) => code) {
 	rimraf(path.join(cwd, dir, '.svelte-kit'));
 
-	const initial = options(config, 'config');
+	const initial = options({}, 'config');
 
 	initial.kit.files.assets = path.resolve(cwd, 'static');
 	initial.kit.files.params = path.resolve(cwd, 'params');
@@ -49,14 +62,10 @@ async function run_test(dir, config = {}) {
 			continue;
 		}
 
-		const expected = format(fs.readFileSync(expected_file, 'utf-8'), {
-			parser: 'typescript'
-		});
-		const actual = format(fs.readFileSync(actual_file, 'utf-8'), {
-			parser: 'typescript'
-		});
+		const expected = format_dts(expected_file);
+		const actual = format_dts(actual_file);
 		const err_msg = `Expected equal file contents for ${file} in ${dir}`;
-		assert.fixture(actual, expected, err_msg);
+		assert.fixture(actual, prepare_expected(expected), err_msg);
 	}
 }
 
@@ -81,7 +90,15 @@ test('Create $types for grouped layout and page', async () => {
 });
 
 test('Create $types with params', async () => {
-	await run_test('slugs');
+	await run_test('slugs', (code) =>
+		// For some reason, the order of the params differentiates between windows and mac/linux
+		process.platform === 'win32'
+			? code.replace(
+					'rest?: string; slug?: string; optional?: string',
+					'optional?: string; rest?: string; slug?: string'
+			  )
+			: code
+	);
 });
 
 test('Create $types with params and required return types for layout', async () => {

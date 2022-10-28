@@ -195,7 +195,9 @@ function update_types(config, routes, route, to_delete = new Set()) {
 	// Makes sure a type is "repackaged" and therefore more readable
 	declarations.push('type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;');
 	declarations.push(
-		`type RouteParams = { ${route.names.map((param) => `${param}: string`).join('; ')} }`
+		`type RouteParams = { ${route.names
+			.map((param, idx) => `${param}${route.optional[idx] ? '?' : ''}: string`)
+			.join('; ')} }`
 	);
 
 	// These could also be placed in our public types, but it would bloat them unnecessarily and we may want to change these in the future
