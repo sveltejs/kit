@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.0.0-next.526
+
+### Patch Changes
+
+- declare function type with named syntax ([#7396](https://github.com/sveltejs/kit/pull/7396))
+
+* [fix] optional params can be undefined ([#7379](https://github.com/sveltejs/kit/pull/7379))
+
+- [fix] support undici 5.12.0 and pin it ([#7412](https://github.com/sveltejs/kit/pull/7412))
+
+* [chore] upgrade to vite-plugin-svelte 1.1.0 and enable prebundleSvelteLibraries ([#7388](https://github.com/sveltejs/kit/pull/7388))
+
+- Show more descriptive error if data returned from `load` is a non-POJO ([#7386](https://github.com/sveltejs/kit/pull/7386))
+
 ## 1.0.0-next.525
 
 ### Patch Changes

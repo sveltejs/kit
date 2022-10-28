@@ -288,7 +288,7 @@ importers:
       svelte-preprocess: ^4.10.7
       tiny-glob: ^0.2.9
       typescript: ^4.8.4
-      undici: ^5.11.0
+      undici: 5.12.0
       uvu: ^0.5.6
       vite: ^3.1.8
     dependencies:
@@ -303,7 +303,7 @@ importers:
       set-cookie-parser: 2.5.1
       sirv: 2.0.2
       tiny-glob: 0.2.9
-      undici: 5.11.0
+      undici: 5.12.0
     devDependencies:
       '@playwright/test': 1.25.0
       '@types/connect': 3.4.35
@@ -694,7 +694,7 @@ importers:
       '@sveltejs/adapter-static': workspace:*
       '@sveltejs/amp': workspace:*
       '@sveltejs/kit': workspace:*
-      '@sveltejs/site-kit': ^2.1.2
+      '@sveltejs/site-kit': ^2.1.4
       '@types/node': ^16.11.68
       flexsearch: ^0.7.31
       magic-string: ^0.26.7
@@ -713,7 +713,7 @@ importers:
       '@sveltejs/adapter-static': link:../../packages/adapter-static
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': 2.1.2
+      '@sveltejs/site-kit': 2.1.4
       '@types/node': 16.18.2
       flexsearch: 0.7.31
       magic-string: 0.26.7
@@ -1165,8 +1165,8 @@ packages:
       picomatch: 2.3.1
       rollup: 2.79.1
 
-  /@sveltejs/site-kit/2.1.2:
-    resolution: {integrity: sha512-VB5JhdvO1299lgR0ZU1MUdKNPb0TZMq4ck8cxg7p/o3TXFTLwbgwF/aV4ei9I/p11bpWFh9FKGzGUUGxWgJxSg==}
+  /@sveltejs/site-kit/2.1.4:
+    resolution: {integrity: sha512-PxpbiCWYXJ320abc6ucp3AXhh6YCggf6ea+EVA6W+wCBe45UFoChfoeQYeD6sQxPZN25XntoS4clZeYnt9H93Q==}
     dependencies:
       golden-fleece: 1.0.9
     dev: true
@@ -4476,8 +4476,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
-  /undici/5.11.0:
-    resolution: {integrity: sha512-oWjWJHzFet0Ow4YZBkyiJwiK5vWqEYoH7BINzJAJOLedZ++JpAlCbUktW2GQ2DS2FpKmxD/JMtWUUWl1BtghGw==}
+  /undici/5.12.0:
+    resolution: {integrity: sha512-zMLamCG62PGjd9HHMpo05bSLvvwWOZgGeiWlN/vlqu3+lRo3elxktVGEyLMX+IO7c2eflLjcW74AlkhEZm15mg==}
     engines: {node: '>=12.18'}
     dependencies:
       busboy: 1.6.0
