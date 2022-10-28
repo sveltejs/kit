@@ -5,10 +5,15 @@ import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { is_form_content_type } from '../../utils/http.js';
 import { GENERIC_ERROR, handle_fatal_error } from './utils.js';
-import { decode_params, disable_search, normalize_path } from '../../utils/url.js';
+import {
+	decode_params,
+	disable_search,
+	has_data_suffix,
+	normalize_path,
+	strip_data_suffix
+} from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
 import { render_data } from './data/index.js';
-import { DATA_SUFFIX } from '../../constants.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { HttpError } from '../control.js';
 import { create_fetch } from './fetch.js';
@@ -57,8 +62,8 @@ export async function respond(request, options, state) {
 		decoded = decoded.slice(options.paths.base.length) || '/';
 	}
 
-	const is_data_request = decoded.endsWith(DATA_SUFFIX);
-	if (is_data_request) decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
+	const is_data_request = has_data_suffix(decoded);
+	if (is_data_request) decoded = strip_data_suffix(decoded);
 
 	if (!state.prerendering?.fallback) {
 		const matchers = await options.manifest._.matchers();
