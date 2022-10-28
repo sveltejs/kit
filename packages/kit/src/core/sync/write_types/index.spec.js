@@ -1,35 +1,19 @@
-// @ts-nocheck
 import path from 'path';
-import fs from 'fs';
-import { format } from 'prettier';
 import { fileURLToPath } from 'url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { rimraf, walk } from '../../../utils/filesystem.js';
+import { rimraf } from '../../../utils/filesystem.js';
 import options from '../../config/options.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { tweak_types, write_all_types } from './index.js';
+import { execSync } from 'child_process';
 
 const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
-function format_dts(file) {
-	// format with the same settings we use in this monorepo so
-	// the output is the same as visible when opening the $types.d.ts
-	// files in the editor
-	return format(fs.readFileSync(file, 'utf-8'), {
-		parser: 'typescript',
-		useTabs: true,
-		singleQuote: true,
-		trailingComma: 'none',
-		printWidth: 100
-	});
-}
-
 /**
  * @param {string} dir
- * @param {(code: string) => string} [prepare_expected]
  */
-async function run_test(dir, prepare_expected = (code) => code) {
+async function run_test(dir) {
 	rimraf(path.join(cwd, dir, '.svelte-kit'));
 
 	const initial = options({}, 'config');
@@ -43,66 +27,22 @@ async function run_test(dir, prepare_expected = (code) => code) {
 		config: /** @type {import('types').ValidatedConfig} */ (initial)
 	});
 	await write_all_types(initial, manifest);
-
-	const expected_dir = path.join(cwd, dir, '_expected');
-	const expected_files = walk(expected_dir, true);
-	const actual_dir = path.join(
-		path.join(cwd, dir, '.svelte-kit', 'types'),
-		path.relative(process.cwd(), path.join(cwd, dir))
-	);
-	const actual_files = walk(actual_dir, true);
-
-	assert.equal(actual_files, expected_files);
-
-	for (const file of actual_files) {
-		const expected_file = path.join(expected_dir, file);
-		const actual_file = path.join(actual_dir, file);
-		if (fs.statSync(path.join(actual_dir, file)).isDirectory()) {
-			assert.ok(fs.statSync(actual_file).isDirectory(), 'Expected a directory');
-			continue;
-		}
-
-		const expected = format_dts(expected_file);
-		const actual = format_dts(actual_file);
-		const err_msg = `Expected equal file contents for ${file} in ${dir}`;
-		assert.fixture(actual, prepare_expected(expected), err_msg);
-	}
 }
 
-test('Create $types for +page.js', async () => {
+test('Creates correct $types', async () => {
 	await run_test('simple-page-shared-only');
-});
-
-test('Create $types for page.server.js', async () => {
 	await run_test('simple-page-server-only');
-});
-
-test('Create $types for page(.server).js', async () => {
 	await run_test('simple-page-server-and-shared');
-});
-
-test('Create $types for layout and page', async () => {
 	await run_test('layout');
-});
-
-test('Create $types for grouped layout and page', async () => {
 	await run_test('layout-advanced');
-});
-
-test('Create $types with params', async () => {
-	await run_test('slugs', (code) =>
-		// For some reason, the order of the params differentiates between windows and mac/linux
-		process.platform === 'win32'
-			? code.replace(
-					'rest?: string; slug?: string; optional?: string',
-					'optional?: string; rest?: string; slug?: string'
-			  )
-			: code
-	);
-});
-
-test('Create $types with params and required return types for layout', async () => {
+	await run_test('slugs');
 	await run_test('slugs-layout-not-all-pages-have-load');
+	try {
+		execSync('pnpm testtypes', { cwd });
+	} catch (e) {
+		console.error(/** @type {any} */ (e).stdout.toString());
+		throw new Error('Type tests failed');
+	}
 });
 
 test('Rewrites types for a TypeScript module', () => {
