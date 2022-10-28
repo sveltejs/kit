@@ -96,7 +96,7 @@ export async function respond(request, options, state) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
-	const { cookies, new_cookies, get_cookie_header } = get_cookies(request, url);
+	const { cookies, new_cookies, get_cookie_header } = get_cookies(request, url, options);
 
 	if (state.prerendering) disable_search(url);
 
