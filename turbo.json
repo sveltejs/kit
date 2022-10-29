@@ -1,131 +1,78 @@
 {
-  "$schema": "https://turborepo.org/schema.json",
-  "pipeline": {
-    "@sveltejs/kit#build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "rollup.config.js",
-        "src/**",
-        "scripts/**",
-        "types/**"
-      ],
-      "outputs": [
-        "dist/**",
-        "docs/**",
-        "assets/**"
-      ],
-      "outputMode": "new-only"
-    },
-    "kit.svelte.dev#build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "src/**",
-        "../../packages/kit/docs/**",
-        "../../documentation/**"
-      ],
-      "outputs": [
-        ".vercel_build_output/**",
-        ".vercel/output/**"
-      ],
-      "outputMode": "new-only",
-      "env": [
-        "VERCEL",
-        "ENABLE_VC_BUILD"
-      ]
-    },
-    "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "src/**",
-        "scripts/**",
-        "shared/**",
-        "templates/**"
-      ],
-      "outputs": [
-        "files/**",
-        "dist/**",
-        ".svelte-kit/**",
-        ".vercel_build_output/**",
-        ".vercel/output/**"
-      ],
-      "outputMode": "new-only",
-      "env": [
-        "VERCEL",
-        "ENABLE_VC_BUILD"
-      ]
-    },
-    "check": {
-      "dependsOn": [
-        "prepare"
-      ],
-      "inputs": [
-        "src/**",
-        "types/**",
-        ".svelte-kit/types/**",
-        ".custom-out-dir/types/**",
-        ".svelte-kit/tsconfig.json"
-      ],
-      "outputs": [],
-      "outputMode": "new-only"
-    },
-    "format": {
-      "cache": false,
-      "outputs": [],
-      "outputMode": "new-only"
-    },
-    "prepare": {
-      "inputs": [
-        "src/**",
-        "source/**"
-      ],
-      "outputs": [
-        ".svelte-kit/types/**",
-        ".svelte-kit/tsconfig.json",
-        ".custom-out-dir/types/**",
-        ".custom-out-dir/tsconfig.json"
-      ],
-      "outputMode": "new-only"
-    },
-    "test": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        "coverage/",
-        "test-results/**"
-      ],
-      "outputMode": "new-only",
-      "env": [
-        "CI",
-        "TURBO_CACHE_KEY"
-      ]
-    },
-    "lint": {
-      "outputs": [],
-      "outputMode": "new-only"
-    },
-    "precommit": {
-      "dependsOn": [
-        "format",
-        "lint"
-      ],
-      "outputs": [],
-      "outputMode": "new-only"
-    },
-    "dev": {
-      "cache": false,
-      "outputMode": "new-only"
-    }
-  },
-  "globalDependencies": [
-    ".eslintrc.json",
-    ".prettierrc",
-    "tsconfig.json"
-  ]
+	"$schema": "https://turborepo.org/schema.json",
+	"pipeline": {
+		"@sveltejs/kit#build": {
+			"dependsOn": ["^build"],
+			"inputs": ["rollup.config.js", "src/**", "scripts/**", "types/**"],
+			"outputs": ["dist/**", "docs/**", "assets/**"],
+			"outputMode": "new-only"
+		},
+		"kit.svelte.dev#build": {
+			"dependsOn": ["^build"],
+			"inputs": ["src/**", "../../packages/kit/docs/**", "../../documentation/**"],
+			"outputs": [".vercel_build_output/**", ".vercel/output/**"],
+			"outputMode": "new-only",
+			"env": ["VERCEL", "ENABLE_VC_BUILD"]
+		},
+		"build": {
+			"dependsOn": ["^build"],
+			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
+			"outputs": [
+				"files/**",
+				"dist/**",
+				".svelte-kit/**",
+				".vercel_build_output/**",
+				".vercel/output/**"
+			],
+			"outputMode": "new-only",
+			"env": ["VERCEL", "ENABLE_VC_BUILD"]
+		},
+		"check": {
+			"dependsOn": ["prepare"],
+			"inputs": [
+				"src/**",
+				"types/**",
+				".svelte-kit/types/**",
+				".custom-out-dir/types/**",
+				".svelte-kit/tsconfig.json"
+			],
+			"outputs": [],
+			"outputMode": "new-only"
+		},
+		"format": {
+			"cache": false,
+			"outputs": [],
+			"outputMode": "new-only"
+		},
+		"prepare": {
+			"inputs": ["src/**", "source/**"],
+			"outputs": [
+				".svelte-kit/types/**",
+				".svelte-kit/tsconfig.json",
+				".custom-out-dir/types/**",
+				".custom-out-dir/tsconfig.json"
+			],
+			"outputMode": "new-only"
+		},
+		"test": {
+			"dependsOn": ["^build"],
+			"outputs": ["coverage/", "test-results/**"],
+			"outputMode": "new-only",
+			"env": ["CI", "TURBO_CACHE_KEY"]
+		},
+		"lint": {
+			"outputs": [],
+			"outputMode": "new-only"
+		},
+		"precommit": {
+			"dependsOn": ["format", "lint"],
+			"outputs": [],
+			"outputMode": "new-only"
+		},
+		"dev": {
+			"cache": false,
+			"outputMode": "new-only"
+		}
+	},
+	"globalDependencies": [".eslintrc.json", ".prettierrc", "tsconfig.json"]
 }
