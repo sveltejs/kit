@@ -14,19 +14,19 @@
 		"@sveltejs/amp": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/site-kit": "^2.1.4",
-		"@types/node": "^16.11.36",
+		"@types/node": "^16.11.68",
 		"flexsearch": "^0.7.31",
-		"magic-string": "^0.26.2",
+		"magic-string": "^0.26.7",
 		"marked": "^4.1.1",
 		"prism-svelte": "^0.5.0",
 		"prismjs": "^1.29.0",
 		"shiki-twoslash": "^3.1.0",
-		"svelte": "^3.48.0",
+		"svelte": "^3.52.0",
 		"tiny-glob": "^0.2.9",
-		"typescript": "^4.8.2",
-		"uvu": "^0.5.3",
+		"typescript": "^4.8.4",
+		"uvu": "^0.5.6",
 		"vite": "^3.2.1",
-		"vite-imagetools": "^4.0.10"
+		"vite-imagetools": "^4.0.11"
 	},
 	"type": "module"
 }
