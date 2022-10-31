@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.190
+
+### Patch Changes
+
+- [fix] remove Sverdle from Stackblitz template ([#7448](https://github.com/sveltejs/kit/pull/7448))
+
 ## 2.0.0-next.189
 
 ### Patch Changes
