@@ -41,10 +41,10 @@ export async function handle_action_json_request(event, options, server) {
 		const data = await call_action(event, actions);
 
 		if (data instanceof ValidationError) {
-			check_serializability(data.data, /** @type {string} */ (event.routeId), 'data');
+			check_serializability(data.data, /** @type {string} */ (event.route?.id), 'data');
 			return action_json({ type: 'invalid', status: data.status, data: data.data });
 		} else {
-			check_serializability(data, /** @type {string} */ (event.routeId), 'data');
+			check_serializability(data, /** @type {string} */ (event.route?.id), 'data');
 			return action_json({
 				type: 'success',
 				status: data ? 200 : 204,

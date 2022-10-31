@@ -369,9 +369,14 @@ export interface NavigationEvent<
 	 */
 	params: Params;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 * More info about the route in question
 	 */
-	routeId: string | null;
+	route: {
+		/**
+		 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+		 */
+		id: string;
+	} | null;
 	/**
 	 * The URL of the current page
 	 */
@@ -469,9 +474,14 @@ export interface RequestEvent<
 	 */
 	request: Request;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 * More info about the route in question
 	 */
-	routeId: string | null;
+	route: {
+		/**
+		 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+		 */
+		id: string;
+	} | null;
 	/**
 	 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
 	 *

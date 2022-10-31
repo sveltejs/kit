@@ -233,7 +233,7 @@ export function create_client({ target, base, trailing_slash }) {
 			navigation_result = await server_fallback(
 				url,
 				null,
-				handle_error(new Error(`Not found: ${url.pathname}`), { url, params: {}, routeId: null }),
+				handle_error(new Error(`Not found: ${url.pathname}`), { url, params: {}, route: null }),
 				404
 			);
 		}
@@ -249,7 +249,7 @@ export function create_client({ target, base, trailing_slash }) {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
 				navigation_result = await load_root_error_page({
 					status: 500,
-					error: handle_error(new Error('Redirect loop'), { url, params: {}, routeId: null }),
+					error: handle_error(new Error('Redirect loop'), { url, params: {}, route: null }),
 					url,
 					routeId: null
 				});
@@ -532,7 +532,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
-				routeId,
+				route: routeId ? { id: routeId } : null,
 				params: new Proxy(params, {
 					get: (target, key) => {
 						uses.params.add(/** @type {string} */ (key));
@@ -615,6 +615,12 @@ export function create_client({ target, base, trailing_slash }) {
 						throw new Error(
 							'@migration task: Remove stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
 						);
+					},
+					enumerable: false
+				},
+				routeId: {
+					get() {
+						throw new Error('routeId has been replaced by route.id');
 					},
 					enumerable: false
 				}
@@ -732,7 +738,7 @@ export function create_client({ target, base, trailing_slash }) {
 			} catch (error) {
 				return load_root_error_page({
 					status: 500,
-					error: handle_error(error, { url, params, routeId: route.id }),
+					error: handle_error(error, { url, params, route: { id: route.id } }),
 					url,
 					routeId: route.id
 				});
@@ -821,7 +827,7 @@ export function create_client({ target, base, trailing_slash }) {
 						status = err.status;
 						error = err.body;
 					} else {
-						error = handle_error(err, { params, url, routeId: route.id });
+						error = handle_error(err, { params, url, route: { id: route.id } });
 					}
 
 					const error_load = await load_nearest_error_page(i, branch, errors);
@@ -1028,7 +1034,7 @@ export function create_client({ target, base, trailing_slash }) {
 			}),
 			to: add_url_properties('to', {
 				params: intent?.params ?? null,
-				routeId: intent?.route.id ?? null,
+				routeId: intent?.route?.id ?? null,
 				url
 			}),
 			type
@@ -1492,7 +1498,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 				result = await load_root_error_page({
 					status: error instanceof HttpError ? error.status : 500,
-					error: handle_error(error, { url, params, routeId }),
+					error: handle_error(error, { url, params, route: routeId ? { id: routeId } : null }),
 					url,
 					routeId
 				});
@@ -1538,7 +1544,7 @@ function handle_error(error, event) {
 	}
 	return (
 		hooks.handleError({ error, event }) ??
-		/** @type {any} */ ({ message: event.routeId != null ? 'Internal Error' : 'Not Found' })
+		/** @type {any} */ ({ message: event.route != null ? 'Internal Error' : 'Not Found' })
 	);
 }
 

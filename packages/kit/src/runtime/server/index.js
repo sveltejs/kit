@@ -121,7 +121,7 @@ export async function respond(request, options, state) {
 		params,
 		platform: state.platform,
 		request,
-		routeId: route && route.id,
+		route: route && { id: route.id },
 		setHeaders: (new_headers) => {
 			for (const key in new_headers) {
 				const lower = key.toLowerCase();
@@ -178,7 +178,8 @@ export async function respond(request, options, state) {
 		path: removed('path', 'url.pathname'),
 		query: removed('query', 'url.searchParams'),
 		body: body_getter,
-		rawBody: body_getter
+		rawBody: body_getter,
+		routeId: removed('routeId', 'route.id')
 	});
 
 	/** @type {import('types').RequiredResolveOptions} */
@@ -305,8 +306,8 @@ export async function respond(request, options, state) {
 					}
 					add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
-					if (state.prerendering && event.routeId !== null) {
-						response.headers.set('x-sveltekit-routeid', encodeURI(event.routeId));
+					if (state.prerendering && event.route !== null) {
+						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
 					}
 
 					return response;

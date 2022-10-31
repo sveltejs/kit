@@ -99,7 +99,7 @@ export async function load_data({
 		url: event.url,
 		params: event.params,
 		data: server_data_node?.data ?? null,
-		routeId: event.routeId,
+		route: event.route,
 		fetch: async (input, init) => {
 			const response = await event.fetch(input, init);
 
@@ -184,7 +184,7 @@ export async function load_data({
 						const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
 						if (!included) {
 							throw new Error(
-								`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#server-hooks-handle (at ${event.routeId})`
+								`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#server-hooks-handle (at ${event.route})`
 							);
 						}
 					}

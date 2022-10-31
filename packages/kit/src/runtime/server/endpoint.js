@@ -34,7 +34,7 @@ export async function render_endpoint(event, mod, state) {
 	if (state.prerendering && !prerender) {
 		if (state.initiator) {
 			// if request came from a prerendered page, bail
-			throw new Error(`${event.routeId} is not prerenderable`);
+			throw new Error(`${event.route?.id} is not prerenderable`);
 		} else {
 			// if request came direct from the crawler, signal that
 			// this route cannot be prerendered, but don't bail
