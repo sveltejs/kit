@@ -246,7 +246,7 @@ export async function render_response({
 				env: ${s(options.public_env)},
 				hydrate: ${page_config.ssr ? `{
 					status: ${status},
-					error: ${s(error)},
+					error: ${devalue(error)},
 					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 					params: ${devalue.uneval(event.params)},
 					routeId: ${s(event.routeId)},

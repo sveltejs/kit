@@ -1729,16 +1729,23 @@ test.describe('XSS', () => {
 		}
 	});
 
-	const uri_xss_payload = encodeURIComponent('</script><script>window.pwned=1</script>');
+	const uri_xss_payload = '</script><script>window.pwned=1</script>';
+	const uri_xss_payload_encoded = encodeURIComponent(uri_xss_payload);
+
 	test('no xss via dynamic route path', async ({ page }) => {
-		await page.goto(`/xss/${uri_xss_payload}`);
+		await page.goto(`/xss/${uri_xss_payload_encoded}`);
+
+		expect(await page.textContent('h1')).toBe(uri_xss_payload);
 
 		// @ts-expect-error - check global injected variable
 		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
 	});
 
 	test('no xss via query param', async ({ page }) => {
-		await page.goto(`/xss/query?key=${uri_xss_payload}`);
+		await page.goto(`/xss/query?key=${uri_xss_payload_encoded}`);
+
+		expect(await page.textContent('#one')).toBe(JSON.stringify({ key: [uri_xss_payload] }));
+		expect(await page.textContent('#two')).toBe(JSON.stringify({ key: [uri_xss_payload] }));
 
 		// @ts-expect-error - check global injected variable
 		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
