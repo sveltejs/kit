@@ -4,7 +4,7 @@ import {
 	Config,
 	ServerLoad,
 	Handle,
-	HandleError,
+	HandleServerError,
 	KitConfig,
 	Load,
 	RequestEvent,
@@ -14,7 +14,8 @@ import {
 	ServerInitOptions,
 	SSRManifest,
 	HandleFetch,
-	Actions
+	Actions,
+	HandleClientError
 } from './index.js';
 import {
 	HttpMethod,
@@ -46,6 +47,7 @@ export interface Asset {
 
 export interface BuildData {
 	app_dir: string;
+	app_path: string;
 	manifest_data: ManifestData;
 	service_worker: string | null;
 	client: {
@@ -81,7 +83,7 @@ export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
  */
 export type CSRRoute = {
 	id: string;
-	exec: (path: string) => undefined | Record<string, string>;
+	exec(path: string): undefined | Record<string, string>;
 	errors: Array<CSRPageNodeLoader | undefined>;
 	layouts: Array<[boolean, CSRPageNodeLoader] | undefined>;
 	leaf: [boolean, CSRPageNodeLoader];
@@ -89,15 +91,14 @@ export type CSRRoute = {
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
-export interface Hooks {
-	handle: Handle;
-	handleError: HandleError;
+export interface ServerHooks {
 	handleFetch: HandleFetch;
+	handle: Handle;
+	handleError: HandleServerError;
 }
 
-export interface ImportNode {
-	name: string;
-	dynamic: boolean;
+export interface ClientHooks {
+	handleError: HandleClientError;
 }
 
 export class InternalServer extends Server {
@@ -168,6 +169,7 @@ export interface RouteData {
 	pattern: RegExp;
 	names: string[];
 	types: string[];
+	optional: boolean[];
 
 	layout: PageNode | null;
 	error: PageNode | null;
@@ -226,9 +228,11 @@ export interface ServerDataSkippedNode {
  */
 export interface ServerErrorNode {
 	type: 'error';
-	// Either-or situation, but we don't want to have to do a type assertion
-	error?: Record<string, any>;
-	httperror?: { status: number; message: string };
+	error: App.Error;
+	/**
+	 * Only set for HttpErrors
+	 */
+	status?: number;
 }
 
 export interface SSRComponent {
@@ -257,7 +261,7 @@ export interface SSRNode {
 	/** external CSS files */
 	stylesheets: string[];
 	/** inlined styles */
-	inline_styles?: () => MaybePromise<Record<string, string>>;
+	inline_styles?(): MaybePromise<Record<string, string>>;
 
 	shared: {
 		load?: Load;
@@ -286,9 +290,8 @@ export interface SSROptions {
 		check_origin: boolean;
 	};
 	dev: boolean;
-	get_stack: (error: Error) => string | undefined;
-	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
-	hooks: Hooks;
+	handle_error(error: Error & { frame?: string }, event: RequestEvent): App.Error;
+	hooks: ServerHooks;
 	manifest: SSRManifest;
 	paths: {
 		base: string;
@@ -297,7 +300,7 @@ export interface SSROptions {
 	public_env: Record<string, string>;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
-	service_worker?: string;
+	service_worker: boolean;
 	app_template({
 		head,
 		body,
@@ -333,6 +336,7 @@ export interface SSRRoute {
 	pattern: RegExp;
 	names: string[];
 	types: string[];
+	optional: boolean[];
 
 	page: PageNodeIndexes | null;
 
@@ -341,7 +345,7 @@ export interface SSRRoute {
 
 export interface SSRState {
 	fallback?: string;
-	getClientAddress: () => string;
+	getClientAddress(): string;
 	initiator?: SSRRoute | SSRErrorPage;
 	platform?: any;
 	prerendering?: PrerenderOptions;
@@ -352,7 +356,7 @@ export interface SSRState {
 	prerender_default?: PrerenderOption;
 }
 
-export type StrictBody = string | Uint8Array;
+export type StrictBody = string | ArrayBufferView;
 
 export interface Uses {
 	dependencies: Set<string>;
@@ -373,5 +377,6 @@ declare global {
 	const __SVELTEKIT_APP_VERSION__: string;
 	const __SVELTEKIT_APP_VERSION_FILE__: string;
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+	const __SVELTEKIT_BROWSER__: boolean;
 	const __SVELTEKIT_DEV__: boolean;
 }

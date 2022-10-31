@@ -103,6 +103,8 @@
 		display: block;
 		white-space: nowrap;
 		line-height: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	a strong {
@@ -113,8 +115,6 @@
 	a span {
 		font-size: 1.2rem;
 		color: #737373;
-		overflow: hidden;
-		text-overflow: ellipsis;
 		margin: 0.4rem 0 0 0;
 	}
 

@@ -1,14 +1,16 @@
 import { relative } from 'path';
+import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { trim, write_if_changed } from './utils.js';
 
 /**
  * Writes the client manifest to disk. The manifest is used to power the router. It contains the
  * list of routes and corresponding Svelte components (i.e. pages and layouts).
+ * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  * @param {string} output
  */
-export function write_client_manifest(manifest_data, output) {
+export function write_client_manifest(config, manifest_data, output) {
 	/**
 	 * Creates a module that exports a `CSRPageNode`
 	 * @param {import('types').PageNode} node
@@ -78,10 +80,14 @@ export function write_client_manifest(manifest_data, output) {
 			.join(',\n\t\t')}
 	}`.replace(/^\t/gm, '');
 
+	const hooks_file = resolve_entry(config.kit.files.hooks.client);
+
 	// String representation of __GENERATED__/client-manifest.js
 	write_if_changed(
 		`${output}/client-manifest.js`,
 		trim(`
+			${hooks_file ? `import * as client_hooks from '${posixify(relative(output, hooks_file))}';` : ''}
+
 			export { matchers } from './client-matchers.js';
 
 			export const nodes = [${nodes}];
@@ -89,6 +95,12 @@ export function write_client_manifest(manifest_data, output) {
 			export const server_loads = [${[...layouts_with_server_load].join(',')}];
 
 			export const dictionary = ${dictionary};
+
+			export const hooks = {
+				handleError: ${
+					hooks_file ? 'client_hooks.handleError || ' : ''
+				}(({ error }) => { console.error(error) }),
+			};
 		`)
 	);
 }

@@ -18,7 +18,7 @@
 				{#each Object.entries(background.sources) as [format, images]}
 					<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} /> 
 				{/each}
-				<img src={background.fallback} {alt} />
+				<img src={background.fallback.src} {alt} />
 			</picture>
 		</div>
 	</div>

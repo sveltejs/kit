@@ -1,10 +1,16 @@
 import fs from 'fs';
 import path from 'path';
-import { mkdirp, posixify } from '../../../utils/filesystem.js';
-import { get_vite_config, merge_vite_configs, resolve_entry } from '../utils.js';
+import { mkdirp, posixify, resolve_entry } from '../../../utils/filesystem.js';
+import { get_vite_config, merge_vite_configs } from '../utils.js';
 import { load_error_page, load_template } from '../../../core/config/index.js';
 import { runtime_directory } from '../../../core/utils.js';
-import { create_build, find_deps, get_default_build_config, is_http_method } from './utils.js';
+import {
+	create_build,
+	find_deps,
+	get_default_build_config,
+	is_http_method,
+	resolve_symlinks
+} from './utils.js';
 import { s } from '../../../utils/misc.js';
 
 /**
@@ -33,7 +39,7 @@ const app_template = ({ head, body, assets, nonce }) => ${s(template)
 
 const error_template = ({ status, message }) => ${s(error_page)
 	.replace(/%sveltekit\.status%/g, '" + status + "')
-	.replace(/%sveltekit\.message%/g, '" + message + "')};
+	.replace(/%sveltekit\.error\.message%/g, '" + message + "')};
 
 let read = null;
 
@@ -58,9 +64,8 @@ export class Server {
 				check_origin: ${s(config.kit.csrf.checkOrigin)},
 			},
 			dev: false,
-			get_stack: error => String(error), // for security
 			handle_error: (error, event) => {
-				this.options.hooks.handleError({
+				return this.options.hooks.handleError({
 					error,
 					event,
 
@@ -69,8 +74,7 @@ export class Server {
 					get request() {
 						throw new Error('request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details');
 					}
-				});
-				error.stack = this.options.get_stack(error);
+				}) ?? { message: event.routeId != null ? 'Internal Error' : 'Not Found' };
 			},
 			hooks: null,
 			manifest,
@@ -78,7 +82,7 @@ export class Server {
 			public_env: {},
 			read,
 			root,
-			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
+			service_worker: ${has_service_worker},
 			app_template,
 			app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			error_template,
@@ -158,7 +162,24 @@ export async function build_server(options, client) {
 		service_worker_entry_file
 	} = options;
 
-	let hooks_file = resolve_entry(config.kit.files.hooks);
+	let hooks_file = resolve_entry(config.kit.files.hooks.server);
+
+	// TODO remove for 1.0
+	if (!hooks_file) {
+		const old_file = resolve_entry(path.join(process.cwd(), 'src', 'hooks'));
+		if (old_file && fs.existsSync(old_file)) {
+			throw new Error(
+				`Rename your server hook file from ${posixify(
+					path.relative(process.cwd(), old_file)
+				)} to ${posixify(
+					path.relative(process.cwd(), config.kit.files.hooks.server)
+				)}${path.extname(
+					old_file
+				)} (because there's also client hooks now). See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
+			);
+		}
+	}
+
 	if (!hooks_file || !fs.existsSync(hooks_file)) {
 		hooks_file = path.join(config.kit.outDir, 'build/hooks.js');
 		fs.writeFileSync(hooks_file, '');
@@ -270,7 +291,7 @@ export async function build_server(options, client) {
 
 			exports.push(
 				`export const component = async () => (await import('../${
-					vite_manifest[node.component].file
+					resolve_symlinks(vite_manifest, node.component).chunk.file
 				}')).default;`,
 				`export const file = '${entry.file}';` // TODO what is this?
 			);
@@ -333,7 +354,7 @@ function get_methods(cwd, output, manifest_data) {
 	const lookup = {};
 	output.forEach((chunk) => {
 		if (!chunk.facadeModuleId) return;
-		const id = chunk.facadeModuleId.slice(cwd.length + 1);
+		const id = posixify(path.relative(cwd, chunk.facadeModuleId));
 		lookup[id] = chunk.exports;
 	});
 

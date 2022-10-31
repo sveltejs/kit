@@ -1,6 +1,6 @@
-import { devalue } from 'devalue';
-import { DATA_SUFFIX } from '../../constants.js';
+import * as devalue from 'devalue';
 import { negotiate } from '../../utils/http.js';
+import { has_data_suffix } from '../../utils/url.js';
 import { HttpError } from '../control.js';
 
 /** @param {any} body */
@@ -19,57 +19,6 @@ export function is_pojo(body) {
 	}
 
 	return true;
-}
-
-/**
- * Serialize an error into a JSON string through `error_to_pojo`.
- * This is necessary because `JSON.stringify(error) === '{}'`
- *
- * @param {Error | HttpError} error
- * @param {(error: Error) => string | undefined} get_stack
- */
-export function serialize_error(error, get_stack) {
-	return JSON.stringify(error_to_pojo(error, get_stack));
-}
-
-/**
- * Transform an error into a POJO, by copying its `name`, `message`
- * and (in dev) `stack`, plus any custom properties, plus recursively
- * serialized `cause` properties.
- * Our own HttpError gets a meta property attached so we can identify it on the client.
- *
- * @param {HttpError | Error } error
- * @param {(error: Error) => string | undefined} get_stack
- */
-export function error_to_pojo(error, get_stack) {
-	if (error instanceof HttpError) {
-		return /** @type {import('./page/types').SerializedHttpError} */ ({
-			message: error.message,
-			status: error.status,
-			__is_http_error: true // TODO we should probably make this unnecessary
-		});
-	}
-
-	const {
-		name,
-		message,
-		stack,
-		// @ts-expect-error i guess typescript doesn't know about error.cause yet
-		cause,
-		...custom
-	} = error;
-
-	/** @type {Record<string, any>} */
-	const object = { name, message, stack: get_stack(error) };
-
-	if (cause) object.cause = error_to_pojo(cause, get_stack);
-
-	for (const key in custom) {
-		// @ts-expect-error
-		object[key] = custom[key];
-	}
-
-	return object;
 }
 
 // TODO: Remove for 1.0
@@ -118,23 +67,25 @@ export function allowed_methods(mod) {
 	return allowed;
 }
 
-/** @param {any} data */
-export function data_response(data) {
+/**
+ * @param {any} data
+ * @param {import('types').RequestEvent} event
+ */
+export function data_response(data, event) {
+	const headers = {
+		'content-type': 'application/json',
+		'cache-control': 'private, no-store'
+	};
+
 	try {
-		return new Response(`window.__sveltekit_data = ${devalue(data)}`, {
-			headers: {
-				'content-type': 'application/javascript'
-			}
-		});
+		return new Response(devalue.stringify(data), { headers });
 	} catch (e) {
 		const error = /** @type {any} */ (e);
 		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		const message = match ? `${error.message} (data.${match[2]})` : error.message;
-		return new Response(`throw new Error(${JSON.stringify(message)})`, {
-			headers: {
-				'content-type': 'application/javascript'
-			}
-		});
+		const message = match
+			? `Data returned from \`load\` while rendering ${event.routeId} is not serializable: ${error.message} (data.${match[2]})`
+			: error.message;
+		return new Response(JSON.stringify(message), { headers, status: 500 });
 	}
 }
 
@@ -181,16 +132,11 @@ export function static_error_page(options, status, message) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
- * @param {Error} error
+ * @param {Error | HttpError} error
  */
 export function handle_fatal_error(event, options, error) {
-	let status = 500;
-
-	if (error instanceof HttpError) {
-		status = error.status;
-	} else {
-		options.handle_error(error, event);
-	}
+	const status = error instanceof HttpError ? error.status : 500;
+	const body = handle_error_and_jsonify(event, options, error);
 
 	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
@@ -198,14 +144,28 @@ export function handle_fatal_error(event, options, error) {
 		'text/html'
 	]);
 
-	if (event.url.pathname.endsWith(DATA_SUFFIX) || type === 'application/json') {
-		return new Response(serialize_error(error, options.get_stack), {
+	if (has_data_suffix(event.url.pathname) || type === 'application/json') {
+		return new Response(JSON.stringify(body), {
 			status,
 			headers: { 'content-type': 'application/json; charset=utf-8' }
 		});
 	}
 
-	return static_error_page(options, status, error.message);
+	return static_error_page(options, status, body.message);
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
+ * @param {any} error
+ * @returns {App.Error}
+ */
+export function handle_error_and_jsonify(event, options, error) {
+	if (error instanceof HttpError) {
+		return error.body;
+	} else {
+		return options.handle_error(error, event);
+	}
 }
 
 /**
@@ -213,8 +173,9 @@ export function handle_fatal_error(event, options, error) {
  * @param {string} location
  */
 export function redirect_response(status, location) {
-	return new Response(undefined, {
+	const response = new Response(undefined, {
 		status,
 		headers: { location }
 	});
+	return response;
 }

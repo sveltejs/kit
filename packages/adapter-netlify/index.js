@@ -1,7 +1,6 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve, posix } from 'path';
 import { fileURLToPath } from 'url';
-import glob from 'tiny-glob/sync.js';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 
@@ -46,6 +45,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			const publish = get_publish_directory(netlify_config, builder) || 'build';
 
 			// empty out existing build directories
+			builder.rimraf(publish);
 			builder.rimraf('.netlify/edge-functions');
 			builder.rimraf('.netlify/functions-internal');
 			builder.rimraf('.netlify/server');
@@ -55,20 +55,17 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.log.minor(`Publishing to "${publish}"`);
 
 			builder.log.minor('Copying assets...');
-			builder.writeClient(publish);
-			builder.writePrerendered(publish);
+			const publish_dir = `${publish}${builder.config.kit.paths.base}`;
+			builder.writeClient(publish_dir);
+			builder.writePrerendered(publish_dir);
 
 			builder.log.minor('Writing custom headers...');
 			const headers_file = join(publish, '_headers');
 			builder.copy('_headers', headers_file);
 			appendFileSync(
 				headers_file,
-				`\n\n/${builder.config.kit.appDir}/immutable/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
+				`\n\n/${builder.getAppPath()}/immutable/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
 			);
-
-			// for esbuild, use ESM
-			// for zip-it-and-ship-it, use CJS until https://github.com/netlify/zip-it-and-ship-it/issues/750
-			const esm = netlify_config?.functions?.node_bundler === 'esbuild';
 
 			if (edge) {
 				if (split) {
@@ -77,7 +74,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				await generate_edge_functions({ builder });
 			} else {
-				await generate_lambda_functions({ builder, esm, split, publish });
+				await generate_lambda_functions({ builder, split, publish });
 			}
 		}
 	};
@@ -148,9 +145,8 @@ async function generate_edge_functions({ builder }) {
  * @param {import('@sveltejs/kit').Builder} params.builder
  * @param { string } params.publish
  * @param { boolean } params.split
- * @param { boolean } params.esm
  */
-async function generate_lambda_functions({ builder, publish, split, esm }) {
+async function generate_lambda_functions({ builder, publish, split }) {
 	builder.mkdirp('.netlify/functions-internal');
 
 	/** @type {string[]} */
@@ -160,19 +156,11 @@ async function generate_lambda_functions({ builder, publish, split, esm }) {
 	const replace = {
 		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
 	};
-	if (esm) {
-		builder.copy(`${files}/esm`, '.netlify', { replace });
-	} else {
-		glob('**/*.js', { cwd: '.netlify/server', filesOnly: true }).forEach((file) => {
-			const filepath = `.netlify/server/${file}`;
-			const input = readFileSync(filepath, 'utf8');
-			const output = esbuild.transformSync(input, { format: 'cjs', target: 'node12' }).code;
-			writeFileSync(filepath, output);
-		});
 
-		builder.copy(`${files}/cjs`, '.netlify', { replace });
-		writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
-	}
+	builder.copy(`${files}/esm`, '.netlify', { replace });
+
+	// Configuring the function to use ESM as the output format.
+	const fn_config = JSON.stringify({ config: { nodeModuleFormat: 'esm' }, version: 1 });
 
 	if (split) {
 		builder.log.minor('Generating serverless functions...');
@@ -201,17 +189,16 @@ async function generate_lambda_functions({ builder, publish, split, esm }) {
 				complete: (entry) => {
 					const manifest = entry.generateManifest({
 						relativePath: '../server',
-						format: esm ? 'esm' : 'cjs'
+						format: 'esm'
 					});
 
-					const fn = esm
-						? `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`
-						: `const { init } = require('../serverless.js');\n\nexports.handler = init(${manifest});\n`;
+					const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
 
-					writeFileSync(`.netlify/functions-internal/${name}.js`, fn);
+					writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
+					writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
 
 					redirects.push(`${pattern} /.netlify/functions/${name} 200`);
-					redirects.push(`${pattern}/__data.js /.netlify/functions/${name} 200`);
+					redirects.push(`${pattern}/__data.json /.netlify/functions/${name} 200`);
 				}
 			};
 		});
@@ -220,14 +207,13 @@ async function generate_lambda_functions({ builder, publish, split, esm }) {
 
 		const manifest = builder.generateManifest({
 			relativePath: '../server',
-			format: esm ? 'esm' : 'cjs'
+			format: 'esm'
 		});
 
-		const fn = esm
-			? `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`
-			: `const { init } = require('../serverless.js');\n\nexports.handler = init(${manifest});\n`;
+		const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
 
-		writeFileSync('.netlify/functions-internal/render.js', fn);
+		writeFileSync(`.netlify/functions-internal/render.json`, fn_config);
+		writeFileSync('.netlify/functions-internal/render.mjs', fn);
 		redirects.push('* /.netlify/functions/render 200');
 	}
 

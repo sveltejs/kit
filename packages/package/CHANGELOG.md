@@ -1,5 +1,17 @@
 # @sveltejs/package
 
+## 1.0.0-next.5
+
+### Patch Changes
+
+- fix check for undefined on application/ strip ([#6932](https://github.com/sveltejs/kit/pull/6932))
+
+## 1.0.0-next.4
+
+### Patch Changes
+
+- [fix] don't strip `type="application/.."` tags ([#6887](https://github.com/sveltejs/kit/pull/6887))
+
 ## 1.0.0-next.3
 
 ### Patch Changes

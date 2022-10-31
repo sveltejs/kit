@@ -1,23 +1,21 @@
 export class HttpError {
-	// without these, things like `$page.error.stack` will error. we don't want to
-	// include a stack for these sorts of errors, but we also don't want red
-	// squigglies everywhere, so this feels like a not-terribile compromise
-	name = 'HttpError';
-
-	/** @type {void} */
-	stack = undefined;
-
 	/**
 	 * @param {number} status
-	 * @param {string | undefined} message
+	 * @param {{message: string} extends App.Error ? (App.Error | string | undefined) : App.Error} body
 	 */
-	constructor(status, message) {
+	constructor(status, body) {
 		this.status = status;
-		this.message = message ?? `Error: ${status}`;
+		if (typeof body === 'string') {
+			this.body = { message: body };
+		} else if (body) {
+			this.body = body;
+		} else {
+			this.body = { message: `Error: ${status}` };
+		}
 	}
 
 	toString() {
-		return this.message;
+		return JSON.stringify(this.body);
 	}
 }
 

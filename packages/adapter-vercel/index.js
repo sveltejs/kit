@@ -98,7 +98,7 @@ export default function ({ external = [], edge, split } = {}) {
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 			const dirs = {
-				static: `${dir}/static`,
+				static: `${dir}/static${builder.config.kit.paths.base}`,
 				functions: `${dir}/functions`
 			};
 
@@ -118,7 +118,7 @@ export default function ({ external = [], edge, split } = {}) {
 				...redirects[builder.config.kit.trailingSlash],
 				...prerendered_redirects,
 				{
-					src: `/${builder.config.kit.appDir}/.+`,
+					src: `/${builder.getAppPath()}/.+`,
 					headers: {
 						'cache-control': 'public, immutable, max-age=31536000'
 					}
@@ -225,7 +225,7 @@ export default function ({ external = [], edge, split } = {}) {
 								sliced_pattern = '^/?';
 							}
 
-							const src = `${sliced_pattern}(?:/__data.js)?$`; // TODO adding /__data.js is a temporary workaround — those endpoints should be treated as distinct routes
+							const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
 
 							await generate_function(route.id || 'index', src, entry.generateManifest);
 						}
@@ -308,9 +308,14 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 		// pending https://github.com/vercel/nft/issues/284
 		if (error.message.startsWith('Failed to resolve dependency node:')) return;
 
+		// parse errors are likely not js and can safely be ignored,
+		// such as this html file in "main" meant for nw instead of node:
+		// https://github.com/vercel/nft/issues/311
+		if (error.message.startsWith('Failed to parse')) return;
+
 		if (error.message.startsWith('Failed to resolve dependency')) {
 			const match = /Cannot find module '(.+?)' loaded from (.+)/;
-			const [, module, importer] = match.exec(error.message);
+			const [, module, importer] = match.exec(error.message) ?? [, error.message, '(unknown)'];
 
 			if (!resolution_failures.has(importer)) {
 				resolution_failures.set(importer, []);

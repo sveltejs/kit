@@ -22,6 +22,11 @@ function get_types(code, statements) {
 
 	if (statements) {
 		for (const statement of statements) {
+			const modifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
+
+			const export_modifier = modifiers?.find((modifier) => modifier.kind === 93);
+			if (!export_modifier) continue;
+
 			if (
 				ts.isClassDeclaration(statement) ||
 				ts.isInterfaceDeclaration(statement) ||
@@ -51,13 +56,15 @@ function get_types(code, statements) {
 				const i = code.indexOf('export', start);
 				start = i + 6;
 
-				const snippet = prettier.format(code.slice(start, statement.end).trim(), {
-					parser: 'typescript',
-					printWidth: 80,
-					useTabs: true,
-					singleQuote: true,
-					trailingComma: 'none'
-				});
+				const snippet = prettier
+					.format(code.slice(start, statement.end), {
+						parser: 'typescript',
+						printWidth: 80,
+						useTabs: true,
+						singleQuote: true,
+						trailingComma: 'none'
+					})
+					.trim();
 
 				const collection =
 					ts.isVariableStatement(statement) || ts.isFunctionDeclaration(statement)

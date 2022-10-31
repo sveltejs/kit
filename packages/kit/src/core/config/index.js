@@ -77,8 +77,13 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 		// TODO remove for 1.0
 		if (key === 'template') continue;
 
-		// @ts-expect-error this is typescript at its stupidest
-		validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
+		if (key === 'hooks') {
+			validated.kit.files.hooks.client = path.resolve(cwd, validated.kit.files.hooks.client);
+			validated.kit.files.hooks.server = path.resolve(cwd, validated.kit.files.hooks.server);
+		} else {
+			// @ts-expect-error
+			validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
+		}
 	}
 
 	if (!fs.existsSync(validated.kit.files.errorTemplate)) {

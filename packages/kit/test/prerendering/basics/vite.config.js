@@ -13,6 +13,10 @@ const config = {
 
 	plugins: [sveltekit()],
 
+	define: {
+		'process.env.MY_ENV': '"MY_ENV DEFINED"'
+	},
+
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

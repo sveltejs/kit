@@ -13,5 +13,10 @@ export const adapters = [
 		name: 'Netlify',
 		test: () => !!process.env.NETLIFY,
 		module: '@sveltejs/adapter-netlify'
+	},
+	{
+		name: 'Azure Static Web Apps',
+		test: () => process.env.GITHUB_ACTION_REPOSITORY === 'Azure/static-web-apps-deploy',
+		module: 'svelte-adapter-azure-swa'
 	}
 ];

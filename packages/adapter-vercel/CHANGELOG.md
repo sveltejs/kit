@@ -1,5 +1,59 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.81
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.80
+
+### Patch Changes
+
+- [fix] don't fail on unknown error message ([#7312](https://github.com/sveltejs/kit/pull/7312))
+
+## 1.0.0-next.79
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
+## 1.0.0-next.78
+
+### Patch Changes
+
+- Transfer server data as devalue-encoded JSON ([#7177](https://github.com/sveltejs/kit/pull/7177))
+
+## 1.0.0-next.77
+
+### Patch Changes
+
+- Redact error message if `getRequest` fails ([#6936](https://github.com/sveltejs/kit/pull/6936))
+
+## 1.0.0-next.76
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.75
+
+### Patch Changes
+
+- Ignore warnings when traced file fails to parse ([#6810](https://github.com/sveltejs/kit/pull/6810))
+
+## 1.0.0-next.74
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
+## 1.0.0-next.73
+
+### Patch Changes
+
+- [breaking] request creation cleanup ([#6681](https://github.com/sveltejs/kit/pull/6681))
+
 ## 1.0.0-next.72
 
 ### Patch Changes

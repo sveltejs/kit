@@ -1,54 +1,60 @@
 <script>
+	import { page } from '$app/stores';
 	import { Icon } from '@sveltejs/site-kit';
 	import '@sveltejs/site-kit/code.css';
 	import '$lib/docs/client/docs.css';
 	import '$lib/docs/client/shiki.css';
 	import * as hovers from '$lib/docs/client/hovers.js';
+	import OnThisPage from './OnThisPage.svelte';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
+
+	$: pages = data.sections.map((section) => section.pages).flat();
+	$: index = pages.findIndex(({ path }) => path === $page.url.pathname);
+	$: prev = pages[index - 1];
+	$: next = pages[index + 1];
 
 	hovers.setup();
 </script>
 
 <svelte:head>
-	<title>{data.section.title} • Docs • SvelteKit</title>
+	<title>{data.page.title} • Docs • SvelteKit</title>
 
 	<meta name="twitter:title" content="SvelteKit docs" />
-	<meta name="twitter:description" content="{data.section.title} • SvelteKit documentation" />
-	<meta name="Description" content="{data.section.title} • SvelteKit documentation" />
+	<meta name="twitter:description" content="{data.page.title} • SvelteKit documentation" />
+	<meta name="Description" content="{data.page.title} • SvelteKit documentation" />
 </svelte:head>
 
 <div class="content listify">
-	<h1>{data.section.title}</h1>
+	<h1>{data.page.title}</h1>
 
-	<a
-		class="edit"
-		href="https://github.com/sveltejs/kit/edit/master/documentation/{data.section.file}"
-	>
+	<a class="edit" href="https://github.com/sveltejs/kit/edit/master/documentation/{data.page.file}">
 		<Icon size={50} name="edit" /> Edit this page on GitHub
 	</a>
 
 	<section>
-		{@html data.section.content}
+		{@html data.page.content}
 	</section>
 
 	<div class="controls">
 		<div>
-			<span class:faded={!data.prev}>previous</span>
-			{#if data.prev}
-				<a href="/docs/{data.prev.slug}">{data.prev.title}</a>
+			<span class:faded={!prev}>previous</span>
+			{#if prev}
+				<a href={prev.path}>{prev.title}</a>
 			{/if}
 		</div>
 
 		<div>
-			<span class:faded={!data.next}>next</span>
-			{#if data.next}
-				<a href="/docs/{data.next.slug}">{data.next.title}</a>
+			<span class:faded={!next}>next</span>
+			{#if next}
+				<a href={next.path}>{next.title}</a>
 			{/if}
 		</div>
 	</div>
 </div>
+
+<OnThisPage details={data.page} sections={data.page.sections} />
 
 <style>
 	.edit {

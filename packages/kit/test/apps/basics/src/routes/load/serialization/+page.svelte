@@ -3,4 +3,4 @@
 	export let data;
 </script>
 
-<h1>{data.answer}</h1>
+<h1>{data.a} + {data.b} = {data.c}</h1>

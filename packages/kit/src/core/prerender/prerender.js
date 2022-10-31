@@ -9,7 +9,7 @@ import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { load_config } from '../config/index.js';
-import { affects_path } from '../../utils/routing.js';
+import { get_route_segments } from '../../utils/routing.js';
 import { get_option } from '../../runtime/server/utils.js';
 
 /**
@@ -28,7 +28,7 @@ prerender();
 function format_error({ status, path, referrer, referenceType }, config) {
 	const message =
 		status === 404 && !path.startsWith(config.paths.base)
-			? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\``
+			? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\` - see https://kit.svelte.dev/docs/configuration#paths for more info`
 			: path;
 
 	return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
@@ -85,6 +85,9 @@ export async function prerender() {
 	/** @type {import('types').PrerenderMap} */
 	const prerender_map = new Map();
 
+	/** @type {Set<string>} */
+	const prerendered_routes = new Set();
+
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config()).kit;
 
@@ -99,54 +102,15 @@ export async function prerender() {
 	});
 
 	installPolyfills();
+
+	// TODO remove this for 1.0
 	const { fetch } = globalThis;
 	globalThis.fetch = async (info, init) => {
-		/** @type {string} */
-		let url;
-
-		/** @type {RequestInit} */
-		let opts = {};
-
-		if (info instanceof Request) {
-			url = info.url;
-
-			opts = {
-				method: info.method,
-				headers: info.headers,
-				body: info.body,
-				mode: info.mode,
-				credentials: info.credentials,
-				cache: info.cache,
-				redirect: info.redirect,
-				referrer: info.referrer,
-				integrity: info.integrity
-			};
-		} else {
-			url = info.toString();
-		}
+		const url = info instanceof Request ? info.url : info.toString();
 
 		if (url.startsWith(config.prerender.origin + '/')) {
-			const request = new Request(url, opts);
-			const response = await server.respond(request, {
-				getClientAddress,
-				prerendering: {
-					dependencies: new Map()
-				}
-			});
-
-			const decoded = new URL(url).pathname;
-
-			save(
-				'dependencies',
-				response,
-				Buffer.from(await response.clone().arrayBuffer()),
-				decoded,
-				encodeURI(decoded),
-				null,
-				'fetched'
-			);
-
-			return response;
+			const sliced = url.slice(config.prerender.origin.length);
+			throw new Error(`Use \`event.fetch('${sliced}')\` instead of the global \`fetch('${url}')\``);
 		}
 
 		return fetch(info, init);
@@ -241,10 +205,13 @@ export async function prerender() {
 
 			const prerender = headers['x-sveltekit-prerender'];
 			if (prerender) {
-				const route_id = headers['x-sveltekit-routeid'];
-				const existing_value = prerender_map.get(route_id);
-				if (existing_value !== 'auto') {
-					prerender_map.set(route_id, prerender === 'true' ? true : 'auto');
+				const encoded_route_id = headers['x-sveltekit-routeid'];
+				if (encoded_route_id != null) {
+					const route_id = decodeURI(encoded_route_id);
+					const existing_value = prerender_map.get(route_id);
+					if (existing_value !== 'auto') {
+						prerender_map.set(route_id, prerender === 'true' ? true : 'auto');
+					}
 				}
 			}
 
@@ -301,6 +268,10 @@ export async function prerender() {
 		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
 
 		if (written.has(file)) return;
+
+		const encoded_route_id = response.headers.get('x-sveltekit-routeid');
+		const route_id = encoded_route_id != null ? decodeURI(encoded_route_id) : null;
+		if (route_id !== null) prerendered_routes.add(route_id);
 
 		if (response_type === REDIRECT) {
 			const location = headers['location'];
@@ -399,7 +370,7 @@ export async function prerender() {
 			for (const [id, prerender] of prerender_map) {
 				if (prerender) {
 					if (id.includes('[')) continue;
-					const path = `/${id.split('/').filter(affects_path).join('/')}`;
+					const path = `/${get_route_segments(id).join('/')}`;
 					enqueue(null, config.paths.base + path);
 				}
 			}
@@ -409,6 +380,23 @@ export async function prerender() {
 	}
 
 	await q.done();
+
+	/** @type {string[]} */
+	const not_prerendered = [];
+
+	for (const [route_id, prerender] of prerender_map) {
+		if (prerender === true && !prerendered_routes.has(route_id)) {
+			not_prerendered.push(route_id);
+		}
+	}
+
+	if (not_prerendered.length > 0) {
+		throw new Error(
+			`The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${not_prerendered.map(
+				(id) => `  - ${id}`
+			)}\n\nSee https://kit.svelte.dev/docs/page-options#prerender-troubleshooting for info on how to solve this`
+		);
+	}
 
 	const rendered = await server.respond(new Request(config.prerender.origin + '/[fallback]'), {
 		getClientAddress,

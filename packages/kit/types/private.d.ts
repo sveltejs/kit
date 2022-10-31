@@ -15,15 +15,15 @@ export interface AdapterEntry {
 	 * if it should be treated as a fallback for the current route. For example, `/foo/[c]`
 	 * is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
 	 */
-	filter: (route: RouteDefinition) => boolean;
+	filter(route: RouteDefinition): boolean;
 
 	/**
 	 * A function that is invoked once the entry has been created. This is where you
 	 * should write the function to the filesystem and generate redirect manifests.
 	 */
-	complete: (entry: {
-		generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
-	}) => MaybePromise<void>;
+	complete(entry: {
+		generateManifest(opts: { relativePath: string; format?: 'esm' | 'cjs' }): string;
+	}): MaybePromise<void>;
 }
 
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
@@ -53,7 +53,13 @@ export interface AdapterEntry {
 
 export namespace Csp {
 	type ActionSource = 'strict-dynamic' | 'report-sample';
-	type BaseSource = 'self' | 'unsafe-eval' | 'unsafe-hashes' | 'unsafe-inline' | 'none';
+	type BaseSource =
+		| 'self'
+		| 'unsafe-eval'
+		| 'unsafe-hashes'
+		| 'unsafe-inline'
+		| 'wasm-unsafe-eval'
+		| 'none';
 	type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 	type FrameSource = HostSource | SchemeSource | 'self' | 'none';
 	type HostNameScheme = `${string}.${string}` | 'localhost';
@@ -189,13 +195,12 @@ export type PrerenderOption = boolean | 'auto';
 export type PrerenderMap = Map<string, PrerenderOption>;
 
 export interface RequestOptions {
-	getClientAddress: () => string;
+	getClientAddress(): string;
 	platform?: App.Platform;
 }
 
 export interface RouteDefinition {
 	id: string;
-	type: 'page' | 'endpoint';
 	pattern: RegExp;
 	segments: RouteSegment[];
 	methods: HttpMethod[];
@@ -208,3 +213,12 @@ export interface RouteSegment {
 }
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+
+/**
+ * This doesn't actually exist, it's a way to better distinguish the type
+ */
+declare const uniqueSymbol: unique symbol;
+
+export interface UniqueInterface {
+	readonly [uniqueSymbol]: unknown;
+}

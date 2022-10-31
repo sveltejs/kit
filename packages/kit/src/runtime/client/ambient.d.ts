@@ -1,5 +1,5 @@
 declare module '__GENERATED__/client-manifest.js' {
-	import { CSRPageNodeLoader, ParamMatcher } from 'types';
+	import { CSRPageNodeLoader, ClientHooks, ParamMatcher } from 'types';
 
 	/**
 	 * A list of all the error/layout/page nodes used in the app
@@ -21,4 +21,10 @@ declare module '__GENERATED__/client-manifest.js' {
 	export const dictionary: Record<string, [leaf: number, layouts: number[], errors?: number[]]>;
 
 	export const matchers: Record<string, ParamMatcher>;
+
+	export const hooks: ClientHooks;
+}
+
+declare module '__GENERATED__/root.svelte' {
+	export { SvelteComponent as default } from 'svelte';
 }

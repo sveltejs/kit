@@ -1,5 +1,49 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.83
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.82
+
+### Patch Changes
+
+- Drop CJS version of adapter-netlify ([#7401](https://github.com/sveltejs/kit/pull/7401))
+
+## 1.0.0-next.81
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
+## 1.0.0-next.80
+
+### Patch Changes
+
+- Transfer server data as devalue-encoded JSON ([#7177](https://github.com/sveltejs/kit/pull/7177))
+
+## 1.0.0-next.79
+
+### Patch Changes
+
+- [fix] clear out build directory when running `adapter-netlify` ([#7159](https://github.com/sveltejs/kit/pull/7159))
+
+## 1.0.0-next.78
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.77
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
+* [feat] only generate ESM functions ([#6760](https://github.com/sveltejs/kit/pull/6760))
+
 ## 1.0.0-next.76
 
 ### Patch Changes
@@ -50,7 +94,7 @@
 
 ## 1.0.0-next.68
 
-### Minor Changes
+### Patch Changes
 
 - feat: get client IP from Context object rather than the request header ([#5473](https://github.com/sveltejs/kit/pull/5473))
 

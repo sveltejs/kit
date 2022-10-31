@@ -1,5 +1,35 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.47
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.46
+
+### Patch Changes
+
+- Make options object optional ([#7341](https://github.com/sveltejs/kit/pull/7341))
+
+## 1.0.0-next.45
+
+### Patch Changes
+
+- [feat] more info about prerendering errors, add strict option to adapter-static ([#7264](https://github.com/sveltejs/kit/pull/7264))
+
+## 1.0.0-next.44
+
+### Patch Changes
+
+- fix error message ([#7108](https://github.com/sveltejs/kit/pull/7108))
+
+## 1.0.0-next.43
+
+### Patch Changes
+
+- Improve performance by compressing in parallel ([#6710](https://github.com/sveltejs/kit/pull/6710))
+
 ## 1.0.0-next.42
 
 ### Patch Changes
