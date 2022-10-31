@@ -62,17 +62,6 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 							statusText: response.statusText,
 							headers: response.headers
 						});
-					} else {
-						if (url.origin !== event.url.origin) {
-							const acao = response.headers.get('access-control-allow-origin');
-							if (!acao || (acao !== event.url.origin && acao !== '*')) {
-								throw new Error(
-									`CORS error: ${
-										acao ? 'Incorrect' : 'No'
-									} 'Access-Control-Allow-Origin' header is present on the requested resource`
-								);
-							}
-						}
 					}
 
 					return response;

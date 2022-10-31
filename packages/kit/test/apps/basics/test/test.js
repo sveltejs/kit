@@ -936,7 +936,10 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('true');
 	});
 
-	test('CORS errors are simulated server-side', async ({ page, read_errors }) => {
+	test('CORS errors are simulated server-side for shared load functions', async ({
+		page,
+		read_errors
+	}) => {
 		const { port, close } = await start_server(async (req, res) => {
 			res.end('hello');
 		});
@@ -949,6 +952,17 @@ test.describe('Load', () => {
 
 		await page.goto(`/load/cors/no-cors?port=${port}`);
 		expect(await page.textContent('h1')).toBe('result: ');
+
+		await close();
+	});
+
+	test('CORS errors are skipped for server-only load functions', async ({ page }) => {
+		const { port, close } = await start_server(async (req, res) => {
+			res.end('hello');
+		});
+
+		await page.goto(`/load/cors/server-only?port=${port}`);
+		expect(await page.textContent('h1')).toBe('hello');
 
 		await close();
 	});
