@@ -21,3 +21,18 @@ await create(repo, {
 	prettier: true,
 	playwright: false
 });
+
+// Remove the Sverdle from the template because it doesn't work within Stackblitz (cookies not set)
+fs.rmSync(path.join(repo, 'src', 'routes', 'sverdle'), { force: true, recursive: true });
+
+const header = fs.readFileSync(path.join(repo, 'src', 'routes', 'Header.svelte'), 'utf-8');
+fs.writeFileSync(
+	path.join(repo, 'svelte.config.js'),
+	header.replace(/<\/li>\s+<li.+?'\/sverdle'[\s\S]+?<\/li>/, '</li>')
+);
+
+const about = fs.readFileSync(path.join(repo, 'src', 'routes', 'about', '+page.svelte'), 'utf-8');
+fs.writeFileSync(
+	path.join(repo, 'src', 'routes', 'about', '+page.svelte'),
+	about.replace(/<\/p>\s+<p>\s+?[\s\S]+?Sverdle[\s\S]+?<\/p>/, '</p>')
+);
