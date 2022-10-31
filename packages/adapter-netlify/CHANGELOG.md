@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.83
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
 ## 1.0.0-next.82
 
 ### Patch Changes
