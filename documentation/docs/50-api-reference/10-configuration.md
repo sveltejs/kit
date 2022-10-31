@@ -58,7 +58,7 @@ const config = {
 			enabled: true,
 			entries: ['*'],
 			handleHttpError: 'fail',
-			handleMissingId: 'warn',
+			handleMissingId: 'fail',
 			origin: 'http://sveltekit-prerender'
 		},
 		serviceWorker: {
