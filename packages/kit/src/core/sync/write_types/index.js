@@ -215,6 +215,11 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		);
 		// null & {} == null, we need to prevent that in some situations
 		declarations.push(`type EnsureDefined<T> = T extends null | undefined ? {} : T;`);
+		// Takes a union type and returns a union type where each type also has all properties
+		// of all possible types (typed as undefined), making accessing them more ergonomic
+		declarations.push(
+			`type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;`
+		);
 	}
 
 	if (route.leaf) {
@@ -402,7 +407,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 			proxy
 		);
 
-		data = `Expand<Omit<${parent_type}, keyof ${type}> & EnsureDefined<${type}>>`;
+		data = `Expand<Omit<${parent_type}, keyof ${type}> & OptionalUnion<EnsureDefined<${type}>>>`;
 
 		const output_data_shape =
 			!is_page && all_pages_have_load
@@ -438,7 +443,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 					? `./proxy${replace_ext_with_js(path.basename(file_path))}`
 					: path_to_original(outdir, file_path);
 				const type = `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('${from}').load>>>`;
-				return expand ? `Expand<${type}>` : type;
+				return expand ? `Expand<OptionalUnion<EnsureDefined<${type}>>>` : type;
 			} else {
 				return fallback;
 			}

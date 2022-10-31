@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.529
+
+### Patch Changes
+
+- [fix] better type generation for load functions with different return values ([#7425](https://github.com/sveltejs/kit/pull/7425))
+
+- [fix] correctly strip data suffix at root page ([#7445](https://github.com/sveltejs/kit/pull/7445))
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
 ## 1.0.0-next.528
 
 ### Patch Changes
