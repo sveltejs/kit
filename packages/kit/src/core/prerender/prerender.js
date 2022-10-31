@@ -409,7 +409,9 @@ export async function prerender() {
 
 	// handle invalid fragment links
 	for (const [key, referrers] of expected_deeplinks) {
-		const [path, id] = key.split('#');
+		const index = key.indexOf('#');
+		const path = key.slice(0, index);
+		const id = key.slice(index + 1);
 
 		const actual_ids = actual_deeplinks.get(path);
 
