@@ -138,9 +138,9 @@ You can also add turn off prerendering only to parts of your app, if you want ot
 
 During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [add `export const ssr = false` to your root `+layout`](https://kit.svelte.dev/docs/page-options#ssr). You can also add this option only to parts of your app, if you want other parts to be prerendered.
 
-#### Apache
+### Apache
 
-To run an SPA on [Apache](https://httpd.apache.org/), you need a `static/.htaccess` file to route requests to the fallback page:
+To run an SPA on [Apache](https://httpd.apache.org/), you should add a `static/.htaccess` file to route requests to the fallback page:
 
 ```
 <IfModule mod_rewrite.c>
