@@ -36,7 +36,7 @@ function normalise_error_handler(log, input, format) {
 		case 'ignore':
 			return () => {};
 		default:
-			return input;
+			return (details) => input({ ...details, message: format(details) });
 	}
 }
 
