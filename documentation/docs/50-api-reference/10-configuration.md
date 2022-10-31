@@ -259,14 +259,33 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
   - `'fail'` — (default) fails the build when a routing error is encountered when following a link
   - `'ignore'` - silently ignore the failure and continue
   - `'warn'` — continue, but print a warning
-  - `(details) => void` — a custom error handler that takes a `details` object with `status`, `path`, `referrer` and `referenceType` properties
+  - `(details) => void` — a custom error handler that takes a `details` object with `status`, `path`, `referrer`, `referenceType` and `message` properties. If you `throw` from this function, the build will fail
+  
+      ```js
+    /** @type {import('@sveltejs/kit').Config} */
+    const config = {
+    	kit: {
+    		prerender: {
+    			handleHttpError: ({ path, referrer, message }) => {
+    				// ignore deliberate link to shiny 404 page
+    				if (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {
+    					return;
+    				}
+    				
+    				// otherwise fail the build
+    				throw new Error(message);
+    			}
+    		}
+    	}
+    };
+    ```
 
 - `handleMissingId`
 
   - `'fail'` — (default) fails the build when a prerendered page links to another prerendered page with a `#` fragment that doesn't correspond to an `id`
   - `'ignore'` - silently ignore the failure and continue
   - `'warn'` — continue, but print a warning
-  - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id` and `referrers` properties
+  - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id`, `referrers` and `message` properties. If you `throw` from this function, the build will fail
 
 - `origin` — the value of `url.origin` during prerendering; useful if it is included in rendered content
 
