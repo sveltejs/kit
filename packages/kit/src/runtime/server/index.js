@@ -63,7 +63,7 @@ export async function respond(request, options, state) {
 	}
 
 	const is_data_request = has_data_suffix(decoded);
-	if (is_data_request) decoded = strip_data_suffix(decoded);
+	if (is_data_request) decoded = strip_data_suffix(decoded) || '/';
 
 	if (!state.prerendering?.fallback) {
 		const matchers = await options.manifest._.matchers();
