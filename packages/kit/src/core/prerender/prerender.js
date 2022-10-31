@@ -164,10 +164,10 @@ export async function prerender() {
 	const written = new Set();
 
 	/** @type {Map<string, Set<string>>} */
-	const expected_deeplinks = new Map();
+	const expected_hashlinks = new Map();
 
 	/** @type {Map<string, string[]>} */
-	const actual_deeplinks = new Map();
+	const actual_hashlinks = new Map();
 
 	/**
 	 * @param {string | null} referrer
@@ -247,7 +247,7 @@ export async function prerender() {
 		if (config.prerender.crawl && headers['content-type'] === 'text/html') {
 			const { ids, hrefs } = crawl(body.toString());
 
-			actual_deeplinks.set(decoded, ids);
+			actual_hashlinks.set(decoded, ids);
 
 			for (const href of hrefs) {
 				if (href.startsWith('data:')) continue;
@@ -262,11 +262,11 @@ export async function prerender() {
 				}
 
 				if (hash) {
-					if (!expected_deeplinks.has(pathname + hash)) {
-						expected_deeplinks.set(pathname + hash, new Set());
+					if (!expected_hashlinks.has(pathname + hash)) {
+						expected_hashlinks.set(pathname + hash, new Set());
 					}
 
-					/** @type {Set<string>} */ (expected_deeplinks.get(pathname + hash)).add(decoded);
+					/** @type {Set<string>} */ (expected_hashlinks.get(pathname + hash)).add(decoded);
 				}
 
 				enqueue(decoded, decodeURI(pathname), pathname);
@@ -408,15 +408,15 @@ export async function prerender() {
 	await q.done();
 
 	// handle invalid fragment links
-	for (const [key, referrers] of expected_deeplinks) {
+	for (const [key, referrers] of expected_hashlinks) {
 		const index = key.indexOf('#');
 		const path = key.slice(0, index);
 		const id = key.slice(index + 1);
 
 		// ignore fragment links to pages that were not prerendered
-		if (!actual_deeplinks.has(path)) continue;
+		if (!actual_hashlinks.has(path)) continue;
 
-		if (!actual_deeplinks.get(path).includes(id)) {
+		if (!actual_hashlinks.get(path).includes(id)) {
 			handle_missing_id({ id, path, referrers: Array.from(referrers) });
 		}
 	}
