@@ -250,7 +250,7 @@ export async function prerender() {
 			actual_deeplinks.set(decoded, ids);
 
 			for (const href of hrefs) {
-				if (href.startsWith('data:') || href.startsWith('#')) continue;
+				if (href.startsWith('data:')) continue;
 
 				const resolved = resolve(encoded, href);
 				if (!is_root_relative(resolved)) continue;
