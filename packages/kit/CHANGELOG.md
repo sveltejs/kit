@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.531
+
+### Patch Changes
+
+- [breaking] change `config.kit.prerender.onError` to `handleHttpError`, and check for invalid fragment links ([#7375](https://github.com/sveltejs/kit/pull/7375))
+
+- fix escaping bug in crawler ([#7375](https://github.com/sveltejs/kit/pull/7375))
+
 ## 1.0.0-next.530
 
 ### Patch Changes
