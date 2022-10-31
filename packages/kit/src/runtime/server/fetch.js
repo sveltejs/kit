@@ -12,16 +12,22 @@ import { respond } from './index.js';
  */
 export function create_fetch({ event, options, state, get_cookie_header }) {
 	return async (info, init) => {
-		const request = normalize_fetch_input(info, init, event.url);
+		const original_request = normalize_fetch_input(info, init, event.url);
 
 		const request_body = init?.body;
+
+		// some runtimes (e.g. Cloudflare) error if you access `request.mode`,
+		// annoyingly, so we need to read the value from the `init` object instead
+		let mode = (info instanceof Request ? info.mode : init?.mode) ?? 'cors';
+		let credentials =
+			(info instanceof Request ? info.credentials : init?.credentials) ?? 'same-origin';
 
 		/** @type {import('types').PrerenderDependency} */
 		let dependency;
 
 		return await options.hooks.handleFetch({
 			event,
-			request,
+			request: original_request,
 			fetch: async (info, init) => {
 				const request = normalize_fetch_input(info, init, event.url);
 
@@ -31,11 +37,16 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 					request.headers.set('origin', event.url.origin);
 				}
 
+				if (info !== original_request) {
+					mode = (info instanceof Request ? info.mode : init?.mode) ?? 'cors';
+					credentials =
+						(info instanceof Request ? info.credentials : init?.credentials) ?? 'same-origin';
+				}
+
 				// Remove Origin, according to https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin#description
 				if (
 					(request.method === 'GET' || request.method === 'HEAD') &&
-					((('cf' in request ? 'cors' : request.mode) === 'no-cors' &&
-						url.origin !== event.url.origin) ||
+					((mode === 'no-cors' && url.origin !== event.url.origin) ||
 						url.origin === event.url.origin)
 				) {
 					request.headers.delete('origin');
@@ -50,17 +61,14 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 					// - sub.my.domain.com WILL receive cookies
 					// ports do not affect the resolution
 					// leading dot prevents mydomain.com matching domain.com
-					if (
-						`.${url.hostname}`.endsWith(`.${event.url.hostname}`) &&
-						('cf' in request ? 'same-origin' : request.credentials) !== 'omit'
-					) {
+					if (`.${url.hostname}`.endsWith(`.${event.url.hostname}`) && credentials !== 'omit') {
 						const cookie = get_cookie_header(url, request.headers.get('cookie'));
 						if (cookie) request.headers.set('cookie', cookie);
 					}
 
 					let response = await fetch(request);
 
-					if (('cf' in request ? 'cors' : request.mode) === 'no-cors') {
+					if (mode === 'no-cors') {
 						response = new Response('', {
 							status: response.status,
 							statusText: response.statusText,
@@ -113,7 +121,7 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 					return await fetch(request);
 				}
 
-				if (('cf' in request ? 'same-origin' : request.credentials) !== 'omit') {
+				if (credentials !== 'omit') {
 					const cookie = get_cookie_header(url, request.headers.get('cookie'));
 					if (cookie) {
 						request.headers.set('cookie', cookie);
