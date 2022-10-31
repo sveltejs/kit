@@ -2,7 +2,7 @@ import { hash } from '../hash.js';
 
 let loading = 0;
 
-const native_fetch = window.fetch;
+export const native_fetch = window.fetch;
 
 export function lock_fetch() {
 	loading += 1;
@@ -29,7 +29,7 @@ if (import.meta.env.DEV) {
 		const heuristic = can_inspect_stack_trace ? stack.includes('load_node') : loading;
 		if (heuristic) {
 			console.warn(
-				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
+				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
 		}
 

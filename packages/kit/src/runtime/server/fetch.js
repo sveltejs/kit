@@ -22,9 +22,6 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 		let credentials =
 			(info instanceof Request ? info.credentials : init?.credentials) ?? 'same-origin';
 
-		/** @type {import('types').PrerenderDependency} */
-		let dependency;
-
 		return await options.hooks.handleFetch({
 			event,
 			request: original_request,
@@ -143,11 +140,6 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 				}
 
 				response = await respond(request, options, state);
-
-				if (state.prerendering) {
-					dependency = { response, body: null };
-					state.prerendering.dependencies.set(url.pathname, dependency);
-				}
 
 				const set_cookie = response.headers.get('set-cookie');
 				if (set_cookie) {

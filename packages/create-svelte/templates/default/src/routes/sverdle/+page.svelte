@@ -78,7 +78,21 @@
 
 <svelte:window on:keydown={keydown} />
 
-<form method="POST" action="?/enter" use:enhance>
+<svelte:head>
+	<title>Sverdle</title>
+	<meta name="description" content="A Wordle clone written in SvelteKit" />
+</svelte:head>
+
+<form
+	method="POST"
+	action="?/enter"
+	use:enhance={() => {
+		// prevent default callback from resetting the form
+		return ({ update }) => {
+			update({ reset: false });
+		};
+	}}
+>
 	<a class="how-to-play" href="/sverdle/how-to-play">How to play</a>
 
 	<div class="grid" class:playing={!won} class:bad-guess={form?.badGuess}>
@@ -201,7 +215,7 @@
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		justify-content: start;
+		justify-content: flex-start;
 	}
 
 	.grid .row {

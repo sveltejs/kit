@@ -1,6 +1,6 @@
 import * as devalue from 'devalue';
-import { DATA_SUFFIX } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
+import { has_data_suffix } from '../../utils/url.js';
 import { HttpError } from '../control.js';
 
 /** @param {any} body */
@@ -67,20 +67,25 @@ export function allowed_methods(mod) {
 	return allowed;
 }
 
-/** @param {any} data */
-export function data_response(data) {
+/**
+ * @param {any} data
+ * @param {import('types').RequestEvent} event
+ */
+export function data_response(data, event) {
 	const headers = {
-		'content-type': 'application/javascript',
+		'content-type': 'application/json',
 		'cache-control': 'private, no-store'
 	};
 
 	try {
-		return new Response(`window.__sveltekit_data = ${devalue.uneval(data)}`, { headers });
+		return new Response(devalue.stringify(data), { headers });
 	} catch (e) {
 		const error = /** @type {any} */ (e);
 		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		const message = match ? `${error.message} (data.${match[2]})` : error.message;
-		return new Response(`throw new Error(${JSON.stringify(message)})`, { headers });
+		const message = match
+			? `Data returned from \`load\` while rendering ${event.routeId} is not serializable: ${error.message} (data.${match[2]})`
+			: error.message;
+		return new Response(JSON.stringify(message), { headers, status: 500 });
 	}
 }
 
@@ -139,7 +144,7 @@ export function handle_fatal_error(event, options, error) {
 		'text/html'
 	]);
 
-	if (event.url.pathname.endsWith(DATA_SUFFIX) || type === 'application/json') {
+	if (has_data_suffix(event.url.pathname) || type === 'application/json') {
 		return new Response(JSON.stringify(body), {
 			status,
 			headers: { 'content-type': 'application/json; charset=utf-8' }

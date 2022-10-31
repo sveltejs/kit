@@ -30,6 +30,9 @@ const cwd = process.cwd();
 export async function dev(vite, vite_config, svelte_config) {
 	installPolyfills();
 
+	// @ts-expect-error
+	globalThis.__SVELTEKIT_BROWSER__ = false;
+
 	sync.init(svelte_config, vite_config.mode);
 
 	/** @type {import('types').Respond} */
@@ -59,6 +62,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
+			appPath: svelte_config.kit.appDir,
 			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {
@@ -168,6 +172,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							pattern: route.pattern,
 							names: route.names,
 							types: route.types,
+							optional: route.optional,
 							page: route.page,
 							endpoint: endpoint
 								? async () => {
@@ -286,6 +291,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res) => {
+			// Vite's base middleware strips out the base path. Restore it
+			req.url = req.originalUrl;
 			try {
 				const base = `${vite.config.server.https ? 'https' : 'http'}://${
 					req.headers[':authority'] || req.headers.host

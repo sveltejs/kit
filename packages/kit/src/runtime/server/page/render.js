@@ -177,7 +177,25 @@ export async function render_response({
 		// function, but it would mean passing more stuff around than we currently do
 		const error = /** @type {any} */ (e);
 		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		if (match) throw new Error(`${error.message} (data.${match[2]})`);
+		if (match) {
+			throw new Error(
+				`Data returned from \`load\` while rendering ${event.routeId} is not serializable: ${error.message} (data.${match[2]})`
+			);
+		}
+
+		const nonPojoError = /pojo/i.exec(error.message);
+
+		if (nonPojoError) {
+			const constructorName = branch.find(({ server_data }) => server_data?.data?.constructor?.name)
+				?.server_data?.data?.constructor?.name;
+
+			throw new Error(
+				`Data returned from \`load\` (while rendering ${event.routeId}) must be a plain object${
+					constructorName ? ` rather than an instance of ${constructorName}` : ''
+				}`
+			);
+		}
+
 		throw error;
 	}
 

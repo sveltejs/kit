@@ -1,5 +1,49 @@
 # create-svelte
 
+## 2.0.0-next.190
+
+### Patch Changes
+
+- [fix] remove Sverdle from Stackblitz template ([#7448](https://github.com/sveltejs/kit/pull/7448))
+
+## 2.0.0-next.189
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 2.0.0-next.188
+
+### Patch Changes
+
+- Use aria-current instead of active class in nav ([#7376](https://github.com/sveltejs/kit/pull/7376))
+
+## 2.0.0-next.187
+
+### Patch Changes
+
+- Add missing titles and descriptions to the Sverdle pages ([#7351](https://github.com/sveltejs/kit/pull/7351))
+
+* Use `justify-content: flex-start;` on Sverdle CSS to avoid compatibility issues ([#7352](https://github.com/sveltejs/kit/pull/7352))
+
+## 2.0.0-next.186
+
+### Patch Changes
+
+- [feat] add reset option to update method of enhance ([#7326](https://github.com/sveltejs/kit/pull/7326))
+
+## 2.0.0-next.185
+
+### Patch Changes
+
+- Warn user when they accidentally try to publish the `./` directory ([#7280](https://github.com/sveltejs/kit/pull/7280))
+
+## 2.0.0-next.184
+
+### Patch Changes
+
+- fix sverdle guesses incorrectly cleared by form `enhance` ([#7241](https://github.com/sveltejs/kit/pull/7241))
+
 ## 2.0.0-next.183
 
 ### Patch Changes
