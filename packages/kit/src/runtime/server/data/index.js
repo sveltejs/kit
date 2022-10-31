@@ -3,8 +3,7 @@ import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
 import { data_response, handle_error_and_jsonify } from '../utils.js';
-import { normalize_path } from '../../../utils/url.js';
-import { DATA_SUFFIX } from '../../../constants.js';
+import { normalize_path, strip_data_suffix } from '../../../utils/url.js';
 
 /**
  * @param {import('types').RequestEvent} event
@@ -15,7 +14,7 @@ import { DATA_SUFFIX } from '../../../constants.js';
  */
 export async function render_data(event, route, options, state) {
 	if (!route.page) {
-		// requesting /__data.js should fail for a +server.js
+		// requesting /__data.json should fail for a +server.js
 		return new Response(undefined, {
 			status: 404
 		});
@@ -25,21 +24,13 @@ export async function render_data(event, route, options, state) {
 		const node_ids = [...route.page.layouts, route.page.leaf];
 
 		const invalidated =
-			event.url.searchParams
-				.get('__invalid')
-				?.split('')
-				.map((x) => x === 'y') ?? node_ids.map(() => true);
+			event.request.headers.get('x-sveltekit-invalidated')?.split(',').map(Boolean) ??
+			node_ids.map(() => true);
 
 		let aborted = false;
 
 		const url = new URL(event.url);
-		url.pathname = normalize_path(
-			url.pathname.slice(0, -DATA_SUFFIX.length),
-			options.trailing_slash
-		);
-
-		url.searchParams.delete('__invalid');
-		url.searchParams.delete('__id');
+		url.pathname = normalize_path(strip_data_suffix(url.pathname), options.trailing_slash);
 
 		const new_event = { ...event, url };
 
@@ -116,7 +107,7 @@ export async function render_data(event, route, options, state) {
 			nodes: nodes.slice(0, length)
 		};
 
-		return data_response(server_data);
+		return data_response(server_data, event);
 	} catch (e) {
 		const error = normalize_error(e);
 
@@ -127,10 +118,10 @@ export async function render_data(event, route, options, state) {
 				location: error.location
 			};
 
-			return data_response(server_data);
+			return data_response(server_data, event);
 		} else {
 			// TODO make it clearer that this was an unexpected error
-			return data_response(handle_error_and_jsonify(event, options, error));
+			return data_response(handle_error_and_jsonify(event, options, error), event);
 		}
 	}
 }

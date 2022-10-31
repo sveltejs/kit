@@ -54,7 +54,6 @@ export async function render_endpoint(event, mod, state) {
 		}
 
 		if (state.prerendering) {
-			response.headers.set('x-sveltekit-routeid', /** @type {string} */ (event.routeId));
 			response.headers.set('x-sveltekit-prerender', String(prerender));
 		}
 
@@ -77,12 +76,15 @@ export async function render_endpoint(event, mod, state) {
  * @param {import('types').RequestEvent} event
  */
 export function is_endpoint_request(event) {
-	const { method } = event.request;
+	const { method, headers } = event.request;
 
 	if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
 		// These methods exist exclusively for endpoints
 		return true;
 	}
+
+	// use:enhance uses a custom header to disambiguate
+	if (method === 'POST' && headers.get('x-sveltekit-action') === 'true') return false;
 
 	// GET/POST requests may be for endpoints or pages. We prefer endpoints if this isn't a text/html request
 	const accept = event.request.headers.get('accept') ?? '*/*';

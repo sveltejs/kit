@@ -21,10 +21,14 @@ export function enhance(form, submit = () => {}) {
 	 * @param {{
 	 *   action: URL;
 	 *   result: import('types').ActionResult;
+	 *   reset?: boolean
 	 * }} opts
 	 */
-	const fallback_callback = async ({ action, result }) => {
+	const fallback_callback = async ({ action, result, reset }) => {
 		if (result.type === 'success') {
+			if (reset !== false) {
+				form.reset();
+			}
 			await invalidateAll();
 		}
 
@@ -51,6 +55,12 @@ export function enhance(form, submit = () => {}) {
 		);
 
 		const data = new FormData(form);
+
+		const submitter_name = event.submitter?.getAttribute('name');
+		if (submitter_name) {
+			data.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
+		}
+
 		const controller = new AbortController();
 
 		let cancelled = false;
@@ -73,8 +83,10 @@ export function enhance(form, submit = () => {}) {
 			const response = await fetch(action, {
 				method: 'POST',
 				headers: {
-					accept: 'application/json'
+					accept: 'application/json',
+					'x-sveltekit-action': 'true'
 				},
+				cache: 'no-store',
 				body: data,
 				signal: controller.signal
 			});
@@ -89,6 +101,7 @@ export function enhance(form, submit = () => {}) {
 			action,
 			data,
 			form,
+			update: (opts) => fallback_callback({ action, result, reset: opts?.reset }),
 			// @ts-expect-error generic constraints stuff we don't care about
 			result,
 			// TODO remove for 1.0

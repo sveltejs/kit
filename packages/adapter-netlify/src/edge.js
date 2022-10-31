@@ -2,7 +2,7 @@ import { Server } from '0SERVER';
 import { manifest, prerendered } from 'MANIFEST';
 
 const server = new Server(manifest);
-const prefix = `/${manifest.appDir}/`;
+const prefix = `/${manifest.appPath}/`;
 
 const initialized = server.init({
 	// @ts-ignore

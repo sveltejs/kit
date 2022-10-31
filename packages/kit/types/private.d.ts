@@ -15,15 +15,15 @@ export interface AdapterEntry {
 	 * if it should be treated as a fallback for the current route. For example, `/foo/[c]`
 	 * is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
 	 */
-	filter: (route: RouteDefinition) => boolean;
+	filter(route: RouteDefinition): boolean;
 
 	/**
 	 * A function that is invoked once the entry has been created. This is where you
 	 * should write the function to the filesystem and generate redirect manifests.
 	 */
-	complete: (entry: {
-		generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
-	}) => MaybePromise<void>;
+	complete(entry: {
+		generateManifest(opts: { relativePath: string; format?: 'esm' | 'cjs' }): string;
+	}): MaybePromise<void>;
 }
 
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
@@ -195,7 +195,7 @@ export type PrerenderOption = boolean | 'auto';
 export type PrerenderMap = Map<string, PrerenderOption>;
 
 export interface RequestOptions {
-	getClientAddress: () => string;
+	getClientAddress(): string;
 	platform?: App.Platform;
 }
 

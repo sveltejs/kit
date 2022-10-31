@@ -1,7 +1,7 @@
-import { devalue } from 'devalue';
-import { DATA_SUFFIX } from '../../../constants.js';
+import * as devalue from 'devalue';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
+import { add_data_suffix } from '../../../utils/url.js';
 import { HttpError, Redirect } from '../../control.js';
 import {
 	get_option,
@@ -15,7 +15,6 @@ import {
 	is_action_json_request,
 	is_action_request
 } from './actions.js';
-import { create_fetch } from './fetch.js';
 import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
@@ -36,6 +35,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 			status: 404
 		});
 	}
+
+	state.initiator = route;
 
 	if (is_action_json_request(event)) {
 		const node = await options.manifest._.nodes[page.leaf]();
@@ -75,7 +76,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 
 		const should_prerender_data = nodes.some((node) => node?.server);
-		const data_pathname = event.url.pathname.replace(/\/$/, '') + DATA_SUFFIX;
+		const data_pathname = add_data_suffix(event.url.pathname);
 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
@@ -93,20 +94,17 @@ export async function render_page(event, route, page, options, state, resolve_op
 			});
 		}
 
-		const { fetcher, fetched, cookies } = create_fetch({
-			event,
-			options,
-			state,
-			route,
-			prerender_default: should_prerender,
-			resolve_opts
-		});
+		// if we fetch any endpoints while loading data for this page, they should
+		// inherit the prerender option of the page
+		state.prerender_default = should_prerender;
+
+		/** @type {import('./types').Fetched[]} */
+		const fetched = [];
 
 		if (get_option(nodes, 'ssr') === false) {
 			return await render_response({
 				branch: [],
 				fetched,
-				cookies,
 				page_config: {
 					ssr: false,
 					csr: get_option(nodes, 'csr') ?? true
@@ -162,6 +160,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 			});
 		});
 
+		const csr = get_option(nodes, 'csr') ?? true;
+
 		/** @type {Array<Promise<Record<string, any> | null>>} */
 		const load_promises = nodes.map((node, i) => {
 			if (load_error) throw load_error;
@@ -169,7 +169,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 				try {
 					return await load_data({
 						event,
-						fetcher,
+						fetched,
 						node,
 						parent: async () => {
 							const data = {};
@@ -178,8 +178,10 @@ export async function render_page(event, route, page, options, state, resolve_op
 							}
 							return data;
 						},
+						resolve_opts,
 						server_data_promise: server_promises[i],
-						state
+						state,
+						csr
 					});
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);
@@ -206,10 +208,10 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 					if (err instanceof Redirect) {
 						if (state.prerendering && should_prerender_data) {
-							const body = `window.__sveltekit_data = ${JSON.stringify({
+							const body = devalue.stringify({
 								type: 'redirect',
 								location: err.location
-							})}`;
+							});
 
 							state.prerendering.dependencies.set(data_pathname, {
 								response: new Response(body),
@@ -217,7 +219,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 							});
 						}
 
-						return redirect_response(err.status, err.location, cookies);
+						return redirect_response(err.status, err.location);
 					}
 
 					const status = err instanceof HttpError ? err.status : 500;
@@ -244,8 +246,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 									data: null,
 									server_data: null
 								}),
-								fetched,
-								cookies
+								fetched
 							});
 						}
 					}
@@ -262,10 +263,10 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 
 		if (state.prerendering && should_prerender_data) {
-			const body = `window.__sveltekit_data = ${devalue({
+			const body = devalue.stringify({
 				type: 'data',
 				nodes: branch.map((branch_node) => branch_node?.server_data)
-			})}`;
+			});
 
 			state.prerendering.dependencies.set(data_pathname, {
 				response: new Response(body),
@@ -286,8 +287,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			error: null,
 			branch: compact(branch),
 			action_result,
-			fetched,
-			cookies
+			fetched
 		});
 	} catch (error) {
 		// if we end up here, it means the data loaded successfull

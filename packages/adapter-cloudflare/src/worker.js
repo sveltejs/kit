@@ -4,7 +4,7 @@ import * as Cache from 'worktop/cfw.cache';
 
 const server = new Server(manifest);
 
-const prefix = `/${manifest.appDir}/`;
+const app_path = `/${manifest.appPath}/`;
 
 /** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
 const worker = {
@@ -18,11 +18,11 @@ const worker = {
 		let { pathname } = new URL(req.url);
 
 		// static assets
-		if (pathname.startsWith(prefix)) {
+		if (pathname.startsWith(app_path)) {
 			res = await env.ASSETS.fetch(req);
 			if (!res.ok) return res;
 
-			const cache_control = pathname.startsWith(prefix + 'immutable/')
+			const cache_control = pathname.startsWith(app_path + 'immutable/')
 				? 'public, immutable, max-age=31536000'
 				: 'no-cache';
 
