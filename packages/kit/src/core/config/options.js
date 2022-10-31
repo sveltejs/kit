@@ -283,7 +283,7 @@ const options = object(
 				// TODO: remove this for the 1.0 release
 				onError: validate(undefined, (input, keypath) => {
 					if (typeof input !== 'undefined') {
-						let message = `${keypath} has been renamed in favor of \`handleHttpError\``;
+						let message = `${keypath} has been renamed to \`handleHttpError\``;
 
 						if (input === 'continue') {
 							message += ', and "continue" has been renamed to "warn"';
