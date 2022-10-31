@@ -40,7 +40,8 @@
     "server-only-folder": "0.0.1",
     "server-only-folder-dynamic-import": "0.0.1",
     "server-only-module-dynamic-import": "0.0.1",
-    "prerenderable-not-prerendered": "0.0.1"
+    "prerenderable-not-prerendered": "0.0.1",
+    "prerenderable-incorrect-fragment": "0.0.1"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -313,6 +314,7 @@
     "fast-crabs-applaud",
     "fast-goats-argue",
     "fast-islands-lick",
+    "fast-ladybugs-thank",
     "fast-pans-enjoy",
     "fast-poems-notice",
     "few-apes-listen",
@@ -1286,6 +1288,7 @@
     "three-chicken-ring",
     "three-dingos-scream",
     "three-elephants-breathe",
+    "three-frogs-happen",
     "three-garlics-brush",
     "three-laws-appear",
     "three-meals-vanish",
