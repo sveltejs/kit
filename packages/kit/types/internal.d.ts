@@ -210,8 +210,9 @@ export interface ServerDataNode {
 	uses: {
 		dependencies?: string[];
 		params?: string[];
-		parent?: number | void; // 1 or undefined
-		url?: number | void; // 1 or undefined
+		parent?: 1 | void;
+		route?: 1 | void;
+		url?: 1 | void;
 	};
 }
 
@@ -362,6 +363,7 @@ export interface Uses {
 	dependencies: Set<string>;
 	params: Set<string>;
 	parent: boolean;
+	route: boolean;
 	url: boolean;
 }
 

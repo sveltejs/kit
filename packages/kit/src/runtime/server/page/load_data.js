@@ -17,6 +17,7 @@ export async function load_server_data({ event, state, node, parent }) {
 		dependencies: new Set(),
 		params: new Set(),
 		parent: false,
+		route: false,
 		url: false
 	};
 
@@ -47,6 +48,12 @@ export async function load_server_data({ event, state, node, parent }) {
 			uses.parent = true;
 			return parent();
 		},
+		route: {
+			get id() {
+				uses.route = true;
+				return event.route.id;
+			}
+		},
 		url
 	});
 
@@ -59,6 +66,7 @@ export async function load_server_data({ event, state, node, parent }) {
 			dependencies: uses.dependencies.size > 0 ? Array.from(uses.dependencies) : undefined,
 			params: uses.params.size > 0 ? Array.from(uses.params) : undefined,
 			parent: uses.parent ? 1 : undefined,
+			route: uses.route ? 1 : undefined,
 			url: uses.url ? 1 : undefined
 		}
 	};

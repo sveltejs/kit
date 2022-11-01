@@ -520,6 +520,7 @@ export function create_client({ target, base, trailing_slash }) {
 			dependencies: new Set(),
 			params: new Set(),
 			parent: false,
+			route: false,
 			url: false
 		};
 
@@ -536,7 +537,12 @@ export function create_client({ target, base, trailing_slash }) {
 
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
-				route,
+				route: {
+					get id() {
+						uses.route = true;
+						return route.id;
+					}
+				},
 				params: new Proxy(params, {
 					get: (target, key) => {
 						uses.params.add(/** @type {string} */ (key));
