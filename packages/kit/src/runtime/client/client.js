@@ -1540,7 +1540,7 @@ function handle_error(error, event) {
 	}
 	return (
 		hooks.handleError({ error, event }) ??
-		/** @type {any} */ ({ message: event.route != null ? 'Internal Error' : 'Not Found' })
+		/** @type {any} */ ({ message: event.route.id != null ? 'Internal Error' : 'Not Found' })
 	);
 }
 
