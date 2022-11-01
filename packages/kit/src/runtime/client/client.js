@@ -659,17 +659,19 @@ export function create_client({ target, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {boolean} url_changed
 	 * @param {boolean} parent_changed
+	 * @param {boolean} route_changed
+	 * @param {boolean} url_changed
 	 * @param {import('types').Uses | undefined} uses
 	 * @param {Record<string, string>} params
 	 */
-	function has_changed(url_changed, parent_changed, uses, params) {
+	function has_changed(parent_changed, route_changed, url_changed, uses, params) {
 		if (force_invalidation) return true;
 
 		if (!uses) return false;
 
 		if (uses.parent && parent_changed) return true;
+		if (uses.route && route_changed) return true;
 		if (uses.url && url_changed) return true;
 
 		for (const param of uses.params) {
@@ -697,6 +699,7 @@ export function create_client({ target, base, trailing_slash }) {
 					dependencies: new Set(node.uses.dependencies ?? []),
 					params: new Set(node.uses.params ?? []),
 					parent: !!node.uses.parent,
+					route: !!node.uses.route,
 					url: !!node.uses.url
 				}
 			};
@@ -729,6 +732,7 @@ export function create_client({ target, base, trailing_slash }) {
 		let server_data = null;
 
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
+		const route_changed = current.route ? id !== current.route.id : false;
 
 		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];
@@ -736,7 +740,13 @@ export function create_client({ target, base, trailing_slash }) {
 			const invalid =
 				!!loader?.[0] &&
 				(previous?.loader !== loader[1] ||
-					has_changed(url_changed, acc.some(Boolean), previous.server?.uses, params));
+					has_changed(
+						acc.some(Boolean),
+						route_changed,
+						url_changed,
+						previous.server?.uses,
+						params
+					));
 
 			acc.push(invalid);
 			return acc;
@@ -775,7 +785,7 @@ export function create_client({ target, base, trailing_slash }) {
 			const valid =
 				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
-				!has_changed(url_changed, parent_changed, previous.shared?.uses, params);
+				!has_changed(parent_changed, route_changed, url_changed, previous.shared?.uses, params);
 			if (valid) return previous;
 
 			parent_changed = true;

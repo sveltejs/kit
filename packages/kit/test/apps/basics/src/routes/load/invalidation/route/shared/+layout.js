@@ -1,4 +1,4 @@
-/** @type {import('./$types').LayoutServerLoad} */
+/** @type {import('./$types').LayoutLoad} */
 export function load({ route }) {
 	return { route };
 }
