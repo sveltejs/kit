@@ -1,3 +1,6 @@
+import { execSync } from 'child_process';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { adapters } from './adapters.js';
 
 /** @type {import('./index').default} */
@@ -10,31 +13,39 @@ for (const candidate of adapters) {
 
 		try {
 			module = await import(candidate.module);
-
-			fn = () => {
-				const adapter = module.default();
-				return {
-					...adapter,
-					adapt: (builder) => {
-						builder.log.info(`Detected environment: ${candidate.name}. Using ${candidate.module}`);
-						return adapter.adapt(builder);
-					}
-				};
-			};
-
-			break;
 		} catch (error) {
 			if (
 				error.code === 'ERR_MODULE_NOT_FOUND' &&
 				error.message.startsWith(`Cannot find package '${candidate.module}'`)
 			) {
-				throw new Error(
-					`It looks like ${candidate.module} is not installed. Please install it and try building your project again.`
-				);
+				try {
+					execSync(
+						`echo "Installing ${candidate.module}" && npm install ${candidate.module} --no-save --no-package-lock`,
+						{ stdio: 'inherit', cwd: dirname(fileURLToPath(import.meta.url)) }
+					);
+					module = await import(candidate.module);
+				} catch (e) {
+					throw new Error(
+						`Could not install ${candidate.module} on the fly. Please install it yourself by adding it to your package.json's devDependencies and try building your project again.`
+					);
+				}
 			}
 
 			throw error;
 		}
+
+		fn = () => {
+			const adapter = module.default();
+			return {
+				...adapter,
+				adapt: (builder) => {
+					builder.log.info(`Detected environment: ${candidate.name}. Using ${candidate.module}`);
+					return adapter.adapt(builder);
+				}
+			};
+		};
+
+		break;
 	}
 }
 
