@@ -29,9 +29,9 @@ for (const candidate of adapters) {
 						`Could not install ${candidate.module} on the fly. Please install it yourself by adding it to your package.json's devDependencies and try building your project again.`
 					);
 				}
+			} else {
+				throw error;
 			}
-
-			throw error;
 		}
 
 		fn = () => {
