@@ -362,7 +362,8 @@ export interface LoadEvent<
 }
 
 export interface NavigationEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
 > {
 	/**
 	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, the `slug` parameter
@@ -375,8 +376,8 @@ export interface NavigationEvent<
 		/**
 		 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
 		 */
-		id: string;
-	} | null;
+		id: RouteId;
+	};
 	/**
 	 * The URL of the current page
 	 */
@@ -385,7 +386,7 @@ export interface NavigationEvent<
 
 export interface NavigationTarget {
 	params: Record<string, string> | null;
-	routeId: string | null;
+	route: { id: string | null };
 	url: URL;
 }
 
@@ -411,9 +412,14 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	 */
 	params: Params;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 * Info about the current route
 	 */
-	routeId: string | null;
+	route: {
+		/**
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+		 */
+		id: string | null;
+	};
 	/**
 	 * Http status code of the current page
 	 */
@@ -437,7 +443,8 @@ export interface ParamMatcher {
 }
 
 export interface RequestEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
 > {
 	/**
 	 * Get or set cookies related to the current request
@@ -480,8 +487,8 @@ export interface RequestEvent<
 		/**
 		 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
 		 */
-		id: string;
-	} | null;
+		id: RouteId;
+	};
 	/**
 	 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
 	 *

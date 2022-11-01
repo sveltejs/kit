@@ -28,7 +28,7 @@ export interface Client {
 		error: App.Error;
 		node_ids: number[];
 		params: Record<string, string>;
-		routeId: string | null;
+		route: { id: string | null };
 		data: Array<import('types').ServerDataNode | null>;
 		form: Record<string, any> | null;
 	}): Promise<void>;

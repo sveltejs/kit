@@ -92,7 +92,7 @@ export async function render_response({
 		props.page = {
 			error,
 			params: /** @type {Record<string, any>} */ (event.params),
-			routeId: event.route?.id ?? null,
+			route: event.route,
 			status,
 			url: event.url,
 			data,
@@ -179,7 +179,7 @@ export async function render_response({
 		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
 		if (match) {
 			throw new Error(
-				`Data returned from \`load\` while rendering ${event.route?.id} is not serializable: ${error.message} (data.${match[2]})`
+				`Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data.${match[2]})`
 			);
 		}
 
@@ -190,7 +190,7 @@ export async function render_response({
 				?.server_data?.data?.constructor?.name;
 
 			throw new Error(
-				`Data returned from \`load\` (while rendering ${event.route?.id}) must be a plain object${
+				`Data returned from \`load\` (while rendering ${event.route.id}) must be a plain object${
 					constructorName ? ` rather than an instance of ${constructorName}` : ''
 				}`
 			);
@@ -249,7 +249,7 @@ export async function render_response({
 					error: ${s(error)},
 					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 					params: ${devalue.uneval(event.params)},
-					routeId: ${s(event.route?.id ?? null)},
+					route: ${s(event.route)},
 					data: ${serialized.data},
 					form: ${serialized.form}
 				}` : 'null'},

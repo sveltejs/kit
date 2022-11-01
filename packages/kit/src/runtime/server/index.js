@@ -121,7 +121,7 @@ export async function respond(request, options, state) {
 		params,
 		platform: state.platform,
 		request,
-		route: route && { id: route.id },
+		route: { id: route?.id ?? null },
 		setHeaders: (new_headers) => {
 			for (const key in new_headers) {
 				const lower = key.toLowerCase();
@@ -306,7 +306,7 @@ export async function respond(request, options, state) {
 					}
 					add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
-					if (state.prerendering && event.route !== null) {
+					if (state.prerendering && event.route.id !== null) {
 						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
 					}
 

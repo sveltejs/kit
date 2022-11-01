@@ -232,8 +232,12 @@ export function create_client({ target, base, trailing_slash }) {
 		if (!navigation_result) {
 			navigation_result = await server_fallback(
 				url,
-				null,
-				handle_error(new Error(`Not found: ${url.pathname}`), { url, params: {}, route: null }),
+				{ id: null },
+				handle_error(new Error(`Not found: ${url.pathname}`), {
+					url,
+					params: {},
+					route: { id: null }
+				}),
 				404
 			);
 		}
@@ -249,9 +253,9 @@ export function create_client({ target, base, trailing_slash }) {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
 				navigation_result = await load_root_error_page({
 					status: 500,
-					error: handle_error(new Error('Redirect loop'), { url, params: {}, route: null }),
+					error: handle_error(new Error('Redirect loop'), { url, params: {}, route: { id: null } }),
 					url,
-					routeId: null
+					route: { id: null }
 				});
 			} else {
 				goto(
@@ -382,7 +386,7 @@ export function create_client({ target, base, trailing_slash }) {
 			from: null,
 			to: add_url_properties('to', {
 				params: current.params,
-				routeId: current.route?.id ?? null,
+				route: { id: current.route?.id ?? null },
 				url: new URL(location.href)
 			}),
 			type: 'load'
@@ -464,7 +468,7 @@ export function create_client({ target, base, trailing_slash }) {
 			result.props.page = {
 				error,
 				params,
-				routeId: route && route.id,
+				route,
 				status,
 				url,
 				form,
@@ -502,12 +506,12 @@ export function create_client({ target, base, trailing_slash }) {
 	 * 	 parent: () => Promise<Record<string, any>>;
 	 *   url: URL;
 	 *   params: Record<string, string>;
-	 *   routeId: string | null;
+	 *   route: { id: string | null };
 	 * 	 server_data_node: import('./types').DataNode | null;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
-	async function load_node({ loader, parent, url, params, routeId, server_data_node }) {
+	async function load_node({ loader, parent, url, params, route, server_data_node }) {
 		/** @type {Record<string, any> | null} */
 		let data = null;
 
@@ -532,7 +536,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
-				route: routeId ? { id: routeId } : null,
+				route,
 				params: new Proxy(params, {
 					get: (target, key) => {
 						uses.params.add(/** @type {string} */ (key));
@@ -740,7 +744,7 @@ export function create_client({ target, base, trailing_slash }) {
 					status: 500,
 					error: handle_error(error, { url, params, route: { id: route.id } }),
 					url,
-					routeId: route.id
+					route
 				});
 			}
 
@@ -779,7 +783,7 @@ export function create_client({ target, base, trailing_slash }) {
 				loader: loader[1],
 				url,
 				params,
-				routeId: route.id,
+				route,
 				parent: async () => {
 					const data = {};
 					for (let j = 0; j < i; j += 1) {
@@ -843,7 +847,7 @@ export function create_client({ target, base, trailing_slash }) {
 					} else {
 						// if we get here, it's because the root `load` function failed,
 						// and we need to fall back to the server
-						return await server_fallback(url, route.id, error, status);
+						return await server_fallback(url, { id: route.id }, error, status);
 					}
 				}
 			} else {
@@ -899,11 +903,11 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   status: number;
 	 *   error: App.Error;
 	 *   url: URL;
-	 *   routeId: string | null
+	 *   route: { id: string | null }
 	 * }} opts
 	 * @returns {Promise<import('./types').NavigationFinished>}
 	 */
-	async function load_root_error_page({ status, error, url, routeId }) {
+	async function load_root_error_page({ status, error, url, route }) {
 		/** @type {Record<string, string>} */
 		const params = {}; // error page does not have params
 
@@ -939,7 +943,7 @@ export function create_client({ target, base, trailing_slash }) {
 			loader: default_layout_loader,
 			url,
 			params,
-			routeId,
+			route,
 			parent: () => Promise.resolve({}),
 			server_data_node: create_data_node(server_data_node)
 		});
@@ -1029,12 +1033,12 @@ export function create_client({ target, base, trailing_slash }) {
 		const navigation = {
 			from: add_url_properties('from', {
 				params: current.params,
-				routeId: current.route?.id ?? null,
+				route: { id: current.route?.id ?? null },
 				url: current.url
 			}),
 			to: add_url_properties('to', {
 				params: intent?.params ?? null,
-				routeId: intent?.route?.id ?? null,
+				route: { id: intent?.route?.id ?? null },
 				url
 			}),
 			type
@@ -1086,12 +1090,12 @@ export function create_client({ target, base, trailing_slash }) {
 	/**
 	 * Does a full page reload if it wouldn't result in an endless loop in the SPA case
 	 * @param {URL} url
-	 * @param {string | null} routeId
+	 * @param {{ id: string | null }} route
 	 * @param {App.Error} error
 	 * @param {number} status
 	 * @returns {Promise<import('./types').NavigationFinished>}
 	 */
-	async function server_fallback(url, routeId, error, status) {
+	async function server_fallback(url, route, error, status) {
 		if (url.origin === location.origin && url.pathname === location.pathname && !hydrated) {
 			// We would reload the same page we're currently on, which isn't hydrated,
 			// which means no SSR, which means we would end up in an endless loop
@@ -1099,7 +1103,7 @@ export function create_client({ target, base, trailing_slash }) {
 				status,
 				error,
 				url,
-				routeId
+				route
 			});
 		}
 		return await native_navigation(url);
@@ -1254,7 +1258,7 @@ export function create_client({ target, base, trailing_slash }) {
 				const navigation = {
 					from: add_url_properties('from', {
 						params: current.params,
-						routeId: current.route?.id ?? null,
+						route: { id: current.route?.id ?? null },
 						url: current.url
 					}),
 					to: null,
@@ -1443,15 +1447,7 @@ export function create_client({ target, base, trailing_slash }) {
 			});
 		},
 
-		_hydrate: async ({
-			status,
-			error,
-			node_ids,
-			params,
-			routeId,
-			data: server_data_nodes,
-			form
-		}) => {
+		_hydrate: async ({ status, error, node_ids, params, route, data: server_data_nodes, form }) => {
 			hydrated = true;
 
 			const url = new URL(location.href);
@@ -1467,7 +1463,7 @@ export function create_client({ target, base, trailing_slash }) {
 						loader: nodes[n],
 						url,
 						params,
-						routeId,
+						route,
 						parent: async () => {
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
@@ -1486,7 +1482,7 @@ export function create_client({ target, base, trailing_slash }) {
 					status,
 					error,
 					form,
-					route: routes.find((route) => route.id === routeId) ?? null
+					route: routes.find(({ id }) => id === route.id) ?? null
 				});
 			} catch (error) {
 				if (error instanceof Redirect) {
@@ -1498,9 +1494,9 @@ export function create_client({ target, base, trailing_slash }) {
 
 				result = await load_root_error_page({
 					status: error instanceof HttpError ? error.status : 500,
-					error: handle_error(error, { url, params, route: routeId ? { id: routeId } : null }),
+					error: handle_error(error, { url, params, route }),
 					url,
-					routeId
+					route
 				});
 			}
 
@@ -1579,6 +1575,15 @@ function add_url_properties(type, target) {
 			enumerable: false
 		});
 	}
+
+	Object.defineProperty(target, 'routeId', {
+		get() {
+			throw new Error(
+				`The navigation shape changed - ${type}.routeId should now be ${type}.route.id`
+			);
+		},
+		enumerable: false
+	});
 
 	return target;
 }

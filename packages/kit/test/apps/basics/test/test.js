@@ -1661,12 +1661,12 @@ test.describe('Routing', () => {
 		);
 	});
 
-	test('exposes page.routeId', async ({ page, clicknav }) => {
+	test('exposes page.route.id', async ({ page, clicknav }) => {
 		await page.goto('/routing/route-id');
 		await clicknav('[href="/routing/route-id/foo"]');
 
-		expect(await page.textContent('h1')).toBe('routeId in load: /routing/route-id/[x]');
-		expect(await page.textContent('h2')).toBe('routeId in store: /routing/route-id/[x]');
+		expect(await page.textContent('h1')).toBe('route.id in load: /routing/route-id/[x]');
+		expect(await page.textContent('h2')).toBe('route.id in store: /routing/route-id/[x]');
 	});
 
 	test('serves a page that clashes with a root directory', async ({ page }) => {
