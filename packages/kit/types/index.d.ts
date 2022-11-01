@@ -263,16 +263,18 @@ export interface Load<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	InputData extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
-	OutputData extends Record<string, unknown> | void = Record<string, any> | void
+	OutputData extends Record<string, unknown> | void = Record<string, any> | void,
+	RouteId extends string | null = string | null
 > {
-	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData>;
+	(event: LoadEvent<Params, InputData, ParentData, RouteId>): MaybePromise<OutputData>;
 }
 
 export interface LoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
-	ParentData extends Record<string, unknown> = Record<string, any>
-> extends NavigationEvent<Params> {
+	ParentData extends Record<string, unknown> = Record<string, any>,
+	RouteId extends string | null = string | null
+> extends NavigationEvent<Params, RouteId> {
 	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 	 *
@@ -402,7 +404,10 @@ export interface Navigation {
 /**
  * The shape of the `$page` store
  */
-export interface Page<Params extends Record<string, string> = Record<string, string>> {
+export interface Page<
+	Params extends Record<string, string> = Record<string, string>,
+	RouteId extends string | null = string | null
+> {
 	/**
 	 * The URL of the current page
 	 */
@@ -418,7 +423,7 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 		/**
 		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
 		 */
-		id: string | null;
+		id: RouteId;
 	};
 	/**
 	 * Http status code of the current page
@@ -524,9 +529,10 @@ export interface RequestEvent<
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://kit.svelte.dev/docs/types#generated-types) instead.
  */
 export interface RequestHandler<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
 > {
-	(event: RequestEvent<Params>): MaybePromise<Response>;
+	(event: RequestEvent<Params, RouteId>): MaybePromise<Response>;
 }
 
 export interface ResolveOptions {
@@ -570,15 +576,17 @@ export interface SSRManifest {
 export interface ServerLoad<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	ParentData extends Record<string, any> = Record<string, any>,
-	OutputData extends Record<string, any> | void = Record<string, any> | void
+	OutputData extends Record<string, any> | void = Record<string, any> | void,
+	RouteId extends string | null = string | null
 > {
-	(event: ServerLoadEvent<Params, ParentData>): MaybePromise<OutputData>;
+	(event: ServerLoadEvent<Params, ParentData, RouteId>): MaybePromise<OutputData>;
 }
 
 export interface ServerLoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	ParentData extends Record<string, any> = Record<string, any>
-> extends RequestEvent<Params> {
+	ParentData extends Record<string, any> = Record<string, any>,
+	RouteId extends string | null = string | null
+> extends RequestEvent<Params, RouteId> {
 	/**
 	 * `await parent()` returns data from parent `+layout.server.js` `load` functions.
 	 *
@@ -627,15 +635,17 @@ export interface ServerLoadEvent<
 
 export interface Action<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	OutputData extends Record<string, any> | void = Record<string, any> | void
+	OutputData extends Record<string, any> | void = Record<string, any> | void,
+	RouteId extends string | null = string | null
 > {
-	(event: RequestEvent<Params>): MaybePromise<OutputData>;
+	(event: RequestEvent<Params, RouteId>): MaybePromise<OutputData>;
 }
 
 export type Actions<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	OutputData extends Record<string, any> | void = Record<string, any> | void
-> = Record<string, Action<Params, OutputData>>;
+	OutputData extends Record<string, any> | void = Record<string, any> | void,
+	RouteId extends string | null = string | null
+> = Record<string, Action<Params, OutputData, RouteId>>;
 
 /**
  * When calling a form action via fetch, the response will be one of these shapes.
