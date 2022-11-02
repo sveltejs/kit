@@ -13,7 +13,7 @@
 		"@sveltejs/vite-plugin-svelte": "^1.1.0",
 		"@types/cookie": "^0.5.1",
 		"cookie": "^0.5.0",
-		"devalue": "^4.1.0",
+		"devalue": "^4.2.0",
 		"kleur": "^4.1.5",
 		"magic-string": "^0.26.7",
 		"mime": "^3.0.0",
