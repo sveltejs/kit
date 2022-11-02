@@ -3,7 +3,7 @@ import { HttpError, Redirect } from '../../control.js';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
-import { handle_error_and_jsonify } from '../utils.js';
+import { clarify_devalue_error, handle_error_and_jsonify } from '../utils.js';
 import { normalize_path, strip_data_suffix } from '../../../utils/url.js';
 
 /**
@@ -133,11 +133,7 @@ export async function render_data(event, route, options, state) {
 			return json_response(json);
 		} catch (e) {
 			const error = /** @type {any} */ (e);
-			const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-			const message = match
-				? `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data.${match[2]})`
-				: error.message;
-			return json_response(JSON.stringify(message), 500);
+			return json_response(JSON.stringify(clarify_devalue_error(event, error)), 500);
 		}
 	} catch (e) {
 		const error = normalize_error(e);
