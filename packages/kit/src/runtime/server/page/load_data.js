@@ -62,13 +62,7 @@ export async function load_server_data({ event, state, node, parent }) {
 	return {
 		type: 'data',
 		data,
-		uses: {
-			dependencies: uses.dependencies.size > 0 ? Array.from(uses.dependencies) : undefined,
-			params: uses.params.size > 0 ? Array.from(uses.params) : undefined,
-			parent: uses.parent ? 1 : undefined,
-			route: uses.route ? 1 : undefined,
-			url: uses.url ? 1 : undefined
-		}
+		uses
 	};
 }
 

@@ -686,7 +686,7 @@ export function create_client({ target, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | null} node
+	 * @param {import('types').ServerDataStub | import('types').ServerDataSkippedNode | null} node
 	 * @param {import('./types').DataNode | null} [previous]
 	 * @returns {import('./types').DataNode | null}
 	 */
@@ -929,7 +929,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 		const node = await default_layout_loader();
 
-		/** @type {import('types').ServerDataNode | null} */
+		/** @type {import('types').ServerDataStub | null} */
 		let server_data_node = null;
 
 		if (node.server) {

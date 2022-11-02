@@ -29,7 +29,7 @@ export interface Client {
 		node_ids: number[];
 		params: Record<string, string>;
 		route: { id: string | null };
-		data: Array<import('types').ServerDataNode | null>;
+		data: Array<import('types').ServerDataStub | null>;
 		form: Record<string, any> | null;
 	}): Promise<void>;
 	_start_router(): void;

@@ -207,12 +207,21 @@ export type ServerData =
 export interface ServerDataNode {
 	type: 'data';
 	data: Record<string, any> | null;
+	uses: Uses;
+}
+
+/**
+ * The representation of a ServerDataNode that is sent over the wire
+ */
+export interface ServerDataStub {
+	type: 'data';
+	data: Record<string, any> | null;
 	uses: {
 		dependencies?: string[];
 		params?: string[];
-		parent?: 1 | void;
-		route?: 1 | void;
-		url?: 1 | void;
+		parent?: 1;
+		route?: 1;
+		url?: 1;
 	};
 }
 
