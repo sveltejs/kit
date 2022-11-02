@@ -210,7 +210,7 @@ export function load({ routeId }) {
 
 `params` is derived from `url.pathname` and `routeId`.
 
-Given a `routeId` of `a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `params` object would look like this:
+Given a `routeId` of `/a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `params` object would look like this:
 
 ```json
 {
