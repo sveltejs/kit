@@ -85,7 +85,13 @@ test('generates __data.json file for shadow endpoints', () => {
 			{
 				type: 'data',
 				data: { message: 'hello' },
-				uses: { dependencies: undefined, params: undefined, parent: undefined, url: undefined }
+				uses: {
+					dependencies: undefined,
+					params: undefined,
+					parent: undefined,
+					route: undefined,
+					url: undefined
+				}
 			}
 		]
 	});
@@ -98,7 +104,13 @@ test('generates __data.json file for shadow endpoints', () => {
 			{
 				type: 'data',
 				data: { answer: 42 },
-				uses: { dependencies: undefined, params: undefined, parent: undefined, url: undefined }
+				uses: {
+					dependencies: undefined,
+					params: undefined,
+					parent: undefined,
+					route: undefined,
+					url: undefined
+				}
 			}
 		]
 	});
@@ -189,7 +201,13 @@ test('fetches data from local endpoint', () => {
 			{
 				type: 'data',
 				data: { message: 'hello' },
-				uses: { dependencies: undefined, params: undefined, parent: undefined, url: undefined }
+				uses: {
+					dependencies: undefined,
+					params: undefined,
+					parent: undefined,
+					route: undefined,
+					url: undefined
+				}
 			}
 		]
 	});
