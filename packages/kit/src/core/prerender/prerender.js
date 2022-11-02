@@ -413,10 +413,11 @@ export async function prerender() {
 		const path = key.slice(0, index);
 		const id = key.slice(index + 1);
 
+		const hashlinks = actual_hashlinks.get(path);
 		// ignore fragment links to pages that were not prerendered
-		if (!actual_hashlinks.has(path)) continue;
+		if (!hashlinks) continue;
 
-		if (!actual_hashlinks.get(path).includes(id)) {
+		if (!hashlinks.includes(id)) {
 			handle_missing_id({ id, path, referrers: Array.from(referrers) });
 		}
 	}
