@@ -371,7 +371,7 @@ export interface NavigationEvent<
 	 */
 	params: Params;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
 	 */
 	routeId: string | null;
 	/**
@@ -408,7 +408,7 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	 */
 	params: Params;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
 	 */
 	routeId: string | null;
 	/**
@@ -471,7 +471,7 @@ export interface RequestEvent<
 	 */
 	request: Request;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
 	 */
 	routeId: string | null;
 	/**
