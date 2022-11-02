@@ -102,49 +102,70 @@ export async function render_data(event, route, options, state) {
 			)
 		);
 
-		/** @type {import('types').ServerData} */
-		const server_data = {
-			type: 'data',
-			nodes: nodes.slice(0, length)
-		};
+		try {
+			const stubs = nodes.slice(0, length).map((node) => {
+				if (!node) return 'null';
 
-		return data_response(server_data, event);
+				if (node.type === 'error' || node.type === 'skip') {
+					return JSON.stringify(node);
+				}
+
+				const stringified = devalue.stringify(node.data);
+
+				const uses = [];
+
+				if (node.uses.dependencies.size > 0) {
+					uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
+				}
+
+				if (node.uses.params.size > 0) {
+					uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
+				}
+
+				if (node.uses.parent) uses.push(`"parent":1`);
+				if (node.uses.route) uses.push(`"route":1`);
+				if (node.uses.url) uses.push(`"url":1`);
+
+				return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}}`;
+			});
+
+			const json = `{"type":"data","nodes":[${stubs.join(',')}]}`;
+			return json_response(json);
+		} catch (e) {
+			const error = /** @type {any} */ (e);
+			const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
+			const message = match
+				? `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data.${match[2]})`
+				: error.message;
+			return json_response(JSON.stringify(message), 500);
+		}
 	} catch (e) {
 		const error = normalize_error(e);
 
 		if (error instanceof Redirect) {
-			/** @type {import('types').ServerData} */
-			const server_data = {
-				type: 'redirect',
-				location: error.location
-			};
-
-			return data_response(server_data, event);
+			return json_response(
+				JSON.stringify({
+					type: 'redirect',
+					location: error.location
+				})
+			);
 		} else {
 			// TODO make it clearer that this was an unexpected error
-			return data_response(handle_error_and_jsonify(event, options, error), event);
+			return json_response(JSON.stringify(handle_error_and_jsonify(event, options, error)));
 		}
 	}
 }
 
 /**
- * @param {any} data
- * @param {import('types').RequestEvent} event
+ * @param {string} json
+ * @param {number} [status]
  */
-function data_response(data, event) {
-	const headers = {
-		'content-type': 'application/json',
-		'cache-control': 'private, no-store'
-	};
-
-	try {
-		return new Response(devalue.stringify(data), { headers });
-	} catch (e) {
-		const error = /** @type {any} */ (e);
-		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		const message = match
-			? `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data.${match[2]})`
-			: error.message;
-		return new Response(JSON.stringify(message), { headers, status: 500 });
-	}
+function json_response(json, status = 200) {
+	return new Response(json, {
+		status,
+		headers: {
+			'content-type': 'application/json',
+			'cache-control': 'private, no-store'
+		}
+	});
 }
