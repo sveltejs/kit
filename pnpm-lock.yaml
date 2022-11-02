@@ -32,15 +32,8 @@ importers:
 
   packages/adapter-auto:
     specifiers:
-      '@sveltejs/adapter-cloudflare': workspace:*
-      '@sveltejs/adapter-netlify': workspace:*
-      '@sveltejs/adapter-vercel': workspace:*
       '@types/node': ^16.11.68
       typescript: ^4.8.4
-    dependencies:
-      '@sveltejs/adapter-cloudflare': link:../adapter-cloudflare
-      '@sveltejs/adapter-netlify': link:../adapter-netlify
-      '@sveltejs/adapter-vercel': link:../adapter-vercel
     devDependencies:
       '@types/node': 16.18.2
       typescript: 4.8.4
