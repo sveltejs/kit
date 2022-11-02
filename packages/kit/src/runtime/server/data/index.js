@@ -1,8 +1,9 @@
+import * as devalue from 'devalue';
 import { HttpError, Redirect } from '../../control.js';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
-import { data_response, handle_error_and_jsonify } from '../utils.js';
+import { handle_error_and_jsonify } from '../utils.js';
 import { normalize_path, strip_data_suffix } from '../../../utils/url.js';
 
 /**
@@ -123,5 +124,27 @@ export async function render_data(event, route, options, state) {
 			// TODO make it clearer that this was an unexpected error
 			return data_response(handle_error_and_jsonify(event, options, error), event);
 		}
+	}
+}
+
+/**
+ * @param {any} data
+ * @param {import('types').RequestEvent} event
+ */
+function data_response(data, event) {
+	const headers = {
+		'content-type': 'application/json',
+		'cache-control': 'private, no-store'
+	};
+
+	try {
+		return new Response(devalue.stringify(data), { headers });
+	} catch (e) {
+		const error = /** @type {any} */ (e);
+		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
+		const message = match
+			? `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data.${match[2]})`
+			: error.message;
+		return new Response(JSON.stringify(message), { headers, status: 500 });
 	}
 }

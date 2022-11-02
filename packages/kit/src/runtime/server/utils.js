@@ -1,4 +1,3 @@
-import * as devalue from 'devalue';
 import { negotiate } from '../../utils/http.js';
 import { has_data_suffix } from '../../utils/url.js';
 import { HttpError } from '../control.js';
@@ -65,28 +64,6 @@ export function allowed_methods(mod) {
 	if (mod.GET || mod.HEAD) allowed.push('HEAD');
 
 	return allowed;
-}
-
-/**
- * @param {any} data
- * @param {import('types').RequestEvent} event
- */
-export function data_response(data, event) {
-	const headers = {
-		'content-type': 'application/json',
-		'cache-control': 'private, no-store'
-	};
-
-	try {
-		return new Response(devalue.stringify(data), { headers });
-	} catch (e) {
-		const error = /** @type {any} */ (e);
-		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		const message = match
-			? `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data.${match[2]})`
-			: error.message;
-		return new Response(JSON.stringify(message), { headers, status: 500 });
-	}
 }
 
 /**
