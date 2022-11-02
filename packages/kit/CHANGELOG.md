@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.532
+
+### Patch Changes
+
+- Bump devalue version ([#7466](https://github.com/sveltejs/kit/pull/7466))
+
 ## 1.0.0-next.531
 
 ### Patch Changes
