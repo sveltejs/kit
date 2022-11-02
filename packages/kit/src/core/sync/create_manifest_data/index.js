@@ -7,6 +7,7 @@ import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
 
 /**
+ * Generates the manifest data used for the client-side manifest and types generation.
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   fallback?: string;
