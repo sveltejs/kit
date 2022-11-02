@@ -1535,14 +1535,21 @@ async function load_data(url, invalid) {
 			'x-sveltekit-invalidated': invalid.map((x) => (x ? '1' : '')).join(',')
 		}
 	});
-	const server_data = await res.text();
+	const data = await res.json();
 
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
-		throw new Error(JSON.parse(server_data));
+		throw new Error(data);
 	}
 
-	return devalue.parse(server_data);
+	// revive devalue-flattened data
+	data.nodes?.forEach((node) => {
+		if (node.type === 'data') {
+			node.data = devalue.unflatten(node.data);
+		}
+	});
+
+	return data;
 }
 
 /**
