@@ -10,7 +10,8 @@ import {
 	Logger,
 	MaybePromise,
 	Prerendered,
-	PrerenderOnErrorValue,
+	PrerenderHttpErrorHandlerValue,
+	PrerenderMissingIdHandlerValue,
 	RequestOptions,
 	RouteDefinition,
 	TrailingSlash,
@@ -222,7 +223,8 @@ export interface KitConfig {
 		default?: boolean;
 		enabled?: boolean;
 		entries?: Array<'*' | `/${string}`>;
-		onError?: PrerenderOnErrorValue;
+		handleHttpError?: PrerenderHttpErrorHandlerValue;
+		handleMissingId?: PrerenderMissingIdHandlerValue;
 		origin?: string;
 	};
 	serviceWorker?: {
@@ -372,11 +374,11 @@ export interface NavigationEvent<
 	 */
 	params: Params;
 	/**
-	 * More info about the route in question
+	 * Info about the current route
 	 */
 	route: {
 		/**
-		 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
 		 */
 		id: RouteId;
 	};
@@ -486,11 +488,11 @@ export interface RequestEvent<
 	 */
 	request: Request;
 	/**
-	 * More info about the route in question
+	 * Info about the current route
 	 */
 	route: {
 		/**
-		 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
 		 */
 		id: RouteId;
 	};

@@ -1,5 +1,27 @@
 # @sveltejs/kit
 
+## 1.0.0-next.532
+
+### Patch Changes
+
+- Bump devalue version ([#7466](https://github.com/sveltejs/kit/pull/7466))
+
+## 1.0.0-next.531
+
+### Patch Changes
+
+- [breaking] change `config.kit.prerender.onError` to `handleHttpError`, and check for invalid fragment links ([#7375](https://github.com/sveltejs/kit/pull/7375))
+
+- fix escaping bug in crawler ([#7375](https://github.com/sveltejs/kit/pull/7375))
+
+## 1.0.0-next.530
+
+### Patch Changes
+
+- [fix] fetch erroring on Cloudflare ([#7453](https://github.com/sveltejs/kit/pull/7453))
+
+- Only simulate CORS errors for shared load functions ([#7454](https://github.com/sveltejs/kit/pull/7454))
+
 ## 1.0.0-next.529
 
 ### Patch Changes

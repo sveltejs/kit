@@ -117,9 +117,24 @@ export async function load_data({
 			/** @type {import('types').PrerenderDependency} */
 			let dependency;
 
-			if (same_origin && state.prerendering) {
-				dependency = { response, body: null };
-				state.prerendering.dependencies.set(url.pathname, dependency);
+			if (same_origin) {
+				if (state.prerendering) {
+					dependency = { response, body: null };
+					state.prerendering.dependencies.set(url.pathname, dependency);
+				}
+			} else {
+				// simulate CORS errors server-side for consistency with client-side behaviour
+				const mode = input instanceof Request ? input.mode : init?.mode ?? 'cors';
+				if (mode !== 'no-cors') {
+					const acao = response.headers.get('access-control-allow-origin');
+					if (!acao || (acao !== event.url.origin && acao !== '*')) {
+						throw new Error(
+							`CORS error: ${
+								acao ? 'Incorrect' : 'No'
+							} 'Access-Control-Allow-Origin' header is present on the requested resource`
+						);
+					}
+				}
 			}
 
 			const proxy = new Proxy(response, {

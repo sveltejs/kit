@@ -275,7 +275,7 @@ importers:
       '@types/sade': ^1.7.4
       '@types/set-cookie-parser': ^2.4.2
       cookie: ^0.5.0
-      devalue: ^4.0.1
+      devalue: ^4.1.0
       kleur: ^4.1.5
       magic-string: ^0.26.7
       marked: ^4.1.1
@@ -295,7 +295,7 @@ importers:
       '@sveltejs/vite-plugin-svelte': 1.1.0_svelte@3.52.0+vite@3.2.1
       '@types/cookie': 0.5.1
       cookie: 0.5.0
-      devalue: 4.0.1
+      devalue: 4.1.0
       kleur: 4.1.5
       magic-string: 0.26.7
       mime: 3.0.0
@@ -433,6 +433,22 @@ importers:
       uvu: ^0.5.6
     devDependencies:
       uvu: 0.5.6
+
+  packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
+    specifiers:
+      '@sveltejs/adapter-auto': workspace:*
+      '@sveltejs/kit': workspace:*
+      svelte: ^3.48.0
+      svelte-check: ^2.7.1
+      typescript: ^4.8.2
+      vite: ^3.1.1
+    devDependencies:
+      '@sveltejs/adapter-auto': link:../../../../../adapter-auto
+      '@sveltejs/kit': link:../../../..
+      svelte: 3.52.0
+      svelte-check: 2.9.2_svelte@3.52.0
+      typescript: 4.8.4
+      vite: 3.2.1
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     specifiers:
@@ -1900,8 +1916,8 @@ packages:
     resolution: {integrity: sha512-463v3ZeIrcWtdgIg6vI6XUncguvr2TnGl4SzDXinkt9mSLpBJKXT3mW6xT3VQdDN11+WVs29pgvivTc4Lp8v+w==}
     engines: {node: '>=8'}
 
-  /devalue/4.0.1:
-    resolution: {integrity: sha512-Oksbel8g2rv5ivcCyImF1RXEU2FcS1OtCwVs4tJCCeVws/Dp9EE15fUbEsNr/xLD3ZxsQURBCDf56Lk1CgwCpg==}
+  /devalue/4.1.0:
+    resolution: {integrity: sha512-glzE77YSRp97HdNQ8EKTYJQ3tS/7DaY+c7/NjsTrJsNexqYIEANww4qyjhxsJqvpDpoqxgRqjwDNrOq8WS8NFQ==}
     dev: false
 
   /diff/5.1.0:
