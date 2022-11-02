@@ -211,21 +211,6 @@ export interface ServerDataNode {
 }
 
 /**
- * The representation of a ServerDataNode that is sent over the wire
- */
-export interface ServerDataStub {
-	type: 'data';
-	data: Record<string, any> | null;
-	uses: {
-		dependencies?: string[];
-		params?: string[];
-		parent?: 1;
-		route?: 1;
-		url?: 1;
-	};
-}
-
-/**
  * Signals that the server `load` function was not run, and the
  * client should use what it has in memory
  */

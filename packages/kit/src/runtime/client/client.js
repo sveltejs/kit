@@ -686,7 +686,7 @@ export function create_client({ target, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('types').ServerDataStub | import('types').ServerDataSkippedNode | null} node
+	 * @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | null} node
 	 * @param {import('./types').DataNode | null} [previous]
 	 * @returns {import('./types').DataNode | null}
 	 */
@@ -929,7 +929,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 		const node = await default_layout_loader();
 
-		/** @type {import('types').ServerDataStub | null} */
+		/** @type {import('types').ServerDataNode | null} */
 		let server_data_node = null;
 
 		if (node.server) {
@@ -1543,9 +1543,16 @@ async function load_data(url, invalid) {
 	}
 
 	// revive devalue-flattened data
-	data.nodes?.forEach((node) => {
+	data.nodes?.forEach((/** @type {any} */ node) => {
 		if (node.type === 'data') {
 			node.data = devalue.unflatten(node.data);
+			node.uses = {
+				dependencies: new Set(node.uses.dependencies ?? []),
+				params: new Set(node.uses.params ?? []),
+				parent: !!node.uses.parent,
+				route: !!node.uses.route,
+				url: !!node.uses.url
+			};
 		}
 	});
 
