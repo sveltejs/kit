@@ -371,7 +371,7 @@ export interface NavigationEvent<
 	 */
 	params: Params;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
 	 */
 	routeId: string | null;
 	/**
