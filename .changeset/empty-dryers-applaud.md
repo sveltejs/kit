@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[chore] separate module resolving and loading
+[fix] check for private var usage in client code instead of server code
