@@ -198,7 +198,7 @@ declare module '$app/navigation' {
 			/**
 			 * If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
 			 */
-			keepfocus?: boolean;
+			keepFocus?: boolean;
 			/**
 			 * The state of the new/updated history entry
 			 */

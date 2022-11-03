@@ -8,6 +8,6 @@
 	type="text"
 	value={$page.url.searchParams.get('foo')}
 	on:input={(e) => {
-		goto('?foo=' + e.currentTarget?.value, { keepfocus: true });
+		goto('?foo=' + e.currentTarget?.value, { keepFocus: true });
 	}}
 />

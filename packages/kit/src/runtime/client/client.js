@@ -163,7 +163,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/**
 	 * @param {string | URL} url
-	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any; invalidateAll?: boolean }} opts
+	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
 	 * @param {string[]} redirect_chain
 	 * @param {{}} [nav_token]
 	 */
@@ -172,7 +172,7 @@ export function create_client({ target, base, trailing_slash }) {
 		{
 			noScroll = false,
 			replaceState = false,
-			keepfocus = false,
+			keepFocus = false,
 			state = {},
 			invalidateAll = false
 		},
@@ -186,7 +186,7 @@ export function create_client({ target, base, trailing_slash }) {
 		return navigate({
 			url,
 			scroll: noScroll ? scroll_state() : null,
-			keepfocus,
+			keepfocus: keepFocus,
 			redirect_chain,
 			details: {
 				state,
