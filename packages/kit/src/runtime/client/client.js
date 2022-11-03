@@ -183,14 +183,6 @@ export function create_client({ target, base, trailing_slash }) {
 			url = new URL(url, get_base_uri(document));
 		}
 
-		if (arguments[1].hasOwnProperty('keepfocus')) {
-			throw new Error('keepfocus has been renamed to keepFocus (note the difference in casing)');
-		}
-
-		if (arguments[1].hasOwnProperty('noscroll')) {
-			throw new Error('noscroll has been renamed to noScroll (note the difference in casing)');
-		}
-
 		return navigate({
 			url,
 			scroll: noScroll ? scroll_state() : null,
@@ -1157,7 +1149,21 @@ export function create_client({ target, base, trailing_slash }) {
 			}
 		},
 
-		goto: (href, opts = {}) => goto(href, opts, []),
+		goto: (href, opts = {}) => {
+			if (opts.hasOwnProperty('keepfocus')) {
+				throw new Error(
+					'`keepfocus` has been renamed to `keepFocus` (note the difference in casing)'
+				);
+			}
+
+			if (opts.hasOwnProperty('noscroll')) {
+				throw new Error(
+					'`noscroll` has been renamed to `noScroll` (note the difference in casing)'
+				);
+			}
+
+			return goto(href, opts, []);
+		},
 
 		invalidate: (resource) => {
 			if (resource === undefined) {
