@@ -45,6 +45,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 	/** @type {import('types').SSRManifest} */
 	return `{
 		appDir: ${s(build_data.app_dir)},
+		appPath: ${s(build_data.app_path)},
 		assets: new Set(${s(assets)}),
 		mimeTypes: ${s(get_mime_lookup(build_data.manifest_data))},
 		_: {
@@ -65,6 +66,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 					pattern: ${route.pattern},
 					names: ${s(route.names)},
 					types: ${s(route.types)},
+					optional: ${s(route.optional)},
 					page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${route.page.leaf} }` : 'null'},
 					endpoint: ${route.endpoint ? loader(`${relative_path}/${resolve_symlinks(build_data.server.vite_manifest, route.endpoint.file).chunk.file}`) : 'null'}
 				}`;

@@ -79,12 +79,14 @@ export interface Builder {
 	 */
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
-	generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
+	generateManifest(opts: { relativePath: string; format?: 'esm' | 'cjs' }): string;
 
 	getBuildDirectory(name: string): string;
 	getClientDirectory(): string;
 	getServerDirectory(): string;
 	getStaticDirectory(): string;
+	/** The application path including any configured base path */
+	getAppPath(): string;
 
 	/**
 	 * @param dest the destination folder to which files should be copied
@@ -116,7 +118,7 @@ export interface Builder {
 		from: string,
 		to: string,
 		opts?: {
-			filter?: (basename: string) => boolean;
+			filter?(basename: string): boolean;
 			replace?: Record<string, string>;
 		}
 	): string[];
@@ -135,8 +137,8 @@ export interface Config {
 		source?: string;
 		dir?: string;
 		emitTypes?: boolean;
-		exports?: (filepath: string) => boolean;
-		files?: (filepath: string) => boolean;
+		exports?(filepath: string): boolean;
+		files?(filepath: string): boolean;
 	};
 	preprocess?: any;
 	[key: string]: any;
@@ -151,7 +153,7 @@ export interface Cookies {
 	/**
 	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` during the current request.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *
 	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 */
@@ -159,13 +161,15 @@ export interface Cookies {
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
+	 *
+	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 */
 	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
 
 	/**
 	 * Serialize a cookie name-value pair into a Set-Cookie header string.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default, and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *
 	 * By default, the `path` of a cookie is the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 *
@@ -223,7 +227,7 @@ export interface KitConfig {
 	};
 	serviceWorker?: {
 		register?: boolean;
-		files?: (filepath: string) => boolean;
+		files?(filepath: string): boolean;
 	};
 	trailingSlash?: TrailingSlash;
 	version?: {
@@ -269,18 +273,108 @@ export interface LoadEvent<
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>
 > extends NavigationEvent<Params> {
+	/**
+	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
+	 *
+	 * - it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request
+	 * - it can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context)
+	 * - internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call
+	 * - during server-side rendering, the response will be captured and inlined into the rendered HTML. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://kit.svelte.dev/docs/hooks#server-hooks-handle)
+	 * - during hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request
+	 *
+	 * > Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
+	 */
 	fetch: typeof fetch;
+	/**
+	 * Contains the data returned by the route's server `load` function (in `+layout.server.js` or `+page.server.js`), if any.
+	 */
 	data: Data;
-	setHeaders: (headers: Record<string, string>) => void;
-	parent: () => Promise<ParentData>;
-	depends: (...deps: string[]) => void;
+	/**
+	 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
+	 *
+	 *	```js
+	 *	/// file: src/routes/blog/+page.js
+	 *	export async function load({ fetch, setHeaders }) {
+	 *		const url = `https://cms.example.com/articles.json`;
+	 *		const response = await fetch(url);
+	 *
+	 *		setHeaders({
+	 *			age: response.headers.get('age'),
+	 *			'cache-control': response.headers.get('cache-control')
+	 *		});
+	 *
+	 *		return response.json();
+	 *	}
+	 *	```
+	 *
+	 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
+	 *
+	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#sveltejs-kit-cookies) API in a server-only `load` function instead.
+	 *
+	 * `setHeaders` has no effect when a `load` function runs in the browser.
+	 */
+	setHeaders(headers: Record<string, string>): void;
+	/**
+	 * `await parent()` returns data from parent `+layout.js` `load` functions.
+	 * Implicitly, a missing `+layout.js` is treated as a `({ data }) => data` function, meaning that it will return and forward data from parent `+layout.server.js` files.
+	 *
+	 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
+	 */
+	parent(): Promise<ParentData>;
+	/**
+	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
+	 *
+	 * Most of the time you won't need this, as `fetch` calls `depends` on your behalf — it's only necessary if you're using a custom API client that bypasses `fetch`.
+	 *
+	 * URLs can be absolute or relative to the page being loaded, and must be [encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding).
+	 *
+	 * Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html).
+	 *
+	 * The following example shows how to use `depends` to register a dependency on a custom identifier, which is `invalidate`d after a button click, making the `load` function rerun.
+	 *
+	 * ```js
+	 * /// file: src/routes/+page.js
+	 * let count = 0;
+	 * export async function load({ depends }) {
+	 * 	depends('increase:count');
+	 *
+	 * 	return { count: count++ };
+	 * }
+	 * ```
+	 *
+	 * ```html
+	 * /// file: src/routes/+page.svelte
+	 * <script>
+	 * 	import { invalidate } from '$app/navigation';
+	 *
+	 * 	export let data;
+	 *
+	 * 	const increase = async () => {
+	 * 		await invalidate('increase:count');
+	 * 	}
+	 * </script>
+	 *
+	 * <p>{data.count}<p>
+	 * <button on:click={increase}>Increase Count</button>
+	 * ```
+	 */
+	depends(...deps: string[]): void;
 }
 
 export interface NavigationEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
 > {
+	/**
+	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, the `slug` parameter
+	 */
 	params: Params;
+	/**
+	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 */
 	routeId: string | null;
+	/**
+	 * The URL of the current page
+	 */
 	url: URL;
 }
 
@@ -368,14 +462,70 @@ export interface ParamMatcher {
 export interface RequestEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
 > {
+	/**
+	 * Get or set cookies related to the current request
+	 */
 	cookies: Cookies;
-	getClientAddress: () => string;
+	/**
+	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
+	 *
+	 * - it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request
+	 * - it can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context)
+	 * - internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call
+	 *
+	 * > Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
+	 */
+	fetch: typeof fetch;
+	/**
+	 * The client's IP address, set by the adapter.
+	 */
+	getClientAddress(): string;
+	/**
+	 * Contains custom data that was added to the request within the [`handle hook`](https://kit.svelte.dev/docs/hooks#server-hooks-handle).
+	 */
 	locals: App.Locals;
+	/**
+	 * The parameters of the current page or endpoint - e.g. for a route like `/blog/[slug]`, the `slug` parameter
+	 */
 	params: Params;
+	/**
+	 * Additional data made available through the adapter.
+	 */
 	platform: Readonly<App.Platform>;
+	/**
+	 * The original request object
+	 */
 	request: Request;
+	/**
+	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+	 */
 	routeId: string | null;
-	setHeaders: (headers: Record<string, string>) => void;
+	/**
+	 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
+	 *
+	 *	```js
+	 *	/// file: src/routes/blog/+page.js
+	 *	export async function load({ fetch, setHeaders }) {
+	 *		const url = `https://cms.example.com/articles.json`;
+	 *		const response = await fetch(url);
+	 *
+	 *		setHeaders({
+	 *			age: response.headers.get('age'),
+	 *			'cache-control': response.headers.get('cache-control')
+	 *		});
+	 *
+	 *		return response.json();
+	 *	}
+	 *	```
+	 *
+	 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
+	 *
+	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#sveltejs-kit-cookies) API instead.
+	 */
+	setHeaders(headers: Record<string, string>): void;
+	/**
+	 * The URL of the current page or endpoint
+	 */
 	url: URL;
 }
 
@@ -391,8 +541,8 @@ export interface RequestHandler<
 }
 
 export interface ResolveOptions {
-	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
-	filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
+	transformPageChunk?(input: { html: string; done: boolean }): MaybePromise<string | undefined>;
+	filterSerializedResponseHeaders?(name: string, value: string): boolean;
 }
 
 export class Server {
@@ -407,6 +557,7 @@ export interface ServerInitOptions {
 
 export interface SSRManifest {
 	appDir: string;
+	appPath: string;
 	assets: Set<string>;
 	mimeTypes: Record<string, string>;
 
@@ -419,7 +570,7 @@ export interface SSRManifest {
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
-		matchers: () => Promise<Record<string, ParamMatcher>>;
+		matchers(): Promise<Record<string, ParamMatcher>>;
 	};
 }
 
@@ -439,8 +590,50 @@ export interface ServerLoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	ParentData extends Record<string, any> = Record<string, any>
 > extends RequestEvent<Params> {
-	parent: () => Promise<ParentData>;
-	depends: (...deps: string[]) => void;
+	/**
+	 * `await parent()` returns data from parent `+layout.server.js` `load` functions.
+	 *
+	 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
+	 */
+	parent(): Promise<ParentData>;
+	/**
+	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
+	 *
+	 * Most of the time you won't need this, as `fetch` calls `depends` on your behalf — it's only necessary if you're using a custom API client that bypasses `fetch`.
+	 *
+	 * URLs can be absolute or relative to the page being loaded, and must be [encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding).
+	 *
+	 * Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html).
+	 *
+	 * The following example shows how to use `depends` to register a dependency on a custom identifier, which is `invalidate`d after a button click, making the `load` function rerun.
+	 *
+	 * ```js
+	 * /// file: src/routes/+page.js
+	 * let count = 0;
+	 * export async function load({ depends }) {
+	 * 	depends('increase:count');
+	 *
+	 * 	return { count: count++ };
+	 * }
+	 * ```
+	 *
+	 * ```html
+	 * /// file: src/routes/+page.svelte
+	 * <script>
+	 * 	import { invalidate } from '$app/navigation';
+	 *
+	 * 	export let data;
+	 *
+	 * 	const increase = async () => {
+	 * 		await invalidate('increase:count');
+	 * 	}
+	 * </script>
+	 *
+	 * <p>{data.count}<p>
+	 * <button on:click={increase}>Increase Count</button>
+	 * ```
+	 */
+	depends(...deps: string[]): void;
 }
 
 export interface Action<

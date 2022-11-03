@@ -1,6 +1,6 @@
 import { error, json } from '../../../exports/index.js';
 import { normalize_error } from '../../../utils/error.js';
-import { negotiate } from '../../../utils/http.js';
+import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ValidationError } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
 
@@ -62,20 +62,25 @@ export async function handle_action_json_request(event, options, server) {
 			});
 		}
 
-		if (!(error instanceof HttpError)) {
-			options.handle_error(error, event);
-		}
-
 		return action_json(
 			{
 				type: 'error',
-				error: handle_error_and_jsonify(event, options, error)
+				error: handle_error_and_jsonify(event, options, check_incorrect_invalid_use(error))
 			},
 			{
 				status: error instanceof HttpError ? error.status : 500
 			}
 		);
 	}
+}
+
+/**
+ * @param {HttpError | Error} error
+ */
+function check_incorrect_invalid_use(error) {
+	return error instanceof ValidationError
+		? new Error(`Cannot "throw invalid()". Use "return invalid()"`)
+		: error;
 }
 
 /**
@@ -141,7 +146,10 @@ export async function handle_action_request(event, server) {
 			};
 		}
 
-		return { type: 'error', error };
+		return {
+			type: 'error',
+			error: check_incorrect_invalid_use(error)
+		};
 	}
 }
 
@@ -180,9 +188,10 @@ export async function call_action(event, actions) {
 		throw new Error(`No action with name '${name}' found`);
 	}
 
-	const type = event.request.headers.get('content-type')?.split('; ')[0];
-	if (type !== 'application/x-www-form-urlencoded' && type !== 'multipart/form-data') {
-		throw new Error(`Actions expect form-encoded data (received ${type})`);
+	if (!is_form_content_type(event.request)) {
+		throw new Error(
+			`Actions expect form-encoded data (received ${event.request.headers.get('content-type')}`
+		);
 	}
 
 	return action(event);
@@ -239,5 +248,9 @@ function check_serializability(value, id, path) {
 		}
 	}
 
-	throw new Error(`${path} returned from action in ${id} cannot be serialized as JSON`);
+	throw new Error(
+		`${path} returned from action in ${id} cannot be serialized as JSON without losing its original type` +
+			// probably the most common case, so let's give a hint
+			(value instanceof Date ? ' (Date objects are serialized as strings)' : '')
+	);
 }

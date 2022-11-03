@@ -17,5 +17,5 @@
 		"noUnusedParameters": true
 	},
 	"include": ["scripts/**/*", "src/**/*", "types/**/*"],
-	"exclude": ["./**/write_types/test/*/_expected/**"]
+	"exclude": ["./**/write_types/test/**"]
 }

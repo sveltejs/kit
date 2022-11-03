@@ -42,14 +42,15 @@ paths.negative.forEach(([path, constraint]) => {
 	});
 });
 
-const cookies_setup = () => {
-	const url = new URL('https://example.com');
+/** @param {string} href */
+const cookies_setup = (href = 'https://example.com') => {
+	const url = new URL(href);
 	const request = new Request(url, {
 		headers: new Headers({
 			cookie: 'a=b;'
 		})
 	});
-	return get_cookies(request, url);
+	return get_cookies(request, url, { dev: false, trailing_slash: 'ignore' });
 };
 
 test('a cookie should not be present after it is deleted', () => {
@@ -63,17 +64,34 @@ test('a cookie should not be present after it is deleted', () => {
 test('default values when set is called', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	cookies.set('a', 'b');
-	const opts = new_cookies.get('a')?.options;
+	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, true);
 	assert.equal(opts?.httpOnly, true);
-	assert.equal(opts?.path, undefined);
+	assert.equal(opts?.path, '/');
 	assert.equal(opts?.sameSite, 'lax');
+});
+
+test('default values when set is called on sub path', () => {
+	const { cookies, new_cookies } = cookies_setup('https://example.com/foo/bar');
+	cookies.set('a', 'b');
+	const opts = new_cookies['a']?.options;
+	assert.equal(opts?.secure, true);
+	assert.equal(opts?.httpOnly, true);
+	assert.equal(opts?.path, '/foo');
+	assert.equal(opts?.sameSite, 'lax');
+});
+
+test('default values when on localhost', () => {
+	const { cookies, new_cookies } = cookies_setup('http://localhost:1234');
+	cookies.set('a', 'b');
+	const opts = new_cookies['a']?.options;
+	assert.equal(opts?.secure, false);
 });
 
 test('overridden defaults when set is called', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	cookies.set('a', 'b', { secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c' });
-	const opts = new_cookies.get('a')?.options;
+	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, false);
 	assert.equal(opts?.httpOnly, false);
 	assert.equal(opts?.path, '/a/b/c');
@@ -83,10 +101,10 @@ test('overridden defaults when set is called', () => {
 test('default values when delete is called', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	cookies.delete('a');
-	const opts = new_cookies.get('a')?.options;
+	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, true);
 	assert.equal(opts?.httpOnly, true);
-	assert.equal(opts?.path, undefined);
+	assert.equal(opts?.path, '/');
 	assert.equal(opts?.sameSite, 'lax');
 	assert.equal(opts?.maxAge, 0);
 });
@@ -94,7 +112,7 @@ test('default values when delete is called', () => {
 test('overridden defaults when delete is called', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	cookies.delete('a', { secure: false, httpOnly: false, sameSite: 'strict', path: '/a/b/c' });
-	const opts = new_cookies.get('a')?.options;
+	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, false);
 	assert.equal(opts?.httpOnly, false);
 	assert.equal(opts?.path, '/a/b/c');
@@ -105,7 +123,7 @@ test('overridden defaults when delete is called', () => {
 test('cannot override maxAge on delete', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	cookies.delete('a', { maxAge: 1234 });
-	const opts = new_cookies.get('a')?.options;
+	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.maxAge, 0);
 });
 
@@ -113,7 +131,7 @@ test('last cookie set with the same name wins', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	cookies.set('a', 'foo');
 	cookies.set('a', 'bar');
-	const entry = new_cookies.get('a');
+	const entry = new_cookies['a'];
 	assert.equal(entry?.value, 'bar');
 });
 
@@ -122,8 +140,8 @@ test('cookie names are case sensitive', () => {
 	// not that one should do this, but we follow the spec...
 	cookies.set('a', 'foo');
 	cookies.set('A', 'bar');
-	const entrya = new_cookies.get('a');
-	const entryA = new_cookies.get('A');
+	const entrya = new_cookies['a'];
+	const entryA = new_cookies['A'];
 	assert.equal(entrya?.value, 'foo');
 	assert.equal(entryA?.value, 'bar');
 });

@@ -12,5 +12,7 @@ export const handle = async ({ event, resolve }) => {
 					.replace('__PRERENDERING__', String(prerendering))
 		});
 	}
-	return await resolve(event);
+	return await resolve(event, {
+		filterSerializedResponseHeaders: (name) => name === 'content-type'
+	});
 };

@@ -8,11 +8,18 @@ import { mkdirp, rimraf } from '../utils.js';
 
 /** @param {string} content */
 function convert_typescript(content) {
-	const transformed = transform(content, {
-		transforms: ['typescript']
+	let { code } = transform(content, {
+		transforms: ['typescript'],
+		disableESTransforms: true
 	});
 
-	return prettier.format(transformed.code, {
+	// sucrase leaves invalid class fields intact
+	code = code.replace(/^\s*[a-z]+;$/gm, '');
+
+	// Prettier strips 'unnecessary' parens from .ts files, we need to hack them back in
+	code = code.replace(/(\/\*\* @type.+? \*\/) (.+?) \/\*\*\*\//g, '$1($2)');
+
+	return prettier.format(code, {
 		parser: 'babel',
 		useTabs: true,
 		singleQuote: true,
@@ -23,7 +30,18 @@ function convert_typescript(content) {
 
 /** @param {string} content */
 function strip_jsdoc(content) {
-	return content.replace(/\/\*\*[\s\S]+?\*\/[\s\n]+/g, '');
+	return content
+		.replace(/\/\*\*\*\//g, '')
+		.replace(
+			/\/\*\*([\s\S]+?)(@[\s\S]+?)?\*\/([\s\n]+)/g,
+			(match, description, tags, whitespace) => {
+				if (/^\s+(\*\s*)?$/.test(description)) {
+					return '';
+				}
+
+				return `/**${description.replace(/\*\ $/, '')}*/${whitespace}`;
+			}
+		);
 }
 
 /** @param {Set<string>} shared */
@@ -31,6 +49,8 @@ async function generate_templates(shared) {
 	const templates = fs.readdirSync('templates');
 
 	for (const template of templates) {
+		if (template[0] === '.') continue;
+
 		const dir = `dist/templates/${template}`;
 		const assets = `${dir}/assets`;
 		mkdirp(assets);
@@ -38,7 +58,10 @@ async function generate_templates(shared) {
 		const cwd = path.resolve('templates', template);
 
 		const gitignore_file = path.join(cwd, '.gitignore');
-		if (!fs.existsSync(gitignore_file)) throw new Error('Template must have a .gitignore file');
+		if (!fs.existsSync(gitignore_file)) {
+			throw new Error(`"${template}" template must have a .gitignore file`);
+		}
+
 		const gitignore = parser.compile(fs.readFileSync(gitignore_file, 'utf-8'));
 
 		const ignore_file = path.join(cwd, '.ignore');
@@ -122,7 +145,8 @@ async function generate_templates(shared) {
 							const suffix = `\n${imports.join(',')}`;
 
 							const transformed = transform(typescript + suffix, {
-								transforms: ['typescript']
+								transforms: ['typescript'],
+								disableESTransforms: true
 							}).code.slice(0, -suffix.length);
 
 							const contents = prettier

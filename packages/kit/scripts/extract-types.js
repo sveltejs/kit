@@ -56,13 +56,15 @@ function get_types(code, statements) {
 				const i = code.indexOf('export', start);
 				start = i + 6;
 
-				const snippet = prettier.format(code.slice(start, statement.end).trim(), {
-					parser: 'typescript',
-					printWidth: 80,
-					useTabs: true,
-					singleQuote: true,
-					trailingComma: 'none'
-				});
+				const snippet = prettier
+					.format(code.slice(start, statement.end), {
+						parser: 'typescript',
+						printWidth: 80,
+						useTabs: true,
+						singleQuote: true,
+						trailingComma: 'none'
+					})
+					.trim();
 
 				const collection =
 					ts.isVariableStatement(statement) || ts.isFunctionDeclaration(statement)
