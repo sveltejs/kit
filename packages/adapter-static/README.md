@@ -162,7 +162,7 @@ You will have to prevent GitHub's provided Jekyll from managing your site by put
 A config for GitHub Pages might look like the following:
 
 ```js
-const dev = process.env.NODE_ENV === 'development';
+const dev = process.argv.includes('dev');
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
