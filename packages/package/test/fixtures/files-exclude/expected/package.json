@@ -9,6 +9,5 @@
 		"./internal": "./internal/index.js",
 		"./Test.svelte": "./Test.svelte",
 		".": "./index.js"
-	},
-	"svelte": "./index.js"
+	}
 }

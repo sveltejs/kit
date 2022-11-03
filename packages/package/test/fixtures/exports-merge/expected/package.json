@@ -17,6 +17,5 @@
 		"./Test": "./Test.svelte",
 		"./package.json": "./package.json"
 	},
-	"type": "module",
-	"svelte": "./index.js"
+	"type": "module"
 }
