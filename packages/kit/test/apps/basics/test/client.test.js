@@ -464,7 +464,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
+				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
 
 			warnings.length = 0;
@@ -473,7 +473,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
+				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
 		});
 	}
@@ -755,15 +755,27 @@ test.describe.serial('Invalidation', () => {
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
-		await page.click('button');
-		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(200); // apparently necessary
+		await page.click('button.invalidateall');
+		await page.evaluate(() => window.promise);
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 
-		await page.click('button');
-		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(200);
+		await page.click('button.invalidateall');
+		await page.evaluate(() => window.promise);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
+	});
+
+	test('server-only load functions are re-run following goto with forced invalidation', async ({
+		page,
+		request
+	}) => {
+		await request.get('/load/invalidation/forced/reset');
+
+		await page.goto('/load/invalidation/forced');
+		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+
+		await page.click('button.goto');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 	});
 
 	test('multiple invalidations run concurrently', async ({ page, request }) => {

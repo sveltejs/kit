@@ -1,5 +1,17 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.81
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.80
+
+### Patch Changes
+
+- [fix] don't fail on unknown error message ([#7312](https://github.com/sveltejs/kit/pull/7312))
+
 ## 1.0.0-next.79
 
 ### Patch Changes

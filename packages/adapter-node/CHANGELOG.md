@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.100
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.99
+
+### Patch Changes
+
+- [fix] take into account deep exports for external packages ([#7311](https://github.com/sveltejs/kit/pull/7311))
+
 ## 1.0.0-next.98
 
 ### Patch Changes

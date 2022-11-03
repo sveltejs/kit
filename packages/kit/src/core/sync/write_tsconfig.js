@@ -46,7 +46,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(config.outDir, file));
 
-	const include = ['ambient.d.ts', config_relative('vite.config.ts')];
+	const include = ['ambient.d.ts', './types/**/$types.d.ts', config_relative('vite.config.ts')];
 	for (const dir of [config.files.routes, config.files.lib]) {
 		const relative = project_relative(path.dirname(dir));
 		include.push(config_relative(`${relative}/**/*.js`));

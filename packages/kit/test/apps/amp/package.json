@@ -7,7 +7,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "npm run test:dev && npm run test:build",
+		"test": "pnpm test:dev && pnpm test:build",
 		"test:dev": "cross-env DEV=true playwright test",
 		"test:build": "playwright test"
 	},
@@ -16,10 +16,10 @@
 		"@sveltejs/kit": "workspace:*",
 		"cross-env": "^7.0.3",
 		"purify-css": "^1.2.5",
-		"svelte": "^3.48.0",
-		"svelte-check": "^2.7.1",
-		"typescript": "^4.8.2",
-		"vite": "^3.1.1"
+		"svelte": "^3.52.0",
+		"svelte-check": "^2.9.2",
+		"typescript": "^4.8.4",
+		"vite": "^3.2.1"
 	},
 	"type": "module"
 }

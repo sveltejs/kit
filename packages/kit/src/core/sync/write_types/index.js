@@ -147,7 +147,7 @@ export async function write_types(config, manifest_data, file) {
 		return;
 	}
 
-	const id = posixify(path.relative(config.kit.files.routes, path.dirname(file)));
+	const id = '/' + posixify(path.relative(config.kit.files.routes, path.dirname(file)));
 
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return; // this shouldn't ever happen
@@ -195,7 +195,9 @@ function update_types(config, routes, route, to_delete = new Set()) {
 	// Makes sure a type is "repackaged" and therefore more readable
 	declarations.push('type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;');
 	declarations.push(
-		`type RouteParams = { ${route.names.map((param) => `${param}: string`).join('; ')} }`
+		`type RouteParams = { ${route.names
+			.map((param, idx) => `${param}${route.optional[idx] ? '?' : ''}: string`)
+			.join('; ')} }`
 	);
 
 	// These could also be placed in our public types, but it would bloat them unnecessarily and we may want to change these in the future
@@ -213,6 +215,11 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		);
 		// null & {} == null, we need to prevent that in some situations
 		declarations.push(`type EnsureDefined<T> = T extends null | undefined ? {} : T;`);
+		// Takes a union type and returns a union type where each type also has all properties
+		// of all possible types (typed as undefined), making accessing them more ergonomic
+		declarations.push(
+			`type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;`
+		);
 	}
 
 	if (route.leaf) {
@@ -400,7 +407,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 			proxy
 		);
 
-		data = `Expand<Omit<${parent_type}, keyof ${type}> & EnsureDefined<${type}>>`;
+		data = `Expand<Omit<${parent_type}, keyof ${type}> & OptionalUnion<EnsureDefined<${type}>>>`;
 
 		const output_data_shape =
 			!is_page && all_pages_have_load
@@ -436,7 +443,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 					? `./proxy${replace_ext_with_js(path.basename(file_path))}`
 					: path_to_original(outdir, file_path);
 				const type = `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('${from}').load>>>`;
-				return expand ? `Expand<${type}>` : type;
+				return expand ? `Expand<OptionalUnion<EnsureDefined<${type}>>>` : type;
 			} else {
 				return fallback;
 			}

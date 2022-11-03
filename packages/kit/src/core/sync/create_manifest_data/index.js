@@ -3,9 +3,11 @@ import path from 'path';
 import mime from 'mime';
 import { runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
-import { parse_route_id, affects_path } from '../../../utils/routing.js';
+import { parse_route_id } from '../../../utils/routing.js';
+import { sort_routes } from './sort.js';
 
 /**
+ * Generates the manifest data used for the client-side manifest and types generation.
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   fallback?: string;
@@ -82,11 +84,8 @@ function create_matchers(config, cwd) {
  * @param {string} fallback
  */
 function create_routes_and_nodes(cwd, config, fallback) {
-	/** @type {Map<string, import('types').RouteData>} */
-	const route_map = new Map();
-
-	/** @type {Map<string, import('./types').Part[][]>} */
-	const segment_map = new Map();
+	/** @type {import('types').RouteData[]} */
+	const routes = [];
 
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
 
@@ -111,32 +110,19 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				throw new Error(`Invalid route ${id} — brackets are unbalanced`);
 			}
 
-			const { pattern, names, types } = parse_route_id(id);
+			if (/\[\.\.\.\w+\]\/\[\[/.test(id)) {
+				throw new Error(
+					`Invalid route ${id} — an [[optional]] route segment cannot follow a [...rest] route segment`
+				);
+			}
 
-			const segments = id.split('/');
+			if (/\[\[\.\.\./.test(id)) {
+				throw new Error(
+					`Invalid route ${id} — a rest route segment is always optional, remove the outer square brackets`
+				);
+			}
 
-			segment_map.set(
-				id,
-				segments
-					.filter((segment) => segment !== '' && affects_path(segment))
-					.map((segment) => {
-						/** @type {import('./types').Part[]} */
-						const parts = [];
-						segment.split(/\[(.+?)\]/).map((content, i) => {
-							const dynamic = !!(i % 2);
-
-							if (!content) return;
-
-							parts.push({
-								content,
-								dynamic,
-								rest: dynamic && content.startsWith('...'),
-								type: (dynamic && content.split('=')[1]) || null
-							});
-						});
-						return parts;
-					})
-			);
+			const { pattern, names, types, optional } = parse_route_id(id);
 
 			/** @type {import('types').RouteData} */
 			const route = {
@@ -147,6 +133,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				pattern,
 				names,
 				types,
+				optional,
 
 				layout: null,
 				error: null,
@@ -157,7 +144,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			// important to do this before walking children, so that child
 			// routes appear later
-			route_map.set(id, route);
+			routes.push(route);
 
 			// if we don't do this, the route map becomes unwieldy to console.log
 			Object.defineProperty(route, 'parent', { enumerable: false });
@@ -222,10 +209,10 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			}
 		};
 
-		walk(0, '', '', null);
+		walk(0, '/', '', null);
 
-		const root = /** @type {import('types').RouteData} */ (route_map.get(''));
-		if (route_map.size === 1) {
+		if (routes.length === 1) {
+			const root = routes[0];
 			if (!root.leaf && !root.error && !root.layout && !root.endpoint) {
 				throw new Error(
 					// TODO adjust this error message for 1.0
@@ -237,12 +224,13 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	} else {
 		// If there's no routes directory, we'll just create a single empty route. This ensures the root layout and
 		// error components are included in the manifest, which is needed for subsequent build/dev commands to work
-		route_map.set('', {
-			id: '',
+		routes.push({
+			id: '/',
 			segment: '',
 			pattern: /^$/,
 			names: [],
 			types: [],
+			optional: [],
 			parent: null,
 			layout: null,
 			error: null,
@@ -252,7 +240,9 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		});
 	}
 
-	const root = /** @type {import('types').RouteData} */ (route_map.get(''));
+	prevent_conflicts(routes);
+
+	const root = routes[0];
 
 	if (!root.layout?.component) {
 		if (!root.layout) root.layout = { depth: 0, child_pages: [] };
@@ -267,32 +257,19 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	// we do layouts/errors first as they are more likely to be reused,
 	// and smaller indexes take fewer bytes. also, this guarantees that
 	// the default error/layout are 0/1
-	route_map.forEach((route) => {
+	for (const route of routes) {
 		if (route.layout) nodes.push(route.layout);
 		if (route.error) nodes.push(route.error);
-	});
+	}
 
-	/** @type {Map<string, string>} */
-	const conflicts = new Map();
-
-	route_map.forEach((route) => {
-		if (!route.leaf) return;
-
-		nodes.push(route.leaf);
-
-		const normalized = route.id.split('/').filter(affects_path).join('/');
-
-		if (conflicts.has(normalized)) {
-			throw new Error(`${conflicts.get(normalized)} and ${route.id} occupy the same route`);
-		}
-
-		conflicts.set(normalized, route.id);
-	});
+	for (const route of routes) {
+		if (route.leaf) nodes.push(route.leaf);
+	}
 
 	const indexes = new Map(nodes.map((node, i) => [node, i]));
 
-	route_map.forEach((route) => {
-		if (!route.leaf) return;
+	for (const route of routes) {
+		if (!route.leaf) continue;
 
 		route.page = {
 			layouts: [],
@@ -333,11 +310,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		if (parent_id !== undefined) {
 			throw new Error(`${current_node.component} references missing segment "${parent_id}"`);
 		}
-	});
+	}
 
-	const routes = Array.from(route_map.values()).sort((a, b) => compare(a, b, segment_map));
-
-	return { nodes, routes };
+	return {
+		nodes,
+		routes: sort_routes(routes)
+	};
 }
 
 /**
@@ -400,59 +378,6 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	throw new Error(`Files and directories prefixed with + are reserved (saw ${project_relative})`);
 }
 
-/**
- * @param {import('types').RouteData} a
- * @param {import('types').RouteData} b
- * @param {Map<string, import('./types').Part[][]>} segment_map
- */
-function compare(a, b, segment_map) {
-	const a_segments = /** @type {import('./types').Part[][]} */ (segment_map.get(a.id));
-	const b_segments = /** @type {import('./types').Part[][]} */ (segment_map.get(b.id));
-
-	const max_segments = Math.max(a_segments.length, b_segments.length);
-	for (let i = 0; i < max_segments; i += 1) {
-		const sa = a_segments[i];
-		const sb = b_segments[i];
-
-		// /x < /x/y, but /[...x]/y < /[...x]
-		if (!sa) return a.id.includes('[...') ? +1 : -1;
-		if (!sb) return b.id.includes('[...') ? -1 : +1;
-
-		const max_parts = Math.max(sa.length, sb.length);
-		for (let i = 0; i < max_parts; i += 1) {
-			const pa = sa[i];
-			const pb = sb[i];
-
-			// xy < x[y], but [x].json < [x]
-			if (pa === undefined) return pb.dynamic ? -1 : +1;
-			if (pb === undefined) return pa.dynamic ? +1 : -1;
-
-			// x < [x]
-			if (pa.dynamic !== pb.dynamic) {
-				return pa.dynamic ? +1 : -1;
-			}
-
-			if (pa.dynamic) {
-				// [x] < [...x]
-				if (pa.rest !== pb.rest) {
-					return pa.rest ? +1 : -1;
-				}
-
-				// [x=type] < [x]
-				if (!!pa.type !== !!pb.type) {
-					return pa.type ? -1 : +1;
-				}
-			}
-		}
-	}
-
-	if (!!a.endpoint !== !!b.endpoint) {
-		return a.endpoint ? -1 : +1;
-	}
-
-	return a < b ? -1 : 1;
-}
-
 /** @param {string} dir */
 function list_files(dir) {
 	/** @type {string[]} */
@@ -485,4 +410,64 @@ function count_occurrences(needle, haystack) {
 		if (haystack[i] === needle) count += 1;
 	}
 	return count;
+}
+
+/** @param {import('types').RouteData[]} routes */
+function prevent_conflicts(routes) {
+	/** @type {Map<string, string>} */
+	const lookup = new Map();
+
+	for (const route of routes) {
+		if (!route.leaf && !route.endpoint) continue;
+
+		const normalized = normalize_route_id(route.id);
+
+		// find all permutations created by optional parameters
+		const split = normalized.split(/<\?(.+?)\>/g);
+
+		let permutations = [/** @type {string} */ (split[0])];
+
+		// turn `x/[[optional]]/y` into `x/y` and `x/[required]/y`
+		for (let i = 1; i < split.length; i += 2) {
+			const matcher = split[i];
+			const next = split[i + 1];
+
+			permutations = [
+				...permutations.map((x) => x + next),
+				...permutations.map((x) => x + `<${matcher}>${next}`)
+			];
+		}
+
+		for (const permutation of permutations) {
+			// remove leading/trailing/duplicated slashes caused by prior
+			// manipulation of optional parameters and (groups)
+			const key = permutation
+				.replace(/\/{2,}/, '/')
+				.replace(/^\//, '')
+				.replace(/\/$/, '');
+
+			if (lookup.has(key)) {
+				throw new Error(
+					`The "${lookup.get(key)}" and "${route.id}" routes conflict with each other`
+				);
+			}
+
+			lookup.set(key, route.id);
+		}
+	}
+}
+
+/** @param {string} id */
+function normalize_route_id(id) {
+	return (
+		id
+			// remove groups
+			.replace(/(?<=^|\/)\(.+?\)(?=$|\/)/g, '')
+
+			// replace `[param]` with `<*>`, `[param=x]` with `<x>`, and `[[param]]` with `<?*>`
+			.replace(
+				/\[(?:(\[)|(\.\.\.))?.+?(=.+?)?\]\]?/g,
+				(_, optional, rest, matcher) => `<${optional ? '?' : ''}${rest ?? ''}${matcher ?? '*'}>`
+			)
+	);
 }

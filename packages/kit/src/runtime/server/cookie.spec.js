@@ -42,15 +42,15 @@ paths.negative.forEach(([path, constraint]) => {
 	});
 });
 
-/** @param {boolean} localhost */
-const cookies_setup = (localhost = false) => {
-	const url = new URL(localhost ? 'http://localhost:1234' : 'https://example.com');
+/** @param {string} href */
+const cookies_setup = (href = 'https://example.com') => {
+	const url = new URL(href);
 	const request = new Request(url, {
 		headers: new Headers({
 			cookie: 'a=b;'
 		})
 	});
-	return get_cookies(request, url);
+	return get_cookies(request, url, { dev: false, trailing_slash: 'ignore' });
 };
 
 test('a cookie should not be present after it is deleted', () => {
@@ -67,12 +67,22 @@ test('default values when set is called', () => {
 	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, true);
 	assert.equal(opts?.httpOnly, true);
-	assert.equal(opts?.path, undefined);
+	assert.equal(opts?.path, '/');
+	assert.equal(opts?.sameSite, 'lax');
+});
+
+test('default values when set is called on sub path', () => {
+	const { cookies, new_cookies } = cookies_setup('https://example.com/foo/bar');
+	cookies.set('a', 'b');
+	const opts = new_cookies['a']?.options;
+	assert.equal(opts?.secure, true);
+	assert.equal(opts?.httpOnly, true);
+	assert.equal(opts?.path, '/foo');
 	assert.equal(opts?.sameSite, 'lax');
 });
 
 test('default values when on localhost', () => {
-	const { cookies, new_cookies } = cookies_setup(true);
+	const { cookies, new_cookies } = cookies_setup('http://localhost:1234');
 	cookies.set('a', 'b');
 	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, false);
@@ -94,7 +104,7 @@ test('default values when delete is called', () => {
 	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, true);
 	assert.equal(opts?.httpOnly, true);
-	assert.equal(opts?.path, undefined);
+	assert.equal(opts?.path, '/');
 	assert.equal(opts?.sameSite, 'lax');
 	assert.equal(opts?.maxAge, 0);
 });

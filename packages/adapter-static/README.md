@@ -18,7 +18,8 @@ export default {
       pages: 'build',
       assets: 'build',
       fallback: null,
-      precompress: false
+      precompress: false,
+      strict: true
     })
   }
 };
@@ -70,6 +71,10 @@ Specify a fallback page for SPA mode, e.g. `index.html` or `200.html` or `404.ht
 ### precompress
 
 If `true`, precompresses files with brotli and gzip. This will generate `.br` and `.gz` files.
+
+### strict
+
+By default, `adapter-static` checks that either all pages and endpoints (if any) of your app were prerendered, or you have the `fallback` option set. This check exists to prevent you from accidentally publishing an app where some parts of it are not accessible, because they are not contained in the final output. If you know this is ok (for example when a certain page only exists conditionally), you can set `strict` to `false` to turn off this check.
 
 ## SPA mode
 
@@ -132,6 +137,21 @@ You can also add turn off prerendering only to parts of your app, if you want ot
 ### Turn off ssr
 
 During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [add `export const ssr = false` to your root `+layout`](https://kit.svelte.dev/docs/page-options#ssr). You can also add this option only to parts of your app, if you want other parts to be prerendered.
+
+### Apache
+
+To run an SPA on [Apache](https://httpd.apache.org/), you should add a `static/.htaccess` file to route requests to the fallback page:
+
+```
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^200\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /200.html [L]
+</IfModule>
+```
 
 ## GitHub Pages
 

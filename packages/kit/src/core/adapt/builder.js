@@ -5,7 +5,7 @@ import { pipeline } from 'stream';
 import { promisify } from 'util';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
-import { affects_path } from '../../utils/routing.js';
+import { get_route_segments } from '../../utils/routing.js';
 
 const pipe = promisify(pipeline);
 
@@ -33,10 +33,11 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 		async createEntries(fn) {
 			/** @type {import('types').RouteDefinition[]} */
 			const facades = routes.map((route) => {
+				/** @type {Set<import('types').HttpMethod>} */
 				const methods = new Set();
 
 				if (route.page) {
-					methods.add('SET');
+					methods.add('GET');
 				}
 
 				if (route.endpoint) {
@@ -47,14 +48,11 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 
 				return {
 					id: route.id,
-					segments: route.id
-						.split('/')
-						.filter(affects_path)
-						.map((segment) => ({
-							dynamic: segment.includes('['),
-							rest: segment.includes('[...'),
-							content: segment
-						})),
+					segments: get_route_segments(route.id).map((segment) => ({
+						dynamic: segment.includes('['),
+						rest: segment.includes('[...'),
+						content: segment
+					})),
 					pattern: route.pattern,
 					methods: Array.from(methods)
 				};

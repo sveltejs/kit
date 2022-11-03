@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { confetti } from '@neoconfetti/svelte';
-	import { applyAction, enhance } from '$app/forms';
+	import { enhance } from '$app/forms';
 	import type { PageData, ActionData } from './$types';
-	import { invalidateAll } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data: PageData;
@@ -79,16 +78,18 @@
 
 <svelte:window on:keydown={keydown} />
 
+<svelte:head>
+	<title>Sverdle</title>
+	<meta name="description" content="A Wordle clone written in SvelteKit" />
+</svelte:head>
+
 <form
 	method="POST"
 	action="?/enter"
 	use:enhance={() => {
 		// prevent default callback from resetting the form
-		return async ({ result }) => {
-			if (result.type === 'success') {
-				await invalidateAll();
-			}
-			await applyAction(result);
+		return ({ update }) => {
+			update({ reset: false });
 		};
 	}}
 >
@@ -214,7 +215,7 @@
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		justify-content: start;
+		justify-content: flex-start;
 	}
 
 	.grid .row {

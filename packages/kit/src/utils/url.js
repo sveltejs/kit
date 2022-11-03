@@ -7,6 +7,7 @@ const scheme = /^[a-z]+:/;
  */
 export function resolve(base, path) {
 	if (scheme.test(path)) return path;
+	if (path[0] === '#') return base + path;
 
 	const base_match = absolute.exec(base);
 	const path_match = absolute.exec(path);
@@ -103,10 +104,12 @@ export function make_trackable(url, callback) {
 		});
 	}
 
-	// @ts-ignore
-	tracked[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
-		return inspect(url, opts);
-	};
+	if (!__SVELTEKIT_BROWSER__) {
+		// @ts-ignore
+		tracked[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+			return inspect(url, opts);
+		};
+	}
 
 	disable_hash(tracked);
 
@@ -139,4 +142,21 @@ export function disable_search(url) {
 			}
 		});
 	}
+}
+
+const DATA_SUFFIX = '/__data.json';
+
+/** @param {string} pathname */
+export function has_data_suffix(pathname) {
+	return pathname.endsWith(DATA_SUFFIX);
+}
+
+/** @param {string} pathname */
+export function add_data_suffix(pathname) {
+	return pathname.replace(/\/$/, '') + DATA_SUFFIX;
+}
+
+/** @param {string} pathname */
+export function strip_data_suffix(pathname) {
+	return pathname.slice(0, -DATA_SUFFIX.length);
 }

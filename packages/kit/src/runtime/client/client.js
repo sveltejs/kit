@@ -1,5 +1,5 @@
 import { onMount, tick } from 'svelte';
-import { make_trackable, decode_params, normalize_path } from '../../utils/url.js';
+import { make_trackable, decode_params, normalize_path, add_data_suffix } from '../../utils/url.js';
 import { find_anchor, get_base_uri, scroll_state } from './utils.js';
 import {
 	lock_fetch,
@@ -14,7 +14,6 @@ import Root from '__GENERATED__/root.svelte';
 import { nodes, server_loads, dictionary, matchers, hooks } from '__GENERATED__/client-manifest.js';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
-import { DATA_SUFFIX } from '../../constants.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
 
@@ -164,13 +163,19 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/**
 	 * @param {string | URL} url
-	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
+	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any; invalidateAll?: boolean }} opts
 	 * @param {string[]} redirect_chain
 	 * @param {{}} [nav_token]
 	 */
 	async function goto(
 		url,
-		{ noscroll = false, replaceState = false, keepfocus = false, state = {} },
+		{
+			noscroll = false,
+			replaceState = false,
+			keepfocus = false,
+			state = {},
+			invalidateAll = false
+		},
 		redirect_chain,
 		nav_token
 	) {
@@ -188,7 +193,11 @@ export function create_client({ target, base, trailing_slash }) {
 				replaceState
 			},
 			nav_token,
-			accepted: () => {},
+			accepted: () => {
+				if (invalidateAll) {
+					force_invalidation = true;
+				}
+			},
 			blocked: () => {},
 			type: 'goto'
 		});
@@ -199,7 +208,7 @@ export function create_client({ target, base, trailing_slash }) {
 		const intent = get_navigation_intent(url, false);
 
 		if (!intent) {
-			throw new Error('Attempted to prefetch a URL that does not belong to this app');
+			throw new Error(`Attempted to prefetch a URL that does not belong to this app: ${url}`);
 		}
 
 		load_cache = { id: intent.id, promise: load_route(intent) };
@@ -1212,7 +1221,7 @@ export function create_client({ target, base, trailing_slash }) {
 					post_update();
 				}
 			} else if (result.type === 'redirect') {
-				goto(result.location, {}, []);
+				goto(result.location, { invalidateAll: true }, []);
 			} else {
 				/** @type {Record<string, any>} */
 				const props = {
@@ -1501,7 +1510,7 @@ export function create_client({ target, base, trailing_slash }) {
  */
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
-	data_url.pathname = url.pathname.replace(/\/$/, '') + DATA_SUFFIX;
+	data_url.pathname = add_data_suffix(url.pathname);
 
 	const res = await native_fetch(data_url.href, {
 		headers: {
