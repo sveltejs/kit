@@ -291,13 +291,13 @@ export interface NavigationTarget {
 }
 
 /**
- * - `load`: Initial navigation is complete
- * - `unload`: The page is about to be unloaded, but not due to a navigation
+ * - `enter`: Initial navigation is complete
+ * - `leave`: The page is about to be unloaded, but not due to a navigation
  * - `link`: The page is about to change due to a navigation link. If it causes the site to unload can be determined through `external`
  * - `goto`: The page is about to change due to calling `goto` or due to a redirect. If it causes a page unload can be determined through `external`
  * - `popstate`: The page is about to change due to a browser back/forward navigation
  */
-export type NavigationType = 'load' | 'unload' | 'link' | 'goto' | 'popstate';
+export type NavigationType = 'enter' | 'leave' | 'link' | 'goto' | 'popstate';
 
 export interface Navigation {
 	/**
@@ -310,8 +310,8 @@ export interface Navigation {
 	to: NavigationTarget | null;
 	/**
 	 * The type of navigation:
-	 * - `load`: Initial navigation is complete
-	 * - `unload`: The page is about to be unloaded, but not due to a navigation
+	 * - `enter`: Initial navigation is complete
+	 * - `leave`: The page is about to be unloaded, but not due to a navigation
 	 * - `link`: The page is about to change due to a navigation link. If it causes the site to unload can be determined through `external`
 	 * - `goto`: The page is about to change due to calling `goto` or due to a redirect. If it causes the site to unload can be determined through `external`
 	 * - `popstate`: The page is about to change due to a browser back/forward navigation
@@ -320,7 +320,7 @@ export interface Navigation {
 	/**
 	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
 	 */
-	unload: boolean;
+	willUnload: boolean;
 	/**
 	 * In case of a history back/forward navigation, the number of steps to go back/forward
 	 */

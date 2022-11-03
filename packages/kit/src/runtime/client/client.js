@@ -370,8 +370,8 @@ export function create_client({ target, base, trailing_slash }) {
 				routeId: current.route?.id ?? null,
 				url: new URL(location.href)
 			}),
-			unload: false,
-			type: 'load'
+			willUnload: false,
+			type: 'enter'
 		};
 		callbacks.after_navigate.forEach((fn) => fn(navigation));
 
@@ -995,7 +995,7 @@ export function create_client({ target, base, trailing_slash }) {
 				routeId: intent?.route.id ?? null,
 				url
 			}),
-			unload: !intent,
+			willUnload: !intent,
 			type
 		};
 
@@ -1258,8 +1258,8 @@ export function create_client({ target, base, trailing_slash }) {
 							url: current.url
 						}),
 						to: null,
-						unload: true,
-						type: 'unload',
+						willUnload: true,
+						type: 'leave',
 						cancel: () => (should_block = true)
 					};
 
