@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] call beforeNavigate once with type unload on external navigation
+[breaking] call beforeNavigate once with type unload on external navigation, rename type 'load' to 'enter' and type 'unload' to 'leave', add 'willUnload' property
