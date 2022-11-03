@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
-import { parse } from 'devalue';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 
@@ -26,7 +25,7 @@ test('renders a server-side redirect', () => {
 	const html = read('redirect-server.html');
 	assert.equal(html, '<meta http-equiv="refresh" content="0;url=https://example.com/redirected">');
 
-	const data = parse(read('redirect-server/__data.json'));
+	const data = JSON.parse(read('redirect-server/__data.json'));
 
 	assert.equal(data, {
 		type: 'redirect',
@@ -77,40 +76,28 @@ test('loads a file with spaces in the filename', () => {
 });
 
 test('generates __data.json file for shadow endpoints', () => {
-	let data = parse(read('__data.json'));
+	let data = JSON.parse(read('__data.json'));
 	assert.equal(data, {
 		type: 'data',
 		nodes: [
 			null,
 			{
 				type: 'data',
-				data: { message: 'hello' },
-				uses: {
-					dependencies: undefined,
-					params: undefined,
-					parent: undefined,
-					route: undefined,
-					url: undefined
-				}
+				data: [{ message: 1 }, 'hello'],
+				uses: {}
 			}
 		]
 	});
 
-	data = parse(read('shadowed-get/__data.json'));
+	data = JSON.parse(read('shadowed-get/__data.json'));
 	assert.equal(data, {
 		type: 'data',
 		nodes: [
 			null,
 			{
 				type: 'data',
-				data: { answer: 42 },
-				uses: {
-					dependencies: undefined,
-					params: undefined,
-					parent: undefined,
-					route: undefined,
-					url: undefined
-				}
+				data: [{ answer: 1 }, 42],
+				uses: {}
 			}
 		]
 	});
@@ -192,7 +179,7 @@ test('prerenders binary data', async () => {
 });
 
 test('fetches data from local endpoint', () => {
-	const data = parse(read('origin/__data.json'));
+	const data = JSON.parse(read('origin/__data.json'));
 
 	assert.equal(data, {
 		type: 'data',
@@ -200,14 +187,8 @@ test('fetches data from local endpoint', () => {
 			null,
 			{
 				type: 'data',
-				data: { message: 'hello' },
-				uses: {
-					dependencies: undefined,
-					params: undefined,
-					parent: undefined,
-					route: undefined,
-					url: undefined
-				}
+				data: [{ message: 1 }, 'hello'],
+				uses: {}
 			}
 		]
 	});
