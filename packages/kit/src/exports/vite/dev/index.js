@@ -49,12 +49,10 @@ export async function dev(vite, vite_config, svelte_config) {
 	async function resolve(id) {
 		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
-		const module = await vite.ssrLoadModule(url);
-
 		const module_node = await vite.moduleGraph.getModuleByUrl(url);
 		if (!module_node) throw new Error(`Could not find node for ${url}`);
 
-		return { module, module_node, url };
+		return { module_node, url };
 	}
 
 	async function update_manifest() {
@@ -87,9 +85,8 @@ export async function dev(vite, vite_config, svelte_config) {
 
 						if (node.component) {
 							result.component = async () => {
-								const { module_node, module, url } = await resolve(
-									/** @type {string} */ (node.component)
-								);
+								const id = /** @type {string} */ (node.component);
+								const { module_node, url } = await resolve(id);
 
 								module_nodes.push(module_node);
 								result.file = url.endsWith('.svelte') ? url : url + '?import'; // TODO what is this for?
@@ -100,27 +97,28 @@ export async function dev(vite, vite_config, svelte_config) {
 									extensions
 								);
 
+								const module = await vite.ssrLoadModule(url);
 								return module.default;
 							};
 						}
 
 						if (node.shared) {
-							const { module, module_node } = await resolve(node.shared);
+							const { module_node, url } = await resolve(node.shared);
 
 							module_nodes.push(module_node);
-
-							result.shared = module;
 
 							prevent_illegal_vite_imports(
 								module_node,
 								normalizePath(svelte_config.kit.files.lib),
 								extensions
 							);
+
+							result.shared = await vite.ssrLoadModule(url);
 						}
 
 						if (node.server) {
-							const { module } = await resolve(node.server);
-							result.server = module;
+							const { url } = await resolve(node.server);
+							result.server = await vite.ssrLoadModule(url);
 							result.server_id = node.server;
 						}
 
