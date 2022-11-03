@@ -163,14 +163,14 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/**
 	 * @param {string | URL} url
-	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any; invalidateAll?: boolean }} opts
+	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any; invalidateAll?: boolean }} opts
 	 * @param {string[]} redirect_chain
 	 * @param {{}} [nav_token]
 	 */
 	async function goto(
 		url,
 		{
-			noscroll = false,
+			noScroll = false,
 			replaceState = false,
 			keepfocus = false,
 			state = {},
@@ -185,7 +185,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 		return navigate({
 			url,
-			scroll: noscroll ? scroll_state() : null,
+			scroll: noScroll ? scroll_state() : null,
 			keepfocus,
 			redirect_chain,
 			details: {

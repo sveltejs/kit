@@ -194,7 +194,7 @@ declare module '$app/navigation' {
 			/**
 			 * If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
 			 */
-			noscroll?: boolean;
+			noScroll?: boolean;
 			/**
 			 * If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
 			 */
