@@ -49,6 +49,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	async function resolve(id) {
 		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
+		await vite.moduleGraph.ensureEntryFromUrl(url);
 		const module_node = await vite.moduleGraph.getModuleByUrl(url);
 		if (!module_node) throw new Error(`Could not find node for ${url}`);
 
