@@ -49,6 +49,8 @@ export async function dev(vite, vite_config, svelte_config) {
 	async function resolve(id) {
 		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
+		// need to ensure the entry is in the module graph before we can get it
+		// we leave the ssr parameter undefined because we care about the client-side code here
 		await vite.moduleGraph.ensureEntryFromUrl(url);
 		const module_node = await vite.moduleGraph.getModuleByUrl(url);
 		if (!module_node) throw new Error(`Could not find node for ${url}`);
@@ -98,6 +100,7 @@ export async function dev(vite, vite_config, svelte_config) {
 									extensions
 								);
 
+								// wait to load the module until after we check for illegal imports
 								const module = await vite.ssrLoadModule(url);
 								return module.default;
 							};
