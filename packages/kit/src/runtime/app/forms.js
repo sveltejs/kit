@@ -1,5 +1,6 @@
-import { invalidateAll } from './navigation.js';
+import * as devalue from 'devalue';
 import { client } from '../client/singletons.js';
+import { invalidateAll } from './navigation.js';
 
 /**
  * @param {string} name
@@ -92,6 +93,9 @@ export function enhance(form, submit = () => {}) {
 			});
 
 			result = await response.json();
+			if (result.data) {
+				result.data = devalue.parse(result.data);
+			}
 		} catch (error) {
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = { type: 'error', error };

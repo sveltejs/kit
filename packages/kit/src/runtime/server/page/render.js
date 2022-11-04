@@ -4,6 +4,7 @@ import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
+import { stringify_action_response } from './actions.js';
 
 // TODO rename this function/module
 
@@ -200,8 +201,7 @@ export async function render_response({
 	}
 
 	if (form_value) {
-		// no need to check it can be serialized, we already verified that it's JSON-friendly
-		serialized.form = devalue.uneval(form_value);
+		serialized.form = stringify_action_response(form_value, event.routeId);
 	}
 
 	if (inline_styles.size > 0) {
