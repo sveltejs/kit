@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.534
+
+### Patch Changes
+
+- [breaking] more consistent casing for goto options ([#7502](https://github.com/sveltejs/kit/pull/7502))
+
+- [breaking] replace routeId with route.id ([#7450](https://github.com/sveltejs/kit/pull/7450))
+
+- Fix nullish data node reference ([#7503](https://github.com/sveltejs/kit/pull/7503))
+
 ## 1.0.0-next.533
 
 ### Patch Changes
