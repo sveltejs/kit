@@ -1,202 +1,81 @@
 import path from 'path';
 import { normalizePath } from 'vite';
-import { remove_query_from_id } from './utils.js';
 
-/** @typedef {import('./types').ImportGraph} ImportGraph */
-
-const CWD_ID = normalizePath(process.cwd());
-const NODE_MODULES_ID = normalizePath(path.resolve(process.cwd(), 'node_modules'));
+const cwd = normalizePath(process.cwd());
+const node_modules = normalizePath(path.resolve(process.cwd(), 'node_modules'));
 const ILLEGAL_IMPORTS = new Set(['\0$env/dynamic/private', '\0$env/static/private']);
 const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
 
-export class IllegalModuleGuard {
-	/** @type {string} */
-	#lib_dir;
-
-	/** @type {string} */
-	#server_dir;
-
-	/** @type {Array<ImportGraph>} */
-	#chain = [];
-
-	/**
-	 * @param {string} lib_dir
-	 */
-	constructor(lib_dir) {
-		this.#lib_dir = normalizePath(lib_dir);
-		this.#server_dir = normalizePath(path.resolve(lib_dir, 'server'));
-	}
-
-	/**
-	 * Assert that a node imports no illegal modules.
-	 * @param {ImportGraph} node
-	 * @returns {void}
-	 */
-	assert_legal(node) {
-		this.#chain.push(node);
-		for (const child of node.children) {
-			if (this.#is_illegal(child.id)) {
-				this.#chain.push(child);
-				const error = this.#format_illegal_import_chain(this.#chain);
-				this.#chain = []; // Reset the chain in case we want to reuse this guard
-				throw new Error(error);
-			}
-			this.assert_legal(child);
-		}
-		this.#chain.pop();
-	}
-
-	/**
-	 * `true` if the provided ID represents a server-only module, else `false`.
-	 * @param {string} module_id
-	 * @returns {boolean}
-	 */
-	#is_illegal(module_id) {
-		if (this.#is_kit_illegal(module_id) || this.#is_user_illegal(module_id)) return true;
-		return false;
-	}
-
-	/**
-	 * `true` if the provided ID represents a Kit-defined server-only module, else `false`.
-	 * @param {string} module_id
-	 * @returns {boolean}
-	 */
-	#is_kit_illegal(module_id) {
-		return ILLEGAL_IMPORTS.has(module_id);
-	}
-
-	/**
-	 * `true` if the provided ID represents a user-defined server-only module, else `false`.
-	 * @param {string} module_id
-	 * @returns {boolean}
-	 */
-	#is_user_illegal(module_id) {
-		if (module_id.startsWith(this.#server_dir)) return true;
-
-		// files outside the project root are ignored
-		if (!module_id.startsWith(CWD_ID)) return false;
-
-		// so are files inside node_modules
-		if (module_id.startsWith(NODE_MODULES_ID)) return false;
-
-		return ILLEGAL_MODULE_NAME_PATTERN.test(path.basename(module_id));
-	}
-
-	/**
-	 * @param {string} str
-	 * @param {number} times
-	 */
-	#repeat(str, times) {
-		return new Array(times + 1).join(str);
-	}
-
-	/**
-	 * Create a formatted error for an illegal import.
-	 * @param {Array<ImportGraph>} stack
-	 */
-	#format_illegal_import_chain(stack) {
-		const dev_virtual_prefix = '/@id/__x00__';
-		const prod_virtual_prefix = '\0';
-
-		stack = stack.map((graph) => {
-			if (graph.id.startsWith(dev_virtual_prefix)) {
-				return { ...graph, id: graph.id.replace(dev_virtual_prefix, '') };
-			}
-			if (graph.id.startsWith(prod_virtual_prefix)) {
-				return { ...graph, id: graph.id.replace(prod_virtual_prefix, '') };
-			}
-			if (graph.id.startsWith(this.#lib_dir)) {
-				return { ...graph, id: graph.id.replace(this.#lib_dir, '$lib') };
-			}
-
-			return { ...graph, id: path.relative(process.cwd(), graph.id) };
-		});
-
-		const pyramid = stack
-			.map(
-				(file, i) =>
-					`${this.#repeat(' ', i * 2)}- ${file.id} ${
-						file.dynamic ? '(imported by parent dynamically)' : ''
-					}`
-			)
-			.join('\n');
-
-		return `Cannot import ${stack.at(-1)?.id} into public-facing code:\n${pyramid}`;
-	}
-}
-
-/** @implements {ImportGraph} */
-export class RollupImportGraph {
-	/** @type {(id: string) => import('rollup').ModuleInfo | null} */
-	#node_getter;
-
-	/** @type {import('rollup').ModuleInfo} */
-	#module_info;
-
-	/** @type {string} */
-	id;
-
-	/** @type {boolean} */
-	dynamic;
-
+/**
+ * @param {import('rollup').PluginContext} context
+ * @param {string} lib
+ */
+export function module_guard(context, lib) {
 	/** @type {Set<string>} */
-	#seen;
+	const safe = new Set();
+
+	const lib_dir = normalizePath(lib);
+	const server_dir = normalizePath(path.resolve(lib, 'server'));
 
 	/**
-	 * @param {(id: string) => import('rollup').ModuleInfo | null} node_getter
-	 * @param {import('rollup').ModuleInfo} node
+	 * @param {string} id
+	 * @param {Array<{ id: string, dynamic: boolean }>} chain
 	 */
-	constructor(node_getter, node) {
-		this.#node_getter = node_getter;
-		this.#module_info = node;
-		this.id = remove_query_from_id(normalizePath(node.id));
-		this.dynamic = false;
-		this.#seen = new Set();
-	}
+	function follow(id, chain = []) {
+		if (safe.has(id)) return;
 
-	/**
-	 * @param {(id: string) => import('rollup').ModuleInfo | null} node_getter
-	 * @param {import('rollup').ModuleInfo} node
-	 * @param {boolean} dynamic
-	 * @param {Set<string>} seen;
-	 * @returns {RollupImportGraph}
-	 */
-	static #new_internal(node_getter, node, dynamic, seen) {
-		const instance = new RollupImportGraph(node_getter, node);
-		instance.dynamic = dynamic;
-		instance.#seen = seen;
-		return instance;
-	}
+		if (
+			ILLEGAL_IMPORTS.has(id) ||
+			id.startsWith(server_dir) ||
+			(ILLEGAL_MODULE_NAME_PATTERN.test(path.basename(id)) &&
+				id.startsWith(cwd) &&
+				!id.startsWith(node_modules))
+		) {
+			chain.shift(); // discard the entry point
 
-	get children() {
-		return this.#children();
-	}
+			if (id.startsWith(lib_dir)) id = id.replace(lib_dir, '$lib');
+			if (id.startsWith(cwd)) id = path.relative(cwd, id);
 
-	*#children() {
-		if (this.#seen.has(this.id)) return;
-		this.#seen.add(this.id);
-		for (const id of this.#module_info.importedIds) {
-			const child = this.#node_getter(id);
-			if (child === null) return;
-			yield RollupImportGraph.#new_internal(this.#node_getter, child, false, this.#seen);
+			const pyramid =
+				chain.map(({ id, dynamic }, i) => {
+					if (id.startsWith(lib_dir)) id = id.replace(lib_dir, '$lib');
+					if (id.startsWith(cwd)) id = path.relative(cwd, id);
+
+					return `${repeat(' ', i * 2)}- ${id} ${dynamic ? 'dynamically imports' : 'imports'}\n`;
+				}) + `${repeat(' ', chain.length)}- ${id}`;
+
+			const message = `Cannot import ${id} into public-facing code:\n${pyramid}`;
+
+			throw new Error(message);
 		}
-		for (const id of this.#module_info.dynamicallyImportedIds) {
-			const child = this.#node_getter(id);
-			if (child === null) return;
-			yield RollupImportGraph.#new_internal(this.#node_getter, child, true, this.#seen);
+
+		const module = context.getModuleInfo(id);
+
+		if (module) {
+			for (const child of module.importedIds) {
+				follow(child, [...chain, { id, dynamic: false }]);
+			}
+
+			for (const child of module.dynamicallyImportedIds) {
+				follow(child, [...chain, { id, dynamic: true }]);
+			}
 		}
+
+		safe.add(id);
 	}
+
+	return {
+		/** @param {string} id */
+		check: (id) => {
+			follow(id, []);
+		}
+	};
 }
 
 /**
- * Throw an error if a private module is imported from a client-side node.
- * @param {(id: string) => import('rollup').ModuleInfo | null} node_getter
- * @param {import('rollup').ModuleInfo} node
- * @param {string} lib_dir
- * @returns {void}
+ * @param {string} str
+ * @param {number} times
  */
-export function prevent_illegal_imports(node_getter, node, lib_dir) {
-	const graph = new RollupImportGraph(node_getter, node);
-	const guard = new IllegalModuleGuard(lib_dir);
-	guard.assert_legal(graph);
+function repeat(str, times) {
+	return new Array(times + 1).join(str);
 }
