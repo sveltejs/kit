@@ -7,7 +7,8 @@ import {
 	get_option,
 	redirect_response,
 	static_error_page,
-	handle_error_and_jsonify
+	handle_error_and_jsonify,
+	serialize_data_node
 } from '../utils.js';
 import {
 	handle_action_json_request,
@@ -208,7 +209,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 					if (err instanceof Redirect) {
 						if (state.prerendering && should_prerender_data) {
-							const body = devalue.stringify({
+							const body = JSON.stringify({
 								type: 'redirect',
 								location: err.location
 							});
@@ -263,10 +264,9 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 
 		if (state.prerendering && should_prerender_data) {
-			const body = devalue.stringify({
-				type: 'data',
-				nodes: branch.map((branch_node) => branch_node?.server_data)
-			});
+			const body = `{"type":"data","nodes":[${branch
+				.map((node) => serialize_data_node(node?.server_data))
+				.join(',')}]}`;
 
 			state.prerendering.dependencies.set(data_pathname, {
 				response: new Response(body),

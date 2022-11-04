@@ -1,3 +1,4 @@
+import * as devalue from 'devalue';
 import { negotiate } from '../../utils/http.js';
 import { has_data_suffix } from '../../utils/url.js';
 import { HttpError } from '../control.js';
@@ -172,4 +173,31 @@ export function clarify_devalue_error(event, error) {
 
 	// belt and braces — this should never happen
 	return error.message;
+}
+
+/** @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | import('types').ServerErrorNode | null} node */
+export function serialize_data_node(node) {
+	if (!node) return 'null';
+
+	if (node.type === 'error' || node.type === 'skip') {
+		return JSON.stringify(node);
+	}
+
+	const stringified = devalue.stringify(node.data);
+
+	const uses = [];
+
+	if (node.uses.dependencies.size > 0) {
+		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
+	}
+
+	if (node.uses.params.size > 0) {
+		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
+	}
+
+	if (node.uses.parent) uses.push(`"parent":1`);
+	if (node.uses.route) uses.push(`"route":1`);
+	if (node.uses.url) uses.push(`"url":1`);
+
+	return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}}`;
 }

@@ -3,7 +3,7 @@ import { HttpError, Redirect } from '../../control.js';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
-import { clarify_devalue_error, handle_error_and_jsonify } from '../utils.js';
+import { clarify_devalue_error, handle_error_and_jsonify, serialize_data_node } from '../utils.js';
 import { normalize_path, strip_data_suffix } from '../../../utils/url.js';
 
 /**
@@ -103,31 +103,7 @@ export async function render_data(event, route, options, state) {
 		);
 
 		try {
-			const stubs = nodes.slice(0, length).map((node) => {
-				if (!node) return 'null';
-
-				if (node.type === 'error' || node.type === 'skip') {
-					return JSON.stringify(node);
-				}
-
-				const stringified = devalue.stringify(node.data);
-
-				const uses = [];
-
-				if (node.uses.dependencies.size > 0) {
-					uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
-				}
-
-				if (node.uses.params.size > 0) {
-					uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
-				}
-
-				if (node.uses.parent) uses.push(`"parent":1`);
-				if (node.uses.route) uses.push(`"route":1`);
-				if (node.uses.url) uses.push(`"url":1`);
-
-				return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}}`;
-			});
+			const stubs = nodes.slice(0, length).map(serialize_data_node);
 
 			const json = `{"type":"data","nodes":[${stubs.join(',')}]}`;
 			return json_response(json);
