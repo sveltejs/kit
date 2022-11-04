@@ -414,11 +414,11 @@ export interface Navigation {
 	to: NavigationTarget | null;
 	/**
 	 * The type of navigation:
-	 * - `enter`: Initial navigation is complete
-	 * - `leave`: The page is about to be unloaded, but not due to a navigation
-	 * - `link`: The page is about to change due to a navigation link. If it causes the site to unload can be determined through `external`
-	 * - `goto`: The page is about to change due to calling `goto` or due to a redirect. If it causes the site to unload can be determined through `external`
-	 * - `popstate`: The page is about to change due to a browser back/forward navigation
+	 * - `enter`: The app has hydrated
+	 * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
+	 * - `link`: Navigation was triggered by a link click
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
 	type: NavigationType;
 	/**
