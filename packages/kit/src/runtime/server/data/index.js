@@ -1,4 +1,3 @@
-import * as devalue from 'devalue';
 import { HttpError, Redirect } from '../../control.js';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';

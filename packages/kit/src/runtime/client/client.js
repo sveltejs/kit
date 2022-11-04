@@ -79,7 +79,7 @@ export function create_client({ target, base, trailing_slash }) {
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
-	/** @type {{id: string, promise: Promise<import('./types').NavigationResult | undefined>} | null} */
+	/** @type {{id: string, promise: Promise<import('./types').NavigationResult>} | null} */
 	let load_cache = null;
 
 	const callbacks = {
@@ -103,6 +103,9 @@ export function create_client({ target, base, trailing_slash }) {
 	let started = false;
 	let autoscroll = true;
 	let updating = false;
+	let navigating = false;
+	let hash_navigating = false;
+
 	let force_invalidation = false;
 
 	/** @type {import('svelte').SvelteComponent} */
@@ -131,8 +134,6 @@ export function create_client({ target, base, trailing_slash }) {
 		history.scrollRestoration = 'manual';
 		scrollTo(scroll.x, scroll.y);
 	}
-
-	let hash_navigating = false;
 
 	/** @type {import('types').Page} */
 	let page;
@@ -389,7 +390,8 @@ export function create_client({ target, base, trailing_slash }) {
 				route: { id: current.route?.id ?? null },
 				url: new URL(location.href)
 			}),
-			type: 'load'
+			willUnload: false,
+			type: 'enter'
 		};
 		callbacks.after_navigate.forEach((fn) => fn(navigation));
 
@@ -711,7 +713,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/**
 	 * @param {import('./types').NavigationIntent} intent
-	 * @returns {Promise<import('./types').NavigationResult | undefined>}
+	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
 	async function load_route({ id, invalidating, url, params, route }) {
 		if (load_cache?.id === id) {
@@ -1015,6 +1017,49 @@ export function create_client({ target, base, trailing_slash }) {
 	/**
 	 * @param {{
 	 *   url: URL;
+	 *   type: import('types').NavigationType;
+	 *   intent?: import('./types').NavigationIntent;
+	 *   delta?: number;
+	 * }} opts
+	 */
+	function before_navigate({ url, type, intent, delta }) {
+		let should_block = false;
+
+		/** @type {import('types').Navigation} */
+		const navigation = {
+			from: add_url_properties('from', {
+				params: current.params,
+				route: { id: current.route?.id ?? null },
+				url: current.url
+			}),
+			to: add_url_properties('to', {
+				params: intent?.params ?? null,
+				route: { id: intent?.route?.id ?? null },
+				url
+			}),
+			willUnload: !intent,
+			type
+		};
+
+		if (delta !== undefined) {
+			navigation.delta = delta;
+		}
+
+		const cancellable = {
+			...navigation,
+			cancel: () => {
+				should_block = true;
+			}
+		};
+
+		callbacks.before_navigate.forEach((fn) => fn(cancellable));
+
+		return should_block ? null : navigation;
+	}
+
+	/**
+	 * @param {{
+	 *   url: URL;
 	 *   scroll: { x: number, y: number } | null;
 	 *   keepfocus: boolean;
 	 *   redirect_chain: string[];
@@ -1041,39 +1086,10 @@ export function create_client({ target, base, trailing_slash }) {
 		accepted,
 		blocked
 	}) {
-		let should_block = false;
-
 		const intent = get_navigation_intent(url, false);
+		const navigation = before_navigate({ url, type, delta, intent });
 
-		/** @type {import('types').Navigation} */
-		const navigation = {
-			from: add_url_properties('from', {
-				params: current.params,
-				route: { id: current.route?.id ?? null },
-				url: current.url
-			}),
-			to: add_url_properties('to', {
-				params: intent?.params ?? null,
-				route: { id: intent?.route?.id ?? null },
-				url
-			}),
-			type
-		};
-
-		if (delta !== undefined) {
-			navigation.delta = delta;
-		}
-
-		const cancellable = {
-			...navigation,
-			cancel: () => {
-				should_block = true;
-			}
-		};
-
-		callbacks.before_navigate.forEach((fn) => fn(cancellable));
-
-		if (should_block) {
+		if (!navigation) {
 			blocked();
 			return;
 		}
@@ -1081,6 +1097,8 @@ export function create_client({ target, base, trailing_slash }) {
 		update_scroll_positions(current_history_index);
 
 		accepted();
+
+		navigating = true;
 
 		if (started) {
 			stores.navigating.set(navigation);
@@ -1097,6 +1115,7 @@ export function create_client({ target, base, trailing_slash }) {
 			},
 			nav_token,
 			() => {
+				navigating = false;
 				callbacks.after_navigate.forEach((fn) => fn(navigation));
 				stores.navigating.set(null);
 			}
@@ -1285,19 +1304,24 @@ export function create_client({ target, base, trailing_slash }) {
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
 
-				/** @type {import('types').Navigation & { cancel: () => void }} */
-				const navigation = {
-					from: add_url_properties('from', {
-						params: current.params,
-						route: { id: current.route?.id ?? null },
-						url: current.url
-					}),
-					to: null,
-					type: 'unload',
-					cancel: () => (should_block = true)
-				};
+				if (!navigating) {
+					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
+					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
+					/** @type {import('types').Navigation & { cancel: () => void }} */
+					const navigation = {
+						from: add_url_properties('from', {
+							params: current.params,
+							route: { id: current.route?.id ?? null },
+							url: current.url
+						}),
+						to: null,
+						willUnload: true,
+						type: 'leave',
+						cancel: () => (should_block = true)
+					};
 
-				callbacks.before_navigate.forEach((fn) => fn(navigation));
+					callbacks.before_navigate.forEach((fn) => fn(navigation));
+				}
 
 				if (should_block) {
 					e.preventDefault();
@@ -1375,17 +1399,22 @@ export function create_client({ target, base, trailing_slash }) {
 				)
 					return;
 
-				// Ignore if tag has
-				// 1. 'download' attribute
-				// 2. 'rel' attribute includes external
-				const rel = (a.getAttribute('rel') || '').split(/\s+/);
+				if (a.hasAttribute('download')) return;
 
-				if (a.hasAttribute('download') || rel.includes('external') || options.reload) {
+				// Ignore the following but fire beforeNavigate
+				const rel = (a.getAttribute('rel') || '').split(/\s+/);
+				if (
+					rel.includes('external') ||
+					options.reload ||
+					(is_svg_a_element ? a.target.baseVal : a.target)
+				) {
+					const navigation = before_navigate({ url, type: 'link' });
+					if (!navigation) {
+						event.preventDefault();
+					}
+					navigating = true;
 					return;
 				}
-
-				// Ignore if <a> has a target
-				if (is_svg_a_element ? a.target.baseVal : a.target) return;
 
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired

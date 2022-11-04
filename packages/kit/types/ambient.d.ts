@@ -257,7 +257,7 @@ declare module '$app/navigation' {
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
 	 * Calling `cancel()` will prevent the navigation from completing.
 	 *
-	 * When navigating to an external URL, `navigation.to` will be `null`.
+	 * When a navigation isn't client side, `navigation.to.routeId` will be `null`.
 	 *
 	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */

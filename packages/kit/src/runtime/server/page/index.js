@@ -1,4 +1,3 @@
-import * as devalue from 'devalue';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
 import { add_data_suffix } from '../../../utils/url.js';
