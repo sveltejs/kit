@@ -6,9 +6,7 @@ import { normalizePath } from 'vite';
 
 const CWD = process.cwd();
 const FAKE_LIB_DIR = normalizePath(path.join(CWD, 'lib'));
-const DEV_VIRTUAL_DYNAMIC_ID = '/@id/__x00__$env/dynamic/private';
 const PROD_VIRTUAL_DYNAMIC_ID = '\0$env/dynamic/private';
-const DEV_VIRTUAL_STATIC_ID = '/@id/__x00__$env/static/private';
 const PROD_VIRTUAL_STATIC_ID = '\0$env/static/private';
 const USER_SERVER_ID = normalizePath(path.join(FAKE_LIB_DIR, 'test.server.js'));
 const USER_SERVER_ID_NODE_MODULES = normalizePath(path.join(CWD, 'node_modules', 'test.server.js'));
