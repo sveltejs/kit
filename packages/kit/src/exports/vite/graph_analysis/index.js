@@ -1,6 +1,6 @@
 import path from 'path';
 import { normalizePath } from 'vite';
-import { remove_query_from_id, get_module_types } from './utils.js';
+import { remove_query_from_id } from './utils.js';
 
 /** @typedef {import('./types').ImportGraph} ImportGraph */
 
@@ -193,63 +193,6 @@ export class RollupImportGraph {
 	}
 }
 
-/** @implements {ImportGraph} */
-export class ViteImportGraph {
-	/** @type {Set<string>} */
-	#module_types;
-
-	/** @type {import('vite').ModuleNode} */
-	#module_info;
-
-	/** @type {string} */
-	id;
-
-	/** @type {Set<string>} */
-	#seen;
-
-	/**
-	 * @param {Set<string>} module_types Module types to analyze, eg '.js', '.ts', etc.
-	 * @param {import('vite').ModuleNode} node
-	 */
-	constructor(module_types, node) {
-		this.#module_types = module_types;
-		this.#module_info = node;
-		this.id = remove_query_from_id(normalizePath(node.id ?? ''));
-		this.#seen = new Set();
-	}
-
-	/**
-	 * @param {Set<string>} module_types Module types to analyze, eg '.js', '.ts', etc.
-	 * @param {import('vite').ModuleNode} node
-	 * @param {Set<string>} seen
-	 * @returns {ViteImportGraph}
-	 */
-	static #new_internal(module_types, node, seen) {
-		const instance = new ViteImportGraph(module_types, node);
-		instance.#seen = seen;
-		return instance;
-	}
-
-	get dynamic() {
-		return false;
-	}
-
-	get children() {
-		return this.#children();
-	}
-
-	*#children() {
-		if (this.#seen.has(this.id)) return;
-		this.#seen.add(this.id);
-		for (const child of this.#module_info.importedModules) {
-			if (!this.#module_types.has(path.extname(this.id))) {
-				continue;
-			}
-			yield ViteImportGraph.#new_internal(this.#module_types, child, this.#seen);
-		}
-	}
-}
-
 /**
  * Throw an error if a private module is imported from a client-side node.
  * @param {(id: string) => import('rollup').ModuleInfo | null} node_getter
@@ -259,19 +202,6 @@ export class ViteImportGraph {
  */
 export function prevent_illegal_rollup_imports(node_getter, node, lib_dir) {
 	const graph = new RollupImportGraph(node_getter, node);
-	const guard = new IllegalModuleGuard(lib_dir);
-	guard.assert_legal(graph);
-}
-
-/**
- * Throw an error if a private module is imported from a client-side node.
- * @param {import('vite').ModuleNode} node
- * @param {string} lib_dir
- * @param {Iterable<string>} module_types File extensions to analyze in addition to the defaults: `.ts`, `.js`, etc.
- * @returns {void}
- */
-export function prevent_illegal_vite_imports(node, lib_dir, module_types) {
-	const graph = new ViteImportGraph(get_module_types(module_types), node);
 	const guard = new IllegalModuleGuard(lib_dir);
 	guard.assert_legal(graph);
 }

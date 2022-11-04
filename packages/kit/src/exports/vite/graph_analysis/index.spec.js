@@ -184,8 +184,8 @@ describe('IllegalImportGuard', (test) => {
 });
 
 /*
-We don't have a great way to mock Vite and Rollup's implementations of module graphs, so unit testing
-ViteImportGraph and RollupImportGraph is kind of an exercise in "code coverage hubris" -- they're covered by
-the integration tests, where Vite and Rollup can provide a useful graph implementation. If, in the future, we can find
+We don't have a great way to mock Rollup's implementation of a module graph, so unit testing
+RollupImportGraph is kind of an exercise in "code coverage hubris" -- it's covered by the integration
+tests, where Rollup can provide a useful graph implementation. If, in the future, we can find
 a reason to unit test them, we can add those below.
 */

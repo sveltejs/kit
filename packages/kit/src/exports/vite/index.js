@@ -292,7 +292,19 @@ function kit() {
 			if (id.startsWith('$env/')) return `\0${id}`;
 		},
 
-		async load(id) {
+		async load(id, { ssr }) {
+			if (!ssr) {
+				// TODO this is incomplete — we need to replicate the #is_illegal logic
+				if (
+					id.endsWith('.server.js') ||
+					id === '\0$env/static/private' ||
+					id === '\0$env/dynamic/private'
+				) {
+					const relative = id.startsWith(process.cwd()) ? path.relative('.', id) : id;
+					throw new Error(`Cannot import ${relative} into client-side code`);
+				}
+			}
+
 			switch (id) {
 				case '\0$env/static/private':
 					return create_static_module('$env/static/private', env.private);
