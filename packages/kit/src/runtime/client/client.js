@@ -163,16 +163,16 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/**
 	 * @param {string | URL} url
-	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any; invalidateAll?: boolean }} opts
+	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
 	 * @param {string[]} redirect_chain
 	 * @param {{}} [nav_token]
 	 */
 	async function goto(
 		url,
 		{
-			noscroll = false,
+			noScroll = false,
 			replaceState = false,
-			keepfocus = false,
+			keepFocus = false,
 			state = {},
 			invalidateAll = false
 		},
@@ -185,8 +185,8 @@ export function create_client({ target, base, trailing_slash }) {
 
 		return navigate({
 			url,
-			scroll: noscroll ? scroll_state() : null,
-			keepfocus,
+			scroll: noScroll ? scroll_state() : null,
+			keepfocus: keepFocus,
 			redirect_chain,
 			details: {
 				state,
@@ -1175,7 +1175,22 @@ export function create_client({ target, base, trailing_slash }) {
 			}
 		},
 
-		goto: (href, opts = {}) => goto(href, opts, []),
+		goto: (href, opts = {}) => {
+			// TODO remove for 1.0
+			if ('keepfocus' in opts) {
+				throw new Error(
+					'`keepfocus` has been renamed to `keepFocus` (note the difference in casing)'
+				);
+			}
+
+			if ('noscroll' in opts) {
+				throw new Error(
+					'`noscroll` has been renamed to `noScroll` (note the difference in casing)'
+				);
+			}
+
+			return goto(href, opts, []);
+		},
 
 		invalidate: (resource) => {
 			if (resource === undefined) {
