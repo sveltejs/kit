@@ -50,6 +50,20 @@ New projects will use Node 16 by default. However, if you're upgrading a project
 
 SvelteKit supports the beta release of [Netlify Edge Functions](https://docs.netlify.com/netlify-labs/experimental-features/edge-functions/). If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor. If set to `false` (the default), the site will deploy to standard Node-based Netlify Functions.
 
+```js
+import adapter from '@sveltejs/adapter-netlify';
+
+export default {
+  kit: {
+    adapter: adapter({
+      // will create a Netlify Edge Function using Deno-based 
+			// rather than using standard Node-based functions
+      edge: true,
+    })
+  }
+};
+```
+
 ## Netlify alternatives to SvelteKit functionality
 
 You may build your app using functionality provided directly by SvelteKit without relying on any Netlify functionality. Using the SvelteKit versions of these features will allow them to be used in dev mode, tested with integration tests, and to work with other adapters should you ever decide to switch away from Netlify. However, in some scenarios you may find it beneficial to use the Netlify versions of these features. One example would be if you're migrating an app that's already hosted on Netlify to SvelteKit.
@@ -69,7 +83,15 @@ During compilation, redirect rules are automatically appended to your `_redirect
 
 ### Using Netlify Functions
 
-With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https://docs.netlify.com/functions/overview/). Netlify function handlers have additional context, including [Netlify Identity](https://docs.netlify.com/visitor-access/identity/) information. You can access this context via the `event.platform.context` field inside your hooks and endpoints.
+With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https://docs.netlify.com/functions/overview/). Netlify function handlers have additional context, including [Netlify Identity](https://docs.netlify.com/visitor-access/identity/) information. You can access this context via the `event.platform.context` field inside your hooks and `+page.server` or `+layout.server` endpoints. These are [serverless functions](https://docs.netlify.com/functions/overview/) when the `edge` property is `false` in the adapter config or [edge functions](https://docs.netlify.com/edge-functions/overview/#app) when it is `true`.
+
+```js
+// +page.server.js
+export const load = async (event) => {
+   const context = event.platform.context
+	 console.log(context)  // shows in your functions log in the Netlify app
+}
+```
 
 Additionally, you can add your own Netlify functions by creating a directory for them and adding the configuration to your `netlify.toml` file. For example:
 
