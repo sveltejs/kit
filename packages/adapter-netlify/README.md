@@ -56,9 +56,9 @@ import adapter from '@sveltejs/adapter-netlify';
 export default {
   kit: {
     adapter: adapter({
-      // will create a Netlify Edge Function using Deno-based 
-			// rather than using standard Node-based functions
-      edge: true,
+      // will create a Netlify Edge Function using Deno-based
+      // rather than using standard Node-based functions
+      edge: true
     })
   }
 };
@@ -88,9 +88,9 @@ With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https:/
 ```js
 // +page.server.js
 export const load = async (event) => {
-   const context = event.platform.context
-	 console.log(context)  // shows up in your functions log in the Netlify app
-}
+  const context = event.platform.context;
+  console.log(context); // shows up in your functions log in the Netlify app
+};
 ```
 
 Additionally, you can add your own Netlify functions by creating a directory for them and adding the configuration to your `netlify.toml` file. For example:
