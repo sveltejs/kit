@@ -5,7 +5,7 @@ import { load_config } from './src/core/config/index.js';
 import * as sync from './src/core/sync/sync.js';
 
 try {
-	const cwd = process.env.INIT_CWD ?? process.cwd();
+	const cwd = process.env.INIT_CWD || process.cwd();
 	process.chdir(cwd);
 
 	if (fs.existsSync('package.json')) {
