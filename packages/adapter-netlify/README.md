@@ -89,7 +89,7 @@ With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https:/
 // +page.server.js
 export const load = async (event) => {
    const context = event.platform.context
-	 console.log(context)  // shows in your functions log in the Netlify app
+	 console.log(context)  // shows up in your functions log in the Netlify app
 }
 ```
 
