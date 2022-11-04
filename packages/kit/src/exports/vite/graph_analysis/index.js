@@ -6,12 +6,7 @@ import { remove_query_from_id } from './utils.js';
 
 const CWD_ID = normalizePath(process.cwd());
 const NODE_MODULES_ID = normalizePath(path.resolve(process.cwd(), 'node_modules'));
-const ILLEGAL_IMPORTS = new Set([
-	'/@id/__x00__$env/dynamic/private', //dev
-	'\0$env/dynamic/private', // prod
-	'/@id/__x00__$env/static/private', // dev
-	'\0$env/static/private' // prod
-]);
+const ILLEGAL_IMPORTS = new Set(['\0$env/dynamic/private', '\0$env/static/private']);
 const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
 
 export class IllegalModuleGuard {
@@ -200,7 +195,7 @@ export class RollupImportGraph {
  * @param {string} lib_dir
  * @returns {void}
  */
-export function prevent_illegal_rollup_imports(node_getter, node, lib_dir) {
+export function prevent_illegal_imports(node_getter, node, lib_dir) {
 	const graph = new RollupImportGraph(node_getter, node);
 	const guard = new IllegalModuleGuard(lib_dir);
 	guard.assert_legal(graph);

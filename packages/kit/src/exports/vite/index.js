@@ -15,7 +15,7 @@ import { runtime_directory, logger } from '../../core/utils.js';
 import { find_deps, get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
 import { get_aliases, get_env } from './utils.js';
-import { prevent_illegal_rollup_imports } from './graph_analysis/index.js';
+import { prevent_illegal_imports } from './graph_analysis/index.js';
 import { fileURLToPath } from 'node:url';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 
@@ -370,7 +370,7 @@ function kit() {
 					const module_node = this.getModuleInfo(id);
 
 					if (module_node) {
-						prevent_illegal_rollup_imports(
+						prevent_illegal_imports(
 							this.getModuleInfo.bind(this),
 							module_node,
 							vite.normalizePath(svelte_config.kit.files.lib)
