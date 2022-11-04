@@ -14,7 +14,7 @@ import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { find_deps, get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import { get_aliases, get_env } from './utils.js';
+import { get_config_aliases, get_app_aliases, get_env } from './utils.js';
 import { prevent_illegal_rollup_imports } from './graph_analysis/index.js';
 import { fileURLToPath } from 'node:url';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
@@ -257,7 +257,7 @@ function kit() {
 				},
 				publicDir: svelte_config.kit.files.assets,
 				resolve: {
-					alias: get_aliases(svelte_config.kit)
+					alias: [...get_app_aliases(svelte_config.kit), ...get_config_aliases(svelte_config.kit)]
 				},
 				root: cwd,
 				server: {
