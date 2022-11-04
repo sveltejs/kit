@@ -53,6 +53,10 @@ describe('resolve', (test) => {
 	test('handles schemes like tel: and mailto:', () => {
 		assert.equal(resolve('/a/b/c', 'mailto:hello@svelte.dev'), 'mailto:hello@svelte.dev');
 	});
+
+	test('resolves a fragment link', () => {
+		assert.equal(resolve('/a/b/c', '#foo'), '/a/b/c#foo');
+	});
 });
 
 describe('normalize_path', (test) => {

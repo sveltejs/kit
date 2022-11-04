@@ -2,7 +2,7 @@
 const config = {
 	kit: {
 		prerender: {
-			onError: 'continue'
+			handleHttpError: 'warn'
 		}
 	}
 };

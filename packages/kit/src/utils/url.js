@@ -7,6 +7,7 @@ const scheme = /^[a-z]+:/;
  */
 export function resolve(base, path) {
 	if (scheme.test(path)) return path;
+	if (path[0] === '#') return base + path;
 
 	const base_match = absolute.exec(base);
 	const path_match = absolute.exec(path);

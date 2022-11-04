@@ -17,6 +17,7 @@ export async function load_server_data({ event, state, node, parent }) {
 		dependencies: new Set(),
 		params: new Set(),
 		parent: false,
+		route: false,
 		url: false
 	};
 
@@ -47,6 +48,12 @@ export async function load_server_data({ event, state, node, parent }) {
 			uses.parent = true;
 			return parent();
 		},
+		route: {
+			get id() {
+				uses.route = true;
+				return event.route.id;
+			}
+		},
 		url
 	});
 
@@ -55,12 +62,7 @@ export async function load_server_data({ event, state, node, parent }) {
 	return {
 		type: 'data',
 		data,
-		uses: {
-			dependencies: uses.dependencies.size > 0 ? Array.from(uses.dependencies) : undefined,
-			params: uses.params.size > 0 ? Array.from(uses.params) : undefined,
-			parent: uses.parent ? 1 : undefined,
-			url: uses.url ? 1 : undefined
-		}
+		uses
 	};
 }
 
@@ -99,7 +101,7 @@ export async function load_data({
 		url: event.url,
 		params: event.params,
 		data: server_data_node?.data ?? null,
-		routeId: event.routeId,
+		route: event.route,
 		fetch: async (input, init) => {
 			const response = await event.fetch(input, init);
 
@@ -109,9 +111,24 @@ export async function load_data({
 			/** @type {import('types').PrerenderDependency} */
 			let dependency;
 
-			if (same_origin && state.prerendering) {
-				dependency = { response, body: null };
-				state.prerendering.dependencies.set(url.pathname, dependency);
+			if (same_origin) {
+				if (state.prerendering) {
+					dependency = { response, body: null };
+					state.prerendering.dependencies.set(url.pathname, dependency);
+				}
+			} else {
+				// simulate CORS errors server-side for consistency with client-side behaviour
+				const mode = input instanceof Request ? input.mode : init?.mode ?? 'cors';
+				if (mode !== 'no-cors') {
+					const acao = response.headers.get('access-control-allow-origin');
+					if (!acao || (acao !== event.url.origin && acao !== '*')) {
+						throw new Error(
+							`CORS error: ${
+								acao ? 'Incorrect' : 'No'
+							} 'Access-Control-Allow-Origin' header is present on the requested resource`
+						);
+					}
+				}
 			}
 
 			const proxy = new Proxy(response, {
@@ -184,7 +201,7 @@ export async function load_data({
 						const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
 						if (!included) {
 							throw new Error(
-								`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#server-hooks-handle (at ${event.routeId})`
+								`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#server-hooks-handle (at ${event.route})`
 							);
 						}
 					}

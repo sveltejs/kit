@@ -8,6 +8,7 @@ export function set_should_fail(value) {
 	should_fail = value;
 }
 
+/** @type {import('./$types').LayoutServerLoad} */
 export async function load() {
 	if (should_fail) {
 		if (should_fail === 'expected') {

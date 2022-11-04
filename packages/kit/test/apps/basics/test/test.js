@@ -936,7 +936,10 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('true');
 	});
 
-	test('CORS errors are simulated server-side', async ({ page, read_errors }) => {
+	test('CORS errors are simulated server-side for shared load functions', async ({
+		page,
+		read_errors
+	}) => {
 		const { port, close } = await start_server(async (req, res) => {
 			res.end('hello');
 		});
@@ -949,6 +952,17 @@ test.describe('Load', () => {
 
 		await page.goto(`/load/cors/no-cors?port=${port}`);
 		expect(await page.textContent('h1')).toBe('result: ');
+
+		await close();
+	});
+
+	test('CORS errors are skipped for server-only load functions', async ({ page }) => {
+		const { port, close } = await start_server(async (req, res) => {
+			res.end('hello');
+		});
+
+		await page.goto(`/load/cors/server-only?port=${port}`);
+		expect(await page.textContent('h1')).toBe('hello');
 
 		await close();
 	});
@@ -1661,12 +1675,12 @@ test.describe('Routing', () => {
 		);
 	});
 
-	test('exposes page.routeId', async ({ page, clicknav }) => {
+	test('exposes page.route.id', async ({ page, clicknav }) => {
 		await page.goto('/routing/route-id');
 		await clicknav('[href="/routing/route-id/foo"]');
 
-		expect(await page.textContent('h1')).toBe('routeId in load: /routing/route-id/[x]');
-		expect(await page.textContent('h2')).toBe('routeId in store: /routing/route-id/[x]');
+		expect(await page.textContent('h1')).toBe('route.id in load: /routing/route-id/[x]');
+		expect(await page.textContent('h2')).toBe('route.id in store: /routing/route-id/[x]');
 	});
 
 	test('serves a page that clashes with a root directory', async ({ page }) => {
@@ -1729,16 +1743,23 @@ test.describe('XSS', () => {
 		}
 	});
 
-	const uri_xss_payload = encodeURIComponent('</script><script>window.pwned=1</script>');
+	const uri_xss_payload = '</script><script>window.pwned=1</script>';
+	const uri_xss_payload_encoded = encodeURIComponent(uri_xss_payload);
+
 	test('no xss via dynamic route path', async ({ page }) => {
-		await page.goto(`/xss/${uri_xss_payload}`);
+		await page.goto(`/xss/${uri_xss_payload_encoded}`);
+
+		expect(await page.textContent('h1')).toBe(uri_xss_payload);
 
 		// @ts-expect-error - check global injected variable
 		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
 	});
 
 	test('no xss via query param', async ({ page }) => {
-		await page.goto(`/xss/query?key=${uri_xss_payload}`);
+		await page.goto(`/xss/query?key=${uri_xss_payload_encoded}`);
+
+		expect(await page.textContent('#one')).toBe(JSON.stringify({ key: [uri_xss_payload] }));
+		expect(await page.textContent('#two')).toBe(JSON.stringify({ key: [uri_xss_payload] }));
 
 		// @ts-expect-error - check global injected variable
 		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
