@@ -1150,13 +1150,14 @@ export function create_client({ target, base, trailing_slash }) {
 		},
 
 		goto: (href, opts = {}) => {
-			if (opts.hasOwnProperty('keepfocus')) {
+			// TODO remove for 1.0
+			if ('keepfocus' in opts) {
 				throw new Error(
 					'`keepfocus` has been renamed to `keepFocus` (note the difference in casing)'
 				);
 			}
 
-			if (opts.hasOwnProperty('noscroll')) {
+			if ('noscroll' in opts) {
 				throw new Error(
 					'`noscroll` has been renamed to `noScroll` (note the difference in casing)'
 				);
