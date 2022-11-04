@@ -74,7 +74,7 @@ export class Server {
 					get request() {
 						throw new Error('request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details');
 					}
-				}) ?? { message: event.routeId != null ? 'Internal Error' : 'Not Found' };
+				}) ?? { message: event.route.id != null ? 'Internal Error' : 'Not Found' };
 			},
 			hooks: null,
 			manifest,

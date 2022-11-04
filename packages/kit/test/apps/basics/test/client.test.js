@@ -843,6 +843,22 @@ test.describe.serial('Invalidation', () => {
 		await page.goBack();
 		expect(await page.textContent('pre')).toBe('{"a":"1"}');
 	});
+
+	test('route.id use is tracked for server-only load functions', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/route/server/a');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/server/a');
+
+		await clicknav('[href="/load/invalidation/route/server/b"]');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/server/b');
+	});
+
+	test('route.id use is tracked for shared load functions', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/route/shared/a');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/a');
+
+		await clicknav('[href="/load/invalidation/route/shared/b"]');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/b');
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {
