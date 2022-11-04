@@ -265,16 +265,18 @@ export interface Load<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	InputData extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
-	OutputData extends Record<string, unknown> | void = Record<string, any> | void
+	OutputData extends Record<string, unknown> | void = Record<string, any> | void,
+	RouteId extends string | null = string | null
 > {
-	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData>;
+	(event: LoadEvent<Params, InputData, ParentData, RouteId>): MaybePromise<OutputData>;
 }
 
 export interface LoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
-	ParentData extends Record<string, unknown> = Record<string, any>
-> extends NavigationEvent<Params> {
+	ParentData extends Record<string, unknown> = Record<string, any>,
+	RouteId extends string | null = string | null
+> extends NavigationEvent<Params, RouteId> {
 	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 	 *
@@ -364,16 +366,22 @@ export interface LoadEvent<
 }
 
 export interface NavigationEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
 > {
 	/**
 	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, the `slug` parameter
 	 */
 	params: Params;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+	 * Info about the current route
 	 */
-	routeId: string | null;
+	route: {
+		/**
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+		 */
+		id: RouteId;
+	};
 	/**
 	 * The URL of the current page
 	 */
@@ -382,23 +390,54 @@ export interface NavigationEvent<
 
 export interface NavigationTarget {
 	params: Record<string, string> | null;
-	routeId: string | null;
+	route: { id: string | null };
 	url: URL;
 }
 
-export type NavigationType = 'load' | 'unload' | 'link' | 'goto' | 'popstate';
+/**
+ * - `enter`: The app has hydrated
+ * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
+ * - `link`: Navigation was triggered by a link click
+ * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+ * - `popstate`: Navigation was triggered by back/forward navigation
+ */
+export type NavigationType = 'enter' | 'leave' | 'link' | 'goto' | 'popstate';
 
 export interface Navigation {
+	/**
+	 * Where navigation was triggered from
+	 */
 	from: NavigationTarget | null;
+	/**
+	 * Where navigation is going to/has gone to
+	 */
 	to: NavigationTarget | null;
+	/**
+	 * The type of navigation:
+	 * - `enter`: The app has hydrated
+	 * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
+	 * - `link`: Navigation was triggered by a link click
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
 	type: NavigationType;
+	/**
+	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
+	 */
+	willUnload: boolean;
+	/**
+	 * In case of a history back/forward navigation, the number of steps to go back/forward
+	 */
 	delta?: number;
 }
 
 /**
  * The shape of the `$page` store
  */
-export interface Page<Params extends Record<string, string> = Record<string, string>> {
+export interface Page<
+	Params extends Record<string, string> = Record<string, string>,
+	RouteId extends string | null = string | null
+> {
 	/**
 	 * The URL of the current page
 	 */
@@ -408,9 +447,14 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	 */
 	params: Params;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+	 * Info about the current route
 	 */
-	routeId: string | null;
+	route: {
+		/**
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+		 */
+		id: RouteId;
+	};
 	/**
 	 * Http status code of the current page
 	 */
@@ -434,7 +478,8 @@ export interface ParamMatcher {
 }
 
 export interface RequestEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
 > {
 	/**
 	 * Get or set cookies related to the current request
@@ -471,9 +516,14 @@ export interface RequestEvent<
 	 */
 	request: Request;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+	 * Info about the current route
 	 */
-	routeId: string | null;
+	route: {
+		/**
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+		 */
+		id: RouteId;
+	};
 	/**
 	 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
 	 *
@@ -509,9 +559,10 @@ export interface RequestEvent<
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://kit.svelte.dev/docs/types#generated-types) instead.
  */
 export interface RequestHandler<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
 > {
-	(event: RequestEvent<Params>): MaybePromise<Response>;
+	(event: RequestEvent<Params, RouteId>): MaybePromise<Response>;
 }
 
 export interface ResolveOptions {
@@ -555,15 +606,17 @@ export interface SSRManifest {
 export interface ServerLoad<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	ParentData extends Record<string, any> = Record<string, any>,
-	OutputData extends Record<string, any> | void = Record<string, any> | void
+	OutputData extends Record<string, any> | void = Record<string, any> | void,
+	RouteId extends string | null = string | null
 > {
-	(event: ServerLoadEvent<Params, ParentData>): MaybePromise<OutputData>;
+	(event: ServerLoadEvent<Params, ParentData, RouteId>): MaybePromise<OutputData>;
 }
 
 export interface ServerLoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	ParentData extends Record<string, any> = Record<string, any>
-> extends RequestEvent<Params> {
+	ParentData extends Record<string, any> = Record<string, any>,
+	RouteId extends string | null = string | null
+> extends RequestEvent<Params, RouteId> {
 	/**
 	 * `await parent()` returns data from parent `+layout.server.js` `load` functions.
 	 *
@@ -612,15 +665,17 @@ export interface ServerLoadEvent<
 
 export interface Action<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	OutputData extends Record<string, any> | void = Record<string, any> | void
+	OutputData extends Record<string, any> | void = Record<string, any> | void,
+	RouteId extends string | null = string | null
 > {
-	(event: RequestEvent<Params>): MaybePromise<OutputData>;
+	(event: RequestEvent<Params, RouteId>): MaybePromise<OutputData>;
 }
 
 export type Actions<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	OutputData extends Record<string, any> | void = Record<string, any> | void
-> = Record<string, Action<Params, OutputData>>;
+	OutputData extends Record<string, any> | void = Record<string, any> | void,
+	RouteId extends string | null = string | null
+> = Record<string, Action<Params, OutputData, RouteId>>;
 
 /**
  * When calling a form action via fetch, the response will be one of these shapes.

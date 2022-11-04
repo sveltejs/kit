@@ -45,13 +45,13 @@ export async function handle_action_json_request(event, options, server) {
 			return action_json({
 				type: 'invalid',
 				status: data.status,
-				data: uneval(data.data, /** @type {string} */ (event.routeId))
+				data: uneval(data.data, /** @type {string} */ (event.route.id))
 			});
 		} else {
 			return action_json({
 				type: 'success',
 				status: data ? 200 : 204,
-				data: uneval(data, /** @type {string} */ (event.routeId))
+				data: uneval(data, /** @type {string} */ (event.route.id))
 			});
 		}
 	} catch (e) {

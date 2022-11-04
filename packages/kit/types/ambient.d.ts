@@ -194,11 +194,11 @@ declare module '$app/navigation' {
 			/**
 			 * If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
 			 */
-			noscroll?: boolean;
+			noScroll?: boolean;
 			/**
 			 * If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
 			 */
-			keepfocus?: boolean;
+			keepFocus?: boolean;
 			/**
 			 * The state of the new/updated history entry
 			 */
@@ -257,7 +257,7 @@ declare module '$app/navigation' {
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
 	 * Calling `cancel()` will prevent the navigation from completing.
 	 *
-	 * When navigating to an external URL, `navigation.to` will be `null`.
+	 * When a navigation isn't client side, `navigation.to.routeId` will be `null`.
 	 *
 	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */

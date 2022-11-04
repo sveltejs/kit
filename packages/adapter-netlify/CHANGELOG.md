@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.84
+
+### Patch Changes
+
+- Add information about edge functions and `event.platform` ([#7498](https://github.com/sveltejs/kit/pull/7498))
+
 ## 1.0.0-next.83
 
 ### Patch Changes
