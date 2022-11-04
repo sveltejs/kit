@@ -1559,7 +1559,7 @@ async function load_data(url, invalid) {
 
 	// revive devalue-flattened data
 	data.nodes?.forEach((/** @type {any} */ node) => {
-		if (node.type === 'data') {
+		if (node?.type === 'data') {
 			node.data = devalue.unflatten(node.data);
 			node.uses = {
 				dependencies: new Set(node.uses.dependencies ?? []),
