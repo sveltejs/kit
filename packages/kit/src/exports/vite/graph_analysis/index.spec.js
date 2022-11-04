@@ -88,18 +88,6 @@ describe('IllegalImportGuard', (test) => {
 		assert.not.throws(() => guard.assert_legal(get_module_graph()));
 	});
 
-	test('assert throws an error when importing $env/static/private in dev', () => {
-		const module_graph = get_module_graph({
-			id: DEV_VIRTUAL_STATIC_ID,
-			dynamic: false,
-			children: generator_from_array([])
-		});
-		assert.throws(
-			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$env\/static\/private into public-facing code:.*/gs
-		);
-	});
-
 	test('assert throws an error when importing $env/static/private in prod', () => {
 		const module_graph = get_module_graph({
 			id: PROD_VIRTUAL_STATIC_ID,
@@ -109,18 +97,6 @@ describe('IllegalImportGuard', (test) => {
 		assert.throws(
 			() => guard.assert_legal(module_graph),
 			/.*Cannot import \$env\/static\/private into public-facing code:.*/gs
-		);
-	});
-
-	test('assert throws an error when importing $env/dynamic/private in dev', () => {
-		const module_graph = get_module_graph({
-			id: DEV_VIRTUAL_DYNAMIC_ID,
-			dynamic: false,
-			children: generator_from_array([])
-		});
-		assert.throws(
-			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$env\/dynamic\/private into public-facing code:.*/gs
 		);
 	});
 
