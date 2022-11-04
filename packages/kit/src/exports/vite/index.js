@@ -34,8 +34,10 @@ const enforced_config = {
 			formats: true
 		},
 		manifest: true,
+		modulePreload: {
+			polyfill: true
+		},
 		outDir: true,
-		polyfillModulePreload: true,
 		rollupOptions: {
 			input: true,
 			output: {
