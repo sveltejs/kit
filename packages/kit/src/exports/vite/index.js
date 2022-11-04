@@ -292,8 +292,8 @@ function kit() {
 			if (id.startsWith('$env/')) return `\0${id}`;
 		},
 
-		async load(id, { ssr }) {
-			if (!ssr) {
+		async load(id, options) {
+			if (options?.ssr === false) {
 				// TODO this is incomplete — we need to replicate the #is_illegal logic
 				if (
 					id.endsWith('.server.js') ||
