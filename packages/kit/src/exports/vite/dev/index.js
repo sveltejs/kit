@@ -117,6 +117,7 @@ export async function dev(vite, vite_config, svelte_config) {
 								extensions
 							);
 
+							// wait to load the module until after we check for illegal imports
 							result.shared = await vite.ssrLoadModule(url);
 						}
 
