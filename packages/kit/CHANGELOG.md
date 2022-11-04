@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.533
+
+### Patch Changes
+
+- [fix] bump required Vite version and address warning ([#7491](https://github.com/sveltejs/kit/pull/7491))
+
 ## 1.0.0-next.532
 
 ### Patch Changes
