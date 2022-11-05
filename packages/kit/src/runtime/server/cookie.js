@@ -57,9 +57,16 @@ export function get_cookies(request, url, options) {
 				return cookie;
 			}
 
-			if (c || cookie_paths[name]?.size > 0) {
+			// Warn about cookies that are set with other paths in dev mode
+			if (cookie_paths[name]?.has(url.pathname)) {
+				// Cookie was set on this path, but removed elsewhere
+				// Reflect these changes and remove the path from the set
+				cookie_paths[name].delete(url.pathname);
+			} else if (cookie_paths[name]?.size > 0) {
+				// Warn about cookie existence on other paths
+				const paths = `'${Array.from(cookie_paths[name]).join("', '")}'`;
 				console.warn(
-					`Cookie with name '${name}' was not found, but a cookie with that name exists at a sub path. Did you mean to set its 'path' to '/'?`
+					`Cookie with name '${name}' was not found at path: '${url.pathname}'. However, it was found at these paths: ${paths}. Did you mean to set its 'path' to '/' instead?`
 				);
 			}
 		},
