@@ -58,10 +58,10 @@ export function get_cookies(request, url, options) {
 			}
 
 			// Warn about cookies that are set with other paths in dev mode
-			if (cookie_paths[name]?.has(url.pathname)) {
+			if (cookie_paths[name]?.has('/')) {
 				// Cookie was set on this path, but removed elsewhere
 				// Reflect these changes and remove the path from the set
-				cookie_paths[name].delete(url.pathname);
+				cookie_paths[name].delete('/');
 			} else if (cookie_paths[name]?.size > 0) {
 				// Warn about cookie existence on other paths
 				const paths = `'${Array.from(cookie_paths[name]).join("', '")}'`;
