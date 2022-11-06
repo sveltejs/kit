@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-Avoid cleaning build_dir and output_dir when using --watch
+[fix] don't clean build and output directories when using `--watch`
