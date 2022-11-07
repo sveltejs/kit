@@ -467,6 +467,23 @@ test.describe('Load', () => {
 		expect(response.headers()['cache-control']).toBe('private, no-store');
 	});
 
+	test('cache with body hash', async ({ page, clicknav }) => {
+		// 1/ go to the page (first load, we expect the right data)
+		await page.goto('/load/fetch-cache-control/load-data');
+		expect(await page.textContent('div#fr')).toBe(JSON.stringify({ hi: 'bonjour' }));
+		expect(await page.textContent('div#hu')).toBe(JSON.stringify({ hi: 'szia' }));
+
+		// 2/ change to another route (client side)
+		await clicknav('a');
+
+		// 3/ come back to the original page (client side)
+		await clicknav('a');
+
+		// 4/ data should still be the same (and cached!)
+		expect(await page.textContent('div#fr')).toBe(JSON.stringify({ hi: 'bonjour' }));
+		expect(await page.textContent('div#hu')).toBe(JSON.stringify({ hi: 'szia' }));
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page }) => {
 			const port = 5173;
