@@ -15,8 +15,34 @@ const cookie_paths = {};
  */
 export function get_cookies(request, url, options) {
 	const header = request.headers.get('cookie') ?? '';
-
 	const initial_cookies = parse(header);
+
+	const normalized_url = normalize_path(
+		// Remove suffix: 'foo/__data.json' would mean the cookie path is '/foo',
+		// whereas a direct hit of /foo would mean the cookie path is '/'
+		has_data_suffix(url.pathname) ? strip_data_suffix(url.pathname) : url.pathname,
+		options.trailing_slash
+	);
+	// Emulate browser-behavior: if the cookie is set at '/foo/bar', its path is '/foo'
+	const default_path = normalized_url.split('/').slice(0, -1).join('/') || '/';
+
+	if (options.dev) {
+		// Remove all cookies that no longer exist according to the request
+		for (const name of Object.keys(cookie_paths)) {
+			cookie_paths[name] = new Set(
+				[...cookie_paths[name]].filter(
+					(path) => !path_matches(normalized_url, path) || name in initial_cookies
+				)
+			);
+		}
+		// Add all new cookies we might not have seen before
+		for (const name in initial_cookies) {
+			cookie_paths[name] = cookie_paths[name] ?? new Set();
+			if (![...cookie_paths[name]].some((path) => path_matches(normalized_url, path))) {
+				cookie_paths[name].add(default_path);
+			}
+		}
+	}
 
 	/** @type {Record<string, import('./page/types').Cookie>} */
 	const new_cookies = {};
@@ -57,9 +83,14 @@ export function get_cookies(request, url, options) {
 				return cookie;
 			}
 
-			if (c || cookie_paths[name]?.size > 0) {
+			const paths = new Set([...(cookie_paths[name] ?? [])]);
+			if (c) {
+				paths.add(c.options.path ?? default_path);
+			}
+			if (paths.size > 0) {
 				console.warn(
-					`Cookie with name '${name}' was not found, but a cookie with that name exists at a sub path. Did you mean to set its 'path' to '/'?`
+					// prettier-ignore
+					`Cookie with name '${name}' was not found at path '${url.pathname}', but a cookie with that name exists at these paths: '${[...paths].join("', '")}'. Did you mean to set its 'path' to '/' instead?`
 				);
 			}
 		},
@@ -70,17 +101,7 @@ export function get_cookies(request, url, options) {
 		 * @param {import('cookie').CookieSerializeOptions} opts
 		 */
 		set(name, value, opts = {}) {
-			let path = opts.path;
-			if (!path) {
-				const normalized = normalize_path(
-					// Remove suffix: 'foo/__data.json' would mean the cookie path is '/foo',
-					// whereas a direct hit of /foo would mean the cookie path is '/'
-					has_data_suffix(url.pathname) ? strip_data_suffix(url.pathname) : url.pathname,
-					options.trailing_slash
-				);
-				// Emulate browser-behavior: if the cookie is set at '/foo/bar', its path is '/foo'
-				path = normalized.split('/').slice(0, -1).join('/') || '/';
-			}
+			let path = opts.path ?? default_path;
 
 			new_cookies[name] = {
 				name,
@@ -93,11 +114,12 @@ export function get_cookies(request, url, options) {
 			};
 
 			if (options.dev) {
-				cookie_paths[name] = cookie_paths[name] || new Set();
+				cookie_paths[name] = cookie_paths[name] ?? new Set();
 				if (!value) {
 					if (!cookie_paths[name].has(path) && cookie_paths[name].size > 0) {
+						const paths = `'${Array.from(cookie_paths[name]).join("', '")}'`;
 						console.warn(
-							`Trying to delete cookie '${name}' at path '${path}', but a cookie with that name only exists at a different path.`
+							`Trying to delete cookie '${name}' at path '${path}', but a cookie with that name only exists at these paths: ${paths}.`
 						);
 					}
 					cookie_paths[name].delete(path);
