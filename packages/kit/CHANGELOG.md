@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.536
+
+### Patch Changes
+
+- custom aliases resolved in service worker builds ([#7500](https://github.com/sveltejs/kit/pull/7500))
+
 ## 1.0.0-next.535
 
 ### Patch Changes
