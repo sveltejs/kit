@@ -1,5 +1,5 @@
 <script>
-	const mod = import('../test.server.js');
+	const mod = import('../illegal.server.js');
 </script>
 
 {#await mod then resolved}

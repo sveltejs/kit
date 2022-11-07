@@ -988,7 +988,7 @@ test.describe('cookies', () => {
 	});
 });
 
-test.describe('Illegal imports', () => {
+test.describe.serial('Illegal imports', () => {
 	test.skip(() => !process.env.DEV);
 
 	test('$env/dynamic/private is not statically importable from the client', async ({ page }) => {
@@ -1022,13 +1022,13 @@ test.describe('Illegal imports', () => {
 	test('server-only module is not statically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/server-only-modules/static-import');
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $lib/test.server.js into client-side code'
+			'Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into client-side code'
 		);
 	});
 	test('server-only module is not dynamically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/server-only-modules/dynamic-import');
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $lib/test.server.js into client-side code'
+			'Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into client-side code'
 		);
 	});
 
