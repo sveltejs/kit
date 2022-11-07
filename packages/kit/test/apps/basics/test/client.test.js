@@ -988,7 +988,7 @@ test.describe('cookies', () => {
 	});
 });
 
-test.describe.only('Illegal imports', () => {
+test.describe('Illegal imports', () => {
 	test.skip(() => !process.env.DEV);
 
 	test('$env/dynamic/private is not statically importable from the client', async ({ page }) => {
