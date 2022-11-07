@@ -73,7 +73,11 @@ export async function preview(vite, vite_config, svelte_config) {
 				next();
 			} else {
 				res.statusCode = 404;
-				res.end(`Not found (did you mean ${base + pathname}?)`);
+				res.end(
+					`The server is configured with a public base URL of ${base} - did you mean to visit <a href="${
+						base + pathname
+					}">${base + pathname}</a> instead?`
+				);
 			}
 		});
 
