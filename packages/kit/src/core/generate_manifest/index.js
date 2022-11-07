@@ -40,6 +40,16 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 
 	const matchers = new Set();
 
+	const used_nodes = new Set();
+
+	for (const route of routes) {
+		if (route.page) {
+			for (const i of route.page.layouts) used_nodes.add(i);
+			for (const i of route.page.errors) used_nodes.add(i);
+			used_nodes.add(route.page.leaf);
+		}
+	}
+
 	// prettier-ignore
 	// String representation of
 	/** @type {import('types').SSRManifest} */
@@ -51,7 +61,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 		_: {
 			entry: ${s(build_data.client.entry)},
 			nodes: [
-				${Array.from(bundled_nodes.values()).map(node => loader(node.path)).join(',\n\t\t\t\t')}
+				${Array.from(bundled_nodes.values()).filter(node => used_nodes.has(node.index)).map(node => loader(node.path)).join(',\n\t\t\t\t')}
 			],
 			routes: [
 				${routes.map(route => {

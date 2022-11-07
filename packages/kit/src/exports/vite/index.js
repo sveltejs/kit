@@ -408,7 +408,7 @@ function kit() {
 					server
 				};
 
-				const manifest_path = `${paths.output_dir}/server/manifest.js`;
+				const manifest_path = `${paths.output_dir}/server/manifest-full.js`;
 				fs.writeFileSync(
 					manifest_path,
 					`export const manifest = ${generate_manifest({
@@ -431,6 +431,7 @@ function kit() {
 						script,
 						[
 							vite_config.build.outDir,
+							manifest_path,
 							results_path,
 							'' + verbose,
 							JSON.stringify({ ...env.private, ...env.public })
@@ -458,6 +459,16 @@ function kit() {
 						}
 					});
 				});
+
+				// generate a new manifest that doesn't include prerendered pages
+				fs.writeFileSync(
+					`${paths.output_dir}/server/manifest.js`,
+					`export const manifest = ${generate_manifest({
+						build_data,
+						relative_path: '.',
+						routes: manifest_data.routes.filter((route) => prerender_map.get(route.id) !== true)
+					})};\n`
+				);
 
 				if (options.service_worker_entry_file) {
 					if (svelte_config.kit.paths.assets) {
