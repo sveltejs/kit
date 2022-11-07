@@ -6,6 +6,7 @@ import { coalesce_to_error } from '../../utils/error.js';
 import { is_form_content_type } from '../../utils/http.js';
 import { GENERIC_ERROR, handle_fatal_error } from './utils.js';
 import {
+	decode_pathname,
 	decode_params,
 	disable_search,
 	has_data_suffix,
@@ -44,7 +45,7 @@ export async function respond(request, options, state) {
 
 	let decoded;
 	try {
-		decoded = decodeURI(url.pathname);
+		decoded = decode_pathname(url.pathname);
 	} catch {
 		return new Response('Malformed URI', { status: 400 });
 	}

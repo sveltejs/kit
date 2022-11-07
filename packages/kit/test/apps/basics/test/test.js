@@ -331,6 +331,14 @@ test.describe('Encoded paths', () => {
 		expect(await page.innerHTML('h3')).toBe('/encoded/test%2520me: test%20me');
 	});
 
+	test('visits a route with a doubly encoded slash', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/test%252fme"]');
+		expect(await page.innerHTML('h1')).toBe('dynamic');
+		expect(await page.innerHTML('h2')).toBe('/encoded/test%252fme: test%2fme');
+		expect(await page.innerHTML('h3')).toBe('/encoded/test%252fme: test%2fme');
+	});
+
 	test('visits a route with an encoded slash', async ({ page, clicknav }) => {
 		await page.goto('/encoded');
 		await clicknav('[href="/encoded/AC%2fDC"]');
