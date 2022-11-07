@@ -1967,7 +1967,8 @@ test.describe('Actions', () => {
 	});
 });
 
-test.describe('Cookies API', () => {
+// Run in serial to not pollute the log with (correct) cookie warnings
+test.describe.serial('Cookies API', () => {
 	// there's a problem running these tests in the CI with webkit,
 	// since AFAICT the browser is using http://localhost and webkit won't
 	// set a `Secure` cookie on that. So we bail...
@@ -1990,18 +1991,6 @@ test.describe('Cookies API', () => {
 		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
 		await page.goto('/cookies/delete');
-		span = page.locator('#cookie-value');
-		expect(await span.innerText()).toContain('undefined');
-	});
-
-	test('cookies can be set with a path', async ({ page }) => {
-		await page.goto('/cookies/nested/a');
-		let span = page.locator('#cookie-value');
-		expect(await span.innerText()).toContain('teapot');
-		await page.goto('/cookies/nested/b');
-		span = page.locator('#cookie-value');
-		expect(await span.innerText()).toContain('undefined');
-		await page.goto('/cookies');
 		span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 	});
@@ -2042,5 +2031,17 @@ test.describe('Cookies API', () => {
 		// setting a different value...
 		await page.click('button#janeAusten');
 		await expect(page.locator('#cookie-value')).toHaveText('Jane Austen');
+	});
+
+	test('cookies can be set with a path', async ({ page }) => {
+		await page.goto('/cookies/nested/a');
+		let span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot');
+		await page.goto('/cookies/nested/b');
+		span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('undefined');
+		await page.goto('/cookies');
+		span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('undefined');
 	});
 });
