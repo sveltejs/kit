@@ -85,6 +85,10 @@ Since these routes cannot be dynamically server-rendered, this will cause errors
 
 Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's hydrated. If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](/docs/glossary#ssr)). If you add `export const ssr = false` to your root `+layout.js`, your entire app will only be rendered on the client — which essentially means you turn your app into an SPA.
 
+```js
+/// file: +page.js
+export const ssr = false;
+
 ### csr
 
 Ordinarily, SvelteKit [hydrates](/docs/glossary#hydration) your server-rendered HTML into an interactive client-side-rendered (CSR) page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can disable CSR:
