@@ -1,7 +1,8 @@
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { unwrap_promises } from '../../../utils/promises.js';
+
 /**
- * Calls the user's `load` function.
+ * Calls the user's server `load` function.
  * @param {{
  *   event: import('types').RequestEvent;
  *   state: import('types').SSRState;
