@@ -88,6 +88,7 @@ Normally, SvelteKit renders your page on the server first and sends that HTML to
 ```js
 /// file: +page.js
 export const ssr = false;
+```
 
 ### csr
 
