@@ -7,6 +7,18 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 test.describe.configure({ mode: 'parallel' });
 
+test.describe('Caching', () => {
+	test('caches __data.json requests with Vary header', async ({ page, app }) => {
+		await page.goto('/');
+		const [, response] = await Promise.all([
+			app.goto('/caching/server-data'),
+			page.waitForResponse((request) => request.url().endsWith('server-data/__data.json'))
+		]);
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+		expect(response.headers()['vary']).toBe('x-sveltekit-invalidated');
+	});
+});
+
 test.describe('beforeNavigate', () => {
 	test('prevents navigation triggered by link click', async ({ page, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');

@@ -6,6 +6,7 @@ import { coalesce_to_error } from '../../utils/error.js';
 import { is_form_content_type } from '../../utils/http.js';
 import { GENERIC_ERROR, handle_fatal_error } from './utils.js';
 import {
+	decode_pathname,
 	decode_params,
 	disable_search,
 	has_data_suffix,
@@ -13,7 +14,7 @@ import {
 	strip_data_suffix
 } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
-import { render_data } from './data/index.js';
+import { INVALIDATED_HEADER, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { HttpError } from '../control.js';
 import { create_fetch } from './fetch.js';
@@ -44,7 +45,7 @@ export async function respond(request, options, state) {
 
 	let decoded;
 	try {
-		decoded = decodeURI(url.pathname);
+		decoded = decode_pathname(url.pathname);
 	} catch {
 		return new Response('Malformed URI', { status: 400 });
 	}
@@ -296,14 +297,21 @@ export async function respond(request, options, state) {
 				resolve(event, opts).then((response) => {
 					// add headers/cookies here, rather than inside `resolve`, so that we
 					// can do it once for all responses instead of once per `return`
-					if (!is_data_request) {
-						// we only want to set cookies on __data.json requests, we don't
-						// want to cache stuff erroneously etc
-						for (const key in headers) {
-							const value = headers[key];
-							response.headers.set(key, /** @type {string} */ (value));
+					for (const key in headers) {
+						const value = headers[key];
+						response.headers.set(key, /** @type {string} */ (value));
+					}
+
+					if (is_data_request) {
+						// set the Vary header on __data.json requests to ensure we don't cache
+						// incomplete responses with skipped data loads
+						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary
+						const vary = response.headers.get('Vary');
+						if (vary !== '*') {
+							response.headers.append('Vary', INVALIDATED_HEADER);
 						}
 					}
+
 					add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
 					if (state.prerendering && event.route.id !== null) {
