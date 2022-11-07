@@ -987,3 +987,61 @@ test.describe('cookies', () => {
 		await expect(page.locator('p')).toHaveText('foo=bar');
 	});
 });
+
+test.describe.only('Illegal imports', () => {
+	test.skip(() => !process.env.DEV);
+
+	test('$env/dynamic/private is not statically importable from the client', async ({ page }) => {
+		await page.goto('/illegal-imports/env/dynamic-private');
+		expect(await page.innerHTML('body')).toMatch(
+			/.*Cannot import \$env\/dynamic\/private into public-facing code:.*/gs
+		);
+	});
+
+	test('$env/dynamic/private is not dynamically importable from the client', async ({ page }) => {
+		await page.goto('/illegal-imports/env/dynamic-private-dynamic-import');
+		expect(await page.innerHTML('body')).toMatch(
+			/.*Cannot import \$env\/dynamic\/private into public-facing code:.*/gs
+		);
+	});
+
+	test('$env/static/private is not statically importable from the client', async ({ page }) => {
+		await page.goto('/illegal-imports/env/static-private');
+		expect(await page.innerHTML('body')).toMatch(
+			/.*Cannot import \$env\/static\/private into public-facing code:.*/gs
+		);
+	});
+
+	test('$env/static/private is not dynamically importable from the client', async ({ page }) => {
+		await page.goto('/illegal-imports/env/static-private-dynamic-import');
+		expect(await page.innerHTML('body')).toMatch(
+			/.*Cannot import \$env\/static\/private into public-facing code:.*/gs
+		);
+	});
+
+	test('server-only module is not statically importable from the client', async ({ page }) => {
+		await page.goto('/illegal-imports/server-only-modules/static-import');
+		expect(await page.innerHTML('body')).toMatch(
+			/.*Cannot import \$lib\/test.server.js into public-facing code:.*/gs
+		);
+	});
+	test('server-only module is not dynamically importable from the client', async ({ page }) => {
+		await page.goto('/illegal-imports/server-only-modules/dynamic-import');
+		expect(await page.innerHTML('body')).toMatch(
+			/.*Cannot import \$lib\/test.server.js into public-facing code:.*/gs
+		);
+	});
+
+	test('server-only folder is not statically importable from the client', async ({ page }) => {
+		await page.goto('/illegal-imports/server-only-folder/static-import');
+		expect(await page.innerHTML('body')).toMatch(
+			/.*Cannot import \$lib\/server\/blah\/test.js into public-facing code:.*/gs
+		);
+	});
+	test('server-only folder is not dynamically importable from the client', async ({ page }) => {
+		await page.goto('/illegal-imports/server-only-folder/dynamic-import');
+		expect(await page.innerHTML('body')).toMatch(
+			/.*Cannot import \$lib\/server\/blah\/test.js into public-facing code:.*/gs
+		);
+	});
+});
