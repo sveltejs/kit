@@ -1,6 +1,7 @@
 import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
 import { resolve_symlinks } from '../../exports/vite/build/utils.js';
+import { compact } from '../../utils/array.js';
 
 /**
  * Generates the data used to write the server-side manifest.js file. This data is used in the Vite
@@ -13,6 +14,26 @@ import { resolve_symlinks } from '../../exports/vite/build/utils.js';
  * }} opts
  */
 export function generate_manifest({ build_data, relative_path, routes, format = 'esm' }) {
+	const reindexed = new Map();
+	const used_nodes = new Set();
+
+	for (const route of routes) {
+		if (route.page) {
+			for (const i of route.page.layouts) used_nodes.add(i);
+			for (const i of route.page.errors) used_nodes.add(i);
+			used_nodes.add(route.page.leaf);
+		}
+	}
+
+	const node_paths = compact(
+		build_data.manifest_data.nodes.map((_, i) => {
+			if (used_nodes.has(i)) {
+				reindexed.set(i, reindexed.size);
+				return `${relative_path}/nodes/${i}.js`;
+			}
+		})
+	);
+
 	/** @typedef {{ index: number, path: string }} LookupEntry */
 	/** @type {Map<import('types').PageNode, LookupEntry>} */
 	const bundled_nodes = new Map();
@@ -40,14 +61,18 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 
 	const matchers = new Set();
 
-	const used_nodes = new Set();
+	/** @param {Array<number | undefined>} indexes */
+	function get_nodes(indexes) {
+		let string = indexes.map((n) => reindexed.get(n) ?? '').join(',');
 
-	for (const route of routes) {
-		if (route.page) {
-			for (const i of route.page.layouts) used_nodes.add(i);
-			for (const i of route.page.errors) used_nodes.add(i);
-			used_nodes.add(route.page.leaf);
+		if (indexes.at(-1) === undefined) {
+			// since JavaScript ignores trailing commas, we need to insert a dummy
+			// comma so that the array has the correct length if the last item
+			// is undefined
+			string += ',';
 		}
+
+		return `[${string}]`;
 	}
 
 	// prettier-ignore
@@ -61,7 +86,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 		_: {
 			entry: ${s(build_data.client.entry)},
 			nodes: [
-				${Array.from(bundled_nodes.values()).filter(node => used_nodes.has(node.index)).map(node => loader(node.path)).join(',\n\t\t\t\t')}
+				${(node_paths).map(loader).join(',\n\t\t\t\t')}
 			],
 			routes: [
 				${routes.map(route => {
@@ -77,7 +102,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 					names: ${s(route.names)},
 					types: ${s(route.types)},
 					optional: ${s(route.optional)},
-					page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${route.page.leaf} }` : 'null'},
+					page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${reindexed.get(route.page.leaf)} }` : 'null'},
 					endpoint: ${route.endpoint ? loader(`${relative_path}/${resolve_symlinks(build_data.server.vite_manifest, route.endpoint.file).chunk.file}`) : 'null'}
 				}`;
 				}).filter(Boolean).join(',\n\t\t\t\t')}
@@ -88,18 +113,4 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 			}
 		}
 	}`.replace(/^\t/gm, '');
-}
-
-/** @param {Array<number | undefined>} indexes */
-function get_nodes(indexes) {
-	let string = indexes.map((n) => n ?? '').join(',');
-
-	if (indexes.at(-1) === undefined) {
-		// since JavaScript ignores trailing commas, we need to insert a dummy
-		// comma so that the array has the correct length if the last item
-		// is undefined
-		string += ',';
-	}
-
-	return `[${string}]`;
 }
