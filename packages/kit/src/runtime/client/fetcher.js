@@ -63,24 +63,17 @@ const cache = new Map();
  * Should be called on the initial run of load functions that hydrate the page.
  * Saves any requests with cache-control max-age to the cache.
  * @param {RequestInfo | URL} resource
- * @param {string} resolved
  * @param {RequestInit} [opts]
  */
-export function initial_fetch(resource, resolved, opts) {
-	const url = JSON.stringify(resource instanceof Request ? resource.url : resource);
-
-	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
-
-	if (opts?.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
-		selector += `[data-hash="${hash(opts.body)}"]`;
-	}
+export function initial_fetch(resource, opts) {
+	const selector = selector_builder(resource, opts);
 
 	const script = document.querySelector(selector);
 	if (script?.textContent) {
 		const { body, ...init } = JSON.parse(script.textContent);
 
 		const ttl = script.getAttribute('data-ttl');
-		if (ttl) cache.set(resolved, { body, init, ttl: 1000 * Number(ttl) });
+		if (ttl) cache.set(selector, { body, init, ttl: 1000 * Number(ttl) });
 
 		return Promise.resolve(new Response(body, init));
 	}
@@ -90,18 +83,37 @@ export function initial_fetch(resource, resolved, opts) {
 
 /**
  * Tries to get the response from the cache, if max-age allows it, else does a fetch.
+ * @param {RequestInfo | URL} resource
  * @param {string} resolved
  * @param {RequestInit} [opts]
  */
-export function subsequent_fetch(resolved, opts) {
-	const cached = cache.get(resolved);
+export function subsequent_fetch(resource, resolved, opts) {
+	const selector = selector_builder(resource, opts);
+	const cached = cache.get(selector);
 	if (cached) {
 		if (performance.now() < cached.ttl) {
 			return new Response(cached.body, cached.init);
 		}
 
-		cache.delete(resolved);
+		cache.delete(selector);
 	}
 
 	return native_fetch(resolved, opts);
+}
+
+/**
+ * Build the cache key for a given request
+ * @param {RequestInfo | URL} resource
+ * @param {RequestInit} [opts]
+ */
+function selector_builder(resource, opts) {
+	const url = JSON.stringify(resource instanceof Request ? resource.url : resource);
+
+	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
+
+	if (opts?.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
+		selector += `[data-hash="${hash(opts.body)}"]`;
+	}
+
+	return selector;
 }
