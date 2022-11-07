@@ -152,7 +152,7 @@ export async function load_data({
 								method: event.request.method,
 								request_body: /** @type {string | ArrayBufferView | undefined} */ (
 									input instanceof Request && cloned_body
-										? await streamToString(cloned_body)
+										? await stream_to_string(cloned_body)
 										: init?.body
 								),
 								response_body: body,
@@ -242,7 +242,7 @@ export async function load_data({
 /**
  * @param {ReadableStream<Uint8Array>} stream
  */
-async function streamToString(stream) {
+async function stream_to_string(stream) {
 	let result = '';
 	const reader = stream.getReader();
 	const decoder = new TextDecoder();
