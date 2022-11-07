@@ -5,6 +5,8 @@ import { load_server_data } from '../page/load_data.js';
 import { clarify_devalue_error, handle_error_and_jsonify, serialize_data_node } from '../utils.js';
 import { normalize_path, strip_data_suffix } from '../../../utils/url.js';
 
+export const INVALIDATED_HEADER = 'x-sveltekit-invalidated';
+
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSRRoute} route
@@ -24,7 +26,7 @@ export async function render_data(event, route, options, state) {
 		const node_ids = [...route.page.layouts, route.page.leaf];
 
 		const invalidated =
-			event.request.headers.get('x-sveltekit-invalidated')?.split(',').map(Boolean) ??
+			event.request.headers.get(INVALIDATED_HEADER)?.split(',').map(Boolean) ??
 			node_ids.map(() => true);
 
 		let aborted = false;
