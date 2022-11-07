@@ -307,7 +307,7 @@ export async function respond(request, options, state) {
 						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary
 						const vary = response.headers.get('Vary');
 						if (vary !== '*') {
-							response.headers.set('Vary', `${vary ? `${vary}, ` : ''}${INVALIDATED_HEADER}`);
+							response.headers.append('Vary', INVALIDATED_HEADER);
 						}
 					}
 
