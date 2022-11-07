@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.538
+
+### Patch Changes
+
+- [feat] enable caching for `__data.json` requests ([#7532](https://github.com/sveltejs/kit/pull/7532))
+
+- [fix] prevent double decoding of params ([#7521](https://github.com/sveltejs/kit/pull/7521))
+
+- [fix] take into account Request input when serializing fetch data ([#7531](https://github.com/sveltejs/kit/pull/7531))
+
+- [fix] better cookie warning checks ([#7528](https://github.com/sveltejs/kit/pull/7528))
+
 ## 1.0.0-next.537
 
 ### Patch Changes
