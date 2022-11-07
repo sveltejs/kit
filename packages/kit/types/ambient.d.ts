@@ -171,7 +171,7 @@ declare module '$app/forms' {
  * ```
  */
 declare module '$app/navigation' {
-	import { Navigation } from '@sveltejs/kit';
+	import { BeforeNavigate, AfterNavigate } from '@sveltejs/kit';
 
 	/**
 	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
@@ -261,16 +261,14 @@ declare module '$app/navigation' {
 	 *
 	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */
-	export function beforeNavigate(
-		callback: (navigation: Navigation & { cancel(): void }) => void
-	): void;
+	export function beforeNavigate(callback: (navigation: BeforeNavigate) => void): void;
 
 	/**
 	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
 	 *
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */
-	export function afterNavigate(callback: (navigation: Navigation) => void): void;
+	export function afterNavigate(callback: (navigation: AfterNavigate) => void): void;
 }
 
 /**
