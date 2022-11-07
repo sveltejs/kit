@@ -414,13 +414,12 @@ export interface Navigation {
 	to: NavigationTarget | null;
 	/**
 	 * The type of navigation:
-	 * - `enter`: The app has hydrated
 	 * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
-	type: NavigationType;
+	type: Omit<NavigationType, 'enter'>;
 	/**
 	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
 	 */
@@ -429,6 +428,31 @@ export interface Navigation {
 	 * In case of a history back/forward navigation, the number of steps to go back/forward
 	 */
 	delta?: number;
+}
+
+/**
+ * The interface that corresponds to the `beforeNavigate`'s input parameter.
+ */
+export interface BeforeNavigate extends Navigation {
+	/**
+	 * Call this to prevent the navigation from starting.
+	 */
+	cancel(): void;
+}
+
+/**
+ * The interface that corresponds to the `afterNavigate`'s input parameter.
+ */
+export interface AfterNavigate extends Navigation {
+	/**
+	 * The type of navigation:
+	 * - `enter`: The app has hydrated
+	 * - `link`: Navigation was triggered by a link click
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
+	type: Omit<NavigationType, 'leave'>;
+	willUnload: false;
 }
 
 /**
