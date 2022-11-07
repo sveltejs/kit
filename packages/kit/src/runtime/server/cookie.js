@@ -37,7 +37,7 @@ export function get_cookies(request, url, options) {
 		}
 		// Add all new cookies we might not have seen before
 		for (const name in initial_cookies) {
-			cookie_paths[name] = cookie_paths[name] || new Set();
+			cookie_paths[name] = cookie_paths[name] ?? new Set();
 			if (![...cookie_paths[name]].some((path) => path_matches(normalized_url, path))) {
 				cookie_paths[name].add(default_path);
 			}
@@ -83,9 +83,9 @@ export function get_cookies(request, url, options) {
 				return cookie;
 			}
 
-			const paths = new Set([...(cookie_paths[name] || [])]);
+			const paths = new Set([...(cookie_paths[name] ?? [])]);
 			if (c) {
-				paths.add(c.options.path || default_path);
+				paths.add(c.options.path ?? default_path);
 			}
 			if (paths.size > 0) {
 				console.warn(
@@ -114,7 +114,7 @@ export function get_cookies(request, url, options) {
 			};
 
 			if (options.dev) {
-				cookie_paths[name] = cookie_paths[name] || new Set();
+				cookie_paths[name] = cookie_paths[name] ?? new Set();
 				if (!value) {
 					if (!cookie_paths[name].has(path) && cookie_paths[name].size > 0) {
 						const paths = `'${Array.from(cookie_paths[name]).join("', '")}'`;
