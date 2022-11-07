@@ -708,15 +708,13 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('a: X');
 		expect(await page.textContent('h2')).toBe('b: Y');
 
-		const payload_a = '{"status":200,"statusText":"","headers":{},"body":"X"}';
-		const payload_b = '{"status":200,"statusText":"","headers":{},"body":"Y"}';
-
 		if (!javaScriptEnabled) {
+			const payload_a = '{"status":200,"statusText":"","headers":{},"body":"X"}';
+			const payload_b = '{"status":200,"statusText":"","headers":{},"body":"Y"}';
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents_a = await page.innerHTML(
 				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t25"]'
 			);
-
 			const script_contents_b = await page.innerHTML(
 				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t24"]'
 			);
@@ -726,6 +724,28 @@ test.describe('Load', () => {
 		}
 
 		expect(requests.some((r) => r.endsWith('/load/serialization.json'))).toBe(false);
+	});
+
+	test('POST fetches with Request init are serialized', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/load/serialization-post-request');
+
+		expect(await page.textContent('h1')).toBe('a: X');
+		expect(await page.textContent('h2')).toBe('b: Y');
+
+		if (!javaScriptEnabled) {
+			const payload_a = '{"status":200,"statusText":"","headers":{},"body":"X"}';
+			const payload_b = '{"status":200,"statusText":"","headers":{},"body":"Y"}';
+			// by the time JS has run, hydration will have nuked these scripts
+			const script_contents_a = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t25"]'
+			);
+			const script_contents_b = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t24"]'
+			);
+
+			expect(script_contents_a).toBe(payload_a);
+			expect(script_contents_b).toBe(payload_b);
+		}
 	});
 
 	test('json string is returned', async ({ page }) => {

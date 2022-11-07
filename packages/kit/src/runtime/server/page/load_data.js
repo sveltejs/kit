@@ -104,6 +104,7 @@ export async function load_data({
 		data: server_data_node?.data ?? null,
 		route: event.route,
 		fetch: async (input, init) => {
+			const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
 			const response = await event.fetch(input, init);
 
 			const url = new URL(input instanceof Request ? input.url : input, event.url);
@@ -150,7 +151,11 @@ export async function load_data({
 							fetched.push({
 								url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
 								method: event.request.method,
-								request_body: /** @type {string | ArrayBufferView | undefined} */ (init?.body),
+								request_body: /** @type {string | ArrayBufferView | undefined} */ (
+									input instanceof Request && cloned_body
+										? await stream_to_string(cloned_body)
+										: init?.body
+								),
 								response_body: body,
 								response: response
 							});
@@ -233,4 +238,21 @@ export async function load_data({
 	const data = await node.shared.load.call(null, load_event);
 
 	return data ? unwrap_promises(data) : null;
+}
+
+/**
+ * @param {ReadableStream<Uint8Array>} stream
+ */
+async function stream_to_string(stream) {
+	let result = '';
+	const reader = stream.getReader();
+	const decoder = new TextDecoder();
+	while (true) {
+		const { done, value } = await reader.read();
+		if (done) {
+			break;
+		}
+		result += decoder.decode(value);
+	}
+	return result;
 }
