@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[feat] enable caching for \_\_data.json requests
+[feat] enable caching for `__data.json` requests
