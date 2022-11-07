@@ -718,10 +718,7 @@ test.describe('Load', () => {
 		expect(requests.some((r) => r.endsWith('/load/serialization.json'))).toBe(false);
 	});
 
-	test.only('POST fetches with Request init are serialized', async ({
-		page,
-		javaScriptEnabled
-	}) => {
+	test('POST fetches with Request init are serialized', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/load/serialization-post-request');
 
 		expect(await page.textContent('h1')).toBe('a: X');
