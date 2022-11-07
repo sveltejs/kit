@@ -1,10 +1,10 @@
-import { devalue } from 'devalue';
+import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
-import { add_cookies_to_headers } from '../cookie.js';
+import { clarify_devalue_error } from '../utils.js';
 
 // TODO rename this function/module
 
@@ -18,12 +18,11 @@ const updated = {
  * @param {{
  *   branch: Array<import('./types').Loaded>;
  *   fetched: Array<import('./types').Fetched>;
- *   cookies: import('./types').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
- *   error: App.PageError | null;
+ *   error: App.Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('types').ActionResult;
@@ -32,7 +31,6 @@ const updated = {
 export async function render_response({
 	branch,
 	fetched,
-	cookies,
 	options,
 	state,
 	page_config,
@@ -95,10 +93,11 @@ export async function render_response({
 		props.page = {
 			error,
 			params: /** @type {Record<string, any>} */ (event.params),
-			routeId: event.routeId,
+			route: event.route,
 			status,
 			url: event.url,
-			data
+			data,
+			form: form_value
 		};
 
 		// TODO remove this for 1.0
@@ -137,7 +136,8 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
-	let { head, html: body } = rendered;
+	let head = '';
+	let body = rendered.html;
 
 	const csp = new Csp(options.csp, {
 		dev: options.dev,
@@ -171,52 +171,39 @@ export async function render_response({
 	const serialized = { data: '', form: 'null' };
 
 	try {
-		serialized.data = devalue(branch.map(({ server_data }) => server_data));
+		serialized.data = `[${branch
+			.map(({ server_data }) => {
+				if (server_data?.type === 'data') {
+					const data = devalue.uneval(server_data.data);
+
+					const uses = [];
+					if (server_data.uses.dependencies.size > 0) {
+						uses.push(`dependencies:${s(Array.from(server_data.uses.dependencies))}`);
+					}
+
+					if (server_data.uses.params.size > 0) {
+						uses.push(`params:${s(Array.from(server_data.uses.params))}`);
+					}
+
+					if (server_data.uses.parent) uses.push(`parent:1`);
+					if (server_data.uses.route) uses.push(`route:1`);
+					if (server_data.uses.url) uses.push(`url:1`);
+
+					return `{type:"data",data:${data},uses:{${uses.join(',')}}}`;
+				}
+
+				return s(server_data);
+			})
+			.join(',')}]`;
 	} catch (e) {
-		// If we're here, the data could not be serialized with devalue
-		// TODO if we wanted to get super fancy we could track down the origin of the `load`
-		// function, but it would mean passing more stuff around than we currently do
 		const error = /** @type {any} */ (e);
-		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		if (match) throw new Error(`${error.message} (data.${match[2]})`);
-		throw error;
+		throw new Error(clarify_devalue_error(event, error));
 	}
 
 	if (form_value) {
 		// no need to check it can be serialized, we already verified that it's JSON-friendly
-		serialized.form = devalue(form_value);
+		serialized.form = devalue.uneval(form_value);
 	}
-
-	// prettier-ignore
-	const init_app = `
-		import { start } from ${s(prefixed(entry.file))};
-
-		start({
-			env: ${s(options.public_env)},
-			hydrate: ${page_config.ssr ? `{
-				status: ${status},
-				error: ${s(error)},
-				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
-				params: ${devalue(event.params)},
-				routeId: ${s(event.routeId)},
-				data: ${serialized.data},
-				form: ${serialized.form}
-			}` : 'null'},
-			paths: ${s(options.paths)},
-			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-			trailing_slash: ${s(options.trailing_slash)}
-		});
-	`;
-
-	// we use an anonymous function instead of an arrow function to support
-	// older browsers (https://github.com/sveltejs/kit/pull/5417)
-	const init_service_worker = `
-		if ('serviceWorker' in navigator) {
-			addEventListener('load', function () {
-				navigator.serviceWorker.register('${options.service_worker}');
-			});
-		}
-	`;
 
 	if (inline_styles.size > 0) {
 		const content = Array.from(inline_styles.values()).join('\n');
@@ -248,15 +235,36 @@ export async function render_response({
 		}
 
 		attributes.unshift('rel="stylesheet"');
-		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
+		head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
 	if (page_config.csr) {
+		// prettier-ignore
+		const init_app = `
+			import { start } from ${s(prefixed(entry.file))};
+
+			start({
+				env: ${s(options.public_env)},
+				hydrate: ${page_config.ssr ? `{
+					status: ${status},
+					error: ${devalue.uneval(error)},
+					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
+					params: ${devalue.uneval(event.params)},
+					route: ${s(event.route)},
+					data: ${serialized.data},
+					form: ${serialized.form}
+				}` : 'null'},
+				paths: ${s(options.paths)},
+				target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
+				trailing_slash: ${s(options.trailing_slash)}
+			});
+		`;
+
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
 			if (state.prerendering) {
-				head += `\n\t<link rel="modulepreload" href="${path}">`;
+				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
 			}
 		}
 
@@ -280,11 +288,21 @@ export async function render_response({
 	}
 
 	if (options.service_worker) {
+		// we use an anonymous function instead of an arrow function to support
+		// older browsers (https://github.com/sveltejs/kit/pull/5417)
+		const init_service_worker = `
+			if ('serviceWorker' in navigator) {
+				addEventListener('load', function () {
+					navigator.serviceWorker.register('${prefixed('service-worker.js')}');
+				});
+			}
+		`;
+
 		// always include service worker unless it's turned off explicitly
 		csp.add_script(init_service_worker);
 
 		head += `
-			<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
+		<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
 	}
 
 	if (state.prerendering) {
@@ -304,6 +322,9 @@ export async function render_response({
 			head = http_equiv.join('\n') + head;
 		}
 	}
+
+	// add the content after the script/css links so the link elements are parsed first
+	head += rendered.head;
 
 	// TODO flush chunks as early as we can
 	const html =
@@ -327,8 +348,6 @@ export async function render_response({
 		if (report_only_header) {
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
-
-		add_cookies_to_headers(headers, cookies);
 
 		if (link_header_preloads.size) {
 			headers.set('link', Array.from(link_header_preloads).join(', '));

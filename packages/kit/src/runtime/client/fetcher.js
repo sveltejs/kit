@@ -2,7 +2,7 @@ import { hash } from '../hash.js';
 
 let loading = 0;
 
-const native_fetch = window.fetch;
+export const native_fetch = window.fetch;
 
 export function lock_fetch() {
 	loading += 1;
@@ -29,7 +29,7 @@ if (import.meta.env.DEV) {
 		const heuristic = can_inspect_stack_trace ? stack.includes('load_node') : loading;
 		if (heuristic) {
 			console.warn(
-				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
+				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
 		}
 
@@ -62,16 +62,16 @@ const cache = new Map();
 /**
  * Should be called on the initial run of load functions that hydrate the page.
  * Saves any requests with cache-control max-age to the cache.
- * @param {RequestInfo} resource
+ * @param {RequestInfo | URL} resource
  * @param {string} resolved
  * @param {RequestInit} [opts]
  */
 export function initial_fetch(resource, resolved, opts) {
-	const url = JSON.stringify(typeof resource === 'string' ? resource : resource.url);
+	const url = JSON.stringify(resource instanceof Request ? resource.url : resource);
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
-	if (opts && typeof opts.body === 'string') {
+	if (opts?.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
 		selector += `[data-hash="${hash(opts.body)}"]`;
 	}
 

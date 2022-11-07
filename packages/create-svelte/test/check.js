@@ -62,6 +62,8 @@ test.before(() => {
 });
 
 for (const template of fs.readdirSync('templates')) {
+	if (template[0] === '.') continue;
+
 	for (const types of ['checkjs', 'typescript']) {
 		test(`${template}: ${types}`, () => {
 			const cwd = path.join(test_workspace_dir, `${template}-${types}`);
@@ -110,7 +112,7 @@ for (const template of fs.readdirSync('templates')) {
 			console.group(`${template}-${types}`);
 			for (const script of scripts_to_test.filter((s) => !!pkg.scripts[s])) {
 				try {
-					execSync(`pnpm run ${script}`, { cwd, stdio: 'pipe' });
+					execSync(`pnpm ${script}`, { cwd, stdio: 'pipe' });
 					console.log(`✅ ${script}`);
 				} catch (e) {
 					console.error(`❌ ${script}`);

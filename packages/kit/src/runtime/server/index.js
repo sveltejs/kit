@@ -3,13 +3,21 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
+import { is_form_content_type } from '../../utils/http.js';
 import { GENERIC_ERROR, handle_fatal_error } from './utils.js';
-import { decode_params, disable_search, normalize_path } from '../../utils/url.js';
+import {
+	decode_pathname,
+	decode_params,
+	disable_search,
+	has_data_suffix,
+	normalize_path,
+	strip_data_suffix
+} from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
-import { render_data } from './data/index.js';
-import { DATA_SUFFIX } from '../../constants.js';
+import { INVALIDATED_HEADER, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { HttpError } from '../control.js';
+import { create_fetch } from './fetch.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -23,12 +31,10 @@ export async function respond(request, options, state) {
 	let url = new URL(request.url);
 
 	if (options.csrf.check_origin) {
-		const type = request.headers.get('content-type')?.split(';')[0];
-
 		const forbidden =
 			request.method === 'POST' &&
 			request.headers.get('origin') !== url.origin &&
-			(type === 'application/x-www-form-urlencoded' || type === 'multipart/form-data');
+			is_form_content_type(request);
 
 		if (forbidden) {
 			return new Response(`Cross-site ${request.method} form submissions are forbidden`, {
@@ -39,7 +45,7 @@ export async function respond(request, options, state) {
 
 	let decoded;
 	try {
-		decoded = decodeURI(url.pathname);
+		decoded = decode_pathname(url.pathname);
 	} catch {
 		return new Response('Malformed URI', { status: 400 });
 	}
@@ -57,8 +63,8 @@ export async function respond(request, options, state) {
 		decoded = decoded.slice(options.paths.base.length) || '/';
 	}
 
-	const is_data_request = decoded.endsWith(DATA_SUFFIX);
-	if (is_data_request) decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
+	const is_data_request = has_data_suffix(decoded);
+	if (is_data_request) decoded = strip_data_suffix(decoded) || '/';
 
 	if (!state.prerendering?.fallback) {
 		const matchers = await options.manifest._.matchers();
@@ -67,7 +73,7 @@ export async function respond(request, options, state) {
 			const match = candidate.pattern.exec(decoded);
 			if (!match) continue;
 
-			const matched = exec(match, candidate.names, candidate.types, matchers);
+			const matched = exec(match, candidate, matchers);
 			if (matched) {
 				route = candidate;
 				params = decode_params(matched);
@@ -96,13 +102,15 @@ export async function respond(request, options, state) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
-	const { cookies, new_cookies } = get_cookies(request, url);
+	const { cookies, new_cookies, get_cookie_header } = get_cookies(request, url, options);
 
 	if (state.prerendering) disable_search(url);
 
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		cookies,
+		// @ts-expect-error this is added in the next step, because `create_fetch` needs a reference to `event`
+		fetch: null,
 		getClientAddress:
 			state.getClientAddress ||
 			(() => {
@@ -114,7 +122,7 @@ export async function respond(request, options, state) {
 		params,
 		platform: state.platform,
 		request,
-		routeId: route && route.id,
+		route: { id: route?.id ?? null },
 		setHeaders: (new_headers) => {
 			for (const key in new_headers) {
 				const lower = key.toLowerCase();
@@ -137,6 +145,8 @@ export async function respond(request, options, state) {
 		},
 		url
 	};
+
+	event.fetch = create_fetch({ event, options, state, get_cookie_header });
 
 	// TODO remove this for 1.0
 	/**
@@ -169,7 +179,8 @@ export async function respond(request, options, state) {
 		path: removed('path', 'url.pathname'),
 		query: removed('query', 'url.searchParams'),
 		body: body_getter,
-		rawBody: body_getter
+		rawBody: body_getter,
+		routeId: removed('routeId', 'route.id')
 	});
 
 	/** @type {import('types').RequiredResolveOptions} */
@@ -215,7 +226,6 @@ export async function respond(request, options, state) {
 					error: null,
 					branch: [],
 					fetched: [],
-					cookies: [],
 					resolve_opts
 				});
 			}
@@ -235,17 +245,6 @@ export async function respond(request, options, state) {
 					// doesn't know that
 					throw new Error('This should never happen');
 				}
-
-				if (!is_data_request) {
-					// we only want to set cookies on __data.js requests, we don't
-					// want to cache stuff erroneously etc
-					for (const key in headers) {
-						const value = headers[key];
-						response.headers.set(key, /** @type {string} */ (value));
-					}
-				}
-
-				add_cookies_to_headers(response.headers, Array.from(new_cookies.values()));
 
 				return response;
 			}
@@ -294,7 +293,33 @@ export async function respond(request, options, state) {
 	try {
 		const response = await options.hooks.handle({
 			event,
-			resolve,
+			resolve: (event, opts) =>
+				resolve(event, opts).then((response) => {
+					// add headers/cookies here, rather than inside `resolve`, so that we
+					// can do it once for all responses instead of once per `return`
+					for (const key in headers) {
+						const value = headers[key];
+						response.headers.set(key, /** @type {string} */ (value));
+					}
+
+					if (is_data_request) {
+						// set the Vary header on __data.json requests to ensure we don't cache
+						// incomplete responses with skipped data loads
+						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary
+						const vary = response.headers.get('Vary');
+						if (vary !== '*') {
+							response.headers.append('Vary', INVALIDATED_HEADER);
+						}
+					}
+
+					add_cookies_to_headers(response.headers, Object.values(new_cookies));
+
+					if (state.prerendering && event.route.id !== null) {
+						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+					}
+
+					return response;
+				}),
 			// TODO remove for 1.0
 			// @ts-expect-error
 			get request() {
@@ -316,8 +341,15 @@ export async function respond(request, options, state) {
 			if (if_none_match_value === etag) {
 				const headers = new Headers({ etag });
 
-				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
-				for (const key of ['cache-control', 'content-location', 'date', 'expires', 'vary']) {
+				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
+				for (const key of [
+					'cache-control',
+					'content-location',
+					'date',
+					'expires',
+					'vary',
+					'set-cookie'
+				]) {
 					const value = response.headers.get(key);
 					if (value) headers.set(key, value);
 				}

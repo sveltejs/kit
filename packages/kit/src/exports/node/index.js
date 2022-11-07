@@ -1,4 +1,5 @@
 import * as set_cookie_parser from 'set-cookie-parser';
+import { error } from '../index.js';
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -27,7 +28,8 @@ function get_raw_body(req, body_size_limit) {
 		if (!length) {
 			length = body_size_limit;
 		} else if (length > body_size_limit) {
-			throw new Error(
+			throw error(
+				413,
 				`Received content-length of ${length}, but only accept up to ${body_size_limit} bytes.`
 			);
 		}
@@ -45,6 +47,7 @@ function get_raw_body(req, body_size_limit) {
 	return new ReadableStream({
 		start(controller) {
 			req.on('error', (error) => {
+				cancelled = true;
 				controller.error(error);
 			});
 
@@ -58,8 +61,10 @@ function get_raw_body(req, body_size_limit) {
 
 				size += chunk.length;
 				if (size > length) {
-					req.destroy(
-						new Error(
+					cancelled = true;
+					controller.error(
+						error(
+							413,
 							`request body size exceeded ${
 								content_length ? "'content-length'" : 'BODY_SIZE_LIMIT'
 							} of ${length}`
@@ -89,21 +94,11 @@ function get_raw_body(req, body_size_limit) {
 
 /** @type {import('@sveltejs/kit/node').getRequest} */
 export async function getRequest({ request, base, bodySizeLimit }) {
-	let headers = /** @type {Record<string, string>} */ (request.headers);
-	if (request.httpVersionMajor === 2) {
-		// we need to strip out the HTTP/2 pseudo-headers because node-fetch's
-		// Request implementation doesn't like them
-		// TODO is this still true with Node 18
-		headers = Object.assign({}, headers);
-		delete headers[':method'];
-		delete headers[':path'];
-		delete headers[':authority'];
-		delete headers[':scheme'];
-	}
-
 	return new Request(base + request.url, {
+		// @ts-expect-error
+		duplex: 'half',
 		method: request.method,
-		headers,
+		headers: /** @type {Record<string, string>} */ (request.headers),
 		body: get_raw_body(request, bodySizeLimit)
 	});
 }

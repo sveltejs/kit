@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="theme-default typo-default">
+<html lang="en" class="theme-default typo-default no-js">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
@@ -13,6 +13,27 @@
 		<meta name="twitter:creator" content="@sveltejs" />
 		<meta name="twitter:image" content="/images/twitter-thumbnail.jpg" />
 		<meta name="og:image" content="/images/twitter-thumbnail.jpg" />
+
+		<!-- add inline style and blocking script to prevent content flash/jump -->
+		<style>
+			.code-block.ts-version {
+				display: none;
+			}
+			.prefers-ts .code-block.js-version {
+				display: none;
+			}
+			.prefers-ts .code-block.ts-version {
+				display: block;
+			}
+			.no-js .ts-toggle {
+				display: none;
+			}
+		</style>
+		<script>
+			document.getElementsByTagName('html')[0].classList.remove('no-js');
+			localStorage.getItem('prefers-ts') === 'true' &&
+				document.documentElement.classList.add('prefers-ts');
+		</script>
 
 		%sveltekit.head%
 	</head>

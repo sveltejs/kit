@@ -5,6 +5,7 @@ declare global {
 		pageContext: any;
 		mounted: number;
 		fulfil_navigation: (value: any) => void;
+		promise: Promise<any>;
 	}
 }
 

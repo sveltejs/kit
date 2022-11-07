@@ -1,6 +1,7 @@
 import fs from 'fs';
 import * as vite from 'vite';
 import { s } from '../../../utils/misc.js';
+import { get_config_aliases } from '../utils.js';
 import { assets_base } from './utils.js';
 
 /**
@@ -16,7 +17,7 @@ import { assets_base } from './utils.js';
  * @param {import('vite').Manifest} client_manifest
  */
 export async function build_service_worker(
-	{ config, manifest_data, output_dir, service_worker_entry_file },
+	{ config, vite_config, manifest_data, output_dir, service_worker_entry_file },
 	prerendered,
 	client_manifest
 ) {
@@ -79,12 +80,13 @@ export async function build_service_worker(
 			outDir: `${output_dir}/client`,
 			emptyOutDir: false
 		},
+		define: vite_config.define,
 		configFile: false,
 		resolve: {
-			alias: {
-				'$service-worker': service_worker,
-				$lib: config.kit.files.lib
-			}
+			alias: [
+				...get_config_aliases(config.kit),
+				{ find: '$service-worker', replacement: service_worker }
+			]
 		}
 	});
 }

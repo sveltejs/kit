@@ -1,7 +1,7 @@
 export class HttpError {
 	/**
 	 * @param {number} status
-	 * @param {{message: string} extends App.PageError ? (App.PageError | string | undefined) : App.PageError} body
+	 * @param {{message: string} extends App.Error ? (App.Error | string | undefined) : App.Error} body
 	 */
 	constructor(status, body) {
 		this.status = status;

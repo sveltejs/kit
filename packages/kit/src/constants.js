@@ -3,5 +3,3 @@
 export const SVELTE_KIT_ASSETS = '/_svelte_kit_assets';
 
 export const GENERATED_COMMENT = '// this file is generated — do not edit it\n';
-
-export const DATA_SUFFIX = '/__data.js';

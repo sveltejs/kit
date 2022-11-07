@@ -25,11 +25,9 @@ test('renders a server-side redirect', () => {
 	const html = read('redirect-server.html');
 	assert.equal(html, '<meta http-equiv="refresh" content="0;url=https://example.com/redirected">');
 
-	const code = read('redirect-server/__data.js');
-	const window = {};
-	new Function('window', code)(window);
+	const data = JSON.parse(read('redirect-server/__data.json'));
 
-	assert.equal(window.__sveltekit_data, {
+	assert.equal(data, {
 		type: 'redirect',
 		location: 'https://example.com/redirected'
 	});
@@ -77,31 +75,29 @@ test('loads a file with spaces in the filename', () => {
 	assert.ok(content.includes('<h1>answer: 42</h1>'), content);
 });
 
-test('generates __data.js file for shadow endpoints', () => {
-	const window = {};
-
-	new Function('window', read('__data.js'))(window);
-	assert.equal(window.__sveltekit_data, {
+test('generates __data.json file for shadow endpoints', () => {
+	let data = JSON.parse(read('__data.json'));
+	assert.equal(data, {
 		type: 'data',
 		nodes: [
 			null,
 			{
 				type: 'data',
-				data: { message: 'hello' },
-				uses: { dependencies: undefined, params: undefined, parent: undefined, url: undefined }
+				data: [{ message: 1 }, 'hello'],
+				uses: {}
 			}
 		]
 	});
 
-	new Function('window', read('shadowed-get/__data.js'))(window);
-	assert.equal(window.__sveltekit_data, {
+	data = JSON.parse(read('shadowed-get/__data.json'));
+	assert.equal(data, {
 		type: 'data',
 		nodes: [
 			null,
 			{
 				type: 'data',
-				data: { answer: 42 },
-				uses: { dependencies: undefined, params: undefined, parent: undefined, url: undefined }
+				data: [{ answer: 1 }, 42],
+				uses: {}
 			}
 		]
 	});
@@ -109,7 +105,7 @@ test('generates __data.js file for shadow endpoints', () => {
 
 test('does not prerender page with shadow endpoint with non-load handler', () => {
 	assert.ok(!fs.existsSync(`${build}/shadowed-post.html`));
-	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.js`));
+	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 
 test('decodes paths when writing files', () => {
@@ -183,17 +179,16 @@ test('prerenders binary data', async () => {
 });
 
 test('fetches data from local endpoint', () => {
-	const window = {};
-	new Function('window', read('origin/__data.js'))(window);
+	const data = JSON.parse(read('origin/__data.json'));
 
-	assert.equal(window.__sveltekit_data, {
+	assert.equal(data, {
 		type: 'data',
 		nodes: [
 			null,
 			{
 				type: 'data',
-				data: { message: 'hello' },
-				uses: { dependencies: undefined, params: undefined, parent: undefined, url: undefined }
+				data: [{ message: 1 }, 'hello'],
+				uses: {}
 			}
 		]
 	});
@@ -223,6 +218,16 @@ test('$env - includes environment variables', () => {
 test('prerenders a page in a (group)', () => {
 	const content = read('grouped.html');
 	assert.ok(content.includes('<h1>grouped</h1>'));
+});
+
+test('injects relative service worker', () => {
+	const content = read('index.html');
+	assert.ok(content.includes(`navigator.serviceWorker.register('./service-worker.js')`));
+});
+
+test('define service worker variables', () => {
+	const content = read('service-worker.js');
+	assert.ok(content.includes(`MY_ENV DEFINED`));
 });
 
 test.run();

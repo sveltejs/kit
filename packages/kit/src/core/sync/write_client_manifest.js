@@ -99,7 +99,7 @@ export function write_client_manifest(config, manifest_data, output) {
 			export const hooks = {
 				handleError: ${
 					hooks_file ? 'client_hooks.handleError || ' : ''
-				}(({ error }) => { console.error(error); return { message: 'Internal Error' }; }),
+				}(({ error }) => { console.error(error) }),
 			};
 		`)
 	);

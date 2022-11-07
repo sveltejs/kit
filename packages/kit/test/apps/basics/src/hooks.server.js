@@ -38,13 +38,25 @@ export const handleError = ({ event, error: e }) => {
 
 export const handle = sequence(
 	({ event, resolve }) => {
-		event.locals.key = event.routeId;
+		event.locals.key = event.route.id;
 		event.locals.params = event.params;
 		event.locals.answer = 42;
 		return resolve(event);
 	},
 	({ event, resolve }) => {
-		event.locals.name = /** @type {string} */ (event.cookies.get('name'));
+		if (event.url.pathname.includes('fetch-credentialed')) {
+			// Only get the cookie at the test where we know it's set to avoid polluting our logs with (correct) warnings
+			event.locals.name = /** @type {string} */ (event.cookies.get('name'));
+		}
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname === '/cookies/serialize') {
+			event.cookies.set('before', 'before');
+			const response = await resolve(event);
+			response.headers.append('set-cookie', event.cookies.serialize('after', 'after'));
+			return response;
+		}
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {

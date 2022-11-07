@@ -1,5 +1,35 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.40
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.39
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
+## 1.0.0-next.38
+
+### Patch Changes
+
+- Ensure all excluded paths in `_routes.json` start with / ([#6952](https://github.com/sveltejs/kit/pull/6952))
+
+## 1.0.0-next.37
+
+### Patch Changes
+
+- Support Cloudflare Pages `_routes.json` specification ([#6530](https://github.com/sveltejs/kit/pull/6530))
+
+## 1.0.0-next.36
+
+### Patch Changes
+
+- Include ambient.d.ts files in adapter packages. ([#6917](https://github.com/sveltejs/kit/pull/6917))
+
 ## 1.0.0-next.35
 
 ### Patch Changes
@@ -62,7 +92,7 @@
 
 ## 1.0.0-next.25
 
-### Minor Changes
+### Patch Changes
 
 - Expose Cloudflare Worker Cache API through `caches` in Platform ([#5081](https://github.com/sveltejs/kit/pull/5081))
 

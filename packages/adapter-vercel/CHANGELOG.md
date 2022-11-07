@@ -1,5 +1,35 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.81
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.80
+
+### Patch Changes
+
+- [fix] don't fail on unknown error message ([#7312](https://github.com/sveltejs/kit/pull/7312))
+
+## 1.0.0-next.79
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
+## 1.0.0-next.78
+
+### Patch Changes
+
+- Transfer server data as devalue-encoded JSON ([#7177](https://github.com/sveltejs/kit/pull/7177))
+
+## 1.0.0-next.77
+
+### Patch Changes
+
+- Redact error message if `getRequest` fails ([#6936](https://github.com/sveltejs/kit/pull/6936))
+
 ## 1.0.0-next.76
 
 ### Patch Changes

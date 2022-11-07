@@ -56,10 +56,11 @@ export const test = base.extend({
 		 * @param {{ timeout: number }} options
 		 */
 		async function clicknav(selector, options) {
+			const element = page.locator(selector);
 			if (javaScriptEnabled) {
-				await Promise.all([page.waitForNavigation(options), page.click(selector)]);
+				await Promise.all([page.waitForNavigation(options), element.click()]);
 			} else {
-				await page.click(selector);
+				await element.click();
 			}
 		}
 
@@ -137,10 +138,10 @@ export const config = {
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
+		command: process.env.DEV ? 'pnpm dev' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 4173
 	},
-	retries: process.env.CI ? 5 : 0,
+	retries: process.env.CI ? 2 : 0,
 	projects: [
 		{
 			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
