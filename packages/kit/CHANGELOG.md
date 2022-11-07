@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.537
+
+### Patch Changes
+
+- [feat] better navigation interfaces ([#7529](https://github.com/sveltejs/kit/pull/7529))
+
 ## 1.0.0-next.536
 
 ### Patch Changes
