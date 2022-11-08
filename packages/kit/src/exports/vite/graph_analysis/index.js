@@ -12,13 +12,9 @@ const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
  * }} dirs
  */
 export function is_illegal(id, dirs) {
+	if (ILLEGAL_IMPORTS.has(id)) return true;
 	if (!id.startsWith(dirs.cwd) || id.startsWith(dirs.node_modules)) return false;
-
-	return (
-		ILLEGAL_IMPORTS.has(id) ||
-		ILLEGAL_MODULE_NAME_PATTERN.test(path.basename(id)) ||
-		id.startsWith(dirs.server)
-	);
+	return ILLEGAL_MODULE_NAME_PATTERN.test(path.basename(id)) || id.startsWith(dirs.server);
 }
 
 /**

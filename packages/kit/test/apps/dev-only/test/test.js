@@ -3,14 +3,10 @@ import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
-test.describe.configure({ mode: 'parallel' });
+test.describe.serial('Illegal imports', () => {
+	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
 
-test.describe.serial.only('Illegal imports', () => {
-	test.skip(() => !process.env.DEV);
-
-	test.only('$env/dynamic/private is not statically importable from the client', async ({
-		page
-	}) => {
+	test('$env/dynamic/private is not statically importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/env/dynamic-private');
 		expect(await page.textContent('.message-body')).toBe(
 			'Cannot import \0$env/dynamic/private into client-side code'
