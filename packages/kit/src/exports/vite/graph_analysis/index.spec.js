@@ -1,3 +1,4 @@
+import path from 'path';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { module_guard } from './index.js';
