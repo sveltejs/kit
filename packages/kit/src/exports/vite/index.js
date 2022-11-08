@@ -362,7 +362,10 @@ function kit() {
 					return;
 				}
 
-				const guard = module_guard(this, vite.normalizePath(svelte_config.kit.files.lib));
+				const guard = module_guard(this, {
+					cwd: vite.normalizePath(process.cwd()),
+					lib: vite.normalizePath(svelte_config.kit.files.lib)
+				});
 
 				manifest_data.nodes.forEach((_node, i) => {
 					const id = vite.normalizePath(

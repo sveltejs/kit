@@ -1,21 +1,18 @@
 import path from 'path';
-import { normalizePath } from 'vite';
 
-const cwd = normalizePath(process.cwd());
-const node_modules = normalizePath(path.resolve(process.cwd(), 'node_modules'));
 const ILLEGAL_IMPORTS = new Set(['\0$env/dynamic/private', '\0$env/static/private']);
 const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
 
 /**
  * @param {import('rollup').PluginContext} context
- * @param {string} lib
+ * @param {{ cwd: string, lib: string }} paths
  */
-export function module_guard(context, lib) {
+export function module_guard(context, { cwd, lib }) {
 	/** @type {Set<string>} */
 	const safe = new Set();
 
-	const lib_dir = normalizePath(lib);
-	const server_dir = normalizePath(path.resolve(lib, 'server'));
+	const node_modules = path.join(cwd, 'node_modules');
+	const server_dir = path.join(lib, 'server');
 
 	/**
 	 * @param {string} id
@@ -33,12 +30,12 @@ export function module_guard(context, lib) {
 		) {
 			chain.shift(); // discard the entry point
 
-			if (id.startsWith(lib_dir)) id = id.replace(lib_dir, '$lib');
+			if (id.startsWith(lib)) id = id.replace(lib, '$lib');
 			if (id.startsWith(cwd)) id = path.relative(cwd, id);
 
 			const pyramid =
 				chain.map(({ id, dynamic }, i) => {
-					if (id.startsWith(lib_dir)) id = id.replace(lib_dir, '$lib');
+					if (id.startsWith(lib)) id = id.replace(lib, '$lib');
 					if (id.startsWith(cwd)) id = path.relative(cwd, id);
 
 					return `${repeat(' ', i * 2)}- ${id} ${dynamic ? 'dynamically imports' : 'imports'}\n`;
