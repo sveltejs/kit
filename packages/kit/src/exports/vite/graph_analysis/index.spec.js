@@ -30,6 +30,7 @@ function check(graph, expected_error) {
 			guard.check('~/src/entry');
 			throw new Error('Expected an error');
 		} catch (e) {
+			// @ts-expect-error
 			assert.equal(e.message, expected_error.replace(/^\t+/gm, ''));
 		}
 	} else {
