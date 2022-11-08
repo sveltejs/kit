@@ -21,7 +21,7 @@ export function module_guard(context, lib) {
 	 * @param {string} id
 	 * @param {Array<{ id: string, dynamic: boolean }>} chain
 	 */
-	function follow(id, chain = []) {
+	function follow(id, chain) {
 		if (safe.has(id)) return;
 
 		if (
