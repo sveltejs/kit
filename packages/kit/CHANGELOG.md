@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.539
+
+### Patch Changes
+
+- Omit prerendered routes from server manifest ([#7541](https://github.com/sveltejs/kit/pull/7541))
+
 ## 1.0.0-next.538
 
 ### Patch Changes
