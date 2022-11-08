@@ -12,7 +12,7 @@ import { load_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { get_option } from '../../runtime/server/utils.js';
 
-const [, , client_out_dir, results_path, verbose, env] = process.argv;
+const [, , client_out_dir, manifest_path, results_path, verbose, env] = process.argv;
 
 prerender();
 
@@ -108,7 +108,7 @@ export async function prerender() {
 	const { Server, override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 
 	/** @type {import('types').SSRManifest} */
-	const manifest = (await import(pathToFileURL(`${server_root}/server/manifest.js`).href)).manifest;
+	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	override({
 		paths: config.paths,
