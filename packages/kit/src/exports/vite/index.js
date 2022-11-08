@@ -17,7 +17,7 @@ import { preview } from './preview/index.js';
 import { get_config_aliases, get_app_aliases, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
-import { module_guard } from './graph_analysis/index.js';
+import { is_illegal, module_guard } from './graph_analysis/index.js';
 
 const cwd = process.cwd();
 
@@ -294,13 +294,18 @@ function kit() {
 
 		async load(id, options) {
 			if (options?.ssr === false) {
-				// TODO this is incomplete — we need to replicate the #is_illegal logic
 				if (
-					id.endsWith('.server.js') ||
-					id === '\0$env/static/private' ||
-					id === '\0$env/dynamic/private'
+					is_illegal(id, {
+						cwd: vite.normalizePath(cwd),
+						node_modules: vite.normalizePath(path.join(cwd, 'node_modules')),
+						server: vite.normalizePath(path.join(svelte_config.kit.files.lib, 'server'))
+					})
 				) {
-					const relative = id.startsWith(process.cwd()) ? path.relative('.', id) : id;
+					const relative = id.startsWith(svelte_config.kit.files.lib)
+						? id.replace(svelte_config.kit.files.lib, '$lib')
+						: id.startsWith(cwd)
+						? path.relative('.', id)
+						: id;
 					throw new Error(`Cannot import ${relative} into client-side code`);
 				}
 			}

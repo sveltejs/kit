@@ -4,30 +4,46 @@ const ILLEGAL_IMPORTS = new Set(['\0$env/dynamic/private', '\0$env/static/privat
 const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
 
 /**
+ * @param {string} id
+ * @param {{
+ *   cwd: string;
+ *   node_modules: string;
+ *   server: string;
+ * }} dirs
+ */
+export function is_illegal(id, dirs) {
+	if (!id.startsWith(dirs.cwd) || id.startsWith(dirs.node_modules)) return false;
+
+	return (
+		ILLEGAL_IMPORTS.has(id) ||
+		ILLEGAL_MODULE_NAME_PATTERN.test(path.basename(id)) ||
+		id.startsWith(dirs.server)
+	);
+}
+
+/**
  * @param {import('rollup').PluginContext} context
  * @param {{ cwd: string, lib: string }} paths
  */
 export function module_guard(context, { cwd, lib }) {
 	/** @type {Set<string>} */
-	const safe = new Set();
+	const seen = new Set();
 
-	const node_modules = path.join(cwd, 'node_modules');
-	const server_dir = path.join(lib, 'server');
+	const dirs = {
+		cwd,
+		node_modules: path.join(cwd, 'node_modules'),
+		server: path.join(lib, 'server')
+	};
 
 	/**
 	 * @param {string} id
 	 * @param {Array<{ id: string, dynamic: boolean }>} chain
 	 */
 	function follow(id, chain) {
-		if (safe.has(id)) return;
+		if (seen.has(id)) return;
+		seen.add(id);
 
-		if (
-			ILLEGAL_IMPORTS.has(id) ||
-			id.startsWith(server_dir) ||
-			(ILLEGAL_MODULE_NAME_PATTERN.test(path.basename(id)) &&
-				id.startsWith(cwd) &&
-				!id.startsWith(node_modules))
-		) {
+		if (is_illegal(id, dirs)) {
 			chain.shift(); // discard the entry point
 
 			if (id.startsWith(lib)) id = id.replace(lib, '$lib');
@@ -57,8 +73,6 @@ export function module_guard(context, { cwd, lib }) {
 				follow(child, [...chain, { id, dynamic: true }]);
 			}
 		}
-
-		safe.add(id);
 	}
 
 	return {
