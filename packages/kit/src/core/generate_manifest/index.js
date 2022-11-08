@@ -14,11 +14,11 @@ import { compact } from '../../utils/array.js';
  * }} opts
  */
 export function generate_manifest({ build_data, relative_path, routes, format = 'esm' }) {
-	/** 
+	/**
 	 * @type {Map<any, number>} The new index of each node in the filtered nodes array
 	 */
 	const reindexed = new Map();
-	/** 
+	/**
 	 * @type {Set<any>} All nodes actually used in the routes definition (prerendered routes are omitted)
 	 */
 	const used_nodes = new Set();
