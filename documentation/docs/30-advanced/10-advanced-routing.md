@@ -67,7 +67,7 @@ export function load(event) {
 
 A route like `[lang]/home` contains a parameter named `lang` which is required. Sometimes it's beneficial to make these parameters optional, so that in this example both `home` and `en/home` point to the same page. You can do that by wrapping the parameter in another bracket pair: `[[lang]]/home`
 
-Note that an optional route parameter cannot follow a rest parameter (`[...rest]/[[optional]]`), since parameters are matched 'greedily' and the optional parameter would always be unused.
+Note that an optional route parameter cannot follow a rest parameter (`[...rest]/[[optional]]`), since parameters are matched 'greedily' and the optional parameter would always be unused. For the same reason (greedy matching), a route like `[[optional=matcher]]/[...rest]` will _always_ assign the first route segment to the optional parameter - so if the matcher says the route doesn't fit, it's discarded instead of assigning the route segment to the `[...rest]` parameter.
 
 ### Matching
 
