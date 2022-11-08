@@ -1,30 +1,26 @@
+import glob from 'tiny-glob';
+import zlib from 'zlib';
+import { existsSync, statSync, createReadStream, createWriteStream } from 'fs';
+import { pipeline } from 'stream';
+import { promisify } from 'util';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
+import { get_route_segments } from '../../utils/routing.js';
+
+const pipe = promisify(pipeline);
 
 /**
  * Creates the Builder which is passed to adapters for building the application.
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   build_data: import('types').BuildData;
+ *   routes: import('types').RouteData[];
  *   prerendered: import('types').Prerendered;
  *   log: import('types').Logger;
  * }} opts
  * @returns {import('types').Builder}
  */
-export function create_builder({ config, build_data, prerendered, log }) {
-	/** @type {Set<string>} */
-	const prerendered_paths = new Set(prerendered.paths);
-
-	/** @param {import('types').RouteData} route */
-	// TODO routes should come pre-filtered
-	function not_prerendered(route) {
-		if (route.type === 'page' && route.path) {
-			return !prerendered_paths.has(route.path);
-		}
-
-		return true;
-	}
-
+export function create_builder({ config, build_data, routes, prerendered, log }) {
 	return {
 		log,
 		rimraf,
@@ -35,20 +31,32 @@ export function create_builder({ config, build_data, prerendered, log }) {
 		prerendered,
 
 		async createEntries(fn) {
-			const { routes } = build_data.manifest_data;
-
 			/** @type {import('types').RouteDefinition[]} */
-			const facades = routes.map((route) => ({
-				id: route.id,
-				type: route.type,
-				segments: route.id.split('/').map((segment) => ({
-					dynamic: segment.includes('['),
-					rest: segment.includes('[...'),
-					content: segment
-				})),
-				pattern: route.pattern,
-				methods: route.type === 'page' ? ['get'] : build_data.server.methods[route.file]
-			}));
+			const facades = routes.map((route) => {
+				/** @type {Set<import('types').HttpMethod>} */
+				const methods = new Set();
+
+				if (route.page) {
+					methods.add('GET');
+				}
+
+				if (route.endpoint) {
+					for (const method of build_data.server.methods[route.endpoint.file]) {
+						methods.add(method);
+					}
+				}
+
+				return {
+					id: route.id,
+					segments: get_route_segments(route.id).map((segment) => ({
+						dynamic: segment.includes('['),
+						rest: segment.includes('[...'),
+						content: segment
+					})),
+					pattern: route.pattern,
+					methods: Array.from(methods)
+				};
+			});
 
 			const seen = new Set();
 
@@ -68,12 +76,13 @@ export function create_builder({ config, build_data, prerendered, log }) {
 					}
 				}
 
-				const filtered = new Set(group.filter(not_prerendered));
+				const filtered = new Set(group);
 
 				// heuristic: if /foo/[bar] is included, /foo/[bar].json should
 				// also be included, since the page likely needs the endpoint
+				// TODO is this still necessary, given the new way of doing things?
 				filtered.forEach((route) => {
-					if (route.type === 'page') {
+					if (route.page) {
 						const endpoint = routes.find((candidate) => candidate.id === route.id + '.json');
 
 						if (endpoint) {
@@ -100,7 +109,7 @@ export function create_builder({ config, build_data, prerendered, log }) {
 			return generate_manifest({
 				build_data,
 				relative_path: relativePath,
-				routes: build_data.manifest_data.routes.filter(not_prerendered),
+				routes,
 				format
 			});
 		},
@@ -121,8 +130,12 @@ export function create_builder({ config, build_data, prerendered, log }) {
 			return config.kit.files.assets;
 		},
 
+		getAppPath() {
+			return build_data.app_path;
+		},
+
 		writeClient(dest) {
-			return copy(`${config.kit.outDir}/output/client`, dest);
+			return [...copy(`${config.kit.outDir}/output/client`, dest)];
 		},
 
 		writePrerendered(dest, { fallback } = {}) {
@@ -141,15 +154,59 @@ export function create_builder({ config, build_data, prerendered, log }) {
 			return copy(`${config.kit.outDir}/output/server`, dest);
 		},
 
-		writeStatic(dest) {
-			return copy(config.kit.files.assets, dest);
+		// TODO remove these methods for 1.0
+		// @ts-expect-error
+		writeStatic() {
+			throw new Error(
+				`writeStatic has been removed. Please ensure you are using the latest version of ${
+					config.kit.adapter.name || 'your adapter'
+				}`
+			);
 		},
 
-		// @ts-expect-error
+		async compress(directory) {
+			if (!existsSync(directory)) {
+				return;
+			}
+
+			const files = await glob('**/*.{html,js,json,css,svg,xml,wasm}', {
+				cwd: directory,
+				dot: true,
+				absolute: true,
+				filesOnly: true
+			});
+
+			await Promise.all(
+				files.map((file) => Promise.all([compress_file(file, 'gz'), compress_file(file, 'br')]))
+			);
+		},
+
 		async prerender() {
 			throw new Error(
 				'builder.prerender() has been removed. Prerendering now takes place in the build phase — see builder.prerender and builder.writePrerendered'
 			);
 		}
 	};
+}
+
+/**
+ * @param {string} file
+ * @param {'gz' | 'br'} format
+ */
+async function compress_file(file, format = 'gz') {
+	const compress =
+		format == 'br'
+			? zlib.createBrotliCompress({
+					params: {
+						[zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
+						[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
+						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
+					}
+			  })
+			: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
+
+	const source = createReadStream(file);
+	const destination = createWriteStream(`${file}.${format}`);
+
+	await pipe(source, compress, destination);
 }

@@ -1,5 +1,6 @@
 import { getContext } from 'svelte';
-import { browser } from './env.js';
+import { browser } from './environment.js';
+import { stores as browser_stores } from '../client/singletons.js';
 
 // TODO remove this (for 1.0? after 1.0?)
 let warned = false;
@@ -15,26 +16,39 @@ export function stores() {
  * @type {import('$app/stores').getStores}
  */
 export const getStores = () => {
-	const stores = getContext('__svelte__');
+	const stores = browser ? browser_stores : getContext('__svelte__');
 
-	return {
+	const readonly_stores = {
 		page: {
 			subscribe: stores.page.subscribe
 		},
 		navigating: {
 			subscribe: stores.navigating.subscribe
 		},
-		// TODO remove this (for 1.0? after 1.0?)
-		// @ts-expect-error - deprecated, not part of type definitions, but still callable
-		get preloading() {
-			console.error('stores.preloading is deprecated; use stores.navigating instead');
-			return {
-				subscribe: stores.navigating.subscribe
-			};
-		},
-		session: stores.session,
 		updated: stores.updated
 	};
+
+	// TODO remove this for 1.0
+	Object.defineProperties(readonly_stores, {
+		preloading: {
+			get() {
+				console.error('stores.preloading is deprecated; use stores.navigating instead');
+				return {
+					subscribe: stores.navigating.subscribe
+				};
+			},
+			enumerable: false
+		},
+		session: {
+			get() {
+				removed_session();
+				return {};
+			},
+			enumerable: false
+		}
+	});
+
+	return readonly_stores;
 };
 
 /** @type {typeof import('$app/stores').page} */
@@ -54,29 +68,17 @@ export const navigating = {
 	}
 };
 
-/** @param {string} verb */
-const throw_error = (verb) => {
+function removed_session() {
+	// TODO remove for 1.0
 	throw new Error(
-		browser
-			? `Cannot ${verb} session store before subscribing`
-			: `Can only ${verb} session store in browser`
+		'stores.session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
 	);
-};
+}
 
-/** @type {typeof import('$app/stores').session} */
 export const session = {
-	subscribe(fn) {
-		const store = getStores().session;
-
-		if (browser) {
-			session.set = store.set;
-			session.update = store.update;
-		}
-
-		return store.subscribe(fn);
-	},
-	set: () => throw_error('set'),
-	update: () => throw_error('update')
+	subscribe: removed_session,
+	set: removed_session,
+	update: removed_session
 };
 
 /** @type {typeof import('$app/stores').updated} */
@@ -90,5 +92,11 @@ export const updated = {
 
 		return store.subscribe(fn);
 	},
-	check: () => throw_error('check')
+	check: () => {
+		throw new Error(
+			browser
+				? `Cannot check updated store before subscribing`
+				: `Can only check updated store in browser`
+		);
+	}
 };

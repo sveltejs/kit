@@ -3,6 +3,8 @@ import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
+test.describe.configure({ mode: 'parallel' });
+
 test.describe('base path', () => {
 	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
 		const response = await request.get('/');
@@ -22,15 +24,13 @@ test.describe('base path', () => {
 		);
 	});
 
-	// TODO re-enable these once we upgrade to Vite 3
-	// https://github.com/sveltejs/kit/pull/4891#issuecomment-1125471630
-	test.skip('sets_paths', async ({ page }) => {
+	test('sets_paths', async ({ page }) => {
 		await page.goto('/path-base/base/');
 		expect(await page.textContent('[data-source="base"]')).toBe('/path-base');
 		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets');
 	});
 
-	test.skip('loads javascript', async ({ page, javaScriptEnabled }) => {
+	test('loads javascript', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
 		expect(await page.textContent('button')).toBe('clicks: 0');
 
@@ -40,7 +40,7 @@ test.describe('base path', () => {
 		}
 	});
 
-	test.skip('loads CSS', async ({ page }) => {
+	test('loads CSS', async ({ page }) => {
 		await page.goto('/path-base/base/');
 		expect(
 			await page.evaluate(() => {
@@ -50,7 +50,7 @@ test.describe('base path', () => {
 		).toBe('rgb(255, 0, 0)');
 	});
 
-	test.skip('inlines CSS', async ({ page, javaScriptEnabled }) => {
+	test('inlines CSS', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
 		if (process.env.DEV) {
 			const ssr_style = await page.evaluate(() => document.querySelector('style[data-sveltekit]'));
@@ -76,7 +76,7 @@ test.describe('base path', () => {
 		}
 	});
 
-	test.skip('sets params correctly', async ({ page, clicknav }) => {
+	test('sets params correctly', async ({ page, clicknav }) => {
 		await page.goto('/path-base/base/one');
 
 		expect(await page.textContent('h2')).toBe('one');
@@ -132,6 +132,13 @@ test.describe('Custom extensions', () => {
 	});
 });
 
+test.describe('env', () => {
+	test('resolves downwards', async ({ page }) => {
+		await page.goto('/path-base/env');
+		expect(await page.textContent('p')).toBe('and thank you');
+	});
+});
+
 test.describe('trailingSlash', () => {
 	test('adds trailing slash', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/path-base/slash');
@@ -154,18 +161,58 @@ test.describe('trailingSlash', () => {
 		expect(await r2.text()).toBe('hi');
 	});
 
-	test('can fetch data from page-endpoint', async ({ request, baseURL }) => {
+	test('can fetch data from page-endpoint', async ({ request }) => {
 		const r = await request.get('/path-base/page-endpoint/__data.json');
-		expect(r.url()).toBe(`${baseURL}/path-base/page-endpoint/__data.json`);
-		expect(await r.json()).toEqual({ data: 'hi' });
+		const data = await r.json();
+
+		expect(data).toEqual({
+			type: 'data',
+			nodes: [null, { type: 'data', data: [{ message: 1 }, 'hi'], uses: {} }]
+		});
+	});
+
+	test('accounts for trailingSlash when prefetching', async ({ app, page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/path-base/prefetching');
+
+		/** @type {string[]} */
+		let requests = [];
+		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
+
+		// also wait for network processing to complete, see
+		// https://playwright.dev/docs/network#network-events
+		await app.prefetch('/path-base/prefetching/prefetched');
+
+		// svelte request made is environment dependent
+		if (process.env.DEV) {
+			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
+		} else {
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
+		}
+
+		expect(requests.includes(`/path-base/prefetching/prefetched/__data.json`)).toBe(true);
+
+		requests = [];
+		await app.goto('/path-base/prefetching/prefetched');
+		expect(requests).toEqual([]);
 	});
 });
 
 test.describe('serviceWorker', () => {
-	if (!process.env.DEV) {
-		test('does not register service worker if none created', async ({ page }) => {
-			await page.goto('/path-base/');
-			expect(await page.content()).not.toMatch('navigator.serviceWorker');
-		});
-	}
+	if (process.env.DEV) return;
+
+	test('does not register service worker if none created', async ({ page }) => {
+		await page.goto('/path-base/');
+		expect(await page.content()).not.toMatch('navigator.serviceWorker');
+	});
+});
+
+test.describe('Vite options', () => {
+	test('Respects --mode', async ({ page }) => {
+		await page.goto('/path-base/mode');
+
+		const mode = process.env.DEV ? 'development' : 'custom';
+		expect(await page.textContent('h2')).toBe(`${mode} === ${mode} === ${mode}`);
+	});
 });

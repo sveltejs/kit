@@ -1,5 +1,135 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.100
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.99
+
+### Patch Changes
+
+- [fix] take into account deep exports for external packages ([#7311](https://github.com/sveltejs/kit/pull/7311))
+
+## 1.0.0-next.98
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
+## 1.0.0-next.97
+
+### Patch Changes
+
+- [chore] update dependency @rollup/plugin-json to v5 ([#7204](https://github.com/sveltejs/kit/pull/7204))
+
+## 1.0.0-next.96
+
+### Patch Changes
+
+- Disable builtin modules warning ([#7031](https://github.com/sveltejs/kit/pull/7031))
+
+## 1.0.0-next.95
+
+### Patch Changes
+
+- Redact error message if `getRequest` fails ([#6936](https://github.com/sveltejs/kit/pull/6936))
+
+## 1.0.0-next.94
+
+### Patch Changes
+
+- Add missing Rollup dependency ([#6927](https://github.com/sveltejs/kit/pull/6927))
+
+## 1.0.0-next.93
+
+### Patch Changes
+
+- Bundle with rollup instead of esbuild ([#6896](https://github.com/sveltejs/kit/pull/6896))
+
+## 1.0.0-next.92
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.91
+
+### Patch Changes
+
+- Allow streaming when `BODY_SIZE_LIMIT` is set ([#6702](https://github.com/sveltejs/kit/pull/6702))
+
+## 1.0.0-next.90
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
+* Improve performance by compressing in parallel ([#6710](https://github.com/sveltejs/kit/pull/6710))
+
+## 1.0.0-next.89
+
+### Patch Changes
+
+- [breaking] request creation cleanup ([#6681](https://github.com/sveltejs/kit/pull/6681))
+
+* [breaking] limit adapter-node request size ([#6684](https://github.com/sveltejs/kit/pull/6684))
+
+## 1.0.0-next.88
+
+### Patch Changes
+
+- Bundle non-production dependencies with esbuild ([#6372](https://github.com/sveltejs/kit/pull/6372))
+
+## 1.0.0-next.87
+
+### Patch Changes
+
+- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+
+## 1.0.0-next.86
+
+### Patch Changes
+
+- Move `compress` logic to `Builder` API ([#5822](https://github.com/sveltejs/kit/pull/5822))
+
+## 1.0.0-next.85
+
+### Patch Changes
+
+- Initialise `env` ([#5663](https://github.com/sveltejs/kit/pull/5663))
+
+## 1.0.0-next.84
+
+### Patch Changes
+
+- Set Vite's publicDir and correctly serve public assets earlier in pipeline ([#5686](https://github.com/sveltejs/kit/pull/5686))
+
+## 1.0.0-next.83
+
+### Patch Changes
+
+- set Vite's `publicDir` option ([#5648](https://github.com/sveltejs/kit/pull/5648))
+
+## 1.0.0-next.82
+
+### Patch Changes
+
+- [breaking] remove writeStatic to align with Vite ([#5618](https://github.com/sveltejs/kit/pull/5618))
+
+## 1.0.0-next.81
+
+### Patch Changes
+
+- [breaking] remove compression middleware from adapter-node output server ([#5506](https://github.com/sveltejs/kit/pull/5506))
+
+## 1.0.0-next.80
+
+### Patch Changes
+
+- Update dependencies ([#5005](https://github.com/sveltejs/kit/pull/5005))
+
 ## 1.0.0-next.79
 
 ### Patch Changes

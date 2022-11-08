@@ -1,10 +1,8 @@
 import fs from 'fs';
 import http from 'http';
-import * as ports from 'port-authority';
 import { test as base, devices } from '@playwright/test';
 
 export const test = base.extend({
-	// @ts-expect-error
 	app: async ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
 		use({
@@ -34,7 +32,6 @@ export const test = base.extend({
 				page.evaluate((/** @type {(url: URL) => any} */ fn) => beforeNavigate(fn), fn),
 
 			/**
-			 * @param {() => void} fn
 			 * @returns {Promise<void>}
 			 */
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
@@ -49,29 +46,27 @@ export const test = base.extend({
 			 * @param {string[]} [urls]
 			 * @returns {Promise<void>}
 			 */
-			prefetchRoutes: (urls) =>
-				page.evaluate((/** @type {string[]} */ urls) => prefetchRoutes(urls), urls)
+			prefetchRoutes: (urls) => page.evaluate((urls) => prefetchRoutes(urls), urls)
 		});
 	},
 
-	// @ts-expect-error
 	clicknav: async ({ page, javaScriptEnabled }, use) => {
 		/**
 		 * @param {string} selector
 		 * @param {{ timeout: number }} options
 		 */
 		async function clicknav(selector, options) {
+			const element = page.locator(selector);
 			if (javaScriptEnabled) {
-				await Promise.all([page.waitForNavigation(options), page.click(selector)]);
+				await Promise.all([page.waitForNavigation(options), element.click()]);
 			} else {
-				await page.click(selector);
+				await element.click();
 			}
 		}
 
 		use(clicknav);
 	},
 
-	// @ts-expect-error
 	in_view: async ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
@@ -84,23 +79,15 @@ export const test = base.extend({
 	},
 
 	page: async ({ page, javaScriptEnabled }, use) => {
-		if (javaScriptEnabled) {
-			page.addInitScript({
-				content: `
-					addEventListener('sveltekit:start', () => {
-						document.body.classList.add('started');
-					});
-				`
-			});
-		}
-
 		// automatically wait for kit started event after navigation functions if js is enabled
 		const page_navigation_functions = ['goto', 'goBack', 'reload'];
 		page_navigation_functions.forEach((fn) => {
+			// @ts-expect-error
 			const page_fn = page[fn];
 			if (!page_fn) {
 				throw new Error(`function does not exist on page: ${fn}`);
 			}
+			// @ts-expect-error
 			page[fn] = async function (...args) {
 				const res = await page_fn.call(page, ...args);
 				if (javaScriptEnabled) {
@@ -113,8 +100,6 @@ export const test = base.extend({
 		await use(page);
 	},
 
-	// @ts-expect-error
-	// eslint-disable-next-line
 	read_errors: ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
@@ -127,12 +112,15 @@ export const test = base.extend({
 		use(read_errors);
 	}
 });
-const test_browser = process.env.KIT_E2E_BROWSER ?? 'chromium';
+
 const known_devices = {
 	chromium: devices['Desktop Chrome'],
 	firefox: devices['Desktop Firefox'],
-	safari: devices['Desktop Safari']
+	webkit: devices['Desktop Safari']
 };
+const test_browser = /** @type {keyof typeof known_devices} */ (
+	process.env.KIT_E2E_BROWSER ?? 'chromium'
+);
 
 const test_browser_device = known_devices[test_browser];
 
@@ -150,19 +138,19 @@ export const config = {
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
-		port: process.env.DEV ? 3000 : 4173
+		command: process.env.DEV ? 'pnpm dev' : 'pnpm build && pnpm preview',
+		port: process.env.DEV ? 5173 : 4173
 	},
-	retries: process.env.CI ? 5 : 0,
+	retries: process.env.CI ? 2 : 0,
 	projects: [
 		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}+js`,
+			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
 			use: {
 				javaScriptEnabled: true
 			}
 		},
 		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}-js`,
+			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}-no-js`,
 			use: {
 				javaScriptEnabled: false
 			}
@@ -171,24 +159,27 @@ export const config = {
 	use: {
 		...test_browser_device,
 		screenshot: 'only-on-failure',
-		trace: process.env.KIT_E2E_TRACE ? 'retain-on-failure' : 'on-first-retry'
+		trace: 'retain-on-failure'
 	},
 	workers: process.env.CI ? 2 : undefined
 };
 
 /**
  * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
- * @param {number} [start]
  */
-export async function start_server(handler, start = 4000) {
-	const port = await ports.find(start);
+export async function start_server(handler) {
 	const server = http.createServer(handler);
 
 	await new Promise((fulfil) => {
-		server.listen(port, 'localhost', () => {
+		server.listen(0, 'localhost', () => {
 			fulfil(undefined);
 		});
 	});
+
+	const { port } = /** @type {import('net').AddressInfo} */ (server.address());
+	if (!port) {
+		throw new Error(`Could not find port from server ${JSON.stringify(server.address())}`);
+	}
 
 	return {
 		port,
@@ -205,7 +196,3 @@ export async function start_server(handler, start = 4000) {
 		}
 	};
 }
-
-export const plugin = process.env.CI
-	? (await import('../dist/vite.js')).sveltekit
-	: (await import('../src/vite/index.js')).sveltekit;

@@ -22,6 +22,40 @@ function remove_keys(o, check) {
 	}
 }
 
+const directive_defaults = {
+	'child-src': undefined,
+	'default-src': undefined,
+	'frame-src': undefined,
+	'worker-src': undefined,
+	'connect-src': undefined,
+	'font-src': undefined,
+	'img-src': undefined,
+	'manifest-src': undefined,
+	'media-src': undefined,
+	'object-src': undefined,
+	'prefetch-src': undefined,
+	'script-src': undefined,
+	'script-src-elem': undefined,
+	'script-src-attr': undefined,
+	'style-src': undefined,
+	'style-src-elem': undefined,
+	'style-src-attr': undefined,
+	'base-uri': undefined,
+	sandbox: undefined,
+	'form-action': undefined,
+	'frame-ancestors': undefined,
+	'navigate-to': undefined,
+	'report-uri': undefined,
+	'report-to': undefined,
+	'require-trusted-types-for': undefined,
+	'trusted-types': undefined,
+	'upgrade-insecure-requests': false,
+	'require-sri-for': undefined,
+	'block-all-mixed-content': false,
+	'plugin-types': undefined,
+	referrer: undefined
+};
+
 const get_defaults = (prefix = '') => ({
 	extensions: ['.svelte'],
 	kit: {
@@ -30,69 +64,43 @@ const get_defaults = (prefix = '') => ({
 		amp: undefined,
 		appDir: '_app',
 		browser: {
-			hydrate: true,
-			router: true
+			hydrate: undefined,
+			router: undefined
 		},
 		csp: {
 			mode: 'auto',
-			directives: {
-				'child-src': undefined,
-				'default-src': undefined,
-				'frame-src': undefined,
-				'worker-src': undefined,
-				'connect-src': undefined,
-				'font-src': undefined,
-				'img-src': undefined,
-				'manifest-src': undefined,
-				'media-src': undefined,
-				'object-src': undefined,
-				'prefetch-src': undefined,
-				'script-src': undefined,
-				'script-src-elem': undefined,
-				'script-src-attr': undefined,
-				'style-src': undefined,
-				'style-src-elem': undefined,
-				'style-src-attr': undefined,
-				'base-uri': undefined,
-				sandbox: undefined,
-				'form-action': undefined,
-				'frame-ancestors': undefined,
-				'navigate-to': undefined,
-				'report-uri': undefined,
-				'report-to': undefined,
-				'require-trusted-types-for': undefined,
-				'trusted-types': undefined,
-				'upgrade-insecure-requests': false,
-				'require-sri-for': undefined,
-				'block-all-mixed-content': false,
-				'plugin-types': undefined,
-				referrer: undefined
-			}
+			directives: directive_defaults,
+			reportOnly: directive_defaults
+		},
+		csrf: {
+			checkOrigin: true
 		},
 		endpointExtensions: undefined,
+		env: {
+			dir: process.cwd(),
+			publicPrefix: 'PUBLIC_'
+		},
 		files: {
 			assets: join(prefix, 'static'),
-			hooks: join(prefix, 'src/hooks'),
+			hooks: {
+				client: join(prefix, 'src/hooks.client'),
+				server: join(prefix, 'src/hooks.server')
+			},
 			lib: join(prefix, 'src/lib'),
 			params: join(prefix, 'src/params'),
 			routes: join(prefix, 'src/routes'),
 			serviceWorker: join(prefix, 'src/service-worker'),
-			template: join(prefix, 'src/app.html')
+			appTemplate: join(prefix, 'src/app.html'),
+			errorTemplate: join(prefix, 'src/error.html'),
+			template: undefined
 		},
 		headers: undefined,
 		host: undefined,
 		hydrate: undefined,
 		inlineStyleThreshold: 0,
-		methodOverride: {
-			parameter: '_method',
-			allowed: []
-		},
+		methodOverride: undefined,
 		moduleExtensions: ['.js', '.ts'],
 		outDir: join(prefix, '.svelte-kit'),
-		package: {
-			dir: 'package',
-			emitTypes: true
-		},
 		serviceWorker: {
 			register: true
 		},
@@ -104,15 +112,19 @@ const get_defaults = (prefix = '') => ({
 			concurrency: 1,
 			crawl: true,
 			createIndexFiles: undefined,
-			default: false,
+			default: undefined,
 			enabled: true,
 			entries: ['*'],
 			force: undefined,
-			onError: 'fail',
+			handleHttpError: 'fail',
+			handleMissingId: 'fail',
+			onError: undefined,
+			origin: 'http://sveltekit-prerender',
 			pages: undefined
 		},
 		protocol: undefined,
 		router: undefined,
+		routes: undefined,
 		ssr: undefined,
 		target: undefined,
 		trailingSlash: 'never',
@@ -120,17 +132,16 @@ const get_defaults = (prefix = '') => ({
 			name: Date.now().toString(),
 			pollInterval: 0
 		},
-		vite: undefined
+		// TODO cleanup for 1.0
+		vite: undefined,
+		package: undefined
 	}
 });
 
 test('fills in defaults', () => {
 	const validated = validate_config({});
 
-	assert.equal(validated.kit.package.exports(''), true);
-	assert.equal(validated.kit.package.files(''), true);
 	assert.equal(validated.kit.serviceWorker.files(''), true);
-	assert.equal(validated.kit.vite, undefined);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
@@ -167,7 +178,6 @@ test('errors on invalid nested values', () => {
 test('does not error on invalid top-level values', () => {
 	assert.not.throws(() => {
 		validate_config({
-			// @ts-expect-error - valid option for others but not in our definition
 			onwarn: () => {}
 		});
 	});
@@ -193,10 +203,7 @@ test('fills in partial blanks', () => {
 		}
 	});
 
-	assert.equal(validated.kit.package.exports(''), true);
-	assert.equal(validated.kit.package.files(''), true);
 	assert.equal(validated.kit.serviceWorker.files(''), true);
-	assert.equal(validated.kit.vite, undefined);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
@@ -368,6 +375,9 @@ test('load default config (esm)', async () => {
 
 	const defaults = get_defaults(cwd + '/');
 	defaults.kit.version.name = config.kit.version.name;
+	defaults.kit.files.errorTemplate = fileURLToPath(
+		new URL('./default-error.html', import.meta.url)
+	);
 
 	assert.equal(config, defaults);
 });

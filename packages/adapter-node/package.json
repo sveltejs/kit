@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.79",
+	"version": "1.0.0-next.100",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -27,27 +27,24 @@
 		"build": "rimraf files && rollup -c",
 		"test": "echo \"tests temporarily disabled\" # c8 uvu tests",
 		"check": "tsc",
-		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
-		"format": "npm run check-format -- --write",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"prepublishOnly": "npm run build"
-	},
-	"dependencies": {
-		"tiny-glob": "^0.2.9"
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"format": "pnpm lint --write",
+		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
-		"@rollup/plugin-json": "^4.1.0",
 		"@sveltejs/kit": "workspace:*",
-		"@types/compression": "^1.7.2",
-		"@types/node": "^16.11.36",
-		"c8": "^7.11.3",
-		"compression": "^1.7.4",
-		"node-fetch": "^3.2.4",
+		"@types/node": "^16.11.68",
+		"c8": "^7.12.0",
 		"polka": "^1.0.0-next.22",
 		"rimraf": "^3.0.2",
-		"rollup": "^2.75.3",
 		"sirv": "^2.0.2",
-		"typescript": "^4.7.4",
-		"uvu": "^0.5.3"
+		"typescript": "^4.8.4",
+		"uvu": "^0.5.6"
+	},
+	"dependencies": {
+		"@rollup/plugin-commonjs": "^23.0.2",
+		"@rollup/plugin-json": "^5.0.1",
+		"@rollup/plugin-node-resolve": "^15.0.1",
+		"rollup": "^2.79.1"
 	}
 }

@@ -4,8 +4,34 @@ import colors from 'kleur';
 import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
 
-/** @param {string} file */
-const exists = (file) => fs.existsSync(file) && file;
+/**
+ * @param {string} cwd
+ * @param {string} file
+ */
+function maybe_file(cwd, file) {
+	const resolved = path.resolve(cwd, file);
+	if (fs.existsSync(resolved)) {
+		return resolved;
+	}
+}
+
+/**
+ * @param {string} file
+ */
+function project_relative(file) {
+	return posixify(path.relative('.', file));
+}
+
+/**
+ * @param {string} file
+ */
+function remove_trailing_slashstar(file) {
+	if (file.endsWith('/*')) {
+		return file.slice(0, -2);
+	} else {
+		return file;
+	}
+}
 
 /**
  * Writes the tsconfig that the user's tsconfig inherits from.
@@ -13,42 +39,26 @@ const exists = (file) => fs.existsSync(file) && file;
  */
 export function write_tsconfig(config, cwd = process.cwd()) {
 	const out = path.join(config.outDir, 'tsconfig.json');
-	const user_file =
-		exists(path.resolve(cwd, 'tsconfig.json')) || exists(path.resolve(cwd, 'jsconfig.json'));
+	const user_file = maybe_file(cwd, 'tsconfig.json') || maybe_file(cwd, 'jsconfig.json');
 
 	if (user_file) validate(config, cwd, out, user_file);
 
 	/** @param {string} file */
-	const project_relative = (file) => posixify(path.relative('.', file));
-
-	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(config.outDir, file));
 
-	const dirs = new Set([
-		project_relative(path.dirname(config.files.routes)),
-		project_relative(path.dirname(config.files.lib))
-	]);
-
-	/** @type {string[]} */
-	const include = [];
-	dirs.forEach((dir) => {
-		include.push(config_relative(`${dir}/**/*.js`));
-		include.push(config_relative(`${dir}/**/*.ts`));
-		include.push(config_relative(`${dir}/**/*.svelte`));
-	});
-
-	/** @type {Record<string, string[]>} */
-	const paths = {};
-	const alias = {
-		$lib: project_relative(config.files.lib),
-		...config.alias
-	};
-	for (const [key, value] of Object.entries(alias)) {
-		if (fs.existsSync(project_relative(value))) {
-			paths[key] = [project_relative(value)];
-			paths[key + '/*'] = [project_relative(value) + '/*'];
-		}
+	const include = ['ambient.d.ts', './types/**/$types.d.ts', config_relative('vite.config.ts')];
+	for (const dir of [config.files.routes, config.files.lib]) {
+		const relative = project_relative(path.dirname(dir));
+		include.push(config_relative(`${relative}/**/*.js`));
+		include.push(config_relative(`${relative}/**/*.ts`));
+		include.push(config_relative(`${relative}/**/*.svelte`));
 	}
+	// Test folder is a special case - we advocate putting tests in a top-level test folder
+	// and it's not configurable (should we make it?)
+	const test_folder = project_relative('tests');
+	include.push(config_relative(`${test_folder}/**/*.js`));
+	include.push(config_relative(`${test_folder}/**/*.ts`));
+	include.push(config_relative(`${test_folder}/**/*.svelte`));
 
 	write_if_changed(
 		out,
@@ -57,7 +67,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 				compilerOptions: {
 					// generated options
 					baseUrl: config_relative('.'),
-					paths,
+					paths: get_tsconfig_paths(config),
 					rootDirs: [config_relative('.'), './types'],
 
 					// essential options
@@ -70,15 +80,15 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 					// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
 					preserveValueImports: true,
 
-					// This is required for svelte-kit package to work as expected
+					// This is required for svelte-package to work as expected
 					// Can be overwritten
-					lib: ['esnext', 'DOM'],
+					lib: ['esnext', 'DOM', 'DOM.Iterable'],
 					moduleResolution: 'node',
 					module: 'esnext',
 					target: 'esnext'
 				},
 				include,
-				exclude: [config_relative('node_modules/**'), './**']
+				exclude: [config_relative('node_modules/**'), './[!ambient.d.ts]**']
 			},
 			null,
 			'\t'
@@ -135,4 +145,51 @@ function validate(config, cwd, out, user_file) {
 		);
 		console.warn(`{\n  "extends": "${relative}"\n}`);
 	}
+}
+
+// <something><optional /*>
+const alias_regex = /^(.+?)(\/\*)?$/;
+// <path><optional /* or .fileending>
+const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
+
+/**
+ * Generates tsconfig path aliases from kit's aliases.
+ * Related to vite alias creation.
+ *
+ * @param {import('types').ValidatedKitConfig} config
+ */
+export function get_tsconfig_paths(config) {
+	const alias = {
+		...config.alias
+	};
+	if (fs.existsSync(project_relative(config.files.lib))) {
+		alias['$lib'] = project_relative(config.files.lib);
+	}
+
+	/** @type {Record<string, string[]>} */
+	const paths = {};
+
+	for (const [key, value] of Object.entries(alias)) {
+		const key_match = alias_regex.exec(key);
+		if (!key_match) throw new Error(`Invalid alias key: ${key}`);
+
+		const value_match = value_regex.exec(value);
+		if (!value_match) throw new Error(`Invalid alias value: ${value}`);
+
+		const rel_path = project_relative(remove_trailing_slashstar(value));
+		const slashstar = key_match[2];
+
+		if (slashstar) {
+			paths[key] = [rel_path + '/*'];
+		} else {
+			paths[key] = [rel_path];
+			const fileending = value_match[4];
+
+			if (!fileending && !(key + '/*' in alias)) {
+				paths[key + '/*'] = [rel_path + '/*'];
+			}
+		}
+	}
+
+	return paths;
 }

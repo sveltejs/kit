@@ -4,9 +4,9 @@ import { modules } from '../../../../../../packages/kit/docs/types.js';
 export function render_modules(kind) {
 	return modules
 		.map((module) => {
-			// special case — we want to include $lib in the modules page
-			const is_lib_exports = kind === 'exports' && module.name === '$lib';
-			const skip = module[kind].length === 0 && !is_lib_exports;
+			// special case — we want to include $lib etc in the modules page
+			const is_exempt = kind === 'exports' && module.exempt;
+			const skip = module[kind].length === 0 && !is_exempt;
 
 			if (skip) return '';
 

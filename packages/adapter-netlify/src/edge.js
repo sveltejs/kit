@@ -2,24 +2,30 @@ import { Server } from '0SERVER';
 import { manifest, prerendered } from 'MANIFEST';
 
 const server = new Server(manifest);
-const prefix = `/${manifest.appDir}/`;
+const prefix = `/${manifest.appPath}/`;
+
+const initialized = server.init({
+	// @ts-ignore
+	env: Deno.env.toObject()
+});
 
 /**
  * @param { Request } request
  * @param { any } context
  * @returns { Promise<Response> }
  */
-export default function handler(request, context) {
+export default async function handler(request, context) {
 	if (is_static_file(request)) {
 		// Static files can skip the handler
 		// TODO can we serve _app/immutable files with an immutable cache header?
 		return;
 	}
 
+	await initialized;
 	return server.respond(request, {
 		platform: { context },
 		getClientAddress() {
-			return request.headers.get('x-nf-client-connection-ip');
+			return context.ip;
 		}
 	});
 }

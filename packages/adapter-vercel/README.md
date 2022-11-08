@@ -6,8 +6,6 @@ If you're using [adapter-auto](../adapter-auto), you don't need to install this 
 
 ## Usage
 
-> The `edge` and `split` options depend on the Vercel Build Output API which is currently in beta. For now, you must opt in by visiting `https://vercel.com/[YOUR_USERNAME]/[YOUR_PROJECT]/settings/environment-variables` and adding `ENABLE_VC_BUILD` with the value `1`.
-
 Add `"@sveltejs/adapter-vercel": "next"` to the `devDependencies` in your `package.json` and run `npm install`.
 
 Then in your `svelte.config.js`:
@@ -40,7 +38,7 @@ export default {
 
 ### Vercel functions
 
-Vercel functions contained in the `/api` directory at the project's root will _not_ be included in the deployment — these should be implemented as [endpoints](https://kit.svelte.dev/docs/routing#endpoints) in your SvelteKit app.
+Vercel functions contained in the `/api` directory at the project's root will _not_ be included in the deployment — these should be implemented as [server endpoints](https://kit.svelte.dev/docs/routing#server) in your SvelteKit app.
 
 ### Node version
 

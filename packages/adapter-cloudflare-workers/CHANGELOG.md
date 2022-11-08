@@ -1,5 +1,83 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.60
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.59
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
+## 1.0.0-next.58
+
+### Patch Changes
+
+- Add config option to set custom `wrangler.toml` file name ([#7104](https://github.com/sveltejs/kit/pull/7104))
+
+## 1.0.0-next.57
+
+### Patch Changes
+
+- Include ambient.d.ts files in adapter packages. ([#6917](https://github.com/sveltejs/kit/pull/6917))
+
+## 1.0.0-next.56
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.55
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
+## 1.0.0-next.54
+
+### Patch Changes
+
+- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+
+## 1.0.0-next.53
+
+### Patch Changes
+
+- expose caches on platform ([#5887](https://github.com/sveltejs/kit/pull/5887))
+
+## 1.0.0-next.52
+
+### Patch Changes
+
+- Initialise `env` ([#5663](https://github.com/sveltejs/kit/pull/5663))
+
+## 1.0.0-next.51
+
+### Patch Changes
+
+- [breaking] remove writeStatic to align with Vite ([#5618](https://github.com/sveltejs/kit/pull/5618))
+
+## 1.0.0-next.50
+
+### Patch Changes
+
+- Update dependencies ([#5005](https://github.com/sveltejs/kit/pull/5005))
+
+## 1.0.0-next.49
+
+### Patch Changes
+
+- [breaking] Don't pass arbitrary options to esbuild ([#4639](https://github.com/sveltejs/kit/pull/4639))
+
+## 1.0.0-next.48
+
+### Patch Changes
+
+- Expose App interfaces ([#5386](https://github.com/sveltejs/kit/pull/5386))
+
 ## 1.0.0-next.47
 
 ### Patch Changes

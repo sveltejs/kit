@@ -47,38 +47,33 @@ When configuring your project settings, you must use the following settings:
 - **Build command** – `npm run build` or `svelte-kit build`
 - **Build output directory** – `.svelte-kit/cloudflare`
 - **Environment variables**
-  - `NODE_VERSION`: `16` or `14`
+  - `NODE_VERSION`: `16`
 
-> **Important:** You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `14.13` or later, so you should use `14` or `16` as the `NODE_VERSION` value.
+> **Important:** You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `16.14` or later, so you should use `16` as the `NODE_VERSION` value.
 
 ## Environment variables
 
-The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV/DO namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
 
-```diff
-// src/app.d.ts
-declare namespace App {
-	interface Locals {}
-
-+	interface Platform {
-+		env: {
-+			COUNTER: DurableObjectNamespace;
-+		};
-+		context: {
-+			waitUntil(promise: Promise<any>): void;
-+		};
-+		caches: CacheStorage & { default: Cache }
-+	}
-
-	interface Session {}
-
-	interface Stuff {}
+```js
+export async function POST({ request, platform }) {
+  const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
 }
 ```
 
-```js
-export async function post({ request, platform }) {
-  const counter = platform.env.COUNTER.idFromName('A');
+To make these types available to your app, reference them in your `src/app.d.ts`:
+
+```diff
+/// <reference types="@sveltejs/kit" />
++/// <reference types="@sveltejs/adapter-cloudflare" />
+
+declare namespace App {
+	interface Platform {
++		env?: {
++			YOUR_KV_NAMESPACE: KVNamespace;
++			YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
++		};
+	}
 }
 ```
 
@@ -86,9 +81,11 @@ export async function post({ request, platform }) {
 
 ## Notes
 
-Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [endpoints](https://kit.svelte.dev/docs/routing#endpoints) in your SvelteKit app.
+Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [server endpoints](https://kit.svelte.dev/docs/routing#server) in your SvelteKit app.
 
-If you want to use `_headers` or `_redirects` custom [config files](https://developers.cloudflare.com/pages/platform/headers) to modify cloudflare behaviour you should put those configs in the `/static` folder of your SvelteKit project.
+The [`_headers` and `_redirects`](config files) files specific to Cloudflare Pages can be used for static asset responses (like images) by putting them into the `/static` folder.
+
+However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](https://kit.svelte.dev/docs/routing#server) or with the [`handle`](https://kit.svelte.dev/docs/hooks#server-hooks-handle) hook.
 
 ## Changelog
 

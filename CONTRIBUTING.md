@@ -1,6 +1,6 @@
 # SvelteKit Contributing Guide
 
-## Building and Running
+## Preparing
 
 This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.js.org/en/). You can [install pnpm](https://pnpm.io/installation) with:
 
@@ -8,13 +8,12 @@ This is a monorepo, meaning the repo holds multiple packages. It requires the us
 npm i -g pnpm
 ```
 
-`pnpm` commands run in the project's root directory will run on all sub-projects. You can checkout the code and build all sub-projects with:
+`pnpm` commands run in the project's root directory will run on all sub-projects. You can checkout the code and install the dependencies with:
 
 ```bash
 git clone git@github.com:sveltejs/kit.git
 cd kit
 pnpm install
-pnpm build
 ```
 
 You can now run SvelteKit by linking it into your project with [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides) as demonstrated in the [sandbox example](https://github.com/sveltejs/kit-sandbox) or by running one of the test projects as described in [the testing section](#testing) below.
@@ -23,13 +22,13 @@ You can now run SvelteKit by linking it into your project with [pnpm `overrides`
 
 Entry points to be aware of are:
 
-- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) - code that's run when you create a new project with `npm init svelte`
-- [`packages/kit/src/packaging`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/packaging) - for the `svelte-kit package` command
-- [`packages/kit/src/vite/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/vite/index.js) - for the Vite plugin
-- [`packages/kit/src/core/sync/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/sync/sync.js) - for `svelte-kit sync`, which regenerates routing info and type definitions
+- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) - code that's run when you create a new project with `npm create svelte@latest`
+- [`packages/package`](https://github.com/sveltejs/kit/tree/master/packages/package) - for the `svelte-package` command
+- [`packages/kit/src/core`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/core) - code that's called at dev/build-time
+- [`packages/kit/src/core/sync`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/core/sync) - for `svelte-kit sync`, which regenerates routing info and type definitions
+- [`packages/kit/src/runtime`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/runtime) - code that's called at runtime
+- [`packages/kit/src/exports/vite`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/exports/vite) - for all the Vite plugin related stuff
 - [`packages/adapter-[platform]`](https://github.com/sveltejs/kit/tree/master/packages) - for the various SvelteKit-provided adapters
-
-Most code called at build-time or from the CLI entry point lives in [packages/kit/src/core](https://github.com/sveltejs/kit/tree/master/packages/kit/src/core). Code that runs for rendering and routing lives in [packages/kit/src/runtime](https://github.com/sveltejs/kit/tree/master/packages/kit/src/runtime). Most changes to SvelteKit itself would involve code in these two directories.
 
 ## Testing
 
@@ -47,6 +46,12 @@ You may need to install some dependencies first, e.g. with `npx playwright insta
 
 If there are tests that fail on the CI, you can retrieve the failed screenshots by going to the summary page of the CI run. You can usually find this by clicking on "Details" of the check results, click "Summary" at the top-left corner, and then scroll to the bottom "Artifacts" section to download the archive.
 
+It is very easy to introduce flakiness in a browser test. If you try to fix the flakiness in a test, you can run it until failure to gain some confidence you've fixed the test with a command like:
+
+```
+npx playwright test --workers=1 --repeat-each 1000 --max-failures 1 -g "accepts a Request object"
+```
+
 ## Working on Vite and other dependencies
 
 If you would like to test local changes to Vite or another dependency, you can build it and then use [`pnpm.overrides`](https://pnpm.io/package_json#pnpmoverrides). Please note that `pnpm.overrides` must be specified in the root `package.json` and you must first list the package as a dependency in the root `package.json`:
@@ -55,7 +60,7 @@ If you would like to test local changes to Vite or another dependency, you can b
 {
 	// ...
 	"dependencies": {
-		"vite": "^2.0.0"
+		"vite": "^3.1.0"
 	},
 	"pnpm": {
 		"overrides": {

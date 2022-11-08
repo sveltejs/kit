@@ -1,6 +1,8 @@
 import { writable } from 'svelte/store';
 import { assets } from '../paths.js';
 
+/* global __SVELTEKIT_APP_VERSION__, __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
+
 /** @param {HTMLDocument} doc */
 export function get_base_uri(doc) {
 	let baseURI = doc.baseURI;
@@ -22,17 +24,63 @@ export function scroll_state() {
 
 /** @param {Event} event */
 export function find_anchor(event) {
-	const node = event
-		.composedPath()
-		.find((e) => e instanceof Node && e.nodeName.toUpperCase() === 'A'); // SVG <a> elements have a lowercase name
-	return /** @type {HTMLAnchorElement | SVGAElement | undefined} */ (node);
+	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
+	let a;
+
+	/** @type {boolean | null} */
+	let noscroll = null;
+
+	/** @type {boolean | null} */
+	let prefetch = null;
+
+	/** @type {boolean | null} */
+	let reload = null;
+
+	for (const element of event.composedPath()) {
+		if (!(element instanceof Element)) continue;
+
+		if (!a && element.nodeName.toUpperCase() === 'A') {
+			// SVG <a> elements have a lowercase name
+			a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
+		}
+
+		if (noscroll === null) noscroll = get_link_option(element, 'data-sveltekit-noscroll');
+		if (prefetch === null) prefetch = get_link_option(element, 'data-sveltekit-prefetch');
+		if (reload === null) reload = get_link_option(element, 'data-sveltekit-reload');
+	}
+
+	const url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
+
+	return {
+		a,
+		url,
+		options: {
+			noscroll,
+			prefetch,
+			reload
+		}
+	};
 }
 
-/** @param {HTMLAnchorElement | SVGAElement} node */
-export function get_href(node) {
-	return node instanceof SVGAElement
-		? new URL(node.href.baseVal, document.baseURI)
-		: new URL(node.href);
+const warned = new WeakSet();
+
+/**
+ * @param {Element} element
+ * @param {string} attribute
+ */
+function get_link_option(element, attribute) {
+	const value = element.getAttribute(attribute);
+	if (value === null) return value;
+
+	if (value === '') return true;
+	if (value === 'off') return false;
+
+	if (__SVELTEKIT_DEV__ && !warned.has(element)) {
+		console.error(`Unexpected value for ${attribute} — should be "" or "off"`, element);
+		warned.add(element);
+	}
+
+	return false;
 }
 
 /** @param {any} value */
@@ -68,10 +116,7 @@ export function notifiable_store(value) {
 export function create_updated_store() {
 	const { set, subscribe } = writable(false);
 
-	const interval = +(
-		/** @type {string} */ (import.meta.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL)
-	);
-	const initial = import.meta.env.VITE_SVELTEKIT_APP_VERSION;
+	const interval = __SVELTEKIT_APP_VERSION_POLL_INTERVAL__;
 
 	/** @type {NodeJS.Timeout} */
 	let timeout;
@@ -83,9 +128,7 @@ export function create_updated_store() {
 
 		if (interval) timeout = setTimeout(check, interval);
 
-		const file = import.meta.env.VITE_SVELTEKIT_APP_VERSION_FILE;
-
-		const res = await fetch(`${assets}/${file}`, {
+		const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
 			headers: {
 				pragma: 'no-cache',
 				'cache-control': 'no-cache'
@@ -94,7 +137,7 @@ export function create_updated_store() {
 
 		if (res.ok) {
 			const { version } = await res.json();
-			const updated = version !== initial;
+			const updated = version !== __SVELTEKIT_APP_VERSION__;
 
 			if (updated) {
 				set(true);

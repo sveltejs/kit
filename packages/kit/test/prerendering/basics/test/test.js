@@ -6,7 +6,7 @@ import * as assert from 'uvu/assert';
 const build = fileURLToPath(new URL('../build', import.meta.url));
 
 /** @param {string} file */
-const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
+const read = (file, encoding = 'utf-8') => fs.readFileSync(`${build}/${file}`, encoding);
 
 test('prerenders /', () => {
 	const content = read('index.html');
@@ -19,6 +19,18 @@ test('renders a redirect', () => {
 		content,
 		'<meta http-equiv="refresh" content="0;url=https://example.com/redirected">'
 	);
+});
+
+test('renders a server-side redirect', () => {
+	const html = read('redirect-server.html');
+	assert.equal(html, '<meta http-equiv="refresh" content="0;url=https://example.com/redirected">');
+
+	const data = JSON.parse(read('redirect-server/__data.json'));
+
+	assert.equal(data, {
+		type: 'redirect',
+		location: 'https://example.com/redirected'
+	});
 });
 
 test('does not double-encode redirect locations', () => {
@@ -52,7 +64,7 @@ test('renders page with data from endpoint', () => {
 
 test('renders page with unbuffered data from endpoint', () => {
 	const content = read('fetch-endpoint/not-buffered.html');
-	assert.ok(content.includes('<h1>content-type: application/json; charset=utf-8</h1>'), content);
+	assert.ok(content.includes('<h1>content-type: application/json</h1>'), content);
 
 	const json = read('fetch-endpoint/not-buffered.json');
 	assert.equal(json, JSON.stringify({ answer: 42 }));
@@ -64,19 +76,36 @@ test('loads a file with spaces in the filename', () => {
 });
 
 test('generates __data.json file for shadow endpoints', () => {
-	assert.equal(read('__data.json'), JSON.stringify({ message: 'hello' }));
-	assert.equal(read('shadowed-get/__data.json'), JSON.stringify({ answer: 42 }));
+	let data = JSON.parse(read('__data.json'));
+	assert.equal(data, {
+		type: 'data',
+		nodes: [
+			null,
+			{
+				type: 'data',
+				data: [{ message: 1 }, 'hello'],
+				uses: {}
+			}
+		]
+	});
+
+	data = JSON.parse(read('shadowed-get/__data.json'));
+	assert.equal(data, {
+		type: 'data',
+		nodes: [
+			null,
+			{
+				type: 'data',
+				data: [{ answer: 1 }, 42],
+				uses: {}
+			}
+		]
+	});
 });
 
-test('does not prerender page with shadow endpoint with non-GET handler', () => {
+test('does not prerender page with shadow endpoint with non-load handler', () => {
 	assert.ok(!fs.existsSync(`${build}/shadowed-post.html`));
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
-});
-
-test('does not prerender page accessing session in load', () => {
-	// This should fail to prerender as session can never be populated
-	// for a prerendered page.
-	assert.ok(!fs.existsSync(`${build}/accesses-session.html`));
 });
 
 test('decodes paths when writing files', () => {
@@ -131,6 +160,9 @@ test('targets the data-sveltekit-hydrate parent node', () => {
 		/<body>([^]+?)<script type="module" data-sveltekit-hydrate="(\w+)">([^]+?)<\/script>[^]+?<\/body>/;
 
 	const match = pattern.exec(content);
+	if (!match) {
+		throw new Error('Could not find data-sveltekit-hydrate');
+	}
 
 	assert.equal(match[1].trim(), '<h1>hello</h1>');
 
@@ -139,6 +171,63 @@ test('targets the data-sveltekit-hydrate parent node', () => {
 			`target: document.querySelector('[data-sveltekit-hydrate="${match[2]}"]').parentNode`
 		)
 	);
+});
+
+test('prerenders binary data', async () => {
+	assert.equal(Buffer.compare(read('fetch-image/image.jpg', null), read('image.jpg', null)), 0);
+	assert.equal(Buffer.compare(read('fetch-image/image.png', null), read('image.png', null)), 0);
+});
+
+test('fetches data from local endpoint', () => {
+	const data = JSON.parse(read('origin/__data.json'));
+
+	assert.equal(data, {
+		type: 'data',
+		nodes: [
+			null,
+			{
+				type: 'data',
+				data: [{ message: 1 }, 'hello'],
+				uses: {}
+			}
+		]
+	});
+	assert.equal(read('origin/message.json'), JSON.stringify({ message: 'hello' }));
+});
+
+test('respects config.prerender.origin', () => {
+	const content = read('origin.html');
+	assert.ok(content.includes('<h2>http://example.com</h2>'));
+});
+
+test('$env - includes environment variables', () => {
+	const content = read('env.html');
+
+	assert.match(
+		content,
+		/.*PRIVATE_STATIC: accessible to server-side code\/replaced at build time.*/gs
+	);
+	assert.match(
+		content,
+		/.*PRIVATE_DYNAMIC: accessible to server-side code\/evaluated at run time.*/gs
+	);
+	assert.match(content, /.*PUBLIC_STATIC: accessible anywhere\/replaced at build time.*/gs);
+	assert.match(content, /.*PUBLIC_DYNAMIC: accessible anywhere\/evaluated at run time.*/gs);
+});
+
+test('prerenders a page in a (group)', () => {
+	const content = read('grouped.html');
+	assert.ok(content.includes('<h1>grouped</h1>'));
+});
+
+test('injects relative service worker', () => {
+	const content = read('index.html');
+	assert.ok(content.includes(`navigator.serviceWorker.register('./service-worker.js')`));
+});
+
+test('define service worker variables', () => {
+	const content = read('service-worker.js');
+	assert.ok(content.includes(`MY_ENV DEFINED`));
 });
 
 test.run();

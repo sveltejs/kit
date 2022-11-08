@@ -7,6 +7,10 @@ installPolyfills();
 
 const server = new Server(manifest);
 
+await server.init({
+	env: process.env
+});
+
 /**
  * @param {import('http').IncomingMessage} req
  * @param {import('http').ServerResponse} res
@@ -16,10 +20,10 @@ export default async (req, res) => {
 	let request;
 
 	try {
-		request = await getRequest(`https://${req.headers.host}`, req);
+		request = await getRequest({ base: `https://${req.headers.host}`, request: req });
 	} catch (err) {
 		res.statusCode = err.status || 400;
-		return res.end(err.reason || 'Invalid request body');
+		return res.end('Invalid request body');
 	}
 
 	setResponse(

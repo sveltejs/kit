@@ -3,11 +3,14 @@ import adapter from '@sveltejs/adapter-auto';
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: adapter(),
+		adapter: adapter()
+	},
 
-		prerender: {
-			default: true,
-			entries: ['*', '/content.json']
+	vitePlugin: {
+		experimental: {
+			inspector: {
+				holdMode: true
+			}
 		}
 	}
 };

@@ -12,8 +12,10 @@
 			"@sveltejs/kit": ["./types/index"],
 			// internal use only
 			"types": ["./types/internal"]
-		}
+		},
+		"noUnusedLocals": true,
+		"noUnusedParameters": true
 	},
 	"include": ["scripts/**/*", "src/**/*", "types/**/*"],
-	"exclude": ["src/packaging/test/fixtures/**/*", "src/packaging/test/watch/**/*"]
+	"exclude": ["./**/write_types/test/**"]
 }

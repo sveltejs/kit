@@ -63,10 +63,8 @@ function vercel_routes(builder) {
 /** @type {Platform[]} */
 export const platforms = [
 	{
-		// Build Output API
-		// TODO remove the ENABLE_VC_BUILD check when no longer required
 		name: 'Vercel',
-		test: () => !!process.env.VERCEL && !!process.env.ENABLE_VC_BUILD,
+		test: () => !!process.env.VERCEL,
 		defaults: (config) => ({
 			pages: `.vercel/output/static/${config.kit.appDir}/prerendered`,
 			assets: '.vercel/output/static'
@@ -78,26 +76,6 @@ export const platforms = [
 					version: 3,
 					routes: vercel_routes(builder)
 				})
-			);
-		}
-	},
-	{
-		// Legacy filesystem API
-		// TODO remove once Build Output API leaves beta
-		name: 'Vercel',
-		test: () => !!process.env.VERCEL,
-		defaults: (config) => ({
-			pages: `.vercel_build_output/static/${config.kit.appDir}/prerendered`,
-			assets: '.vercel_build_output/static'
-		}),
-		done: (builder) => {
-			if (!fs.existsSync('.vercel_build_output/config')) {
-				fs.mkdirSync('.vercel_build_output/config');
-			}
-
-			fs.writeFileSync(
-				'.vercel_build_output/config/routes.json',
-				JSON.stringify(vercel_routes(builder))
 			);
 		}
 	}

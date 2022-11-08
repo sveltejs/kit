@@ -1,36 +1,7 @@
-/** @param {Record<string, any>} obj */
-export function lowercase_keys(obj) {
-	/** @type {Record<string, any>} */
-	const clone = {};
-
-	for (const key in obj) {
-		clone[key.toLowerCase()] = obj[key];
-	}
-
-	return clone;
-}
-
-/** @param {Record<string, string>} params */
-export function decode_params(params) {
-	for (const key in params) {
-		// input has already been decoded by decodeURI
-		// now handle the rest that decodeURIComponent would do
-		params[key] = params[key]
-			.replace(/%23/g, '#')
-			.replace(/%3[Bb]/g, ';')
-			.replace(/%2[Cc]/g, ',')
-			.replace(/%2[Ff]/g, '/')
-			.replace(/%3[Ff]/g, '?')
-			.replace(/%3[Aa]/g, ':')
-			.replace(/%40/g, '@')
-			.replace(/%26/g, '&')
-			.replace(/%3[Dd]/g, '=')
-			.replace(/%2[Bb]/g, '+')
-			.replace(/%24/g, '$');
-	}
-
-	return params;
-}
+import * as devalue from 'devalue';
+import { negotiate } from '../../utils/http.js';
+import { has_data_suffix } from '../../utils/url.js';
+import { HttpError } from '../control.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -50,49 +21,183 @@ export function is_pojo(body) {
 	return true;
 }
 
-/** @param {import('types').RequestEvent} event */
-export function normalize_request_method(event) {
-	const method = event.request.method.toLowerCase();
-	return method === 'delete' ? 'del' : method; // 'delete' is a reserved word
+// TODO: Remove for 1.0
+/** @param {Record<string, any>} mod */
+export function check_method_names(mod) {
+	['get', 'post', 'put', 'patch', 'del'].forEach((m) => {
+		if (m in mod) {
+			const replacement = m === 'del' ? 'DELETE' : m.toUpperCase();
+			throw Error(
+				`Endpoint method "${m}" has changed to "${replacement}". See https://github.com/sveltejs/kit/discussions/5359 for more information.`
+			);
+		}
+	});
 }
 
+/** @type {import('types').SSRErrorPage} */
+export const GENERIC_ERROR = {
+	id: '__error'
+};
+
 /**
- * Serialize an error into a JSON string, by copying its `name`, `message`
- * and (in dev) `stack`, plus any custom properties, plus recursively
- * serialized `cause` properties. This is necessary because
- * `JSON.stringify(error) === '{}'`
- * @param {Error} error
- * @param {(error: Error) => string | undefined} get_stack
+ * @param {Partial<Record<import('types').HttpMethod, any>>} mod
+ * @param {import('types').HttpMethod} method
  */
-export function serialize_error(error, get_stack) {
-	return JSON.stringify(clone_error(error, get_stack));
+export function method_not_allowed(mod, method) {
+	return new Response(`${method} method not allowed`, {
+		status: 405,
+		headers: {
+			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+			// "The server must generate an Allow header field in a 405 status code response"
+			allow: allowed_methods(mod).join(', ')
+		}
+	});
 }
 
-/**
- * @param {Error} error
- * @param {(error: Error) => string | undefined} get_stack
- */
-function clone_error(error, get_stack) {
-	const {
-		name,
-		message,
-		// this should constitute 'using' a var, since it affects `custom`
-		// eslint-disable-next-line
-		stack,
-		// @ts-expect-error i guess typescript doesn't know about error.cause yet
-		cause,
-		...custom
-	} = error;
+/** @param {Partial<Record<import('types').HttpMethod, any>>} mod */
+export function allowed_methods(mod) {
+	const allowed = [];
 
-	/** @type {Record<string, any>} */
-	const object = { name, message, stack: get_stack(error) };
-
-	if (cause) object.cause = clone_error(cause, get_stack);
-
-	for (const key in custom) {
-		// @ts-expect-error
-		object[key] = custom[key];
+	for (const method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
+		if (method in mod) allowed.push(method);
 	}
 
-	return object;
+	if (mod.GET || mod.HEAD) allowed.push('HEAD');
+
+	return allowed;
+}
+
+/**
+ * @template {'prerender' | 'ssr' | 'csr'} Option
+ * @template {Option extends 'prerender' ? import('types').PrerenderOption : boolean} Value
+ *
+ * @param {Array<import('types').SSRNode | undefined>} nodes
+ * @param {Option} option
+ *
+ * @returns {Value | undefined}
+ */
+export function get_option(nodes, option) {
+	return nodes.reduce((value, node) => {
+		// TODO remove for 1.0
+		for (const thing of [node?.server, node?.shared]) {
+			if (thing && ('router' in thing || 'hydrate' in thing)) {
+				throw new Error(
+					'`export const hydrate` and `export const router` have been replaced with `export const csr`. See https://github.com/sveltejs/kit/pull/6446'
+				);
+			}
+		}
+
+		return /** @type {any} TypeScript's too dumb to understand this */ (
+			node?.shared?.[option] ?? node?.server?.[option] ?? value
+		);
+	}, /** @type {Value | undefined} */ (undefined));
+}
+
+/**
+ * Return as a response that renders the error.html
+ *
+ * @param {import('types').SSROptions} options
+ * @param {number} status
+ * @param {string} message
+ */
+export function static_error_page(options, status, message) {
+	return new Response(options.error_template({ status, message }), {
+		headers: { 'content-type': 'text/html; charset=utf-8' },
+		status
+	});
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
+ * @param {Error | HttpError} error
+ */
+export function handle_fatal_error(event, options, error) {
+	const status = error instanceof HttpError ? error.status : 500;
+	const body = handle_error_and_jsonify(event, options, error);
+
+	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
+	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
+		'application/json',
+		'text/html'
+	]);
+
+	if (has_data_suffix(event.url.pathname) || type === 'application/json') {
+		return new Response(JSON.stringify(body), {
+			status,
+			headers: { 'content-type': 'application/json; charset=utf-8' }
+		});
+	}
+
+	return static_error_page(options, status, body.message);
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
+ * @param {any} error
+ * @returns {App.Error}
+ */
+export function handle_error_and_jsonify(event, options, error) {
+	if (error instanceof HttpError) {
+		return error.body;
+	} else {
+		return options.handle_error(error, event);
+	}
+}
+
+/**
+ * @param {number} status
+ * @param {string} location
+ */
+export function redirect_response(status, location) {
+	const response = new Response(undefined, {
+		status,
+		headers: { location }
+	});
+	return response;
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {Error & { path: string }} error
+ */
+export function clarify_devalue_error(event, error) {
+	if (error.path) {
+		return `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data${error.path})`;
+	}
+
+	if (error.path === '') {
+		return `Data returned from \`load\` while rendering ${event.route.id} is not a plain object`;
+	}
+
+	// belt and braces — this should never happen
+	return error.message;
+}
+
+/** @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | import('types').ServerErrorNode | null} node */
+export function serialize_data_node(node) {
+	if (!node) return 'null';
+
+	if (node.type === 'error' || node.type === 'skip') {
+		return JSON.stringify(node);
+	}
+
+	const stringified = devalue.stringify(node.data);
+
+	const uses = [];
+
+	if (node.uses.dependencies.size > 0) {
+		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
+	}
+
+	if (node.uses.params.size > 0) {
+		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
+	}
+
+	if (node.uses.parent) uses.push(`"parent":1`);
+	if (node.uses.route) uses.push(`"route":1`);
+	if (node.uses.url) uses.push(`"url":1`);
+
+	return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}}`;
 }

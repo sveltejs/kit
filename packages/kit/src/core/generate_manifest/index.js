@@ -1,6 +1,7 @@
 import { s } from '../../utils/misc.js';
-import { parse_route_id } from '../../utils/routing.js';
 import { get_mime_lookup } from '../utils.js';
+import { resolve_symlinks } from '../../exports/vite/build/utils.js';
+import { compact } from '../../utils/array.js';
 
 /**
  * Generates the data used to write the server-side manifest.js file. This data is used in the Vite
@@ -13,34 +14,41 @@ import { get_mime_lookup } from '../utils.js';
  * }} opts
  */
 export function generate_manifest({ build_data, relative_path, routes, format = 'esm' }) {
+	/**
+	 * @type {Map<any, number>} The new index of each node in the filtered nodes array
+	 */
+	const reindexed = new Map();
+	/**
+	 * @type {Set<any>} All nodes actually used in the routes definition (prerendered routes are omitted)
+	 */
+	const used_nodes = new Set();
+
+	for (const route of routes) {
+		if (route.page) {
+			for (const i of route.page.layouts) used_nodes.add(i);
+			for (const i of route.page.errors) used_nodes.add(i);
+			used_nodes.add(route.page.leaf);
+		}
+	}
+
+	const node_paths = compact(
+		build_data.manifest_data.nodes.map((_, i) => {
+			if (used_nodes.has(i)) {
+				reindexed.set(i, reindexed.size);
+				return `${relative_path}/nodes/${i}.js`;
+			}
+		})
+	);
+
 	/** @typedef {{ index: number, path: string }} LookupEntry */
-	/** @type {Map<string, LookupEntry>} */
+	/** @type {Map<import('types').PageNode, LookupEntry>} */
 	const bundled_nodes = new Map();
 
-	// 0 and 1 are special, they correspond to the root layout and root error nodes
-	bundled_nodes.set(build_data.manifest_data.components[0], {
-		path: `${relative_path}/nodes/0.js`,
-		index: 0
-	});
-
-	bundled_nodes.set(build_data.manifest_data.components[1], {
-		path: `${relative_path}/nodes/1.js`,
-		index: 1
-	});
-
-	routes.forEach((route) => {
-		if (route.type === 'page') {
-			[...route.a, ...route.b].forEach((component) => {
-				if (component && !bundled_nodes.has(component)) {
-					const i = build_data.manifest_data.components.indexOf(component);
-
-					bundled_nodes.set(component, {
-						path: `${relative_path}/nodes/${i}.js`,
-						index: bundled_nodes.size
-					});
-				}
-			});
-		}
+	build_data.manifest_data.nodes.forEach((node, i) => {
+		bundled_nodes.set(node, {
+			path: `${relative_path}/nodes/${i}.js`,
+			index: i
+		});
 	});
 
 	/** @type {(path: string) => string} */
@@ -57,57 +65,52 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 		assets.push(build_data.service_worker);
 	}
 
-	/** @param {string | undefined} id */
-	const get_index = (id) => id && /** @type {LookupEntry} */ (bundled_nodes.get(id)).index;
-
 	const matchers = new Set();
 
+	/** @param {Array<number | undefined>} indexes */
+	function get_nodes(indexes) {
+		let string = indexes.map((n) => reindexed.get(n) ?? '').join(',');
+
+		if (indexes.at(-1) === undefined) {
+			// since JavaScript ignores trailing commas, we need to insert a dummy
+			// comma so that the array has the correct length if the last item
+			// is undefined
+			string += ',';
+		}
+
+		return `[${string}]`;
+	}
+
 	// prettier-ignore
+	// String representation of
+	/** @type {import('types').SSRManifest} */
 	return `{
 		appDir: ${s(build_data.app_dir)},
+		appPath: ${s(build_data.app_path)},
 		assets: new Set(${s(assets)}),
 		mimeTypes: ${s(get_mime_lookup(build_data.manifest_data))},
 		_: {
 			entry: ${s(build_data.client.entry)},
 			nodes: [
-				${Array.from(bundled_nodes.values()).map(node => loader(node.path)).join(',\n\t\t\t\t')}
+				${(node_paths).map(loader).join(',\n\t\t\t\t')}
 			],
 			routes: [
 				${routes.map(route => {
-					const { pattern, names, types } = parse_route_id(route.id);
-
-					types.forEach(type => {
+					route.types.forEach(type => {
 						if (type) matchers.add(type);
 					});
 
-					if (route.type === 'page') {
-						return `{
-							type: 'page',
-							id: ${s(route.id)},
-							pattern: ${pattern},
-							names: ${s(names)},
-							types: ${s(types)},
-							path: ${route.path ? s(route.path) : null},
-							shadow: ${route.shadow ? loader(`${relative_path}/${build_data.server.vite_manifest[route.shadow].file}`) : null},
-							a: ${s(route.a.map(get_index))},
-							b: ${s(route.b.map(get_index))}
-						}`.replace(/^\t\t/gm, '');
-					} else {
-						if (!build_data.server.vite_manifest[route.file]) {
-							// this is necessary in cases where a .css file snuck in —
-							// perhaps it would be better to disallow these (and others?)
-							return null;
-						}
+					if (!route.page && !route.endpoint) return;
 
-						return `{
-							type: 'endpoint',
-							id: ${s(route.id)},
-							pattern: ${pattern},
-							names: ${s(names)},
-							types: ${s(types)},
-							load: ${loader(`${relative_path}/${build_data.server.vite_manifest[route.file].file}`)}
-						}`.replace(/^\t\t/gm, '');
-					}
+					return `{
+					id: ${s(route.id)},
+					pattern: ${route.pattern},
+					names: ${s(route.names)},
+					types: ${s(route.types)},
+					optional: ${s(route.optional)},
+					page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${reindexed.get(route.page.leaf)} }` : 'null'},
+					endpoint: ${route.endpoint ? loader(`${relative_path}/${resolve_symlinks(build_data.server.vite_manifest, route.endpoint.file).chunk.file}`) : 'null'}
+				}`;
 				}).filter(Boolean).join(',\n\t\t\t\t')}
 			],
 			matchers: async () => {

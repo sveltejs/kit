@@ -3,18 +3,19 @@
 	"pipeline": {
 		"@sveltejs/kit#build": {
 			"dependsOn": ["^build"],
-			"inputs": ["src/**", "scripts/**", "types/**"],
+			"inputs": ["rollup.config.js", "src/**", "scripts/**", "types/**"],
 			"outputs": ["dist/**", "docs/**", "assets/**"],
 			"outputMode": "new-only"
 		},
 		"kit.svelte.dev#build": {
-			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
+			"dependsOn": ["^build"],
 			"inputs": ["src/**", "../../packages/kit/docs/**", "../../documentation/**"],
-			"outputs": [".vercel_build_output/**", ".vercel/output/**" ],
-			"outputMode": "new-only"
+			"outputs": [".vercel_build_output/**", ".vercel/output/**"],
+			"outputMode": "new-only",
+			"env": ["VERCEL", "ENABLE_VC_BUILD"]
 		},
 		"build": {
-			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
+			"dependsOn": ["^build"],
 			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
 			"outputs": [
 				"files/**",
@@ -23,7 +24,8 @@
 				".vercel_build_output/**",
 				".vercel/output/**"
 			],
-			"outputMode": "new-only"
+			"outputMode": "new-only",
+			"env": ["VERCEL", "ENABLE_VC_BUILD"]
 		},
 		"check": {
 			"dependsOn": ["prepare"],
@@ -38,13 +40,8 @@
 			"outputMode": "new-only"
 		},
 		"format": {
-			"outputs": [
-				"src/**",
-				"scripts/**",
-				"shared/**",
-				"templates/**",
-				"types/**"
-			],
+			"cache": false,
+			"outputs": [],
 			"outputMode": "new-only"
 		},
 		"prepare": {
@@ -58,9 +55,10 @@
 			"outputMode": "new-only"
 		},
 		"test": {
-			"dependsOn": ["^build", "$CI", "$TURBO_CACHE_KEY"],
+			"dependsOn": ["^build"],
 			"outputs": ["coverage/", "test-results/**"],
-			"outputMode": "new-only"
+			"outputMode": "new-only",
+			"env": ["CI", "TURBO_CACHE_KEY"]
 		},
 		"lint": {
 			"outputs": [],

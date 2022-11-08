@@ -7,6 +7,7 @@ const scheme = /^[a-z]+:/;
  */
 export function resolve(base, path) {
 	if (scheme.test(path)) return path;
+	if (path[0] === '#') return base + path;
 
 	const base_match = absolute.exec(base);
 	const path_match = absolute.exec(path);
@@ -53,23 +54,106 @@ export function normalize_path(path, trailing_slash) {
 	return path;
 }
 
-export class LoadURL extends URL {
-	/** @returns {string} */
-	get hash() {
-		throw new Error(
-			'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
-		);
+/**
+ * Decode pathname excluding %25 to prevent further double decoding of params
+ * @param {string} pathname
+ */
+export function decode_pathname(pathname) {
+	return pathname.split('%25').map(decodeURI).join('%25');
+}
+
+/** @param {Record<string, string>} params */
+export function decode_params(params) {
+	for (const key in params) {
+		// input has already been decoded by decodeURI
+		// now handle the rest
+		params[key] = decodeURIComponent(params[key]);
+	}
+
+	return params;
+}
+
+/**
+ * URL properties that could change during the lifetime of the page,
+ * which excludes things like `origin`
+ * @type {Array<keyof URL>}
+ */
+const tracked_url_properties = ['href', 'pathname', 'search', 'searchParams', 'toString', 'toJSON'];
+
+/**
+ * @param {URL} url
+ * @param {() => void} callback
+ */
+export function make_trackable(url, callback) {
+	const tracked = new URL(url);
+
+	for (const property of tracked_url_properties) {
+		let value = tracked[property];
+
+		Object.defineProperty(tracked, property, {
+			get() {
+				callback();
+				return value;
+			},
+
+			enumerable: true,
+			configurable: true
+		});
+	}
+
+	if (!__SVELTEKIT_BROWSER__) {
+		// @ts-ignore
+		tracked[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+			return inspect(url, opts);
+		};
+	}
+
+	disable_hash(tracked);
+
+	return tracked;
+}
+
+/**
+ * Disallow access to `url.hash` on the server and in `load`
+ * @param {URL} url
+ */
+export function disable_hash(url) {
+	Object.defineProperty(url, 'hash', {
+		get() {
+			throw new Error(
+				'Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead'
+			);
+		}
+	});
+}
+
+/**
+ * Disallow access to `url.search` and `url.searchParams` during prerendering
+ * @param {URL} url
+ */
+export function disable_search(url) {
+	for (const property of ['search', 'searchParams']) {
+		Object.defineProperty(url, property, {
+			get() {
+				throw new Error(`Cannot access url.${property} on a page with prerendering enabled`);
+			}
+		});
 	}
 }
 
-export class PrerenderingURL extends URL {
-	/** @returns {string} */
-	get search() {
-		throw new Error('Cannot access url.search on a page with prerendering enabled');
-	}
+const DATA_SUFFIX = '/__data.json';
 
-	/** @returns {URLSearchParams} */
-	get searchParams() {
-		throw new Error('Cannot access url.searchParams on a page with prerendering enabled');
-	}
+/** @param {string} pathname */
+export function has_data_suffix(pathname) {
+	return pathname.endsWith(DATA_SUFFIX);
+}
+
+/** @param {string} pathname */
+export function add_data_suffix(pathname) {
+	return pathname.replace(/\/$/, '') + DATA_SUFFIX;
+}
+
+/** @param {string} pathname */
+export function strip_data_suffix(pathname) {
+	return pathname.slice(0, -DATA_SUFFIX.length);
 }

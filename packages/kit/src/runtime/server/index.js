@@ -1,50 +1,51 @@
-import { render_endpoint } from './endpoint.js';
+import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
-import { decode_params, serialize_error } from './utils.js';
-import { normalize_path } from '../../utils/url.js';
+import { is_form_content_type } from '../../utils/http.js';
+import { GENERIC_ERROR, handle_fatal_error } from './utils.js';
+import {
+	decode_pathname,
+	decode_params,
+	disable_search,
+	has_data_suffix,
+	normalize_path,
+	strip_data_suffix
+} from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
-import { negotiate } from '../../utils/http.js';
+import { INVALIDATED_HEADER, render_data } from './data/index.js';
+import { add_cookies_to_headers, get_cookies } from './cookie.js';
+import { HttpError } from '../control.js';
+import { create_fetch } from './fetch.js';
 
-const DATA_SUFFIX = '/__data.json';
+/* global __SVELTEKIT_ADAPTER_NAME__ */
 
 /** @param {{ html: string }} opts */
 const default_transform = ({ html }) => html;
+
+const default_filter = () => false;
 
 /** @type {import('types').Respond} */
 export async function respond(request, options, state) {
 	let url = new URL(request.url);
 
-	const { parameter, allowed } = options.method_override;
-	const method_override = url.searchParams.get(parameter)?.toUpperCase();
+	if (options.csrf.check_origin) {
+		const forbidden =
+			request.method === 'POST' &&
+			request.headers.get('origin') !== url.origin &&
+			is_form_content_type(request);
 
-	if (method_override) {
-		if (request.method === 'POST') {
-			if (allowed.includes(method_override)) {
-				request = new Proxy(request, {
-					get: (target, property, _receiver) => {
-						if (property === 'method') return method_override;
-						return Reflect.get(target, property, target);
-					}
-				});
-			} else {
-				const verb = allowed.length === 0 ? 'enabled' : 'allowed';
-				const body = `${parameter}=${method_override} is not ${verb}. See https://kit.svelte.dev/docs/configuration#methodoverride`;
-
-				return new Response(body, {
-					status: 400
-				});
-			}
-		} else {
-			throw new Error(`${parameter}=${method_override} is only allowed with POST requests`);
+		if (forbidden) {
+			return new Response(`Cross-site ${request.method} form submissions are forbidden`, {
+				status: 403
+			});
 		}
 	}
 
 	let decoded;
 	try {
-		decoded = decodeURI(url.pathname);
+		decoded = decode_pathname(url.pathname);
 	} catch {
 		return new Response('Malformed URI', { status: 400 });
 	}
@@ -62,13 +63,8 @@ export async function respond(request, options, state) {
 		decoded = decoded.slice(options.paths.base.length) || '/';
 	}
 
-	const is_data_request = decoded.endsWith(DATA_SUFFIX);
-
-	if (is_data_request) {
-		const data_suffix_length = DATA_SUFFIX.length - (options.trailing_slash === 'always' ? 1 : 0);
-		decoded = decoded.slice(0, -data_suffix_length) || '/';
-		url = new URL(url.origin + url.pathname.slice(0, -data_suffix_length) + url.search);
-	}
+	const is_data_request = has_data_suffix(decoded);
+	if (is_data_request) decoded = strip_data_suffix(decoded) || '/';
 
 	if (!state.prerendering?.fallback) {
 		const matchers = await options.manifest._.matchers();
@@ -77,7 +73,7 @@ export async function respond(request, options, state) {
 			const match = candidate.pattern.exec(decoded);
 			if (!match) continue;
 
-			const matched = exec(match, candidate.names, candidate.types, matchers);
+			const matched = exec(match, candidate, matchers);
 			if (matched) {
 				route = candidate;
 				params = decode_params(matched);
@@ -86,54 +82,71 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	if (route) {
-		if (route.type === 'page') {
-			const normalized = normalize_path(url.pathname, options.trailing_slash);
+	if (route?.page && !is_data_request) {
+		const normalized = normalize_path(url.pathname, options.trailing_slash);
 
-			if (normalized !== url.pathname && !state.prerendering?.fallback) {
-				return new Response(undefined, {
-					status: 301,
-					headers: {
-						'x-sveltekit-normalize': '1',
-						location:
-							// ensure paths starting with '//' are not treated as protocol-relative
-							(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-							(url.search === '?' ? '' : url.search)
-					}
-				});
-			}
-		} else if (is_data_request) {
-			// requesting /__data.json should fail for a standalone endpoint
+		if (normalized !== url.pathname && !state.prerendering?.fallback) {
 			return new Response(undefined, {
-				status: 404
+				status: 301,
+				headers: {
+					'x-sveltekit-normalize': '1',
+					location:
+						// ensure paths starting with '//' are not treated as protocol-relative
+						(normalized.startsWith('//') ? url.origin + normalized : normalized) +
+						(url.search === '?' ? '' : url.search)
+				}
 			});
 		}
 	}
 
+	/** @type {Record<string, string>} */
+	const headers = {};
+
+	const { cookies, new_cookies, get_cookie_header } = get_cookies(request, url, options);
+
+	if (state.prerendering) disable_search(url);
+
 	/** @type {import('types').RequestEvent} */
 	const event = {
-		get clientAddress() {
-			if (!state.getClientAddress) {
+		cookies,
+		// @ts-expect-error this is added in the next step, because `create_fetch` needs a reference to `event`
+		fetch: null,
+		getClientAddress:
+			state.getClientAddress ||
+			(() => {
 				throw new Error(
-					`${
-						import.meta.env.VITE_SVELTEKIT_ADAPTER_NAME
-					} does not specify getClientAddress. Please raise an issue`
+					`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
 				);
-			}
-
-			Object.defineProperty(event, 'clientAddress', {
-				value: state.getClientAddress()
-			});
-
-			return event.clientAddress;
-		},
+			}),
 		locals: {},
 		params,
 		platform: state.platform,
 		request,
-		routeId: route && route.id,
+		route: { id: route?.id ?? null },
+		setHeaders: (new_headers) => {
+			for (const key in new_headers) {
+				const lower = key.toLowerCase();
+				const value = new_headers[key];
+
+				if (lower === 'set-cookie') {
+					throw new Error(
+						`Use \`event.cookies.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
+					);
+				} else if (lower in headers) {
+					throw new Error(`"${key}" header is already set`);
+				} else {
+					headers[lower] = value;
+
+					if (state.prerendering && lower === 'cache-control') {
+						state.prerendering.cache = /** @type {string} */ (value);
+					}
+				}
+			}
+		},
 		url
 	};
+
+	event.fetch = create_fetch({ event, options, state, get_cookie_header });
 
 	// TODO remove this for 1.0
 	/**
@@ -159,145 +172,154 @@ export async function respond(request, options, state) {
 	};
 
 	Object.defineProperties(event, {
+		clientAddress: removed('clientAddress', 'getClientAddress'),
 		method: removed('method', 'request.method', details),
 		headers: removed('headers', 'request.headers', details),
 		origin: removed('origin', 'url.origin'),
 		path: removed('path', 'url.pathname'),
 		query: removed('query', 'url.searchParams'),
 		body: body_getter,
-		rawBody: body_getter
+		rawBody: body_getter,
+		routeId: removed('routeId', 'route.id')
 	});
 
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
-		ssr: true,
-		transformPage: default_transform
+		transformPageChunk: default_transform,
+		filterSerializedResponseHeaders: default_filter
 	};
 
-	// TODO match route before calling handle?
+	/**
+	 *
+	 * @param {import('types').RequestEvent} event
+	 * @param {import('types').ResolveOptions} [opts]
+	 */
+	async function resolve(event, opts) {
+		try {
+			if (opts) {
+				// TODO remove for 1.0
+				if ('transformPage' in opts) {
+					throw new Error(
+						'transformPage has been replaced by transformPageChunk — see https://github.com/sveltejs/kit/pull/5657 for more information'
+					);
+				}
+
+				if ('ssr' in opts) {
+					throw new Error(
+						'ssr has been removed, set it in the appropriate +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197'
+					);
+				}
+
+				resolve_opts = {
+					transformPageChunk: opts.transformPageChunk || default_transform,
+					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter
+				};
+			}
+
+			if (state.prerendering?.fallback) {
+				return await render_response({
+					event,
+					options,
+					state,
+					page_config: { ssr: false, csr: true },
+					status: 200,
+					error: null,
+					branch: [],
+					fetched: [],
+					resolve_opts
+				});
+			}
+
+			if (route) {
+				/** @type {Response} */
+				let response;
+
+				if (is_data_request) {
+					response = await render_data(event, route, options, state);
+				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
+					response = await render_endpoint(event, await route.endpoint(), state);
+				} else if (route.page) {
+					response = await render_page(event, route, route.page, options, state, resolve_opts);
+				} else {
+					// a route will always have a page or an endpoint, but TypeScript
+					// doesn't know that
+					throw new Error('This should never happen');
+				}
+
+				return response;
+			}
+
+			if (state.initiator === GENERIC_ERROR) {
+				return new Response('Internal Server Error', {
+					status: 500
+				});
+			}
+
+			// if this request came direct from the user, rather than
+			// via a `fetch` in a `load`, render a 404 page
+			if (!state.initiator) {
+				return await respond_with_error({
+					event,
+					options,
+					state,
+					status: 404,
+					error: new Error(`Not found: ${event.url.pathname}`),
+					resolve_opts
+				});
+			}
+
+			if (state.prerendering) {
+				return new Response('not found', { status: 404 });
+			}
+
+			// we can't load the endpoint from our own manifest,
+			// so we need to make an actual HTTP request
+			return await fetch(request);
+		} catch (e) {
+			// HttpError can come from endpoint - TODO should it be handled there instead?
+			const error = e instanceof HttpError ? e : coalesce_to_error(e);
+			return handle_fatal_error(event, options, error);
+		} finally {
+			event.cookies.set = () => {
+				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
+			};
+
+			event.setHeaders = () => {
+				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+			};
+		}
+	}
 
 	try {
 		const response = await options.hooks.handle({
 			event,
-			resolve: async (event, opts) => {
-				if (opts) {
-					resolve_opts = {
-						ssr: opts.ssr !== false,
-						transformPage: opts.transformPage || default_transform
-					};
-				}
-
-				if (state.prerendering?.fallback) {
-					return await render_response({
-						event,
-						options,
-						state,
-						$session: await options.hooks.getSession(event),
-						page_config: { router: true, hydrate: true },
-						stuff: {},
-						status: 200,
-						error: null,
-						branch: [],
-						resolve_opts: {
-							...resolve_opts,
-							ssr: false
-						}
-					});
-				}
-
-				if (route) {
-					/** @type {Response} */
-					let response;
-
-					if (is_data_request && route.type === 'page' && route.shadow) {
-						response = await render_endpoint(event, await route.shadow(), options);
-
-						// loading data for a client-side transition is a special case
-						if (request.headers.has('x-sveltekit-load')) {
-							// since redirects are opaque to the browser, we need to repackage
-							// 3xx responses as 200s with a custom header
-							if (response.status >= 300 && response.status < 400) {
-								const location = response.headers.get('location');
-
-								if (location) {
-									const headers = new Headers(response.headers);
-									headers.set('x-sveltekit-location', location);
-									response = new Response(undefined, {
-										status: 204,
-										headers
-									});
-								}
-							}
-						}
-					} else {
-						response =
-							route.type === 'endpoint'
-								? await render_endpoint(event, await route.load(), options)
-								: await render_page(event, route, options, state, resolve_opts);
+			resolve: (event, opts) =>
+				resolve(event, opts).then((response) => {
+					// add headers/cookies here, rather than inside `resolve`, so that we
+					// can do it once for all responses instead of once per `return`
+					for (const key in headers) {
+						const value = headers[key];
+						response.headers.set(key, /** @type {string} */ (value));
 					}
 
-					if (response) {
-						// respond with 304 if etag matches
-						if (response.status === 200 && response.headers.has('etag')) {
-							let if_none_match_value = request.headers.get('if-none-match');
-
-							// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
-							if (if_none_match_value?.startsWith('W/"')) {
-								if_none_match_value = if_none_match_value.substring(2);
-							}
-
-							const etag = /** @type {string} */ (response.headers.get('etag'));
-
-							if (if_none_match_value === etag) {
-								const headers = new Headers({ etag });
-
-								// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
-								for (const key of [
-									'cache-control',
-									'content-location',
-									'date',
-									'expires',
-									'vary'
-								]) {
-									const value = response.headers.get(key);
-									if (value) headers.set(key, value);
-								}
-
-								return new Response(undefined, {
-									status: 304,
-									headers
-								});
-							}
+					if (is_data_request) {
+						// set the Vary header on __data.json requests to ensure we don't cache
+						// incomplete responses with skipped data loads
+						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary
+						const vary = response.headers.get('Vary');
+						if (vary !== '*') {
+							response.headers.append('Vary', INVALIDATED_HEADER);
 						}
-
-						return response;
 					}
-				}
 
-				// if this request came direct from the user, rather than
-				// via a `fetch` in a `load`, render a 404 page
-				if (!state.initiator) {
-					const $session = await options.hooks.getSession(event);
-					return await respond_with_error({
-						event,
-						options,
-						state,
-						$session,
-						status: 404,
-						error: new Error(`Not found: ${event.url.pathname}`),
-						resolve_opts
-					});
-				}
+					add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
-				if (state.prerendering) {
-					return new Response('not found', { status: 404 });
-				}
+					if (state.prerendering && event.route.id !== null) {
+						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+					}
 
-				// we can't load the endpoint from our own manifest,
-				// so we need to make an actual HTTP request
-				return await fetch(request);
-			},
-
+					return response;
+				}),
 			// TODO remove for 1.0
 			// @ts-expect-error
 			get request() {
@@ -305,46 +327,43 @@ export async function respond(request, options, state) {
 			}
 		});
 
-		// TODO for 1.0, change the error message to point to docs rather than PR
-		if (response && !(response instanceof Response)) {
-			throw new Error('handle must return a Response object' + details);
+		// respond with 304 if etag matches
+		if (response.status === 200 && response.headers.has('etag')) {
+			let if_none_match_value = request.headers.get('if-none-match');
+
+			// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
+			if (if_none_match_value?.startsWith('W/"')) {
+				if_none_match_value = if_none_match_value.substring(2);
+			}
+
+			const etag = /** @type {string} */ (response.headers.get('etag'));
+
+			if (if_none_match_value === etag) {
+				const headers = new Headers({ etag });
+
+				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
+				for (const key of [
+					'cache-control',
+					'content-location',
+					'date',
+					'expires',
+					'vary',
+					'set-cookie'
+				]) {
+					const value = response.headers.get(key);
+					if (value) headers.set(key, value);
+				}
+
+				return new Response(undefined, {
+					status: 304,
+					headers
+				});
+			}
 		}
 
 		return response;
 	} catch (/** @type {unknown} */ e) {
 		const error = coalesce_to_error(e);
-
-		options.handle_error(error, event);
-
-		const type = negotiate(event.request.headers.get('accept') || 'text/html', [
-			'text/html',
-			'application/json'
-		]);
-
-		if (is_data_request || type === 'application/json') {
-			return new Response(serialize_error(error, options.get_stack), {
-				status: 500,
-				headers: { 'content-type': 'application/json; charset=utf-8' }
-			});
-		}
-
-		try {
-			const $session = await options.hooks.getSession(event);
-			return await respond_with_error({
-				event,
-				options,
-				state,
-				$session,
-				status: 500,
-				error,
-				resolve_opts
-			});
-		} catch (/** @type {unknown} */ e) {
-			const error = coalesce_to_error(e);
-
-			return new Response(options.dev ? error.stack : error.message, {
-				status: 500
-			});
-		}
+		return handle_fatal_error(event, options, error);
 	}
 }

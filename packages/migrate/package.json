@@ -1,0 +1,38 @@
+{
+	"name": "svelte-migrate",
+	"version": "1.0.0-next.13",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sveltejs/kit",
+		"directory": "packages/migrate"
+	},
+	"license": "MIT",
+	"homepage": "https://kit.svelte.dev",
+	"publishConfig": {
+		"access": "public"
+	},
+	"type": "module",
+	"bin": {
+		"svelte-migrate": "./bin.js"
+	},
+	"files": [
+		"bin.js",
+		"migrations"
+	],
+	"dependencies": {
+		"kleur": "^4.1.5",
+		"magic-string": "^0.26.7",
+		"prompts": "^2.4.2",
+		"tiny-glob": "^0.2.9",
+		"typescript": "^4.8.4"
+	},
+	"devDependencies": {
+		"@types/prompts": "^2.4.1",
+		"prettier": "^2.7.1",
+		"uvu": "^0.5.6"
+	},
+	"scripts": {
+		"test": "uvu",
+		"check": "tsc"
+	}
+}

@@ -4,13 +4,9 @@ import { imagetools } from 'vite-imagetools';
 
 /** @type {import('vite').UserConfig} */
 const config = {
-	plugins: [imagetools(), sveltekit()],
+	logLevel: 'info',
 
-	resolve: {
-		alias: {
-			$img: path.resolve('src/images')
-		}
-	},
+	plugins: [imagetools(), sveltekit()],
 
 	server: {
 		fs: {

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-auto",
-	"version": "1.0.0-next.55",
+	"version": "1.0.0-next.87",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -25,10 +25,9 @@
 		"adapters.js"
 	],
 	"scripts": {
-		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
-		"format": "npm run check-format -- --write",
-		"check": "tsc",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"format": "pnpm lint --write",
+		"check": "tsc"
 	},
 	"dependencies": {
 		"@sveltejs/adapter-cloudflare": "workspace:*",
@@ -36,7 +35,7 @@
 		"@sveltejs/adapter-vercel": "workspace:*"
 	},
 	"devDependencies": {
-		"@types/node": "^16.11.36",
-		"typescript": "^4.7.4"
+		"@types/node": "^16.11.68",
+		"typescript": "^4.8.4"
 	}
 }

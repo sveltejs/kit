@@ -1,8 +1,5 @@
 import { escape_html_attr } from '../../../utils/escape.js';
-import { sha256, base64 } from './crypto.js';
-
-/** @type {Promise<void>} */
-export let csp_ready;
+import { base64, sha256 } from './crypto.js';
 
 const array = new Uint8Array(16);
 
@@ -18,17 +15,17 @@ const quoted = new Set([
 	'unsafe-inline',
 	'none',
 	'strict-dynamic',
-	'report-sample'
+	'report-sample',
+	'wasm-unsafe-eval'
 ]);
 
 const crypto_pattern = /^(nonce|sha\d\d\d)-/;
 
-export class Csp {
+// CSP and CSP Report Only are extremely similar with a few caveats
+// the easiest/DRYest way to express this is with some private encapsulation
+class BaseProvider {
 	/** @type {boolean} */
 	#use_hashes;
-
-	/** @type {boolean} */
-	#dev;
 
 	/** @type {boolean} */
 	#script_needs_csp;
@@ -45,21 +42,18 @@ export class Csp {
 	/** @type {import('types').Csp.Source[]} */
 	#style_src;
 
+	/** @type {string} */
+	#nonce;
+
 	/**
-	 * @param {{
-	 *   mode: string,
-	 *   directives: import('types').CspDirectives
-	 * }} config
-	 * @param {{
-	 *   dev: boolean;
-	 *   prerender: boolean;
-	 *   needs_nonce: boolean;
-	 * }} opts
+	 * @param {boolean} use_hashes
+	 * @param {import('types').CspDirectives} directives
+	 * @param {string} nonce
+	 * @param {boolean} dev
 	 */
-	constructor({ mode, directives }, { dev, prerender, needs_nonce }) {
-		this.#use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
+	constructor(use_hashes, directives, nonce, dev) {
+		this.#use_hashes = use_hashes;
 		this.#directives = dev ? { ...directives } : directives; // clone in dev so we can safely mutate
-		this.#dev = dev;
 
 		const d = this.#directives;
 
@@ -101,10 +95,7 @@ export class Csp {
 
 		this.script_needs_nonce = this.#script_needs_csp && !this.#use_hashes;
 		this.style_needs_nonce = this.#style_needs_csp && !this.#use_hashes;
-
-		if (this.script_needs_nonce || this.style_needs_nonce || needs_nonce) {
-			this.nonce = generate_nonce();
-		}
+		this.#nonce = nonce;
 	}
 
 	/** @param {string} content */
@@ -113,7 +104,7 @@ export class Csp {
 			if (this.#use_hashes) {
 				this.#script_src.push(`sha256-${sha256(content)}`);
 			} else if (this.#script_src.length === 0) {
-				this.#script_src.push(`nonce-${this.nonce}`);
+				this.#script_src.push(`nonce-${this.#nonce}`);
 			}
 		}
 	}
@@ -124,12 +115,14 @@ export class Csp {
 			if (this.#use_hashes) {
 				this.#style_src.push(`sha256-${sha256(content)}`);
 			} else if (this.#style_src.length === 0) {
-				this.#style_src.push(`nonce-${this.nonce}`);
+				this.#style_src.push(`nonce-${this.#nonce}`);
 			}
 		}
 	}
 
-	/** @param {boolean} [is_meta] */
+	/**
+	 * @param {boolean} [is_meta]
+	 */
 	get_header(is_meta = false) {
 		const header = [];
 
@@ -160,7 +153,7 @@ export class Csp {
 				continue;
 			}
 
-			// @ts-expect-error gimme a break typescript, `key` is obviously a member of directives
+			// @ts-expect-error gimme a break typescript, `key` is obviously a member of internal_directives
 			const value = /** @type {string[] | true} */ (directives[key]);
 
 			if (!value) continue;
@@ -181,9 +174,77 @@ export class Csp {
 
 		return header.join('; ');
 	}
+}
 
+class CspProvider extends BaseProvider {
 	get_meta() {
 		const content = escape_html_attr(this.get_header(true));
 		return `<meta http-equiv="content-security-policy" content=${content}>`;
+	}
+}
+
+class CspReportOnlyProvider extends BaseProvider {
+	/**
+	 * @param {boolean} use_hashes
+	 * @param {import('types').CspDirectives} directives
+	 * @param {string} nonce
+	 * @param {boolean} dev
+	 */
+	constructor(use_hashes, directives, nonce, dev) {
+		super(use_hashes, directives, nonce, dev);
+
+		if (Object.values(directives).filter((v) => !!v).length > 0) {
+			// If we're generating content-security-policy-report-only,
+			// if there are any directives, we need a report-uri or report-to (or both)
+			// else it's just an expensive noop.
+			const has_report_to = directives['report-to']?.length ?? 0 > 0;
+			const has_report_uri = directives['report-uri']?.length ?? 0 > 0;
+			if (!has_report_to && !has_report_uri) {
+				throw Error(
+					'`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both'
+				);
+			}
+		}
+	}
+}
+
+export class Csp {
+	/** @readonly */
+	nonce = generate_nonce();
+
+	/** @type {CspProvider} */
+	csp_provider;
+
+	/** @type {CspReportOnlyProvider} */
+	report_only_provider;
+
+	/**
+	 * @param {import('./types').CspConfig} config
+	 * @param {import('./types').CspOpts} opts
+	 */
+	constructor({ mode, directives, reportOnly }, { prerender, dev }) {
+		const use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
+		this.csp_provider = new CspProvider(use_hashes, directives, this.nonce, dev);
+		this.report_only_provider = new CspReportOnlyProvider(use_hashes, reportOnly, this.nonce, dev);
+	}
+
+	get script_needs_nonce() {
+		return this.csp_provider.script_needs_nonce || this.report_only_provider.script_needs_nonce;
+	}
+
+	get style_needs_nonce() {
+		return this.csp_provider.style_needs_nonce || this.report_only_provider.style_needs_nonce;
+	}
+
+	/** @param {string} content */
+	add_script(content) {
+		this.csp_provider.add_script(content);
+		this.report_only_provider.add_script(content);
+	}
+
+	/** @param {string} content */
+	add_style(content) {
+		this.csp_provider.add_style(content);
+		this.report_only_provider.add_style(content);
 	}
 }

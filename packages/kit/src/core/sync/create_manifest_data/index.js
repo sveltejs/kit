@@ -1,54 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
-import { get_runtime_path } from '../../utils.js';
+import { runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
+import { sort_routes } from './sort.js';
 
 /**
- * A portion of a file or directory name where the name has been split into
- * static and dynamic parts
- * @typedef {{
- *   content: string;
- *   dynamic: boolean;
- *   rest: boolean;
- *   type: string | null;
- * }} Part
- */
-
-/**
- * A route, consisting of an endpoint module and/or an array of components
- * (n layouts and one leaf) for successful navigations and an array of
- * n error components to render if navigation fails
- * @typedef {{
- *   id: string;
- *   pattern: RegExp;
- *   segments: Part[][];
- *   page?: {
- *     a: Array<string | undefined>;
- *     b: Array<string | undefined>;
- *   };
- *   endpoint?: string;
- * }} Unit
- */
-
-/**
- * @typedef {{
- *   error: string | undefined;
- *   layouts: Record<string, { file: string, name: string }>
- * }} Node
- */
-
-/**
- * @typedef {Map<string, Node>} Tree
- */
-
-const layout_pattern = /^__layout(?:-([a-zA-Z0-9_-]+))?(?:@([a-zA-Z0-9_-]+))?$/;
-const dunder_pattern = /(^|\/)__(?!tests?__)/; // forbid __-prefixed files/directories except __error, __layout[-...], __test__, __tests__
-
-const DEFAULT = 'default';
-
-/**
+ * Generates the manifest data used for the client-side manifest and types generation.
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   fallback?: string;
@@ -58,208 +17,37 @@ const DEFAULT = 'default';
  */
 export default function create_manifest_data({
 	config,
-	fallback = `${get_runtime_path(config.kit)}/components`,
+	fallback = `${runtime_directory}/components`,
 	cwd = process.cwd()
 }) {
-	/** @type {import('types').RouteData[]} */
-	const routes = [];
+	const assets = create_assets(config);
+	const matchers = create_matchers(config, cwd);
+	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
 
-	/** @type {Map<string, Unit>} */
-	const units = new Map();
-
-	/** @type {Tree} */
-	const tree = new Map();
-
-	const default_layout = {
-		file: posixify(path.relative(cwd, `${fallback}/layout.svelte`)),
-		name: DEFAULT
+	return {
+		assets,
+		matchers,
+		nodes,
+		routes
 	};
+}
 
-	// set default root layout/error
-	tree.set('', {
-		error: posixify(path.relative(cwd, `${fallback}/error.svelte`)),
-		layouts: { [DEFAULT]: default_layout }
-	});
+/**
+ * @param {import('types').ValidatedConfig} config
+ */
+function create_assets(config) {
+	return list_files(config.kit.files.assets).map((file) => ({
+		file,
+		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
+		type: mime.getType(file)
+	}));
+}
 
-	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
-	const valid_extensions = [...config.extensions, ...config.kit.moduleExtensions];
-
-	if (fs.existsSync(config.kit.files.routes)) {
-		list_files(config.kit.files.routes).forEach((file) => {
-			const extension = valid_extensions.find((ext) => file.endsWith(ext));
-			if (!extension) return;
-
-			const id = file
-				.slice(0, -extension.length)
-				.replace(/(?:^|\/)index((?:@[a-zA-Z0-9_-]+)?(?:\.[a-z]+)?)?$/, '$1');
-			const project_relative = `${routes_base}/${file}`;
-
-			const segments = id.split('/');
-			const name = /** @type {string} */ (segments.pop());
-
-			if (name === '__layout.reset') {
-				throw new Error(
-					'__layout.reset has been removed in favour of named layouts: https://kit.svelte.dev/docs/layouts#named-layouts'
-				);
-			}
-
-			if (name === '__error' || layout_pattern.test(name)) {
-				const dir = segments.join('/');
-
-				if (!tree.has(dir)) {
-					tree.set(dir, {
-						error: undefined,
-						layouts: {}
-					});
-				}
-
-				const group = /** @type {Node} */ (tree.get(dir));
-
-				if (name === '__error') {
-					group.error = project_relative;
-				} else {
-					const match = /** @type {RegExpMatchArray} */ (layout_pattern.exec(name));
-
-					if (match[1] === DEFAULT) {
-						throw new Error(`${project_relative} cannot use reserved "${DEFAULT}" name`);
-					}
-
-					const layout_id = match[1] || DEFAULT;
-
-					const defined = group.layouts[layout_id];
-					if (defined && defined !== default_layout) {
-						throw new Error(
-							`Duplicate layout ${project_relative} already defined at ${defined.file}`
-						);
-					}
-
-					group.layouts[layout_id] = {
-						file: project_relative,
-						name
-					};
-				}
-
-				return;
-			} else if (dunder_pattern.test(file)) {
-				throw new Error(
-					`Files and directories prefixed with __ are reserved (saw ${project_relative})`
-				);
-			}
-
-			if (!config.kit.routes(file)) return;
-
-			if (/\]\[/.test(id)) {
-				throw new Error(`Invalid route ${project_relative} — parameters must be separated`);
-			}
-
-			if (count_occurrences('[', id) !== count_occurrences(']', id)) {
-				throw new Error(`Invalid route ${project_relative} — brackets are unbalanced`);
-			}
-
-			if (!units.has(id)) {
-				units.set(id, {
-					id,
-					pattern: parse_route_id(id).pattern,
-					segments: id
-						.split('/')
-						.filter(Boolean)
-						.map((segment) => {
-							/** @type {Part[]} */
-							const parts = [];
-							segment.split(/\[(.+?)\]/).map((content, i) => {
-								const dynamic = !!(i % 2);
-
-								if (!content) return;
-
-								parts.push({
-									content,
-									dynamic,
-									rest: dynamic && content.startsWith('...'),
-									type: (dynamic && content.split('=')[1]) || null
-								});
-							});
-							return parts;
-						}),
-					page: undefined,
-					endpoint: undefined
-				});
-			}
-
-			const unit = /** @type {Unit} */ (units.get(id));
-
-			if (config.extensions.find((ext) => file.endsWith(ext))) {
-				const { layouts, errors } = trace(project_relative, file, tree, config.extensions);
-				unit.page = {
-					a: layouts.concat(project_relative),
-					b: errors
-				};
-			} else {
-				unit.endpoint = project_relative;
-			}
-		});
-	}
-
-	/** @type {string[]} */
-	const components = [];
-
-	tree.forEach(({ layouts, error }) => {
-		// we do [default, error, ...other_layouts] so that components[0] and [1]
-		// are the root layout/error. kinda janky, there's probably a nicer way
-		if (layouts[DEFAULT]) {
-			components.push(layouts[DEFAULT].file);
-		}
-
-		if (error) {
-			components.push(error);
-		}
-
-		for (const id in layouts) {
-			if (id !== DEFAULT) components.push(layouts[id].file);
-		}
-	});
-
-	units.forEach((unit) => {
-		if (unit.page) {
-			const leaf = /** @type {string} */ (unit.page.a[unit.page.a.length - 1]);
-			components.push(leaf);
-		}
-	});
-
-	Array.from(units.values())
-		.sort(compare)
-		.forEach((unit) => {
-			// TODO when we introduce layout endpoints and scoped middlewares, we
-			// will probably want to have a single unified route type here
-			// (created in the list_files(...).forEach(...) callback)
-			if (unit.page) {
-				routes.push({
-					type: 'page',
-					id: unit.id,
-					pattern: unit.pattern,
-					path: unit.id.includes('[') ? '' : `/${unit.id.replace(/@(?:[a-zA-Z0-9_-]+)/g, '')}`,
-					shadow: unit.endpoint || null,
-					a: unit.page.a,
-					b: unit.page.b
-				});
-			} else if (unit.endpoint) {
-				routes.push({
-					type: 'endpoint',
-					id: unit.id,
-					pattern: unit.pattern,
-					file: unit.endpoint
-				});
-			}
-		});
-
-	/** @type {import('types').Asset[]} */
-	const assets = fs.existsSync(config.kit.files.assets)
-		? list_files(config.kit.files.assets).map((file) => ({
-				file,
-				size: fs.statSync(`${config.kit.files.assets}/${file}`).size,
-				type: mime.getType(file)
-		  }))
-		: [];
-
+/**
+ * @param {import('types').ValidatedConfig} config
+ * @param {string} cwd
+ */
+function create_matchers(config, cwd) {
 	const params_base = path.relative(cwd, config.kit.files.params);
 
 	/** @type {Record<string, string>} */
@@ -287,133 +75,329 @@ export default function create_manifest_data({
 		}
 	}
 
+	return matchers;
+}
+
+/**
+ * @param {import('types').ValidatedConfig} config
+ * @param {string} cwd
+ * @param {string} fallback
+ */
+function create_routes_and_nodes(cwd, config, fallback) {
+	/** @type {import('types').RouteData[]} */
+	const routes = [];
+
+	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
+
+	const valid_extensions = [...config.extensions, ...config.kit.moduleExtensions];
+
+	/** @type {import('types').PageNode[]} */
+	const nodes = [];
+
+	if (fs.existsSync(config.kit.files.routes)) {
+		/**
+		 * @param {number} depth
+		 * @param {string} id
+		 * @param {string} segment
+		 * @param {import('types').RouteData | null} parent
+		 */
+		const walk = (depth, id, segment, parent) => {
+			if (/\]\[/.test(id)) {
+				throw new Error(`Invalid route ${id} — parameters must be separated`);
+			}
+
+			if (count_occurrences('[', id) !== count_occurrences(']', id)) {
+				throw new Error(`Invalid route ${id} — brackets are unbalanced`);
+			}
+
+			if (/\[\.\.\.\w+\]\/\[\[/.test(id)) {
+				throw new Error(
+					`Invalid route ${id} — an [[optional]] route segment cannot follow a [...rest] route segment`
+				);
+			}
+
+			if (/\[\[\.\.\./.test(id)) {
+				throw new Error(
+					`Invalid route ${id} — a rest route segment is always optional, remove the outer square brackets`
+				);
+			}
+
+			const { pattern, names, types, optional } = parse_route_id(id);
+
+			/** @type {import('types').RouteData} */
+			const route = {
+				id,
+				parent,
+
+				segment,
+				pattern,
+				names,
+				types,
+				optional,
+
+				layout: null,
+				error: null,
+				leaf: null,
+				page: null,
+				endpoint: null
+			};
+
+			// important to do this before walking children, so that child
+			// routes appear later
+			routes.push(route);
+
+			// if we don't do this, the route map becomes unwieldy to console.log
+			Object.defineProperty(route, 'parent', { enumerable: false });
+
+			const dir = path.join(cwd, routes_base, id);
+
+			// We can't use withFileTypes because of a NodeJs bug which returns wrong results
+			// with isDirectory() in case of symlinks: https://github.com/nodejs/node/issues/30646
+			const files = fs.readdirSync(dir).map((name) => ({
+				is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
+				name
+			}));
+
+			// process files first
+			for (const file of files) {
+				if (file.is_dir) continue;
+				if (!file.name.startsWith('+')) continue;
+				if (!valid_extensions.find((ext) => file.name.endsWith(ext))) continue;
+
+				const project_relative = posixify(path.relative(cwd, path.join(dir, file.name)));
+
+				const item = analyze(
+					project_relative,
+					file.name,
+					config.extensions,
+					config.kit.moduleExtensions
+				);
+
+				if (item.kind === 'component') {
+					if (item.is_error) {
+						route.error = {
+							depth,
+							component: project_relative
+						};
+					} else if (item.is_layout) {
+						if (!route.layout) route.layout = { depth, child_pages: [] };
+						route.layout.component = project_relative;
+						if (item.uses_layout !== undefined) route.layout.parent_id = item.uses_layout;
+					} else {
+						if (!route.leaf) route.leaf = { depth };
+						route.leaf.component = project_relative;
+						if (item.uses_layout !== undefined) route.leaf.parent_id = item.uses_layout;
+					}
+				} else if (item.is_layout) {
+					if (!route.layout) route.layout = { depth, child_pages: [] };
+					route.layout[item.kind] = project_relative;
+				} else if (item.is_page) {
+					if (!route.leaf) route.leaf = { depth };
+					route.leaf[item.kind] = project_relative;
+				} else {
+					route.endpoint = {
+						file: project_relative
+					};
+				}
+			}
+
+			// then handle children
+			for (const file of files) {
+				if (file.is_dir) {
+					walk(depth + 1, path.posix.join(id, file.name), file.name, route);
+				}
+			}
+		};
+
+		walk(0, '/', '', null);
+
+		if (routes.length === 1) {
+			const root = routes[0];
+			if (!root.leaf && !root.error && !root.layout && !root.endpoint) {
+				throw new Error(
+					// TODO adjust this error message for 1.0
+					// 'No routes found. If you are using a custom src/routes directory, make sure it is specified in svelte.config.js'
+					'The filesystem router API has changed, see https://github.com/sveltejs/kit/discussions/5774 for details'
+				);
+			}
+		}
+	} else {
+		// If there's no routes directory, we'll just create a single empty route. This ensures the root layout and
+		// error components are included in the manifest, which is needed for subsequent build/dev commands to work
+		routes.push({
+			id: '/',
+			segment: '',
+			pattern: /^$/,
+			names: [],
+			types: [],
+			optional: [],
+			parent: null,
+			layout: null,
+			error: null,
+			leaf: null,
+			page: null,
+			endpoint: null
+		});
+	}
+
+	prevent_conflicts(routes);
+
+	const root = routes[0];
+
+	if (!root.layout?.component) {
+		if (!root.layout) root.layout = { depth: 0, child_pages: [] };
+		root.layout.component = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
+	}
+
+	if (!root.error?.component) {
+		if (!root.error) root.error = { depth: 0 };
+		root.error.component = posixify(path.relative(cwd, `${fallback}/error.svelte`));
+	}
+
+	// we do layouts/errors first as they are more likely to be reused,
+	// and smaller indexes take fewer bytes. also, this guarantees that
+	// the default error/layout are 0/1
+	for (const route of routes) {
+		if (route.layout) nodes.push(route.layout);
+		if (route.error) nodes.push(route.error);
+	}
+
+	for (const route of routes) {
+		if (route.leaf) nodes.push(route.leaf);
+	}
+
+	const indexes = new Map(nodes.map((node, i) => [node, i]));
+
+	for (const route of routes) {
+		if (!route.leaf) continue;
+
+		route.page = {
+			layouts: [],
+			errors: [],
+			leaf: /** @type {number} */ (indexes.get(route.leaf))
+		};
+
+		/** @type {import('types').RouteData | null} */
+		let current_route = route;
+		let current_node = route.leaf;
+		let parent_id = route.leaf.parent_id;
+
+		while (current_route) {
+			if (parent_id === undefined || current_route.segment === parent_id) {
+				if (current_route.layout || current_route.error) {
+					route.page.layouts.unshift(
+						current_route.layout ? indexes.get(current_route.layout) : undefined
+					);
+					route.page.errors.unshift(
+						current_route.error ? indexes.get(current_route.error) : undefined
+					);
+				}
+
+				if (current_route.layout) {
+					/** @type {import('types').PageNode[]} */ (current_route.layout.child_pages).push(
+						route.leaf
+					);
+					current_node.parent = current_node = current_route.layout;
+					parent_id = current_node.parent_id;
+				} else {
+					parent_id = undefined;
+				}
+			}
+
+			current_route = current_route.parent;
+		}
+
+		if (parent_id !== undefined) {
+			throw new Error(`${current_node.component} references missing segment "${parent_id}"`);
+		}
+	}
+
 	return {
-		assets,
-		components,
-		routes,
-		matchers
+		nodes,
+		routes: sort_routes(routes)
 	};
 }
 
 /**
+ * @param {string} project_relative
  * @param {string} file
- * @param {string} path
- * @param {Tree} tree
- * @param {string[]} extensions
+ * @param {string[]} component_extensions
+ * @param {string[]} module_extensions
+ * @returns {import('./types').RouteFile}
  */
-function trace(file, path, tree, extensions) {
-	/** @type {Array<string | undefined>} */
-	const layouts = [];
+function analyze(project_relative, file, component_extensions, module_extensions) {
+	const component_extension = component_extensions.find((ext) => file.endsWith(ext));
+	if (component_extension) {
+		const name = file.slice(0, -component_extension.length);
+		const pattern = /^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/;
+		const match = pattern.exec(name);
+		if (!match) {
+			// TODO remove for 1.0
+			if (/^\+layout-/.test(name)) {
+				throw new Error(
+					`${project_relative} should be reimplemented with layout groups: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts`
+				);
+			}
 
-	/** @type {Array<string | undefined>} */
-	const errors = [];
-
-	const parts = path.split('/');
-	const filename = /** @type {string} */ (parts.pop());
-	const extension = /** @type {string} */ (extensions.find((ext) => path.endsWith(ext)));
-	const base = filename.slice(0, -extension.length);
-
-	let layout_id = base.includes('@') ? base.split('@')[1] : DEFAULT;
-
-	if (parts.findIndex((part) => part.indexOf('@') > -1) > -1) {
-		throw new Error(`Invalid route ${file} - named layouts are not allowed in directories`);
-	}
-
-	// walk up the tree, find which __layout and __error components
-	// apply to this page
-	// eslint-disable-next-line
-	while (true) {
-		const node = tree.get(parts.join('/'));
-		const layout = node?.layouts[layout_id];
-
-		if (layout?.file && layouts.indexOf(layout.file) > -1) {
-			throw new Error(`Recursive layout detected: ${layout.file} -> ${layouts.join(' -> ')}`);
+			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
 		}
 
-		// any segment that has neither a __layout nor an __error can be discarded.
-		// in other words these...
-		//  layouts: [a, , b, c]
-		//  errors:  [d, , e,  ]
-		//
-		// ...can be compacted to these:
-		//  layouts: [a, b, c]
-		//  errors:  [d, e,  ]
-		if (node?.error || layout?.file) {
-			errors.unshift(node?.error);
-			layouts.unshift(layout?.file);
-		}
-
-		if (layout?.name.includes('@')) {
-			layout_id = layout.name.split('@')[1];
-		} else {
-			if (layout) layout_id = DEFAULT;
-			if (parts.length === 0) break;
-			parts.pop();
-		}
+		return {
+			kind: 'component',
+			is_page: !!match[1],
+			is_layout: !!match[3],
+			is_error: !!match[5],
+			uses_layout: match[2] ?? match[4]
+		};
 	}
 
-	if (layout_id !== DEFAULT) {
-		throw new Error(`${file} references missing layout "${layout_id}"`);
+	const module_extension = module_extensions.find((ext) => file.endsWith(ext));
+	if (module_extension) {
+		const name = file.slice(0, -module_extension.length);
+		const pattern =
+			/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/;
+		const match = pattern.exec(name);
+		if (!match) {
+			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
+		} else if (match[3] || match[6]) {
+			throw new Error(
+				// prettier-ignore
+				`Only Svelte files can reference named layouts. Remove '${match[3] || match[6]}' from ${file} (at ${project_relative})`
+			);
+		}
+
+		const kind = !!(match[1] || match[4] || match[7]) ? 'server' : 'shared';
+
+		return {
+			kind,
+			is_page: !!match[2],
+			is_layout: !!match[5]
+		};
 	}
 
-	// trim empty space off the end of the errors array
-	let i = errors.length;
-	while (i--) if (errors[i]) break;
-	errors.length = i + 1;
-
-	return { layouts, errors };
+	throw new Error(`Files and directories prefixed with + are reserved (saw ${project_relative})`);
 }
 
-/**
- * @param {Unit} a
- * @param {Unit} b
- */
-function compare(a, b) {
-	const max_segments = Math.max(a.segments.length, b.segments.length);
-	for (let i = 0; i < max_segments; i += 1) {
-		const sa = a.segments[i];
-		const sb = b.segments[i];
+/** @param {string} dir */
+function list_files(dir) {
+	/** @type {string[]} */
+	const files = [];
 
-		// /x < /x/y, but /[...x]/y < /[...x]
-		if (!sa) return a.id.includes('[...') ? +1 : -1;
-		if (!sb) return b.id.includes('[...') ? -1 : +1;
-
-		const max_parts = Math.max(sa.length, sb.length);
-		for (let i = 0; i < max_parts; i += 1) {
-			const pa = sa[i];
-			const pb = sb[i];
-
-			// xy < x[y], but [x].json < [x]
-			if (pa === undefined) return pb.dynamic ? -1 : +1;
-			if (pb === undefined) return pa.dynamic ? +1 : -1;
-
-			// x < [x]
-			if (pa.dynamic !== pb.dynamic) {
-				return pa.dynamic ? +1 : -1;
-			}
-
-			if (pa.dynamic) {
-				// [x] < [...x]
-				if (pa.rest !== pb.rest) {
-					return pa.rest ? +1 : -1;
-				}
-
-				// [x=type] < [x]
-				if (!!pa.type !== !!pb.type) {
-					return pa.type ? -1 : +1;
-				}
+	/** @param {string} current */
+	function walk(current) {
+		for (const file of fs.readdirSync(path.resolve(dir, current))) {
+			const child = path.posix.join(current, file);
+			if (fs.statSync(path.resolve(dir, child)).isDirectory()) {
+				walk(child);
+			} else {
+				files.push(child);
 			}
 		}
 	}
 
-	const a_is_endpoint = !a.page && a.endpoint;
-	const b_is_endpoint = !b.page && b.endpoint;
+	if (fs.existsSync(dir)) walk('');
 
-	if (a_is_endpoint !== b_is_endpoint) {
-		return a_is_endpoint ? -1 : +1;
-	}
-
-	return a < b ? -1 : 1;
+	return files;
 }
 
 /**
@@ -428,40 +412,62 @@ function count_occurrences(needle, haystack) {
 	return count;
 }
 
-/**
- * @param {string} dir
- * @param {string} [path]
- * @param {string[]} [files]
- */
-function list_files(dir, path = '', files = []) {
-	fs.readdirSync(dir)
-		.sort((a, b) => {
-			// sort each directory in (__layout, __error, everything else) order
-			// so that we can trace layouts/errors immediately
+/** @param {import('types').RouteData[]} routes */
+function prevent_conflicts(routes) {
+	/** @type {Map<string, string>} */
+	const lookup = new Map();
 
-			if (a.startsWith('__layout')) {
-				if (!b.startsWith('__layout')) return -1;
-			} else if (b.startsWith('__layout')) {
-				return 1;
-			} else if (a.startsWith('__')) {
-				if (!b.startsWith('__')) return -1;
-			} else if (b.startsWith('__')) {
-				return 1;
+	for (const route of routes) {
+		if (!route.leaf && !route.endpoint) continue;
+
+		const normalized = normalize_route_id(route.id);
+
+		// find all permutations created by optional parameters
+		const split = normalized.split(/<\?(.+?)\>/g);
+
+		let permutations = [/** @type {string} */ (split[0])];
+
+		// turn `x/[[optional]]/y` into `x/y` and `x/[required]/y`
+		for (let i = 1; i < split.length; i += 2) {
+			const matcher = split[i];
+			const next = split[i + 1];
+
+			permutations = [
+				...permutations.map((x) => x + next),
+				...permutations.map((x) => x + `<${matcher}>${next}`)
+			];
+		}
+
+		for (const permutation of permutations) {
+			// remove leading/trailing/duplicated slashes caused by prior
+			// manipulation of optional parameters and (groups)
+			const key = permutation
+				.replace(/\/{2,}/, '/')
+				.replace(/^\//, '')
+				.replace(/\/$/, '');
+
+			if (lookup.has(key)) {
+				throw new Error(
+					`The "${lookup.get(key)}" and "${route.id}" routes conflict with each other`
+				);
 			}
 
-			return a < b ? -1 : 1;
-		})
-		.forEach((file) => {
-			const full = `${dir}/${file}`;
-			const stats = fs.statSync(full);
-			const joined = path ? `${path}/${file}` : file;
+			lookup.set(key, route.id);
+		}
+	}
+}
 
-			if (stats.isDirectory()) {
-				list_files(full, joined, files);
-			} else {
-				files.push(joined);
-			}
-		});
+/** @param {string} id */
+function normalize_route_id(id) {
+	return (
+		id
+			// remove groups
+			.replace(/(?<=^|\/)\(.+?\)(?=$|\/)/g, '')
 
-	return files;
+			// replace `[param]` with `<*>`, `[param=x]` with `<x>`, and `[[param]]` with `<?*>`
+			.replace(
+				/\[(?:(\[)|(\.\.\.))?.+?(=.+?)?\]\]?/g,
+				(_, optional, rest, matcher) => `<${optional ? '?' : ''}${rest ?? ''}${matcher ?? '*'}>`
+			)
+	);
 }

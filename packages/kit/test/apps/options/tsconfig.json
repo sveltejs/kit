@@ -4,8 +4,9 @@
 		"checkJs": true,
 		"noEmit": true,
 		"paths": {
-			"$lib": ["source/components"],
-			"$lib/*": ["source/components/*"],
+			"@sveltejs/kit": ["../../../types"],
+			"$lib": ["./source/components"],
+			"$lib/*": ["./source/components/*"],
 			"types": ["../../../types/internal"]
 		}
 	},

@@ -1,6 +1,6 @@
 export type Options = {
 	name: string;
-	template: 'default' | 'skeleton';
+	template: 'default' | 'skeleton' | 'skeletonlib';
 	types: 'typescript' | 'checkjs' | null;
 	prettier: boolean;
 	eslint: boolean;
@@ -19,7 +19,8 @@ export type Condition =
 	| 'checkjs'
 	| 'playwright'
 	| 'skeleton'
-	| 'default';
+	| 'default'
+	| 'skeletonlib';
 
 export type Common = {
 	files: Array<{

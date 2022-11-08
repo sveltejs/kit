@@ -1,25 +1,3 @@
-/** @param {Partial<import('types').ResponseHeaders> | undefined} object */
-export function to_headers(object) {
-	const headers = new Headers();
-
-	if (object) {
-		for (const key in object) {
-			const value = object[key];
-			if (!value) continue;
-
-			if (Array.isArray(value)) {
-				value.forEach((value) => {
-					headers.append(key, /** @type {string} */ (value));
-				});
-			} else {
-				headers.set(key, /** @type {string} */ (value));
-			}
-		}
-	}
-
-	return headers;
-}
-
 /**
  * Given an Accept header and a list of possible content types, pick
  * the most suitable one to respond with
@@ -27,32 +5,34 @@ export function to_headers(object) {
  * @param {string[]} types
  */
 export function negotiate(accept, types) {
-	const parts = accept
-		.split(',')
-		.map((str, i) => {
-			const match = /([^/]+)\/([^;]+)(?:;q=([0-9.]+))?/.exec(str);
-			if (match) {
-				const [, type, subtype, q = '1'] = match;
-				return { type, subtype, q: +q, i };
-			}
+	/** @type {Array<{ type: string, subtype: string, q: number, i: number }>} */
+	const parts = [];
 
-			throw new Error(`Invalid Accept header: ${accept}`);
-		})
-		.sort((a, b) => {
-			if (a.q !== b.q) {
-				return b.q - a.q;
-			}
+	accept.split(',').forEach((str, i) => {
+		const match = /([^/]+)\/([^;]+)(?:;q=([0-9.]+))?/.exec(str);
 
-			if ((a.subtype === '*') !== (b.subtype === '*')) {
-				return a.subtype === '*' ? 1 : -1;
-			}
+		// no match equals invalid header — ignore
+		if (match) {
+			const [, type, subtype, q = '1'] = match;
+			parts.push({ type, subtype, q: +q, i });
+		}
+	});
 
-			if ((a.type === '*') !== (b.type === '*')) {
-				return a.type === '*' ? 1 : -1;
-			}
+	parts.sort((a, b) => {
+		if (a.q !== b.q) {
+			return b.q - a.q;
+		}
 
-			return a.i - b.i;
-		});
+		if ((a.subtype === '*') !== (b.subtype === '*')) {
+			return a.subtype === '*' ? 1 : -1;
+		}
+
+		if ((a.type === '*') !== (b.type === '*')) {
+			return a.type === '*' ? 1 : -1;
+		}
+
+		return a.i - b.i;
+	});
 
 	let accepted;
 	let min_priority = Infinity;
@@ -72,4 +52,21 @@ export function negotiate(accept, types) {
 	}
 
 	return accepted;
+}
+
+/**
+ * Returns `true` if the request contains a `content-type` header with the given type
+ * @param {Request} request
+ * @param  {...string} types
+ */
+export function is_content_type(request, ...types) {
+	const type = request.headers.get('content-type')?.split(';', 1)[0].trim() ?? '';
+	return types.includes(type);
+}
+
+/**
+ * @param {Request} request
+ */
+export function is_form_content_type(request) {
+	return is_content_type(request, 'application/x-www-form-urlencoded', 'multipart/form-data');
 }

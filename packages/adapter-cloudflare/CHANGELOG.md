@@ -1,5 +1,89 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.40
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.39
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
+## 1.0.0-next.38
+
+### Patch Changes
+
+- Ensure all excluded paths in `_routes.json` start with / ([#6952](https://github.com/sveltejs/kit/pull/6952))
+
+## 1.0.0-next.37
+
+### Patch Changes
+
+- Support Cloudflare Pages `_routes.json` specification ([#6530](https://github.com/sveltejs/kit/pull/6530))
+
+## 1.0.0-next.36
+
+### Patch Changes
+
+- Include ambient.d.ts files in adapter packages. ([#6917](https://github.com/sveltejs/kit/pull/6917))
+
+## 1.0.0-next.35
+
+### Patch Changes
+
+- [fix] return 404 instead of 200 for missing assets ([#6879](https://github.com/sveltejs/kit/pull/6879))
+
+## 1.0.0-next.34
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.33
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
+## 1.0.0-next.32
+
+### Patch Changes
+
+- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+
+## 1.0.0-next.31
+
+### Patch Changes
+
+- Initialise `env` ([#5663](https://github.com/sveltejs/kit/pull/5663))
+
+## 1.0.0-next.30
+
+### Patch Changes
+
+- [breaking] remove writeStatic to align with Vite ([#5618](https://github.com/sveltejs/kit/pull/5618))
+
+## 1.0.0-next.29
+
+### Patch Changes
+
+- Update dependencies ([#5005](https://github.com/sveltejs/kit/pull/5005))
+
+## 1.0.0-next.28
+
+### Patch Changes
+
+- [breaking] Don't pass arbitrary options to esbuild ([#4639](https://github.com/sveltejs/kit/pull/4639))
+
+## 1.0.0-next.27
+
+### Patch Changes
+
+- Expose App interfaces ([#5386](https://github.com/sveltejs/kit/pull/5386))
+
 ## 1.0.0-next.26
 
 ### Patch Changes
@@ -8,7 +92,7 @@
 
 ## 1.0.0-next.25
 
-### Minor Changes
+### Patch Changes
 
 - Expose Cloudflare Worker Cache API through `caches` in Platform ([#5081](https://github.com/sveltejs/kit/pull/5081))
 

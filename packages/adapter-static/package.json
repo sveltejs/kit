@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "1.0.0-next.35",
+	"version": "1.0.0-next.48",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -19,24 +19,18 @@
 	},
 	"types": "index.d.ts",
 	"scripts": {
-		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
-		"format": "npm run check-format -- --write",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"format": "pnpm lint --write",
 		"test": "uvu test test.js"
-	},
-	"dependencies": {
-		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"@types/node": "^16.11.36",
-		"playwright-chromium": "^1.22.2",
-		"port-authority": "^2.0.1",
+		"@types/node": "^16.11.68",
 		"sirv": "^2.0.2",
-		"svelte": "^3.48.0",
-		"typescript": "^4.7.4",
-		"uvu": "^0.5.3",
-		"vite": "^2.9.13"
+		"svelte": "^3.52.0",
+		"typescript": "^4.8.4",
+		"uvu": "^0.5.6",
+		"vite": "^3.2.1"
 	}
 }

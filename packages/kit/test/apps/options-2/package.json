@@ -6,9 +6,8 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"prepare": "node ../../cli.js sync",
-		"check": "tsc && svelte-check",
-		"test": "npm run test:dev && npm run test:build",
+		"check": "svelte-kit sync && tsc && svelte-check",
+		"test": "pnpm test:dev && pnpm test:build",
 		"test:dev": "cross-env DEV=true playwright test",
 		"test:build": "playwright test"
 	},
@@ -16,10 +15,10 @@
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"cross-env": "^7.0.3",
-		"svelte": "^3.48.0",
-		"svelte-check": "^2.7.1",
-		"typescript": "^4.7.4",
-		"vite": "^2.9.13"
+		"svelte": "^3.52.0",
+		"svelte-check": "^2.9.2",
+		"typescript": "^4.8.4",
+		"vite": "^3.2.1"
 	},
 	"type": "module"
 }

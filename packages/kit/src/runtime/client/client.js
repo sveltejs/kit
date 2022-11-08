@@ -1,33 +1,40 @@
 import { onMount, tick } from 'svelte';
-import { writable } from 'svelte/store';
-import { coalesce_to_error } from '../../utils/error.js';
-import { normalize } from '../load.js';
-import { LoadURL, normalize_path } from '../../utils/url.js';
 import {
-	create_updated_store,
-	find_anchor,
-	get_base_uri,
-	get_href,
-	notifiable_store,
-	scroll_state
-} from './utils.js';
-import { lock_fetch, unlock_fetch, initial_fetch, native_fetch } from './fetcher.js';
+	make_trackable,
+	decode_pathname,
+	decode_params,
+	normalize_path,
+	add_data_suffix
+} from '../../utils/url.js';
+import { find_anchor, get_base_uri, scroll_state } from './utils.js';
+import {
+	lock_fetch,
+	unlock_fetch,
+	initial_fetch,
+	subsequent_fetch,
+	native_fetch
+} from './fetcher.js';
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { components, dictionary, matchers } from '__GENERATED__/client-manifest.js';
+import { nodes, server_loads, dictionary, matchers, hooks } from '__GENERATED__/client-manifest.js';
+import { HttpError, Redirect } from '../control.js';
+import { stores } from './singletons.js';
+import { unwrap_promises } from '../../utils/promises.js';
+import * as devalue from 'devalue';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
 
-const routes = parse(components, dictionary, matchers);
+const routes = parse(nodes, server_loads, dictionary, matchers);
 
-// we import the root layout/error components eagerly, so that
+const default_layout_loader = nodes[0];
+const default_error_loader = nodes[1];
+
+// we import the root layout/error nodes eagerly, so that
 // connectivity errors after initialisation don't nuke the app
-const default_layout = components[0]();
-const default_error = components[1]();
-
-const root_stuff = {};
+default_layout_loader();
+default_error_loader();
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -48,41 +55,44 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
+// TODO remove for 1.0
+/** @type {Record<string, true>} */
+let warned_about_attributes = {};
+
+function check_for_removed_attributes() {
+	const attrs = ['prefetch', 'noscroll', 'reload'];
+	for (const attr of attrs) {
+		if (document.querySelector(`[sveltekit\\:${attr}]`)) {
+			if (!warned_about_attributes[attr]) {
+				warned_about_attributes[attr] = true;
+				console.error(
+					`The sveltekit:${attr} attribute has been replaced with data-sveltekit-${attr}`
+				);
+			}
+		}
+	}
+}
+
 /**
  * @param {{
  *   target: Element;
- *   session: App.Session;
  *   base: string;
  *   trailing_slash: import('types').TrailingSlash;
  * }} opts
  * @returns {import('./types').Client}
  */
-export function create_client({ target, session, base, trailing_slash }) {
-	/** @type {Map<string, import('./types').NavigationResult>} */
-	const cache = new Map();
-
-	/** @type {Array<((href: string) => boolean)>} */
+export function create_client({ target, base, trailing_slash }) {
+	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
-	const stores = {
-		url: notifiable_store({}),
-		page: notifiable_store({}),
-		navigating: writable(/** @type {import('types').Navigation | null} */ (null)),
-		session: writable(session),
-		updated: create_updated_store()
-	};
-
-	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
-	const load_cache = {
-		id: null,
-		promise: null
-	};
+	/** @type {{id: string, promise: Promise<import('./types').NavigationResult>} | null} */
+	let load_cache = null;
 
 	const callbacks = {
-		/** @type {Array<(opts: { from: URL, to: URL | null, cancel: () => void }) => void>} */
+		/** @type {Array<(navigation: import('types').BeforeNavigate) => void>} */
 		before_navigate: [],
 
-		/** @type {Array<(opts: { from: URL | null, to: URL }) => void>} */
+		/** @type {Array<(navigation: import('types').AfterNavigate) => void>} */
 		after_navigate: []
 	};
 
@@ -90,38 +100,22 @@ export function create_client({ target, session, base, trailing_slash }) {
 	let current = {
 		branch: [],
 		error: null,
-		session_id: 0,
-		stuff: root_stuff,
 		// @ts-ignore - we need the initial value to be null
 		url: null
 	};
 
+	/** this being true means we SSR'd */
+	let hydrated = false;
 	let started = false;
 	let autoscroll = true;
 	let updating = false;
-	let session_id = 1;
+	let navigating = false;
+	let hash_navigating = false;
 
-	/** @type {Promise<void> | null} */
-	let invalidating = null;
+	let force_invalidation = false;
 
 	/** @type {import('svelte').SvelteComponent} */
 	let root;
-
-	/** @type {App.Session} */
-	let $session;
-
-	let ready = false;
-	stores.session.subscribe(async (value) => {
-		$session = value;
-
-		if (!ready) return;
-		session_id += 1;
-
-		update(new URL(location.href), [], true);
-	});
-	ready = true;
-
-	let router_enabled = true;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
 	let current_history_index = history.state?.[INDEX_KEY];
@@ -147,120 +141,136 @@ export function create_client({ target, session, base, trailing_slash }) {
 		scrollTo(scroll.x, scroll.y);
 	}
 
-	let hash_navigating = false;
-
 	/** @type {import('types').Page} */
 	let page;
 
 	/** @type {{}} */
 	let token;
 
+	/** @type {Promise<void> | null} */
+	let pending_invalidate;
+
+	async function invalidate() {
+		// Accept all invalidations as they come, don't swallow any while another invalidation
+		// is running because subsequent invalidations may make earlier ones outdated,
+		// but batch multiple synchronous invalidations.
+		pending_invalidate = pending_invalidate || Promise.resolve();
+		await pending_invalidate;
+		pending_invalidate = null;
+
+		const url = new URL(location.href);
+		const intent = get_navigation_intent(url, true);
+		// Clear prefetch, it might be affected by the invalidation.
+		// Also solves an edge case where a prefetch is triggered, the navigation for it
+		// was then triggered and is still running while the invalidation kicks in,
+		// at which point the invalidation should take over and "win".
+		load_cache = null;
+		await update(intent, url, []);
+	}
+
 	/**
 	 * @param {string | URL} url
-	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
+	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
 	 * @param {string[]} redirect_chain
+	 * @param {{}} [nav_token]
 	 */
 	async function goto(
 		url,
-		{ noscroll = false, replaceState = false, keepfocus = false, state = {} },
-		redirect_chain
+		{
+			noScroll = false,
+			replaceState = false,
+			keepFocus = false,
+			state = {},
+			invalidateAll = false
+		},
+		redirect_chain,
+		nav_token
 	) {
 		if (typeof url === 'string') {
 			url = new URL(url, get_base_uri(document));
 		}
 
-		if (router_enabled) {
-			return navigate({
-				url,
-				scroll: noscroll ? scroll_state() : null,
-				keepfocus,
-				redirect_chain,
-				details: {
-					state,
-					replaceState
-				},
-				accepted: () => {},
-				blocked: () => {}
-			});
-		}
-
-		await native_navigation(url);
+		return navigate({
+			url,
+			scroll: noScroll ? scroll_state() : null,
+			keepfocus: keepFocus,
+			redirect_chain,
+			details: {
+				state,
+				replaceState
+			},
+			nav_token,
+			accepted: () => {
+				if (invalidateAll) {
+					force_invalidation = true;
+				}
+			},
+			blocked: () => {},
+			type: 'goto'
+		});
 	}
 
 	/** @param {URL} url */
 	async function prefetch(url) {
-		const intent = get_navigation_intent(url);
+		const intent = get_navigation_intent(url, false);
 
 		if (!intent) {
-			throw new Error('Attempted to prefetch a URL that does not belong to this app');
+			throw new Error(`Attempted to prefetch a URL that does not belong to this app: ${url}`);
 		}
 
-		load_cache.promise = load_route(intent, false);
-		load_cache.id = intent.id;
+		load_cache = { id: intent.id, promise: load_route(intent) };
 
 		return load_cache.promise;
 	}
 
 	/**
 	 * Returns `true` if update completes, `false` if it is aborted
+	 * @param {import('./types').NavigationIntent | undefined} intent
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
-	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
 	 * @param {() => void} [callback]
 	 */
-	async function update(url, redirect_chain, no_cache, opts, callback) {
-		const intent = get_navigation_intent(url);
-
-		const current_token = (token = {});
-		let navigation_result = intent && (await load_route(intent, no_cache));
-
-		if (
-			!navigation_result &&
-			url.origin === location.origin &&
-			url.pathname === location.pathname
-		) {
-			// this could happen in SPA fallback mode if the user navigated to
-			// `/non-existent-page`. if we fall back to reloading the page, it
-			// will create an infinite loop. so whereas we normally handle
-			// unknown routes by going to the server, in this special case
-			// we render a client-side error page instead
-			navigation_result = await load_root_error_page({
-				status: 404,
-				error: new Error(`Not found: ${url.pathname}`),
-				url,
-				routeId: null
-			});
-		}
+	async function update(intent, url, redirect_chain, opts, nav_token = {}, callback) {
+		token = nav_token;
+		let navigation_result = intent && (await load_route(intent));
 
 		if (!navigation_result) {
-			await native_navigation(url);
-			return false; // unnecessary, but TypeScript prefers it this way
+			navigation_result = await server_fallback(
+				url,
+				{ id: null },
+				handle_error(new Error(`Not found: ${url.pathname}`), {
+					url,
+					params: {},
+					route: { id: null }
+				}),
+				404
+			);
 		}
 
+		// if this is an internal navigation intent, use the normalized
+		// URL for the rest of the function
+		url = intent?.url || url;
+
 		// abort if user navigated during update
-		if (token !== current_token) return false;
+		if (token !== nav_token) return false;
 
-		invalidated.length = 0;
-
-		if (navigation_result.redirect) {
+		if (navigation_result.type === 'redirect') {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
 				navigation_result = await load_root_error_page({
 					status: 500,
-					error: new Error('Redirect loop'),
+					error: handle_error(new Error('Redirect loop'), { url, params: {}, route: { id: null } }),
 					url,
-					routeId: null
+					route: { id: null }
 				});
 			} else {
-				if (router_enabled) {
-					goto(new URL(navigation_result.redirect, url).href, {}, [
-						...redirect_chain,
-						url.pathname
-					]);
-				} else {
-					await native_navigation(new URL(navigation_result.redirect, location.href));
-				}
-
+				goto(
+					new URL(navigation_result.location, url).href,
+					{},
+					[...redirect_chain, url.pathname],
+					nav_token
+				);
 				return false;
 			}
 		} else if (navigation_result.props?.page?.status >= 400) {
@@ -269,6 +279,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 				await native_navigation(url);
 			}
 		}
+
+		// reset invalidation only after a finished navigation. If there are redirects or
+		// additional invalidations, they should get the same invalidation treatment
+		invalidated.length = 0;
+		force_invalidation = false;
 
 		updating = true;
 
@@ -279,6 +294,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 
+		// reset prefetch synchronously after the history state has been set to avoid race conditions
+		load_cache = null;
+
 		if (started) {
 			current = navigation_result.state;
 
@@ -286,7 +304,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 				navigation_result.props.page.url = url;
 			}
 
+			const post_update = pre_update();
 			root.$set(navigation_result.props);
+			post_update();
 		} else {
 			initialize(navigation_result);
 		}
@@ -340,23 +360,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 			await tick();
 		}
 
-		load_cache.promise = null;
-		load_cache.id = null;
 		autoscroll = true;
 
 		if (navigation_result.props.page) {
 			page = navigation_result.props.page;
 		}
 
-		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
-		router_enabled = leaf_node?.module.router !== false;
-
 		if (callback) callback();
 
 		updating = false;
 	}
 
-	/** @param {import('./types').NavigationResult} result */
+	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
 		current = result.state;
 
@@ -365,16 +380,26 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		page = result.props.page;
 
+		const post_update = pre_update();
 		root = new Root({
 			target,
 			props: { ...result.props, stores },
 			hydrate: true
 		});
+		post_update();
 
-		if (router_enabled) {
-			const navigation = { from: null, to: new URL(location.href) };
-			callbacks.after_navigate.forEach((fn) => fn(navigation));
-		}
+		/** @type {import('types').AfterNavigate} */
+		const navigation = {
+			from: null,
+			to: add_url_properties('to', {
+				params: current.params,
+				route: { id: current.route?.id ?? null },
+				url: new URL(location.href)
+			}),
+			willUnload: false,
+			type: 'enter'
+		};
+		callbacks.after_navigate.forEach((fn) => fn(navigation));
 
 		started = true;
 	}
@@ -384,54 +409,80 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {{
 	 *   url: URL;
 	 *   params: Record<string, string>;
-	 *   stuff: Record<string, any>;
 	 *   branch: Array<import('./types').BranchNode | undefined>;
 	 *   status: number;
-	 *   error: Error | null;
-	 *   routeId: string | null;
+	 *   error: App.Error | null;
+	 *   route: import('types').CSRRoute | null;
+	 *   form?: Record<string, any> | null;
 	 * }} opts
 	 */
 	async function get_navigation_result_from_branch({
 		url,
 		params,
-		stuff,
 		branch,
 		status,
 		error,
-		routeId
+		route,
+		form
 	}) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
-		const redirect = filtered.find((f) => f.loaded?.redirect);
 
-		/** @type {import('./types').NavigationResult} */
+		/** @type {import('./types').NavigationFinished} */
 		const result = {
-			redirect: redirect?.loaded?.redirect,
+			type: 'loaded',
 			state: {
 				url,
 				params,
 				branch,
 				error,
-				stuff,
-				session_id
+				route
 			},
 			props: {
-				components: filtered.map((node) => node.module.default)
+				components: filtered.map((branch_node) => branch_node.node.component)
 			}
 		};
 
+		if (form !== undefined) {
+			result.props.form = form;
+		}
+
+		let data = {};
+		let data_changed = !page;
 		for (let i = 0; i < filtered.length; i += 1) {
-			const loaded = filtered[i].loaded;
-			result.props[`props_${i}`] = loaded ? await loaded.props : null;
+			const node = filtered[i];
+			data = { ...data, ...node.data };
+
+			// Only set props if the node actually updated. This prevents needless rerenders.
+			if (data_changed || !current.branch.some((previous) => previous === node)) {
+				result.props[`data_${i}`] = data;
+				data_changed = data_changed || Object.keys(node.data ?? {}).length > 0;
+			}
+		}
+		if (!data_changed) {
+			// If nothing was added, and the object entries are the same length, this means
+			// that nothing was removed either and therefore the data is the same as the previous one.
+			// This would be more readable with a separate boolean but that would cost us some bytes.
+			data_changed = Object.keys(page.data).length !== Object.keys(data).length;
 		}
 
 		const page_changed =
 			!current.url ||
 			url.href !== current.url.href ||
 			current.error !== error ||
-			current.stuff !== stuff;
+			form !== undefined ||
+			data_changed;
 
 		if (page_changed) {
-			result.props.page = { error, params, routeId, status, stuff, url };
+			result.props.page = {
+				error,
+				params,
+				route,
+				status,
+				url,
+				form,
+				// The whole page store is updated, but this way the object reference stays the same
+				data: data_changed ? data : page.data
+			};
 
 			// TODO remove this for 1.0
 			/**
@@ -451,113 +502,69 @@ export function create_client({ target, session, base, trailing_slash }) {
 			print_error('query', 'searchParams');
 		}
 
-		const leaf = filtered[filtered.length - 1];
-		const load_cache = leaf?.loaded?.cache;
-
-		if (load_cache) {
-			const key = url.pathname + url.search; // omit hash
-			let ready = false;
-
-			const clear = () => {
-				if (cache.get(key) === result) {
-					cache.delete(key);
-				}
-
-				unsubscribe();
-				clearTimeout(timeout);
-			};
-
-			const timeout = setTimeout(clear, load_cache.maxage * 1000);
-
-			const unsubscribe = stores.session.subscribe(() => {
-				if (ready) clear();
-			});
-
-			ready = true;
-
-			cache.set(key, result);
-		}
-
 		return result;
 	}
 
 	/**
+	 * Call the load function of the given node, if it exists.
+	 * If `server_data` is passed, this is treated as the initial run and the page endpoint is not requested.
+	 *
 	 * @param {{
-	 *   status?: number;
-	 *   error?: Error;
-	 *   module: import('types').CSRComponent;
+	 *   loader: import('types').CSRPageNodeLoader;
+	 * 	 parent: () => Promise<Record<string, any>>;
 	 *   url: URL;
 	 *   params: Record<string, string>;
-	 *   stuff: Record<string, any>;
-	 *   props?: Record<string, any>;
-	 *   routeId: string | null;
+	 *   route: { id: string | null };
+	 * 	 server_data_node: import('./types').DataNode | null;
 	 * }} options
+	 * @returns {Promise<import('./types').BranchNode>}
 	 */
-	async function load_node({ status, error, module, url, params, stuff, props, routeId }) {
-		/** @type {import('./types').BranchNode} */
-		const node = {
-			module,
-			uses: {
-				params: new Set(),
-				url: false,
-				session: false,
-				stuff: false,
-				dependencies: new Set()
-			},
-			loaded: null,
-			stuff
+	async function load_node({ loader, parent, url, params, route, server_data_node }) {
+		/** @type {Record<string, any> | null} */
+		let data = null;
+
+		/** @type {import('types').Uses} */
+		const uses = {
+			dependencies: new Set(),
+			params: new Set(),
+			parent: false,
+			route: false,
+			url: false
 		};
 
-		/** @param dep {string} */
-		function add_dependency(dep) {
-			const { href } = new URL(dep, url);
-			node.uses.dependencies.add(href);
-		}
+		const node = await loader();
 
-		if (props) {
-			// shadow endpoint props means we need to mark this URL as a dependency of itself
-			node.uses.dependencies.add(url.href);
-		}
+		if (node.shared?.load) {
+			/** @param {string[]} deps */
+			function depends(...deps) {
+				for (const dep of deps) {
+					const { href } = new URL(dep, url);
+					uses.dependencies.add(href);
+				}
+			}
 
-		/** @type {Record<string, string>} */
-		const uses_params = {};
-		for (const key in params) {
-			Object.defineProperty(uses_params, key, {
-				get() {
-					node.uses.params.add(key);
-					return params[key];
-				},
-				enumerable: true
-			});
-		}
-
-		const session = $session;
-		const load_url = new LoadURL(url);
-
-		if (module.load) {
 			/** @type {import('types').LoadEvent} */
 			const load_input = {
-				routeId,
-				params: uses_params,
-				props: props || {},
-				get url() {
-					node.uses.url = true;
-					return load_url;
+				route: {
+					get id() {
+						uses.route = true;
+						return route.id;
+					}
 				},
-				get session() {
-					node.uses.session = true;
-					return session;
-				},
-				get stuff() {
-					node.uses.stuff = true;
-					return { ...stuff };
-				},
+				params: new Proxy(params, {
+					get: (target, key) => {
+						uses.params.add(/** @type {string} */ (key));
+						return target[/** @type {string} */ (key)];
+					}
+				}),
+				data: server_data_node?.data ?? null,
+				url: make_trackable(url, () => {
+					uses.url = true;
+				}),
 				async fetch(resource, init) {
 					let requested;
 
-					if (typeof resource === 'string') {
-						requested = resource;
-					} else {
+					if (resource instanceof Request) {
 						requested = resource.url;
 
 						// we're not allowed to modify the received `Request` object, so in order
@@ -582,333 +589,478 @@ export function create_client({ target, session, base, trailing_slash }) {
 							signal: resource.signal,
 							...init
 						};
+					} else {
+						requested = resource;
 					}
 
 					// we must fixup relative urls so they are resolved from the target page
-					const normalized = new URL(requested, url).href;
-					add_dependency(normalized);
+					const resolved = new URL(requested, url).href;
+					depends(resolved);
 
-					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be normalized
-					return started ? native_fetch(normalized, init) : initial_fetch(requested, init);
+					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
+					return started
+						? subsequent_fetch(resolved, init)
+						: initial_fetch(requested, resolved, init);
 				},
-				status: status ?? null,
-				error: error ?? null
+				setHeaders: () => {}, // noop
+				depends,
+				parent() {
+					uses.parent = true;
+					return parent();
+				}
 			};
 
-			if (import.meta.env.DEV) {
-				// TODO remove this for 1.0
-				Object.defineProperty(load_input, 'page', {
-					get: () => {
-						throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
-					}
-				});
-			}
-
-			let loaded;
+			// TODO remove this for 1.0
+			Object.defineProperties(load_input, {
+				props: {
+					get() {
+						throw new Error(
+							'@migration task: Replace `props` with `data` stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
+						);
+					},
+					enumerable: false
+				},
+				session: {
+					get() {
+						throw new Error(
+							'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
+						);
+					},
+					enumerable: false
+				},
+				stuff: {
+					get() {
+						throw new Error(
+							'@migration task: Remove stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
+						);
+					},
+					enumerable: false
+				},
+				routeId: {
+					get() {
+						throw new Error('routeId has been replaced by route.id');
+					},
+					enumerable: false
+				}
+			});
 
 			if (import.meta.env.DEV) {
 				try {
 					lock_fetch();
-					loaded = await module.load.call(null, load_input);
+					data = (await node.shared.load.call(null, load_input)) ?? null;
 				} finally {
 					unlock_fetch();
 				}
 			} else {
-				loaded = await module.load.call(null, load_input);
+				data = (await node.shared.load.call(null, load_input)) ?? null;
 			}
-
-			if (!loaded) {
-				throw new Error('load function must return a value');
-			}
-
-			node.loaded = normalize(loaded);
-			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
-			if (node.loaded.dependencies) {
-				node.loaded.dependencies.forEach(add_dependency);
-			}
-		} else if (props) {
-			node.loaded = normalize({ props });
+			data = data ? await unwrap_promises(data) : null;
 		}
 
-		return node;
+		return {
+			node,
+			loader,
+			server: server_data_node,
+			shared: node.shared?.load ? { type: 'data', data, uses } : null,
+			data: data ?? server_data_node?.data ?? null
+		};
+	}
+
+	/**
+	 * @param {boolean} parent_changed
+	 * @param {boolean} route_changed
+	 * @param {boolean} url_changed
+	 * @param {import('types').Uses | undefined} uses
+	 * @param {Record<string, string>} params
+	 */
+	function has_changed(parent_changed, route_changed, url_changed, uses, params) {
+		if (force_invalidation) return true;
+
+		if (!uses) return false;
+
+		if (uses.parent && parent_changed) return true;
+		if (uses.route && route_changed) return true;
+		if (uses.url && url_changed) return true;
+
+		for (const param of uses.params) {
+			if (params[param] !== current.params[param]) return true;
+		}
+
+		for (const href of uses.dependencies) {
+			if (invalidated.some((fn) => fn(new URL(href)))) return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | null} node
+	 * @param {import('./types').DataNode | null} [previous]
+	 * @returns {import('./types').DataNode | null}
+	 */
+	function create_data_node(node, previous) {
+		if (node?.type === 'data') {
+			return {
+				type: 'data',
+				data: node.data,
+				uses: {
+					dependencies: new Set(node.uses.dependencies ?? []),
+					params: new Set(node.uses.params ?? []),
+					parent: !!node.uses.parent,
+					route: !!node.uses.route,
+					url: !!node.uses.url
+				}
+			};
+		} else if (node?.type === 'skip') {
+			return previous ?? null;
+		}
+		return null;
 	}
 
 	/**
 	 * @param {import('./types').NavigationIntent} intent
-	 * @param {boolean} no_cache
+	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	async function load_route({ id, url, params, route }, no_cache) {
-		if (load_cache.id === id && load_cache.promise) {
+	async function load_route({ id, invalidating, url, params, route }) {
+		if (load_cache?.id === id) {
 			return load_cache.promise;
 		}
 
-		if (!no_cache) {
-			const cached = cache.get(id);
-			if (cached) return cached;
-		}
+		const { errors, layouts, leaf } = route;
 
-		const { a, b, has_shadow } = route;
-
-		const changed = current.url && {
-			url: id !== current.url.pathname + current.url.search,
-			params: Object.keys(params).filter((key) => current.params[key] !== params[key]),
-			session: session_id !== current.session_id
-		};
-
-		/** @type {Array<import('./types').BranchNode | undefined>} */
-		let branch = [];
-
-		/** @type {Record<string, any>} */
-		let stuff = root_stuff;
-		let stuff_changed = false;
-
-		/** @type {number | undefined} */
-		let status = 200;
-
-		/** @type {Error | null} */
-		let error = null;
+		const loaders = [...layouts, leaf];
 
 		// preload modules to avoid waterfall, but handle rejections
 		// so they don't get reported to Sentry et al (we don't need
 		// to act on the failures at this point)
-		a.forEach((loader) => loader().catch(() => {}));
+		errors.forEach((loader) => loader?.().catch(() => {}));
+		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
 
-		load: for (let i = 0; i < a.length; i += 1) {
-			/** @type {import('./types').BranchNode | undefined} */
-			let node;
+		/** @type {import('types').ServerData | null} */
+		let server_data = null;
 
+		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
+		const route_changed = current.route ? id !== current.route.id : false;
+
+		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
+			const previous = current.branch[i];
+
+			const invalid =
+				!!loader?.[0] &&
+				(previous?.loader !== loader[1] ||
+					has_changed(
+						acc.some(Boolean),
+						route_changed,
+						url_changed,
+						previous.server?.uses,
+						params
+					));
+
+			acc.push(invalid);
+			return acc;
+		}, /** @type {boolean[]} */ ([]));
+
+		if (invalid_server_nodes.some(Boolean)) {
 			try {
-				if (!a[i]) continue;
-
-				const module = await a[i]();
-				const previous = current.branch[i];
-
-				const changed_since_last_render =
-					!previous ||
-					module !== previous.module ||
-					(changed.url && previous.uses.url) ||
-					changed.params.some((param) => previous.uses.params.has(param)) ||
-					(changed.session && previous.uses.session) ||
-					Array.from(previous.uses.dependencies).some((dep) => invalidated.some((fn) => fn(dep))) ||
-					(stuff_changed && previous.uses.stuff);
-
-				if (changed_since_last_render) {
-					/** @type {Record<string, any>} */
-					let props = {};
-
-					const is_shadow_page = has_shadow && i === a.length - 1;
-
-					if (is_shadow_page) {
-						const res = await native_fetch(
-							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
-							{
-								headers: {
-									'x-sveltekit-load': 'true'
-								}
-							}
-						);
-
-						if (res.ok) {
-							const redirect = res.headers.get('x-sveltekit-location');
-
-							if (redirect) {
-								return {
-									redirect,
-									props: {},
-									state: current
-								};
-							}
-
-							props = res.status === 204 ? {} : await res.json();
-						} else {
-							status = res.status;
-							try {
-								error = await res.json();
-							} catch (e) {
-								error = new Error('Failed to load data');
-							}
-						}
-					}
-
-					if (!error) {
-						node = await load_node({
-							module,
-							url,
-							params,
-							props,
-							stuff,
-							routeId: route.id
-						});
-					}
-
-					if (node) {
-						if (is_shadow_page) {
-							node.uses.url = true;
-						}
-
-						if (node.loaded) {
-							if (node.loaded.error) {
-								status = node.loaded.status;
-								error = node.loaded.error;
-							}
-
-							if (node.loaded.redirect) {
-								return {
-									redirect: node.loaded.redirect,
-									props: {},
-									state: current
-								};
-							}
-
-							if (node.loaded.stuff) {
-								stuff_changed = true;
-							}
-						}
-					}
-				} else {
-					node = previous;
-				}
-			} catch (e) {
-				status = 500;
-				error = coalesce_to_error(e);
+				server_data = await load_data(url, invalid_server_nodes);
+			} catch (error) {
+				return load_root_error_page({
+					status: 500,
+					error: handle_error(error, { url, params, route: { id: route.id } }),
+					url,
+					route
+				});
 			}
 
-			if (error) {
-				while (i--) {
-					if (b[i]) {
-						let error_loaded;
+			if (server_data.type === 'redirect') {
+				return server_data;
+			}
+		}
 
-						/** @type {import('./types').BranchNode | undefined} */
-						let node_loaded;
-						let j = i;
-						while (!(node_loaded = branch[j])) {
-							j -= 1;
-						}
+		const server_data_nodes = server_data?.nodes;
 
-						try {
-							error_loaded = await load_node({
-								status,
-								error,
-								module: await b[i](),
-								url,
-								params,
-								stuff: node_loaded.stuff,
-								routeId: route.id
-							});
+		let parent_changed = false;
 
-							if (error_loaded?.loaded?.error) {
-								continue;
-							}
+		const branch_promises = loaders.map(async (loader, i) => {
+			if (!loader) return;
 
-							if (error_loaded?.loaded?.stuff) {
-								stuff = {
-									...stuff,
-									...error_loaded.loaded.stuff
-								};
-							}
+			/** @type {import('./types').BranchNode | undefined} */
+			const previous = current.branch[i];
 
-							branch = branch.slice(0, j + 1).concat(error_loaded);
-							break load;
-						} catch (e) {
-							continue;
-						}
+			const server_data_node = server_data_nodes?.[i];
+
+			// re-use data from previous load if it's still valid
+			const valid =
+				(!server_data_node || server_data_node.type === 'skip') &&
+				loader[1] === previous?.loader &&
+				!has_changed(parent_changed, route_changed, url_changed, previous.shared?.uses, params);
+			if (valid) return previous;
+
+			parent_changed = true;
+
+			if (server_data_node?.type === 'error') {
+				// rethrow and catch below
+				throw server_data_node;
+			}
+
+			return load_node({
+				loader: loader[1],
+				url,
+				params,
+				route,
+				parent: async () => {
+					const data = {};
+					for (let j = 0; j < i; j += 1) {
+						Object.assign(data, (await branch_promises[j])?.data);
+					}
+					return data;
+				},
+				server_data_node: create_data_node(
+					// server_data_node is undefined if it wasn't reloaded from the server;
+					// and if current loader uses server data, we want to reuse previous data.
+					server_data_node === undefined && loader[0] ? { type: 'skip' } : server_data_node ?? null,
+					previous?.server
+				)
+			});
+		});
+
+		// if we don't do this, rejections will be unhandled
+		for (const p of branch_promises) p.catch(() => {});
+
+		/** @type {Array<import('./types').BranchNode | undefined>} */
+		const branch = [];
+
+		for (let i = 0; i < loaders.length; i += 1) {
+			if (loaders[i]) {
+				try {
+					branch.push(await branch_promises[i]);
+				} catch (err) {
+					if (err instanceof Redirect) {
+						return {
+							type: 'redirect',
+							location: err.location
+						};
+					}
+
+					let status = 500;
+					/** @type {App.Error} */
+					let error;
+
+					if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
+						// this is the server error rethrown above, reconstruct but don't invoke
+						// the client error handler; it should've already been handled on the server
+						status = /** @type {import('types').ServerErrorNode} */ (err).status ?? status;
+						error = /** @type {import('types').ServerErrorNode} */ (err).error;
+					} else if (err instanceof HttpError) {
+						status = err.status;
+						error = err.body;
+					} else {
+						error = handle_error(err, { params, url, route: { id: route.id } });
+					}
+
+					const error_load = await load_nearest_error_page(i, branch, errors);
+					if (error_load) {
+						return await get_navigation_result_from_branch({
+							url,
+							params,
+							branch: branch.slice(0, error_load.idx).concat(error_load.node),
+							status,
+							error,
+							route
+						});
+					} else {
+						// if we get here, it's because the root `load` function failed,
+						// and we need to fall back to the server
+						return await server_fallback(url, { id: route.id }, error, status);
 					}
 				}
-
-				return await load_root_error_page({
-					status,
-					error,
-					url,
-					routeId: route.id
-				});
 			} else {
-				if (node?.loaded?.stuff) {
-					stuff = {
-						...stuff,
-						...node.loaded.stuff
-					};
-				}
-
-				branch.push(node);
+				// push an empty slot so we can rewind past gaps to the
+				// layout that corresponds with an +error.svelte page
+				branch.push(undefined);
 			}
 		}
 
 		return await get_navigation_result_from_branch({
 			url,
 			params,
-			stuff,
 			branch,
-			status,
-			error,
-			routeId: route.id
+			status: 200,
+			error: null,
+			route,
+			// Reset `form` on navigation, but not invalidation
+			form: invalidating ? undefined : null
 		});
+	}
+
+	/**
+	 * @param {number} i Start index to backtrack from
+	 * @param {Array<import('./types').BranchNode | undefined>} branch Branch to backtrack
+	 * @param {Array<import('types').CSRPageNodeLoader | undefined>} errors All error pages for this branch
+	 * @returns {Promise<{idx: number; node: import('./types').BranchNode} | undefined>}
+	 */
+	async function load_nearest_error_page(i, branch, errors) {
+		while (i--) {
+			if (errors[i]) {
+				let j = i;
+				while (!branch[j]) j -= 1;
+				try {
+					return {
+						idx: j + 1,
+						node: {
+							node: await /** @type {import('types').CSRPageNodeLoader } */ (errors[i])(),
+							loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
+							data: {},
+							server: null,
+							shared: null
+						}
+					};
+				} catch (e) {
+					continue;
+				}
+			}
+		}
 	}
 
 	/**
 	 * @param {{
 	 *   status: number;
-	 *   error: Error;
+	 *   error: App.Error;
 	 *   url: URL;
-	 *   routeId: string | null
+	 *   route: { id: string | null }
 	 * }} opts
+	 * @returns {Promise<import('./types').NavigationFinished>}
 	 */
-	async function load_root_error_page({ status, error, url, routeId }) {
+	async function load_root_error_page({ status, error, url, route }) {
 		/** @type {Record<string, string>} */
 		const params = {}; // error page does not have params
 
+		const node = await default_layout_loader();
+
+		/** @type {import('types').ServerDataNode | null} */
+		let server_data_node = null;
+
+		if (node.server) {
+			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
+			// existing root layout data
+			try {
+				const server_data = await load_data(url, [true]);
+
+				if (
+					server_data.type !== 'data' ||
+					(server_data.nodes[0] && server_data.nodes[0].type !== 'data')
+				) {
+					throw 0;
+				}
+
+				server_data_node = server_data.nodes[0] ?? null;
+			} catch {
+				// at this point we have no choice but to fall back to the server, if it wouldn't
+				// bring us right back here, turning this into an endless loop
+				if (url.origin !== location.origin || url.pathname !== location.pathname || hydrated) {
+					await native_navigation(url);
+				}
+			}
+		}
+
 		const root_layout = await load_node({
-			module: await default_layout,
+			loader: default_layout_loader,
 			url,
 			params,
-			stuff: {},
-			routeId
+			route,
+			parent: () => Promise.resolve({}),
+			server_data_node: create_data_node(server_data_node)
 		});
 
-		const root_error = await load_node({
-			status,
-			error,
-			module: await default_error,
-			url,
-			params,
-			stuff: (root_layout && root_layout.loaded && root_layout.loaded.stuff) || {},
-			routeId
-		});
+		/** @type {import('./types').BranchNode} */
+		const root_error = {
+			node: await default_error_loader(),
+			loader: default_error_loader,
+			shared: null,
+			server: null,
+			data: null
+		};
 
 		return await get_navigation_result_from_branch({
 			url,
 			params,
-			stuff: {
-				...root_layout?.loaded?.stuff,
-				...root_error?.loaded?.stuff
-			},
 			branch: [root_layout, root_error],
 			status,
 			error,
-			routeId
+			route: null
 		});
 	}
 
-	/** @param {URL} url */
-	function get_navigation_intent(url) {
-		if (url.origin !== location.origin || !url.pathname.startsWith(base)) return;
+	/**
+	 * @param {URL} url
+	 * @param {boolean} invalidating
+	 */
+	function get_navigation_intent(url, invalidating) {
+		if (is_external_url(url)) return;
 
-		const path = decodeURI(url.pathname.slice(base.length) || '/');
+		const path = decode_pathname(url.pathname.slice(base.length) || '/');
 
 		for (const route of routes) {
 			const params = route.exec(path);
 
 			if (params) {
+				const normalized = new URL(
+					url.origin + normalize_path(url.pathname, trailing_slash) + url.search + url.hash
+				);
+				const id = normalized.pathname + normalized.search;
 				/** @type {import('./types').NavigationIntent} */
-				const intent = {
-					id: url.pathname + url.search,
-					route,
-					params,
-					url
-				};
-
+				const intent = { id, invalidating, route, params: decode_params(params), url: normalized };
 				return intent;
 			}
 		}
+	}
+
+	/** @param {URL} url */
+	function is_external_url(url) {
+		return url.origin !== location.origin || !url.pathname.startsWith(base);
+	}
+
+	/**
+	 * @param {{
+	 *   url: URL;
+	 *   type: import('types').NavigationType;
+	 *   intent?: import('./types').NavigationIntent;
+	 *   delta?: number;
+	 * }} opts
+	 */
+	function before_navigate({ url, type, intent, delta }) {
+		let should_block = false;
+
+		/** @type {import('types').Navigation} */
+		const navigation = {
+			from: add_url_properties('from', {
+				params: current.params,
+				route: { id: current.route?.id ?? null },
+				url: current.url
+			}),
+			to: add_url_properties('to', {
+				params: intent?.params ?? null,
+				route: { id: intent?.route?.id ?? null },
+				url
+			}),
+			willUnload: !intent,
+			type
+		};
+
+		if (delta !== undefined) {
+			navigation.delta = delta;
+		}
+
+		const cancellable = {
+			...navigation,
+			cancel: () => {
+				should_block = true;
+			}
+		};
+
+		callbacks.before_navigate.forEach((fn) => fn(cancellable));
+
+		return should_block ? null : navigation;
 	}
 
 	/**
@@ -921,57 +1073,83 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *     replaceState: boolean;
 	 *     state: any;
 	 *   } | null;
+	 *   type: import('types').NavigationType;
+	 *   delta?: number;
+	 *   nav_token?: {};
 	 *   accepted: () => void;
 	 *   blocked: () => void;
 	 * }} opts
 	 */
-	async function navigate({ url, scroll, keepfocus, redirect_chain, details, accepted, blocked }) {
-		const from = current.url;
-		let should_block = false;
+	async function navigate({
+		url,
+		scroll,
+		keepfocus,
+		redirect_chain,
+		details,
+		type,
+		delta,
+		nav_token,
+		accepted,
+		blocked
+	}) {
+		const intent = get_navigation_intent(url, false);
+		const navigation = before_navigate({ url, type, delta, intent });
 
-		const navigation = {
-			from,
-			to: url,
-			cancel: () => (should_block = true)
-		};
-
-		callbacks.before_navigate.forEach((fn) => fn(navigation));
-
-		if (should_block) {
+		if (!navigation) {
 			blocked();
 			return;
 		}
-
-		const pathname = normalize_path(url.pathname, trailing_slash);
-		const normalized = new URL(url.origin + pathname + url.search + url.hash);
 
 		update_scroll_positions(current_history_index);
 
 		accepted();
 
+		navigating = true;
+
 		if (started) {
-			stores.navigating.set({
-				from: current.url,
-				to: normalized
-			});
+			stores.navigating.set(navigation);
 		}
 
 		await update(
-			normalized,
+			intent,
+			url,
 			redirect_chain,
-			false,
 			{
 				scroll,
 				keepfocus,
 				details
 			},
+			nav_token,
 			() => {
-				const navigation = { from, to: normalized };
-				callbacks.after_navigate.forEach((fn) => fn(navigation));
-
+				navigating = false;
+				callbacks.after_navigate.forEach((fn) =>
+					fn(/** @type {import('types').AfterNavigate} */ (navigation))
+				);
 				stores.navigating.set(null);
 			}
 		);
+	}
+
+	/**
+	 * Does a full page reload if it wouldn't result in an endless loop in the SPA case
+	 * @param {URL} url
+	 * @param {{ id: string | null }} route
+	 * @param {App.Error} error
+	 * @param {number} status
+	 * @returns {Promise<import('./types').NavigationFinished>}
+	 */
+	async function server_fallback(url, route, error, status) {
+		if (url.origin === location.origin && url.pathname === location.pathname && !hydrated) {
+			// We would reload the same page we're currently on, which isn't hydrated,
+			// which means no SSR, which means we would end up in an endless loop
+			return await load_root_error_page({
+				status,
+				error,
+				url,
+				route
+			});
+		}
+		return await native_navigation(url);
 	}
 
 	/**
@@ -1024,25 +1202,44 @@ export function create_client({ target, session, base, trailing_slash }) {
 			}
 		},
 
-		goto: (href, opts = {}) => goto(href, opts, []),
+		goto: (href, opts = {}) => {
+			// TODO remove for 1.0
+			if ('keepfocus' in opts) {
+				throw new Error(
+					'`keepfocus` has been renamed to `keepFocus` (note the difference in casing)'
+				);
+			}
+
+			if ('noscroll' in opts) {
+				throw new Error(
+					'`noscroll` has been renamed to `noScroll` (note the difference in casing)'
+				);
+			}
+
+			return goto(href, opts, []);
+		},
 
 		invalidate: (resource) => {
+			if (resource === undefined) {
+				// TODO remove for 1.0
+				throw new Error(
+					'`invalidate()` (with no arguments) has been replaced by `invalidateAll()`'
+				);
+			}
+
 			if (typeof resource === 'function') {
 				invalidated.push(resource);
 			} else {
 				const { href } = new URL(resource, location.href);
-				invalidated.push((dep) => dep === href);
+				invalidated.push((url) => url.href === href);
 			}
 
-			if (!invalidating) {
-				invalidating = Promise.resolve().then(async () => {
-					await update(new URL(location.href), [], true);
+			return invalidate();
+		},
 
-					invalidating = null;
-				});
-			}
-
-			return invalidating;
+		invalidateAll: () => {
+			force_invalidation = true;
+			return invalidate();
 		},
 
 		prefetch: async (href) => {
@@ -1056,9 +1253,53 @@ export function create_client({ target, session, base, trailing_slash }) {
 				? routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)))
 				: routes;
 
-			const promises = matching.map((r) => Promise.all(r.a.map((load) => load())));
+			const promises = matching.map((r) => {
+				return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
+			});
 
 			await Promise.all(promises);
+		},
+
+		apply_action: async (result) => {
+			if (result.type === 'error') {
+				const url = new URL(location.href);
+
+				const { branch, route } = current;
+				if (!route) return;
+
+				const error_load = await load_nearest_error_page(
+					current.branch.length,
+					branch,
+					route.errors
+				);
+				if (error_load) {
+					const navigation_result = await get_navigation_result_from_branch({
+						url,
+						params: current.params,
+						branch: branch.slice(0, error_load.idx).concat(error_load.node),
+						status: 500, // TODO might not be 500?
+						error: result.error,
+						route
+					});
+
+					current = navigation_result.state;
+
+					const post_update = pre_update();
+					root.$set(navigation_result.props);
+					post_update();
+				}
+			} else if (result.type === 'redirect') {
+				goto(result.location, { invalidateAll: true }, []);
+			} else {
+				/** @type {Record<string, any>} */
+				const props = {
+					form: result.data,
+					page: { ...page, form: result.data, status: result.status }
+				};
+				const post_update = pre_update();
+				root.$set(props);
+				post_update();
+			}
 		},
 
 		_start_router: () => {
@@ -1071,13 +1312,24 @@ export function create_client({ target, session, base, trailing_slash }) {
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
 
-				const navigation = {
-					from: current.url,
-					to: null,
-					cancel: () => (should_block = true)
-				};
+				if (!navigating) {
+					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
+					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
+					/** @type {import('types').BeforeNavigate} */
+					const navigation = {
+						from: add_url_properties('from', {
+							params: current.params,
+							route: { id: current.route?.id ?? null },
+							url: current.url
+						}),
+						to: null,
+						willUnload: true,
+						type: 'leave',
+						cancel: () => (should_block = true)
+					};
 
-				callbacks.before_navigate.forEach((fn) => fn(navigation));
+					callbacks.before_navigate.forEach((fn) => fn(navigation));
+				}
 
 				if (should_block) {
 					e.preventDefault();
@@ -1101,9 +1353,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			/** @param {Event} event */
 			const trigger_prefetch = (event) => {
-				const a = find_anchor(event);
-				if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
-					prefetch(get_href(a));
+				const { url, options } = find_anchor(event);
+				if (url && options.prefetch) {
+					if (is_external_url(url)) return;
+					prefetch(url);
 				}
 			};
 
@@ -1128,42 +1381,48 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			/** @param {MouseEvent} event */
 			addEventListener('click', (event) => {
-				if (!router_enabled) return;
-
 				// Adapted from https://github.com/visionmedia/page.js
 				// MIT license https://github.com/visionmedia/page.js#license
 				if (event.button || event.which !== 1) return;
 				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 				if (event.defaultPrevented) return;
 
-				const a = find_anchor(event);
-				if (!a) return;
-
-				if (!a.href) return;
+				const { a, url, options } = find_anchor(event);
+				if (!a || !url) return;
 
 				const is_svg_a_element = a instanceof SVGAElement;
-				const url = get_href(a);
 
-				// Ignore if url does not have origin (e.g. `mailto:`, `tel:`.)
+				// Ignore URL protocols that differ to the current one and are not http(s) (e.g. `mailto:`, `tel:`, `myapp:`, etc.)
+				// This may be wrong when the protocol is x: and the link goes to y:.. which should be treated as an external
+				// navigation, but it's not clear how to handle that case and it's not likely to come up in practice.
 				// MEMO: Without this condition, firefox will open mailer twice.
-				// See: https://github.com/sveltejs/kit/issues/4045
-				if (!is_svg_a_element && url.origin === 'null') return;
-
-				// Ignore if tag has
-				// 1. 'download' attribute
-				// 2. 'rel' attribute includes external
-				const rel = (a.getAttribute('rel') || '').split(/\s+/);
-
+				// See:
+				// - https://github.com/sveltejs/kit/issues/4045
+				// - https://github.com/sveltejs/kit/issues/5725
+				// - https://github.com/sveltejs/kit/issues/6496
 				if (
-					a.hasAttribute('download') ||
+					!is_svg_a_element &&
+					url.protocol !== location.protocol &&
+					!(url.protocol === 'https:' || url.protocol === 'http:')
+				)
+					return;
+
+				if (a.hasAttribute('download')) return;
+
+				// Ignore the following but fire beforeNavigate
+				const rel = (a.getAttribute('rel') || '').split(/\s+/);
+				if (
 					rel.includes('external') ||
-					a.hasAttribute('sveltekit:reload')
+					options.reload ||
+					(is_svg_a_element ? a.target.baseVal : a.target)
 				) {
+					const navigation = before_navigate({ url, type: 'link' });
+					if (!navigation) {
+						event.preventDefault();
+					}
+					navigating = true;
 					return;
 				}
-
-				// Ignore if <a> has a target
-				if (is_svg_a_element ? a.target.baseVal : a.target) return;
 
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired
@@ -1172,10 +1431,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 				if (hash !== undefined && base === location.href.split('#')[0]) {
 					// set this flag to distinguish between navigations triggered by
 					// clicking a hash link and those triggered by popstate
+					// TODO why not update history here directly?
 					hash_navigating = true;
 
 					update_scroll_positions(current_history_index);
 
+					current.url = url;
 					stores.page.set({ ...page, url });
 					stores.page.notify();
 
@@ -1184,7 +1445,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 				navigate({
 					url,
-					scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
+					scroll: options.noscroll ? scroll_state() : null,
 					keepfocus: false,
 					redirect_chain: [],
 					details: {
@@ -1192,15 +1453,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 						replaceState: url.href === location.href
 					},
 					accepted: () => event.preventDefault(),
-					blocked: () => event.preventDefault()
+					blocked: () => event.preventDefault(),
+					type: 'link'
 				});
 			});
 
 			addEventListener('popstate', (event) => {
-				if (event.state && router_enabled) {
+				if (event.state) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
+
+					const delta = event.state[INDEX_KEY] - current_history_index;
 
 					navigate({
 						url: new URL(location.href),
@@ -1212,9 +1476,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 							current_history_index = event.state[INDEX_KEY];
 						},
 						blocked: () => {
-							const delta = current_history_index - event.state[INDEX_KEY];
-							history.go(delta);
-						}
+							history.go(-delta);
+						},
+						type: 'popstate',
+						delta
 					});
 				}
 			});
@@ -1231,100 +1496,202 @@ export function create_client({ target, session, base, trailing_slash }) {
 					);
 				}
 			});
-		},
 
-		_hydrate: async ({ status, error, nodes, params, routeId }) => {
-			const url = new URL(location.href);
-
-			/** @type {Array<import('./types').BranchNode | undefined>} */
-			const branch = [];
-
-			/** @type {Record<string, any>} */
-			let stuff = {};
-
-			/** @type {import('./types').NavigationResult | undefined} */
-			let result;
-
-			let error_args;
-
-			try {
-				for (let i = 0; i < nodes.length; i += 1) {
-					const is_leaf = i === nodes.length - 1;
-
-					let props;
-
-					if (is_leaf) {
-						const serialized = document.querySelector('script[sveltekit\\:data-type="props"]');
-						if (serialized) {
-							props = JSON.parse(/** @type {string} */ (serialized.textContent));
-						}
-					}
-
-					const node = await load_node({
-						module: await components[nodes[i]](),
-						url,
-						params,
-						stuff,
-						status: is_leaf ? status : undefined,
-						error: is_leaf ? error : undefined,
-						props,
-						routeId
-					});
-
-					if (props) {
-						node.uses.dependencies.add(url.href);
-						node.uses.url = true;
-					}
-
-					branch.push(node);
-
-					if (node && node.loaded) {
-						if (node.loaded.error) {
-							if (error) throw node.loaded.error;
-							error_args = {
-								status: node.loaded.status,
-								error: node.loaded.error,
-								url,
-								routeId
-							};
-						} else if (node.loaded.stuff) {
-							stuff = {
-								...stuff,
-								...node.loaded.stuff
-							};
-						}
-					}
-				}
-
-				result = error_args
-					? await load_root_error_page(error_args)
-					: await get_navigation_result_from_branch({
-							url,
-							params,
-							stuff,
-							branch,
-							status,
-							error,
-							routeId
-					  });
-			} catch (e) {
-				if (error) throw e;
-
-				result = await load_root_error_page({
-					status: 500,
-					error: coalesce_to_error(e),
-					url,
-					routeId
-				});
+			// fix link[rel=icon], because browsers will occasionally try to load relative
+			// URLs after a pushState/replaceState, resulting in a 404 — see
+			// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
+			for (const link of document.querySelectorAll('link')) {
+				if (link.rel === 'icon') link.href = link.href;
 			}
 
-			if (result.redirect) {
-				// this is a real edge case — `load` would need to return
-				// a redirect but only in the browser
-				await native_navigation(new URL(result.redirect, location.href));
+			addEventListener('pageshow', (event) => {
+				// If the user navigates to another site and then uses the back button and
+				// bfcache hits, we need to set navigating to null, the site doesn't know
+				// the navigation away from it was successful.
+				// Info about bfcache here: https://web.dev/bfcache
+				if (event.persisted) {
+					stores.navigating.set(null);
+				}
+			});
+		},
+
+		_hydrate: async ({ status, error, node_ids, params, route, data: server_data_nodes, form }) => {
+			hydrated = true;
+
+			const url = new URL(location.href);
+
+			/** @type {import('./types').NavigationFinished | undefined} */
+			let result;
+
+			try {
+				const branch_promises = node_ids.map(async (n, i) => {
+					const server_data_node = server_data_nodes[i];
+
+					return load_node({
+						loader: nodes[n],
+						url,
+						params,
+						route,
+						parent: async () => {
+							const data = {};
+							for (let j = 0; j < i; j += 1) {
+								Object.assign(data, (await branch_promises[j]).data);
+							}
+							return data;
+						},
+						server_data_node: create_data_node(server_data_node)
+					});
+				});
+
+				result = await get_navigation_result_from_branch({
+					url,
+					params,
+					branch: await Promise.all(branch_promises),
+					status,
+					error,
+					form,
+					route: routes.find(({ id }) => id === route.id) ?? null
+				});
+			} catch (error) {
+				if (error instanceof Redirect) {
+					// this is a real edge case — `load` would need to return
+					// a redirect but only in the browser
+					await native_navigation(new URL(error.location, location.href));
+					return;
+				}
+
+				result = await load_root_error_page({
+					status: error instanceof HttpError ? error.status : 500,
+					error: handle_error(error, { url, params, route }),
+					url,
+					route
+				});
 			}
 
 			initialize(result);
 		}
+	};
+}
+
+/**
+ * @param {URL} url
+ * @param {boolean[]} invalid
+ * @returns {Promise<import('types').ServerData>}
+ */
+async function load_data(url, invalid) {
+	const data_url = new URL(url);
+	data_url.pathname = add_data_suffix(url.pathname);
+
+	const res = await native_fetch(data_url.href, {
+		headers: {
+			'x-sveltekit-invalidated': invalid.map((x) => (x ? '1' : '')).join(',')
+		}
+	});
+	const data = await res.json();
+
+	if (!res.ok) {
+		// error message is a JSON-stringified string which devalue can't handle at the top level
+		throw new Error(data);
+	}
+
+	// revive devalue-flattened data
+	data.nodes?.forEach((/** @type {any} */ node) => {
+		if (node?.type === 'data') {
+			node.data = devalue.unflatten(node.data);
+			node.uses = {
+				dependencies: new Set(node.uses.dependencies ?? []),
+				params: new Set(node.uses.params ?? []),
+				parent: !!node.uses.parent,
+				route: !!node.uses.route,
+				url: !!node.uses.url
+			};
+		}
+	});
+
+	return data;
+}
+
+/**
+ * @param {unknown} error
+ * @param {import('types').NavigationEvent} event
+ * @returns {App.Error}
+ */
+function handle_error(error, event) {
+	if (error instanceof HttpError) {
+		return error.body;
+	}
+	return (
+		hooks.handleError({ error, event }) ??
+		/** @type {any} */ ({ message: event.route.id != null ? 'Internal Error' : 'Not Found' })
+	);
+}
+
+// TODO remove for 1.0
+const properties = [
+	'hash',
+	'href',
+	'host',
+	'hostname',
+	'origin',
+	'pathname',
+	'port',
+	'protocol',
+	'search',
+	'searchParams',
+	'toString',
+	'toJSON'
+];
+
+/**
+ * @param {'from' | 'to'} type
+ * @param {import('types').NavigationTarget} target
+ */
+function add_url_properties(type, target) {
+	for (const prop of properties) {
+		Object.defineProperty(target, prop, {
+			get() {
+				throw new Error(
+					`The navigation shape changed - ${type}.${prop} should now be ${type}.url.${prop}`
+				);
+			},
+			enumerable: false
+		});
+	}
+
+	Object.defineProperty(target, 'routeId', {
+		get() {
+			throw new Error(
+				`The navigation shape changed - ${type}.routeId should now be ${type}.route.id`
+			);
+		},
+		enumerable: false
+	});
+
+	return target;
+}
+
+function pre_update() {
+	if (__SVELTEKIT_DEV__) {
+		return () => {
+			check_for_removed_attributes();
+		};
+	}
+
+	return () => {};
+}
+
+if (__SVELTEKIT_DEV__) {
+	// Nasty hack to silence harmless warnings the user can do nothing about
+	const warn = console.warn;
+	console.warn = (...args) => {
+		if (
+			args.length === 1 &&
+			/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
+				args[0]
+			)
+		) {
+			return;
+		}
+		warn(...args);
 	};
 }

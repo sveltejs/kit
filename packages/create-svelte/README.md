@@ -3,7 +3,7 @@
 A CLI for creating new [SvelteKit](https://kit.svelte.dev) projects. Just run...
 
 ```bash
-npm init svelte
+npm create svelte@latest
 ```
 
 ...and follow the prompts.
@@ -17,7 +17,7 @@ import { create } from 'create-svelte';
 
 await create('my-new-app', {
   name: 'my-new-app',
-  template: 'default', // or 'skeleton'
+  template: 'default', // or 'skeleton' or 'skeletonlib'
   types: 'checkjs', // or 'typescript' or null;
   prettier: false,
   eslint: false,

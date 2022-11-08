@@ -13,16 +13,19 @@ export const test: TestType<
 	PlaywrightTestArgs &
 		PlaywrightTestOptions & {
 			app: {
-				goto: (url: string, opts?: { replaceState?: boolean }) => Promise<void>;
-				invalidate: (url: string) => Promise<void>;
-				beforeNavigate: (url: URL) => void | boolean;
-				afterNavigate: (url: URL) => void;
-				prefetch: (url: string) => Promise<void>;
-				prefetchRoutes: (urls: string[]) => Promise<void>;
+				goto(url: string, opts?: { replaceState?: boolean }): Promise<void>;
+				invalidate(url: string): Promise<void>;
+				beforeNavigate(url: URL): void | boolean;
+				afterNavigate(url: URL): void;
+				prefetch(url: string): Promise<void>;
+				prefetchRoutes(urls: string[]): Promise<void>;
 			};
-			clicknav: (selector: string, options?: { timeout?: number }) => Promise<void>;
-			in_view: (selector: string) => Promise<boolean>;
-			read_errors: (href: string) => string;
+			clicknav(selector: string, options?: { timeout?: number }): Promise<void>;
+			in_view(selector: string): Promise<boolean>;
+			/**
+			 * `handleError` defines the shape
+			 */
+			read_errors(href: string): Record<string, any>;
 		},
 	PlaywrightWorkerArgs & PlaywrightWorkerOptions
 >;
@@ -34,7 +37,7 @@ export const start_server: (
 	start?: number
 ) => Promise<{
 	port: number;
-	close: () => Promise<void>;
+	close(): Promise<void>;
 }>;
 
 export const plugin: () => Plugin;

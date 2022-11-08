@@ -13,6 +13,13 @@
 	}
 }
 
+@media (min-width: 1300px) {
+	/* can't use vars in @media :( */
+	.content {
+		padding-right: calc(var(--sidebar-w) + var(--side-nav));
+	}
+}
+
 .content h1 {
 	font-size: 3.2rem;
 	margin: 0;
@@ -210,7 +217,7 @@
 }
 
 .content ul > li {
-	margin: 0.5em 0;
+	margin: 0.5em 0 !important;
 }
 
 /** hacky overrides to allow filenames inside code blocks —
@@ -294,4 +301,5 @@ pre.language-diff code {
 	white-space: pre-wrap;
 	padding-left: calc(var(--indent) + 2ch);
 	text-indent: calc(-1 * var(--indent) - 2ch);
+	min-height: 1.35em;
 }

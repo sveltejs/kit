@@ -1,6 +1,6 @@
 import { config } from '../../utils.js';
 
-config.webServer && (config.webServer.timeout = 15000); // AMP validator needs a long time to get moving
+config.webServer && (config.webServer.timeout = 45000); // AMP validator needs a long time to get moving
 
 // remove any projects with javaScriptEnabled
 const projects = config.projects || [];

@@ -10,11 +10,11 @@ import options from './options.js';
  * @param {import('types').ValidatedConfig} config
  */
 export function load_template(cwd, config) {
-	const { template } = config.kit.files;
-	const relative = path.relative(cwd, template);
+	const { appTemplate } = config.kit.files;
+	const relative = path.relative(cwd, appTemplate);
 
-	if (fs.existsSync(template)) {
-		const contents = fs.readFileSync(template, 'utf8');
+	if (fs.existsSync(appTemplate)) {
+		const contents = fs.readFileSync(appTemplate, 'utf8');
 
 		// TODO remove this for 1.0
 		const match = /%svelte\.([a-z]+)%/.exec(contents);
@@ -34,7 +34,17 @@ export function load_template(cwd, config) {
 		throw new Error(`${relative} does not exist`);
 	}
 
-	return fs.readFileSync(template, 'utf-8');
+	return fs.readFileSync(appTemplate, 'utf-8');
+}
+
+/**
+ * Loads the error page (src/error.html by default) if it exists.
+ * Falls back to a generic error page content.
+ * @param {import('types').ValidatedConfig} config
+ */
+export function load_error_page(config) {
+	const { errorTemplate } = config.kit.files;
+	return fs.readFileSync(errorTemplate, 'utf-8');
 }
 
 /**
@@ -64,8 +74,22 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 
 	for (const key in validated.kit.files) {
-		// @ts-expect-error this is typescript at its stupidest
-		validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
+		// TODO remove for 1.0
+		if (key === 'template') continue;
+
+		if (key === 'hooks') {
+			validated.kit.files.hooks.client = path.resolve(cwd, validated.kit.files.hooks.client);
+			validated.kit.files.hooks.server = path.resolve(cwd, validated.kit.files.hooks.server);
+		} else {
+			// @ts-expect-error
+			validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
+		}
+	}
+
+	if (!fs.existsSync(validated.kit.files.errorTemplate)) {
+		validated.kit.files.errorTemplate = url.fileURLToPath(
+			new URL('./default-error.html', import.meta.url)
+		);
 	}
 
 	return validated;

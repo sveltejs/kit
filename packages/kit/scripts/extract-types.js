@@ -2,10 +2,11 @@ import fs from 'fs';
 import ts from 'typescript';
 import prettier from 'prettier';
 import { mkdirp } from '../src/utils/filesystem.js';
+import { fileURLToPath } from 'url';
 
 /** @typedef {{ name: string, comment: string, snippet: string }} Extracted */
 
-/** @type {Array<{ name: string, comment: string, exports: Extracted[], types: Extracted[] }>} */
+/** @type {Array<{ name: string, comment: string, exports: Extracted[], types: Extracted[], exempt?: boolean }>} */
 const modules = [];
 
 /**
@@ -19,57 +20,77 @@ function get_types(code, statements) {
 	/** @type {Extracted[]} */
 	const types = [];
 
-	for (const statement of statements) {
-		if (
-			ts.isClassDeclaration(statement) ||
-			ts.isInterfaceDeclaration(statement) ||
-			ts.isTypeAliasDeclaration(statement) ||
-			ts.isModuleDeclaration(statement) ||
-			ts.isVariableStatement(statement) ||
-			ts.isFunctionDeclaration(statement)
-		) {
-			const name_node = ts.isVariableStatement(statement)
-				? statement.declarationList.declarations[0]
-				: statement;
+	if (statements) {
+		for (const statement of statements) {
+			const modifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
 
-			// @ts-ignore no idea why it's complaining here
-			const name = name_node.name?.escapedText;
+			const export_modifier = modifiers?.find((modifier) => modifier.kind === 93);
+			if (!export_modifier) continue;
 
-			let start = statement.pos;
-			let comment = '';
+			if (
+				ts.isClassDeclaration(statement) ||
+				ts.isInterfaceDeclaration(statement) ||
+				ts.isTypeAliasDeclaration(statement) ||
+				ts.isModuleDeclaration(statement) ||
+				ts.isVariableStatement(statement) ||
+				ts.isFunctionDeclaration(statement)
+			) {
+				const name_node = ts.isVariableStatement(statement)
+					? statement.declarationList.declarations[0]
+					: statement;
 
-			// @ts-ignore i think typescript is bad at typescript
-			if (statement.jsDoc) {
-				// @ts-ignore
-				comment = statement.jsDoc[0].comment;
-				// @ts-ignore
-				start = statement.jsDoc[0].end;
+				// @ts-ignore no idea why it's complaining here
+				const name = name_node.name?.escapedText;
+
+				let start = statement.pos;
+				let comment = '';
+
+				// @ts-ignore i think typescript is bad at typescript
+				if (statement.jsDoc) {
+					// @ts-ignore
+					comment = statement.jsDoc[0].comment;
+					// @ts-ignore
+					start = statement.jsDoc[0].end;
+				}
+
+				const i = code.indexOf('export', start);
+				start = i + 6;
+
+				const snippet = prettier
+					.format(code.slice(start, statement.end), {
+						parser: 'typescript',
+						printWidth: 80,
+						useTabs: true,
+						singleQuote: true,
+						trailingComma: 'none'
+					})
+					.trim();
+
+				const collection =
+					ts.isVariableStatement(statement) || ts.isFunctionDeclaration(statement)
+						? exports
+						: types;
+
+				collection.push({ name, comment, snippet });
 			}
-
-			const i = code.indexOf('export', start);
-			start = i + 6;
-
-			const snippet = prettier.format(code.slice(start, statement.end).trim(), {
-				parser: 'typescript',
-				printWidth: 60,
-				useTabs: true,
-				singleQuote: true,
-				trailingComma: 'none'
-			});
-
-			const collection =
-				ts.isVariableStatement(statement) || ts.isFunctionDeclaration(statement) ? exports : types;
-
-			collection.push({ name, comment, snippet });
-		} else {
-			// console.log(statement.kind);
 		}
+
+		types.sort((a, b) => (a.name < b.name ? -1 : 1));
+		exports.sort((a, b) => (a.name < b.name ? -1 : 1));
 	}
 
-	types.sort((a, b) => (a.name < b.name ? -1 : 1));
-	exports.sort((a, b) => (a.name < b.name ? -1 : 1));
-
 	return { types, exports };
+}
+
+/**
+ * Type declarations include fully qualified URLs so that they become links when
+ * you hover over names in an editor with TypeScript enabled. We need to remove
+ * the origin so that they become root-relative, so that they work in preview
+ * deployments and when developing locally
+ * @param {string} str
+ */
+function strip_origin(str) {
+	return str.replace(/https:\/\/kit\.svelte\.dev/g, '');
 }
 
 {
@@ -78,7 +99,7 @@ function get_types(code, statements) {
 
 	modules.push({
 		name: '@sveltejs/kit',
-		comment: 'The following types can be imported from `@sveltejs/kit`:',
+		comment: 'The following can be imported from `@sveltejs/kit`:',
 		...get_types(code, node.statements)
 	});
 }
@@ -95,13 +116,20 @@ function get_types(code, statements) {
 	});
 }
 
-modules.push({
-	name: '$lib',
-	comment:
-		'This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](/docs/configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.',
-	exports: [],
-	types: []
-});
+const dir = fileURLToPath(new URL('./special-types', import.meta.url).href);
+for (const file of fs.readdirSync(dir)) {
+	if (!file.endsWith('.md')) continue;
+
+	const comment = strip_origin(fs.readFileSync(`${dir}/${file}`, 'utf-8'));
+
+	modules.push({
+		name: file.replace(/\+/g, '/').slice(0, -3),
+		comment,
+		exports: [],
+		types: [],
+		exempt: true
+	});
+}
 
 {
 	const code = fs.readFileSync('types/ambient.d.ts', 'utf-8');
@@ -113,13 +141,13 @@ modules.push({
 			const name = statement.name.text || statement.name.escapedText;
 
 			// @ts-ignore
-			const comment = statement.jsDoc?.[0].comment ?? '';
+			const comment = strip_origin(statement.jsDoc?.[0].comment ?? '');
 
 			modules.push({
 				name,
 				comment,
 				// @ts-ignore
-				...get_types(code, statement.body.statements)
+				...get_types(code, statement.body?.statements)
 			});
 		}
 	}

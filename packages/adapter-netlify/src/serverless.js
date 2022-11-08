@@ -9,7 +9,16 @@ import { split_headers } from './headers';
 export function init(manifest) {
 	const server = new Server(manifest);
 
+	let init_promise = server.init({
+		env: process.env
+	});
+
 	return async (event, context) => {
+		if (init_promise !== null) {
+			await init_promise;
+			init_promise = null;
+		}
+
 		const response = await server.respond(to_request(event), {
 			platform: { context },
 			getClientAddress() {

@@ -1,24 +1,27 @@
 import { OutputAsset, OutputChunk } from 'rollup';
+import { SvelteComponent } from 'svelte/internal';
 import {
 	Config,
-	ExternalFetch,
-	GetSession,
+	ServerLoad,
 	Handle,
-	HandleError,
+	HandleServerError,
 	KitConfig,
 	Load,
 	RequestEvent,
 	RequestHandler,
 	ResolveOptions,
 	Server,
-	SSRManifest
+	ServerInitOptions,
+	SSRManifest,
+	HandleFetch,
+	Actions,
+	HandleClientError
 } from './index.js';
 import {
 	HttpMethod,
-	JSONObject,
 	MaybePromise,
+	PrerenderOption,
 	RequestOptions,
-	ResponseHeaders,
 	TrailingSlash
 } from './private.js';
 
@@ -44,6 +47,7 @@ export interface Asset {
 
 export interface BuildData {
 	app_dir: string;
+	app_path: string;
 	manifest_data: ManifestData;
 	service_worker: string | null;
 	client: {
@@ -64,35 +68,42 @@ export interface BuildData {
 	};
 }
 
-export type CSRComponent = any; // TODO
+export interface CSRPageNode {
+	component: typeof SvelteComponent;
+	shared: {
+		load?: Load;
+	};
+	server: boolean;
+}
 
-export type CSRComponentLoader = () => Promise<CSRComponent>;
+export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
 
+/**
+ * Definition of a client side route.
+ * The boolean in the tuples indicates whether the route has a server load.
+ */
 export type CSRRoute = {
 	id: string;
-	exec: (path: string) => undefined | Record<string, string>;
-	a: CSRComponentLoader[];
-	b: CSRComponentLoader[];
-	has_shadow: boolean;
+	exec(path: string): undefined | Record<string, string>;
+	errors: Array<CSRPageNodeLoader | undefined>;
+	layouts: Array<[boolean, CSRPageNodeLoader] | undefined>;
+	leaf: [boolean, CSRPageNodeLoader];
 };
-
-export interface EndpointData {
-	type: 'endpoint';
-	id: string;
-	pattern: RegExp;
-	file: string;
-}
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
-export interface Hooks {
-	externalFetch: ExternalFetch;
-	getSession: GetSession;
+export interface ServerHooks {
+	handleFetch: HandleFetch;
 	handle: Handle;
-	handleError: HandleError;
+	handleError: HandleServerError;
+}
+
+export interface ClientHooks {
+	handleError: HandleClientError;
 }
 
 export class InternalServer extends Server {
+	init(options: ServerInitOptions): Promise<void>;
 	respond(
 		request: Request,
 		options: RequestOptions & {
@@ -103,44 +114,23 @@ export class InternalServer extends Server {
 
 export interface ManifestData {
 	assets: Asset[];
-	components: string[];
+	nodes: PageNode[];
 	routes: RouteData[];
 	matchers: Record<string, string>;
 }
 
-export interface MethodOverride {
-	parameter: string;
-	allowed: string[];
+export interface PageNode {
+	depth: number;
+	component?: string; // TODO supply default component if it's missing (bit of an edge case)
+	shared?: string;
+	server?: string;
+	parent_id?: string;
+	parent?: PageNode;
+	/**
+	 * Filled with the pages that reference this layout (if this is a layout)
+	 */
+	child_pages?: PageNode[];
 }
-
-export type NormalizedLoadOutput = {
-	status: number;
-	error?: Error;
-	redirect?: string;
-	props?: Record<string, any> | Promise<Record<string, any>>;
-	stuff?: Record<string, any>;
-	cache?: NormalizedLoadOutputCache;
-	dependencies?: string[];
-};
-
-export interface NormalizedLoadOutputCache {
-	maxage: number;
-	private?: boolean;
-}
-
-export interface PageData {
-	type: 'page';
-	id: string;
-	shadow: string | null;
-	pattern: RegExp;
-	path: string;
-	a: Array<string | undefined>;
-	b: Array<string | undefined>;
-}
-
-export type PayloadScriptAttributes =
-	| { type: 'data'; url: string; body?: string }
-	| { type: 'props' };
 
 export interface PrerenderDependency {
 	response: Response;
@@ -148,18 +138,16 @@ export interface PrerenderDependency {
 }
 
 export interface PrerenderOptions {
+	cache?: string; // including this here is a bit of a hack, but it makes it easy to add <meta http-equiv>
 	fallback?: boolean;
 	dependencies: Map<string, PrerenderDependency>;
 }
 
 export type RecursiveRequired<T> = {
 	// Recursive implementation of TypeScript's Required utility type.
-	// Will recursively continue until it reaches primitive or union
-	// with a Function in it, except those commented below
+	// Will recursively continue until it reaches a primitive or Function
 	[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
 		? RecursiveRequired<T[K]> // recursively continue through.
-		: K extends 'vite' // If it reaches the 'vite' key
-		? Extract<T[K], Function> // only take the Function type.
 		: T[K]; // Use the exact type for everything else
 };
 
@@ -169,31 +157,81 @@ export interface Respond {
 	(request: Request, options: SSROptions, state: SSRState): Promise<Response>;
 }
 
-export type RouteData = PageData | EndpointData;
+/**
+ * Represents a route segment in the app. It can either be an intermediate node
+ * with only layout/error pages, or a leaf, at which point either `page` and `leaf`
+ * or `endpoint` is set.
+ */
+export interface RouteData {
+	id: string;
+	parent: RouteData | null;
 
-export interface ShadowEndpointOutput<Output extends JSONObject = JSONObject> {
-	status?: number;
-	headers?: Partial<ResponseHeaders>;
-	body?: Output;
+	segment: string;
+	pattern: RegExp;
+	names: string[];
+	types: string[];
+	optional: boolean[];
+
+	layout: PageNode | null;
+	error: PageNode | null;
+	leaf: PageNode | null;
+
+	page: {
+		layouts: Array<number | undefined>;
+		errors: Array<number | undefined>;
+		leaf: number;
+	} | null;
+
+	endpoint: {
+		file: string;
+	} | null;
 }
 
-export interface ShadowRequestHandler<Output extends JSONObject = JSONObject> {
-	(event: RequestEvent): MaybePromise<ShadowEndpointOutput<Output>>;
+export type ServerData =
+	| {
+			type: 'redirect';
+			location: string;
+	  }
+	| {
+			type: 'data';
+			/**
+			 * If `null`, then there was no load function
+			 */
+			nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
+	  };
+
+/**
+ * Signals a successful response of the server `load` function.
+ * The `uses` property tells the client when it's possible to reuse this data
+ * in a subsequent request.
+ */
+export interface ServerDataNode {
+	type: 'data';
+	data: Record<string, any> | null;
+	uses: Uses;
 }
 
-export interface ShadowData {
+/**
+ * Signals that the server `load` function was not run, and the
+ * client should use what it has in memory
+ */
+export interface ServerDataSkippedNode {
+	type: 'skip';
+}
+
+/**
+ * Signals that the server `load` function failed
+ */
+export interface ServerErrorNode {
+	type: 'error';
+	error: App.Error;
+	/**
+	 * Only set for HttpErrors
+	 */
 	status?: number;
-	error?: Error;
-	redirect?: string;
-	cookies?: string[];
-	body?: JSONObject;
 }
 
 export interface SSRComponent {
-	router?: boolean;
-	hydrate?: boolean;
-	prerender?: boolean;
-	load: Load;
 	default: {
 		render(props: Record<string, any>): {
 			html: string;
@@ -208,19 +246,8 @@ export interface SSRComponent {
 
 export type SSRComponentLoader = () => Promise<SSRComponent>;
 
-export interface SSREndpoint {
-	type: 'endpoint';
-	id: string;
-	pattern: RegExp;
-	names: string[];
-	types: string[];
-	load(): Promise<{
-		[method: string]: RequestHandler;
-	}>;
-}
-
 export interface SSRNode {
-	module: SSRComponent;
+	component: SSRComponentLoader;
 	/** index into the `components` array in client-manifest.js */
 	index: number;
 	/** client-side module URL for this component */
@@ -232,34 +259,47 @@ export interface SSRNode {
 	/** external font files */
 	fonts: string[];
 	/** inlined styles */
-	inline_styles?: () => MaybePromise<Record<string, string>>;
+	inline_styles?(): MaybePromise<Record<string, string>>;
+
+	shared: {
+		load?: Load;
+		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
+	};
+
+	server: {
+		load?: ServerLoad;
+		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
+		actions?: Actions;
+	};
+
+	// store this in dev so we can print serialization errors
+	server_id?: string;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	csp: ValidatedConfig['kit']['csp'];
+	csrf: {
+		check_origin: boolean;
+	};
 	dev: boolean;
-	get_stack: (error: Error) => string | undefined;
-	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
-	hooks: Hooks;
-	hydrate: boolean;
+	handle_error(error: Error & { frame?: string }, event: RequestEvent): App.Error;
+	hooks: ServerHooks;
 	manifest: SSRManifest;
-	method_override: MethodOverride;
 	paths: {
 		base: string;
 		assets: string;
 	};
-	prefix: string;
-	prerender: {
-		default: boolean;
-		enabled: boolean;
-	};
+	public_env: Record<string, string>;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
-	router: boolean;
-	service_worker?: string;
-	template({
+	service_worker: boolean;
+	app_template({
 		head,
 		body,
 		assets,
@@ -270,48 +310,59 @@ export interface SSROptions {
 		assets: string;
 		nonce: string;
 	}): string;
-	template_contains_nonce: boolean;
+	app_template_contains_nonce: boolean;
+	error_template({ message, status }: { message: string; status: number }): string;
 	trailing_slash: TrailingSlash;
 }
 
-export interface SSRPage {
-	type: 'page';
+export interface SSRErrorPage {
+	id: '__error';
+}
+
+export interface PageNodeIndexes {
+	errors: Array<number | undefined>;
+	layouts: Array<number | undefined>;
+	leaf: number;
+}
+
+export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
+	prerender?: PrerenderOption;
+};
+
+export interface SSRRoute {
 	id: string;
 	pattern: RegExp;
 	names: string[];
 	types: string[];
-	shadow:
-		| null
-		| (() => Promise<{
-				[method: string]: ShadowRequestHandler;
-		  }>);
-	/**
-	 * plan a is to render 1 or more layout components followed by a leaf component.
-	 */
-	a: Array<number | undefined>;
-	/**
-	 * plan b — if one of them components fails in `load` we backtrack until we find
-	 * the nearest error component.
-	 */
-	b: Array<number | undefined>;
-}
+	optional: boolean[];
 
-export interface SSRPagePart {
-	id: string;
-	load: SSRComponentLoader;
-}
+	page: PageNodeIndexes | null;
 
-export type SSRRoute = SSREndpoint | SSRPage;
+	endpoint: (() => Promise<SSREndpoint>) | null;
+}
 
 export interface SSRState {
 	fallback?: string;
-	getClientAddress: () => string;
-	initiator?: SSRPage | null;
+	getClientAddress(): string;
+	initiator?: SSRRoute | SSRErrorPage;
 	platform?: any;
 	prerendering?: PrerenderOptions;
+	/**
+	 * When fetching data from a +server.js endpoint in `load`, the page's
+	 * prerender option is inherited by the endpoint, unless overridden
+	 */
+	prerender_default?: PrerenderOption;
 }
 
-export type StrictBody = string | Uint8Array;
+export type StrictBody = string | ArrayBufferView;
+
+export interface Uses {
+	dependencies: Set<string>;
+	params: Set<string>;
+	parent: boolean;
+	route: boolean;
+	url: boolean;
+}
 
 export type ValidatedConfig = RecursiveRequired<Config>;
 
@@ -319,3 +370,12 @@ export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export * from './index';
 export * from './private';
+
+declare global {
+	const __SVELTEKIT_ADAPTER_NAME__: string;
+	const __SVELTEKIT_APP_VERSION__: string;
+	const __SVELTEKIT_APP_VERSION_FILE__: string;
+	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+	const __SVELTEKIT_BROWSER__: boolean;
+	const __SVELTEKIT_DEV__: boolean;
+}

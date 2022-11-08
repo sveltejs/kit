@@ -1,11 +1,5 @@
-import { createReadStream, createWriteStream, statSync } from 'fs';
-import { pipeline } from 'stream';
-import glob from 'tiny-glob';
-import { promisify } from 'util';
-import zlib from 'zlib';
+import path from 'path';
 import { platforms } from './platforms.js';
-
-const pipe = promisify(pipeline);
 
 /** @type {import('.').default} */
 export default function (options) {
@@ -13,10 +7,51 @@ export default function (options) {
 		name: '@sveltejs/adapter-static',
 
 		async adapt(builder) {
-			if (!options?.fallback && !builder.config.kit.prerender.default) {
-				builder.log.warn(
-					'You should set `config.kit.prerender.default` to `true` if no fallback is specified'
-				);
+			if (!options?.fallback) {
+				/** @type {string[]} */
+				const dynamic_routes = [];
+
+				// this is a bit of a hack — it allows us to know whether there are dynamic
+				// (i.e. prerender = false/'auto') routes without having dedicated API
+				// surface area for it
+				builder.createEntries((route) => {
+					dynamic_routes.push(route.id);
+
+					return {
+						id: '',
+						filter: () => false,
+						complete: () => {}
+					};
+				});
+
+				if (dynamic_routes.length > 0 && options?.strict !== false) {
+					const prefix = path.relative('.', builder.config.kit.files.routes);
+					const has_param_routes = dynamic_routes.some((route) => route.includes('['));
+					const config_option =
+						has_param_routes || JSON.stringify(builder.config.kit.prerender.entries) !== '["*"]'
+							? `  - adjust the \`prerender.entries\` config option ${
+									has_param_routes
+										? '(routes with parameters are not part of entry points by default)'
+										: ''
+							  } — see https://kit.svelte.dev/docs/configuration#prerender for more info.`
+							: '';
+
+					builder.log.error(
+						`@sveltejs/adapter-static: all routes must be fully prerenderable, but found the following routes that are dynamic:
+${dynamic_routes.map((id) => `  - ${path.posix.join(prefix, id)}`).join('\n')}
+
+You have the following options:
+  - set the \`fallback\` option — see https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode for more info.
+  - add \`export const prerender = true\` to your root \`+layout.js/.ts\` or \`+layout.server.js/.ts\` file. This will try to prerender all pages.
+  - add \`export const prerender = true\` to any \`+server.js/ts\` files that are not fetched by page \`load\` functions.
+${config_option}
+  - pass \`strict: false\` to \`adapter-static\` to ignore this error. Only do this if you are sure you don't need the routes in question in your final app, as they will be unavailable. See https://github.com/sveltejs/kit/tree/master/packages/adapter-static#strict for more info.
+
+If this doesn't help, you may need to use a different adapter. @sveltejs/adapter-static can only be used for sites that don't need a server for dynamic rendering, and can run on just a static file server.
+See https://kit.svelte.dev/docs/page-options#prerender for more details`
+					);
+					throw new Error('Encountered dynamic routes');
+				}
 			}
 
 			const platform = platforms.find((platform) => platform.test());
@@ -43,20 +78,15 @@ export default function (options) {
 			builder.rimraf(assets);
 			builder.rimraf(pages);
 
-			builder.writeStatic(assets);
 			builder.writeClient(assets);
 			builder.writePrerendered(pages, { fallback });
 
 			if (precompress) {
+				builder.log.minor('Compressing assets and pages');
 				if (pages === assets) {
-					builder.log.minor('Compressing assets and pages');
-					await compress(assets);
+					await builder.compress(assets);
 				} else {
-					builder.log.minor('Compressing assets');
-					await compress(assets);
-
-					builder.log.minor('Compressing pages');
-					await compress(pages);
+					await Promise.all([builder.compress(assets), builder.compress(pages)]);
 				}
 			}
 
@@ -69,42 +99,4 @@ export default function (options) {
 			if (!options) platform?.done(builder);
 		}
 	};
-}
-
-/**
- * @param {string} directory
- */
-async function compress(directory) {
-	const files = await glob('**/*.{html,js,json,css,svg,xml,wasm}', {
-		cwd: directory,
-		dot: true,
-		absolute: true,
-		filesOnly: true
-	});
-
-	await Promise.all(
-		files.map((file) => Promise.all([compress_file(file, 'gz'), compress_file(file, 'br')]))
-	);
-}
-
-/**
- * @param {string} file
- * @param {'gz' | 'br'} format
- */
-async function compress_file(file, format = 'gz') {
-	const compress =
-		format == 'br'
-			? zlib.createBrotliCompress({
-					params: {
-						[zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
-						[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
-						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
-					}
-			  })
-			: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
-
-	const source = createReadStream(file);
-	const destination = createWriteStream(`${file}.${format}`);
-
-	await pipe(source, compress, destination);
 }

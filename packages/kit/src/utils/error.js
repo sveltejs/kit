@@ -1,3 +1,5 @@
+import { HttpError, Redirect } from '../runtime/control.js';
+
 /**
  * @param {unknown} err
  * @return {Error}
@@ -10,10 +12,11 @@ export function coalesce_to_error(err) {
 }
 
 /**
- * @param {Error} err
- * @param {any} errorCode
- * @return {err is Error & {code: any}}
+ * This is an identity function that exists to make TypeScript less
+ * paranoid about people throwing things that aren't errors, which
+ * frankly is not something we should care about
+ * @param {unknown} error
  */
-export function has_error_code(err, errorCode = undefined) {
-	return 'code' in err && (errorCode === undefined || /** @type {any} */ (err).code === errorCode);
+export function normalize_error(error) {
+	return /** @type {Redirect | HttpError | Error} */ (error);
 }

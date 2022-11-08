@@ -37,12 +37,12 @@
 	{#each results as result, i}
 		<li>
 			<a
-				sveltekit:prefetch
+				data-sveltekit-prefetch
 				href={result.href}
 				on:click={() => dispatch('select', { href: result.href })}
 				data-has-node={result.node ? true : undefined}
 			>
-				<strong>{@html excerpt(result.breadcrumbs.at(-1), query)}</strong>
+				<strong>{@html excerpt(result.breadcrumbs[result.breadcrumbs.length - 1], query)}</strong>
 
 				{#if result.node?.content}
 					<span>{@html excerpt(result.node.content, query)}</span>
@@ -103,6 +103,8 @@
 		display: block;
 		white-space: nowrap;
 		line-height: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	a strong {
@@ -112,9 +114,7 @@
 
 	a span {
 		font-size: 1.2rem;
-		color: #999;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		color: #737373;
 		margin: 0.4rem 0 0 0;
 	}
 

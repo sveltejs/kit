@@ -1,17 +1,9 @@
-import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { resolve, normalize_path, LoadURL, PrerenderingURL } from './url.js';
+import { describe } from './unit_test.js';
+import { resolve, normalize_path, make_trackable, disable_search } from './url.js';
 
-/**
- *
- * @param {string} name
- * @param {(suite: import('uvu').Test<import('uvu').Context>) => void} fn
- */
-function describe(name, fn) {
-	const s = suite(name);
-	fn(s);
-	s.run();
-}
+// @ts-expect-error define global required in url.js
+globalThis.__SVELTEKIT_BROWSER__ = false;
 
 describe('resolve', (test) => {
 	test('resolves a root-relative path', () => {
@@ -61,6 +53,10 @@ describe('resolve', (test) => {
 	test('handles schemes like tel: and mailto:', () => {
 		assert.equal(resolve('/a/b/c', 'mailto:hello@svelte.dev'), 'mailto:hello@svelte.dev');
 	});
+
+	test('resolves a fragment link', () => {
+		assert.equal(resolve('/a/b/c', '#foo'), '/a/b/c#foo');
+	});
 });
 
 describe('normalize_path', (test) => {
@@ -94,12 +90,23 @@ describe('normalize_path', (test) => {
 	});
 });
 
-describe('LoadURL', (test) => {
+describe('make_trackable', (test) => {
+	test('makes URL properties trackable', () => {
+		let tracked = false;
+
+		const url = make_trackable(new URL('https://kit.svelte.dev/docs'), () => {
+			tracked = true;
+		});
+
+		url.origin;
+		assert.ok(!tracked);
+
+		url.pathname;
+		assert.ok(tracked);
+	});
+
 	test('throws an error when its hash property is accessed', () => {
-		/**
-		 * @type {URL}
-		 */
-		const url = new LoadURL('https://kit.svelte.dev/docs');
+		const url = make_trackable(new URL('https://kit.svelte.dev/docs'), () => {});
 
 		assert.throws(
 			() => url.hash,
@@ -108,16 +115,12 @@ describe('LoadURL', (test) => {
 	});
 });
 
-describe('PrerenderingURL', (test) => {
+describe('disable_search', (test) => {
 	test('throws an error when its search property is accessed', () => {
-		/**
-		 * @type {URL}
-		 */
-		const url = new PrerenderingURL('https://kit.svelte.dev/docs');
+		const url = new URL('https://kit.svelte.dev/docs');
+		disable_search(url);
 
-		/**
-		 * @type {Array<'search' | 'searchParams'>}
-		 */
+		/** @type {Array<keyof URL>} */
 		const props = ['search', 'searchParams'];
 		props.forEach((prop) => {
 			assert.throws(

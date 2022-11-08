@@ -1,5 +1,83 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.48
+
+### Patch Changes
+
+- Update README ([#7480](https://github.com/sveltejs/kit/pull/7480))
+
+## 1.0.0-next.47
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.46
+
+### Patch Changes
+
+- Make options object optional ([#7341](https://github.com/sveltejs/kit/pull/7341))
+
+## 1.0.0-next.45
+
+### Patch Changes
+
+- [feat] more info about prerendering errors, add strict option to adapter-static ([#7264](https://github.com/sveltejs/kit/pull/7264))
+
+## 1.0.0-next.44
+
+### Patch Changes
+
+- fix error message ([#7108](https://github.com/sveltejs/kit/pull/7108))
+
+## 1.0.0-next.43
+
+### Patch Changes
+
+- Improve performance by compressing in parallel ([#6710](https://github.com/sveltejs/kit/pull/6710))
+
+## 1.0.0-next.42
+
+### Patch Changes
+
+- [docs] more specific error message when prerendering fails ([#6577](https://github.com/sveltejs/kit/pull/6577))
+
+## 1.0.0-next.41
+
+### Patch Changes
+
+- Better error when encountering not-fully-prerenderable routes ([#6474](https://github.com/sveltejs/kit/pull/6474))
+
+## 1.0.0-next.40
+
+### Patch Changes
+
+- [breaking] require all routes to be prerenderable when not using fallback option ([#6392](https://github.com/sveltejs/kit/pull/6392))
+
+## 1.0.0-next.39
+
+### Patch Changes
+
+- Move `compress` logic to `Builder` API ([#5822](https://github.com/sveltejs/kit/pull/5822))
+
+## 1.0.0-next.38
+
+### Patch Changes
+
+- [breaking] remove writeStatic to align with Vite ([#5618](https://github.com/sveltejs/kit/pull/5618))
+
+## 1.0.0-next.37
+
+### Patch Changes
+
+- [breaking] Throws when correctly configured to run as a static site of a SPA ([#5562](https://github.com/sveltejs/kit/pull/5562))
+
+## 1.0.0-next.36
+
+### Patch Changes
+
+- Remove ENABLE_VC_BUILD check, use v3 build output API for all apps deployed to Vercel ([#5514](https://github.com/sveltejs/kit/pull/5514))
+
 ## 1.0.0-next.35
 
 ### Patch Changes

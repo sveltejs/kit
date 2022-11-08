@@ -13,7 +13,6 @@ const inputs = [
 
 inputs.forEach((input) => {
 	test(input, async () => {
-		// @ts-expect-error typescript what are you doing you lunatic
 		const expected_bytes = await webcrypto.subtle.digest(
 			'SHA-256',
 			new TextEncoder().encode(input)

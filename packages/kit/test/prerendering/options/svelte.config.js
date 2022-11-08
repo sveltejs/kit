@@ -22,10 +22,6 @@ const config = {
 			assets: 'https://cdn.example.com/stuff'
 		},
 
-		prerender: {
-			default: true
-		},
-
 		trailingSlash: 'always'
 	}
 };

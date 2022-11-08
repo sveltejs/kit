@@ -6,7 +6,7 @@ const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
 const server = new Server(manifest);
 
-const prefix = `/${manifest.appDir}/`;
+const app_path = `/${manifest.appPath}/`;
 
 export default {
 	/**
@@ -15,15 +15,17 @@ export default {
 	 * @param {any} context
 	 */
 	async fetch(req, env, context) {
+		await server.init({ env });
+
 		const url = new URL(req.url);
 
 		// static assets
-		if (url.pathname.startsWith(prefix)) {
+		if (url.pathname.startsWith(app_path)) {
 			/** @type {Response} */
 			const res = await get_asset_from_kv(req, env, context);
 			if (is_error(res.status)) return res;
 
-			const cache_control = url.pathname.startsWith(prefix + 'immutable/')
+			const cache_control = url.pathname.startsWith(app_path + 'immutable/')
 				? 'public, immutable, max-age=31536000'
 				: 'no-cache';
 
@@ -65,7 +67,7 @@ export default {
 
 		// dynamically-generated pages
 		return await server.respond(req, {
-			platform: { env, context },
+			platform: { env, context, caches },
 			getClientAddress() {
 				return req.headers.get('cf-connecting-ip');
 			}

@@ -1,141 +1,92 @@
-import { to_headers } from '../../utils/http.js';
-import { hash } from '../hash.js';
-import { is_pojo, normalize_request_method, serialize_error } from './utils.js';
-
-/** @param {string} body */
-function error(body) {
-	return new Response(body, {
-		status: 500
-	});
-}
-
-/** @param {unknown} s */
-function is_string(s) {
-	return typeof s === 'string' || s instanceof String;
-}
-
-const text_types = new Set([
-	'application/xml',
-	'application/json',
-	'application/x-www-form-urlencoded',
-	'multipart/form-data'
-]);
-
-const bodyless_status_codes = new Set([101, 204, 205, 304]);
+import { json } from '../../exports/index.js';
+import { negotiate } from '../../utils/http.js';
+import { Redirect, ValidationError } from '../control.js';
+import { check_method_names, method_not_allowed } from './utils.js';
 
 /**
- * Decides how the body should be parsed based on its mime type
- *
- * @param {string | undefined | null} content_type The `content-type` header of a request/response.
- * @returns {boolean}
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSREndpoint} mod
+ * @param {import('types').SSRState} state
+ * @returns {Promise<Response>}
  */
-export function is_text(content_type) {
-	if (!content_type) return true; // defaults to json
-	const type = content_type.split(';')[0].toLowerCase(); // get the mime type
+export async function render_endpoint(event, mod, state) {
+	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
-	return type.startsWith('text/') || type.endsWith('+xml') || text_types.has(type);
+	// TODO: Remove for 1.0
+	check_method_names(mod);
+
+	let handler = mod[method];
+
+	if (!handler && method === 'HEAD') {
+		handler = mod.GET;
+	}
+
+	if (!handler) {
+		return method_not_allowed(mod, method);
+	}
+
+	const prerender = mod.prerender ?? state.prerender_default;
+
+	if (prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
+		throw new Error('Cannot prerender endpoints that have mutative methods');
+	}
+
+	if (state.prerendering && !prerender) {
+		if (state.initiator) {
+			// if request came from a prerendered page, bail
+			throw new Error(`${event.route.id} is not prerenderable`);
+		} else {
+			// if request came direct from the crawler, signal that
+			// this route cannot be prerendered, but don't bail
+			return new Response(undefined, { status: 204 });
+		}
+	}
+
+	try {
+		const response = await handler(
+			/** @type {import('types').RequestEvent<Record<string, any>>} */ (event)
+		);
+
+		if (!(response instanceof Response)) {
+			throw new Error(
+				`Invalid response from route ${event.url.pathname}: handler should return a Response object`
+			);
+		}
+
+		if (state.prerendering) {
+			response.headers.set('x-sveltekit-prerender', String(prerender));
+		}
+
+		return response;
+	} catch (error) {
+		if (error instanceof Redirect) {
+			return new Response(undefined, {
+				status: error.status,
+				headers: { location: error.location }
+			});
+		} else if (error instanceof ValidationError) {
+			return json(error.data, { status: error.status });
+		}
+
+		throw error;
+	}
 }
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {{ [method: string]: import('types').RequestHandler }} mod
- * @param {import('types').SSROptions} options
- * @returns {Promise<Response>}
  */
-export async function render_endpoint(event, mod, options) {
-	const method = normalize_request_method(event);
+export function is_endpoint_request(event) {
+	const { method, headers } = event.request;
 
-	/** @type {import('types').RequestHandler} */
-	let handler = mod[method];
-
-	if (!handler && method === 'head') {
-		handler = mod.get;
+	if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+		// These methods exist exclusively for endpoints
+		return true;
 	}
 
-	if (!handler) {
-		const allowed = [];
+	// use:enhance uses a custom header to disambiguate
+	if (method === 'POST' && headers.get('x-sveltekit-action') === 'true') return false;
 
-		for (const method in ['get', 'post', 'put', 'patch']) {
-			if (mod[method]) allowed.push(method.toUpperCase());
-		}
-
-		if (mod.del) allowed.push('DELETE');
-		if (mod.get || mod.head) allowed.push('HEAD');
-
-		return event.request.headers.get('x-sveltekit-load')
-			? // TODO would be nice to avoid these requests altogether,
-			  // by noting whether or not page endpoints export `get`
-			  new Response(undefined, {
-					status: 204
-			  })
-			: new Response(`${event.request.method} method not allowed`, {
-					status: 405,
-					headers: {
-						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-						// "The server must generate an Allow header field in a 405 status code response"
-						allow: allowed.join(', ')
-					}
-			  });
-	}
-
-	const response = await handler(event);
-	const preface = `Invalid response from route ${event.url.pathname}`;
-
-	if (typeof response !== 'object') {
-		return error(`${preface}: expected an object, got ${typeof response}`);
-	}
-
-	// TODO remove for 1.0
-	// @ts-expect-error
-	if (response.fallthrough) {
-		throw new Error(
-			'fallthrough is no longer supported. Use matchers instead: https://kit.svelte.dev/docs/routing#advanced-routing-matching'
-		);
-	}
-
-	const { status = 200, body = {} } = response;
-	const headers =
-		response.headers instanceof Headers
-			? new Headers(response.headers)
-			: to_headers(response.headers);
-
-	const type = headers.get('content-type');
-
-	if (
-		!is_text(type) &&
-		!(body instanceof Uint8Array || body instanceof ReadableStream || is_string(body))
-	) {
-		return error(
-			`${preface}: body must be an instance of string, Uint8Array or ReadableStream if content-type is not a supported textual content-type`
-		);
-	}
-
-	/** @type {import('types').StrictBody} */
-	let normalized_body;
-
-	if (is_pojo(body) && (!type || type.startsWith('application/json'))) {
-		headers.set('content-type', 'application/json; charset=utf-8');
-		normalized_body =
-			body instanceof Error ? serialize_error(body, options.get_stack) : JSON.stringify(body);
-	} else {
-		normalized_body = /** @type {import('types').StrictBody} */ (body);
-	}
-
-	if (
-		(typeof normalized_body === 'string' || normalized_body instanceof Uint8Array) &&
-		!headers.has('etag')
-	) {
-		const cache_control = headers.get('cache-control');
-		if (!cache_control || !/(no-store|immutable)/.test(cache_control)) {
-			headers.set('etag', `"${hash(normalized_body)}"`);
-		}
-	}
-
-	return new Response(
-		method !== 'head' && !bodyless_status_codes.has(status) ? normalized_body : undefined,
-		{
-			status,
-			headers
-		}
-	);
+	// GET/POST requests may be for endpoints or pages. We prefer endpoints if this isn't a text/html request
+	const accept = event.request.headers.get('accept') ?? '*/*';
+	return negotiate(accept, ['*', 'text/html']) !== 'text/html';
 }

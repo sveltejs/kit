@@ -17,13 +17,10 @@ export function init(blocks) {
 	// we have multiple indexes, so we can rank sections (migration guide comes last)
 	const max_rank = Math.max(...blocks.map((block) => block.rank ?? 0));
 
-	indexes = Array.from(
-		{ length: max_rank + 1 },
-		() => new flexsearch.Index({ tokenize: 'forward' })
-	);
+	indexes = Array.from({ length: max_rank + 1 }, () => new flexsearch({ tokenize: 'forward' }));
 
 	for (const block of blocks) {
-		const title = block.breadcrumbs.at(-1);
+		const title = block.breadcrumbs[block.breadcrumbs.length - 1];
 		map.set(block.href, {
 			title,
 			href: block.href,
@@ -43,7 +40,8 @@ export function init(blocks) {
  * @returns {import('./types').Block[]}
  */
 export function search(query) {
-	const regex = new RegExp(`\\b${query}`, 'i');
+	const escaped = query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+	const regex = new RegExp(`(^|\\b)${escaped}`, 'i');
 
 	const blocks = indexes
 		.map((index) => index.search(query))
