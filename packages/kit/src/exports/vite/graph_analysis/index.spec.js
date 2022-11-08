@@ -31,7 +31,7 @@ function check(graph, expected_error) {
 			throw new Error('Expected an error');
 		} catch (e) {
 			// @ts-expect-error
-			assert.equal(e.message, expected_error.replace(/^\t+/gm, ''));
+			assert.equal(e.message, expected_error.replace(/^\t+/gm, '').replace(/\//g, path.sep));
 		}
 	} else {
 		guard.check('~/src/entry');
