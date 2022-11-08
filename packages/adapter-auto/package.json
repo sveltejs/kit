@@ -27,7 +27,8 @@
 	"scripts": {
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "pnpm lint --write",
-		"check": "tsc"
+		"check": "tsc",
+		"postinstall": "node index.js"
 	},
 	"devDependencies": {
 		"@types/node": "^16.11.68",
