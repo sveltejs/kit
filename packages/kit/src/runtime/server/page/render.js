@@ -243,6 +243,19 @@ export async function render_response({
 		head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
+	for (const dep of fonts) {
+		const ext = dep.slice(dep.lastIndexOf('.') + 1);
+		const attributes = [
+			'rel="preload"',
+			'as="font"',
+			`type="font/${ext}"`,
+			`href="${prefixed(dep)}"`,
+			'crossorigin'
+		];
+
+		head += `\n\t\t<link ${attributes.join(' ')}>`;
+	}
+
 	if (page_config.csr) {
 		// prettier-ignore
 		const init_app = `
@@ -282,22 +295,6 @@ export async function render_response({
 		}
 
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
-
-		head += Array.from(fonts)
-			.map((dep) => {
-				const ext = dep.slice(dep.lastIndexOf('.') + 1);
-
-				const attributes = [
-					'rel="preload"',
-					'as="font"',
-					`type="font/${ext}"`,
-					`href="${prefixed(dep)}"`,
-					'crossorigin'
-				];
-
-				return `\n\t<link ${attributes.join(' ')}>`;
-			})
-			.join('');
 	}
 
 	if (page_config.ssr && page_config.csr) {
