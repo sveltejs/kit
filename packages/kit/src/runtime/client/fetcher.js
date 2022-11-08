@@ -66,7 +66,7 @@ const cache = new Map();
  * @param {RequestInit} [opts]
  */
 export function initial_fetch(resource, opts) {
-	const selector = selector_builder(resource, opts);
+	const selector = build_selector(resource, opts);
 
 	const script = document.querySelector(selector);
 	if (script?.textContent) {
@@ -88,14 +88,16 @@ export function initial_fetch(resource, opts) {
  * @param {RequestInit} [opts]
  */
 export function subsequent_fetch(resource, resolved, opts) {
-	const selector = selector_builder(resource, opts);
-	const cached = cache.get(selector);
-	if (cached) {
-		if (performance.now() < cached.ttl) {
-			return new Response(cached.body, cached.init);
-		}
+	if (cache.size > 0) {
+		const selector = build_selector(resource, opts);
+		const cached = cache.get(selector);
+		if (cached) {
+			if (performance.now() < cached.ttl) {
+				return new Response(cached.body, cached.init);
+			}
 
-		cache.delete(selector);
+			cache.delete(selector);
+		}
 	}
 
 	return native_fetch(resolved, opts);
@@ -106,7 +108,7 @@ export function subsequent_fetch(resource, resolved, opts) {
  * @param {RequestInfo | URL} resource
  * @param {RequestInit} [opts]
  */
-function selector_builder(resource, opts) {
+function build_selector(resource, opts) {
 	const url = JSON.stringify(resource instanceof Request ? resource.url : resource);
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
