@@ -1,4 +1,5 @@
 import * as devalue from 'devalue';
+import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { has_data_suffix } from '../../utils/url.js';
 import { HttpError } from '../control.js';
@@ -110,9 +111,10 @@ export function static_error_page(options, status, message) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
- * @param {Error | HttpError} error
+ * @param {unknown} error
  */
 export function handle_fatal_error(event, options, error) {
+	error = error instanceof HttpError ? error : coalesce_to_error(error);
 	const status = error instanceof HttpError ? error.status : 500;
 	const body = handle_error_and_jsonify(event, options, error);
 

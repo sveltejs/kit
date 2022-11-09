@@ -86,6 +86,8 @@ export async function handle({ event, resolve }) {
 }
 ```
 
+If an error is thrown during `handle`, it's treated as a fatal error. Depending on the requested response type either a JSON error response or the static fallback `src/error.html` is returned.
+
 #### handleFetch
 
 This function allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering).

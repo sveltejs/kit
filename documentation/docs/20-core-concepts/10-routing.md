@@ -129,6 +129,8 @@ If an error occurs during `load`, SvelteKit will render a default error page. Yo
 
 SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and `src/routes/+error.svelte` before rendering the default error page. If _that_ fails (or if the error was thrown from the `load` function of the root `+layout`, which sits 'above' the root `+error`), SvelteKit will bail out and render a static fallback error page, which you can customise by creating a `src/error.html` file.
 
+> `+error.svelte` is _not_ used when an error occurs inside the [handle hook](/docs/hooks#server-hooks-handle) or an [endpoint](#server).
+
 ### +layout
 
 So far, we've treated pages as entirely standalone components — upon navigation, the existing `+page.svelte` component will be destroyed, and a new one will take its place.
@@ -267,7 +269,7 @@ export function GET({ url }) {
 
 The first argument to `Response` can be a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream), making it possible to stream large amounts of data or create server-sent events (unless deploying to platforms that buffer responses, like AWS Lambda).
 
-You can use the `error`, `redirect` and `json` methods from `@sveltejs/kit` for convenience (but you don't have to). Note that `throw error(..)` only returns a plain text error response.
+You can use the `error`, `redirect` and `json` methods from `@sveltejs/kit` for convenience (but you don't have to). Note that `throw error(..)` (or an unexpected error) only returns a plain text error response, [+error.svelte](#error) is not used in this case as an endpoint doesn't live in the context of a page.
 
 #### Receiving data
 
