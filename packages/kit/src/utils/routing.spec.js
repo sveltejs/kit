@@ -68,8 +68,8 @@ const tests = {
 		names: ['id'],
 		types: [undefined]
 	},
-	'/%255bdoubly-encoded': {
-		pattern: /^\/%5bdoubly-encoded\/?$/,
+	'/%25-not-encoded': {
+		pattern: /^\/%25-not-encoded\/?$/,
 		names: [],
 		types: []
 	}

@@ -402,6 +402,12 @@ test.describe('Encoded paths', () => {
 		expect(await page.textContent('h1')).toBe('$SVLT');
 	});
 
+	test('allows %-encoded percent character in directory names', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/99%25"]');
+		expect(await page.textContent('h1')).toBe('99%');
+	});
+
 	test('allows %-encoded characters in filenames', async ({ page, clicknav }) => {
 		await page.goto('/encoded');
 		await clicknav('[href="/encoded/@svelte"]');

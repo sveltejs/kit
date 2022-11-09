@@ -21,7 +21,8 @@ export function parse_route_id(id) {
 			: new RegExp(
 					`^${get_route_segments(id)
 						.map((segment, i, segments) => {
-							const decoded_segment = decodeURIComponent(segment);
+							// exclude %25 from decoding to match decoding of url.pathname
+							const decoded_segment = segment.split('%25').map(decodeURIComponent).join('%25');
 							// special case — /[...rest]/ could contain zero segments
 							const rest_match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(decoded_segment);
 							if (rest_match) {
