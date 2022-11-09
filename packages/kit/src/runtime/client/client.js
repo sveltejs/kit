@@ -485,6 +485,12 @@ export function create_client({ target, base, trailing_slash }) {
 			};
 
 			// TODO remove this for 1.0
+			Object.defineProperty(result.props.page, 'routeId', {
+				get() {
+					throw new Error('$page.routeId has been replaced by $page.route.id');
+				},
+				enumerable: false
+			});
 			/**
 			 * @param {string} property
 			 * @param {string} replacement
