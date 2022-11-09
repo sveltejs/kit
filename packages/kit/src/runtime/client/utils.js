@@ -58,7 +58,14 @@ export function find_anchor(event) {
 			noscroll,
 			prefetch,
 			reload
-		}
+		},
+		has: a
+			? {
+					rel_external: (a.getAttribute('rel') || '').split(' ').includes('external'),
+					download: a.hasAttribute('download'),
+					target: !!(a instanceof SVGAElement ? a.target.baseVal : a.target)
+			  }
+			: {}
 	};
 }
 
