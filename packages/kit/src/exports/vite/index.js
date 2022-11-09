@@ -294,17 +294,19 @@ function kit() {
 
 		async load(id, options) {
 			if (options?.ssr === false) {
+				const normalized_cwd = vite.normalizePath(cwd);
+				const normalized_lib = vite.normalizePath(svelte_config.kit.files.lib);
 				if (
 					is_illegal(id, {
-						cwd: vite.normalizePath(cwd),
+						cwd: normalized_cwd,
 						node_modules: vite.normalizePath(path.join(cwd, 'node_modules')),
-						server: vite.normalizePath(path.join(svelte_config.kit.files.lib, 'server'))
+						server: vite.normalizePath(path.join(normalized_lib, 'server'))
 					})
 				) {
-					const relative = id.startsWith(svelte_config.kit.files.lib)
-						? id.replace(svelte_config.kit.files.lib, '$lib')
-						: id.startsWith(cwd)
-						? path.relative('.', id)
+					const relative = id.startsWith(normalized_lib)
+						? id.replace(normalized_lib, '$lib')
+						: id.startsWith(normalized_cwd)
+						? vite.normalizePath(path.relative('.', id))
 						: id;
 					throw new Error(`Cannot import ${relative} into client-side code`);
 				}
