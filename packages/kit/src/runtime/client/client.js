@@ -484,7 +484,7 @@ export function create_client({ target, base, trailing_slash }) {
 				data: data_changed ? data : page.data
 			};
 
-			// TODO remove this for 1.0,
+			// TODO remove this for 1.0
 			Object.defineProperty(result.props.page, 'routeId', {
 				get() {
 					throw new Error('routeId has been replaced by route.id');
