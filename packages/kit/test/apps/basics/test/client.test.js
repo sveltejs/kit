@@ -861,8 +861,8 @@ test.describe.serial('Invalidation', () => {
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
-		await Promise.all([page.click('button.server'), page.waitForLoadState('networkidle')]);
-		await page.waitForTimeout(200);
+		await page.click('button.server');
+		await page.evaluate(() => window.promise);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
 		expect(server).not.toBe(next_server);
@@ -876,8 +876,8 @@ test.describe.serial('Invalidation', () => {
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
-		await Promise.all([page.click('button.shared'), page.waitForLoadState('networkidle')]);
-		await page.waitForTimeout(200);
+		await page.click('button.shared');
+		await page.evaluate(() => window.promise);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
 		expect(server).toBe(next_server);
