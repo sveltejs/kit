@@ -5,7 +5,7 @@ const ILLEGAL_IMPORTS = new Set(['\0$env/dynamic/private', '\0$env/static/privat
 const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
 
 /**
- * Checks if given id imports a module that is not allowed to be imported into public-facing code.
+ * Checks if given id imports a module that is not allowed to be imported into client-side code.
  * @param {string} id
  * @param {{
  *   cwd: string;
@@ -20,7 +20,7 @@ export function is_illegal(id, dirs) {
 }
 
 /**
- * Creates a guard that checks that no id imports a module that is not allowed to be imported into public-facing code.
+ * Creates a guard that checks that no id imports a module that is not allowed to be imported into client-side code.
  * @param {import('rollup').PluginContext} context
  * @param {{ cwd: string, lib: string }} paths
  */
@@ -54,7 +54,7 @@ export function module_guard(context, { cwd, lib }) {
 					return `${repeat(' ', i * 2)}- ${id} ${dynamic ? 'dynamically imports' : 'imports'}\n`;
 				}) + `${repeat(' ', chain.length)}- ${id}`;
 
-			const message = `Cannot import ${id} into public-facing code:\n${pyramid}`;
+			const message = `Cannot import ${id} into client-side code:\n${pyramid}`;
 
 			throw new Error(message);
 		}
