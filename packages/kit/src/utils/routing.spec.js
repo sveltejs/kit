@@ -67,11 +67,6 @@ const tests = {
 		pattern: /^\/@at-encoded\/([^/]+?)\/?$/,
 		names: ['id'],
 		types: [undefined]
-	},
-	'/%255bdoubly-encoded': {
-		pattern: /^\/%5bdoubly-encoded\/?$/,
-		names: [],
-		types: []
 	}
 };
 
@@ -193,6 +188,12 @@ for (const { path, route, expected } of exec_tests) {
 test('errors on bad param name', () => {
 	assert.throws(() => parse_route_id('abc/[b-c]'), /Invalid param: b-c/);
 	assert.throws(() => parse_route_id('abc/[bc=d-e]'), /Invalid param: bc=d-e/);
+});
+
+test('errors on bad encoded characters', () => {
+	assert.throws(() => parse_route_id('abc/%25'), /unprocessable encoded character %25/);
+	assert.throws(() => parse_route_id('abc/%40%5b/def'), /unprocessable encoded character %5B/);
+	assert.throws(() => parse_route_id('abc/%c2%b5/def'), /unprocessable encoded character %C2%B5/);
 });
 
 test.run();

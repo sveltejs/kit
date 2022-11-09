@@ -21,6 +21,8 @@ export function parse_route_id(id) {
 			: new RegExp(
 					`^${get_route_segments(id)
 						.map((segment, i, segments) => {
+							assert_segment(segment);
+
 							const decoded_segment = decodeURIComponent(segment);
 							// special case — /[...rest]/ could contain zero segments
 							const rest_match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(decoded_segment);
@@ -98,6 +100,23 @@ export function parse_route_id(id) {
  */
 function affects_path(segment) {
 	return !/^\([^)]+\)$/.test(segment);
+}
+
+/**
+ * Throws error if segment contains invalid characters
+ * @param {string} segment
+ */
+function assert_segment(segment) {
+	const decoded_segment = decodeURI(segment);
+	if (decoded_segment === segment) return;
+
+	let diff_index = segment.split('').findIndex((char, i) => char !== decoded_segment[i]);
+	if (segment[diff_index] !== '%') diff_index -= 1;
+
+	const diff_char = decoded_segment.slice(diff_index, diff_index + 1);
+	const encoded_diff_char = encodeURIComponent(diff_char);
+
+	throw Error(`Segment ${segment} contains unprocessable encoded character ${encoded_diff_char}.`);
 }
 
 /**
