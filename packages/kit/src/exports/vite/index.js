@@ -366,8 +366,8 @@ function kit() {
 				}
 
 				const guard = module_guard(this, {
-					cwd: process.cwd(),
-					lib: svelte_config.kit.files.lib
+					cwd: vite.normalizePath(process.cwd()),
+					lib: vite.normalizePath(svelte_config.kit.files.lib)
 				});
 
 				manifest_data.nodes.forEach((_node, i) => {
