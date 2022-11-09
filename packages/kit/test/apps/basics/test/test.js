@@ -407,6 +407,12 @@ test.describe('Encoded paths', () => {
 		await clicknav('[href="/encoded/@svelte"]');
 		expect(await page.textContent('h1')).toBe('@svelte');
 	});
+
+	test('allows %-encoded underscores in directory names', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/_underscore-prefix"]');
+		expect(await page.textContent('h1')).toBe('_underscore-prefix');
+	});
 });
 
 test.describe('$env', () => {
