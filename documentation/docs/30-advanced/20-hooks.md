@@ -86,7 +86,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-If an error is thrown during `handle`, it's treated as a fatal error. Depending on the requested response type either a JSON error response or the static fallback `src/error.html` is returned.
+Note that `resolve(...)` will never throw an error, it will always return a `Promise<Response>` with the appropriate status code. If an error is thrown elsewhere during `handle`, it is treated as fatal, and SvelteKit will respond with a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header.
 
 #### handleFetch
 
