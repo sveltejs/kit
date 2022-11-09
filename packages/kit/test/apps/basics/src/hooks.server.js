@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { sequence } from '@sveltejs/kit/hooks';
 import { HttpError } from '../../../../src/runtime/control';
+import { error } from '@sveltejs/kit';
 
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
@@ -62,6 +63,8 @@ export const handle = sequence(
 	async ({ event, resolve }) => {
 		if (event.url.pathname === '/errors/error-in-handle') {
 			throw new Error('Error in handle');
+		} else if (event.url.pathname === '/errors/expected-error-in-handle') {
+			throw error(500, 'Expected error in handle');
 		}
 
 		const response = await resolve(event, {
