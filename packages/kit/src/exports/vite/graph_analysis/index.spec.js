@@ -1,4 +1,3 @@
-import path from 'path';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { module_guard } from './index.js';
@@ -32,7 +31,7 @@ function check(graph, expected_error) {
 			throw new Error('Expected an error');
 		} catch (e) {
 			// @ts-expect-error
-			assert.equal(e.message, expected_error.replace(/^\t+/gm, '').replace(/\//g, path.sep));
+			assert.equal(e.message, expected_error.replace(/^\t+/gm, ''));
 		}
 	} else {
 		guard.check('~/src/entry');

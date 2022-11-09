@@ -17,7 +17,7 @@ import { preview } from './preview/index.js';
 import { get_config_aliases, get_app_aliases, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
-import { is_illegal, module_guard } from './graph_analysis/index.js';
+import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 
 const cwd = process.cwd();
 
@@ -303,11 +303,7 @@ function kit() {
 						server: vite.normalizePath(path.join(normalized_lib, 'server'))
 					})
 				) {
-					const relative = id.startsWith(normalized_lib)
-						? id.replace(normalized_lib, '$lib')
-						: id.startsWith(normalized_cwd)
-						? vite.normalizePath(path.relative('.', id))
-						: id;
+					const relative = normalize_id(id, normalized_lib, normalized_cwd);
 					throw new Error(`Cannot import ${relative} into client-side code`);
 				}
 			}
@@ -370,8 +366,8 @@ function kit() {
 				}
 
 				const guard = module_guard(this, {
-					cwd: vite.normalizePath(process.cwd()),
-					lib: vite.normalizePath(svelte_config.kit.files.lib)
+					cwd: process.cwd(),
+					lib: svelte_config.kit.files.lib
 				});
 
 				manifest_data.nodes.forEach((_node, i) => {
