@@ -1354,8 +1354,8 @@ export function create_client({ target, base, trailing_slash }) {
 			/** @param {Event} event */
 			const trigger_prefetch = (event) => {
 				const { url, options, has } = find_anchor(event);
-				if (url && options.prefetch && !options.reload) {
-					if (is_external_url(url) || has.rel_external || has.download || has.target) return;
+				if (url && options.prefetch && !is_external_url(url)) {
+					if (options.reload || has.rel_external || has.target || has.download) return;
 					prefetch(url);
 				}
 			};
@@ -1410,7 +1410,7 @@ export function create_client({ target, base, trailing_slash }) {
 				if (has.download) return;
 
 				// Ignore the following but fire beforeNavigate
-				if (has.rel_external || options.reload || has.target) {
+				if (options.reload || has.rel_external || has.target) {
 					const navigation = before_navigate({ url, type: 'link' });
 					if (!navigation) {
 						event.preventDefault();
