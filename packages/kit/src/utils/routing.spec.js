@@ -67,11 +67,6 @@ const tests = {
 		pattern: /^\/@at-encoded\/([^/]+?)\/?$/,
 		names: ['id'],
 		types: [undefined]
-	},
-	'/%255bdoubly-encoded': {
-		pattern: /^\/%5bdoubly-encoded\/?$/,
-		names: [],
-		types: []
 	}
 };
 
