@@ -27,7 +27,8 @@ export function enhance(form, submit = () => {}) {
 	const fallback_callback = async ({ action, result, reset }) => {
 		if (result.type === 'success') {
 			if (reset !== false) {
-				form.reset();
+				// We call reset from the prototype to avoid DOM clobbering
+				HTMLFormElement.prototype.reset.call(form);
 			}
 			await invalidateAll();
 		}

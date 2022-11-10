@@ -15,6 +15,7 @@
 
 <form method="post" action="?/login" use:enhance>
 	<input type=hidden name="action" value="DOM clobbering" />
+	<input type=hidden name="reset" value="DOM clobbering" />
 	<input name="username" type="text" />
 	<button class="form1">Submit</button>
 	<button class="form1-register" formAction="?/register">Submit</button>
