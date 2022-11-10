@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.0.0-next.540
+
+### Patch Changes
+
+- Serve prerendered non-page files when running preview ([#7576](https://github.com/sveltejs/kit/pull/7576))
+
+- [fix] caching takes now into account the body payload ([#7546](https://github.com/sveltejs/kit/pull/7546))
+
+- [fix] handle locked readable stream when reading body ([#7565](https://github.com/sveltejs/kit/pull/7565))
+
+- [fix] prefetch should ignore links ignored by the router ([#7580](https://github.com/sveltejs/kit/pull/7580))
+
+- [fix] migration error when using $page.routeId ([#7574](https://github.com/sveltejs/kit/pull/7574))
+
+- prevent loading of illegal modules in the browser, rather than during SSR ([#7507](https://github.com/sveltejs/kit/pull/7507))
+
+- [fix] prevent double decoding of path segment ([#7550](https://github.com/sveltejs/kit/pull/7550))
+
 ## 1.0.0-next.539
 
 ### Patch Changes
