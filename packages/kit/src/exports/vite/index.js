@@ -345,10 +345,11 @@ function kit() {
 			completed_build = false;
 
 			if (is_build) {
-				rimraf(paths.build_dir);
+				if (!vite_config.build.watch) {
+					rimraf(paths.build_dir);
+					rimraf(paths.output_dir);
+				}
 				mkdirp(paths.build_dir);
-
-				rimraf(paths.output_dir);
 				mkdirp(paths.output_dir);
 			}
 		},
