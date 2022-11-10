@@ -9,48 +9,34 @@ import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { load_config } from '../config/index.js';
-import { affects_path } from '../../utils/routing.js';
+import { get_route_segments } from '../../utils/routing.js';
 import { get_option } from '../../runtime/server/utils.js';
 
-/**
- * @typedef {import('types').PrerenderErrorHandler} PrerenderErrorHandler
- * @typedef {import('types').Logger} Logger
- */
-
-const [, , client_out_dir, results_path, verbose, env] = process.argv;
+const [, , client_out_dir, manifest_path, results_path, verbose, env] = process.argv;
 
 prerender();
 
 /**
- * @param {Parameters<PrerenderErrorHandler>[0]} details
- * @param {import('types').ValidatedKitConfig} config
+ * @template T
+ * @param {import('types').Logger} log
+ * @param {'fail' | 'warn' | 'ignore' | ((details: T) => void)} input
+ * @param {(details: T) => string} format
+ * @returns {(details: T) => void}
  */
-function format_error({ status, path, referrer, referenceType }, config) {
-	const message =
-		status === 404 && !path.startsWith(config.paths.base)
-			? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\``
-			: path;
-
-	return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
-}
-
-/**
- * @param {Logger} log
- * @param {import('types').ValidatedKitConfig} config
- * @returns {PrerenderErrorHandler}
- */
-function normalise_error_handler(log, config) {
-	switch (config.prerender.onError) {
-		case 'continue':
-			return (details) => {
-				log.error(format_error(details, config));
-			};
+function normalise_error_handler(log, input, format) {
+	switch (input) {
 		case 'fail':
 			return (details) => {
-				throw new Error(format_error(details, config));
+				throw new Error(format(details));
 			};
+		case 'warn':
+			return (details) => {
+				log.error(format(details));
+			};
+		case 'ignore':
+			return () => {};
 		default:
-			return config.prerender.onError;
+			return (details) => input({ ...details, message: format(details) });
 	}
 }
 
@@ -102,54 +88,15 @@ export async function prerender() {
 	});
 
 	installPolyfills();
+
+	// TODO remove this for 1.0
 	const { fetch } = globalThis;
 	globalThis.fetch = async (info, init) => {
-		/** @type {string} */
-		let url;
-
-		/** @type {RequestInit} */
-		let opts = {};
-
-		if (info instanceof Request) {
-			url = info.url;
-
-			opts = {
-				method: info.method,
-				headers: info.headers,
-				body: info.body,
-				mode: info.mode,
-				credentials: info.credentials,
-				cache: info.cache,
-				redirect: info.redirect,
-				referrer: info.referrer,
-				integrity: info.integrity
-			};
-		} else {
-			url = info.toString();
-		}
+		const url = info instanceof Request ? info.url : info.toString();
 
 		if (url.startsWith(config.prerender.origin + '/')) {
-			const request = new Request(url, opts);
-			const response = await server.respond(request, {
-				getClientAddress,
-				prerendering: {
-					dependencies: new Map()
-				}
-			});
-
-			const decoded = new URL(url).pathname;
-
-			save(
-				'dependencies',
-				response,
-				Buffer.from(await response.clone().arrayBuffer()),
-				decoded,
-				encodeURI(decoded),
-				null,
-				'fetched'
-			);
-
-			return response;
+			const sliced = url.slice(config.prerender.origin.length);
+			throw new Error(`Use \`event.fetch('${sliced}')\` instead of the global \`fetch('${url}')\``);
 		}
 
 		return fetch(info, init);
@@ -161,7 +108,7 @@ export async function prerender() {
 	const { Server, override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 
 	/** @type {import('types').SSRManifest} */
-	const manifest = (await import(pathToFileURL(`${server_root}/server/manifest.js`).href)).manifest;
+	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	override({
 		paths: config.paths,
@@ -172,7 +119,29 @@ export async function prerender() {
 	const server = new Server(manifest);
 	await server.init({ env: JSON.parse(env) });
 
-	const error = normalise_error_handler(log, config);
+	const handle_http_error = normalise_error_handler(
+		log,
+		config.prerender.handleHttpError,
+		({ status, path, referrer, referenceType }) => {
+			const message =
+				status === 404 && !path.startsWith(config.paths.base)
+					? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\` - see https://kit.svelte.dev/docs/configuration#paths for more info`
+					: path;
+
+			return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
+		}
+	);
+
+	const handle_missing_id = normalise_error_handler(
+		log,
+		config.prerender.handleMissingId,
+		({ path, id, referrers }) => {
+			return (
+				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path}:` +
+				referrers.map((l) => `\n  - ${l}`).join('')
+			);
+		}
+	);
 
 	const q = queue(config.prerender.concurrency);
 
@@ -193,6 +162,12 @@ export async function prerender() {
 	const files = new Set(walk(client_out_dir).map(posixify));
 	const seen = new Set();
 	const written = new Set();
+
+	/** @type {Map<string, Set<string>>} */
+	const expected_hashlinks = new Map();
+
+	/** @type {Map<string, string[]>} */
+	const actual_hashlinks = new Map();
 
 	/**
 	 * @param {string | null} referrer
@@ -216,7 +191,7 @@ export async function prerender() {
 	 */
 	async function visit(decoded, encoded, referrer) {
 		if (!decoded.startsWith(config.paths.base)) {
-			error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
+			handle_http_error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
 			return;
 		}
 
@@ -244,10 +219,13 @@ export async function prerender() {
 
 			const prerender = headers['x-sveltekit-prerender'];
 			if (prerender) {
-				const route_id = headers['x-sveltekit-routeid'];
-				const existing_value = prerender_map.get(route_id);
-				if (existing_value !== 'auto') {
-					prerender_map.set(route_id, prerender === 'true' ? true : 'auto');
+				const encoded_route_id = headers['x-sveltekit-routeid'];
+				if (encoded_route_id != null) {
+					const route_id = decodeURI(encoded_route_id);
+					const existing_value = prerender_map.get(route_id);
+					if (existing_value !== 'auto') {
+						prerender_map.set(route_id, prerender === 'true' ? true : 'auto');
+					}
 				}
 			}
 
@@ -267,16 +245,28 @@ export async function prerender() {
 		const headers = Object.fromEntries(response.headers);
 
 		if (config.prerender.crawl && headers['content-type'] === 'text/html') {
-			for (const href of crawl(body.toString())) {
-				if (href.startsWith('data:') || href.startsWith('#')) continue;
+			const { ids, hrefs } = crawl(body.toString());
+
+			actual_hashlinks.set(decoded, ids);
+
+			for (const href of hrefs) {
+				if (href.startsWith('data:')) continue;
 
 				const resolved = resolve(encoded, href);
 				if (!is_root_relative(resolved)) continue;
 
-				const { pathname, search } = new URL(resolved, 'http://localhost');
+				const { pathname, search, hash } = new URL(resolved, 'http://localhost');
 
 				if (search) {
 					// TODO warn that query strings have no effect on statically-exported pages
+				}
+
+				if (hash) {
+					if (!expected_hashlinks.has(pathname + hash)) {
+						expected_hashlinks.set(pathname + hash, new Set());
+					}
+
+					/** @type {Set<string>} */ (expected_hashlinks.get(pathname + hash)).add(decoded);
 				}
 
 				enqueue(decoded, decodeURI(pathname), pathname);
@@ -305,7 +295,8 @@ export async function prerender() {
 
 		if (written.has(file)) return;
 
-		const route_id = response.headers.get('x-sveltekit-routeid');
+		const encoded_route_id = response.headers.get('x-sveltekit-routeid');
+		const route_id = encoded_route_id != null ? decodeURI(encoded_route_id) : null;
 		if (route_id !== null) prerendered_routes.add(route_id);
 
 		if (response_type === REDIRECT) {
@@ -364,7 +355,7 @@ export async function prerender() {
 
 			prerendered.paths.push(decoded);
 		} else if (response_type !== OK) {
-			error({ status: response.status, path: decoded, referrer, referenceType });
+			handle_http_error({ status: response.status, path: decoded, referrer, referenceType });
 		}
 	}
 
@@ -405,7 +396,7 @@ export async function prerender() {
 			for (const [id, prerender] of prerender_map) {
 				if (prerender) {
 					if (id.includes('[')) continue;
-					const path = `/${id.split('/').filter(affects_path).join('/')}`;
+					const path = `/${get_route_segments(id).join('/')}`;
 					enqueue(null, config.paths.base + path);
 				}
 			}
@@ -415,6 +406,21 @@ export async function prerender() {
 	}
 
 	await q.done();
+
+	// handle invalid fragment links
+	for (const [key, referrers] of expected_hashlinks) {
+		const index = key.indexOf('#');
+		const path = key.slice(0, index);
+		const id = key.slice(index + 1);
+
+		const hashlinks = actual_hashlinks.get(path);
+		// ignore fragment links to pages that were not prerendered
+		if (!hashlinks) continue;
+
+		if (!hashlinks.includes(id)) {
+			handle_missing_id({ id, path, referrers: Array.from(referrers) });
+		}
+	}
 
 	/** @type {string[]} */
 	const not_prerendered = [];
@@ -427,9 +433,9 @@ export async function prerender() {
 
 	if (not_prerendered.length > 0) {
 		throw new Error(
-			`The following routes were marked as prerenderable, but were not prerendered:\n${not_prerendered.map(
+			`The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${not_prerendered.map(
 				(id) => `  - ${id}`
-			)}\n\nSee https://kit.svelte.dev/docs/page-options#prerender-troubleshooting for more info`
+			)}\n\nSee https://kit.svelte.dev/docs/page-options#prerender-troubleshooting for info on how to solve this`
 		);
 	}
 

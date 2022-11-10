@@ -11,7 +11,7 @@ test('$lib/*.server.* is not statically importable from the client', () => {
 				stdio: 'pipe',
 				timeout: 15000
 			}),
-		/.*Cannot import \$lib\/test.server.js into public-facing code:.*/gs
+		/.*Cannot import \$lib\/test.server.js into client-side code:.*/gs
 	);
 });
 
@@ -23,7 +23,7 @@ test('$lib/*.server.* is not dynamically importable from the client', () => {
 				stdio: 'pipe',
 				timeout: 15000
 			}),
-		/.*Cannot import \$lib\/test.server.js into public-facing code:.*/gs
+		/.*Cannot import \$lib\/test.server.js into client-side code:.*/gs
 	);
 });
 
@@ -35,7 +35,7 @@ test('$lib/server/* is not statically importable from the client', () => {
 				stdio: 'pipe',
 				timeout: 15000
 			}),
-		/.*Cannot import \$lib\/server\/something\/test.js into public-facing code:.*/gs
+		/.*Cannot import \$lib\/server\/something\/test.js into client-side code:.*/gs
 	);
 });
 
@@ -47,7 +47,7 @@ test('$lib/server/* is not dynamically importable from the client', () => {
 				stdio: 'pipe',
 				timeout: 15000
 			}),
-		/.*Cannot import \$lib\/server\/something\/test.js into public-facing code:.*/gs
+		/.*Cannot import \$lib\/server\/something\/test.js into client-side code:.*/gs
 	);
 });
 

@@ -1,8 +1,7 @@
-import { devalue } from 'devalue';
-import { DATA_SUFFIX } from '../../constants.js';
+import * as devalue from 'devalue';
 import { negotiate } from '../../utils/http.js';
+import { has_data_suffix } from '../../utils/url.js';
 import { HttpError } from '../control.js';
-import { add_cookies_to_headers } from './cookie.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -68,23 +67,6 @@ export function allowed_methods(mod) {
 	return allowed;
 }
 
-/** @param {any} data */
-export function data_response(data) {
-	const headers = {
-		'content-type': 'application/javascript',
-		'cache-control': 'private, no-store'
-	};
-
-	try {
-		return new Response(`window.__sveltekit_data = ${devalue(data)}`, { headers });
-	} catch (e) {
-		const error = /** @type {any} */ (e);
-		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		const message = match ? `${error.message} (data.${match[2]})` : error.message;
-		return new Response(`throw new Error(${JSON.stringify(message)})`, { headers });
-	}
-}
-
 /**
  * @template {'prerender' | 'ssr' | 'csr'} Option
  * @template {Option extends 'prerender' ? import('types').PrerenderOption : boolean} Value
@@ -140,7 +122,7 @@ export function handle_fatal_error(event, options, error) {
 		'text/html'
 	]);
 
-	if (event.url.pathname.endsWith(DATA_SUFFIX) || type === 'application/json') {
+	if (has_data_suffix(event.url.pathname) || type === 'application/json') {
 		return new Response(JSON.stringify(body), {
 			status,
 			headers: { 'content-type': 'application/json; charset=utf-8' }
@@ -167,13 +149,55 @@ export function handle_error_and_jsonify(event, options, error) {
 /**
  * @param {number} status
  * @param {string} location
- * @param {import('./page/types.js').Cookie[]} [cookies]
  */
-export function redirect_response(status, location, cookies = []) {
+export function redirect_response(status, location) {
 	const response = new Response(undefined, {
 		status,
 		headers: { location }
 	});
-	add_cookies_to_headers(response.headers, cookies);
 	return response;
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {Error & { path: string }} error
+ */
+export function clarify_devalue_error(event, error) {
+	if (error.path) {
+		return `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data${error.path})`;
+	}
+
+	if (error.path === '') {
+		return `Data returned from \`load\` while rendering ${event.route.id} is not a plain object`;
+	}
+
+	// belt and braces — this should never happen
+	return error.message;
+}
+
+/** @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | import('types').ServerErrorNode | null} node */
+export function serialize_data_node(node) {
+	if (!node) return 'null';
+
+	if (node.type === 'error' || node.type === 'skip') {
+		return JSON.stringify(node);
+	}
+
+	const stringified = devalue.stringify(node.data);
+
+	const uses = [];
+
+	if (node.uses.dependencies.size > 0) {
+		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
+	}
+
+	if (node.uses.params.size > 0) {
+		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
+	}
+
+	if (node.uses.parent) uses.push(`"parent":1`);
+	if (node.uses.route) uses.push(`"route":1`);
+	if (node.uses.url) uses.push(`"url":1`);
+
+	return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}}`;
 }

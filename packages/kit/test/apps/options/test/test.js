@@ -162,24 +162,16 @@ test.describe('trailingSlash', () => {
 	});
 
 	test('can fetch data from page-endpoint', async ({ request }) => {
-		const r = await request.get('/path-base/page-endpoint/__data.js');
-		const code = await r.text();
+		const r = await request.get('/path-base/page-endpoint/__data.json');
+		const data = await r.json();
 
-		const window = {};
-		new Function('window', code)(window);
-
-		expect(window.__sveltekit_data).toEqual({
+		expect(data).toEqual({
 			type: 'data',
-			nodes: [null, { type: 'data', data: { message: 'hi' }, uses: {} }]
+			nodes: [null, { type: 'data', data: [{ message: 1 }, 'hi'], uses: {} }]
 		});
 	});
 
-	test('accounts for trailingSlash when prefetching', async ({
-		app,
-		baseURL,
-		page,
-		javaScriptEnabled
-	}) => {
+	test('accounts for trailingSlash when prefetching', async ({ app, page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
 		await page.goto('/path-base/prefetching');
@@ -199,7 +191,7 @@ test.describe('trailingSlash', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`/path-base/prefetching/prefetched/__data.js`)).toBe(true);
+		expect(requests.includes(`/path-base/prefetching/prefetched/__data.json`)).toBe(true);
 
 		requests = [];
 		await app.goto('/path-base/prefetching/prefetched');

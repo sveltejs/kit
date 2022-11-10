@@ -74,7 +74,7 @@ export class Server {
 					get request() {
 						throw new Error('request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details');
 					}
-				}) ?? { message: event.routeId != null ? 'Internal Error' : 'Not Found' };
+				}) ?? { message: event.route.id != null ? 'Internal Error' : 'Not Found' };
 			},
 			hooks: null,
 			manifest,
@@ -354,7 +354,7 @@ function get_methods(cwd, output, manifest_data) {
 	const lookup = {};
 	output.forEach((chunk) => {
 		if (!chunk.facadeModuleId) return;
-		const id = chunk.facadeModuleId.slice(cwd.length + 1);
+		const id = posixify(path.relative(cwd, chunk.facadeModuleId));
 		lookup[id] = chunk.exports;
 	});
 

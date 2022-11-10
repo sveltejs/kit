@@ -7,6 +7,18 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 test.describe.configure({ mode: 'parallel' });
 
+test.describe('Caching', () => {
+	test('caches __data.json requests with Vary header', async ({ page, app }) => {
+		await page.goto('/');
+		const [, response] = await Promise.all([
+			app.goto('/caching/server-data'),
+			page.waitForResponse((request) => request.url().endsWith('server-data/__data.json'))
+		]);
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+		expect(response.headers()['vary']).toBe('x-sveltekit-invalidated');
+	});
+});
+
 test.describe('beforeNavigate', () => {
 	test('prevents navigation triggered by link click', async ({ page, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
@@ -15,14 +27,33 @@ test.describe('beforeNavigate', () => {
 		await page.waitForLoadState('networkidle');
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('true');
+		expect(await page.innerHTML('pre')).toBe('true false link');
+	});
+
+	test('prevents navigation to external', async ({ page, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
+
+		page.on('dialog', (dialog) => dialog.dismiss());
+
+		page.click('a[href="https://google.de"]'); // do NOT await this, promise only resolves after successful navigation, which never happens
+		await page.waitForTimeout(500);
+		await expect(page.locator('pre')).toHaveText('true true link');
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 	});
 
 	test('prevents navigation triggered by goto', async ({ page, app, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 		await app.goto('/before-navigate/a');
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('true');
+		expect(await page.innerHTML('pre')).toBe('true false goto');
+	});
+
+	test('prevents external navigation triggered by goto', async ({ page, app, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+		await app.goto('https://google.de');
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('true true goto');
 	});
 
 	test('prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
@@ -31,7 +62,7 @@ test.describe('beforeNavigate', () => {
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 
 		await page.goBack();
-		expect(await page.innerHTML('pre')).toBe('true');
+		expect(await page.innerHTML('pre')).toBe('true false popstate');
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 	});
 
@@ -47,6 +78,7 @@ test.describe('beforeNavigate', () => {
 
 		await page.close({ runBeforeUnload: true });
 		expect(await type).toBe('beforeunload');
+		expect(await page.innerHTML('pre')).toBe('true true leave');
 	});
 });
 
@@ -302,18 +334,20 @@ test.describe.serial('Errors', () => {
 		expect(await page.innerHTML('h1')).toBe('401');
 	});
 
-	test('Root error falls back to error.html (unexpected error)', async ({ page }) => {
+	test('Root error falls back to error.html (unexpected error)', async ({ page, clicknav }) => {
 		await page.goto('/errors/error-html');
-		await page.click('button:text-is("Unexpected")');
+		await clicknav('button:text-is("Unexpected")');
+
 		expect(await page.textContent('h1')).toBe('Error - 500');
 		expect(await page.textContent('p')).toBe(
 			'This is the static error page with the following message: Failed to load'
 		);
 	});
 
-	test('Root error falls back to error.html (expected error)', async ({ page }) => {
+	test('Root error falls back to error.html (expected error)', async ({ page, clicknav }) => {
 		await page.goto('/errors/error-html');
-		await page.click('button:text-is("Expected")');
+		await clicknav('button:text-is("Expected")');
+
 		expect(await page.textContent('h1')).toBe('Error - 401');
 		expect(await page.textContent('p')).toBe(
 			'This is the static error page with the following message: Not allowed'
@@ -392,21 +426,24 @@ test.describe('Load', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 	});
 
-	test('keeps server data when valid while not reusing client load data', async ({ page }) => {
+	test('keeps server data when valid while not reusing client load data', async ({
+		page,
+		clicknav
+	}) => {
 		await page.goto('/load/url-query-param');
 
 		expect(await page.textContent('h1')).toBe('Hello ');
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 
-		await page.click('a[href="/load/url-query-param?currentClientState=ABC"]');
+		await clicknav('a[href="/load/url-query-param?currentClientState=ABC"]');
 		expect(await page.textContent('h1')).toBe('Hello ABC');
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 
-		await page.click('a[href="/load/url-query-param?currentClientState=DEF"]');
+		await clicknav('a[href="/load/url-query-param?currentClientState=DEF"]');
 		expect(await page.textContent('h1')).toBe('Hello DEF');
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 
-		await page.click('a[href="/load/url-query-param"]');
+		await clicknav('a[href="/load/url-query-param"]');
 		expect(await page.textContent('h1')).toBe('Hello ');
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 	});
@@ -431,7 +468,7 @@ test.describe('Load', () => {
 		await expect(page.locator('p')).toHaveText('Count is 2');
 	});
 
-	test('__data.js has cache-control: private, no-store', async ({ page, clicknav }) => {
+	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
 		await page.goto('/load/server-data-nostore?x=1');
 
 		const [response] = await Promise.all([
@@ -440,6 +477,30 @@ test.describe('Load', () => {
 		]);
 
 		expect(response.headers()['cache-control']).toBe('private, no-store');
+	});
+
+	test('cache with body hash', async ({ page, clicknav }) => {
+		// 1. go to the page (first load, we expect the right data)
+		await page.goto('/load/fetch-cache-control/load-data');
+		expect(await page.textContent('div#fr')).toBe(JSON.stringify({ hi: 'bonjour' }));
+		expect(await page.textContent('div#hu')).toBe(JSON.stringify({ hi: 'szia' }));
+
+		// 2. change to another route (client side)
+		await clicknav('[href="/load/fetch-cache-control"]');
+
+		// 3. come back to the original page (client side)
+		let did_request_data = false;
+		page.on('request', (request) => {
+			if (request.url().endsWith('fetch-cache-control/load-data')) {
+				did_request_data = true;
+			}
+		});
+		await clicknav('[href="/load/fetch-cache-control/load-data"]');
+
+		// 4. data should still be the same (and cached)
+		expect(await page.textContent('div#fr')).toBe(JSON.stringify({ hi: 'bonjour' }));
+		expect(await page.textContent('div#hu')).toBe(JSON.stringify({ hi: 'szia' }));
+		expect(did_request_data).toBe(false);
 	});
 
 	if (process.env.DEV) {
@@ -459,7 +520,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
+				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
 
 			warnings.length = 0;
@@ -468,7 +529,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
+				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
 		});
 	}
@@ -650,7 +711,7 @@ test.describe('SPA mode / no SSR', () => {
 		expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
 	});
 
-	test('Can use browser-only global on client-only page through ssr config in layout.js', async ({
+	test('Can use browser-only global on client-only page through ssr config in +layout.js', async ({
 		page,
 		read_errors
 	}) => {
@@ -659,7 +720,7 @@ test.describe('SPA mode / no SSR', () => {
 		expect(read_errors('/no-ssr/ssr-page-config')).toBe(undefined);
 	});
 
-	test('Can use browser-only global on client-only page through ssr config in page.js', async ({
+	test('Can use browser-only global on client-only page through ssr config in +page.js', async ({
 		page,
 		read_errors
 	}) => {
@@ -668,7 +729,7 @@ test.describe('SPA mode / no SSR', () => {
 		expect(read_errors('/no-ssr/ssr-page-config/layout/inherit')).toBe(undefined);
 	});
 
-	test('Cannot use browser-only global on page because of ssr config in page.js', async ({
+	test('Cannot use browser-only global on page because of ssr config in +page.js', async ({
 		page
 	}) => {
 		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
@@ -750,15 +811,27 @@ test.describe.serial('Invalidation', () => {
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
-		await page.click('button');
-		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(200); // apparently necessary
+		await page.click('button.invalidateall');
+		await page.evaluate(() => window.promise);
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 
-		await page.click('button');
-		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(200);
+		await page.click('button.invalidateall');
+		await page.evaluate(() => window.promise);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
+	});
+
+	test('server-only load functions are re-run following goto with forced invalidation', async ({
+		page,
+		request
+	}) => {
+		await request.get('/load/invalidation/forced/reset');
+
+		await page.goto('/load/invalidation/forced');
+		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+
+		await page.click('button.goto');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 	});
 
 	test('multiple invalidations run concurrently', async ({ page, request }) => {
@@ -788,8 +861,8 @@ test.describe.serial('Invalidation', () => {
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
-		await Promise.all([page.click('button.server'), page.waitForLoadState('networkidle')]);
-		await page.waitForTimeout(200);
+		await page.click('button.server');
+		await page.evaluate(() => window.promise);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
 		expect(server).not.toBe(next_server);
@@ -803,8 +876,8 @@ test.describe.serial('Invalidation', () => {
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
-		await Promise.all([page.click('button.shared'), page.waitForLoadState('networkidle')]);
-		await page.waitForTimeout(200);
+		await page.click('button.shared');
+		await page.evaluate(() => window.promise);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
 		expect(server).toBe(next_server);
@@ -825,6 +898,22 @@ test.describe.serial('Invalidation', () => {
 
 		await page.goBack();
 		expect(await page.textContent('pre')).toBe('{"a":"1"}');
+	});
+
+	test('route.id use is tracked for server-only load functions', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/route/server/a');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/server/a');
+
+		await clicknav('[href="/load/invalidation/route/server/b"]');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/server/b');
+	});
+
+	test('route.id use is tracked for shared load functions', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/route/shared/a');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/a');
+
+		await clicknav('[href="/load/invalidation/route/shared/b"]');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/b');
 	});
 });
 
@@ -917,8 +1006,20 @@ test.describe('Content negotiation', () => {
 	test('use:enhance uses action, not POST handler', async ({ page }) => {
 		await page.goto('/routing/content-negotiation');
 
-		page.click('button:has-text("Submit")');
-		await page.waitForResponse('/routing/content-negotiation');
+		await Promise.all([
+			page.waitForResponse('/routing/content-negotiation'),
+			page.click('button:has-text("Submit")')
+		]);
+
 		await expect(page.locator('[data-testid="form-result"]')).toHaveText('form.submitted: true');
+	});
+});
+
+test.describe('cookies', () => {
+	test('etag forwards cookies', async ({ page }) => {
+		await page.goto('/cookies/forwarded-in-etag');
+		await expect(page.locator('p')).toHaveText('foo=bar');
+		await Promise.all([page.waitForNavigation(), page.click('button')]);
+		await expect(page.locator('p')).toHaveText('foo=bar');
 	});
 });

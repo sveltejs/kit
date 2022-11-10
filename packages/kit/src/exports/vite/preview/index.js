@@ -100,27 +100,24 @@ export async function preview(vite, vite_config, svelte_config) {
 
 				const { pathname } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
-				// only treat this as a page if it doesn't include an extension
-				if (pathname === '/' || /\/[^./]+\/?$/.test(pathname)) {
-					const file = join(
-						svelte_config.kit.outDir,
-						'output/prerendered/pages' +
-							pathname +
-							(pathname.endsWith('/') ? 'index.html' : '.html')
-					);
+				let filename = join(svelte_config.kit.outDir, 'output/prerendered/pages' + pathname);
+				let prerendered = is_file(filename);
 
-					if (fs.existsSync(file)) {
-						res.writeHead(200, {
-							'content-type': 'text/html',
-							etag
-						});
-
-						fs.createReadStream(file).pipe(res);
-						return;
-					}
+				if (!prerendered) {
+					filename += filename.endsWith('/') ? 'index.html' : '.html';
+					prerendered = is_file(filename);
 				}
 
-				next();
+				if (prerendered) {
+					res.writeHead(200, {
+						'content-type': 'text/html',
+						etag
+					});
+
+					fs.createReadStream(filename).pipe(res);
+				} else {
+					next();
+				}
 			})
 		);
 
@@ -186,4 +183,9 @@ function scoped(scope, handler) {
 			next();
 		}
 	};
+}
+
+/** @param {string} path */
+function is_file(path) {
+	return fs.existsSync(path) && !fs.statSync(path).isDirectory();
 }

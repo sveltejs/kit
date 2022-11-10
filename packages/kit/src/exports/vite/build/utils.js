@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as vite from 'vite';
-import { get_aliases } from '../utils.js';
+import { get_config_aliases, get_app_aliases } from '../utils.js';
 
 /**
  * @typedef {import('rollup').RollupOutput} RollupOutput
@@ -115,8 +115,10 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 			cssCodeSplit: true,
 			// don't use the default name to avoid collisions with 'static/manifest.json'
 			manifest: 'vite-manifest.json',
+			modulePreload: {
+				polyfill: false
+			},
 			outDir,
-			polyfillModulePreload: false,
 			rollupOptions: {
 				input,
 				output: {
@@ -136,11 +138,12 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 			__SVELTEKIT_APP_VERSION__: JSON.stringify(config.kit.version.name),
 			__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${config.kit.appDir}/version.json`),
 			__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(config.kit.version.pollInterval),
+			__SVELTEKIT_BROWSER__: ssr ? 'false' : 'true',
 			__SVELTEKIT_DEV__: 'false'
 		},
 		publicDir: ssr ? false : config.kit.files.assets,
 		resolve: {
-			alias: get_aliases(config.kit)
+			alias: [...get_app_aliases(config.kit), ...get_config_aliases(config.kit)]
 		},
 		optimizeDeps: {
 			exclude: ['@sveltejs/kit']

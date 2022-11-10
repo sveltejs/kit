@@ -26,13 +26,13 @@ body:
     attributes:
       label: Logs
       description: "Please include browser console and server logs around the time this bug occurred. Please try not to insert an image but copy paste the log text."
-      render: shell
+      render: Shell
   - type: textarea
     id: system-info
     attributes:
       label: System Info
       description: Output of `npx envinfo --system --binaries --browsers --npmPackages "{svelte,@sveltejs/*,vite}"`
-      render: shell
+      render: Shell
       placeholder: System, Binaries, Browsers
     validations:
       required: true
