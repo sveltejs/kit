@@ -302,6 +302,22 @@ export async function dev(vite, vite_config, svelte_config) {
 					);
 				}
 
+				if (decoded === '/service-worker.js') {
+					const resolved = resolve_entry(svelte_config.kit.files.serviceWorker);
+
+					if (resolved) {
+						res.writeHead(200, {
+							'content-type': 'application/javascript'
+						});
+						res.end(`import '${resolved}';`);
+					} else {
+						res.writeHead(404);
+						res.end('not found');
+					}
+
+					return;
+				}
+
 				const hooks_file = svelte_config.kit.files.hooks.server;
 				/** @type {Partial<import('types').ServerHooks>} */
 				const user_hooks = resolve_entry(hooks_file)
@@ -451,7 +467,9 @@ export async function dev(vite, vite_config, svelte_config) {
 								.replace(/%sveltekit\.status%/g, String(status))
 								.replace(/%sveltekit\.error\.message%/g, message);
 						},
-						service_worker: false,
+						service_worker:
+							svelte_config.kit.serviceWorker.register &&
+							!!resolve_entry(svelte_config.kit.files.serviceWorker),
 						trailing_slash: svelte_config.kit.trailingSlash
 					},
 					{

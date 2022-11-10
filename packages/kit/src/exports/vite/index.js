@@ -18,6 +18,7 @@ import { get_config_aliases, get_app_aliases, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
+import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 
 const cwd = process.cwd();
 
@@ -289,7 +290,7 @@ function kit() {
 
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/')) return `\0${id}`;
+			if (id.startsWith('$env/') || id === '$service-worker') return `\0${id}`;
 		},
 
 		async load(id, options) {
@@ -323,6 +324,8 @@ function kit() {
 						'public',
 						vite_config_env.command === 'serve' ? env.public : undefined
 					);
+				case '\0$service-worker':
+					return create_service_worker_module(svelte_config);
 			}
 		},
 
@@ -627,3 +630,22 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 
 	return out;
 }
+
+/**
+ * @param {import('types').ValidatedConfig} config
+ */
+const create_service_worker_module = (config) => `
+if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
+	throw new Error('This module can only be imported inside a service worker');
+}
+
+export const build = [];
+export const files = [
+	${create_assets(config)
+		.filter((asset) => config.kit.serviceWorker.files(asset.file))
+		.map((asset) => `${JSON.stringify(`${config.kit.paths.base}/${asset.file}`)}`)
+		.join(',\n\t\t\t\t')}
+];
+export const prerendered = [];
+export const version = ${JSON.stringify(config.kit.version.name)};
+`;

@@ -35,7 +35,7 @@ export default function create_manifest_data({
 /**
  * @param {import('types').ValidatedConfig} config
  */
-function create_assets(config) {
+export function create_assets(config) {
 	return list_files(config.kit.files.assets).map((file) => ({
 		file,
 		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
