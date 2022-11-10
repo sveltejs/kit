@@ -6,7 +6,7 @@ Errors are an inevitable fact of software development. SvelteKit handles errors 
 
 ### Error objects
 
-SvelteKit doesn't expose errors to users directly, Instead, errors are represented as simple `{ message: string }` objects by default.
+SvelteKit distinguishes between expected and unexpected errors, both of which are represented as simple `{ message: string }` objects by default.
 
 You can add additional properties, like a `code` or a tracking `id`, as shown below.
 
