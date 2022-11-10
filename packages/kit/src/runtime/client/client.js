@@ -1066,7 +1066,10 @@ export function create_client({ target, base, trailing_slash }) {
 			}
 		};
 
-		callbacks.before_navigate.forEach((fn) => fn(cancellable));
+		if (!navigating) {
+			// Don't run the event during redirects
+			callbacks.before_navigate.forEach((fn) => fn(cancellable));
+		}
 
 		return should_block ? null : navigation;
 	}
