@@ -40,17 +40,14 @@ test.describe('a11y', () => {
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
 	});
 
-	(process.env.KIT_E2E_BROWSER === 'webkit' ? test.skip : test)(
-		'applies autofocus after an enhanced form submit',
-		async ({ page }) => {
-			await page.goto('/accessibility/autofocus/b');
+	test('applies autofocus after an enhanced form submit', async ({ page }) => {
+		await page.goto('/accessibility/autofocus/b');
 
-			await page.click('#submit');
-			await page.waitForFunction(() => document.activeElement?.nodeName === 'INPUT', null, {
-				timeout: 1000
-			});
-		}
-	);
+		await page.click('#submit');
+		await page.waitForFunction(() => document.activeElement?.nodeName === 'INPUT', null, {
+			timeout: 1000
+		});
+	});
 
 	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {
 		await page.goto('/accessibility/a');
