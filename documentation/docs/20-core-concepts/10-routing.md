@@ -131,6 +131,8 @@ SvelteKit will 'walk up the tree' looking for the closest error boundary — if 
 
 > `+error.svelte` is _not_ used when an error occurs inside [`handle`](/docs/hooks#server-hooks-handle) or a [+server.js](#server) request handler.
 
+You can read more about error handling [here](/docs/errors).
+
 ### +layout
 
 So far, we've treated pages as entirely standalone components — upon navigation, the existing `+page.svelte` component will be destroyed, and a new one will take its place.
@@ -271,7 +273,7 @@ The first argument to `Response` can be a [`ReadableStream`](https://developer.m
 
 You can use the `error`, `redirect` and `json` methods from `@sveltejs/kit` for convenience (but you don't have to).
 
-If an error is thrown (either `throw error(...)` or an unexpected error), the response will be a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. The [`+error.svelte`](#error) component will _not_ be rendered in this case.
+If an error is thrown (either `throw error(...)` or an unexpected error), the response will be a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. The [`+error.svelte`](#error) component will _not_ be rendered in this case. You can read more about error handling [here](/docs/errors).
 
 #### Receiving data
 
