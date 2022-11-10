@@ -24,7 +24,9 @@ export function parse_route_id(id) {
 							// allow encoded characters on the file system
 							const decoded_segment = decodeURIComponent(segment);
 							if (decoded_segment.includes('%')) {
-								throw new Error('Vite does not accept % in filenames even if encoded. Please use a route parameter instead.');
+								throw new Error(
+									'Vite does not accept % in filenames even if encoded. Please use a route parameter instead.'
+								);
 							}
 
 							// special case — /[...rest]/ could contain zero segments

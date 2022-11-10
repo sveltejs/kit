@@ -143,8 +143,6 @@ assert.equal(
 );
 ```
 
-To express a `%` character, use `%25`, otherwise the result will be malformed.
-
 ### Advanced layouts
 
 By default, the _layout hierarchy_ mirrors the _route hierarchy_. In some cases, that might not be what you want.
