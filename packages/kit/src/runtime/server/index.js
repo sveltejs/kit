@@ -102,7 +102,7 @@ export async function respond(request, options, state) {
 
 	const { cookies, new_cookies, get_cookie_header } = get_cookies(request, url, options);
 
-	if (state.prerendering) disable_search(url);
+	if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
 	/** @type {import('types').RequestEvent} */
 	const event = {
