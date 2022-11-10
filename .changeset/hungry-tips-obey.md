@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] don't run beforeNavigate during redirects
+[breaking] don't run beforeNavigate during redirects
