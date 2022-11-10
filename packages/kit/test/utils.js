@@ -90,7 +90,7 @@ export const test = base.extend({
 			// @ts-expect-error
 			page[fn] = async function (...args) {
 				const res = await page_fn.call(page, ...args);
-				if (javaScriptEnabled) {
+				if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
 					await page.waitForSelector('body.started', { timeout: 5000 });
 				}
 				return res;

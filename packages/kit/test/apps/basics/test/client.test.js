@@ -572,6 +572,30 @@ test.describe('Load', () => {
 		expect(response.headers()['cache-control']).toBe('private, no-store');
 	});
 
+	test('cache with body hash', async ({ page, clicknav }) => {
+		// 1. go to the page (first load, we expect the right data)
+		await page.goto('/load/fetch-cache-control/load-data');
+		expect(await page.textContent('div#fr')).toBe(JSON.stringify({ hi: 'bonjour' }));
+		expect(await page.textContent('div#hu')).toBe(JSON.stringify({ hi: 'szia' }));
+
+		// 2. change to another route (client side)
+		await clicknav('[href="/load/fetch-cache-control"]');
+
+		// 3. come back to the original page (client side)
+		let did_request_data = false;
+		page.on('request', (request) => {
+			if (request.url().endsWith('fetch-cache-control/load-data')) {
+				did_request_data = true;
+			}
+		});
+		await clicknav('[href="/load/fetch-cache-control/load-data"]');
+
+		// 4. data should still be the same (and cached)
+		expect(await page.textContent('div#fr')).toBe(JSON.stringify({ hi: 'bonjour' }));
+		expect(await page.textContent('div#hu')).toBe(JSON.stringify({ hi: 'szia' }));
+		expect(did_request_data).toBe(false);
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page }) => {
 			const port = 5173;
@@ -930,8 +954,8 @@ test.describe.serial('Invalidation', () => {
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
-		await Promise.all([page.click('button.server'), page.waitForLoadState('networkidle')]);
-		await page.waitForTimeout(200);
+		await page.click('button.server');
+		await page.evaluate(() => window.promise);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
 		expect(server).not.toBe(next_server);
@@ -945,8 +969,8 @@ test.describe.serial('Invalidation', () => {
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
-		await Promise.all([page.click('button.shared'), page.waitForLoadState('networkidle')]);
-		await page.waitForTimeout(200);
+		await page.click('button.shared');
+		await page.evaluate(() => window.promise);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
 		expect(server).toBe(next_server);

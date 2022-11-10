@@ -351,6 +351,8 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
+		if (__SVELTEKIT_DEV__ && document.querySelector('vite-error-overlay')) return;
+
 		current = result.state;
 
 		const style = document.querySelector('style[data-sveltekit]');
@@ -463,6 +465,12 @@ export function create_client({ target, base, trailing_slash }) {
 			};
 
 			// TODO remove this for 1.0
+			Object.defineProperty(result.props.page, 'routeId', {
+				get() {
+					throw new Error('$page.routeId has been replaced by $page.route.id');
+				},
+				enumerable: false
+			});
 			/**
 			 * @param {string} property
 			 * @param {string} replacement
@@ -577,8 +585,8 @@ export function create_client({ target, base, trailing_slash }) {
 
 					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
 					return started
-						? subsequent_fetch(resolved, init)
-						: initial_fetch(requested, resolved, init);
+						? subsequent_fetch(requested, resolved, init)
+						: initial_fetch(requested, init);
 				},
 				setHeaders: () => {}, // noop
 				depends,
@@ -1337,9 +1345,9 @@ export function create_client({ target, base, trailing_slash }) {
 
 			/** @param {Event} event */
 			const trigger_prefetch = (event) => {
-				const { url, options } = find_anchor(event);
-				if (url && options.prefetch) {
-					if (is_external_url(url)) return;
+				const { url, options, has } = find_anchor(event);
+				if (url && options.prefetch && !is_external_url(url)) {
+					if (options.reload || has.rel_external || has.target || has.download) return;
 					prefetch(url);
 				}
 			};
@@ -1371,7 +1379,7 @@ export function create_client({ target, base, trailing_slash }) {
 				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 				if (event.defaultPrevented) return;
 
-				const { a, url, options } = find_anchor(event);
+				const { a, url, options, has } = find_anchor(event);
 				if (!a || !url) return;
 
 				const is_svg_a_element = a instanceof SVGAElement;
@@ -1391,15 +1399,10 @@ export function create_client({ target, base, trailing_slash }) {
 				)
 					return;
 
-				if (a.hasAttribute('download')) return;
+				if (has.download) return;
 
 				// Ignore the following but fire beforeNavigate
-				const rel = (a.getAttribute('rel') || '').split(/\s+/);
-				if (
-					rel.includes('external') ||
-					options.reload ||
-					(is_svg_a_element ? a.target.baseVal : a.target)
-				) {
+				if (options.reload || has.rel_external || has.target) {
 					const navigation = before_navigate({ url, type: 'link' });
 					if (!navigation) {
 						event.preventDefault();

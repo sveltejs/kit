@@ -26,6 +26,12 @@ export const test: TestType<
 			 * `handleError` defines the shape
 			 */
 			read_errors(href: string): Record<string, any>;
+			page: PlaywrightTestArgs['page'] & {
+				goto: (
+					url: string,
+					opts?: Parameters<PlaywrightTestArgs['page']['goto']>[1] & { wait_for_started?: boolean }
+				) => ReturnType<PlaywrightTestArgs['page']['goto']>;
+			};
 		},
 	PlaywrightWorkerArgs & PlaywrightWorkerOptions
 >;

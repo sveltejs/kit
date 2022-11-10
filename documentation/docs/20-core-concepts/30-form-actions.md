@@ -225,6 +225,70 @@ export const actions = {
 };
 ```
 
+### Loading data
+
+After an action runs, the page will be re-rendered (unless a redirect or an unexpected error occurs), with the action's return value available to the page as the `form` prop. This means that your page's `load` functions will run after the action completes.
+
+Note that `handle` runs before the action is invoked, and does not re-run before the `load` functions. This means that if, for example, you use `handle` to populate `event.locals` based on a cookie, you must update `event.locals` when you set or delete the cookie in an action:
+
+```js
+/// file: src/hooks.server.js
+// @filename: ambient.d.ts
+declare namespace App {
+	interface Locals {
+		user: {
+			name: string;
+		} | null
+	}
+}
+
+// @filename: global.d.ts
+declare global {
+	function getUser(sessionid: string | undefined): {
+		name: string;
+	};
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ event, resolve }) {
+	event.locals.user = await getUser(event.cookies.get('sessionid'));
+	return resolve(event);
+}
+```
+
+```js
+/// file: src/routes/account/+page.server.js
+// @filename: ambient.d.ts
+declare namespace App {
+	interface Locals {
+		user: {
+			name: string;
+		} | null
+	}
+}
+
+// @filename: index.js
+// ---cut---
+/** @type {import('./$types').PageServerLoad} */
+export function load(event) {
+	return {
+		user: event.locals.user
+	};
+}
+
+/** @type {import('./$types').Actions} */
+export const actions = {
+	logout: async (event) => {
+		event.cookies.delete('sessionid');
+		event.locals.user = null;
+	}
+};
+```
+
 ### Progressive enhancement
 
 In the preceding sections we built a `/login` action that [works without client-side JavaScript](https://kryogenix.org/code/browser/everyonehasjs.html) — not a `fetch` in sight. That's great, but when JavaScript _is_ available we can progressively enhance our form interactions to provide a better user experience.
