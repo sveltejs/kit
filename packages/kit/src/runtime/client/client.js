@@ -373,6 +373,8 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
+		if (__SVELTEKIT_DEV__ && document.querySelector('vite-error-overlay')) return;
+
 		current = result.state;
 
 		const style = document.querySelector('style[data-sveltekit]');
