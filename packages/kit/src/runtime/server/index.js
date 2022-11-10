@@ -16,7 +16,6 @@ import {
 import { exec } from '../../utils/routing.js';
 import { INVALIDATED_HEADER, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
-import { HttpError } from '../control.js';
 import { create_fetch } from './fetch.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
@@ -275,9 +274,8 @@ export async function respond(request, options, state) {
 			// we can't load the endpoint from our own manifest,
 			// so we need to make an actual HTTP request
 			return await fetch(request);
-		} catch (e) {
-			// HttpError can come from endpoint - TODO should it be handled there instead?
-			const error = e instanceof HttpError ? e : coalesce_to_error(e);
+		} catch (error) {
+			// HttpError from endpoint can end up here - TODO should it be handled there instead?
 			return handle_fatal_error(event, options, error);
 		} finally {
 			event.cookies.set = () => {
@@ -362,8 +360,7 @@ export async function respond(request, options, state) {
 		}
 
 		return response;
-	} catch (/** @type {unknown} */ e) {
-		const error = coalesce_to_error(e);
+	} catch (error) {
 		return handle_fatal_error(event, options, error);
 	}
 }
