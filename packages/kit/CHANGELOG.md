@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.541
+
+### Minor Changes
+
+- [fix] don't clean build and output directories when using `--watch` ([#7516](https://github.com/sveltejs/kit/pull/7516))
+
+### Patch Changes
+
+- [fix] handle expected errors thrown in handle hook correctly ([#7566](https://github.com/sveltejs/kit/pull/7566))
+
 ## 1.0.0-next.540
 
 ### Patch Changes
