@@ -100,6 +100,8 @@ You can customise the fallback error page by adding a `src/error.html` file:
 </html>
 ```
 
+SvelteKit will replace `%sveltekit.status%` and `%sveltekit.error.message%` with their corresponding values.
+
 If the error instead occurs inside a `load` function while rendering a page, SvelteKit will render the [`+error.svelte`](/docs/routing#error) component nearest to where the error occurred.
 
 The exception is when the error occurs inside the root `+layout.js` or `+layout.server.js`, since the root layout would ordinarily _contain_ the `+error.svelte` component. In this case, SvelteKit uses the fallback error page.
