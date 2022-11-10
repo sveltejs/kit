@@ -9,7 +9,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"svelte": "^3.52.0",
+		"svelte": "^3.53.1",
 		"vite": "^3.2.1"
 	},
 	"type": "module"
