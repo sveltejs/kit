@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.542
+
+### Patch Changes
+
+- Add support for linking to <a name="hash"> tags ([#7596](https://github.com/sveltejs/kit/pull/7596))
+
+- [breaking] don't run beforeNavigate during redirects ([#7588](https://github.com/sveltejs/kit/pull/7588))
+
+- [fix] respect autofocus following navigation or enhanced form submit ([#6643](https://github.com/sveltejs/kit/pull/6643))
+
 ## 1.0.0-next.541
 
 ### Minor Changes
