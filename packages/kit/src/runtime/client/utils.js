@@ -61,7 +61,7 @@ export function find_anchor(event) {
 		},
 		has: a
 			? {
-					rel_external: (a.getAttribute('rel') || '').split(' ').includes('external'),
+					rel_external: (a.getAttribute('rel') || '').split(/\s+/).includes('external'),
 					download: a.hasAttribute('download'),
 					target: !!(a instanceof SVGAElement ? a.target.baseVal : a.target)
 			  }
