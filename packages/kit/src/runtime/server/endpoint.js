@@ -1,6 +1,5 @@
-import { json } from '../../exports/index.js';
 import { negotiate } from '../../utils/http.js';
-import { Redirect, ValidationError } from '../control.js';
+import { Redirect } from '../control.js';
 import { check_method_names, method_not_allowed } from './utils.js';
 
 /**
