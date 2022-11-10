@@ -302,14 +302,14 @@ export async function dev(vite, vite_config, svelte_config) {
 					);
 				}
 
-				if (decoded === '/service-worker.js') {
+				if (decoded === svelte_config.kit.paths.base + '/service-worker.js') {
 					const resolved = resolve_entry(svelte_config.kit.files.serviceWorker);
 
 					if (resolved) {
 						res.writeHead(200, {
 							'content-type': 'application/javascript'
 						});
-						res.end(`import '${resolved}';`);
+						res.end(`import '/@fs${resolved}';`);
 					} else {
 						res.writeHead(404);
 						res.end('not found');
