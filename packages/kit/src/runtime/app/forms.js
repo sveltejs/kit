@@ -50,10 +50,10 @@ export function enhance(form, submit = () => {}) {
 
 		const action = new URL(
 			// We can't do submitter.formAction directly because that property is always set
-			// We do form.cloneNode() for avoid DOM clobbering - https://github.com/sveltejs/kit/issues/7593
+			// We do cloneNode for avoid DOM clobbering - https://github.com/sveltejs/kit/issues/7593
 			event.submitter?.hasAttribute('formaction')
 				? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
-				: /** @type {HTMLFormElement} */ (form.cloneNode()).action
+				: /** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).action
 		);
 
 		const data = new FormData(form);
@@ -119,11 +119,13 @@ export function enhance(form, submit = () => {}) {
 		});
 	}
 
-	form.addEventListener('submit', handle_submit);
+	// @ts-expect-error
+	HTMLFormElement.prototype.addEventListener.call(form, 'submit', handle_submit);
 
 	return {
 		destroy() {
-			form.removeEventListener('submit', handle_submit);
+			// @ts-expect-error
+			HTMLFormElement.prototype.removeEventListener.call(form, 'submit', handle_submit);
 		}
 	};
 }
