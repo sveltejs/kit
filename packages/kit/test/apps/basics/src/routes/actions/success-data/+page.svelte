@@ -1,5 +1,5 @@
 <script>
-	import { deserialize } from '$app/data';
+	import { deserialize } from '$app/forms';
 
 	/** @type {import('./$types').ActionData} */
 	export let form;
@@ -15,8 +15,9 @@
 				accept: 'application/json'
 			}
 		});
-		const { data } = await res.json();
-		form = deserialize(data);
+		// @ts-expect-error don't bother with type narrowing work here
+		const { data } = deserialize(await res.text());
+		form = data;
 	}
 </script>
 

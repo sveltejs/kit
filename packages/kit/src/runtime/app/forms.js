@@ -16,6 +16,15 @@ const ssr = import.meta.env.SSR;
 /** @type {import('$app/forms').applyAction} */
 export const applyAction = ssr ? guard('applyAction') : client.apply_action;
 
+/** @type {import('$app/forms').deserialize} */
+export function deserialize(result) {
+	const parsed = JSON.parse(result);
+	if (parsed.data) {
+		parsed.data = devalue.parse(parsed.data);
+	}
+	return parsed;
+}
+
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
 	/**
@@ -92,12 +101,7 @@ export function enhance(form, submit = () => {}) {
 				signal: controller.signal
 			});
 
-			result = await response.json();
-			// @ts-expect-error data type not available on all objects, but this works at runtime
-			if (result.data) {
-				// @ts-expect-error
-				result.data = devalue.parse(result.data);
-			}
+			result = deserialize(await response.text());
 		} catch (error) {
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = { type: 'error', error };
