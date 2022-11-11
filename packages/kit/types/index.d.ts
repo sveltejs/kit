@@ -727,13 +727,11 @@ export function error(
 	body?: { message: string } extends App.Error ? App.Error | string | undefined : never
 ): HttpError;
 
-type HttpRedirectStatusCode = 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308
-
 /**
  * Creates a `Redirect` object. If thrown during request handling, SvelteKit will
  * return a redirect response.
  */
-export function redirect(status: HttpRedirectStatusCode, location: string): Redirect;
+export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string): Redirect;
 
 /**
  * Generates a JSON `Response` object from the supplied data.

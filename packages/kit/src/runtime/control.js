@@ -55,12 +55,10 @@ export function error(status, message) {
 	return new HttpError(status, message);
 }
 
-/** @typedef { 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 } HttpRedirectStatusCode }
-
 /**
  * Creates a `Redirect` object. If thrown during request handling, SvelteKit will
  * return a redirect response.
- * @param {HttpRedirectStatusCode} status
+ * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status
  * @param {string} location
  */
 export function redirect(status, location) {
