@@ -1283,6 +1283,18 @@ test.describe('Redirects', () => {
 		);
 	});
 
+	test('errors on invalid 3xx status', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/redirect');
+
+		await clicknav('[href="/redirect/missing-status/c"]');
+
+		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/c`);
+		expect(await page.textContent('h1')).toBe('500');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Invalid status code"'
+		);
+	});
+
 	test('redirect-on-load', async ({ baseURL, page, javaScriptEnabled }) => {
 		const redirected_to_url = javaScriptEnabled
 			? `${baseURL}/redirect-on-load/redirected`
