@@ -207,8 +207,6 @@ src/routes/
 └ +layout.svelte
 ```
 
-There is no way to break out of the root layout. You can be sure that it's always present in your app and for example put app-wide UI or behavior in it.
-
 #### +layout@
 
 Like pages, layouts can _themselves_ break out of their parent layout hierarchy, using the same technique. For example, a `+layout@.svelte` component would reset the hierarchy for all its child routes.
@@ -227,9 +225,41 @@ src/routes/
 └ +layout.svelte
 ```
 
+#### Breaking out of the root layout
+
+There is no way to break out of the root layout. You can be sure that it's always present in your app and for example put app-wide UI or behavior in it - and if you don't define one, it falls back to a simple `<slot />` component. But what to do, if you want some pages to _not_ have the same layout as the rest? You have two options:
+
+Option 1: Create a `(group)` at the root, in which you create a `+layout.svelte` which is used for each page below it. Every page that should inherit a blank root layout instead is put outside of that root `(group)`. In the following example, the login page inherits a blank root layout, while the other pages inherit the layout inside `(group)`:
+
+```
+src/routes/
+├ (group)
+│ ├ about/
+│ │ └ +page.svelte // inherits (group) layout
+│ └ +layout.svelte
+├ login/
+│ └ +page.svelte // inherits blank root layout
+```
+
+Option 2: Add an exception to your root `+layout.svelte` where you don't render the surrounding UI on specific pages:
+
+```svelte
+/// file: src/routes/+layout.svelte
+<script>
+	import { page } from '$app/stores';
+</script>
+
+{#if $page.url.pathname !== '/login'}
+	<slot />
+{:else}
+	<div>Surrounding UI</div>
+	<slot />
+{/if}
+```
+
 #### When to use layout groups
 
-Not all use cases are suited for layout grouping, nor should you feel compelled to use them. It might be that your use case would result in complex `(group)` nesting, or that you don't want to introduce a `(group)` for a single outlier. It's perfectly fine to use other means such as composition (reusable `load` functions or Svelte components) or if-statements to achieve what you want. The following example shows a layout that rewinds to the root layout and reuses components and functions that other layouts can also use:
+Not all use cases are suited for layout grouping, nor should you feel compelled to use them. It might be that your use case would result in complex `(group)` nesting, or that you don't want to introduce a `(group)` for a single outlier (as in the example of the previous section). It's perfectly fine to use other means such as composition (reusable `load` functions or Svelte components) or if-statements to achieve what you want. The following example shows a layout that rewinds to the root layout and reuses components and functions that other layouts can also use:
 
 ```svelte
 /// file: src/routes/nested/route/+layout@.svelte
