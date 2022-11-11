@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 1.0.0-next.543
+
+### Patch Changes
+
+- Don't print search params error when prerendering fallback page ([#7598](https://github.com/sveltejs/kit/pull/7598))
+
+- allow async function for `enhance` action parameter ([#7608](https://github.com/sveltejs/kit/pull/7608))
+
+- Run service worker during development ([#7597](https://github.com/sveltejs/kit/pull/7597))
+
+- [feat] support throwing redirect in handle ([#7612](https://github.com/sveltejs/kit/pull/7612))
+
+- Workaround for the DOM clobbering for use:enhance ([#7599](https://github.com/sveltejs/kit/pull/7599))
+
+- [fix] don't cache prefetch errors ([#7610](https://github.com/sveltejs/kit/pull/7610))
+
 ## 1.0.0-next.542
 
 ### Patch Changes
