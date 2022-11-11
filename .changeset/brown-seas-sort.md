@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-narrow down possible status codes for redirects to 300-308
+[breaking] narrow down possible status codes for redirects to 300-308
