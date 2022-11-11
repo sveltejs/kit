@@ -207,12 +207,7 @@ export type ServerData =
 export interface ServerDataNode {
 	type: 'data';
 	data: Record<string, any> | null;
-	uses: {
-		dependencies?: string[];
-		params?: string[];
-		parent?: number | void; // 1 or undefined
-		url?: number | void; // 1 or undefined
-	};
+	uses: Uses;
 }
 
 /**
@@ -362,6 +357,7 @@ export interface Uses {
 	dependencies: Set<string>;
 	params: Set<string>;
 	parent: boolean;
+	route: boolean;
 	url: boolean;
 }
 

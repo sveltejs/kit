@@ -164,7 +164,7 @@ Conceptually, they're the same thing, but there are some important differences t
 
 #### Input
 
-Both shared and server-only `load` functions have access to properties describing the request (`params`, `routeId` and `url`) and various functions (`depends`, `fetch` and `parent`). These are described in the following sections.
+Both shared and server-only `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`depends`, `fetch` and `parent`). These are described in the following sections.
 
 Server-only `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
 
@@ -186,7 +186,7 @@ In rare cases, you might need to use both together — for example, you might ne
 
 ### Using URL data
 
-Often the `load` function depends on the URL in one way or another. For this, the `load` function provides you with `url`, `routeId` and `params`.
+Often the `load` function depends on the URL in one way or another. For this, the `load` function provides you with `url`, `route` and `params`.
 
 #### url
 
@@ -194,23 +194,23 @@ An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), co
 
 > In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node](/docs/adapters#supported-environments-node-js), for example, you may need to configure the adapter in order for the URL to be correct.
 
-#### routeId
+#### route
 
-The name of the current route directory, relative to `src/routes`:
+Contains the name of the current route directory, relative to `src/routes`:
 
 ```js
 /// file: src/routes/a/[b]/[...c]/+page.js
 /** @type {import('./$types').PageLoad} */
-export function load({ routeId }) {
-	console.log(routeId); // '/a/[b]/[...c]'
+export function load({ route }) {
+	console.log(route.id); // '/a/[b]/[...c]'
 }
 ```
 
 #### params
 
-`params` is derived from `url.pathname` and `routeId`.
+`params` is derived from `url.pathname` and `route.id`.
 
-Given a `routeId` of `a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `params` object would look like this:
+Given a `route.id` of `/a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `params` object would look like this:
 
 ```json
 {
@@ -547,7 +547,7 @@ To summarize, a `load` function will re-run in the following situations:
 - It declared a dependency on a specific URL via [`fetch`](#making-fetch-requests) or [`depends`](/docs/types#sveltejs-kit-loadevent), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
 - All active `load` functions were forcibly re-run with [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall)
 
-Note that re-running a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't want you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
+Note that re-running a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't what you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
 
 ### Shared state
 

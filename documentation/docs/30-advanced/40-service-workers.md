@@ -73,6 +73,16 @@ self.addEventListener('fetch', (event) => {
 
 > Careful with caching too much for too long! Browsers have a limit on the amount they cache, and not everything should be cached, for example requests that contain dynamic data that change over time
 
-Because service workers need to be bundled (since browsers don't yet support `import` in this context), **SvelteKit's service workers only work in the production build, not in development**, since it depends on the client-side app's build manifest. To test it locally, use `vite preview` after running a build.
+The service worker is bundled for production, but not during development. For that reason, only browsers that support [modules in service workers](https://web.dev/es-modules-in-sw) will be able to use them at dev time. If you are manually registering your service worker, you will need to pass the `{ type: 'module' }` option in development:
+
+```js
+import { dev } from '$app/environment';
+
+navigator.serviceWorker.register('/service-worker.js', {
+	type: dev ? 'module' : 'classic'
+});
+```
+
+> `build` and `prerendered` are empty arrays during development
 
 SvelteKit's service worker implementation is deliberately low-level. If you need a more full-flegded but also more opinionated solution, we recommend looking at solutions like [Vite PWA plugin](https://vite-pwa-org.netlify.app/frameworks/sveltekit.html), which uses [Workbox](https://web.dev/learn/pwa/workbox). For more general information on service workers, we recommend [the MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers).

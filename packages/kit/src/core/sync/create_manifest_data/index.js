@@ -7,6 +7,7 @@ import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
 
 /**
+ * Generates the manifest data used for the client-side manifest and types generation.
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   fallback?: string;
@@ -34,7 +35,7 @@ export default function create_manifest_data({
 /**
  * @param {import('types').ValidatedConfig} config
  */
-function create_assets(config) {
+export function create_assets(config) {
 	return list_files(config.kit.files.assets).map((file) => ({
 		file,
 		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
