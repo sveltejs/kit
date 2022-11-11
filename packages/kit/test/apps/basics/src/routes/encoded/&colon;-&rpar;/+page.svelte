@@ -2,4 +2,4 @@
 	import { page } from '$app/stores';
 </script>
 
-<h1>{$page.params.pathname.split('/').pop()}</h1>
+<h1>{$page.url.pathname.split('/').pop()}</h1>
