@@ -67,7 +67,7 @@ export function enhance(form, submit = () => {}) {
 		const cancel = () => (cancelled = true);
 
 		const callback =
-			submit({
+			await submit({
 				action,
 				cancel,
 				controller,
