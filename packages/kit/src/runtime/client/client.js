@@ -218,7 +218,16 @@ export function create_client({ target, base, trailing_slash }) {
 			throw new Error(`Attempted to prefetch a URL that does not belong to this app: ${url}`);
 		}
 
-		load_cache = { id: intent.id, promise: load_route(intent) };
+		load_cache = {
+			id: intent.id,
+			promise: load_route(intent).then((result) => {
+				if (result.type === 'loaded' && result.state.error) {
+					// Don't cache errors, because they might be transient
+					load_cache = null;
+				}
+				return result;
+			})
+		};
 
 		return load_cache.promise;
 	}
