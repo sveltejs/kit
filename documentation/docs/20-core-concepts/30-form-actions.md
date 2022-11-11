@@ -97,6 +97,12 @@ Each action receives a `RequestEvent` object, allowing you to read the data with
 ```js
 // @errors: 2339 2304
 /// file: src/routes/login/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
+export async function load({ cookies }) {
+	const user = await db.getUserFromSession(cookies.get('sessionid'));
+	return { user };
+}
+
 /** @type {import('./$types').Actions} */
 export const actions = {
 	login: async ({ cookies, request }) => {
