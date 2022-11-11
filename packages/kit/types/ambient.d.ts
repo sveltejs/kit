@@ -67,6 +67,26 @@ declare namespace App {
 
 /**
  * ```ts
+ * import { serialize, deserialize } from '$app/data';
+ * ```
+ */
+declare module '$app/data' {
+	/**
+	 * Turns an object into a string. Supports everything that [devalue](https://github.com/rich-harris/devalue) supports (most notably `Date` and `BigInt`).
+	 * `load` and `actions` use this under the hood.
+	 * @param data The data to serialize
+	 */
+	export function serialize<T>(data: T): string;
+	/**
+	 * Turns a string produced with `serialize` back into an object.
+	 * `load` and `actions` use this under the hood.
+	 * @param serialized The data to deserialize
+	 */
+	export function deserialize<T>(serialized: string | number | any[]): T;
+}
+
+/**
+ * ```ts
  * import { browser, dev, prerendering } from '$app/environment';
  * ```
  */

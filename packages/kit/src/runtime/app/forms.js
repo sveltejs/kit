@@ -93,7 +93,9 @@ export function enhance(form, submit = () => {}) {
 			});
 
 			result = await response.json();
+			// @ts-expect-error data type not available on all objects, but this works at runtime
 			if (result.data) {
+				// @ts-expect-error
 				result.data = devalue.parse(result.data);
 			}
 		} catch (error) {

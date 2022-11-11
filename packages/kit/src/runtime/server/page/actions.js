@@ -45,13 +45,17 @@ export async function handle_action_json_request(event, options, server) {
 			return action_json({
 				type: 'invalid',
 				status: data.status,
-				data: uneval(data.data, /** @type {string} */ (event.route.id))
+				// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
+				// because we don't use the object outside, and this way we have better code navigation
+				// through knowing where the related interface is used.
+				data: stringify_action_response(data.data, /** @type {string} */ (event.route.id))
 			});
 		} else {
 			return action_json({
 				type: 'success',
 				status: data ? 200 : 204,
-				data: uneval(data, /** @type {string} */ (event.route.id))
+				// @ts-expect-error see comment above
+				data: stringify_action_response(data, /** @type {string} */ (event.route.id))
 			});
 		}
 	} catch (e) {
@@ -214,13 +218,31 @@ function maybe_throw_migration_error(server) {
 }
 
 /**
+ * Try to `devalue.uneval` the data object, and if it fails, return a proper Error with context
+ * @param {any} data
+ * @param {string} routeId
+ */
+export function uneval_action_response(data, routeId) {
+	return try_deserialize(data, devalue.uneval, routeId);
+}
+
+/**
  * Try to `devalue.stringify` the data object, and if it fails, return a proper Error with context
  * @param {any} data
  * @param {string} routeId
  */
-export function stringify_action_response(data, routeId) {
+function stringify_action_response(data, routeId) {
+	return try_deserialize(data, devalue.stringify, routeId);
+}
+
+/**
+ * @param {any} data
+ * @param {(data: any) => string} fn
+ * @param {string} routeId
+ */
+function try_deserialize(data, fn, routeId) {
 	try {
-		return devalue.stringify(data);
+		return fn(data);
 	} catch (e) {
 		// If we're here, the data could not be serialized with devalue
 		const error = /** @type {any} */ (e);

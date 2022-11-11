@@ -4,7 +4,7 @@ import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
-import { stringify_action_response } from './actions.js';
+import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
 
 // TODO rename this function/module
@@ -202,7 +202,7 @@ export async function render_response({
 	}
 
 	if (form_value) {
-		serialized.form = stringify_action_response(form_value, event.routeId);
+		serialized.form = uneval_action_response(form_value, /** @type {string} */ (event.route.id));
 	}
 
 	if (inline_styles.size > 0) {

@@ -1,4 +1,5 @@
 <script>
+	import { deserialize } from '$app/data';
 	import { browser } from '$app/environment';
 
 	/** @type {import('./$types').ActionData} */
@@ -14,10 +15,8 @@
 				accept: 'application/json'
 			}
 		});
-		const {
-			data: { errors, values }
-		} = await res.json();
-		form = { errors, values };
+		const { data } = await res.json();
+		form = deserialize(data);
 	}
 </script>
 

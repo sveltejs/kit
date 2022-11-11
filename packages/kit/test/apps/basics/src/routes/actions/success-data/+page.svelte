@@ -1,19 +1,22 @@
 <script>
+	import { deserialize } from '$app/data';
+
 	/** @type {import('./$types').ActionData} */
 	export let form;
 
 	async function submit({ submitter }) {
 		const res = await fetch(this.action, {
 			method: 'POST',
-			body: submitter.getAttribute('formenctype') === 'multipart/form-data'
-				? new FormData(this)
-				: new URLSearchParams({ username: this['username'].value }),
+			body:
+				submitter.getAttribute('formenctype') === 'multipart/form-data'
+					? new FormData(this)
+					: new URLSearchParams({ username: this['username'].value }),
 			headers: {
 				accept: 'application/json'
 			}
 		});
 		const { data } = await res.json();
-		form = data;
+		form = deserialize(data);
 	}
 </script>
 
