@@ -6,7 +6,7 @@ import { URL } from 'url';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { posixify, resolve_entry } from '../../../utils/filesystem.js';
+import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
 import { load_error_page, load_template } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
@@ -309,7 +309,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						res.writeHead(200, {
 							'content-type': 'application/javascript'
 						});
-						res.end(`import '/@fs${resolved}';`);
+						res.end(`import '${to_fs(resolved)}';`);
 					} else {
 						res.writeHead(404);
 						res.end('not found');
