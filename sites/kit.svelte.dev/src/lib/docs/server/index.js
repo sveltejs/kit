@@ -10,6 +10,7 @@ import { escape, extract_frontmatter, transform } from './markdown.js';
 import { modules } from '../../../../../../packages/kit/docs/types.js';
 import { render_modules } from './modules.js';
 import { parse_route_id } from '../../../../../../packages/kit/src/utils/routing.js';
+import { decode_html_entities } from '../../../../../../packages/kit/src/utils/entities';
 import ts from 'typescript';
 import MagicString from 'magic-string';
 import { fileURLToPath } from 'url';
@@ -123,7 +124,7 @@ export async function read_file(file) {
 						);
 					}
 					if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
-						const params = parse_route_id(options.file || `+page.${language}`)
+						const params = parse_route_id(options.file || `+page.${language}`, decode_html_entities)
 							.names.map((name) => `${name}: string`)
 							.join(', ');
 
