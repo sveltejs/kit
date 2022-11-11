@@ -329,7 +329,7 @@ test.describe('Encoded paths', () => {
 		expect(await page.textContent('h1')).toBe('@svelte');
 	});
 
-	test('allows characters to be represented as HTML entities', async ({ page }) => {
+	test('allows characters to be represented as HTML entities', async ({ page, clicknav }) => {
 		await page.goto('/encoded');
 		await clicknav('[href="/encoded/:-)"]');
 		expect(await page.textContent('h1')).toBe(':-)');

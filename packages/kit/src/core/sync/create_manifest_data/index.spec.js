@@ -197,8 +197,8 @@ test('encodes invalid characters', () => {
 	]);
 
 	assert.equal(
-		routes.map((p) => p.pattern),
-		[/^\/$/, /^\/%23\/?$/, /^\/%3[Ff]\/?$/, /^\/"\/?$/]
+		routes.map((p) => p.pattern.toString()),
+		[/^\/$/, /^\/%23\/?$/, /^\/%3[Ff]\/?$/, /^\/"\/?$/].map((pattern) => pattern.toString())
 	);
 });
 
