@@ -258,7 +258,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	// and smaller indexes take fewer bytes. also, this guarantees that
 	// the default error/layout are 0/1
 	for (const route of routes) {
-		if (route.layout) nodes.push(route.layout);
+		if (route.layout) {
+			if (!route.layout?.component) {
+				route.layout.component = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
+			}
+			nodes.push(route.layout);
+		}
 		if (route.error) nodes.push(route.error);
 	}
 
