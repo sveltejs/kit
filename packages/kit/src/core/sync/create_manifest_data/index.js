@@ -110,6 +110,11 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				throw new Error(`Invalid route ${id} — brackets are unbalanced`);
 			}
 
+			if (/#/.test(segment)) {
+				// Vite will barf on files with # in them
+				throw new Error(`Route ${id} should be renamed ${id.replace(/#/g, '&num;')}`);
+			}
+
 			if (/\[\.\.\.\w+\]\/\[\[/.test(id)) {
 				throw new Error(
 					`Invalid route ${id} — an [[optional]] route segment cannot follow a [...rest] route segment`

@@ -21,16 +21,6 @@ export function parse_route_id(id) {
 			: new RegExp(
 					`^${get_route_segments(id)
 						.map((segment, i, segments) => {
-							if (segment.includes('%')) {
-								throw new Error(`Routes ${id} must be provided in decoded form.`);
-							}
-							if (/[#\/\?]/.test(segment)) {
-								// #, ?, and / will not be decoded by decodeURI so cannot be matched
-								// '/' is illegal on all file systems so we don't bother warning about it
-								throw new Error(
-									`Route ${id} should not contain '#' or '?'. Please use a parameter.`
-								);
-							}
 							// special case — /[...rest]/ could contain zero segments
 							const rest_match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(segment);
 							if (rest_match) {
