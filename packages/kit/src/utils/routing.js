@@ -1,7 +1,10 @@
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
-/** @param {string} id */
-export function parse_route_id(id) {
+/**
+ * @param {string} id
+ * @param {(encoded: string) => string} decode
+ */
+export function parse_route_id(id, decode) {
 	/** @type {string[]} */
 	const names = [];
 
@@ -69,10 +72,17 @@ export function parse_route_id(id) {
 									if (is_last && content.includes('.')) add_trailing_slash = false;
 
 									return (
-										content // allow users to specify characters on the file system in an encoded manner
+										decode(content) // allow users to specify characters on the file system using HTML entities
 											.normalize()
+											// escape [ and ] before escaping other characters, since they are used in the replacements
+											.replace(/[[\]]/g, '\\$&')
+											// replace %, /, ? and # with their encoded versions
+											.replace(/%/g, '%25')
+											.replace(/\//g, '%2[Ff]')
+											.replace(/\?/g, '%3[Ff]')
+											.replace(/#/g, '%23')
 											// escape characters that have special meaning in regex
-											.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+											.replace(/[.*+?^${}()|\\]/g, '\\$&')
 									);
 								})
 								.join('');

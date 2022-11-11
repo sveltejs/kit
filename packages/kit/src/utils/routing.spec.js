@@ -1,5 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+import { decode_html_entities } from './entities.js';
 import { exec, parse_route_id } from './routing.js';
 
 const tests = {
@@ -67,7 +68,7 @@ const tests = {
 
 for (const [key, expected] of Object.entries(tests)) {
 	test(`parse_route_id: "${key}"`, () => {
-		const actual = parse_route_id(key);
+		const actual = parse_route_id(key, decode_html_entities);
 
 		assert.equal(actual.pattern.toString(), expected.pattern.toString());
 		assert.equal(actual.names, expected.names);
@@ -165,7 +166,7 @@ const exec_tests = [
 
 for (const { path, route, expected } of exec_tests) {
 	test(`exec extracts params correctly for ${path} from ${route}`, () => {
-		const { pattern, names, types, optional } = parse_route_id(route);
+		const { pattern, names, types, optional } = parse_route_id(route, decode_html_entities);
 		const match = pattern.exec(path);
 		if (!match) throw new Error(`Failed to match ${path}`);
 		const actual = exec(
@@ -181,8 +182,11 @@ for (const { path, route, expected } of exec_tests) {
 }
 
 test('errors on bad param name', () => {
-	assert.throws(() => parse_route_id('abc/[b-c]'), /Invalid param: b-c/);
-	assert.throws(() => parse_route_id('abc/[bc=d-e]'), /Invalid param: bc=d-e/);
+	assert.throws(() => parse_route_id('abc/[b-c]', decode_html_entities), /Invalid param: b-c/);
+	assert.throws(
+		() => parse_route_id('abc/[bc=d-e]', decode_html_entities),
+		/Invalid param: bc=d-e/
+	);
 });
 
 test.run();

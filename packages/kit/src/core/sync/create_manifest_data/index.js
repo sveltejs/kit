@@ -5,6 +5,7 @@ import { runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
+import { decode_html_entities } from '../../../utils/entities.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -127,7 +128,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				);
 			}
 
-			const { pattern, names, types, optional } = parse_route_id(id);
+			const { pattern, names, types, optional } = parse_route_id(id, decode_html_entities);
 
 			/** @type {import('types').RouteData} */
 			const route = {
