@@ -360,7 +360,7 @@ test.describe('Shadowed pages', () => {
 		});
 
 		expect(response.status()).toBe(200);
-		expect(await response.json()).toEqual({ type: 'success', status: 204 });
+		expect(await response.json()).toEqual({ data: '-1', type: 'success', status: 204 });
 	});
 });
 
