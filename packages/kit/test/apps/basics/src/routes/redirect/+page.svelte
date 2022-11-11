@@ -7,3 +7,4 @@
 
 <a href="/redirect/missing-status/a">a (missing-status)</a>
 <a href="/redirect/missing-status/b">b (missing-status)</a>
+<a href="/redirect/missing-status/c">c (missing-status)</a>
