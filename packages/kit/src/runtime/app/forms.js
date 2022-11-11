@@ -67,13 +67,13 @@ export function enhance(form, submit = () => {}) {
 		const cancel = () => (cancelled = true);
 
 		const callback =
-			await submit({
+			(await submit({
 				action,
 				cancel,
 				controller,
 				data,
 				form
-			}) ?? fallback_callback;
+			})) ?? fallback_callback;
 		if (cancelled) return;
 
 		/** @type {import('types').ActionResult} */
