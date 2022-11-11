@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[breaking] remove support for encoded directories
+[breaking] require special characters to be HTML-encoded
