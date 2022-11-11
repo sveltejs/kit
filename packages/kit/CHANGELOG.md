@@ -1,5 +1,73 @@
 # @sveltejs/kit
 
+## 1.0.0-next.542
+
+### Patch Changes
+
+- Add support for linking to <a name="hash"> tags ([#7596](https://github.com/sveltejs/kit/pull/7596))
+
+- [breaking] don't run beforeNavigate during redirects ([#7588](https://github.com/sveltejs/kit/pull/7588))
+
+- [fix] respect autofocus following navigation or enhanced form submit ([#6643](https://github.com/sveltejs/kit/pull/6643))
+
+## 1.0.0-next.541
+
+### Minor Changes
+
+- [fix] don't clean build and output directories when using `--watch` ([#7516](https://github.com/sveltejs/kit/pull/7516))
+
+### Patch Changes
+
+- [fix] handle expected errors thrown in handle hook correctly ([#7566](https://github.com/sveltejs/kit/pull/7566))
+
+## 1.0.0-next.540
+
+### Patch Changes
+
+- Serve prerendered non-page files when running preview ([#7576](https://github.com/sveltejs/kit/pull/7576))
+
+- [fix] caching takes now into account the body payload ([#7546](https://github.com/sveltejs/kit/pull/7546))
+
+- [fix] handle locked readable stream when reading body ([#7565](https://github.com/sveltejs/kit/pull/7565))
+
+- [fix] prefetch should ignore links ignored by the router ([#7580](https://github.com/sveltejs/kit/pull/7580))
+
+- [fix] migration error when using $page.routeId ([#7574](https://github.com/sveltejs/kit/pull/7574))
+
+- prevent loading of illegal modules in the browser, rather than during SSR ([#7507](https://github.com/sveltejs/kit/pull/7507))
+
+- [fix] prevent double decoding of path segment ([#7550](https://github.com/sveltejs/kit/pull/7550))
+
+## 1.0.0-next.539
+
+### Patch Changes
+
+- Omit prerendered routes from server manifest ([#7541](https://github.com/sveltejs/kit/pull/7541))
+
+## 1.0.0-next.538
+
+### Patch Changes
+
+- [feat] enable caching for `__data.json` requests ([#7532](https://github.com/sveltejs/kit/pull/7532))
+
+- [fix] prevent double decoding of params ([#7521](https://github.com/sveltejs/kit/pull/7521))
+
+- [fix] take into account Request input when serializing fetch data ([#7531](https://github.com/sveltejs/kit/pull/7531))
+
+- [fix] better cookie warning checks ([#7528](https://github.com/sveltejs/kit/pull/7528))
+
+## 1.0.0-next.537
+
+### Patch Changes
+
+- [feat] better navigation interfaces ([#7529](https://github.com/sveltejs/kit/pull/7529))
+
+## 1.0.0-next.536
+
+### Patch Changes
+
+- custom aliases resolved in service worker builds ([#7500](https://github.com/sveltejs/kit/pull/7500))
+
 ## 1.0.0-next.535
 
 ### Patch Changes

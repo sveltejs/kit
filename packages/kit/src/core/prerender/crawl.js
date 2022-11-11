@@ -160,6 +160,8 @@ export function crawl(html) {
 								href = value;
 							} else if (name === 'id') {
 								ids.push(value);
+							} else if (name === 'name') {
+								if (tag === 'A') ids.push(value);
 							} else if (name === 'rel') {
 								rel = value;
 							} else if (name === 'src') {

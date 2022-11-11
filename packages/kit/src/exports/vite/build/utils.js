@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as vite from 'vite';
-import { get_aliases } from '../utils.js';
+import { get_config_aliases, get_app_aliases } from '../utils.js';
 
 /**
  * @typedef {import('rollup').RollupOutput} RollupOutput
@@ -143,7 +143,7 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 		},
 		publicDir: ssr ? false : config.kit.files.assets,
 		resolve: {
-			alias: get_aliases(config.kit)
+			alias: [...get_app_aliases(config.kit), ...get_config_aliases(config.kit)]
 		},
 		optimizeDeps: {
 			exclude: ['@sveltejs/kit']

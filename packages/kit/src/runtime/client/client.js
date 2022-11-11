@@ -1,5 +1,11 @@
 import { onMount, tick } from 'svelte';
-import { make_trackable, decode_params, normalize_path, add_data_suffix } from '../../utils/url.js';
+import {
+	make_trackable,
+	decode_pathname,
+	decode_params,
+	normalize_path,
+	add_data_suffix
+} from '../../utils/url.js';
 import { find_anchor, get_base_uri, scroll_state } from './utils.js';
 import {
 	lock_fetch,
@@ -83,10 +89,10 @@ export function create_client({ target, base, trailing_slash }) {
 	let load_cache = null;
 
 	const callbacks = {
-		/** @type {Array<(navigation: import('types').Navigation & { cancel: () => void }) => void>} */
+		/** @type {Array<(navigation: import('types').BeforeNavigate) => void>} */
 		before_navigate: [],
 
-		/** @type {Array<(navigation: import('types').Navigation) => void>} */
+		/** @type {Array<(navigation: import('types').AfterNavigate) => void>} */
 		after_navigate: []
 	};
 
@@ -309,29 +315,8 @@ export function create_client({ target, base, trailing_slash }) {
 		if (opts) {
 			const { scroll, keepfocus } = opts;
 
-			if (!keepfocus) {
-				// Reset page selection and focus
-				// We try to mimic browsers' behaviour as closely as possible by targeting the
-				// first scrollable region, but unfortunately it's not a perfect match — e.g.
-				// shift-tabbing won't immediately cycle up from the end of the page on Chromium
-				// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-				const root = document.body;
-				const tabindex = root.getAttribute('tabindex');
-
-				root.tabIndex = -1;
-				root.focus({ preventScroll: true });
-
-				setTimeout(() => {
-					getSelection()?.removeAllRanges();
-				});
-
-				// restore `tabindex` as to prevent `root` from stealing input from elements
-				if (tabindex !== null) {
-					root.setAttribute('tabindex', tabindex);
-				} else {
-					root.removeAttribute('tabindex');
-				}
-			}
+			// reset focus first, so that manual focus management can override it
+			if (!keepfocus) reset_focus();
 
 			// need to render the DOM before we can scroll to the rendered elements
 			await tick();
@@ -350,7 +335,6 @@ export function create_client({ target, base, trailing_slash }) {
 				}
 			}
 		} else {
-			// in this case we're simply invalidating
 			await tick();
 		}
 
@@ -367,6 +351,8 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
+		if (__SVELTEKIT_DEV__ && document.querySelector('vite-error-overlay')) return;
+
 		current = result.state;
 
 		const style = document.querySelector('style[data-sveltekit]');
@@ -382,7 +368,7 @@ export function create_client({ target, base, trailing_slash }) {
 		});
 		post_update();
 
-		/** @type {import('types').Navigation} */
+		/** @type {import('types').AfterNavigate} */
 		const navigation = {
 			from: null,
 			to: add_url_properties('to', {
@@ -479,6 +465,12 @@ export function create_client({ target, base, trailing_slash }) {
 			};
 
 			// TODO remove this for 1.0
+			Object.defineProperty(result.props.page, 'routeId', {
+				get() {
+					throw new Error('$page.routeId has been replaced by $page.route.id');
+				},
+				enumerable: false
+			});
 			/**
 			 * @param {string} property
 			 * @param {string} replacement
@@ -593,8 +585,8 @@ export function create_client({ target, base, trailing_slash }) {
 
 					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
 					return started
-						? subsequent_fetch(resolved, init)
-						: initial_fetch(requested, resolved, init);
+						? subsequent_fetch(requested, resolved, init)
+						: initial_fetch(requested, init);
 				},
 				setHeaders: () => {}, // noop
 				depends,
@@ -992,7 +984,7 @@ export function create_client({ target, base, trailing_slash }) {
 	function get_navigation_intent(url, invalidating) {
 		if (is_external_url(url)) return;
 
-		const path = decodeURI(url.pathname.slice(base.length) || '/');
+		const path = decode_pathname(url.pathname.slice(base.length) || '/');
 
 		for (const route of routes) {
 			const params = route.exec(path);
@@ -1052,7 +1044,10 @@ export function create_client({ target, base, trailing_slash }) {
 			}
 		};
 
-		callbacks.before_navigate.forEach((fn) => fn(cancellable));
+		if (!navigating) {
+			// Don't run the event during redirects
+			callbacks.before_navigate.forEach((fn) => fn(cancellable));
+		}
 
 		return should_block ? null : navigation;
 	}
@@ -1116,7 +1111,9 @@ export function create_client({ target, base, trailing_slash }) {
 			nav_token,
 			() => {
 				navigating = false;
-				callbacks.after_navigate.forEach((fn) => fn(navigation));
+				callbacks.after_navigate.forEach((fn) =>
+					fn(/** @type {import('types').AfterNavigate} */ (navigation))
+				);
 				stores.navigating.set(null);
 			}
 		);
@@ -1279,6 +1276,8 @@ export function create_client({ target, base, trailing_slash }) {
 					const post_update = pre_update();
 					root.$set(navigation_result.props);
 					post_update();
+
+					tick().then(reset_focus);
 				}
 			} else if (result.type === 'redirect') {
 				goto(result.location, { invalidateAll: true }, []);
@@ -1291,6 +1290,10 @@ export function create_client({ target, base, trailing_slash }) {
 				const post_update = pre_update();
 				root.$set(props);
 				post_update();
+
+				if (result.type === 'success') {
+					tick().then(reset_focus);
+				}
 			}
 		},
 
@@ -1307,7 +1310,7 @@ export function create_client({ target, base, trailing_slash }) {
 				if (!navigating) {
 					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
 					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
-					/** @type {import('types').Navigation & { cancel: () => void }} */
+					/** @type {import('types').BeforeNavigate} */
 					const navigation = {
 						from: add_url_properties('from', {
 							params: current.params,
@@ -1345,9 +1348,9 @@ export function create_client({ target, base, trailing_slash }) {
 
 			/** @param {Event} event */
 			const trigger_prefetch = (event) => {
-				const { url, options } = find_anchor(event);
-				if (url && options.prefetch) {
-					if (is_external_url(url)) return;
+				const { url, options, has } = find_anchor(event);
+				if (url && options.prefetch && !is_external_url(url)) {
+					if (options.reload || has.rel_external || has.target || has.download) return;
 					prefetch(url);
 				}
 			};
@@ -1379,7 +1382,7 @@ export function create_client({ target, base, trailing_slash }) {
 				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 				if (event.defaultPrevented) return;
 
-				const { a, url, options } = find_anchor(event);
+				const { a, url, options, has } = find_anchor(event);
 				if (!a || !url) return;
 
 				const is_svg_a_element = a instanceof SVGAElement;
@@ -1399,15 +1402,10 @@ export function create_client({ target, base, trailing_slash }) {
 				)
 					return;
 
-				if (a.hasAttribute('download')) return;
+				if (has.download) return;
 
 				// Ignore the following but fire beforeNavigate
-				const rel = (a.getAttribute('rel') || '').split(/\s+/);
-				if (
-					rel.includes('external') ||
-					options.reload ||
-					(is_svg_a_element ? a.target.baseVal : a.target)
-				) {
+				if (options.reload || has.rel_external || has.target) {
 					const navigation = before_navigate({ url, type: 'link' });
 					if (!navigation) {
 						event.preventDefault();
@@ -1670,6 +1668,36 @@ function pre_update() {
 	}
 
 	return () => {};
+}
+
+function reset_focus() {
+	const autofocus = document.querySelector('[autofocus]');
+	if (autofocus) {
+		// @ts-ignore
+		autofocus.focus();
+	} else {
+		// Reset page selection and focus
+		// We try to mimic browsers' behaviour as closely as possible by targeting the
+		// first scrollable region, but unfortunately it's not a perfect match — e.g.
+		// shift-tabbing won't immediately cycle up from the end of the page on Chromium
+		// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
+		const root = document.body;
+		const tabindex = root.getAttribute('tabindex');
+
+		root.tabIndex = -1;
+		root.focus({ preventScroll: true });
+
+		setTimeout(() => {
+			getSelection()?.removeAllRanges();
+		});
+
+		// restore `tabindex` as to prevent `root` from stealing input from elements
+		if (tabindex !== null) {
+			root.setAttribute('tabindex', tabindex);
+		} else {
+			root.removeAttribute('tabindex');
+		}
+	}
 }
 
 if (__SVELTEKIT_DEV__) {

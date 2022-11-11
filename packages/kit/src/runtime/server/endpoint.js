@@ -1,6 +1,5 @@
-import { json } from '../../exports/index.js';
 import { negotiate } from '../../utils/http.js';
-import { Redirect, ValidationError } from '../control.js';
+import { Redirect } from '../control.js';
 import { check_method_names, method_not_allowed } from './utils.js';
 
 /**
@@ -64,8 +63,6 @@ export async function render_endpoint(event, mod, state) {
 				status: error.status,
 				headers: { location: error.location }
 			});
-		} else if (error instanceof ValidationError) {
-			return json(error.data, { status: error.status });
 		}
 
 		throw error;

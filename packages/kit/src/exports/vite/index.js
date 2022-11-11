@@ -14,10 +14,10 @@ import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { find_deps, get_default_build_config } from './build/utils.js';
 import { preview } from './preview/index.js';
-import { get_aliases, get_env } from './utils.js';
-import { prevent_illegal_rollup_imports } from './graph_analysis/index.js';
+import { get_config_aliases, get_app_aliases, get_env } from './utils.js';
 import { fileURLToPath } from 'node:url';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
+import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 
 const cwd = process.cwd();
 
@@ -257,7 +257,7 @@ function kit() {
 				},
 				publicDir: svelte_config.kit.files.assets,
 				resolve: {
-					alias: get_aliases(svelte_config.kit)
+					alias: [...get_app_aliases(svelte_config.kit), ...get_config_aliases(svelte_config.kit)]
 				},
 				root: cwd,
 				server: {
@@ -292,7 +292,22 @@ function kit() {
 			if (id.startsWith('$env/')) return `\0${id}`;
 		},
 
-		async load(id) {
+		async load(id, options) {
+			if (options?.ssr === false) {
+				const normalized_cwd = vite.normalizePath(cwd);
+				const normalized_lib = vite.normalizePath(svelte_config.kit.files.lib);
+				if (
+					is_illegal(id, {
+						cwd: normalized_cwd,
+						node_modules: vite.normalizePath(path.join(cwd, 'node_modules')),
+						server: vite.normalizePath(path.join(normalized_lib, 'server'))
+					})
+				) {
+					const relative = normalize_id(id, normalized_lib, normalized_cwd);
+					throw new Error(`Cannot import ${relative} into client-side code`);
+				}
+			}
+
 			switch (id) {
 				case '\0$env/static/private':
 					return create_static_module('$env/static/private', env.private);
@@ -330,10 +345,11 @@ function kit() {
 			completed_build = false;
 
 			if (is_build) {
-				rimraf(paths.build_dir);
+				if (!vite_config.build.watch) {
+					rimraf(paths.build_dir);
+					rimraf(paths.output_dir);
+				}
 				mkdirp(paths.build_dir);
-
-				rimraf(paths.output_dir);
 				mkdirp(paths.output_dir);
 			}
 		},
@@ -350,20 +366,17 @@ function kit() {
 					return;
 				}
 
+				const guard = module_guard(this, {
+					cwd: vite.normalizePath(process.cwd()),
+					lib: vite.normalizePath(svelte_config.kit.files.lib)
+				});
+
 				manifest_data.nodes.forEach((_node, i) => {
 					const id = vite.normalizePath(
 						path.resolve(svelte_config.kit.outDir, `generated/nodes/${i}.js`)
 					);
 
-					const module_node = this.getModuleInfo(id);
-
-					if (module_node) {
-						prevent_illegal_rollup_imports(
-							this.getModuleInfo.bind(this),
-							module_node,
-							vite.normalizePath(svelte_config.kit.files.lib)
-						);
-					}
+					guard.check(id);
 				});
 
 				const verbose = vite_config.logLevel === 'info';
@@ -408,7 +421,7 @@ function kit() {
 					server
 				};
 
-				const manifest_path = `${paths.output_dir}/server/manifest.js`;
+				const manifest_path = `${paths.output_dir}/server/manifest-full.js`;
 				fs.writeFileSync(
 					manifest_path,
 					`export const manifest = ${generate_manifest({
@@ -431,6 +444,7 @@ function kit() {
 						script,
 						[
 							vite_config.build.outDir,
+							manifest_path,
 							results_path,
 							'' + verbose,
 							JSON.stringify({ ...env.private, ...env.public })
@@ -458,6 +472,16 @@ function kit() {
 						}
 					});
 				});
+
+				// generate a new manifest that doesn't include prerendered pages
+				fs.writeFileSync(
+					`${paths.output_dir}/server/manifest.js`,
+					`export const manifest = ${generate_manifest({
+						build_data,
+						relative_path: '.',
+						routes: manifest_data.routes.filter((route) => prerender_map.get(route.id) !== true)
+					})};\n`
+				);
 
 				if (options.service_worker_entry_file) {
 					if (svelte_config.kit.paths.assets) {

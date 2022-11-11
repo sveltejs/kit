@@ -96,15 +96,14 @@ function merge_into(a, b) {
 
 /**
  * Transforms kit.alias to a valid vite.resolve.alias array.
+ *
  * Related to tsconfig path alias creation.
  *
  * @param {import('types').ValidatedKitConfig} config
  * */
-export function get_aliases(config) {
+export function get_config_aliases(config) {
 	/** @type {import('vite').Alias[]} */
 	const alias = [
-		{ find: '__GENERATED__', replacement: path.posix.join(config.outDir, 'generated') },
-		{ find: '$app', replacement: `${runtime_directory}/app` },
 		// For now, we handle `$lib` specially here rather than make it a default value for
 		// `config.kit.alias` since it has special meaning for packaging, etc.
 		{ find: '$lib', replacement: config.files.lib }
@@ -131,6 +130,21 @@ export function get_aliases(config) {
 			alias.push({ find: key, replacement: path.resolve(value) });
 		}
 	}
+
+	return alias;
+}
+
+/**
+ * Returns Vite aliases for generated and runtime files.
+ *
+ * @param {import('types').ValidatedKitConfig} config
+ * */
+export function get_app_aliases(config) {
+	/** @type {import('vite').Alias[]} */
+	const alias = [
+		{ find: '__GENERATED__', replacement: path.posix.join(config.outDir, 'generated') },
+		{ find: '$app', replacement: `${runtime_directory}/app` }
+	];
 
 	return alias;
 }
