@@ -328,6 +328,12 @@ test.describe('Encoded paths', () => {
 		await clicknav('[href="/encoded/@svelte"]');
 		expect(await page.textContent('h1')).toBe('@svelte');
 	});
+
+	test('allows characters to be represented as HTML entities', async ({ page }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/:-)"]');
+		expect(await page.textContent('h1')).toBe(':-)');
+	});
 });
 
 test.describe('$env', () => {
