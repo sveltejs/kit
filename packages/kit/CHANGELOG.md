@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.544
+
+### Patch Changes
+
+- [breaking] narrow down possible status codes for redirects to 300-308 ([#7615](https://github.com/sveltejs/kit/pull/7615))
+
+- [feat] add fallback component for layouts without one ([#7619](https://github.com/sveltejs/kit/pull/7619))
+
 ## 1.0.0-next.543
 
 ### Patch Changes
