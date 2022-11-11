@@ -181,6 +181,27 @@ test('succeeds when routes does not exist', () => {
 	]);
 });
 
+test('encodes invalid characters', () => {
+	const { nodes, routes } = create('samples/encoding');
+
+	const hash = { component: 'samples/encoding/&num;/+page.svelte' };
+	const question_mark = { component: 'samples/encoding/&quest;/+page.svelte' };
+	const quote = { component: 'samples/encoding/&quot;/+page.svelte' };
+
+	assert.equal(nodes.map(simplify_node), [
+		default_layout,
+		default_error,
+		hash,
+		question_mark,
+		quote
+	]);
+
+	assert.equal(
+		routes.map((p) => p.pattern),
+		[/^\/$/, /^\/%23\/?$/, /^\/%3[Ff]\/?$/, /^\/"\/?$/]
+	);
+});
+
 test('sorts routes correctly', () => {
 	const expected = [
 		'/',
