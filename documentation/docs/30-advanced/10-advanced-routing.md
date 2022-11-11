@@ -123,7 +123,25 @@ src/routes/[...catchall]/+page.svelte
 
 ### Encoding
 
-Directories should be named in URI-decoded form. E.g. name your directory `@[username]` and not `%40[username]`. There are some characters which may be illegal to create on a file system in decoded form. Such characters may be handled using [parameter matching](#matching).
+Some characters can't be used on the filesystem — `/` on Linux and Mac, `\ / : * ? " < > |` on Windows. Additionally, the `[ ] ( )` characters have special meaning to SvelteKit, so these also can't be used directly as part of your route.
+
+To use these characters in your routes, you can use HTML entities:
+
+- `\` — `&bsol;`
+- `/` — `&sol;`
+- `:` — `&colon;`
+- `*` — `&ast;`
+- `?` — `&quest;`
+- `"` — `&quot;`
+- `<` — `&lt;`
+- `>` — `&gt;`
+- `|` — `&vert;`
+- `[` — `&lbrack;`
+- `]` — `&rbrack;`
+- `(` — `&lpar;`
+- `)` — `&rpar;`
+
+For example, to create a `/:-)` route, you would create a `src/routes/&colon;-&rpar;/+page.svelte` file.
 
 ### Advanced layouts
 
