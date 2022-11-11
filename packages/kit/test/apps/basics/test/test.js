@@ -323,13 +323,7 @@ test.describe('Encoded paths', () => {
 		});
 	});
 
-	test('allows %-encoded characters in directory names', async ({ page, clicknav }) => {
-		await page.goto('/encoded');
-		await clicknav('[href="/encoded/$SVLT"]');
-		expect(await page.textContent('h1')).toBe('$SVLT');
-	});
-
-	test('allows %-encoded characters in filenames', async ({ page, clicknav }) => {
+	test('allows non-ASCII character in parameterized route segment', async ({ page, clicknav }) => {
 		await page.goto('/encoded');
 		await clicknav('[href="/encoded/@svelte"]');
 		expect(await page.textContent('h1')).toBe('@svelte');

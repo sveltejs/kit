@@ -123,27 +123,7 @@ src/routes/[...catchall]/+page.svelte
 
 ### Encoding
 
-Directory names are URI-decoded, meaning that (for example) a directory like `%40[username]` would match characters beginning with `@`:
-
-```js
-// @filename: ambient.d.ts
-declare global {
-	const assert: {
-		equal: (a: any, b: any) => boolean;
-	};
-}
-
-export {};
-
-// @filename: index.js
-// ---cut---
-assert.equal(
-	decodeURIComponent('%40[username]'),
-	'@[username]'
-);
-```
-
-To express a `%` character, use `%25`, otherwise the result will be malformed.
+Directories should be named in URI-decoded form. E.g. name your directory `@[username]` and not `%40[username]`. There are some characters which may be illegal to create on a file system in decoded form. Such characters may be handled using [parameter matching](#matching).
 
 ### Advanced layouts
 

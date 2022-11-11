@@ -181,35 +181,6 @@ test('succeeds when routes does not exist', () => {
 	]);
 });
 
-// TODO some characters will need to be URL-encoded in the filename
-test('encodes invalid characters', () => {
-	const { nodes, routes } = create('samples/encoding');
-
-	// had to remove ? and " because windows
-
-	// const quote = 'samples/encoding/".svelte';
-	const hash = { component: 'samples/encoding/%23/+page.svelte' };
-	// const question_mark = 'samples/encoding/?.svelte';
-
-	assert.equal(nodes.map(simplify_node), [
-		default_layout,
-		default_error,
-		// quote,
-		hash
-		// question_mark
-	]);
-
-	assert.equal(
-		routes.map((p) => p.pattern),
-		[
-			/^\/$/,
-			// /^\/%22\/?$/,
-			/^\/%23\/?$/
-			// /^\/%3F\/?$/
-		]
-	);
-});
-
 test('sorts routes correctly', () => {
 	const expected = [
 		'/',
