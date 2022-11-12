@@ -95,6 +95,20 @@ declare module '$app/environment' {
 declare module '$app/forms' {
 	import type { ActionResult } from '@sveltejs/kit';
 
+	export type ActionCallback<
+		Success extends Record<string, unknown> | undefined = Record<string, any>,
+		Invalid extends Record<string, unknown> | undefined = Record<string, any>
+	> = (opts: {
+		form: HTMLFormElement;
+		action: URL;
+		result: ActionResult<Success, Invalid>;
+		/**
+		 * Call this to get the default behavior of a form submission response.
+		 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
+		 */
+		update(options?: { reset: boolean }): Promise<void>;
+	}) => void;
+
 	export type SubmitFunction<
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
@@ -104,18 +118,7 @@ declare module '$app/forms' {
 		form: HTMLFormElement;
 		controller: AbortController;
 		cancel(): void;
-	}) =>
-		| void
-		| ((opts: {
-				form: HTMLFormElement;
-				action: URL;
-				result: ActionResult<Success, Invalid>;
-				/**
-				 * Call this to get the default behavior of a form submission response.
-				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
-				 */
-				update(options?: { reset: boolean }): Promise<void>;
-		  }) => void);
+	}) => void | ActionCallback<Success, Invalid> | Promise<void | ActionCallback<Success, Invalid>>;
 
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
