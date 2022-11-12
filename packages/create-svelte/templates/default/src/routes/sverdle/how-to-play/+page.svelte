@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>How to play Sverdle</title>
+	<meta name="description" content="How to play Sverdle" />
+</svelte:head>
+
 <div class="text-column">
 	<h1>How to play Sverdle</h1>
 
@@ -70,7 +75,7 @@
 
 	.example {
 		display: flex;
-		justify-content: start;
+		justify-content: flex-start;
 		margin: 1rem 0;
 		gap: 0.2rem;
 	}

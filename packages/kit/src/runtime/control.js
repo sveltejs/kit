@@ -58,11 +58,11 @@ export function error(status, message) {
 /**
  * Creates a `Redirect` object. If thrown during request handling, SvelteKit will
  * return a redirect response.
- * @param {number} status
+ * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status
  * @param {string} location
  */
 export function redirect(status, location) {
-	if (isNaN(status) || status < 300 || status > 399) {
+	if (isNaN(status) || status < 300 || status > 308) {
 		throw new Error('Invalid status code');
 	}
 

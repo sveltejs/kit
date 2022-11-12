@@ -1,7 +1,7 @@
 import path from 'path';
 import colors from 'kleur';
 import { fileURLToPath } from 'url';
-import { posixify } from '../utils/filesystem.js';
+import { posixify, to_fs } from '../utils/filesystem.js';
 
 /**
  * Resolved path of the `runtime` directory
@@ -23,10 +23,7 @@ export const runtime_prefix = posixify_path(runtime_directory);
  */
 export const runtime_base = runtime_directory.startsWith(process.cwd())
 	? `/${path.relative('.', runtime_directory)}`
-	: `/@fs${
-			// Windows/Linux separation - Windows starts with a drive letter, we need a / in front there
-			runtime_directory.startsWith('/') ? '' : '/'
-	  }${runtime_directory}`;
+	: to_fs(runtime_directory);
 
 /** @param {string} str */
 function posixify_path(str) {

@@ -11,14 +11,14 @@ export function parse(nodes, server_loads, dictionary, matchers) {
 	const layouts_with_server_load = new Set(server_loads);
 
 	return Object.entries(dictionary).map(([id, [leaf, layouts, errors]]) => {
-		const { pattern, names, types } = parse_route_id(id);
+		const { pattern, names, types, optional } = parse_route_id(id);
 
 		const route = {
 			id,
 			/** @param {string} path */
 			exec: (path) => {
 				const match = pattern.exec(path);
-				if (match) return exec(match, names, types, matchers);
+				if (match) return exec(match, { names, types, optional }, matchers);
 			},
 			errors: [1, ...(errors || [])].map((n) => nodes[n]),
 			layouts: [0, ...(layouts || [])].map(create_layout_loader),

@@ -95,6 +95,8 @@ function get_raw_body(req, body_size_limit) {
 /** @type {import('@sveltejs/kit/node').getRequest} */
 export async function getRequest({ request, base, bodySizeLimit }) {
 	return new Request(base + request.url, {
+		// @ts-expect-error
+		duplex: 'half',
 		method: request.method,
 		headers: /** @type {Record<string, string>} */ (request.headers),
 		body: get_raw_body(request, bodySizeLimit)
@@ -116,6 +118,15 @@ export async function setResponse(res, response) {
 	res.writeHead(response.status, headers);
 
 	if (!response.body) {
+		res.end();
+		return;
+	}
+
+	if (response.body.locked) {
+		res.write(
+			'Fatal error: Response body is locked. ' +
+				`This can happen when the response was already read (for example through 'response.json()' or 'response.text()').`
+		);
 		res.end();
 		return;
 	}

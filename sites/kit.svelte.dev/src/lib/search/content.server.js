@@ -1,4 +1,6 @@
 import fs from 'fs';
+import path from 'path';
+import glob from 'tiny-glob/sync.js';
 import { extract_frontmatter, transform } from '../docs/server/markdown';
 import { render_modules } from '../docs/server/modules';
 import { slugify } from '../docs/server';
@@ -24,8 +26,9 @@ export function content() {
 	for (const category of categories) {
 		const breadcrumbs = category.label ? [category.label] : [];
 
-		for (const file of fs.readdirSync(`../../documentation/${category.slug}`)) {
-			const match = /\d{2}-(.+)\.md/.exec(file);
+		for (const file of glob('**/*.md', { cwd: `../../documentation/${category.slug}` })) {
+			const basename = path.basename(file);
+			const match = /\d{2}-(.+)\.md/.exec(basename);
 			if (!match) continue;
 
 			const slug = match[1];

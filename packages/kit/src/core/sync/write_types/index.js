@@ -147,7 +147,7 @@ export async function write_types(config, manifest_data, file) {
 		return;
 	}
 
-	const id = posixify(path.relative(config.kit.files.routes, path.dirname(file)));
+	const id = '/' + posixify(path.relative(config.kit.files.routes, path.dirname(file)));
 
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return; // this shouldn't ever happen
@@ -195,8 +195,12 @@ function update_types(config, routes, route, to_delete = new Set()) {
 	// Makes sure a type is "repackaged" and therefore more readable
 	declarations.push('type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;');
 	declarations.push(
-		`type RouteParams = { ${route.names.map((param) => `${param}: string`).join('; ')} }`
+		`type RouteParams = { ${route.names
+			.map((param, idx) => `${param}${route.optional[idx] ? '?' : ''}: string`)
+			.join('; ')} }`
 	);
+
+	declarations.push(`type RouteId = '${route.id}';`);
 
 	// These could also be placed in our public types, but it would bloat them unnecessarily and we may want to change these in the future
 	if (route.layout || route.leaf) {
@@ -213,6 +217,11 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		);
 		// null & {} == null, we need to prevent that in some situations
 		declarations.push(`type EnsureDefined<T> = T extends null | undefined ? {} : T;`);
+		// Takes a union type and returns a union type where each type also has all properties
+		// of all possible types (typed as undefined), making accessing them more ergonomic
+		declarations.push(
+			`type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;`
+		);
 	}
 
 	if (route.leaf) {
@@ -242,17 +251,25 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		}
 
 		if (route.leaf.server) {
-			exports.push(`export type Action = Kit.Action<RouteParams>`);
-			exports.push(`export type Actions = Kit.Actions<RouteParams>`);
+			exports.push(
+				`export type Action<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Action<RouteParams, OutputData, RouteId>`
+			);
+			exports.push(
+				`export type Actions<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Actions<RouteParams, OutputData, RouteId>`
+			);
 		}
 	}
 
 	if (route.layout) {
 		let all_pages_have_load = true;
 		const layout_params = new Set();
+		const ids = ['RouteId'];
+
 		route.layout.child_pages?.forEach((page) => {
 			const leaf = routes.get(page);
 			if (leaf) {
+				if (leaf.route.page) ids.push(`"${leaf.route.id}"`);
+
 				for (const name of leaf.route.names) {
 					layout_params.add(name);
 				}
@@ -272,6 +289,13 @@ function update_types(config, routes, route, to_delete = new Set()) {
 				all_pages_have_load = false;
 			}
 		});
+
+		if (route.id === '/') {
+			// root layout is used for fallback error page, where ID can be null
+			ids.push('null');
+		}
+
+		declarations.push(`type LayoutRouteId = ${ids.join(' | ')}`);
 
 		declarations.push(
 			`type LayoutParams = RouteParams & { ${Array.from(layout_params).map(
@@ -299,11 +323,11 @@ function update_types(config, routes, route, to_delete = new Set()) {
 	}
 
 	if (route.endpoint) {
-		exports.push(`export type RequestHandler = Kit.RequestHandler<RouteParams>;`);
+		exports.push(`export type RequestHandler = Kit.RequestHandler<RouteParams, RouteId>;`);
 	}
 
 	if (route.leaf?.server || route.layout?.server || route.endpoint) {
-		exports.push(`export type RequestEvent = Kit.RequestEvent<RouteParams>;`);
+		exports.push(`export type RequestEvent = Kit.RequestEvent<RouteParams, RouteId>;`);
 	}
 
 	const output = [imports.join('\n'), declarations.join('\n'), exports.join('\n')]
@@ -328,6 +352,8 @@ function update_types(config, routes, route, to_delete = new Set()) {
 function process_node(node, outdir, is_page, proxies, all_pages_have_load = true) {
 	const params = `${is_page ? 'Route' : 'Layout'}Params`;
 	const prefix = is_page ? 'Page' : 'Layout';
+
+	const route_id = is_page ? 'RouteId' : 'LayoutRouteId';
 
 	/** @type {string[]} */
 	const declarations = [];
@@ -360,7 +386,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 				? `Partial<App.PageData> & Record<string, any> | void`
 				: `OutputDataShape<${parent_type}>`;
 		exports.push(
-			`export type ${prefix}ServerLoad<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.ServerLoad<${params}, ${parent_type}, OutputData>;`
+			`export type ${prefix}ServerLoad<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.ServerLoad<${params}, ${parent_type}, OutputData, ${route_id}>;`
 		);
 
 		exports.push(`export type ${prefix}ServerLoadEvent = Parameters<${prefix}ServerLoad>[0];`);
@@ -400,14 +426,14 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 			proxy
 		);
 
-		data = `Expand<Omit<${parent_type}, keyof ${type}> & EnsureDefined<${type}>>`;
+		data = `Expand<Omit<${parent_type}, keyof ${type}> & OptionalUnion<EnsureDefined<${type}>>>`;
 
 		const output_data_shape =
 			!is_page && all_pages_have_load
 				? `Partial<App.PageData> & Record<string, any> | void`
 				: `OutputDataShape<${parent_type}>`;
 		exports.push(
-			`export type ${prefix}Load<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.Load<${params}, ${prefix}ServerData, ${parent_type}, OutputData>;`
+			`export type ${prefix}Load<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.Load<${params}, ${prefix}ServerData, ${parent_type}, OutputData, ${route_id}>;`
 		);
 
 		exports.push(`export type ${prefix}LoadEvent = Parameters<${prefix}Load>[0];`);
@@ -436,7 +462,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 					? `./proxy${replace_ext_with_js(path.basename(file_path))}`
 					: path_to_original(outdir, file_path);
 				const type = `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('${from}').load>>>`;
-				return expand ? `Expand<${type}>` : type;
+				return expand ? `Expand<OptionalUnion<EnsureDefined<${type}>>>` : type;
 			} else {
 				return fallback;
 			}

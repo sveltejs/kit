@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.99",
+	"version": "1.0.0-next.100",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -33,18 +33,18 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"@types/node": "^16.11.36",
-		"c8": "^7.11.3",
+		"@types/node": "^16.11.68",
+		"c8": "^7.12.0",
 		"polka": "^1.0.0-next.22",
 		"rimraf": "^3.0.2",
 		"sirv": "^2.0.2",
-		"typescript": "^4.8.2",
-		"uvu": "^0.5.3"
+		"typescript": "^4.8.4",
+		"uvu": "^0.5.6"
 	},
 	"dependencies": {
-		"@rollup/plugin-commonjs": "^23.0.0",
-		"@rollup/plugin-json": "^5.0.0",
-		"@rollup/plugin-node-resolve": "^15.0.0",
-		"rollup": "^2.78.1"
+		"@rollup/plugin-commonjs": "^23.0.2",
+		"@rollup/plugin-json": "^5.0.1",
+		"@rollup/plugin-node-resolve": "^15.0.1",
+		"rollup": "^2.79.1"
 	}
 }

@@ -1,13 +1,13 @@
-import * as devalue from 'devalue';
-import { DATA_SUFFIX } from '../../../constants.js';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
+import { add_data_suffix } from '../../../utils/url.js';
 import { HttpError, Redirect } from '../../control.js';
 import {
 	get_option,
 	redirect_response,
 	static_error_page,
-	handle_error_and_jsonify
+	handle_error_and_jsonify,
+	serialize_data_node
 } from '../utils.js';
 import {
 	handle_action_json_request,
@@ -76,7 +76,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 
 		const should_prerender_data = nodes.some((node) => node?.server);
-		const data_pathname = event.url.pathname.replace(/\/$/, '') + DATA_SUFFIX;
+		const data_pathname = add_data_suffix(event.url.pathname);
 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
@@ -208,7 +208,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 					if (err instanceof Redirect) {
 						if (state.prerendering && should_prerender_data) {
-							const body = devalue.stringify({
+							const body = JSON.stringify({
 								type: 'redirect',
 								location: err.location
 							});
@@ -263,10 +263,9 @@ export async function render_page(event, route, page, options, state, resolve_op
 		}
 
 		if (state.prerendering && should_prerender_data) {
-			const body = devalue.stringify({
-				type: 'data',
-				nodes: branch.map((branch_node) => branch_node?.server_data)
-			});
+			const body = `{"type":"data","nodes":[${branch
+				.map((node) => serialize_data_node(node?.server_data))
+				.join(',')}]}`;
 
 			state.prerendering.dependencies.set(data_pathname, {
 				response: new Response(body),

@@ -4,6 +4,7 @@ import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
+import { clarify_devalue_error } from '../utils.js';
 
 // TODO rename this function/module
 
@@ -93,7 +94,7 @@ export async function render_response({
 		props.page = {
 			error,
 			params: /** @type {Record<string, any>} */ (event.params),
-			routeId: event.routeId,
+			route: event.route,
 			status,
 			url: event.url,
 			data,
@@ -171,19 +172,33 @@ export async function render_response({
 	const serialized = { data: '', form: 'null' };
 
 	try {
-		serialized.data = devalue.uneval(branch.map(({ server_data }) => server_data));
+		serialized.data = `[${branch
+			.map(({ server_data }) => {
+				if (server_data?.type === 'data') {
+					const data = devalue.uneval(server_data.data);
+
+					const uses = [];
+					if (server_data.uses.dependencies.size > 0) {
+						uses.push(`dependencies:${s(Array.from(server_data.uses.dependencies))}`);
+					}
+
+					if (server_data.uses.params.size > 0) {
+						uses.push(`params:${s(Array.from(server_data.uses.params))}`);
+					}
+
+					if (server_data.uses.parent) uses.push(`parent:1`);
+					if (server_data.uses.route) uses.push(`route:1`);
+					if (server_data.uses.url) uses.push(`url:1`);
+
+					return `{type:"data",data:${data},uses:{${uses.join(',')}}}`;
+				}
+
+				return s(server_data);
+			})
+			.join(',')}]`;
 	} catch (e) {
-		// If we're here, the data could not be serialized with devalue
-		// TODO if we wanted to get super fancy we could track down the origin of the `load`
-		// function, but it would mean passing more stuff around than we currently do
 		const error = /** @type {any} */ (e);
-		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		if (match) {
-			throw new Error(
-				`Data returned from \`load\` while rendering ${event.routeId} is not serializable: ${error.message} (data.${match[2]})`
-			);
-		}
-		throw error;
+		throw new Error(clarify_devalue_error(event, error));
 	}
 
 	if (form_value) {
@@ -295,10 +310,10 @@ export async function render_response({
 				env: ${s(options.public_env)},
 				hydrate: ${page_config.ssr ? `{
 					status: ${status},
-					error: ${s(error)},
+					error: ${devalue.uneval(error)},
 					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 					params: ${devalue.uneval(event.params)},
-					routeId: ${s(event.routeId)},
+					route: ${s(event.route)},
 					data: ${serialized.data},
 					form: ${serialized.form}
 				}` : 'null'},
@@ -369,12 +384,14 @@ export async function render_response({
 	}
 
 	if (options.service_worker) {
+		const opts = options.dev ? `, { type: 'module' }` : '';
+
 		// we use an anonymous function instead of an arrow function to support
 		// older browsers (https://github.com/sveltejs/kit/pull/5417)
 		const init_service_worker = `
 			if ('serviceWorker' in navigator) {
 				addEventListener('load', function () {
-					navigator.serviceWorker.register('${prefixed('service-worker.js')}');
+					navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
 				});
 			}
 		`;

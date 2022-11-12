@@ -103,7 +103,7 @@ declare module '$app/forms' {
 		data: FormData;
 		form: HTMLFormElement;
 		controller: AbortController;
-		cancel: () => void;
+		cancel(): void;
 	}) =>
 		| void
 		| ((opts: {
@@ -114,7 +114,7 @@ declare module '$app/forms' {
 				 * Call this to get the default behavior of a form submission response.
 				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
 				 */
-				update: (options?: { reset: boolean }) => Promise<void>;
+				update(options?: { reset: boolean }): Promise<void>;
 		  }) => void);
 
 	/**
@@ -144,7 +144,7 @@ declare module '$app/forms' {
 		 * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
 		 */
 		submit?: SubmitFunction<Success, Invalid>
-	): { destroy: () => void };
+	): { destroy(): void };
 
 	/**
 	 * This action updates the `form` property of the current page with the given data and updates `$page.status`.
@@ -171,7 +171,7 @@ declare module '$app/forms' {
  * ```
  */
 declare module '$app/navigation' {
-	import { Navigation } from '@sveltejs/kit';
+	import { BeforeNavigate, AfterNavigate } from '@sveltejs/kit';
 
 	/**
 	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
@@ -182,14 +182,32 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
 	 *
 	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
-	 * @param opts.replaceState If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
-	 * @param opts.noscroll If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
-	 * @param opts.keepfocus If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
-	 * @param opts.state The state of the new/updated history entry
+	 * @param opts Options related to the navigation
 	 */
 	export function goto(
 		url: string | URL,
-		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
+		opts?: {
+			/**
+			 * If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
+			 */
+			replaceState?: boolean;
+			/**
+			 * If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
+			 */
+			noScroll?: boolean;
+			/**
+			 * If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
+			 */
+			keepFocus?: boolean;
+			/**
+			 * The state of the new/updated history entry
+			 */
+			state?: any;
+			/**
+			 * If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#invalidation for more info on invalidation.
+			 */
+			invalidateAll?: boolean;
+		}
 	): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
@@ -239,20 +257,18 @@ declare module '$app/navigation' {
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
 	 * Calling `cancel()` will prevent the navigation from completing.
 	 *
-	 * When navigating to an external URL, `navigation.to` will be `null`.
+	 * When a navigation isn't client side, `navigation.to.routeId` will be `null`.
 	 *
 	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */
-	export function beforeNavigate(
-		callback: (navigation: Navigation & { cancel: () => void }) => void
-	): void;
+	export function beforeNavigate(callback: (navigation: BeforeNavigate) => void): void;
 
 	/**
 	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
 	 *
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */
-	export function afterNavigate(callback: (navigation: Navigation) => void): void;
+	export function afterNavigate(callback: (navigation: AfterNavigate) => void): void;
 }
 
 /**
@@ -303,7 +319,7 @@ declare module '$app/stores' {
 	/**
 	 *  A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 */
-	export const updated: Readable<boolean> & { check: () => boolean };
+	export const updated: Readable<boolean> & { check(): boolean };
 
 	/**
 	 * A function that returns all of the contextual stores. On the server, this must be called during component initialization.
@@ -326,6 +342,7 @@ declare module '$app/stores' {
 declare module '$service-worker' {
 	/**
 	 * An array of URL strings representing the files generated by Vite, suitable for caching with `cache.addAll(build)`.
+	 * During development, this is be an empty array.
 	 */
 	export const build: string[];
 	/**
@@ -334,6 +351,7 @@ declare module '$service-worker' {
 	export const files: string[];
 	/**
 	 * An array of pathnames corresponding to prerendered pages and endpoints.
+	 * During development, this is be an empty array.
 	 */
 	export const prerendered: string[];
 	/**

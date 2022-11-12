@@ -3,7 +3,7 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { validate_config } from '../../core/config/index.js';
 import { posixify } from '../../utils/filesystem.js';
-import { deep_merge, get_aliases, merge_vite_configs } from './utils.js';
+import { deep_merge, get_app_aliases, get_config_aliases, merge_vite_configs } from './utils.js';
 
 test('basic test no conflicts', async () => {
 	const merged = deep_merge(
@@ -211,7 +211,10 @@ test('transform kit.alias to resolve.alias', () => {
 		}
 	});
 
-	const transformed = get_aliases(config.kit).map((entry) => {
+	// combine aliases from config with generated and runtime aliases
+	const aliases = [...get_app_aliases(config.kit), ...get_config_aliases(config.kit)];
+
+	const transformed = aliases.map((entry) => {
 		const replacement = posixify(path.relative('.', entry.replacement));
 
 		return {

@@ -8,6 +8,9 @@ export function parse_route_id(id) {
 	/** @type {string[]} */
 	const types = [];
 
+	/** @type {boolean[]} */
+	const optional = [];
+
 	// `/foo` should get an optional trailing slash, `/foo.json` should not
 	// const add_trailing_slash = !/\.[a-z]+$/.test(key);
 	let add_trailing_slash = true;
@@ -16,10 +19,7 @@ export function parse_route_id(id) {
 		id === '/'
 			? /^\/$/
 			: new RegExp(
-					`^${id
-						.split(/(?:\/|$)/)
-						.slice(1)
-						.filter(affects_path)
+					`^${get_route_segments(id)
 						.map((segment, i, segments) => {
 							const decoded_segment = decodeURIComponent(segment);
 							// special case — /[...rest]/ could contain zero segments
@@ -27,6 +27,7 @@ export function parse_route_id(id) {
 							if (rest_match) {
 								names.push(rest_match[1]);
 								types.push(rest_match[2]);
+								optional.push(false);
 								return '(?:/(.*))?';
 							}
 							// special case — /[[optional]]/ could contain zero segments
@@ -34,6 +35,7 @@ export function parse_route_id(id) {
 							if (optional_match) {
 								names.push(optional_match[1]);
 								types.push(optional_match[2]);
+								optional.push(true);
 								return '(?:/([^/]+))?';
 							}
 
@@ -54,14 +56,15 @@ export function parse_route_id(id) {
 											);
 										}
 
-										const [, optional, rest, name, type] = match;
+										const [, is_optional, is_rest, name, type] = match;
 										// It's assumed that the following invalid route id cases are already checked
 										// - unbalanced brackets
 										// - optional param following rest param
 
 										names.push(name);
 										types.push(type);
-										return rest ? '(.*?)' : optional ? '([^/]*)?' : '([^/]+?)';
+										optional.push(!!is_optional);
+										return is_rest ? '(.*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
 									}
 
 									if (is_last && content.includes('.')) add_trailing_slash = false;
@@ -69,11 +72,6 @@ export function parse_route_id(id) {
 									return (
 										content // allow users to specify characters on the file system in an encoded manner
 											.normalize()
-											// We use [ and ] to denote parameters, so users must encode these on the file
-											// system to match against them. We don't decode all characters since others
-											// can already be epressed and so that '%' can be easily used directly in filenames
-											.replace(/%5[Bb]/g, '[')
-											.replace(/%5[Dd]/g, ']')
 											// '#', '/', and '?' can only appear in URL path segments in an encoded manner.
 											// They will not be touched by decodeURI so need to be encoded here, so
 											// that we can match against them.
@@ -91,40 +89,56 @@ export function parse_route_id(id) {
 						.join('')}${add_trailing_slash ? '/?' : ''}$`
 			  );
 
-	return { pattern, names, types };
+	return { pattern, names, types, optional };
 }
 
 /**
  * Returns `false` for `(group)` segments
  * @param {string} segment
  */
-export function affects_path(segment) {
+function affects_path(segment) {
 	return !/^\([^)]+\)$/.test(segment);
 }
 
 /**
+ * Splits a route id into its segments, removing segments that
+ * don't affect the path (i.e. groups). The root route is represented by `/`
+ * and will be returned as `['']`.
+ * @param {string} route
+ * @returns string[]
+ */
+export function get_route_segments(route) {
+	return route.slice(1).split('/').filter(affects_path);
+}
+
+/**
  * @param {RegExpMatchArray} match
- * @param {string[]} names
- * @param {string[]} types
+ * @param {{
+ *   names: string[];
+ *   types: string[];
+ *   optional: boolean[];
+ * }} candidate
  * @param {Record<string, import('types').ParamMatcher>} matchers
  */
-export function exec(match, names, types, matchers) {
+export function exec(match, { names, types, optional }, matchers) {
 	/** @type {Record<string, string>} */
 	const params = {};
 
 	for (let i = 0; i < names.length; i += 1) {
 		const name = names[i];
 		const type = types[i];
-		let value = match[i + 1] || '';
+		let value = match[i + 1];
 
-		if (type) {
-			const matcher = matchers[type];
-			if (!matcher) throw new Error(`Missing "${type}" param matcher`); // TODO do this ahead of time?
+		if (value || !optional[i]) {
+			if (type) {
+				const matcher = matchers[type];
+				if (!matcher) throw new Error(`Missing "${type}" param matcher`); // TODO do this ahead of time?
 
-			if (!matcher(value)) return;
+				if (!matcher(value)) return;
+			}
+
+			params[name] = value ?? '';
 		}
-
-		params[name] = value;
 	}
 
 	return params;

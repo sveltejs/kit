@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import { renderCodeToHTML, runTwoSlash, createShikiHighlighter } from 'shiki-twoslash';
 import PrismJS from 'prismjs';
 import 'prismjs/components/prism-bash.js';
@@ -8,10 +9,16 @@ import 'prism-svelte';
 import { escape, extract_frontmatter, transform } from './markdown.js';
 import { modules } from '../../../../../../packages/kit/docs/types.js';
 import { render_modules } from './modules.js';
-import { error } from '@sveltejs/kit';
 import { parse_route_id } from '../../../../../../packages/kit/src/utils/routing.js';
 import ts from 'typescript';
 import MagicString from 'magic-string';
+import { fileURLToPath } from 'url';
+import { createHash } from 'crypto';
+
+const snippet_cache = fileURLToPath(new URL('../../../../.snippets', import.meta.url));
+if (!fs.existsSync(snippet_cache)) {
+	fs.mkdirSync(snippet_cache, { recursive: true });
+}
 
 const languages = {
 	bash: 'bash',
@@ -48,17 +55,14 @@ modules.forEach((module) => {
 });
 
 /**
- * @param {string} dir
  * @param {string} file
  */
-export async function read_file(dir, file) {
-	const match = /\d{2}-(.+)\.md/.exec(file);
+export async function read_file(file) {
+	const match = /\d{2}-(.+)\.md/.exec(file.split(path.sep).pop());
 	if (!match) return null;
 
-	const slug = match[1];
-
 	const markdown = fs
-		.readFileSync(`${base}/${dir}/${file}`, 'utf-8')
+		.readFileSync(`${base}/${file}`, 'utf-8')
 		.replace('**TYPES**', () => render_modules('types'))
 		.replace('**EXPORTS**', () => render_modules('exports'));
 
@@ -66,12 +70,18 @@ export async function read_file(dir, file) {
 
 	const { metadata, body } = extract_frontmatter(markdown);
 
-	const { content } = parse({
+	const { content, sections } = parse({
 		body: generate_ts_from_js(body),
 		file,
-		// gross hack to accommodate FAQ
-		slug: dir === 'faq' ? slug : undefined,
 		code: (source, language, current) => {
+			const hash = createHash('sha256');
+			hash.update(source + language + current);
+			const digest = hash.digest().toString('base64').replace(/\//g, '-');
+
+			if (fs.existsSync(`${snippet_cache}/${digest}.html`)) {
+				return fs.readFileSync(`${snippet_cache}/${digest}.html`, 'utf-8');
+			}
+
 			/** @type {Record<string, string>} */
 			const options = {};
 
@@ -163,7 +173,7 @@ export async function read_file(dir, file) {
 						twoslash
 					);
 				} catch (e) {
-					console.error(`Error compiling snippet in ${dir}/${file}`);
+					console.error(`Error compiling snippet in ${file}`);
 					console.error(e.code);
 					throw e;
 				}
@@ -215,7 +225,7 @@ export async function read_file(dir, file) {
 
 			type_regex.lastIndex = 0;
 
-			return html
+			html = html
 				.replace(type_regex, (match, prefix, name) => {
 					if (options.link === 'false' || name === current) {
 						// we don't want e.g. RequestHandler to link to RequestHandler
@@ -242,6 +252,9 @@ export async function read_file(dir, file) {
 							.join('');
 					}
 				);
+
+			fs.writeFileSync(`${snippet_cache}/${digest}.html`, html);
+			return html;
 		},
 		codespan: (text) => {
 			return (
@@ -256,96 +269,24 @@ export async function read_file(dir, file) {
 	});
 
 	return {
-		file: `${dir}/${file}`,
+		file,
 		slug: match[1],
 		title: metadata.title,
-		content
+		content,
+		sections
 	};
-}
-
-/**
- * @param {string} dir
- * @param {string} slug
- */
-export async function read(dir, slug) {
-	const files = fs.readdirSync(`${base}/${dir}`).filter((file) => /^\d{2}-(.+)\.md$/.test(file));
-	const index = files.findIndex((file) => file.slice(3, -3) === slug);
-
-	if (index === -1) throw error(404);
-
-	const prev = index > 0 && files[index - 1];
-	const next = index < files.length - 1 && files[index + 1];
-
-	const summarise = (file) => ({
-		slug: file.slice(3, -3), // remove 00- prefix and .md suffix
-		title: extract_frontmatter(fs.readFileSync(`${base}/${dir}/${file}`, 'utf8')).metadata.title
-	});
-
-	return {
-		prev: prev && summarise(prev),
-		next: next && summarise(next),
-		section: await read_file(dir, files[index])
-	};
-}
-
-/** @param {string} dir */
-export async function read_all(dir) {
-	const result = [];
-
-	for (const file of fs.readdirSync(`${base}/${dir}`)) {
-		const section = await read_file(dir, file);
-		if (section) result.push(section);
-	}
-
-	return result;
-}
-
-/** @param {string} dir */
-export function read_headings(dir) {
-	return fs
-		.readdirSync(`${base}/${dir}`)
-		.map((file) => {
-			const match = /\d{2}-(.+)\.md/.exec(file);
-			if (!match) return null;
-
-			const slug = match[1];
-
-			const markdown = fs
-				.readFileSync(`${base}/${dir}/${file}`, 'utf-8')
-				.replace('**TYPES**', () => render_modules('types'))
-				.replace('**EXPORTS**', () => render_modules('exports'));
-
-			const { body, metadata } = extract_frontmatter(markdown);
-
-			const { sections } = parse({
-				body,
-				file,
-				// gross hack to accommodate FAQ
-				slug: dir === 'faq' ? slug : undefined,
-				code: () => '',
-				codespan: () => ''
-			});
-
-			return {
-				slug: match[1],
-				title: metadata.title,
-				sections
-			};
-		})
-		.filter(Boolean);
 }
 
 /**
  * @param {{
  *   body: string;
  *   file: string;
- *   slug: string;
  *   code: (source: string, language: string, current: string) => string;
  *   codespan: (source: string) => string;
  * }} opts
  */
-function parse({ body, file, slug, code, codespan }) {
-	const headings = slug ? [slug] : [];
+function parse({ body, file, code, codespan }) {
+	const headings = [];
 
 	/** @type {import('./types').Section[]} */
 	const sections = [];

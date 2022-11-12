@@ -67,6 +67,11 @@ const tests = {
 		pattern: /^\/@at-encoded\/([^/]+?)\/?$/,
 		names: ['id'],
 		types: [undefined]
+	},
+	'/%255bdoubly-encoded': {
+		pattern: /^\/%5bdoubly-encoded\/?$/,
+		names: [],
+		types: []
 	}
 };
 
@@ -84,12 +89,12 @@ const exec_tests = [
 	{
 		route: '/blog/[[slug]]/sub[[param]]',
 		path: '/blog/sub',
-		expected: { slug: '', param: '' }
+		expected: {}
 	},
 	{
 		route: '/blog/[[slug]]/sub[[param]]',
 		path: '/blog/slug/sub',
-		expected: { slug: 'slug', param: '' }
+		expected: { slug: 'slug' }
 	},
 	{
 		route: '/blog/[[slug]]/sub[[param]]',
@@ -99,7 +104,7 @@ const exec_tests = [
 	{
 		route: '/blog/[[slug]]/sub[[param]]',
 		path: '/blog/subparam',
-		expected: { slug: '', param: 'param' }
+		expected: { param: 'param' }
 	},
 	{
 		route: '/[[slug]]/[...rest]',
@@ -119,7 +124,7 @@ const exec_tests = [
 	{
 		route: '/[[slug]]/[...rest]',
 		path: '/',
-		expected: { slug: '', rest: '' }
+		expected: { rest: '' }
 	},
 	{
 		route: '/[...rest]/path',
@@ -134,16 +139,53 @@ const exec_tests = [
 	{
 		route: '/[[slug1]]/[[slug2]]',
 		path: '/slug1',
-		expected: { slug1: 'slug1', slug2: '' }
+		expected: { slug1: 'slug1' }
+	},
+	{
+		route: '/[[slug1=matches]]',
+		path: '/',
+		expected: {}
+	},
+	{
+		route: '/[[slug1=doesntmatch]]',
+		path: '/',
+		expected: {}
+	},
+	{
+		route: '/[[slug1=matches]]/[[slug2=doesntmatch]]',
+		path: '/foo',
+		expected: { slug1: 'foo' }
+	},
+	{
+		route: '/[[slug1=doesntmatch]]/[[slug2=doesntmatch]]',
+		path: '/foo',
+		expected: undefined
+	},
+	{
+		route: '/[...slug1=matches]',
+		path: '/',
+		expected: { slug1: '' }
+	},
+	{
+		route: '/[...slug1=doesntmatch]',
+		path: '/',
+		expected: undefined
 	}
 ];
 
 for (const { path, route, expected } of exec_tests) {
-	test(`exec extracts params correctly for ${path}`, () => {
-		const { pattern, names, types } = parse_route_id(route);
+	test(`exec extracts params correctly for ${path} from ${route}`, () => {
+		const { pattern, names, types, optional } = parse_route_id(route);
 		const match = pattern.exec(path);
 		if (!match) throw new Error(`Failed to match ${path}`);
-		const actual = exec(match, names, types, {});
+		const actual = exec(
+			match,
+			{ names, types, optional },
+			{
+				matches: () => true,
+				doesntmatch: () => false
+			}
+		);
 		assert.equal(actual, expected);
 	});
 }

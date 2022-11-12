@@ -138,6 +138,21 @@ You can also add turn off prerendering only to parts of your app, if you want ot
 
 During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [add `export const ssr = false` to your root `+layout`](https://kit.svelte.dev/docs/page-options#ssr). You can also add this option only to parts of your app, if you want other parts to be prerendered.
 
+### Apache
+
+To run an SPA on [Apache](https://httpd.apache.org/), you should add a `static/.htaccess` file to route requests to the fallback page:
+
+```
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^200\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /200.html [L]
+</IfModule>
+```
+
 ## GitHub Pages
 
 When building for GitHub Pages, make sure to update [`paths.base`](https://kit.svelte.dev/docs/configuration#paths) to match your repo name, since the site will be served from <https://your-username.github.io/your-repo-name> rather than from the root.
@@ -147,7 +162,7 @@ You will have to prevent GitHub's provided Jekyll from managing your site by put
 A config for GitHub Pages might look like the following:
 
 ```js
-const dev = process.env.NODE_ENV === 'development';
+const dev = process.argv.includes('dev');
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {

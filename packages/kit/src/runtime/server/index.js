@@ -2,16 +2,21 @@ import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
-import { coalesce_to_error } from '../../utils/error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { GENERIC_ERROR, handle_fatal_error } from './utils.js';
-import { decode_params, disable_search, normalize_path } from '../../utils/url.js';
+import { GENERIC_ERROR, handle_fatal_error, redirect_response } from './utils.js';
+import {
+	decode_pathname,
+	decode_params,
+	disable_search,
+	has_data_suffix,
+	normalize_path,
+	strip_data_suffix
+} from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
-import { render_data } from './data/index.js';
-import { DATA_SUFFIX } from '../../constants.js';
+import { INVALIDATED_HEADER, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
-import { HttpError } from '../control.js';
 import { create_fetch } from './fetch.js';
+import { Redirect } from '../control.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -58,7 +63,7 @@ export async function respond(request, options, state) {
 
 	let decoded;
 	try {
-		decoded = decodeURI(url.pathname);
+		decoded = decode_pathname(url.pathname);
 	} catch {
 		return new Response('Malformed URI', { status: 400 });
 	}
@@ -76,8 +81,8 @@ export async function respond(request, options, state) {
 		decoded = decoded.slice(options.paths.base.length) || '/';
 	}
 
-	const is_data_request = decoded.endsWith(DATA_SUFFIX);
-	if (is_data_request) decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
+	const is_data_request = has_data_suffix(decoded);
+	if (is_data_request) decoded = strip_data_suffix(decoded) || '/';
 
 	if (!state.prerendering?.fallback) {
 		const matchers = await options.manifest._.matchers();
@@ -86,7 +91,7 @@ export async function respond(request, options, state) {
 			const match = candidate.pattern.exec(decoded);
 			if (!match) continue;
 
-			const matched = exec(match, candidate.names, candidate.types, matchers);
+			const matched = exec(match, candidate, matchers);
 			if (matched) {
 				route = candidate;
 				params = decode_params(matched);
@@ -115,9 +120,9 @@ export async function respond(request, options, state) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
-	const { cookies, new_cookies, get_cookie_header } = get_cookies(request, url);
+	const { cookies, new_cookies, get_cookie_header } = get_cookies(request, url, options);
 
-	if (state.prerendering) disable_search(url);
+	if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
 	/** @type {import('types').RequestEvent} */
 	const event = {
@@ -135,7 +140,7 @@ export async function respond(request, options, state) {
 		params,
 		platform: state.platform,
 		request,
-		routeId: route && route.id,
+		route: { id: route?.id ?? null },
 		setHeaders: (new_headers) => {
 			for (const key in new_headers) {
 				const lower = key.toLowerCase();
@@ -192,7 +197,8 @@ export async function respond(request, options, state) {
 		path: removed('path', 'url.pathname'),
 		query: removed('query', 'url.searchParams'),
 		body: body_getter,
-		rawBody: body_getter
+		rawBody: body_getter,
+		routeId: removed('routeId', 'route.id')
 	});
 
 	/** @type {import('types').RequiredResolveOptions} */
@@ -287,9 +293,8 @@ export async function respond(request, options, state) {
 			// we can't load the endpoint from our own manifest,
 			// so we need to make an actual HTTP request
 			return await fetch(request);
-		} catch (e) {
-			// HttpError can come from endpoint - TODO should it be handled there instead?
-			const error = e instanceof HttpError ? e : coalesce_to_error(e);
+		} catch (error) {
+			// HttpError from endpoint can end up here - TODO should it be handled there instead?
 			return handle_fatal_error(event, options, error);
 		} finally {
 			event.cookies.set = () => {
@@ -309,18 +314,25 @@ export async function respond(request, options, state) {
 				resolve(event, opts).then((response) => {
 					// add headers/cookies here, rather than inside `resolve`, so that we
 					// can do it once for all responses instead of once per `return`
-					if (!is_data_request) {
-						// we only want to set cookies on __data.json requests, we don't
-						// want to cache stuff erroneously etc
-						for (const key in headers) {
-							const value = headers[key];
-							response.headers.set(key, /** @type {string} */ (value));
+					for (const key in headers) {
+						const value = headers[key];
+						response.headers.set(key, /** @type {string} */ (value));
+					}
+
+					if (is_data_request) {
+						// set the Vary header on __data.json requests to ensure we don't cache
+						// incomplete responses with skipped data loads
+						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary
+						const vary = response.headers.get('Vary');
+						if (vary !== '*') {
+							response.headers.append('Vary', INVALIDATED_HEADER);
 						}
 					}
+
 					add_cookies_to_headers(response.headers, Object.values(new_cookies));
 
-					if (state.prerendering && event.routeId !== null) {
-						response.headers.set('x-sveltekit-routeid', encodeURI(event.routeId));
+					if (state.prerendering && event.route.id !== null) {
+						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
 					}
 
 					return response;
@@ -367,8 +379,10 @@ export async function respond(request, options, state) {
 		}
 
 		return response;
-	} catch (/** @type {unknown} */ e) {
-		const error = coalesce_to_error(e);
+	} catch (error) {
+		if (error instanceof Redirect) {
+			return redirect_response(error.status, error.location);
+		}
 		return handle_fatal_error(event, options, error);
 	}
 }
