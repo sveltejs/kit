@@ -47,7 +47,7 @@ export default function (opts = {}) {
 
 			writeFileSync(
 				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath: './' })};`
+				`export const manifest = ${builder.generateManifest({ relativePath: '.' })};`
 			);
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
