@@ -1,5 +1,11 @@
 import { onMount, tick } from 'svelte';
-import { make_trackable, decode_params, normalize_path, add_data_suffix } from '../../utils/url.js';
+import {
+	make_trackable,
+	decode_pathname,
+	decode_params,
+	normalize_path,
+	add_data_suffix
+} from '../../utils/url.js';
 import { find_anchor, get_base_uri, scroll_state } from './utils.js';
 import {
 	lock_fetch,
@@ -987,7 +993,7 @@ export function create_client({ target, base, trailing_slash }) {
 	function get_navigation_intent(url, invalidating) {
 		if (is_external_url(url)) return;
 
-		const path = decodeURI(url.pathname.slice(base.length) || '/');
+		const path = decode_pathname(url.pathname.slice(base.length) || '/');
 
 		for (const route of routes) {
 			const params = route.exec(path);
