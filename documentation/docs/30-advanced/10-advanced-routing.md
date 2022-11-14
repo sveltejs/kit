@@ -229,7 +229,7 @@ src/routes/
 
 There is no way to break out of the root layout. You can be sure that it's always present in your app and for example put app-wide UI or behavior in it - and if you don't define one, it falls back to a simple `<slot />` component. If you want some pages to _not_ have the same layout as the rest, then you have two options:
 
-Option 1: Create a `(group)` at the root, in which you create a `+layout.svelte` which is used for each page below it. Every page that should inherit a blank root layout instead is put outside of that root `(group)`. In the following example, the login page inherits a blank root layout, while the other pages inherit the layout inside `(group)`:
+Option 1: Create a `(group)` at the root and a `+layout.svelte` within it, which is used for each page below it. Every page that should inherit a blank root layout instead is put outside of that root `(group)`. In the following example, the login page inherits a blank root layout, while the other pages inherit the layout inside `(group)`:
 
 ```
 src/routes/
