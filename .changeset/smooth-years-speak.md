@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[breaking] require special characters to be HTML-encoded
+[breaking] allow hex/unicode escape sequences in routes
