@@ -95,6 +95,8 @@ declare module '$app/environment' {
 declare module '$app/forms' {
 	import type { ActionResult } from '@sveltejs/kit';
 
+	type MaybePromise<T> = T | Promise<T>;
+
 	export type SubmitFunction<
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
@@ -104,7 +106,7 @@ declare module '$app/forms' {
 		form: HTMLFormElement;
 		controller: AbortController;
 		cancel(): void;
-	}) =>
+	}) => MaybePromise<
 		| void
 		| ((opts: {
 				form: HTMLFormElement;
@@ -115,7 +117,8 @@ declare module '$app/forms' {
 				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
 				 */
 				update(options?: { reset: boolean }): Promise<void>;
-		  }) => void);
+		  }) => void)
+	>;
 
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
