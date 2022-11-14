@@ -19,9 +19,11 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 	 */
 	const reindexed = new Map();
 	/**
-	 * @type {Set<any>} All nodes actually used in the routes definition (prerendered routes are omitted)
+	 * All nodes actually used in the routes definition (prerendered routes are omitted).
+	 * Root layout/error is always included as they are needed for 404 and root errors.
+	 * @type {Set<any>}
 	 */
-	const used_nodes = new Set();
+	const used_nodes = new Set([0, 1]);
 
 	for (const route of routes) {
 		if (route.page) {

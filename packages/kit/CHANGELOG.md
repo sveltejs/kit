@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.545
+
+### Patch Changes
+
+- [fix] prerendering path and layout fixes ([#7639](https://github.com/sveltejs/kit/pull/7639))
+
+- [fix] add Promise return type to the `enhance` action ([#7629](https://github.com/sveltejs/kit/pull/7629))
+
 ## 1.0.0-next.544
 
 ### Patch Changes
