@@ -102,7 +102,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		 * @param {import('types').RouteData | null} parent
 		 */
 		const walk = (depth, id, segment, parent) => {
-			const unescaped = id.replace(/\[([ux])\+([^\]]+)\]/i, (match, type, code) => {
+			const unescaped = id.replace(/\[([ux])\+([^\]]+)\]/gi, (match, type, code) => {
 				if (match !== match.toLowerCase()) {
 					throw new Error(`Character escape sequence in ${id} should be lowercase`);
 				}
@@ -138,7 +138,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			if (/#/.test(segment)) {
 				// Vite will barf on files with # in them
-				throw new Error(`Route ${id} should be renamed ${id.replace(/#/g, '[x+23]')}`);
+				throw new Error(`Route ${id} should be renamed to ${id.replace(/#/g, '[x+23]')}`);
 			}
 
 			if (/\[\.\.\.\w+\]\/\[\[/.test(id)) {

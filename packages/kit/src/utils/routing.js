@@ -1,6 +1,7 @@
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
 /**
+ * Creates the regex pattern, extracts parameter names, and generates types for a route
  * @param {string} id
  */
 export function parse_route_id(id) {
