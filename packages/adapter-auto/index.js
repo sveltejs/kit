@@ -20,7 +20,7 @@ for (const candidate of adapters) {
 			) {
 				try {
 					console.log(`Installing ${candidate.module} on the fly...`);
-					execSync(`npm install ${candidate.module} --no-save --no-package-lock`, {
+					execSync(`npm install ${candidate.module} --no-save --production --no-package-lock`, {
 						stdio: 'inherit',
 						cwd: dirname(fileURLToPath(import.meta.url))
 					});
