@@ -246,23 +246,11 @@ function try_deserialize(data, fn, route_id) {
 	} catch (e) {
 		// If we're here, the data could not be serialized with devalue
 		const error = /** @type {any} */ (e);
-		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		if (match) {
-			throw new Error(
-				`Data returned from \`action\` inside ${route_id} is not serializable: ${error.message} (data.${match[2]})`
-			);
-		}
 
-		const nonPojoError = /pojo/i.exec(error.message);
-
-		if (nonPojoError) {
-			const constructorName = data?.constructor?.name;
-
-			throw new Error(
-				`Data returned from \`action\` inside ${route_id} must be a plain object${
-					constructorName ? ` rather than an instance of ${constructorName}` : ''
-				}`
-			);
+		if ('path' in error) {
+			let message = `Data returned from action inside ${route_id} is not serializable: ${error.message}`;
+			if (error.path !== '') message += ` (data.${error.path})`;
+			throw new Error(message);
 		}
 
 		throw error;
