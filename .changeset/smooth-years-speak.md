@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[breaking] allow hex/unicode escape sequences in routes
+[breaking] use hex/unicode escape sequences for encoding special characters in route directory names
