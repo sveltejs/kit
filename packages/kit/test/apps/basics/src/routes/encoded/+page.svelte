@@ -7,4 +7,3 @@
 <a href="/encoded/test%252fme">test%2fme</a>
 <a href="/encoded/AC%2fDC">AC/DC</a>
 <a href="/encoded/%5b">[</a>
-<a href="/encoded/:-)">:-)</a>

@@ -330,9 +330,22 @@ test.describe('Encoded paths', () => {
 	});
 
 	test('allows characters to be represented as HTML entities', async ({ page, clicknav }) => {
-		await page.goto('/encoded');
-		await clicknav('[href="/encoded/:-)"]');
+		await page.goto('/encoded/entities');
+
+		await clicknav('[href="/encoded/entities/:-)"]');
 		expect(await page.textContent('h1')).toBe(':-)');
+
+		await clicknav('[href="/encoded/entities/%23;"]');
+		expect(await page.textContent('h1')).toBe('#');
+
+		await clicknav('[href="/encoded/entities/%2F;"]');
+		expect(await page.textContent('h1')).toBe('/');
+
+		await clicknav('[href="/encoded/entities/%3f;"]');
+		expect(await page.textContent('h1')).toBe('?');
+
+		await clicknav('[href="/encoded/entities/苗"]');
+		expect(await page.textContent('h1')).toBe('?');
 	});
 });
 
