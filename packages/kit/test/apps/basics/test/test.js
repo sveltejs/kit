@@ -329,22 +329,22 @@ test.describe('Encoded paths', () => {
 		expect(await page.textContent('h1')).toBe('@svelte');
 	});
 
-	test('allows characters to be represented as Unicode code points', async ({ page, clicknav }) => {
-		await page.goto('/encoded/code-points');
+	test('allows characters to be represented as escape sequences', async ({ page, clicknav }) => {
+		await page.goto('/encoded/escape-sequences');
 
-		await clicknav('[href="/encoded/code-points/:-)"]');
+		await clicknav('[href="/encoded/escape-sequences/:-)"]');
 		expect(await page.textContent('h1')).toBe(':-)');
 
-		await clicknav('[href="/encoded/code-points/%23"]');
+		await clicknav('[href="/encoded/escape-sequences/%23"]');
 		expect(await page.textContent('h1')).toBe('#');
 
-		await clicknav('[href="/encoded/code-points/%2F"]');
+		await clicknav('[href="/encoded/escape-sequences/%2F"]');
 		expect(await page.textContent('h1')).toBe('/');
 
-		await clicknav('[href="/encoded/code-points/%3f"]');
+		await clicknav('[href="/encoded/escape-sequences/%3f"]');
 		expect(await page.textContent('h1')).toBe('?');
 
-		await clicknav('[href="/encoded/code-points/苗"]');
+		await clicknav('[href="/encoded/escape-sequences/苗"]');
 		expect(await page.textContent('h1')).toBe('苗');
 	});
 });
