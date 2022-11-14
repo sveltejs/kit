@@ -20,10 +20,13 @@ for (const candidate of adapters) {
 			) {
 				try {
 					console.log(`Installing ${candidate.module} on the fly...`);
-					execSync(`npm install ${candidate.module} --no-save --omit=dev --no-package-lock`, {
-						stdio: 'inherit',
-						cwd: dirname(fileURLToPath(import.meta.url))
-					});
+					execSync(
+						`npm install ${candidate.module} --no-save --omit=dev --no-package-lock --foreground-scripts`,
+						{
+							stdio: 'inherit',
+							cwd: dirname(fileURLToPath(import.meta.url))
+						}
+					);
 					module = await import(candidate.module);
 					console.log(
 						`Successfully installed ${candidate.module} on the fly. If you plan on staying on this deployment platform, consider switching out @sveltejs/adapter-auto for ${candidate.module} for faster and more robust installs.`
