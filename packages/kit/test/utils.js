@@ -250,7 +250,7 @@ export const config = {
 	workers: process.env.CI ? 2 : undefined,
 	reporter: process.env.CI
 		? [
-				['github'],
+				['dot'],
 				[path.resolve(fileURLToPath(import.meta.url), '../github-flaky-warning-reporter.js')]
 		  ]
 		: 'list'
