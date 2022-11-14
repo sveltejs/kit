@@ -151,7 +151,7 @@ You can determine the hexadecimal code for a character with JavaScript:
 ':'.charCodeAt(0).toString(16); // '3a', hence '[x+3a]'
 ```
 
-You can also use Unicode escape sequences. Generally you won't need to as you can use the unencoded character directly, but if — for some reason — you can't use emoji in filenames, for example, then you can use the escaped characters. In other words, these are equivalent:
+You can also use Unicode escape sequences. Generally you won't need to as you can use the unencoded character directly, but if — for some reason — you can't have a filename with an emoji in it, for example, then you can use the escaped characters. In other words, these are equivalent:
 
 ```
 src/routes/[u+d83e][u+dd2a]/+page.svelte

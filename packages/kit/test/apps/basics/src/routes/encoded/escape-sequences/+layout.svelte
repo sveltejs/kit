@@ -13,3 +13,4 @@
 <a href="/encoded/escape-sequences/<">&lt;</a>
 <a href="/encoded/escape-sequences/1<2">1&lt;2</a>
 <a href="/encoded/escape-sequences/🤪">🤪</a>
+<a href="/encoded/escape-sequences/%25">%</a>

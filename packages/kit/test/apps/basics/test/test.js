@@ -344,7 +344,7 @@ test.describe('Encoded paths', () => {
 		await clicknav('[href="/encoded/escape-sequences/%3f"]');
 		expect(await page.textContent('h1')).toBe('?');
 
-		await clicknav('[href="/encoded/escape-sequences/%"]');
+		await clicknav('[href="/encoded/escape-sequences/%25"]');
 		expect(await page.textContent('h1')).toBe('%');
 
 		await clicknav('[href="/encoded/escape-sequences/<"]');
