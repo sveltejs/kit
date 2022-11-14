@@ -774,7 +774,7 @@ test.describe('Routing', () => {
 	});
 
 	test('does not normalize external path', async ({ page }) => {
-		/** @type {string[] } */
+		/** @type {string[]} */
 		const urls = [];
 
 		const { port, close } = await start_server((req, res) => {
