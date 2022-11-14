@@ -774,10 +774,11 @@ test.describe('Routing', () => {
 	});
 
 	test('does not normalize external path', async ({ page }) => {
+		/** @type {string[] } */
 		const urls = [];
 
 		const { port, close } = await start_server((req, res) => {
-			if (req.url !== '/favicon.ico') urls.push(req.url);
+			if (req.url && req.url !== '/favicon.ico') urls.push(req.url);
 			res.end('ok');
 		});
 
@@ -1030,6 +1031,7 @@ test.describe.serial('Invalidation', () => {
 
 test.describe('data-sveltekit attributes', () => {
 	test('data-sveltekit-prefetch', async ({ baseURL, page }) => {
+		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
@@ -1065,6 +1067,7 @@ test.describe('data-sveltekit attributes', () => {
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
+		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 

@@ -1,9 +1,7 @@
-import { set_should_fail } from '../../../+layout.server';
-
 /**
  * @type {import('./$types').RequestHandler} param0
  */
-export function GET({ url }) {
-	set_should_fail(url.searchParams.get('type'));
+export function GET({ cookies, url }) {
+	cookies.set('fail-type', url.searchParams.get('type'));
 	return new Response();
 }
