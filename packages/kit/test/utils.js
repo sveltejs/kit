@@ -1,6 +1,8 @@
 import fs from 'fs';
+import path from 'path';
 import http from 'http';
 import { test as base, devices } from '@playwright/test';
+import { fileURLToPath } from 'url';
 
 export const test = base.extend({
 	app: async ({ page }, use) => {
@@ -245,5 +247,11 @@ export const config = {
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
 	},
-	workers: process.env.CI ? 2 : undefined
+	workers: process.env.CI ? 2 : undefined,
+	reporter: process.env.CI
+		? [
+				['github'],
+				[path.resolve(fileURLToPath(import.meta.url), '../github-flaky-warning-reporter.js')]
+		  ]
+		: 'list'
 };
