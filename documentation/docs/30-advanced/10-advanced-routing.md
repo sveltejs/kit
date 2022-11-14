@@ -123,7 +123,7 @@ src/routes/[...catchall]/+page.svelte
 
 ### Encoding
 
-Some characters can't be used on the filesystem — `/` on Linux and Mac, `\ / : * ? " < > |` on Windows. The `#` character has special meaning in URLs, and the `[ ] ( )` characters have special meaning to SvelteKit, so these also can't be used directly as part of your route.
+Some characters can't be used on the filesystem — `/` on Linux and Mac, `\ / : * ? " < > |` on Windows. The `#` and `%` characters have special meaning in URLs, and the `[ ] ( )` characters have special meaning to SvelteKit, so these also can't be used directly as part of your route.
 
 To use these characters in your routes, you can use hexadecimal escape sequences, which have the format `[x+nn]` where `nn` is a hexadecimal character code:
 
@@ -137,6 +137,7 @@ To use these characters in your routes, you can use hexadecimal escape sequences
 - `>` — `[x+3e]`
 - `|` — `[x+7c]`
 - `#` — `[x+23]`
+- `%` — `[x+25]`
 - `[` — `[x+5b]`
 - `]` — `[x+5d]`
 - `(` — `[x+28]`
