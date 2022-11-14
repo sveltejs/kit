@@ -54,14 +54,6 @@ export function normalize_path(path, trailing_slash) {
 	return path;
 }
 
-/**
- * Decode pathname excluding %25 to prevent further double decoding of params
- * @param {string} pathname
- */
-export function decode_pathname(pathname) {
-	return pathname.split('%25').map(decodeURI).join('%25');
-}
-
 /** @param {Record<string, string>} params */
 export function decode_params(params) {
 	for (const key in params) {

@@ -158,7 +158,7 @@ function escape(str) {
 			// escape [ and ] before escaping other characters, since they are used in the replacements
 			.replace(/[[\]]/g, '\\$&')
 			// replace %, /, ? and # with their encoded versions
-			.replace(/%/g, '%25')
+			// .replace(/%/g, '%25')
 			.replace(/\//g, '%2[Ff]')
 			.replace(/\?/g, '%3[Ff]')
 			.replace(/#/g, '%23')
