@@ -627,6 +627,7 @@ test('handles pages without .svelte file', () => {
 		default_error,
 		{ component: 'samples/page-without-svelte-file/error/+error.svelte' },
 		{ component: 'samples/page-without-svelte-file/layout/+layout.svelte' },
+		{ ...default_layout, shared: 'samples/page-without-svelte-file/layout/exists/+layout.js' },
 		{ component: 'samples/page-without-svelte-file/+page.svelte' },
 		{ shared: 'samples/page-without-svelte-file/error/[...path]/+page.js' },
 		{ component: 'samples/page-without-svelte-file/layout/exists/+page.svelte' },
@@ -637,7 +638,7 @@ test('handles pages without .svelte file', () => {
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 4 }
+			page: { layouts: [0], errors: [1], leaf: 5 }
 		},
 		{
 			id: '/error',
@@ -646,7 +647,7 @@ test('handles pages without .svelte file', () => {
 		{
 			id: '/error/[...path]',
 			pattern: '/^/error(?:/(.*))?/?$/',
-			page: { layouts: [0, undefined], errors: [1, 2], leaf: 5 }
+			page: { layouts: [0, undefined], errors: [1, 2], leaf: 6 }
 		},
 		{
 			id: '/layout',
@@ -655,12 +656,12 @@ test('handles pages without .svelte file', () => {
 		{
 			id: '/layout/exists',
 			pattern: '/^/layout/exists/?$/',
-			page: { layouts: [0, 3], errors: [1, undefined], leaf: 6 }
+			page: { layouts: [0, 3, 4], errors: [1, undefined, undefined], leaf: 7 }
 		},
 		{
 			id: '/layout/redirect',
 			pattern: '/^/layout/redirect/?$/',
-			page: { layouts: [0, 3], errors: [1, undefined], leaf: 7 }
+			page: { layouts: [0, 3], errors: [1, undefined], leaf: 8 }
 		}
 	]);
 });

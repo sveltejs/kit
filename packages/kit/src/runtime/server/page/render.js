@@ -288,12 +288,14 @@ export async function render_response({
 	}
 
 	if (options.service_worker) {
+		const opts = options.dev ? `, { type: 'module' }` : '';
+
 		// we use an anonymous function instead of an arrow function to support
 		// older browsers (https://github.com/sveltejs/kit/pull/5417)
 		const init_service_worker = `
 			if ('serviceWorker' in navigator) {
 				addEventListener('load', function () {
-					navigator.serviceWorker.register('${prefixed('service-worker.js')}');
+					navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
 				});
 			}
 		`;

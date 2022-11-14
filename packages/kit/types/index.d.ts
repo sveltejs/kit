@@ -731,7 +731,10 @@ export function error(
  * Creates a `Redirect` object. If thrown during request handling, SvelteKit will
  * return a redirect response.
  */
-export function redirect(status: number, location: string): Redirect;
+export function redirect(
+	status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308,
+	location: string
+): Redirect;
 
 /**
  * Generates a JSON `Response` object from the supplied data.
