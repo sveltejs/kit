@@ -125,7 +125,7 @@ src/routes/[...catchall]/+page.svelte
 
 Some characters can't be used on the filesystem — `/` on Linux and Mac, `\ / : * ? " < > |` on Windows. The `#` character has special meaning in URLs, and the `[ ] ( )` characters have special meaning to SvelteKit, so these also can't be used directly as part of your route.
 
-To use these characters in your routes, you can use hexadecimal escape sequences:
+To use these characters in your routes, you can use hexadecimal escape sequences, which have the format `[x+nn]` where `nn` is a hexadecimal character code:
 
 - `\` — `[x+5c]`
 - `/` — `[x+2f]`
@@ -142,14 +142,22 @@ To use these characters in your routes, you can use hexadecimal escape sequences
 - `(` — `[x+28]`
 - `)` — `[x+29]`
 
-For example, to create a `/:-)` route, you would create a `src/routes/[x+3a]-[x+29]/+page.svelte` file.
+For example, to create a `/smileys/:-)` route, you would create a `src/routes/smileys/[x+3a]-[x+29]/+page.svelte` file.
 
-You can also use unicode escape sequences. Generally you won't need to as you can use the unencoded character directly, but if — for some reason — you can't use emoji in filenames, for example, then you can use the escaped characters. In other words, these are equivalent:
+You can determine the hexadecimal code for a character with JavaScript:
+
+```js
+':'.charCodeAt(0).toString(16); // '3a', hence '[x+3a]'
+```
+
+You can also use Unicode escape sequences. Generally you won't need to as you can use the unencoded character directly, but if — for some reason — you can't use emoji in filenames, for example, then you can use the escaped characters. In other words, these are equivalent:
 
 ```
 src/routes/[u+d83e][u+dd2a]/+page.svelte
 src/routes/🤪/+page.svelte
 ```
+
+The format for a Unicode escape sequence is `[u+nnnn]` where `nnnn` is a valid value between `0000` and `10ffff`. (Unlike JavaScript string escaping, there's no need to use surrogate pairs to represent code points above `ffff`.) To learn more about Unicode encodings, consult [Programming with Unicode](https://unicodebook.readthedocs.io/unicode_encodings.html).
 
 ### Advanced layouts
 
