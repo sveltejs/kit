@@ -138,7 +138,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			if (/#/.test(segment)) {
 				// Vite will barf on files with # in them
-				throw new Error(`Route ${id} should be renamed ${id.replace(/#/g, '&num;')}`);
+				throw new Error(`Route ${id} should be renamed ${id.replace(/#/g, '[x+23]')}`);
 			}
 
 			if (/\[\.\.\.\w+\]\/\[\[/.test(id)) {
