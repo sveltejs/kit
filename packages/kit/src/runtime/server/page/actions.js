@@ -220,27 +220,27 @@ function maybe_throw_migration_error(server) {
 /**
  * Try to `devalue.uneval` the data object, and if it fails, return a proper Error with context
  * @param {any} data
- * @param {string} routeId
+ * @param {string} route_id
  */
-export function uneval_action_response(data, routeId) {
-	return try_deserialize(data, devalue.uneval, routeId);
+export function uneval_action_response(data, route_id) {
+	return try_deserialize(data, devalue.uneval, route_id);
 }
 
 /**
  * Try to `devalue.stringify` the data object, and if it fails, return a proper Error with context
  * @param {any} data
- * @param {string} routeId
+ * @param {string} route_id
  */
-function stringify_action_response(data, routeId) {
-	return try_deserialize(data, devalue.stringify, routeId);
+function stringify_action_response(data, route_id) {
+	return try_deserialize(data, devalue.stringify, route_id);
 }
 
 /**
  * @param {any} data
  * @param {(data: any) => string} fn
- * @param {string} routeId
+ * @param {string} route_id
  */
-function try_deserialize(data, fn, routeId) {
+function try_deserialize(data, fn, route_id) {
 	try {
 		return fn(data);
 	} catch (e) {
@@ -249,7 +249,7 @@ function try_deserialize(data, fn, routeId) {
 		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
 		if (match) {
 			throw new Error(
-				`Data returned from \`action\` inside ${routeId} is not serializable: ${error.message} (data.${match[2]})`
+				`Data returned from \`action\` inside ${route_id} is not serializable: ${error.message} (data.${match[2]})`
 			);
 		}
 
@@ -259,7 +259,7 @@ function try_deserialize(data, fn, routeId) {
 			const constructorName = data?.constructor?.name;
 
 			throw new Error(
-				`Data returned from \`action\` inside ${routeId} must be a plain object${
+				`Data returned from \`action\` inside ${route_id} must be a plain object${
 					constructorName ? ` rather than an instance of ${constructorName}` : ''
 				}`
 			);
