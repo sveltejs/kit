@@ -111,11 +111,11 @@ const options = object(
 			browser: object({
 				hydrate: error(
 					(keypath) =>
-						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+						`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
 				),
 				router: error(
 					(keypath) =>
-						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+						`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
 				)
 			}),
 
@@ -318,7 +318,10 @@ const options = object(
 			),
 
 			// TODO remove for 1.0
-			router: error((keypath) => `${keypath} has been moved to config.kit.browser.router`),
+			router: error(
+				(keypath) =>
+					`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+			),
 
 			// TODO remove for 1.0
 			routes: error(
