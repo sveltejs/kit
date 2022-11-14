@@ -335,13 +335,13 @@ test.describe('Encoded paths', () => {
 		await clicknav('[href="/encoded/entities/:-)"]');
 		expect(await page.textContent('h1')).toBe(':-)');
 
-		await clicknav('[href="/encoded/entities/%23;"]');
+		await clicknav('[href="/encoded/entities/%23"]');
 		expect(await page.textContent('h1')).toBe('#');
 
-		await clicknav('[href="/encoded/entities/%2F;"]');
+		await clicknav('[href="/encoded/entities/%2F"]');
 		expect(await page.textContent('h1')).toBe('/');
 
-		await clicknav('[href="/encoded/entities/%3f;"]');
+		await clicknav('[href="/encoded/entities/%3f"]');
 		expect(await page.textContent('h1')).toBe('?');
 
 		await clicknav('[href="/encoded/entities/苗"]');

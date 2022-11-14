@@ -16,7 +16,11 @@ export function decode_html_entities(str) {
 		.replace(ambiguous, (match) => entities[match]);
 }
 
-/** @type {Record<string, string>} */
+/**
+ * Map of named HTML entities to their corresponding characters, derived from
+ * https://html.spec.whatwg.org/multipage/named-characters.html
+ * @type {Record<string, string>}
+ */
 const entities = {
 	'&CounterClockwiseContourIntegral;': '∳',
 	'&ClockwiseContourIntegral;': '∲',
