@@ -774,11 +774,11 @@ test.describe('Routing', () => {
 	});
 
 	test('does not normalize external path', async ({ page }) => {
-		/** @type {string[]} */
+		/** @type {Array<string|undefined>} */
 		const urls = [];
 
 		const { port, close } = await start_server((req, res) => {
-			if (req.url && req.url !== '/favicon.ico') urls.push(req.url);
+			if (req.url !== '/favicon.ico') urls.push(req.url);
 			res.end('ok');
 		});
 
