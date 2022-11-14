@@ -184,21 +184,21 @@ test('succeeds when routes does not exist', () => {
 test('encodes invalid characters', () => {
 	const { nodes, routes } = create('samples/encoding');
 
-	const hash = { component: 'samples/encoding/&num;/+page.svelte' };
-	const question_mark = { component: 'samples/encoding/&quest;/+page.svelte' };
-	const quote = { component: 'samples/encoding/&quot;/+page.svelte' };
+	const quote = { component: 'samples/encoding/[x+22]/+page.svelte' };
+	const hash = { component: 'samples/encoding/[x+23]/+page.svelte' };
+	const question_mark = { component: 'samples/encoding/[x+3f]/+page.svelte' };
 
 	assert.equal(nodes.map(simplify_node), [
 		default_layout,
 		default_error,
+		quote,
 		hash,
-		question_mark,
-		quote
+		question_mark
 	]);
 
 	assert.equal(
 		routes.map((p) => p.pattern.toString()),
-		[/^\/$/, /^\/%23\/?$/, /^\/%3[Ff]\/?$/, /^\/"\/?$/].map((pattern) => pattern.toString())
+		[/^\/$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/].map((pattern) => pattern.toString())
 	);
 });
 
