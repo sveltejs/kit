@@ -57,7 +57,8 @@ const config = {
 			crawl: true,
 			enabled: true,
 			entries: ['*'],
-			onError: 'fail',
+			handleHttpError: 'fail',
+			handleMissingId: 'fail',
 			origin: 'http://sveltekit-prerender'
 		},
 		serviceWorker: {
@@ -253,32 +254,38 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
 - `enabled` — set to `false` to disable prerendering altogether
 - `entries` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]`, because SvelteKit doesn't know what value the parameters should have)
-- `onError`
+- `handleHttpError`
 
   - `'fail'` — (default) fails the build when a routing error is encountered when following a link
-  - `'continue'` — allows the build to continue, despite routing errors
-  - `function` — custom error handler allowing you to log, `throw` and fail the build, or take other action of your choosing based on the details of the crawl
-
-    ```js
-    import adapter from '@sveltejs/adapter-static';
-
+  - `'ignore'` - silently ignore the failure and continue
+  - `'warn'` — continue, but print a warning
+  - `(details) => void` — a custom error handler that takes a `details` object with `status`, `path`, `referrer`, `referenceType` and `message` properties. If you `throw` from this function, the build will fail
+  
+      ```js
     /** @type {import('@sveltejs/kit').Config} */
     const config = {
     	kit: {
-    		adapter: adapter(),
     		prerender: {
-    			onError: ({ status, path, referrer, referenceType }) => {
-    				if (path.startsWith('/blog')) throw new Error('Missing a blog page!');
-    				console.warn(
-    					`${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`
-    				);
+    			handleHttpError: ({ path, referrer, message }) => {
+    				// ignore deliberate link to shiny 404 page
+    				if (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {
+    					return;
+    				}
+    				
+    				// otherwise fail the build
+    				throw new Error(message);
     			}
     		}
     	}
     };
-
-    export default config;
     ```
+
+- `handleMissingId`
+
+  - `'fail'` — (default) fails the build when a prerendered page links to another prerendered page with a `#` fragment that doesn't correspond to an `id`
+  - `'ignore'` - silently ignore the failure and continue
+  - `'warn'` — continue, but print a warning
+  - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id`, `referrers` and `message` properties. If you `throw` from this function, the build will fail
 
 - `origin` — the value of `url.origin` during prerendering; useful if it is included in rendered content
 

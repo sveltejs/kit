@@ -1,6 +1,5 @@
-import { json } from '../../exports/index.js';
 import { negotiate } from '../../utils/http.js';
-import { Redirect, ValidationError } from '../control.js';
+import { Redirect } from '../control.js';
 import { check_method_names, method_not_allowed } from './utils.js';
 
 /**
@@ -34,7 +33,7 @@ export async function render_endpoint(event, mod, state) {
 	if (state.prerendering && !prerender) {
 		if (state.initiator) {
 			// if request came from a prerendered page, bail
-			throw new Error(`${event.routeId} is not prerenderable`);
+			throw new Error(`${event.route.id} is not prerenderable`);
 		} else {
 			// if request came direct from the crawler, signal that
 			// this route cannot be prerendered, but don't bail
@@ -64,8 +63,6 @@ export async function render_endpoint(event, mod, state) {
 				status: error.status,
 				headers: { location: error.location }
 			});
-		} else if (error instanceof ValidationError) {
-			return json(error.data, { status: error.status });
 		}
 
 		throw error;

@@ -6,7 +6,7 @@ const config = {
 		adapter: adapter(),
 
 		prerender: {
-			onError: 'continue',
+			handleHttpError: 'warn',
 			origin: 'http://example.com'
 		}
 	}

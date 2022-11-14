@@ -1,4 +1,5 @@
 import * as devalue from 'devalue';
+import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { has_data_suffix } from '../../utils/url.js';
 import { HttpError } from '../control.js';
@@ -68,28 +69,6 @@ export function allowed_methods(mod) {
 }
 
 /**
- * @param {any} data
- * @param {import('types').RequestEvent} event
- */
-export function data_response(data, event) {
-	const headers = {
-		'content-type': 'application/json',
-		'cache-control': 'private, no-store'
-	};
-
-	try {
-		return new Response(devalue.stringify(data), { headers });
-	} catch (e) {
-		const error = /** @type {any} */ (e);
-		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		const message = match
-			? `Data returned from \`load\` while rendering ${event.routeId} is not serializable: ${error.message} (data.${match[2]})`
-			: error.message;
-		return new Response(JSON.stringify(message), { headers, status: 500 });
-	}
-}
-
-/**
  * @template {'prerender' | 'ssr' | 'csr'} Option
  * @template {Option extends 'prerender' ? import('types').PrerenderOption : boolean} Value
  *
@@ -132,9 +111,10 @@ export function static_error_page(options, status, message) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
- * @param {Error | HttpError} error
+ * @param {unknown} error
  */
 export function handle_fatal_error(event, options, error) {
+	error = error instanceof HttpError ? error : coalesce_to_error(error);
 	const status = error instanceof HttpError ? error.status : 500;
 	const body = handle_error_and_jsonify(event, options, error);
 
@@ -178,4 +158,48 @@ export function redirect_response(status, location) {
 		headers: { location }
 	});
 	return response;
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {Error & { path: string }} error
+ */
+export function clarify_devalue_error(event, error) {
+	if (error.path) {
+		return `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data${error.path})`;
+	}
+
+	if (error.path === '') {
+		return `Data returned from \`load\` while rendering ${event.route.id} is not a plain object`;
+	}
+
+	// belt and braces — this should never happen
+	return error.message;
+}
+
+/** @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | import('types').ServerErrorNode | null} node */
+export function serialize_data_node(node) {
+	if (!node) return 'null';
+
+	if (node.type === 'error' || node.type === 'skip') {
+		return JSON.stringify(node);
+	}
+
+	const stringified = devalue.stringify(node.data);
+
+	const uses = [];
+
+	if (node.uses.dependencies.size > 0) {
+		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
+	}
+
+	if (node.uses.params.size > 0) {
+		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
+	}
+
+	if (node.uses.parent) uses.push(`"parent":1`);
+	if (node.uses.route) uses.push(`"route":1`);
+	if (node.uses.url) uses.push(`"url":1`);
+
+	return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}}`;
 }

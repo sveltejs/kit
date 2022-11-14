@@ -1,5 +1,149 @@
 # @sveltejs/kit
 
+## 1.0.0-next.545
+
+### Patch Changes
+
+- [fix] prerendering path and layout fixes ([#7639](https://github.com/sveltejs/kit/pull/7639))
+
+- [fix] add Promise return type to the `enhance` action ([#7629](https://github.com/sveltejs/kit/pull/7629))
+
+## 1.0.0-next.544
+
+### Patch Changes
+
+- [breaking] narrow down possible status codes for redirects to 300-308 ([#7615](https://github.com/sveltejs/kit/pull/7615))
+
+- [feat] add fallback component for layouts without one ([#7619](https://github.com/sveltejs/kit/pull/7619))
+
+## 1.0.0-next.543
+
+### Patch Changes
+
+- Don't print search params error when prerendering fallback page ([#7598](https://github.com/sveltejs/kit/pull/7598))
+
+- allow async function for `enhance` action parameter ([#7608](https://github.com/sveltejs/kit/pull/7608))
+
+- Run service worker during development ([#7597](https://github.com/sveltejs/kit/pull/7597))
+
+- [feat] support throwing redirect in handle ([#7612](https://github.com/sveltejs/kit/pull/7612))
+
+- Workaround for the DOM clobbering for use:enhance ([#7599](https://github.com/sveltejs/kit/pull/7599))
+
+- [fix] don't cache prefetch errors ([#7610](https://github.com/sveltejs/kit/pull/7610))
+
+## 1.0.0-next.542
+
+### Patch Changes
+
+- Add support for linking to <a name="hash"> tags ([#7596](https://github.com/sveltejs/kit/pull/7596))
+
+- [breaking] don't run beforeNavigate during redirects ([#7588](https://github.com/sveltejs/kit/pull/7588))
+
+- [fix] respect autofocus following navigation or enhanced form submit ([#6643](https://github.com/sveltejs/kit/pull/6643))
+
+## 1.0.0-next.541
+
+### Minor Changes
+
+- [fix] don't clean build and output directories when using `--watch` ([#7516](https://github.com/sveltejs/kit/pull/7516))
+
+### Patch Changes
+
+- [fix] handle expected errors thrown in handle hook correctly ([#7566](https://github.com/sveltejs/kit/pull/7566))
+
+## 1.0.0-next.540
+
+### Patch Changes
+
+- Serve prerendered non-page files when running preview ([#7576](https://github.com/sveltejs/kit/pull/7576))
+
+- [fix] caching takes now into account the body payload ([#7546](https://github.com/sveltejs/kit/pull/7546))
+
+- [fix] handle locked readable stream when reading body ([#7565](https://github.com/sveltejs/kit/pull/7565))
+
+- [fix] prefetch should ignore links ignored by the router ([#7580](https://github.com/sveltejs/kit/pull/7580))
+
+- [fix] migration error when using $page.routeId ([#7574](https://github.com/sveltejs/kit/pull/7574))
+
+- prevent loading of illegal modules in the browser, rather than during SSR ([#7507](https://github.com/sveltejs/kit/pull/7507))
+
+- [fix] prevent double decoding of path segment ([#7550](https://github.com/sveltejs/kit/pull/7550))
+
+## 1.0.0-next.539
+
+### Patch Changes
+
+- Omit prerendered routes from server manifest ([#7541](https://github.com/sveltejs/kit/pull/7541))
+
+## 1.0.0-next.538
+
+### Patch Changes
+
+- [feat] enable caching for `__data.json` requests ([#7532](https://github.com/sveltejs/kit/pull/7532))
+
+- [fix] prevent double decoding of params ([#7521](https://github.com/sveltejs/kit/pull/7521))
+
+- [fix] take into account Request input when serializing fetch data ([#7531](https://github.com/sveltejs/kit/pull/7531))
+
+- [fix] better cookie warning checks ([#7528](https://github.com/sveltejs/kit/pull/7528))
+
+## 1.0.0-next.537
+
+### Patch Changes
+
+- [feat] better navigation interfaces ([#7529](https://github.com/sveltejs/kit/pull/7529))
+
+## 1.0.0-next.536
+
+### Patch Changes
+
+- custom aliases resolved in service worker builds ([#7500](https://github.com/sveltejs/kit/pull/7500))
+
+## 1.0.0-next.535
+
+### Patch Changes
+
+- [breaking] call beforeNavigate once with type unload on external navigation, rename type 'load' to 'enter' and type 'unload' to 'leave', add 'willUnload' property ([#6813](https://github.com/sveltejs/kit/pull/6813))
+
+## 1.0.0-next.534
+
+### Patch Changes
+
+- [breaking] more consistent casing for goto options ([#7502](https://github.com/sveltejs/kit/pull/7502))
+
+- [breaking] replace routeId with route.id ([#7450](https://github.com/sveltejs/kit/pull/7450))
+
+- Fix nullish data node reference ([#7503](https://github.com/sveltejs/kit/pull/7503))
+
+## 1.0.0-next.533
+
+### Patch Changes
+
+- [fix] bump required Vite version and address warning ([#7491](https://github.com/sveltejs/kit/pull/7491))
+
+## 1.0.0-next.532
+
+### Patch Changes
+
+- Bump devalue version ([#7466](https://github.com/sveltejs/kit/pull/7466))
+
+## 1.0.0-next.531
+
+### Patch Changes
+
+- [breaking] change `config.kit.prerender.onError` to `handleHttpError`, and check for invalid fragment links ([#7375](https://github.com/sveltejs/kit/pull/7375))
+
+- fix escaping bug in crawler ([#7375](https://github.com/sveltejs/kit/pull/7375))
+
+## 1.0.0-next.530
+
+### Patch Changes
+
+- [fix] fetch erroring on Cloudflare ([#7453](https://github.com/sveltejs/kit/pull/7453))
+
+- Only simulate CORS errors for shared load functions ([#7454](https://github.com/sveltejs/kit/pull/7454))
+
 ## 1.0.0-next.529
 
 ### Patch Changes

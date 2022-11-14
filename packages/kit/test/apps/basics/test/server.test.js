@@ -258,6 +258,37 @@ test.describe('Errors', () => {
 			});
 		}
 	});
+
+	test('expected error thrown in handle results in a rendered error page or JSON response', async ({
+		request
+	}) => {
+		// HTML
+		{
+			const res = await request.get('/errors/expected-error-in-handle', {
+				headers: {
+					accept: 'text/html'
+				}
+			});
+
+			expect(res.status()).toBe(500);
+			expect(await res.text()).toContain(
+				'This is the static error page with the following message: Expected error in handle'
+			);
+		}
+
+		// JSON (default)
+		{
+			const res = await request.get('/errors/expected-error-in-handle');
+
+			const error = await res.json();
+
+			expect(error.stack).toBe(undefined);
+			expect(res.status()).toBe(500);
+			expect(error).toEqual({
+				message: 'Expected error in handle'
+			});
+		}
+	});
 });
 
 test.describe('Load', () => {

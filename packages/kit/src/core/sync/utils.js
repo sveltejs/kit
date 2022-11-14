@@ -27,7 +27,7 @@ export function write(file, code) {
 
 /** @param {string} str */
 export function trim(str) {
-	const indentation = /** @type {RegExpExecArray} */ (/\n?(\s*)/.exec(str))[1];
+	const indentation = /** @type {RegExpExecArray} */ (/\n?([ \t]*)/.exec(str))[1];
 	const pattern = new RegExp(`^${indentation}`, 'gm');
 	return str.replace(pattern, '').trim();
 }

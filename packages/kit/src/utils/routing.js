@@ -72,11 +72,6 @@ export function parse_route_id(id) {
 									return (
 										content // allow users to specify characters on the file system in an encoded manner
 											.normalize()
-											// We use [ and ] to denote parameters, so users must encode these on the file
-											// system to match against them. We don't decode all characters since others
-											// can already be epressed and so that '%' can be easily used directly in filenames
-											.replace(/%5[Bb]/g, '[')
-											.replace(/%5[Dd]/g, ']')
 											// '#', '/', and '?' can only appear in URL path segments in an encoded manner.
 											// They will not be touched by decodeURI so need to be encoded here, so
 											// that we can match against them.

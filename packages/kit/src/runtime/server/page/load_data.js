@@ -1,7 +1,8 @@
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { unwrap_promises } from '../../../utils/promises.js';
+
 /**
- * Calls the user's `load` function.
+ * Calls the user's server `load` function.
  * @param {{
  *   event: import('types').RequestEvent;
  *   state: import('types').SSRState;
@@ -17,6 +18,7 @@ export async function load_server_data({ event, state, node, parent }) {
 		dependencies: new Set(),
 		params: new Set(),
 		parent: false,
+		route: false,
 		url: false
 	};
 
@@ -47,6 +49,12 @@ export async function load_server_data({ event, state, node, parent }) {
 			uses.parent = true;
 			return parent();
 		},
+		route: {
+			get id() {
+				uses.route = true;
+				return event.route.id;
+			}
+		},
 		url
 	});
 
@@ -55,12 +63,7 @@ export async function load_server_data({ event, state, node, parent }) {
 	return {
 		type: 'data',
 		data,
-		uses: {
-			dependencies: uses.dependencies.size > 0 ? Array.from(uses.dependencies) : undefined,
-			params: uses.params.size > 0 ? Array.from(uses.params) : undefined,
-			parent: uses.parent ? 1 : undefined,
-			url: uses.url ? 1 : undefined
-		}
+		uses
 	};
 }
 
@@ -99,8 +102,9 @@ export async function load_data({
 		url: event.url,
 		params: event.params,
 		data: server_data_node?.data ?? null,
-		routeId: event.routeId,
+		route: event.route,
 		fetch: async (input, init) => {
+			const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
 			const response = await event.fetch(input, init);
 
 			const url = new URL(input instanceof Request ? input.url : input, event.url);
@@ -109,9 +113,24 @@ export async function load_data({
 			/** @type {import('types').PrerenderDependency} */
 			let dependency;
 
-			if (same_origin && state.prerendering) {
-				dependency = { response, body: null };
-				state.prerendering.dependencies.set(url.pathname, dependency);
+			if (same_origin) {
+				if (state.prerendering) {
+					dependency = { response, body: null };
+					state.prerendering.dependencies.set(url.pathname, dependency);
+				}
+			} else {
+				// simulate CORS errors server-side for consistency with client-side behaviour
+				const mode = input instanceof Request ? input.mode : init?.mode ?? 'cors';
+				if (mode !== 'no-cors') {
+					const acao = response.headers.get('access-control-allow-origin');
+					if (!acao || (acao !== event.url.origin && acao !== '*')) {
+						throw new Error(
+							`CORS error: ${
+								acao ? 'Incorrect' : 'No'
+							} 'Access-Control-Allow-Origin' header is present on the requested resource`
+						);
+					}
+				}
 			}
 
 			const proxy = new Proxy(response, {
@@ -132,7 +151,11 @@ export async function load_data({
 							fetched.push({
 								url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
 								method: event.request.method,
-								request_body: /** @type {string | ArrayBufferView | undefined} */ (init?.body),
+								request_body: /** @type {string | ArrayBufferView | undefined} */ (
+									input instanceof Request && cloned_body
+										? await stream_to_string(cloned_body)
+										: init?.body
+								),
 								response_body: body,
 								response: response
 							});
@@ -184,7 +207,7 @@ export async function load_data({
 						const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
 						if (!included) {
 							throw new Error(
-								`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#server-hooks-handle (at ${event.routeId})`
+								`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#server-hooks-handle (at ${event.route})`
 							);
 						}
 					}
@@ -215,4 +238,21 @@ export async function load_data({
 	const data = await node.shared.load.call(null, load_event);
 
 	return data ? unwrap_promises(data) : null;
+}
+
+/**
+ * @param {ReadableStream<Uint8Array>} stream
+ */
+async function stream_to_string(stream) {
+	let result = '';
+	const reader = stream.getReader();
+	const decoder = new TextDecoder();
+	while (true) {
+		const { done, value } = await reader.read();
+		if (done) {
+			break;
+		}
+		result += decoder.decode(value);
+	}
+	return result;
 }

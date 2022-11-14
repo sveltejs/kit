@@ -90,7 +90,7 @@ export const test = base.extend({
 			// @ts-expect-error
 			page[fn] = async function (...args) {
 				const res = await page_fn.call(page, ...args);
-				if (javaScriptEnabled) {
+				if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
 					await page.waitForSelector('body.started', { timeout: 5000 });
 				}
 				return res;
@@ -141,7 +141,7 @@ export const config = {
 		command: process.env.DEV ? 'pnpm dev' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 4173
 	},
-	retries: process.env.CI ? 5 : 0,
+	retries: process.env.CI ? 2 : 0,
 	projects: [
 		{
 			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
