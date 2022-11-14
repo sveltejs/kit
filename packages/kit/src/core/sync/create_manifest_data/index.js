@@ -5,7 +5,6 @@ import { runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
-import { decode_html_entities } from '../../../utils/entities.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -128,7 +127,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				);
 			}
 
-			const { pattern, names, types, optional } = parse_route_id(id, decode_html_entities);
+			const { pattern, names, types, optional } = parse_route_id(id);
 
 			/** @type {import('types').RouteData} */
 			const route = {
@@ -469,6 +468,17 @@ function normalize_route_id(id) {
 		id
 			// remove groups
 			.replace(/(?<=^|\/)\(.+?\)(?=$|\/)/g, '')
+
+			.replace(/\[x\+([0-9a-f]{2})\]/g, (_, x) =>
+				String.fromCharCode(parseInt(x, 16)).replace(/\//g, '%2f')
+			)
+
+			.replace(/\[u\+([0-9a-f]{4})(?:-([0-9a-f]{4}))?\]/g, (_, u1, u2) =>
+				(u2
+					? String.fromCharCode(parseInt(u1, 16), parseInt(u2, 16))
+					: String.fromCharCode(parseInt(u1, 16))
+				).replace(/\//g, '%2f')
+			)
 
 			// replace `[param]` with `<*>`, `[param=x]` with `<x>`, and `[[param]]` with `<?*>`
 			.replace(

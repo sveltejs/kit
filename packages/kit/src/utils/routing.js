@@ -2,9 +2,8 @@ const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
 /**
  * @param {string} id
- * @param {(encoded: string) => string} decode
  */
-export function parse_route_id(id, decode) {
+export function parse_route_id(id) {
 	/** @type {string[]} */
 	const names = [];
 
@@ -51,6 +50,21 @@ export function parse_route_id(id, decode) {
 							const result = parts
 								.map((content, i) => {
 									if (i % 2) {
+										if (content.startsWith('x+')) {
+											return escape(String.fromCharCode(parseInt(content.slice(2), 16)));
+										}
+
+										if (content.startsWith('u+')) {
+											return escape(
+												String.fromCharCode(
+													...content
+														.slice(2)
+														.split('-')
+														.map((code) => parseInt(code, 16))
+												)
+											);
+										}
+
 										const match = param_pattern.exec(content);
 										if (!match) {
 											throw new Error(
@@ -71,19 +85,7 @@ export function parse_route_id(id, decode) {
 
 									if (is_last && content.includes('.')) add_trailing_slash = false;
 
-									return (
-										decode(content) // allow users to specify characters on the file system using HTML entities
-											.normalize()
-											// escape [ and ] before escaping other characters, since they are used in the replacements
-											.replace(/[[\]]/g, '\\$&')
-											// replace %, /, ? and # with their encoded versions
-											.replace(/%/g, '%25')
-											.replace(/\//g, '%2[Ff]')
-											.replace(/\?/g, '%3[Ff]')
-											.replace(/#/g, '%23')
-											// escape characters that have special meaning in regex
-											.replace(/[.*+?^${}()|\\]/g, '\\$&')
-									);
+									return escape(content);
 								})
 								.join('');
 
@@ -145,4 +147,21 @@ export function exec(match, { names, types, optional }, matchers) {
 	}
 
 	return params;
+}
+
+/** @param {string} str */
+function escape(str) {
+	return (
+		str
+			.normalize()
+			// escape [ and ] before escaping other characters, since they are used in the replacements
+			.replace(/[[\]]/g, '\\$&')
+			// replace %, /, ? and # with their encoded versions
+			.replace(/%/g, '%25')
+			.replace(/\//g, '%2[Ff]')
+			.replace(/\?/g, '%3[Ff]')
+			.replace(/#/g, '%23')
+			// escape characters that have special meaning in regex
+			.replace(/[.*+?^${}()|\\]/g, '\\$&')
+	);
 }

@@ -10,14 +10,8 @@ import { exec, parse_route_id } from '../../utils/routing.js';
 export function parse(nodes, server_loads, dictionary, matchers) {
 	const layouts_with_server_load = new Set(server_loads);
 
-	const div = document.createElement('div');
-
 	return Object.entries(dictionary).map(([id, [leaf, layouts, errors]]) => {
-		const { pattern, names, types, optional } = parse_route_id(id, (str) => {
-			if (!str.includes('&')) return str;
-			div.innerHTML = str;
-			return /** @type {string} */ (div.textContent);
-		});
+		const { pattern, names, types, optional } = parse_route_id(id);
 
 		const route = {
 			id,
