@@ -104,7 +104,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		const walk = (depth, id, segment, parent) => {
 			const unescaped = id.replace(/\[([ux])\+([^\]]+)\]/gi, (match, type, code) => {
 				if (match !== match.toLowerCase()) {
-					throw new Error(`Character escape sequence in ${id} should be lowercase`);
+					throw new Error(`Character escape sequence in ${id} must be lowercase`);
 				}
 
 				if (!/[0-9a-f]+/.test(code)) {
@@ -113,14 +113,14 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 				if (type === 'x') {
 					if (code.length !== 2) {
-						throw new Error(`Hexadecimal escape sequence in ${id} should be two characters`);
+						throw new Error(`Hexadecimal escape sequence in ${id} must be two characters`);
 					}
 
 					return String.fromCharCode(parseInt(code, 16));
 				} else {
 					if (code.length < 4 || code.length > 6) {
 						throw new Error(
-							`Unicode escape sequence in ${id} should be between four and six characters`
+							`Unicode escape sequence in ${id} must be between four and six characters`
 						);
 					}
 
