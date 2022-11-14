@@ -352,6 +352,9 @@ test.describe('Encoded paths', () => {
 
 		await clicknav('[href="/encoded/escape-sequences/苗"]');
 		expect(await page.textContent('h1')).toBe('苗');
+
+		await clicknav('[href="/encoded/escape-sequences/🤪"]');
+		expect(await page.textContent('h1')).toBe('🤪');
 	});
 });
 

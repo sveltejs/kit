@@ -125,24 +125,31 @@ src/routes/[...catchall]/+page.svelte
 
 Some characters can't be used on the filesystem — `/` on Linux and Mac, `\ / : * ? " < > |` on Windows. The `#` character has special meaning in URLs, and the `[ ] ( )` characters have special meaning to SvelteKit, so these also can't be used directly as part of your route.
 
-To use these characters in your routes, you can use HTML entities:
+To use these characters in your routes, you can use hexadecimal escape sequences:
 
-- `\` — `&bsol;`
-- `/` — `&sol;`
-- `:` — `&colon;`
-- `*` — `&ast;`
-- `?` — `&quest;`
-- `"` — `&quot;`
-- `<` — `&lt;`
-- `>` — `&gt;`
-- `|` — `&vert;`
-- `#` — `&num;`
-- `[` — `&lbrack;`
-- `]` — `&rbrack;`
-- `(` — `&lpar;`
-- `)` — `&rpar;`
+- `\` — `[x+5c]`
+- `/` — `[x+2f]`
+- `:` — `[x+3a]`
+- `*` — `[x+2a]`
+- `?` — `[x+3f]`
+- `"` — `[x+22]`
+- `<` — `[x+3c]`
+- `>` — `[x+3e]`
+- `|` — `[x+7c]`
+- `#` — `[x+23]`
+- `[` — `[x+5b]`
+- `]` — `[x+5d]`
+- `(` — `[x+28]`
+- `)` — `[x+29]`
 
-For example, to create a `/:-)` route, you would create a `src/routes/&colon;-&rpar;/+page.svelte` file.
+For example, to create a `/:-)` route, you would create a `src/routes/[x+3a]-[x+29]/+page.svelte` file.
+
+You can also use unicode escape sequences. Generally you won't need to as you can use the unencoded character directly, but if — for some reason — you can't use emoji in filenames, for example, then you can use the escaped characters. In other words, these are equivalent:
+
+```
+src/routes/[u+d83e][u+dd2a]/+page.svelte
+src/routes/🤪/+page.svelte
+```
 
 ### Advanced layouts
 
