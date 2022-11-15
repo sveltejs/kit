@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.547
+
+### Patch Changes
+
+- [fix] safely join url segments in manifest ([#7653](https://github.com/sveltejs/kit/pull/7653))
+
+- [breaking] use devalue to (de)serialize action data ([#7494](https://github.com/sveltejs/kit/pull/7494))
+
+- Warn if `%sveltekit.body%` is direct child of `<body>` ([#7652](https://github.com/sveltejs/kit/pull/7652))
+
 ## 1.0.0-next.546
 
 ### Patch Changes
