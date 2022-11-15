@@ -2,6 +2,7 @@ import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
 import { resolve_symlinks } from '../../exports/vite/build/utils.js';
 import { compact } from '../../utils/array.js';
+import { join_relative } from '../../utils/filesystem.js';
 
 /**
  * Generates the data used to write the server-side manifest.js file. This data is used in the Vite
@@ -37,7 +38,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 		build_data.manifest_data.nodes.map((_, i) => {
 			if (used_nodes.has(i)) {
 				reindexed.set(i, reindexed.size);
-				return `${relative_path}/nodes/${i}.js`;
+				return join_relative(relative_path, `/nodes/${i}.js`);
 			}
 		})
 	);
@@ -48,7 +49,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 
 	build_data.manifest_data.nodes.forEach((node, i) => {
 		bundled_nodes.set(node, {
-			path: `${relative_path}/nodes/${i}.js`,
+			path: join_relative(relative_path, `/nodes/${i}.js`),
 			index: i
 		});
 	});
@@ -111,12 +112,12 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 					types: ${s(route.types)},
 					optional: ${s(route.optional)},
 					page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${reindexed.get(route.page.leaf)} }` : 'null'},
-					endpoint: ${route.endpoint ? loader(`${relative_path}/${resolve_symlinks(build_data.server.vite_manifest, route.endpoint.file).chunk.file}`) : 'null'}
+					endpoint: ${route.endpoint ? loader(join_relative(relative_path, resolve_symlinks(build_data.server.vite_manifest, route.endpoint.file).chunk.file)) : 'null'}
 				}`;
 				}).filter(Boolean).join(',\n\t\t\t\t')}
 			],
 			matchers: async () => {
-				${Array.from(matchers).map(type => `const { match: ${type} } = await ${load(`${relative_path}/entries/matchers/${type}.js`)}`).join('\n\t\t\t\t')}
+				${Array.from(matchers).map(type => `const { match: ${type} } = await ${load(join_relative(relative_path, `/entries/matchers/${type}.js`))}`).join('\n\t\t\t\t')}
 				return { ${Array.from(matchers).join(', ')} };
 			}
 		}

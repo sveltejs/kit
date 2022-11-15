@@ -113,6 +113,18 @@ export function posixify(str) {
 }
 
 /**
+ * Like `path.join`, but posixified and with a leading ./ if necessary
+ * @param {string[]} str
+ */
+export function join_relative(...str) {
+	let result = posixify(path.join(...str));
+	if (!result.startsWith('.')) {
+		result = `./${result}`;
+	}
+	return result;
+}
+
+/**
  * Prepend given path with `/@fs` prefix
  * @param {string} str
  */
