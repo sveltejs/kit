@@ -34,7 +34,6 @@
 		"typescript": "^4.8.4"
 	},
 	"dependencies": {
-		"detect-package-manager": "^2.0.1",
 		"import-meta-resolve": "^2.1.0"
 	}
 }

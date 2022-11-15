@@ -1,8 +1,9 @@
 import { execSync } from 'child_process';
-import { detect } from 'detect-package-manager';
 import { pathToFileURL } from 'url';
 import { resolve } from 'import-meta-resolve';
 import { adapters } from './adapters.js';
+import { dirname, join } from 'path';
+import { existsSync } from 'fs';
 
 /** @type {import('./index').default} */
 let fn;
@@ -13,6 +14,29 @@ const commands = {
 	pnpm: (name) => `pnpm add -D ${name}`,
 	yarn: (name) => `yarn add -D ${name}`
 };
+
+function detect_lockfile() {
+	let dir = process.cwd();
+
+	do {
+		if (existsSync(join(dir, 'pnpm-lock.yaml'))) return 'pnpm';
+		if (existsSync(join(dir, 'yarn.lock'))) return 'yarn';
+		if (existsSync(join(dir, 'package-lock.json'))) return 'npm';
+	} while (dir !== (dir = dirname(dir)));
+
+	return 'npm';
+}
+
+function detect_package_manager() {
+	const manager = detect_lockfile();
+
+	try {
+		execSync(`${manager} --version`);
+		return manager;
+	} catch {
+		return 'npm';
+	}
+}
 
 /** @param {string} name */
 async function import_from_cwd(name) {
@@ -34,7 +58,7 @@ for (const candidate of adapters) {
 				error.code === 'ERR_MODULE_NOT_FOUND' &&
 				error.message.startsWith(`Cannot find package '${candidate.module}'`)
 			) {
-				const package_manager = await detect();
+				const package_manager = detect_package_manager();
 				const command = commands[package_manager](candidate.module);
 
 				try {
