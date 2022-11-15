@@ -332,7 +332,7 @@ export async function render_response({
 
 			const importAndStartCall = `System.import(${s(
 				prefixed(legacy_entry_file)
-			)}).then(window.${startup_script_var_name});`;
+			)}).then(window.${startup_script_var_name})`;
 
 			add_nomodule_script(importAndStartCall);
 
@@ -348,7 +348,7 @@ export async function render_response({
 					? `var n=document.createElement("script");n.src=${s(
 							prefixed(legacy_polyfills_file)
 					  )},n.onload=function(){${importAndStartCall}},document.body.appendChild(n)`
-					: `(${importAndStartCall})()`) +
+					: importAndStartCall) +
 				`}();`;
 			head += `\n\t\t<script type="module"${
 				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
