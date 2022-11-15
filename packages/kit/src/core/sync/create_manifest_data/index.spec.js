@@ -181,32 +181,24 @@ test('succeeds when routes does not exist', () => {
 	]);
 });
 
-// TODO some characters will need to be URL-encoded in the filename
 test('encodes invalid characters', () => {
 	const { nodes, routes } = create('samples/encoding');
 
-	// had to remove ? and " because windows
-
-	// const quote = 'samples/encoding/".svelte';
-	const hash = { component: 'samples/encoding/%23/+page.svelte' };
-	// const question_mark = 'samples/encoding/?.svelte';
+	const quote = { component: 'samples/encoding/[x+22]/+page.svelte' };
+	const hash = { component: 'samples/encoding/[x+23]/+page.svelte' };
+	const question_mark = { component: 'samples/encoding/[x+3f]/+page.svelte' };
 
 	assert.equal(nodes.map(simplify_node), [
 		default_layout,
 		default_error,
-		// quote,
-		hash
-		// question_mark
+		quote,
+		hash,
+		question_mark
 	]);
 
 	assert.equal(
-		routes.map((p) => p.pattern),
-		[
-			/^\/$/,
-			// /^\/%22\/?$/,
-			/^\/%23\/?$/
-			// /^\/%3F\/?$/
-		]
+		routes.map((p) => p.pattern.toString()),
+		[/^\/$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/].map((pattern) => pattern.toString())
 	);
 });
 

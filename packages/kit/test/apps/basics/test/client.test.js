@@ -774,6 +774,7 @@ test.describe('Routing', () => {
 	});
 
 	test('does not normalize external path', async ({ page }) => {
+		/** @type {Array<string|undefined>} */
 		const urls = [];
 
 		const { port, close } = await start_server((req, res) => {
@@ -1030,6 +1031,7 @@ test.describe.serial('Invalidation', () => {
 
 test.describe('data-sveltekit attributes', () => {
 	test('data-sveltekit-prefetch', async ({ baseURL, page }) => {
+		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
@@ -1065,6 +1067,7 @@ test.describe('data-sveltekit attributes', () => {
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
+		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
