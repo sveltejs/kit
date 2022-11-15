@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { testButtonTest } from '../../components/test-button-test.js';
 import { routeLegacy } from '../../legacy-utils.js';
 
-const detectModernBrowserVarName = '__KIT_is_modern_browser';
+//const detectModernBrowserVarName = '__KIT_is_modern_browser';
 
 const dev = process.env.DEV === 'true';
 
@@ -16,7 +16,7 @@ if (!dev) {
 		}
 		// otherwise
 
-		page.route('/test-page', async (route) => {
+		await page.route('/test-page', async (route) => {
 			const response = await page.request.fetch(route.request());
 
 			let body = await response.text();
@@ -31,7 +31,7 @@ if (!dev) {
 	});
 }
 
-// TODO: Add check for legacy by compatibility errors checks
+// TODO: Add check for legacy by compatibility errors checks, using `detectModernBrowserVarName`
 
 const legacyStates = dev ? [false] : [false, true];
 
@@ -43,7 +43,7 @@ legacyStates.forEach((legacy) =>
 			javaScriptEnabled = javaScriptEnabled ?? true;
 
 			if (legacy) {
-				routeLegacy(page, '/');
+				await routeLegacy(page, '/');
 			}
 
 			await page.goto('/');
@@ -56,18 +56,15 @@ legacyStates.forEach((legacy) =>
 			const rootStartingIndicatorText = await page
 				.locator('#root-starting-indicator')
 				.textContent();
-			if (javaScriptEnabled) {
-				expect(rootStartingIndicatorText).toBe('true');
-			} else {
-				expect(rootStartingIndicatorText).toBe('false');
-			}
+
+			expect(rootStartingIndicatorText).toBe(`${javaScriptEnabled}`);
 		});
 
 		test('test page', async ({ page, javaScriptEnabled }) => {
 			javaScriptEnabled = javaScriptEnabled ?? true;
 
 			if (legacy) {
-				routeLegacy(page, '/test-page');
+				await routeLegacy(page, '/test-page');
 			}
 
 			await page.goto('/test-page');
