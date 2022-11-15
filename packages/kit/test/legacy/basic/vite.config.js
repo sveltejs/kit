@@ -9,7 +9,7 @@ const config = {
 		sveltekit(),
 		legacy({
 			targets: readBrowsersList(),
-			polyfills: false,
+			polyfills: false
 		})
 	],
 	server: {
