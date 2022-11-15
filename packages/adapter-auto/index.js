@@ -21,7 +21,9 @@ for (const candidate of adapters) {
 				try {
 					console.log(`Installing ${candidate.module} on the fly...`);
 					execSync(
-						`npm install ${candidate.module} --no-save --omit=dev --no-package-lock --foreground-scripts`,
+						`${process.platform === 'win32' ? 'set' : ''} NODE_ENV=ignore_me && npm install ${
+							candidate.module
+						} --no-save --omit=dev --no-package-lock`,
 						{
 							stdio: 'inherit',
 							cwd: dirname(fileURLToPath(import.meta.url))
@@ -32,14 +34,14 @@ for (const candidate of adapters) {
 						`Successfully installed ${candidate.module} on the fly. If you plan on staying on this deployment platform, consider switching out @sveltejs/adapter-auto for ${candidate.module} for faster and more robust installs.`
 					);
 				} catch (e) {
-					if (
-						error.code === 'ERR_MODULE_NOT_FOUND' &&
-						error.message.startsWith(`Cannot find package '${candidate.module}'`)
-					) {
-						throw new Error(
-							`Could not install ${candidate.module} on the fly. Please install it yourself by adding it to your package.json's devDependencies and try building your project again.`
-						);
-					}
+					// if (
+					// 	error.code === 'ERR_MODULE_NOT_FOUND' &&
+					// 	error.message.startsWith(`Cannot find package '${candidate.module}'`)
+					// ) {
+					throw new Error(
+						`Could not install ${candidate.module} on the fly. Please install it yourself by adding it to your package.json's devDependencies and try building your project again.`
+					);
+					// }
 					// ignore other errors, but print them
 					console.warn(e);
 				}
