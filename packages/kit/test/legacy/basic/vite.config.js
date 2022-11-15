@@ -8,7 +8,8 @@ const config = {
 	plugins: [
 		sveltekit(),
 		legacy({
-			targets: readBrowsersList()
+			targets: readBrowsersList(),
+			polyfills: false,
 		})
 	],
 	server: {
