@@ -76,7 +76,7 @@ for (const candidate of adapters) {
 
 					console.log(`Successfully installed ${candidate.module}.`);
 					console.warn(
-						`If you plan on staying on this deployment platform, consider switching out @sveltejs/adapter-auto for ${candidate.module} for faster and more robust installs.`
+						`\nIf you plan on staying on this deployment platform, consider replacing @sveltejs/adapter-auto with ${candidate.module}. This will give you faster and more robust installs, and more control over deployment configuration.\n`
 					);
 				} catch (e) {
 					throw new Error(
