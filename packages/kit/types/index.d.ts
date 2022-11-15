@@ -292,7 +292,7 @@ export interface LoadEvent<
 	/**
 	 * Contains the data returned by the route's server `load` function (in `+layout.server.js` or `+page.server.js`), if any.
 	 */
-	data: Data;
+	data: Promise<Data>;
 	/**
 	 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
 	 *

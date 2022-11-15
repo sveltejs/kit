@@ -510,7 +510,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   route: { id: string | null };
-	 * 	 server_data_node: import('./types').DataNode | null;
+	 * 	 server_data_node: Promise<import('./types').DataNode | null>;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
@@ -552,7 +552,7 @@ export function create_client({ target, base, trailing_slash }) {
 						return target[/** @type {string} */ (key)];
 					}
 				}),
-				data: server_data_node?.data ?? null,
+				data: server_data_node.then((n) => n?.data ?? null),
 				url: make_trackable(url, () => {
 					uses.url = true;
 				}),
@@ -655,9 +655,9 @@ export function create_client({ target, base, trailing_slash }) {
 		return {
 			node,
 			loader,
-			server: server_data_node,
+			server: await server_data_node,
 			shared: node.shared?.load ? { type: 'data', data, uses } : null,
-			data: data ?? server_data_node?.data ?? null
+			data: data ?? (await server_data_node)?.data ?? null
 		};
 	}
 
@@ -731,8 +731,10 @@ export function create_client({ target, base, trailing_slash }) {
 		errors.forEach((loader) => loader?.().catch(() => {}));
 		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
 
-		/** @type {import('types').ServerData | null} */
+		/** @type {Promise<import('types').ServerData> | null} */
 		let server_data = null;
+		/** @type {import('types').ServerData | null} */
+		let redirect = null;
 
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
 		const route_changed = current.route ? id !== current.route.id : false;
@@ -756,20 +758,13 @@ export function create_client({ target, base, trailing_slash }) {
 		}, /** @type {boolean[]} */ ([]));
 
 		if (invalid_server_nodes.some(Boolean)) {
-			try {
-				server_data = await load_data(url, invalid_server_nodes);
-			} catch (error) {
-				return load_root_error_page({
-					status: 500,
-					error: handle_error(error, { url, params, route: { id: route.id } }),
-					url,
-					route
-				});
-			}
-
-			if (server_data.type === 'redirect') {
-				return server_data;
-			}
+			server_data = load_data(url, invalid_server_nodes).then((data) => {
+				if (data.type === 'redirect') {
+					redirect = data;
+					throw redirect;
+				}
+				return data;
+			});
 		}
 
 		const server_data_nodes = server_data?.nodes;
@@ -821,6 +816,21 @@ export function create_client({ target, base, trailing_slash }) {
 
 		// if we don't do this, rejections will be unhandled
 		for (const p of branch_promises) p.catch(() => {});
+
+		try {
+			await server_data;
+		} catch (error) {
+			if (error && error === redirect) {
+				return redirect;
+			} else {
+				return load_root_error_page({
+					status: 500,
+					error: handle_error(error, { url, params, route: { id: route.id } }),
+					url,
+					route
+				});
+			}
+		}
 
 		/** @type {Array<import('./types').BranchNode | undefined>} */
 		const branch = [];
