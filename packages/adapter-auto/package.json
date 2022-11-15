@@ -29,13 +29,11 @@
 		"format": "pnpm lint --write",
 		"check": "tsc"
 	},
-	"dependencies": {
-		"@sveltejs/adapter-cloudflare": "workspace:*",
-		"@sveltejs/adapter-netlify": "workspace:*",
-		"@sveltejs/adapter-vercel": "workspace:*"
-	},
 	"devDependencies": {
 		"@types/node": "^16.11.68",
 		"typescript": "^4.8.4"
+	},
+	"dependencies": {
+		"import-meta-resolve": "^2.1.0"
 	}
 }

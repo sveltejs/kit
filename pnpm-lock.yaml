@@ -32,15 +32,11 @@ importers:
 
   packages/adapter-auto:
     specifiers:
-      '@sveltejs/adapter-cloudflare': workspace:*
-      '@sveltejs/adapter-netlify': workspace:*
-      '@sveltejs/adapter-vercel': workspace:*
       '@types/node': ^16.11.68
+      import-meta-resolve: ^2.1.0
       typescript: ^4.8.4
     dependencies:
-      '@sveltejs/adapter-cloudflare': link:../adapter-cloudflare
-      '@sveltejs/adapter-netlify': link:../adapter-netlify
-      '@sveltejs/adapter-vercel': link:../adapter-vercel
+      import-meta-resolve: 2.1.0
     devDependencies:
       '@types/node': 16.18.3
       typescript: 4.8.4
@@ -2604,6 +2600,10 @@ packages:
       parent-module: 1.0.1
       resolve-from: 4.0.0
     dev: true
+
+  /import-meta-resolve/2.1.0:
+    resolution: {integrity: sha512-yG9pxkWJVTy4cmRsNWE3ztFdtFuYIV8G4N+cbCkO8b+qngkLyIUhxQFuZ0qJm67+0nUOxjMPT7nfksPKza1v2g==}
+    dev: false
 
   /indent-string/4.0.0:
     resolution: {integrity: sha512-EdDDZu4A2OyIK7Lr/2zG+w5jmbuk1DVBnEwREQvBzspBJkCEbRa8GxU1lghYcaGJCnRWibjDXlq779X1/y5xwg==}
