@@ -28,7 +28,8 @@ for (const candidate of adapters) {
 						} --no-save --no-package-lock`,
 						{
 							stdio: 'inherit',
-							cwd: dirname(fileURLToPath(import.meta.url))
+							cwd: dirname(fileURLToPath(import.meta.url)),
+							env: {}
 						}
 					);
 					process.env.NODE_ENV = current;
