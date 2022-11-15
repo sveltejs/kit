@@ -153,7 +153,7 @@ export async function prerender() {
 		const file = path.slice(config.paths.base.length + 1) || 'index.html';
 
 		if (is_html && !file.endsWith('.html')) {
-			return file + (file.endsWith('/') ? 'index.html' : '.html');
+			return file + (file.endsWith('/') ? '' : '/') + 'index.html';
 		}
 
 		return file;
