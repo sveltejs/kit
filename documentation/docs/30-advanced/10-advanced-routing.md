@@ -171,7 +171,7 @@ You can also put a `+page` directly inside a `(group)`, for example if `/` shoul
 
 #### Breaking out of layouts
 
-The root layout — which, if omitted, defaults to `<slot />` — applies to every page of your app. If you want some pages to _not_ have the same layout hierarchy as the rest, then you can put your entire app inside one or more groups _except_ the routes that should not inherit the common layouts.
+The root layout applies to every page of your app — if omitted, it defaults to `<slot />`. If you want some pages to have a different layout hierarchy than the rest, then you can put your entire app inside one or more groups _except_ the routes that should not inherit the common layouts.
 
 In the example above, the `/admin` route does not inherit either the `(app)` or `(marketing)` layouts.
 
