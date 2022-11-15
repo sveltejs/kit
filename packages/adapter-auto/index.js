@@ -1,10 +1,26 @@
 import { execSync } from 'child_process';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { detect } from 'detect-package-manager';
+import { pathToFileURL } from 'url';
+import { resolve } from 'import-meta-resolve';
 import { adapters } from './adapters.js';
 
 /** @type {import('./index').default} */
 let fn;
+
+/** @type {Record<string, (name: string) => string>} */
+const commands = {
+	npm: (name) => `npm install -D ${name}`,
+	pnpm: (name) => `pnpm add -D ${name}`,
+	yarn: (name) => `yarn add -D ${name}`
+};
+
+/** @param {string} name */
+async function import_from_cwd(name) {
+	const cwd = pathToFileURL(process.cwd()).href;
+	const url = await resolve(name, cwd + '/x.js');
+
+	return import(url);
+}
 
 for (const candidate of adapters) {
 	if (candidate.test()) {
@@ -12,43 +28,36 @@ for (const candidate of adapters) {
 		let module;
 
 		try {
-			module = await import(candidate.module);
+			module = await import_from_cwd(candidate.module);
 		} catch (error) {
 			if (
 				error.code === 'ERR_MODULE_NOT_FOUND' &&
 				error.message.startsWith(`Cannot find package '${candidate.module}'`)
 			) {
-				const current = process.env.NODE_ENV;
+				const package_manager = await detect();
+				const command = commands[package_manager](candidate.module);
+
 				try {
-					console.log(`Installing ${candidate.module} on the fly...`);
-					process.env.NODE_ENV = undefined;
-					execSync(
-						`${process.platform === 'win32' ? 'set' : ''} NODE_ENV=ignore_me && npm install ${
-							candidate.module
-						} --no-save --no-package-lock`,
-						{
-							stdio: 'inherit',
-							cwd: dirname(fileURLToPath(import.meta.url)),
-							env: {}
+					console.log(`Installing ${candidate.module}...`);
+
+					execSync(command, {
+						stdio: 'inherit',
+						env: {
+							...process.env,
+							NODE_ENV: undefined
 						}
-					);
-					process.env.NODE_ENV = current;
-					module = await import(candidate.module);
-					console.log(
-						`Successfully installed ${candidate.module} on the fly. If you plan on staying on this deployment platform, consider switching out @sveltejs/adapter-auto for ${candidate.module} for faster and more robust installs.`
+					});
+
+					module = await import_from_cwd(candidate.module);
+
+					console.log(`Successfully installed ${candidate.module}.`);
+					console.warn(
+						`If you plan on staying on this deployment platform, consider switching out @sveltejs/adapter-auto for ${candidate.module} for faster and more robust installs.`
 					);
 				} catch (e) {
-					process.env.NODE_ENV = current;
-					// if (
-					// 	error.code === 'ERR_MODULE_NOT_FOUND' &&
-					// 	error.message.startsWith(`Cannot find package '${candidate.module}'`)
-					// ) {
 					throw new Error(
-						`Could not install ${candidate.module} on the fly. Please install it yourself by adding it to your package.json's devDependencies and try building your project again.`
+						`Could not install ${candidate.module}. Please install it yourself by adding it to your package.json's devDependencies and try building your project again.`
 					);
-					// }
-					// ignore other errors, but print them
-					console.warn(e);
 				}
 			} else {
 				throw error;
