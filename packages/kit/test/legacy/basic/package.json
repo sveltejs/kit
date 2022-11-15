@@ -1,0 +1,25 @@
+{
+	"name": "legacy-basic",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
+		"test:dev": "cross-env DEV=true playwright test",
+		"test:build": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:*",
+		"@vitejs/plugin-legacy": "^2.2.0",
+		"cross-env": "^7.0.3",
+		"svelte": "^3.44.0",
+		"svelte-check": "^2.7.1",
+		"terser": ">=5.4.0 <6.0.0",
+		"typescript": "^4.7.4",
+		"vite": "^3.1.0"
+	},
+	"type": "module"
+}
