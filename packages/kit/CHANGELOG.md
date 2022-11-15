@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.548
+
+### Patch Changes
+
+- Only apply polyfills where necessary ([#7668](https://github.com/sveltejs/kit/pull/7668))
+
 ## 1.0.0-next.547
 
 ### Patch Changes
