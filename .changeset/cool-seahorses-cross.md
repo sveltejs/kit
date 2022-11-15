@@ -2,4 +2,4 @@
 'create-svelte': patch
 ---
 
-Bump TypeScript version
+Bump TypeScript version and use `satisfies` operator
