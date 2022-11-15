@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.546
+
+### Patch Changes
+
+- fix outdated config error ([#7649](https://github.com/sveltejs/kit/pull/7649))
+
+- [breaking] use hex/unicode escape sequences for encoding special characters in route directory names ([#7644](https://github.com/sveltejs/kit/pull/7644))
+
+- fix `beforeNavigate` description — `routeId` -> `route.id` ([#7643](https://github.com/sveltejs/kit/pull/7643))
+
 ## 1.0.0-next.545
 
 ### Patch Changes
