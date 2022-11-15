@@ -58,20 +58,10 @@ const tests = {
 		names: ['id'],
 		types: ['uuid']
 	},
-	'/%23hash-encoded': {
-		pattern: /^\/%23hash-encoded\/?$/,
-		names: [],
-		types: []
-	},
-	'/%40at-encoded/[id]': {
-		pattern: /^\/@at-encoded\/([^/]+?)\/?$/,
+	'/@-symbol/[id]': {
+		pattern: /^\/@-symbol\/([^/]+?)\/?$/,
 		names: ['id'],
 		types: [undefined]
-	},
-	'/%255bdoubly-encoded': {
-		pattern: /^\/%5bdoubly-encoded\/?$/,
-		names: [],
-		types: []
 	}
 };
 

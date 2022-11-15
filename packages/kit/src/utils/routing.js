@@ -1,6 +1,9 @@
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
-/** @param {string} id */
+/**
+ * Creates the regex pattern, extracts parameter names, and generates types for a route
+ * @param {string} id
+ */
 export function parse_route_id(id) {
 	/** @type {string[]} */
 	const names = [];
@@ -21,9 +24,8 @@ export function parse_route_id(id) {
 			: new RegExp(
 					`^${get_route_segments(id)
 						.map((segment, i, segments) => {
-							const decoded_segment = decodeURIComponent(segment);
 							// special case — /[...rest]/ could contain zero segments
-							const rest_match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(decoded_segment);
+							const rest_match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(segment);
 							if (rest_match) {
 								names.push(rest_match[1]);
 								types.push(rest_match[2]);
@@ -31,7 +33,7 @@ export function parse_route_id(id) {
 								return '(?:/(.*))?';
 							}
 							// special case — /[[optional]]/ could contain zero segments
-							const optional_match = /^\[\[(\w+)(?:=(\w+))?\]\]$/.exec(decoded_segment);
+							const optional_match = /^\[\[(\w+)(?:=(\w+))?\]\]$/.exec(segment);
 							if (optional_match) {
 								names.push(optional_match[1]);
 								types.push(optional_match[2]);
@@ -41,14 +43,29 @@ export function parse_route_id(id) {
 
 							const is_last = i === segments.length - 1;
 
-							if (!decoded_segment) {
+							if (!segment) {
 								return;
 							}
 
-							const parts = decoded_segment.split(/\[(.+?)\](?!\])/);
+							const parts = segment.split(/\[(.+?)\](?!\])/);
 							const result = parts
 								.map((content, i) => {
 									if (i % 2) {
+										if (content.startsWith('x+')) {
+											return escape(String.fromCharCode(parseInt(content.slice(2), 16)));
+										}
+
+										if (content.startsWith('u+')) {
+											return escape(
+												String.fromCharCode(
+													...content
+														.slice(2)
+														.split('-')
+														.map((code) => parseInt(code, 16))
+												)
+											);
+										}
+
 										const match = param_pattern.exec(content);
 										if (!match) {
 											throw new Error(
@@ -69,18 +86,7 @@ export function parse_route_id(id) {
 
 									if (is_last && content.includes('.')) add_trailing_slash = false;
 
-									return (
-										content // allow users to specify characters on the file system in an encoded manner
-											.normalize()
-											// '#', '/', and '?' can only appear in URL path segments in an encoded manner.
-											// They will not be touched by decodeURI so need to be encoded here, so
-											// that we can match against them.
-											// We skip '/' since you can't create a file with it on any OS
-											.replace(/#/g, '%23')
-											.replace(/\?/g, '%3F')
-											// escape characters that have special meaning in regex
-											.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-									); // TODO handle encoding
+									return escape(content);
 								})
 								.join('');
 
@@ -142,4 +148,21 @@ export function exec(match, { names, types, optional }, matchers) {
 	}
 
 	return params;
+}
+
+/** @param {string} str */
+function escape(str) {
+	return (
+		str
+			.normalize()
+			// escape [ and ] before escaping other characters, since they are used in the replacements
+			.replace(/[[\]]/g, '\\$&')
+			// replace %, /, ? and # with their encoded versions because decode_pathname leaves them untouched
+			.replace(/%/g, '%25')
+			.replace(/\//g, '%2[Ff]')
+			.replace(/\?/g, '%3[Ff]')
+			.replace(/#/g, '%23')
+			// escape characters that have special meaning in regex
+			.replace(/[.*+?^${}()|\\]/g, '\\$&')
+	);
 }

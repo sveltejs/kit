@@ -378,7 +378,7 @@ export interface NavigationEvent<
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
 		 */
 		id: RouteId;
 	};
@@ -475,7 +475,7 @@ export interface Page<
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
 		 */
 		id: RouteId;
 	};
@@ -544,7 +544,7 @@ export interface RequestEvent<
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `blog/[slug]`
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
 		 */
 		id: RouteId;
 	};
@@ -731,7 +731,10 @@ export function error(
  * Creates a `Redirect` object. If thrown during request handling, SvelteKit will
  * return a redirect response.
  */
-export function redirect(status: number, location: string): Redirect;
+export function redirect(
+	status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308,
+	location: string
+): Redirect;
 
 /**
  * Generates a JSON `Response` object from the supplied data.

@@ -666,8 +666,8 @@ test.describe('Prefetching', () => {
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
 		await Promise.all([
-			page.waitForResponse(`${baseURL}/routing/prefetched.json`),
-			app.prefetch('/routing/prefetched')
+			page.waitForResponse(`${baseURL}/routing/prefetching/prefetched.json`),
+			app.prefetch('/routing/prefetching/prefetched')
 		]);
 
 		// svelte request made is environment dependent
@@ -679,10 +679,10 @@ test.describe('Prefetching', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/routing/prefetched.json`)).toBe(true);
+		expect(requests.includes(`${baseURL}/routing/prefetching/prefetched.json`)).toBe(true);
 
 		requests = [];
-		await app.goto('/routing/prefetched');
+		await app.goto('/routing/prefetching/prefetched');
 		expect(requests).toEqual([]);
 
 		try {
@@ -698,27 +698,35 @@ test.describe('Prefetching', () => {
 		page
 	}) => {
 		await page.goto('/routing/a');
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-		await app.goto('/routing/prefetched/hash-route');
+		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me');
+		await app.goto('/routing/prefetching/hash-route');
 		await expect(page.locator('h1')).not.toHaveText('Oopsie');
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-		await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
+		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me');
+		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me');
+		await app.goto('/routing/prefetching/hash-route#please-dont-show-me');
 		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
 	});
 
 	test('does not rerun load on calls to different preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me-jr');
-		await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
+		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me');
+		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me-jr');
+		await app.goto('/routing/prefetching/hash-route#please-dont-show-me');
 		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
+	});
+
+	test('does rerun load when prefetch errored', async ({ app, page }) => {
+		await page.goto('/routing/a');
+
+		await app.prefetch('/routing/prefetching/prefetch-error');
+		await app.goto('/routing/prefetching/prefetch-error');
+		await expect(page.locator('p')).toHaveText('hello');
 	});
 });
 
@@ -766,6 +774,7 @@ test.describe('Routing', () => {
 	});
 
 	test('does not normalize external path', async ({ page }) => {
+		/** @type {Array<string|undefined>} */
 		const urls = [];
 
 		const { port, close } = await start_server((req, res) => {
@@ -1022,6 +1031,7 @@ test.describe.serial('Invalidation', () => {
 
 test.describe('data-sveltekit attributes', () => {
 	test('data-sveltekit-prefetch', async ({ baseURL, page }) => {
+		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
@@ -1057,6 +1067,7 @@ test.describe('data-sveltekit attributes', () => {
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
+		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 

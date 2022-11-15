@@ -1,5 +1,47 @@
 # @sveltejs/kit
 
+## 1.0.0-next.546
+
+### Patch Changes
+
+- fix outdated config error ([#7649](https://github.com/sveltejs/kit/pull/7649))
+
+- [breaking] use hex/unicode escape sequences for encoding special characters in route directory names ([#7644](https://github.com/sveltejs/kit/pull/7644))
+
+- fix `beforeNavigate` description — `routeId` -> `route.id` ([#7643](https://github.com/sveltejs/kit/pull/7643))
+
+## 1.0.0-next.545
+
+### Patch Changes
+
+- [fix] prerendering path and layout fixes ([#7639](https://github.com/sveltejs/kit/pull/7639))
+
+- [fix] add Promise return type to the `enhance` action ([#7629](https://github.com/sveltejs/kit/pull/7629))
+
+## 1.0.0-next.544
+
+### Patch Changes
+
+- [breaking] narrow down possible status codes for redirects to 300-308 ([#7615](https://github.com/sveltejs/kit/pull/7615))
+
+- [feat] add fallback component for layouts without one ([#7619](https://github.com/sveltejs/kit/pull/7619))
+
+## 1.0.0-next.543
+
+### Patch Changes
+
+- Don't print search params error when prerendering fallback page ([#7598](https://github.com/sveltejs/kit/pull/7598))
+
+- allow async function for `enhance` action parameter ([#7608](https://github.com/sveltejs/kit/pull/7608))
+
+- Run service worker during development ([#7597](https://github.com/sveltejs/kit/pull/7597))
+
+- [feat] support throwing redirect in handle ([#7612](https://github.com/sveltejs/kit/pull/7612))
+
+- Workaround for the DOM clobbering for use:enhance ([#7599](https://github.com/sveltejs/kit/pull/7599))
+
+- [fix] don't cache prefetch errors ([#7610](https://github.com/sveltejs/kit/pull/7610))
+
 ## 1.0.0-next.542
 
 ### Patch Changes

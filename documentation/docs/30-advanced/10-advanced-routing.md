@@ -123,27 +123,42 @@ src/routes/[...catchall]/+page.svelte
 
 ### Encoding
 
-Directory names are URI-decoded, meaning that (for example) a directory like `%40[username]` would match characters beginning with `@`:
+Some characters can't be used on the filesystem — `/` on Linux and Mac, `\ / : * ? " < > |` on Windows. The `#` and `%` characters have special meaning in URLs, and the `[ ] ( )` characters have special meaning to SvelteKit, so these also can't be used directly as part of your route.
+
+To use these characters in your routes, you can use hexadecimal escape sequences, which have the format `[x+nn]` where `nn` is a hexadecimal character code:
+
+- `\` — `[x+5c]`
+- `/` — `[x+2f]`
+- `:` — `[x+3a]`
+- `*` — `[x+2a]`
+- `?` — `[x+3f]`
+- `"` — `[x+22]`
+- `<` — `[x+3c]`
+- `>` — `[x+3e]`
+- `|` — `[x+7c]`
+- `#` — `[x+23]`
+- `%` — `[x+25]`
+- `[` — `[x+5b]`
+- `]` — `[x+5d]`
+- `(` — `[x+28]`
+- `)` — `[x+29]`
+
+For example, to create a `/smileys/:-)` route, you would create a `src/routes/smileys/[x+3a]-[x+29]/+page.svelte` file.
+
+You can determine the hexadecimal code for a character with JavaScript:
 
 ```js
-// @filename: ambient.d.ts
-declare global {
-	const assert: {
-		equal: (a: any, b: any) => boolean;
-	};
-}
-
-export {};
-
-// @filename: index.js
-// ---cut---
-assert.equal(
-	decodeURIComponent('%40[username]'),
-	'@[username]'
-);
+':'.charCodeAt(0).toString(16); // '3a', hence '[x+3a]'
 ```
 
-To express a `%` character, use `%25`, otherwise the result will be malformed.
+You can also use Unicode escape sequences. Generally you won't need to as you can use the unencoded character directly, but if — for some reason — you can't have a filename with an emoji in it, for example, then you can use the escaped characters. In other words, these are equivalent:
+
+```
+src/routes/[u+d83e][u+dd2a]/+page.svelte
+src/routes/🤪/+page.svelte
+```
+
+The format for a Unicode escape sequence is `[u+nnnn]` where `nnnn` is a valid value between `0000` and `10ffff`. (Unlike JavaScript string escaping, there's no need to use surrogate pairs to represent code points above `ffff`.) To learn more about Unicode encodings, consult [Programming with Unicode](https://unicodebook.readthedocs.io/unicode_encodings.html).
 
 ### Advanced layouts
 
