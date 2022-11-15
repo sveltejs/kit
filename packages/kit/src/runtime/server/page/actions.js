@@ -1,3 +1,4 @@
+import * as devalue from 'devalue';
 import { error, json } from '../../../exports/index.js';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
@@ -41,14 +42,20 @@ export async function handle_action_json_request(event, options, server) {
 		const data = await call_action(event, actions);
 
 		if (data instanceof ValidationError) {
-			check_serializability(data.data, /** @type {string} */ (event.route.id), 'data');
-			return action_json({ type: 'invalid', status: data.status, data: data.data });
+			return action_json({
+				type: 'invalid',
+				status: data.status,
+				// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
+				// because we don't use the object outside, and this way we have better code navigation
+				// through knowing where the related interface is used.
+				data: stringify_action_response(data.data, /** @type {string} */ (event.route.id))
+			});
 		} else {
-			check_serializability(data, /** @type {string} */ (event.route.id), 'data');
 			return action_json({
 				type: 'success',
 				status: data ? 200 : 204,
-				data: /** @type {Record<string, any> | undefined} */ (data)
+				// @ts-expect-error see comment above
+				data: stringify_action_response(data, /** @type {string} */ (event.route.id))
 			});
 		}
 	} catch (e) {
@@ -211,46 +218,41 @@ function maybe_throw_migration_error(server) {
 }
 
 /**
- * Check that the data can safely be serialized to JSON
- * @param {any} value
- * @param {string} id
- * @param {string} path
+ * Try to `devalue.uneval` the data object, and if it fails, return a proper Error with context
+ * @param {any} data
+ * @param {string} route_id
  */
-function check_serializability(value, id, path) {
-	const type = typeof value;
+export function uneval_action_response(data, route_id) {
+	return try_deserialize(data, devalue.uneval, route_id);
+}
 
-	if (type === 'string' || type === 'boolean' || type === 'number' || type === 'undefined') {
-		// primitives are fine
-		return;
-	}
+/**
+ * Try to `devalue.stringify` the data object, and if it fails, return a proper Error with context
+ * @param {any} data
+ * @param {string} route_id
+ */
+function stringify_action_response(data, route_id) {
+	return try_deserialize(data, devalue.stringify, route_id);
+}
 
-	if (type === 'object') {
-		// nulls are fine...
-		if (!value) return;
+/**
+ * @param {any} data
+ * @param {(data: any) => string} fn
+ * @param {string} route_id
+ */
+function try_deserialize(data, fn, route_id) {
+	try {
+		return fn(data);
+	} catch (e) {
+		// If we're here, the data could not be serialized with devalue
+		const error = /** @type {any} */ (e);
 
-		// ...so are plain arrays...
-		if (Array.isArray(value)) {
-			value.forEach((child, i) => {
-				check_serializability(child, id, `${path}[${i}]`);
-			});
-			return;
+		if ('path' in error) {
+			let message = `Data returned from action inside ${route_id} is not serializable: ${error.message}`;
+			if (error.path !== '') message += ` (data.${error.path})`;
+			throw new Error(message);
 		}
 
-		// ...and objects
-		// This simple check might potentially run into some weird edge cases
-		// Refer to https://github.com/lodash/lodash/blob/2da024c3b4f9947a48517639de7560457cd4ec6c/isPlainObject.js?rgh-link-date=2022-07-20T12%3A48%3A07Z#L30
-		// if that ever happens
-		if (Object.getPrototypeOf(value) === Object.prototype) {
-			for (const key in value) {
-				check_serializability(value[key], id, `${path}.${key}`);
-			}
-			return;
-		}
+		throw error;
 	}
-
-	throw new Error(
-		`${path} returned from action in ${id} cannot be serialized as JSON without losing its original type` +
-			// probably the most common case, so let's give a hint
-			(value instanceof Date ? ' (Date objects are serialized as strings)' : '')
-	);
 }

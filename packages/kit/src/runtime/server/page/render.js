@@ -4,6 +4,7 @@ import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
+import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
 
 // TODO rename this function/module
@@ -206,8 +207,7 @@ export async function render_response({
 	}
 
 	if (form_value) {
-		// no need to check it can be serialized, we already verified that it's JSON-friendly
-		serialized.form = devalue.uneval(form_value);
+		serialized.form = uneval_action_response(form_value, /** @type {string} */ (event.route.id));
 	}
 
 	if (inline_styles.size > 0) {
@@ -306,12 +306,14 @@ export async function render_response({
 	}
 
 	if (options.service_worker) {
+		const opts = options.dev ? `, { type: 'module' }` : '';
+
 		// we use an anonymous function instead of an arrow function to support
 		// older browsers (https://github.com/sveltejs/kit/pull/5417)
 		const init_service_worker = `
 			if ('serviceWorker' in navigator) {
 				addEventListener('load', function () {
-					navigator.serviceWorker.register('${prefixed('service-worker.js')}');
+					navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
 				});
 			}
 		`;

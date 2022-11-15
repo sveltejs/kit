@@ -13,7 +13,7 @@ export function error(status, message) {
 
 /** @type {import('@sveltejs/kit').redirect} */
 export function redirect(status, location) {
-	if (isNaN(status) || status < 300 || status > 399) {
+	if (isNaN(status) || status < 300 || status > 308) {
 		throw new Error('Invalid status code');
 	}
 

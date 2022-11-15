@@ -122,6 +122,15 @@ export async function setResponse(res, response) {
 		return;
 	}
 
+	if (response.body.locked) {
+		res.write(
+			'Fatal error: Response body is locked. ' +
+				`This can happen when the response was already read (for example through 'response.json()' or 'response.text()').`
+		);
+		res.end();
+		return;
+	}
+
 	const reader = response.body.getReader();
 
 	if (res.destroyed) {

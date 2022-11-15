@@ -2,9 +2,8 @@ import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
-import { coalesce_to_error } from '../../utils/error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { GENERIC_ERROR, handle_fatal_error } from './utils.js';
+import { GENERIC_ERROR, handle_fatal_error, redirect_response } from './utils.js';
 import {
 	decode_pathname,
 	decode_params,
@@ -16,8 +15,8 @@ import {
 import { exec } from '../../utils/routing.js';
 import { INVALIDATED_HEADER, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
-import { HttpError } from '../control.js';
 import { create_fetch } from './fetch.js';
+import { Redirect } from '../control.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -104,7 +103,7 @@ export async function respond(request, options, state) {
 
 	const { cookies, new_cookies, get_cookie_header } = get_cookies(request, url, options);
 
-	if (state.prerendering) disable_search(url);
+	if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
 	/** @type {import('types').RequestEvent} */
 	const event = {
@@ -275,9 +274,8 @@ export async function respond(request, options, state) {
 			// we can't load the endpoint from our own manifest,
 			// so we need to make an actual HTTP request
 			return await fetch(request);
-		} catch (e) {
-			// HttpError can come from endpoint - TODO should it be handled there instead?
-			const error = e instanceof HttpError ? e : coalesce_to_error(e);
+		} catch (error) {
+			// HttpError from endpoint can end up here - TODO should it be handled there instead?
 			return handle_fatal_error(event, options, error);
 		} finally {
 			event.cookies.set = () => {
@@ -362,8 +360,10 @@ export async function respond(request, options, state) {
 		}
 
 		return response;
-	} catch (/** @type {unknown} */ e) {
-		const error = coalesce_to_error(e);
+	} catch (error) {
+		if (error instanceof Redirect) {
+			return redirect_response(error.status, error.location);
+		}
 		return handle_fatal_error(event, options, error);
 	}
 }

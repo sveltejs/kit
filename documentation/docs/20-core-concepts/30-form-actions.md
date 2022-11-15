@@ -97,6 +97,12 @@ Each action receives a `RequestEvent` object, allowing you to read the data with
 ```js
 // @errors: 2339 2304
 /// file: src/routes/login/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
+export async function load({ cookies }) {
+	const user = await db.getUserFromSession(cookies.get('sessionid'));
+	return { user };
+}
+
 /** @type {import('./$types').Actions} */
 export const actions = {
 	login: async ({ cookies, request }) => {
@@ -225,6 +231,70 @@ export const actions = {
 };
 ```
 
+### Loading data
+
+After an action runs, the page will be re-rendered (unless a redirect or an unexpected error occurs), with the action's return value available to the page as the `form` prop. This means that your page's `load` functions will run after the action completes.
+
+Note that `handle` runs before the action is invoked, and does not re-run before the `load` functions. This means that if, for example, you use `handle` to populate `event.locals` based on a cookie, you must update `event.locals` when you set or delete the cookie in an action:
+
+```js
+/// file: src/hooks.server.js
+// @filename: ambient.d.ts
+declare namespace App {
+	interface Locals {
+		user: {
+			name: string;
+		} | null
+	}
+}
+
+// @filename: global.d.ts
+declare global {
+	function getUser(sessionid: string | undefined): {
+		name: string;
+	};
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ event, resolve }) {
+	event.locals.user = await getUser(event.cookies.get('sessionid'));
+	return resolve(event);
+}
+```
+
+```js
+/// file: src/routes/account/+page.server.js
+// @filename: ambient.d.ts
+declare namespace App {
+	interface Locals {
+		user: {
+			name: string;
+		} | null
+	}
+}
+
+// @filename: index.js
+// ---cut---
+/** @type {import('./$types').PageServerLoad} */
+export function load(event) {
+	return {
+		user: event.locals.user
+	};
+}
+
+/** @type {import('./$types').Actions} */
+export const actions = {
+	logout: async (event) => {
+		event.cookies.delete('sessionid');
+		event.locals.user = null;
+	}
+};
+```
+
 ### Progressive enhancement
 
 In the preceding sections we built a `/login` action that [works without client-side JavaScript](https://kryogenix.org/code/browser/everyonehasjs.html) — not a `fetch` in sight. That's great, but when JavaScript _is_ available we can progressively enhance our form interactions to provide a better user experience.
@@ -319,7 +389,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 /// file: src/routes/login/+page.svelte
 <script>
 	import { invalidateAll, goto } from '$app/navigation';
-	import { applyAction } from '$app/forms';
+	import { applyAction, deserialize } from '$app/forms';
 
 	/** @type {import('./$types').ActionData} */
 	export let form;
@@ -336,7 +406,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 		});
 
 		/** @type {import('@sveltejs/kit').ActionResult} */
-		const result = await response.json();
+		const result = deserialize(await response.text());
 
 		if (result.type === 'success') {
 			// re-run all `load` functions, following the successful update
@@ -351,6 +421,8 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	<!-- content -->
 </form>
 ```
+
+Note that you need to `deserialize` the response before processing it further using the corresponding method from `$app/forms`. `JSON.parse()` isn't enough because form actions - like `load` functions - also support returning `Date` or `BigInt` objects.
 
 If you have a `+server.js` alongside your `+page.server.js`, `fetch` requests will be routed there by default. To `POST` to an action in `+page.server.js` instead, use the custom `x-sveltekit-action` header:
 

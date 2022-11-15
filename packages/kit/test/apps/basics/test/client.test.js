@@ -7,6 +7,99 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 test.describe.configure({ mode: 'parallel' });
 
+test.describe('a11y', () => {
+	test('resets focus', async ({ page, clicknav, browserName }) => {
+		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+
+		await page.goto('/accessibility/a');
+
+		await clicknav('[href="/accessibility/b"]');
+		expect(await page.innerHTML('h1')).toBe('b');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		await page.keyboard.press(tab);
+
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BUTTON');
+		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('focus me');
+
+		await clicknav('[href="/accessibility/a"]');
+		expect(await page.innerHTML('h1')).toBe('a');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+
+		await page.keyboard.press(tab);
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BUTTON');
+		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('focus me');
+
+		expect(await page.evaluate(() => document.documentElement.getAttribute('tabindex'))).toBe(null);
+	});
+
+	test('applies autofocus after a navigation', async ({ page, clicknav }) => {
+		await page.goto('/accessibility/autofocus/a');
+
+		await clicknav('[href="/accessibility/autofocus/b"]');
+		expect(await page.innerHTML('h1')).toBe('b');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
+	});
+
+	(process.env.KIT_E2E_BROWSER === 'webkit' ? test.skip : test)(
+		'applies autofocus after an enhanced form submit',
+		async ({ page }) => {
+			await page.goto('/accessibility/autofocus/b');
+
+			await page.click('#submit');
+			await page.waitForFunction(() => document.activeElement?.nodeName === 'INPUT', null, {
+				timeout: 1000
+			});
+		}
+	);
+
+	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {
+		await page.goto('/accessibility/a');
+
+		const has_live_region = (await page.innerHTML('body')).includes('aria-live');
+
+		if (javaScriptEnabled) {
+			expect(has_live_region).toBeTruthy();
+
+			// live region should exist, but be empty
+			expect(await page.innerHTML('[aria-live]')).toBe('');
+
+			await clicknav('[href="/accessibility/b"]');
+			expect(await page.innerHTML('[aria-live]')).toBe('b'); // TODO i18n
+		} else {
+			expect(has_live_region).toBeFalsy();
+		}
+	});
+
+	test('reset selection', async ({ page, clicknav }) => {
+		await page.goto('/selection/a');
+
+		expect(
+			await page.evaluate(() => {
+				const range = document.createRange();
+				range.selectNodeContents(document.body);
+				const selection = getSelection();
+				if (selection) {
+					selection.removeAllRanges();
+					selection.addRange(range);
+					return selection.rangeCount;
+				}
+				return -1;
+			})
+		).toBe(1);
+
+		await clicknav('[href="/selection/b"]');
+		expect(
+			await page.evaluate(() => {
+				const selection = getSelection();
+				if (selection) {
+					return selection.rangeCount;
+				}
+				return -1;
+			})
+		).toBe(0);
+	});
+});
+
 test.describe('Caching', () => {
 	test('caches __data.json requests with Vary header', async ({ page, app }) => {
 		await page.goto('/');
@@ -27,7 +120,7 @@ test.describe('beforeNavigate', () => {
 		await page.waitForLoadState('networkidle');
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('true false link');
+		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
 	test('prevents navigation to external', async ({ page, baseURL }) => {
@@ -38,7 +131,7 @@ test.describe('beforeNavigate', () => {
 
 		page.click('a[href="https://google.de"]'); // do NOT await this, promise only resolves after successful navigation, which never happens
 		await page.waitForTimeout(500);
-		await expect(page.locator('pre')).toHaveText('true true link');
+		await expect(page.locator('pre')).toHaveText('1 true link');
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 	});
 
@@ -46,14 +139,14 @@ test.describe('beforeNavigate', () => {
 		await page.goto('/before-navigate/prevent-navigation');
 		await app.goto('/before-navigate/a');
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('true false goto');
+		expect(await page.innerHTML('pre')).toBe('1 false goto');
 	});
 
 	test('prevents external navigation triggered by goto', async ({ page, app, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 		await app.goto('https://google.de');
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('true true goto');
+		expect(await page.innerHTML('pre')).toBe('1 true goto');
 	});
 
 	test('prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
@@ -62,7 +155,7 @@ test.describe('beforeNavigate', () => {
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 
 		await page.goBack();
-		expect(await page.innerHTML('pre')).toBe('true false popstate');
+		expect(await page.innerHTML('pre')).toBe('1 false popstate');
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 	});
 
@@ -78,7 +171,17 @@ test.describe('beforeNavigate', () => {
 
 		await page.close({ runBeforeUnload: true });
 		expect(await type).toBe('beforeunload');
-		expect(await page.innerHTML('pre')).toBe('true true leave');
+		expect(await page.innerHTML('pre')).toBe('1 true leave');
+	});
+
+	test('is not triggered on redirect', async ({ page, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+
+		await page.click('[href="/before-navigate/redirect"]');
+		await page.waitForLoadState('networkidle');
+
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 });
 
@@ -479,6 +582,30 @@ test.describe('Load', () => {
 		expect(response.headers()['cache-control']).toBe('private, no-store');
 	});
 
+	test('cache with body hash', async ({ page, clicknav }) => {
+		// 1. go to the page (first load, we expect the right data)
+		await page.goto('/load/fetch-cache-control/load-data');
+		expect(await page.textContent('div#fr')).toBe(JSON.stringify({ hi: 'bonjour' }));
+		expect(await page.textContent('div#hu')).toBe(JSON.stringify({ hi: 'szia' }));
+
+		// 2. change to another route (client side)
+		await clicknav('[href="/load/fetch-cache-control"]');
+
+		// 3. come back to the original page (client side)
+		let did_request_data = false;
+		page.on('request', (request) => {
+			if (request.url().endsWith('fetch-cache-control/load-data')) {
+				did_request_data = true;
+			}
+		});
+		await clicknav('[href="/load/fetch-cache-control/load-data"]');
+
+		// 4. data should still be the same (and cached)
+		expect(await page.textContent('div#fr')).toBe(JSON.stringify({ hi: 'bonjour' }));
+		expect(await page.textContent('div#hu')).toBe(JSON.stringify({ hi: 'szia' }));
+		expect(did_request_data).toBe(false);
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page }) => {
 			const port = 5173;
@@ -539,8 +666,8 @@ test.describe('Prefetching', () => {
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
 		await Promise.all([
-			page.waitForResponse(`${baseURL}/routing/prefetched.json`),
-			app.prefetch('/routing/prefetched')
+			page.waitForResponse(`${baseURL}/routing/prefetching/prefetched.json`),
+			app.prefetch('/routing/prefetching/prefetched')
 		]);
 
 		// svelte request made is environment dependent
@@ -552,10 +679,10 @@ test.describe('Prefetching', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/routing/prefetched.json`)).toBe(true);
+		expect(requests.includes(`${baseURL}/routing/prefetching/prefetched.json`)).toBe(true);
 
 		requests = [];
-		await app.goto('/routing/prefetched');
+		await app.goto('/routing/prefetching/prefetched');
 		expect(requests).toEqual([]);
 
 		try {
@@ -571,27 +698,35 @@ test.describe('Prefetching', () => {
 		page
 	}) => {
 		await page.goto('/routing/a');
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-		await app.goto('/routing/prefetched/hash-route');
+		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me');
+		await app.goto('/routing/prefetching/hash-route');
 		await expect(page.locator('h1')).not.toHaveText('Oopsie');
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-		await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
+		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me');
+		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me');
+		await app.goto('/routing/prefetching/hash-route#please-dont-show-me');
 		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
 	});
 
 	test('does not rerun load on calls to different preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me-jr');
-		await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
+		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me');
+		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me-jr');
+		await app.goto('/routing/prefetching/hash-route#please-dont-show-me');
 		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
+	});
+
+	test('does rerun load when prefetch errored', async ({ app, page }) => {
+		await page.goto('/routing/a');
+
+		await app.prefetch('/routing/prefetching/prefetch-error');
+		await app.goto('/routing/prefetching/prefetch-error');
+		await expect(page.locator('p')).toHaveText('hello');
 	});
 });
 
@@ -639,6 +774,7 @@ test.describe('Routing', () => {
 	});
 
 	test('does not normalize external path', async ({ page }) => {
+		/** @type {Array<string|undefined>} */
 		const urls = [];
 
 		const { port, close } = await start_server((req, res) => {
@@ -837,8 +973,8 @@ test.describe.serial('Invalidation', () => {
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
-		await Promise.all([page.click('button.server'), page.waitForLoadState('networkidle')]);
-		await page.waitForTimeout(200);
+		await page.click('button.server');
+		await page.evaluate(() => window.promise);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
 		expect(server).not.toBe(next_server);
@@ -852,8 +988,8 @@ test.describe.serial('Invalidation', () => {
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
-		await Promise.all([page.click('button.shared'), page.waitForLoadState('networkidle')]);
-		await page.waitForTimeout(200);
+		await page.click('button.shared');
+		await page.evaluate(() => window.promise);
 		const next_server = await page.textContent('p.server');
 		const next_shared = await page.textContent('p.shared');
 		expect(server).toBe(next_server);
@@ -895,6 +1031,7 @@ test.describe.serial('Invalidation', () => {
 
 test.describe('data-sveltekit attributes', () => {
 	test('data-sveltekit-prefetch', async ({ baseURL, page }) => {
+		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
@@ -930,6 +1067,7 @@ test.describe('data-sveltekit attributes', () => {
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
+		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
