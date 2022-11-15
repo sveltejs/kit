@@ -1,5 +1,11 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.88
+
+### Patch Changes
+
+- [feat] install adapters on demand ([#7462](https://github.com/sveltejs/kit/pull/7462))
+
 ## 1.0.0-next.87
 
 ### Patch Changes
