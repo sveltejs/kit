@@ -389,7 +389,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 /// file: src/routes/login/+page.svelte
 <script>
 	import { invalidateAll, goto } from '$app/navigation';
-	import { applyAction } from '$app/forms';
+	import { applyAction, deserialize } from '$app/forms';
 
 	/** @type {import('./$types').ActionData} */
 	export let form;
@@ -406,7 +406,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 		});
 
 		/** @type {import('@sveltejs/kit').ActionResult} */
-		const result = await response.json();
+		const result = deserialize(await response.text());
 
 		if (result.type === 'success') {
 			// re-run all `load` functions, following the successful update
@@ -421,6 +421,8 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	<!-- content -->
 </form>
 ```
+
+Note that you need to `deserialize` the response before processing it further using the corresponding method from `$app/forms`. `JSON.parse()` isn't enough because form actions - like `load` functions - also support returning `Date` or `BigInt` objects.
 
 If you have a `+server.js` alongside your `+page.server.js`, `fetch` requests will be routed there by default. To `POST` to an action in `+page.server.js` instead, use the custom `x-sveltekit-action` header:
 

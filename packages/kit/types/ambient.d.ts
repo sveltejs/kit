@@ -157,6 +157,19 @@ declare module '$app/forms' {
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	>(result: ActionResult<Success, Invalid>): Promise<void>;
+
+	/**
+	 * Use this function to deserialize the response from a form submission.
+	 * Usage:
+	 * ```
+	 * const res = await fetch('/form?/action', { method: 'POST', body: formData });
+	 * const result = deserialize(await res.text());
+	 * ```
+	 */
+	export function deserialize<
+		Success extends Record<string, unknown> | undefined = Record<string, any>,
+		Invalid extends Record<string, unknown> | undefined = Record<string, any>
+	>(serialized: string): ActionResult<Success, Invalid>;
 }
 
 /**
