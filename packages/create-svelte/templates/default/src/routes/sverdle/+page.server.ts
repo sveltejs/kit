@@ -3,7 +3,7 @@ import { words, allowed } from './words.server';
 import type { PageServerLoad, Actions } from './$types';
 
 /** @type {import('./$types').PageServerLoad} */
-export const load: PageServerLoad = ({ cookies }) => {
+export function load({ cookies }) {
 	const game = new Game(cookies.get('sverdle'));
 
 	return {
@@ -23,10 +23,10 @@ export const load: PageServerLoad = ({ cookies }) => {
 		 */
 		answer: game.answers.length >= 6 ? game.answer : null
 	};
-};
+} satisfies PageServerLoad;
 
 /** @type {import('./$types').Actions} */
-export const actions: Actions = {
+export const actions = {
 	/**
 	 * Modify game state in reaction to a keypress. If client-side JavaScript
 	 * is available, this will happen in the browser instead of here
@@ -68,7 +68,7 @@ export const actions: Actions = {
 	restart: async ({ cookies }) => {
 		cookies.delete('sverdle');
 	}
-};
+} satisifies Actions;
 
 class Game {
 	index: number;
