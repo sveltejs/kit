@@ -17,7 +17,7 @@ import {
 	TrailingSlash,
 	UniqueInterface
 } from './private.js';
-import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
+import { Asset, SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 import { HttpError, Redirect } from '../src/runtime/control.js';
 
 export { PrerenderOption } from './private.js';
@@ -71,6 +71,7 @@ export interface Builder {
 	rimraf(dir: string): void;
 	mkdirp(dir: string): void;
 
+	assets: Asset[];
 	config: ValidatedConfig;
 	prerendered: Prerendered;
 

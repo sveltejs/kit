@@ -14,6 +14,7 @@ export async function adapt(config, build_data, prerendered, prerender_map, { lo
 	console.log(colors.bold().cyan(`\n> Using ${name}`));
 
 	const builder = create_builder({
+		assets: build_data.manifest_data.assets,
 		config,
 		build_data,
 		routes: build_data.manifest_data.routes.filter((route) => {

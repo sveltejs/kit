@@ -12,6 +12,7 @@ const pipe = promisify(pipeline);
 /**
  * Creates the Builder which is passed to adapters for building the application.
  * @param {{
+ *   assets: import('types').Asset[];
  *   config: import('types').ValidatedConfig;
  *   build_data: import('types').BuildData;
  *   routes: import('types').RouteData[];
@@ -20,13 +21,14 @@ const pipe = promisify(pipeline);
  * }} opts
  * @returns {import('types').Builder}
  */
-export function create_builder({ config, build_data, routes, prerendered, log }) {
+export function create_builder({ assets, config, build_data, routes, prerendered, log }) {
 	return {
 		log,
 		rimraf,
 		mkdirp,
 		copy,
 
+		assets,
 		config,
 		prerendered,
 

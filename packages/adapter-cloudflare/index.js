@@ -41,7 +41,7 @@ export default function () {
 
 			writeFileSync(
 				`${dest}/_routes.json`,
-				JSON.stringify(get_routes_json(builder.config.kit.appDir, written_files))
+				JSON.stringify(get_routes_json(builder.config.kit.appDir, written_files)) // TODO involve builder.assets here
 			);
 
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.config.kit.appDir));
