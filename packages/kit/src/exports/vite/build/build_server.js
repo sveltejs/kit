@@ -27,7 +27,7 @@ const server_template = ({ config, hooks, has_service_worker, runtime, template,
 import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
-import { set_prerendering } from '${runtime}/env.js';
+import { set_prerendering, set_version } from '${runtime}/env.js';
 import { set_private_env } from '${runtime}/env-private.js';
 import { set_public_env } from '${runtime}/env-public.js';
 
@@ -44,6 +44,7 @@ const error_template = ({ status, message }) => ${s(error_page)
 let read = null;
 
 set_paths(${s(config.kit.paths)});
+set_version(${s(config.kit.version.name)});
 
 let default_protocol = 'https';
 
@@ -86,7 +87,8 @@ export class Server {
 			app_template,
 			app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			error_template,
-			trailing_slash: ${s(config.kit.trailingSlash)}
+			trailing_slash: ${s(config.kit.trailingSlash)},
+			version: ${s(config.kit.version.name)}
 		};
 	}
 

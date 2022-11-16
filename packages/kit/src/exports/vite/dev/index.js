@@ -268,6 +268,11 @@ export async function dev(vite, vite_config, svelte_config) {
 		}
 	});
 
+	// set `import { version } from '$app/environment'`
+	(await vite.ssrLoadModule(`${runtime_prefix}/env.js`)).set_version(
+		svelte_config.kit.version.name
+	);
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -472,7 +477,8 @@ export async function dev(vite, vite_config, svelte_config) {
 						service_worker:
 							svelte_config.kit.serviceWorker.register &&
 							!!resolve_entry(svelte_config.kit.files.serviceWorker),
-						trailing_slash: svelte_config.kit.trailingSlash
+						trailing_slash: svelte_config.kit.trailingSlash,
+						version: svelte_config.kit.version.name
 					},
 					{
 						getClientAddress: () => {

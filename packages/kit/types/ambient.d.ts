@@ -85,6 +85,11 @@ declare module '$app/environment' {
 	 * `true` when prerendering, `false` otherwise.
 	 */
 	export const prerendering: boolean;
+
+	/**
+	 * The value of `config.kit.version.name`
+	 */
+	export const version: string;
 }
 
 /**
