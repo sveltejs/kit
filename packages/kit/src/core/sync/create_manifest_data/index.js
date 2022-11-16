@@ -195,6 +195,20 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				if (!file.name.startsWith('+')) continue;
 				if (!valid_extensions.find((ext) => file.name.endsWith(ext))) continue;
 
+				if (file.name.endsWith('.d.ts')) {
+					let name = file.name.slice(0, -5);
+					const ext = valid_extensions.find((ext) => name.endsWith(ext));
+					if (ext) name = name.slice(0, -ext.length);
+
+					const valid =
+						/^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/.test(name) ||
+						/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/.test(
+							name
+						);
+
+					if (valid) continue;
+				}
+
 				const project_relative = posixify(path.relative(cwd, path.join(dir, file.name)));
 
 				const item = analyze(
