@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.551
+
+### Patch Changes
+
+- Add `Access-Control-Allow-Origin: *` to static assets in dev ([#7688](https://github.com/sveltejs/kit/pull/7688))
+
+- Ignore presence of `keepfocus` and `noscroll` in `goto` options if correctly-cased options are also present ([#7678](https://github.com/sveltejs/kit/pull/7678))
+
 ## 1.0.0-next.550
 
 ### Patch Changes
