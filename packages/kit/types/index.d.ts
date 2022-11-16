@@ -344,6 +344,7 @@ export interface LoadEvent<
 	 * The following example shows how to use `depends` to register a dependency on a custom identifier, which is `invalidate`d after a button click, making the `load` function rerun.
 	 *
 	 * ```js
+	 * // @errors: 7031
 	 * /// file: src/routes/+page.js
 	 * let count = 0;
 	 * export async function load({ depends }) {
@@ -559,6 +560,7 @@ export interface RequestEvent<
 	 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
 	 *
 	 *	```js
+	 *	// @errors: 7031
 	 *	/// file: src/routes/blog/+page.js
 	 *	export async function load({ fetch, setHeaders }) {
 	 *		const url = `https://cms.example.com/articles.json`;
@@ -685,6 +687,7 @@ export interface ServerLoadEvent<
 	 * The following example shows how to use `depends` to register a dependency on a custom identifier, which is `invalidate`d after a button click, making the `load` function rerun.
 	 *
 	 * ```js
+	 * // @errors: 7031
 	 * /// file: src/routes/+page.js
 	 * let count = 0;
 	 * export async function load({ depends }) {
