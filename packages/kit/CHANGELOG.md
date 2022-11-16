@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.549
+
+### Patch Changes
+
+- Always apply Node polyfills ([#7675](https://github.com/sveltejs/kit/pull/7675))
+
 ## 1.0.0-next.548
 
 ### Patch Changes
