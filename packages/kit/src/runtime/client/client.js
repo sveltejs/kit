@@ -205,7 +205,7 @@ export function create_client({ target, base, trailing_slash }) {
 					force_invalidation = true;
 				}
 			},
-			blocked: () => { },
+			blocked: () => {},
 			type: 'goto'
 		});
 	}
@@ -548,7 +548,7 @@ export function create_client({ target, base, trailing_slash }) {
 				},
 				params: new Proxy(params, {
 					get: (target, key) => {
-						uses.params.add(/** @type {string} */(key));
+						uses.params.add(/** @type {string} */ (key));
 						return target[/** @type {string} */ (key)];
 					}
 				}),
@@ -597,7 +597,7 @@ export function create_client({ target, base, trailing_slash }) {
 						? subsequent_fetch(requested, resolved, init)
 						: initial_fetch(requested, init);
 				},
-				setHeaders: () => { }, // noop
+				setHeaders: () => {}, // noop
 				depends,
 				parent() {
 					uses.parent = true;
@@ -728,8 +728,8 @@ export function create_client({ target, base, trailing_slash }) {
 		// preload modules to avoid waterfall, but handle rejections
 		// so they don't get reported to Sentry et al (we don't need
 		// to act on the failures at this point)
-		errors.forEach((loader) => loader?.().catch(() => { }));
-		loaders.forEach((loader) => loader?.[1]().catch(() => { }));
+		errors.forEach((loader) => loader?.().catch(() => {}));
+		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
 
 		/** @type {import('types').ServerData | null} */
 		let server_data = null;
@@ -753,7 +753,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 			acc.push(invalid);
 			return acc;
-		}, /** @type {boolean[]} */([]));
+		}, /** @type {boolean[]} */ ([]));
 
 		if (invalid_server_nodes.some(Boolean)) {
 			try {
@@ -820,7 +820,7 @@ export function create_client({ target, base, trailing_slash }) {
 		});
 
 		// if we don't do this, rejections will be unhandled
-		for (const p of branch_promises) p.catch(() => { });
+		for (const p of branch_promises) p.catch(() => {});
 
 		/** @type {Array<import('./types').BranchNode | undefined>} */
 		const branch = [];
@@ -841,7 +841,7 @@ export function create_client({ target, base, trailing_slash }) {
 					/** @type {App.Error} */
 					let error;
 
-					if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */(err))) {
+					if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
 						// this is the server error rethrown above, reconstruct but don't invoke
 						// the client error handler; it should've already been handled on the server
 						status = /** @type {import('types').ServerErrorNode} */ (err).status ?? status;
@@ -1121,7 +1121,7 @@ export function create_client({ target, base, trailing_slash }) {
 			() => {
 				navigating = false;
 				callbacks.after_navigate.forEach((fn) =>
-					fn(/** @type {import('types').AfterNavigate} */(navigation))
+					fn(/** @type {import('types').AfterNavigate} */ (navigation))
 				);
 				stores.navigating.set(null);
 			}
@@ -1158,7 +1158,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 */
 	function native_navigation(url) {
 		location.href = url.href;
-		return new Promise(() => { });
+		return new Promise(() => {});
 	}
 
 	if (import.meta.hot) {
@@ -1676,7 +1676,7 @@ function pre_update() {
 		};
 	}
 
-	return () => { };
+	return () => {};
 }
 
 function reset_focus() {
