@@ -39,9 +39,7 @@ export async function build(config, cwd = process.cwd()) {
 	}
 
 	if (pkg.svelte) {
-		console.warn(
-			'The "svelte" field in package.json has been deprecated.\n'
-		);
+		console.warn('The "svelte" field in package.json has been deprecated.\n');
 	}
 
 	write(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
