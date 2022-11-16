@@ -157,6 +157,8 @@ export default config;
 
 ...would prevent scripts loading from external sites. SvelteKit will augment the specified directives with nonces or hashes (depending on `mode`) for any inline styles and scripts it generates.
 
+To add nonce on a specific script, you may use the placeholder `%sveltekit.nonce%` as `<script nonce="%sveltekit.nonce%">` on scripts loaded in app.html.
+
 When pages are prerendered, the CSP header is added via a `<meta http-equiv>` tag (note that in this case, `frame-ancestors`, `report-uri` and `sandbox` directives will be ignored).
 
 > When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
