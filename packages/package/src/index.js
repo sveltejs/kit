@@ -32,6 +32,10 @@ export async function build(config, cwd = process.cwd()) {
 
 	const pkg = generate_pkg(cwd, files);
 
+	if (!has_svelte(pkg.dependencies) && !has_svelte(pkg.peerDependencies)) {
+		console.warn('Svelte libraries should include "svelte" in either "dependencies" or "peerDependencies".');
+	}
+
 	if (!pkg.svelte && files.some((file) => file.is_svelte)) {
 		// Several heuristics in Kit/vite-plugin-svelte to tell Vite to mark Svelte packages
 		// rely on the "svelte" property. Vite/Rollup/Webpack plugin can all deal with it.
@@ -80,6 +84,19 @@ export async function build(config, cwd = process.cwd()) {
 	console.log(`Successfully built '${pkg.name}' package. To publish it to npm:`);
 	console.log(colors.bold().cyan(`  cd ${to}`));
 	console.log(colors.bold().cyan('  npm publish\n'));
+}
+
+/** @param {object} field */
+function has_svelte(field) {
+	if (!field) {
+		return false;
+	}
+	for (const key of Object.keys(field)) {
+		if (key === 'svelte') {
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
