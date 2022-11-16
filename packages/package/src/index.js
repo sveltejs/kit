@@ -33,7 +33,9 @@ export async function build(config, cwd = process.cwd()) {
 	const pkg = generate_pkg(cwd, files);
 
 	if (!pkg.dependencies?.svelte && !pkg.peerDependencies?.svelte) {
-		console.warn('Svelte libraries should include "svelte" in either "dependencies" or "peerDependencies".');
+		console.warn(
+			'Svelte libraries should include "svelte" in either "dependencies" or "peerDependencies".'
+		);
 	}
 
 	if (!pkg.svelte && files.some((file) => file.is_svelte)) {
