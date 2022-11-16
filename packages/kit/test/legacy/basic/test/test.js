@@ -70,7 +70,9 @@ legacyStates.forEach((legacyState) =>
 			await page.goto('/test-page');
 			expect(await page.title()).toBe('SvelteKit Legacy Basic Test Page');
 
-			expect(await page.locator('#js-indicator').textContent()).toBe(`${javaScriptEnabled}`);
+			// We wait instead of immediate expect, since on dev mode the page sometimes didn't finish to load JS, causing flakiness
+			await page.locator(`#js-indicator:text("${javaScriptEnabled}")`).waitFor();
+
 			expect(await page.locator('#legacy-indicator').textContent()).toBe(`${!!legacyState}`);
 
 			await testButtonTest({ button: page.locator('button'), javaScriptEnabled });
