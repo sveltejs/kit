@@ -4,7 +4,7 @@
 	"description": "monorepo for @sveltejs/kit and friends",
 	"private": true,
 	"scripts": {
-		"test": "turbo run test --filter=./packages/* --force",
+		"test": "turbo run test --filter=./packages/*",
 		"check": "turbo run check",
 		"lint": "turbo run lint",
 		"format": "turbo run format",

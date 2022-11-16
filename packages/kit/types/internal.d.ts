@@ -57,6 +57,7 @@ export interface BuildData {
 			file: string;
 			imports: string[];
 			stylesheets: string[];
+			fonts: string[];
 		};
 		vite_manifest: import('vite').Manifest;
 	};
@@ -207,12 +208,7 @@ export type ServerData =
 export interface ServerDataNode {
 	type: 'data';
 	data: Record<string, any> | null;
-	uses: {
-		dependencies?: string[];
-		params?: string[];
-		parent?: number | void; // 1 or undefined
-		url?: number | void; // 1 or undefined
-	};
+	uses: Uses;
 }
 
 /**
@@ -260,6 +256,8 @@ export interface SSRNode {
 	imports: string[];
 	/** external CSS files */
 	stylesheets: string[];
+	/** external font files */
+	fonts: string[];
 	/** inlined styles */
 	inline_styles?(): MaybePromise<Record<string, string>>;
 
@@ -362,6 +360,7 @@ export interface Uses {
 	dependencies: Set<string>;
 	params: Set<string>;
 	parent: boolean;
+	route: boolean;
 	url: boolean;
 }
 

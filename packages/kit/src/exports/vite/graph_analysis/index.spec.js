@@ -1,191 +1,163 @@
-import { describe } from '../../../utils/unit_test.js';
+import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { IllegalModuleGuard } from './index.js';
-import path from 'path';
-import { normalizePath } from 'vite';
-
-const CWD = process.cwd();
-const FAKE_LIB_DIR = normalizePath(path.join(CWD, 'lib'));
-const DEV_VIRTUAL_DYNAMIC_ID = '/@id/__x00__$env/dynamic/private';
-const PROD_VIRTUAL_DYNAMIC_ID = '\0$env/dynamic/private';
-const DEV_VIRTUAL_STATIC_ID = '/@id/__x00__$env/static/private';
-const PROD_VIRTUAL_STATIC_ID = '\0$env/static/private';
-const USER_SERVER_ID = normalizePath(path.join(FAKE_LIB_DIR, 'test.server.js'));
-const USER_SERVER_ID_NODE_MODULES = normalizePath(path.join(CWD, 'node_modules', 'test.server.js'));
-const USER_SERVER_ID_OUTSIDE_ROOT = normalizePath(path.join(CWD, '..', 'test.server.js'));
-const USER_SERVER_FOLDER_ID = normalizePath(path.join(FAKE_LIB_DIR, '/server/some/nested/path.js'));
+import { module_guard } from './index.js';
 
 /**
- * @template {any} T
- * @param {Array<T>} arr
- * @returns {Generator<T>}
+ *
+ * @param {Record<string, { importedIds?: string[]; dynamicallyImportedIds?: string[] }>} graph
+ * @param {string} [expected_error]
  */
-function* generator_from_array(arr) {
-	for (const item of arr) {
-		yield item;
+function check(graph, expected_error) {
+	// @ts-expect-error
+	const context = /** @type {import('rollup').PluginContext} */ ({
+		/** @param {string} id */
+		getModuleInfo(id) {
+			return {
+				importedIds: [],
+				dynamicallyImportedIds: [],
+				...graph[id]
+			};
+		}
+	});
+
+	const guard = module_guard(context, {
+		cwd: '~',
+		lib: '~/src/lib'
+	});
+
+	if (expected_error) {
+		try {
+			guard.check('~/src/entry');
+			throw new Error('Expected an error');
+		} catch (e) {
+			// @ts-expect-error
+			assert.equal(e.message, expected_error.replace(/^\t+/gm, ''));
+		}
+	} else {
+		guard.check('~/src/entry');
 	}
 }
 
-/**
- * @param {Array<import('./types').ImportGraph>} nodes_to_insert
- * @returns {import('./types').ImportGraph}
- */
-function get_module_graph(...nodes_to_insert) {
-	return {
-		id: 'test.svelte',
-		dynamic: false,
-		children: generator_from_array([
-			{
-				id: 'fine.js',
-				dynamic: false,
-				children: generator_from_array([
-					{
-						id: 'also_fine.js',
-						dynamic: false,
-						children: generator_from_array([
-							{
-								id: 'erstwhile.css',
-								dynamic: false,
-								children: generator_from_array([])
-							},
-							{
-								id: 'gruntled.js',
-								dynamic: false,
-								children: generator_from_array([])
-							}
-						])
-					},
-					{
-						id: 'somewhat_neat.js',
-						dynamic: false,
-						children: generator_from_array([])
-					},
-					{
-						id: 'blah.ts',
-						dynamic: false,
-						children: generator_from_array([])
-					}
-				])
+test('throws an error when importing $env/static/private', () => {
+	check(
+		{
+			'~/src/entry': {
+				importedIds: ['~/src/routes/+page.svelte']
 			},
-			{
-				id: 'something.svelte',
-				dynamic: false,
-				children: generator_from_array(nodes_to_insert)
-			},
-			{
-				id: 'im_not_creative.hamburger',
-				dynamic: false,
-				children: generator_from_array([])
+			'~/src/routes/+page.svelte': {
+				importedIds: ['\0$env/static/private']
 			}
-		])
-	};
-}
+		},
+		`Cannot import \0$env/static/private into client-side code:
+		- src/routes/+page.svelte imports
+		 - \0$env/static/private`
+	);
+});
 
-describe('IllegalImportGuard', (test) => {
-	const guard = new IllegalModuleGuard(FAKE_LIB_DIR);
+test('throws an error when dynamically importing $env/static/private', () => {
+	check(
+		{
+			'~/src/entry': {
+				importedIds: ['~/src/routes/+page.svelte']
+			},
+			'~/src/routes/+page.svelte': {
+				dynamicallyImportedIds: ['\0$env/static/private']
+			}
+		},
+		`Cannot import \0$env/static/private into client-side code:
+		- src/routes/+page.svelte dynamically imports
+		 - \0$env/static/private`
+	);
+});
 
-	test('assert succeeds for a graph with no illegal imports', () => {
-		assert.not.throws(() => guard.assert_legal(get_module_graph()));
-	});
+test('throws an error when importing $env/dynamic/private', () => {
+	check(
+		{
+			'~/src/entry': {
+				importedIds: ['~/src/routes/+page.svelte']
+			},
+			'~/src/routes/+page.svelte': {
+				importedIds: ['\0$env/dynamic/private']
+			}
+		},
+		`Cannot import \0$env/dynamic/private into client-side code:
+		- src/routes/+page.svelte imports
+		 - \0$env/dynamic/private`
+	);
+});
 
-	test('assert throws an error when importing $env/static/private in dev', () => {
-		const module_graph = get_module_graph({
-			id: DEV_VIRTUAL_STATIC_ID,
-			dynamic: false,
-			children: generator_from_array([])
-		});
-		assert.throws(
-			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$env\/static\/private into public-facing code:.*/gs
-		);
-	});
+test('throws an error when dynamically importing $env/dynamic/private', () => {
+	check(
+		{
+			'~/src/entry': {
+				importedIds: ['~/src/routes/+page.svelte']
+			},
+			'~/src/routes/+page.svelte': {
+				dynamicallyImportedIds: ['\0$env/dynamic/private']
+			}
+		},
+		`Cannot import \0$env/dynamic/private into client-side code:
+		- src/routes/+page.svelte dynamically imports
+		 - \0$env/dynamic/private`
+	);
+});
 
-	test('assert throws an error when importing $env/static/private in prod', () => {
-		const module_graph = get_module_graph({
-			id: PROD_VIRTUAL_STATIC_ID,
-			dynamic: false,
-			children: generator_from_array([])
-		});
-		assert.throws(
-			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$env\/static\/private into public-facing code:.*/gs
-		);
-	});
+test('throws an error when importing a .server.js module', () => {
+	check(
+		{
+			'~/src/entry': {
+				importedIds: ['~/src/routes/+page.svelte']
+			},
+			'~/src/routes/+page.svelte': {
+				importedIds: ['~/src/routes/illegal.server.js']
+			},
+			'~/src/routes/illegal.server.js': {}
+		},
+		`Cannot import src/routes/illegal.server.js into client-side code:
+		- src/routes/+page.svelte imports
+		 - src/routes/illegal.server.js`
+	);
+});
 
-	test('assert throws an error when importing $env/dynamic/private in dev', () => {
-		const module_graph = get_module_graph({
-			id: DEV_VIRTUAL_DYNAMIC_ID,
-			dynamic: false,
-			children: generator_from_array([])
-		});
-		assert.throws(
-			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$env\/dynamic\/private into public-facing code:.*/gs
-		);
-	});
+test('throws an error when importing a $lib/server/**/*.js module', () => {
+	check(
+		{
+			'~/src/entry': {
+				importedIds: ['~/src/routes/+page.svelte']
+			},
+			'~/src/routes/+page.svelte': {
+				importedIds: ['~/src/lib/server/some/module.js']
+			},
+			'~/src/lib/server/some/module.js': {}
+		},
+		`Cannot import $lib/server/some/module.js into client-side code:
+		- src/routes/+page.svelte imports
+		 - $lib/server/some/module.js`
+	);
+});
 
-	test('assert throws an error when importing $env/dynamic/private in prod', () => {
-		const module_graph = get_module_graph({
-			id: PROD_VIRTUAL_DYNAMIC_ID,
-			dynamic: false,
-			children: generator_from_array([])
-		});
-		assert.throws(
-			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$env\/dynamic\/private into public-facing code:.*/gs
-		);
-	});
-
-	test('assert throws an error when importing a single server-only module', () => {
-		const module_graph = get_module_graph({
-			id: USER_SERVER_ID,
-			dynamic: false,
-			children: generator_from_array([])
-		});
-
-		assert.throws(
-			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$lib\/test.server.js into public-facing code:.*/gs
-		);
-	});
-
-	test('assert throws an error when importing a module in the server-only folder', () => {
-		const module_graph = get_module_graph({
-			id: USER_SERVER_FOLDER_ID,
-			dynamic: false,
-			children: generator_from_array([])
-		});
-
-		assert.throws(
-			() => guard.assert_legal(module_graph),
-			/.*Cannot import \$lib\/server\/some\/nested\/path.js into public-facing code:.*/gs
-		);
-	});
-
-	test('assert ignores illegal server-only modules in node_modules', () => {
-		const module_graph = get_module_graph({
-			id: USER_SERVER_ID_NODE_MODULES,
-			dynamic: false,
-			children: generator_from_array([])
-		});
-
-		assert.not.throws(() => guard.assert_legal(module_graph));
-	});
-
-	test('assert ignores illegal server-only modules outside the project root', () => {
-		const module_graph = get_module_graph({
-			id: USER_SERVER_ID_OUTSIDE_ROOT,
-			dynamic: false,
-			children: generator_from_array([])
-		});
-
-		assert.not.throws(() => guard.assert_legal(module_graph));
+test('ignores .server.js files in node_modules', () => {
+	check({
+		'~/src/entry': {
+			importedIds: ['~/src/routes/+page.svelte']
+		},
+		'~/src/routes/+page.svelte': {
+			importedIds: ['~/node_modules/illegal.server.js']
+		},
+		'~/node_modules/illegal.server.js': {}
 	});
 });
 
-/*
-We don't have a great way to mock Vite and Rollup's implementations of module graphs, so unit testing
-ViteImportGraph and RollupImportGraph is kind of an exercise in "code coverage hubris" -- they're covered by
-the integration tests, where Vite and Rollup can provide a useful graph implementation. If, in the future, we can find
-a reason to unit test them, we can add those below.
-*/
+test('ignores .server.js files outside the project root', () => {
+	check({
+		'~/src/entry': {
+			importedIds: ['~/src/routes/+page.svelte']
+		},
+		'~/src/routes/+page.svelte': {
+			importedIds: ['/illegal.server.js']
+		},
+		'/illegal.server.js': {}
+	});
+});
+
+test.run();

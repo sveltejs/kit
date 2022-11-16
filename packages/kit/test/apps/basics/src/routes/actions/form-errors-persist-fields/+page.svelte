@@ -1,4 +1,5 @@
 <script>
+	import { deserialize } from '$app/forms';
 	import { browser } from '$app/environment';
 
 	/** @type {import('./$types').ActionData} */
@@ -14,10 +15,9 @@
 				accept: 'application/json'
 			}
 		});
-		const {
-			data: { errors, values }
-		} = await res.json();
-		form = { errors, values };
+		// @ts-expect-error don't bother with type narrowing work here
+		const { data } = deserialize(await res.text());
+		form = data;
 	}
 </script>
 

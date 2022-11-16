@@ -111,11 +111,11 @@ const options = object(
 			browser: object({
 				hydrate: error(
 					(keypath) =>
-						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+						`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
 				),
 				router: error(
 					(keypath) =>
-						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+						`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
 				)
 			}),
 
@@ -257,15 +257,13 @@ const options = object(
 
 				// TODO: remove this for the 1.0 release
 				force: validate(undefined, (input, keypath) => {
-					if (typeof input !== 'undefined') {
-						const new_input = input ? 'warn' : 'fail';
-						const needs_option = new_input === 'warn';
-						throw new Error(
-							`${keypath} has been removed in favor of \`handleHttpError\`. In your case, set \`handleHttpError\` to "${new_input}"${
-								needs_option ? '' : ' (or leave it undefined)'
-							} to get the same behavior as you would with \`force: ${JSON.stringify(input)}\``
-						);
-					}
+					const new_input = input ? 'warn' : 'fail';
+					const needs_option = new_input === 'warn';
+					throw new Error(
+						`${keypath} has been removed in favor of \`handleHttpError\`. In your case, set \`handleHttpError\` to "${new_input}"${
+							needs_option ? '' : ' (or leave it undefined)'
+						} to get the same behavior as you would with \`force: ${JSON.stringify(input)}\``
+					);
 				}),
 
 				handleHttpError: validate('fail', (input, keypath) => {
@@ -282,15 +280,13 @@ const options = object(
 
 				// TODO: remove this for the 1.0 release
 				onError: validate(undefined, (input, keypath) => {
-					if (typeof input !== 'undefined') {
-						let message = `${keypath} has been renamed to \`handleHttpError\``;
+					let message = `${keypath} has been renamed to \`handleHttpError\``;
 
-						if (input === 'continue') {
-							message += ', and "continue" has been renamed to "warn"';
-						}
-
-						throw new Error(message);
+					if (input === 'continue') {
+						message += ', and "continue" has been renamed to "warn"';
 					}
+
+					throw new Error(message);
 				}),
 
 				origin: validate('http://sveltekit-prerender', (input, keypath) => {
@@ -322,7 +318,10 @@ const options = object(
 			),
 
 			// TODO remove for 1.0
-			router: error((keypath) => `${keypath} has been moved to config.kit.browser.router`),
+			router: error(
+				(keypath) =>
+					`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+			),
 
 			// TODO remove for 1.0
 			routes: error(
@@ -432,8 +431,6 @@ function string(fallback, allow_empty = true) {
  */
 function string_array(fallback) {
 	return validate(fallback, (input, keypath) => {
-		if (input === undefined) return input;
-
 		if (!Array.isArray(input) || input.some((value) => typeof value !== 'string')) {
 			throw new Error(`${keypath} must be an array of strings, if specified`);
 		}
@@ -511,10 +508,8 @@ function assert_string(input, keypath) {
 
 /** @param {(keypath?: string) => string} fn */
 function error(fn) {
-	return validate(undefined, (input, keypath) => {
-		if (input !== undefined) {
-			throw new Error(fn(keypath));
-		}
+	return validate(undefined, (_, keypath) => {
+		throw new Error(fn(keypath));
 	});
 }
 

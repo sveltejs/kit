@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.532",
+	"version": "1.0.0-next.550",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -13,7 +13,7 @@
 		"@sveltejs/vite-plugin-svelte": "^1.1.0",
 		"@types/cookie": "^0.5.1",
 		"cookie": "^0.5.0",
-		"devalue": "^4.1.0",
+		"devalue": "^4.2.0",
 		"kleur": "^4.1.5",
 		"magic-string": "^0.26.7",
 		"mime": "^3.0.0",
@@ -31,7 +31,7 @@
 		"@types/node": "^16.11.68",
 		"@types/sade": "^1.7.4",
 		"@types/set-cookie-parser": "^2.4.2",
-		"marked": "^4.1.1",
+		"marked": "^4.2.2",
 		"rollup": "^2.79.1",
 		"svelte": "^3.52.0",
 		"svelte-preprocess": "^4.10.7",
@@ -41,7 +41,7 @@
 	},
 	"peerDependencies": {
 		"svelte": "^3.44.0",
-		"vite": "^3.1.0"
+		"vite": "^3.2.0"
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit.js"

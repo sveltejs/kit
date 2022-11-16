@@ -4,6 +4,8 @@ import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
+import { uneval_action_response } from './actions.js';
+import { clarify_devalue_error } from '../utils.js';
 
 // TODO rename this function/module
 
@@ -53,6 +55,7 @@ export async function render_response({
 
 	const stylesheets = new Set(entry.stylesheets);
 	const modulepreloads = new Set(entry.imports);
+	const fonts = new Set(options.manifest._.entry.fonts);
 
 	/** @type {Set<string>} */
 	const link_header_preloads = new Set();
@@ -92,7 +95,7 @@ export async function render_response({
 		props.page = {
 			error,
 			params: /** @type {Record<string, any>} */ (event.params),
-			routeId: event.routeId,
+			route: event.route,
 			status,
 			url: event.url,
 			data,
@@ -125,6 +128,10 @@ export async function render_response({
 
 			if (node.stylesheets) {
 				node.stylesheets.forEach((url) => stylesheets.add(url));
+			}
+
+			if (node.fonts) {
+				node.fonts.forEach((url) => fonts.add(url));
 			}
 
 			if (node.inline_styles) {
@@ -170,38 +177,37 @@ export async function render_response({
 	const serialized = { data: '', form: 'null' };
 
 	try {
-		serialized.data = devalue.uneval(branch.map(({ server_data }) => server_data));
+		serialized.data = `[${branch
+			.map(({ server_data }) => {
+				if (server_data?.type === 'data') {
+					const data = devalue.uneval(server_data.data);
+
+					const uses = [];
+					if (server_data.uses.dependencies.size > 0) {
+						uses.push(`dependencies:${s(Array.from(server_data.uses.dependencies))}`);
+					}
+
+					if (server_data.uses.params.size > 0) {
+						uses.push(`params:${s(Array.from(server_data.uses.params))}`);
+					}
+
+					if (server_data.uses.parent) uses.push(`parent:1`);
+					if (server_data.uses.route) uses.push(`route:1`);
+					if (server_data.uses.url) uses.push(`url:1`);
+
+					return `{type:"data",data:${data},uses:{${uses.join(',')}}}`;
+				}
+
+				return s(server_data);
+			})
+			.join(',')}]`;
 	} catch (e) {
-		// If we're here, the data could not be serialized with devalue
-		// TODO if we wanted to get super fancy we could track down the origin of the `load`
-		// function, but it would mean passing more stuff around than we currently do
 		const error = /** @type {any} */ (e);
-		const match = /\[(\d+)\]\.data\.(.+)/.exec(error.path);
-		if (match) {
-			throw new Error(
-				`Data returned from \`load\` while rendering ${event.routeId} is not serializable: ${error.message} (data.${match[2]})`
-			);
-		}
-
-		const nonPojoError = /pojo/i.exec(error.message);
-
-		if (nonPojoError) {
-			const constructorName = branch.find(({ server_data }) => server_data?.data?.constructor?.name)
-				?.server_data?.data?.constructor?.name;
-
-			throw new Error(
-				`Data returned from \`load\` (while rendering ${event.routeId}) must be a plain object${
-					constructorName ? ` rather than an instance of ${constructorName}` : ''
-				}`
-			);
-		}
-
-		throw error;
+		throw new Error(clarify_devalue_error(event, error));
 	}
 
 	if (form_value) {
-		// no need to check it can be serialized, we already verified that it's JSON-friendly
-		serialized.form = devalue.uneval(form_value);
+		serialized.form = uneval_action_response(form_value, /** @type {string} */ (event.route.id));
 	}
 
 	if (inline_styles.size > 0) {
@@ -218,23 +224,43 @@ export async function render_response({
 
 	for (const dep of stylesheets) {
 		const path = prefixed(dep);
-		const attributes = [];
 
-		if (csp.style_needs_nonce) {
-			attributes.push(`nonce="${csp.nonce}"`);
+		if (resolve_opts.preload({ type: 'css', path })) {
+			const attributes = [];
+
+			if (csp.style_needs_nonce) {
+				attributes.push(`nonce="${csp.nonce}"`);
+			}
+
+			if (inline_styles.has(dep)) {
+				// don't load stylesheets that are already inlined
+				// include them in disabled state so that Vite can detect them and doesn't try to add them
+				attributes.push('disabled', 'media="(max-width: 0)"');
+			} else {
+				const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
+				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+			}
+
+			attributes.unshift('rel="stylesheet"');
+			head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 		}
+	}
 
-		if (inline_styles.has(dep)) {
-			// don't load stylesheets that are already inlined
-			// include them in disabled state so that Vite can detect them and doesn't try to add them
-			attributes.push('disabled', 'media="(max-width: 0)"');
-		} else {
-			const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
-			link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+	for (const dep of fonts) {
+		const path = prefixed(dep);
+
+		if (resolve_opts.preload({ type: 'font', path })) {
+			const ext = dep.slice(dep.lastIndexOf('.') + 1);
+			const attributes = [
+				'rel="preload"',
+				'as="font"',
+				`type="font/${ext}"`,
+				`href="${path}"`,
+				'crossorigin'
+			];
+
+			head += `\n\t\t<link ${attributes.join(' ')}>`;
 		}
-
-		attributes.unshift('rel="stylesheet"');
-		head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
 	if (page_config.csr) {
@@ -249,7 +275,7 @@ export async function render_response({
 					error: ${devalue.uneval(error)},
 					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
 					params: ${devalue.uneval(event.params)},
-					routeId: ${s(event.routeId)},
+					route: ${s(event.route)},
 					data: ${serialized.data},
 					form: ${serialized.form}
 				}` : 'null'},
@@ -261,9 +287,12 @@ export async function render_response({
 
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
-			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-			if (state.prerendering) {
-				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+
+			if (resolve_opts.preload({ type: 'js', path })) {
+				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+				if (state.prerendering) {
+					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+				}
 			}
 		}
 
@@ -287,12 +316,14 @@ export async function render_response({
 	}
 
 	if (options.service_worker) {
+		const opts = options.dev ? `, { type: 'module' }` : '';
+
 		// we use an anonymous function instead of an arrow function to support
 		// older browsers (https://github.com/sveltejs/kit/pull/5417)
 		const init_service_worker = `
 			if ('serviceWorker' in navigator) {
 				addEventListener('load', function () {
-					navigator.serviceWorker.register('${prefixed('service-worker.js')}');
+					navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
 				});
 			}
 		`;

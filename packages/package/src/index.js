@@ -32,9 +32,15 @@ export async function build(config, cwd = process.cwd()) {
 
 	const pkg = generate_pkg(cwd, files);
 
+	if (!pkg.dependencies?.svelte && !pkg.peerDependencies?.svelte) {
+		console.warn(
+			'Svelte libraries should include "svelte" in either "dependencies" or "peerDependencies".'
+		);
+	}
+
 	if (pkg.svelte) {
 		console.warn(
-			'The "svelte" field in package.json has been deprecated. Please ensure that svelte is a dependency or peerDependency instead.\n'
+			'The "svelte" field in package.json has been deprecated.\n'
 		);
 	}
 

@@ -1,5 +1,6 @@
-import { invalidateAll } from './navigation.js';
+import * as devalue from 'devalue';
 import { client } from '../client/singletons.js';
+import { invalidateAll } from './navigation.js';
 
 /**
  * @param {string} name
@@ -15,6 +16,15 @@ const ssr = import.meta.env.SSR;
 /** @type {import('$app/forms').applyAction} */
 export const applyAction = ssr ? guard('applyAction') : client.apply_action;
 
+/** @type {import('$app/forms').deserialize} */
+export function deserialize(result) {
+	const parsed = JSON.parse(result);
+	if (parsed.data) {
+		parsed.data = devalue.parse(parsed.data);
+	}
+	return parsed;
+}
+
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
 	/**
@@ -27,7 +37,8 @@ export function enhance(form, submit = () => {}) {
 	const fallback_callback = async ({ action, result, reset }) => {
 		if (result.type === 'success') {
 			if (reset !== false) {
-				form.reset();
+				// We call reset from the prototype to avoid DOM clobbering
+				HTMLFormElement.prototype.reset.call(form);
 			}
 			await invalidateAll();
 		}
@@ -49,9 +60,10 @@ export function enhance(form, submit = () => {}) {
 
 		const action = new URL(
 			// We can't do submitter.formAction directly because that property is always set
+			// We do cloneNode for avoid DOM clobbering - https://github.com/sveltejs/kit/issues/7593
 			event.submitter?.hasAttribute('formaction')
 				? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
-				: form.action
+				: /** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).action
 		);
 
 		const data = new FormData(form);
@@ -67,13 +79,13 @@ export function enhance(form, submit = () => {}) {
 		const cancel = () => (cancelled = true);
 
 		const callback =
-			submit({
+			(await submit({
 				action,
 				cancel,
 				controller,
 				data,
 				form
-			}) ?? fallback_callback;
+			})) ?? fallback_callback;
 		if (cancelled) return;
 
 		/** @type {import('types').ActionResult} */
@@ -91,7 +103,7 @@ export function enhance(form, submit = () => {}) {
 				signal: controller.signal
 			});
 
-			result = await response.json();
+			result = deserialize(await response.text());
 		} catch (error) {
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = { type: 'error', error };
@@ -117,11 +129,13 @@ export function enhance(form, submit = () => {}) {
 		});
 	}
 
-	form.addEventListener('submit', handle_submit);
+	// @ts-expect-error
+	HTMLFormElement.prototype.addEventListener.call(form, 'submit', handle_submit);
 
 	return {
 		destroy() {
-			form.removeEventListener('submit', handle_submit);
+			// @ts-expect-error
+			HTMLFormElement.prototype.removeEventListener.call(form, 'submit', handle_submit);
 		}
 	};
 }

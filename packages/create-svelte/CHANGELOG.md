@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.191
+
+### Patch Changes
+
+- Add `style="display: contents"` to wrapper element by default ([#7652](https://github.com/sveltejs/kit/pull/7652))
+
 ## 2.0.0-next.190
 
 ### Patch Changes

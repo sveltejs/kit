@@ -4,5 +4,5 @@
 </script>
 
 Cookie: <span id="cookie-value">
-	{data.a}
+	{data.encoding}
 </span>

@@ -238,6 +238,12 @@ export interface KitConfig {
 	};
 }
 
+/**
+ * This function runs every time the SvelteKit server receives a [request](https://kit.svelte.dev/docs/web-standards#fetch-apis-request) and
+ * determines the [response](https://kit.svelte.dev/docs/web-standards#fetch-apis-response).
+ * It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`.
+ * This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
+ */
 export interface Handle {
 	(input: {
 		event: RequestEvent;
@@ -265,16 +271,18 @@ export interface Load<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	InputData extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
-	OutputData extends Record<string, unknown> | void = Record<string, any> | void
+	OutputData extends Record<string, unknown> | void = Record<string, any> | void,
+	RouteId extends string | null = string | null
 > {
-	(event: LoadEvent<Params, InputData, ParentData>): MaybePromise<OutputData>;
+	(event: LoadEvent<Params, InputData, ParentData, RouteId>): MaybePromise<OutputData>;
 }
 
 export interface LoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
-	ParentData extends Record<string, unknown> = Record<string, any>
-> extends NavigationEvent<Params> {
+	ParentData extends Record<string, unknown> = Record<string, any>,
+	RouteId extends string | null = string | null
+> extends NavigationEvent<Params, RouteId> {
 	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 	 *
@@ -364,16 +372,22 @@ export interface LoadEvent<
 }
 
 export interface NavigationEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
 > {
 	/**
 	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, the `slug` parameter
 	 */
 	params: Params;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+	 * Info about the current route
 	 */
-	routeId: string | null;
+	route: {
+		/**
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+		 */
+		id: RouteId;
+	};
 	/**
 	 * The URL of the current page
 	 */
@@ -382,23 +396,78 @@ export interface NavigationEvent<
 
 export interface NavigationTarget {
 	params: Record<string, string> | null;
-	routeId: string | null;
+	route: { id: string | null };
 	url: URL;
 }
 
-export type NavigationType = 'load' | 'unload' | 'link' | 'goto' | 'popstate';
+/**
+ * - `enter`: The app has hydrated
+ * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
+ * - `link`: Navigation was triggered by a link click
+ * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+ * - `popstate`: Navigation was triggered by back/forward navigation
+ */
+export type NavigationType = 'enter' | 'leave' | 'link' | 'goto' | 'popstate';
 
 export interface Navigation {
+	/**
+	 * Where navigation was triggered from
+	 */
 	from: NavigationTarget | null;
+	/**
+	 * Where navigation is going to/has gone to
+	 */
 	to: NavigationTarget | null;
-	type: NavigationType;
+	/**
+	 * The type of navigation:
+	 * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
+	 * - `link`: Navigation was triggered by a link click
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
+	type: Omit<NavigationType, 'enter'>;
+	/**
+	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
+	 */
+	willUnload: boolean;
+	/**
+	 * In case of a history back/forward navigation, the number of steps to go back/forward
+	 */
 	delta?: number;
+}
+
+/**
+ * The interface that corresponds to the `beforeNavigate`'s input parameter.
+ */
+export interface BeforeNavigate extends Navigation {
+	/**
+	 * Call this to prevent the navigation from starting.
+	 */
+	cancel(): void;
+}
+
+/**
+ * The interface that corresponds to the `afterNavigate`'s input parameter.
+ */
+export interface AfterNavigate extends Navigation {
+	/**
+	 * The type of navigation:
+	 * - `enter`: The app has hydrated
+	 * - `link`: Navigation was triggered by a link click
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
+	type: Omit<NavigationType, 'leave'>;
+	willUnload: false;
 }
 
 /**
  * The shape of the `$page` store
  */
-export interface Page<Params extends Record<string, string> = Record<string, string>> {
+export interface Page<
+	Params extends Record<string, string> = Record<string, string>,
+	RouteId extends string | null = string | null
+> {
 	/**
 	 * The URL of the current page
 	 */
@@ -408,9 +477,14 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	 */
 	params: Params;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+	 * Info about the current route
 	 */
-	routeId: string | null;
+	route: {
+		/**
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+		 */
+		id: RouteId;
+	};
 	/**
 	 * Http status code of the current page
 	 */
@@ -434,7 +508,8 @@ export interface ParamMatcher {
 }
 
 export interface RequestEvent<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
 > {
 	/**
 	 * Get or set cookies related to the current request
@@ -471,9 +546,14 @@ export interface RequestEvent<
 	 */
 	request: Request;
 	/**
-	 * The route ID of the current page - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+	 * Info about the current route
 	 */
-	routeId: string | null;
+	route: {
+		/**
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+		 */
+		id: RouteId;
+	};
 	/**
 	 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
 	 *
@@ -509,14 +589,33 @@ export interface RequestEvent<
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://kit.svelte.dev/docs/types#generated-types) instead.
  */
 export interface RequestHandler<
-	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>
+	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
+	RouteId extends string | null = string | null
 > {
-	(event: RequestEvent<Params>): MaybePromise<Response>;
+	(event: RequestEvent<Params, RouteId>): MaybePromise<Response>;
 }
 
 export interface ResolveOptions {
+	/**
+	 * Applies custom transforms to HTML. If `done` is true, it's the final chunk. Chunks are not guaranteed to be well-formed HTML
+	 * (they could include an element's opening tag but not its closing tag, for example)
+	 * but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
+	 * @param input the html chunk and the info if this is the last chunk
+	 */
 	transformPageChunk?(input: { html: string; done: boolean }): MaybePromise<string | undefined>;
+	/**
+	 * Determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`.
+	 * By default, none will be included.
+	 * @param name header name
+	 * @param value header value
+	 */
 	filterSerializedResponseHeaders?(name: string, value: string): boolean;
+	/**
+	 * Determines what should be added to the `<head>` tag to preload it.
+	 * By default, `js`, `css` and `font` files will be preloaded.
+	 * @param input the type of the file and its path
+	 */
+	preload?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
 }
 
 export class Server {
@@ -541,6 +640,7 @@ export interface SSRManifest {
 			file: string;
 			imports: string[];
 			stylesheets: string[];
+			fonts: string[];
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
@@ -555,15 +655,17 @@ export interface SSRManifest {
 export interface ServerLoad<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	ParentData extends Record<string, any> = Record<string, any>,
-	OutputData extends Record<string, any> | void = Record<string, any> | void
+	OutputData extends Record<string, any> | void = Record<string, any> | void,
+	RouteId extends string | null = string | null
 > {
-	(event: ServerLoadEvent<Params, ParentData>): MaybePromise<OutputData>;
+	(event: ServerLoadEvent<Params, ParentData, RouteId>): MaybePromise<OutputData>;
 }
 
 export interface ServerLoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	ParentData extends Record<string, any> = Record<string, any>
-> extends RequestEvent<Params> {
+	ParentData extends Record<string, any> = Record<string, any>,
+	RouteId extends string | null = string | null
+> extends RequestEvent<Params, RouteId> {
 	/**
 	 * `await parent()` returns data from parent `+layout.server.js` `load` functions.
 	 *
@@ -612,15 +714,17 @@ export interface ServerLoadEvent<
 
 export interface Action<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	OutputData extends Record<string, any> | void = Record<string, any> | void
+	OutputData extends Record<string, any> | void = Record<string, any> | void,
+	RouteId extends string | null = string | null
 > {
-	(event: RequestEvent<Params>): MaybePromise<OutputData>;
+	(event: RequestEvent<Params, RouteId>): MaybePromise<OutputData>;
 }
 
 export type Actions<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	OutputData extends Record<string, any> | void = Record<string, any> | void
-> = Record<string, Action<Params, OutputData>>;
+	OutputData extends Record<string, any> | void = Record<string, any> | void,
+	RouteId extends string | null = string | null
+> = Record<string, Action<Params, OutputData, RouteId>>;
 
 /**
  * When calling a form action via fetch, the response will be one of these shapes.
@@ -652,7 +756,10 @@ export function error(
  * Creates a `Redirect` object. If thrown during request handling, SvelteKit will
  * return a redirect response.
  */
-export function redirect(status: number, location: string): Redirect;
+export function redirect(
+	status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308,
+	location: string
+): Redirect;
 
 /**
  * Generates a JSON `Response` object from the supplied data.
