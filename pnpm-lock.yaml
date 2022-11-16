@@ -2590,7 +2590,7 @@ packages:
     resolution: {integrity: sha512-YbZhedg/zja34yV6iRDhfo4cmAYSwxaErkuzc/RpMMAELgszpDKf3MLH6VlsR+QkenPUEGkGAVpJAM2GbUls9Q==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      sharp: 0.31.2
+      sharp: 0.31.0
     dev: true
 
   /import-fresh/3.3.0:
