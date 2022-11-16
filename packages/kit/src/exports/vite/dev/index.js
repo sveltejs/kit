@@ -65,7 +65,8 @@ export async function dev(vite, vite_config, svelte_config) {
 				entry: {
 					file: `/@fs${runtime_prefix}/client/start.js`,
 					imports: [],
-					stylesheets: []
+					stylesheets: [],
+					fonts: []
 				},
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
@@ -80,6 +81,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						// these are unused in dev, it's easier to include them
 						result.imports = [];
 						result.stylesheets = [];
+						result.fonts = [];
 
 						if (node.component) {
 							result.component = async () => {

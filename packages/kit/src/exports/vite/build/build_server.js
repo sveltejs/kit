@@ -283,11 +283,15 @@ export async function build_server(options, client) {
 		/** @type {string[]} */
 		const stylesheets = [];
 
+		/** @type {string[]} */
+		const fonts = [];
+
 		if (node.component) {
 			const entry = find_deps(client.vite_manifest, node.component, true);
 
 			imported.push(...entry.imports);
 			stylesheets.push(...entry.stylesheets);
+			fonts.push(...entry.fonts);
 
 			exports.push(
 				`export const component = async () => (await import('../${
@@ -302,6 +306,7 @@ export async function build_server(options, client) {
 
 			imported.push(...entry.imports);
 			stylesheets.push(...entry.stylesheets);
+			fonts.push(...entry.fonts);
 
 			imports.push(`import * as shared from '../${vite_manifest[node.shared].file}';`);
 			exports.push(`export { shared };`);
@@ -314,7 +319,8 @@ export async function build_server(options, client) {
 
 		exports.push(
 			`export const imports = ${s(imported)};`,
-			`export const stylesheets = ${s(stylesheets)};`
+			`export const stylesheets = ${s(stylesheets)};`,
+			`export const fonts = ${s(fonts)};`
 		);
 
 		/** @type {string[]} */

@@ -20,10 +20,14 @@ import { Redirect } from '../control.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
-/** @param {{ html: string }} opts */
+/** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
 
+/** @type {import('types').RequiredResolveOptions['filterSerializedResponseHeaders']} */
 const default_filter = () => false;
+
+/** @type {import('types').RequiredResolveOptions['preload']} */
+const default_preload = ({ type }) => type !== 'asset';
 
 /** @type {import('types').Respond} */
 export async function respond(request, options, state) {
@@ -185,7 +189,8 @@ export async function respond(request, options, state) {
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
 		transformPageChunk: default_transform,
-		filterSerializedResponseHeaders: default_filter
+		filterSerializedResponseHeaders: default_filter,
+		preload: default_preload
 	};
 
 	/**
@@ -211,7 +216,8 @@ export async function respond(request, options, state) {
 
 				resolve_opts = {
 					transformPageChunk: opts.transformPageChunk || default_transform,
-					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter
+					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter,
+					preload: opts.preload || default_preload
 				};
 			}
 

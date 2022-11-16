@@ -57,6 +57,7 @@ export interface BuildData {
 			file: string;
 			imports: string[];
 			stylesheets: string[];
+			fonts: string[];
 		};
 		vite_manifest: import('vite').Manifest;
 	};
@@ -255,6 +256,8 @@ export interface SSRNode {
 	imports: string[];
 	/** external CSS files */
 	stylesheets: string[];
+	/** external font files */
+	fonts: string[];
 	/** inlined styles */
 	inline_styles?(): MaybePromise<Record<string, string>>;
 

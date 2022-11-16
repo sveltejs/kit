@@ -45,6 +45,9 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 	/** @type {Set<string>} */
 	const stylesheets = new Set();
 
+	/** @type {Set<string>} */
+	const fonts = new Set();
+
 	/**
 	 * @param {string} current
 	 * @param {boolean} add_js
@@ -56,6 +59,14 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		const { chunk } = resolve_symlinks(manifest, current);
 
 		if (add_js) imports.add(chunk.file);
+
+		if (chunk.assets) {
+			for (const asset of chunk.assets) {
+				if (/\.(woff2?|ttf|otf)$/.test(asset)) {
+					fonts.add(asset);
+				}
+			}
+		}
 
 		if (chunk.css) {
 			chunk.css.forEach((file) => stylesheets.add(file));
@@ -77,7 +88,8 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 	return {
 		file: chunk.file,
 		imports: Array.from(imports),
-		stylesheets: Array.from(stylesheets)
+		stylesheets: Array.from(stylesheets),
+		fonts: Array.from(fonts)
 	};
 }
 
