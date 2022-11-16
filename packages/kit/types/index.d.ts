@@ -238,6 +238,12 @@ export interface KitConfig {
 	};
 }
 
+/**
+ * This function runs every time the SvelteKit server receives a [request](https://kit.svelte.dev/docs/web-standards#fetch-apis-request) and
+ * determines the [response](https://kit.svelte.dev/docs/web-standards#fetch-apis-response).
+ * It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`.
+ * This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
+ */
 export interface Handle {
 	(input: {
 		event: RequestEvent;
@@ -590,8 +596,26 @@ export interface RequestHandler<
 }
 
 export interface ResolveOptions {
+	/**
+	 * Applies custom transforms to HTML. If `done` is true, it's the final chunk. Chunks are not guaranteed to be well-formed HTML
+	 * (they could include an element's opening tag but not its closing tag, for example)
+	 * but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
+	 * @param input the html chunk and the info if this is the last chunk
+	 */
 	transformPageChunk?(input: { html: string; done: boolean }): MaybePromise<string | undefined>;
+	/**
+	 * Determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`.
+	 * By default, none will be included.
+	 * @param name header name
+	 * @param value header value
+	 */
 	filterSerializedResponseHeaders?(name: string, value: string): boolean;
+	/**
+	 * Determines what should be added to the `<head>` tag to preload it.
+	 * By default, `js`, `css` and `font` files will be preloaded.
+	 * @param input the type of the file and its path
+	 */
+	preload?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
 }
 
 export class Server {

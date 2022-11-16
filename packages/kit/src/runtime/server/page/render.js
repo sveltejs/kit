@@ -224,36 +224,43 @@ export async function render_response({
 
 	for (const dep of stylesheets) {
 		const path = prefixed(dep);
-		const attributes = [];
 
-		if (csp.style_needs_nonce) {
-			attributes.push(`nonce="${csp.nonce}"`);
+		if (resolve_opts.preload({ type: 'css', path })) {
+			const attributes = [];
+
+			if (csp.style_needs_nonce) {
+				attributes.push(`nonce="${csp.nonce}"`);
+			}
+
+			if (inline_styles.has(dep)) {
+				// don't load stylesheets that are already inlined
+				// include them in disabled state so that Vite can detect them and doesn't try to add them
+				attributes.push('disabled', 'media="(max-width: 0)"');
+			} else {
+				const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
+				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+			}
+
+			attributes.unshift('rel="stylesheet"');
+			head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 		}
-
-		if (inline_styles.has(dep)) {
-			// don't load stylesheets that are already inlined
-			// include them in disabled state so that Vite can detect them and doesn't try to add them
-			attributes.push('disabled', 'media="(max-width: 0)"');
-		} else {
-			const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
-			link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
-		}
-
-		attributes.unshift('rel="stylesheet"');
-		head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
 	for (const dep of fonts) {
-		const ext = dep.slice(dep.lastIndexOf('.') + 1);
-		const attributes = [
-			'rel="preload"',
-			'as="font"',
-			`type="font/${ext}"`,
-			`href="${prefixed(dep)}"`,
-			'crossorigin'
-		];
+		const path = prefixed(dep);
 
-		head += `\n\t\t<link ${attributes.join(' ')}>`;
+		if (resolve_opts.preload({ type: 'font', path })) {
+			const ext = dep.slice(dep.lastIndexOf('.') + 1);
+			const attributes = [
+				'rel="preload"',
+				'as="font"',
+				`type="font/${ext}"`,
+				`href="${path}"`,
+				'crossorigin'
+			];
+
+			head += `\n\t\t<link ${attributes.join(' ')}>`;
+		}
 	}
 
 	if (page_config.csr) {
@@ -280,9 +287,12 @@ export async function render_response({
 
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
-			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-			if (state.prerendering) {
-				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+
+			if (resolve_opts.preload({ type: 'js', path })) {
+				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+				if (state.prerendering) {
+					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+				}
 			}
 		}
 
