@@ -1202,13 +1202,13 @@ export function create_client({ target, base, trailing_slash }) {
 
 		goto: (href, opts = {}) => {
 			// TODO remove for 1.0
-			if ('keepfocus' in opts) {
+			if (!'keepFocus' in opts && 'keepfocus' in opts) {
 				throw new Error(
 					'`keepfocus` has been renamed to `keepFocus` (note the difference in casing)'
 				);
 			}
 
-			if ('noscroll' in opts) {
+			if (!'noScroll' in opts && 'noscroll' in opts) {
 				throw new Error(
 					'`noscroll` has been renamed to `noScroll` (note the difference in casing)'
 				);
