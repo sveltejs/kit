@@ -372,6 +372,8 @@ test.describe('Static files', () => {
 		response = await request.get('/subdirectory/static.json');
 		expect(await response.json()).toBe('subdirectory file');
 
+		expect(response.headers()['access-control-allow-origin']).toBe('*');
+
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
 	});
