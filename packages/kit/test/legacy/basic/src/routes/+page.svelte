@@ -13,4 +13,4 @@
 
 <h1>SvelteKit Legacy Basic</h1>
 
-<p><a href="/test-page">Test Page</a></p>
+<p><a data-sveltekit-prefetch href="/test-page">Test Page</a></p>
