@@ -1,1 +1,4 @@
-["/styles.css", "/favicon.png", "https://external.com", "/wheee"]
+{
+	"hrefs": ["/styles.css", "/favicon.png", "https://external.com", "/wheee"],
+	"ids": []
+}

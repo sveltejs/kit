@@ -1,6 +1,6 @@
 # SvelteKit Contributing Guide
 
-## Building and Running
+## Preparing
 
 This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.js.org/en/). You can [install pnpm](https://pnpm.io/installation) with:
 
@@ -8,13 +8,12 @@ This is a monorepo, meaning the repo holds multiple packages. It requires the us
 npm i -g pnpm
 ```
 
-`pnpm` commands run in the project's root directory will run on all sub-projects. You can checkout the code and build all sub-projects with:
+`pnpm` commands run in the project's root directory will run on all sub-projects. You can checkout the code and install the dependencies with:
 
 ```bash
 git clone git@github.com:sveltejs/kit.git
 cd kit
 pnpm install
-pnpm build
 ```
 
 You can now run SvelteKit by linking it into your project with [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides) as demonstrated in the [sandbox example](https://github.com/sveltejs/kit-sandbox) or by running one of the test projects as described in [the testing section](#testing) below.

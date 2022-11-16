@@ -2,9 +2,10 @@ import { HttpError, Redirect } from '../../control.js';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
-import { data_response, handle_error_and_jsonify } from '../utils.js';
-import { normalize_path } from '../../../utils/url.js';
-import { DATA_SUFFIX } from '../../../constants.js';
+import { clarify_devalue_error, handle_error_and_jsonify, serialize_data_node } from '../utils.js';
+import { normalize_path, strip_data_suffix } from '../../../utils/url.js';
+
+export const INVALIDATED_HEADER = 'x-sveltekit-invalidated';
 
 /**
  * @param {import('types').RequestEvent} event
@@ -25,16 +26,13 @@ export async function render_data(event, route, options, state) {
 		const node_ids = [...route.page.layouts, route.page.leaf];
 
 		const invalidated =
-			event.request.headers.get('x-sveltekit-invalidated')?.split(',').map(Boolean) ??
+			event.request.headers.get(INVALIDATED_HEADER)?.split(',').map(Boolean) ??
 			node_ids.map(() => true);
 
 		let aborted = false;
 
 		const url = new URL(event.url);
-		url.pathname = normalize_path(
-			url.pathname.slice(0, -DATA_SUFFIX.length),
-			options.trailing_slash
-		);
+		url.pathname = normalize_path(strip_data_suffix(url.pathname), options.trailing_slash);
 
 		const new_event = { ...event, url };
 
@@ -105,27 +103,42 @@ export async function render_data(event, route, options, state) {
 			)
 		);
 
-		/** @type {import('types').ServerData} */
-		const server_data = {
-			type: 'data',
-			nodes: nodes.slice(0, length)
-		};
+		try {
+			const stubs = nodes.slice(0, length).map(serialize_data_node);
 
-		return data_response(server_data, event);
+			const json = `{"type":"data","nodes":[${stubs.join(',')}]}`;
+			return json_response(json);
+		} catch (e) {
+			const error = /** @type {any} */ (e);
+			return json_response(JSON.stringify(clarify_devalue_error(event, error)), 500);
+		}
 	} catch (e) {
 		const error = normalize_error(e);
 
 		if (error instanceof Redirect) {
-			/** @type {import('types').ServerData} */
-			const server_data = {
-				type: 'redirect',
-				location: error.location
-			};
-
-			return data_response(server_data, event);
+			return json_response(
+				JSON.stringify({
+					type: 'redirect',
+					location: error.location
+				})
+			);
 		} else {
 			// TODO make it clearer that this was an unexpected error
-			return data_response(handle_error_and_jsonify(event, options, error), event);
+			return json_response(JSON.stringify(handle_error_and_jsonify(event, options, error)));
 		}
 	}
+}
+
+/**
+ * @param {string} json
+ * @param {number} [status]
+ */
+function json_response(json, status = 200) {
+	return new Response(json, {
+		status,
+		headers: {
+			'content-type': 'application/json',
+			'cache-control': 'private, no-store'
+		}
+	});
 }

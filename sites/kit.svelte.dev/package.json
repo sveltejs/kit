@@ -2,8 +2,8 @@
 	"name": "kit.svelte.dev",
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
+		"dev": "node ../../scripts/check-doc-links.js && vite dev",
+		"build": "node ../../scripts/check-doc-links.js && vite build",
 		"prebuild": "test \"$CI\" = true && npx pnpm install --store=node_modules/.pnpm-store || echo skipping pnpm install",
 		"preview": "vite preview",
 		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\""
@@ -13,19 +13,20 @@
 		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/amp": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"@sveltejs/site-kit": "^2.1.2",
-		"@types/node": "^16.11.36",
+		"@sveltejs/site-kit": "^2.1.4",
+		"@types/node": "^16.11.68",
 		"flexsearch": "^0.7.31",
-		"magic-string": "^0.26.2",
-		"marked": "^4.1.1",
+		"magic-string": "^0.26.7",
+		"marked": "^4.2.2",
 		"prism-svelte": "^0.5.0",
 		"prismjs": "^1.29.0",
 		"shiki-twoslash": "^3.1.0",
-		"svelte": "^3.48.0",
-		"typescript": "^4.8.2",
-		"uvu": "^0.5.3",
-		"vite": "^3.1.1",
-		"vite-imagetools": "^4.0.10"
+		"svelte": "^3.52.0",
+		"tiny-glob": "^0.2.9",
+		"typescript": "^4.8.4",
+		"uvu": "^0.5.6",
+		"vite": "^3.2.1",
+		"vite-imagetools": "^4.0.11"
 	},
 	"type": "module"
 }

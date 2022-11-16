@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as vite from 'vite';
-import { get_aliases } from '../utils.js';
+import { get_config_aliases, get_app_aliases } from '../utils.js';
 
 /**
  * @typedef {import('rollup').RollupOutput} RollupOutput
@@ -45,6 +45,9 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 	/** @type {Set<string>} */
 	const stylesheets = new Set();
 
+	/** @type {Set<string>} */
+	const fonts = new Set();
+
 	/**
 	 * @param {string} current
 	 * @param {boolean} add_js
@@ -56,6 +59,14 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		const { chunk } = resolve_symlinks(manifest, current);
 
 		if (add_js) imports.add(chunk.file);
+
+		if (chunk.assets) {
+			for (const asset of chunk.assets) {
+				if (/\.(woff2?|ttf|otf)$/.test(asset)) {
+					fonts.add(asset);
+				}
+			}
+		}
 
 		if (chunk.css) {
 			chunk.css.forEach((file) => stylesheets.add(file));
@@ -77,7 +88,8 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 	return {
 		file: chunk.file,
 		imports: Array.from(imports),
-		stylesheets: Array.from(stylesheets)
+		stylesheets: Array.from(stylesheets),
+		fonts: Array.from(fonts)
 	};
 }
 
@@ -115,8 +127,10 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 			cssCodeSplit: true,
 			// don't use the default name to avoid collisions with 'static/manifest.json'
 			manifest: 'vite-manifest.json',
+			modulePreload: {
+				polyfill: false
+			},
 			outDir,
-			polyfillModulePreload: false,
 			rollupOptions: {
 				input,
 				output: {
@@ -141,7 +155,7 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 		},
 		publicDir: ssr ? false : config.kit.files.assets,
 		resolve: {
-			alias: get_aliases(config.kit)
+			alias: [...get_app_aliases(config.kit), ...get_config_aliases(config.kit)]
 		},
 		optimizeDeps: {
 			exclude: ['@sveltejs/kit']

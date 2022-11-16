@@ -5,79 +5,6 @@ import { start_server, test } from '../../../utils.js';
 
 test.describe.configure({ mode: 'parallel' });
 
-test.describe('a11y', () => {
-	test('resets focus', async ({ page, clicknav, browserName }) => {
-		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
-
-		await page.goto('/accessibility/a');
-
-		await clicknav('[href="/accessibility/b"]');
-		expect(await page.innerHTML('h1')).toBe('b');
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
-		await page.keyboard.press(tab);
-
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BUTTON');
-		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('focus me');
-
-		await clicknav('[href="/accessibility/a"]');
-		expect(await page.innerHTML('h1')).toBe('a');
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
-
-		await page.keyboard.press(tab);
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BUTTON');
-		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('focus me');
-
-		expect(await page.evaluate(() => document.documentElement.getAttribute('tabindex'))).toBe(null);
-	});
-
-	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {
-		await page.goto('/accessibility/a');
-
-		const has_live_region = (await page.innerHTML('body')).includes('aria-live');
-
-		if (javaScriptEnabled) {
-			expect(has_live_region).toBeTruthy();
-
-			// live region should exist, but be empty
-			expect(await page.innerHTML('[aria-live]')).toBe('');
-
-			await clicknav('[href="/accessibility/b"]');
-			expect(await page.innerHTML('[aria-live]')).toBe('b'); // TODO i18n
-		} else {
-			expect(has_live_region).toBeFalsy();
-		}
-	});
-
-	test('reset selection', async ({ page, clicknav }) => {
-		await page.goto('/selection/a');
-
-		expect(
-			await page.evaluate(() => {
-				const range = document.createRange();
-				range.selectNodeContents(document.body);
-				const selection = getSelection();
-				if (selection) {
-					selection.removeAllRanges();
-					selection.addRange(range);
-					return selection.rangeCount;
-				}
-				return -1;
-			})
-		).toBe(1);
-
-		await clicknav('[href="/selection/b"]');
-		expect(
-			await page.evaluate(() => {
-				const selection = getSelection();
-				if (selection) {
-					return selection.rangeCount;
-				}
-				return -1;
-			})
-		).toBe(0);
-	});
-});
-
 test.describe('Imports', () => {
 	test('imports from node_modules', async ({ page, clicknav }) => {
 		await page.goto('/imports');
@@ -331,6 +258,14 @@ test.describe('Encoded paths', () => {
 		expect(await page.innerHTML('h3')).toBe('/encoded/test%2520me: test%20me');
 	});
 
+	test('visits a route with a doubly encoded slash', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+		await clicknav('[href="/encoded/test%252fme"]');
+		expect(await page.innerHTML('h1')).toBe('dynamic');
+		expect(await page.innerHTML('h2')).toBe('/encoded/test%252fme: test%2fme');
+		expect(await page.innerHTML('h3')).toBe('/encoded/test%252fme: test%2fme');
+	});
+
 	test('visits a route with an encoded slash', async ({ page, clicknav }) => {
 		await page.goto('/encoded');
 		await clicknav('[href="/encoded/AC%2fDC"]');
@@ -388,16 +323,41 @@ test.describe('Encoded paths', () => {
 		});
 	});
 
-	test('allows %-encoded characters in directory names', async ({ page, clicknav }) => {
-		await page.goto('/encoded');
-		await clicknav('[href="/encoded/$SVLT"]');
-		expect(await page.textContent('h1')).toBe('$SVLT');
-	});
-
-	test('allows %-encoded characters in filenames', async ({ page, clicknav }) => {
+	test('allows non-ASCII character in parameterized route segment', async ({ page, clicknav }) => {
 		await page.goto('/encoded');
 		await clicknav('[href="/encoded/@svelte"]');
 		expect(await page.textContent('h1')).toBe('@svelte');
+	});
+
+	test('allows characters to be represented as escape sequences', async ({ page, clicknav }) => {
+		await page.goto('/encoded/escape-sequences');
+
+		await clicknav('[href="/encoded/escape-sequences/:-)"]');
+		expect(await page.textContent('h1')).toBe(':-)');
+
+		await clicknav('[href="/encoded/escape-sequences/%23"]');
+		expect(await page.textContent('h1')).toBe('#');
+
+		await clicknav('[href="/encoded/escape-sequences/%2F"]');
+		expect(await page.textContent('h1')).toBe('/');
+
+		await clicknav('[href="/encoded/escape-sequences/%3f"]');
+		expect(await page.textContent('h1')).toBe('?');
+
+		await clicknav('[href="/encoded/escape-sequences/%25"]');
+		expect(await page.textContent('h1')).toBe('%');
+
+		await clicknav('[href="/encoded/escape-sequences/<"]');
+		expect(await page.textContent('h1')).toBe('<');
+
+		await clicknav('[href="/encoded/escape-sequences/1<2"]');
+		expect(await page.textContent('h1')).toBe('1<2');
+
+		await clicknav('[href="/encoded/escape-sequences/苗"]');
+		expect(await page.textContent('h1')).toBe('苗');
+
+		await clicknav('[href="/encoded/escape-sequences/🤪"]');
+		expect(await page.textContent('h1')).toBe('🤪');
 	});
 });
 
@@ -700,15 +660,13 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('a: X');
 		expect(await page.textContent('h2')).toBe('b: Y');
 
-		const payload_a = '{"status":200,"statusText":"","headers":{},"body":"X"}';
-		const payload_b = '{"status":200,"statusText":"","headers":{},"body":"Y"}';
-
 		if (!javaScriptEnabled) {
+			const payload_a = '{"status":200,"statusText":"","headers":{},"body":"X"}';
+			const payload_b = '{"status":200,"statusText":"","headers":{},"body":"Y"}';
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents_a = await page.innerHTML(
 				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t25"]'
 			);
-
 			const script_contents_b = await page.innerHTML(
 				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t24"]'
 			);
@@ -718,6 +676,28 @@ test.describe('Load', () => {
 		}
 
 		expect(requests.some((r) => r.endsWith('/load/serialization.json'))).toBe(false);
+	});
+
+	test('POST fetches with Request init are serialized', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/load/serialization-post-request');
+
+		expect(await page.textContent('h1')).toBe('a: X');
+		expect(await page.textContent('h2')).toBe('b: Y');
+
+		if (!javaScriptEnabled) {
+			const payload_a = '{"status":200,"statusText":"","headers":{},"body":"X"}';
+			const payload_b = '{"status":200,"statusText":"","headers":{},"body":"Y"}';
+			// by the time JS has run, hydration will have nuked these scripts
+			const script_contents_a = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t25"]'
+			);
+			const script_contents_b = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t24"]'
+			);
+
+			expect(script_contents_a).toBe(payload_a);
+			expect(script_contents_b).toBe(payload_b);
+		}
 	});
 
 	test('json string is returned', async ({ page }) => {
@@ -936,7 +916,10 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('true');
 	});
 
-	test('CORS errors are simulated server-side', async ({ page, read_errors }) => {
+	test('CORS errors are simulated server-side for shared load functions', async ({
+		page,
+		read_errors
+	}) => {
 		const { port, close } = await start_server(async (req, res) => {
 			res.end('hello');
 		});
@@ -949,6 +932,17 @@ test.describe('Load', () => {
 
 		await page.goto(`/load/cors/no-cors?port=${port}`);
 		expect(await page.textContent('h1')).toBe('result: ');
+
+		await close();
+	});
+
+	test('CORS errors are skipped for server-only load functions', async ({ page }) => {
+		const { port, close } = await start_server(async (req, res) => {
+			res.end('hello');
+		});
+
+		await page.goto(`/load/cors/server-only?port=${port}`);
+		expect(await page.textContent('h1')).toBe('hello');
 
 		await close();
 	});
@@ -1661,12 +1655,12 @@ test.describe('Routing', () => {
 		);
 	});
 
-	test('exposes page.routeId', async ({ page, clicknav }) => {
+	test('exposes page.route.id', async ({ page, clicknav }) => {
 		await page.goto('/routing/route-id');
 		await clicknav('[href="/routing/route-id/foo"]');
 
-		expect(await page.textContent('h1')).toBe('routeId in load: routing/route-id/[x]');
-		expect(await page.textContent('h2')).toBe('routeId in store: routing/route-id/[x]');
+		expect(await page.textContent('h1')).toBe('route.id in load: /routing/route-id/[x]');
+		expect(await page.textContent('h2')).toBe('route.id in store: /routing/route-id/[x]');
 	});
 
 	test('serves a page that clashes with a root directory', async ({ page }) => {
@@ -1729,16 +1723,23 @@ test.describe('XSS', () => {
 		}
 	});
 
-	const uri_xss_payload = encodeURIComponent('</script><script>window.pwned=1</script>');
+	const uri_xss_payload = '</script><script>window.pwned=1</script>';
+	const uri_xss_payload_encoded = encodeURIComponent(uri_xss_payload);
+
 	test('no xss via dynamic route path', async ({ page }) => {
-		await page.goto(`/xss/${uri_xss_payload}`);
+		await page.goto(`/xss/${uri_xss_payload_encoded}`);
+
+		expect(await page.textContent('h1')).toBe(uri_xss_payload);
 
 		// @ts-expect-error - check global injected variable
 		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
 	});
 
 	test('no xss via query param', async ({ page }) => {
-		await page.goto(`/xss/query?key=${uri_xss_payload}`);
+		await page.goto(`/xss/query?key=${uri_xss_payload_encoded}`);
+
+		expect(await page.textContent('#one')).toBe(JSON.stringify({ key: [uri_xss_payload] }));
+		expect(await page.textContent('#two')).toBe(JSON.stringify({ key: [uri_xss_payload] }));
 
 		// @ts-expect-error - check global injected variable
 		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
@@ -1946,7 +1947,8 @@ test.describe('Actions', () => {
 	});
 });
 
-test.describe('Cookies API', () => {
+// Run in serial to not pollute the log with (correct) cookie warnings
+test.describe.serial('Cookies API', () => {
 	// there's a problem running these tests in the CI with webkit,
 	// since AFAICT the browser is using http://localhost and webkit won't
 	// set a `Secure` cookie on that. So we bail...
@@ -1969,18 +1971,6 @@ test.describe('Cookies API', () => {
 		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
 		await page.goto('/cookies/delete');
-		span = page.locator('#cookie-value');
-		expect(await span.innerText()).toContain('undefined');
-	});
-
-	test('cookies can be set with a path', async ({ page }) => {
-		await page.goto('/cookies/nested/a');
-		let span = page.locator('#cookie-value');
-		expect(await span.innerText()).toContain('teapot');
-		await page.goto('/cookies/nested/b');
-		span = page.locator('#cookie-value');
-		expect(await span.innerText()).toContain('undefined');
-		await page.goto('/cookies');
 		span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 	});
@@ -2021,5 +2011,17 @@ test.describe('Cookies API', () => {
 		// setting a different value...
 		await page.click('button#janeAusten');
 		await expect(page.locator('#cookie-value')).toHaveText('Jane Austen');
+	});
+
+	test('cookies can be set with a path', async ({ page }) => {
+		await page.goto('/cookies/nested/a');
+		let span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot');
+		await page.goto('/cookies/nested/b');
+		span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('undefined');
+		await page.goto('/cookies');
+		span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('undefined');
 	});
 });

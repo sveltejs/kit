@@ -14,7 +14,7 @@ export interface Client {
 	// public API, exposed via $app/navigation
 	after_navigate: typeof afterNavigate;
 	before_navigate: typeof beforeNavigate;
-	disable_scroll_handling: () => void;
+	disable_scroll_handling(): void;
 	goto: typeof goto;
 	invalidate: typeof invalidate;
 	invalidateAll: typeof invalidateAll;
@@ -23,16 +23,16 @@ export interface Client {
 	apply_action: typeof applyAction;
 
 	// private API
-	_hydrate: (opts: {
+	_hydrate(opts: {
 		status: number;
 		error: App.Error;
 		node_ids: number[];
 		params: Record<string, string>;
-		routeId: string | null;
+		route: { id: string | null };
 		data: Array<import('types').ServerDataNode | null>;
 		form: Record<string, any> | null;
-	}) => Promise<void>;
-	_start_router: () => void;
+	}): Promise<void>;
+	_start_router(): void;
 }
 
 export type NavigationIntent = {

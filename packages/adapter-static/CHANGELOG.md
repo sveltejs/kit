@@ -1,5 +1,23 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.48
+
+### Patch Changes
+
+- Update README ([#7480](https://github.com/sveltejs/kit/pull/7480))
+
+## 1.0.0-next.47
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.46
+
+### Patch Changes
+
+- Make options object optional ([#7341](https://github.com/sveltejs/kit/pull/7341))
+
 ## 1.0.0-next.45
 
 ### Patch Changes

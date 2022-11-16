@@ -1,5 +1,6 @@
 .DS_Store
 .env
 /.svelte-kit/
+/.snippets
 /build/
 /functions/

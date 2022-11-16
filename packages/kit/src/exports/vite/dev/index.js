@@ -6,14 +6,12 @@ import { URL } from 'url';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { posixify, resolve_entry } from '../../../utils/filesystem.js';
+import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
 import { load_error_page, load_template } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
-import { prevent_illegal_vite_imports } from '../graph_analysis/index.js';
 import { compact } from '../../../utils/array.js';
-import { normalizePath } from 'vite';
 
 // Vite doesn't expose this so we just copy the list for now
 // https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
@@ -43,8 +41,6 @@ export async function dev(vite, vite_config, svelte_config) {
 	/** @type {import('types').SSRManifest} */
 	let manifest;
 
-	const extensions = [...svelte_config.extensions, ...svelte_config.kit.moduleExtensions];
-
 	/** @param {string} id */
 	async function resolve(id) {
 		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
@@ -69,7 +65,8 @@ export async function dev(vite, vite_config, svelte_config) {
 				entry: {
 					file: `/@fs${runtime_prefix}/client/start.js`,
 					imports: [],
-					stylesheets: []
+					stylesheets: [],
+					fonts: []
 				},
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
@@ -84,6 +81,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						// these are unused in dev, it's easier to include them
 						result.imports = [];
 						result.stylesheets = [];
+						result.fonts = [];
 
 						if (node.component) {
 							result.component = async () => {
@@ -93,12 +91,6 @@ export async function dev(vite, vite_config, svelte_config) {
 
 								module_nodes.push(module_node);
 								result.file = url.endsWith('.svelte') ? url : url + '?import'; // TODO what is this for?
-
-								prevent_illegal_vite_imports(
-									module_node,
-									normalizePath(svelte_config.kit.files.lib),
-									extensions
-								);
 
 								return module.default;
 							};
@@ -110,12 +102,6 @@ export async function dev(vite, vite_config, svelte_config) {
 							module_nodes.push(module_node);
 
 							result.shared = module;
-
-							prevent_illegal_vite_imports(
-								module_node,
-								normalizePath(svelte_config.kit.files.lib),
-								extensions
-							);
 						}
 
 						if (node.server) {
@@ -172,6 +158,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							pattern: route.pattern,
 							names: route.names,
 							types: route.types,
+							optional: route.optional,
 							page: route.page,
 							endpoint: endpoint
 								? async () => {
@@ -249,7 +236,10 @@ export async function dev(vite, vite_config, svelte_config) {
 		dev: true,
 		etag: true,
 		maxAge: 0,
-		extensions: []
+		extensions: [],
+		setHeaders: (res) => {
+			res.setHeader('access-control-allow-origin', '*');
+		}
 	});
 
 	vite.middlewares.use(async (req, res, next) => {
@@ -290,6 +280,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res) => {
+			// Vite's base middleware strips out the base path. Restore it
+			req.url = req.originalUrl;
 			try {
 				const base = `${vite.config.server.https ? 'https' : 'http'}://${
 					req.headers[':authority'] || req.headers.host
@@ -313,6 +305,22 @@ export async function dev(vite, vite_config, svelte_config) {
 						res,
 						`Not found (did you mean ${svelte_config.kit.paths.base + req.url}?)`
 					);
+				}
+
+				if (decoded === svelte_config.kit.paths.base + '/service-worker.js') {
+					const resolved = resolve_entry(svelte_config.kit.files.serviceWorker);
+
+					if (resolved) {
+						res.writeHead(200, {
+							'content-type': 'application/javascript'
+						});
+						res.end(`import '${to_fs(resolved)}';`);
+					} else {
+						res.writeHead(404);
+						res.end('not found');
+					}
+
+					return;
 				}
 
 				const hooks_file = svelte_config.kit.files.hooks.server;
@@ -436,7 +444,7 @@ export async function dev(vite, vite_config, svelte_config) {
 											'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
 										);
 									}
-								}) ?? { message: event.routeId != null ? 'Internal Error' : 'Not Found' }
+								}) ?? { message: event.route.id != null ? 'Internal Error' : 'Not Found' }
 							);
 						},
 						hooks,
@@ -464,7 +472,9 @@ export async function dev(vite, vite_config, svelte_config) {
 								.replace(/%sveltekit\.status%/g, String(status))
 								.replace(/%sveltekit\.error\.message%/g, message);
 						},
-						service_worker: false,
+						service_worker:
+							svelte_config.kit.serviceWorker.register &&
+							!!resolve_entry(svelte_config.kit.files.serviceWorker),
 						trailing_slash: svelte_config.kit.trailingSlash
 					},
 					{

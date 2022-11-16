@@ -94,13 +94,15 @@ function get_types(code, statements) {
 				if (parts.length) {
 					snippet_unformatted = snippet_unformatted.replace(/\/\*\*[\s\S]+?\*\//g, '');
 				}
-				const snippet = prettier.format(snippet_unformatted, {
-					parser: 'typescript',
-					printWidth: 80,
-					useTabs: true,
-					singleQuote: true,
-					trailingComma: 'none'
-				});
+				const snippet = prettier
+					.format(snippet_unformatted, {
+						parser: 'typescript',
+						printWidth: 80,
+						useTabs: true,
+						singleQuote: true,
+						trailingComma: 'none'
+					})
+					.trim();
 
 				const collection =
 					ts.isVariableStatement(statement) || ts.isFunctionDeclaration(statement)

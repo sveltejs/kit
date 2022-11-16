@@ -1,0 +1,3 @@
+<slot />
+
+<input autofocus />

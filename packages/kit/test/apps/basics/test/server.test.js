@@ -258,6 +258,37 @@ test.describe('Errors', () => {
 			});
 		}
 	});
+
+	test('expected error thrown in handle results in a rendered error page or JSON response', async ({
+		request
+	}) => {
+		// HTML
+		{
+			const res = await request.get('/errors/expected-error-in-handle', {
+				headers: {
+					accept: 'text/html'
+				}
+			});
+
+			expect(res.status()).toBe(500);
+			expect(await res.text()).toContain(
+				'This is the static error page with the following message: Expected error in handle'
+			);
+		}
+
+		// JSON (default)
+		{
+			const res = await request.get('/errors/expected-error-in-handle');
+
+			const error = await res.json();
+
+			expect(error.stack).toBe(undefined);
+			expect(res.status()).toBe(500);
+			expect(error).toEqual({
+				message: 'Expected error in handle'
+			});
+		}
+	});
 });
 
 test.describe('Load', () => {
@@ -304,7 +335,7 @@ test.describe('Routing', () => {
 	test('event.params are available in handle', async ({ request }) => {
 		const response = await request.get('/routing/params-in-handle/banana');
 		expect(await response.json()).toStrictEqual({
-			key: 'routing/params-in-handle/[x]',
+			key: '/routing/params-in-handle/[x]',
 			params: { x: 'banana' }
 		});
 	});
@@ -329,7 +360,7 @@ test.describe('Shadowed pages', () => {
 		});
 
 		expect(response.status()).toBe(200);
-		expect(await response.json()).toEqual({ type: 'success', status: 204 });
+		expect(await response.json()).toEqual({ data: '-1', type: 'success', status: 204 });
 	});
 });
 
@@ -340,6 +371,8 @@ test.describe('Static files', () => {
 
 		response = await request.get('/subdirectory/static.json');
 		expect(await response.json()).toBe('subdirectory file');
+
+		expect(response.headers()['access-control-allow-origin']).toBe('*');
 
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);

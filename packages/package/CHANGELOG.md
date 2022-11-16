@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 1.0.0-next.6
+
+### Patch Changes
+
+- [feat] warn if svelte not found in dependencies or peerDependencies ([#7685](https://github.com/sveltejs/kit/pull/7685))
+
 ## 1.0.0-next.5
 
 ### Patch Changes

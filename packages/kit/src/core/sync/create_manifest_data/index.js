@@ -7,6 +7,7 @@ import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
 
 /**
+ * Generates the manifest data used for the client-side manifest and types generation.
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   fallback?: string;
@@ -34,7 +35,7 @@ export default function create_manifest_data({
 /**
  * @param {import('types').ValidatedConfig} config
  */
-function create_assets(config) {
+export function create_assets(config) {
 	return list_files(config.kit.files.assets).map((file) => ({
 		file,
 		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
@@ -101,12 +102,43 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		 * @param {import('types').RouteData | null} parent
 		 */
 		const walk = (depth, id, segment, parent) => {
-			if (/\]\[/.test(id)) {
+			const unescaped = id.replace(/\[([ux])\+([^\]]+)\]/gi, (match, type, code) => {
+				if (match !== match.toLowerCase()) {
+					throw new Error(`Character escape sequence in ${id} must be lowercase`);
+				}
+
+				if (!/[0-9a-f]+/.test(code)) {
+					throw new Error(`Invalid character escape sequence in ${id}`);
+				}
+
+				if (type === 'x') {
+					if (code.length !== 2) {
+						throw new Error(`Hexadecimal escape sequence in ${id} must be two characters`);
+					}
+
+					return String.fromCharCode(parseInt(code, 16));
+				} else {
+					if (code.length < 4 || code.length > 6) {
+						throw new Error(
+							`Unicode escape sequence in ${id} must be between four and six characters`
+						);
+					}
+
+					return String.fromCharCode(parseInt(code, 16));
+				}
+			});
+
+			if (/\]\[/.test(unescaped)) {
 				throw new Error(`Invalid route ${id} — parameters must be separated`);
 			}
 
 			if (count_occurrences('[', id) !== count_occurrences(']', id)) {
 				throw new Error(`Invalid route ${id} — brackets are unbalanced`);
+			}
+
+			if (/#/.test(segment)) {
+				// Vite will barf on files with # in them
+				throw new Error(`Route ${id} should be renamed to ${id.replace(/#/g, '[x+23]')}`);
 			}
 
 			if (/\[\.\.\.\w+\]\/\[\[/.test(id)) {
@@ -121,7 +153,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				);
 			}
 
-			const { pattern, names, types } = parse_route_id(id);
+			const { pattern, names, types, optional } = parse_route_id(id);
 
 			/** @type {import('types').RouteData} */
 			const route = {
@@ -132,6 +164,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				pattern,
 				names,
 				types,
+				optional,
 
 				layout: null,
 				error: null,
@@ -207,7 +240,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			}
 		};
 
-		walk(0, '', '', null);
+		walk(0, '/', '', null);
 
 		if (routes.length === 1) {
 			const root = routes[0];
@@ -223,11 +256,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		// If there's no routes directory, we'll just create a single empty route. This ensures the root layout and
 		// error components are included in the manifest, which is needed for subsequent build/dev commands to work
 		routes.push({
-			id: '',
+			id: '/',
 			segment: '',
 			pattern: /^$/,
 			names: [],
 			types: [],
+			optional: [],
 			parent: null,
 			layout: null,
 			error: null,
@@ -255,7 +289,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	// and smaller indexes take fewer bytes. also, this guarantees that
 	// the default error/layout are 0/1
 	for (const route of routes) {
-		if (route.layout) nodes.push(route.layout);
+		if (route.layout) {
+			if (!route.layout?.component) {
+				route.layout.component = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
+			}
+			nodes.push(route.layout);
+		}
 		if (route.error) nodes.push(route.error);
 	}
 
@@ -460,6 +499,10 @@ function normalize_route_id(id) {
 		id
 			// remove groups
 			.replace(/(?<=^|\/)\(.+?\)(?=$|\/)/g, '')
+
+			.replace(/\[[ux]\+([0-9a-f]+)\]/g, (_, x) =>
+				String.fromCharCode(parseInt(x, 16)).replace(/\//g, '%2f')
+			)
 
 			// replace `[param]` with `<*>`, `[param=x]` with `<x>`, and `[[param]]` with `<?*>`
 			.replace(

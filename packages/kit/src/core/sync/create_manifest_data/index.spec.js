@@ -76,34 +76,34 @@ test('creates routes', () => {
 
 	assert.equal(routes.map(simplify_route), [
 		{
-			id: '',
+			id: '/',
 			pattern: '/^/$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 		{
-			id: 'about',
+			id: '/about',
 			pattern: '/^/about/?$/',
 			page: { layouts: [0], errors: [1], leaf: 3 }
 		},
 		{
-			id: 'blog.json',
+			id: '/blog.json',
 			pattern: '/^/blog.json$/',
 			endpoint: { file: 'samples/basic/blog.json/+server.js' }
 		},
 		{
-			id: 'blog',
+			id: '/blog',
 			pattern: '/^/blog/?$/',
 			page: { layouts: [0], errors: [1], leaf: 4 }
 		},
 		{
-			id: 'blog/[slug].json',
+			id: '/blog/[slug].json',
 			pattern: '/^/blog/([^/]+?).json$/',
 			endpoint: {
 				file: 'samples/basic/blog/[slug].json/+server.ts'
 			}
 		},
 		{
-			id: 'blog/[slug]',
+			id: '/blog/[slug]',
 			pattern: '/^/blog/([^/]+?)/?$/',
 			page: { layouts: [0], errors: [1], leaf: 5 }
 		}
@@ -128,13 +128,13 @@ test_symlinks('creates symlinked routes', () => {
 
 	assert.equal(routes, [
 		{
-			id: '',
+			id: '/',
 			pattern: '/^/$/',
 			page: { layouts: [0], errors: [1], leaf: 1 }
 		},
 
 		{
-			id: 'foo',
+			id: '/foo',
 			pattern: '/^/foo/?$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
 		}
@@ -154,13 +154,13 @@ test('creates routes with layout', () => {
 
 	assert.equal(routes.map(simplify_route), [
 		{
-			id: '',
+			id: '/',
 			pattern: '/^/$/',
 			page: { layouts: [0], errors: [1], leaf: 3 }
 		},
 
 		{
-			id: 'foo',
+			id: '/foo',
 			pattern: '/^/foo/?$/',
 			page: { layouts: [0, 2], errors: [1, undefined], leaf: 4 }
 		}
@@ -175,71 +175,63 @@ test('succeeds when routes does not exist', () => {
 	]);
 	assert.equal(routes.map(simplify_route), [
 		{
-			id: '',
+			id: '/',
 			pattern: '/^$/'
 		}
 	]);
 });
 
-// TODO some characters will need to be URL-encoded in the filename
 test('encodes invalid characters', () => {
 	const { nodes, routes } = create('samples/encoding');
 
-	// had to remove ? and " because windows
-
-	// const quote = 'samples/encoding/".svelte';
-	const hash = { component: 'samples/encoding/%23/+page.svelte' };
-	// const question_mark = 'samples/encoding/?.svelte';
+	const quote = { component: 'samples/encoding/[x+22]/+page.svelte' };
+	const hash = { component: 'samples/encoding/[x+23]/+page.svelte' };
+	const question_mark = { component: 'samples/encoding/[x+3f]/+page.svelte' };
 
 	assert.equal(nodes.map(simplify_node), [
 		default_layout,
 		default_error,
-		// quote,
-		hash
-		// question_mark
+		quote,
+		hash,
+		question_mark
 	]);
 
 	assert.equal(
-		routes.map((p) => p.pattern),
-		[
-			/^\/$/,
-			// /^\/%22\/?$/,
-			/^\/%23\/?$/
-			// /^\/%3F\/?$/
-		]
+		routes.map((p) => p.pattern.toString()),
+		[/^\/$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/].map((pattern) => pattern.toString())
 	);
 });
 
 test('sorts routes correctly', () => {
 	const expected = [
-		'',
-		'a',
-		'b',
-		'b/[required]',
-		'c',
-		'c/bar',
-		'c/b[x].json',
-		'c/b[x]',
-		'c/foo',
-		'd/e',
-		'd/e[...rest]',
-		'e/f',
-		'e/[...rest]/f',
-		'f/static[...rest]',
-		'f/[...rest]static',
-		'g/[[optional]]/static',
-		'g/[required]',
-		'g/[...rest]/[required]',
-		'h/a/b',
-		'h/a/[required]/b',
-		'h/a/[...rest]/b',
-		'x/[...rest]',
-		'[...rest]/x',
-		'[...rest]/x/[...deep_rest]/y',
-		'[...rest]/x/[...deep_rest]',
-		'[required=matcher]',
-		'[required]',
-		'[...rest]'
+		'/',
+		'/a',
+		'/b',
+		'/b/[required]',
+		'/c',
+		'/c/bar',
+		'/c/b[x].json',
+		'/c/b[x]',
+		'/c/foo',
+		'/d/e',
+		'/d/e[...rest]',
+		'/e/f',
+		'/e/[...rest]/f',
+		'/f/static[...rest]',
+		'/f/[...rest]static',
+		'/g/[[optional]]/static',
+		'/g/[required]',
+		'/g/[...rest]/[required]',
+		'/h/a/b',
+		'/h/a/[required]/b',
+		'/h/a/[...rest]/b',
+		'/x/[...rest]',
+		'/[...rest]/x',
+		'/[...rest]/x/[...deep_rest]/y',
+		'/[...rest]/x/[...deep_rest]',
+		'/[required=matcher]',
+		'/[required]',
+		'/[...rest]'
 	];
 
 	const routes = /** @type {import('types').RouteData[]} */ (expected.map((id) => ({ id })));
@@ -269,24 +261,24 @@ test('sorts routes with rest correctly', () => {
 
 	assert.equal(routes.map(simplify_route), [
 		{
-			id: '',
+			id: '/',
 			pattern: '/^/$/'
 		},
 		{
-			id: 'a',
+			id: '/a',
 			pattern: '/^/a/?$/'
 		},
 		{
-			id: 'a/[...rest]',
+			id: '/a/[...rest]',
 			pattern: '/^/a(?:/(.*))?/?$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 		{
-			id: 'b',
+			id: '/b',
 			pattern: '/^/b/?$/'
 		},
 		{
-			id: 'b/[...rest]',
+			id: '/b/[...rest]',
 			pattern: '/^/b(?:/(.*))?/?$/',
 			page: { layouts: [0], errors: [1], leaf: 3 }
 		}
@@ -306,16 +298,16 @@ test('allows rest parameters inside segments', () => {
 
 	assert.equal(routes.map(simplify_route), [
 		{
-			id: '',
+			id: '/',
 			pattern: '/^/$/'
 		},
 		{
-			id: 'prefix-[...rest]',
+			id: '/prefix-[...rest]',
 			pattern: '/^/prefix-(.*?)/?$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 		{
-			id: '[...rest].json',
+			id: '/[...rest].json',
 			pattern: '/^/(.*?).json$/',
 			endpoint: {
 				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
@@ -351,17 +343,17 @@ test('optional parameters', () => {
 
 	assert.equal(routes.map(simplify_route), [
 		{
-			id: '',
+			id: '/',
 			pattern: '/^/$/'
 		},
 		{
-			id: '[[foo]]bar',
+			id: '/[[foo]]bar',
 			pattern: '/^/([^/]*)?bar/?$/',
 			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js' }
 		},
-		{ id: 'nested', pattern: '/^/nested/?$/' },
+		{ id: '/nested', pattern: '/^/nested/?$/' },
 		{
-			id: 'nested/[[optional]]/sub',
+			id: '/nested/[[optional]]/sub',
 			pattern: '/^/nested(?:/([^/]+))?/sub/?$/',
 			page: {
 				layouts: [0],
@@ -370,9 +362,9 @@ test('optional parameters', () => {
 				leaf: nodes.findIndex((node) => node.component?.includes('nested/[[optional]]'))
 			}
 		},
-		{ id: 'nested/[[optional]]', pattern: '/^/nested(?:/([^/]+))?/?$/' },
+		{ id: '/nested/[[optional]]', pattern: '/^/nested(?:/([^/]+))?/?$/' },
 		{
-			id: 'prefix[[suffix]]',
+			id: '/prefix[[suffix]]',
 			pattern: '/^/prefix([^/]*)?/?$/',
 			page: {
 				layouts: [0],
@@ -382,7 +374,7 @@ test('optional parameters', () => {
 			}
 		},
 		{
-			id: '[[optional]]',
+			id: '/[[optional]]',
 			pattern: '/^(?:/([^/]+))?/?$/',
 			page: {
 				layouts: [0],
@@ -415,7 +407,7 @@ test('allows multiple slugs', () => {
 
 	assert.equal(routes.filter((route) => route.endpoint).map(simplify_route), [
 		{
-			id: '[file].[ext]',
+			id: '/[file].[ext]',
 			pattern: '/^/([^/]+?).([^/]+?)$/',
 			endpoint: {
 				file: 'samples/multiple-slugs/[file].[ext]/+server.js'
@@ -427,7 +419,7 @@ test('allows multiple slugs', () => {
 test('fails if dynamic params are not separated', () => {
 	assert.throws(() => {
 		create('samples/invalid-params');
-	}, /Invalid route \[foo\]\[bar\] — parameters must be separated/);
+	}, /Invalid route \/\[foo\]\[bar\] — parameters must be separated/);
 });
 
 test('ignores things that look like lockfiles', () => {
@@ -435,11 +427,11 @@ test('ignores things that look like lockfiles', () => {
 
 	assert.equal(routes.map(simplify_route), [
 		{
-			id: '',
+			id: '/',
 			pattern: '/^/$/'
 		},
 		{
-			id: 'foo',
+			id: '/foo',
 			pattern: '/^/foo/?$/',
 			endpoint: {
 				file: 'samples/lockfiles/foo/+server.js'
@@ -464,36 +456,36 @@ test('works with custom extensions', () => {
 
 	assert.equal(routes.map(simplify_route), [
 		{
-			id: '',
+			id: '/',
 			pattern: '/^/$/',
 			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 		{
-			id: 'about',
+			id: '/about',
 			pattern: '/^/about/?$/',
 			page: { layouts: [0], errors: [1], leaf: 3 }
 		},
 		{
-			id: 'blog.json',
+			id: '/blog.json',
 			pattern: '/^/blog.json$/',
 			endpoint: {
 				file: 'samples/custom-extension/blog.json/+server.js'
 			}
 		},
 		{
-			id: 'blog',
+			id: '/blog',
 			pattern: '/^/blog/?$/',
 			page: { layouts: [0], errors: [1], leaf: 4 }
 		},
 		{
-			id: 'blog/[slug].json',
+			id: '/blog/[slug].json',
 			pattern: '/^/blog/([^/]+?).json$/',
 			endpoint: {
 				file: 'samples/custom-extension/blog/[slug].json/+server.js'
 			}
 		},
 		{
-			id: 'blog/[slug]',
+			id: '/blog/[slug]',
 			pattern: '/^/blog/([^/]+?)/?$/',
 			page: { layouts: [0], errors: [1], leaf: 5 }
 		}
@@ -532,19 +524,19 @@ test('includes nested error components', () => {
 
 	assert.equal(routes.map(simplify_route), [
 		{
-			id: '',
+			id: '/',
 			pattern: '/^/$/'
 		},
 		{
-			id: 'foo',
+			id: '/foo',
 			pattern: '/^/foo/?$/'
 		},
 		{
-			id: 'foo/bar',
+			id: '/foo/bar',
 			pattern: '/^/foo/bar/?$/'
 		},
 		{
-			id: 'foo/bar/baz',
+			id: '/foo/bar/baz',
 			pattern: '/^/foo/bar/baz/?$/',
 			page: { layouts: [0, 2, undefined, 4], errors: [1, undefined, 3, 5], leaf: 6 }
 		}
@@ -585,42 +577,42 @@ test('creates routes with named layouts', () => {
 
 	assert.equal(routes.filter((route) => route.page).map(simplify_route), [
 		{
-			id: 'a/a1',
+			id: '/a/a1',
 			pattern: '/^/a/a1/?$/',
 			page: { layouts: [0, 4], errors: [1, undefined], leaf: 10 }
 		},
 		{
-			id: '(special)/a/a2',
+			id: '/(special)/a/a2',
 			pattern: '/^/a/a2/?$/',
 			page: { layouts: [0, 2], errors: [1, undefined], leaf: 9 }
 		},
 		{
-			id: '(special)/(alsospecial)/b/c/c1',
+			id: '/(special)/(alsospecial)/b/c/c1',
 			pattern: '/^/b/c/c1/?$/',
 			page: { layouts: [0, 2, 3], errors: [1, undefined, undefined], leaf: 8 }
 		},
 		{
-			id: 'b/c/c2',
+			id: '/b/c/c2',
 			pattern: '/^/b/c/c2/?$/',
 			page: { layouts: [0], errors: [1], leaf: 11 }
 		},
 		{
-			id: 'b/d/(special)',
+			id: '/b/d/(special)',
 			pattern: '/^/b/d/?$/',
 			page: { layouts: [0, 6], errors: [1, undefined], leaf: 12 }
 		},
 		{
-			id: 'b/d/d1',
+			id: '/b/d/d1',
 			pattern: '/^/b/d/d1/?$/',
 			page: { layouts: [0], errors: [1], leaf: 15 }
 		},
 		{
-			id: 'b/d/(special)/(extraspecial)/d2',
+			id: '/b/d/(special)/(extraspecial)/d2',
 			pattern: '/^/b/d/d2/?$/',
 			page: { layouts: [0, 6, 7], errors: [1, undefined, undefined], leaf: 13 }
 		},
 		{
-			id: 'b/d/(special)/(extraspecial)/d3',
+			id: '/b/d/(special)/(extraspecial)/d3',
 			pattern: '/^/b/d/d3/?$/',
 			page: { layouts: [0, 6], errors: [1, undefined], leaf: 14 }
 		}
@@ -635,6 +627,7 @@ test('handles pages without .svelte file', () => {
 		default_error,
 		{ component: 'samples/page-without-svelte-file/error/+error.svelte' },
 		{ component: 'samples/page-without-svelte-file/layout/+layout.svelte' },
+		{ ...default_layout, shared: 'samples/page-without-svelte-file/layout/exists/+layout.js' },
 		{ component: 'samples/page-without-svelte-file/+page.svelte' },
 		{ shared: 'samples/page-without-svelte-file/error/[...path]/+page.js' },
 		{ component: 'samples/page-without-svelte-file/layout/exists/+page.svelte' },
@@ -643,32 +636,32 @@ test('handles pages without .svelte file', () => {
 
 	assert.equal(routes.map(simplify_route), [
 		{
-			id: '',
+			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 4 }
+			page: { layouts: [0], errors: [1], leaf: 5 }
 		},
 		{
-			id: 'error',
+			id: '/error',
 			pattern: '/^/error/?$/'
 		},
 		{
-			id: 'error/[...path]',
+			id: '/error/[...path]',
 			pattern: '/^/error(?:/(.*))?/?$/',
-			page: { layouts: [0, undefined], errors: [1, 2], leaf: 5 }
+			page: { layouts: [0, undefined], errors: [1, 2], leaf: 6 }
 		},
 		{
-			id: 'layout',
+			id: '/layout',
 			pattern: '/^/layout/?$/'
 		},
 		{
-			id: 'layout/exists',
+			id: '/layout/exists',
 			pattern: '/^/layout/exists/?$/',
-			page: { layouts: [0, 3], errors: [1, undefined], leaf: 6 }
+			page: { layouts: [0, 3, 4], errors: [1, undefined, undefined], leaf: 7 }
 		},
 		{
-			id: 'layout/redirect',
+			id: '/layout/redirect',
 			pattern: '/^/layout/redirect/?$/',
-			page: { layouts: [0, 3], errors: [1, undefined], leaf: 7 }
+			page: { layouts: [0, 3], errors: [1, undefined], leaf: 8 }
 		}
 	]);
 });
@@ -725,7 +718,7 @@ test('errors on duplicate matchers', () => {
 test('prevents route conflicts between groups', () => {
 	assert.throws(
 		() => create('samples/conflicting-groups'),
-		/The "\(x\)\/a" and "\(y\)\/a" routes conflict with each other/
+		/The "\/\(x\)\/a" and "\/\(y\)\/a" routes conflict with each other/
 	);
 });
 

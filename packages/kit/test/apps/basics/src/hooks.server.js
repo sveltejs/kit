@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { sequence } from '@sveltejs/kit/hooks';
 import { HttpError } from '../../../../src/runtime/control';
+import { error } from '@sveltejs/kit';
 
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
@@ -38,13 +39,16 @@ export const handleError = ({ event, error: e }) => {
 
 export const handle = sequence(
 	({ event, resolve }) => {
-		event.locals.key = event.routeId;
+		event.locals.key = event.route.id;
 		event.locals.params = event.params;
 		event.locals.answer = 42;
 		return resolve(event);
 	},
 	({ event, resolve }) => {
-		event.locals.name = /** @type {string} */ (event.cookies.get('name'));
+		if (event.url.pathname.includes('fetch-credentialed')) {
+			// Only get the cookie at the test where we know it's set to avoid polluting our logs with (correct) warnings
+			event.locals.name = /** @type {string} */ (event.cookies.get('name'));
+		}
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {
@@ -59,6 +63,8 @@ export const handle = sequence(
 	async ({ event, resolve }) => {
 		if (event.url.pathname === '/errors/error-in-handle') {
 			throw new Error('Error in handle');
+		} else if (event.url.pathname === '/errors/expected-error-in-handle') {
+			throw error(500, 'Expected error in handle');
 		}
 
 		const response = await resolve(event, {

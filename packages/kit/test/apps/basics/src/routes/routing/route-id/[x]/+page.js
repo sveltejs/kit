@@ -1,4 +1,4 @@
 /** @type {import('./$types').PageLoad} */
-export function load({ routeId }) {
-	return { routeId };
+export function load({ route }) {
+	return { route };
 }
