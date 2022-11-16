@@ -209,7 +209,7 @@ importers:
       prettier: ^2.7.1
       prettier-plugin-svelte: ^2.8.0
       prompts: ^2.4.2
-      sucrase: ^3.28.0
+      sucrase: ^3.29.0
       svelte: ^3.52.0
       svelte-preprocess: ^4.10.7
       tiny-glob: ^0.2.9
@@ -226,7 +226,7 @@ importers:
       gitignore-parser: 0.0.2
       prettier: 2.7.1
       prettier-plugin-svelte: 2.8.0_nryolsexf6k3znhuh4uzpugsem
-      sucrase: 3.28.0
+      sucrase: 3.29.0
       svelte: 3.53.1
       svelte-preprocess: 4.10.7_svelte@3.53.1
       tiny-glob: 0.2.9
@@ -4090,8 +4090,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /sucrase/3.28.0:
-    resolution: {integrity: sha512-TK9600YInjuiIhVM3729rH4ZKPOsGeyXUwY+Ugu9eilNbdTFyHr6XcAGYbRVZPDgWj6tgI7bx95aaJjHnbffag==}
+  /sucrase/3.29.0:
+    resolution: {integrity: sha512-bZPAuGA5SdFHuzqIhTAqt9fvNEo9rESqXIG3oiKdF8K4UmkQxC4KlNL3lVyAErXp+mPvUqZ5l13qx6TrDIGf3A==}
     engines: {node: '>=8'}
     hasBin: true
     dependencies:
