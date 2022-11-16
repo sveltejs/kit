@@ -82,7 +82,11 @@ const redirects = {
 };
 
 /** @type {import('.').default} **/
-export default function ({ external = [], edge, split } = {}) {
+export default function ({
+	external = /** @type {string[]} */ ([]),
+	edge = false,
+	split = false
+} = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
