@@ -16,7 +16,7 @@ export function render_modules(kind) {
 
 					if (type.parts?.length) {
 						content +=
-							'\n\n' +
+							'\n\nThis interface has the following fields:\n\n' +
 							type.parts
 								.map((part) => {
 									const params = part.params
@@ -27,7 +27,8 @@ export function render_modules(kind) {
 										: '';
 
 									return (
-										`\`\`\`ts\n/// style: border\n${part.snippet}\n\`\`\`\n\n` +
+										`**${part.snippet.match(/\w+/)[0]}**\n` +
+										`\`\`\`ts\n${part.snippet}\n\`\`\`\n\n` +
 										params +
 										returns +
 										(params ? '\n\n' : '') +
