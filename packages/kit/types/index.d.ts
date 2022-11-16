@@ -303,7 +303,7 @@ export interface LoadEvent<
 	 * If you need to set headers for the response, you can do so using the this method. This is useful if you want the page to be cached, for example:
 	 *
 	 *	```js
-	 *  // @errors: 7031
+	 *	// @errors: 7031
 	 *	/// file: src/routes/blog/+page.js
 	 *	export async function load({ fetch, setHeaders }) {
 	 *		const url = `https://cms.example.com/articles.json`;
