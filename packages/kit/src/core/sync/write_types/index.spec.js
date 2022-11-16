@@ -265,4 +265,28 @@ test('Rewrites action types for a TypeScript module', () => {
 	);
 });
 
+test('Leaves satisfies operator untouched', () => {
+	const source = `
+		import type { Actions, PageServerLoad, RequestEvent } from './$types';
+
+		export function load({ params }) {
+			return {
+				a: 1
+			};
+		} satisfies PageServerLoad
+
+		export const actions = {
+			a: () => {},
+			b: (param: RequestEvent) => {},
+			c: (param) => {},
+		} satisfies Actions
+	`;
+
+	const rewritten = tweak_types(source, true);
+
+	assert.equal(rewritten?.exports, ['load', 'actions']);
+	assert.equal(rewritten?.modified, false);
+	assert.equal(rewritten?.code, source);
+});
+
 test.run();
