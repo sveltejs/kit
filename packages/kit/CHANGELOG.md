@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.550
+
+### Patch Changes
+
+- [feat] preload fonts and add preload customization ([#4963](https://github.com/sveltejs/kit/pull/4963))
+
 ## 1.0.0-next.549
 
 ### Patch Changes
