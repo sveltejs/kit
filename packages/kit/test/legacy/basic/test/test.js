@@ -22,60 +22,69 @@ if (!dev) {
 	});
 }
 
-const legacyStates = dev ? [undefined] : [undefined, { simulatePartialESModule: false }, { simulatePartialESModule: true }];
+const legacyStates = dev
+	? [undefined]
+	: [undefined, { simulatePartialESModule: false }, { simulatePartialESModule: true }];
 
 legacyStates.forEach((legacyState) =>
-	test.describe(legacyState ? (legacyState.simulatePartialESModule ? 'legacy (partial ESModule)' : 'legacy (no ESModule)') : 'modern', () => {
-		test.skip(({ javaScriptEnabled }) => !(javaScriptEnabled ?? true) && !!legacyState);
+	test.describe(
+		legacyState
+			? legacyState.simulatePartialESModule
+				? 'legacy (partial ESModule)'
+				: 'legacy (no ESModule)'
+			: 'modern',
+		() => {
+			test.skip(({ javaScriptEnabled }) => !(javaScriptEnabled ?? true) && !!legacyState);
 
-		test('check modern browser token variable', async ({ page, javaScriptEnabled }) => {
-			if (!javaScriptEnabled) {
-				return;
-			}
-			// otherwise
+			test('check modern browser token variable', async ({ page, javaScriptEnabled }) => {
+				if (!javaScriptEnabled) {
+					return;
+				}
+				// otherwise
 
-			await routeLegacyCommon(page, '/', legacyState);
+				await routeLegacyCommon(page, '/', legacyState);
 
-			await page.goto('/');
+				await page.goto('/');
 
-			const modernTokenValue = await page.evaluate(`window.${detectModernBrowserVarName}`);
-			const shouldBeDefined = !dev && legacyState === undefined;
-			expect(modernTokenValue).toBe(shouldBeDefined || undefined);
-		});
+				const modernTokenValue = await page.evaluate(`window.${detectModernBrowserVarName}`);
+				const shouldBeDefined = !dev && legacyState === undefined;
+				expect(modernTokenValue).toBe(shouldBeDefined || undefined);
+			});
 
-		test('navigation', async ({ page, javaScriptEnabled }) => {
-			javaScriptEnabled = javaScriptEnabled ?? true;
+			test('navigation', async ({ page, javaScriptEnabled }) => {
+				javaScriptEnabled = javaScriptEnabled ?? true;
 
-			await routeLegacyCommon(page, '/', legacyState);
+				await routeLegacyCommon(page, '/', legacyState);
 
-			await page.goto('/');
-			expect(await page.title()).toBe('SvelteKit Legacy Basic');
+				await page.goto('/');
+				expect(await page.title()).toBe('SvelteKit Legacy Basic');
 
-			await page.locator('a[href="/test-page"]').click();
+				await page.locator('a[href="/test-page"]').click();
 
-			expect(await page.locator('#js-indicator').textContent()).toBe(`${javaScriptEnabled}`);
+				expect(await page.locator('#js-indicator').textContent()).toBe(`${javaScriptEnabled}`);
 
-			const rootStartingIndicatorText = await page
-				.locator('#root-starting-indicator')
-				.textContent();
+				const rootStartingIndicatorText = await page
+					.locator('#root-starting-indicator')
+					.textContent();
 
-			expect(rootStartingIndicatorText).toBe(`${javaScriptEnabled}`);
-		});
+				expect(rootStartingIndicatorText).toBe(`${javaScriptEnabled}`);
+			});
 
-		test('test page', async ({ page, javaScriptEnabled }) => {
-			javaScriptEnabled = javaScriptEnabled ?? true;
+			test('test page', async ({ page, javaScriptEnabled }) => {
+				javaScriptEnabled = javaScriptEnabled ?? true;
 
-			await routeLegacyCommon(page, '/test-page', legacyState);
+				await routeLegacyCommon(page, '/test-page', legacyState);
 
-			await page.goto('/test-page');
-			expect(await page.title()).toBe('SvelteKit Legacy Basic Test Page');
+				await page.goto('/test-page');
+				expect(await page.title()).toBe('SvelteKit Legacy Basic Test Page');
 
-			// We wait instead of immediate expect, since on dev mode the page sometimes didn't finish to load JS, causing flakiness
-			await page.locator(`#js-indicator:text("${javaScriptEnabled}")`).waitFor();
+				// We wait instead of immediate expect, since on dev mode the page sometimes didn't finish to load JS, causing flakiness
+				await page.locator(`#js-indicator:text("${javaScriptEnabled}")`).waitFor();
 
-			expect(await page.locator('#legacy-indicator').textContent()).toBe(`${!!legacyState}`);
+				expect(await page.locator('#legacy-indicator').textContent()).toBe(`${!!legacyState}`);
 
-			await testButtonTest({ button: page.locator('button'), javaScriptEnabled });
-		});
-	})
+				await testButtonTest({ button: page.locator('button'), javaScriptEnabled });
+			});
+		}
+	)
 );

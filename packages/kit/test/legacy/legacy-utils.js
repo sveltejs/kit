@@ -29,18 +29,18 @@ export const routeLegacy = (page, path, options = {}) =>
 		const response = await page.request.fetch(route.request());
 
 		let body = await response.text();
-        
-        if (options.removeScriptModule ?? true) {
-            body = body.replace(/<script type="module".*?<\/script>/g, '');
-        }
-        
-        if (options.stripNoModule ?? true) {
-            body = body.replace(/<script nomodule/g, '<script');
-        }
 
-        if (options.partialESModule ?? false) {
-            body = body.replace(`window.${detectModernBrowserVarName}=true`, '');
-        }
+		if (options.removeScriptModule ?? true) {
+			body = body.replace(/<script type="module".*?<\/script>/g, '');
+		}
+
+		if (options.stripNoModule ?? true) {
+			body = body.replace(/<script nomodule/g, '<script');
+		}
+
+		if (options.partialESModule ?? false) {
+			body = body.replace(`window.${detectModernBrowserVarName}=true`, '');
+		}
 
 		route.fulfill({ response, body, headers: response.headers() });
 	});
@@ -52,11 +52,16 @@ export const routeLegacy = (page, path, options = {}) =>
  * @returns
  */
 export const routeLegacyCommon = (page, path, legacyState) => {
-    if (legacyState === undefined) {
-        return Promise.resolve();
-    }
-    // otherwise
+	if (legacyState === undefined) {
+		return Promise.resolve();
+	}
+	// otherwise
 
-    return routeLegacy(page, path,
-        legacyState.simulatePartialESModule ? { removeScriptModule: false, stripNoModule: false, partialESModule: true } : {});
-}
+	return routeLegacy(
+		page,
+		path,
+		legacyState.simulatePartialESModule
+			? { removeScriptModule: false, stripNoModule: false, partialESModule: true }
+			: {}
+	);
+};
