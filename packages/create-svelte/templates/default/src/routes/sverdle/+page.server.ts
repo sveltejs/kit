@@ -3,7 +3,7 @@ import { words, allowed } from './words.server';
 import type { PageServerLoad, Actions } from './$types';
 
 /** @type {import('./$types').PageServerLoad} */
-export function load({ cookies }) {
+export const load = (({ cookies }) => {
 	const game = new Game(cookies.get('sverdle'));
 
 	return {
@@ -23,7 +23,7 @@ export function load({ cookies }) {
 		 */
 		answer: game.answers.length >= 6 ? game.answer : null
 	};
-} satisfies PageServerLoad;
+}) satisfies PageServerLoad;
 
 /** @type {import('./$types').Actions} */
 export const actions = {
@@ -68,7 +68,7 @@ export const actions = {
 	restart: async ({ cookies }) => {
 		cookies.delete('sverdle');
 	}
-} satisifies Actions;
+} satisfies Actions;
 
 class Game {
 	index: number;
