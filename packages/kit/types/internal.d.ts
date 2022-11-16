@@ -313,6 +313,7 @@ export interface SSROptions {
 	app_template_contains_nonce: boolean;
 	error_template({ message, status }: { message: string; status: number }): string;
 	trailing_slash: TrailingSlash;
+	version: string;
 }
 
 export interface SSRErrorPage {

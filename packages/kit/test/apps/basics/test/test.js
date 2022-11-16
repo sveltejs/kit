@@ -1051,6 +1051,13 @@ test.describe('Page options', () => {
 	});
 });
 
+test.describe('$app/environment', () => {
+	test('includes version', async ({ page }) => {
+		await page.goto('/app-environment');
+		expect(await page.textContent('h1')).toBe('TEST_VERSION');
+	});
+});
+
 test.describe('$app/paths', () => {
 	test('includes paths', async ({ page }) => {
 		await page.goto('/paths');

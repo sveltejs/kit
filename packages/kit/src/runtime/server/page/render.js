@@ -281,7 +281,8 @@ export async function render_response({
 				}` : 'null'},
 				paths: ${s(options.paths)},
 				target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-				trailing_slash: ${s(options.trailing_slash)}
+				trailing_slash: ${s(options.trailing_slash)},
+				version: ${s(options.version)}
 			});
 		`;
 

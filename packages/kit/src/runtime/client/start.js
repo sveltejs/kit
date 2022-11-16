@@ -2,6 +2,7 @@ import { create_client } from './client.js';
 import { init } from './singletons.js';
 import { set_paths } from '../paths.js';
 import { set_public_env } from '../env-public.js';
+import { set_version } from '../env.js';
 
 /**
  * @param {{
@@ -13,11 +14,13 @@ import { set_public_env } from '../env-public.js';
  *   },
  *   target: Element;
  *   trailing_slash: import('types').TrailingSlash;
+ *   version: string;
  * }} opts
  */
-export async function start({ env, hydrate, paths, target, trailing_slash }) {
+export async function start({ env, hydrate, paths, target, trailing_slash, version }) {
 	set_public_env(env);
 	set_paths(paths);
+	set_version(version);
 
 	if (__SVELTEKIT_DEV__ && target === document.body) {
 		console.warn(
