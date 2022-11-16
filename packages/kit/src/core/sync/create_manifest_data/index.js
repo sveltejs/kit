@@ -192,7 +192,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			// process files first
 			for (const file of files) {
 				if (file.is_dir) continue;
-				if (!file.name.startsWith('+')) continue;
+				if (!file.name.startsWith('+') || file.name.endsWith('.d.ts')) continue;
 				if (!valid_extensions.find((ext) => file.name.endsWith(ext))) continue;
 
 				const project_relative = posixify(path.relative(cwd, path.join(dir, file.name)));
