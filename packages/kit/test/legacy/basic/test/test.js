@@ -1,8 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { testButtonTest } from '../../components/test-button-test.js';
-import { routeLegacy } from '../../legacy-utils.js';
-
-//const detectModernBrowserVarName = '__KIT_is_modern_browser';
+import { routeLegacy, routeLegacyCommon, detectModernBrowserVarName } from '../../legacy-utils.js';
 
 const dev = process.env.DEV === 'true';
 
@@ -16,14 +14,7 @@ if (!dev) {
 		}
 		// otherwise
 
-		await page.route('/test-page', async (route) => {
-			const response = await page.request.fetch(route.request());
-
-			let body = await response.text();
-			body = body.replace(/<script type="module".*?<\/script>/g, '');
-
-			route.fulfill({ response, body, headers: response.headers() });
-		});
+		await routeLegacy(page, '/test-page', { stripNoModule: false });
 
 		await page.goto('/test-page');
 
@@ -31,20 +22,31 @@ if (!dev) {
 	});
 }
 
-// TODO: Add check for legacy by compatibility errors checks, using `detectModernBrowserVarName`
+const legacyStates = dev ? [undefined] : [undefined, { simulatePartialESModule: false }, { simulatePartialESModule: true }];
 
-const legacyStates = dev ? [false] : [false, true];
+legacyStates.forEach((legacyState) =>
+	test.describe(legacyState ? (legacyState.simulatePartialESModule ? 'legacy (partial ESModule)' : 'legacy (no ESModule)') : 'modern', () => {
+		test.skip(({ javaScriptEnabled }) => !(javaScriptEnabled ?? true) && !!legacyState);
 
-legacyStates.forEach((legacy) =>
-	test.describe(legacy ? 'legacy' : 'modern', () => {
-		test.skip(({ javaScriptEnabled }) => !(javaScriptEnabled ?? true) && legacy);
+		test('check modern browser token variable', async ({ page, javaScriptEnabled }) => {
+			if (!javaScriptEnabled) {
+				return;
+			}
+			// otherwise
+
+			await routeLegacyCommon(page, '/', legacyState);
+
+			await page.goto('/');
+
+			const modernTokenValue = await page.evaluate(`window.${detectModernBrowserVarName}`);
+			const shouldBeDefined = !dev && legacyState === undefined;
+			expect(modernTokenValue).toBe(shouldBeDefined || undefined);
+		});
 
 		test('navigation', async ({ page, javaScriptEnabled }) => {
 			javaScriptEnabled = javaScriptEnabled ?? true;
 
-			if (legacy) {
-				await routeLegacy(page, '/');
-			}
+			await routeLegacyCommon(page, '/', legacyState);
 
 			await page.goto('/');
 			expect(await page.title()).toBe('SvelteKit Legacy Basic');
@@ -63,15 +65,13 @@ legacyStates.forEach((legacy) =>
 		test('test page', async ({ page, javaScriptEnabled }) => {
 			javaScriptEnabled = javaScriptEnabled ?? true;
 
-			if (legacy) {
-				await routeLegacy(page, '/test-page');
-			}
+			await routeLegacyCommon(page, '/test-page', legacyState);
 
 			await page.goto('/test-page');
 			expect(await page.title()).toBe('SvelteKit Legacy Basic Test Page');
 
 			expect(await page.locator('#js-indicator').textContent()).toBe(`${javaScriptEnabled}`);
-			expect(await page.locator('#legacy-indicator').textContent()).toBe(`${legacy}`);
+			expect(await page.locator('#legacy-indicator').textContent()).toBe(`${!!legacyState}`);
 
 			await testButtonTest({ button: page.locator('button'), javaScriptEnabled });
 		});
