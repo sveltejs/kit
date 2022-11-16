@@ -21,6 +21,12 @@ const body_size_limit = parseInt(env('BODY_SIZE_LIMIT', '524288'));
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 
+if (!origin && (!address_header || !host_header)) {
+	console.warn(
+		`You should specify either ${ENV_PREFIX}ORIGIN or both ${ENV_PREFIX}PROTOCOL_HEADER and ${ENV_PREFIX}HOST_HEADER so that adapter-node can reliably determine the request URL. See https://github.com/sveltejs/kit/tree/master/packages/adapter-node#environment-variables for more information`
+	);
+}
+
 /**
  * @param {string} path
  * @param {boolean} client
