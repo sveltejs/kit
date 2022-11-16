@@ -31,7 +31,7 @@
 		"@types/node": "^16.11.68",
 		"@types/sade": "^1.7.4",
 		"@types/set-cookie-parser": "^2.4.2",
-		"marked": "^4.1.1",
+		"marked": "^4.2.2",
 		"rollup": "^2.79.1",
 		"svelte": "^3.52.0",
 		"svelte-preprocess": "^4.10.7",
