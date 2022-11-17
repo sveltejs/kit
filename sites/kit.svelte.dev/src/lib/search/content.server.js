@@ -93,8 +93,8 @@ function plaintext(markdown) {
 	return transform(markdown, {
 		code: block,
 		blockquote: block,
-		html: () => {
-			throw new Error('TODO implement HTML');
+		html: (html) => {
+			return html;
 		},
 		hr: () => '',
 		list: block,

@@ -27,12 +27,12 @@ export function render_modules(kind) {
 										: '';
 
 									return (
-										`**${part.snippet.match(/\w+/)[0]}**\n` +
-										`\`\`\`ts\n${part.snippet}\n\`\`\`\n\n` +
+										`<div class="api-section">\n\n\`\`\`ts\n${part.snippet}\n\`\`\`\n\n` +
 										params +
 										returns +
 										(params ? '\n\n' : '') +
-										part.content
+										part.content +
+										'\n</div>'
 									);
 								})
 								.join('\n\n');

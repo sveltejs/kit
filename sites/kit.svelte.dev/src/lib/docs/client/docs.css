@@ -307,3 +307,10 @@ pre.language-diff code {
 	text-indent: calc(-1 * var(--indent) - 2ch);
 	min-height: 1.35em;
 }
+
+.api-section {
+	background: var(--back-api);
+	padding: 1rem;
+	margin-bottom: 1rem;
+	max-width: var(--linemax);
+}
