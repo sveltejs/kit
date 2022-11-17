@@ -1,6 +1,5 @@
-import path from 'path';
 import { s } from '../../utils/misc.js';
-import { write_if_changed } from './utils.js';
+import { relative_path, write_if_changed } from './utils.js';
 
 /**
  * @param {import('types').ManifestData} manifest_data
@@ -13,7 +12,7 @@ export function write_matchers(manifest_data, output) {
 	for (const key in manifest_data.matchers) {
 		const src = manifest_data.matchers[key];
 
-		imports.push(`import { match as ${key} } from ${s(path.relative(output, src))};`);
+		imports.push(`import { match as ${key} } from ${s(relative_path(output, src))};`);
 		matchers.push(key);
 	}
 

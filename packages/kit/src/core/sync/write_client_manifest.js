@@ -1,7 +1,6 @@
-import { relative } from 'path';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
-import { trim, write_if_changed } from './utils.js';
+import { relative_path, trim, write_if_changed } from './utils.js';
 
 /**
  * Writes the client manifest to disk. The manifest is used to power the router. It contains the
@@ -20,14 +19,16 @@ export function write_client_manifest(config, manifest_data, output) {
 
 		if (node.shared) {
 			declarations.push(
-				`import * as shared from ${s(relative(`${output}/nodes`, node.shared))};`,
+				`import * as shared from ${s(relative_path(`${output}/nodes`, node.shared))};`,
 				`export { shared };`
 			);
 		}
 
 		if (node.component) {
 			declarations.push(
-				`export { default as component } from ${s(relative(`${output}/nodes`, node.component))};`
+				`export { default as component } from ${s(
+					relative_path(`${output}/nodes`, node.component)
+				)};`
 			);
 		}
 
@@ -86,7 +87,11 @@ export function write_client_manifest(config, manifest_data, output) {
 	write_if_changed(
 		`${output}/client-manifest.js`,
 		trim(`
-			${hooks_file ? `import * as client_hooks from '${posixify(relative(output, hooks_file))}';` : ''}
+			${
+				hooks_file
+					? `import * as client_hooks from '${posixify(relative_path(output, hooks_file))}';`
+					: ''
+			}
 
 			export { matchers } from './client-matchers.js';
 
