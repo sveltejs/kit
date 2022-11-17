@@ -313,4 +313,5 @@ pre.language-diff code {
 	padding: 1rem;
 	margin-bottom: 1rem;
 	max-width: var(--linemax);
+	border-radius: 0.5rem;
 }
