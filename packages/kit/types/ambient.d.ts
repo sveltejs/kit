@@ -231,12 +231,12 @@ declare module '$app/navigation' {
 		}
 	): Promise<void>;
 	/**
-	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `resources` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
-	 * If the argument is given as a `string` or `URL`, it must resolve to the same URL that was passed to `fetch` or `depends` (including query parameters).
+	 * If a resource is specified as a `string` or `URL`, it must resolve to the same URL that was passed to `fetch` or `depends` (including query parameters).
 	 * To create a custom identifier, use a string beginning with `[a-z]+:` (e.g. `custom:state`) — this is a valid URL.
 	 *
-	 * The `function` argument can be used define a custom predicate. It receives the full `URL` and causes `load` to rerun if `true` is returned.
+	 * If a resources is specified as a `function`, it defines a custom predicate. It receives the full `URL` and causes `load` to rerun if `true` is returned.
 	 * This can be useful if you want to invalidate based on a pattern instead of a exact match.
 	 *
 	 * ```ts
@@ -245,7 +245,9 @@ declare module '$app/navigation' {
 	 * ```
 	 * @param url The invalidated URL
 	 */
-	export function invalidate(url: string | URL | ((url: URL) => boolean)): Promise<void>;
+	export function invalidate(
+		...resources: Array<string | URL | ((url: URL) => boolean)>
+	): Promise<void>;
 	/**
 	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
 	 */

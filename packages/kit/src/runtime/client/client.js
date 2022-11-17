@@ -1217,19 +1217,21 @@ export function create_client({ target, base, trailing_slash }) {
 			return goto(href, opts, []);
 		},
 
-		invalidate: (resource) => {
-			if (resource === undefined) {
+		invalidate: (...resources) => {
+			if (resources.length === 0) {
 				// TODO remove for 1.0
 				throw new Error(
 					'`invalidate()` (with no arguments) has been replaced by `invalidateAll()`'
 				);
 			}
 
-			if (typeof resource === 'function') {
-				invalidated.push(resource);
-			} else {
-				const { href } = new URL(resource, location.href);
-				invalidated.push((url) => url.href === href);
+			for (const resource of resources) {
+				if (typeof resource === 'function') {
+					invalidated.push(resource);
+				} else {
+					const { href } = new URL(resource, location.href);
+					invalidated.push((url) => url.href === href);
+				}
 			}
 
 			return invalidate();
