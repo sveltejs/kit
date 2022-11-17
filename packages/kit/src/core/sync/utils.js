@@ -34,7 +34,7 @@ export function trim(str) {
 
 /**
  * This function generates relative paths, whoose `from` argument can safely reside
- * inside of `node_modules`. Otherwise paths returned by `path.relative` would be interpreted
+ * inside of `node_modules`. Otherwise paths returned by `path.relative` could be interpreted
  * as package paths.
  *
  * @param { string } from
