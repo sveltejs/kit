@@ -27,7 +27,7 @@ const default_transform = ({ html }) => html;
 const default_filter = () => false;
 
 /** @type {import('types').RequiredResolveOptions['preload']} */
-const default_preload = ({ type }) => type !== 'asset';
+const default_preload = ({ type }) => type === 'js' || type === 'css';
 
 /** @type {import('types').Respond} */
 export async function respond(request, options, state) {
