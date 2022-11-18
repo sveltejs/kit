@@ -87,7 +87,6 @@ export class Server {
 			app_template,
 			app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			error_template,
-			trailing_slash: ${s(config.kit.trailingSlash)},
 			version: ${s(config.kit.version.name)}
 		};
 	}

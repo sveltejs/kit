@@ -50,7 +50,7 @@ const cookies_setup = (href = 'https://example.com') => {
 			cookie: 'a=b;'
 		})
 	});
-	return get_cookies(request, url, { dev: false, trailing_slash: 'ignore' });
+	return get_cookies(request, url, false, 'ignore');
 };
 
 test('a cookie should not be present after it is deleted', () => {

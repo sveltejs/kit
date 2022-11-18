@@ -343,7 +343,10 @@ const options = object(
 			// TODO remove this for 1.0
 			target: error((keypath) => `${keypath} is no longer required, and should be removed`),
 
-			trailingSlash: list(['never', 'always', 'ignore']),
+			trailingSlash: error(
+				(keypath, input) =>
+					`${keypath} has been removed. You can set \`export const trailingSlash = '${input}'\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/TODO`
+			),
 
 			version: object({
 				name: string(Date.now().toString()),
@@ -506,10 +509,10 @@ function assert_string(input, keypath) {
 	}
 }
 
-/** @param {(keypath?: string) => string} fn */
+/** @param {(keypath?: string, input?: any) => string} fn */
 function error(fn) {
-	return validate(undefined, (_, keypath) => {
-		throw new Error(fn(keypath));
+	return validate(undefined, (input, keypath) => {
+		throw new Error(fn(keypath, input));
 	});
 }
 

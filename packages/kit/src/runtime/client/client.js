@@ -77,11 +77,10 @@ function check_for_removed_attributes() {
  * @param {{
  *   target: Element;
  *   base: string;
- *   trailing_slash: import('types').TrailingSlash;
  * }} opts
  * @returns {import('./types').Client}
  */
-export function create_client({ target, base, trailing_slash }) {
+export function create_client({ target, base }) {
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
