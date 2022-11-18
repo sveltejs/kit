@@ -34,7 +34,7 @@ export default {
 export const prerender = true;
 ```
 
-> ⚠️ You must ensure SvelteKit's [`trailingSlash`](https://kit.svelte.dev/docs/configuration#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+> ⚠️ You must ensure SvelteKit's [`trailingSlash`](https://kit.svelte.dev/docs/page-options#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
 
 ## Zero-config support
 

@@ -104,3 +104,18 @@ export const csr = false;
 ```
 
 > If both `ssr` and `csr` are `false`, nothing will be rendered!
+
+### trailingSlash
+
+By default, SvelteKit will remove trailing slashes from URLs — if you visit `/about/`, it will respond with a redirect to `/about`. You can change this behaviour with the `trailingSlash` option, which can be one of `'never'` (the default), `'always'`, or `'ignore'`.
+
+As with other page options, you can export this value from a `+layout.js` or a `+layout.server.js` and it will apply to all child pages. You can also export the configuration from `+server.js` files.
+
+```js
+/// file: src/routes/+layout.js
+export const trailingSlash = 'always';
+```
+
+This option also affects [prerendering](#prerender). If `trailingSlash` is `always`, a route like `/about` will result in an `about/index.html` file, otherwise it will create `about.html`, mirroring static webserver conventions.
+
+> Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO.

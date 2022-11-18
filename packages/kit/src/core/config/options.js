@@ -232,7 +232,7 @@ const options = object(
 				crawl: boolean(true),
 				createIndexFiles: error(
 					(keypath) =>
-						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/configuration#trailingslash`
+						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/page-options#trailingslash`
 				),
 				default: error(
 					(keypath) =>
