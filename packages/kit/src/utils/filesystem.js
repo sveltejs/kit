@@ -173,6 +173,6 @@ export function resolve_entry(entry) {
  * @param { string } to
  * @returns { string }
  */
- export function relative_path(from, to) {
+export function relative_path(from, to) {
 	return `.${path.sep}${path.relative(from, to)}`;
 }
