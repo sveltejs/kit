@@ -92,8 +92,6 @@ export async function respond(request, options, state) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
-	if (state.prerendering && !state.prerendering.fallback) disable_search(url);
-
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		// @ts-expect-error `cookies` and `fetch` need to be created after the `event` itself
@@ -218,6 +216,8 @@ export async function respond(request, options, state) {
 
 		event.cookies = cookies;
 		event.fetch = create_fetch({ event, options, state, get_cookie_header });
+
+		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
 		const response = await options.hooks.handle({
 			event,
