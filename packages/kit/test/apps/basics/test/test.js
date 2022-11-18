@@ -1331,7 +1331,7 @@ test.describe('Redirects', () => {
 });
 
 test.describe('Routing', () => {
-	test.only('redirects from /routing/ to /routing', async ({
+	test('redirects from /routing/ to /routing', async ({
 		baseURL,
 		page,
 		clicknav,

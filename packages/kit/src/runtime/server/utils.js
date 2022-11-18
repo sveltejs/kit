@@ -201,5 +201,7 @@ export function serialize_data_node(node) {
 	if (node.uses.route) uses.push(`"route":1`);
 	if (node.uses.url) uses.push(`"url":1`);
 
-	return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}}`;
+	return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}${
+		node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
+	}}`;
 }

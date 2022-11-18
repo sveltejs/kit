@@ -415,6 +415,14 @@ export function create_client({ target, base }) {
 	}) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 
+		/** @type {import('types').TrailingSlash} */
+		let slash = 'never';
+		for (const node of branch) {
+			if (node?.slash !== undefined) slash = node.slash;
+		}
+		url.pathname = normalize_path(url.pathname, slash);
+		url.search = url.search; // turn `/?` into `/`
+
 		/** @type {import('./types').NavigationFinished} */
 		const result = {
 			type: 'loaded',
@@ -656,7 +664,8 @@ export function create_client({ target, base }) {
 			loader,
 			server: server_data_node,
 			shared: node.shared?.load ? { type: 'data', data, uses } : null,
-			data: data ?? server_data_node?.data ?? null
+			data: data ?? server_data_node?.data ?? null,
+			slash: node.shared?.trailingSlash ?? server_data_node?.slash
 		};
 	}
 
@@ -703,7 +712,8 @@ export function create_client({ target, base }) {
 					parent: !!node.uses.parent,
 					route: !!node.uses.route,
 					url: !!node.uses.url
-				}
+				},
+				slash: node.slash
 			};
 		} else if (node?.type === 'skip') {
 			return previous ?? null;
@@ -998,12 +1008,9 @@ export function create_client({ target, base }) {
 			const params = route.exec(path);
 
 			if (params) {
-				const normalized = new URL(
-					url.origin + normalize_path(url.pathname, trailing_slash) + url.search + url.hash
-				);
-				const id = normalized.pathname + normalized.search;
+				const id = url.pathname + url.search;
 				/** @type {import('./types').NavigationIntent} */
-				const intent = { id, invalidating, route, params: decode_params(params), url: normalized };
+				const intent = { id, invalidating, route, params: decode_params(params), url };
 				return intent;
 			}
 		}

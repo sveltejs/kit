@@ -320,7 +320,7 @@ const options = object(
 			// TODO remove for 1.0
 			router: error(
 				(keypath) =>
-					`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+					`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js (or +layout.server.js) instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
 			),
 
 			// TODO remove for 1.0
@@ -345,7 +345,7 @@ const options = object(
 
 			trailingSlash: error(
 				(keypath, input) =>
-					`${keypath} has been removed. You can set \`export const trailingSlash = '${input}'\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/TODO`
+					`${keypath} has been removed. You can set \`export const trailingSlash = '${input}'\` inside a top level +layout.js (or +layout.server.js) instead. See the PR for more information: https://github.com/sveltejs/kit/pull/TODO`
 			),
 
 			version: object({

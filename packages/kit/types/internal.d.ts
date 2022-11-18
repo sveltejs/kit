@@ -72,6 +72,7 @@ export interface CSRPageNode {
 	component: typeof SvelteComponent;
 	shared: {
 		load?: Load;
+		trailingSlash?: TrailingSlash;
 	};
 	server: boolean;
 }
@@ -209,6 +210,7 @@ export interface ServerDataNode {
 	type: 'data';
 	data: Record<string, any> | null;
 	uses: Uses;
+	slash?: TrailingSlash;
 }
 
 /**

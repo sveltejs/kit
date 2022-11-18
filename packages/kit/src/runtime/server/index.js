@@ -187,8 +187,6 @@ export async function respond(request, options, state) {
 					options.manifest._.nodes[route.page.leaf]()
 				]);
 
-				console.log('page nodes', nodes);
-
 				trailing_slash = get_option(nodes, 'trailingSlash');
 			} else if (route.endpoint) {
 				const node = await route.endpoint();
