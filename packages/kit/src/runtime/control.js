@@ -21,7 +21,7 @@ export class HttpError {
 
 export class Redirect {
 	/**
-	 * @param {number} status
+	 * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status
 	 * @param {string} location
 	 */
 	constructor(status, location) {
