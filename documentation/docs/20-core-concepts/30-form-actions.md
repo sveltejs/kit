@@ -178,8 +178,17 @@ export const actions = {
 
 ```diff
 /// file: src/routes/login/+page.svelte
+<script>
+	import { page } from '$app/stores'
+
+	export let form
+</script>
+
 <form method="POST" action="?/login">
 -	<input name="email" type="email">
++	{#if form?.missing || form?.incorrect}
++		<p>{$page.status} There are errors in your form submission. See below</p>
++	{/if}
 +	{#if form?.missing}<p class="error">The email field is required</p>{/if}
 +	{#if form?.incorrect}<p class="error">Invalid credentials!</p>{/if}
 +	<input name="email" type="email" value={form?.email ?? ''}>
