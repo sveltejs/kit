@@ -1,6 +1,6 @@
-import { posixify, resolve_entry } from '../../utils/filesystem.js';
+import { posixify, relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
-import { relative_path, trim, write_if_changed } from './utils.js';
+import { trim, write_if_changed } from './utils.js';
 
 /**
  * Writes the client manifest to disk. The manifest is used to power the router. It contains the

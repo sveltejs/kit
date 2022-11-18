@@ -1,5 +1,6 @@
 import { s } from '../../utils/misc.js';
-import { relative_path, write_if_changed } from './utils.js';
+import { relative_path } from '../../utils/filesystem.js';
+import { write_if_changed } from './utils.js';
 
 /**
  * @param {import('types').ManifestData} manifest_data

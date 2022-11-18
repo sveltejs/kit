@@ -164,3 +164,15 @@ export function resolve_entry(entry) {
 
 	return null;
 }
+
+/**
+ * This function generates relative paths, whoose `from` argument can safely reside
+ * inside of `node_modules`. Otherwise paths could be falsly interpreted as package paths.
+ *
+ * @param { string } from
+ * @param { string } to
+ * @returns { string }
+ */
+ export function relative_path(from, to) {
+	return `.${path.sep}${path.relative(from, to)}`;
+}
