@@ -747,11 +747,11 @@ export function error(
 /**
  * The object returned by the `error` function
  */
-export interface HttpError extends UniqueInterface {
+export interface HttpError {
 	/** The HTTP status code */
 	status: number;
 	/** The error message */
-	body: { message: string } extends App.Error ? App.Error | string | undefined : App.Error;
+	body: App.Error;
 }
 
 /**
@@ -766,7 +766,7 @@ export function redirect(
 /**
  * The object returned by the `redirect` function
  */
-export interface Redirect extends UniqueInterface {
+export interface Redirect {
 	/** The HTTP status code */
 	status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 	/** The location to redirect to */
