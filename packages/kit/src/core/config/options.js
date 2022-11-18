@@ -345,7 +345,7 @@ const options = object(
 
 			trailingSlash: error(
 				(keypath, input) =>
-					`${keypath} has been removed. You can set \`export const trailingSlash = '${input}'\` inside a top level +layout.js (or +layout.server.js) instead. See the PR for more information: https://github.com/sveltejs/kit/pull/TODO`
+					`${keypath} has been removed. You can set \`export const trailingSlash = '${input}'\` inside a top level +layout.js (or +layout.server.js) instead. See the PR for more information: https://github.com/sveltejs/kit/pull/7719`
 			),
 
 			version: object({
