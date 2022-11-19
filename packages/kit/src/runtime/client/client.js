@@ -1458,7 +1458,7 @@ export function create_client({ target, base, trailing_slash }) {
 			});
 
 			addEventListener('popstate', (event) => {
-				if (event.state) {
+				if (event.state?.[INDEX_KEY]) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
