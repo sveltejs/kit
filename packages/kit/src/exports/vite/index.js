@@ -107,9 +107,6 @@ function kit() {
 	/** @type {import('types').BuildData} */
 	let build_data;
 
-	/** @type {string | undefined} */
-	let deferred_warning;
-
 	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
 	let env;
 
@@ -284,7 +281,9 @@ function kit() {
 				}
 			};
 
-			deferred_warning = warn_overridden_config(config, result);
+			const warning = warn_overridden_config(config, result);
+			if (warning) console.error(warning);
+
 			return result;
 		},
 
@@ -334,7 +333,10 @@ function kit() {
 		 */
 		configResolved(config) {
 			vite_config = config;
-			if (deferred_warning) config.logger.error(deferred_warning);
+
+			// This is a hack to prevent Vite from nuking useful logs,
+			// pending https://github.com/vitejs/vite/issues/9378
+			config.logger.warn('');
 		},
 
 		/**
