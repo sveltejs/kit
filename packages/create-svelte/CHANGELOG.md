@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.192
+
+### Patch Changes
+
+- Ignore Vite timestamp files by default in `create-svelte` templates (added to `.gitignore`) ([#7660](https://github.com/sveltejs/kit/pull/7660))
+
 ## 2.0.0-next.191
 
 ### Patch Changes
