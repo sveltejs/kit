@@ -817,6 +817,8 @@ test.describe('Load', () => {
 
 		if (javaScriptEnabled) {
 			expect(headers).toEqual({
+				accept: '*/*',
+				'accept-language': 'en-US',
 				// the referer will be the previous page in the client-side
 				// navigation case
 				referer: `${baseURL}/load`,
@@ -827,7 +829,10 @@ test.describe('Load', () => {
 				connection: 'keep-alive'
 			});
 		} else {
-			expect(headers).toEqual({});
+			expect(headers).toEqual({
+				accept: '*/*',
+				'accept-language': 'en-US'
+			});
 		}
 	});
 
