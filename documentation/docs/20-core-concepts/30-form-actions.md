@@ -181,13 +181,16 @@ export const actions = {
 <script>
 	import { page } from '$app/stores'
 
+	/** @type {import('./$types').ActionData} */
 	export let form
 </script>
 
 <form method="POST" action="?/login">
 -	<input name="email" type="email">
-+	{#if form?.missing || form?.incorrect}
-+		<p>{$page.status} There are errors in your form submission. See below</p>
++	{#if form?.incorrect && $page.status === 400}
++		<p>There are errors in your form submission. See below</p>
++	{:else if form?.incorrect && $page.status === 409}
++		<p>Account already exists, please log in or register with a different email.</p>
 +	{/if}
 +	{#if form?.missing}<p class="error">The email field is required</p>{/if}
 +	{#if form?.incorrect}<p class="error">Invalid credentials!</p>{/if}
