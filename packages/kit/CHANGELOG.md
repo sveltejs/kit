@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.553
+
+### Patch Changes
+
+- Prevent Vite from nuking logs on startup ([#7724](https://github.com/sveltejs/kit/pull/7724))
+
 ## 1.0.0-next.552
 
 ### Patch Changes
