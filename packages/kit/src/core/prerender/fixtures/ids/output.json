@@ -1,4 +1,4 @@
 {
-	"hrefs": [],
-	"ids": ["before", "after"]
+	"hrefs": ["#encöded"],
+	"ids": ["before", "after", "encöded"]
 }

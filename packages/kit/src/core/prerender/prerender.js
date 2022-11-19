@@ -262,11 +262,13 @@ export async function prerender() {
 				}
 
 				if (hash) {
-					if (!expected_hashlinks.has(pathname + hash)) {
-						expected_hashlinks.set(pathname + hash, new Set());
+					const key = decodeURI(pathname + hash);
+
+					if (!expected_hashlinks.has(key)) {
+						expected_hashlinks.set(key, new Set());
 					}
 
-					/** @type {Set<string>} */ (expected_hashlinks.get(pathname + hash)).add(decoded);
+					/** @type {Set<string>} */ (expected_hashlinks.get(key)).add(decoded);
 				}
 
 				enqueue(decoded, decodeURI(pathname), pathname);
