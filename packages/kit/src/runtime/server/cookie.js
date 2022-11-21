@@ -186,7 +186,7 @@ export function get_cookies(request, url, options) {
 		}
 
 		return Object.entries(combined_cookies)
-			.map(([name, value]) => `${name}=${value}`)
+			.map(([name, value]) => `${name}=${encodeURIComponent(value)}`)
 			.join('; ');
 	}
 
