@@ -180,13 +180,29 @@ export default function ({ external = [], edge, split } = {}) {
 
 			builder.log.minor('Writing routes...');
 
+			console.log(
+				JSON.stringify(
+					{
+						version: 3,
+						routes,
+						overrides
+					},
+					null,
+					'  '
+				)
+			);
+
 			write(
 				`${dir}/config.json`,
-				JSON.stringify({
-					version: 3,
-					routes,
-					overrides
-				})
+				JSON.stringify(
+					{
+						version: 3,
+						routes,
+						overrides
+					},
+					null,
+					'  '
+				)
 			);
 		}
 	};
