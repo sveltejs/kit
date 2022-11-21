@@ -25,7 +25,7 @@ export async function get_vite_config(config, config_env) {
 		mode: config_env.mode,
 		logLevel: config.logLevel,
 		clearScreen: config.clearScreen,
-		optimizeDeps: { force: config.optimizeDeps.force },
+		optimizeDeps: { force: config.optimizeDeps.force }
 	};
 }
 
