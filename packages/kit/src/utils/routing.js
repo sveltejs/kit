@@ -17,7 +17,13 @@ export function parse_route_id(id) {
 							// special case — /[...rest]/ could contain zero segments
 							const rest_match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(segment);
 							if (rest_match) {
-								params.push({ name: rest_match[1], matcher: rest_match[2], optional: false });
+								params.push({
+									name: rest_match[1],
+									matcher: rest_match[2],
+									optional: false,
+									rest: true,
+									standalone: true
+								});
 								return '(?:/(.*))?';
 							}
 							// special case — /[[optional]]/ could contain zero segments
@@ -26,7 +32,9 @@ export function parse_route_id(id) {
 								params.push({
 									name: optional_match[1],
 									matcher: optional_match[2],
-									optional: true
+									optional: true,
+									rest: false,
+									standalone: true
 								});
 								return '(?:/([^/]+))?';
 							}
@@ -66,7 +74,13 @@ export function parse_route_id(id) {
 										// - unbalanced brackets
 										// - optional param following rest param
 
-										params.push({ name, matcher, optional: !!is_optional });
+										params.push({
+											name,
+											matcher,
+											optional: !!is_optional,
+											rest: !!is_rest,
+											standalone: false
+										});
 										return is_rest ? '(.*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
 									}
 
