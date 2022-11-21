@@ -8,16 +8,12 @@ export function parse_route_id(id) {
 	/** @type {Array<{ name: string, matcher: string, optional: boolean }>} */
 	const params = [];
 
-	// `/foo` should get an optional trailing slash, `/foo.json` should not
-	// const add_trailing_slash = !/\.[a-z]+$/.test(key);
-	let add_trailing_slash = true;
-
 	const pattern =
 		id === '/'
 			? /^\/$/
 			: new RegExp(
 					`^${get_route_segments(id)
-						.map((segment, i, segments) => {
+						.map((segment) => {
 							// special case — /[...rest]/ could contain zero segments
 							const rest_match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(segment);
 							if (rest_match) {
@@ -34,8 +30,6 @@ export function parse_route_id(id) {
 								});
 								return '(?:/([^/]+))?';
 							}
-
-							const is_last = i === segments.length - 1;
 
 							if (!segment) {
 								return;
@@ -76,15 +70,13 @@ export function parse_route_id(id) {
 										return is_rest ? '(.*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
 									}
 
-									if (is_last && content.includes('.')) add_trailing_slash = false;
-
 									return escape(content);
 								})
 								.join('');
 
 							return '/' + result;
 						})
-						.join('')}${add_trailing_slash ? '/?' : ''}$`
+						.join('')}/?$`
 			  );
 
 	return { pattern, params };
