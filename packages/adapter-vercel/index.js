@@ -227,7 +227,11 @@ export default function ({ external = [], edge, split } = {}) {
 
 							const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
 
-							await generate_function(route.id || 'index', src, entry.generateManifest);
+							await generate_function(
+								route.id === '/' ? 'index' : route.id,
+								src,
+								entry.generateManifest
+							);
 						}
 					};
 				});
