@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.82
+
+### Patch Changes
+
+- Handle redirects inside SvelteKit ([#7719](https://github.com/sveltejs/kit/pull/7719))
+
 ## 1.0.0-next.81
 
 ### Patch Changes

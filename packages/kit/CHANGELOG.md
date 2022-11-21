@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.554
+
+### Patch Changes
+
+- create stronger types for dynamically generated env modules ([#7735](https://github.com/sveltejs/kit/pull/7735))
+
+- [breaking] Make `trailingSlash` a page option, rather than configuration ([#7719](https://github.com/sveltejs/kit/pull/7719))
+
+- Handle hash links with non-ASCII characters when prerendering ([#7729](https://github.com/sveltejs/kit/pull/7729))
+
+- Ignore popstate events from outside the router ([#7721](https://github.com/sveltejs/kit/pull/7721))
+
 ## 1.0.0-next.553
 
 ### Patch Changes
