@@ -71,14 +71,13 @@ export function create_dynamic_types(id, env) {
 		.filter((k) => valid_identifier.test(k))
 		.map((k) => `\t\t${k}: string;`);
 
-	properties.push(
-		`\t\t[key: \`${env.prefix}\${string}\`]: ${
-			id === 'public' ? 'string | undefined' : 'undefined'
-		};`
-	);
+	const prefixed = `[key: \`${env.prefix}\${string}\`]`;
 
 	if (id === 'private') {
+		properties.push(`\t\t${prefixed}: undefined;`);
 		properties.push(`\t\t[key: string]: string | undefined;`);
+	} else {
+		properties.push(`\t\t${prefixed}: string | undefined;`);
 	}
 
 	const declaration = `export const env: {\n${properties.join('\n')}\n\t}`;
