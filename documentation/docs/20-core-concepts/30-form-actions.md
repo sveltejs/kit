@@ -140,7 +140,7 @@ export const actions = {
 
 #### Validation errors
 
-If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `invalid` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data:
+If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `invalid` function lets you return an HTTP status code in `$page.status` (typically 400 or 422, in the case of validation errors) along with the data in `form`:
 
 ```diff
 // @errors: 2339 2304
@@ -178,20 +178,8 @@ export const actions = {
 
 ```diff
 /// file: src/routes/login/+page.svelte
-<script>
-	import { page } from '$app/stores'
-
-	/** @type {import('./$types').ActionData} */
-	export let form
-</script>
-
 <form method="POST" action="?/login">
 -	<input name="email" type="email">
-+	{#if form?.incorrect && $page.status === 400}
-+		<p>There are errors in your form submission. See below</p>
-+	{:else if form?.incorrect && $page.status === 409}
-+		<p>Account already exists, please log in or register with a different email.</p>
-+	{/if}
 +	{#if form?.missing}<p class="error">The email field is required</p>{/if}
 +	{#if form?.incorrect}<p class="error">Invalid credentials!</p>{/if}
 +	<input name="email" type="email" value={form?.email ?? ''}>
