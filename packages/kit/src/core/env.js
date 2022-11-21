@@ -74,7 +74,7 @@ export function create_dynamic_types(id, env) {
 	properties.push(
 		`\t\t[key: \`${env.prefix}\${string}\`]: ${
 			id === 'public' ? 'string | undefined' : 'undefined'
-		}`
+		};`
 	);
 
 	if (id === 'private') {
