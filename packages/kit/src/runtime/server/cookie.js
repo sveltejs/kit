@@ -11,9 +11,10 @@ const cookie_paths = {};
 /**
  * @param {Request} request
  * @param {URL} url
- * @param {Pick<import('types').SSROptions, 'dev' | 'trailing_slash'>} options
+ * @param {boolean} dev
+ * @param {import('types').TrailingSlash} trailing_slash
  */
-export function get_cookies(request, url, options) {
+export function get_cookies(request, url, dev, trailing_slash) {
 	const header = request.headers.get('cookie') ?? '';
 	const initial_cookies = parse(header);
 
@@ -21,12 +22,12 @@ export function get_cookies(request, url, options) {
 		// Remove suffix: 'foo/__data.json' would mean the cookie path is '/foo',
 		// whereas a direct hit of /foo would mean the cookie path is '/'
 		has_data_suffix(url.pathname) ? strip_data_suffix(url.pathname) : url.pathname,
-		options.trailing_slash
+		trailing_slash
 	);
 	// Emulate browser-behavior: if the cookie is set at '/foo/bar', its path is '/foo'
 	const default_path = normalized_url.split('/').slice(0, -1).join('/') || '/';
 
-	if (options.dev) {
+	if (dev) {
 		// Remove all cookies that no longer exist according to the request
 		for (const name of Object.keys(cookie_paths)) {
 			cookie_paths[name] = new Set(
@@ -79,7 +80,7 @@ export function get_cookies(request, url, options) {
 			const req_cookies = parse(header, { decode });
 			const cookie = req_cookies[name]; // the decoded string or undefined
 
-			if (!options.dev || cookie) {
+			if (!dev || cookie) {
 				return cookie;
 			}
 
@@ -113,7 +114,7 @@ export function get_cookies(request, url, options) {
 				}
 			};
 
-			if (options.dev) {
+			if (dev) {
 				cookie_paths[name] = cookie_paths[name] ?? new Set();
 				if (!value) {
 					if (!cookie_paths[name].has(path) && cookie_paths[name].size > 0) {

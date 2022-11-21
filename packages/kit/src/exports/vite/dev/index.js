@@ -480,7 +480,6 @@ export async function dev(vite, vite_config, svelte_config) {
 						service_worker:
 							svelte_config.kit.serviceWorker.register &&
 							!!resolve_entry(svelte_config.kit.files.serviceWorker),
-						trailing_slash: svelte_config.kit.trailingSlash,
 						version: svelte_config.kit.version.name
 					},
 					{

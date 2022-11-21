@@ -18,7 +18,7 @@ Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impac
 
 #### Normalized URLs
 
-SvelteKit redirects pathnames with trailing slashes to ones without (or vice versa depending on your [configuration](/docs/configuration#trailingslash)), as duplicate URLs are bad for SEO.
+SvelteKit redirects pathnames with trailing slashes to ones without (or vice versa depending on your [configuration](/docs/page-options#trailingslash)), as duplicate URLs are bad for SEO.
 
 ### Manual setup
 

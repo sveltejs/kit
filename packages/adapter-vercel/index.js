@@ -4,83 +4,6 @@ import { fileURLToPath } from 'url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
-// rules for clean URLs and trailing slash handling,
-// generated with @vercel/routing-utils
-const redirects = {
-	always: [
-		{
-			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
-			headers: {
-				Location: '/$1/'
-			},
-			status: 308
-		},
-		{
-			src: '^/(.*)\\.html/?$',
-			headers: {
-				Location: '/$1/'
-			},
-			status: 308
-		},
-		{
-			src: '^/\\.well-known(?:/.*)?$'
-		},
-		{
-			src: '^/((?:[^/]+/)*[^/\\.]+)$',
-			headers: {
-				Location: '/$1/'
-			},
-			status: 308
-		},
-		{
-			src: '^/((?:[^/]+/)*[^/]+\\.\\w+)/$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		}
-	],
-	never: [
-		{
-			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		},
-		{
-			src: '^/(.*)\\.html/?$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		},
-		{
-			src: '^/(.*)/$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		}
-	],
-	ignore: [
-		{
-			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		},
-		{
-			src: '^/(.*)\\.html/?$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		}
-	]
-};
-
 /** @type {import('.').default} **/
 export default function ({ external = [], edge, split } = {}) {
 	return {
@@ -115,7 +38,6 @@ export default function ({ external = [], edge, split } = {}) {
 
 			/** @type {any[]} */
 			const routes = [
-				...redirects[builder.config.kit.trailingSlash],
 				...prerendered_redirects,
 				{
 					src: `/${builder.getAppPath()}/.+`,

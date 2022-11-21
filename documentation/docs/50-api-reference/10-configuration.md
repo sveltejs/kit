@@ -65,7 +65,6 @@ const config = {
 			register: true,
 			files: (filepath) => !/\.DS_Store/.test(filepath)
 		},
-		trailingSlash: 'never',
 		version: {
 			name: Date.now().toString(),
 			pollInterval: 0
@@ -262,7 +261,7 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
   - `'ignore'` - silently ignore the failure and continue
   - `'warn'` — continue, but print a warning
   - `(details) => void` — a custom error handler that takes a `details` object with `status`, `path`, `referrer`, `referenceType` and `message` properties. If you `throw` from this function, the build will fail
-  
+
       ```js
     /** @type {import('@sveltejs/kit').Config} */
     const config = {
@@ -273,7 +272,7 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
     				if (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {
     					return;
     				}
-    				
+
     				// otherwise fail the build
     				throw new Error(message);
     			}
@@ -297,18 +296,6 @@ An object containing zero or more of the following values:
 
 - `register` - if set to `false`, will disable automatic service worker registration
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
-
-### trailingSlash
-
-Whether to remove, append, or ignore trailing slashes when resolving URLs (note that this only applies to pages, not endpoints).
-
-- `'never'` — redirect `/x/` to `/x`
-- `'always'` — redirect `/x` to `/x/`
-- `'ignore'` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
-
-This option also affects [prerendering](/docs/page-options#prerender). If `trailingSlash` is `always`, a route like `/about` will result in an `about/index.html` file, otherwise it will create `about.html`, mirroring static webserver conventions.
-
-> Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO. If you use this option, ensure that you implement logic for conditionally adding or removing trailing slashes from `request.path` inside your [`handle`](/docs/hooks#server-hooks-handle) function.
 
 ### version
 

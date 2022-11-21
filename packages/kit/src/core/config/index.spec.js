@@ -127,7 +127,7 @@ const get_defaults = (prefix = '') => ({
 		routes: undefined,
 		ssr: undefined,
 		target: undefined,
-		trailingSlash: 'never',
+		trailingSlash: undefined,
 		version: {
 			name: Date.now().toString(),
 			pollInterval: 0

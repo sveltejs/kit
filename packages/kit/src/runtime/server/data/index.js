@@ -12,9 +12,10 @@ export const INVALIDATED_HEADER = 'x-sveltekit-invalidated';
  * @param {import('types').SSRRoute} route
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRState} state
+ * @param {import('types').TrailingSlash} trailing_slash
  * @returns {Promise<Response>}
  */
-export async function render_data(event, route, options, state) {
+export async function render_data(event, route, options, state, trailing_slash) {
 	if (!route.page) {
 		// requesting /__data.json should fail for a +server.js
 		return new Response(undefined, {
@@ -32,7 +33,7 @@ export async function render_data(event, route, options, state) {
 		let aborted = false;
 
 		const url = new URL(event.url);
-		url.pathname = normalize_path(strip_data_suffix(url.pathname), options.trailing_slash);
+		url.pathname = normalize_path(strip_data_suffix(url.pathname), trailing_slash);
 
 		const new_event = { ...event, url };
 

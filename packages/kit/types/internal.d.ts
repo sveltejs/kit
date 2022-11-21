@@ -72,6 +72,7 @@ export interface CSRPageNode {
 	component: typeof SvelteComponent;
 	shared: {
 		load?: Load;
+		trailingSlash?: TrailingSlash;
 	};
 	server: boolean;
 }
@@ -209,6 +210,7 @@ export interface ServerDataNode {
 	type: 'data';
 	data: Record<string, any> | null;
 	uses: Uses;
+	slash?: TrailingSlash;
 }
 
 /**
@@ -266,6 +268,7 @@ export interface SSRNode {
 		prerender?: PrerenderOption;
 		ssr?: boolean;
 		csr?: boolean;
+		trailingSlash?: TrailingSlash;
 	};
 
 	server: {
@@ -273,6 +276,7 @@ export interface SSRNode {
 		prerender?: PrerenderOption;
 		ssr?: boolean;
 		csr?: boolean;
+		trailingSlash?: TrailingSlash;
 		actions?: Actions;
 	};
 
@@ -312,7 +316,6 @@ export interface SSROptions {
 	}): string;
 	app_template_contains_nonce: boolean;
 	error_template({ message, status }: { message: string; status: number }): string;
-	trailing_slash: TrailingSlash;
 	version: string;
 }
 
@@ -328,6 +331,7 @@ export interface PageNodeIndexes {
 
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;
+	trailingSlash?: TrailingSlash;
 };
 
 export interface SSRRoute {
