@@ -155,10 +155,10 @@ test('serialized cookie header should be url-encoded', () => {
 			cookie: 'a=f%C3%BC' // a=fü
 		}
 	});
-	// not that one should do this, but we follow the spec...
-	cookies.set('b', 'fö');
-	const header = get_cookie_header(new URL(href), 'c=f%C3%A4');
-	assert.equal(header, 'a=f%C3%BC; b=f%C3%B6; c=f%C3%A4');
+	cookies.set('b', 'fö'); // should use default encoding
+	cookies.set('c', 'fö', { encode: () => 'öf' }); // should respect `encode`
+	const header = get_cookie_header(new URL(href), 'd=f%C3%A4');
+	assert.equal(header, 'a=f%C3%BC; b=f%C3%B6; c=öf; d=f%C3%A4');
 });
 
 test.run();
