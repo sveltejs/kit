@@ -19,11 +19,7 @@ function read_description(filename) {
 }
 
 /**
- * @param {{
- * 	public: Record<string, string>;
- * 	private: Record<string, string>;
- * 	prefix: string;
- * }} env
+ * @param {import('../env.js').EnvData} env
  */
 const template = (env) => `
 ${GENERATED_COMMENT}
