@@ -13,9 +13,9 @@ export default function ({ external = [], edge, split } = {}) {
 			const node_version = get_node_version();
 
 			const dir = '.vercel/output';
-
 			const tmp = builder.getBuildDirectory('vercel-tmp');
 
+			builder.rimraf(dir);
 			builder.rimraf(tmp);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -25,16 +25,32 @@ export default function ({ external = [], edge, split } = {}) {
 				functions: `${dir}/functions`
 			};
 
-			const prerendered_redirects = Array.from(
-				builder.prerendered.redirects,
-				([src, redirect]) => ({
-					src,
-					headers: {
-						Location: redirect.location
-					},
-					status: redirect.status
-				})
-			);
+			/** @type {any[]} */
+			const prerendered_redirects = [];
+
+			/** @type {Record<string, { path: string }>} */
+			const overrides = {};
+
+			for (const [src, redirect] of builder.prerendered.redirects) {
+				prerendered_redirects.push({
+					source: src,
+					destination: redirect,
+					permanent: true
+				});
+			}
+
+			for (const [path, page] of builder.prerendered.pages) {
+				if (path.endsWith('/') && path !== '/') {
+					prerendered_redirects.push(
+						{ src: path, dest: path.slice(0, -1) },
+						{ src: path.slice(0, -1), status: 308, headers: { Location: path } }
+					);
+
+					overrides[page.file] = { path: path.slice(1, -1) };
+				} else {
+					overrides[page.file] = { path: path.slice(1) };
+				}
+			}
 
 			/** @type {any[]} */
 			const routes = [
@@ -163,12 +179,6 @@ export default function ({ external = [], edge, split } = {}) {
 			builder.writePrerendered(dirs.static);
 
 			builder.log.minor('Writing routes...');
-
-			/** @type {Record<string, { path: string }>} */
-			const overrides = {};
-			builder.prerendered.pages.forEach((page, src) => {
-				overrides[page.file] = { path: src.slice(1) };
-			});
 
 			write(
 				`${dir}/config.json`,
