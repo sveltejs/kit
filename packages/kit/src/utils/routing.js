@@ -5,7 +5,7 @@ const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
  * @param {string} id
  */
 export function parse_route_id(id) {
-	/** @type {Array<{ name: string, matcher: string, optional: boolean }>} */
+	/** @type {import('types').RouteParam[]} */
 	const params = [];
 
 	const pattern =
@@ -103,16 +103,18 @@ export function get_route_segments(route) {
 
 /**
  * @param {RegExpMatchArray} match
- * @param {Array<{ name: string, matcher: string, optional: boolean }>} params
+ * @param {import('types').RouteParam[]} params
  * @param {Record<string, import('types').ParamMatcher>} matchers
  */
 export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
 	const result = {};
 
-	for (let i = 0; i < params.length; i += 1) {
-		const param = params[i];
-		let value = match[i + 1];
+	let p = 0;
+
+	for (let i = 1; i < match.length; i += 1) {
+		const param = params[p++];
+		const value = match[i];
 
 		if (value || !param.optional) {
 			if (param.matcher) {
