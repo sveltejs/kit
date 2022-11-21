@@ -373,6 +373,10 @@ export function generate_ts_from_js(markdown) {
 				// No named file -> assume that the code is not meant to be shown in two versions
 				return match;
 			}
+			if (code.includes('/// file: svelte.config.js')) {
+				// svelte.config.js has no TS equivalent
+				return match;
+			}
 
 			const ts = convert_to_ts(code);
 
