@@ -2,6 +2,15 @@ import { GENERATED_COMMENT } from '../constants.js';
 import { runtime_base } from './utils.js';
 
 /**
+ * @typedef {'public' | 'private'} EnvType
+ * @typedef {{
+ * 	public: Record<string, string>;
+ * 	private: Record<string, string>;
+ * 	prefix: string;
+ * }} EnvData
+ */
+
+/**
  * @param {string} id
  * @param {Record<string, string>} env
  * @returns {string}
@@ -25,46 +34,53 @@ export function create_static_module(id, env) {
 }
 
 /**
- * @param {'public' | 'private'} type
+ * @param {EnvType} type
  * @param {Record<string, string> | undefined} dev_values If in a development mode, values to pre-populate the module with.
  */
 export function create_dynamic_module(type, dev_values) {
 	if (dev_values) {
-		const objectKeys = Object.entries(dev_values).map(
+		const keys = Object.entries(dev_values).map(
 			([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`
 		);
-		return `const env = {\n${objectKeys.join(',\n')}\n}\n\nexport { env }`;
+		return `export const env = {\n${keys.join(',\n')}\n}`;
 	}
 	return `export { env } from '${runtime_base}/env-${type}.js';`;
 }
 
 /**
- * @param {string} id
- * @param {Record<string, string>} env
+ * @param {EnvType} id
+ * @param {EnvData} env
  * @returns {string}
  */
 export function create_static_types(id, env) {
-	const declarations = Object.keys(env)
+	const declarations = Object.keys(env[id])
 		.filter((k) => valid_identifier.test(k))
 		.map((k) => `\texport const ${k}: string;`)
 		.join('\n');
 
-	return `declare module '${id}' {\n${declarations}\n}`;
+	return `declare module '$env/static/${id}' {\n${declarations}\n}`;
 }
 
 /**
- * @param {string} id
- * @param {Record<string, string>} env
+ * @param {EnvType} id
+ * @param {EnvData} env
  * @returns {string}
  */
 export function create_dynamic_types(id, env) {
-	const properties = Object.keys(env)
+	const properties = Object.keys(env[id])
 		.filter((k) => valid_identifier.test(k))
 		.map((k) => `\t\t${k}: string;`);
 
-	properties.push(`\t\t[key: string]: string | undefined;`);
+	properties.push(
+		`\t\t[key: \`${env.prefix}\${string}\`]: ${id === 'public' ? 'string | undefined' : 'never'}`
+	);
 
-	return `declare module '${id}' {\n\texport const env: {\n${properties.join('\n')}\n\t}\n}`;
+	if (id === 'private') {
+		properties.push(`\t\t[key: string]: string | undefined;`);
+	}
+
+	const declaration = `export const env: {\n${properties.join('\n')}\n\t}`;
+	return `declare module '$env/dynamic/${id}' {\n\t${declaration}\n}`;
 }
 
 export const reserved = new Set([
