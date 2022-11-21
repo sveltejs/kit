@@ -1,4 +1,4 @@
-import { posixify, relative_path, resolve_entry } from '../../utils/filesystem.js';
+import { relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { trim, write_if_changed } from './utils.js';
 
@@ -87,11 +87,7 @@ export function write_client_manifest(config, manifest_data, output) {
 	write_if_changed(
 		`${output}/client-manifest.js`,
 		trim(`
-			${
-				hooks_file
-					? `import * as client_hooks from '${posixify(relative_path(output, hooks_file))}';`
-					: ''
-			}
+			${hooks_file ? `import * as client_hooks from '${relative_path(output, hooks_file)}';` : ''}
 
 			export { matchers } from './client-matchers.js';
 
