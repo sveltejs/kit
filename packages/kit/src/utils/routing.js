@@ -118,8 +118,6 @@ export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
 	const result = {};
 
-	console.log(match, params);
-
 	for (let i = 0; i < params.length; i += 1) {
 		const param = params[i];
 		let value = match[i + 1];

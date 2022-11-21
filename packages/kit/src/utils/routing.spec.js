@@ -17,39 +17,39 @@ const tests = {
 	},
 	'/blog/[slug]': {
 		pattern: /^\/blog\/([^/]+?)\/?$/,
-		params: [{ name: 'slug', matcher: undefined }]
+		params: [{ name: 'slug', matcher: undefined, optional: false }]
 	},
 	'/blog/[slug].json': {
 		pattern: /^\/blog\/([^/]+?)\.json$/,
-		params: [{ name: 'slug', matcher: undefined }]
+		params: [{ name: 'slug', matcher: undefined, optional: false }]
 	},
 	'/blog/[[slug]]': {
 		pattern: /^\/blog(?:\/([^/]+))?\/?$/,
-		params: [{ name: 'slug', matcher: undefined }]
+		params: [{ name: 'slug', matcher: undefined, optional: true }]
 	},
 	'/blog/[[slug=type]]/sub': {
 		pattern: /^\/blog(?:\/([^/]+))?\/sub\/?$/,
-		params: [{ name: 'slug', matcher: undefined }]
+		params: [{ name: 'slug', matcher: 'type', optional: true }]
 	},
 	'/blog/[[slug]].json': {
 		pattern: /^\/blog\/([^/]*)?\.json$/,
-		params: [{ name: 'slug', matcher: undefined }]
+		params: [{ name: 'slug', matcher: undefined, optional: true }]
 	},
 	'/[...catchall]': {
 		pattern: /^(?:\/(.*))?\/?$/,
-		params: [{ name: 'catchall', matcher: undefined }]
+		params: [{ name: 'catchall', matcher: undefined, optional: false }]
 	},
 	'/foo/[...catchall]/bar': {
 		pattern: /^\/foo(?:\/(.*))?\/bar\/?$/,
-		params: [{ name: 'catchall', matcher: undefined }]
+		params: [{ name: 'catchall', matcher: undefined, optional: false }]
 	},
 	'/matched/[id=uuid]': {
 		pattern: /^\/matched\/([^/]+?)\/?$/,
-		params: [{ name: 'id', matcher: undefined }]
+		params: [{ name: 'id', matcher: 'uuid', optional: false }]
 	},
 	'/@-symbol/[id]': {
 		pattern: /^\/@-symbol\/([^/]+?)\/?$/,
-		params: [{ name: 'id', matcher: undefined }]
+		params: [{ name: 'id', matcher: undefined, optional: false }]
 	}
 };
 
