@@ -19,7 +19,7 @@ function read_description(filename) {
 }
 
 /**
- * @param {{ public: Record<string, string>, private: Record<string, string> }} env
+ * @param {import('../env.js').EnvData} env
  */
 const template = (env) => `
 ${GENERATED_COMMENT}
@@ -27,16 +27,16 @@ ${GENERATED_COMMENT}
 /// <reference types="@sveltejs/kit" />
 
 ${read_description('$env+static+private.md')}
-${create_static_types('$env/static/private', env.private)}
+${create_static_types('private', env)}
 
 ${read_description('$env+static+public.md')}
-${create_static_types('$env/static/public', env.public)}
+${create_static_types('public', env)}
 
 ${read_description('$env+dynamic+private.md')}
-${create_dynamic_types('$env/dynamic/private', env.private)}
+${create_dynamic_types('private', env)}
 
 ${read_description('$env+dynamic+public.md')}
-${create_dynamic_types('$env/dynamic/public', env.public)}
+${create_dynamic_types('public', env)}
 `;
 
 /**
@@ -49,5 +49,8 @@ ${create_dynamic_types('$env/dynamic/public', env.public)}
 export function write_ambient(config, mode) {
 	const env = get_env(config.env, mode);
 
-	write_if_changed(path.join(config.outDir, 'ambient.d.ts'), template(env));
+	write_if_changed(
+		path.join(config.outDir, 'ambient.d.ts'),
+		template({ ...env, prefix: config.env.publicPrefix })
+	);
 }
