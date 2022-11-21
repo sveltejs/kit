@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.556
+
+### Patch Changes
+
+- [fix] preserve Vite CLI opts ([#7749](https://github.com/sveltejs/kit/pull/7749))
+
 ## 1.0.0-next.555
 
 ### Patch Changes
