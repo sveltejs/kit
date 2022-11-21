@@ -195,8 +195,8 @@ function update_types(config, routes, route, to_delete = new Set()) {
 	// Makes sure a type is "repackaged" and therefore more readable
 	declarations.push('type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;');
 	declarations.push(
-		`type RouteParams = { ${route.names
-			.map((param, idx) => `${param}${route.optional[idx] ? '?' : ''}: string`)
+		`type RouteParams = { ${route.params
+			.map((param) => `${param.name}${param.optional ? '?' : ''}: string`)
 			.join('; ')} }`
 	);
 
@@ -270,8 +270,8 @@ function update_types(config, routes, route, to_delete = new Set()) {
 			if (leaf) {
 				if (leaf.route.page) ids.push(`"${leaf.route.id}"`);
 
-				for (const name of leaf.route.names) {
-					layout_params.add(name);
+				for (const param of leaf.route.params) {
+					layout_params.add(param.name);
 				}
 
 				ensureProxies(page, leaf.proxies);

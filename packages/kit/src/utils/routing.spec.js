@@ -5,63 +5,51 @@ import { exec, parse_route_id } from './routing.js';
 const tests = {
 	'/': {
 		pattern: /^\/$/,
-		names: [],
-		types: []
+		params: []
 	},
 	'/blog': {
 		pattern: /^\/blog\/?$/,
-		names: [],
-		types: []
+		params: []
 	},
 	'/blog.json': {
 		pattern: /^\/blog\.json$/,
-		names: [],
-		types: []
+		params: []
 	},
 	'/blog/[slug]': {
 		pattern: /^\/blog\/([^/]+?)\/?$/,
-		names: ['slug'],
-		types: [undefined]
+		params: [{ name: 'slug', matcher: undefined }]
 	},
 	'/blog/[slug].json': {
 		pattern: /^\/blog\/([^/]+?)\.json$/,
-		names: ['slug'],
-		types: [undefined]
+		params: [{ name: 'slug', matcher: undefined }]
 	},
 	'/blog/[[slug]]': {
 		pattern: /^\/blog(?:\/([^/]+))?\/?$/,
-		names: ['slug'],
-		types: [undefined]
+		params: [{ name: 'slug', matcher: undefined }]
 	},
 	'/blog/[[slug=type]]/sub': {
 		pattern: /^\/blog(?:\/([^/]+))?\/sub\/?$/,
-		names: ['slug'],
-		types: ['type']
+		params: [{ name: 'slug', matcher: undefined }]
 	},
 	'/blog/[[slug]].json': {
 		pattern: /^\/blog\/([^/]*)?\.json$/,
-		names: ['slug'],
-		types: [undefined]
+		params: [{ name: 'slug', matcher: undefined }]
 	},
 	'/[...catchall]': {
 		pattern: /^(?:\/(.*))?\/?$/,
-		names: ['catchall'],
-		types: [undefined]
+		params: [{ name: 'catchall', matcher: undefined }]
 	},
 	'/foo/[...catchall]/bar': {
 		pattern: /^\/foo(?:\/(.*))?\/bar\/?$/,
-		names: ['catchall'],
-		types: [undefined]
+		params: [{ name: 'catchall', matcher: undefined }]
 	},
 	'/matched/[id=uuid]': {
 		pattern: /^\/matched\/([^/]+?)\/?$/,
-		names: ['id'],
-		types: ['uuid']
+		params: [{ name: 'id', matcher: undefined }]
 	},
 	'/@-symbol/[id]': {
 		pattern: /^\/@-symbol\/([^/]+?)\/?$/,
-		names: ['id'],
-		types: [undefined]
+		params: [{ name: 'id', matcher: undefined }]
 	}
 };
 
@@ -70,8 +58,7 @@ for (const [key, expected] of Object.entries(tests)) {
 		const actual = parse_route_id(key);
 
 		assert.equal(actual.pattern.toString(), expected.pattern.toString());
-		assert.equal(actual.names, expected.names);
-		assert.equal(actual.types, expected.types);
+		assert.equal(actual.params, expected.params);
 	});
 }
 
@@ -165,17 +152,13 @@ const exec_tests = [
 
 for (const { path, route, expected } of exec_tests) {
 	test(`exec extracts params correctly for ${path} from ${route}`, () => {
-		const { pattern, names, types, optional } = parse_route_id(route);
+		const { pattern, params } = parse_route_id(route);
 		const match = pattern.exec(path);
 		if (!match) throw new Error(`Failed to match ${path}`);
-		const actual = exec(
-			match,
-			{ names, types, optional },
-			{
-				matches: () => true,
-				doesntmatch: () => false
-			}
-		);
+		const actual = exec(match, params, {
+			matches: () => true,
+			doesntmatch: () => false
+		});
 		assert.equal(actual, expected);
 	});
 }

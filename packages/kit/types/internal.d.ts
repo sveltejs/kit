@@ -169,9 +169,11 @@ export interface RouteData {
 
 	segment: string;
 	pattern: RegExp;
-	names: string[];
-	types: string[];
-	optional: boolean[];
+	params: Array<{
+		name: string;
+		matcher: string;
+		optional: boolean;
+	}>;
 
 	layout: PageNode | null;
 	error: PageNode | null;
@@ -337,12 +339,8 @@ export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 export interface SSRRoute {
 	id: string;
 	pattern: RegExp;
-	names: string[];
-	types: string[];
-	optional: boolean[];
-
+	params: Array<{ name: string; matcher: string; optional: boolean }>;
 	page: PageNodeIndexes | null;
-
 	endpoint: (() => Promise<SSREndpoint>) | null;
 }
 

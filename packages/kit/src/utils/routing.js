@@ -5,14 +5,8 @@ const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
  * @param {string} id
  */
 export function parse_route_id(id) {
-	/** @type {string[]} */
-	const names = [];
-
-	/** @type {string[]} */
-	const types = [];
-
-	/** @type {boolean[]} */
-	const optional = [];
+	/** @type {Array<{ name: string, matcher: string, optional: boolean }>} */
+	const params = [];
 
 	// `/foo` should get an optional trailing slash, `/foo.json` should not
 	// const add_trailing_slash = !/\.[a-z]+$/.test(key);
@@ -27,17 +21,17 @@ export function parse_route_id(id) {
 							// special case — /[...rest]/ could contain zero segments
 							const rest_match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(segment);
 							if (rest_match) {
-								names.push(rest_match[1]);
-								types.push(rest_match[2]);
-								optional.push(false);
+								params.push({ name: rest_match[1], matcher: rest_match[2], optional: false });
 								return '(?:/(.*))?';
 							}
 							// special case — /[[optional]]/ could contain zero segments
 							const optional_match = /^\[\[(\w+)(?:=(\w+))?\]\]$/.exec(segment);
 							if (optional_match) {
-								names.push(optional_match[1]);
-								types.push(optional_match[2]);
-								optional.push(true);
+								params.push({
+									name: optional_match[1],
+									matcher: optional_match[2],
+									optional: true
+								});
 								return '(?:/([^/]+))?';
 							}
 
@@ -73,14 +67,12 @@ export function parse_route_id(id) {
 											);
 										}
 
-										const [, is_optional, is_rest, name, type] = match;
+										const [, is_optional, is_rest, name, matcher] = match;
 										// It's assumed that the following invalid route id cases are already checked
 										// - unbalanced brackets
 										// - optional param following rest param
 
-										names.push(name);
-										types.push(type);
-										optional.push(!!is_optional);
+										params.push({ name, matcher, optional: !!is_optional });
 										return is_rest ? '(.*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
 									}
 
@@ -95,7 +87,7 @@ export function parse_route_id(id) {
 						.join('')}${add_trailing_slash ? '/?' : ''}$`
 			  );
 
-	return { pattern, names, types, optional };
+	return { pattern, params };
 }
 
 /**
@@ -119,35 +111,32 @@ export function get_route_segments(route) {
 
 /**
  * @param {RegExpMatchArray} match
- * @param {{
- *   names: string[];
- *   types: string[];
- *   optional: boolean[];
- * }} candidate
+ * @param {Array<{ name: string, matcher: string, optional: boolean }>} params
  * @param {Record<string, import('types').ParamMatcher>} matchers
  */
-export function exec(match, { names, types, optional }, matchers) {
+export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
-	const params = {};
+	const result = {};
 
-	for (let i = 0; i < names.length; i += 1) {
-		const name = names[i];
-		const type = types[i];
+	console.log(match, params);
+
+	for (let i = 0; i < params.length; i += 1) {
+		const param = params[i];
 		let value = match[i + 1];
 
-		if (value || !optional[i]) {
-			if (type) {
-				const matcher = matchers[type];
-				if (!matcher) throw new Error(`Missing "${type}" param matcher`); // TODO do this ahead of time?
+		if (value || !param.optional) {
+			if (param.matcher) {
+				const matcher = matchers[param.matcher];
+				if (!matcher) throw new Error(`Missing "${param.matcher}" param matcher`); // TODO do this ahead of time?
 
 				if (!matcher(value)) return;
 			}
 
-			params[name] = value ?? '';
+			result[param.name] = value ?? '';
 		}
 	}
 
-	return params;
+	return result;
 }
 
 /** @param {string} str */
