@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.555
+
+### Patch Changes
+
+- Made `config.kit.outDir` able to be located in `node_modules` ([#7707](https://github.com/sveltejs/kit/pull/7707))
+
 ## 1.0.0-next.554
 
 ### Patch Changes
