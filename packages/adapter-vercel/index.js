@@ -33,9 +33,11 @@ export default function ({ external = [], edge, split } = {}) {
 
 			for (const [src, redirect] of builder.prerendered.redirects) {
 				prerendered_redirects.push({
-					source: src,
-					destination: redirect,
-					permanent: true
+					src,
+					headers: {
+						Location: redirect.location
+					},
+					status: redirect.status
 				});
 			}
 
