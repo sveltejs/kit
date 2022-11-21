@@ -87,7 +87,7 @@ test('creates routes', () => {
 		},
 		{
 			id: '/blog.json',
-			pattern: '/^/blog.json$/',
+			pattern: '/^/blog.json/?$/',
 			endpoint: { file: 'samples/basic/blog.json/+server.js' }
 		},
 		{
@@ -97,7 +97,7 @@ test('creates routes', () => {
 		},
 		{
 			id: '/blog/[slug].json',
-			pattern: '/^/blog/([^/]+?).json$/',
+			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
 				file: 'samples/basic/blog/[slug].json/+server.ts'
 			}
@@ -308,7 +308,7 @@ test('allows rest parameters inside segments', () => {
 		},
 		{
 			id: '/[...rest].json',
-			pattern: '/^/(.*?).json$/',
+			pattern: '/^/(.*?).json/?$/',
 			endpoint: {
 				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
 			}
@@ -408,7 +408,7 @@ test('allows multiple slugs', () => {
 	assert.equal(routes.filter((route) => route.endpoint).map(simplify_route), [
 		{
 			id: '/[file].[ext]',
-			pattern: '/^/([^/]+?).([^/]+?)$/',
+			pattern: '/^/([^/]+?).([^/]+?)/?$/',
 			endpoint: {
 				file: 'samples/multiple-slugs/[file].[ext]/+server.js'
 			}
@@ -467,7 +467,7 @@ test('works with custom extensions', () => {
 		},
 		{
 			id: '/blog.json',
-			pattern: '/^/blog.json$/',
+			pattern: '/^/blog.json/?$/',
 			endpoint: {
 				file: 'samples/custom-extension/blog.json/+server.js'
 			}
@@ -479,7 +479,7 @@ test('works with custom extensions', () => {
 		},
 		{
 			id: '/blog/[slug].json',
-			pattern: '/^/blog/([^/]+?).json$/',
+			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
 				file: 'samples/custom-extension/blog/[slug].json/+server.js'
 			}

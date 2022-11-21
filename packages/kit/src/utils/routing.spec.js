@@ -12,7 +12,7 @@ const tests = {
 		params: []
 	},
 	'/blog.json': {
-		pattern: /^\/blog\.json$/,
+		pattern: /^\/blog\.json\/?$/,
 		params: []
 	},
 	'/blog/[slug]': {
@@ -20,7 +20,7 @@ const tests = {
 		params: [{ name: 'slug', matcher: undefined, optional: false }]
 	},
 	'/blog/[slug].json': {
-		pattern: /^\/blog\/([^/]+?)\.json$/,
+		pattern: /^\/blog\/([^/]+?)\.json\/?$/,
 		params: [{ name: 'slug', matcher: undefined, optional: false }]
 	},
 	'/blog/[[slug]]': {
@@ -32,7 +32,7 @@ const tests = {
 		params: [{ name: 'slug', matcher: 'type', optional: true }]
 	},
 	'/blog/[[slug]].json': {
-		pattern: /^\/blog\/([^/]*)?\.json$/,
+		pattern: /^\/blog\/([^/]*)?\.json\/?$/,
 		params: [{ name: 'slug', matcher: undefined, optional: true }]
 	},
 	'/[...catchall]': {
