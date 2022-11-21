@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.83
+
+### Patch Changes
+
+- [fix] handle root route for split config ([#7741](https://github.com/sveltejs/kit/pull/7741))
+
 ## 1.0.0-next.82
 
 ### Patch Changes
