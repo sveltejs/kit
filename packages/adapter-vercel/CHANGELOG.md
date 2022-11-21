@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.84
+
+### Patch Changes
+
+- [fix] Write redirects for prerendered pages with trailing slashes ([#7747](https://github.com/sveltejs/kit/pull/7747))
+
 ## 1.0.0-next.83
 
 ### Patch Changes
