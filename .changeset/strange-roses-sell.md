@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Client-side router ignores links outside app target
+[breaking] Make client-side router ignore links outside %sveltekit.body%
