@@ -126,48 +126,52 @@ export function exec(match, params, matchers) {
 
 	const values = match.slice(1);
 
-	let p = 0;
-	let v = 0;
-
 	let buffered = '';
 
-	while (p < params.length) {
-		const param = params[p++];
-		let value = values[v++];
+	for (let i = 0; i < params.length; i += 1) {
+		const param = params[i];
+		let value = values[i];
 
 		if (param.chained && param.rest && buffered) {
+			// in the `[[lang=lang]]/[...rest]` case, if `lang` didn't
+			// match, we roll it over into the rest value
 			value = value ? buffered + '/' + value : buffered;
 		}
 
+		buffered = '';
+
 		if (value === undefined) {
+			// if `value` is undefined, it means this is
+			// an optional or rest parameter
 			if (param.rest) result[param.name] = '';
 		} else {
-			if (param.matcher) {
-				const matcher = matchers[param.matcher];
-				if (!matcher(value)) {
-					if (param.optional && param.chained) {
-						// @ts-expect-error TypeScript is... wrong
-						let i = values.indexOf(undefined, v);
+			if (param.matcher && !matchers[param.matcher](value)) {
+				// in the `/[[a=b]]/[[c=d]]` case, if the value didn't satisfy the `b` matcher,
+				// try again with the next segment by shifting values rightwards
+				if (param.optional && param.chained) {
+					// @ts-expect-error TypeScript is... wrong
+					let j = values.indexOf(undefined, i);
 
-						if (i === -1) {
-							buffered = value;
-						}
-
-						while (i >= v) {
-							values[i] = values[i - 1];
-							i -= 1;
-						}
-
-						continue;
+					if (j === -1) {
+						// we can't shift values any further, so hang on to this value
+						// so it can be rolled into a subsequent `[...rest]` param
+						buffered = value;
 					}
-					return;
+
+					while (j >= i) {
+						values[j] = values[j - 1];
+						j -= 1;
+					}
+
+					continue;
 				}
+
+				// otherwise, if the matcher returns `false`, the route did not match
+				return;
 			}
 
 			result[param.name] = value;
 		}
-
-		buffered = '';
 	}
 
 	if (buffered) return;
