@@ -77,7 +77,7 @@ declare module '$app/environment' {
 	export const browser: boolean;
 
 	/**
-	 * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`.
+	 * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`. This also applies during prerendering.
 	 */
 	export const building: boolean;
 
