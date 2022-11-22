@@ -17,39 +17,39 @@ const tests = {
 	},
 	'/blog/[slug]': {
 		pattern: /^\/blog\/([^/]+?)\/?$/,
-		params: [{ name: 'slug', matcher: undefined, optional: false }]
+		params: [{ name: 'slug', matcher: undefined, optional: false, rest: false, chained: false }]
 	},
 	'/blog/[slug].json': {
 		pattern: /^\/blog\/([^/]+?)\.json\/?$/,
-		params: [{ name: 'slug', matcher: undefined, optional: false }]
+		params: [{ name: 'slug', matcher: undefined, optional: false, rest: false, chained: false }]
 	},
 	'/blog/[[slug]]': {
 		pattern: /^\/blog(?:\/([^/]+))?\/?$/,
-		params: [{ name: 'slug', matcher: undefined, optional: true }]
+		params: [{ name: 'slug', matcher: undefined, optional: true, rest: false, chained: true }]
 	},
 	'/blog/[[slug=type]]/sub': {
 		pattern: /^\/blog(?:\/([^/]+))?\/sub\/?$/,
-		params: [{ name: 'slug', matcher: 'type', optional: true }]
+		params: [{ name: 'slug', matcher: 'type', optional: true, rest: false, chained: true }]
 	},
 	'/blog/[[slug]].json': {
 		pattern: /^\/blog\/([^/]*)?\.json\/?$/,
-		params: [{ name: 'slug', matcher: undefined, optional: true }]
+		params: [{ name: 'slug', matcher: undefined, optional: true, rest: false, chained: false }]
 	},
 	'/[...catchall]': {
 		pattern: /^(?:\/(.*))?\/?$/,
-		params: [{ name: 'catchall', matcher: undefined, optional: false }]
+		params: [{ name: 'catchall', matcher: undefined, optional: false, rest: true, chained: true }]
 	},
 	'/foo/[...catchall]/bar': {
 		pattern: /^\/foo(?:\/(.*))?\/bar\/?$/,
-		params: [{ name: 'catchall', matcher: undefined, optional: false }]
+		params: [{ name: 'catchall', matcher: undefined, optional: false, rest: true, chained: true }]
 	},
 	'/matched/[id=uuid]': {
 		pattern: /^\/matched\/([^/]+?)\/?$/,
-		params: [{ name: 'id', matcher: 'uuid', optional: false }]
+		params: [{ name: 'id', matcher: 'uuid', optional: false, rest: false, chained: false }]
 	},
 	'/@-symbol/[id]': {
 		pattern: /^\/@-symbol\/([^/]+?)\/?$/,
-		params: [{ name: 'id', matcher: undefined, optional: false }]
+		params: [{ name: 'id', matcher: undefined, optional: false, rest: false, chained: false }]
 	}
 };
 
