@@ -1,6 +1,6 @@
-<a id="one" href="/data-sveltekit/prefetch/target" data-sveltekit-prefetch>one</a>
+<a id="one" href="/data-sveltekit/prefetch/target" data-sveltekit-preload>one</a>
 
-<div data-sveltekit-prefetch>
+<div data-sveltekit-preload>
 	<a id="two" href="/data-sveltekit/prefetch/target">two</a>
-	<a id="three" href="/data-sveltekit/prefetch/target" data-sveltekit-prefetch="off">three</a>
+	<a id="three" href="/data-sveltekit/prefetch/target" data-sveltekit-preload="off">three</a>
 </div>

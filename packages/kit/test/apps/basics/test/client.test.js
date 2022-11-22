@@ -1051,7 +1051,7 @@ test.describe.serial('Invalidation', () => {
 });
 
 test.describe('data-sveltekit attributes', () => {
-	test('data-sveltekit-prefetch', async ({ baseURL, page }) => {
+	test('data-sveltekit-preload', async ({ baseURL, page }) => {
 		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));

@@ -46,7 +46,7 @@ export function find_anchor(event) {
 		}
 
 		if (noscroll === null) noscroll = get_link_option(element, 'data-sveltekit-noscroll');
-		if (prefetch === null) prefetch = get_link_option(element, 'data-sveltekit-prefetch');
+		if (prefetch === null) prefetch = get_link_option(element, 'data-sveltekit-preload');
 		if (reload === null) reload = get_link_option(element, 'data-sveltekit-reload');
 	}
 

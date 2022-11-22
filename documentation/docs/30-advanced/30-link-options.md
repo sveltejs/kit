@@ -6,15 +6,15 @@ In SvelteKit, `<a>` elements (rather than framework-specific `<Link>` components
 
 You can customise the behaviour of links with `data-sveltekit-*` attributes. These can be applied to the `<a>` itself, or to a parent element.
 
-### data-sveltekit-prefetch
+### data-sveltekit-preload
 
-To get a head start on importing the code and fetching the page's data, use the `data-sveltekit-prefetch` attribute, which will start loading everything as soon as the user hovers over the link (on a desktop) or touches it (on mobile), rather than waiting for the `click` event to trigger navigation. Typically, this buys us an extra couple of hundred milliseconds, which is the difference between a user interface that feels laggy, and one that feels snappy.
+To get a head start on importing the code and fetching the page's data, use the `data-sveltekit-preload` attribute, which will start loading everything as soon as the user hovers over the link (on a desktop) or touches it (on mobile), rather than waiting for the `click` event to trigger navigation. Typically, this buys us an extra couple of hundred milliseconds, which is the difference between a user interface that feels laggy, and one that feels snappy.
 
 To apply this behaviour across the board, add the attribute to a parent element (or even the `<body>` in your `src/app.html`):
 
 ```html
 /// file: src/routes/+layout.svelte
-<main data-sveltekit-prefetch>
+<main data-sveltekit-preload>
 	<slot />
 </main>
 ```
@@ -50,13 +50,13 @@ In certain cases, you may wish to disable this behaviour. Adding a `data-sveltek
 To disable any of these options inside an element where they have been enabled, use the `"off"` value:
 
 ```html
-<div data-sveltekit-prefetch>
+<div data-sveltekit-preload>
 	<!-- these links will be prefetched -->
 	<a href="/a">a</a>
 	<a href="/b">b</a>
 	<a href="/c">c</a>
 
-	<div data-sveltekit-prefetch="off">
+	<div data-sveltekit-preload="off">
 		<!-- these links will NOT be prefetched -->
 		<a href="/d">d</a>
 		<a href="/e">e</a>
