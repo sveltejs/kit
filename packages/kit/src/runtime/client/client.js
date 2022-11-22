@@ -75,7 +75,7 @@ function check_for_removed_attributes() {
 
 /**
  * @param {{
- *   target: Element;
+ *   target: HTMLElement;
  *   base: string;
  * }} opts
  * @returns {import('./types').Client}
@@ -1385,12 +1385,12 @@ export function create_client({ target, base }) {
 				}, 20);
 			};
 
-			addEventListener('touchstart', trigger_prefetch);
-			addEventListener('mousemove', handle_mousemove);
-			addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
+			target.addEventListener('touchstart', trigger_prefetch);
+			target.addEventListener('mousemove', handle_mousemove);
+			target.addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
 
 			/** @param {MouseEvent} event */
-			addEventListener('click', (event) => {
+			target.addEventListener('click', (event) => {
 				// Adapted from https://github.com/visionmedia/page.js
 				// MIT license https://github.com/visionmedia/page.js#license
 				if (event.button || event.which !== 1) return;
