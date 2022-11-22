@@ -12,7 +12,7 @@ import { set_version } from '../env.js';
  *     assets: string;
  *     base: string;
  *   },
- *   target: Element;
+ *   target: HTMLElement;
  *   version: string;
  * }} opts
  */
