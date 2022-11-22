@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Allow chained optional parameters
+Roll over non-matching optional parameters instead of 404ing
