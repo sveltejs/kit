@@ -146,6 +146,7 @@ export function exec(match, params, matchers) {
 				const matcher = matchers[param.matcher];
 				if (!matcher(value)) {
 					if (param.optional && param.chained) {
+						// @ts-expect-error TypeScript is... wrong
 						let i = values.indexOf(undefined, v);
 
 						if (i === -1) {
