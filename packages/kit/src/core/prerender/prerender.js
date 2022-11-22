@@ -77,11 +77,6 @@ export async function prerender() {
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config()).kit;
 
-	if (!config.prerender.enabled) {
-		output_and_exit({ prerendered, prerender_map });
-		return;
-	}
-
 	/** @type {import('types').Logger} */
 	const log = logger({
 		verbose: verbose === 'true'
@@ -111,8 +106,8 @@ export async function prerender() {
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	override({
+		building: true,
 		paths: config.paths,
-		prerendering: true,
 		read: (file) => readFileSync(join(config.files.assets, file))
 	});
 

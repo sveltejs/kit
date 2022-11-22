@@ -39,7 +39,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	override({
 		paths: { base, assets },
-		prerendering: false,
+		building: false,
 		protocol,
 		read: (file) => fs.readFileSync(join(svelte_config.kit.files.assets, file))
 	});

@@ -67,7 +67,7 @@ declare namespace App {
 
 /**
  * ```ts
- * import { browser, dev, prerendering } from '$app/environment';
+ * import { browser, building, dev, version } from '$app/environment';
  * ```
  */
 declare module '$app/environment' {
@@ -77,17 +77,17 @@ declare module '$app/environment' {
 	export const browser: boolean;
 
 	/**
+	 * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`.
+	 */
+	export const building: boolean;
+
+	/**
 	 * Whether the dev server is running. This is not guaranteed to correspond to `NODE_ENV` or `MODE`.
 	 */
 	export const dev: boolean;
 
 	/**
-	 * `true` when prerendering, `false` otherwise.
-	 */
-	export const prerendering: boolean;
-
-	/**
-	 * The value of `config.kit.version.name`
+	 * The value of `config.kit.version.name`.
 	 */
 	export const version: string;
 }

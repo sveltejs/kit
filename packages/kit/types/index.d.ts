@@ -213,7 +213,6 @@ export interface KitConfig {
 		concurrency?: number;
 		crawl?: boolean;
 		default?: boolean;
-		enabled?: boolean;
 		entries?: Array<'*' | `/${string}`>;
 		handleHttpError?: PrerenderHttpErrorHandlerValue;
 		handleMissingId?: PrerenderMissingIdHandlerValue;
