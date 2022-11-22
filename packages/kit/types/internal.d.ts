@@ -163,7 +163,7 @@ export interface RouteParam {
 	matcher: string;
 	optional: boolean;
 	rest: boolean;
-	standalone: boolean;
+	chained: boolean;
 }
 
 /**

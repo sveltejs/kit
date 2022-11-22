@@ -22,7 +22,7 @@ export function parse_route_id(id) {
 									matcher: rest_match[2],
 									optional: false,
 									rest: true,
-									standalone: true
+									chained: true
 								});
 								return '(?:/(.*))?';
 							}
@@ -34,7 +34,7 @@ export function parse_route_id(id) {
 									matcher: optional_match[2],
 									optional: true,
 									rest: false,
-									standalone: true
+									chained: true
 								});
 								return '(?:/([^/]+))?';
 							}
@@ -79,7 +79,7 @@ export function parse_route_id(id) {
 											matcher,
 											optional: !!is_optional,
 											rest: !!is_rest,
-											standalone: false
+											chained: is_rest ? i === 1 && parts[0] === '' : false
 										});
 										return is_rest ? '(.*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
 									}
@@ -124,20 +124,34 @@ export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
 	const result = {};
 
-	let p = 0;
+	let m = 1;
+	let prev = '';
 
-	for (let i = 1; i < match.length; i += 1) {
-		const param = params[p++];
-		const value = match[i];
+	for (const param of params) {
+		let value = (param.chained && prev) || match[m++];
 
-		if (value || !param.optional) {
-			if (param.matcher) {
-				const matcher = matchers[param.matcher];
-				if (!matcher(value)) return;
-			}
-
-			result[param.name] = value ?? '';
+		if (param.rest && param.chained && prev && match[m]) {
+			value += `/${match[m++]}`;
 		}
+
+		if (!value) {
+			if (param.rest) result[param.name] = '';
+			continue;
+		}
+
+		if (param.matcher) {
+			const matcher = matchers[param.matcher];
+			if (!matcher(value)) {
+				if (param.optional && param.chained) {
+					prev = value;
+					continue;
+				}
+				return;
+			}
+		}
+
+		result[param.name] = value;
+		prev = '';
 	}
 
 	return result;
