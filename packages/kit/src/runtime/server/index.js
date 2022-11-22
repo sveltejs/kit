@@ -77,7 +77,7 @@ export async function respond(request, options, state) {
 			const match = candidate.pattern.exec(decoded);
 			if (!match) continue;
 
-			const matched = exec(match, candidate, matchers);
+			const matched = exec(match, candidate.params, matchers);
 			if (matched) {
 				route = candidate;
 				params = decode_params(matched);

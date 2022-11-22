@@ -158,6 +158,14 @@ export interface Respond {
 	(request: Request, options: SSROptions, state: SSRState): Promise<Response>;
 }
 
+export interface RouteParam {
+	name: string;
+	matcher: string;
+	optional: boolean;
+	rest: boolean;
+	chained: boolean;
+}
+
 /**
  * Represents a route segment in the app. It can either be an intermediate node
  * with only layout/error pages, or a leaf, at which point either `page` and `leaf`
@@ -169,9 +177,7 @@ export interface RouteData {
 
 	segment: string;
 	pattern: RegExp;
-	names: string[];
-	types: string[];
-	optional: boolean[];
+	params: RouteParam[];
 
 	layout: PageNode | null;
 	error: PageNode | null;
@@ -337,12 +343,8 @@ export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 export interface SSRRoute {
 	id: string;
 	pattern: RegExp;
-	names: string[];
-	types: string[];
-	optional: boolean[];
-
+	params: RouteParam[];
 	page: PageNodeIndexes | null;
-
 	endpoint: (() => Promise<SSREndpoint>) | null;
 }
 
