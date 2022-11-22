@@ -24,6 +24,14 @@ export default function create_manifest_data({
 	const matchers = create_matchers(config, cwd);
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
 
+	for (const route of routes) {
+		for (const param of route.params) {
+			if (param.matcher && !matchers[param.matcher]) {
+				throw new Error(`No matcher found for parameter '${param.matcher}' in route ${route.id}`);
+			}
+		}
+	}
+
 	return {
 		assets,
 		matchers,
@@ -153,7 +161,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				);
 			}
 
-			const { pattern, names, types, optional } = parse_route_id(id);
+			const { pattern, params } = parse_route_id(id);
 
 			/** @type {import('types').RouteData} */
 			const route = {
@@ -162,9 +170,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 				segment,
 				pattern,
-				names,
-				types,
-				optional,
+				params,
 
 				layout: null,
 				error: null,
@@ -273,9 +279,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			id: '/',
 			segment: '',
 			pattern: /^$/,
-			names: [],
-			types: [],
-			optional: [],
+			params: [],
 			parent: null,
 			layout: null,
 			error: null,

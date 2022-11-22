@@ -99,8 +99,8 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 			],
 			routes: [
 				${routes.map(route => {
-					route.types.forEach(type => {
-						if (type) matchers.add(type);
+					route.params.forEach(param => {
+						if (param.matcher) matchers.add(param.matcher);
 					});
 
 					if (!route.page && !route.endpoint) return;
@@ -108,9 +108,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 					return `{
 					id: ${s(route.id)},
 					pattern: ${route.pattern},
-					names: ${s(route.names)},
-					types: ${s(route.types)},
-					optional: ${s(route.optional)},
+					params: ${s(route.params)},
 					page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${reindexed.get(route.page.leaf)} }` : 'null'},
 					endpoint: ${route.endpoint ? loader(join_relative(relative_path, resolve_symlinks(build_data.server.vite_manifest, route.endpoint.file).chunk.file)) : 'null'}
 				}`;

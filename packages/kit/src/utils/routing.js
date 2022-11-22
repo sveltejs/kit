@@ -5,43 +5,39 @@ const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
  * @param {string} id
  */
 export function parse_route_id(id) {
-	/** @type {string[]} */
-	const names = [];
-
-	/** @type {string[]} */
-	const types = [];
-
-	/** @type {boolean[]} */
-	const optional = [];
-
-	// `/foo` should get an optional trailing slash, `/foo.json` should not
-	// const add_trailing_slash = !/\.[a-z]+$/.test(key);
-	let add_trailing_slash = true;
+	/** @type {import('types').RouteParam[]} */
+	const params = [];
 
 	const pattern =
 		id === '/'
 			? /^\/$/
 			: new RegExp(
 					`^${get_route_segments(id)
-						.map((segment, i, segments) => {
+						.map((segment) => {
 							// special case — /[...rest]/ could contain zero segments
 							const rest_match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(segment);
 							if (rest_match) {
-								names.push(rest_match[1]);
-								types.push(rest_match[2]);
-								optional.push(false);
+								params.push({
+									name: rest_match[1],
+									matcher: rest_match[2],
+									optional: false,
+									rest: true,
+									chained: true
+								});
 								return '(?:/(.*))?';
 							}
 							// special case — /[[optional]]/ could contain zero segments
 							const optional_match = /^\[\[(\w+)(?:=(\w+))?\]\]$/.exec(segment);
 							if (optional_match) {
-								names.push(optional_match[1]);
-								types.push(optional_match[2]);
-								optional.push(true);
+								params.push({
+									name: optional_match[1],
+									matcher: optional_match[2],
+									optional: true,
+									rest: false,
+									chained: true
+								});
 								return '(?:/([^/]+))?';
 							}
-
-							const is_last = i === segments.length - 1;
 
 							if (!segment) {
 								return;
@@ -73,18 +69,20 @@ export function parse_route_id(id) {
 											);
 										}
 
-										const [, is_optional, is_rest, name, type] = match;
+										const [, is_optional, is_rest, name, matcher] = match;
 										// It's assumed that the following invalid route id cases are already checked
 										// - unbalanced brackets
 										// - optional param following rest param
 
-										names.push(name);
-										types.push(type);
-										optional.push(!!is_optional);
+										params.push({
+											name,
+											matcher,
+											optional: !!is_optional,
+											rest: !!is_rest,
+											chained: is_rest ? i === 1 && parts[0] === '' : false
+										});
 										return is_rest ? '(.*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
 									}
-
-									if (is_last && content.includes('.')) add_trailing_slash = false;
 
 									return escape(content);
 								})
@@ -92,10 +90,10 @@ export function parse_route_id(id) {
 
 							return '/' + result;
 						})
-						.join('')}${add_trailing_slash ? '/?' : ''}$`
+						.join('')}/?$`
 			  );
 
-	return { pattern, names, types, optional };
+	return { pattern, params };
 }
 
 /**
@@ -119,35 +117,70 @@ export function get_route_segments(route) {
 
 /**
  * @param {RegExpMatchArray} match
- * @param {{
- *   names: string[];
- *   types: string[];
- *   optional: boolean[];
- * }} candidate
+ * @param {import('types').RouteParam[]} params
  * @param {Record<string, import('types').ParamMatcher>} matchers
  */
-export function exec(match, { names, types, optional }, matchers) {
+export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
-	const params = {};
+	const result = {};
 
-	for (let i = 0; i < names.length; i += 1) {
-		const name = names[i];
-		const type = types[i];
-		let value = match[i + 1];
+	const values = match.slice(1);
 
-		if (value || !optional[i]) {
-			if (type) {
-				const matcher = matchers[type];
-				if (!matcher) throw new Error(`Missing "${type}" param matcher`); // TODO do this ahead of time?
+	let buffered = '';
 
-				if (!matcher(value)) return;
+	for (let i = 0; i < params.length; i += 1) {
+		const param = params[i];
+		let value = values[i];
+
+		if (param.chained && param.rest && buffered) {
+			// in the `[[lang=lang]]/[...rest]` case, if `lang` didn't
+			// match, we roll it over into the rest value
+			value = value ? buffered + '/' + value : buffered;
+		}
+
+		buffered = '';
+
+		if (value === undefined) {
+			// if `value` is undefined, it means this is
+			// an optional or rest parameter
+			if (param.rest) result[param.name] = '';
+		} else {
+			if (param.matcher && !matchers[param.matcher](value)) {
+				// in the `/[[a=b]]/[[c=d]]` case, if the value didn't satisfy the `b` matcher,
+				// try again with the next segment by shifting values rightwards
+				if (param.optional && param.chained) {
+					// @ts-expect-error TypeScript is... wrong
+					let j = values.indexOf(undefined, i);
+
+					if (j === -1) {
+						// we can't shift values any further, so hang on to this value
+						// so it can be rolled into a subsequent `[...rest]` param
+						const next = params[i + 1];
+						if (next?.rest && next.chained) {
+							buffered = value;
+						} else {
+							return;
+						}
+					}
+
+					while (j >= i) {
+						values[j] = values[j - 1];
+						j -= 1;
+					}
+
+					continue;
+				}
+
+				// otherwise, if the matcher returns `false`, the route did not match
+				return;
 			}
 
-			params[name] = value ?? '';
+			result[param.name] = value;
 		}
 	}
 
-	return params;
+	if (buffered) return;
+	return result;
 }
 
 /** @param {string} str */
