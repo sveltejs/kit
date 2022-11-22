@@ -184,10 +184,10 @@ test.describe('trailingSlash', () => {
 		});
 	});
 
-	test('accounts for trailingSlash when prefetching', async ({ app, page, javaScriptEnabled }) => {
+	test('accounts for trailingSlash when preloading', async ({ app, page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
-		await page.goto('/path-base/prefetching');
+		await page.goto('/path-base/preloading');
 
 		/** @type {string[]} */
 		let requests = [];
@@ -195,7 +195,7 @@ test.describe('trailingSlash', () => {
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
-		await app.preload('/path-base/prefetching/prefetched');
+		await app.preload('/path-base/preloading/preloaded');
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {
@@ -204,10 +204,10 @@ test.describe('trailingSlash', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`/path-base/prefetching/prefetched/__data.json`)).toBe(true);
+		expect(requests.includes(`/path-base/preloading/preloaded/__data.json`)).toBe(true);
 
 		requests = [];
-		await app.goto('/path-base/prefetching/prefetched');
+		await app.goto('/path-base/preloading/preloaded');
 		expect(requests).toEqual([]);
 	});
 });

@@ -66,7 +66,9 @@ function check_for_removed_attributes() {
 			if (!warned_about_attributes[attr]) {
 				warned_about_attributes[attr] = true;
 				console.error(
-					`The sveltekit:${attr} attribute has been replaced with data-sveltekit-${attr}`
+					`The sveltekit:${attr} attribute has been replaced with data-sveltekit-${
+						attr === 'prefetch' ? 'preload' : attr
+					}`
 				);
 			}
 		}
@@ -159,8 +161,8 @@ export function create_client({ target, base }) {
 
 		const url = new URL(location.href);
 		const intent = get_navigation_intent(url, true);
-		// Clear prefetch, it might be affected by the invalidation.
-		// Also solves an edge case where a prefetch is triggered, the navigation for it
+		// Clear preload, it might be affected by the invalidation.
+		// Also solves an edge case where a preload is triggered, the navigation for it
 		// was then triggered and is still running while the invalidation kicks in,
 		// at which point the invalidation should take over and "win".
 		load_cache = null;
@@ -302,7 +304,7 @@ export function create_client({ target, base }) {
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 
-		// reset prefetch synchronously after the history state has been set to avoid race conditions
+		// reset preload synchronously after the history state has been set to avoid race conditions
 		load_cache = null;
 
 		if (started) {
@@ -1361,7 +1363,7 @@ export function create_client({ target, base }) {
 			/** @param {Event} event */
 			const trigger_prefetch = (event) => {
 				const { url, options, has } = find_anchor(event);
-				if (url && options.prefetch && !is_external_url(url)) {
+				if (url && options.preload && !is_external_url(url)) {
 					if (options.reload || has.rel_external || has.target || has.download) return;
 					preload(url);
 				}

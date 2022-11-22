@@ -666,8 +666,8 @@ test.describe('Prefetching', () => {
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
 		await Promise.all([
-			page.waitForResponse(`${baseURL}/routing/prefetching/prefetched.json`),
-			app.preload('/routing/prefetching/prefetched')
+			page.waitForResponse(`${baseURL}/routing/preloading/preloaded.json`),
+			app.preload('/routing/preloading/preloaded')
 		]);
 
 		// svelte request made is environment dependent
@@ -679,10 +679,10 @@ test.describe('Prefetching', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/routing/prefetching/prefetched.json`)).toBe(true);
+		expect(requests.includes(`${baseURL}/routing/preloading/preloaded.json`)).toBe(true);
 
 		requests = [];
-		await app.goto('/routing/prefetching/prefetched');
+		await app.goto('/routing/preloading/preloaded');
 		expect(requests).toEqual([]);
 
 		try {
@@ -693,39 +693,39 @@ test.describe('Prefetching', () => {
 		}
 	});
 
-	test('chooses correct route when hash route is prefetched but regular route is clicked', async ({
+	test('chooses correct route when hash route is preloaded but regular route is clicked', async ({
 		app,
 		page
 	}) => {
 		await page.goto('/routing/a');
-		await app.preload('/routing/prefetching/hash-route#please-dont-show-me');
-		await app.goto('/routing/prefetching/hash-route');
+		await app.preload('/routing/preloading/hash-route#please-dont-show-me');
+		await app.goto('/routing/preloading/hash-route');
 		await expect(page.locator('h1')).not.toHaveText('Oopsie');
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.preload('/routing/prefetching/hash-route#please-dont-show-me');
-		await app.preload('/routing/prefetching/hash-route#please-dont-show-me');
-		await app.goto('/routing/prefetching/hash-route#please-dont-show-me');
+		await app.preload('/routing/preloading/hash-route#please-dont-show-me');
+		await app.preload('/routing/preloading/hash-route#please-dont-show-me');
+		await app.goto('/routing/preloading/hash-route#please-dont-show-me');
 		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
 	});
 
 	test('does not rerun load on calls to different preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.preload('/routing/prefetching/hash-route#please-dont-show-me');
-		await app.preload('/routing/prefetching/hash-route#please-dont-show-me-jr');
-		await app.goto('/routing/prefetching/hash-route#please-dont-show-me');
+		await app.preload('/routing/preloading/hash-route#please-dont-show-me');
+		await app.preload('/routing/preloading/hash-route#please-dont-show-me-jr');
+		await app.goto('/routing/preloading/hash-route#please-dont-show-me');
 		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
 	});
 
-	test('does rerun load when prefetch errored', async ({ app, page }) => {
+	test('does rerun load when preload errored', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.preload('/routing/prefetching/prefetch-error');
-		await app.goto('/routing/prefetching/prefetch-error');
+		await app.preload('/routing/preloading/preload-error');
+		await app.goto('/routing/preloading/preload-error');
 		await expect(page.locator('p')).toHaveText('hello');
 	});
 });
@@ -1057,32 +1057,32 @@ test.describe('data-sveltekit attributes', () => {
 		page.on('request', (r) => requests.push(r.url()));
 
 		const module = process.env.DEV
-			? `${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`
-			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/prefetch/target/_page`;
+			? `${baseURL}/src/routes/data-sveltekit/preload/target/+page.svelte`
+			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/preload/target/_page`;
 
-		await page.goto('/data-sveltekit/prefetch');
+		await page.goto('/data-sveltekit/preload');
 		await page.locator('#one').dispatchEvent('mousemove');
 		await Promise.all([
-			page.waitForTimeout(100), // wait for prefetching to start
-			page.waitForLoadState('networkidle') // wait for prefetching to finish
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
 
 		requests.length = 0;
-		await page.goto('/data-sveltekit/prefetch');
+		await page.goto('/data-sveltekit/preload');
 		await page.locator('#two').dispatchEvent('mousemove');
 		await Promise.all([
-			page.waitForTimeout(100), // wait for prefetching to start
-			page.waitForLoadState('networkidle') // wait for prefetching to finish
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
 
 		requests.length = 0;
-		await page.goto('/data-sveltekit/prefetch');
+		await page.goto('/data-sveltekit/preload');
 		await page.locator('#three').dispatchEvent('mousemove');
 		await Promise.all([
-			page.waitForTimeout(100), // wait for prefetching to start
-			page.waitForLoadState('networkidle') // wait for prefetching to finish
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.find((r) => r.startsWith(module))).toBeUndefined();
 	});

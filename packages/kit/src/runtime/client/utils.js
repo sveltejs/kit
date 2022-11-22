@@ -32,7 +32,7 @@ export function find_anchor(event) {
 	let noscroll = null;
 
 	/** @type {boolean | null} */
-	let prefetch = null;
+	let preload = null;
 
 	/** @type {boolean | null} */
 	let reload = null;
@@ -46,7 +46,7 @@ export function find_anchor(event) {
 		}
 
 		if (noscroll === null) noscroll = get_link_option(element, 'data-sveltekit-noscroll');
-		if (prefetch === null) prefetch = get_link_option(element, 'data-sveltekit-preload');
+		if (preload === null) preload = get_link_option(element, 'data-sveltekit-preload');
 		if (reload === null) reload = get_link_option(element, 'data-sveltekit-reload');
 	}
 
@@ -57,7 +57,7 @@ export function find_anchor(event) {
 		url,
 		options: {
 			noscroll,
-			prefetch,
+			preload,
 			reload
 		},
 		has: a

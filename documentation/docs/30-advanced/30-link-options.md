@@ -19,7 +19,7 @@ To apply this behaviour across the board, add the attribute to a parent element 
 </main>
 ```
 
-> You can also programmatically invoke `prefetch` from `$app/navigation`.
+> You can also programmatically invoke `preload` from `$app/navigation`.
 
 ### data-sveltekit-reload
 
@@ -51,13 +51,13 @@ To disable any of these options inside an element where they have been enabled, 
 
 ```html
 <div data-sveltekit-preload>
-	<!-- these links will be prefetched -->
+	<!-- these links will be preloaded -->
 	<a href="/a">a</a>
 	<a href="/b">b</a>
 	<a href="/c">c</a>
 
 	<div data-sveltekit-preload="off">
-		<!-- these links will NOT be prefetched -->
+		<!-- these links will NOT be preloaded -->
 		<a href="/d">d</a>
 		<a href="/e">e</a>
 		<a href="/f">f</a>
