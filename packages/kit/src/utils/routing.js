@@ -125,33 +125,33 @@ export function exec(match, params, matchers) {
 	const result = {};
 
 	let m = 1;
-	let prev = '';
+	let buffered = '';
 
 	for (const param of params) {
-		let value = (param.chained && prev) || match[m++];
+		let value = (param.chained && buffered) || match[m++];
 
-		if (param.rest && param.chained && prev && match[m]) {
+		if (param.rest && param.chained && buffered && match[m]) {
 			value += `/${match[m++]}`;
 		}
 
-		if (!value) {
-			if (param.rest) result[param.name] = '';
-			continue;
-		}
-
-		if (param.matcher) {
-			const matcher = matchers[param.matcher];
-			if (!matcher(value)) {
-				if (param.optional && param.chained) {
-					prev = value;
-					continue;
+		if (value) {
+			if (param.matcher) {
+				const matcher = matchers[param.matcher];
+				if (!matcher(value)) {
+					if (param.optional && param.chained) {
+						buffered = value;
+						continue;
+					}
+					return;
 				}
-				return;
 			}
+
+			result[param.name] = value;
+		} else {
+			if (param.rest) result[param.name] = '';
 		}
 
-		result[param.name] = value;
-		prev = '';
+		buffered = '';
 	}
 
 	return result;
