@@ -133,8 +133,6 @@ export function exec(match, params, matchers) {
 		if (value || !param.optional) {
 			if (param.matcher) {
 				const matcher = matchers[param.matcher];
-				if (!matcher) throw new Error(`Missing "${param.matcher}" param matcher`); // TODO do this ahead of time?
-
 				if (!matcher(value)) return;
 			}
 

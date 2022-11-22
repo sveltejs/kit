@@ -24,6 +24,14 @@ export default function create_manifest_data({
 	const matchers = create_matchers(config, cwd);
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
 
+	for (const route of routes) {
+		for (const param of route.params) {
+			if (param.matcher && !matchers[param.matcher]) {
+				throw new Error(`No matcher found for parameter '${param.matcher}' in route ${route.id}`);
+			}
+		}
+	}
+
 	return {
 		assets,
 		matchers,
