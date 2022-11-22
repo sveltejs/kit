@@ -124,7 +124,7 @@ export async function read_file(file) {
 					}
 					if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
 						const params = parse_route_id(options.file || `+page.${language}`)
-							.names.map((name) => `${name}: string`)
+							.params.map((param) => `${param.name}: string`)
 							.join(', ');
 
 						injected.push(
