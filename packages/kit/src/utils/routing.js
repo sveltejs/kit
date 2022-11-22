@@ -155,7 +155,12 @@ export function exec(match, params, matchers) {
 					if (j === -1) {
 						// we can't shift values any further, so hang on to this value
 						// so it can be rolled into a subsequent `[...rest]` param
-						buffered = value;
+						const next = params[i + 1];
+						if (next?.rest && next.chained) {
+							buffered = value;
+						} else {
+							return;
+						}
 					}
 
 					while (j >= i) {

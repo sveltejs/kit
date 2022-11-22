@@ -157,6 +157,11 @@ const exec_tests = [
 		route: '/[[slug1=doesntmatch]]/[[slug2=matches]]/[[slug3=doesntmatch]]/[...rest].json',
 		path: '/foo/bar/baz.json',
 		expected: { slug2: 'foo', rest: 'bar/baz' }
+	},
+	{
+		route: '/[[a=doesntmatch]]/[[b=matches]]/c',
+		path: '/a/b/c',
+		expected: undefined
 	}
 ];
 
