@@ -124,14 +124,19 @@ export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
 	const result = {};
 
-	let m = 1;
+	const values = match.slice(1);
+
+	let p = 0;
+	let v = 0;
+
 	let buffered = '';
 
-	for (const param of params) {
-		let value = (param.chained && buffered) || match[m++];
+	while (p < params.length) {
+		const param = params[p++];
+		let value = values[v++];
 
-		if (param.rest && param.chained && buffered && match[m]) {
-			value += `/${match[m++]}`;
+		if (param.chained && param.rest && buffered) {
+			value = value ? buffered + '/' + value : buffered;
 		}
 
 		if (value) {
@@ -139,7 +144,17 @@ export function exec(match, params, matchers) {
 				const matcher = matchers[param.matcher];
 				if (!matcher(value)) {
 					if (param.optional && param.chained) {
-						buffered = value;
+						let i = values.indexOf(undefined, v);
+
+						if (i === -1) {
+							buffered = value;
+						}
+
+						while (i >= v) {
+							values[i] = values[i - 1];
+							i -= 1;
+						}
+
 						continue;
 					}
 					return;
