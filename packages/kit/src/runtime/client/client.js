@@ -1191,9 +1191,9 @@ export function create_client({ target, base }) {
 	);
 
 	function setup_preload() {
-		/** @param {Event} event */
-		const trigger_prefetch = (event) => {
-			const { url, options, has } = find_anchor(/** @type {Element} */ (event.composedPath()[0]));
+		/** @param {Element} element */
+		const trigger_prefetch = (element) => {
+			const { url, options, has } = find_anchor(element);
 			if (url && options.preload && !is_external_url(url)) {
 				if (options.reload || has.rel_external || has.target || has.download) return;
 				preload(url);
@@ -1203,21 +1203,16 @@ export function create_client({ target, base }) {
 		/** @type {NodeJS.Timeout} */
 		let mousemove_timeout;
 
-		/** @param {MouseEvent|TouchEvent} event */
-		const handle_mousemove = (event) => {
+		target.addEventListener('mousemove', (event) => {
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
-				// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
-				// add a layer of indirection to address that
-				event.target?.dispatchEvent(
-					new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
-				);
+				trigger_prefetch(/** @type {Element} */ (event.target));
 			}, 20);
-		};
+		});
 
-		target.addEventListener('touchstart', trigger_prefetch);
-		target.addEventListener('mousemove', handle_mousemove);
-		target.addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
+		target.addEventListener('touchstart', (event) =>
+			trigger_prefetch(/** @type {Element} */ (event.composedPath()[0]))
+		);
 	}
 
 	return {
