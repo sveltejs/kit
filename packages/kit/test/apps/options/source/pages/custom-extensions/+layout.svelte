@@ -1,8 +1,8 @@
 <script>
-	import { goto, prefetch, prefetchRoutes } from '$app/navigation';
+	import { goto, preload, prepare } from '$app/navigation';
 
 	if (typeof window !== 'undefined') {
-		Object.assign(window, { goto, prefetch, prefetchRoutes });
+		Object.assign(window, { goto, preload, prepare });
 	}
 </script>
 

@@ -186,8 +186,8 @@ declare module '$app/forms' {
  * 	goto,
  * 	invalidate,
  * 	invalidateAll,
- * 	prefetch,
- * 	prefetchRoutes
+ * 	preload,
+ * 	prepare
  * } from '$app/navigation';
  * ```
  */
@@ -251,7 +251,7 @@ declare module '$app/navigation' {
 	 */
 	export function invalidateAll(): Promise<void>;
 	/**
-	 * Programmatically prefetches the given page, which means
+	 * Programmatically preloads the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
 	 *  2. calling the page's load function with the appropriate options.
 	 *
@@ -261,18 +261,18 @@ declare module '$app/navigation' {
 	 *
 	 * @param href Page to prefetch
 	 */
-	export function prefetch(href: string): Promise<void>;
+	export function preload(href: string): Promise<void>;
 	/**
-	 * Programmatically prefetches the code for routes that haven't yet been fetched.
+	 * Programmatically imports the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
 	 *
 	 * If no argument is given, all routes will be fetched, otherwise you can specify routes by any matching pathname
 	 * such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`).
 	 *
-	 * Unlike prefetch, this won't call load for individual pages.
-	 * Returns a Promise that resolves when the routes have been prefetched.
+	 * Unlike preload, this won't call load for individual pages.
+	 * Returns a Promise that resolves when the modules have been imported.
 	 */
-	export function prefetchRoutes(routes?: string[]): Promise<void>;
+	export function prepare(...urls: string[]): Promise<void>;
 
 	/**
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.

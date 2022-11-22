@@ -5,8 +5,8 @@ import {
 	goto,
 	invalidate,
 	invalidateAll,
-	prefetch,
-	prefetchRoutes
+	preload,
+	prepare
 } from '$app/navigation';
 import { CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
 
@@ -18,8 +18,8 @@ export interface Client {
 	goto: typeof goto;
 	invalidate: typeof invalidate;
 	invalidateAll: typeof invalidateAll;
-	prefetch: typeof prefetch;
-	prefetch_routes: typeof prefetchRoutes;
+	preload: typeof preload;
+	prepare: typeof prepare;
 	apply_action: typeof applyAction;
 
 	// private API

@@ -1,11 +1,4 @@
-import {
-	goto,
-	invalidate,
-	prefetch,
-	prefetchRoutes,
-	beforeNavigate,
-	afterNavigate
-} from '$app/navigation';
+import { goto, invalidate, preload, prepare, beforeNavigate, afterNavigate } from '$app/navigation';
 import { onMount } from 'svelte';
 
 export function setup() {
@@ -14,8 +7,8 @@ export function setup() {
 		Object.assign(window, {
 			goto,
 			invalidate,
-			prefetch,
-			prefetchRoutes,
+			preload,
+			prepare,
 			beforeNavigate,
 			afterNavigate
 		});

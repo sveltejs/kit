@@ -195,7 +195,7 @@ test.describe('trailingSlash', () => {
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
-		await app.prefetch('/path-base/prefetching/prefetched');
+		await app.preload('/path-base/prefetching/prefetched');
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {

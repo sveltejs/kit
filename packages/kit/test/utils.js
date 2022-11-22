@@ -40,13 +40,13 @@ export const test = base.extend({
 			 * @param {string} url
 			 * @returns {Promise<void>}
 			 */
-			prefetch: (url) => page.evaluate((/** @type {string} */ url) => prefetch(url), url),
+			preload: (url) => page.evaluate((/** @type {string} */ url) => preload(url), url),
 
 			/**
-			 * @param {string[]} [urls]
+			 * @param {string[]} urls
 			 * @returns {Promise<void>}
 			 */
-			prefetchRoutes: (urls) => page.evaluate((urls) => prefetchRoutes(urls), urls)
+			prepare: (...urls) => page.evaluate((urls) => prepare(...urls), urls)
 		});
 	},
 

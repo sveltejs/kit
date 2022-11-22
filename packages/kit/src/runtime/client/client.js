@@ -210,11 +210,11 @@ export function create_client({ target, base }) {
 	}
 
 	/** @param {URL} url */
-	async function prefetch(url) {
+	async function preload(url) {
 		const intent = get_navigation_intent(url, false);
 
 		if (!intent) {
-			throw new Error(`Attempted to prefetch a URL that does not belong to this app: ${url}`);
+			throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
 		}
 
 		load_cache = {
@@ -1246,16 +1246,13 @@ export function create_client({ target, base }) {
 			return invalidate();
 		},
 
-		prefetch: async (href) => {
+		preload: async (href) => {
 			const url = new URL(href, get_base_uri(document));
-			await prefetch(url);
+			await preload(url);
 		},
 
-		// TODO rethink this API
-		prefetch_routes: async (pathnames) => {
-			const matching = pathnames
-				? routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)))
-				: routes;
+		prepare: async (...pathnames) => {
+			const matching = routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)));
 
 			const promises = matching.map((r) => {
 				return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
@@ -1366,7 +1363,7 @@ export function create_client({ target, base }) {
 				const { url, options, has } = find_anchor(event);
 				if (url && options.prefetch && !is_external_url(url)) {
 					if (options.reload || has.rel_external || has.target || has.download) return;
-					prefetch(url);
+					preload(url);
 				}
 			};
 
