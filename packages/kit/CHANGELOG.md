@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.558
+
+### Patch Changes
+
+- [breaking] Disallow error status codes outside 400-599 ([#7767](https://github.com/sveltejs/kit/pull/7767))
+
+- [breaking] Make client-side router ignore links outside %sveltekit.body% ([#7766](https://github.com/sveltejs/kit/pull/7766))
+
 ## 1.0.0-next.557
 
 ### Patch Changes
