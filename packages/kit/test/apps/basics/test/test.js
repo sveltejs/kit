@@ -1686,18 +1686,6 @@ test.describe('Routing', () => {
 		expect(await page.textContent('p')).toBe('This is your custom error page saying: "Not Found"');
 	});
 
-	test('allows optional parameter before a rest parameter', async ({ page, clicknav }) => {
-		await page.goto('/routing/optional-then-rest');
-
-		await clicknav('[href="/routing/optional-then-rest/a/1"]');
-		expect(await page.textContent('[data-testid="x"]')).toBe('undefined');
-		expect(await page.textContent('[data-testid="y"]')).toBe('a/1');
-
-		await clicknav('[href="/routing/optional-then-rest/1/2"]');
-		expect(await page.textContent('[data-testid="x"]')).toBe('1');
-		expect(await page.textContent('[data-testid="y"]')).toBe('2');
-	});
-
 	if (process.platform !== 'win32') {
 		test('Respects symlinks', async ({ page, clicknav }) => {
 			await page.goto('/routing');
