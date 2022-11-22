@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.557
+
+### Patch Changes
+
+- external fetch calls: ensure serialized cookie values are url-encoded [#7736] ([#7736](https://github.com/sveltejs/kit/pull/7736))
+
 ## 1.0.0-next.556
 
 ### Patch Changes
