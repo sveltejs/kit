@@ -8,6 +8,10 @@ import { has_data_suffix, normalize_path, strip_data_suffix } from '../../utils/
  * @type {Record<string, Set<string>>} */
 const cookie_paths = {};
 
+// default encoding functions for header cookie values
+const encode = encodeURIComponent;
+const decode = decodeURIComponent;
+
 /**
  * @param {Request} request
  * @param {URL} url
@@ -16,7 +20,7 @@ const cookie_paths = {};
  */
 export function get_cookies(request, url, dev, trailing_slash) {
 	const header = request.headers.get('cookie') ?? '';
-	const initial_cookies = parse(header);
+	const initial_cookies = parse(header, { decode });
 
 	const normalized_url = normalize_path(
 		// Remove suffix: 'foo/__data.json' would mean the cookie path is '/foo',
@@ -76,8 +80,8 @@ export function get_cookies(request, url, dev, trailing_slash) {
 				return c.value;
 			}
 
-			const decode = opts?.decode || decodeURIComponent;
-			const req_cookies = parse(header, { decode });
+			const decoder = opts?.decode || decode;
+			const req_cookies = parse(header, { decode: decoder });
 			const cookie = req_cookies[name]; // the decoded string or undefined
 
 			if (!dev || cookie) {
@@ -166,7 +170,7 @@ export function get_cookies(request, url, dev, trailing_slash) {
 
 		// cookies sent by the user agent have lowest precedence
 		for (const name in initial_cookies) {
-			combined_cookies[name] = initial_cookies[name];
+			combined_cookies[name] = encode(initial_cookies[name]);
 		}
 
 		// cookies previous set during this event with cookies.set have higher precedence
@@ -175,14 +179,15 @@ export function get_cookies(request, url, dev, trailing_slash) {
 			if (!domain_matches(destination.hostname, cookie.options.domain)) continue;
 			if (!path_matches(destination.pathname, cookie.options.path)) continue;
 
-			combined_cookies[cookie.name] = cookie.value;
+			const encoder = cookie.options.encode || encode;
+			combined_cookies[cookie.name] = encoder(cookie.value);
 		}
 
 		// explicit header has highest precedence
 		if (header) {
-			const parsed = parse(header);
+			const parsed = parse(header, { decode });
 			for (const name in parsed) {
-				combined_cookies[name] = parsed[name];
+				combined_cookies[name] = encode(parsed[name]);
 			}
 		}
 

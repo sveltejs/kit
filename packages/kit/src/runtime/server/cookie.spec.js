@@ -42,12 +42,13 @@ paths.negative.forEach(([path, constraint]) => {
 	});
 });
 
-/** @param {string} href */
-const cookies_setup = (href = 'https://example.com') => {
-	const url = new URL(href);
+/** @param {{ href?: string, headers?: Record<string, string> }} href */
+const cookies_setup = ({ href, headers } = {}) => {
+	const url = new URL(href || 'https://example.com');
 	const request = new Request(url, {
 		headers: new Headers({
-			cookie: 'a=b;'
+			cookie: 'a=b;',
+			...headers
 		})
 	});
 	return get_cookies(request, url, false, 'ignore');
@@ -72,7 +73,7 @@ test('default values when set is called', () => {
 });
 
 test('default values when set is called on sub path', () => {
-	const { cookies, new_cookies } = cookies_setup('https://example.com/foo/bar');
+	const { cookies, new_cookies } = cookies_setup({ href: 'https://example.com/foo/bar' });
 	cookies.set('a', 'b');
 	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, true);
@@ -82,7 +83,7 @@ test('default values when set is called on sub path', () => {
 });
 
 test('default values when on localhost', () => {
-	const { cookies, new_cookies } = cookies_setup('http://localhost:1234');
+	const { cookies, new_cookies } = cookies_setup({ href: 'http://localhost:1234' });
 	cookies.set('a', 'b');
 	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, false);
@@ -144,6 +145,20 @@ test('cookie names are case sensitive', () => {
 	const entryA = new_cookies['A'];
 	assert.equal(entrya?.value, 'foo');
 	assert.equal(entryA?.value, 'bar');
+});
+
+test('serialized cookie header should be url-encoded', () => {
+	const href = 'https://example.com';
+	const { cookies, get_cookie_header } = cookies_setup({
+		href,
+		headers: {
+			cookie: 'a=f%C3%BC' // a=fü
+		}
+	});
+	cookies.set('b', 'fö'); // should use default encoding
+	cookies.set('c', 'fö', { encode: () => 'öf' }); // should respect `encode`
+	const header = get_cookie_header(new URL(href), 'd=f%C3%A4');
+	assert.equal(header, 'a=f%C3%BC; b=f%C3%B6; c=öf; d=f%C3%A4');
 });
 
 test.run();
