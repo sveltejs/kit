@@ -139,7 +139,9 @@ export function exec(match, params, matchers) {
 			value = value ? buffered + '/' + value : buffered;
 		}
 
-		if (value) {
+		if (value === undefined) {
+			if (param.rest) result[param.name] = '';
+		} else {
 			if (param.matcher) {
 				const matcher = matchers[param.matcher];
 				if (!matcher(value)) {
@@ -162,13 +164,12 @@ export function exec(match, params, matchers) {
 			}
 
 			result[param.name] = value;
-		} else {
-			if (param.rest) result[param.name] = '';
 		}
 
 		buffered = '';
 	}
 
+	if (buffered) return;
 	return result;
 }
 
