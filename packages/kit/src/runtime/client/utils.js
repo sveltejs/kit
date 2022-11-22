@@ -23,31 +23,59 @@ export function scroll_state() {
 	};
 }
 
-/** @param {Event} event */
-export function find_anchor(event) {
+const warned = new WeakSet();
+
+/**
+ * @param {Element} element
+ * @param {string | null} attribute
+ * @param {string[]} options
+ */
+function validate(element, attribute, options) {
+	if (warned.has(element)) return;
+	if (attribute === null) return;
+	if (!options.includes(attribute)) {
+		warned.add(element);
+		console.error(
+			`Unexpected value for ${attribute} — should be one of ${options
+				.map((option) => JSON.stringify(option))
+				.join(', ')}`,
+			element
+		);
+	}
+}
+
+/** @param {Element} element */
+export function find_anchor(element) {
 	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
 	let a;
 
-	/** @type {boolean | null} */
+	/** @type {string | null} */
 	let noscroll = null;
 
-	/** @type {boolean | null} */
+	/** @type {string | null} */
 	let preload = null;
 
-	/** @type {boolean | null} */
+	/** @type {string | null} */
 	let reload = null;
 
-	for (const element of event.composedPath()) {
-		if (!(element instanceof Element)) continue;
-
+	while (element) {
 		if (!a && element.nodeName.toUpperCase() === 'A') {
 			// SVG <a> elements have a lowercase name
 			a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
 		}
 
-		if (noscroll === null) noscroll = get_link_option(element, 'data-sveltekit-noscroll');
-		if (preload === null) preload = get_link_option(element, 'data-sveltekit-preload');
-		if (reload === null) reload = get_link_option(element, 'data-sveltekit-reload');
+		if (noscroll === null) noscroll = element.getAttribute('data-sveltekit-noscroll');
+		if (preload === null) preload = element.getAttribute('data-sveltekit-preload');
+		if (reload === null) reload = element.getAttribute('data-sveltekit-reload');
+
+		if (__SVELTEKIT_DEV__) {
+			validate(element, preload, ['', 'off', 'tap', 'hover', 'viewport', 'page']);
+			validate(element, noscroll, ['', 'off']);
+			validate(element, reload, ['', 'off']);
+		}
+
+		// @ts-expect-error
+		element = element.parentNode?.host ?? element.parentNode;
 	}
 
 	const url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
@@ -56,9 +84,9 @@ export function find_anchor(event) {
 		a,
 		url,
 		options: {
-			noscroll,
-			preload,
-			reload
+			preload: preload === '' ? 'hover' : preload,
+			noscroll: noscroll === 'off' ? false : noscroll === '' ? true : null,
+			reload: reload === 'off' ? false : reload === '' ? true : null
 		},
 		has: a
 			? {
@@ -68,27 +96,6 @@ export function find_anchor(event) {
 			  }
 			: {}
 	};
-}
-
-const warned = new WeakSet();
-
-/**
- * @param {Element} element
- * @param {string} attribute
- */
-function get_link_option(element, attribute) {
-	const value = element.getAttribute(attribute);
-	if (value === null) return value;
-
-	if (value === '') return true;
-	if (value === 'off') return false;
-
-	if (__SVELTEKIT_DEV__ && !warned.has(element)) {
-		console.error(`Unexpected value for ${attribute} — should be "" or "off"`, element);
-		warned.add(element);
-	}
-
-	return false;
 }
 
 /** @param {any} value */

@@ -1175,6 +1175,51 @@ export function create_client({ target, base }) {
 		});
 	}
 
+	const preload_observer = new IntersectionObserver(
+		(entries, observer) => {
+			for (const entry of entries) {
+				if (entry.isIntersecting) {
+					const { url, options, has } = find_anchor(entry.target);
+					// observer.unobserve(entry.target);
+					// if (url) preload(url);
+				}
+			}
+		},
+		{
+			threshold: 0
+		}
+	);
+
+	function setup_preload() {
+		/** @param {Event} event */
+		const trigger_prefetch = (event) => {
+			const { url, options, has } = find_anchor(/** @type {Element} */ (event.composedPath()[0]));
+			if (url && options.preload && !is_external_url(url)) {
+				if (options.reload || has.rel_external || has.target || has.download) return;
+				preload(url);
+			}
+		};
+
+		/** @type {NodeJS.Timeout} */
+		let mousemove_timeout;
+
+		/** @param {MouseEvent|TouchEvent} event */
+		const handle_mousemove = (event) => {
+			clearTimeout(mousemove_timeout);
+			mousemove_timeout = setTimeout(() => {
+				// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
+				// add a layer of indirection to address that
+				event.target?.dispatchEvent(
+					new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
+				);
+			}, 20);
+		};
+
+		target.addEventListener('touchstart', trigger_prefetch);
+		target.addEventListener('mousemove', handle_mousemove);
+		target.addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
+	}
+
 	return {
 		after_navigate: (fn) => {
 			onMount(() => {
@@ -1360,33 +1405,10 @@ export function create_client({ target, base }) {
 				}
 			});
 
-			/** @param {Event} event */
-			const trigger_prefetch = (event) => {
-				const { url, options, has } = find_anchor(event);
-				if (url && options.preload && !is_external_url(url)) {
-					if (options.reload || has.rel_external || has.target || has.download) return;
-					preload(url);
-				}
-			};
-
-			/** @type {NodeJS.Timeout} */
-			let mousemove_timeout;
-
-			/** @param {MouseEvent|TouchEvent} event */
-			const handle_mousemove = (event) => {
-				clearTimeout(mousemove_timeout);
-				mousemove_timeout = setTimeout(() => {
-					// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
-					// add a layer of indirection to address that
-					event.target?.dispatchEvent(
-						new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
-					);
-				}, 20);
-			};
-
-			target.addEventListener('touchstart', trigger_prefetch);
-			target.addEventListener('mousemove', handle_mousemove);
-			target.addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
+			// @ts-ignore this isn't supported everywhere yet
+			if (!navigator.connection?.saveData) {
+				setup_preload();
+			}
 
 			/** @param {MouseEvent} event */
 			target.addEventListener('click', (event) => {
@@ -1396,7 +1418,9 @@ export function create_client({ target, base }) {
 				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 				if (event.defaultPrevented) return;
 
-				const { a, url, options, has } = find_anchor(event);
+				const { a, url, options, has } = find_anchor(
+					/** @type {Element} */ (event.composedPath()[0])
+				);
 				if (!a || !url) return;
 
 				const is_svg_a_element = a instanceof SVGAElement;
