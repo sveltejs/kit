@@ -127,9 +127,7 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 			cssCodeSplit: true,
 			// don't use the default name to avoid collisions with 'static/manifest.json'
 			manifest: 'vite-manifest.json',
-			modulePreload: {
-				polyfill: false
-			},
+			modulePreload: false,
 			outDir,
 			rollupOptions: {
 				input,
