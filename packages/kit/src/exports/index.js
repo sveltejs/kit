@@ -8,6 +8,10 @@ import { HttpError, Redirect, ValidationError } from '../runtime/control.js';
  * @param {any} message
  */
 export function error(status, message) {
+	if (status < 400 || status > 599) {
+		throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
+	}
+
 	return new HttpError(status, message);
 }
 
