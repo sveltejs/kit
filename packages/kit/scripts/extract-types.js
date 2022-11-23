@@ -65,7 +65,7 @@ function get_types(code, statements) {
 
 				if (ts.isInterfaceDeclaration(statement)) {
 					for (const member of statement.members) {
-						const snippet = member.getText();
+						const snippet = member.getText().replace(/^\t/gm, '');
 						// @ts-ignore
 						const doc = member.jsDoc?.[0];
 						const content = doc?.comment ?? '';

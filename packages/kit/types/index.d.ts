@@ -377,7 +377,7 @@ export interface NavigationEvent<
 	RouteId extends string | null = string | null
 > {
 	/**
-	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, the `slug` parameter
+	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
 	 */
 	params: Params;
 	/**
@@ -474,7 +474,7 @@ export interface Page<
 	 */
 	url: URL;
 	/**
-	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, the `slug` parameter
+	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
 	 */
 	params: Params;
 	/**
@@ -535,7 +535,7 @@ export interface RequestEvent<
 	 */
 	locals: App.Locals;
 	/**
-	 * The parameters of the current page or endpoint - e.g. for a route like `/blog/[slug]`, the `slug` parameter
+	 * The parameters of the current page or endpoint - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
 	 */
 	params: Params;
 	/**
