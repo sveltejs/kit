@@ -271,7 +271,7 @@ export function GET({ url }) {
 
 The first argument to `Response` can be a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream), making it possible to stream large amounts of data or create server-sent events (unless deploying to platforms that buffer responses, like AWS Lambda).
 
-You can use the `error`, `redirect` and `json` methods from `@sveltejs/kit` for convenience (but you don't have to).
+You can use the [`error`](https://kit.svelte.dev/docs/modules#sveltejs-kit-error), [`redirect`](https://kit.svelte.dev/docs/modules#sveltejs-kit-redirect) and [`json`](https://kit.svelte.dev/docs/modules#sveltejs-kit-json) methods from `@sveltejs/kit` for convenience (but you don't have to).
 
 If an error is thrown (either `throw error(...)` or an unexpected error), the response will be a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. The [`+error.svelte`](#error) component will _not_ be rendered in this case. You can read more about error handling [here](/docs/errors).
 
