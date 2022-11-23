@@ -1198,6 +1198,12 @@ export function create_client({ target, base }) {
 			prepare_and_preload(/** @type {Element} */ (event.composedPath()[0]), 1)
 		);
 
+		target.addEventListener('keydown', (event) => {
+			if (event.key === 'Enter' && event.target === document.activeElement) {
+				prepare_and_preload(/** @type {Element} */ (event.composedPath()[0]), 1);
+			}
+		});
+
 		const observer = new IntersectionObserver(
 			(entries, observer) => {
 				for (const entry of entries) {
