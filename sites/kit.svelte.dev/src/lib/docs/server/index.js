@@ -116,7 +116,7 @@ export async function read_file(file) {
 			if (language === 'js' || language === 'ts') {
 				try {
 					const injected = [];
-					if (source.includes('$app/')) {
+					if (source.includes('$app/') || source.includes('@sveltejs/kit/')) {
 						injected.push(
 							`// @filename: ambient-kit.d.ts`,
 							`/// <reference types="@sveltejs/kit" />`

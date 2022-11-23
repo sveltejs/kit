@@ -131,8 +131,21 @@ function strip_origin(str) {
 	return str.replace(/https:\/\/kit\.svelte\.dev/g, '');
 }
 
+/**
+ * @param {string} file
+ */
+function read_d_ts_file(file) {
+	// We can't use JSDoc comments inside JSDoc, so we would get ts(7031) errors if
+	// we didn't ignore this error specifically for `/// file:` code examples
+	const str = fs.readFileSync(file, 'utf-8');
+	return str.replace(
+		/(\s*\*\s*)\/\/\/ file:/g,
+		(match, prefix) => prefix + '// @errors: 7031' + match
+	);
+}
+
 {
-	const code = fs.readFileSync('types/index.d.ts', 'utf-8');
+	const code = read_d_ts_file('types/index.d.ts');
 	const node = ts.createSourceFile('index.d.ts', code, ts.ScriptTarget.Latest, true);
 
 	modules.push({
@@ -143,7 +156,7 @@ function strip_origin(str) {
 }
 
 {
-	const code = fs.readFileSync('types/private.d.ts', 'utf-8');
+	const code = read_d_ts_file('types/private.d.ts');
 	const node = ts.createSourceFile('private.d.ts', code, ts.ScriptTarget.Latest, true);
 
 	modules.push({
@@ -158,7 +171,7 @@ const dir = fileURLToPath(new URL('./special-types', import.meta.url).href);
 for (const file of fs.readdirSync(dir)) {
 	if (!file.endsWith('.md')) continue;
 
-	const comment = strip_origin(fs.readFileSync(`${dir}/${file}`, 'utf-8'));
+	const comment = strip_origin(read_d_ts_file(`${dir}/${file}`));
 
 	modules.push({
 		name: file.replace(/\+/g, '/').slice(0, -3),
@@ -170,7 +183,7 @@ for (const file of fs.readdirSync(dir)) {
 }
 
 {
-	const code = fs.readFileSync('types/ambient.d.ts', 'utf-8');
+	const code = read_d_ts_file('types/ambient.d.ts');
 	const node = ts.createSourceFile('ambient.d.ts', code, ts.ScriptTarget.Latest, true);
 
 	for (const statement of node.statements) {

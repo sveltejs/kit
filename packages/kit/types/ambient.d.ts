@@ -388,10 +388,9 @@ declare module '@sveltejs/kit/hooks' {
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
 	 *
 	 * ```js
-	 * /// file: src/hooks.js
+	 * /// file: src/hooks.server.js
 	 * import { sequence } from '@sveltejs/kit/hooks';
 	 *
-	 * /** @type {import('@sveltejs/kit').Handle} *\/
 	 * async function first({ event, resolve }) {
 	 * 	console.log('first pre-processing');
 	 * 	const result = await resolve(event, {
@@ -405,7 +404,6 @@ declare module '@sveltejs/kit/hooks' {
 	 * 	return result;
 	 * }
 	 *
-	 * /** @type {import('@sveltejs/kit').Handle} *\/
 	 * async function second({ event, resolve }) {
 	 * 	console.log('second pre-processing');
 	 * 	const result = await resolve(event, {
