@@ -1,10 +1,5 @@
 import { modules } from '../../../../../../packages/kit/docs/types.js';
 
-// Markdown doesn't give us a good way to nest code blocks inside an element,
-// so we resort to this hackery
-const OPEN = '```ts-open\n```';
-const CLOSE = '```ts-close\n```';
-
 /** @param {'types' | 'exports'} kind */
 export function render_modules(kind) {
 	return modules
