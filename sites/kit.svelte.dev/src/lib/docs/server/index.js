@@ -258,7 +258,8 @@ export async function read_file(file) {
 							})
 							.join('');
 					}
-				);
+				)
+				.replace(/\/\*…\*\//g, '…');
 
 			fs.writeFileSync(`${snippet_cache}/${digest}.html`, html);
 			return html;
