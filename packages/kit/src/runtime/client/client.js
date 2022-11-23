@@ -22,9 +22,7 @@ import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
-
-const SCROLL_KEY = 'sveltekit:scroll';
-const INDEX_KEY = 'sveltekit:index';
+import { INDEX_KEY, PRIORITY_PAGE, PRIORITY_VIEWPORT, SCROLL_KEY } from './constants.js';
 
 const routes = parse(nodes, server_loads, dictionary, matchers);
 
@@ -1220,9 +1218,9 @@ export function create_client({ target, base }) {
 
 		/**
 		 * @param {Element} element
-		 * @param {number} level
+		 * @param {number} priority
 		 */
-		function prepare_and_preload(element, level) {
+		function prepare_and_preload(element, priority) {
 			const { url, options, has } = find_anchor(element, base);
 
 			const ignore =
@@ -1235,9 +1233,9 @@ export function create_client({ target, base }) {
 
 			if (ignore) return;
 
-			if (level <= options.preload) {
+			if (priority <= options.preload) {
 				preload(url);
-			} else if (level <= options.prepare) {
+			} else if (priority <= options.prepare) {
 				prepare(url.pathname);
 			}
 		}
@@ -1250,12 +1248,11 @@ export function create_client({ target, base }) {
 
 				if (external) continue;
 
-				if (options.prepare === 3) {
-					// TODO use strings
+				if (options.prepare === PRIORITY_VIEWPORT) {
 					observer.observe(a);
 				}
 
-				if (options.prepare === 4) {
+				if (options.prepare === PRIORITY_PAGE) {
 					prepare(/** @type {URL} */ (url).pathname);
 				}
 			}

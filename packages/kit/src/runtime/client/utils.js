@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 import { assets } from '../paths.js';
 import { version } from '../env.js';
+import { PRIORITY_HOVER, PRIORITY_PAGE, PRIORITY_TAP, PRIORITY_VIEWPORT } from './constants.js';
 
 /* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
 
@@ -47,11 +48,11 @@ function validate(element, name, value, options) {
 
 /** @type {Record<string, number>} */
 const levels = {
-	tap: 1,
-	hover: 2,
-	viewport: 3,
-	page: 4,
-	'': 2,
+	tap: PRIORITY_TAP,
+	hover: PRIORITY_HOVER,
+	viewport: PRIORITY_VIEWPORT,
+	page: PRIORITY_PAGE,
+	'': PRIORITY_HOVER,
 	off: -1
 };
 
