@@ -444,14 +444,14 @@ export interface Handle {
 }
 
 /**
- * The server-side [`handleError`](https://kit.svelte.dev/docs/hooks#server-hooks-handleerror) hook runs when an unexpected error is thrown while responding to a request.
+ * The server-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while responding to a request.
  */
 export interface HandleServerError {
 	(input: { error: unknown; event: RequestEvent }): void | App.Error;
 }
 
 /**
- * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#server-hooks-handleerror) hook runs when an unexpected error is thrown while navigating.
+ * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while navigating.
  */
 export interface HandleClientError {
 	(input: { error: unknown; event: NavigationEvent }): void | App.Error;

@@ -7,7 +7,7 @@ import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
 import 'prism-svelte';
 import { escape, extract_frontmatter, transform } from './markdown.js';
-import { modules } from '../../../../../../packages/kit/docs/types.js';
+import { modules } from './type-info.js';
 import { render_modules } from './modules.js';
 import { parse_route_id } from '../../../../../../packages/kit/src/utils/routing.js';
 import ts from 'typescript';

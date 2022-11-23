@@ -53,8 +53,7 @@
 		"!src/core/**/test",
 		"types",
 		"svelte-kit.js",
-		"postinstall.js",
-		"scripts/special-types"
+		"postinstall.js"
 	],
 	"scripts": {
 		"build": "pnpm types",

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const cwd = path.join(__dirname, '../documentation/docs');
+const cwd = path.join(__dirname, '../../../documentation/docs');
 
 const doc_filenames = glob('**/*.md', { cwd });
 const doc_urls = new Set();
@@ -63,8 +63,8 @@ for (const doc of doc_filenames) {
 
 // 3. check SvelteKit docs for broken links
 
-for (const file of walk_kit_dir(path.join(__dirname, '../packages/kit'))) {
-	const content = fs.readFileSync(path.join(__dirname, '../packages/kit', file), 'utf-8');
+for (const file of walk_kit_dir(path.join(__dirname, '../../../packages/kit'))) {
+	const content = fs.readFileSync(path.join(__dirname, '../../../packages/kit', file), 'utf-8');
 
 	const links = content.matchAll(/https:\/\/kit\.svelte\.dev\/docs\/([a-z$\-#]+)/g);
 	if (!links) continue;
