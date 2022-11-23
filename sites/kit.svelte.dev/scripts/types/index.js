@@ -102,13 +102,6 @@ function get_types(code, statements) {
 						parts.push(part);
 					}
 
-					// If none of the interface members have comments, the resulting docs
-					// look rather sparse, so we'll just use the interface comment for all
-					// in that case
-					if (parts.every((part) => !part.content)) {
-						parts.length = 0;
-					}
-
 					if (parts.length) {
 						// collapse `interface Foo {/* lots of stuff*/}` into `interface Foo {…}`
 						const first = statement.members.at(0);
