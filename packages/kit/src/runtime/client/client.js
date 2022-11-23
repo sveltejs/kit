@@ -1181,63 +1181,6 @@ export function create_client({ target, base }) {
 		});
 	}
 
-	/**
-	 * @param {Element} element
-	 * @param {number} level
-	 */
-	function preload_and_prepare(element, level) {
-		const { url, options, has } = find_anchor(element, base);
-
-		const ignore =
-			!url ||
-			is_external_url(url, base) ||
-			options.reload ||
-			has.rel_external ||
-			has.target ||
-			has.download;
-
-		if (ignore) return;
-
-		if (level <= options.preload) {
-			preload(url);
-		} else if (level <= options.prepare) {
-			prepare(url.pathname);
-		}
-	}
-
-	const preload_and_prepare_observer = new IntersectionObserver(
-		(entries, observer) => {
-			for (const entry of entries) {
-				if (entry.isIntersecting) {
-					prepare(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href).pathname);
-					observer.unobserve(entry.target);
-				}
-			}
-		},
-		{
-			threshold: 0
-		}
-	);
-
-	function update_preload_and_prepare() {
-		preload_and_prepare_observer.disconnect();
-
-		for (const a of target.querySelectorAll('a')) {
-			const { url, external, options } = find_anchor(a, base);
-
-			if (external) continue;
-
-			if (options.prepare === 3) {
-				// TODO use strings
-				preload_and_prepare_observer.observe(a);
-			}
-
-			if (options.prepare === 4) {
-				prepare(/** @type {URL} */ (url).pathname);
-			}
-		}
-	}
-
 	function setup_preload_and_prepare() {
 		/** @type {NodeJS.Timeout} */
 		let mousemove_timeout;
@@ -1247,16 +1190,73 @@ export function create_client({ target, base }) {
 
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
-				preload_and_prepare(target, 2);
+				prepare_and_preload(target, 2);
 			}, 20);
 		});
 
 		target.addEventListener('touchstart', (event) =>
-			preload_and_prepare(/** @type {Element} */ (event.composedPath()[0]), 1)
+			prepare_and_preload(/** @type {Element} */ (event.composedPath()[0]), 1)
 		);
 
-		callbacks.after_navigate.push(update_preload_and_prepare);
-		update_preload_and_prepare();
+		const observer = new IntersectionObserver(
+			(entries, observer) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) {
+						prepare(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href).pathname);
+						observer.unobserve(entry.target);
+					}
+				}
+			},
+			{
+				threshold: 0
+			}
+		);
+
+		/**
+		 * @param {Element} element
+		 * @param {number} level
+		 */
+		function prepare_and_preload(element, level) {
+			const { url, options, has } = find_anchor(element, base);
+
+			const ignore =
+				!url ||
+				is_external_url(url, base) ||
+				options.reload ||
+				has.rel_external ||
+				has.target ||
+				has.download;
+
+			if (ignore) return;
+
+			if (level <= options.preload) {
+				preload(url);
+			} else if (level <= options.prepare) {
+				prepare(url.pathname);
+			}
+		}
+
+		function after_navigate() {
+			observer.disconnect();
+
+			for (const a of target.querySelectorAll('a')) {
+				const { url, external, options } = find_anchor(a, base);
+
+				if (external) continue;
+
+				if (options.prepare === 3) {
+					// TODO use strings
+					observer.observe(a);
+				}
+
+				if (options.prepare === 4) {
+					prepare(/** @type {URL} */ (url).pathname);
+				}
+			}
+		}
+
+		callbacks.after_navigate.push(after_navigate);
+		after_navigate();
 	}
 
 	return {
