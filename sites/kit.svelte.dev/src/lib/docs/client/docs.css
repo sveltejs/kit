@@ -351,3 +351,8 @@ pre.language-diff code {
 .ts-block-property-details {
 	padding: 0 1rem;
 }
+
+/* we need to have a come-to-jesus moment about the site-kit css */
+.listify ul > li::before {
+	margin-top: 0.8rem !important;
+}

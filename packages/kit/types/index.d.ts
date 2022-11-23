@@ -231,7 +231,7 @@ export interface KitConfig {
 }
 
 /**
- * This function runs every time the SvelteKit server receives a [request](https://kit.svelte.dev/docs/web-standards#fetch-apis-request) and
+ * The [`handle`](https://kit.svelte.dev/docs/hooks#server-hooks-handle) hook runs every time the SvelteKit server receives a [request](https://kit.svelte.dev/docs/web-standards#fetch-apis-request) and
  * determines the [response](https://kit.svelte.dev/docs/web-standards#fetch-apis-response).
  * It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`.
  * This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
@@ -243,14 +243,23 @@ export interface Handle {
 	}): MaybePromise<Response>;
 }
 
+/**
+ * The server-side [`handleError`](https://kit.svelte.dev/docs/hooks#server-hooks-handleerror) hook runs when an unexpected error is thrown while responding to a request.
+ */
 export interface HandleServerError {
 	(input: { error: unknown; event: RequestEvent }): void | App.Error;
 }
 
+/**
+ * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#server-hooks-handleerror) hook runs when an unexpected error is thrown while navigating.
+ */
 export interface HandleClientError {
 	(input: { error: unknown; event: NavigationEvent }): void | App.Error;
 }
 
+/**
+ * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handlefetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
+ */
 export interface HandleFetch {
 	(input: { event: RequestEvent; request: Request; fetch: typeof fetch }): MaybePromise<Response>;
 }
