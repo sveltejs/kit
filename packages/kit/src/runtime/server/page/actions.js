@@ -72,7 +72,7 @@ export async function handle_action_json_request(event, options, server) {
 		return action_json(
 			{
 				type: 'error',
-				error: handle_error_and_jsonify(event, options, check_incorrect_invalid_use(error))
+				error: await handle_error_and_jsonify(event, options, check_incorrect_invalid_use(error))
 			},
 			{
 				status: error instanceof HttpError ? error.status : 500

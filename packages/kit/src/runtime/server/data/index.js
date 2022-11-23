@@ -87,7 +87,7 @@ export async function render_data(event, route, options, state, trailing_slash) 
 		let length = promises.length;
 		const nodes = await Promise.all(
 			promises.map((p, i) =>
-				p.catch((error) => {
+				p.catch(async (error) => {
 					if (error instanceof Redirect) {
 						throw error;
 					}
@@ -97,7 +97,7 @@ export async function render_data(event, route, options, state, trailing_slash) 
 
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
-						error: handle_error_and_jsonify(event, options, error),
+						error: await handle_error_and_jsonify(event, options, error),
 						status: error instanceof HttpError ? error.status : undefined
 					});
 				})
@@ -125,7 +125,7 @@ export async function render_data(event, route, options, state, trailing_slash) 
 			);
 		} else {
 			// TODO make it clearer that this was an unexpected error
-			return json_response(JSON.stringify(handle_error_and_jsonify(event, options, error)));
+			return json_response(JSON.stringify(await handle_error_and_jsonify(event, options, error)));
 		}
 	}
 }

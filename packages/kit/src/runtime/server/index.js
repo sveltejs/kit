@@ -294,7 +294,7 @@ export async function respond(request, options, state) {
 		if (error instanceof Redirect) {
 			return redirect_response(error.status, error.location);
 		}
-		return handle_fatal_error(event, options, error);
+		return await handle_fatal_error(event, options, error);
 	}
 
 	/**
@@ -386,7 +386,7 @@ export async function respond(request, options, state) {
 			return await fetch(request);
 		} catch (error) {
 			// HttpError from endpoint can end up here - TODO should it be handled there instead?
-			return handle_fatal_error(event, options, error);
+			return await handle_fatal_error(event, options, error);
 		} finally {
 			event.cookies.set = () => {
 				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');

@@ -200,3 +200,5 @@ export function handleError({ error, event }) {
 This function is not called for _expected_ errors (those thrown with the [`error`](/docs/modules#sveltejs-kit-error) function imported from `@sveltejs/kit`).
 
 During development, if an error occurs because of a syntax error in your Svelte code, the passed in error has a `frame` property appended highlighting the location of the error.
+
+> Make sure that `handleError` _never_ throws an error

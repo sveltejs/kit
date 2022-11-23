@@ -113,10 +113,10 @@ export function static_error_page(options, status, message) {
  * @param {import('types').SSROptions} options
  * @param {unknown} error
  */
-export function handle_fatal_error(event, options, error) {
+export async function handle_fatal_error(event, options, error) {
 	error = error instanceof HttpError ? error : coalesce_to_error(error);
 	const status = error instanceof HttpError ? error.status : 500;
-	const body = handle_error_and_jsonify(event, options, error);
+	const body = await handle_error_and_jsonify(event, options, error);
 
 	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
@@ -138,7 +138,7 @@ export function handle_fatal_error(event, options, error) {
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {any} error
- * @returns {App.Error}
+ * @returns {import('../../../types/private.js').MaybePromise<App.Error>}
  */
 export function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {
