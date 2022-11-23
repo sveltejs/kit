@@ -87,7 +87,9 @@ export interface Builder {
 	 */
 	writeClient(dest: string): string[];
 	/**
-	 * @param dest
+	 * @param dest the destination folder to which files should be copied
+	 * @param opts.fallback the name of a file for fallback responses, like `200.html` or `404.html` depending on where the app is deployed
+	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */
 	writePrerendered(
 		dest: string,
@@ -174,58 +176,256 @@ export interface Cookies {
 }
 
 export interface KitConfig {
+	/**
+	 * Your [adapter](https://kit.svelte.dev/docs/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
+	 * @default undefined
+	 */
 	adapter?: Adapter;
+	/**
+	 * An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
+	 *
+	 * ```js
+	 * /// file: svelte.config.js
+	 * /** @type {import('@sveltejs/kit').Config} *\/
+	 * const config = {
+	 * 	kit: {
+	 * 		alias: {
+	 * 			// this will match a file
+	 * 			'my-file': 'path/to/my-file.js',
+	 *
+	 * 			// this will match a directory and its contents
+	 * 			// (`my-directory/x` resolves to `path/to/my-directory/x`)
+	 * 			'my-directory': 'path/to/my-directory',
+	 *
+	 * 			// an alias ending /* will only match
+	 * 			// the contents of a directory, not the directory itself
+	 * 			'my-directory/*': 'path/to/my-directory/*'
+	 * 		}
+	 * 	}
+	 * };
+	 * ```
+	 *
+	 * > The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
+	 *
+	 * > You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
+	 */
 	alias?: Record<string, string>;
+	/**
+	 * The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
+	 */
 	appDir?: string;
+	/**
+	 * An object containing zero or more of the following values:
+	 *
+	 * - `mode` — 'hash', 'nonce' or 'auto'
+	 * - `directives` — an object of `[directive]: value[]` pairs
+	 * - `reportOnly` — an object of `[directive]: value[]` pairs for CSP report-only mode
+	 *
+	 * [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) configuration. CSP helps to protect your users against cross-site scripting (XSS) attacks, by limiting the places resources can be loaded from. For example, a configuration like this...
+	 *
+	 * ```js
+	 * /// file: svelte.config.js
+	 * /** @type {import('@sveltejs/kit').Config} *\/
+	 * const config = {
+	 * 	kit: {
+	 * 		csp: {
+	 * 			directives: {
+	 * 				'script-src': ['self']
+	 * 			},
+	 * 			reportOnly: {
+	 * 				'script-src': ['self']
+	 * 			}
+	 * 		}
+	 * 	}
+	 * };
+	 *
+	 * export default config;
+	 * ```
+	 *
+	 * ...would prevent scripts loading from external sites. SvelteKit will augment the specified directives with nonces or hashes (depending on `mode`) for any inline styles and scripts it generates.
+	 *
+	 * To add a nonce for scripts and links manually included in `app.html`, you may use the placeholder `%sveltekit.nonce%` (for example `<script nonce="%sveltekit.nonce%">`).
+	 *
+	 * When pages are prerendered, the CSP header is added via a `<meta http-equiv>` tag (note that in this case, `frame-ancestors`, `report-uri` and `sandbox` directives will be ignored).
+	 *
+	 * > When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
+	 *
+	 * > Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
+	 */
 	csp?: {
 		mode?: 'hash' | 'nonce' | 'auto';
 		directives?: CspDirectives;
 		reportOnly?: CspDirectives;
 	};
+	/**
+	 * Protection against [cross-site request forgery](https://owasp.org/www-community/attacks/csrf) attacks:
+	 *
+	 * - `checkOrigin` — if `true`, SvelteKit will check the incoming `origin` header for `POST` form submissions and verify that it matches the server's origin
+	 *
+	 * To allow people to make `POST` form submissions to your app from other origins, you will need to disable this option. Be careful!
+	 */
 	csrf?: {
 		checkOrigin?: boolean;
 	};
+	/**
+	 * Environment variable configuration
+	 */
 	env?: {
+		/**
+		 * The directory to search for `.env` files.
+		 */
 		dir?: string;
+		/**
+		 * A prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](/docs/modules#$env-static-public) and [`$env/dynamic/public`](/docs/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
+		 */
 		publicPrefix?: string;
 	};
-	moduleExtensions?: string[];
+	/**
+	 * Where to find various files within your project.
+	 */
 	files?: {
+		/**
+		 * a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
+		 */
 		assets?: string;
+		/**
+		 * the location of your client and server [hooks](https://kit.svelte.dev/docs/hooks)
+		 */
 		hooks?: {
 			client?: string;
 			server?: string;
 		};
+		/**
+		 * your app's internal library, accessible throughout the codebase as `$lib`
+		 */
 		lib?: string;
+		/**
+		 * a directory containing [parameter matchers](https://kit.svelte.dev/docs/advanced-routing#matching)
+		 */
 		params?: string;
+		/**
+		 * the files that define the structure of your app (see [Routing](https://kit.svelte.dev/docs/routing))
+		 */
 		routes?: string;
+		/**
+		 * the location of your service worker's entry point (see [Service workers](https://kit.svelte.dev/docs/service-workers))
+		 */
 		serviceWorker?: string;
+		/**
+		 * the location of the template for HTML responses
+		 */
 		appTemplate?: string;
+		/**
+		 * the location of the template for fallback error responses
+		 */
 		errorTemplate?: string;
 	};
+	/**
+	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
+	 *
+	 * > This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
+	 */
 	inlineStyleThreshold?: number;
+	/**
+	 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
+	 */
+	moduleExtensions?: string[];
+	/**
+	 * The directory that SvelteKit writes files to during `dev` and `build`. You should exclude this directory from version control.
+	 */
 	outDir?: string;
 	paths?: {
+		/**
+		 * an absolute path that your app's files are served from. This is useful if your files are served from a storage bucket of some kind
+		 */
 		assets?: string;
+		/**
+		 * a root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`base` from `$app/paths`](/docs/modules#$app-paths-base) for that: `<a href="{base}/your-page">Link</a>`. If you find yourself writing this often, it may make sense to extract this into a reusable component.
+		 */
 		base?: string;
 	};
+	/**
+	 * See [Prerendering](https://kit.svelte.dev/docs/page-options#prerender).
+	 */
 	prerender?: {
+		/**
+		 * How many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response.
+		 */
 		concurrency?: number;
+		/**
+		 * Determines whether SvelteKit should find pages to prerender by following links from the seed page(s).
+		 */
 		crawl?: boolean;
-		default?: boolean;
+		/**
+		 * Set to `false` to disable prerendering altogether
+		 */
 		enabled?: boolean;
+		/**
+		 * An array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]`, because SvelteKit doesn't know what value the parameters should have).
+		 */
 		entries?: Array<'*' | `/${string}`>;
+		/**
+		 * - `'fail'` — (default) fails the build when a routing error is encountered when following a link
+		 * - `'ignore'` - silently ignore the failure and continue
+		 * - `'warn'` — continue, but print a warning
+		 * - `(details) => void` — a custom error handler that takes a `details` object with `status`, `path`, `referrer`, `referenceType` and `message` properties. If you `throw` from this function, the build will fail
+		 *
+		 * ```js
+		 * /** @type {import('@sveltejs/kit').Config} *\/
+		 * const config = {
+		 * 	kit: {
+		 * 		prerender: {
+		 * 			handleHttpError: ({ path, referrer, message }) => {
+		 * 				// ignore deliberate link to shiny 404 page
+		 * 				if (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {
+		 * 					return;
+		 * 				}
+		 *
+		 * 				// otherwise fail the build
+		 * 					throw new Error(message);
+		 * 				}
+		 * 			}
+		 * 		}
+		 * 	}
+		 * };
+		 * ```
+		 */
 		handleHttpError?: PrerenderHttpErrorHandlerValue;
+		/**
+		 * - `'fail'` — (default) fails the build when a prerendered page links to another prerendered page with a `#` fragment that doesn't correspond to an `id`
+		 * - `'ignore'` - silently ignore the failure and continue
+		 * - `'warn'` — continue, but print a warning
+		 * - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id`, `referrers` and `message` properties. If you `throw` from this function, the build will fail
+		 */
 		handleMissingId?: PrerenderMissingIdHandlerValue;
+		/**
+		 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
+		 */
 		origin?: string;
 	};
 	serviceWorker?: {
+		/**
+		 * If set to `false`, will disable automatic service worker registration.
+		 */
 		register?: boolean;
+		/**
+		 * A function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
+		 */
 		files?(filepath: string): boolean;
 	};
-	trailingSlash?: TrailingSlash;
+	/**
+	 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists. SvelteKit solves this problem by falling back to traditional full-page navigation if it detects that a new version has been deployed, using the `name` specified here (which defaults to a timestamp of the build).
+	 *
+	 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](/docs/modules#$app-stores-updated) store to `true` when it detects one.
+	 */
 	version?: {
+		/**
+		 * The current app version string
+		 */
 		name?: string;
+		/**
+		 * The interval in milliseconds to poll for version changes.
+		 */
 		pollInterval?: number;
 	};
 }

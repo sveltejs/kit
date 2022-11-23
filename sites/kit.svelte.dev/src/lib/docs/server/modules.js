@@ -24,19 +24,16 @@ export function render_modules(kind) {
 							'\n\n' +
 							type.parts
 								.map((part) => {
-									const params = part.params
-										.map(([name, desc]) => `- \`${name}\` ${desc}`)
-										.join('\n');
-									const returns = part.returns
-										? `${params ? '\n' : ''}- Returns ${part.returns}`
-										: '';
+									const bullets = part.params.map(([name, desc]) => `- \`${name}\` ${desc}`);
+
+									if (part.default) bullets.push(`- Default \`${part.default}\``);
+									if (part.returns) bullets.push(`- Returns ${part.returns}`);
 
 									return (
 										`<div class="ts-block-property">\n\n\`\`\`ts\n${part.snippet}\n\`\`\`\n\n` +
 										`<div class="ts-block-property-details">\n\n` +
-										params +
-										returns +
-										(params ? '\n\n' : '') +
+										bullets.join('\n') +
+										'\n\n' +
 										part.content +
 										'\n</div></div>'
 									);

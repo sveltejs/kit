@@ -4,7 +4,7 @@ import prettier from 'prettier';
 import { mkdirp } from '../src/utils/filesystem.js';
 import { fileURLToPath } from 'url';
 
-/** @typedef {{ snippet: string; params: Array<[string, string]>; returns: string; content: string}} Part */
+/** @typedef {{ snippet: string; params: Array<[string, string]>; default: string; returns: string; content: string}} Part */
 
 /** @typedef {{ name: string, comment: string, snippet: string; parts: Part[] }} Extracted */
 
@@ -65,23 +65,40 @@ function get_types(code, statements) {
 
 				if (ts.isInterfaceDeclaration(statement)) {
 					for (const member of statement.members) {
-						const snippet = member.getText().replace(/^\t/gm, '');
 						// @ts-ignore
 						const doc = member.jsDoc?.[0];
-						const content = doc?.comment ?? '';
-						/** @type {Array<[string, string]>} */
-						const params = [];
-						let returns = '';
 
-						for (const param of doc?.tags ?? []) {
-							if (param.tagName.escapedText === 'param') {
-								params.push([param.name.getText(), param.comment]);
-							} else if (param.tagName.escapedText === 'returns') {
-								returns = param.comment;
+						/** @type {Part} */
+						const part = {
+							snippet: member.getText().replace(/^\t/gm, ''),
+							content: doc?.comment ?? '',
+							params: [],
+							default: '',
+							returns: ''
+						};
+
+						for (const tag of doc?.tags ?? []) {
+							const type = tag.tagName.escapedText;
+
+							switch (tag.tagName.escapedText) {
+								case 'param':
+									part.params.push([tag.name.getText(), tag.comment]);
+									break;
+
+								case 'default':
+									part.default = tag.comment;
+									break;
+
+								case 'returns':
+									part.returns = tag.comment;
+									break;
+
+								default:
+									console.log(`unhandled JSDoc tag: ${type}`);
 							}
 						}
 
-						parts.push({ snippet, content, params, returns });
+						parts.push(part);
 					}
 
 					// If none of the interface members have comments, the resulting docs
