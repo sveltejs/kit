@@ -313,5 +313,33 @@ pre.language-diff code {
 	padding: 1rem;
 	margin-bottom: 1rem;
 	max-width: var(--linemax);
-	border-radius: 0.5rem;
+	border-radius: var(--border-r);
+}
+
+.ts-block {
+	margin-bottom: 1rem;
+	max-width: var(--linemax);
+	background: white;
+	border-radius: var(--border-r);
+	filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.08));
+	overflow: hidden;
+}
+
+.ts-block > .code-block {
+	margin: 0;
+	border-radius: 0;
+	box-shadow: none;
+	background: white;
+}
+
+.ts-block-property > .code-block {
+	margin: 1rem 0 0 0;
+	border-radius: 0;
+	box-shadow: none;
+	/* background: var(--back-light); */
+	border-top: 1px solid var(--back-api);
+}
+
+.ts-block-property-details {
+	padding: 0 1rem;
 }
