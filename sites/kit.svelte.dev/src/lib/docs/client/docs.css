@@ -332,6 +332,14 @@ pre.language-diff code {
 	background: white;
 }
 
+.ts-block .ts-block-property p {
+	margin: 1rem 0;
+}
+
+.ts-block-property .code-block {
+	margin: 1rem 0;
+}
+
 .ts-block-property > .code-block {
 	margin: 0;
 	border-radius: 0;

@@ -120,7 +120,9 @@ export async function read_file(file) {
 				version_class = ' js-version';
 			}
 
-			if (language === 'js' || language === 'ts') {
+			if (language === 'ts') {
+				html = renderCodeToHTML(source, 'ts', { twoslash: false }, {}, highlighter);
+			} else if (language === 'js') {
 				try {
 					const injected = [];
 					if (source.includes('$app/') || source.includes('@sveltejs/kit/')) {
