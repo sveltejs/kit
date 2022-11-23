@@ -6,7 +6,7 @@ import {
 	normalize_path,
 	add_data_suffix
 } from '../../utils/url.js';
-import { find_anchor, get_base_uri, scroll_state } from './utils.js';
+import { find_anchor, get_base_uri, is_external_url, scroll_state } from './utils.js';
 import {
 	lock_fetch,
 	unlock_fetch,
@@ -231,6 +231,17 @@ export function create_client({ target, base }) {
 		};
 
 		return load_cache.promise;
+	}
+
+	/** @param {...string} pathnames */
+	async function prepare(...pathnames) {
+		const matching = routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)));
+
+		const promises = matching.map((r) => {
+			return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
+		});
+
+		await Promise.all(promises);
 	}
 
 	/**
@@ -1002,7 +1013,7 @@ export function create_client({ target, base }) {
 	 * @param {boolean} invalidating
 	 */
 	function get_navigation_intent(url, invalidating) {
-		if (is_external_url(url)) return;
+		if (is_external_url(url, base)) return;
 
 		const path = decode_pathname(url.pathname.slice(base.length) || '/');
 
@@ -1016,11 +1027,6 @@ export function create_client({ target, base }) {
 				return intent;
 			}
 		}
-	}
-
-	/** @param {URL} url */
-	function is_external_url(url) {
-		return url.origin !== location.origin || !url.pathname.startsWith(base);
 	}
 
 	/**
@@ -1179,22 +1185,32 @@ export function create_client({ target, base }) {
 	 * @param {Element} element
 	 * @param {number} level
 	 */
-	function preload_or_prepare(element, level) {
-		const { url, options, has } = find_anchor(element);
-		console.log(level <= options.preload, url?.href);
-		if (url && level <= options.preload && !is_external_url(url)) {
-			if (options.reload || has.rel_external || has.target || has.download) return;
+	function preload_and_prepare(element, level) {
+		const { url, options, has } = find_anchor(element, base);
+
+		const ignore =
+			!url ||
+			is_external_url(url, base) ||
+			options.reload ||
+			has.rel_external ||
+			has.target ||
+			has.download;
+
+		if (ignore) return;
+
+		if (level <= options.preload) {
 			preload(url);
+		} else if (level <= options.prepare) {
+			prepare(url.pathname);
 		}
 	}
 
-	const preload_observer = new IntersectionObserver(
+	const preload_and_prepare_observer = new IntersectionObserver(
 		(entries, observer) => {
 			for (const entry of entries) {
 				if (entry.isIntersecting) {
-					const { url, options, has } = find_anchor(entry.target);
-					// observer.unobserve(entry.target);
-					// if (url) preload(url);
+					prepare(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href).pathname);
+					observer.unobserve(entry.target);
 				}
 			}
 		},
@@ -1203,7 +1219,26 @@ export function create_client({ target, base }) {
 		}
 	);
 
-	function setup_preload() {
+	function update_preload_and_prepare() {
+		preload_and_prepare_observer.disconnect();
+
+		for (const a of target.querySelectorAll('a')) {
+			const { url, external, options } = find_anchor(a, base);
+
+			if (external) continue;
+
+			if (options.prepare === 3) {
+				// TODO use strings
+				preload_and_prepare_observer.observe(a);
+			}
+
+			if (options.prepare === 4) {
+				prepare(/** @type {URL} */ (url).pathname);
+			}
+		}
+	}
+
+	function setup_preload_and_prepare() {
 		/** @type {NodeJS.Timeout} */
 		let mousemove_timeout;
 
@@ -1212,13 +1247,16 @@ export function create_client({ target, base }) {
 
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
-				preload_or_prepare(target, 2);
+				preload_and_prepare(target, 2);
 			}, 20);
 		});
 
 		target.addEventListener('touchstart', (event) =>
-			preload_or_prepare(/** @type {Element} */ (event.composedPath()[0]), 1)
+			preload_and_prepare(/** @type {Element} */ (event.composedPath()[0]), 1)
 		);
+
+		callbacks.after_navigate.push(update_preload_and_prepare);
+		update_preload_and_prepare();
 	}
 
 	return {
@@ -1299,15 +1337,7 @@ export function create_client({ target, base }) {
 			await preload(url);
 		},
 
-		prepare: async (...pathnames) => {
-			const matching = routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)));
-
-			const promises = matching.map((r) => {
-				return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
-			});
-
-			await Promise.all(promises);
-		},
+		prepare,
 
 		apply_action: async (result) => {
 			if (result.type === 'error') {
@@ -1408,7 +1438,7 @@ export function create_client({ target, base }) {
 
 			// @ts-ignore this isn't supported everywhere yet
 			if (!navigator.connection?.saveData) {
-				setup_preload();
+				setup_preload_and_prepare();
 			}
 
 			/** @param {MouseEvent} event */
@@ -1420,7 +1450,8 @@ export function create_client({ target, base }) {
 				if (event.defaultPrevented) return;
 
 				const { a, url, options, has } = find_anchor(
-					/** @type {Element} */ (event.composedPath()[0])
+					/** @type {Element} */ (event.composedPath()[0]),
+					base
 				);
 				if (!a || !url) return;
 
@@ -1456,8 +1487,8 @@ export function create_client({ target, base }) {
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired
 				// Removing the hash does a full page navigation in the browser, so make sure a hash is present
-				const [base, hash] = url.href.split('#');
-				if (hash !== undefined && base === location.href.split('#')[0]) {
+				const [nonhash, hash] = url.href.split('#');
+				if (hash !== undefined && nonhash === location.href.split('#')[0]) {
 					// set this flag to distinguish between navigations triggered by
 					// clicking a hash link and those triggered by popstate
 					// TODO why not update history here directly?

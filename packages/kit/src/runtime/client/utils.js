@@ -27,16 +27,17 @@ const warned = new WeakSet();
 
 /**
  * @param {Element} element
- * @param {string | null} attribute
+ * @param {string} name
+ * @param {string | null} value
  * @param {string[]} options
  */
-function validate(element, attribute, options) {
+function validate(element, name, value, options) {
 	if (warned.has(element)) return;
-	if (attribute === null) return;
-	if (!options.includes(attribute)) {
+	if (value === null) return;
+	if (!options.includes(value)) {
 		warned.add(element);
 		console.error(
-			`Unexpected value for ${attribute} — should be one of ${options
+			`Unexpected value for ${name} — should be one of ${options
 				.map((option) => JSON.stringify(option))
 				.join(', ')}`,
 			element
@@ -54,8 +55,11 @@ const levels = {
 	off: -1
 };
 
-/** @param {Element} element */
-export function find_anchor(element) {
+/**
+ * @param {Element} element
+ * @param {string} base
+ */
+export function find_anchor(element, base) {
 	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
 	let a;
 
@@ -77,17 +81,26 @@ export function find_anchor(element) {
 			a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
 		}
 
-		if (preload === null) preload = element.getAttribute('data-sveltekit-preload');
-		if (prepare === null) prepare = element.getAttribute('data-sveltekit-prepare');
-		if (noscroll === null) noscroll = element.getAttribute('data-sveltekit-noscroll');
-		if (reload === null) reload = element.getAttribute('data-sveltekit-reload');
+		if (a) {
+			if (preload === null) preload = element.getAttribute('data-sveltekit-preload');
+			if (prepare === null) prepare = element.getAttribute('data-sveltekit-prepare');
+			if (noscroll === null) noscroll = element.getAttribute('data-sveltekit-noscroll');
+			if (reload === null) reload = element.getAttribute('data-sveltekit-reload');
 
-		if (__SVELTEKIT_DEV__) {
-			validate(element, preload, ['', 'off', 'tap', 'hover']);
-			validate(element, prepare, ['', 'off', 'tap', 'hover', 'viewport', 'page']);
+			if (__SVELTEKIT_DEV__) {
+				validate(element, 'data-sveltekit-preload', preload, ['', 'off', 'tap', 'hover']);
+				validate(element, 'data-sveltekit-preload', prepare, [
+					'',
+					'off',
+					'tap',
+					'hover',
+					'viewport',
+					'page'
+				]);
 
-			validate(element, noscroll, ['', 'off']);
-			validate(element, reload, ['', 'off']);
+				validate(element, 'data-sveltekit-preload', noscroll, ['', 'off']);
+				validate(element, 'data-sveltekit-preload', reload, ['', 'off']);
+			}
 		}
 
 		// @ts-expect-error handle shadow roots
@@ -99,22 +112,35 @@ export function find_anchor(element) {
 
 	const url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
 
+	const options = {
+		preload: levels[preload ?? 'off'],
+		prepare: levels[prepare ?? 'off'],
+		noscroll: noscroll === 'off' ? false : noscroll === '' ? true : null,
+		reload: reload === 'off' ? false : reload === '' ? true : null
+	};
+
+	const has = a
+		? {
+				rel_external: (a.getAttribute('rel') || '').split(/\s+/).includes('external'),
+				download: a.hasAttribute('download'),
+				target: !!(a instanceof SVGAElement ? a.target.baseVal : a.target)
+		  }
+		: {};
+
+	const external =
+		!url ||
+		is_external_url(url, base) ||
+		options.reload ||
+		has.rel_external ||
+		has.target ||
+		has.download;
+
 	return {
 		a,
 		url,
-		options: {
-			preload: levels[preload ?? 'off'],
-			prepare: levels[prepare ?? 'off'],
-			noscroll: noscroll === 'off' ? false : noscroll === '' ? true : null,
-			reload: reload === 'off' ? false : reload === '' ? true : null
-		},
-		has: a
-			? {
-					rel_external: (a.getAttribute('rel') || '').split(/\s+/).includes('external'),
-					download: a.hasAttribute('download'),
-					target: !!(a instanceof SVGAElement ? a.target.baseVal : a.target)
-			  }
-			: {}
+		options,
+		external,
+		has
 	};
 }
 
@@ -191,4 +217,12 @@ export function create_updated_store() {
 		subscribe,
 		check
 	};
+}
+
+/**
+ * @param {URL} url
+ * @param {string} base
+ */
+export function is_external_url(url, base) {
+	return url.origin !== location.origin || !url.pathname.startsWith(base);
 }
