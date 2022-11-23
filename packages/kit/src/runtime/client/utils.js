@@ -111,7 +111,12 @@ export function find_anchor(element, base) {
 		if (element.nodeType === 11) element = element.host;
 	}
 
-	const url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
+	/** @type {URL | undefined} */
+	let url;
+
+	try {
+		url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
+	} catch {}
 
 	const options = {
 		preload: levels[preload ?? 'off'],
