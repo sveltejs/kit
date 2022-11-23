@@ -1175,6 +1175,19 @@ export function create_client({ target, base }) {
 		});
 	}
 
+	/**
+	 * @param {Element} element
+	 * @param {number} level
+	 */
+	function preload_or_prepare(element, level) {
+		const { url, options, has } = find_anchor(element);
+		console.log(level <= options.preload, url?.href);
+		if (url && level <= options.preload && !is_external_url(url)) {
+			if (options.reload || has.rel_external || has.target || has.download) return;
+			preload(url);
+		}
+	}
+
 	const preload_observer = new IntersectionObserver(
 		(entries, observer) => {
 			for (const entry of entries) {
@@ -1191,27 +1204,20 @@ export function create_client({ target, base }) {
 	);
 
 	function setup_preload() {
-		/** @param {Element} element */
-		const trigger_prefetch = (element) => {
-			const { url, options, has } = find_anchor(element);
-			if (url && options.preload && !is_external_url(url)) {
-				if (options.reload || has.rel_external || has.target || has.download) return;
-				preload(url);
-			}
-		};
-
 		/** @type {NodeJS.Timeout} */
 		let mousemove_timeout;
 
 		target.addEventListener('mousemove', (event) => {
+			const target = /** @type {Element} */ (event.target);
+
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
-				trigger_prefetch(/** @type {Element} */ (event.target));
+				preload_or_prepare(target, 2);
 			}, 20);
 		});
 
 		target.addEventListener('touchstart', (event) =>
-			trigger_prefetch(/** @type {Element} */ (event.composedPath()[0]))
+			preload_or_prepare(/** @type {Element} */ (event.composedPath()[0]), 1)
 		);
 	}
 

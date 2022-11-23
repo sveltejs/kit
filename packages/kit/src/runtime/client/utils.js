@@ -44,6 +44,16 @@ function validate(element, attribute, options) {
 	}
 }
 
+/** @type {Record<string, number>} */
+const levels = {
+	tap: 1,
+	hover: 2,
+	viewport: 3,
+	page: 4,
+	'': 2,
+	off: -1
+};
+
 /** @param {Element} element */
 export function find_anchor(element) {
 	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
@@ -56,26 +66,35 @@ export function find_anchor(element) {
 	let preload = null;
 
 	/** @type {string | null} */
+	let prepare = null;
+
+	/** @type {string | null} */
 	let reload = null;
 
-	while (element) {
+	while (element !== document.documentElement) {
 		if (!a && element.nodeName.toUpperCase() === 'A') {
 			// SVG <a> elements have a lowercase name
 			a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
 		}
 
-		if (noscroll === null) noscroll = element.getAttribute('data-sveltekit-noscroll');
 		if (preload === null) preload = element.getAttribute('data-sveltekit-preload');
+		if (prepare === null) prepare = element.getAttribute('data-sveltekit-prepare');
+		if (noscroll === null) noscroll = element.getAttribute('data-sveltekit-noscroll');
 		if (reload === null) reload = element.getAttribute('data-sveltekit-reload');
 
 		if (__SVELTEKIT_DEV__) {
-			validate(element, preload, ['', 'off', 'tap', 'hover', 'viewport', 'page']);
+			validate(element, preload, ['', 'off', 'tap', 'hover']);
+			validate(element, prepare, ['', 'off', 'tap', 'hover', 'viewport', 'page']);
+
 			validate(element, noscroll, ['', 'off']);
 			validate(element, reload, ['', 'off']);
 		}
 
-		// @ts-expect-error
-		element = element.parentNode?.host ?? element.parentNode;
+		// @ts-expect-error handle shadow roots
+		element = element.assignedSlot ?? element.parentNode;
+
+		// @ts-expect-error handle shadow roots
+		if (element.nodeType === 11) element = element.host;
 	}
 
 	const url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
@@ -84,7 +103,8 @@ export function find_anchor(element) {
 		a,
 		url,
 		options: {
-			preload: preload === '' ? 'hover' : preload,
+			preload: levels[preload ?? 'off'],
+			prepare: levels[prepare ?? 'off'],
 			noscroll: noscroll === 'off' ? false : noscroll === '' ? true : null,
 			reload: reload === 'off' ? false : reload === '' ? true : null
 		},
