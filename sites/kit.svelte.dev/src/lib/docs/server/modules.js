@@ -12,7 +12,7 @@ export function render_modules(kind) {
 
 			return `### ${module.name}\n\n${module.comment}\n\n${module[kind]
 				.map((type) => {
-					let content = `#### ${type.name}\n\n${type.comment}\n\n<div class="ts-block">\n\n\`\`\`ts\n${type.snippet}\n\`\`\``;
+					let content = `#### ${type.name}\n\n${type.comment}\n\n<div class="ts-block">\n\n\`\`\`dts\n${type.snippet}\n\`\`\``;
 
 					if (type.parts?.length) {
 						content +=
@@ -25,7 +25,7 @@ export function render_modules(kind) {
 									if (part.returns) bullets.push(`- Returns ${part.returns}`);
 
 									return (
-										`<div class="ts-block-property">\n\n\`\`\`ts\n${part.snippet}\n\`\`\`\n\n` +
+										`<div class="ts-block-property">\n\n\`\`\`dts\n${part.snippet}\n\`\`\`\n\n` +
 										`<div class="ts-block-property-details">\n\n` +
 										bullets.join('\n') +
 										'\n\n' +

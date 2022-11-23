@@ -73,14 +73,6 @@ export async function read_file(file) {
 	const { content, sections } = parse({
 		body: generate_ts_from_js(body),
 		code: (source, language, current) => {
-			if (language === 'ts-open') {
-				return '<div class="ts-block">';
-			}
-
-			if (language === 'ts-close') {
-				return '</div>';
-			}
-
 			const hash = createHash('sha256');
 			hash.update(source + language + current);
 			const digest = hash.digest().toString('base64').replace(/\//g, '-');
@@ -120,9 +112,9 @@ export async function read_file(file) {
 				version_class = ' js-version';
 			}
 
-			if (language === 'ts') {
+			if (language === 'dts') {
 				html = renderCodeToHTML(source, 'ts', { twoslash: false }, {}, highlighter);
-			} else if (language === 'js') {
+			} else if (language === 'js' || language === 'ts') {
 				try {
 					const injected = [];
 					if (source.includes('$app/') || source.includes('@sveltejs/kit/')) {
