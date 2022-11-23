@@ -43,14 +43,14 @@ importers:
 
   packages/adapter-cloudflare:
     specifiers:
-      '@cloudflare/workers-types': ^3.18.0
+      '@cloudflare/workers-types': ^4.0.0
       '@types/node': ^16.11.68
       '@types/ws': ^8.5.3
       esbuild: ^0.15.12
       typescript: ^4.8.4
       worktop: 0.8.0-next.14
     dependencies:
-      '@cloudflare/workers-types': 3.18.0
+      '@cloudflare/workers-types': 4.20221111.0
       esbuild: 0.15.13
       worktop: 0.8.0-next.14
     devDependencies:
@@ -61,13 +61,13 @@ importers:
   packages/adapter-cloudflare-workers:
     specifiers:
       '@cloudflare/kv-asset-handler': ^0.2.0
-      '@cloudflare/workers-types': ^3.18.0
+      '@cloudflare/workers-types': ^4.0.0
       '@iarna/toml': ^2.2.5
       '@types/node': ^16.11.68
       esbuild: ^0.15.12
       typescript: ^4.8.4
     dependencies:
-      '@cloudflare/workers-types': 3.18.0
+      '@cloudflare/workers-types': 4.20221111.0
       '@iarna/toml': 2.2.5
       esbuild: 0.15.13
     devDependencies:
@@ -640,22 +640,6 @@ importers:
       uvu: 0.5.6
       vite: 3.2.3
 
-  packages/kit/test/prerendering/trailing-slash:
-    specifiers:
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.52.0
-      svelte-check: ^2.9.2
-      typescript: ^4.8.4
-      uvu: ^0.5.6
-      vite: ^3.2.1
-    devDependencies:
-      '@sveltejs/kit': link:../../..
-      svelte: 3.53.1
-      svelte-check: 2.9.2_svelte@3.53.1
-      typescript: 4.8.4
-      uvu: 0.5.6
-      vite: 3.2.3
-
   packages/migrate:
     specifiers:
       '@types/prompts': ^2.4.1
@@ -972,8 +956,8 @@ packages:
       mime: 3.0.0
     dev: true
 
-  /@cloudflare/workers-types/3.18.0:
-    resolution: {integrity: sha512-ehKOJVLMeR+tZkYhWEaLYQxl0TaIZu/kE86HF3/RidR8Xv5LuQxpbh+XXAoKVqsaphWLhIgBhgnlN5HGdheXSQ==}
+  /@cloudflare/workers-types/4.20221111.0:
+    resolution: {integrity: sha512-VHaqOBtYnfffxfNOQB4UiZoDT5pk07Y279nZ71w9M6WdAF8EfNp808GlUK0GVf4JZF4Dyu58bytm9gwbTQnhBg==}
     dev: false
 
   /@esbuild/android-arm/0.15.13:

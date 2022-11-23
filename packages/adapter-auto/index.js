@@ -5,9 +5,6 @@ import { adapters } from './adapters.js';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
 
-/** @type {import('./index').default} */
-let fn;
-
 /** @type {Record<string, (name: string) => string>} */
 const commands = {
 	npm: (name) => `npm install -D ${name}`,
@@ -46,72 +43,78 @@ async function import_from_cwd(name) {
 	return import(url);
 }
 
-for (const candidate of adapters) {
-	if (candidate.test()) {
-		/** @type {{ default: () => import('@sveltejs/kit').Adapter }} */
-		let module;
+/** @typedef {import('@sveltejs/kit').Adapter} Adapter */
 
-		try {
-			module = await import_from_cwd(candidate.module);
-		} catch (error) {
-			if (
-				error.code === 'ERR_MODULE_NOT_FOUND' &&
-				error.message.startsWith(`Cannot find package '${candidate.module}'`)
-			) {
-				const package_manager = detect_package_manager();
-				const command = commands[package_manager](candidate.module);
+/**
+ * @returns {Promise<Adapter | undefined>} The corresponding adapter for the current environment if found otherwise undefined
+ */
+async function get_adapter() {
+	const match = adapters.find((candidate) => candidate.test());
 
-				try {
-					console.log(`Installing ${candidate.module}...`);
+	if (!match) return;
 
-					execSync(command, {
-						stdio: 'inherit',
-						env: {
-							...process.env,
-							NODE_ENV: undefined
-						}
-					});
+	/** @type {{ default: () => Adapter }} */
+	let module;
 
-					module = await import_from_cwd(candidate.module);
+	try {
+		module = await import_from_cwd(match.module);
+	} catch (error) {
+		if (
+			error.code === 'ERR_MODULE_NOT_FOUND' &&
+			error.message.startsWith(`Cannot find package '${match.module}'`)
+		) {
+			const package_manager = detect_package_manager();
+			const command = commands[package_manager](match.module);
 
-					console.log(`Successfully installed ${candidate.module}.`);
-					console.warn(
-						`\nIf you plan on staying on this deployment platform, consider replacing @sveltejs/adapter-auto with ${candidate.module}. This will give you faster and more robust installs, and more control over deployment configuration.\n`
-					);
-				} catch (e) {
-					throw new Error(
-						`Could not install ${candidate.module}. Please install it yourself by adding it to your package.json's devDependencies and try building your project again.`
-					);
-				}
-			} else {
-				throw error;
+			try {
+				console.log(`Installing ${match.module}...`);
+
+				execSync(command, {
+					stdio: 'inherit',
+					env: {
+						...process.env,
+						NODE_ENV: undefined
+					}
+				});
+
+				module = await import_from_cwd(match.module);
+
+				console.log(`Successfully installed ${match.module}.`);
+				console.warn(
+					`\nIf you plan on staying on this deployment platform, consider replacing @sveltejs/adapter-auto with ${match.module}. This will give you faster and more robust installs, and more control over deployment configuration.\n`
+				);
+			} catch (e) {
+				throw new Error(
+					`Could not install ${match.module}. Please install it yourself by adding it to your package.json's devDependencies and try building your project again.`,
+					{ cause: e }
+				);
 			}
+		} else {
+			throw error;
 		}
-
-		fn = () => {
-			const adapter = module.default();
-			return {
-				...adapter,
-				adapt: (builder) => {
-					builder.log.info(`Detected environment: ${candidate.name}. Using ${candidate.module}`);
-					return adapter.adapt(builder);
-				}
-			};
-		};
-
-		break;
 	}
-}
 
-if (!fn) {
-	fn = () => ({
-		name: '@sveltejs/adapter-auto',
+	const adapter = module.default();
+
+	return {
+		...adapter,
 		adapt: (builder) => {
-			builder.log.warn(
-				'Could not detect a supported production environment. See https://kit.svelte.dev/docs/adapters to learn how to configure your app to run on the platform of your choosing'
-			);
+			builder.log.info(`Detected environment: ${match.name}. Using ${match.module}`);
+			return adapter.adapt(builder);
 		}
-	});
+	};
 }
 
-export default fn;
+/** @type {() => Adapter} */
+export default () => ({
+	name: '@sveltejs/adapter-auto',
+	adapt: async (builder) => {
+		const adapter = await get_adapter();
+
+		if (adapter) return adapter.adapt(builder);
+
+		builder.log.warn(
+			'Could not detect a supported production environment. See https://kit.svelte.dev/docs/adapters to learn how to configure your app to run on the platform of your choosing'
+		);
+	}
+});

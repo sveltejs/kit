@@ -113,7 +113,7 @@ export function posixify(str) {
 }
 
 /**
- * Like `path.join`, but posixified and with a leading ./ if necessary
+ * Like `path.join`, but posixified and with a leading `./` if necessary
  * @param {string[]} str
  */
 export function join_relative(...str) {
@@ -122,6 +122,17 @@ export function join_relative(...str) {
 		result = `./${result}`;
 	}
 	return result;
+}
+
+/**
+ * Like `path.relative`, but always posixified and with a leading `./` if necessary.
+ * Useful for JS imports so the path can safely reside inside of `node_modules`.
+ * Otherwise paths could be falsely interpreted as package paths.
+ * @param {string} from
+ * @param {string} to
+ */
+export function relative_path(from, to) {
+	return join_relative(path.relative(from, to));
 }
 
 /**

@@ -8,7 +8,7 @@ import {
 	prefetch,
 	prefetchRoutes
 } from '$app/navigation';
-import { CSRPageNode, CSRPageNodeLoader, CSRRoute, Uses } from 'types';
+import { CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
 
 export interface Client {
 	// public API, exposed via $app/navigation
@@ -67,12 +67,14 @@ export type BranchNode = {
 	server: DataNode | null;
 	shared: DataNode | null;
 	data: Record<string, any> | null;
+	slash?: TrailingSlash;
 };
 
 export interface DataNode {
 	type: 'data';
 	data: Record<string, any> | null;
 	uses: Uses;
+	slash?: TrailingSlash;
 }
 
 export interface NavigationState {

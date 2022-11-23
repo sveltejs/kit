@@ -817,6 +817,8 @@ test.describe('Load', () => {
 
 		if (javaScriptEnabled) {
 			expect(headers).toEqual({
+				accept: '*/*',
+				'accept-language': 'en-US',
 				// the referer will be the previous page in the client-side
 				// navigation case
 				referer: `${baseURL}/load`,
@@ -827,7 +829,10 @@ test.describe('Load', () => {
 				connection: 'keep-alive'
 			});
 		} else {
-			expect(headers).toEqual({});
+			expect(headers).toEqual({
+				accept: '*/*',
+				'accept-language': 'en-US'
+			});
 		}
 	});
 
@@ -1048,6 +1053,13 @@ test.describe('Page options', () => {
 	test('transformPageChunk can change the html output', async ({ page }) => {
 		await page.goto('/transform-page-chunk');
 		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
+	});
+});
+
+test.describe('$app/environment', () => {
+	test('includes version', async ({ page }) => {
+		await page.goto('/app-environment');
+		expect(await page.textContent('h1')).toBe('TEST_VERSION');
 	});
 });
 
@@ -1283,28 +1295,32 @@ test.describe('Redirects', () => {
 
 		await clicknav('[href="/redirect/missing-status/a"]');
 
+		const message = process.env.DEV || !javaScriptEnabled ? 'Invalid status code' : 'Redirect loop';
+
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/a`);
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Invalid status code"'
+			`This is your custom error page saying: "${message}"`
 		);
 
 		if (!javaScriptEnabled) {
 			// handleError is not invoked for client-side navigation
 			const lines = read_errors('/redirect/missing-status/a').stack.split('\n');
-			expect(lines[0]).toBe('Error: Invalid status code');
+			expect(lines[0]).toBe(`Error: ${message}`);
 		}
 	});
 
-	test('errors on invalid status', async ({ baseURL, page, clicknav }) => {
+	test('errors on invalid status', async ({ baseURL, page, clicknav, javaScriptEnabled }) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/missing-status/b"]');
 
+		const message = process.env.DEV || !javaScriptEnabled ? 'Invalid status code' : 'Redirect loop';
+
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/b`);
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Invalid status code"'
+			`This is your custom error page saying: "${message}"`
 		);
 	});
 

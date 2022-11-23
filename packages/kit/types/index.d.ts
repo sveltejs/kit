@@ -18,7 +18,6 @@ import {
 	UniqueInterface
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
-import { HttpError, Redirect } from '../src/runtime/control.js';
 
 export { PrerenderOption } from './private.js';
 
@@ -52,13 +51,6 @@ type OptionalUnion<
 	U extends Record<string, any>, // not unknown, else interfaces don't satisfy this constraint
 	A extends keyof U = U extends U ? keyof U : never
 > = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
-
-// Needs to be here, else ActionData will be resolved to unknown - probably because of "d.ts file imports .js file" in combination with allowJs
-export interface ValidationError<T extends Record<string, unknown> | undefined = undefined>
-	extends UniqueInterface {
-	status: number;
-	data: T;
-}
 
 type UnpackValidationError<T> = T extends ValidationError<infer X>
 	? X
@@ -757,6 +749,16 @@ export function error(
 ): HttpError;
 
 /**
+ * The object returned by the `error` function
+ */
+export interface HttpError {
+	/** The HTTP status code */
+	status: number;
+	/** The error message */
+	body: App.Error;
+}
+
+/**
  * Creates a `Redirect` object. If thrown during request handling, SvelteKit will
  * return a redirect response.
  */
@@ -764,6 +766,16 @@ export function redirect(
 	status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308,
 	location: string
 ): Redirect;
+
+/**
+ * The object returned by the `redirect` function
+ */
+export interface Redirect {
+	/** The HTTP status code */
+	status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
+	/** The location to redirect to */
+	location: string;
+}
 
 /**
  * Generates a JSON `Response` object from the supplied data.
@@ -777,3 +789,12 @@ export function invalid<T extends Record<string, unknown> | undefined>(
 	status: number,
 	data?: T
 ): ValidationError<T>;
+
+/**
+ * The object returned by the `invalid` function
+ */
+export interface ValidationError<T extends Record<string, unknown> | undefined = undefined>
+	extends UniqueInterface {
+	status: number;
+	data: T;
+}

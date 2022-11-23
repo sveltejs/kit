@@ -63,7 +63,8 @@ export async function load_server_data({ event, state, node, parent }) {
 	return {
 		type: 'data',
 		data,
-		uses
+		uses,
+		slash: node.server.trailingSlash
 	};
 }
 

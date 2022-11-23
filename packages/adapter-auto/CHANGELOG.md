@@ -1,5 +1,11 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.89
+
+### Patch Changes
+
+- defer adapter installation until actually needed ([#7739](https://github.com/sveltejs/kit/pull/7739))
+
 ## 1.0.0-next.88
 
 ### Patch Changes

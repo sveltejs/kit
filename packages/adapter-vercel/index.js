@@ -4,83 +4,6 @@ import { fileURLToPath } from 'url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
-// rules for clean URLs and trailing slash handling,
-// generated with @vercel/routing-utils
-const redirects = {
-	always: [
-		{
-			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
-			headers: {
-				Location: '/$1/'
-			},
-			status: 308
-		},
-		{
-			src: '^/(.*)\\.html/?$',
-			headers: {
-				Location: '/$1/'
-			},
-			status: 308
-		},
-		{
-			src: '^/\\.well-known(?:/.*)?$'
-		},
-		{
-			src: '^/((?:[^/]+/)*[^/\\.]+)$',
-			headers: {
-				Location: '/$1/'
-			},
-			status: 308
-		},
-		{
-			src: '^/((?:[^/]+/)*[^/]+\\.\\w+)/$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		}
-	],
-	never: [
-		{
-			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		},
-		{
-			src: '^/(.*)\\.html/?$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		},
-		{
-			src: '^/(.*)/$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		}
-	],
-	ignore: [
-		{
-			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		},
-		{
-			src: '^/(.*)\\.html/?$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		}
-	]
-};
-
 /** @type {import('.').default} **/
 export default function ({ external = [], edge, split } = {}) {
 	return {
@@ -90,9 +13,9 @@ export default function ({ external = [], edge, split } = {}) {
 			const node_version = get_node_version();
 
 			const dir = '.vercel/output';
-
 			const tmp = builder.getBuildDirectory('vercel-tmp');
 
+			builder.rimraf(dir);
 			builder.rimraf(tmp);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -102,20 +25,37 @@ export default function ({ external = [], edge, split } = {}) {
 				functions: `${dir}/functions`
 			};
 
-			const prerendered_redirects = Array.from(
-				builder.prerendered.redirects,
-				([src, redirect]) => ({
+			/** @type {any[]} */
+			const prerendered_redirects = [];
+
+			/** @type {Record<string, { path: string }>} */
+			const overrides = {};
+
+			for (const [src, redirect] of builder.prerendered.redirects) {
+				prerendered_redirects.push({
 					src,
 					headers: {
 						Location: redirect.location
 					},
 					status: redirect.status
-				})
-			);
+				});
+			}
+
+			for (const [path, page] of builder.prerendered.pages) {
+				if (path.endsWith('/') && path !== '/') {
+					prerendered_redirects.push(
+						{ src: path, dest: path.slice(0, -1) },
+						{ src: path.slice(0, -1), status: 308, headers: { Location: path } }
+					);
+
+					overrides[page.file] = { path: path.slice(1, -1) };
+				} else {
+					overrides[page.file] = { path: path.slice(1) };
+				}
+			}
 
 			/** @type {any[]} */
 			const routes = [
-				...redirects[builder.config.kit.trailingSlash],
 				...prerendered_redirects,
 				{
 					src: `/${builder.getAppPath()}/.+`,
@@ -227,7 +167,7 @@ export default function ({ external = [], edge, split } = {}) {
 
 							const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
 
-							await generate_function(route.id || 'index', src, entry.generateManifest);
+							await generate_function(route.id.slice(1) || 'index', src, entry.generateManifest);
 						}
 					};
 				});
@@ -242,19 +182,17 @@ export default function ({ external = [], edge, split } = {}) {
 
 			builder.log.minor('Writing routes...');
 
-			/** @type {Record<string, { path: string }>} */
-			const overrides = {};
-			builder.prerendered.pages.forEach((page, src) => {
-				overrides[page.file] = { path: src.slice(1) };
-			});
-
 			write(
 				`${dir}/config.json`,
-				JSON.stringify({
-					version: 3,
-					routes,
-					overrides
-				})
+				JSON.stringify(
+					{
+						version: 3,
+						routes,
+						overrides
+					},
+					null,
+					'  '
+				)
 			);
 		}
 	};

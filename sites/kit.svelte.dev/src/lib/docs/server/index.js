@@ -124,7 +124,7 @@ export async function read_file(file) {
 					}
 					if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
 						const params = parse_route_id(options.file || `+page.${language}`)
-							.names.map((name) => `${name}: string`)
+							.params.map((param) => `${param.name}: string`)
 							.join(', ');
 
 						injected.push(
@@ -371,6 +371,10 @@ export function generate_ts_from_js(markdown) {
 		.replaceAll(/```js\n([\s\S]+?)\n```/g, (match, code) => {
 			if (!code.includes('/// file:')) {
 				// No named file -> assume that the code is not meant to be shown in two versions
+				return match;
+			}
+			if (code.includes('/// file: svelte.config.js')) {
+				// svelte.config.js has no TS equivalent
 				return match;
 			}
 

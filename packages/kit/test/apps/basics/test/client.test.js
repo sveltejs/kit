@@ -791,6 +791,27 @@ test.describe('Routing', () => {
 			await close();
 		}
 	});
+
+	test('ignores popstate events from outside the router', async ({ page }) => {
+		await page.goto('/routing/external-popstate');
+		expect(await page.textContent('h1')).toBe('hello');
+
+		await page.click('button');
+		expect(await page.textContent('h1')).toBe('hello');
+
+		await page.goBack();
+		expect(await page.textContent('h1')).toBe('hello');
+
+		await page.goForward();
+		expect(await page.textContent('h1')).toBe('hello');
+	});
+
+	test('ignores clicks outside the app target', async ({ page }) => {
+		await page.goto('/routing/link-outside-app-target/source');
+
+		await page.click('[href="/routing/link-outside-app-target/target"]');
+		expect(await page.textContent('h1')).toBe('target: 0');
+	});
 });
 
 test.describe('Shadow DOM', () => {

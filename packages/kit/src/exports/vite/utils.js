@@ -19,7 +19,14 @@ export async function get_vite_config(config, config_env) {
 	if (!loaded) {
 		throw new Error('Could not load Vite config');
 	}
-	return { ...loaded.config, mode: config_env.mode };
+	return {
+		...loaded.config,
+		// CLI opts
+		mode: config_env.mode,
+		logLevel: config.logLevel,
+		clearScreen: config.clearScreen,
+		optimizeDeps: { force: config.optimizeDeps.force }
+	};
 }
 
 /**

@@ -1,5 +1,75 @@
 # @sveltejs/kit
 
+## 1.0.0-next.559
+
+### Patch Changes
+
+- Roll over non-matching optional parameters instead of 404ing ([#7753](https://github.com/sveltejs/kit/pull/7753))
+
+- [fix] enable Vite's modulePreload.polyfill ([#7770](https://github.com/sveltejs/kit/pull/7770))
+
+## 1.0.0-next.558
+
+### Patch Changes
+
+- [breaking] Disallow error status codes outside 400-599 ([#7767](https://github.com/sveltejs/kit/pull/7767))
+
+- [breaking] Make client-side router ignore links outside %sveltekit.body% ([#7766](https://github.com/sveltejs/kit/pull/7766))
+
+## 1.0.0-next.557
+
+### Patch Changes
+
+- external fetch calls: ensure serialized cookie values are url-encoded [#7736] ([#7736](https://github.com/sveltejs/kit/pull/7736))
+
+## 1.0.0-next.556
+
+### Patch Changes
+
+- [fix] preserve Vite CLI opts ([#7749](https://github.com/sveltejs/kit/pull/7749))
+
+## 1.0.0-next.555
+
+### Patch Changes
+
+- Made `config.kit.outDir` able to be located in `node_modules` ([#7707](https://github.com/sveltejs/kit/pull/7707))
+
+## 1.0.0-next.554
+
+### Patch Changes
+
+- create stronger types for dynamically generated env modules ([#7735](https://github.com/sveltejs/kit/pull/7735))
+
+- [breaking] Make `trailingSlash` a page option, rather than configuration ([#7719](https://github.com/sveltejs/kit/pull/7719))
+
+- Handle hash links with non-ASCII characters when prerendering ([#7729](https://github.com/sveltejs/kit/pull/7729))
+
+- Ignore popstate events from outside the router ([#7721](https://github.com/sveltejs/kit/pull/7721))
+
+## 1.0.0-next.553
+
+### Patch Changes
+
+- Prevent Vite from nuking logs on startup ([#7724](https://github.com/sveltejs/kit/pull/7724))
+
+## 1.0.0-next.552
+
+### Patch Changes
+
+- Don't hardcode version in client bundle ([#7694](https://github.com/sveltejs/kit/pull/7694))
+
+- Allow .d.ts files to have a + prefix ([#7682](https://github.com/sveltejs/kit/pull/7682))
+
+- Expose version from `$app/environment` ([#7689](https://github.com/sveltejs/kit/pull/7689))
+
+- [fix] export HttpError/Redirect interface ([#7701](https://github.com/sveltejs/kit/pull/7701))
+
+- [fix] don't preload fonts by default ([#7704](https://github.com/sveltejs/kit/pull/7704))
+
+- Always set `Accept` and `Accept-Language` headers when making a self-request ([#7722](https://github.com/sveltejs/kit/pull/7722))
+
+- [fix] adjust interfaces to fix type errors ([#7718](https://github.com/sveltejs/kit/pull/7718))
+
 ## 1.0.0-next.551
 
 ### Patch Changes

@@ -1,7 +1,8 @@
 import { writable } from 'svelte/store';
 import { assets } from '../paths.js';
+import { version } from '../env.js';
 
-/* global __SVELTEKIT_APP_VERSION__, __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
+/* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
 
 /** @param {HTMLDocument} doc */
 export function get_base_uri(doc) {
@@ -143,8 +144,8 @@ export function create_updated_store() {
 		});
 
 		if (res.ok) {
-			const { version } = await res.json();
-			const updated = version !== __SVELTEKIT_APP_VERSION__;
+			const data = await res.json();
+			const updated = data.version !== version;
 
 			if (updated) {
 				set(true);

@@ -156,9 +156,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						return {
 							id: route.id,
 							pattern: route.pattern,
-							names: route.names,
-							types: route.types,
-							optional: route.optional,
+							params: route.params,
 							page: route.page,
 							endpoint: endpoint
 								? async () => {
@@ -270,6 +268,11 @@ export async function dev(vite, vite_config, svelte_config) {
 			res.end(fix_stack_trace(error));
 		}
 	});
+
+	// set `import { version } from '$app/environment'`
+	(await vite.ssrLoadModule(`${runtime_prefix}/env.js`)).set_version(
+		svelte_config.kit.version.name
+	);
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -475,7 +478,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						service_worker:
 							svelte_config.kit.serviceWorker.register &&
 							!!resolve_entry(svelte_config.kit.files.serviceWorker),
-						trailing_slash: svelte_config.kit.trailingSlash
+						version: svelte_config.kit.version.name
 					},
 					{
 						getClientAddress: () => {

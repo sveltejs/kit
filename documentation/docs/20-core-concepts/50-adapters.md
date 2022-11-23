@@ -54,7 +54,7 @@ Most adapters will generate static HTML for any [prerenderable](/docs/page-optio
 
 You can also use `adapter-static` to generate single-page apps (SPAs) by specifying a [fallback page and disabling SSR](https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode).
 
-> You must ensure [`trailingSlash`](/docs/configuration#trailingslash) is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+> You must ensure [`trailingSlash`](/docs/page-options#trailingslash) is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
 
 #### Platform-specific context
 
