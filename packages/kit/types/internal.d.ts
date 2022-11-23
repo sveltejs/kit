@@ -29,11 +29,11 @@ export interface ServerModule {
 	Server: typeof InternalServer;
 
 	override(options: {
+		building: boolean;
 		paths: {
 			base: string;
 			assets: string;
 		};
-		prerendering: boolean;
 		protocol?: 'http' | 'https';
 		read(file: string): Buffer;
 	}): void;
