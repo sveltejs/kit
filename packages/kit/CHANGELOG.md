@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.559
+
+### Patch Changes
+
+- Roll over non-matching optional parameters instead of 404ing ([#7753](https://github.com/sveltejs/kit/pull/7753))
+
+- [fix] enable Vite's modulePreload.polyfill ([#7770](https://github.com/sveltejs/kit/pull/7770))
+
 ## 1.0.0-next.558
 
 ### Patch Changes
