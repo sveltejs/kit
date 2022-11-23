@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.560
+
+### Patch Changes
+
+- [breaking] Rename `prerendering` to `building`, remove `config.kit.prerender.enabled` ([#7762](https://github.com/sveltejs/kit/pull/7762))
+
 ## 1.0.0-next.559
 
 ### Patch Changes
