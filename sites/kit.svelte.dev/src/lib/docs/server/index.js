@@ -58,7 +58,10 @@ modules.forEach((module) => {
  * @param {string} file
  */
 export async function read_file(file) {
-	const match = /\d{2}-(.+)\.md/.exec(file.split(path.sep).pop());
+	const match = /\d{2}-(.+)\.md/.exec(
+		// Just Windows things
+		file.replace(/\\/g, '/').split('/').pop()
+	);
 	if (!match) return null;
 
 	const markdown = fs
