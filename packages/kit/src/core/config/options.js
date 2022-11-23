@@ -238,7 +238,10 @@ const options = object(
 					(keypath) =>
 						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
 				),
-				enabled: boolean(true),
+				enabled: error(
+					(keypath) =>
+						`${keypath} has been removed. You can wrap any code that should not be executed during build in a \`if (!building) {...}\` block. See the discussion for more information: https://github.com/sveltejs/kit/discussions/7716`
+				),
 				entries: validate(['*'], (input, keypath) => {
 					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
 						throw new Error(`${keypath} must be an array of strings`);

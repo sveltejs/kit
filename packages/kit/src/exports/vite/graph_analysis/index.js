@@ -22,7 +22,7 @@ export function is_illegal(id, dirs) {
 /**
  * Creates a guard that checks that no id imports a module that is not allowed to be imported into client-side code.
  * @param {import('rollup').PluginContext} context
- * @param {{ cwd: string, lib: string }} paths
+ * @param {{ cwd: string; lib: string }} paths
  */
 export function module_guard(context, { cwd, lib }) {
 	/** @type {Set<string>} */
@@ -37,7 +37,7 @@ export function module_guard(context, { cwd, lib }) {
 
 	/**
 	 * @param {string} id
-	 * @param {Array<{ id: string, dynamic: boolean }>} chain
+	 * @param {Array<{ id: string; dynamic: boolean }>} chain
 	 */
 	function follow(id, chain) {
 		if (seen.has(id)) return;
@@ -51,8 +51,8 @@ export function module_guard(context, { cwd, lib }) {
 				chain.map(({ id, dynamic }, i) => {
 					id = normalize_id(id, lib, cwd);
 
-					return `${repeat(' ', i * 2)}- ${id} ${dynamic ? 'dynamically imports' : 'imports'}\n`;
-				}) + `${repeat(' ', chain.length)}- ${id}`;
+					return `${' '.repeat(i * 2)}- ${id} ${dynamic ? 'dynamically imports' : 'imports'}\n`;
+				}) + `${' '.repeat(chain.length)}- ${id}`;
 
 			const message = `Cannot import ${id} into client-side code:\n${pyramid}`;
 
@@ -96,12 +96,4 @@ export function normalize_id(id, lib, cwd) {
 	}
 
 	return posixify(id);
-}
-
-/**
- * @param {string} str
- * @param {number} times
- */
-function repeat(str, times) {
-	return new Array(times + 1).join(str);
 }
