@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.561
+
+### Patch Changes
+
+- Upgrade vite-plugin-svelte to ^1.3.1 ([#7760](https://github.com/sveltejs/kit/pull/7760))
+
 ## 1.0.0-next.560
 
 ### Patch Changes
