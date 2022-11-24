@@ -127,6 +127,7 @@ function stringify_type_element(member, depth = 1) {
 	const children = [];
 
 	let snippet = member.getText();
+
 	for (let i = 0; i < depth; i += 1) {
 		snippet = snippet.replace(/^\t/gm, '');
 	}
@@ -180,7 +181,11 @@ function stringify_type_element(member, depth = 1) {
 		`<div class="ts-block-property-details">\n\n` +
 		bullets.join('\n') +
 		'\n\n' +
-		(doc?.comment ?? '') +
+		(doc?.comment ?? '')
+			.replace(/\/\/\/ type: (.+)/g, '/** @type {$1} */')
+			.replace(/^(  )+/gm, (match, spaces) => {
+				return '\t'.repeat(match.length / 2);
+			}) +
 		child_block +
 		'\n</div></div>'
 	);

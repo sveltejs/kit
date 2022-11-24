@@ -232,22 +232,22 @@ export interface KitConfig {
 	 *
 	 * ```js
 	 * /// file: svelte.config.js
-	 * /** @type {import('@sveltejs/kit').Config} *\/
+	 * /// type: import('@sveltejs/kit').Config
 	 * const config = {
-	 * 	kit: {
-	 * 		alias: {
-	 * 			// this will match a file
-	 * 			'my-file': 'path/to/my-file.js',
+	 *   kit: {
+	 *     alias: {
+	 *       // this will match a file
+	 *       'my-file': 'path/to/my-file.js',
 	 *
-	 * 			// this will match a directory and its contents
-	 * 			// (`my-directory/x` resolves to `path/to/my-directory/x`)
-	 * 			'my-directory': 'path/to/my-directory',
+	 *       // this will match a directory and its contents
+	 *       // (`my-directory/x` resolves to `path/to/my-directory/x`)
+	 *       'my-directory': 'path/to/my-directory',
 	 *
-	 * 			// an alias ending /* will only match
-	 * 			// the contents of a directory, not the directory itself
-	 * 			'my-directory/*': 'path/to/my-directory/*'
-	 * 		}
-	 * 	}
+	 *       // an alias ending /* will only match
+	 *       // the contents of a directory, not the directory itself
+	 *       'my-directory/*': 'path/to/my-directory/*'
+	 *     }
+	 *   }
 	 * };
 	 * ```
 	 *
@@ -271,18 +271,18 @@ export interface KitConfig {
 	 *
 	 * ```js
 	 * /// file: svelte.config.js
-	 * /** @type {import('@sveltejs/kit').Config} *\/
+	 * /// type: import('@sveltejs/kit').Config
 	 * const config = {
-	 * 	kit: {
-	 * 		csp: {
-	 * 			directives: {
-	 * 				'script-src': ['self']
-	 * 			},
-	 * 			reportOnly: {
-	 * 				'script-src': ['self']
-	 * 			}
-	 * 		}
-	 * 	}
+	 *   kit: {
+	 *     csp: {
+	 *       directives: {
+	 *         'script-src': ['self']
+	 *       },
+	 *       reportOnly: {
+	 *         'script-src': ['self']
+	 *       }
+	 *     }
+	 *   }
 	 * };
 	 *
 	 * export default config;
@@ -417,22 +417,22 @@ export interface KitConfig {
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `status`, `path`, `referrer`, `referenceType` and `message` properties. If you `throw` from this function, the build will fail
 		 *
 		 * ```js
-		 * /** @type {import('@sveltejs/kit').Config} *\/
+		 * /// type: import('@sveltejs/kit').Config
 		 * const config = {
-		 * 	kit: {
-		 * 		prerender: {
-		 * 			handleHttpError: ({ path, referrer, message }) => {
-		 * 				// ignore deliberate link to shiny 404 page
-		 * 				if (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {
-		 * 					return;
-		 * 				}
+		 *   kit: {
+		 *     prerender: {
+		 *       handleHttpError: ({ path, referrer, message }) => {
+		 *         // ignore deliberate link to shiny 404 page
+		 *         if (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {
+		 *           return;
+		 *         }
 		 *
-		 * 				// otherwise fail the build
-		 * 					throw new Error(message);
-		 * 				}
-		 * 			}
-		 * 		}
-		 * 	}
+		 *         // otherwise fail the build
+		 *           throw new Error(message);
+		 *         }
+		 *       }
+		 *     }
+		 *   }
 		 * };
 		 * ```
 		 */
