@@ -122,23 +122,30 @@ function get_types(code, statements) {
 /**
  * @param {ts.TypeElement} member
  */
-function stringify_type_element(member) {
+function stringify_type_element(member, depth = 1) {
 	// @ts-ignore
 	const doc = member.jsDoc?.[0];
 
 	/** @type {string} */
 	const children = [];
 
-	let snippet = member.getText().replace(/^\t/gm, '');
+	let snippet = member.getText();
+	for (let i = 0; i < depth; i += 1) {
+		snippet = snippet.replace(/^\t/gm, '');
+	}
 
-	if (ts.isPropertySignature(member) && ts.isTypeLiteralNode(member.type)) {
+	if (
+		ts.isPropertySignature(member) &&
+		ts.isTypeLiteralNode(member.type) &&
+		member.type.members.some((member) => member.jsDoc?.[0].comment)
+	) {
 		let a = 0;
 		while (snippet[a] !== '{') a += 1;
 
 		snippet = snippet.slice(0, a + 1) + '/*…*/}';
 
 		for (const child of member.type.members) {
-			children.push(stringify_type_element(child));
+			children.push(stringify_type_element(child, depth + 1));
 		}
 	}
 
@@ -166,14 +173,18 @@ function stringify_type_element(member) {
 		}
 	}
 
+	const child_block =
+		children.length > 0
+			? `\n\n<div class="ts-block-property-children">${children.join('\n')}</div>`
+			: '';
+
 	return (
 		`<div class="ts-block-property">${fence(snippet)}` +
 		`<div class="ts-block-property-details">\n\n` +
 		bullets.join('\n') +
 		'\n\n' +
 		(doc?.comment ?? '') +
-		'\n\n' +
-		children.join('\n\n') +
+		child_block +
 		'\n</div></div>'
 	);
 }

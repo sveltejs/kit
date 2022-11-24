@@ -352,6 +352,14 @@ pre.language-diff code {
 	padding: 0 1rem;
 }
 
+.ts-block-property-children {
+	margin: 1rem -1rem 2rem 1rem;
+}
+
+.ts-block-property-children .ts-block-property > .code-block {
+	border: none;
+}
+
 /* we need to have a come-to-jesus moment about the site-kit css */
 .listify ul > li::before {
 	margin-top: 0.8rem !important;
