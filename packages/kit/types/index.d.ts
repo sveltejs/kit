@@ -22,7 +22,14 @@ import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 export { PrerenderOption } from './private.js';
 
 export interface Adapter {
+	/**
+	 * Name of the adapter. Should be unique, ideally corresponds to the package name.
+	 */
 	name: string;
+	/**
+	 * Function that is called to adapt the app to the target platform.
+	 * @param builder An object provided by SvelteKit that contains methods for adapting the app
+	 */
 	adapt(builder: Builder): MaybePromise<void>;
 }
 
@@ -58,12 +65,21 @@ type UnpackValidationError<T> = T extends ValidationError<infer X>
 	? undefined // needs to be undefined, because void will corrupt union type
 	: T;
 
+/**
+ * This object is passed to the `adapt` function of adapters.
+ * It contains various methods and properties that are useful for adapting the app.
+ */
 export interface Builder {
+	/** Logger to output information of various log levels */
 	log: Logger;
+	/** Helper to remove given directory and all its contents */
 	rimraf(dir: string): void;
+	/** Helper to create given directory */
 	mkdirp(dir: string): void;
 
+	/** The fully resolved `svelte.config.js` */
 	config: ValidatedConfig;
+	/** Information about the prerendered files, if any */
 	prerendered: Prerendered;
 
 	/**
@@ -72,11 +88,22 @@ export interface Builder {
 	 */
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
+	/**
+	 * Generates the data used to write the server-side `manifest.js` file.
+	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
+	 */
 	generateManifest(opts: { relativePath: string; format?: 'esm' | 'cjs' }): string;
 
+	/**
+	 * Returns a fully resolved path to the build directory where SvelteKit wrote the files
+	 * @param name path to the file, relative to the build directory
+	 */
 	getBuildDirectory(name: string): string;
+	/** Where the build output for the client is stored */
 	getClientDirectory(): string;
+	/** Where the build output for the server is stored */
 	getServerDirectory(): string;
+	/** Where assets are stored */
 	getStaticDirectory(): string;
 	/** The application path including any configured base path */
 	getAppPath(): string;
@@ -125,9 +152,13 @@ export interface Builder {
 }
 
 export interface Config {
+	/** Svelte compiler options */
 	compilerOptions?: CompileOptions;
+	/** List of file extensions which should be treated as Svelte files */
 	extensions?: string[];
+	/** SvelteKit options */
 	kit?: KitConfig;
+	/** @sveltejs/package options */
 	package?: {
 		source?: string;
 		dir?: string;
@@ -135,6 +166,7 @@ export interface Config {
 		exports?(filepath: string): boolean;
 		files?(filepath: string): boolean;
 	};
+	/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
 	preprocess?: any;
 	[key: string]: any;
 }
@@ -478,6 +510,10 @@ export interface Load<
 	(event: LoadEvent<Params, InputData, ParentData, RouteId>): MaybePromise<OutputData>;
 }
 
+/**
+ * The generic form of `PageLoadEvent` and `LayoutLoadEvent`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
+ * rather than using `LoadEvent` directly.
+ */
 export interface LoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	Data extends Record<string, unknown> | null = Record<string, any> | null,
@@ -595,9 +631,22 @@ export interface NavigationEvent<
 	url: URL;
 }
 
+/**
+ * Information about the target of a specific navigation.
+ */
 export interface NavigationTarget {
+	/**
+	 * Parameters of the target page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
+	 * Is `null` if the target is not part of the SvelteKit app (could not be resolved to a route).
+	 */
 	params: Record<string, string> | null;
+	/**
+	 * Info about the target route
+	 */
 	route: { id: string | null };
+	/**
+	 * The URL that is navigated to
+	 */
 	url: URL;
 }
 
@@ -704,6 +753,9 @@ export interface Page<
 	form: any;
 }
 
+/**
+ * The shape of a param matcher. See [matching](https://kit.svelte.dev/docs/advanced-routing#matching) for more info.
+ */
 export interface ParamMatcher {
 	(param: string): boolean;
 }
@@ -913,6 +965,10 @@ export interface ServerLoadEvent<
 	depends(...deps: string[]): void;
 }
 
+/**
+ * Shape of a form action method that is part of `export const actions = {..}` in `+page.server.js`.
+ * See [form actions](https://kit-svelte-d4b3r0pff-svelte.vercel.app/docs/form-actions) for more information.
+ */
 export interface Action<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
@@ -921,6 +977,10 @@ export interface Action<
 	(event: RequestEvent<Params, RouteId>): MaybePromise<OutputData>;
 }
 
+/**
+ * Shape of the `export const actions = {..}` object in `+page.server.js`.
+ * See [form actions](https://kit-svelte-d4b3r0pff-svelte.vercel.app/docs/form-actions) for more information.
+ */
 export type Actions<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
