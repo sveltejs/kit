@@ -5,11 +5,11 @@ import prettier from 'prettier';
 import { mkdirp } from '../../../../packages/kit/src/utils/filesystem.js';
 import { fileURLToPath } from 'url';
 
-/** @typedef {{ snippet: string; params: Array<[string, string]>; default: string; returns: string; content: string}} Part */
+/** @typedef {{ snippet: string; params: Array<[string, string]>; default: string; returns: string; content: string; }} Part */
 
-/** @typedef {{ name: string, comment: string, snippet: string; parts: Part[] }} Extracted */
+/** @typedef {{ name: string; comment: string; markdown: string; }} Extracted */
 
-/** @type {Array<{ name: string, comment: string, exports: Extracted[], types: Extracted[], exempt?: boolean }>} */
+/** @type {Array<{ name: string; comment: string; exports: Extracted[]; types: Extracted[]; exempt?: boolean; }>} */
 const modules = [];
 
 /**
@@ -131,12 +131,33 @@ function get_types(code, statements) {
 					.replace(/\s*(\/\*…\*\/)\s*/g, '/*…*/')
 					.trim();
 
+				let markdown =
+					`<div class="ts-block">\n\n\`\`\`dts\n${snippet}\n\`\`\`\n\n` +
+					parts
+						.map((part) => {
+							const bullets = part.params.map(([name, desc]) => `- \`${name}\` ${desc}`);
+
+							if (part.default) bullets.push(`- Default \`${part.default}\``);
+							if (part.returns) bullets.push(`- Returns ${part.returns}`);
+
+							return (
+								`<div class="ts-block-property">\n\n\`\`\`dts\n${part.snippet}\n\`\`\`\n\n` +
+								`<div class="ts-block-property-details">\n\n` +
+								bullets.join('\n') +
+								'\n\n' +
+								part.content +
+								'\n</div></div>'
+							);
+						})
+						.join('\n\n') +
+					`\n\n</div>`;
+
 				const collection =
 					ts.isVariableStatement(statement) || ts.isFunctionDeclaration(statement)
 						? exports
 						: types;
 
-				collection.push({ name, comment, snippet, parts });
+				collection.push({ name, comment, markdown });
 			}
 		}
 
