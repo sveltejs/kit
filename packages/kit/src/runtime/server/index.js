@@ -13,7 +13,7 @@ import {
 	strip_data_suffix
 } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
-import { INVALIDATED_HEADER, render_data } from './data/index.js';
+import { INVALIDATED_HEADER, redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { Redirect } from '../control.js';
@@ -289,10 +289,23 @@ export async function respond(request, options, state) {
 			}
 		}
 
+		// Edge case: If user does `return Response(30x)` in handle hook while processing a data request,
+		// we need to transform the redirect response to a corresponding JSON response.
+		if (is_data_request && response.status >= 300 && response.status < 309) {
+			const location = response.headers.get('location');
+			if (location) {
+				return redirect_json_response(new Redirect(/** @type {any} */ (response.status), location));
+			}
+		}
+
 		return response;
 	} catch (error) {
 		if (error instanceof Redirect) {
-			return redirect_response(error.status, error.location);
+			if (is_data_request) {
+				return redirect_json_response(error);
+			} else {
+				return redirect_response(error.status, error.location);
+			}
 		}
 		return handle_fatal_error(event, options, error);
 	}
