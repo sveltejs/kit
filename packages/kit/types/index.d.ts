@@ -14,20 +14,22 @@ import {
 	PrerenderMissingIdHandlerValue,
 	RequestOptions,
 	RouteDefinition,
-	TrailingSlash,
 	UniqueInterface
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 
 export { PrerenderOption } from './private.js';
 
+/**
+ * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
+ */
 export interface Adapter {
 	/**
-	 * Name of the adapter. Should be unique, ideally corresponds to the package name.
+	 * The name of the adapter, using for logging. Will typically correspond to the package name.
 	 */
 	name: string;
 	/**
-	 * Function that is called to adapt the app to the target platform.
+	 * This function is called after SvelteKit has built your app.
 	 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 	 */
 	adapt(builder: Builder): MaybePromise<void>;
@@ -70,53 +72,55 @@ type UnpackValidationError<T> = T extends ValidationError<infer X>
  * It contains various methods and properties that are useful for adapting the app.
  */
 export interface Builder {
-	/** Logger to output information of various log levels */
+	/** Print messages to the console. `log.info` and `log.minor` are silent unless Vite's `logLevel` is `info`. */
 	log: Logger;
-	/** Helper to remove given directory and all its contents */
+	/** Remove `dir` and all its contents. */
 	rimraf(dir: string): void;
-	/** Helper to create given directory */
+	/** Create `dir` and any required parent directories. */
 	mkdirp(dir: string): void;
 
-	/** The fully resolved `svelte.config.js` */
+	/** The fully resolved `svelte.config.js`. */
 	config: ValidatedConfig;
-	/** Information about the prerendered files, if any */
+	/** Information about prerendered pages and assets, if any. */
 	prerendered: Prerendered;
 
 	/**
-	 * Create entry points that map to individual functions
+	 * Create separate functions that map to one or more routes of your app.
 	 * @param fn A function that groups a set of routes into an entry point
 	 */
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
 	/**
-	 * Generates the data used to write the server-side `manifest.js` file.
+	 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#sveltejs-kit-server) with.
 	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 	 */
 	generateManifest(opts: { relativePath: string; format?: 'esm' | 'cjs' }): string;
 
 	/**
-	 * Returns a fully resolved path to the build directory where SvelteKit wrote the files
+	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
 	 * @param name path to the file, relative to the build directory
 	 */
 	getBuildDirectory(name: string): string;
-	/** Where the build output for the client is stored */
+	/** Get the fully resolved path to the directory containing client-side assets, including the contents of your `static` directory. */
 	getClientDirectory(): string;
-	/** Where the build output for the server is stored */
+	/** Get the fully resolved path to the directory containing server-side code. */
 	getServerDirectory(): string;
-	/** Where assets are stored */
+	/** Get the fully resolved path to your `static` directory. */
 	getStaticDirectory(): string;
-	/** The application path including any configured base path */
+	/** Get the application path including any configured `base` path, e.g. `/my-base-path/_app`. */
 	getAppPath(): string;
 
 	/**
-	 * @param dest the destination folder to which files should be copied
-	 * @returns an array of paths corresponding to the files that have been created by the copy
+	 * Write client assets to `dest`.
+	 * @param dest the destination folder
+	 * @returns an array of files written to `dest`
 	 */
 	writeClient(dest: string): string[];
 	/**
-	 * @param dest the destination folder to which files should be copied
+	 * Write server-side code to `dest`.
+	 * @param dest the destination folder
 	 * @param opts.fallback the name of a file for fallback responses, like `200.html` or `404.html` depending on where the app is deployed
-	 * @returns an array of paths corresponding to the files that have been created by the copy
+	 * @returns an array of files written to `dest`
 	 */
 	writePrerendered(
 		dest: string,
@@ -125,16 +129,18 @@ export interface Builder {
 		}
 	): string[];
 	/**
-	 * @param dest the destination folder to which files should be copied
-	 * @returns an array of paths corresponding to the files that have been created by the copy
+	 * Write server-side code to `dest`.
+	 * @param dest the destination folder
+	 * @returns an array of files written to `dest`
 	 */
 	writeServer(dest: string): string[];
 	/**
-	 * @param from the source file or folder
-	 * @param to the destination file or folder
-	 * @param opts.filter a function to determine whether a file or folder should be copied
+	 * Copy a file or directory.
+	 * @param from the source file or directory
+	 * @param to the destination file or directory
+	 * @param opts.filter a function to determine whether a file or directory should be copied
 	 * @param opts.replace a map of strings to replace
-	 * @returns an array of paths corresponding to the files that have been created by the copy
+	 * @returns an array of files that were copied
 	 */
 	copy(
 		from: string,
@@ -146,7 +152,8 @@ export interface Builder {
 	): string[];
 
 	/**
-	 * @param {string} directory Path to the directory containing the files to be compressed
+	 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
+	 * @param {string} directory The directory containing the files to be compressed
 	 */
 	compress(directory: string): Promise<void>;
 }
@@ -174,6 +181,8 @@ export interface Config {
 export interface Cookies {
 	/**
 	 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
+	 * @param name the name of the cookie
+	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 	 */
 	get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
 
@@ -183,6 +192,9 @@ export interface Cookies {
 	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *
 	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+	 * @param name the name of the cookie
+	 * @param value the cookie value
+	 * @param opts the options, passed directory to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
 	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
 
@@ -190,19 +202,21 @@ export interface Cookies {
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 	 *
 	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+	 * @param name the name of the cookie
+	 * @param opts the options, passed directory to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
 	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
 
 	/**
-	 * Serialize a cookie name-value pair into a Set-Cookie header string.
+	 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
 	 *
 	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *
 	 * By default, the `path` of a cookie is the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 *
-	 * @param name the name for the cookie
-	 * @param value value to set the cookie to
-	 * @param options object containing serialization options
+	 * @param name the name of the cookie
+	 * @param value the cookie value
+	 * @param opts the options, passed directory to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
 	serialize(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): string;
 }
@@ -687,7 +701,7 @@ export interface Navigation {
 }
 
 /**
- * The interface that corresponds to the `beforeNavigate`'s input parameter.
+ * The argument passed to [`beforeNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-beforenavigate) callbacks.
  */
 export interface BeforeNavigate extends Navigation {
 	/**
@@ -697,7 +711,7 @@ export interface BeforeNavigate extends Navigation {
 }
 
 /**
- * The interface that corresponds to the `afterNavigate`'s input parameter.
+ * The argument passed to [`afterNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-afternavigate) callbacks.
  */
 export interface AfterNavigate extends Navigation {
 	/**
@@ -708,6 +722,9 @@ export interface AfterNavigate extends Navigation {
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
 	type: Omit<NavigationType, 'leave'>;
+	/**
+	 * Since `afterNavigate` is called after a navigation completes, it will never be called with a navigation that unloads the page.
+	 */
 	willUnload: false;
 }
 

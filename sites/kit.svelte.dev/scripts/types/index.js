@@ -59,9 +59,6 @@ function get_types(code, statements) {
 				const i = code.indexOf('export', start);
 				start = i + 6;
 
-				/** @type {Part[]} */
-				const parts = [];
-
 				/** @type {string[]} */
 				const children = [];
 
@@ -165,7 +162,7 @@ function stringify_type_element(member, depth = 1) {
 				break;
 
 			case 'returns':
-				bullets.push(`- Returns \`${tag.comment}\``);
+				bullets.push(`- Returns ${tag.comment}`);
 				break;
 
 			default:

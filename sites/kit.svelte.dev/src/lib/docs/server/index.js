@@ -78,7 +78,7 @@ export async function read_file(file) {
 			const digest = hash.digest().toString('base64').replace(/\//g, '-');
 
 			if (fs.existsSync(`${snippet_cache}/${digest}.html`)) {
-				// return fs.readFileSync(`${snippet_cache}/${digest}.html`, 'utf-8');
+				return fs.readFileSync(`${snippet_cache}/${digest}.html`, 'utf-8');
 			}
 
 			/** @type {Record<string, string>} */
