@@ -62,47 +62,17 @@ function get_types(code, statements) {
 				/** @type {Part[]} */
 				const parts = [];
 
+				/** @type {string[]} */
+				const children = [];
+
 				let snippet_unformatted = code.slice(start, statement.end).trim();
 
 				if (ts.isInterfaceDeclaration(statement)) {
-					for (const member of statement.members) {
-						// @ts-ignore
-						const doc = member.jsDoc?.[0];
-
-						/** @type {Part} */
-						const part = {
-							snippet: member.getText().replace(/^\t/gm, ''),
-							content: doc?.comment ?? '',
-							params: [],
-							default: '',
-							returns: ''
-						};
-
-						for (const tag of doc?.tags ?? []) {
-							const type = tag.tagName.escapedText;
-
-							switch (tag.tagName.escapedText) {
-								case 'param':
-									part.params.push([tag.name.getText(), tag.comment]);
-									break;
-
-								case 'default':
-									part.default = tag.comment;
-									break;
-
-								case 'returns':
-									part.returns = tag.comment;
-									break;
-
-								default:
-									console.log(`unhandled JSDoc tag: ${type}`);
-							}
+					if (statement.members.length > 0) {
+						for (const member of statement.members) {
+							children.push(stringify_type_element(member));
 						}
 
-						parts.push(part);
-					}
-
-					if (parts.length) {
 						// collapse `interface Foo {/* lots of stuff*/}` into `interface Foo {…}`
 						const first = statement.members.at(0);
 						const last = statement.members.at(-1);
@@ -131,26 +101,7 @@ function get_types(code, statements) {
 					.replace(/\s*(\/\*…\*\/)\s*/g, '/*…*/')
 					.trim();
 
-				let markdown =
-					`<div class="ts-block">\n\n\`\`\`dts\n${snippet}\n\`\`\`\n\n` +
-					parts
-						.map((part) => {
-							const bullets = part.params.map(([name, desc]) => `- \`${name}\` ${desc}`);
-
-							if (part.default) bullets.push(`- Default \`${part.default}\``);
-							if (part.returns) bullets.push(`- Returns ${part.returns}`);
-
-							return (
-								`<div class="ts-block-property">\n\n\`\`\`dts\n${part.snippet}\n\`\`\`\n\n` +
-								`<div class="ts-block-property-details">\n\n` +
-								bullets.join('\n') +
-								'\n\n' +
-								part.content +
-								'\n</div></div>'
-							);
-						})
-						.join('\n\n') +
-					`\n\n</div>`;
+				let markdown = `<div class="ts-block">${fence(snippet)}` + children.join('\n\n') + `</div>`;
 
 				const collection =
 					ts.isVariableStatement(statement) || ts.isFunctionDeclaration(statement)
@@ -166,6 +117,73 @@ function get_types(code, statements) {
 	}
 
 	return { types, exports };
+}
+
+/**
+ * @param {ts.TypeElement} member
+ */
+function stringify_type_element(member) {
+	// @ts-ignore
+	const doc = member.jsDoc?.[0];
+
+	/** @type {string} */
+	const children = [];
+
+	let snippet = member.getText().replace(/^\t/gm, '');
+
+	if (ts.isPropertySignature(member) && ts.isTypeLiteralNode(member.type)) {
+		let a = 0;
+		while (snippet[a] !== '{') a += 1;
+
+		snippet = snippet.slice(0, a + 1) + '/*…*/}';
+
+		for (const child of member.type.members) {
+			children.push(stringify_type_element(child));
+		}
+	}
+
+	/** @type {string[]} */
+	const bullets = [];
+
+	for (const tag of doc?.tags ?? []) {
+		const type = tag.tagName.escapedText;
+
+		switch (tag.tagName.escapedText) {
+			case 'param':
+				bullets.push(`- \`${tag.name.getText()}\` ${tag.comment}`);
+				break;
+
+			case 'default':
+				bullets.push(`- Default \`${tag.comment}\``);
+				break;
+
+			case 'returns':
+				bullets.push(`- Returns \`${tag.comment}\``);
+				break;
+
+			default:
+				console.log(`unhandled JSDoc tag: ${type}`); // TODO indicate deprecated stuff
+		}
+	}
+
+	return (
+		`<div class="ts-block-property">${fence(snippet)}` +
+		`<div class="ts-block-property-details">\n\n` +
+		bullets.join('\n') +
+		'\n\n' +
+		(doc?.comment ?? '') +
+		'\n\n' +
+		children.join('\n\n') +
+		'\n</div></div>'
+	);
+}
+
+/**
+ * @param {string} code
+ * @param {string} lang
+ */
+function fence(code, lang = 'dts') {
+	return '\n\n```' + lang + '\n' + code + '\n```\n\n';
 }
 
 /**
