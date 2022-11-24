@@ -1082,3 +1082,28 @@ export interface ValidationError<T extends Record<string, unknown> | undefined =
 	status: number;
 	data: T;
 }
+
+export interface SubmitFunction<
+	Success extends Record<string, unknown> | undefined = Record<string, any>,
+	Invalid extends Record<string, unknown> | undefined = Record<string, any>
+> {
+	(input: {
+		action: URL;
+		data: FormData;
+		form: HTMLFormElement;
+		controller: AbortController;
+		cancel(): void;
+	}): MaybePromise<
+		| void
+		| ((opts: {
+				form: HTMLFormElement;
+				action: URL;
+				result: ActionResult<Success, Invalid>;
+				/**
+				 * Call this to get the default behavior of a form submission response.
+				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
+				 */
+				update(options?: { reset: boolean }): Promise<void>;
+		  }) => void)
+	>;
+}
