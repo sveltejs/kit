@@ -1031,17 +1031,17 @@ export function error(
 ): HttpError;
 
 /**
- * The object returned by the `error` function
+ * The object returned by the [`error`](https://kit.svelte.dev/docs/modules#sveltejs-kit-error) function.
  */
 export interface HttpError {
-	/** The HTTP status code */
+	/** The [HTTP status code](https://httpstatusdogs.com), in the range 400-599 */
 	status: number;
-	/** The error message */
+	/** The content of the error. */
 	body: App.Error;
 }
 
 /**
- * Creates a `Redirect` object. If thrown during request handling, SvelteKit will
+ * Create a `Redirect` object. If thrown during request handling, SvelteKit will
  * return a redirect response.
  */
 export function redirect(
@@ -1050,22 +1050,24 @@ export function redirect(
 ): Redirect;
 
 /**
- * The object returned by the `redirect` function
+ * The object returned by the [`redirect`](https://kit.svelte.dev/docs/modules#sveltejs-kit-redirect) function
  */
 export interface Redirect {
-	/** The HTTP status code */
+	/** The [HTTP status code](https://httpstatusdogs.com), in the range 300-308. */
 	status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
-	/** The location to redirect to */
+	/** The location to redirect to. */
 	location: string;
 }
 
 /**
- * Generates a JSON `Response` object from the supplied data.
+ * Create a JSON `Response` object from the supplied data.
+ * @param data The value that will be serialized as JSON.
+ * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Type: application/json` header will be added automatically.
  */
 export function json(data: any, init?: ResponseInit): Response;
 
 /**
- * Generates a `ValidationError` object.
+ * Create a `ValidationError` object.
  */
 export function invalid<T extends Record<string, unknown> | undefined>(
 	status: number,
@@ -1073,7 +1075,7 @@ export function invalid<T extends Record<string, unknown> | undefined>(
 ): ValidationError<T>;
 
 /**
- * The object returned by the `invalid` function
+ * The object returned by the [`invalid`](https://kit.svelte.dev/docs/modules#sveltejs-kit-invalid) function
  */
 export interface ValidationError<T extends Record<string, unknown> | undefined = undefined>
 	extends UniqueInterface {
