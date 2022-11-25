@@ -1718,7 +1718,7 @@ function reset_focus() {
 if (__SVELTEKIT_DEV__) {
 	// Nasty hack to silence harmless warnings the user can do nothing about
 	const warn = console.warn;
-	console.warn = (...args) => {
+	console.warn = function warn(...args) {
 		if (
 			args.length === 1 &&
 			/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
