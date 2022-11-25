@@ -77,7 +77,6 @@ export interface Builder {
 	getBuildDirectory(name: string): string;
 	getClientDirectory(): string;
 	getServerDirectory(): string;
-	getStaticDirectory(): string;
 	/** The application path including any configured base path */
 	getAppPath(): string;
 
