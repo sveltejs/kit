@@ -1385,7 +1385,7 @@ export function create_client({ target, base }) {
 				}, 20);
 			};
 
-			target.addEventListener('touchstart', trigger_prefetch);
+			target.addEventListener('touchstart', trigger_prefetch, { passive: true });
 			target.addEventListener('mousemove', handle_mousemove);
 			target.addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
 
