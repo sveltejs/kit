@@ -291,7 +291,7 @@ export async function respond(request, options, state) {
 
 		// Edge case: If user does `return Response(30x)` in handle hook while processing a data request,
 		// we need to transform the redirect response to a corresponding JSON response.
-		if (is_data_request && response.status >= 300 && response.status < 309) {
+		if (is_data_request && response.status >= 300 && response.status <= 308) {
 			const location = response.headers.get('location');
 			if (location) {
 				return redirect_json_response(new Redirect(/** @type {any} */ (response.status), location));
