@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.193
+
+### Patch Changes
+
+- Added the option to add Vitest to new projects ([#5708](https://github.com/sveltejs/kit/pull/5708))
+
 ## 2.0.0-next.192
 
 ### Patch Changes
