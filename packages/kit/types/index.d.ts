@@ -254,19 +254,15 @@ export interface KitConfig {
 	 * > The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
 	 *
 	 * > You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
+	 * @default {}
 	 */
 	alias?: Record<string, string>;
 	/**
 	 * The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
+	 * @default "_app"
 	 */
 	appDir?: string;
 	/**
-	 * An object containing zero or more of the following values:
-	 *
-	 * - `mode` — 'hash', 'nonce' or 'auto'
-	 * - `directives` — an object of `[directive]: value[]` pairs
-	 * - `reportOnly` — an object of `[directive]: value[]` pairs for CSP report-only mode
-	 *
 	 * [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) configuration. CSP helps to protect your users against cross-site scripting (XSS) attacks, by limiting the places resources can be loaded from. For example, a configuration like this...
 	 *
 	 * ```js
@@ -290,7 +286,7 @@ export interface KitConfig {
 	 *
 	 * ...would prevent scripts loading from external sites. SvelteKit will augment the specified directives with nonces or hashes (depending on `mode`) for any inline styles and scripts it generates.
 	 *
-	 * To add a nonce for scripts and links manually included in `app.html`, you may use the placeholder `%sveltekit.nonce%` (for example `<script nonce="%sveltekit.nonce%">`).
+	 * To add a nonce for scripts and links manually included in `src/app.html`, you may use the placeholder `%sveltekit.nonce%` (for example `<script nonce="%sveltekit.nonce%">`).
 	 *
 	 * When pages are prerendered, the CSP header is added via a `<meta http-equiv>` tag (note that in this case, `frame-ancestors`, `report-uri` and `sandbox` directives will be ignored).
 	 *
@@ -299,18 +295,29 @@ export interface KitConfig {
 	 * > Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
 	 */
 	csp?: {
+		/**
+		 * Whether to use hashes or nonces to restrict `<script>` and `<style>` elements. `'auto'` will use hashes for prerendered pages, and nonces for dynamically rendered pages.
+		 */
 		mode?: 'hash' | 'nonce' | 'auto';
+		/**
+		 * Directives that will be added to `Content-Security-Policy` headers.
+		 */
 		directives?: CspDirectives;
+		/**
+		 * Directives that will be added to `Content-Security-Policy-Report-Only` headers.
+		 */
 		reportOnly?: CspDirectives;
 	};
 	/**
-	 * Protection against [cross-site request forgery](https://owasp.org/www-community/attacks/csrf) attacks:
-	 *
-	 * - `checkOrigin` — if `true`, SvelteKit will check the incoming `origin` header for `POST` form submissions and verify that it matches the server's origin
-	 *
-	 * To allow people to make `POST` form submissions to your app from other origins, you will need to disable this option. Be careful!
+	 * Protection against [cross-site request forgery](https://owasp.org/www-community/attacks/csrf) attacks.
 	 */
 	csrf?: {
+		/**
+		 * Whether to check the incoming `origin` header for `POST` form submissions and verify that it matches the server's origin.
+		 *
+		 * To allow people to make `POST` form submissions to your app from other origins, you will need to disable this option. Be careful!
+		 * @default true
+		 */
 		checkOrigin?: boolean;
 	};
 	/**
@@ -319,10 +326,12 @@ export interface KitConfig {
 	env?: {
 		/**
 		 * The directory to search for `.env` files.
+		 * @default "."
 		 */
 		dir?: string;
 		/**
 		 * A prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](/docs/modules#$env-static-public) and [`$env/dynamic/public`](/docs/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
+		 * @default "PUBLIC_"
 		 */
 		publicPrefix?: string;
 	};
@@ -332,37 +341,46 @@ export interface KitConfig {
 	files?: {
 		/**
 		 * a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
+		 * @default "static"
 		 */
 		assets?: string;
 		/**
 		 * the location of your client and server [hooks](https://kit.svelte.dev/docs/hooks)
 		 */
 		hooks?: {
+			/** @default "src/hooks.client" */
 			client?: string;
+			/** @default "src/hooks.server" */
 			server?: string;
 		};
 		/**
 		 * your app's internal library, accessible throughout the codebase as `$lib`
+		 * @default "src/lib"
 		 */
 		lib?: string;
 		/**
 		 * a directory containing [parameter matchers](https://kit.svelte.dev/docs/advanced-routing#matching)
+		 * @default "src/params"
 		 */
 		params?: string;
 		/**
 		 * the files that define the structure of your app (see [Routing](https://kit.svelte.dev/docs/routing))
+		 * @default "src/routes"
 		 */
 		routes?: string;
 		/**
 		 * the location of your service worker's entry point (see [Service workers](https://kit.svelte.dev/docs/service-workers))
+		 * @default "src/service-worker"
 		 */
 		serviceWorker?: string;
 		/**
 		 * the location of the template for HTML responses
+		 * @default "src/app.html"
 		 */
 		appTemplate?: string;
 		/**
 		 * the location of the template for fallback error responses
+		 * @default "src/error.html"
 		 */
 		errorTemplate?: string;
 	};
@@ -370,10 +388,12 @@ export interface KitConfig {
 	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
 	 *
 	 * > This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
+	 * @default 0
 	 */
 	inlineStyleThreshold?: number;
 	/**
 	 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
+	 * @default [".js", ".ts"]
 	 */
 	moduleExtensions?: string[];
 	/**

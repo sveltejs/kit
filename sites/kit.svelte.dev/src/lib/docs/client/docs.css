@@ -352,6 +352,10 @@ pre.language-diff code {
 	padding: 0 1rem;
 }
 
+.ts-block-property-details blockquote {
+	margin: 1rem 0;
+}
+
 .ts-block-property-children {
 	margin: 1rem -1rem 2rem 1rem;
 }
