@@ -1179,7 +1179,7 @@ export function create_client({ target, base }) {
 		});
 	}
 
-	function setup_preload_and_prepare() {
+	function setup_preload() {
 		/** @type {NodeJS.Timeout} */
 		let mousemove_timeout;
 
@@ -1445,7 +1445,7 @@ export function create_client({ target, base }) {
 
 			// @ts-ignore this isn't supported everywhere yet
 			if (!navigator.connection?.saveData) {
-				setup_preload_and_prepare();
+				setup_preload();
 			}
 
 			/** @param {MouseEvent} event */
