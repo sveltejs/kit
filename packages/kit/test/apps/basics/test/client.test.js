@@ -1055,10 +1055,10 @@ test.describe('data-sveltekit attributes', () => {
 		page.on('request', (r) => requests.push(r.url()));
 
 		const module = process.env.DEV
-			? `${baseURL}/src/routes/data-sveltekit/preload/target/+page.svelte`
-			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/preload/target/_page`;
+			? `${baseURL}/src/routes/data-sveltekit/preload-data/target/+page.svelte`
+			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/preload-data/target/_page`;
 
-		await page.goto('/data-sveltekit/preload');
+		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#one').dispatchEvent('mousemove');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
@@ -1067,7 +1067,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
 
 		requests.length = 0;
-		await page.goto('/data-sveltekit/preload');
+		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#two').dispatchEvent('mousemove');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
@@ -1076,7 +1076,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
 
 		requests.length = 0;
-		await page.goto('/data-sveltekit/preload');
+		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#three').dispatchEvent('mousemove');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start

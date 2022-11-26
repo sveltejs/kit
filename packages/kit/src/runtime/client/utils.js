@@ -68,10 +68,10 @@ export function find_anchor(element, base) {
 	let noscroll = null;
 
 	/** @type {string | null} */
-	let preload = null;
+	let preload_code = null;
 
 	/** @type {string | null} */
-	let prepare = null;
+	let preload_data = null;
 
 	/** @type {string | null} */
 	let reload = null;
@@ -83,14 +83,14 @@ export function find_anchor(element, base) {
 		}
 
 		if (a) {
-			if (preload === null) preload = element.getAttribute('data-sveltekit-preload-data');
-			if (prepare === null) prepare = element.getAttribute('data-sveltekit-preload-code');
+			if (preload_code === null) preload_code = element.getAttribute('data-sveltekit-preload-code');
+			if (preload_data === null) preload_data = element.getAttribute('data-sveltekit-preload-data');
 			if (noscroll === null) noscroll = element.getAttribute('data-sveltekit-noscroll');
 			if (reload === null) reload = element.getAttribute('data-sveltekit-reload');
 
 			if (__SVELTEKIT_DEV__) {
-				validate(element, 'data-sveltekit-preload-data', preload, ['', 'off', 'tap', 'hover']);
-				validate(element, 'data-sveltekit-preload-data', prepare, [
+				validate(element, 'data-sveltekit-preload-data', preload_data, ['', 'off', 'tap', 'hover']);
+				validate(element, 'data-sveltekit-preload-code', preload_code, [
 					'',
 					'off',
 					'tap',
@@ -119,8 +119,8 @@ export function find_anchor(element, base) {
 	} catch {}
 
 	const options = {
-		preload: levels[preload ?? 'off'],
-		prepare: levels[prepare ?? 'off'],
+		preload_code: levels[preload_code ?? 'off'],
+		preload_data: levels[preload_data ?? 'off'],
 		noscroll: noscroll === 'off' ? false : noscroll === '' ? true : null,
 		reload: reload === 'off' ? false : reload === '' ? true : null
 	};

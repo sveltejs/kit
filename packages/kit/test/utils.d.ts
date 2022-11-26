@@ -17,8 +17,8 @@ export const test: TestType<
 				invalidate(url: string): Promise<void>;
 				beforeNavigate(url: URL): void | boolean;
 				afterNavigate(url: URL): void;
-				preload(url: string): Promise<void>;
-				prepare(...urls: string[]): Promise<void>;
+				preloadCode(...urls: string[]): Promise<void>;
+				preloadData(url: string): Promise<void>;
 			};
 			clicknav(selector: string, options?: { timeout?: number }): Promise<void>;
 			in_view(selector: string): Promise<boolean>;

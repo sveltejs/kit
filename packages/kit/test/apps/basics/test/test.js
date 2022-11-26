@@ -1164,7 +1164,7 @@ test.describe('$app/stores', () => {
 		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 
 		if (javaScriptEnabled) {
-			await app.prepare('/store/navigating/b');
+			await app.preloadCode('/store/navigating/b');
 
 			const res = await Promise.all([
 				page.click('a[href="/store/navigating/b"]'),

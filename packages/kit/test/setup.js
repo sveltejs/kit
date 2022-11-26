@@ -1,4 +1,11 @@
-import { goto, invalidate, preload, prepare, beforeNavigate, afterNavigate } from '$app/navigation';
+import {
+	goto,
+	invalidate,
+	preloadCode,
+	preloadData,
+	beforeNavigate,
+	afterNavigate
+} from '$app/navigation';
 import { onMount } from 'svelte';
 
 export function setup() {
@@ -7,8 +14,8 @@ export function setup() {
 		Object.assign(window, {
 			goto,
 			invalidate,
-			preload,
-			prepare,
+			preloadCode,
+			preloadData,
 			beforeNavigate,
 			afterNavigate
 		});

@@ -1,8 +1,8 @@
 <script>
-	import { goto, preload, prepare } from '$app/navigation';
+	import { goto, preloadCode, preloadData } from '$app/navigation';
 
 	if (typeof window !== 'undefined') {
-		Object.assign(window, { goto, preload, prepare });
+		Object.assign(window, { goto, preloadCode, preloadData });
 	}
 </script>
 

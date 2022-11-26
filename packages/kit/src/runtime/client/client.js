@@ -65,7 +65,7 @@ function check_for_removed_attributes() {
 				warned_about_attributes[attr] = true;
 				console.error(
 					`The sveltekit:${attr} attribute has been replaced with data-sveltekit-${
-						attr === 'prefetch' ? 'preload' : attr
+						attr === 'prefetch' ? 'preload-data' : attr
 					}`
 				);
 			}
@@ -210,7 +210,7 @@ export function create_client({ target, base }) {
 	}
 
 	/** @param {URL} url */
-	async function preload(url) {
+	async function preload_data(url) {
 		const intent = get_navigation_intent(url, false);
 
 		if (!intent) {
@@ -232,7 +232,7 @@ export function create_client({ target, base }) {
 	}
 
 	/** @param {...string} pathnames */
-	async function prepare(...pathnames) {
+	async function preload_code(...pathnames) {
 		const matching = routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)));
 
 		const promises = matching.map((r) => {
@@ -1210,7 +1210,7 @@ export function create_client({ target, base }) {
 			(entries, observer) => {
 				for (const entry of entries) {
 					if (entry.isIntersecting) {
-						prepare(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href).pathname);
+						preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href).pathname);
 						observer.unobserve(entry.target);
 					}
 				}
@@ -1237,10 +1237,10 @@ export function create_client({ target, base }) {
 
 			if (ignore) return;
 
-			if (priority <= options.preload) {
-				preload(url);
-			} else if (priority <= options.prepare) {
-				prepare(url.pathname);
+			if (priority <= options.preload_data) {
+				preload_data(url);
+			} else if (priority <= options.preload_code) {
+				preload_code(url.pathname);
 			}
 		}
 
@@ -1252,12 +1252,12 @@ export function create_client({ target, base }) {
 
 				if (external) continue;
 
-				if (options.prepare === PRIORITY_VIEWPORT) {
+				if (options.preload_code === PRIORITY_VIEWPORT) {
 					observer.observe(a);
 				}
 
-				if (options.prepare === PRIORITY_PAGE) {
-					prepare(/** @type {URL} */ (url).pathname);
+				if (options.preload_code === PRIORITY_PAGE) {
+					preload_code(/** @type {URL} */ (url).pathname);
 				}
 			}
 		}
@@ -1339,12 +1339,12 @@ export function create_client({ target, base }) {
 			return invalidate();
 		},
 
-		preload: async (href) => {
+		preload_data: async (href) => {
 			const url = new URL(href, get_base_uri(document));
-			await preload(url);
+			await preload_data(url);
 		},
 
-		prepare,
+		preload_code,
 
 		apply_action: async (result) => {
 			if (result.type === 'error') {
