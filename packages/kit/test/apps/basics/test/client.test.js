@@ -617,18 +617,18 @@ test.describe('Load', () => {
 				}
 			});
 
-			await page.goto('/load/window-fetch/incorrect');
-			expect(await page.textContent('h1')).toBe('42');
+			await Promise.all([page.goto('/load/window-fetch/incorrect'), page.waitForEvent('console')]);
 
+			expect(await page.textContent('h1')).toBe('42');
 			expect(warnings).toContain(
 				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
 
 			warnings.length = 0;
 
-			await page.goto('/load/window-fetch/correct');
-			expect(await page.textContent('h1')).toBe('42');
+			await Promise.all([page.goto('/load/window-fetch/correct'), page.waitForEvent('console')]);
 
+			expect(await page.textContent('h1')).toBe('42');
 			expect(warnings).not.toContain(
 				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
