@@ -77,7 +77,6 @@ export interface Builder {
 	getBuildDirectory(name: string): string;
 	getClientDirectory(): string;
 	getServerDirectory(): string;
-	getStaticDirectory(): string;
 	/** The application path including any configured base path */
 	getAppPath(): string;
 
@@ -213,7 +212,6 @@ export interface KitConfig {
 		concurrency?: number;
 		crawl?: boolean;
 		default?: boolean;
-		enabled?: boolean;
 		entries?: Array<'*' | `/${string}`>;
 		handleHttpError?: PrerenderHttpErrorHandlerValue;
 		handleMissingId?: PrerenderMissingIdHandlerValue;

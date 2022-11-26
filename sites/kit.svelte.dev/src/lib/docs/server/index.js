@@ -58,7 +58,7 @@ modules.forEach((module) => {
  * @param {string} file
  */
 export async function read_file(file) {
-	const match = /\d{2}-(.+)\.md/.exec(file.split(path.sep).pop());
+	const match = /\d{2}-(.+)\.md/.exec(path.basename(file));
 	if (!match) return null;
 
 	const markdown = fs

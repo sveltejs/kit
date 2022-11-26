@@ -117,12 +117,7 @@ export async function render_data(event, route, options, state, trailing_slash) 
 		const error = normalize_error(e);
 
 		if (error instanceof Redirect) {
-			return json_response(
-				JSON.stringify({
-					type: 'redirect',
-					location: error.location
-				})
-			);
+			return redirect_json_response(error);
 		} else {
 			// TODO make it clearer that this was an unexpected error
 			return json_response(JSON.stringify(handle_error_and_jsonify(event, options, error)));
@@ -142,4 +137,16 @@ function json_response(json, status = 200) {
 			'cache-control': 'private, no-store'
 		}
 	});
+}
+
+/**
+ * @param {Redirect} redirect
+ */
+export function redirect_json_response(redirect) {
+	return json_response(
+		JSON.stringify({
+			type: 'redirect',
+			location: redirect.location
+		})
+	);
 }

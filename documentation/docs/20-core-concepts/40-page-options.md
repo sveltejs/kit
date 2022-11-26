@@ -35,6 +35,8 @@ export const prerender = 'auto';
 
 The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with the `entries` option in the [prerender configuration](/docs/configuration#prerender).
 
+While prerendering, the value of `building` imported from [`$app/environment`](/docs/modules#$app-environment) will be `true`.
+
 #### Prerendering server routes
 
 Unlike the other page options, `prerender` also applies to `+server.js` files. These files are _not_ affected from layouts, but will inherit default values from the pages that fetch data from them, if any. For example if a `+page.js` contains this `load` function...

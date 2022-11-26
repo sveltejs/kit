@@ -1,9 +1,9 @@
-export let prerendering = false;
+export let building = false;
 export let version = '';
 
 /** @param {boolean} value */
-export function set_prerendering(value) {
-	prerendering = value;
+export function set_building(value) {
+	building = value;
 }
 
 /** @param {string} value */

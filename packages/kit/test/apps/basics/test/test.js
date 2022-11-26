@@ -1337,6 +1337,32 @@ test.describe('Redirects', () => {
 			expect(await page.textContent('h1')).toBe('Hazaa!');
 		}
 	});
+
+	test('redirect response in handle hook', async ({ baseURL, clicknav, page }) => {
+		await page.goto('/redirect');
+
+		await clicknav('[href="/redirect/in-handle?response"]');
+
+		await page.waitForURL('/redirect/c');
+		expect(await page.textContent('h1')).toBe('c');
+		expect(page.url()).toBe(`${baseURL}/redirect/c`);
+
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/redirect`);
+	});
+
+	test('throw redirect in handle hook', async ({ baseURL, clicknav, page }) => {
+		await page.goto('/redirect');
+
+		await clicknav('[href="/redirect/in-handle?throw"]');
+
+		await page.waitForURL('/redirect/c');
+		expect(await page.textContent('h1')).toBe('c');
+		expect(page.url()).toBe(`${baseURL}/redirect/c`);
+
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/redirect`);
+	});
 });
 
 test.describe('Routing', () => {
