@@ -138,7 +138,7 @@ export async function handle_fatal_error(event, options, error) {
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {any} error
- * @returns {import('../../../types/private.js').MaybePromise<App.Error>}
+ * @returns {import('types').MaybePromise<App.Error>}
  */
 export function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {
