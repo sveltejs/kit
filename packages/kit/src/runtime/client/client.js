@@ -1717,7 +1717,7 @@ function reset_focus() {
 
 if (__SVELTEKIT_DEV__) {
 	// Nasty hack to silence harmless warnings the user can do nothing about
-	const original_warn = console.warn;
+	const console_warn = console.warn;
 	console.warn = function warn(...args) {
 		if (
 			args.length === 1 &&
@@ -1727,6 +1727,6 @@ if (__SVELTEKIT_DEV__) {
 		) {
 			return;
 		}
-		original_warn(...args);
+		console_warn(...args);
 	};
 }
