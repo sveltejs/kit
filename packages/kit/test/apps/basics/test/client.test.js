@@ -665,7 +665,7 @@ test.describe('Prefetching', () => {
 		// https://playwright.dev/docs/network#network-events
 		await Promise.all([
 			page.waitForResponse(`${baseURL}/routing/preloading/preloaded.json`),
-			app.preload('/routing/preloading/preloaded')
+			app.preloadData('/routing/preloading/preloaded')
 		]);
 
 		// svelte request made is environment dependent
@@ -684,7 +684,7 @@ test.describe('Prefetching', () => {
 		expect(requests).toEqual([]);
 
 		try {
-			await app.preload('https://example.com');
+			await app.preloadData('https://example.com');
 			throw new Error('Error was not thrown');
 		} catch (/** @type {any} */ e) {
 			expect(e.message).toMatch('Attempted to preload a URL that does not belong to this app');
@@ -696,7 +696,7 @@ test.describe('Prefetching', () => {
 		page
 	}) => {
 		await page.goto('/routing/a');
-		await app.preload('/routing/preloading/hash-route#please-dont-show-me');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
 		await app.goto('/routing/preloading/hash-route');
 		await expect(page.locator('h1')).not.toHaveText('Oopsie');
 	});
@@ -704,8 +704,8 @@ test.describe('Prefetching', () => {
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.preload('/routing/preloading/hash-route#please-dont-show-me');
-		await app.preload('/routing/preloading/hash-route#please-dont-show-me');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
 		await app.goto('/routing/preloading/hash-route#please-dont-show-me');
 		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
 	});
@@ -713,8 +713,8 @@ test.describe('Prefetching', () => {
 	test('does not rerun load on calls to different preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.preload('/routing/preloading/hash-route#please-dont-show-me');
-		await app.preload('/routing/preloading/hash-route#please-dont-show-me-jr');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me-jr');
 		await app.goto('/routing/preloading/hash-route#please-dont-show-me');
 		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
 	});
@@ -722,7 +722,7 @@ test.describe('Prefetching', () => {
 	test('does rerun load when preload errored', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.preload('/routing/preloading/preload-error');
+		await app.preloadData('/routing/preloading/preload-error');
 		await app.goto('/routing/preloading/preload-error');
 		await expect(page.locator('p')).toHaveText('hello');
 	});
@@ -732,7 +732,7 @@ test.describe('Routing', () => {
 	test('navigates to a new page without reloading', async ({ app, page, clicknav }) => {
 		await page.goto('/routing');
 
-		await app.preload('/routing/a').catch((e) => {
+		await app.preloadData('/routing/a').catch((e) => {
 			// from error handler tests; ignore
 			if (!e.message.includes('Crashing now')) throw e;
 		});
@@ -816,7 +816,7 @@ test.describe('Shadow DOM', () => {
 	test('client router captures anchors in shadow dom', async ({ app, page, clicknav }) => {
 		await page.goto('/routing/shadow-dom');
 
-		await app.preload('/routing/a').catch((e) => {
+		await app.preloadData('/routing/a').catch((e) => {
 			// from error handler tests; ignore
 			if (!e.message.includes('Crashing now')) throw e;
 		});
