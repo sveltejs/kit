@@ -83,14 +83,14 @@ export function find_anchor(element, base) {
 		}
 
 		if (a) {
-			if (preload === null) preload = element.getAttribute('data-sveltekit-preload');
-			if (prepare === null) prepare = element.getAttribute('data-sveltekit-prepare');
+			if (preload === null) preload = element.getAttribute('data-sveltekit-preload-data');
+			if (prepare === null) prepare = element.getAttribute('data-sveltekit-preload-code');
 			if (noscroll === null) noscroll = element.getAttribute('data-sveltekit-noscroll');
 			if (reload === null) reload = element.getAttribute('data-sveltekit-reload');
 
 			if (__SVELTEKIT_DEV__) {
-				validate(element, 'data-sveltekit-preload', preload, ['', 'off', 'tap', 'hover']);
-				validate(element, 'data-sveltekit-preload', prepare, [
+				validate(element, 'data-sveltekit-preload-data', preload, ['', 'off', 'tap', 'hover']);
+				validate(element, 'data-sveltekit-preload-data', prepare, [
 					'',
 					'off',
 					'tap',
@@ -99,8 +99,8 @@ export function find_anchor(element, base) {
 					'page'
 				]);
 
-				validate(element, 'data-sveltekit-preload', noscroll, ['', 'off']);
-				validate(element, 'data-sveltekit-preload', reload, ['', 'off']);
+				validate(element, 'data-sveltekit-preload-data', noscroll, ['', 'off']);
+				validate(element, 'data-sveltekit-preload-data', reload, ['', 'off']);
 			}
 		}
 

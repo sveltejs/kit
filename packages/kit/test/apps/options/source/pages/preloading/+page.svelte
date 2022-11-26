@@ -1,1 +1,1 @@
-<a data-sveltekit-preload href="/path-base/preloading/preloaded">click me</a>
+<a data-sveltekit-preload-data href="/path-base/preloading/preloaded">click me</a>
