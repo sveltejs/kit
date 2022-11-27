@@ -1188,26 +1188,20 @@ export function create_client({ target, base }) {
 
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
-				prepare_and_preload(target, 2);
+				preload(target, 2);
 			}, 20);
 		});
 
-		target.addEventListener(
-			'touchstart',
-			(event) => {
-				prepare_and_preload(/** @type {Element} */ (event.composedPath()[0]), 1);
-			},
-			{ passive: true }
-		);
+		/** @param {Event} event */
+		function tap(event) {
+			preload(/** @type {Element} */ (event.composedPath()[0]), 1);
+		}
 
-		target.addEventListener('keydown', (event) => {
-			if (event.key === 'Enter' && event.target === document.activeElement) {
-				prepare_and_preload(/** @type {Element} */ (event.composedPath()[0]), 1);
-			}
-		});
+		target.addEventListener('mousedown', tap);
+		target.addEventListener('touchstart', tap, { passive: true });
 
 		const observer = new IntersectionObserver(
-			(entries, observer) => {
+			(entries) => {
 				for (const entry of entries) {
 					if (entry.isIntersecting) {
 						preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href).pathname);
@@ -1215,32 +1209,22 @@ export function create_client({ target, base }) {
 					}
 				}
 			},
-			{
-				threshold: 0
-			}
+			{ threshold: 0 }
 		);
 
 		/**
 		 * @param {Element} element
 		 * @param {number} priority
 		 */
-		function prepare_and_preload(element, priority) {
-			const { url, options, has } = find_anchor(element, base);
+		function preload(element, priority) {
+			const { url, options, external } = find_anchor(element, base);
 
-			const ignore =
-				!url ||
-				is_external_url(url, base) ||
-				options.reload ||
-				has.rel_external ||
-				has.target ||
-				has.download;
-
-			if (ignore) return;
-
-			if (priority <= options.preload_data) {
-				preload_data(url);
-			} else if (priority <= options.preload_code) {
-				preload_code(url.pathname);
+			if (!external) {
+				if (priority <= options.preload_data) {
+					preload_data(/** @type {URL} */ (url));
+				} else if (priority <= options.preload_code) {
+					preload_code(/** @type {URL} */ (url).pathname);
+				}
 			}
 		}
 
