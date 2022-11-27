@@ -438,7 +438,9 @@ export interface KitConfig {
 		 */
 		entries?: Array<'*' | `/${string}`>;
 		/**
-		 * - `'fail'` — (default) fails the build when a routing error is encountered when following a link
+		 * How to respond to HTTP errors encountered while prerendering the app.
+		 *
+		 * - `'fail'` — fail the build
 		 * - `'ignore'` - silently ignore the failure and continue
 		 * - `'warn'` — continue, but print a warning
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `status`, `path`, `referrer`, `referenceType` and `message` properties. If you `throw` from this function, the build will fail
@@ -467,7 +469,9 @@ export interface KitConfig {
 		 */
 		handleHttpError?: PrerenderHttpErrorHandlerValue;
 		/**
-		 * - `'fail'` — (default) fails the build when a prerendered page links to another prerendered page with a `#` fragment that doesn't correspond to an `id`
+		 * How to respond to hash links from one prerendered page to another that don't correspond to an `id` on the destination page
+		 *
+		 * - `'fail'` — fail the build
 		 * - `'ignore'` - silently ignore the failure and continue
 		 * - `'warn'` — continue, but print a warning
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id`, `referrers` and `message` properties. If you `throw` from this function, the build will fail
@@ -488,7 +492,7 @@ export interface KitConfig {
 		 */
 		register?: boolean;
 		/**
-		 * A function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
+		 * Determine which files in your `static` directory will be available in `$service-worker.files`.
 		 * @default (filename) => !/\.DS_Store/.test(filename)
 		 */
 		files?(filepath: string): boolean;
