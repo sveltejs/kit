@@ -157,13 +157,19 @@ export interface Builder {
 }
 
 export interface Config {
-	/** Svelte compiler options */
+	/**
+	 * Options passed to [`svelte.compile`](https://svelte.dev/docs#compile-time-svelte-compile).
+	 * @default {}
+	 */
 	compilerOptions?: CompileOptions;
-	/** List of file extensions which should be treated as Svelte files */
+	/**
+	 * List of file extensions that should be treated as Svelte files.
+	 * @default [".svelte"]
+	 */
 	extensions?: string[];
 	/** SvelteKit options */
 	kit?: KitConfig;
-	/** @sveltejs/package options */
+	/** [`@sveltejs/package`](/docs/packaging) options. */
 	package?: {
 		source?: string;
 		dir?: string;
@@ -173,6 +179,7 @@ export interface Config {
 	};
 	/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
 	preprocess?: any;
+	/** Any additional options required by tooling that integrates with Svelte. */
 	[key: string]: any;
 }
 
@@ -396,15 +403,18 @@ export interface KitConfig {
 	moduleExtensions?: string[];
 	/**
 	 * The directory that SvelteKit writes files to during `dev` and `build`. You should exclude this directory from version control.
+	 * @default ".svelte-kit"
 	 */
 	outDir?: string;
 	paths?: {
 		/**
-		 * an absolute path that your app's files are served from. This is useful if your files are served from a storage bucket of some kind
+		 * An absolute path that your app's files are served from. This is useful if your files are served from a storage bucket of some kind.
+		 * @default ""
 		 */
 		assets?: string;
 		/**
-		 * a root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`base` from `$app/paths`](/docs/modules#$app-paths-base) for that: `<a href="{base}/your-page">Link</a>`. If you find yourself writing this often, it may make sense to extract this into a reusable component.
+		 * A root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`base` from `$app/paths`](/docs/modules#$app-paths-base) for that: `<a href="{base}/your-page">Link</a>`. If you find yourself writing this often, it may make sense to extract this into a reusable component.
+		 * @default ""
 		 */
 		base?: string;
 	};
@@ -414,18 +424,17 @@ export interface KitConfig {
 	prerender?: {
 		/**
 		 * How many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response.
+		 * @default 1
 		 */
 		concurrency?: number;
 		/**
-		 * Determines whether SvelteKit should find pages to prerender by following links from the seed page(s).
+		 * Whether SvelteKit should find pages to prerender by following links from `entries`.
+		 * @default true
 		 */
 		crawl?: boolean;
 		/**
-		 * Set to `false` to disable prerendering altogether
-		 */
-		enabled?: boolean;
-		/**
 		 * An array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]`, because SvelteKit doesn't know what value the parameters should have).
+		 * @default ["*"]
 		 */
 		entries?: Array<'*' | `/${string}`>;
 		/**
@@ -453,6 +462,8 @@ export interface KitConfig {
 		 *   }
 		 * };
 		 * ```
+		 *
+		 * @default "fail"
 		 */
 		handleHttpError?: PrerenderHttpErrorHandlerValue;
 		/**
@@ -460,20 +471,25 @@ export interface KitConfig {
 		 * - `'ignore'` - silently ignore the failure and continue
 		 * - `'warn'` — continue, but print a warning
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id`, `referrers` and `message` properties. If you `throw` from this function, the build will fail
+		 *
+		 * @default "fail"
 		 */
 		handleMissingId?: PrerenderMissingIdHandlerValue;
 		/**
 		 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
+		 * @default "http://sveltekit-prerender"
 		 */
 		origin?: string;
 	};
 	serviceWorker?: {
 		/**
-		 * If set to `false`, will disable automatic service worker registration.
+		 * Whether to automatically register the service worker, if it exists.
+		 * @default true
 		 */
 		register?: boolean;
 		/**
 		 * A function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
+		 * @default (filename) => !/\.DS_Store/.test(filename)
 		 */
 		files?(filepath: string): boolean;
 	};
@@ -484,11 +500,13 @@ export interface KitConfig {
 	 */
 	version?: {
 		/**
-		 * The current app version string
+		 * The current app version string.
+		 * @default Date.now().toString()
 		 */
 		name?: string;
 		/**
-		 * The interval in milliseconds to poll for version changes.
+		 * The interval in milliseconds to poll for version changes. If this is `0`, no polling occurs.
+		 * @default 0
 		 */
 		pollInterval?: number;
 	};
