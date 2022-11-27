@@ -157,17 +157,22 @@ function stringify_type_element(member, depth = 1) {
 				break;
 
 			case 'default':
-				bullets.push(`- Default \`${tag.comment}\``);
+				bullets.push(`- <span class="tag">default</span> \`${tag.comment}\``);
 				break;
 
 			case 'returns':
-				bullets.push(`- Returns ${tag.comment}`);
+				bullets.push(`- <span class="tag">returns</span> ${tag.comment}`);
 				break;
 
 			default:
 				console.log(`unhandled JSDoc tag: ${type}`); // TODO indicate deprecated stuff
 		}
 	}
+
+	const bullet_block =
+		bullets.length > 0
+			? `\n\n<div class="ts-block-property-bullets">\n\n${bullets.join('\n')}</div>`
+			: '';
 
 	const child_block =
 		children.length > 0
@@ -177,7 +182,7 @@ function stringify_type_element(member, depth = 1) {
 	return (
 		`<div class="ts-block-property">${fence(snippet)}` +
 		`<div class="ts-block-property-details">\n\n` +
-		bullets.join('\n') +
+		bullet_block +
 		'\n\n' +
 		(doc?.comment ?? '')
 			.replace(/\/\/\/ type: (.+)/g, '/** @type {$1} */')

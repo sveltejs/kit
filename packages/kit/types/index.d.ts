@@ -115,7 +115,7 @@ export interface Builder {
 	 */
 	writeClient(dest: string): string[];
 	/**
-	 * Write server-side code to `dest`.
+	 * Write prerendered files to `dest`.
 	 * @param dest the destination folder
 	 * @param opts.fallback the name of a file for fallback responses, like `200.html` or `404.html` depending on where the app is deployed
 	 * @returns an array of files written to `dest`

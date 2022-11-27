@@ -364,6 +364,12 @@ pre.language-diff code {
 	border: none;
 }
 
+.ts-block-property-bullets .tag {
+	font-size: 1.4rem;
+	text-transform: uppercase;
+	color: #666;
+}
+
 /* we need to have a come-to-jesus moment about the site-kit css */
 .listify ul > li::before {
 	margin-top: 0.8rem !important;
