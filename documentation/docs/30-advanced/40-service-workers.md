@@ -4,7 +4,7 @@ title: Service workers
 
 Service workers act as proxy servers that handle network requests inside your app. This makes it possible to make your app work offline, but even if you don't need offline support (or can't realistically implement it because of the type of app you're building), it's often worth using service workers to speed up navigation by precaching your built JS and CSS.
 
-In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker.ts`, `src/service-worker/index.js`, etc.) it will be bundled and automatically registered. You can change the [location of your service worker](/docs/configuration#files) if you need to.
+In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker.ts`, `src/service-worker/index.js`, etc) it will be bundled and automatically registered. You can change the [location of your service worker](/docs/configuration#files) if you need to.
 
 You can [disable automatic registration](/docs/configuration#serviceworker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
 
@@ -18,22 +18,24 @@ if ('serviceWorker' in navigator) {
 
 Inside the service worker you have access to the [`$service-worker` module](/docs/modules#$service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string which you can use for creating a unique cache name. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
 
-The following example caches all files from the build eagerly and also caches all other requests occuring later on. This would make each page work offline once visited.
+The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
 
 ```js
 // @ts-nocheck Official TS Service Worker typings are still a work in progress.
 import { build, files, version } from '$service-worker';
 
-// Give the current service worker instance a unique cache name
+// Create a unique cache name for this deployment
 const CACHE_NAME = `cache-${version}`;
-// In this simple example, we just cache all files
-const to_cache = build.concat(files);
 
 self.addEventListener('install', (event) => {
-	// Create new cache and add all files to it
+	// Create a new cache and add all files to it
 	async function addFilesToCache() {
 		const cache = await caches.open(CACHE_NAME);
-		await cache.addAll(to_cache);
+
+		await cache.addAll([
+			...build, // the app itself
+			...files  // everything in `static`
+		]);
 	}
 
 	event.waitUntil(addFilesToCache());
