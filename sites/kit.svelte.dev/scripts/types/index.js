@@ -5,8 +5,6 @@ import prettier from 'prettier';
 import { mkdirp } from '../../../../packages/kit/src/utils/filesystem.js';
 import { fileURLToPath } from 'url';
 
-/** @typedef {{ snippet: string; params: Array<[string, string]>; default: string; returns: string; content: string; }} Part */
-
 /** @typedef {{ name: string; comment: string; markdown: string; }} Extracted */
 
 /** @type {Array<{ name: string; comment: string; exports: Extracted[]; types: Extracted[]; exempt?: boolean; }>} */
