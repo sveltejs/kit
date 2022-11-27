@@ -248,7 +248,7 @@ export function create_client({ target, base }) {
 			navigation_result = await server_fallback(
 				url,
 				{ id: null },
-				handle_error(new Error(`Not found: ${url.pathname}`), {
+				await handle_error(new Error(`Not found: ${url.pathname}`), {
 					url,
 					params: {},
 					route: { id: null }
@@ -268,7 +268,11 @@ export function create_client({ target, base }) {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
 				navigation_result = await load_root_error_page({
 					status: 500,
-					error: handle_error(new Error('Redirect loop'), { url, params: {}, route: { id: null } }),
+					error: await handle_error(new Error('Redirect loop'), {
+						url,
+						params: {},
+						route: { id: null }
+					}),
 					url,
 					route: { id: null }
 				});
@@ -770,7 +774,7 @@ export function create_client({ target, base }) {
 			} catch (error) {
 				return load_root_error_page({
 					status: 500,
-					error: handle_error(error, { url, params, route: { id: route.id } }),
+					error: await handle_error(error, { url, params, route: { id: route.id } }),
 					url,
 					route
 				});
@@ -859,7 +863,7 @@ export function create_client({ target, base }) {
 						status = err.status;
 						error = err.body;
 					} else {
-						error = handle_error(err, { params, url, route: { id: route.id } });
+						error = await handle_error(err, { params, url, route: { id: route.id } });
 					}
 
 					const error_load = await load_nearest_error_page(i, branch, errors);
@@ -1567,7 +1571,7 @@ export function create_client({ target, base }) {
 
 				result = await load_root_error_page({
 					status: error instanceof HttpError ? error.status : 500,
-					error: handle_error(error, { url, params, route }),
+					error: await handle_error(error, { url, params, route }),
 					url,
 					route
 				});
@@ -1619,7 +1623,7 @@ async function load_data(url, invalid) {
 /**
  * @param {unknown} error
  * @param {import('types').NavigationEvent} event
- * @returns {App.Error}
+ * @returns {import('../../../types/private.js').MaybePromise<App.Error>}
  */
 function handle_error(error, event) {
 	if (error instanceof HttpError) {
