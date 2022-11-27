@@ -188,8 +188,7 @@ async function generate_lambda_functions({ builder, publish, split }) {
 				filter: (other) => matches(route.segments, other.segments),
 				complete: (entry) => {
 					const manifest = entry.generateManifest({
-						relativePath: '../server',
-						format: 'esm'
+						relativePath: '../server'
 					});
 
 					const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
@@ -206,8 +205,7 @@ async function generate_lambda_functions({ builder, publish, split }) {
 		builder.log.minor('Generating serverless functions...');
 
 		const manifest = builder.generateManifest({
-			relativePath: '../server',
-			format: 'esm'
+			relativePath: '../server'
 		});
 
 		const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
