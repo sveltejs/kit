@@ -25,17 +25,18 @@ The following example caches the built app and any files in `static` eagerly, an
 import { build, files, version } from '$service-worker';
 
 // Create a unique cache name for this deployment
-const CACHE_NAME = `cache-${version}`;
+const CACHE = `cache-${version}`;
+
+const ASSETS = [
+	...build, // the app itself
+	...files  // everything in `static`
+];
 
 self.addEventListener('install', (event) => {
 	// Create a new cache and add all files to it
 	async function addFilesToCache() {
-		const cache = await caches.open(CACHE_NAME);
-
-		await cache.addAll([
-			...build, // the app itself
-			...files  // everything in `static`
-		]);
+		const cache = await caches.open(CACHE);
+		await cache.addAll(ASSETS);
 	}
 
 	event.waitUntil(addFilesToCache());
@@ -44,36 +45,43 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
 	// Remove previous cached data from disk
 	async function deleteOldCaches() {
-		const keyList = await caches.keys();
-		const cachesToDelete = keyList.filter((key) => key !== CACHE_NAME);
-		await Promise.all(cachesToDelete.map((key) => caches.delete(key)));
+		for (const key of await caches.keys()) {
+			if (key !== CACHE) await caches.delete(key);
+		}
 	}
 
 	event.waitUntil(deleteOldCaches());
 });
 
 self.addEventListener('fetch', (event) => {
-	// Try to get the response from the cache, add to cache if not found
-	async function addToCache(request, response) {
-		const cache = await caches.open(CACHE_NAME);
-		await cache.put(request, response);
-	}
+	// ignore POST requests etc
+	if (event.request.method !== 'GET') return;
 
-	async function cacheFirst(request) {
-		const responseFromCache = await caches.match(request);
-		if (responseFromCache) {
-			return responseFromCache;
+	async function respond() {
+		const url = new URL(event.request.url);
+		const cache = await caches.open(CACHE);
+
+		// `build`/`files` can always be served from the cache
+		if (ASSETS.includes(url.pathname)) {
+			return cache.match(event.request);
 		}
-		const response = await fetch(request);
-		addToCache(request, response.clone());
-		return response;
+
+		// for everything else, try the network first, but
+		// fall back to the cache if we're offline
+		try {
+			const response = await fetch(event.request);
+			cache.put(response.clone());
+			return response;
+		} catch {
+			return cache.match(event.request);
+		}
 	}
 
-	event.respondWith(cacheFirst(event.request));
+	event.respondWith(respond());
 });
 ```
 
-> Careful with caching too much for too long! Browsers have a limit on the amount they cache, and not everything should be cached, for example requests that contain dynamic data that change over time
+> Be careful when caching! In some cases, stale data might be worse than data that's unavailable while offline. Since browsers will empty caches if they get too full, you should also be careful about caching large assets like video files.
 
 The service worker is bundled for production, but not during development. For that reason, only browsers that support [modules in service workers](https://web.dev/es-modules-in-sw) will be able to use them at dev time. If you are manually registering your service worker, you will need to pass the `{ type: 'module' }` option in development:
 
