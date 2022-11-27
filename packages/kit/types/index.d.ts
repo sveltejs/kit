@@ -349,13 +349,16 @@ export interface KitConfig {
 		 * @default "static"
 		 */
 		assets?: string;
-		/**
-		 * the location of your client and server [hooks](https://kit.svelte.dev/docs/hooks)
-		 */
 		hooks?: {
-			/** @default "src/hooks.client" */
+			/**
+			 * The location of your client [hooks](/docs/hooks).
+			 * @default "src/hooks.client"
+			 */
 			client?: string;
-			/** @default "src/hooks.server" */
+			/**
+			 * The location of your server [hooks](/docs/hooks).
+			 * @default "src/hooks.server"
+			 */
 			server?: string;
 		};
 		/**
