@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.563
+
+### Patch Changes
+
+- [feat] allow handleError to return a promise ([#7780](https://github.com/sveltejs/kit/pull/7780))
+
+- [breaking] remove `format` option from `generateManifest(...)` ([#7820](https://github.com/sveltejs/kit/pull/7820))
+
 ## 1.0.0-next.562
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.194
+
+### Patch Changes
+
+- fix playwright glob filter ([#7826](https://github.com/sveltejs/kit/pull/7826))
+
 ## 2.0.0-next.193
 
 ### Patch Changes
