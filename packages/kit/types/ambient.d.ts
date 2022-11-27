@@ -140,9 +140,10 @@ declare module '$app/forms' {
 	/**
 	 * Use this function to deserialize the response from a form submission.
 	 * Usage:
-	 * ```
-	 * const res = await fetch('/form?/action', { method: 'POST', body: formData });
-	 * const result = deserialize(await res.text());
+	 *
+	 * ```js
+	 * const response = await fetch('/form?/action', { method: 'POST', body: formData });
+	 * const result = deserialize(await response.text());
 	 * ```
 	 */
 	export function deserialize<
