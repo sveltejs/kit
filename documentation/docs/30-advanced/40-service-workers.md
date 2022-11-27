@@ -70,7 +70,11 @@ self.addEventListener('fetch', (event) => {
 		// fall back to the cache if we're offline
 		try {
 			const response = await fetch(event.request);
-			cache.put(response.clone());
+
+			if (response.status === 200) {
+				cache.put(response.clone());
+			}
+
 			return response;
 		} catch {
 			return cache.match(event.request);
