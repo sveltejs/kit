@@ -72,7 +72,7 @@ export interface Builder {
 	 */
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
-	generateManifest(opts: { relativePath: string; format?: 'esm' | 'cjs' }): string;
+	generateManifest(opts: { relativePath: string }): string;
 
 	getBuildDirectory(name: string): string;
 	getClientDirectory(): string;
