@@ -810,6 +810,22 @@ test.describe('Routing', () => {
 		await page.click('[href="/routing/link-outside-app-target/target"]');
 		expect(await page.textContent('h1')).toBe('target: 0');
 	});
+
+	test('responds to <form method="GET"> submission without reload', async ({ page }) => {
+		await page.goto('/routing/form-get');
+		expect(await page.textContent('h1')).toBe('...');
+		expect(await page.textContent('h2')).toBe('enter');
+
+		const requests = [];
+		page.on('request', (request) => requests.push(request.url()));
+
+		await page.locator('input').fill('updated');
+		await page.click('button');
+
+		expect(requests).toEqual([]);
+		expect(await page.textContent('h1')).toBe('updated');
+		expect(await page.textContent('h2')).toBe('form');
+	});
 });
 
 test.describe('Shadow DOM', () => {
