@@ -608,21 +608,32 @@ test.describe('Load', () => {
 
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page, baseURL }) => {
-			const [msg0] = await Promise.all([
-				page.waitForEvent('console'),
-				page.goto('/load/window-fetch/incorrect')
+			await Promise.all([
+				page.goto('/load/window-fetch/incorrect'),
+				page.waitForEvent('console', {
+					predicate: (message) => {
+						return (
+							message.text() ===
+							`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+						);
+					},
+					timeout: 3_000
+				})
 			]);
 			expect(await page.textContent('h1')).toBe('42');
-			expect(msg0.text()).toBe(
-				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
-			);
 
-			const [msg1] = await Promise.all([
-				page.waitForEvent('console'),
-				page.goto('/load/window-fetch/correct')
-			]);
+			/** @type {string[]} */
+			const warnings = [];
+			page.on('console', (msg) => {
+				if (msg.type() === 'warning') {
+					warnings.push(msg.text());
+				}
+			});
+
+			await page.goto('/load/window-fetch/correct');
 			expect(await page.textContent('h1')).toBe('42');
-			expect(msg1.text()).toBe(
+
+			expect(warnings).not.toContain(
 				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
 		});
