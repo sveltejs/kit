@@ -72,7 +72,7 @@ export interface Builder {
 	 */
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
-	generateManifest(opts: { relativePath: string; format?: 'esm' | 'cjs' }): string;
+	generateManifest(opts: { relativePath: string }): string;
 
 	getBuildDirectory(name: string): string;
 	getClientDirectory(): string;
@@ -241,12 +241,20 @@ export interface Handle {
 	}): MaybePromise<Response>;
 }
 
+/**
+ * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
+ * Make sure that this function _never_ throws an error.
+ */
 export interface HandleServerError {
-	(input: { error: unknown; event: RequestEvent }): void | App.Error;
+	(input: { error: unknown; event: RequestEvent }): MaybePromise<void | App.Error>;
 }
 
+/**
+ * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
+ * Make sure that this function _never_ throws an error.
+ */
 export interface HandleClientError {
-	(input: { error: unknown; event: NavigationEvent }): void | App.Error;
+	(input: { error: unknown; event: NavigationEvent }): MaybePromise<void | App.Error>;
 }
 
 export interface HandleFetch {
