@@ -21,10 +21,10 @@
 		"set-cookie-parser": "^2.5.1",
 		"sirv": "^2.0.2",
 		"tiny-glob": "^0.2.9",
-		"undici": "5.12.0"
+		"undici": "5.13.0"
 	},
 	"devDependencies": {
-		"@playwright/test": "1.25.0",
+		"@playwright/test": "1.28.1",
 		"@types/connect": "^3.4.35",
 		"@types/marked": "^4.0.7",
 		"@types/mime": "^3.0.1",
