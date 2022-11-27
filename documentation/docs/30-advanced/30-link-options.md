@@ -83,13 +83,13 @@ In certain cases, you may wish to disable this behaviour. Adding a `data-sveltek
 To disable any of these options inside an element where they have been enabled, use the `"off"` value:
 
 ```html
-<div data-sveltekit-preload>
+<div data-sveltekit-preload-data>
 	<!-- these links will be preloaded -->
 	<a href="/a">a</a>
 	<a href="/b">b</a>
 	<a href="/c">c</a>
 
-	<div data-sveltekit-preload="off">
+	<div data-sveltekit-preload-data="off">
 		<!-- these links will NOT be preloaded -->
 		<a href="/d">d</a>
 		<a href="/e">e</a>
