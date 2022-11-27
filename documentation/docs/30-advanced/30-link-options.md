@@ -54,6 +54,8 @@ Note that `viewport` and `page` only apply to links that are present in the DOM 
 
 > Since preloading code is a prerequisite for preloading data, this attribute will only have an effect if it specifies a more eager value than any `data-sveltekit-preload-data` attribute that is present.
 
+As with `data-sveltekit-preload-data`, this attribute will be ignored if the user has chosen reduced data usage.
+
 ### data-sveltekit-reload
 
 Occasionally, we need to tell SvelteKit not to handle a link, but allow the browser to handle it. Adding a `data-sveltekit-reload` attribute to a link...
