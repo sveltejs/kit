@@ -13,10 +13,21 @@ export function unlock_fetch() {
 }
 
 if (import.meta.env.DEV) {
+	let can_inspect_stack_trace = false;
+
+	const check_stack_trace = async () => {
+		const stack = /** @type {string} */ (new Error().stack);
+		can_inspect_stack_trace = stack.includes('check_stack_trace');
+	};
+
+	check_stack_trace();
+
 	window.fetch = (input, init) => {
 		const url = input instanceof Request ? input.url : input.toString();
+		const stack = /** @type {string} */ (new Error().stack);
 
-		if (loading) {
+		const heuristic = can_inspect_stack_trace ? stack.includes('load_node') : loading;
+		if (heuristic) {
 			console.warn(
 				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
