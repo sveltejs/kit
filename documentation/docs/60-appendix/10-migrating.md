@@ -85,7 +85,7 @@ Your custom error page component should be renamed from `_error.svelte` to `+err
 
 #### Imports
 
-The `goto`, `prefetch` and `prefetchRoutes` imports from `@sapper/app` should be replaced with `goto`, `preload` and `prepare` imports respectively from [`$app/navigation`](/docs/modules#$app-navigation).
+The `goto`, `prefetch` and `prefetchRoutes` imports from `@sapper/app` should be replaced with `goto`, `preloadData` and `preloadCode` imports respectively from [`$app/navigation`](/docs/modules#$app-navigation).
 
 The `stores` import from `@sapper/app` should be replaced — see the [Stores](/docs/migrating#pages-and-layouts-stores) section below.
 
