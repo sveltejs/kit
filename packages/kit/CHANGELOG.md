@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.0.0-next.562
+
+### Patch Changes
+
+- [fix] handle redirects in handle hook while processing data request ([#7797](https://github.com/sveltejs/kit/pull/7797))
+
+- Make touchstart listener passive ([#7818](https://github.com/sveltejs/kit/pull/7818))
+
+- [breaking] remove `getStaticDirectory()` from builder API ([#7809](https://github.com/sveltejs/kit/pull/7809))
+
+- Make console.warn wrapper named rather than anonymous ([#7811](https://github.com/sveltejs/kit/pull/7811))
+
+## 1.0.0-next.561
+
+### Patch Changes
+
+- Upgrade vite-plugin-svelte to ^1.3.1 ([#7760](https://github.com/sveltejs/kit/pull/7760))
+
 ## 1.0.0-next.560
 
 ### Patch Changes

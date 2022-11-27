@@ -93,24 +93,22 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 
 				if (filtered.size > 0) {
 					await complete({
-						generateManifest: ({ relativePath, format }) =>
+						generateManifest: ({ relativePath }) =>
 							generate_manifest({
 								build_data,
 								relative_path: relativePath,
-								routes: Array.from(filtered),
-								format
+								routes: Array.from(filtered)
 							})
 					});
 				}
 			}
 		},
 
-		generateManifest: ({ relativePath, format }) => {
+		generateManifest: ({ relativePath }) => {
 			return generate_manifest({
 				build_data,
 				relative_path: relativePath,
-				routes,
-				format
+				routes
 			});
 		},
 
@@ -124,10 +122,6 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 
 		getServerDirectory() {
 			return `${config.kit.outDir}/output/server`;
-		},
-
-		getStaticDirectory() {
-			return config.kit.files.assets;
 		},
 
 		getAppPath() {

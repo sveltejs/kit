@@ -94,7 +94,7 @@ export interface Builder {
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#sveltejs-kit-server) with.
 	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 	 */
-	generateManifest(opts: { relativePath: string; format?: 'esm' | 'cjs' }): string;
+	generateManifest(opts: { relativePath: string }): string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -105,8 +105,6 @@ export interface Builder {
 	getClientDirectory(): string;
 	/** Get the fully resolved path to the directory containing server-side code. */
 	getServerDirectory(): string;
-	/** Get the fully resolved path to your `static` directory. */
-	getStaticDirectory(): string;
 	/** Get the application path including any configured `base` path, e.g. `/my-base-path/_app`. */
 	getAppPath(): string;
 
@@ -511,16 +509,22 @@ export interface Handle {
 
 /**
  * The server-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while responding to a request.
+ *
+ * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
+ * Make sure that this function _never_ throws an error.
  */
 export interface HandleServerError {
-	(input: { error: unknown; event: RequestEvent }): void | App.Error;
+	(input: { error: unknown; event: RequestEvent }): MaybePromise<void | App.Error>;
 }
 
 /**
  * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while navigating.
+ *
+ * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
+ * Make sure that this function _never_ throws an error.
  */
 export interface HandleClientError {
-	(input: { error: unknown; event: NavigationEvent }): void | App.Error;
+	(input: { error: unknown; event: NavigationEvent }): MaybePromise<void | App.Error>;
 }
 
 /**
