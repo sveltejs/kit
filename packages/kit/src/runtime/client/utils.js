@@ -49,7 +49,7 @@ const anchor_attribute_valid_values = /** @type {const} */ ({
  */
 function getValidatedAttribute(element, attributeName) {
 	const value = element.getAttribute(attributeName);
-	return validateAttributeValue(element, attributeName, value);
+	return __SVELTEKIT_DEV__ ? validateAttributeValue(element, attributeName, value) : value;
 }
 
 /**
