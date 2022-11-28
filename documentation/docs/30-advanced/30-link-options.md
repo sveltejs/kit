@@ -14,10 +14,8 @@ SvelteKit can use this information to get a head start on importing the code and
 
 We can control this behaviour with the `data-sveltekit-preload-data` attribute, which can have one of two values:
 
-- `"hover"` means that preloading will start if the mouse comes to a rest over a link
+- `"hover"` means that preloading will start if the mouse comes to a rest over a link. On mobile, preloading begins on `touchstart`
 - `"tap"` means that preloading will start as soon as a `touchstart` or `mousedown` event is registered
-
-> On mobile, links with `"hover"` will preload on `touchstart`.
 
 The default project template has a `data-sveltekit-preload-data="hover"` attribute applied to the `<body>` element in `src/app.html`, meaning that every link is preloaded on hover by default:
 
