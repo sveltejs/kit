@@ -130,9 +130,6 @@ function fence(code, lang = 'dts') {
  * @param {import('./types').Type} member
  */
 function stringify(member) {
-	// @ts-ignore
-	const doc = member.jsDoc?.[0];
-
 	const bullet_block =
 		member.bullets.length > 0
 			? `\n\n<div class="ts-block-property-bullets">\n\n${member.bullets.join('\n')}</div>`
@@ -150,7 +147,7 @@ function stringify(member) {
 		`<div class="ts-block-property-details">\n\n` +
 		bullet_block +
 		'\n\n' +
-		(doc?.comment ?? '')
+		member.comment
 			.replace(/\/\/\/ type: (.+)/g, '/** @type {$1} */')
 			.replace(/^(  )+/gm, (match, spaces) => {
 				return '\t'.repeat(match.length / 2);
