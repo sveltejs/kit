@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.565
+
+### Patch Changes
+
+- [breaking] Replace `data-sveltekit-prefetch` with `-preload-code` and `-preload-data` ([#7776](https://github.com/sveltejs/kit/pull/7776))
+
+- [breaking] Rename `prefetch` to `preloadData` and `prefetchRoutes` to `preloadCode` ([#7776](https://github.com/sveltejs/kit/pull/7776))
+
 ## 1.0.0-next.564
 
 ### Patch Changes
