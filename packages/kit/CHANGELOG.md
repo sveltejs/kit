@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.567
+
+### Patch Changes
+
+- Co-locate synthetic types with other Kit types ([#7864](https://github.com/sveltejs/kit/pull/7864))
+
 ## 1.0.0-next.566
 
 ### Patch Changes
