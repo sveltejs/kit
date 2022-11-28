@@ -6,7 +6,8 @@
 		"noImplicitAny": true,
 		"module": "esnext",
 		"target": "esnext",
-		"moduleResolution": "node",
+		"skipLibCheck": true,
+		"moduleResolution": "node16",
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]

@@ -32,12 +32,14 @@ importers:
 
   packages/adapter-auto:
     specifiers:
+      '@sveltejs/kit': workspace:*
       '@types/node': ^16.18.3
       import-meta-resolve: ^2.2.0
       typescript: ^4.9.3
     dependencies:
       import-meta-resolve: 2.2.0
     devDependencies:
+      '@sveltejs/kit': link:../kit
       '@types/node': 16.18.3
       typescript: 4.9.3
 

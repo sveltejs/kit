@@ -5,7 +5,7 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
 /** @type {import('.').default} **/
-export default function ({ external = [], edge, split } = {}) {
+const plugin = function ({ external = [], edge, split } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
@@ -333,3 +333,5 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 
 	write(`${dir}/package.json`, JSON.stringify({ type: 'module' }));
 }
+
+export default plugin;
