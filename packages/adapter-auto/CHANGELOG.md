@@ -1,5 +1,11 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.90
+
+### Patch Changes
+
+- Upgrade dependencies ([#7852](https://github.com/sveltejs/kit/pull/7852))
+
 ## 1.0.0-next.89
 
 ### Patch Changes
