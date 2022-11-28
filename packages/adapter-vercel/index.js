@@ -196,7 +196,7 @@ const plugin = function ({ external = [], edge, split } = {}) {
 			);
 		}
 	};
-}
+};
 
 /**
  * @param {string} file
