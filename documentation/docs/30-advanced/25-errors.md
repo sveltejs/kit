@@ -81,7 +81,7 @@ Unexpected errors will go through the [`handleError`](/docs/hooks#shared-hooks-h
 
 ```js
 /// file: src/hooks.server.js
-// @errors: 2322 2571 18046 2339
+// @errors: 2322 2571 2339
 // @filename: ambient.d.ts
 const Sentry: any;
 
