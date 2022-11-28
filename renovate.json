@@ -10,10 +10,17 @@
 	},
 	"ignoreDeps": [
 		"esbuild",
+		"rollup",
 		"typescript"
 	],
 	"ignorePaths": [
 		"**/create-svelte/shared/**",
 		"**/create-svelte/templates/**"
+	],
+	"packageRules": [
+		{
+			"matchPackageNames": ["@types/node", "vite"],
+			"matchUpdateTypes": ["minor", "patch", "pin", "digest"]
+		}
 	]
 }
