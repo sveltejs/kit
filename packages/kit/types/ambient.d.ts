@@ -5,10 +5,9 @@
  * /// <reference types="@sveltejs/kit" />
  *
  * declare namespace App {
+ * 	interface Error {}
  * 	interface Locals {}
- *
  * 	interface PageData {}
- *
  * 	interface Platform {}
  * }
  * ```
@@ -65,11 +64,6 @@ declare namespace App {
 	export interface Platform {}
 }
 
-/**
- * ```ts
- * import { browser, building, dev, version } from '$app/environment';
- * ```
- */
 declare module '$app/environment' {
 	/**
 	 * `true` if the app is running in the browser.
@@ -92,17 +86,14 @@ declare module '$app/environment' {
 	export const version: string;
 }
 
-/**
- * ```ts
- * import { enhance, applyAction } from '$app/forms';
- * ```
- */
 declare module '$app/forms' {
 	import type { ActionResult } from '@sveltejs/kit';
 
 	type MaybePromise<T> = T | Promise<T>;
 
-	export type SubmitFunction<
+	// this is duplicated in @sveltejs/kit because create-svelte tests fail
+	// if we use the imported version. TODO investigate
+	type SubmitFunction<
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	> = (input: {
@@ -166,9 +157,10 @@ declare module '$app/forms' {
 	/**
 	 * Use this function to deserialize the response from a form submission.
 	 * Usage:
-	 * ```
-	 * const res = await fetch('/form?/action', { method: 'POST', body: formData });
-	 * const result = deserialize(await res.text());
+	 *
+	 * ```js
+	 * const response = await fetch('/form?/action', { method: 'POST', body: formData });
+	 * const result = deserialize(await response.text());
 	 * ```
 	 */
 	export function deserialize<
@@ -177,20 +169,6 @@ declare module '$app/forms' {
 	>(serialized: string): ActionResult<Success, Invalid>;
 }
 
-/**
- * ```ts
- * import {
- * 	afterNavigate,
- * 	beforeNavigate,
- * 	disableScrollHandling,
- * 	goto,
- * 	invalidate,
- * 	invalidateAll,
- * 	prefetch,
- * 	prefetchRoutes
- * } from '$app/navigation';
- * ```
- */
 declare module '$app/navigation' {
 	import { BeforeNavigate, AfterNavigate } from '@sveltejs/kit';
 
@@ -251,28 +229,27 @@ declare module '$app/navigation' {
 	 */
 	export function invalidateAll(): Promise<void>;
 	/**
-	 * Programmatically prefetches the given page, which means
+	 * Programmatically preloads the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
 	 *  2. calling the page's load function with the appropriate options.
 	 *
-	 * This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with `data-sveltekit-prefetch`.
+	 * This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with `data-sveltekit-preload-data`.
 	 * If the next navigation is to `href`, the values returned from load will be used, making navigation instantaneous.
-	 * Returns a Promise that resolves when the prefetch is complete.
+	 * Returns a Promise that resolves when the preload is complete.
 	 *
-	 * @param href Page to prefetch
+	 * @param href Page to preload
 	 */
-	export function prefetch(href: string): Promise<void>;
+	export function preloadData(href: string): Promise<void>;
 	/**
-	 * Programmatically prefetches the code for routes that haven't yet been fetched.
+	 * Programmatically imports the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
 	 *
-	 * If no argument is given, all routes will be fetched, otherwise you can specify routes by any matching pathname
-	 * such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`).
+	 * You can specify routes by any matching pathname such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`).
 	 *
-	 * Unlike prefetch, this won't call load for individual pages.
-	 * Returns a Promise that resolves when the routes have been prefetched.
+	 * Unlike `preloadData`, this won't call `load` functions.
+	 * Returns a Promise that resolves when the modules have been imported.
 	 */
-	export function prefetchRoutes(routes?: string[]): Promise<void>;
+	export function preloadCode(...urls: string[]): Promise<void>;
 
 	/**
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
@@ -292,11 +269,6 @@ declare module '$app/navigation' {
 	export function afterNavigate(callback: (navigation: AfterNavigate) => void): void;
 }
 
-/**
- * ```ts
- * import { base, assets } from '$app/paths';
- * ```
- */
 declare module '$app/paths' {
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths).
@@ -313,10 +285,6 @@ declare module '$app/paths' {
 }
 
 /**
- * ```ts
- * import { getStores, navigating, page, updated } from '$app/stores';
- * ```
- *
  * Stores on the server are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `page` is unique to each request, rather than shared between multiple requests handled by the same server simultaneously.
  *
  * Because of that, you must subscribe to the stores during component initialization (which happens automatically if you reference the store value, e.g. as `$page`, in a component) before you can use them.
@@ -354,16 +322,12 @@ declare module '$app/stores' {
 }
 
 /**
- * ```ts
- * import { build, files, prerendered, version } from '$service-worker';
- * ```
- *
  * This module is only available to [service workers](https://kit.svelte.dev/docs/service-workers).
  */
 declare module '$service-worker' {
 	/**
 	 * An array of URL strings representing the files generated by Vite, suitable for caching with `cache.addAll(build)`.
-	 * During development, this is be an empty array.
+	 * During development, this is an empty array.
 	 */
 	export const build: string[];
 	/**
@@ -372,7 +336,7 @@ declare module '$service-worker' {
 	export const files: string[];
 	/**
 	 * An array of pathnames corresponding to prerendered pages and endpoints.
-	 * During development, this is be an empty array.
+	 * During development, this is an empty array.
 	 */
 	export const prerendered: string[];
 	/**
@@ -388,10 +352,9 @@ declare module '@sveltejs/kit/hooks' {
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
 	 *
 	 * ```js
-	 * /// file: src/hooks.js
+	 * /// file: src/hooks.server.js
 	 * import { sequence } from '@sveltejs/kit/hooks';
 	 *
-	 * /** @type {import('@sveltejs/kit').Handle} *\/
 	 * async function first({ event, resolve }) {
 	 * 	console.log('first pre-processing');
 	 * 	const result = await resolve(event, {
@@ -405,7 +368,6 @@ declare module '@sveltejs/kit/hooks' {
 	 * 	return result;
 	 * }
 	 *
-	 * /** @type {import('@sveltejs/kit').Handle} *\/
 	 * async function second({ event, resolve }) {
 	 * 	console.log('second pre-processing');
 	 * 	const result = await resolve(event, {

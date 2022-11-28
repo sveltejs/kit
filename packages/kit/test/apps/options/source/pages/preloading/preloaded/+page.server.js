@@ -1,5 +1,5 @@
 export function load() {
 	return {
-		message: 'prefetched'
+		message: 'preloaded'
 	};
 }

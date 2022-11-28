@@ -6,7 +6,11 @@ import { create_dynamic_types, create_static_types } from '../env.js';
 import { write_if_changed } from './utils.js';
 import { fileURLToPath } from 'url';
 
-const descriptions_dir = fileURLToPath(new URL('../../../scripts/special-types', import.meta.url));
+// TODO these types should be described in a neutral place, rather than
+// inside either `packages/kit` or `kit.svelte.dev`
+const descriptions_dir = fileURLToPath(
+	new URL('../../../../../sites/kit.svelte.dev/scripts/types/special-types', import.meta.url)
+);
 
 /** @param {string} filename */
 function read_description(filename) {

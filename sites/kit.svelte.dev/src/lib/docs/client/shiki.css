@@ -2,7 +2,7 @@
 	display: none;
 }
 
-pre.twoslash {
+:root {
 	--shiki-color-text: var(--code-base);
 	--shiki-color-background: transparent;
 	--shiki-token-constant: var(--code-base);

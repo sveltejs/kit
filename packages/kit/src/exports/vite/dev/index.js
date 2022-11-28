@@ -426,28 +426,29 @@ export async function dev(vite, vite_config, svelte_config) {
 							check_origin: svelte_config.kit.csrf.checkOrigin
 						},
 						dev: true,
-						handle_error: (error, event) => {
-							return (
-								hooks.handleError({
-									error: new Proxy(error, {
-										get: (target, property) => {
-											if (property === 'stack') {
-												return fix_stack_trace(error);
-											}
-
-											return Reflect.get(target, property, target);
+						handle_error: async (error, event) => {
+							const error_object = await hooks.handleError({
+								error: new Proxy(error, {
+									get: (target, property) => {
+										if (property === 'stack') {
+											return fix_stack_trace(error);
 										}
-									}),
-									event,
 
-									// TODO remove for 1.0
-									// @ts-expect-error
-									get request() {
-										throw new Error(
-											'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
-										);
+										return Reflect.get(target, property, target);
 									}
-								}) ?? { message: event.route.id != null ? 'Internal Error' : 'Not Found' }
+								}),
+								event,
+
+								// TODO remove for 1.0
+								// @ts-expect-error
+								get request() {
+									throw new Error(
+										'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
+									);
+								}
+							});
+							return (
+								error_object ?? { message: event.route.id != null ? 'Internal Error' : 'Not Found' }
 							);
 						},
 						hooks,

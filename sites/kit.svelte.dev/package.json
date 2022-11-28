@@ -2,8 +2,9 @@
 	"name": "kit.svelte.dev",
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "node ../../scripts/check-doc-links.js && vite dev",
-		"build": "node ../../scripts/check-doc-links.js && vite build",
+		"update": "node scripts/check-doc-links.js && node scripts/types",
+		"dev": "npm run update && vite dev",
+		"build": "npm run update && vite build",
 		"prebuild": "test \"$CI\" = true && npx pnpm install --store=node_modules/.pnpm-store || echo skipping pnpm install",
 		"preview": "vite preview",
 		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\""

@@ -260,6 +260,10 @@
 	text-decoration: none !important;
 }
 
+.code-block.border {
+	border-left: 5px solid var(--second);
+}
+
 /** TODO another thing that belongs in site-kit */
 pre.language-diff code {
 	color: rgba(0, 0, 0, 0.4);
@@ -302,4 +306,76 @@ pre.language-diff code {
 	padding-left: calc(var(--indent) + 2ch);
 	text-indent: calc(-1 * var(--indent) - 2ch);
 	min-height: 1.35em;
+}
+
+.api-section {
+	background: var(--back-api);
+	padding: 1rem;
+	margin-bottom: 1rem;
+	max-width: var(--linemax);
+	border-radius: var(--border-r);
+}
+
+.ts-block {
+	margin-bottom: 1rem;
+	max-width: var(--linemax);
+	background: white;
+	border-radius: var(--border-r);
+	filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.08));
+	overflow: hidden;
+}
+
+.ts-block > .code-block {
+	margin: 0;
+	border-radius: 0;
+	box-shadow: none;
+	background: white;
+}
+
+.ts-block .ts-block-property p {
+	margin: 1rem 0;
+}
+
+.ts-block-property .code-block {
+	margin: 1rem 0;
+}
+
+.ts-block-property > .code-block {
+	margin: 0;
+	padding-left: 1rem;
+	border-radius: 0;
+	box-shadow: none;
+	/* background: var(--back-light); */
+	border-top: 1px solid var(--back-api);
+}
+
+.ts-block-property-details {
+	padding: 0 1rem 0 2rem;
+}
+
+.ts-block-property-details blockquote {
+	margin: 1rem 0;
+}
+
+.ts-block-property-children {
+	margin: 0rem -1rem 0rem 1rem;
+}
+
+.ts-block-property-children .ts-block-property > .code-block {
+	/* border: none; */
+}
+
+.ts-block-property-bullets .tag {
+	font-size: 1.4rem;
+	text-transform: uppercase;
+	color: #666;
+}
+
+.ts-block-property ul:last-child {
+	margin-bottom: 0;
+}
+
+/* we need to have a come-to-jesus moment about the site-kit css */
+.listify ul > li::before {
+	margin-top: 0.8rem !important;
 }
