@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.564
+
+### Patch Changes
+
+- [chore] upgrade undici ([#7830](https://github.com/sveltejs/kit/pull/7830))
+
+- Make `$page.url` resilient against mutations ([#7827](https://github.com/sveltejs/kit/pull/7827))
+
 ## 1.0.0-next.563
 
 ### Patch Changes
