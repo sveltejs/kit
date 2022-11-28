@@ -77,11 +77,11 @@ By default, unexpected errors are printed to the console (or, in production, you
 { "message": "Internal Error" }
 ```
 
-Unexpected errors will go through the [`handleError`](/docs/hooks#shared-hooks-handleerror) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object. 
+Unexpected errors will go through the [`handleError`](/docs/hooks#shared-hooks-handleerror) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object.
 
 ```js
 /// file: src/hooks.server.js
-// @errors: 2322 2571
+// @errors: 2322 2571 2339
 // @filename: ambient.d.ts
 const Sentry: any;
 
@@ -94,7 +94,7 @@ export function handleError({ error, event }) {
 
 	return {
 		message: 'Whoops!',
-		code: error.code ?? 'UNKNOWN'
+		code: error?.code ?? 'UNKNOWN'
 	};
 }
 ```
