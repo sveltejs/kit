@@ -3,19 +3,64 @@ import { modules } from './type-info.js';
 /** @param {string} content */
 export function replace_placeholders(content) {
 	return content
-		.replace(/> TYPES: (.+)/g, (_, name) => {
+		.replace(/> EXPANDED_TYPES: (.+?)#(.+)$/gm, (_, name, id) => {
 			const module = modules.find((module) => module.name === name);
-			const { types } = module;
+			if (!module) throw new Error(`Could not find module ${name}`);
 
-			return `${module.comment}\n\n${types
-				.map((type) => {
-					const markdown =
-						`<div class="ts-block">${fence(type.snippet)}` +
-						type.children.map(stringify).join('\n\n') +
-						`</div>`;
-					return `#### ${type.name}\n\n${type.comment}\n\n${markdown}`;
+			const type = module.types.find((t) => t.name === id);
+
+			return (
+				type.comment +
+				type.children
+					.map((child) => {
+						let section = `### ${child.name}`;
+
+						if (child.bullets) {
+							section += `\n\n<div class="ts-block-property-bullets">\n\n${child.bullets.join(
+								'\n'
+							)}\n\n</div>`;
+						}
+
+						section += `\n\n${child.comment}`;
+
+						if (child.children) {
+							section += `\n\n<div class="ts-block-property-children">\n\n${child.children
+								.map(stringify)
+								.join('\n')}\n\n</div>`;
+						}
+
+						return section;
+					})
+					.join('\n\n')
+			);
+		})
+		.replace(/> TYPES: (.+?)(?:#(.+))?$/gm, (_, name, id) => {
+			const module = modules.find((module) => module.name === name);
+			if (!module) throw new Error(`Could not find module ${name}`);
+
+			if (id) {
+				const type = module.types.find((t) => t.name === id);
+
+				return (
+					`<div class="ts-block">${fence(type.snippet)}` +
+					type.children.map(stringify).join('\n\n') +
+					`</div>`
+				);
+			}
+
+			return `${module.comment}\n\n${module.types
+				.map((t) => {
+					let children = t.children.map(stringify).join('\n\n');
+					if (t.name === 'Config' || t.name === 'KitConfig') {
+						// special case — we want these to be on a separate page
+						children =
+							'<div class="ts-block-property-details">\n\nSee the [configuration reference](/docs#configuration) for details.</div>';
+					}
+
+					const markdown = `<div class="ts-block">${fence(t.snippet)}` + children + `</div>`;
+					return `#### ${t.name}\n\n${t.comment}\n\n${markdown}\n\n`;
 				})
-				.join('\n\n')}`;
+				.join('')}`;
 		})
 		.replace('> MODULES', () => {
 			return modules
