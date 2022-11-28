@@ -37,16 +37,16 @@ export const test = base.extend({
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
 			/**
+			 * @param {string[]} urls
+			 * @returns {Promise<void>}
+			 */
+			preloadCode: (...urls) => page.evaluate((urls) => preloadCode(...urls), urls),
+
+			/**
 			 * @param {string} url
 			 * @returns {Promise<void>}
 			 */
-			prefetch: (url) => page.evaluate((/** @type {string} */ url) => prefetch(url), url),
-
-			/**
-			 * @param {string[]} [urls]
-			 * @returns {Promise<void>}
-			 */
-			prefetchRoutes: (urls) => page.evaluate((urls) => prefetchRoutes(urls), urls)
+			preloadData: (url) => page.evaluate((/** @type {string} */ url) => preloadData(url), url)
 		});
 	},
 
