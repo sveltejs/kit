@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.195
+
+### Patch Changes
+
+- [breaking] Replace `data-sveltekit-prefetch` with `-preload-code` and `-preload-data` ([#7776](https://github.com/sveltejs/kit/pull/7776))
+
+- Upgrade to Playwright 1.28.1 ([#7696](https://github.com/sveltejs/kit/pull/7696))
+
 ## 2.0.0-next.194
 
 ### Patch Changes
