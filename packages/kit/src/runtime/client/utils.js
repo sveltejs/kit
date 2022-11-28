@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 import { assets } from '../paths.js';
 import { version } from '../env.js';
-import { PRIORITY_HOVER, PRIORITY_PAGE, PRIORITY_TAP, PRIORITY_VIEWPORT } from './constants.js';
+import { PRELOAD_PRIORITIES } from './constants.js';
 
 /* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
 
@@ -79,25 +79,9 @@ function validateAttributeValue(element, attributeName, value) {
 	return /** @type {typeof anchor_attribute_valid_values[T][number] | null} */ (value);
 }
 
-/** @typedef {
-		{
-			[key in
-				typeof anchor_attribute_valid_values['data-sveltekit-preload-data'][number]
-				| typeof anchor_attribute_valid_values['data-sveltekit-preload-code'][number]
-			]: number
-		} & {
-			'': number
-		}} Levels
-	*/
-
-/** @type {Levels} */
 const levels = {
-	tap: PRIORITY_TAP,
-	hover: PRIORITY_HOVER,
-	viewport: PRIORITY_VIEWPORT,
-	page: PRIORITY_PAGE,
-	'': PRIORITY_HOVER,
-	off: -1
+	...PRELOAD_PRIORITIES,
+	'': PRELOAD_PRIORITIES['hover']
 };
 
 /**
@@ -108,16 +92,16 @@ export function find_anchor(element, base) {
 	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
 	let a;
 
-	/** @type {string | null} */
+	/** @type {NoscrollValidValues | null} */
 	let noscroll = null;
 
-	/** @type {typeof anchor_attribute_valid_values['data-sveltekit-preload-code'][number] | null} */
+	/** @type {PreloadCodeValidValues | null} */
 	let preload_code = null;
 
-	/** @type {typeof anchor_attribute_valid_values['data-sveltekit-preload-data'][number] | null} */
+	/** @type {PreloadDataValidValues | null} */
 	let preload_data = null;
 
-	/** @type {string | null} */
+	/** @type {ReloadValidValues | null} */
 	let reload = null;
 
 	while (element !== document.documentElement) {
@@ -129,24 +113,10 @@ export function find_anchor(element, base) {
 		if (a) {
 			if (preload_code === null)
 				preload_code = getValidatedAttribute(element, 'data-sveltekit-preload-code');
-			if (preload_data === null) preload_data = element.getAttribute('data-sveltekit-preload-data');
-			if (noscroll === null) noscroll = element.getAttribute('data-sveltekit-noscroll');
-			if (reload === null) reload = element.getAttribute('data-sveltekit-reload');
-
-			if (__SVELTEKIT_DEV__) {
-				validate(element, 'data-sveltekit-preload-data', preload_data, ['', 'off', 'tap', 'hover']);
-				validate(element, 'data-sveltekit-preload-code', preload_code, [
-					'',
-					'off',
-					'tap',
-					'hover',
-					'viewport',
-					'page'
-				]);
-
-				validate(element, 'data-sveltekit-preload-data', noscroll, ['', 'off']);
-				validate(element, 'data-sveltekit-preload-data', reload, ['', 'off']);
-			}
+			if (preload_data === null)
+				preload_data = getValidatedAttribute(element, 'data-sveltekit-preload-data');
+			if (noscroll === null) noscroll = getValidatedAttribute(element, 'data-sveltekit-noscroll');
+			if (reload === null) reload = getValidatedAttribute(element, 'data-sveltekit-reload');
 		}
 
 		// @ts-expect-error handle shadow roots
