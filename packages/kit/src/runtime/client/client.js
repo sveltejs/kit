@@ -1427,7 +1427,7 @@ export function create_client({ target, base }) {
 				}
 			});
 
-			// @ts-ignore this isn't supported everywhere yet
+			// @ts-expect-error this isn't supported everywhere yet
 			if (!navigator.connection?.saveData) {
 				setup_preload();
 			}
