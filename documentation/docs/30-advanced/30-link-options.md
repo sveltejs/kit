@@ -48,7 +48,7 @@ Even in cases where you don't want to preload _data_ for a link, it can be benef
 - `"hover"` - as above, except that only code is preloaded
 - `"tap"` - as above, except that only code is preloaded
 
-Note that `viewport` and `page` only apply to links that are present in the DOM immediately following navigation. This is to avoid performance pitfalls resulting from aggressively observing the DOM for changes.
+Note that `viewport` and `page` only apply to links that are present in the DOM immediately following navigation — if a link is added later (in an `{#if ...}` block, for example) it will not be preloaded until triggered by `hover` or `tap`. This is to avoid performance pitfalls resulting from aggressively observing the DOM for changes.
 
 > Since preloading code is a prerequisite for preloading data, this attribute will only have an effect if it specifies a more eager value than any `data-sveltekit-preload-data` attribute that is present.
 
