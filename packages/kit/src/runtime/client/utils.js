@@ -109,7 +109,30 @@ export function find_anchor(element, target) {
  * @param {HTMLAnchorElement | SVGAElement} a
  * @param {string} base
  */
-export function get_link_options(a, base) {
+export function get_link_info(a, base) {
+	/** @type {URL | undefined} */
+	let url;
+
+	try {
+		url = new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
+	} catch {}
+
+	const has = {
+		rel_external: (a.getAttribute('rel') || '').split(/\s+/).includes('external'),
+		download: a.hasAttribute('download'),
+		target: !!(a instanceof SVGAElement ? a.target.baseVal : a.target)
+	};
+
+	const external =
+		!url || is_external_url(url, base) || has.rel_external || has.target || has.download;
+
+	return { url, has, external };
+}
+
+/**
+ * @param {HTMLFormElement | HTMLAnchorElement | SVGAElement} element
+ */
+export function get_router_options(element) {
 	/** @type {typeof valid_link_options['noscroll'][number] | null} */
 	let noscroll = null;
 
@@ -123,53 +146,22 @@ export function get_link_options(a, base) {
 	let reload = null;
 
 	/** @type {Element} */
-	let element = a;
+	let el = element;
 
-	while (element !== document.documentElement) {
-		if (preload_code === null) preload_code = link_option(element, 'preload-code');
-		if (preload_data === null) preload_data = link_option(element, 'preload-data');
-		if (noscroll === null) noscroll = link_option(element, 'noscroll');
-		if (reload === null) reload = link_option(element, 'reload');
+	while (el !== document.documentElement) {
+		if (preload_code === null) preload_code = link_option(el, 'preload-code');
+		if (preload_data === null) preload_data = link_option(el, 'preload-data');
+		if (noscroll === null) noscroll = link_option(el, 'noscroll');
+		if (reload === null) reload = link_option(el, 'reload');
 
-		element = /** @type {Element} */ (parent_element(element));
+		el = /** @type {Element} */ (parent_element(el));
 	}
 
-	/** @type {URL | undefined} */
-	let url;
-
-	try {
-		url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
-	} catch {}
-
-	const options = {
+	return {
 		preload_code: levels[preload_code ?? 'off'],
 		preload_data: levels[preload_data ?? 'off'],
 		noscroll: noscroll === 'off' ? false : noscroll === '' ? true : null,
 		reload: reload === 'off' ? false : reload === '' ? true : null
-	};
-
-	const has = a
-		? {
-				rel_external: (a.getAttribute('rel') || '').split(/\s+/).includes('external'),
-				download: a.hasAttribute('download'),
-				target: !!(a instanceof SVGAElement ? a.target.baseVal : a.target)
-		  }
-		: {};
-
-	const external =
-		!url ||
-		is_external_url(url, base) ||
-		options.reload ||
-		has.rel_external ||
-		has.target ||
-		has.download;
-
-	return {
-		a,
-		url,
-		options,
-		external,
-		has
 	};
 }
 

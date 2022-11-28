@@ -9,7 +9,8 @@ import {
 import {
 	find_anchor,
 	get_base_uri,
-	get_link_options,
+	get_link_info,
+	get_router_options,
 	is_external_url,
 	scroll_state
 } from './utils.js';
@@ -1230,9 +1231,12 @@ export function create_client({ target, base }) {
 			const a = find_anchor(element, target);
 			if (!a) return;
 
-			const { url, options, external } = get_link_options(a, base);
+			const { url, external } = get_link_info(a, base);
+			if (external) return;
 
-			if (!external) {
+			const options = get_router_options(a);
+
+			if (!options.reload) {
 				if (priority <= options.preload_data) {
 					preload_data(/** @type {URL} */ (url));
 				} else if (priority <= options.preload_code) {
@@ -1245,9 +1249,10 @@ export function create_client({ target, base }) {
 			observer.disconnect();
 
 			for (const a of target.querySelectorAll('a')) {
-				const { url, external, options } = get_link_options(a, base);
+				const { url, external } = get_link_info(a, base);
+				const options = get_router_options(a);
 
-				if (external) continue;
+				if (external || options.reload) continue;
 
 				if (options.preload_code === PRELOAD_PRIORITIES.viewport) {
 					observer.observe(a);
@@ -1456,7 +1461,8 @@ export function create_client({ target, base }) {
 				const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), target);
 				if (!a) return;
 
-				const { url, options, has } = get_link_options(a, base);
+				const { url, external, has } = get_link_info(a, base);
+				const options = get_router_options(a);
 				if (!url) return;
 
 				const is_svg_a_element = a instanceof SVGAElement;
@@ -1479,7 +1485,7 @@ export function create_client({ target, base }) {
 				if (has.download) return;
 
 				// Ignore the following but fire beforeNavigate
-				if (options.reload || has.rel_external || has.target) {
+				if (external || options.reload) {
 					const navigation = before_navigate({ url, type: 'link' });
 					if (!navigation) {
 						event.preventDefault();
@@ -1540,8 +1546,10 @@ export function create_client({ target, base }) {
 				const url = new URL(
 					event.submitter?.hasAttribute('formaction') ? submitter.formAction : form.action
 				);
-
 				if (is_external_url(url, base)) return;
+
+				const { noscroll, reload } = get_router_options(form);
+				if (reload) return;
 
 				event.preventDefault();
 				event.stopPropagation();
@@ -1549,12 +1557,9 @@ export function create_client({ target, base }) {
 				// @ts-ignore `URLSearchParams(fd)` is kosher, but typescript doesn't know that
 				url.search = new URLSearchParams(new FormData(event.target)).toString();
 
-				// TODO implement data-sveltekit-reload and data-sveltekit-noscroll
-				const noScroll = false;
-
 				navigate({
 					url,
-					scroll: noScroll ? scroll_state() : null,
+					scroll: noscroll ? scroll_state() : null,
 					keepfocus: false,
 					redirect_chain: [],
 					details: {
