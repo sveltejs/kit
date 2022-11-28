@@ -56,7 +56,6 @@
 		"postinstall.js"
 	],
 	"scripts": {
-		"build": "echo \"TODO remove build script from packages/kit\"",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
