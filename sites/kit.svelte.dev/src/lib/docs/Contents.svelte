@@ -17,7 +17,7 @@
 					{#each section.pages as { title, path }}
 						<li>
 							<a
-								data-sveltekit-prefetch
+								data-sveltekit-preload-data
 								class="page"
 								class:active={path === $page.url.pathname}
 								href={path}

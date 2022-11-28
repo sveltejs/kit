@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 1.0.0-next.565
+
+### Patch Changes
+
+- [breaking] Replace `data-sveltekit-prefetch` with `-preload-code` and `-preload-data` ([#7776](https://github.com/sveltejs/kit/pull/7776))
+
+- [breaking] Rename `prefetch` to `preloadData` and `prefetchRoutes` to `preloadCode` ([#7776](https://github.com/sveltejs/kit/pull/7776))
+
+## 1.0.0-next.564
+
+### Patch Changes
+
+- [chore] upgrade undici ([#7830](https://github.com/sveltejs/kit/pull/7830))
+
+- Make `$page.url` resilient against mutations ([#7827](https://github.com/sveltejs/kit/pull/7827))
+
+## 1.0.0-next.563
+
+### Patch Changes
+
+- [feat] allow handleError to return a promise ([#7780](https://github.com/sveltejs/kit/pull/7780))
+
+- [breaking] remove `format` option from `generateManifest(...)` ([#7820](https://github.com/sveltejs/kit/pull/7820))
+
 ## 1.0.0-next.562
 
 ### Patch Changes

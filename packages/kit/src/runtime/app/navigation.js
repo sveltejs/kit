@@ -17,7 +17,7 @@ export const disableScrollHandling = ssr
 export const goto = ssr ? guard('goto') : client.goto;
 export const invalidate = ssr ? guard('invalidate') : client.invalidate;
 export const invalidateAll = ssr ? guard('invalidateAll') : client.invalidateAll;
-export const prefetch = ssr ? guard('prefetch') : client.prefetch;
-export const prefetchRoutes = ssr ? guard('prefetchRoutes') : client.prefetch_routes;
+export const preloadData = ssr ? guard('preloadData') : client.preload_data;
+export const preloadCode = ssr ? guard('preloadCode') : client.preload_code;
 export const beforeNavigate = ssr ? () => {} : client.before_navigate;
 export const afterNavigate = ssr ? () => {} : client.after_navigate;

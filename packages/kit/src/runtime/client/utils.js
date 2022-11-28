@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 import { assets } from '../paths.js';
 import { version } from '../env.js';
+import { PRELOAD_PRIORITIES } from './constants.js';
 
 /* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
 
@@ -23,72 +24,137 @@ export function scroll_state() {
 	};
 }
 
-/** @param {Event} event */
-export function find_anchor(event) {
+const warned = new WeakSet();
+
+/** @typedef {keyof typeof valid_link_options} LinkOptionName */
+
+const valid_link_options = /** @type {const} */ ({
+	'preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'eager'],
+	'preload-data': ['', 'off', 'tap', 'hover'],
+	noscroll: ['', 'off'],
+	reload: ['', 'off']
+});
+
+/**
+ * @template {LinkOptionName} T
+ * @param {Element} element
+ * @param {T} name
+ */
+function link_option(element, name) {
+	const value = /** @type {typeof valid_link_options[T][number] | null} */ (
+		element.getAttribute(`data-sveltekit-${name}`)
+	);
+
+	if (__SVELTEKIT_DEV__) validate_link_option(element, name, value);
+
+	return value;
+}
+
+/**
+ * @template {LinkOptionName} T
+ * @template {typeof valid_link_options[T][number] | null} U
+ * @param {Element} element
+ * @param {T} name
+ * @param {U} value
+ */
+function validate_link_option(element, name, value) {
+	if (value === null) return;
+
+	// @ts-expect-error - includes is dumb
+	if (!warned.has(element) && !valid_link_options[name].includes(value)) {
+		console.error(
+			`Unexpected value for ${name} — should be one of ${valid_link_options[name]
+				.map((option) => JSON.stringify(option))
+				.join(', ')}`,
+			element
+		);
+
+		warned.add(element);
+	}
+}
+
+const levels = {
+	...PRELOAD_PRIORITIES,
+	'': PRELOAD_PRIORITIES.hover
+};
+
+/**
+ * @param {Element} element
+ * @param {string} base
+ */
+export function find_anchor(element, base) {
 	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
 	let a;
 
-	/** @type {boolean | null} */
+	/** @type {typeof valid_link_options['noscroll'][number] | null} */
 	let noscroll = null;
 
-	/** @type {boolean | null} */
-	let prefetch = null;
+	/** @type {typeof valid_link_options['preload-code'][number] | null} */
+	let preload_code = null;
 
-	/** @type {boolean | null} */
+	/** @type {typeof valid_link_options['preload-data'][number] | null} */
+	let preload_data = null;
+
+	/** @type {typeof valid_link_options['reload'][number] | null} */
 	let reload = null;
 
-	for (const element of event.composedPath()) {
-		if (!(element instanceof Element)) continue;
-
+	while (element !== document.documentElement) {
 		if (!a && element.nodeName.toUpperCase() === 'A') {
 			// SVG <a> elements have a lowercase name
 			a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
 		}
 
-		if (noscroll === null) noscroll = get_link_option(element, 'data-sveltekit-noscroll');
-		if (prefetch === null) prefetch = get_link_option(element, 'data-sveltekit-prefetch');
-		if (reload === null) reload = get_link_option(element, 'data-sveltekit-reload');
+		if (a) {
+			if (preload_code === null) preload_code = link_option(element, 'preload-code');
+			if (preload_data === null) preload_data = link_option(element, 'preload-data');
+			if (noscroll === null) noscroll = link_option(element, 'noscroll');
+			if (reload === null) reload = link_option(element, 'reload');
+		}
+
+		// @ts-expect-error handle shadow roots
+		element = element.assignedSlot ?? element.parentNode;
+
+		// @ts-expect-error handle shadow roots
+		if (element.nodeType === 11) element = element.host;
 	}
 
-	const url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
+	/** @type {URL | undefined} */
+	let url;
+
+	try {
+		url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
+	} catch {}
+
+	const options = {
+		preload_code: levels[preload_code ?? 'off'],
+		preload_data: levels[preload_data ?? 'off'],
+		noscroll: noscroll === 'off' ? false : noscroll === '' ? true : null,
+		reload: reload === 'off' ? false : reload === '' ? true : null
+	};
+
+	const has = a
+		? {
+				rel_external: (a.getAttribute('rel') || '').split(/\s+/).includes('external'),
+				download: a.hasAttribute('download'),
+				target: !!(a instanceof SVGAElement ? a.target.baseVal : a.target)
+		  }
+		: {};
+
+	const external =
+		!url ||
+		is_external_url(url, base) ||
+		options.reload ||
+		has.rel_external ||
+		has.target ||
+		has.download;
 
 	return {
 		a,
 		url,
-		options: {
-			noscroll,
-			prefetch,
-			reload
-		},
-		has: a
-			? {
-					rel_external: (a.getAttribute('rel') || '').split(/\s+/).includes('external'),
-					download: a.hasAttribute('download'),
-					target: !!(a instanceof SVGAElement ? a.target.baseVal : a.target)
-			  }
-			: {}
+		options,
+		external,
+		has
 	};
-}
-
-const warned = new WeakSet();
-
-/**
- * @param {Element} element
- * @param {string} attribute
- */
-function get_link_option(element, attribute) {
-	const value = element.getAttribute(attribute);
-	if (value === null) return value;
-
-	if (value === '') return true;
-	if (value === 'off') return false;
-
-	if (__SVELTEKIT_DEV__ && !warned.has(element)) {
-		console.error(`Unexpected value for ${attribute} — should be "" or "off"`, element);
-		warned.add(element);
-	}
-
-	return false;
 }
 
 /** @param {any} value */
@@ -164,4 +230,12 @@ export function create_updated_store() {
 		subscribe,
 		check
 	};
+}
+
+/**
+ * @param {URL} url
+ * @param {string} base
+ */
+export function is_external_url(url, base) {
+	return url.origin !== location.origin || !url.pathname.startsWith(base);
 }

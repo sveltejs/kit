@@ -1,8 +1,8 @@
 import {
 	goto,
 	invalidate,
-	prefetch,
-	prefetchRoutes,
+	preloadCode,
+	preloadData,
 	beforeNavigate,
 	afterNavigate
 } from '$app/navigation';
@@ -14,8 +14,8 @@ export function setup() {
 		Object.assign(window, {
 			goto,
 			invalidate,
-			prefetch,
-			prefetchRoutes,
+			preloadCode,
+			preloadData,
 			beforeNavigate,
 			afterNavigate
 		});

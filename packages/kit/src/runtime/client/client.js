@@ -6,7 +6,7 @@ import {
 	normalize_path,
 	add_data_suffix
 } from '../../utils/url.js';
-import { find_anchor, get_base_uri, scroll_state } from './utils.js';
+import { find_anchor, get_base_uri, is_external_url, scroll_state } from './utils.js';
 import {
 	lock_fetch,
 	unlock_fetch,
@@ -22,9 +22,7 @@ import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
-
-const SCROLL_KEY = 'sveltekit:scroll';
-const INDEX_KEY = 'sveltekit:index';
+import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY } from './constants.js';
 
 const routes = parse(nodes, server_loads, dictionary, matchers);
 
@@ -66,7 +64,9 @@ function check_for_removed_attributes() {
 			if (!warned_about_attributes[attr]) {
 				warned_about_attributes[attr] = true;
 				console.error(
-					`The sveltekit:${attr} attribute has been replaced with data-sveltekit-${attr}`
+					`The sveltekit:${attr} attribute has been replaced with data-sveltekit-${
+						attr === 'prefetch' ? 'preload-data' : attr
+					}`
 				);
 			}
 		}
@@ -159,8 +159,8 @@ export function create_client({ target, base }) {
 
 		const url = new URL(location.href);
 		const intent = get_navigation_intent(url, true);
-		// Clear prefetch, it might be affected by the invalidation.
-		// Also solves an edge case where a prefetch is triggered, the navigation for it
+		// Clear preload, it might be affected by the invalidation.
+		// Also solves an edge case where a preload is triggered, the navigation for it
 		// was then triggered and is still running while the invalidation kicks in,
 		// at which point the invalidation should take over and "win".
 		load_cache = null;
@@ -210,11 +210,11 @@ export function create_client({ target, base }) {
 	}
 
 	/** @param {URL} url */
-	async function prefetch(url) {
+	async function preload_data(url) {
 		const intent = get_navigation_intent(url, false);
 
 		if (!intent) {
-			throw new Error(`Attempted to prefetch a URL that does not belong to this app: ${url}`);
+			throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
 		}
 
 		load_cache = {
@@ -229,6 +229,17 @@ export function create_client({ target, base }) {
 		};
 
 		return load_cache.promise;
+	}
+
+	/** @param {...string} pathnames */
+	async function preload_code(...pathnames) {
+		const matching = routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)));
+
+		const promises = matching.map((r) => {
+			return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
+		});
+
+		await Promise.all(promises);
 	}
 
 	/**
@@ -306,7 +317,7 @@ export function create_client({ target, base }) {
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 
-		// reset prefetch synchronously after the history state has been set to avoid race conditions
+		// reset preload synchronously after the history state has been set to avoid race conditions
 		load_cache = null;
 
 		if (started) {
@@ -478,7 +489,7 @@ export function create_client({ target, base }) {
 				params,
 				route,
 				status,
-				url,
+				url: new URL(url),
 				form,
 				// The whole page store is updated, but this way the object reference stays the same
 				data: data_changed ? data : page.data
@@ -1004,7 +1015,7 @@ export function create_client({ target, base }) {
 	 * @param {boolean} invalidating
 	 */
 	function get_navigation_intent(url, invalidating) {
-		if (is_external_url(url)) return;
+		if (is_external_url(url, base)) return;
 
 		const path = decode_pathname(url.pathname.slice(base.length) || '/');
 
@@ -1018,11 +1029,6 @@ export function create_client({ target, base }) {
 				return intent;
 			}
 		}
-	}
-
-	/** @param {URL} url */
-	function is_external_url(url) {
-		return url.origin !== location.origin || !url.pathname.startsWith(base);
 	}
 
 	/**
@@ -1177,6 +1183,77 @@ export function create_client({ target, base }) {
 		});
 	}
 
+	function setup_preload() {
+		/** @type {NodeJS.Timeout} */
+		let mousemove_timeout;
+
+		target.addEventListener('mousemove', (event) => {
+			const target = /** @type {Element} */ (event.target);
+
+			clearTimeout(mousemove_timeout);
+			mousemove_timeout = setTimeout(() => {
+				preload(target, 2);
+			}, 20);
+		});
+
+		/** @param {Event} event */
+		function tap(event) {
+			preload(/** @type {Element} */ (event.composedPath()[0]), 1);
+		}
+
+		target.addEventListener('mousedown', tap);
+		target.addEventListener('touchstart', tap, { passive: true });
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) {
+						preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href).pathname);
+						observer.unobserve(entry.target);
+					}
+				}
+			},
+			{ threshold: 0 }
+		);
+
+		/**
+		 * @param {Element} element
+		 * @param {number} priority
+		 */
+		function preload(element, priority) {
+			const { url, options, external } = find_anchor(element, base);
+
+			if (!external) {
+				if (priority <= options.preload_data) {
+					preload_data(/** @type {URL} */ (url));
+				} else if (priority <= options.preload_code) {
+					preload_code(/** @type {URL} */ (url).pathname);
+				}
+			}
+		}
+
+		function after_navigate() {
+			observer.disconnect();
+
+			for (const a of target.querySelectorAll('a')) {
+				const { url, external, options } = find_anchor(a, base);
+
+				if (external) continue;
+
+				if (options.preload_code === PRELOAD_PRIORITIES.viewport) {
+					observer.observe(a);
+				}
+
+				if (options.preload_code === PRELOAD_PRIORITIES.eager) {
+					preload_code(/** @type {URL} */ (url).pathname);
+				}
+			}
+		}
+
+		callbacks.after_navigate.push(after_navigate);
+		after_navigate();
+	}
+
 	return {
 		after_navigate: (fn) => {
 			onMount(() => {
@@ -1250,23 +1327,12 @@ export function create_client({ target, base }) {
 			return invalidate();
 		},
 
-		prefetch: async (href) => {
+		preload_data: async (href) => {
 			const url = new URL(href, get_base_uri(document));
-			await prefetch(url);
+			await preload_data(url);
 		},
 
-		// TODO rethink this API
-		prefetch_routes: async (pathnames) => {
-			const matching = pathnames
-				? routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)))
-				: routes;
-
-			const promises = matching.map((r) => {
-				return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
-			});
-
-			await Promise.all(promises);
-		},
+		preload_code,
 
 		apply_action: async (result) => {
 			if (result.type === 'error') {
@@ -1365,33 +1431,10 @@ export function create_client({ target, base }) {
 				}
 			});
 
-			/** @param {Event} event */
-			const trigger_prefetch = (event) => {
-				const { url, options, has } = find_anchor(event);
-				if (url && options.prefetch && !is_external_url(url)) {
-					if (options.reload || has.rel_external || has.target || has.download) return;
-					prefetch(url);
-				}
-			};
-
-			/** @type {NodeJS.Timeout} */
-			let mousemove_timeout;
-
-			/** @param {MouseEvent|TouchEvent} event */
-			const handle_mousemove = (event) => {
-				clearTimeout(mousemove_timeout);
-				mousemove_timeout = setTimeout(() => {
-					// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
-					// add a layer of indirection to address that
-					event.target?.dispatchEvent(
-						new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
-					);
-				}, 20);
-			};
-
-			target.addEventListener('touchstart', trigger_prefetch, { passive: true });
-			target.addEventListener('mousemove', handle_mousemove);
-			target.addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
+			// @ts-expect-error this isn't supported everywhere yet
+			if (!navigator.connection?.saveData) {
+				setup_preload();
+			}
 
 			/** @param {MouseEvent} event */
 			target.addEventListener('click', (event) => {
@@ -1401,7 +1444,10 @@ export function create_client({ target, base }) {
 				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 				if (event.defaultPrevented) return;
 
-				const { a, url, options, has } = find_anchor(event);
+				const { a, url, options, has } = find_anchor(
+					/** @type {Element} */ (event.composedPath()[0]),
+					base
+				);
 				if (!a || !url) return;
 
 				const is_svg_a_element = a instanceof SVGAElement;
@@ -1436,8 +1482,8 @@ export function create_client({ target, base }) {
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired
 				// Removing the hash does a full page navigation in the browser, so make sure a hash is present
-				const [base, hash] = url.href.split('#');
-				if (hash !== undefined && base === location.href.split('#')[0]) {
+				const [nonhash, hash] = url.href.split('#');
+				if (hash !== undefined && nonhash === location.href.split('#')[0]) {
 					// set this flag to distinguish between navigations triggered by
 					// clicking a hash link and those triggered by popstate
 					// TODO why not update history here directly?
