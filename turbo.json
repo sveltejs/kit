@@ -1,12 +1,6 @@
 {
 	"$schema": "https://turborepo.org/schema.json",
 	"pipeline": {
-		"@sveltejs/kit#build": {
-			"dependsOn": ["^build"],
-			"inputs": ["rollup.config.js", "src/**", "scripts/**", "types/**"],
-			"outputs": ["dist/**", "docs/**", "assets/**"],
-			"outputMode": "new-only"
-		},
 		"kit.svelte.dev#build": {
 			"dependsOn": ["^build"],
 			"inputs": ["src/**", "../../packages/kit/docs/**", "../../documentation/**"],
