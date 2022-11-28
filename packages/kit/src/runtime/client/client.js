@@ -1522,6 +1522,52 @@ export function create_client({ target, base }) {
 				});
 			});
 
+			target.addEventListener('submit', (event) => {
+				if (event.defaultPrevented) return;
+
+				const form = /** @type {HTMLFormElement} */ (
+					HTMLFormElement.prototype.cloneNode.call(event.target)
+				);
+
+				const submitter = /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter);
+
+				const method = event.submitter?.hasAttribute('formmethod')
+					? submitter.formMethod
+					: form.method;
+
+				if (method !== 'get') return;
+
+				const url = new URL(
+					event.submitter?.hasAttribute('formaction') ? submitter.formAction : form.action
+				);
+
+				if (is_external_url(url, base)) return;
+
+				event.preventDefault();
+				event.stopPropagation();
+
+				// @ts-ignore `URLSearchParams(fd)` is kosher, but typescript doesn't know that
+				url.search = new URLSearchParams(new FormData(event.target)).toString();
+
+				// TODO implement data-sveltekit-reload and data-sveltekit-noscroll
+				const noScroll = false;
+
+				navigate({
+					url,
+					scroll: noScroll ? scroll_state() : null,
+					keepfocus: false,
+					redirect_chain: [],
+					details: {
+						state: {},
+						replaceState: false
+					},
+					nav_token: {},
+					accepted: () => {},
+					blocked: () => {},
+					type: 'form'
+				});
+			});
+
 			addEventListener('popstate', (event) => {
 				if (event.state?.[INDEX_KEY]) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
