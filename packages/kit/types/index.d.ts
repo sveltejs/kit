@@ -351,12 +351,12 @@ export interface KitConfig {
 		assets?: string;
 		hooks?: {
 			/**
-			 * The location of your client [hooks](/docs/hooks).
+			 * The location of your client [hooks](https://kit.svelte.dev/docs/hooks).
 			 * @default "src/hooks.client"
 			 */
 			client?: string;
 			/**
-			 * The location of your server [hooks](/docs/hooks).
+			 * The location of your server [hooks](https://kit.svelte.dev/docs/hooks).
 			 * @default "src/hooks.server"
 			 */
 			server?: string;
