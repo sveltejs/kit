@@ -43,30 +43,28 @@ const anchor_attribute_valid_values = /** @type {const} */ ({
 
 /**
  * @param {Element} element
- * @param {T} attributeName
+ * @param {T} name
  * @returns {typeof anchor_attribute_valid_values[T][number] | null}
  * @template {AnchorAttribute} T
  */
-function getValidatedAttribute(element, attributeName) {
-	const value = element.getAttribute(attributeName);
-	return __SVELTEKIT_DEV__ ? validateAttributeValue(element, attributeName, value) : value;
+function get_validated_attribute(element, name) {
+	const value = element.getAttribute(name);
+	return __SVELTEKIT_DEV__ ? validate_attribute_value(element, name, value) : value;
 }
 
 /**
  * @param {Element} element
- * @param {T} attributeName
+ * @param {T} name
  * @param {string | null} value
  * @returns {typeof anchor_attribute_valid_values[T][number] | null}
  * @template {AnchorAttribute} T
  */
-function validateAttributeValue(element, attributeName, value) {
+function validate_attribute_value(element, name, value) {
 	if (warned.has(element) || value === null) return null;
 	// @ts-expect-error - includes is dumb
-	if (!anchor_attribute_valid_values[attributeName].includes(value)) {
+	if (!anchor_attribute_valid_values[name].includes(value)) {
 		console.error(
-			`Unexpected value for ${attributeName} — should be one of ${anchor_attribute_valid_values[
-				attributeName
-			]
+			`Unexpected value for ${name} — should be one of ${anchor_attribute_valid_values[name]
 				.map((option) => JSON.stringify(option))
 				.join(', ')}`,
 			element
@@ -107,11 +105,11 @@ export function find_anchor(element, base) {
 
 		if (a) {
 			if (preload_code === null)
-				preload_code = getValidatedAttribute(element, 'data-sveltekit-preload-code');
+				preload_code = get_validated_attribute(element, 'data-sveltekit-preload-code');
 			if (preload_data === null)
-				preload_data = getValidatedAttribute(element, 'data-sveltekit-preload-data');
-			if (noscroll === null) noscroll = getValidatedAttribute(element, 'data-sveltekit-noscroll');
-			if (reload === null) reload = getValidatedAttribute(element, 'data-sveltekit-reload');
+				preload_data = get_validated_attribute(element, 'data-sveltekit-preload-data');
+			if (noscroll === null) noscroll = get_validated_attribute(element, 'data-sveltekit-noscroll');
+			if (reload === null) reload = get_validated_attribute(element, 'data-sveltekit-reload');
 		}
 
 		// @ts-expect-error handle shadow roots
