@@ -27,7 +27,7 @@ export function scroll_state() {
 const warned = new WeakSet();
 
 /** @typedef { 'preload-code' | 'preload-data' | 'noscroll' | 'reload' } AnchorShortAttribute */
-/** @typedef { `data-sveltekit-${AnchorShortAttribute}`} AnchorAttribute */
+/** @typedef { `data-sveltekit-${AnchorShortAttribute}`} LinkOptionName */
 
 const valid_link_options = /** @type {const} */ ({
 	'data-sveltekit-preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'page'],
@@ -42,25 +42,28 @@ const valid_link_options = /** @type {const} */ ({
 /** @typedef {typeof valid_link_options['data-sveltekit-reload'][number]} ReloadValidValues */
 
 /**
+ * @template {LinkOptionName} T
+ * @template {typeof valid_link_options[T][number] | null} U
  * @param {Element} element
  * @param {T} name
- * @returns {typeof valid_link_options[T][number] | null}
- * @template {AnchorAttribute} T
+ * @returns {U}
  */
 function link_option(element, name) {
-	const value = element.getAttribute(name);
+	const value = /** @type {U} */ (element.getAttribute(name));
 	return __SVELTEKIT_DEV__ ? validate_attribute_value(element, name, value) : value;
 }
 
 /**
+ * @template {LinkOptionName} T
+ * @template {typeof valid_link_options[T][number] | null} U
  * @param {Element} element
  * @param {T} name
- * @param {string | null} value
- * @returns {typeof valid_link_options[T][number] | null}
- * @template {AnchorAttribute} T
+ * @param {U} value
+ * @returns {U}
  */
 function validate_attribute_value(element, name, value) {
-	if (warned.has(element) || value === null) return null;
+	if (warned.has(element) || value === null) return /** @type {U} */ (null);
+
 	// @ts-expect-error - includes is dumb
 	if (!valid_link_options[name].includes(value)) {
 		console.error(
@@ -70,6 +73,8 @@ function validate_attribute_value(element, name, value) {
 			element
 		);
 	}
+
+	return value;
 }
 
 const levels = {
