@@ -1050,6 +1050,14 @@ test.describe.serial('Invalidation', () => {
 		await clicknav('[href="/load/invalidation/route/shared/b"]');
 		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/b');
 	});
+
+	test('$page.url can safely be mutated', async ({ page }) => {
+		await page.goto('/load/mutated-url?q=initial');
+		expect(await page.textContent('h1')).toBe('initial');
+
+		await page.click('button');
+		expect(await page.textContent('h1')).toBe('updated');
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {
