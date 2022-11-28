@@ -37,14 +37,15 @@ const valid_link_options = /** @type {const} */ ({
 
 /**
  * @template {LinkOptionName} T
- * @template {typeof valid_link_options[T][number] | null} U
  * @param {Element} element
  * @param {T} name
- * @returns {U}
  */
 function link_option(element, name) {
-	const value = /** @type {U} */ (element.getAttribute(`data-sveltekit-${name}`));
-	return __SVELTEKIT_DEV__ ? validate_attribute_value(element, name, value) : value;
+	const value = /** @type {typeof valid_link_options[T][number] | null} */ (
+		element.getAttribute(`data-sveltekit-${name}`)
+	);
+
+	return __SVELTEKIT_DEV__ ? validate_link_option(element, name, value) : value;
 }
 
 /**
@@ -53,9 +54,8 @@ function link_option(element, name) {
  * @param {Element} element
  * @param {T} name
  * @param {U} value
- * @returns {U}
  */
-function validate_attribute_value(element, name, value) {
+function validate_link_option(element, name, value) {
 	if (warned.has(element) || value === null) return /** @type {U} */ (null);
 
 	// @ts-expect-error - includes is dumb
