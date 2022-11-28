@@ -1236,11 +1236,11 @@ export function create_client({ target, base }) {
 
 				if (external) continue;
 
-				if (options.preload_code === PRELOAD_PRIORITIES['viewport']) {
+				if (options.preload_code === PRELOAD_PRIORITIES.viewport) {
 					observer.observe(a);
 				}
 
-				if (options.preload_code === PRELOAD_PRIORITIES['page']) {
+				if (options.preload_code === PRELOAD_PRIORITIES.page) {
 					preload_code(/** @type {URL} */ (url).pathname);
 				}
 			}

@@ -74,7 +74,7 @@ function validate_attribute_value(element, name, value) {
 
 const levels = {
 	...PRELOAD_PRIORITIES,
-	'': PRELOAD_PRIORITIES['hover']
+	'': PRELOAD_PRIORITIES.hover
 };
 
 /**
