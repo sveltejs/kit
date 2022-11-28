@@ -132,7 +132,7 @@ If you're using TypeScript and need to customize the shape of errors, you can do
 
 ```ts
 /// file: src/app.d.ts
-namespace App {
+declare namespace App {
 	interface Error {
 		code: string;
 		id: string;
