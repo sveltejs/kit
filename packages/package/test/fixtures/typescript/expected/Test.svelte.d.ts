@@ -14,9 +14,9 @@ declare const __propDef: {
 		};
 	};
 };
-export declare type TestProps = typeof __propDef.props;
-export declare type TestEvents = typeof __propDef.events;
-export declare type TestSlots = typeof __propDef.slots;
+export type TestProps = typeof __propDef.props;
+export type TestEvents = typeof __propDef.events;
+export type TestSlots = typeof __propDef.slots;
 export default class Test extends SvelteComponentTyped<TestProps, TestEvents, TestSlots> {
 	get astring(): string;
 }
