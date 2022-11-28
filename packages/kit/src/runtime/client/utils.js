@@ -29,22 +29,22 @@ const warned = new WeakSet();
 /** @typedef { 'preload-code' | 'preload-data' | 'noscroll' | 'reload' } AnchorShortAttribute */
 /** @typedef { `data-sveltekit-${AnchorShortAttribute}`} AnchorAttribute */
 
-const anchor_attribute_valid_values = /** @type {const} */ ({
+const valid_link_options = /** @type {const} */ ({
 	'data-sveltekit-preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'page'],
 	'data-sveltekit-preload-data': ['', 'off', 'tap', 'hover'],
 	'data-sveltekit-noscroll': ['', 'off'],
 	'data-sveltekit-reload': ['', 'off']
 });
 
-/** @typedef {typeof anchor_attribute_valid_values['data-sveltekit-preload-data'][number]} PreloadDataValidValues */
-/** @typedef {typeof anchor_attribute_valid_values['data-sveltekit-preload-code'][number]} PreloadCodeValidValues */
-/** @typedef {typeof anchor_attribute_valid_values['data-sveltekit-noscroll'][number]} NoscrollValidValues */
-/** @typedef {typeof anchor_attribute_valid_values['data-sveltekit-reload'][number]} ReloadValidValues */
+/** @typedef {typeof valid_link_options['data-sveltekit-preload-data'][number]} PreloadDataValidValues */
+/** @typedef {typeof valid_link_options['data-sveltekit-preload-code'][number]} PreloadCodeValidValues */
+/** @typedef {typeof valid_link_options['data-sveltekit-noscroll'][number]} NoscrollValidValues */
+/** @typedef {typeof valid_link_options['data-sveltekit-reload'][number]} ReloadValidValues */
 
 /**
  * @param {Element} element
  * @param {T} name
- * @returns {typeof anchor_attribute_valid_values[T][number] | null}
+ * @returns {typeof valid_link_options[T][number] | null}
  * @template {AnchorAttribute} T
  */
 function link_option(element, name) {
@@ -56,15 +56,15 @@ function link_option(element, name) {
  * @param {Element} element
  * @param {T} name
  * @param {string | null} value
- * @returns {typeof anchor_attribute_valid_values[T][number] | null}
+ * @returns {typeof valid_link_options[T][number] | null}
  * @template {AnchorAttribute} T
  */
 function validate_attribute_value(element, name, value) {
 	if (warned.has(element) || value === null) return null;
 	// @ts-expect-error - includes is dumb
-	if (!anchor_attribute_valid_values[name].includes(value)) {
+	if (!valid_link_options[name].includes(value)) {
 		console.error(
-			`Unexpected value for ${name} — should be one of ${anchor_attribute_valid_values[name]
+			`Unexpected value for ${name} — should be one of ${valid_link_options[name]
 				.map((option) => JSON.stringify(option))
 				.join(', ')}`,
 			element
