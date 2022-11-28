@@ -1546,9 +1546,12 @@ export function create_client({ target, base }) {
 				const url = new URL(
 					event.submitter?.hasAttribute('formaction') ? submitter.formAction : form.action
 				);
+
 				if (is_external_url(url, base)) return;
 
-				const { noscroll, reload } = get_router_options(form);
+				const { noscroll, reload } = get_router_options(
+					/** @type {HTMLFormElement} */ (event.target)
+				);
 				if (reload) return;
 
 				event.preventDefault();
