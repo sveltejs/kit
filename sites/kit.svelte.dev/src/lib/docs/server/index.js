@@ -45,8 +45,12 @@ const type_regex = new RegExp(
 
 const type_links = new Map();
 
+const slugs = {
+	'@sveltejs/kit': 'public-types'
+};
+
 modules.forEach((module) => {
-	const slug = slugify(module.name);
+	const slug = slugs[module.name] || slugify(module.name);
 
 	module.types.forEach((type) => {
 		const link = `/docs/types#${slug}-${slugify(type.name)}`;

@@ -91,7 +91,7 @@ export interface Builder {
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
 	/**
-	 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#sveltejs-kit-server) with.
+	 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#public-types-server) with.
 	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 	 */
 	generateManifest(opts: { relativePath: string }): string;
@@ -619,7 +619,7 @@ export interface LoadEvent<
 	 *
 	 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
 	 *
-	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#sveltejs-kit-cookies) API in a server-only `load` function instead.
+	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#public-types-cookies) API in a server-only `load` function instead.
 	 *
 	 * `setHeaders` has no effect when a `load` function runs in the browser.
 	 */
@@ -893,7 +893,7 @@ export interface RequestEvent<
 	 *
 	 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
 	 *
-	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#sveltejs-kit-cookies) API instead.
+	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#public-types-cookies) API instead.
 	 */
 	setHeaders(headers: Record<string, string>): void;
 	/**
