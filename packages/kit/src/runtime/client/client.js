@@ -1240,7 +1240,7 @@ export function create_client({ target, base }) {
 					observer.observe(a);
 				}
 
-				if (options.preload_code === PRELOAD_PRIORITIES.page) {
+				if (options.preload_code === PRELOAD_PRIORITIES.eager) {
 					preload_code(/** @type {URL} */ (url).pathname);
 				}
 			}

@@ -5,6 +5,6 @@ export const PRELOAD_PRIORITIES = /** @type {const} */ ({
 	tap: 1,
 	hover: 2,
 	viewport: 3,
-	page: 4,
+	eager: 4,
 	off: -1
 });

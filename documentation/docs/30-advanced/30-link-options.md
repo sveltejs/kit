@@ -43,12 +43,12 @@ Data will never be preloaded if the user has chosen reduced data usage, meaning 
 
 Even in cases where you don't want to preload _data_ for a link, it can be beneficial to preload the _code_. The `data-sveltekit-preload-code` attribute works similarly to `data-sveltekit-preload-data`, except that it can take one of four values, in decreasing 'eagerness':
 
-- `"page"` means that all links on the page will be preloaded
+- `"eager"` means that links will be preloaded straight away
 - `"viewport"` means that links will be preloaded once they enter the viewport
 - `"hover"` - as above, except that only code is preloaded
 - `"tap"` - as above, except that only code is preloaded
 
-Note that `viewport` and `page` only apply to links that are present in the DOM immediately following navigation — if a link is added later (in an `{#if ...}` block, for example) it will not be preloaded until triggered by `hover` or `tap`. This is to avoid performance pitfalls resulting from aggressively observing the DOM for changes.
+Note that `viewport` and `eager` only apply to links that are present in the DOM immediately following navigation — if a link is added later (in an `{#if ...}` block, for example) it will not be preloaded until triggered by `hover` or `tap`. This is to avoid performance pitfalls resulting from aggressively observing the DOM for changes.
 
 > Since preloading code is a prerequisite for preloading data, this attribute will only have an effect if it specifies a more eager value than any `data-sveltekit-preload-data` attribute that is present.
 

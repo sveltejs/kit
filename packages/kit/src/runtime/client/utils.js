@@ -29,7 +29,7 @@ const warned = new WeakSet();
 /** @typedef {keyof typeof valid_link_options} LinkOptionName */
 
 const valid_link_options = /** @type {const} */ ({
-	'preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'page'],
+	'preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'eager'],
 	'preload-data': ['', 'off', 'tap', 'hover'],
 	noscroll: ['', 'off'],
 	reload: ['', 'off']
