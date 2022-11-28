@@ -60,23 +60,18 @@ function getValidatedAttribute(element, attributeName) {
  * @template {AnchorAttribute} T
  */
 function validateAttributeValue(element, attributeName, value) {
-	// we don't want to waste resources on validation in production
-	if (__SVELTEKIT_DEV__) {
-		if (warned.has(element) || value === null) return null;
-		// @ts-expect-error - includes is dumb
-		if (!anchor_attribute_valid_values[attributeName].includes(value)) {
-			console.error(
-				`Unexpected value for ${attributeName} — should be one of ${anchor_attribute_valid_values[
-					attributeName
-				]
-					.map((option) => JSON.stringify(option))
-					.join(', ')}`,
-				element
-			);
-		}
+	if (warned.has(element) || value === null) return null;
+	// @ts-expect-error - includes is dumb
+	if (!anchor_attribute_valid_values[attributeName].includes(value)) {
+		console.error(
+			`Unexpected value for ${attributeName} — should be one of ${anchor_attribute_valid_values[
+				attributeName
+			]
+				.map((option) => JSON.stringify(option))
+				.join(', ')}`,
+			element
+		);
 	}
-
-	return /** @type {typeof anchor_attribute_valid_values[T][number] | null} */ (value);
 }
 
 const levels = {
