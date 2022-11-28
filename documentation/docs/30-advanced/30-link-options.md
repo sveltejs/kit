@@ -8,7 +8,7 @@ You can customise the behaviour of links with `data-sveltekit-*` attributes. The
 
 ### data-sveltekit-preload-data
 
-Before the browser registers that the user has clicked on a link, we can detect that they've hovered the mouse over it (on desktop) or that a `touchstart` or `mousedown` event has happened. In both cases, we can make an educated guess that a `click` event is coming.
+Before the browser registers that the user has clicked on a link, we can detect that they've hovered the mouse over it (on desktop) or that a `touchstart` or `mousedown` event was triggered. In both cases, we can make an educated guess that a `click` event is coming.
 
 SvelteKit can use this information to get a head start on importing the code and fetching the page's data, which can give us an extra couple of hundred milliseconds — the difference between a user interface that feels laggy and one that feels snappy.
 

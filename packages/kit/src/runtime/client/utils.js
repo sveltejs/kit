@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 import { assets } from '../paths.js';
 import { version } from '../env.js';
-import { PRIORITY_HOVER, PRIORITY_PAGE, PRIORITY_TAP, PRIORITY_VIEWPORT } from './constants.js';
+import { PRELOAD_PRIORITIES } from './constants.js';
 
 /* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
 
@@ -26,34 +26,54 @@ export function scroll_state() {
 
 const warned = new WeakSet();
 
+/** @typedef {keyof typeof valid_link_options} LinkOptionName */
+
+const valid_link_options = /** @type {const} */ ({
+	'preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'page'],
+	'preload-data': ['', 'off', 'tap', 'hover'],
+	noscroll: ['', 'off'],
+	reload: ['', 'off']
+});
+
 /**
+ * @template {LinkOptionName} T
  * @param {Element} element
- * @param {string} name
- * @param {string | null} value
- * @param {string[]} options
+ * @param {T} name
  */
-function validate(element, name, value, options) {
-	if (warned.has(element)) return;
-	if (value === null) return;
-	if (!options.includes(value)) {
-		warned.add(element);
+function link_option(element, name) {
+	const value = /** @type {typeof valid_link_options[T][number] | null} */ (
+		element.getAttribute(`data-sveltekit-${name}`)
+	);
+
+	return __SVELTEKIT_DEV__ ? validate_link_option(element, name, value) : value;
+}
+
+/**
+ * @template {LinkOptionName} T
+ * @template {typeof valid_link_options[T][number] | null} U
+ * @param {Element} element
+ * @param {T} name
+ * @param {U} value
+ */
+function validate_link_option(element, name, value) {
+	if (warned.has(element) || value === null) return /** @type {U} */ (null);
+
+	// @ts-expect-error - includes is dumb
+	if (!valid_link_options[name].includes(value)) {
 		console.error(
-			`Unexpected value for ${name} — should be one of ${options
+			`Unexpected value for ${name} — should be one of ${valid_link_options[name]
 				.map((option) => JSON.stringify(option))
 				.join(', ')}`,
 			element
 		);
 	}
+
+	return value;
 }
 
-/** @type {Record<string, number>} */
 const levels = {
-	tap: PRIORITY_TAP,
-	hover: PRIORITY_HOVER,
-	viewport: PRIORITY_VIEWPORT,
-	page: PRIORITY_PAGE,
-	'': PRIORITY_HOVER,
-	off: -1
+	...PRELOAD_PRIORITIES,
+	'': PRELOAD_PRIORITIES.hover
 };
 
 /**
@@ -64,16 +84,16 @@ export function find_anchor(element, base) {
 	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
 	let a;
 
-	/** @type {string | null} */
+	/** @type {typeof valid_link_options['noscroll'][number] | null} */
 	let noscroll = null;
 
-	/** @type {string | null} */
+	/** @type {typeof valid_link_options['preload-code'][number] | null} */
 	let preload_code = null;
 
-	/** @type {string | null} */
+	/** @type {typeof valid_link_options['preload-data'][number] | null} */
 	let preload_data = null;
 
-	/** @type {string | null} */
+	/** @type {typeof valid_link_options['reload'][number] | null} */
 	let reload = null;
 
 	while (element !== document.documentElement) {
@@ -83,25 +103,10 @@ export function find_anchor(element, base) {
 		}
 
 		if (a) {
-			if (preload_code === null) preload_code = element.getAttribute('data-sveltekit-preload-code');
-			if (preload_data === null) preload_data = element.getAttribute('data-sveltekit-preload-data');
-			if (noscroll === null) noscroll = element.getAttribute('data-sveltekit-noscroll');
-			if (reload === null) reload = element.getAttribute('data-sveltekit-reload');
-
-			if (__SVELTEKIT_DEV__) {
-				validate(element, 'data-sveltekit-preload-data', preload_data, ['', 'off', 'tap', 'hover']);
-				validate(element, 'data-sveltekit-preload-code', preload_code, [
-					'',
-					'off',
-					'tap',
-					'hover',
-					'viewport',
-					'page'
-				]);
-
-				validate(element, 'data-sveltekit-preload-data', noscroll, ['', 'off']);
-				validate(element, 'data-sveltekit-preload-data', reload, ['', 'off']);
-			}
+			if (preload_code === null) preload_code = link_option(element, 'preload-code');
+			if (preload_data === null) preload_data = link_option(element, 'preload-data');
+			if (noscroll === null) noscroll = link_option(element, 'noscroll');
+			if (reload === null) reload = link_option(element, 'reload');
 		}
 
 		// @ts-expect-error handle shadow roots

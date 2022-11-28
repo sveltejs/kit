@@ -22,7 +22,7 @@ import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
-import { INDEX_KEY, PRIORITY_PAGE, PRIORITY_VIEWPORT, SCROLL_KEY } from './constants.js';
+import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY } from './constants.js';
 
 const routes = parse(nodes, server_loads, dictionary, matchers);
 
@@ -1236,11 +1236,11 @@ export function create_client({ target, base }) {
 
 				if (external) continue;
 
-				if (options.preload_code === PRIORITY_VIEWPORT) {
+				if (options.preload_code === PRELOAD_PRIORITIES.viewport) {
 					observer.observe(a);
 				}
 
-				if (options.preload_code === PRIORITY_PAGE) {
+				if (options.preload_code === PRELOAD_PRIORITIES.page) {
 					preload_code(/** @type {URL} */ (url).pathname);
 				}
 			}
