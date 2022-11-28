@@ -439,3 +439,17 @@ const response = await fetch(this.action, {
 ### Alternatives
 
 Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](/docs/routing#server) files to expose (for example) a JSON API.
+
+### GET vs POST
+
+As we've seen, to invoke a form action you must use `method="POST"`.
+
+Some forms don't need to `POST` data to the server — search inputs, for example. For these you can use `method="GET"` (or, equivalently, no `method` at all), and SvelteKit will treat them like `<a>` elements, using the client-side router instead of a full page navigation:
+
+```html
+<form action="/search">
+	<input name="q">
+</form>
+```
+
+As with `<a>` elements, you can use the [`data-sveltekit-reload`](/docs/link-options#data-sveltekit-reload) and [`data-sveltekit-noscroll`](/docs/link-options#data-sveltekit-noscroll) options to control the router's behaviour.
