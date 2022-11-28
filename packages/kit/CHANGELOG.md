@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.566
+
+### Patch Changes
+
+- Add more type documentation ([#7003](https://github.com/sveltejs/kit/pull/7003))
+
+- [breaking] move SubmitFunction into @sveltejs/kit ([#7003](https://github.com/sveltejs/kit/pull/7003))
+
 ## 1.0.0-next.565
 
 ### Patch Changes
